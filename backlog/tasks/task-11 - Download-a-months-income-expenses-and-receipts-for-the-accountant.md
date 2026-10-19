@@ -4,7 +4,7 @@ title: 'Download a month''s income, expenses and receipts for the accountant'
 status: ready-for-human
 assignee: []
 created_date: '2026-10-17 00:38'
-updated_date: '2026-10-18 21:04'
+updated_date: '2026-10-19 07:19'
 labels:
   - spec
   - admin
@@ -63,10 +63,10 @@ Each month Jennie sends her accountant the shop's income and expenses. The data 
    - **Below the rows:** totals of total, VAT and net, one line per currency. Only Finnish VAT is deductible: foreign VAT on a SEK receipt isn't, and EU purchases such as Adobe or Stripe's fees arrive without VAT and are reported by the accountant under reverse charge (*omvänd skattskyldighet*). The vendor VAT number's country prefix (SE, IE) shows them which rows those are.
 
 6. **Each expense's receipt PDF goes in the zip under `kvitton/`.**
-   The accountant has no Papra account, so a Papra id or link would mean nothing to them. Download with `PapraAPI.fetch_document/2`. The filename is `<row number>_<date>_<vendor>.pdf`, with the vendor cut down to ASCII letters, digits and `-`. The zero-padded row number matches the sheet row and makes every name unique. The expense row's "receipt file" column holds that filename. If any download fails, the whole download fails with an error flash and Jennie tries again, so the accountant never gets a zip with receipts missing.
+   The accountant has no Papra account, so a Papra id or link would mean nothing to them. Download with `PapraAPI.fetch_document/2`. The filename is `<row number>_<date>_<vendor>.pdf`, with the vendor cut down to ASCII letters, digits and `-`. The zero-padded row number matches the sheet row and makes every name unique. The expense row's "receipt file" column holds that filename. If a receipt can't be downloaded, the report is still sent: that row's receipt file column says it's missing from Papra, and the expenses page flashes how many are missing so Jennie can send them separately.
 
 7. **The report is built in a plain module, the web layer only serves it.**
-   `Edenflowers.Accounting.MonthlyReport.build(year, month)` returns `{:ok, filename, zip_binary}` or an error. No Ash domain, resource or generic action: it only reads, and the admin-only route is the access check. It reads with `authorize?: false`, as `SalesSummary` and `Payments` do for internal reads. Sheet names, headings, filenames and values such as categories and payment methods are in Swedish where possible, using Finland-Swedish accounting terms; Stripe, Zettle, MobilePay and Zervant stay as they are. The report is rendered inside `Gettext.with_locale("sv", ...)`, so it reuses the existing Swedish translations (categories like "Kontorsmaterial", "Konsulttjänster", payment methods like "Kontant") and its new strings get Swedish msgstrs alongside en and fi. The expenses page's new copy goes through gettext like the rest of the admin.
+   `Edenflowers.Accounting.MonthlyReport.build(year, month)` returns `{:ok, filename, zip_binary, missing_receipts}` or an error. No Ash domain, resource or generic action: it only reads, and the admin-only route is the access check. It reads with `authorize?: false`, as `SalesSummary` and `Payments` do for internal reads. Sheet names, headings, filenames and values such as categories and payment methods are in Swedish where possible, using Finland-Swedish accounting terms; Stripe, Zettle, MobilePay and Zervant stay as they are. The report is rendered inside `Gettext.with_locale("sv", ...)`, so it reuses the existing Swedish translations (categories like "Kontorsmaterial", "Konsulttjänster", payment methods like "Kontant") and its new strings get Swedish msgstrs alongside en and fi. The expenses page's new copy goes through gettext like the rest of the admin.
 
    | English | Swedish |
    |---|---|
@@ -90,7 +90,7 @@ Each month Jennie sends her accountant the shop's income and expenses. The data 
    - **Below the rows:** total fees (booked as an expense) and total paid out to the bank.
    These rows are not sales; sales come from the Försäljning sheet.
 
-   If Stripe can't be reached, the whole download fails, as for receipts in decision 6.
+   If Stripe can't be reached, the whole download fails with an error flash.
 
 ### Open questions
 
@@ -130,6 +130,15 @@ created: 2026-10-18 21:04
 ---
 
 Sequential queue verification: TASK-11.1, TASK-11.2, TASK-11.3 and TASK-11.5 are done; TASK-11.4 has all 4 acceptance criteria checked and is ready-for-human. Reviewed the existing Ash reads, admin-only Phoenix download/error flow and Stripe pagination/sheet implementation; no missing agent implementation identified. Verified on main with source .env && mix test test/edenflowers/accounting/monthly_report_test.exs test/edenflowers/external/stripe_api_test.exs test/edenflowers_web/features/admin/expenses_live_test.exs: 28 tests, 0 failures. Blocker: a human must download a month's report on staging (or locally with the test key) and compare the Stripe sheet's rows, fees and payout totals against the Stripe dashboard balance report for the same Helsinki-bounded month, then record the result on TASK-11.4. The first report also needs the accountant's terminology glance and confirmation that sales are booked only from Försäljning, Stripe fees/payouts from Stripe, and Zettle fees/payouts from Zettle's own report without duplicating sales. Keep TASK-11 and TASK-11.4 open until the human verification is recorded. No quick label was present.
+
+---
+
+author: @claude
+created: 2026-10-19 07:19
+
+---
+
+Changed decision 6: a receipt Papra can't serve no longer fails the download. Its row in Inköp reads "Saknas: kunde inte hämtas från Papra", the PDF is left out, and the controller broadcasts the count to the open expenses page, which flashes it (a file download can't carry a flash). Stripe failures still fail the download.
 
 ---
 <!-- COMMENTS:END -->

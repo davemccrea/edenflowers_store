@@ -12,6 +12,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:accounting:#{socket.assigns.current_user.id}")
+
     {:ok,
      socket
      |> assign(:page_title, ~t"Expenses")
@@ -22,6 +24,14 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   @impl true
   def handle_params(params, uri, socket) do
     {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "missing_receipts", payload: count}, socket) do
+    message =
+      ~t"Receipts missing from the report: #{count}. Papra couldn't serve them, so their rows in the spreadsheet say so."
+
+    {:noreply, put_flash(socket, :error, message)}
   end
 
   @impl true

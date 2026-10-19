@@ -8,10 +8,14 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   `paid_at` (Helsinki time), and an expense in the month it was paid: its
   `paid_on`, or its `date` when that's empty. The sales sheet is the shop's only
   sales record (ADR 0004), so every payment method counts.
+
+  A receipt Papra can't serve doesn't stop the report: its row says so, and
+  `build/2` returns how many are missing so Jennie can be told.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [context: "accounting report"]
 
   require Ash.Query
+  require Logger
 
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.PapraAPI
@@ -34,15 +38,16 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
       with {:ok, payments} <- payments(first, last),
            {:ok, expenses} <- paid_expenses(first, last),
-           rows = expenses |> Enum.with_index(1) |> Enum.map(fn {e, n} -> {n, e, receipt_name(n, e)} end),
-           {:ok, receipts} <- fetch_receipts(rows),
+           rows = expenses |> Enum.with_index(1) |> Enum.map(&fetch_receipt/1),
+           receipts = for({_n, _expense, name, body} <- rows, body, do: {~c"kvitton/#{name}", body}),
            {:ok, transactions} <-
              StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
            workbook = %Workbook{sheets: [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions)]},
            {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
            files = [{~c"#{spreadsheet}", xlsx} | receipts],
            {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
-        {:ok, "redovisning-#{label}.zip", zip}
+        missing_receipts = Enum.count(rows, fn {_n, _expense, _name, body} -> is_nil(body) end)
+        {:ok, "redovisning-#{label}.zip", zip, missing_receipts}
       end
     end)
   end
@@ -189,16 +194,17 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     |> String.replace(~r/[^A-Za-z0-9-]/, "")
   end
 
-  # Any failure fails the whole report, so the accountant never gets a zip with receipts missing.
-  defp fetch_receipts(rows) do
+  defp fetch_receipt({expense, n}) do
     organization_id = Application.get_env(:edenflowers, :papra_organization_id)
 
-    Enum.reduce_while(rows, {:ok, []}, fn {_n, expense, name}, {:ok, files} ->
-      case PapraAPI.impl().fetch_document(organization_id, expense.document_id) do
-        {:ok, %{body: body}} -> {:cont, {:ok, [{~c"kvitton/#{name}", body} | files]}}
-        {:error, error} -> {:halt, {:error, {:receipt_fetch_failed, expense.document_id, error}}}
-      end
-    end)
+    case PapraAPI.impl().fetch_document(organization_id, expense.document_id) do
+      {:ok, %{body: body}} ->
+        {n, expense, receipt_name(n, expense), body}
+
+      {:error, error} ->
+        Logger.warning("Receipt #{expense.document_id} couldn't be fetched for the monthly report: #{inspect(error)}")
+        {n, expense, nil, nil}
+    end
   end
 
   defp expenses_sheet(rows) do
@@ -224,7 +230,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     }
   end
 
-  defp expense_row({n, expense, receipt}) do
+  defp expense_row({n, expense, receipt, _body}) do
     [
       n,
       date_cell(paid_date(expense)),
@@ -238,13 +244,13 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       amount_cell(expense.vat_amount),
       amount_cell(net(expense)),
       if(expense.reviewed_at, do: ~t"yes", else: ~t"no"),
-      receipt
+      receipt || ~t"Missing: couldn't be fetched from Papra"
     ]
   end
 
   defp currency_totals(rows) do
     rows
-    |> Enum.map(fn {_n, expense, _receipt} -> expense end)
+    |> Enum.map(fn {_n, expense, _receipt, _body} -> expense end)
     |> Enum.group_by(&currency(&1.currency))
     |> Enum.sort_by(fn {currency, _} -> currency end)
     |> Enum.map(fn {currency, expenses} ->

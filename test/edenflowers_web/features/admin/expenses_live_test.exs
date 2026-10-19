@@ -213,17 +213,21 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "couldn't be built"
     end
 
-    test "flashes an error and sends nothing when a receipt can't be fetched", %{conn: conn} do
+    test "sends the zip and tells the open expenses page when a receipt can't be fetched", %{conn: conn} do
       create_expense("report-missing", "Kukkatukku", "Flowers", date: ~D[2026-09-03])
       expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ -> {:error, :timeout} end)
 
+      expect(Edenflowers.External.StripeAPI.Mock, :list_balance_transactions_page, fn _, nil ->
+        {:ok, %{data: [], has_more: false}}
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
+
       {conn, log} = with_log(fn -> get(conn, ~p"/admin/accounting?month=2026-09") end)
 
-      assert log =~
-               ~s(Monthly report for "2026-09" failed: {:error, {:receipt_fetch_failed, "report-missing", :timeout}})
-
-      assert redirected_to(conn) == ~p"/admin/expenses"
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "couldn't be built"
+      assert log =~ "Receipt report-missing couldn't be fetched"
+      assert response_content_type(conn, :zip) =~ "application/zip"
+      assert render(view) =~ "Receipts missing from the report: 1."
     end
 
     test "flashes an error for a malformed month", %{conn: conn} do
