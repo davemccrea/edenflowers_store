@@ -5,9 +5,15 @@ defmodule EdenflowersWeb.Admin.AccountingController do
 
   alias Edenflowers.Accounting.MonthlyReport
 
-  def show(%{assigns: %{current_user: %{admin: true}}} = conn, params) do
+  def show(%{assigns: %{current_user: %{admin: true} = user}} = conn, params) do
     with {:ok, year, month} <- parse_month(params["month"]),
-         {:ok, filename, zip} <- MonthlyReport.build(year, month) do
+         {:ok, filename, zip, missing_receipts} <- MonthlyReport.build(year, month) do
+      # The download leaves the expenses page open, so it is told over PubSub
+      # rather than by a flash on a redirect.
+      if missing_receipts > 0 do
+        EdenflowersWeb.Endpoint.broadcast("admin:accounting:#{user.id}", "missing_receipts", missing_receipts)
+      end
+
       send_download(conn, {:binary, zip}, filename: filename, content_type: "application/zip")
     else
       error ->
