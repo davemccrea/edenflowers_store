@@ -29,7 +29,10 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
       case order |> Email.order_details(payment_link_url(order)) |> Mailer.deliver() do
         {:ok, _result} ->
           Logger.info("Sent order details email for order #{order.id}")
-          Ash.Changeset.force_change_attribute(changeset, :details_emailed_at, DateTime.utc_now())
+
+          changeset
+          |> Ash.Changeset.force_change_attribute(:details_emailed_at, DateTime.utc_now())
+          |> clear_failure()
 
         {:error, error} ->
           Ash.Changeset.add_error(changeset, "Failed to send order details email: #{inspect(error)}")
@@ -39,4 +42,7 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
 
   defp payment_link_url(%{payment_link_open?: true} = order), do: EdenflowersWeb.PaymentLink.url_for(order)
   defp payment_link_url(_order), do: nil
+
+  # Atomic, so a caller holding a copy from before the failure still clears it.
+  defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :details_email_failed_at, nil)
 end

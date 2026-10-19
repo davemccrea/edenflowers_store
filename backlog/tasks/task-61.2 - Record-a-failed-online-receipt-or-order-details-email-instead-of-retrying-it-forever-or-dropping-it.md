@@ -3,10 +3,10 @@ id: TASK-61.2
 title: >-
   Record a failed online receipt or order details email instead of retrying it
   forever or dropping it
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-19 07:59'
-updated_date: '2026-10-19 07:59'
+updated_date: '2026-10-19 08:09'
 labels: []
 dependencies:
   - TASK-61.1
@@ -31,8 +31,14 @@ Course bookings' confirmation email is TASK-61.3.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 An online receipt or order details email that fails its last attempt records the failure and stops; nothing requeues it
-- [ ] #2 The order log shows the failure, and a later successful send (queued or Jennie's resend) clears it
-- [ ] #3 An open order page shows the failure without polling
-- [ ] #4 Tests cover the final failure through on_error, clearing on resend, and that no scheduler is left
+- [x] #1 An online receipt or order details email that fails its last attempt records the failure and stops; nothing requeues it
+- [x] #2 The order log shows the failure, and a later successful send (queued or Jennie's resend) clears it
+- [x] #3 An open order page shows the failure without polling
+- [x] #4 Tests cover the final failure through on_error, clearing on resend, and that no scheduler is left
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+record_link_payment queues the receipt only when the order has a customer email, since the trigger no longer has a where to drop it. Success clears the failure with an atomic update, so a caller holding a copy from before the failure still clears it (applied to the fulfillment confirmation too).
+<!-- SECTION:NOTES:END -->

@@ -22,6 +22,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmail do
 
         changeset
         |> Ash.Changeset.force_change_attribute(:receipt_emailed_at, DateTime.utc_now())
+        |> clear_failure()
       else
         {:error, error} -> Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")
       end
@@ -33,4 +34,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmail do
       authorize?: false
     )
   end
+
+  # Atomic, so a caller holding a copy from before the failure still clears it.
+  defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :receipt_email_failed_at, nil)
 end

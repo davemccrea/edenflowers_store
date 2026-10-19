@@ -299,6 +299,25 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 order={@order}
                 payment_message_urls={@payment_message_urls}
               />
+              <div
+                :if={@order.receipt_email_failed_at || @order.details_email_failed_at}
+                id="order-email-failed"
+                class="bg-warning/15 border-warning/40 mt-4 flex gap-2.5 border px-3 py-2.5 text-sm"
+              >
+                <.icon name="hero-envelope" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
+                <div>
+                  <p :if={@order.receipt_email_failed_at} class="text-warning-content font-semibold">
+                    {~t"Couldn't email the receipt."}
+                  </p>
+                  <p :if={@order.details_email_failed_at} class="text-warning-content font-semibold">
+                    {~t"Couldn't email the order details."}
+                  </p>
+                  <p class="text-base-content mt-0.5">
+                    {~t"Check the error, then send it again from the menu."}
+                    <.link navigate={~p"/admin/errors"} class="link link-primary">{~t"View errors"}</.link>
+                  </p>
+                </div>
+              </div>
             </section>
 
             <.widget id="order-customer" title={~t"Customer"}>
@@ -649,6 +668,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp email_failed_message("record_fulfillment_email_failure"), do: ~t"Couldn't email the confirmation."
+  defp email_failed_message("record_receipt_email_failure"), do: ~t"Couldn't email the receipt."
+  defp email_failed_message("record_details_email_failure"), do: ~t"Couldn't email the order details."
   defp email_failed_message(_event), do: nil
 
   defp mark_fulfilled(socket, attrs) do

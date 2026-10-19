@@ -244,6 +244,27 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-log li", "Fulfillment confirmation failed")
   end
 
+  @tag capture_log: true
+  test "an open page shows a receipt that failed in the background", %{conn: conn} do
+    order = placed_order(paid: true)
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    refute has_element?(view, "#order-email-failed")
+
+    primary_key = %{"id" => order.id}
+    job = %Oban.Job{attempt: 3, max_attempts: 3, args: %{"primary_key" => primary_key}}
+
+    Edenflowers.Orders.Workers.SendConfirmationEmail.handle_error(
+      job,
+      RuntimeError.exception("mail server down"),
+      primary_key,
+      []
+    )
+
+    assert render(view) =~ "Couldn&#39;t email the receipt."
+    assert has_element?(view, "#order-email-failed", "Couldn't email the receipt.")
+    assert has_element?(view, "#order-log li", "Receipt failed")
+  end
+
   test "the log keeps the address a confirmation went to after the customer's email changes", %{conn: conn} do
     order = placed_order(fulfillment_status: :fulfilled)
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
