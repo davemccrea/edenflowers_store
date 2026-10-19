@@ -776,7 +776,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         <p :if={@quote.geocoded_address}>{~t"Delivering to #{address = @quote.geocoded_address}"}</p>
         <p>
           {Format.currency(@quote.fee, Format.locale())} ({Format.distance(@quote.distance, Format.locale())})
-          <span :if={present?(@override)}>· {~t"your own fee replaces this"}</span>
+          <span :if={@override not in [nil, ""]}>· {~t"your own fee replaces this"}</span>
         </p>
       </div>
       <p :if={match?(%{status: :error}, @quote)} id="delivery-quote" class="text-warning-content mt-1.5 text-sm">
