@@ -4,7 +4,7 @@ title: 'Download a month''s income, expenses and receipts for the accountant'
 status: ready-for-human
 assignee: []
 created_date: '2026-10-17 00:38'
-updated_date: '2026-10-19 10:24'
+updated_date: '2026-10-19 13:44'
 labels:
   - spec
   - admin
@@ -157,6 +157,15 @@ created: 2026-10-19 10:24
 ---
 
 An expense now can't be saved or reviewed without its date, vendor, total and currency. A draft Claude couldn't date still sits outside every month's report until Jennie fills it in, which the export rethink should cover.
+
+---
+
+author: @claude
+created: 2026-10-19 13:44
+
+---
+
+Changed decision 1: the download moved from Expenses to an Accountant report card on Overview, next to the month's sales (TASK-11.7). It is a plain GET form to ReportController again, opening in a new tab. Missing receipts are noted only in their spreadsheet rows; there is no flash.
 
 ---
 <!-- COMMENTS:END -->

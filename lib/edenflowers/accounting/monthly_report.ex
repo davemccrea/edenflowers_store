@@ -9,8 +9,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   `paid_on`, or its `date` when that's empty. The sales sheet is the shop's only
   sales record (ADR 0004), so every payment method counts.
 
-  A receipt Papra can't serve doesn't stop the report: its row says so, and
-  `build/2` returns how many are missing so Jennie can be told.
+  A receipt Papra can't serve doesn't stop the report: its row says so.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [context: "accounting report"]
 
@@ -51,8 +50,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
            {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
            files = [{~c"#{spreadsheet}", xlsx} | receipts],
            {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
-        missing_receipts = Enum.count(rows, fn {_n, _expense, _name, body} -> is_nil(body) end)
-        {:ok, "redovisning-#{label}.zip", zip, missing_receipts}
+        {:ok, "redovisning-#{label}.zip", zip}
       end
     end)
   end

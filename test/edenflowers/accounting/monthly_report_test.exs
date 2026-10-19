@@ -88,7 +88,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     # 00:00:30 on 1 October in Helsinki.
     generate(payment(order_id: paid.id, amount: Decimal.new("1.00"), method: :cash, paid_at: ~U[2026-09-30 21:00:30Z]))
 
-    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
     [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(1)
 
     assert headings == [
@@ -129,7 +129,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              [nil, nil, nil, "Summa", nil, "177.75", "43.92", "221.67"]
            ]
 
-    assert {:ok, _, october, _} = MonthlyReport.build(2026, 10)
+    assert {:ok, _, october} = MonthlyReport.build(2026, 10)
 
     assert [_headings, [_date, "1001", "beställning", "Kontant" | _] | _] =
              october |> unzip() |> Map.fetch!("rapport-2026-10.xlsx") |> read_sheet(1)
@@ -149,7 +149,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       {:ok, %{body: "%PDF #{document_id}", content_type: "application/pdf"}}
     end)
 
-    assert {:ok, "redovisning-2026-09.zip", zip, 0} = MonthlyReport.build(2026, 9)
+    assert {:ok, "redovisning-2026-09.zip", zip} = MonthlyReport.build(2026, 9)
     files = unzip(zip)
 
     assert Map.keys(files) |> Enum.sort() == [
@@ -215,18 +215,18 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
     stub(PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, %{body: "%PDF", content_type: "application/pdf"}} end)
 
-    assert {:ok, _, august, _} = MonthlyReport.build(2026, 8)
+    assert {:ok, _, august} = MonthlyReport.build(2026, 8)
     refute Map.has_key?(unzip(august), "kvitton/001_2026-09-02_Late-Oy.pdf")
     assert Map.keys(unzip(august)) == ["rapport-2026-08.xlsx"]
 
-    assert {:ok, _, september, _} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, september} = MonthlyReport.build(2026, 9)
     assert Map.has_key?(unzip(september), "kvitton/001_2026-09-02_Late-Oy.pdf")
   end
 
   test "leaves out expenses with no date" do
     create_expense("doc-undated", "Undated Oy", nil, "EUR", "5.00", "1.00")
 
-    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
     assert Map.keys(unzip(zip)) == ["rapport-2026-09.xlsx"]
   end
 
@@ -239,10 +239,9 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       _, "doc-missing" -> {:error, {:papra_http_error, 500}}
     end)
 
-    {{:ok, _, zip, missing}, log} = with_log(fn -> MonthlyReport.build(2026, 9) end)
+    {{:ok, _, zip}, log} = with_log(fn -> MonthlyReport.build(2026, 9) end)
     files = unzip(zip)
 
-    assert missing == 1
     assert log =~ "Receipt doc-missing couldn't be fetched"
     assert Map.keys(files) |> Enum.sort() == ["kvitton/001_2026-09-04_Found-Oy.pdf", "rapport-2026-09.xlsx"]
 
@@ -275,7 +274,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       {:ok, %{data: second_page, has_more: false}}
     end)
 
-    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
     [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(3)
 
     assert headings == ["Datum", "Typ", "Beskrivning", "Brutto", "Avgift", "Netto", "Utbetalnings-id"]

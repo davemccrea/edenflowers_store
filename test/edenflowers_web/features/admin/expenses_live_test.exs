@@ -1,7 +1,6 @@
 defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
   use EdenflowersWeb.ConnCase, async: true
 
-  import ExUnit.CaptureLog
   import Generator
   import Mox
   import Phoenix.LiveViewTest
@@ -169,93 +168,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
     assert html =~ "Papra couldn&#39;t be reached"
     assert Ash.get!(Expenses.Expense, expense.id, authorize?: false)
-  end
-
-  describe "monthly report download" do
-    test "the Export drawer defaults the month to the previous one", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
-
-      previous_month =
-        Edenflowers.ShopTime.today() |> Date.beginning_of_month() |> Date.add(-1) |> Date.to_iso8601()
-
-      assert has_element?(view, ~s(button[phx-click*="phx-show"][phx-click*="export-drawer"]), "Export")
-
-      assert has_element?(
-               view,
-               ~s(#report-form input[name="month"][value="#{String.slice(previous_month, 0, 7)}"])
-             )
-    end
-
-    test "shows the report building, then pushes the month's zip", %{conn: conn} do
-      create_expense("report-doc", "Kukkatukku", "Flowers", date: ~D[2026-09-03])
-
-      expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ ->
-        {:ok, %{body: "%PDF", content_type: "application/pdf"}}
-      end)
-
-      expect(Edenflowers.External.StripeAPI.Mock, :list_balance_transactions_page, fn _, nil ->
-        {:ok, %{data: [], has_more: false}}
-      end)
-
-      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
-
-      # Checked in the submit's own render: the build can finish before a later look at the view.
-      html = view |> form("#report-form", month: "2026-09") |> render_submit()
-      assert html =~ "Building report…"
-      assert html |> LazyHTML.from_fragment() |> LazyHTML.query("#report-form button[disabled]") |> Enum.any?()
-
-      # Building the zip can outlast the default 100ms when the whole suite runs at once.
-      render_async(view, 1_000)
-
-      assert_push_event(view, "download", %{filename: "redovisning-2026-09.zip", content: content})
-      assert {:ok, files} = :zip.unzip(Base.decode64!(content), [:memory])
-      assert {~c"kvitton/001_2026-09-03_Kukkatukku.pdf", "%PDF"} in files
-      refute has_element?(view, "#report-form button[disabled]")
-    end
-
-    test "flashes an error and pushes nothing when Stripe can't be reached", %{conn: conn} do
-      expect(Edenflowers.External.StripeAPI.Mock, :list_balance_transactions_page, fn _, _ -> {:error, :timeout} end)
-
-      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
-
-      {html, log} =
-        with_log(fn ->
-          view |> form("#report-form", month: "2026-09") |> render_submit()
-          render_async(view, 1_000)
-        end)
-
-      assert log =~ ~s(Monthly report for "2026-09" failed:)
-      assert html =~ "couldn&#39;t be built"
-      refute_push_event(view, "download", %{})
-      refute has_element?(view, "#report-form button[disabled]")
-    end
-
-    test "pushes the zip and flashes when a receipt can't be fetched", %{conn: conn} do
-      create_expense("report-missing", "Kukkatukku", "Flowers", date: ~D[2026-09-03])
-      expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ -> {:error, :timeout} end)
-
-      expect(Edenflowers.External.StripeAPI.Mock, :list_balance_transactions_page, fn _, nil ->
-        {:ok, %{data: [], has_more: false}}
-      end)
-
-      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
-
-      {html, log} =
-        with_log(fn ->
-          view |> form("#report-form", month: "2026-09") |> render_submit()
-          render_async(view, 1_000)
-        end)
-
-      assert log =~ "Receipt report-missing couldn't be fetched"
-      assert_push_event(view, "download", %{filename: "redovisning-2026-09.zip"})
-      assert html =~ "Receipts missing from the report: 1."
-    end
-
-    test "flashes an error for a malformed month", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
-
-      assert view |> render_submit("download_report", %{"month" => "2026-13"}) =~ "couldn&#39;t be built"
-    end
   end
 
   defp create_expense(document_id, vendor_name, description, attrs \\ []) do
