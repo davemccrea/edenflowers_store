@@ -1,10 +1,10 @@
 ---
 id: TASK-14.1
 title: Give a goodwill refund on a fulfilled order or a booking
-status: needs-info
+status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 18:40'
-updated_date: '2026-10-18 07:28'
+updated_date: '2026-10-19 13:55'
 labels: []
 dependencies: []
 parent_task_id: TASK-14
@@ -19,7 +19,7 @@ ordinal: 41000
 
 ### What to build
 
-All of `TASK-14`: decisions 1 to 4.
+All of `TASK-14`: decisions 1 to 5.
 
 - `goodwill` on `Payment` (generated migration), left out of `amount_paid` for the balance but counted by `refunded?`.
 - A fragment action for Jennie's goodwill refund outside Stripe, and a `Payments` function that refunds an amount through Stripe and lets the webhook record it as goodwill.
@@ -51,6 +51,15 @@ created: 2026-10-17 18:40
 ---
 
 - Before building: decide whether a goodwill refund asks for a reason shown in the order log (`TASK-14` open question). Set to `ready-for-agent` once decided.
+
+---
+
+author: @claude
+created: 2026-10-19 13:55
+
+---
+
+Decided on 2026-10-19: no reason field (TASK-14 decision 5). Jennie writes the reason in an order's Florist Note; a booking's goodwill refund records none.
 
 ---
 <!-- COMMENTS:END -->
