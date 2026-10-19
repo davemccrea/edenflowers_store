@@ -19,6 +19,7 @@ defmodule Edenflowers.Payments.Changes.UndoPayment do
       |> Ash.Changeset.set_argument(:amount, Decimal.negate(payment.amount))
       |> Ash.Changeset.set_argument(:payment_method, payment.method)
       |> Ash.Changeset.set_argument(:reverses_payment_id, payment.id)
+      |> Ash.Changeset.set_argument(:goodwill, payment.goodwill)
     else
       _ -> Ash.Changeset.add_error(changeset, field: :payment_id, message: "can't be undone")
     end

@@ -22,8 +22,12 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
               {:ok, map()} | {:error, term()}
   @callback cancel_payment_intent(payment_intent :: map()) :: {:ok, map()} | {:error, term()}
   @callback list_refunds(payment_intent_id :: String.t()) :: {:ok, [map()]} | {:error, term()}
-  @callback create_refund(payment_intent_id :: String.t(), amount_cents :: integer(), idempotency_key :: String.t()) ::
-              {:ok, map()} | {:error, term()}
+  @callback create_refund(
+              payment_intent_id :: String.t(),
+              amount_cents :: integer(),
+              idempotency_key :: String.t(),
+              metadata :: map()
+            ) :: {:ok, map()} | {:error, term()}
   @callback list_balance_transactions_page(created :: map(), starting_after :: String.t() | nil) ::
               {:ok, %{data: [map()], has_more: boolean()}} | {:error, term()}
 end
@@ -197,8 +201,8 @@ defmodule Edenflowers.External.StripeAPI do
   end
 
   @impl true
-  def create_refund(payment_intent_id, amount_cents, idempotency_key) do
-    Stripe.Refund.create(%{payment_intent: payment_intent_id, amount: amount_cents},
+  def create_refund(payment_intent_id, amount_cents, idempotency_key, metadata) do
+    Stripe.Refund.create(%{payment_intent: payment_intent_id, amount: amount_cents, metadata: metadata},
       headers: %{"Idempotency-Key" => idempotency_key}
     )
   end

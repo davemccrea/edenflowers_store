@@ -294,6 +294,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               >
                 <.payment_link_buttons :if={Decimal.positive?(@order.balance)} order={@order} locale={@locale} />
               </.balance_panel>
+              <.goodwill_refund_form
+                :if={@order.goodwill_refundable?}
+                id="order-goodwill-refund"
+                record={@order}
+                locale={@locale}
+                params={@goodwill_params}
+                class="border-base-content/12 mt-4 border-t pt-4"
+              />
               <.payment_link
                 :if={@order.payment_link_open? && Decimal.positive?(@order.balance)}
                 order={@order}
@@ -596,6 +604,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, flash_payment_result(socket, result)}
   end
 
+  def handle_event("change_goodwill_refund", %{"goodwill_refund" => params}, socket) do
+    {:noreply, assign(socket, :goodwill_params, params)}
+  end
+
+  def handle_event("goodwill_refund", %{"goodwill_refund" => params}, socket) do
+    result = PaymentActions.goodwill_refund(socket.assigns.order, params, socket.assigns.current_user)
+    {:noreply, flash_payment_result(socket, result)}
+  end
+
   def handle_event("undo_payment", %{"id" => payment_id}, socket) do
     result = PaymentActions.undo_payment(socket.assigns.order, payment_id, socket.assigns.current_user)
     {:noreply, flash_payment_result(socket, result)}
@@ -709,6 +726,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> assign(:payment_message_urls, payment_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
     |> assign(:payment_params, %{})
+    |> assign(:goodwill_params, %{})
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
   end
@@ -742,6 +760,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp payment_label(%{reverses_payment_id: reversed, method: method}) when is_binary(reversed),
     do: ~t"Undone · #{how = OrderLog.payment_method_label(method)}"
+
+  defp payment_label(%{goodwill: true, method: method}),
+    do: ~t"Goodwill refund · #{how = OrderLog.payment_method_label(method)}"
 
   defp payment_label(%{amount: amount, method: method}) do
     if Decimal.negative?(amount),
@@ -978,6 +999,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         >
           {~t"Undo"}
         </button>
+        <span :if={@payment.note} class="text-base-content/65 block">{@payment.note}</span>
       </dt>
       <dd class="text-base-content/90 tabular-nums">
         {Format.currency(negate(@payment.amount), @locale)}
@@ -1137,6 +1159,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <.unavailable_menu_item :if={@receipt_unavailable} reason={@receipt_unavailable}>
         {~t"View receipt"}
       </.unavailable_menu_item>
+
+      <.actions_menu_button
+        :if={@order.goodwill_refundable?}
+        menu="order-actions"
+        phx-click={JS.show(to: "#order-goodwill-refund") |> JS.focus(to: "#order-goodwill-refund-amount")}
+      >
+        {~t"Refund"}
+      </.actions_menu_button>
 
       <%!-- Refunds arrive by webhook; this catches one that never did. --%>
       <.actions_menu_button :if={@paid_through_stripe?} menu="order-actions" phx-click="fetch_stripe_refunds">

@@ -2,9 +2,9 @@ defmodule Edenflowers.Payments.Validations.Recordable do
   @moduledoc """
   What Jennie can record as an `amount`. Only on something placed or
   confirmed, and never taking the balance past zero: an overpayment isn't a
-  sale, and a goodwill refund on something that still stands has to lower it
-  first, so the monthly report sees a lower sale. A refund can't be larger
-  than the money paid outside Stripe, which goes back through Stripe.
+  sale, and money handed back on something that still stands is a goodwill
+  refund (Validations.GoodwillRefundable). A refund can't be larger than the
+  money paid outside Stripe, which goes back through Stripe.
 
   With `undo?: true`, for `undo_payment`, the balance doesn't limit it: an
   undo takes back a payment recorded by mistake, whatever is owed.

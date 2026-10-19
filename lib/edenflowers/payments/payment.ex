@@ -13,6 +13,9 @@ defmodule Edenflowers.Payments.Payment do
   method type ("card", "mobilepay", …) with the card's brand and last four, or
   the method Jennie recorded. It's blank on payments recorded before it existed, so
   their receipts stay as they were sent.
+
+  A `goodwill` refund hands money back without lowering what was sold, so it
+  leaves the balance alone. Jennie can give it a `note` saying why.
   """
   use Ash.Resource,
     domain: Edenflowers.Payments,
@@ -57,7 +60,9 @@ defmodule Edenflowers.Payments.Payment do
         :payment_method_type,
         :card_brand,
         :card_last4,
-        :reverses_payment_id
+        :reverses_payment_id,
+        :goodwill,
+        :note
       ]
     end
   end
@@ -86,6 +91,8 @@ defmodule Edenflowers.Payments.Payment do
     attribute :payment_method_type, :string
     attribute :card_brand, :string
     attribute :card_last4, :string
+    attribute :goodwill, :boolean, allow_nil?: false, default: false
+    attribute :note, :string
     attribute :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
     timestamps()
   end
@@ -107,7 +114,8 @@ defmodule Edenflowers.Payments.Payment do
 
   identities do
     identity :unique_payment_intent, [:payment_intent_id]
-    identity :unique_stripe_refund, [:stripe_refund_id]
+    # A Stripe refund beyond what was owed back is split off as goodwill.
+    identity :unique_stripe_refund, [:stripe_refund_id, :goodwill]
     identity :unique_reversal, [:reverses_payment_id]
   end
 end

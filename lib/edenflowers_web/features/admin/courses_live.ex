@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
+  alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Layouts
 
@@ -20,7 +21,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
      socket
      |> assign(:page_title, ~t"Courses")
      |> assign(:locale, Localize.get_locale())
-     |> assign(booking_form: nil, booking_course_id: nil)
+     |> assign(booking_form: nil, booking_course_id: nil, goodwill_params: %{})
      |> load_courses()}
   end
 
@@ -56,6 +57,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             locale={@locale}
             booking_form={if @booking_course_id == course.id, do: @booking_form}
             highlighted_booking_id={@highlighted_booking_id}
+            goodwill_params={@goodwill_params}
           />
         </div>
       </.admin_page>
@@ -124,6 +126,16 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   def handle_event("refund", %{"record_id" => id, "refund" => params}, socket) do
     actor = socket.assigns.current_user
     with_registration(socket, id, &refund(&1, params, actor))
+  end
+
+  def handle_event("change_goodwill_refund", %{"record_id" => id, "goodwill_refund" => params}, socket) do
+    {:noreply, update(socket, :goodwill_params, &Map.put(&1, id, params))}
+  end
+
+  def handle_event("goodwill_refund", %{"record_id" => id, "goodwill_refund" => params}, socket) do
+    actor = socket.assigns.current_user
+    socket = update(socket, :goodwill_params, &Map.delete(&1, id))
+    with_registration(socket, id, &PaymentActions.goodwill_refund(&1, params, actor))
   end
 
   def handle_event("open_payment_link", %{"id" => id}, socket) do
@@ -210,9 +222,12 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             :settled?,
             :outside_stripe_refund,
             :stripe_refund,
+            :paid_outside_stripe,
+            :paid_through_stripe,
+            :goodwill_refundable?,
             :seats_held,
             :payment_link_open?,
-            payments: [:undoable?]
+            payments: [:undoable?, :reversal]
           ]
         ]
       )
@@ -224,6 +239,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   attr :locale, :any, required: true
   attr :booking_form, :any, required: true
   attr :highlighted_booking_id, :string, default: nil
+  attr :goodwill_params, :map, required: true, doc: "each booking's refund form as filled in so far, by its id"
 
   defp course(assigns) do
     {registrations, cancelled} = Enum.split_with(assigns.course.bookings, &(&1.status == :confirmed))
@@ -381,6 +397,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 >
                   {registration.email}
                 </a>
+                <.goodwill_refunds registration={registration} locale={@locale} />
               </div>
               <.settlement_button registration={registration} />
               <div class="col-start-2 row-start-1 justify-self-end sm:col-start-3">
@@ -428,6 +445,16 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                     {~t"Create payment link"}
                   </.actions_menu_button>
                   <.actions_menu_button
+                    :if={registration.goodwill_refundable?}
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click={
+                      JS.show(to: "#goodwill-refund-#{registration.id}")
+                      |> JS.focus(to: "#goodwill-refund-#{registration.id}-amount")
+                    }
+                  >
+                    {~t"Refund"}
+                  </.actions_menu_button>
+                  <.actions_menu_button
                     :for={payment <- registration.payments}
                     :if={payment.undoable?}
                     id={"undo-payment-#{payment.id}"}
@@ -461,6 +488,14 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               </div>
             </div>
             <.settlement_panel registration={registration} />
+            <.goodwill_refund_form
+              :if={registration.goodwill_refundable?}
+              id={"goodwill-refund-#{registration.id}"}
+              record={registration}
+              locale={@locale}
+              params={Map.get(@goodwill_params, registration.id, %{})}
+              class="bg-base-200/50 col-span-full row-start-4 min-w-0 p-4 sm:row-start-3"
+            />
           </li>
           <li
             :for={registration <- @cancelled}
@@ -512,6 +547,28 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     >
       {~t"To refund #{amount = Format.currency(Decimal.abs(@registration.balance), @locale)}"}
     </.badge>
+    """
+  end
+
+  attr :registration, :map, required: true
+  attr :locale, :string, required: true
+
+  defp goodwill_refunds(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :refunds,
+        Enum.filter(
+          assigns.registration.payments,
+          &(&1.goodwill and Decimal.negative?(&1.amount) and is_nil(&1.reversal))
+        )
+      )
+
+    ~H"""
+    <p :for={refund <- @refunds} class="text-base-content/65 text-sm">
+      {~t"Goodwill refund #{amount = Format.currency(Decimal.abs(refund.amount), @locale)} · #{how = OrderLog.payment_method_label(refund.method)}"}
+      <span :if={refund.note}>· {refund.note}</span>
+    </p>
     """
   end
 

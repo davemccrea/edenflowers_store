@@ -48,11 +48,12 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     title =
       cond do
         payment.reverses_payment_id -> ~t"Undid #{amount} · #{how}"
+        payment.goodwill -> ~t"Goodwill refund #{amount} · #{how}"
         Decimal.negative?(payment.amount) -> ~t"Refunded #{amount} · #{how}"
         true -> ~t"Paid #{amount} · #{how}"
       end
 
-    %{at: payment.paid_at, title: title, details: []}
+    %{at: payment.paid_at, title: title, details: if(payment.note, do: [{nil, payment.note}], else: [])}
   end
 
   defp entry(version, locale) do

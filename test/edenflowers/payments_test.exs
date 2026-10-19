@@ -655,7 +655,7 @@ defmodule Edenflowers.PaymentsTest do
     end
 
     test "refunds a cancelled booking what was paid, once", %{registration: registration, pi: pi} do
-      expect(StripeAPI.Mock, :create_refund, fn ^pi, 17_000, _key -> {:ok, succeeded_refund(pi, 17_000)} end)
+      expect(StripeAPI.Mock, :create_refund, fn ^pi, 17_000, _key, _metadata -> {:ok, succeeded_refund(pi, 17_000)} end)
 
       {:ok, registration} = Courses.cancel_registration(registration, authorize?: false)
       assert {:ok, [_refund]} = Payments.refund_balance(registration)
@@ -670,7 +670,7 @@ defmodule Edenflowers.PaymentsTest do
     end
 
     test "refunds one seat's price after a seat is removed", %{registration: registration, pi: pi} do
-      expect(StripeAPI.Mock, :create_refund, fn ^pi, 8_500, _key -> {:ok, succeeded_refund(pi, 8_500)} end)
+      expect(StripeAPI.Mock, :create_refund, fn ^pi, 8_500, _key, _metadata -> {:ok, succeeded_refund(pi, 8_500)} end)
 
       {:ok, registration} = Courses.remove_registration_seat(registration, authorize?: false)
       assert {:ok, [_refund]} = Payments.refund_balance(registration)

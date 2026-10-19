@@ -1,10 +1,10 @@
 ---
 id: TASK-14
 title: Refund an unhappy customer on a fulfilled order or booking
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-17 18:40'
-updated_date: '2026-10-19 13:56'
+updated_date: '2026-10-19 14:17'
 labels:
   - spec
   - admin
@@ -32,7 +32,7 @@ The reason for refusing doesn't hold. The monthly report is cash-basis VAT (mont
 1. **A goodwill refund is money handed back without lowering what was sold.** It's a refund `Payment` marked `goodwill`. It leaves the balance where it was, so the order or booking stays settled, and a goodwill refund of everything received reads `refunded?` (payment status "Refunded"). It's still a negative row in the monthly report.
    It lives in `Edenflowers.Payments.Payable`, so orders and bookings both get it.
 
-2. **Jennie gives one once nothing is to collect, up to what was received.** On a record that's committed, not cancelled and has `balance <= 0`, capped at what was received less what's already been handed back (goodwill or not). A record with something to collect still refuses a refund (`Validations.Recordable`); a mistake is still corrected with Undo.
+2. **Jennie gives one once nothing is to collect, up to what was received.** On a record that's committed, not cancelled and has `balance <= 0`, so a paid order not yet fulfilled too (decided 2026-10-19), capped at what was received less what's already been handed back (goodwill or not). A record with something to collect still refuses a refund (`Validations.Recordable`); a mistake is still corrected with Undo.
    - **Stripe:** refunds that amount through Stripe, reusing `Payments.refund/2`'s spreading over the Stripe payments, and the webhook records it. Capped at what was paid through Stripe less what Stripe already refunded.
    - **Any other method:** records it, capped at `paid_outside_stripe`, as `Validations.Recordable` does today.
    - A goodwill refund Jennie recorded can be undone like any other payment.
@@ -45,5 +45,4 @@ The reason for refusing doesn't hold. The monthly report is cash-basis VAT (mont
 ### Out of scope
 
 - A credit note or email to the customer. Stripe emails its own refund receipt; anything else Jennie writes herself.
-- Refunding a pending order without editing it. Lowering the order stays the way there, so the receipt matches.
 <!-- SECTION:DESCRIPTION:END -->

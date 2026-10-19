@@ -341,4 +341,63 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert {:ok, registration} = Edenflowers.Courses.remove_registration_seat(registration, actor: admin)
     assert {:error, _} = Edenflowers.Courses.remove_registration_seat(registration, actor: admin)
   end
+
+  describe "goodwill refund" do
+    defp paid_booking(payment_opts) do
+      registration = generate(course_registration(status: :confirmed, name: "Anna", amount: Decimal.new("85.00")))
+      generate(payment([course_registration_id: registration.id, amount: Decimal.new("85.00")] ++ payment_opts))
+      registration
+    end
+
+    defp refund_menu_item(registration), do: "#registration-actions-#{registration.id} button"
+
+    test "Refund is offered only once nothing is to collect", %{conn: conn} do
+      unpaid = generate(course_registration(status: :confirmed, name: "Unpaid Ulla"))
+      paid = paid_booking(method: :cash)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      refute has_element?(view, refund_menu_item(unpaid), "Refund")
+      refute has_element?(view, "#goodwill-refund-#{unpaid.id}")
+      assert has_element?(view, refund_menu_item(paid), "Refund")
+      assert has_element?(view, "#goodwill-refund-#{paid.id}.hidden")
+    end
+
+    test "a part refund by cash is recorded with its reason and leaves nothing to collect", %{conn: conn} do
+      registration = paid_booking(method: :cash)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      view
+      |> form("#goodwill-refund-#{registration.id}-form",
+        goodwill_refund: %{amount: "20", how: "cash", note: "Ran short of moss"}
+      )
+      |> render_submit()
+
+      assert has_element?(view, "#registration-#{registration.id}", "Goodwill refund €20.00 · Cash")
+      assert has_element?(view, "#registration-#{registration.id}", "Ran short of moss")
+      refute has_element?(view, "#registration-#{registration.id}", "To collect")
+      refute has_element?(view, "#registration-#{registration.id}", "To refund")
+    end
+
+    test "a part refund by Stripe is sent and recorded, leaving nothing to collect", %{conn: conn} do
+      registration = paid_booking(payment_intent_id: "pi_booking")
+
+      Edenflowers.External.StripeAPI.Mock
+      |> Mox.stub(:list_refunds, fn "pi_booking" -> {:ok, []} end)
+      |> Mox.expect(:create_refund, fn "pi_booking", 2_000, _key, %{"reason" => "goodwill"} ->
+        {:ok, %{id: "re_booking", payment_intent: "pi_booking", amount: 2_000, status: "succeeded"}}
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      view
+      |> form("#goodwill-refund-#{registration.id}-form", goodwill_refund: %{amount: "20.00", how: "stripe"})
+      |> render_submit()
+
+      assert has_element?(view, "#registration-#{registration.id}", "Goodwill refund €20.00 · Stripe")
+      refute has_element?(view, "#registration-#{registration.id}", "To collect")
+      refute has_element?(view, "#registration-#{registration.id}", "To refund")
+    end
+  end
 end

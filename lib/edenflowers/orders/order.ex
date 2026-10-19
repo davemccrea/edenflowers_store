@@ -83,6 +83,8 @@ defmodule Edenflowers.Orders.Order do
     :payment_status,
     :amount_paid,
     :paid_outside_stripe,
+    :paid_through_stripe,
+    :goodwill_refundable?,
     :holds_money?,
     :balance,
     :unpaid?,
@@ -988,6 +990,7 @@ defmodule Edenflowers.Orders.Order do
                      :delete_custom,
                      :record_payment,
                      :undo_payment,
+                     :goodwill_refund,
                      :open_payment_link,
                      :send_order_details_email,
                      :email_receipt
@@ -1204,6 +1207,7 @@ defmodule Edenflowers.Orders.Order do
     calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
     calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: 0, else: grand_total)
     calculate :committed?, :boolean, expr(state == :placed)
+    calculate :cancelled?, :boolean, expr(fulfillment_status == :cancelled)
 
     calculate :payment_status,
               __MODULE__.PaymentStatus,
@@ -1223,7 +1227,7 @@ defmodule Edenflowers.Orders.Order do
     calculate :unpaid?, :boolean, expr(state == :placed and payable?)
 
     # Some of the customer's money is still with us: paid, and not all refunded.
-    calculate :holds_money?, :boolean, expr(amount_paid > 0)
+    calculate :holds_money?, :boolean, expr(amount_held > 0)
 
     # Jennie has had time to buy flowers for anything closer, so the customer
     # gets the same notice as for a subscription change. Money paid outside

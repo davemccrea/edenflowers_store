@@ -57,7 +57,7 @@ Money that moved for an order or a course booking, by any method: Stripe, the Ze
 _Avoid_: Transaction, charge, in-person payment, offline payment, manual payment
 
 **Balance**:
-What is still owed on a placed order or a confirmed course booking: its Total due minus what has been paid. Positive is to collect, negative is to refund; editing a paid order or cancelling one is what usually leaves one.
+What is still owed on a placed order or a confirmed course booking: its Total due minus what has been paid, leaving out Goodwill refunds. Positive is to collect, negative is to refund; editing a paid order or cancelling one is what usually leaves one. Once the Total due drops below what was paid, only money still held above it is owed back.
 _Avoid_: Amount mismatch, outstanding, difference
 
 **Total due**:
@@ -66,6 +66,10 @@ _Avoid_: Amount due, outstanding
 
 **Settled**:
 Nothing is owed either way, or everything taken was handed back.
+
+**Goodwill refund**:
+Money handed back to an unhappy customer without lowering what was sold, on a placed order or a confirmed course booking with nothing left to collect, up to what's still held. It leaves the Balance where it was, so the order or booking stays settled, and one of everything received reads as refunded. A Stripe refund made in the dashboard beyond what was owed back is one too. Jennie can note why. The monthly report still shows it as a negative row.
+_Avoid_: Discount, compensation, credit
 
 **Undo** (a payment):
 Taking back a payment or refund Jennie recorded by mistake, by recording the opposite amount against it. Once per payment, never a Stripe one. Not a refund: an undone payment never counted as money taken.

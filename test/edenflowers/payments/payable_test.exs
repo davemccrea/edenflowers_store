@@ -22,7 +22,9 @@ defmodule Edenflowers.Payments.PayableTest do
     :refunded?,
     :settled?,
     :outside_stripe_refund,
-    :stripe_refund
+    :stripe_refund,
+    :amount_held,
+    :goodwill_refundable?
   ]
 
   # An order or booking for 80.00, paid with `payments` like `[stripe: "50.00", cash: "30.00"]`.
@@ -88,6 +90,25 @@ defmodule Edenflowers.Payments.PayableTest do
     record
     |> Ash.Changeset.for_update(:undo_payment, %{payment_id: payment_id}, authorize?: false)
     |> Ash.update()
+  end
+
+  defp goodwill_refund(record, amount, method \\ :cash, note \\ nil) do
+    record
+    |> Ash.Changeset.for_update(:goodwill_refund, %{amount: amount, payment_method: method, note: note},
+      authorize?: false
+    )
+    |> Ash.update()
+  end
+
+  defp stripe_payment(parent, record, payment_intent_id, amount, paid_at) do
+    generate(
+      payment([
+        {parent_key(parent), record.id},
+        amount: Decimal.new(amount),
+        payment_intent_id: payment_intent_id,
+        paid_at: paid_at
+      ])
+    )
   end
 
   defp reload(record), do: Ash.load!(record, @fields, authorize?: false, reuse_values?: false)
@@ -383,7 +404,27 @@ defmodule Edenflowers.Payments.PayableTest do
         assert reload(record).settled?
       end
 
-      test "a Stripe refund beyond what was owed back is recorded, leaving a balance to collect" do
+      test "a Stripe refund on a settled one is goodwill and leaves it settled" do
+        record = build(@parent)
+
+        generate(
+          payment([{parent_key(@parent), record.id}, amount: Decimal.new("80.00"), payment_intent_id: "pi_paid"])
+        )
+
+        assert {:ok, :recorded} = Payments.record_stripe_refund(stripe_refund("pi_paid", 3_000))
+
+        record = reload(record)
+        assert record.settled?
+        assert_money(record.balance, 0)
+
+        assert [%{goodwill: true, method: :stripe, note: nil} = refund] =
+                 Enum.filter(payments(record), & &1.stripe_refund_id)
+
+        assert_money(refund.amount, "-30.00")
+        refute record.id in unsettled_ids(@parent)
+      end
+
+      test "a Stripe refund beyond what was owed back settles what was owed and marks the rest goodwill" do
         record = build(@parent, lowered: true)
 
         generate(
@@ -392,7 +433,125 @@ defmodule Edenflowers.Payments.PayableTest do
 
         assert {:ok, :recorded} = Payments.record_stripe_refund(stripe_refund("pi_paid", 6_000))
 
-        assert_money(reload(record).balance, "20.00")
+        record = reload(record)
+        assert record.settled?
+        refunds = record |> payments() |> Enum.filter(& &1.stripe_refund_id) |> Enum.sort_by(& &1.goodwill)
+        assert [%{goodwill: false} = owed, %{goodwill: true} = goodwill] = refunds
+        assert_money(owed.amount, "-40.00")
+        assert_money(goodwill.amount, "-20.00")
+
+        assert {:ok, :already_recorded} =
+                 Payments.record_stripe_refund(%{stripe_refund("pi_paid", 6_000) | id: owed.stripe_refund_id})
+      end
+
+      test "a part goodwill refund leaves it settled" do
+        record = build(@parent, payments: [cash: "80.00"])
+        assert record.goodwill_refundable?
+
+        assert {:ok, record} = goodwill_refund(record, "30.00")
+
+        assert record.settled?
+        refute record.refunded?
+        assert_money(record.balance, 0)
+        assert_money(record.amount_held, "50.00")
+      end
+
+      test "a goodwill refund of everything received reads refunded" do
+        {:ok, record} = goodwill_refund(build(@parent, payments: [mobilepay: "80.00"]), "80.00", :mobilepay)
+
+        assert record.refunded?
+        assert record.settled?
+        refute reload(record).goodwill_refundable?
+      end
+
+      test "a goodwill refund keeps its reason" do
+        {:ok, record} = goodwill_refund(build(@parent, payments: [cash: "80.00"]), "10.00", :cash, "Wilted early")
+
+        assert [%{goodwill: true, note: "Wilted early"}] = Enum.filter(payments(record), & &1.goodwill)
+      end
+
+      test "a goodwill refund above what was received is refused" do
+        record = build(@parent, payments: [cash: "80.00"])
+        {:ok, record} = goodwill_refund(record, "30.00")
+
+        assert {:error, error} = goodwill_refund(record, "50.01")
+        assert Exception.message(error) =~ "That's more than was received"
+      end
+
+      test "a goodwill refund above what was paid outside Stripe is refused outside Stripe" do
+        record = build(@parent, payments: [stripe: "50.00", cash: "30.00"])
+
+        assert {:error, error} = goodwill_refund(record, "30.01")
+        assert Exception.message(error) =~ "That's more than was paid outside Stripe"
+        assert {:error, _error} = goodwill_refund(record, "10.00", :stripe)
+      end
+
+      test "a goodwill refund while something is to collect is refused" do
+        record = build(@parent, payments: [cash: "30.00"])
+        refute record.goodwill_refundable?
+
+        assert {:error, error} = goodwill_refund(record, "10.00")
+        assert Exception.message(error) =~ "Collect what's owed before refunding"
+      end
+
+      test "a goodwill refund on a cancelled one is refused" do
+        record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
+        refute record.goodwill_refundable?
+
+        assert {:error, _error} = goodwill_refund(record, "10.00")
+      end
+
+      test "a goodwill refund can be undone" do
+        {:ok, record} = goodwill_refund(build(@parent, payments: [cash: "80.00"]), "80.00")
+        refund = Enum.find(payments(record), & &1.goodwill)
+
+        assert {:ok, record} = undo_payment(record, refund.id)
+
+        refute record.refunded?
+        assert record.settled?
+        assert_money(record.amount_held, "80.00")
+        assert %{goodwill: true} = Enum.find(payments(record), & &1.reverses_payment_id)
+      end
+
+      test "lowered after a goodwill refund owes back only what's still held above the price" do
+        {:ok, record} = goodwill_refund(build(@parent, payments: [cash: "80.00"]), "30.00")
+
+        lower(record)
+
+        assert_money(reload(record).balance, "-10.00")
+      end
+
+      test "a goodwill refund through Stripe is spread over the Stripe payments, newest first" do
+        record = build(@parent)
+        stripe_payment(@parent, record, "pi_old", "50.00", ~U[2026-10-01 10:00:00Z])
+        stripe_payment(@parent, record, "pi_new", "30.00", ~U[2026-10-02 10:00:00Z])
+
+        StripeAPI.Mock
+        |> stub(:list_refunds, fn _pi -> {:ok, []} end)
+        |> expect(:create_refund, fn "pi_new", 3_000, _key, %{"reason" => "goodwill", "note" => "Late"} ->
+          {:ok, stripe_refund("pi_new", 3_000)}
+        end)
+        |> expect(:create_refund, fn "pi_old", 1_500, _key, %{"reason" => "goodwill", "note" => "Late"} ->
+          {:ok, stripe_refund("pi_old", 1_500)}
+        end)
+
+        assert {:ok, [_, _]} = Payments.refund_goodwill(reload(record), Decimal.new("45.00"), "Late")
+
+        record = reload(record)
+        assert record.settled?
+        assert_money(record.amount_held, "35.00")
+
+        assert record
+               |> payments()
+               |> Enum.filter(& &1.stripe_refund_id)
+               |> Enum.all?(&(&1.goodwill and &1.note == "Late"))
+      end
+
+      test "a goodwill refund through Stripe above what was paid through it is refused" do
+        record = build(@parent, payments: [stripe: "50.00", cash: "30.00"])
+
+        assert {:error, "That's more than was paid through Stripe."} =
+                 Payments.refund_goodwill(record, Decimal.new("50.01"), nil)
       end
     end
   end

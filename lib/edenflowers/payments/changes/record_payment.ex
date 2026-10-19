@@ -8,6 +8,9 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
     * `:amount` - the argument holding the amount.
     * `:method` - the payment method; read from the `:payment_method`
       argument when not given.
+    * `:goodwill` - whether it's a goodwill refund, carrying the `:note`
+      argument; read from the `:goodwill` argument when not given, as an undo
+      of one is goodwill too.
 
   Stripe ids come from the `:payment_intent_id` and `:stripe_refund_id`
   arguments, and the payment an undo takes back from `:reverses_payment_id`,
@@ -20,12 +23,13 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
   alias Edenflowers.Payments.Payment
 
   # Whatever the caller loaded about the money is stale now.
-  @payable_fields [:amount_paid, :paid_outside_stripe, :balance, :refunded?, :settled?]
+  @payable_fields [:amount_paid, :amount_held, :paid_outside_stripe, :balance, :refunded?, :settled?]
 
   @impl true
   def change(changeset, opts, _context) do
     Ash.Changeset.after_action(changeset, fn changeset, record ->
       method = opts[:method] || Ash.Changeset.get_argument(changeset, :payment_method)
+      goodwill = Keyword.get_lazy(opts, :goodwill, fn -> Map.get(changeset.arguments, :goodwill) || false end)
 
       Payment
       |> Ash.Changeset.for_create(
@@ -36,7 +40,9 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
           method: method,
           payment_intent_id: Map.get(changeset.arguments, :payment_intent_id),
           stripe_refund_id: Map.get(changeset.arguments, :stripe_refund_id),
-          reverses_payment_id: Map.get(changeset.arguments, :reverses_payment_id)
+          reverses_payment_id: Map.get(changeset.arguments, :reverses_payment_id),
+          goodwill: goodwill,
+          note: if(goodwill, do: Map.get(changeset.arguments, :note))
         })
       )
       |> Ash.create(authorize?: false)
