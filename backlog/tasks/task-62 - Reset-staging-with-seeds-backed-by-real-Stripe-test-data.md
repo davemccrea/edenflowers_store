@@ -1,10 +1,10 @@
 ---
 id: TASK-62
 title: Reset staging with seeds backed by real Stripe test data
-status: ready-for-agent
+status: in-progress
 assignee: []
 created_date: '2026-10-19 08:02'
-updated_date: '2026-10-19 08:04'
+updated_date: '2026-10-19 09:14'
 labels:
   - spec
   - developers
@@ -47,9 +47,9 @@ Reset staging to the seeded shop with real Stripe test data behind every seeded 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 With the flag on, every seeded Stripe payment, refund and subscription customer exists in Stripe test mode with matching ids and amounts
-- [ ] #2 Without the flag, local seeding makes no Stripe calls and produces the same data as today
-- [ ] #3 Seeding with the flag refuses a key that isn't sk_test_ before writing anything
+- [x] #1 With the flag on, every seeded Stripe payment, refund and subscription customer exists in Stripe test mode with matching ids and amounts
+- [x] #2 Without the flag, local seeding makes no Stripe calls and produces the same data as today
+- [x] #3 Seeding with the flag refuses a key that isn't sk_test_ before writing anything
 - [ ] #4 On a reset staging, a seeded order can be refunded through Stripe from the admin and the current month's Stripe sheet lists the seeded charges and refunds
 - [ ] #5 just db-seed staging --stripe seeds with Stripe on; just db-reset staging empties and migrates staging and runs it, after a confirmation, reminding to wipe Stripe test data first
 <!-- AC:END -->

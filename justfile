@@ -37,7 +37,7 @@ typst-install:
 check-typst:
     @command -v typst >/dev/null || { echo "typst not found: receipt PDFs (and their tests) need it. Run 'just typst-install'." >&2; exit 1; }
 
-# Drop and migrate a database (local: dev and test; staging: restarts the app on an empty schema)
+# Drop and migrate a database (local: dev and test; staging: also reseeds it with Stripe test data)
 [group('database')]
 db-reset target:
     #!/usr/bin/env bash
@@ -46,7 +46,9 @@ db-reset target:
       local)
         ./scripts/reset-db.sh ;;
       staging)
-        read -r -p "Wipe the STAGING database? [y/N] " answer
+        echo "Stripe has no API to wipe test data. First use \"Delete all test data\" in the staging Stripe Dashboard,"
+        echo "or recreate the sandbox and update staging's keys and webhook secret."
+        read -r -p "Wipe and reseed the STAGING database? [y/N] " answer
         [[ "$answer" =~ ^[yY]$ ]] || exit 1
         ssh -T edenflowers-staging bash -s <<'EOF'
     set -euo pipefail
@@ -64,23 +66,38 @@ db-reset target:
     # Without </dev/null, run reads the rest of this script from stdin and the app never starts
     docker compose run --rm -T app /app/bin/migrate </dev/null
     docker compose up -d app
+    for _ in $(seq 60); do
+      docker compose exec -T app /app/bin/edenflowers rpc ':ok' >/dev/null 2>&1 && exit 0
+      sleep 2
+    done
+    echo "The app didn't come up within 2 minutes" >&2; exit 1
     EOF
-        ;;
+        just db-seed staging --stripe ;;
       *)
         echo "Unknown target '{{ target }}', use local or staging" >&2; exit 1 ;;
     esac
 
-# Seed a database (local, staging, or a one-off base seed of an empty production)
+# Seed a database (local, staging, or a one-off base seed of an empty production); --stripe creates the Stripe test data behind it
 [group('database')]
-db-seed target:
+db-seed target *flags:
     #!/usr/bin/env bash
     set -euo pipefail
+    stripe=false
+    for flag in {{ flags }}; do
+      case "$flag" in
+        --stripe) stripe=true ;;
+        *) echo "Unknown flag '$flag', use --stripe" >&2; exit 1 ;;
+      esac
+    done
+    # An environment variable doesn't reach the seeds through rpc, so the flag goes into the expression
+    flag="Process.put(:seed_stripe, $stripe)"
     case "{{ target }}" in
       local)
-        mix run priv/repo/seeds.exs ;;
+        mix run -e "$flag; Code.eval_file(\"priv/repo/seeds.exs\")" ;;
       staging)
-        ssh -T edenflowers-staging "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds.exs\"))'" ;;
+        ssh -T edenflowers-staging "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc '$flag; Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds.exs\"))'" ;;
       production)
+        if $stripe; then echo "--stripe is for local and staging" >&2; exit 1; fi
         read -r -p "Seed the PRODUCTION database? [y/N] " answer
         [[ "$answer" =~ ^[yY]$ ]] || exit 1
         ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds/production.exs\"))'" ;;
