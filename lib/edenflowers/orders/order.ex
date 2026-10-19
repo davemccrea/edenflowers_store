@@ -14,6 +14,15 @@ defmodule Edenflowers.Orders.Order.Origin do
   use Ash.Type.Enum, values: [:online, :custom, :subscription]
 end
 
+defmodule Edenflowers.Orders.Order.PaymentTerms do
+  @moduledoc """
+  How a custom order's customer will pay, as Jennie chose when placing it:
+  through a payment link, by an invoice sent after fulfilment, or in person
+  on delivery or pickup. The order details email tells the customer.
+  """
+  use Ash.Type.Enum, values: [:payment_link, :invoice, :on_fulfillment]
+end
+
 defmodule Edenflowers.Orders.Order do
   use Ash.Resource,
     domain: Edenflowers.Orders,
@@ -473,11 +482,11 @@ defmodule Edenflowers.Orders.Order do
     create :create_for_checkout
 
     create :place_custom do
-      accept @custom_order_fields
+      accept [:payment_terms | @custom_order_fields]
 
       argument :line_items, {:array, :map}, default: []
       validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
-      argument :payment_link?, :boolean, default: true
+      change set_new_attribute(:payment_terms, :payment_link)
       argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
       argument :email_customer?, :boolean, default: true
       argument :customer_id, :uuid
@@ -486,7 +495,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:origin, :custom)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
-      change PaymentChanges.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
+      change PaymentChanges.OpenPaymentLink, where: [attribute_equals(:payment_terms, :payment_link)]
       change load(:payment_status)
 
       # From here to PriceFulfillment, the same rules as :edit. Change both.
@@ -1065,6 +1074,8 @@ defmodule Edenflowers.Orders.Order do
     attribute :cancelled_at, :utc_datetime
 
     attribute :origin, __MODULE__.Origin, allow_nil?: false, default: :online
+    # Custom orders only.
+    attribute :payment_terms, __MODULE__.PaymentTerms
 
     # Step 1 - Your Details
     attribute :customer_name, :string

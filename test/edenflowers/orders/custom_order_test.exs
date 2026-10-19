@@ -125,7 +125,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
     test "comes with a payment link unless the customer pays in person", ctx do
       {:ok, with_link} = place(ctx)
-      {:ok, in_person} = place(ctx, %{payment_link?: false})
+      {:ok, in_person} = place(ctx, %{payment_terms: :invoice})
 
       assert is_binary(with_link.payment_link_token)
       assert in_person.payment_link_token == nil
@@ -212,7 +212,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
 
     test "queues the order details email when the customer has an email", ctx do
-      {:ok, order} = place(ctx, %{customer_email: "son@example.com", payment_link?: true})
+      {:ok, order} = place(ctx, %{customer_email: "son@example.com", payment_terms: :payment_link})
 
       assert_enqueued(worker: SendOrderDetailsEmail, args: %{"primary_key" => %{"id" => order.id}})
 
@@ -238,12 +238,13 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       end)
     end
 
-    test "without a payment link, shows the total and says nothing about when to pay", ctx do
-      {:ok, _order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_link?: false})
+    test "with an invoice, says it comes after pickup", ctx do
+      {:ok, _order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_terms: :invoice})
       Oban.drain_queue(queue: :default)
 
       assert_email_sent(fn email ->
-        assert email.text_body =~ ~r/Ready to collect at the shop on [^\n]+\n\nIf anything needs changing/
+        assert email.text_body =~
+                 ~r/Collect on [^\n]+ from Minimossen[^\n]+\n\nI'll send you an invoice after you've collected your order\./
       end)
     end
 
@@ -298,7 +299,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
         })
 
       Oban.drain_queue(queue: :default)
-      assert_email_sent(fn email -> assert email.text_body =~ "kl. 14.00–15.00" end)
+      assert_email_sent(fn email -> assert email.text_body =~ ", 14.00–15.00" end)
 
       order = Orders.get_order_for_admin!(order.id, actor: ctx.admin)
 

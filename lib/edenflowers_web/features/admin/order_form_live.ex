@@ -324,7 +324,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           <%!-- After the aside, so once stacked it is the last thing before the button. --%>
           <.form_section :if={@mode == :new} title={~t"Payment"} class="xl:col-start-1">
             <div class="space-y-4">
-              <.input :let={option} field={@form[:payment_link?]} type="radio-card" options={payment_options()}>
+              <.input :let={option} field={@form[:payment_terms]} type="radio-card" options={payment_options()}>
                 {option.name}
               </.input>
               <.input
@@ -489,7 +489,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         "locale" => "sv-FI",
         "gift" => "false",
         "fulfillment_time" => "any",
-        "payment_link?" => "true",
+        "payment_terms" => "payment_link",
         "email_customer?" => "true"
       },
       transform_params: &transform_params/3,
@@ -752,7 +752,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   defp payment_options do
-    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Record the payment later", value: "false"}]
+    [
+      %{name: ~t"Send a payment link", value: "payment_link"},
+      %{name: ~t"Invoice after delivery or pickup", value: "invoice"},
+      %{name: ~t"Pay on delivery or at pickup", value: "on_fulfillment"}
+    ]
   end
 
   defp tax_rate_options(tax_rates) do

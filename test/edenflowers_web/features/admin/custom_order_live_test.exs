@@ -739,7 +739,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
     end
 
     test "emails the payment link to the customer", ctx do
-      order = place_custom_order(ctx, %{customer_email: "son@example.com", payment_link?: false})
+      order = place_custom_order(ctx, %{customer_email: "son@example.com", payment_terms: :invoice})
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 

@@ -10,5 +10,4 @@ end %>
 
 <%= ~t"Warm wishes," %>
 
-Jennie
-Eden Flowers
+<%= signature() %>

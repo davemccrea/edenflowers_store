@@ -197,7 +197,7 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert {:ok, _} = perform_job(SendFulfillmentEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
-        assert email.subject == "Your Eden Flowers order 1400 was left for you"
+        assert email.subject == "Your Eden Flowers order 1400 has been delivered (photo attached)"
         assert email.text_body =~ "Nobody was home"
         assert email.text_body =~ "I delivered your order, so I left it in the spot shown in the attached photo."
         assert email.text_body =~ "If anything isn't as it should be, just reply and I'll take care of it."

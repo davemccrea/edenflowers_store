@@ -10,11 +10,10 @@
 <% end %><%= if @enquiry["selection"] != [] do %>
 <%= gettext("Flowers you're interested in:") %>
 <%= for line <- @enquiry["selection"] do %>- <%= line %>
-<% end %><%= gettext("Estimate: %{estimate}", estimate: @enquiry["estimate"]) %>
+<% end %><%= gettext("Rough estimate, not a quote: %{estimate}", estimate: @enquiry["estimate"]) %>
 <% end %><%= if @enquiry["message"] do %>
 <%= @enquiry["message"] %>
 <% end %>
 <%= gettext("Warm wishes,") %>
 
-Jennie
-Eden Flowers
+<%= signature() %>
