@@ -9,20 +9,6 @@ defmodule Edenflowers.Orders.EmailFailureTest do
 
   @moduletag capture_log: true
 
-  # What the worker does once a job's last attempt has failed.
-  defp fail_last_attempt(worker, order) do
-    primary_key = %{"id" => order.id}
-    job = %Oban.Job{attempt: 3, max_attempts: 3, args: %{"primary_key" => primary_key}}
-    worker.handle_error(job, RuntimeError.exception("mail server down"), primary_key, [])
-  end
-
-  defp versions(order) do
-    order
-    |> Ash.load!(:paper_trail_versions, authorize?: false)
-    |> Map.fetch!(:paper_trail_versions)
-    |> Enum.map(& &1.version_action_name)
-  end
-
   test "a receipt that fails its last attempt is recorded, logged and published" do
     order = placed_order(paid: true)
     EdenflowersWeb.Endpoint.subscribe("order:email:#{order.id}")
@@ -61,5 +47,19 @@ defmodule Edenflowers.Orders.EmailFailureTest do
   test "no scheduler requeues a customer email" do
     refute Code.ensure_loaded?(Edenflowers.Orders.Schedulers.SendConfirmationEmail)
     refute Code.ensure_loaded?(Edenflowers.Orders.Schedulers.SendOrderDetailsEmail)
+  end
+
+  # What the worker does once a job's last attempt has failed.
+  defp fail_last_attempt(worker, order) do
+    primary_key = %{"id" => order.id}
+    job = %Oban.Job{attempt: 3, max_attempts: 3, args: %{"primary_key" => primary_key}}
+    worker.handle_error(job, RuntimeError.exception("mail server down"), primary_key, [])
+  end
+
+  defp versions(order) do
+    order
+    |> Ash.load!(:paper_trail_versions, authorize?: false)
+    |> Map.fetch!(:paper_trail_versions)
+    |> Enum.map(& &1.version_action_name)
   end
 end
