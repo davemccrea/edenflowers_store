@@ -25,8 +25,8 @@ defmodule Edenflowers.Email do
   defp render_order_confirmation(order) do
     Templates.order_confirmation(%{
       order: order,
-      format_date: &Format.date(&1, order.locale),
-      fulfillment_on: fulfillment_on(Format.date(order.fulfillment_date, order.locale), order),
+      format_date: &Format.weekday_date(&1, order.locale),
+      fulfillment_on: fulfillment_on(Format.weekday_date(order.fulfillment_date, order.locale), order),
       account_url: EdenflowersWeb.Endpoint.url() <> "/account"
     })
   end
@@ -153,7 +153,7 @@ defmodule Edenflowers.Email do
           order: order,
           refunded: refunded_amount,
           format_currency: &Format.currency(&1, order.locale),
-          format_date: &Format.date(&1, order.locale)
+          format_date: &Format.weekday_date(&1, order.locale)
         })
       )
     end)
@@ -174,7 +174,7 @@ defmodule Edenflowers.Email do
     Templates.course_confirmation(%{
       registration: registration,
       payment_link_url: payment_link_url,
-      format_date: &Format.weekday_numeric_date(&1, registration.locale),
+      format_date: &Format.weekday_date(&1, registration.locale),
       format_time: &Format.time(&1, registration.locale),
       format_currency: &Format.currency(&1, registration.locale)
     })
@@ -195,7 +195,7 @@ defmodule Edenflowers.Email do
         Templates.course_payment_link(%{
           registration: registration,
           payment_link_url: payment_link_url,
-          format_date: &Format.weekday_numeric_date(&1, registration.locale),
+          format_date: &Format.weekday_date(&1, registration.locale),
           format_time: &Format.time(&1, registration.locale),
           format_currency: &Format.currency(&1, registration.locale)
         })
@@ -217,7 +217,7 @@ defmodule Edenflowers.Email do
       Templates.wedding_enquiry(%{
         enquiry: enquiry,
         first_name: Edenflowers.Accounts.Calculations.FirstName.extract(name),
-        wedding_date: Format.date(enquiry["wedding_date"], enquiry["locale"])
+        wedding_date: Format.weekday_date(enquiry["wedding_date"], enquiry["locale"])
       })
     )
   end
