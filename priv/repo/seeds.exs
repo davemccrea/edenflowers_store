@@ -442,8 +442,7 @@ seed_placed_order = fn attrs ->
           order_reference: next_reference.(),
           state: :placed,
           fulfillment_status: fulfillment_status,
-          # Already emailed, otherwise the SendConfirmationEmail trigger emails
-          # every seeded customer, for real on staging.
+          # Already emailed, so the admin menu offers to resend rather than send.
           receipt_emailed_at: DateTime.utc_now(),
           delivered_emailed_at: if(fulfillment_status == :fulfilled, do: DateTime.utc_now()),
           ordered_at: DateTime.utc_now(),

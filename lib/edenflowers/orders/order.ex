@@ -159,34 +159,31 @@ defmodule Edenflowers.Orders.Order do
 
   oban do
     triggers do
+      # Queued by ScheduleConfirmationEmail when Stripe takes a payment. A payment
+      # Jennie records gets its receipt only when she sends one.
       trigger :send_confirmation_email do
         action :send_confirmation_email
         queue :default
-        max_attempts 20
+        max_attempts 3
         lock_for_update? false
-        scheduler_cron "*/10 * * * *"
+        scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendConfirmationEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendConfirmationEmail
         default_actor system_actor()
-        # A payment Jennie records gets its receipt only when she sends one.
-        where expr(
-                state == :placed and exists(payments, method == :stripe) and not is_nil(customer_email) and
-                  is_nil(receipt_emailed_at)
-              )
+        on_error :record_receipt_email_failure
       end
 
-      # Queued only when Jennie places a custom order and ticks "email the customer",
-      # so there is no schedule to pick up the ones she chose not to send.
+      # Queued only when Jennie places a custom order and ticks "email the customer".
       trigger :send_order_details_email do
         action :send_order_details_email
         queue :default
-        max_attempts 20
+        max_attempts 3
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendOrderDetailsEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendOrderDetailsEmail
         default_actor system_actor()
-        where expr(origin == :custom and not is_nil(customer_email) and is_nil(details_emailed_at))
+        on_error :record_details_email_failure
       end
 
       # Queued only when an Occurrence's card is refused, by :place_unpaid_occurrence.
@@ -309,6 +306,8 @@ defmodule Edenflowers.Orders.Order do
       :send_confirmation_email,
       :send_delivered_email,
       :record_fulfillment_email_failure,
+      :record_receipt_email_failure,
+      :record_details_email_failure,
       :email_receipt
     ]
   end
@@ -776,7 +775,8 @@ defmodule Edenflowers.Orders.Order do
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportUnexpectedPayment
       change Changes.ReactivateSubscription, where: [attribute_equals(:origin, :subscription)]
-      change PaymentChanges.ScheduleConfirmationEmail
+      # A phone customer pays a texted link and has no address to send a receipt to.
+      change PaymentChanges.ScheduleConfirmationEmail, where: [present(:customer_email)]
       require_atomic? false
     end
 
@@ -851,10 +851,20 @@ defmodule Edenflowers.Orders.Order do
       change Changes.SendDeliveredEmail
     end
 
-    # AshOban passes the error, which the errors page already shows.
+    # AshOban passes the error to these, which the errors page already shows.
     update :record_fulfillment_email_failure do
       accept []
       change set_attribute(:delivered_email_failed_at, &DateTime.utc_now/0)
+    end
+
+    update :record_receipt_email_failure do
+      accept []
+      change set_attribute(:receipt_email_failed_at, &DateTime.utc_now/0)
+    end
+
+    update :record_details_email_failure do
+      accept []
+      change set_attribute(:details_email_failed_at, &DateTime.utc_now/0)
     end
 
     action :sales_summary, :map do
@@ -951,6 +961,8 @@ defmodule Edenflowers.Orders.Order do
                      :send_confirmation_email,
                      :send_delivered_email,
                      :record_fulfillment_email_failure,
+                     :record_receipt_email_failure,
+                     :record_details_email_failure,
                      :send_order_details_email,
                      :record_link_payment,
                      :record_stripe_refund,
@@ -1021,8 +1033,14 @@ defmodule Edenflowers.Orders.Order do
     # An email sent or failed in the background: an open order page reloads.
     publish :send_delivered_email, ["order", "email", :id]
     publish :record_fulfillment_email_failure, ["order", "email", :id]
+    publish :send_confirmation_email, ["order", "email", :id]
+    publish :record_receipt_email_failure, ["order", "email", :id]
+    publish :send_order_details_email, ["order", "email", :id]
+    publish :record_details_email_failure, ["order", "email", :id]
     publish :send_delivered_email, ["admin", "orders"]
     publish :record_fulfillment_email_failure, ["admin", "orders"]
+    publish :record_receipt_email_failure, ["admin", "orders"]
+    publish :record_details_email_failure, ["admin", "orders"]
     publish :add_promotion_with_code, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
   end
@@ -1107,6 +1125,8 @@ defmodule Edenflowers.Orders.Order do
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
     attribute :receipt_emailed_at, :utc_datetime
+    # The last queued receipt ran out of attempts. Cleared by a successful send.
+    attribute :receipt_email_failed_at, :utc_datetime
     attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
     attribute :delivered_emailed_at, :utc_datetime
     # The customer's email can change later; the log names who was sent it.
@@ -1119,6 +1139,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :delivered_email_failed_at, :utc_datetime
     # The order details a custom order's customer is sent when it is placed.
     attribute :details_emailed_at, :utc_datetime
+    attribute :details_email_failed_at, :utc_datetime
 
     # Jennie's own working note. Never shown to the customer.
     attribute :florist_note, :string

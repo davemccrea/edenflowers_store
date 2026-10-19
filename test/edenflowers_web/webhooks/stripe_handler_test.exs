@@ -107,8 +107,8 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       # First delivery — finalizes + enqueues.
       assert :ok = StripeHandler.handle_event(event)
       # Stripe redelivers the same event after we've already processed it. The
-      # handler must still return :ok so Stripe stops retrying, and the receipt_emailed_at
-      # guard in the worker prevents a duplicate send.
+      # handler must still return :ok so Stripe stops retrying, and the order,
+      # already placed, queues no second receipt.
       assert :ok = StripeHandler.handle_event(event)
 
       order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
