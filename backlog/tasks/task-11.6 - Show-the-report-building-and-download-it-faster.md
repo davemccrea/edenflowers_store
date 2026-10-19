@@ -4,7 +4,7 @@ title: Show the report building and download it faster
 status: done
 assignee: []
 created_date: '2026-10-19 08:56'
-updated_date: '2026-10-19 13:44'
+updated_date: '2026-10-19 20:30'
 labels:
   - quick
 dependencies: []
@@ -64,6 +64,15 @@ created: 2026-10-19 13:44
 ---
 
 Download path replaced by TASK-11.7: a GET to ReportController from Overview instead of start_async and a pushed zip, so AC #3 no longer applies. The parallel Papra fetch stays.
+
+---
+
+author: @claude
+created: 2026-10-19 20:30
+
+---
+
+#3 was overtaken by 9d6598fb: the report now downloads from the Overview through ReportController, as redovisning-YYYY-MM.zip (report_controller_test). Left unticked because the expenses-page download it describes is gone.
 
 ---
 <!-- COMMENTS:END -->

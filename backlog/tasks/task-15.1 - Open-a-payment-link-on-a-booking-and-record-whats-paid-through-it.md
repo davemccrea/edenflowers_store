@@ -4,7 +4,7 @@ title: Open a payment link on a booking and record what's paid through it
 status: done
 assignee: []
 created_date: '2026-10-17 18:41'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies: []
 parent_task_id: TASK-15
@@ -34,6 +34,6 @@ Spec decisions 2 and 3, domain only.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every case above passes
-- [ ] #2 The existing suite passes
+- [x] #1 Every case above passes
+- [x] #2 The existing suite passes
 <!-- AC:END -->

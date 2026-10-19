@@ -4,7 +4,7 @@ title: List what's to collect and to refund on the Overview
 status: done
 assignee: []
 created_date: '2026-10-17 16:35'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies:
   - TASK-13.1
@@ -34,7 +34,7 @@ Decision 6 of the spec.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every case above passes
-- [ ] #2 The widget reads only the domain read actions; no balance logic in the LiveView
-- [ ] #3 The existing suite passes
+- [x] #1 Every case above passes
+- [x] #2 The widget reads only the domain read actions; no balance logic in the LiveView
+- [x] #3 The existing suite passes
 <!-- AC:END -->

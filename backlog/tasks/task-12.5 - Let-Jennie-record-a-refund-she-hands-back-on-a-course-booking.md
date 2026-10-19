@@ -4,7 +4,7 @@ title: Let Jennie record a refund she hands back on a course booking
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies:
   - TASK-12.2
@@ -28,7 +28,7 @@ Decision 4 of the spec for money handed back in person: a booking paid at the co
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Jennie can record an in-person refund on a booking, including a cancelled one
-- [ ] #2 A refund larger than the in-person money taken is refused
-- [ ] #3 The booking's balance reaches zero once the refund is recorded
+- [x] #1 Jennie can record an in-person refund on a booking, including a cancelled one
+- [x] #2 A refund larger than the in-person money taken is refused
+- [x] #3 The booking's balance reaches zero once the refund is recorded
 <!-- AC:END -->

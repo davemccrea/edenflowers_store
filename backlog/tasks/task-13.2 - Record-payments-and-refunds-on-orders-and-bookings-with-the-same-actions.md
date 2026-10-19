@@ -4,7 +4,7 @@ title: Record payments and refunds on orders and bookings with the same actions
 status: done
 assignee: []
 created_date: '2026-10-17 16:35'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies:
   - TASK-13.1
@@ -48,9 +48,9 @@ Added to the shared `payable_test.exs`, run for an order and a booking:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every case passes for both an order and a booking
-- [ ] #2 Marking a booking paid at the course is still one tap after picking the method
-- [ ] #3 `mark_paid`, `record_refund` and `CollectBalance` are gone, and no code records money on either resource except through these two actions and the Stripe completion actions
-- [ ] #4 Seeds run (`mix ecto.reset`)
-- [ ] #5 The existing suite passes
+- [x] #1 Every case passes for both an order and a booking
+- [x] #2 Marking a booking paid at the course is still one tap after picking the method
+- [x] #3 `mark_paid`, `record_refund` and `CollectBalance` are gone, and no code records money on either resource except through these two actions and the Stripe completion actions
+- [x] #4 Seeds run (`mix ecto.reset`)
+- [x] #5 The existing suite passes
 <!-- AC:END -->

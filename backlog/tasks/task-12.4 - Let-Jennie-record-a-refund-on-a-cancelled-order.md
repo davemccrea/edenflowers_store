@@ -4,7 +4,7 @@ title: Let Jennie record a refund on a cancelled order
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies: []
 parent_task_id: TASK-12
@@ -26,8 +26,8 @@ ordinal: 31000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Jennie can record a negative in-person payment on a cancelled order
-- [ ] #2 A positive in-person payment on a cancelled order is still refused
-- [ ] #3 A refund larger than the in-person money taken is refused
-- [ ] #4 Tests cover all three
+- [x] #1 Jennie can record a negative in-person payment on a cancelled order
+- [x] #2 A positive in-person payment on a cancelled order is still refused
+- [x] #3 A refund larger than the in-person money taken is refused
+- [x] #4 Tests cover all three
 <!-- AC:END -->

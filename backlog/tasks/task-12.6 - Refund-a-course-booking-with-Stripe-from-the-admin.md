@@ -4,7 +4,7 @@ title: Refund a course booking with Stripe from the admin
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies:
   - TASK-12.2
@@ -29,8 +29,8 @@ Decision 7 of the spec: a button on the admin course page that refunds a booking
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Refunding a cancelled online booking refunds what was paid and records one negative `Payment`
-- [ ] #2 Refunding after `remove_seat` refunds one seat's price
-- [ ] #3 Two clicks never refund the same money twice
-- [ ] #4 Order refunds behave exactly as before
+- [x] #1 Refunding a cancelled online booking refunds what was paid and records one negative `Payment`
+- [x] #2 Refunding after `remove_seat` refunds one seat's price
+- [x] #3 Two clicks never refund the same money twice
+- [x] #4 Order refunds behave exactly as before
 <!-- AC:END -->
