@@ -5,14 +5,20 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 source scripts/lib/ui.sh
 
+latest_run_id() {
+  gh run list --workflow=deploy.yml --commit "$(git rev-parse HEAD)" --limit 1 --json databaseId -q '.[0].databaseId // 0'
+}
+
+# Takes the latest run id from before the deploy started: a new run takes a few
+# seconds to appear, and a redeploy of the same commit already has older runs.
 watch_deploy() {
-  # The run takes a few seconds to appear after the push; until then "latest" is the previous deploy.
-  local sha run_id=""
+  local previous_run_id="${1:-0}" sha run_id=""
   sha="$(git rev-parse HEAD)"
   printf '  %swaiting for the GitHub Actions run...%s\n' "$DIM" "$RESET"
   for _ in {1..30}; do
-    run_id="$(gh run list --workflow=deploy.yml --commit "$sha" --limit 1 --json databaseId -q '.[0].databaseId')"
-    [[ -n "$run_id" ]] && break
+    run_id="$(latest_run_id)"
+    ((run_id > previous_run_id)) && break
+    run_id=""
     sleep 2
   done
   if [[ -z "$run_id" ]]; then
@@ -30,7 +36,7 @@ offer_watch() {
     return
   fi
 
-  watch_deploy
+  watch_deploy "$1"
 }
 
 section "Preflight checks"
@@ -60,6 +66,10 @@ fi
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
 if [[ "$TARGET" == "staging" ]]; then
+  if [[ "$BRANCH" == "HEAD" ]]; then
+    fail "detached HEAD, check out a branch first"
+  fi
+
   section "Ready to push"
   echo "  staging → $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)  ($BRANCH)"
   echo
@@ -71,17 +81,14 @@ if [[ "$TARGET" == "staging" ]]; then
 
   scripts/sync-images.sh staging
 
-  if [[ "$BRANCH" == "HEAD" ]]; then
-    fail "detached HEAD, check out a branch first"
-  fi
-
   # The workflow builds the ref on GitHub, so it must be pushed first.
   SKIP_HOOKS=1 git push --quiet origin "$BRANCH"
+  PREVIOUS_RUN_ID="$(latest_run_id)"
   gh workflow run deploy.yml --ref "$BRANCH"
 
-  printf '\n%s%s✓ Deployed %s to staging%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
+  printf '\n%s%s✓ Started deploying %s to staging%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
     "$BOLD" "$GREEN" "$BRANCH" "$RESET" "$DIM" "$RESET"
-  offer_watch
+  offer_watch "$PREVIOUS_RUN_ID"
   exit 0
 fi
 
