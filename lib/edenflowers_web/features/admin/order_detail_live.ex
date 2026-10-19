@@ -300,7 +300,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 payment_message_urls={@payment_message_urls}
               />
               <div
-                :if={@order.receipt_email_failed_at || @order.details_email_failed_at}
+                :if={@order.receipt_email_failed_at || @order.order_details_email_failed_at}
                 id="order-email-failed"
                 class="bg-warning/15 border-warning/40 mt-4 flex gap-2.5 border px-3 py-2.5 text-sm"
               >
@@ -309,7 +309,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <p :if={@order.receipt_email_failed_at} class="text-warning-content font-semibold">
                     {~t"Couldn't email the receipt."}
                   </p>
-                  <p :if={@order.details_email_failed_at} class="text-warning-content font-semibold">
+                  <p :if={@order.order_details_email_failed_at} class="text-warning-content font-semibold">
                     {~t"Couldn't email the order details."}
                   </p>
                   <p class="text-base-content mt-0.5">
@@ -669,7 +669,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp email_failed_message("record_fulfillment_email_failure"), do: ~t"Couldn't email the confirmation."
   defp email_failed_message("record_receipt_email_failure"), do: ~t"Couldn't email the receipt."
-  defp email_failed_message("record_details_email_failure"), do: ~t"Couldn't email the order details."
+  defp email_failed_message("record_order_details_email_failure"), do: ~t"Couldn't email the order details."
   defp email_failed_message(_event), do: nil
 
   defp mark_fulfilled(socket, attrs) do
@@ -995,7 +995,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       data-confirm={
         confirm_send(
           ~t"Email a payment link to #{email = @order.customer_email}?",
-          @order.payment_link_open? && @order.details_emailed_at,
+          @order.payment_link_open? && @order.order_details_emailed_at,
           @locale
         )
       }
@@ -1003,7 +1003,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       size="sm"
     >
       <.icon name="hero-envelope" class="h-4 w-4" />
-      {if @order.payment_link_open? && @order.details_emailed_at,
+      {if @order.payment_link_open? && @order.order_details_emailed_at,
         do: ~t"Resend payment link",
         else: ~t"Email payment link"}
     </.button>
@@ -1091,12 +1091,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           data-confirm={
             confirm_send(
               ~t"Email the order details to #{email = @order.customer_email}?",
-              @order.details_emailed_at,
+              @order.order_details_emailed_at,
               @locale
             )
           }
         >
-          {if @order.details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
+          {if @order.order_details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
         </.actions_menu_button>
         <.unavailable_menu_item :if={@email_details_unavailable} reason={@email_details_unavailable}>
           {~t"Email order details"}

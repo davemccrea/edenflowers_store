@@ -1,10 +1,10 @@
-defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
+defmodule Edenflowers.Orders.Changes.SendReceiptEmailTest do
   use Edenflowers.DataCase, async: true
   import Generator
   import Swoosh.TestAssertions
 
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Workers.SendConfirmationEmail
+  alias Edenflowers.Orders.Workers.SendReceiptEmail
 
   @moduletag :typst
 
@@ -31,7 +31,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
     _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
     _payment = generate(payment(order_id: order.id, amount: Decimal.new("39.90")))
 
-    assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
+    assert {:ok, _order} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
@@ -69,7 +69,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
     _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
     _payment = generate(payment(order_id: order.id, amount: Decimal.new("39.90")))
 
-    assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
+    assert {:ok, _order} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
       assert email.subject =~ "Kuitti Eden Flowers -tilauksestasi"
@@ -100,7 +100,7 @@ defmodule Edenflowers.Orders.Changes.SendConfirmationEmailTest do
     _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
     _payment = generate(payment(order_id: order.id, amount: Decimal.new("39.90")))
 
-    assert {:ok, _order} = perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => order.id}})
+    assert {:ok, _order} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
       assert email.subject =~ "Kvitto för din Eden Flowers-beställning"

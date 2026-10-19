@@ -31,7 +31,7 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
           Logger.info("Sent order details email for order #{order.id}")
 
           changeset
-          |> Ash.Changeset.force_change_attribute(:details_emailed_at, DateTime.utc_now())
+          |> Ash.Changeset.force_change_attribute(:order_details_emailed_at, DateTime.utc_now())
           |> clear_failure()
 
         {:error, error} ->
@@ -44,5 +44,5 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
   defp payment_link_url(_order), do: nil
 
   # Atomic, so a caller holding a copy from before the failure still clears it.
-  defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :details_email_failed_at, nil)
+  defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :order_details_email_failed_at, nil)
 end

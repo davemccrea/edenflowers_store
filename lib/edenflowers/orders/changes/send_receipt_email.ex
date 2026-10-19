@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.Changes.SendConfirmationEmail do
+defmodule Edenflowers.Orders.Changes.SendReceiptEmail do
   use Ash.Resource.Change
 
   require Logger

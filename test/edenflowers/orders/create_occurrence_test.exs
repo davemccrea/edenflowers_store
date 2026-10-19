@@ -16,8 +16,8 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   alias Edenflowers.Orders.Schedulers.CreateOccurrence, as: ScheduleOccurrences
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Workers.CreateOccurrence
-  alias Edenflowers.Orders.Workers.SendConfirmationEmail
   alias Edenflowers.Orders.Workers.SendPaymentFailedEmail
+  alias Edenflowers.Orders.Workers.SendReceiptEmail
   alias Edenflowers.Payments.Payment
   alias Edenflowers.ShopTime
 
@@ -128,7 +128,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     assert Decimal.equal?(order.grand_total, "60.00")
     assert [%Payment{method: :stripe, payment_intent_id: "pi_occurrence"} = payment] = order.payments
     assert Decimal.equal?(payment.amount, "60.00")
-    assert_enqueued(worker: SendConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
+    assert_enqueued(worker: SendReceiptEmail, args: %{"primary_key" => %{"id" => order.id}})
 
     assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 14)
   end
