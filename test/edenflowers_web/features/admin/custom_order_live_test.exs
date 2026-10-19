@@ -568,6 +568,22 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "#delivery-quote", "Delivering to Kyrkvägen 5, Vasa")
     end
 
+    test "says when Jennie's own fee replaces the quoted one", ctx do
+      delivery = delivery_option(ctx)
+      stub_geocoding(8_000)
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+
+      view |> form("#order-form", form: %{fulfillment_option_id: delivery.id}) |> render_change()
+      view |> form("#order-form", form: %{delivery_address: "Kyrkvägen 5"}) |> render_change()
+      view |> element("#form_delivery_address") |> render_blur(%{"value" => "Kyrkvägen 5"})
+      render_async(view, 500)
+
+      view |> form("#order-form", form: %{fulfillment_fee_override: "5"}) |> render_change()
+
+      assert has_element?(view, "#delivery-quote", "your own fee replaces this")
+    end
+
     test "says when an address can't be delivered to", ctx do
       delivery = delivery_option(ctx)
       stub_geocoding(50_000)
