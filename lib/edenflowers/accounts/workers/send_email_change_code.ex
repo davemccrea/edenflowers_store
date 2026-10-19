@@ -1,5 +1,5 @@
 defmodule Edenflowers.Accounts.Workers.SendEmailChangeCode do
-  use Oban.Worker, queue: :default
+  use Oban.Worker, queue: :default, max_attempts: 3
 
   alias Edenflowers.Email
   alias Edenflowers.Mailer

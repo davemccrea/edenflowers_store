@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.Workers.SendCancelledEmail do
-  use Oban.Worker, queue: :default, max_attempts: 20
+  use Oban.Worker, queue: :default, max_attempts: 3
 
   require Logger
 

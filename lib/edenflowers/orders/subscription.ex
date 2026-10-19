@@ -100,7 +100,7 @@ defmodule Edenflowers.Orders.Subscription do
       trigger :send_setup_email do
         action :send_setup_email
         queue :default
-        max_attempts 20
+        max_attempts 3
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendSubscriptionSetupEmail

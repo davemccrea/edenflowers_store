@@ -148,6 +148,11 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     with_registration(socket, id, &PaymentActions.email_payment_link(&1, actor))
   end
 
+  def handle_event("email_confirmation", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
+    with_registration(socket, id, &email_confirmation(&1, actor))
+  end
+
   def handle_event("payment_link_copied", _params, socket) do
     {:noreply, put_flash(socket, :info, ~t"Payment link copied.")}
   end
@@ -192,6 +197,13 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       end
 
     {:noreply, load_courses(socket)}
+  end
+
+  defp email_confirmation(registration, actor) do
+    case Courses.email_registration_confirmation(registration, actor: actor) do
+      {:ok, _registration} -> {:info, ~t"Confirmation emailed."}
+      {:error, _error} -> {:error, ~t"Could not email the confirmation."}
+    end
   end
 
   # The amount Jennie leaves in the form is what's handed back; the rest of the balance is kept.
@@ -421,6 +433,16 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                     {if payment_link_emailed?(registration),
                       do: ~t"Resend payment link",
                       else: ~t"Email payment link"}
+                  </.actions_menu_button>
+                  <.actions_menu_button
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click="email_confirmation"
+                    phx-value-id={registration.id}
+                    data-confirm={email_confirmation_confirmation(registration, @locale)}
+                  >
+                    {if registration.confirmation_emailed_at,
+                      do: ~t"Resend confirmation",
+                      else: ~t"Email confirmation"}
                   </.actions_menu_button>
                   <.actions_menu_button
                     :if={to_collect?(registration) and registration.payment_link_open?}
@@ -711,6 +733,14 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
     if payment_link_emailed?(registration),
       do: ~t"Last sent #{time = Format.datetime(registration.payment_link_emailed_at, locale)}." <> " " <> question,
+      else: question
+  end
+
+  defp email_confirmation_confirmation(registration, locale) do
+    question = ~t"Email the booking confirmation to #{email = registration.email}?"
+
+    if registration.confirmation_emailed_at,
+      do: ~t"Last sent #{time = Format.datetime(registration.confirmation_emailed_at, locale)}." <> " " <> question,
       else: question
   end
 

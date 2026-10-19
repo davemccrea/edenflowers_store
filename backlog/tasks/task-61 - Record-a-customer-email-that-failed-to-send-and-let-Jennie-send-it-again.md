@@ -1,10 +1,10 @@
 ---
 id: TASK-61
 title: 'Record a customer email that failed to send, and let Jennie send it again'
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-19 07:58'
-updated_date: '2026-10-19 13:03'
+updated_date: '2026-10-19 20:12'
 labels:
   - spec
   - admin
@@ -33,3 +33,9 @@ Customer emails that go out in the background retry a few times, then record the
 
 Not in production yet: no queued jobs or old rows to keep compatible, so fields and triggers can be dropped and migrations generated freely.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Only the receipt, order details and fulfillment confirmation record a failure for Jennie. A course booking's confirmation has a resend item but no failure field. Every other background email relies on ErrorTracker and /oban (ADR 0005).
+<!-- SECTION:NOTES:END -->

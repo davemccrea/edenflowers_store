@@ -46,13 +46,12 @@ defmodule Edenflowers.Courses.CourseRegistration do
       trigger :send_confirmation_email do
         action :send_confirmation_email
         queue :default
-        max_attempts 20
+        max_attempts 3
         lock_for_update? false
-        scheduler_cron "*/10 * * * *"
+        scheduler_cron false
         worker_module_name Edenflowers.Courses.Workers.SendConfirmationEmail
         scheduler_module_name Edenflowers.Courses.Schedulers.SendConfirmationEmail
         default_actor system_actor()
-        where expr(status == :confirmed and is_nil(confirmation_emailed_at) and not skip_confirmation_email)
       end
 
       trigger :reconcile_payment do
@@ -119,7 +118,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change {Changes.ReserveSeats, allow_after_cutoff?: true}
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
       change PaymentChanges.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
-      change set_attribute(:skip_confirmation_email, true), where: [argument_equals(:email_customer?, false)]
 
       change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_confirmation_email},
         where: [argument_equals(:email_customer?, true)]
@@ -157,7 +155,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
       # The confirmation goes out again, now with the receipt, even if Jennie
       # chose not to email one when she added the booking.
       change set_attribute(:confirmation_emailed_at, nil)
-      change set_attribute(:skip_confirmation_email, false)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
       change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_confirmation_email}
       require_atomic? false
@@ -228,7 +225,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     update :email_receipt do
       accept []
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
-      change set_attribute(:skip_confirmation_email, false)
       transaction? false
       require_atomic? false
       change Changes.SendConfirmationEmail
@@ -300,8 +296,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :payment_link_emailed_at, :utc_datetime
     attribute :confirmed_at, :utc_datetime
     attribute :confirmation_emailed_at, :utc_datetime
-    # Jennie added the booking and chose not to email the customer.
-    attribute :skip_confirmation_email, :boolean, allow_nil?: false, default: false
     attribute :receipt_emailed_at, :utc_datetime
 
     timestamps()
