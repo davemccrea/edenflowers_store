@@ -6,10 +6,11 @@ title: >-
 status: ready-for-human
 assignee: []
 created_date: '2026-10-19 10:11'
-updated_date: '2026-10-19 10:11'
+updated_date: '2026-10-19 13:03'
 labels:
   - admin
   - quick
+  - spec
 dependencies: []
 priority: medium
 type: chore
