@@ -646,7 +646,7 @@ seed_subscription_order = fn subscription, user, attrs ->
     subscription_id: subscription.id,
     subscription_date: attrs[:subscription_date],
     fulfillment_status: attrs[:fulfillment_status],
-    details_emailed_at: if(not paid?, do: DateTime.utc_now()),
+    order_details_emailed_at: if(not paid?, do: DateTime.utc_now()),
     customer_name: user.name,
     customer_email: to_string(user.email),
     user_id: user.id,

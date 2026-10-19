@@ -120,7 +120,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
       change PaymentChanges.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
       change set_attribute(:skip_confirmation_email, true), where: [argument_equals(:email_customer?, false)]
-      change PaymentChanges.ScheduleConfirmationEmail, where: [argument_equals(:email_customer?, true)]
+
+      change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_confirmation_email},
+        where: [argument_equals(:email_customer?, true)]
     end
 
     # Webhook deliveries are at-least-once, so a repeat must not re-confirm.
@@ -139,7 +141,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       # cancelling the booking would ask Stripe to cancel a paid PaymentIntent.
       change set_attribute(:payment_intent_id, nil)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
-      change PaymentChanges.ScheduleConfirmationEmail
+      change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_confirmation_email}
 
       require_atomic? false
     end
@@ -157,7 +159,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change set_attribute(:confirmation_emailed_at, nil)
       change set_attribute(:skip_confirmation_email, false)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
-      change PaymentChanges.ScheduleConfirmationEmail
+      change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_confirmation_email}
       require_atomic? false
     end
 

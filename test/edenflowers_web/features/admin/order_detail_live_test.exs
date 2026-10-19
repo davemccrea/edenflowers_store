@@ -119,7 +119,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|button[phx-click="email_payment_link"]|, "Email payment link")
     assert has_element?(view, ~s|button[phx-click="email_payment_link"][data-confirm^="Email a payment link"]|)
 
-    Ash.Seed.update!(order, %{payment_link_token: "tok_resend_label", details_emailed_at: DateTime.utc_now()})
+    Ash.Seed.update!(order, %{payment_link_token: "tok_resend_label", order_details_emailed_at: DateTime.utc_now()})
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
     assert has_element?(view, ~s|button[phx-click="email_payment_link"]|, "Resend payment link")
@@ -253,7 +253,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     primary_key = %{"id" => order.id}
     job = %Oban.Job{attempt: 3, max_attempts: 3, args: %{"primary_key" => primary_key}}
 
-    Edenflowers.Orders.Workers.SendConfirmationEmail.handle_error(
+    Edenflowers.Orders.Workers.SendReceiptEmail.handle_error(
       job,
       RuntimeError.exception("mail server down"),
       primary_key,

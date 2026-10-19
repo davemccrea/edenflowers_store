@@ -17,7 +17,7 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Schedulers.ReconcilePayment, as: ScheduleOrderReconciliation
   alias Edenflowers.Orders.Workers.ReconcilePayment, as: ReconcileOrderPayment
-  alias Edenflowers.Orders.Workers.SendConfirmationEmail, as: SendOrderConfirmationEmail
+  alias Edenflowers.Orders.Workers.SendReceiptEmail
 
   setup :verify_on_exit!
 
@@ -48,7 +48,7 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
     assert %{state: :placed, payment_status: :paid} =
              Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
 
-    assert_enqueued(worker: SendOrderConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
+    assert_enqueued(worker: SendReceiptEmail, args: %{"primary_key" => %{"id" => order.id}})
   end
 
   test "confirms a paid course booking the webhook missed and logs an error" do
@@ -120,7 +120,7 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
     # Eligibility ages out on updated_at, so reconciling must not touch it.
     assert %{state: :payment, updated_at: updated_at} = Orders.get_order_by_id!(order.id, authorize?: false)
     assert updated_at == order.updated_at
-    refute_enqueued(worker: SendOrderConfirmationEmail)
+    refute_enqueued(worker: SendReceiptEmail)
   end
 
   test "skips orders still within the webhook grace period and abandoned checkouts" do

@@ -9,8 +9,8 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   alias Edenflowers.External.HereAPI
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Workers.SendConfirmationEmail
   alias Edenflowers.Orders.Workers.SendOrderDetailsEmail
+  alias Edenflowers.Orders.Workers.SendReceiptEmail
   alias Edenflowers.Payments
   alias EdenflowersWeb.Admin.OrderLog
 
@@ -836,7 +836,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.payment_link_open?
 
       Oban.drain_queue(queue: :default)
-      refute_enqueued(worker: SendConfirmationEmail)
+      refute_enqueued(worker: SendReceiptEmail)
       assert_no_email_sent()
     end
 
@@ -884,7 +884,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert paid.payment_intent_id == nil
       assert paid.state == :placed
       assert paid.order_reference == order.order_reference
-      assert_enqueued(worker: SendConfirmationEmail, args: %{"primary_key" => %{"id" => order.id}})
+      assert_enqueued(worker: SendReceiptEmail, args: %{"primary_key" => %{"id" => order.id}})
     end
 
     test "through the payment link after paying in person is still recorded, and reported to refund", ctx do

@@ -75,12 +75,12 @@ defmodule EdenflowersWeb.Admin.OrderLog do
       :open_payment_link -> ~t"Payment link created"
       :send_order_details_email -> ~t"Order details emailed"
       :send_payment_failed_email -> ~t"Payment link emailed"
-      :send_confirmation_email -> ~t"Receipt emailed"
+      :send_receipt_email -> ~t"Receipt emailed"
       :email_receipt -> ~t"Receipt emailed"
       :send_fulfillment_email -> ~t"Fulfillment confirmation emailed"
       :record_fulfillment_email_failure -> ~t"Fulfillment confirmation failed"
       :record_receipt_email_failure -> ~t"Receipt failed"
-      :record_details_email_failure -> ~t"Order details failed"
+      :record_order_details_email_failure -> ~t"Order details failed"
       other -> to_string(other)
     end
   end
