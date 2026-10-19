@@ -444,7 +444,7 @@ seed_placed_order = fn attrs ->
           fulfillment_status: fulfillment_status,
           # Already emailed, so the admin menu offers to resend rather than send.
           receipt_emailed_at: DateTime.utc_now(),
-          delivered_emailed_at: if(fulfillment_status == :fulfilled, do: DateTime.utc_now()),
+          fulfillment_emailed_at: if(fulfillment_status == :fulfilled, do: DateTime.utc_now()),
           ordered_at: DateTime.utc_now(),
           locale: "sv-FI",
           fulfillment_option_id: option.id,

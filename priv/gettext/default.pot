@@ -6404,7 +6404,7 @@ msgstr ""
 msgid "Clear customer selection"
 msgstr ""
 
-#: lib/edenflowers/orders/changes/send_delivered_email.ex:47
+#: lib/edenflowers/orders/changes/send_fulfillment_email.ex:47
 #, elixir-autogen, elixir-format
 msgid "Delivery photo is missing."
 msgstr ""
@@ -6419,7 +6419,7 @@ msgstr ""
 msgid "Email delivery confirmation"
 msgstr ""
 
-#: lib/edenflowers/orders/changes/send_delivered_email.ex:39
+#: lib/edenflowers/orders/changes/send_fulfillment_email.ex:39
 #, elixir-autogen, elixir-format
 msgid "Failed to send fulfillment email: %{error}"
 msgstr ""

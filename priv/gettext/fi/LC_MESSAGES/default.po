@@ -6404,7 +6404,7 @@ msgstr "Vahvista toimitus"
 msgid "Clear customer selection"
 msgstr "Tyhjennä asiakasvalinta"
 
-#: lib/edenflowers/orders/changes/send_delivered_email.ex:47
+#: lib/edenflowers/orders/changes/send_fulfillment_email.ex:47
 #, elixir-autogen, elixir-format
 msgid "Delivery photo is missing."
 msgstr "Toimituskuva puuttuu."
@@ -6419,7 +6419,7 @@ msgstr "Lähetä noutovahvistus sähköpostilla"
 msgid "Email delivery confirmation"
 msgstr "Lähetä toimitusvahvistus sähköpostilla"
 
-#: lib/edenflowers/orders/changes/send_delivered_email.ex:39
+#: lib/edenflowers/orders/changes/send_fulfillment_email.ex:39
 #, elixir-autogen, elixir-format
 msgid "Failed to send fulfillment email: %{error}"
 msgstr "Tilauksen toimitus- tai noutovahvistuksen lähettäminen epäonnistui: %{error}"

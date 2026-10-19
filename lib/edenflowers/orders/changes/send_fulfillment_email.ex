@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.Changes.SendDeliveredEmail do
+defmodule Edenflowers.Orders.Changes.SendFulfillmentEmail do
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
@@ -22,8 +22,8 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmail do
 
           changeset
           |> Ash.Changeset.force_change_attributes(
-            delivered_emailed_at: DateTime.utc_now(),
-            delivered_emailed_to: order.customer_email
+            fulfillment_emailed_at: DateTime.utc_now(),
+            fulfillment_emailed_to: order.customer_email
           )
           |> clear_failure()
 
@@ -67,5 +67,5 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmail do
   end
 
   # Atomic, so a caller holding a copy from before the failure still clears it.
-  defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :delivered_email_failed_at, nil)
+  defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :fulfillment_email_failed_at, nil)
 end
