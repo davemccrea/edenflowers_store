@@ -4,7 +4,7 @@ title: Give the shop one calendar instead of one per fulfillment option
 status: done
 assignee: []
 created_date: '2026-10-18 14:27'
-updated_date: '2026-10-18 17:34'
+updated_date: '2026-10-19 10:22'
 labels:
   - spec
   - admin
@@ -89,6 +89,15 @@ created: 2026-10-18 15:06
 ---
 
 Code done; the full suite passes. What's left is the manual carry-over at deploy: before deploying, note the delivery option's open weekdays, future closed/opened dates and same-day cutoff. The migration drops those columns from fulfillment_options. After deploying, set them on the Fulfillments page calendar and same-day form.
+
+---
+
+author: @claude
+created: 2026-10-19 10:22
+
+---
+
+From @david: the calendar settings carry-over is done.
 
 ---
 <!-- COMMENTS:END -->
