@@ -46,7 +46,8 @@ defmodule Edenflowers.Accounting.MonthlyReport do
            receipts = for({_n, _expense, name, body} <- rows, body, do: {~c"kvitton/#{name}", body}),
            {:ok, transactions} <-
              StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
-           workbook = %Workbook{sheets: [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions)]},
+           sheets = [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions)],
+           workbook = %Workbook{sheets: Enum.map(sheets, &with_basic_font/1)},
            {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
            files = [{~c"#{spreadsheet}", xlsx} | receipts],
            {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
@@ -335,6 +336,16 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
   defp date_cell(nil), do: nil
   defp date_cell(date), do: [{Date.to_erl(date), {0, 0, 0}}, yyyymmdd: true]
+
+  # Elixlsx leaves the workbook's default font unnamed, so viewers fall back to
+  # whatever they like (often a serif). Naming it on every cell keeps it plain.
+  defp with_basic_font(sheet) do
+    %{sheet | rows: Enum.map(sheet.rows, fn row -> Enum.map(row, &basic_font_cell/1) end)}
+  end
+
+  defp basic_font_cell(nil), do: nil
+  defp basic_font_cell([value | opts]), do: [value, font: "Arial", size: 11] ++ opts
+  defp basic_font_cell(value), do: [value, font: "Arial", size: 11]
 
   defp amount_cell(nil), do: nil
   defp amount_cell(amount), do: [Decimal.to_float(amount), num_format: "0.00"]
