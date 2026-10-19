@@ -2,11 +2,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   use EdenflowersWeb, :live_view
   use Cinder.UrlSync
 
-  require Logger
-
   import EdenflowersWeb.Admin.Components
 
-  alias Edenflowers.Accounting.MonthlyReport
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.Format
   alias EdenflowersWeb.Layouts
@@ -18,60 +15,12 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
     {:ok,
      socket
      |> assign(:page_title, ~t"Expenses")
-     |> assign(:locale, Localize.get_locale())
-     |> assign(:report_month, previous_month())
-     |> assign(:building_report, false)}
+     |> assign(:locale, Localize.get_locale())}
   end
 
   @impl true
   def handle_params(params, uri, socket) do
     {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}
-  end
-
-  @impl true
-  def handle_event("download_report", %{"month" => month}, socket) do
-    socket = assign(socket, :report_month, month)
-
-    case parse_month(month) do
-      {:ok, year, month} ->
-        {:noreply,
-         socket
-         |> assign(:building_report, true)
-         |> start_async(:report, fn -> MonthlyReport.build(year, month) end)}
-
-      :error ->
-        {:noreply, put_flash(socket, :error, ~t"The report couldn't be built. Please try again.")}
-    end
-  end
-
-  @impl true
-  def handle_async(:report, {:ok, {:ok, filename, zip, count}}, socket) do
-    socket =
-      if count > 0 do
-        put_flash(
-          socket,
-          :error,
-          ~t"Receipts missing from the report: #{count}. Papra couldn't serve them, so their rows in the spreadsheet say so."
-        )
-      else
-        socket
-      end
-
-    # ponytail: the whole zip goes over the socket, fine for a month of receipts;
-    # if months grow to tens of MB, write a temp file and serve it from a signed one-time route.
-    {:noreply,
-     socket
-     |> assign(:building_report, false)
-     |> push_event("download", %{filename: filename, content: Base.encode64(zip)})}
-  end
-
-  def handle_async(:report, result, socket) do
-    Logger.error("Monthly report for #{inspect(socket.assigns.report_month)} failed: #{inspect(result)}")
-
-    {:noreply,
-     socket
-     |> assign(:building_report, false)
-     |> put_flash(:error, ~t"The report couldn't be built. Please try again.")}
   end
 
   @impl true
@@ -81,10 +30,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       <.admin_page>
         <.admin_page_header title={~t"Expenses"}>
           <:actions>
-            <.button type="button" size="sm" variant="neutral" phx-click={JS.exec("phx-show", to: "#export-drawer")}>
-              <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
-              {~t"Export"}
-            </.button>
             <.button
               href={Edenflowers.External.PapraAPI.documents_url()}
               target="_blank"
@@ -97,39 +42,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             </.button>
           </:actions>
         </.admin_page_header>
-
-        <.drawer
-          id="export-drawer"
-          placement="right"
-          label={~t"Export"}
-          class="bg-base-100 border-base-content/12 w-[88vw] flex h-full flex-col border-l sm:w-96"
-        >
-          <header class="flex items-center justify-between gap-4 p-4">
-            <h2 class="text-lg font-semibold">{~t"Export"}</h2>
-            <.icon_button
-              phx-click={JS.exec("phx-hide", to: "#export-drawer")}
-              size="sm"
-              aria_label={~t"Close"}
-            >
-              <.icon name="hero-x-mark" class="h-5 w-5" />
-            </.icon_button>
-          </header>
-          <form id="report-form" phx-submit="download_report" class="flex flex-col gap-4 p-4">
-            <label class="flex flex-col gap-1 text-sm">
-              {~t"Month"}
-              <input type="month" name="month" value={@report_month} required class="input w-full" />
-            </label>
-            <.button type="submit" variant="primary" disabled={@building_report}>
-              <%= if @building_report do %>
-                <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
-                {~t"Building report…"}
-              <% else %>
-                <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
-                {~t"Download"}
-              <% end %>
-            </.button>
-          </form>
-        </.drawer>
 
         <Cinder.collection
           id="expenses-table"
@@ -210,25 +122,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
     </Layouts.admin>
     """
   end
-
-  defp previous_month do
-    Edenflowers.ShopTime.today()
-    |> Date.beginning_of_month()
-    |> Date.add(-1)
-    |> Date.to_iso8601()
-    |> String.slice(0, 7)
-  end
-
-  defp parse_month(<<year::binary-4, "-", month::binary-2>>) do
-    with {year, ""} <- Integer.parse(year),
-         {month, ""} when month in 1..12 <- Integer.parse(month) do
-      {:ok, year, month}
-    else
-      _ -> :error
-    end
-  end
-
-  defp parse_month(_), do: :error
 
   defp search_expenses(query, _searchable_columns, search_term) do
     require Ash.Query

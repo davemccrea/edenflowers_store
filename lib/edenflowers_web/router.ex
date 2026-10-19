@@ -146,6 +146,7 @@ defmodule EdenflowersWeb.Router do
     end
 
     get "/account/avatar", EdenflowersWeb.Admin.AvatarController, :show
+    get "/reports", EdenflowersWeb.Admin.ReportController, :show
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
 

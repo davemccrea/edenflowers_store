@@ -102,15 +102,6 @@ const makeCinderControlOperable = (el) => {
   if (el.matches(cinderFilterToggleSelector)) syncCinderFilterToggle(el);
 };
 
-window.addEventListener("phx:download", async ({ detail }) => {
-  const response = await fetch(`data:application/zip;base64,${detail.content}`);
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(await response.blob());
-  link.download = detail.filename;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(link.href));
-});
-
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Enter" && event.key !== " ") return;
   if (!event.target.matches?.(cinderControlSelector)) return;

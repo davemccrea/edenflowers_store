@@ -1,10 +1,10 @@
 ---
 id: TASK-11.6
 title: Show the report building and download it faster
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-19 08:56'
-updated_date: '2026-10-19 09:00'
+updated_date: '2026-10-19 13:44'
 labels:
   - quick
 dependencies: []
@@ -55,6 +55,15 @@ created: 2026-10-19 09:00
 ---
 
 Left for a human: click Download on /admin/expenses in a real browser and check the zip saves (AC #3). The push and its contents are covered by tests; the browser side of the download is not.
+
+---
+
+author: @claude
+created: 2026-10-19 13:44
+
+---
+
+Download path replaced by TASK-11.7: a GET to ReportController from Overview instead of start_async and a pushed zip, so AC #3 no longer applies. The parallel Papra fetch stays.
 
 ---
 <!-- COMMENTS:END -->

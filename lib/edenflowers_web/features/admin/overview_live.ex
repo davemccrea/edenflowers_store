@@ -20,6 +20,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
      |> assign(:page_title, ~t"Overview")
      |> assign(:locale, Localize.get_locale())
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
+     |> assign(:report_month, previous_month())
      |> assign_orders()}
   end
 
@@ -41,6 +42,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <aside class="flex flex-col gap-6 xl:order-last">
             <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
+            <.report_widget month={@report_month} />
           </aside>
           <div class="flex min-w-0 flex-col gap-6">
             <.orders_widget
@@ -177,6 +179,42 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       </dl>
     </.widget>
     """
+  end
+
+  attr :month, :string, required: true
+
+  # A plain GET, not a LiveView event, so the browser downloads the zip itself. The
+  # new tab loads while the zip builds and closes once the download starts; on an
+  # error it shows Overview with the flash.
+  defp report_widget(assigns) do
+    ~H"""
+    <.widget title={~t"Accountant report"}>
+      <form
+        id="report-form"
+        action={~p"/admin/reports"}
+        method="get"
+        target="_blank"
+        class="flex items-end gap-2"
+      >
+        <label class="flex flex-1 flex-col gap-1 text-sm">
+          {~t"Month"}
+          <input type="month" name="month" value={@month} required class="input w-full" />
+        </label>
+        <.button type="submit" variant="primary">
+          <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
+          {~t"Download"}
+        </.button>
+      </form>
+    </.widget>
+    """
+  end
+
+  defp previous_month do
+    Edenflowers.ShopTime.today()
+    |> Date.beginning_of_month()
+    |> Date.add(-1)
+    |> Date.to_iso8601()
+    |> String.slice(0, 7)
   end
 
   attr :balances, :list, required: true, doc: "`{key, title, rows}` groups, largest first"
