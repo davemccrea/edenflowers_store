@@ -1,6 +1,6 @@
 <%= if @order.customer_first_name, do: ~t"Hi #{name = @order.customer_first_name},", else: ~t"Hi," %>
 
-<%= if @order.recipient_first_name do
+<%= if @order.gift && @order.recipient_first_name do
   ~t"Your order for #{recipient = @order.recipient_first_name} was delivered while nobody was home, so I left it in the spot shown in the attached photo."
 else
   ~t"Nobody was home when I delivered your order, so I left it in the spot shown in the attached photo."
