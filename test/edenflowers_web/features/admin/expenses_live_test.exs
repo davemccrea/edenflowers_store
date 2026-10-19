@@ -182,11 +182,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
       assert has_element?(
                view,
-               ~s(#export-drawer form[action="/admin/accounting"] input[name="month"][value="#{String.slice(previous_month, 0, 7)}"])
+               ~s(#report-form input[name="month"][value="#{String.slice(previous_month, 0, 7)}"])
              )
     end
 
-    test "sends the month's zip", %{conn: conn} do
+    test "shows the report building, then pushes the month's zip", %{conn: conn} do
       create_expense("report-doc", "Kukkatukku", "Flowers", date: ~D[2026-09-03])
 
       expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ ->
@@ -197,23 +197,37 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
         {:ok, %{data: [], has_more: false}}
       end)
 
-      conn = get(conn, ~p"/admin/accounting?month=2026-09")
+      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
 
-      assert response_content_type(conn, :zip) =~ "application/zip"
-      assert get_resp_header(conn, "content-disposition") == [~s(attachment; filename="redovisning-2026-09.zip")]
+      assert view |> form("#report-form", month: "2026-09") |> render_submit() =~ "Building report…"
+      assert has_element?(view, "#report-form button[disabled]")
+
+      render_async(view)
+
+      assert_push_event(view, "download", %{filename: "redovisning-2026-09.zip", content: content})
+      assert {:ok, files} = :zip.unzip(Base.decode64!(content), [:memory])
+      assert {~c"kvitton/001_2026-09-03_Kukkatukku.pdf", "%PDF"} in files
+      refute has_element?(view, "#report-form button[disabled]")
     end
 
-    test "flashes an error and sends nothing when Stripe can't be reached", %{conn: conn} do
+    test "flashes an error and pushes nothing when Stripe can't be reached", %{conn: conn} do
       expect(Edenflowers.External.StripeAPI.Mock, :list_balance_transactions_page, fn _, _ -> {:error, :timeout} end)
 
-      {conn, log} = with_log(fn -> get(conn, ~p"/admin/accounting?month=2026-09") end)
+      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
 
-      assert log =~ ~s(Monthly report for "2026-09" failed: {:error, :timeout})
-      assert redirected_to(conn) == ~p"/admin/expenses"
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "couldn't be built"
+      {html, log} =
+        with_log(fn ->
+          view |> form("#report-form", month: "2026-09") |> render_submit()
+          render_async(view)
+        end)
+
+      assert log =~ ~s(Monthly report for "2026-09" failed:)
+      assert html =~ "couldn&#39;t be built"
+      refute_push_event(view, "download", %{})
+      refute has_element?(view, "#report-form button[disabled]")
     end
 
-    test "sends the zip and tells the open expenses page when a receipt can't be fetched", %{conn: conn} do
+    test "pushes the zip and flashes when a receipt can't be fetched", %{conn: conn} do
       create_expense("report-missing", "Kukkatukku", "Flowers", date: ~D[2026-09-03])
       expect(Edenflowers.External.PapraAPI.Mock, :fetch_document, fn _, _ -> {:error, :timeout} end)
 
@@ -223,31 +237,21 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/expenses")
 
-      {conn, log} = with_log(fn -> get(conn, ~p"/admin/accounting?month=2026-09") end)
+      {html, log} =
+        with_log(fn ->
+          view |> form("#report-form", month: "2026-09") |> render_submit()
+          render_async(view)
+        end)
 
       assert log =~ "Receipt report-missing couldn't be fetched"
-      assert response_content_type(conn, :zip) =~ "application/zip"
-      assert render(view) =~ "Receipts missing from the report: 1."
+      assert_push_event(view, "download", %{filename: "redovisning-2026-09.zip"})
+      assert html =~ "Receipts missing from the report: 1."
     end
 
     test "flashes an error for a malformed month", %{conn: conn} do
-      {conn, log} = with_log(fn -> get(conn, ~p"/admin/accounting?month=2026-13") end)
+      {:ok, view, _html} = live(conn, ~p"/admin/expenses")
 
-      assert log =~ ~s(Monthly report for "2026-13" failed:)
-      assert redirected_to(conn) == ~p"/admin/expenses"
-    end
-
-    test "gives a non-admin no report" do
-      user = generate(admin_user(admin: false)) |> with_token()
-
-      conn =
-        build_conn()
-        |> Plug.Test.init_test_session(%{})
-        |> Helpers.store_in_session(user)
-        |> get(~p"/admin/accounting?month=2026-09")
-
-      assert conn.status == 404
-      assert build_conn() |> get(~p"/admin/accounting?month=2026-09") |> Map.get(:status) == 404
+      assert view |> render_submit("download_report", %{"month" => "2026-13"}) =~ "couldn&#39;t be built"
     end
   end
 

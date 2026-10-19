@@ -2,8 +2,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   use EdenflowersWeb, :live_view
   use Cinder.UrlSync
 
+  require Logger
+
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Accounting.MonthlyReport
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.Format
   alias EdenflowersWeb.Layouts
@@ -12,13 +15,12 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:accounting:#{socket.assigns.current_user.id}")
-
     {:ok,
      socket
      |> assign(:page_title, ~t"Expenses")
      |> assign(:locale, Localize.get_locale())
-     |> assign(:report_month, previous_month())}
+     |> assign(:report_month, previous_month())
+     |> assign(:building_report, false)}
   end
 
   @impl true
@@ -27,11 +29,49 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{event: "missing_receipts", payload: count}, socket) do
-    message =
-      ~t"Receipts missing from the report: #{count}. Papra couldn't serve them, so their rows in the spreadsheet say so."
+  def handle_event("download_report", %{"month" => month}, socket) do
+    socket = assign(socket, :report_month, month)
 
-    {:noreply, put_flash(socket, :error, message)}
+    case parse_month(month) do
+      {:ok, year, month} ->
+        {:noreply,
+         socket
+         |> assign(:building_report, true)
+         |> start_async(:report, fn -> MonthlyReport.build(year, month) end)}
+
+      :error ->
+        {:noreply, put_flash(socket, :error, ~t"The report couldn't be built. Please try again.")}
+    end
+  end
+
+  @impl true
+  def handle_async(:report, {:ok, {:ok, filename, zip, count}}, socket) do
+    socket =
+      if count > 0 do
+        put_flash(
+          socket,
+          :error,
+          ~t"Receipts missing from the report: #{count}. Papra couldn't serve them, so their rows in the spreadsheet say so."
+        )
+      else
+        socket
+      end
+
+    # ponytail: the whole zip goes over the socket, fine for a month of receipts;
+    # if months grow to tens of MB, write a temp file and serve it from a signed one-time route.
+    {:noreply,
+     socket
+     |> assign(:building_report, false)
+     |> push_event("download", %{filename: filename, content: Base.encode64(zip)})}
+  end
+
+  def handle_async(:report, result, socket) do
+    Logger.error("Monthly report for #{inspect(socket.assigns.report_month)} failed: #{inspect(result)}")
+
+    {:noreply,
+     socket
+     |> assign(:building_report, false)
+     |> put_flash(:error, ~t"The report couldn't be built. Please try again.")}
   end
 
   @impl true
@@ -74,14 +114,19 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               <.icon name="hero-x-mark" class="h-5 w-5" />
             </.icon_button>
           </header>
-          <form action={~p"/admin/accounting"} method="get" class="flex flex-col gap-4 p-4">
+          <form id="report-form" phx-submit="download_report" class="flex flex-col gap-4 p-4">
             <label class="flex flex-col gap-1 text-sm">
               {~t"Month"}
               <input type="month" name="month" value={@report_month} required class="input w-full" />
             </label>
-            <.button type="submit">
-              <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
-              {~t"Download"}
+            <.button type="submit" variant="primary" disabled={@building_report}>
+              <%= if @building_report do %>
+                <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+                {~t"Building report…"}
+              <% else %>
+                <.icon name="hero-arrow-down-tray" class="h-4 w-4" />
+                {~t"Download"}
+              <% end %>
             </.button>
           </form>
         </.drawer>
@@ -173,6 +218,17 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
     |> Date.to_iso8601()
     |> String.slice(0, 7)
   end
+
+  defp parse_month(<<year::binary-4, "-", month::binary-2>>) do
+    with {year, ""} <- Integer.parse(year),
+         {month, ""} when month in 1..12 <- Integer.parse(month) do
+      {:ok, year, month}
+    else
+      _ -> :error
+    end
+  end
+
+  defp parse_month(_), do: :error
 
   defp search_expenses(query, _searchable_columns, search_term) do
     require Ash.Query
