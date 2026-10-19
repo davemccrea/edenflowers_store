@@ -34,7 +34,7 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
 
     StripeAPI.Mock
     |> Mox.stub(:list_refunds, fn ^pi -> {:ok, []} end)
-    |> Mox.expect(:create_refund, fn ^pi, cents, _key ->
+    |> Mox.expect(:create_refund, fn ^pi, cents, _key, _metadata ->
       {:ok, %{id: "re_#{order.id}", payment_intent: pi, amount: cents, status: "succeeded"}}
     end)
   end
@@ -87,7 +87,7 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
 
     StripeAPI.Mock
     |> Mox.stub(:list_refunds, fn _pi -> {:ok, []} end)
-    |> Mox.expect(:create_refund, fn _pi, _cents, _key -> {:error, :charge_disputed} end)
+    |> Mox.expect(:create_refund, fn _pi, _cents, _key, _metadata -> {:error, :charge_disputed} end)
 
     log =
       capture_log(fn ->

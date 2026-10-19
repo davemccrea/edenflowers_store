@@ -507,6 +507,108 @@ defmodule EdenflowersWeb.Admin.Components do
       else: ~t"Undo the #{amount} payment by #{how}? This records the opposite amount."
   end
 
+  attr :id, :string, required: true
+
+  attr :record, :map,
+    required: true,
+    doc: "an order or booking, with `paid_through_stripe` and `paid_outside_stripe` loaded"
+
+  attr :locale, :string, required: true
+  attr :params, :map, default: %{}, doc: "the form as Jennie has filled it in so far"
+  attr :class, :any, default: nil
+
+  @doc """
+  Hands money back to an unhappy customer without lowering what was sold.
+  Hidden until something shows it, like a menu's "Refund". Sends
+  `goodwill_refund` with `goodwill_refund` params and the record's id as
+  `record_id`, and `change_goodwill_refund` as the form is filled in, so the
+  confirmation can name the amount.
+  """
+  def goodwill_refund_form(assigns) do
+    form =
+      %{"how" => default_goodwill_method(assigns.record), "amount" => "", "note" => ""}
+      |> Map.merge(assigns.params)
+      |> to_form(as: :goodwill_refund)
+
+    assigns = assign(assigns, form: form, how_options: goodwill_method_options(assigns.record))
+
+    ~H"""
+    <div id={@id} class={["hidden", @class]}>
+      <.form
+        for={@form}
+        id={"#{@id}-form"}
+        phx-change="change_goodwill_refund"
+        phx-submit="goodwill_refund"
+        class="grid grid-cols-2 items-end gap-2"
+      >
+        <input type="hidden" name="record_id" value={@record.id} />
+        <p class="text-base-content col-span-2 text-sm font-medium">{~t"Refund the customer"}</p>
+        <.input
+          field={@form[:amount]}
+          id={"#{@id}-amount"}
+          type="text"
+          inputmode="decimal"
+          label={~t"Amount (€)"}
+          class="input w-full tabular-nums"
+        />
+        <.input
+          field={@form[:how]}
+          id={"#{@id}-how"}
+          type="select"
+          label={~t"How"}
+          class="select w-full"
+          options={@how_options}
+        />
+        <div class="col-span-2">
+          <.input
+            field={@form[:note]}
+            id={"#{@id}-note"}
+            type="text"
+            label={~t"Reason (optional)"}
+            class="input w-full"
+          />
+        </div>
+        <.button
+          type="submit"
+          variant="primary"
+          class="col-span-2"
+          phx-disable-with={~t"Refunding…"}
+          data-confirm={goodwill_confirmation(@form[:amount].value, @form[:how].value, @locale)}
+        >
+          {~t"Refund"}
+        </.button>
+      </.form>
+    </div>
+    """
+  end
+
+  defp default_goodwill_method(record),
+    do: if(Decimal.positive?(record.paid_through_stripe), do: "stripe", else: "zettle")
+
+  # Stripe money goes back through Stripe; money Jennie took herself she hands back herself.
+  defp goodwill_method_options(record) do
+    stripe = [{OrderLog.payment_method_label(:stripe), :stripe}]
+
+    case {Decimal.positive?(record.paid_through_stripe), Decimal.positive?(record.paid_outside_stripe)} do
+      {true, true} -> stripe ++ payment_method_options()
+      {true, false} -> stripe
+      {false, _} -> payment_method_options()
+    end
+  end
+
+  defp goodwill_confirmation(amount, how, locale) do
+    with {amount, ""} <- Decimal.parse(String.replace(amount || "", ",", ".")),
+         true <- Decimal.positive?(amount) do
+      amount = Edenflowers.Format.currency(amount, locale)
+
+      if how == "stripe",
+        do: ~t"Refund #{amount} to the customer's card with Stripe? The price stays as it is.",
+        else: ~t"Record #{amount} handed back to the customer? The price stays as it is."
+    else
+      _invalid -> nil
+    end
+  end
+
   attr :title, :string, required: true
   attr :class, :any, default: nil
   slot :description

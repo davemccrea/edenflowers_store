@@ -12,6 +12,7 @@ defmodule Edenflowers.Payments.Payable do
       apart from anything it keeps, like a booking's late-cancellation fee.
     * `calculate :committed?`: whether money is owed on it at all, so not an
       unplaced cart or a booking still holding its seats while the customer pays.
+    * `calculate :cancelled?`
   """
   use Spark.Dsl.Fragment, of: Ash.Resource
 
@@ -55,14 +56,39 @@ defmodule Edenflowers.Payments.Payable do
       require_atomic? false
     end
 
+    # Money handed back to an unhappy customer by any method except Stripe,
+    # without lowering what was sold. Payments.refund_goodwill/3 does it
+    # through Stripe.
+    update :goodwill_refund do
+      argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
+      argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
+      argument :note, :string
+      argument :refund, :decimal, public?: false
+
+      validate argument_does_not_equal(:payment_method, :stripe), message: "is refunded with Stripe"
+      validate Validations.GoodwillRefundable
+
+      change fn changeset, _context ->
+        case Ash.Changeset.get_argument(changeset, :amount) do
+          %Decimal{} = amount -> Ash.Changeset.set_argument(changeset, :refund, Decimal.negate(amount))
+          _invalid -> changeset
+        end
+      end
+
+      change {Changes.RecordPayment, amount: :refund, goodwill: true}
+      require_atomic? false
+    end
+
     # Takes back a payment Jennie recorded by mistake, once, by recording the
     # opposite amount against it. A refund on something that still stands
-    # otherwise has to wait until it's lowered (Validations.Recordable).
+    # otherwise has to wait until it's lowered (Validations.Recordable), or be
+    # a goodwill refund.
     update :undo_payment do
       argument :payment_id, :uuid, allow_nil?: false
       argument :amount, :decimal, public?: false
       argument :payment_method, Edenflowers.Payments.PaymentMethod, public?: false
       argument :reverses_payment_id, :uuid, public?: false
+      argument :goodwill, :boolean, public?: false
 
       change Changes.UndoPayment
       # Undoing a payment whose money was since handed back would leave it owed again.
@@ -74,26 +100,49 @@ defmodule Edenflowers.Payments.Payable do
 
     # From Stripe's refund webhook, so a refund Jennie makes in the Stripe
     # dashboard shows up without her entering it again. Recorded whatever it
-    # is, because the money moved; one beyond what was owed back leaves a
-    # balance to collect.
+    # is, because the money moved. `goodwill` says what a refund made here
+    # was; for one made in the dashboard, the part beyond what was owed back
+    # is goodwill, recorded as its own payment.
     update :record_stripe_refund do
       argument :stripe_refund_id, :string, allow_nil?: false
       argument :amount, :decimal, allow_nil?: false, constraints: [max: 0, scale: 2]
-      change {Changes.RecordPayment, method: :stripe, amount: :amount}
+      argument :goodwill, :boolean
+      argument :note, :string
+      argument :owed_back, :decimal, public?: false
+      argument :goodwill_refund, :decimal, public?: false
+
+      change Changes.SplitOffGoodwill
+
+      change {Changes.RecordPayment, method: :stripe, amount: :owed_back, goodwill: false},
+        where: [present(:owed_back)]
+
+      change {Changes.RecordPayment, method: :stripe, amount: :goodwill_refund, goodwill: true},
+        where: [present(:goodwill_refund)]
+
       require_atomic? false
     end
   end
 
   calculations do
-    # Positive is still to collect, negative is to refund.
-    calculate :balance, :decimal, expr(total_due - amount_paid)
+    # Positive is still to collect, negative is to refund. A goodwill refund
+    # leaves it alone while the price stands, but once the price drops below
+    # what was paid, only money still held above it is owed back.
+    calculate :balance,
+              :decimal,
+              expr(
+                cond do
+                  total_due >= amount_paid -> total_due - amount_paid
+                  total_due >= amount_held -> 0
+                  true -> total_due - amount_held
+                end
+              )
 
     # An undone payment and its undo don't count as taking and handing back money.
     calculate :refunded?,
               :boolean,
               expr(
                 exists(payments, amount > 0 and is_nil(reverses_payment_id) and not exists(reversal, true)) and
-                  amount_paid <= 0
+                  amount_held <= 0
               )
 
     # What a PaymentIntent can charge.
@@ -120,15 +169,25 @@ defmodule Edenflowers.Payments.Payable do
               :decimal,
               expr(
                 cond do
-                  balance >= 0 or amount_paid <= paid_outside_stripe -> 0
-                  -balance < amount_paid - paid_outside_stripe -> -balance
-                  true -> amount_paid - paid_outside_stripe
+                  balance >= 0 or paid_through_stripe <= 0 -> 0
+                  -balance < paid_through_stripe -> -balance
+                  true -> paid_through_stripe
                 end
               )
+
+    # Whether Jennie can hand money back without lowering what was sold
+    # (Validations.GoodwillRefundable).
+    calculate :goodwill_refundable?,
+              :boolean,
+              expr(committed? and not cancelled? and balance <= 0 and amount_held > 0)
   end
 
   aggregates do
-    sum :amount_paid, :payments, :amount, default: Decimal.new("0")
+    # What the customer paid for what was sold, so not goodwill refunds.
+    sum :amount_paid, :payments, :amount, filter: expr(not goodwill), default: Decimal.new("0")
+    # The money still with us.
+    sum :amount_held, :payments, :amount, default: Decimal.new("0")
     sum :paid_outside_stripe, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
+    sum :paid_through_stripe, :payments, :amount, filter: expr(method == :stripe), default: Decimal.new("0")
   end
 end

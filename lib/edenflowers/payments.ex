@@ -38,6 +38,7 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.Payments.Errors.AmountMismatch
   alias Edenflowers.Payments.Errors.PaymentIntentMismatch
   alias Edenflowers.Payments.Payment
+  alias Edenflowers.Payments.Validations
 
   @metadata_keys ["order_id", "course_registration_id"]
 
@@ -294,13 +295,18 @@ defmodule Edenflowers.Payments do
   Records a refund made in the Stripe dashboard against the order or course
   booking it paid for. Refunds not yet succeeded are left alone; Stripe sends
   `refund.updated` once a pending refund goes through.
+
+  A refund made here says in its metadata whether it was owed or goodwill,
+  with a goodwill refund's note, so it's recorded as what it was even before
+  a cancellation it pays for commits. One made in the dashboard says nothing,
+  and the part beyond what was owed back is goodwill.
   """
   def record_stripe_refund(%{status: "succeeded", payment_intent: payment_intent_id} = refund)
       when is_binary(payment_intent_id) do
     with {:ok, payment} <- find_payment(payment_intent_id),
          false <- refund_recorded?(refund.id),
          amount = Decimal.negate(StripeAPI.from_stripe_amount(refund.amount)),
-         {:ok, record} <- record_refund_against(payment, refund.id, amount) do
+         {:ok, record} <- record_refund_against(payment, refund, amount) do
       Logger.info("Recorded Stripe refund #{refund.id} of #{refund.amount} cents for #{describe(record)}")
       {:ok, :recorded}
     else
@@ -312,15 +318,26 @@ defmodule Edenflowers.Payments do
 
   def record_stripe_refund(_refund), do: {:ok, :ignored}
 
-  defp record_refund_against(payment, refund_id, amount) do
+  defp record_refund_against(payment, refund, amount) do
+    metadata = Map.get(refund, :metadata) || %{}
+
+    input = %{
+      stripe_refund_id: refund.id,
+      amount: amount,
+      goodwill: goodwill_reason?(metadata["reason"]),
+      note: metadata["note"]
+    }
+
     with {:ok, payment} <- Ash.load(payment, [:order, :course_registration], actor: system_actor()) do
       (payment.order || payment.course_registration)
-      |> Ash.Changeset.for_update(:record_stripe_refund, %{stripe_refund_id: refund_id, amount: amount},
-        actor: system_actor()
-      )
+      |> Ash.Changeset.for_update(:record_stripe_refund, input, actor: system_actor())
       |> Ash.update()
     end
   end
+
+  defp goodwill_reason?("goodwill"), do: true
+  defp goodwill_reason?("owed"), do: false
+  defp goodwill_reason?(_made_in_dashboard), do: nil
 
   # The webhook and the order page can record the same refund at once; the
   # unique stripe_refund_id turns the loser's insert into an error.
@@ -382,28 +399,51 @@ defmodule Edenflowers.Payments do
   end
 
   @doc """
+  Hands `amount` back through Stripe to an unhappy customer without lowering
+  what was sold, as far as `Validations.GoodwillRefundable` allows, spread
+  over the Stripe payments as `refund_balance/1` does. Recorded as goodwill
+  by `record_stripe_refund/1`, with `note` carried in the refund's metadata.
+  """
+  def refund_goodwill(payable, amount, note) do
+    with :ok <- Validations.GoodwillRefundable.check(payable, amount, :stripe) do
+      refund(payable, fn _payable -> amount end, {:goodwill, note})
+    end
+  end
+
+  @doc """
   Refunds everything an order's customer has paid through Stripe, as
   `refund_balance/1` does, for an order that will not be made.
   """
   def refund_in_full(%Order{} = order) do
-    refund(order, fn order -> order.amount_paid end)
+    refund(order, fn order -> order.amount_held end)
   end
 
-  defp refund(%resource{id: id} = payable, owed) do
+  defp refund(%resource{id: id} = payable, owed, kind \\ :balance) do
     with {:ok, refunds_by_payment} <- stripe_refunds(payable),
          {:ok, _recorded} <- record_refunds(refunds_by_payment),
-         {:ok, payable} <- Ash.get(resource, id, load: [:balance, :amount_paid], authorize?: false) do
-      owed_cents =
-        StripeAPI.to_stripe_amount(Decimal.max(owed.(payable), 0)) -
-          pending_cents(refunds_by_payment)
-
+         {:ok, payable} <- Ash.get(resource, id, load: [:balance, :amount_held], authorize?: false) do
+      owed_cents = StripeAPI.to_stripe_amount(Decimal.max(owed.(payable), 0))
       payment_count = payable |> payments_query() |> Ash.count!(authorize?: false)
+
+      {owed_cents, key, metadata} = refund_terms(kind, owed_cents, refunds_by_payment, "#{id}-#{payment_count}")
 
       refunds_by_payment
       |> Enum.sort_by(fn {payment, _refunds} -> payment.paid_at end, {:desc, DateTime})
-      |> refund_from(owed_cents, "#{id}-#{payment_count}", [])
+      |> refund_from(owed_cents, key, metadata, [])
     end
   end
+
+  defp refund_terms(:balance, cents, refunds_by_payment, key),
+    do: {cents - pending_cents(refunds_by_payment), key, %{"reason" => "owed"}}
+
+  # A goodwill refund is new money on top of any pending refund, so those
+  # aren't taken off it, and its amount is in the key so two different ones
+  # don't collide.
+  defp refund_terms({:goodwill, nil}, cents, _refunds_by_payment, key),
+    do: {cents, "goodwill-#{key}-#{cents}", %{"reason" => "goodwill"}}
+
+  defp refund_terms({:goodwill, note}, cents, _refunds_by_payment, key),
+    do: {cents, "goodwill-#{key}-#{cents}", %{"reason" => "goodwill", "note" => note}}
 
   defp pending_cents(refunds_by_payment) do
     refunds_by_payment
@@ -415,25 +455,26 @@ defmodule Edenflowers.Payments do
 
   defp all_refunds(refunds_by_payment), do: Enum.flat_map(refunds_by_payment, fn {_payment, refunds} -> refunds end)
 
-  defp refund_from(_refunds_by_payment, left_cents, _key, refunds) when left_cents <= 0,
+  defp refund_from(_refunds_by_payment, left_cents, _key, _metadata, refunds) when left_cents <= 0,
     do: {:ok, Enum.reverse(refunds)}
 
-  defp refund_from([], _left_cents, _key, refunds), do: {:ok, Enum.reverse(refunds)}
+  defp refund_from([], _left_cents, _key, _metadata, refunds), do: {:ok, Enum.reverse(refunds)}
 
-  defp refund_from([{payment, existing_refunds} | rest], left_cents, key, refunds) do
+  defp refund_from([{payment, existing_refunds} | rest], left_cents, key, metadata, refunds) do
     case Kernel.min(left_cents, refundable_cents(payment, existing_refunds)) do
       0 ->
-        refund_from(rest, left_cents, key, refunds)
+        refund_from(rest, left_cents, key, metadata, refunds)
 
       cents ->
         with {:ok, refund} <-
                StripeAPI.impl().create_refund(
                  payment.payment_intent_id,
                  cents,
-                 "refund-#{key}-#{payment.payment_intent_id}"
+                 "refund-#{key}-#{payment.payment_intent_id}",
+                 metadata
                ),
-             {:ok, _outcome} <- record_stripe_refund(refund) do
-          refund_from(rest, left_cents - cents, key, [refund | refunds])
+             {:ok, _outcome} <- record_stripe_refund(Map.put(refund, :metadata, metadata)) do
+          refund_from(rest, left_cents - cents, key, metadata, [refund | refunds])
         end
     end
   end

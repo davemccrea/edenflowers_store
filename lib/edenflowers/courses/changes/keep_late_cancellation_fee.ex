@@ -11,11 +11,11 @@ defmodule Edenflowers.Courses.Changes.KeepLateCancellationFee do
 
   @impl true
   def change(changeset, _opts, _context) do
-    registration = Ash.load!(changeset.data, [:amount_paid, :course], authorize?: false, reuse_values?: false)
+    registration = Ash.load!(changeset.data, [:amount_held, :course], authorize?: false, reuse_values?: false)
     course = registration.course
 
     if Date.diff(course.date, Edenflowers.ShopTime.today()) < @full_refund_days do
-      fee = Decimal.min(course.late_cancellation_fee, Decimal.max(registration.amount_paid, 0))
+      fee = Decimal.min(course.late_cancellation_fee, Decimal.max(registration.amount_held, 0))
       Ash.Changeset.force_change_attribute(changeset, :kept_amount, fee)
     else
       changeset

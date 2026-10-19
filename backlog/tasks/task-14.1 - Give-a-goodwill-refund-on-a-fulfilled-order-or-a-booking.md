@@ -1,10 +1,10 @@
 ---
 id: TASK-14.1
 title: Give a goodwill refund on a fulfilled order or a booking
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-17 18:40'
-updated_date: '2026-10-19 13:56'
+updated_date: '2026-10-19 14:17'
 labels: []
 dependencies: []
 parent_task_id: TASK-14
@@ -37,9 +37,9 @@ All of `TASK-14`: decisions 1 to 5.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every case above passes
-- [ ] #2 A fulfilled order refunded in the Stripe dashboard doesn't appear under "To collect" on the Overview
-- [ ] #3 The existing suite passes
+- [x] #1 Every case above passes
+- [x] #2 A fulfilled order refunded in the Stripe dashboard doesn't appear under "To collect" on the Overview
+- [x] #3 The existing suite passes
 <!-- AC:END -->
 
 ## Comments
@@ -69,6 +69,15 @@ created: 2026-10-19 13:56
 ---
 
 Changed on 2026-10-19: a goodwill refund takes an optional reason after all, as a note on Payment (TASK-14 decision 5), not the Florist Note.
+
+---
+
+author: @claude
+created: 2026-10-19 14:17
+
+---
+
+Built on 2026-10-19. Two calls made before building: an order offers Refund whenever it's placed and not cancelled, fulfilled or not (decision 2 as written, over Out of scope); and once a price drops below what was paid after a goodwill refund, only money still held above the price is owed back. Refunds made here carry a reason (owed or goodwill) in Stripe metadata, so only a dashboard refund is split by the balance.
 
 ---
 <!-- COMMENTS:END -->

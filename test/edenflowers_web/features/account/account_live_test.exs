@@ -86,7 +86,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       Edenflowers.External.StripeAPI.Mock
       |> Mox.stub(:list_refunds, fn "pi_account_cancel" -> {:ok, []} end)
-      |> Mox.expect(:create_refund, fn "pi_account_cancel", 8850, _key ->
+      |> Mox.expect(:create_refund, fn "pi_account_cancel", 8850, _key, _metadata ->
         {:ok, %{id: "re_account_cancel", payment_intent: "pi_account_cancel", amount: 8850, status: "succeeded"}}
       end)
 

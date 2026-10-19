@@ -48,6 +48,41 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
+  def goodwill_refund(payable, %{"amount" => amount, "how" => how} = params, actor) do
+    amount = String.replace(amount, ",", ".")
+    note = params |> Map.get("note", "") |> String.trim() |> then(&if(&1 == "", do: nil, else: &1))
+
+    if how == "stripe",
+      do: goodwill_refund_with_stripe(payable, amount, note),
+      else: goodwill_refund_recorded(payable, %{amount: amount, payment_method: how, note: note}, actor)
+  end
+
+  defp goodwill_refund_with_stripe(payable, amount, note) do
+    with {amount, ""} <- Decimal.parse(amount),
+         true <- Decimal.positive?(amount) do
+      case Payments.refund_goodwill(payable, amount, note) do
+        {:ok, refunds} ->
+          {:info, refund_message(refunds)}
+
+        {:error, message} when is_binary(message) ->
+          {:error, message}
+
+        {:error, reason} ->
+          Logger.error("Goodwill refund for #{inspect(payable.__struct__)} #{payable.id} failed: #{inspect(reason)}")
+          {:error, ~t"Could not refund with Stripe. Check the payment in Stripe."}
+      end
+    else
+      _invalid -> {:error, payment_error(nil)}
+    end
+  end
+
+  defp goodwill_refund_recorded(payable, input, actor) do
+    case Ash.update(payable, input, action: :goodwill_refund, actor: actor) do
+      {:ok, _payable} -> {:info, ~t"Refund recorded."}
+      {:error, error} -> {:error, payment_error(error)}
+    end
+  end
+
   def open_payment_link(payable, actor) do
     case Ash.update(payable, %{}, action: :open_payment_link, actor: actor) do
       {:ok, _payable} -> {:info, ~t"Payment link created."}

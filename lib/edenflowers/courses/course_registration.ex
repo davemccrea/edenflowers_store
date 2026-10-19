@@ -332,6 +332,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     # A pending booking only holds its seats while the customer pays.
     calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled])
+    calculate :cancelled?, :boolean, expr(status == :cancelled)
 
     calculate :holds_seats?,
               :boolean,

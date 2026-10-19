@@ -496,7 +496,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click()
-    assert has_element?(view, "#order-log", "Refunded €10.00 · Stripe")
+    assert has_element?(view, "#order-log", "Goodwill refund €10.00 · Stripe")
 
     assert view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click() =~
              "No new refunds in Stripe."
@@ -532,7 +532,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       "pi_new" -> {:ok, [%{id: "re_pending", amount: 1000, status: "pending"}]}
       "pi_old" -> {:ok, []}
     end)
-    |> Mox.expect(:create_refund, 2, fn payment_intent_id, cents, key ->
+    |> Mox.expect(:create_refund, 2, fn payment_intent_id, cents, key, _metadata ->
       assert key == "refund-#{order.id}-2-#{payment_intent_id}"
       send(test_pid, {:refunded, payment_intent_id, cents})
       {:ok, %{id: "re_#{payment_intent_id}", payment_intent: payment_intent_id, amount: cents, status: "succeeded"}}
@@ -555,7 +555,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     # Stripe hasn't listed the first refund yet when the second click arrives.
     StripeAPI.Mock
     |> Mox.stub(:list_refunds, fn "pi_paid" -> {:ok, []} end)
-    |> Mox.expect(:create_refund, 2, fn "pi_paid", cents, key ->
+    |> Mox.expect(:create_refund, 2, fn "pi_paid", cents, key, _metadata ->
       send(test_pid, {:refund_key, key})
       {:ok, %{id: "re_pending", payment_intent: "pi_paid", amount: cents, status: "pending"}}
     end)
@@ -594,10 +594,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     StripeAPI.Mock
     |> Mox.stub(:list_refunds, fn _payment_intent_id -> {:ok, []} end)
-    |> Mox.expect(:create_refund, fn "pi_new", cents, _key ->
+    |> Mox.expect(:create_refund, fn "pi_new", cents, _key, _metadata ->
       {:ok, %{id: "re_pi_new", payment_intent: "pi_new", amount: cents, status: "succeeded"}}
     end)
-    |> Mox.expect(:create_refund, fn "pi_old", _cents, _key -> {:error, :card_declined} end)
+    |> Mox.expect(:create_refund, fn "pi_old", _cents, _key, _metadata -> {:error, :card_declined} end)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -628,7 +628,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
          %{id: "re_pending", payment_intent: "pi_paid", amount: pending, status: "pending"}
        ]}
     end)
-    |> Mox.expect(:create_refund, 0, fn _, _, _ -> flunk("refunded twice") end)
+    |> Mox.expect(:create_refund, 0, fn _, _, _, _ -> flunk("refunded twice") end)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -756,5 +756,55 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert {:error, {:live_redirect, %{to: to}}} = live(conn, ~p"/admin/orders/#{missing_id}")
     assert to == ~p"/admin/orders"
+  end
+
+  describe "goodwill refund" do
+    test "Refund is offered only once nothing is to collect", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{placed_order(paid: "40.00").id}")
+      refute has_element?(view, "#order-actions button", "Refund")
+      refute has_element?(view, "#order-goodwill-refund")
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{placed_order(paid: true).id}")
+      assert has_element?(view, "#order-actions button", "Refund")
+      assert has_element?(view, "#order-goodwill-refund.hidden")
+    end
+
+    test "a part refund by cash is recorded with its reason and leaves nothing to collect", %{conn: conn} do
+      order = placed_order()
+      generate(payment(order_id: order.id, method: :cash, amount: Decimal.new("88.50")))
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+      view
+      |> form("#order-goodwill-refund-form", goodwill_refund: %{amount: "20,00", how: "cash", note: "Wilted early"})
+      |> render_submit()
+
+      assert has_element?(view, "#order-log", "Goodwill refund €20.00 · Cash")
+      assert has_element?(view, "#order-log", "Wilted early")
+      assert has_element?(view, "#order-payments", "Goodwill refund · Cash")
+      assert has_element?(view, "#order-payments", "Wilted early")
+      refute render(view) =~ "To collect"
+    end
+
+    test "a part refund by Stripe is sent and recorded, leaving nothing to collect", %{conn: conn} do
+      order = placed_order()
+      generate(payment(order_id: order.id, amount: Decimal.new("88.50"), payment_intent_id: "pi_paid"))
+
+      StripeAPI.Mock
+      |> Mox.stub(:list_refunds, fn "pi_paid" -> {:ok, []} end)
+      |> Mox.expect(:create_refund, fn "pi_paid", 2_000, _key, %{"reason" => "goodwill"} ->
+        {:ok, %{id: "re_goodwill", payment_intent: "pi_paid", amount: 2_000, status: "succeeded"}}
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      assert has_element?(view, ~s|#order-goodwill-refund-how option[value="stripe"][selected]|)
+
+      view
+      |> form("#order-goodwill-refund-form", goodwill_refund: %{amount: "20.00", how: "stripe"})
+      |> render_submit()
+
+      assert has_element?(view, "#order-log", "Goodwill refund €20.00 · Stripe")
+      refute render(view) =~ "To collect"
+    end
   end
 end

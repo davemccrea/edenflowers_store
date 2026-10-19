@@ -163,7 +163,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
         StripeAPI.Mock
         |> stub(:list_refunds, fn "pi_paid" -> {:ok, []} end)
-        |> expect(:create_refund, fn "pi_paid", 8_850, _key ->
+        |> expect(:create_refund, fn "pi_paid", 8_850, _key, _metadata ->
           {:ok, %{id: "re_#{record.id}", payment_intent: "pi_paid", amount: 8_850, status: "succeeded"}}
         end)
 
