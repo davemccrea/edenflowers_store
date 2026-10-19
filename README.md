@@ -36,11 +36,10 @@ PORT=4001 just dev              # same, on another port (also honoured by stripe
 just test [args]                # run the test suite
 just stripe-listen              # forward Stripe webhooks to the dev server
 just issues                     # issue board at 127.0.0.1:6420 (npm i -g backlog.md)
-just db-reset                   # drop and set up the dev + test databases
-just db-seed local|staging      # seed the local or staging database
-just db-seed-production         # one-off base seed of an empty production database
-just db-backup-production       # pg_dump production into tmp/
-just db-wipe-staging            # drop the staging schema so the next deploy migrates from scratch
+just db-reset local|staging     # drop and migrate dev + test, or staging
+just db-seed local|staging      # seed the local or staging database (run after db-reset)
+just db-seed production         # one-off base seed of an empty production database
+just db-backup staging|production # pg_dump a server's database into tmp/
 just deploy staging             # push current branch and deploy it to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
 just deploy-watch               # follow the latest deploy run

@@ -37,45 +37,18 @@ typst-install:
 check-typst:
     @command -v typst >/dev/null || { echo "typst not found: receipt PDFs (and their tests) need it. Run 'just typst-install'." >&2; exit 1; }
 
-# Drop and set up the dev and test databases (run `just db-seed local` afterwards for data)
+# Drop and migrate a database (local: dev and test; staging: restarts the app on an empty schema)
 [group('database')]
-db-reset:
-    ./scripts/reset-db.sh
-
-# Seed a database (local or staging, never production)
-[group('database')]
-db-seed target:
+db-reset target:
     #!/usr/bin/env bash
     set -euo pipefail
     case "{{ target }}" in
       local)
-        mix run priv/repo/seeds.exs ;;
+        ./scripts/reset-db.sh ;;
       staging)
-        ssh -T edenflowers-staging "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds.exs\"))'" ;;
-      *)
-        echo "Unknown target '{{ target }}', use local or staging" >&2; exit 1 ;;
-    esac
-
-# Seed an empty production database with admins, tax rates, delivery options and categories (fails if already seeded)
-[confirm("Seed the PRODUCTION database? [y/N]")]
-[group('database')]
-db-seed-production:
-    ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds/production.exs\"))'"
-
-# Back up the production database to tmp/
-[group('database')]
-db-backup-production:
-    @mkdir -p tmp
-    ssh edenflowers-production 'sudo -u postgres pg_dump -Fc edenflowers_store_prod' > tmp/production-$(date +%F).dump
-    @ls -lh tmp/production-$(date +%F).dump
-
-# Wipe the staging database, leaving an empty schema for the next deploy to migrate
-[confirm("Wipe the STAGING database? [y/N]")]
-[group('database')]
-db-wipe-staging:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    ssh -T edenflowers-staging bash -s <<'EOF'
+        read -r -p "Wipe the STAGING database? [y/N] " answer
+        [[ "$answer" =~ ^[yY]$ ]] || exit 1
+        ssh -T edenflowers-staging bash -s <<'EOF'
     set -euo pipefail
     cd /opt/edenflowers_store
     db=edenflowers_store_staging
@@ -88,7 +61,47 @@ db-wipe-staging:
       -c "create schema public" \
       -c "grant all on schema public to $app_role" \
       -c "create extension citext"
+    # Without </dev/null, run reads the rest of this script from stdin and the app never starts
+    docker compose run --rm -T app /app/bin/migrate </dev/null
+    docker compose up -d app
     EOF
+        ;;
+      *)
+        echo "Unknown target '{{ target }}', use local or staging" >&2; exit 1 ;;
+    esac
+
+# Seed a database (local, staging, or a one-off base seed of an empty production)
+[group('database')]
+db-seed target:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{ target }}" in
+      local)
+        mix run priv/repo/seeds.exs ;;
+      staging)
+        ssh -T edenflowers-staging "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds.exs\"))'" ;;
+      production)
+        read -r -p "Seed the PRODUCTION database? [y/N] " answer
+        [[ "$answer" =~ ^[yY]$ ]] || exit 1
+        ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds/production.exs\"))'" ;;
+      *)
+        echo "Unknown target '{{ target }}', use local, staging or production" >&2; exit 1 ;;
+    esac
+
+# Back up a server's database (staging or production) to tmp/
+[group('database')]
+db-backup target:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{ target }}" in
+      staging) db=edenflowers_store_staging ;;
+      production) db=edenflowers_store_prod ;;
+      *) echo "Unknown target '{{ target }}', use staging or production" >&2; exit 1 ;;
+    esac
+    mkdir -p tmp
+    file="tmp/{{ target }}-$(date +%F).dump"
+    ssh edenflowers-{{ target }} "sudo -u postgres pg_dump -Fc $db" > "$file"
+    ls -lh "$file"
 
 # Deploy to staging or production (asks if no target is given)
 [group('deployment')]
@@ -115,24 +128,3 @@ server-logs target:
 server-console target:
     ssh -t edenflowers-{{ target }} 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
 
-# Backwards-compatible aliases for the previous command names. Keep these out of `just --list`.
-[private]
-alias install-typst := typst-install
-[private]
-alias reset-local-db := db-reset
-[private]
-alias seed := db-seed
-[private]
-alias seed-production := db-seed-production
-[private]
-alias dump-production-db := db-backup-production
-[private]
-alias reset-staging-db := db-wipe-staging
-[private]
-alias deploy-status := deploy-watch
-[private]
-alias sync-images := images-sync
-[private]
-alias logs := server-logs
-[private]
-alias console := server-console

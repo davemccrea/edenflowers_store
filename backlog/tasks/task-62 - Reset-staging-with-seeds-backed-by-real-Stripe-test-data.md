@@ -42,7 +42,7 @@ Reset staging to the seeded shop with real Stripe test data behind every seeded 
 
 4. **Stripe can't be backdated.** Every Stripe object is dated the day of seeding while seeded `Payment`s keep their relative dates, so the Stripe sheet only matches the current month. Accepted; note it in a seeds comment.
 
-5. **One recipe resets staging.** `just staging-reset` drops and recreates the staging database, migrates it and runs `just db-seed staging --stripe`, after a confirmation prompt naming staging. Read phoenix-ansible for how staging's Postgres and app container run rather than probing the server. Wiping Stripe stays manual (Stripe has no API for it): the recipe prints a reminder to use "Delete all test data" in the Dashboard first (or recreate the sandbox and update staging's keys and webhook secret).
+5. **One recipe resets staging.** `just db-reset staging` drops and recreates the staging database, migrates it and runs `just db-seed staging --stripe`, after a confirmation prompt naming staging. Read phoenix-ansible for how staging's Postgres and app container run rather than probing the server. Wiping Stripe stays manual (Stripe has no API for it): the recipe prints a reminder to use "Delete all test data" in the Dashboard first (or recreate the sandbox and update staging's keys and webhook secret).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -51,5 +51,5 @@ Reset staging to the seeded shop with real Stripe test data behind every seeded 
 - [ ] #2 Without the flag, local seeding makes no Stripe calls and produces the same data as today
 - [ ] #3 Seeding with the flag refuses a key that isn't sk_test_ before writing anything
 - [ ] #4 On a reset staging, a seeded order can be refunded through Stripe from the admin and the current month's Stripe sheet lists the seeded charges and refunds
-- [ ] #5 just db-seed staging --stripe seeds with Stripe on; just staging-reset empties and migrates staging and runs it, after a confirmation, reminding to wipe Stripe test data first
+- [ ] #5 just db-seed staging --stripe seeds with Stripe on; just db-reset staging empties and migrates staging and runs it, after a confirmation, reminding to wipe Stripe test data first
 <!-- AC:END -->
