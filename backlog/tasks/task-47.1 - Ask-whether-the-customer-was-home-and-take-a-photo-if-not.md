@@ -1,10 +1,10 @@
 ---
 id: TASK-47.1
 title: Ask whether the customer was home and take a photo if not
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
-updated_date: '2026-10-18 19:10'
+updated_date: '2026-10-19 06:46'
 labels: []
 dependencies: []
 parent_task_id: TASK-47
@@ -23,7 +23,7 @@ Confirming a delivery asks "Was the customer home?". No: Jennie takes or uploads
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Confirming a delivery asks whether the customer was home
-- [ ] #2 If not, Jennie can take a photo on her phone and it shows on the order page
+- [x] #2 If not, Jennie can take a photo on her phone and it shows on the order page
 - [x] #3 The photo's URL can't be guessed from the order
 <!-- AC:END -->
 
@@ -36,6 +36,15 @@ created: 2026-10-18 19:10
 ---
 
 Built and tested in LiveView. Left: on a real phone, confirm a delivery with 'No' and check the photo picker offers the camera and the photo shows on the order page.
+
+---
+
+author: @claude
+created: 2026-10-19 06:46
+
+---
+
+User confirmed TASK-47.1 is working; the remaining phone photo capture and order-page display check is complete.
 
 ---
 <!-- COMMENTS:END -->
