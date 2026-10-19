@@ -219,14 +219,14 @@ defmodule Edenflowers.Orders.Order do
       # Queued only when Jennie asks for it, on :mark_fulfilled or
       # :email_fulfillment_confirmation. A job that runs out of attempts records
       # the failure for her to see and send again.
-      trigger :send_delivered_email do
-        action :send_delivered_email
+      trigger :send_fulfillment_email do
+        action :send_fulfillment_email
         queue :default
         max_attempts 3
         lock_for_update? false
         scheduler_cron false
-        worker_module_name Edenflowers.Orders.Workers.SendDeliveredEmail
-        scheduler_module_name Edenflowers.Orders.Schedulers.SendDeliveredEmail
+        worker_module_name Edenflowers.Orders.Workers.SendFulfillmentEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendFulfillmentEmail
         default_actor system_actor()
         on_error :record_fulfillment_email_failure
       end
@@ -304,7 +304,7 @@ defmodule Edenflowers.Orders.Order do
       :send_order_details_email,
       :send_payment_failed_email,
       :send_confirmation_email,
-      :send_delivered_email,
+      :send_fulfillment_email,
       :record_fulfillment_email_failure,
       :record_receipt_email_failure,
       :record_details_email_failure,
@@ -844,17 +844,17 @@ defmodule Edenflowers.Orders.Order do
       change Changes.SendConfirmationEmail
     end
 
-    update :send_delivered_email do
+    update :send_fulfillment_email do
       accept []
       transaction? false
       require_atomic? false
-      change Changes.SendDeliveredEmail
+      change Changes.SendFulfillmentEmail
     end
 
     # AshOban passes the error to these, which the errors page already shows.
     update :record_fulfillment_email_failure do
       accept []
-      change set_attribute(:delivered_email_failed_at, &DateTime.utc_now/0)
+      change set_attribute(:fulfillment_email_failed_at, &DateTime.utc_now/0)
     end
 
     update :record_receipt_email_failure do
@@ -888,7 +888,7 @@ defmodule Edenflowers.Orders.Order do
       validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :fulfilled), message: "isn't fulfilled"
       validate present(:customer_email), message: "has no email address"
-      change run_oban_trigger(:send_delivered_email)
+      change run_oban_trigger(:send_fulfillment_email)
     end
 
     update :mark_fulfilled do
@@ -905,7 +905,7 @@ defmodule Edenflowers.Orders.Order do
           attribute_equals(:email_delivery_photo, true)
         ]
 
-      change run_oban_trigger(:send_delivered_email),
+      change run_oban_trigger(:send_fulfillment_email),
         where: [argument_equals(:email_customer?, true), present(:customer_email)]
 
       change load(@admin_show_load)
@@ -959,7 +959,7 @@ defmodule Edenflowers.Orders.Order do
                      :send_payment_failed_email,
                      :mark_payment_cancelled,
                      :send_confirmation_email,
-                     :send_delivered_email,
+                     :send_fulfillment_email,
                      :record_fulfillment_email_failure,
                      :record_receipt_email_failure,
                      :record_details_email_failure,
@@ -1031,7 +1031,7 @@ defmodule Edenflowers.Orders.Order do
     publish :record_link_payment, ["admin", "orders"]
     publish :cancel_by_customer, ["admin", "orders"]
     # An email sent or failed in the background: an open order page reloads.
-    publish :send_delivered_email, ["order", "email", :id]
+    publish :send_fulfillment_email, ["order", "email", :id]
     publish :record_fulfillment_email_failure, ["order", "email", :id]
     publish :send_confirmation_email, ["order", "email", :id]
     publish :record_receipt_email_failure, ["order", "email", :id]
@@ -1124,15 +1124,15 @@ defmodule Edenflowers.Orders.Order do
     # The last queued receipt ran out of attempts. Cleared by a successful send.
     attribute :receipt_email_failed_at, :utc_datetime
     attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
-    attribute :delivered_emailed_at, :utc_datetime
+    attribute :fulfillment_emailed_at, :utc_datetime
     # The customer's email can change later; the log names who was sent it.
-    attribute :delivered_emailed_to, :string
+    attribute :fulfillment_emailed_to, :string
     # Where Jennie left a delivery nobody answered the door for.
     attribute :delivery_photo_slug, :string
-    # Sends the photo in place of the delivered email.
+    # Sends the photo in place of the fulfillment email.
     attribute :email_delivery_photo, :boolean, allow_nil?: false, default: false
     # The last queued send ran out of attempts. Cleared by a successful send.
-    attribute :delivered_email_failed_at, :utc_datetime
+    attribute :fulfillment_email_failed_at, :utc_datetime
     # The order details a custom order's customer is sent when it is placed.
     attribute :details_emailed_at, :utc_datetime
     attribute :details_email_failed_at, :utc_datetime

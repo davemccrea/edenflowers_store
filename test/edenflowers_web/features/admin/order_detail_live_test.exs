@@ -202,7 +202,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(view, "#order-status", "Fulfilled")
     assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :fulfilled
-    refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
+    refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
   end
 
   test "emails the confirmation from the menu and logs it when sent", %{conn: conn} do
@@ -219,7 +219,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   @tag capture_log: true
   test "an open page shows a confirmation that failed in the background", %{conn: conn} do
-    Req.Test.stub(Edenflowers.Orders.Changes.SendDeliveredEmail, fn conn ->
+    Req.Test.stub(Edenflowers.Orders.Changes.SendFulfillmentEmail, fn conn ->
       Plug.Conn.send_resp(conn, 503, "unavailable")
     end)
 
@@ -234,7 +234,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
     refute has_element?(view, "#order-confirmation-failed")
 
-    perform_job(Edenflowers.Orders.Workers.SendDeliveredEmail, %{"primary_key" => %{"id" => order.id}},
+    perform_job(Edenflowers.Orders.Workers.SendFulfillmentEmail, %{"primary_key" => %{"id" => order.id}},
       attempt: 3,
       max_attempts: 3
     )
@@ -297,7 +297,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
       assert has_element?(view, "#confirm-fulfillment-dialog [role=alert]", "Take a photo of where you left the order.")
       assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :pending
-      refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
+      refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
 
     test "the customer was home: fulfils with no photo", %{conn: conn} do
@@ -317,7 +317,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       refute has_element?(view, "#order-delivery-photo")
 
       assert_enqueued(
-        worker: Edenflowers.Orders.Workers.SendDeliveredEmail,
+        worker: Edenflowers.Orders.Workers.SendFulfillmentEmail,
         args: %{"primary_key" => %{"id" => order.id}}
       )
     end
@@ -380,7 +380,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       order = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
       assert order.fulfillment_status == :fulfilled
       refute order.email_delivery_photo
-      refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
+      refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
 
     test "the choice starts ticked each time the form opens", %{conn: conn} do
@@ -401,7 +401,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
     end
 
-    test "no: fulfils without queueing the delivered email", %{conn: conn} do
+    test "no: fulfils without queueing the fulfillment email", %{conn: conn} do
       order = placed_order()
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
@@ -413,7 +413,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
       reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
       assert reloaded.fulfillment_status == :fulfilled
-      refute_enqueued(worker: Edenflowers.Orders.Workers.SendDeliveredEmail)
+      refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
   end
 

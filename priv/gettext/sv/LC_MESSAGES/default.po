@@ -6404,7 +6404,7 @@ msgstr "Bekräfta leverans"
 msgid "Clear customer selection"
 msgstr "Rensa kundvalet"
 
-#: lib/edenflowers/orders/changes/send_delivered_email.ex:47
+#: lib/edenflowers/orders/changes/send_fulfillment_email.ex:47
 #, elixir-autogen, elixir-format
 msgid "Delivery photo is missing."
 msgstr "Leveransbilden saknas."
@@ -6419,7 +6419,7 @@ msgstr "Mejla bekräftelse på hämtning"
 msgid "Email delivery confirmation"
 msgstr "Mejla leveransbekräftelse"
 
-#: lib/edenflowers/orders/changes/send_delivered_email.ex:39
+#: lib/edenflowers/orders/changes/send_fulfillment_email.ex:39
 #, elixir-autogen, elixir-format
 msgid "Failed to send fulfillment email: %{error}"
 msgstr "Kunde inte skicka bekräftelse på leverans eller hämtning: %{error}"

@@ -65,5 +65,5 @@ config :edenflowers, :papra_req_options, plug: {Req.Test, Edenflowers.External.P
 config :edenflowers, :web_push_req_options, plug: {Req.Test, Edenflowers.WebPush}
 
 config :edenflowers, :delivery_photo_req_options,
-  plug: {Req.Test, Edenflowers.Orders.Changes.SendDeliveredEmail},
+  plug: {Req.Test, Edenflowers.Orders.Changes.SendFulfillmentEmail},
   retry: false

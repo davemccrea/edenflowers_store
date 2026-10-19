@@ -175,7 +175,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </div>
 
               <div
-                :if={@order.delivered_email_failed_at}
+                :if={@order.fulfillment_email_failed_at}
                 id="order-confirmation-failed"
                 class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
               >
@@ -1112,12 +1112,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           data-confirm={
             confirm_send(
               ~t"Email the fulfillment confirmation to #{email = @order.customer_email}?",
-              @order.delivered_emailed_at,
+              @order.fulfillment_emailed_at,
               @locale
             )
           }
         >
-          {if @order.delivered_emailed_at, do: ~t"Resend confirmation", else: ~t"Email confirmation"}
+          {if @order.fulfillment_emailed_at, do: ~t"Resend confirmation", else: ~t"Email confirmation"}
         </.actions_menu_button>
         <.unavailable_menu_item :if={@confirmation_unavailable} reason={@confirmation_unavailable}>
           {~t"Email confirmation"}
