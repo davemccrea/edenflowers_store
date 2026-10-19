@@ -199,8 +199,10 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/expenses")
 
-      assert view |> form("#report-form", month: "2026-09") |> render_submit() =~ "Building report…"
-      assert has_element?(view, "#report-form button[disabled]")
+      # Checked in the submit's own render: the build can finish before a later look at the view.
+      html = view |> form("#report-form", month: "2026-09") |> render_submit()
+      assert html =~ "Building report…"
+      assert html |> LazyHTML.from_fragment() |> LazyHTML.query("#report-form button[disabled]") |> Enum.any?()
 
       # Building the zip can outlast the default 100ms when the whole suite runs at once.
       render_async(view, 1_000)
