@@ -215,11 +215,19 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
     end
 
     test "leaves out the recipient when the order isn't a gift" do
-      order = fulfillable_order(fulfillment_status: :fulfilled)
+      order =
+        fulfillable_order(
+          gift: false,
+          customer_name: "Sara Smith",
+          recipient_name: "Sara Smith",
+          fulfillment_status: :fulfilled
+        )
 
       assert {:ok, _} = perform_job(SendDeliveredEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
+        assert email.text_body =~ "Hi Sara,"
+        refute email.text_body =~ "Your order for Sara"
         assert email.text_body =~ "Your order has been delivered."
       end)
     end
@@ -310,6 +318,8 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmailTest do
 
       order =
         fulfillable_order(
+          gift: false,
+          recipient_name: "Ada Lovelace",
           fulfillment_status: :fulfilled,
           delivery_photo_slug: "local:///uploads/door.jpg",
           email_delivery_photo: true
