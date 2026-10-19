@@ -1,9 +1,10 @@
 ---
 id: TASK-65
 title: Show the custom order's price breakdown on the order form
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-19 20:56'
+updated_date: '2026-10-19 21:10'
 labels:
   - spec
   - admin
@@ -33,8 +34,14 @@ Jennie sees what the order costs while she enters it: each item, the card, deliv
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The form shows each line, the fulfillment fee, VAT and the total before the order is saved
-- [ ] #2 The summary updates as items, quantities, prices, the card, the option, the address or her own fee change
-- [ ] #3 The total shown equals the total of the order once saved
-- [ ] #4 Editing a paid order also shows what is paid and the balance
+- [x] #1 The form shows each line, the fulfillment fee, VAT and the total before the order is saved
+- [x] #2 The summary updates as items, quantities, prices, the card, the option, the address or her own fee change
+- [x] #3 The total shown equals the total of the order once saved
+- [x] #4 Editing a paid order also shows what is paid and the balance
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Priced by Orders.EnteredPrice from the params the form submits, with the domain's own rules: lines as LineItem :enter and EnterCardLine price them, the fee as PriceFulfillment and fee_for_cart charge it (an edit that leaves the option, address and own fee alone keeps the order's fee), VAT by Vat.compute_breakdown. The address is priced by the quote the form already looked up, so nothing is geocoded per keystroke. Tests check the shown total, VAT and fee equal the saved order's. The summary sits above Payment, so the payment choice stays last before Place order. money_row moved to Admin.Components for the order page and the form.
+<!-- SECTION:NOTES:END -->

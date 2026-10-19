@@ -814,4 +814,29 @@ defmodule EdenflowersWeb.Admin.Components do
 
     "#{Edenflowers.Format.day_month(DateTime.to_date(local), locale)} #{Edenflowers.Format.time(DateTime.to_time(local), locale)}"
   end
+
+  attr :label, :string, required: true
+  attr :amount, :any, default: nil
+  attr :locale, :string, required: true
+  attr :strong, :boolean, default: false
+  attr :muted, :boolean, default: false, doc: "for figures already counted in the total, like included VAT"
+  attr :ruled, :boolean, default: false, doc: "starts a new group under the rows above"
+
+  @doc "A label and an amount in a list of money, as the order page's Payment section shows them."
+  def money_row(assigns) do
+    ~H"""
+    <div class={["flex items-center justify-between gap-4 py-0.5", @ruled && "border-base-content/12 mt-1.5 border-t pt-2", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 font-semibold", @muted && "text-base-content/65"]}>
+      <dt class={money_row_tone(@strong, @muted, "text-base-content/75")}>
+        {@label}
+      </dt>
+      <dd class={["tabular-nums", money_row_tone(@strong, @muted, "text-base-content/90")]}>
+        {Edenflowers.Format.currency(@amount, @locale)}
+      </dd>
+    </div>
+    """
+  end
+
+  defp money_row_tone(true = _strong, _muted, _default), do: "text-base-content"
+  defp money_row_tone(_strong, true = _muted, _default), do: nil
+  defp money_row_tone(_strong, _muted, default), do: default
 end
