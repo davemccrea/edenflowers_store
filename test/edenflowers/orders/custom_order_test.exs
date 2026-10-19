@@ -77,6 +77,15 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     Orders.place_custom_order(params(ctx, overrides), actor: ctx.admin)
   end
 
+  defp card(ctx, attrs) do
+    product = generate(product(tax_rate_id: ctx.tax_rate.id))
+    generate(product_variant(Keyword.merge([product_id: product.id], attrs)))
+  end
+
+  defp card_lines(order) do
+    for line <- Ash.load!(order, :line_items, authorize?: false).line_items, line.is_card, do: line
+  end
+
   defp line_errors(error, index) do
     for %{path: [:line_items, ^index], field: field} = e <- Ash.Error.to_error_class(error).errors,
         do: {field, e.message}
@@ -159,6 +168,26 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert {:error, error} = place(ctx, %{gift: true, card_message: String.duplicate("a", 201)})
       assert Exception.message(error) =~ "at most 200 characters"
+    end
+
+    test "adds the chosen card as the order's card, limiting the message to its size", ctx do
+      small = card(ctx, size: :small, price: "3.00")
+
+      {:ok, order} = place(ctx, %{gift: true, recipient_name: "Ada", card_variant_id: small.id, card_message: "Hi"})
+
+      assert [%{product_variant_id: id, quantity: 1}] = card_lines(order)
+      assert id == small.id
+
+      assert {:error, error} =
+               place(ctx, %{gift: true, card_variant_id: small.id, card_message: String.duplicate("a", 81)})
+
+      assert Exception.message(error) =~ "at most 80 characters"
+    end
+
+    test "adds no card when the flowers are for the customer", ctx do
+      {:ok, order} = place(ctx, %{gift: false, card_variant_id: card(ctx, []).id})
+
+      assert card_lines(order) == []
     end
 
     test "keeps a recipient and card only when the flowers are for somebody else", ctx do
@@ -560,39 +589,42 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert Decimal.equal?(price, "49.00")
     end
 
-    test "an online order with a card keeps it as a card", ctx do
-      card = generate(product_variant(product_id: generate(product(tax_rate_id: ctx.tax_rate.id)).id, price: "4.00"))
+    test "an online order keeps its card, at the price it was sold at", ctx do
+      card = card(ctx, price: "4.00")
+      order = online_order_with_card(ctx, card)
+      Ash.Changeset.for_update(card, :update, %{price: "6.00"}) |> Ash.update!(authorize?: false)
 
-      order =
-        generate(
-          order(
-            state: :placed,
-            customer_name: "Ada",
-            customer_email: "ada@example.com",
-            fulfillment_option_id: ctx.pickup.id,
-            fulfillment_method: :pickup,
-            fulfillment_date: tomorrow(),
-            card_message: "Happy birthday",
-            locale: "en-GB"
-          )
-        )
+      {:ok, order} = Orders.edit_order(order, edit_params(ctx, %{card_variant_id: card.id}), actor: ctx.admin)
 
-      card_line = generate(line_item(order_id: order.id, product_variant_id: card.id, is_card: true))
-      kept = %{"id" => card_line.id, "quantity" => "1"}
+      assert [%{product_variant_id: id, unit_price: price}] = card_lines(order)
+      assert id == card.id
+      assert Decimal.equal?(price, "4.00")
+    end
 
-      {:ok, order} =
+    test "choosing another card replaces the order's card", ctx do
+      order = online_order_with_card(ctx, card(ctx, []))
+      other = card(ctx, [])
+
+      {:ok, order} = Orders.edit_order(order, edit_params(ctx, %{card_variant_id: other.id}), actor: ctx.admin)
+
+      assert [%{product_variant_id: id}] = card_lines(order)
+      assert id == other.id
+    end
+
+    test "the card goes with no card chosen, or when the flowers are for the customer", ctx do
+      card = card(ctx, [])
+
+      {:ok, no_card} = Orders.edit_order(online_order_with_card(ctx, card), edit_params(ctx, %{}), actor: ctx.admin)
+
+      {:ok, for_customer} =
         Orders.edit_order(
-          order,
-          %{
-            customer_name: "Ada",
-            fulfillment_option_id: ctx.pickup.id,
-            fulfillment_date: tomorrow(),
-            line_items: [kept, catalogue_line(ctx.variant)]
-          },
+          online_order_with_card(ctx, card),
+          edit_params(ctx, %{gift: false, card_variant_id: card.id}),
           actor: ctx.admin
         )
 
-      assert [%{is_card: true}, %{is_card: false}] = Ash.load!(order, :line_items, authorize?: false).line_items
+      assert card_lines(no_card) == []
+      assert card_lines(for_customer) == []
     end
 
     test "the florist note can change on any order, even a fulfilled one", ctx do
@@ -607,6 +639,42 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert change.title == "Florist note changed"
       assert change.details == [{nil, "White only, no lilies"}]
     end
+  end
+
+  defp online_order_with_card(ctx, card) do
+    order =
+      generate(
+        order(
+          state: :placed,
+          customer_name: "Ada",
+          customer_email: "ada@example.com",
+          fulfillment_option_id: ctx.pickup.id,
+          fulfillment_method: :pickup,
+          fulfillment_date: tomorrow(),
+          gift: true,
+          recipient_name: "Bea",
+          card_message: "Happy birthday",
+          locale: "en-GB"
+        )
+      )
+
+    generate(line_item(order_id: order.id, product_variant_id: card.id, is_card: true))
+    order
+  end
+
+  defp edit_params(ctx, overrides) do
+    Map.merge(
+      %{
+        customer_name: "Ada",
+        customer_email: "ada@example.com",
+        fulfillment_option_id: ctx.pickup.id,
+        fulfillment_date: tomorrow(),
+        gift: true,
+        recipient_name: "Bea",
+        line_items: [catalogue_line(ctx.variant)]
+      },
+      overrides
+    )
   end
 
   describe "cancelling" do

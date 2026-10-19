@@ -9,9 +9,12 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   require Logger
 
   import EdenflowersWeb.Admin.Components
+  import EdenflowersWeb.CardDrawer, only: [card_drawer: 1]
 
   alias Edenflowers.Accounts
+  alias Edenflowers.Catalog
   alias Edenflowers.Catalog.ProductVariant
+  alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
@@ -21,6 +24,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders.Order
   alias Edenflowers.Pricing
+  alias Edenflowers.Translations
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -42,6 +46,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> assign(:fulfillment_options, Fulfillment.list_options!(actor: actor))
          |> assign(:shop_calendar, Fulfillment.get_shop_calendar!(actor: actor))
          |> assign(:variant_options, variant_options(actor))
+         |> assign(
+           :card_variants,
+           Catalog.list_card_drawer_variants!(actor: actor) |> Translations.translate_assoc(:product)
+         )
+         |> assign(:card_variant_id, order && Enum.find_value(order.line_items, &(&1.is_card && &1.product_variant_id)))
          |> assign(:tax_rates, tax_rates)
          |> assign(:default_tax_rate_id, default_tax_rate_id(tax_rates))
          |> assign(:form, build_form(mode, order, actor, tax_rates))
@@ -64,6 +73,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       |> assign(:method, selected_method(assigns.form, assigns.fulfillment_options, assigns.order))
       |> assign(:gift?, assigns.form[:gift].value in [true, "true"])
       |> assign(:time_choice, to_string(assigns.form[:fulfillment_time].value || "any"))
+      |> assign(:card, chosen_card(assigns.card_variants, assigns.order, assigns.card_variant_id))
       |> assign(
         :quote,
         assigns.delivery_quote |> current_quote(assigns.form, current_option_id(assigns)) |> charge(assigns.order)
@@ -272,7 +282,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     field={@form[:gift]}
                     type="radio-card"
                     label={~t"Recipient"}
-                    options={[%{name: ~t"For me", value: "false"}, %{name: ~t"For somebody else", value: "true"}]}
+                    options={[%{name: ~t"The customer", value: "false"}, %{name: ~t"Somebody else", value: "true"}]}
                   >
                     {option.name}
                   </.input>
@@ -292,17 +302,60 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   label={if @method == :delivery, do: ~t"Recipient phone (for the delivery)", else: ~t"Recipient phone"}
                   class="input w-full"
                 />
+                <div :if={@gift?} class="sm:col-span-2" data-testid="order-card-choice">
+                  <input type="hidden" name={@form[:card_variant_id].name} value={@card && @card.variant_id} />
+                  <span class="mb-1 block">{~t"Card"}</span>
+                  <div :if={@card} class="flex items-center gap-3">
+                    <.image
+                      src={@card.image_slug}
+                      alt=""
+                      width={64}
+                      height={64}
+                      sizes="64px"
+                      class="h-16 w-16 shrink-0 object-cover"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <p class="font-medium">{@card.name}</p>
+                      <p class="text-base-content/65 text-sm">{variant_size_label(@card.size)}</p>
+                    </div>
+                    <.button
+                      type="button"
+                      phx-click={JS.exec("phx-show", to: "#card-drawer")}
+                      aria-haspopup="dialog"
+                      variant="neutral"
+                      size="sm"
+                    >
+                      {~t"Change"}
+                    </.button>
+                    <.button type="button" phx-click="remove_card" variant="neutral" size="sm">
+                      {~t"Remove"}
+                    </.button>
+                  </div>
+                  <.button
+                    :if={is_nil(@card)}
+                    type="button"
+                    phx-click={JS.exec("phx-show", to: "#card-drawer")}
+                    aria-haspopup="dialog"
+                    variant="neutral"
+                    size="sm"
+                  >
+                    <.icon name="hero-gift" class="h-4 w-4" /> {~t"Choose a card"}
+                  </.button>
+                  <p :if={is_nil(@card)} class="text-base-content/65 mt-1 text-sm">
+                    {~t"Or none, if you write a card or ribbon of your own."}
+                  </p>
+                </div>
                 <div :if={@gift?} id="card-message-field" class="sm:col-span-2" phx-hook="CharacterCount">
                   <.input
                     field={@form[:card_message]}
                     type="textarea"
                     label={~t"Card message"}
                     rows="3"
-                    maxlength="200"
+                    maxlength={card_message_max(@card)}
                     class="textarea w-full"
                   />
                   <p class="text-base-content/65 mt-1 text-right text-sm tabular-nums">
-                    <span id="char-count">0</span>/200
+                    <span id="char-count">0</span>/{card_message_max(@card)}
                   </p>
                 </div>
               </div>
@@ -347,6 +400,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           </.button>
         </.form>
       </.admin_page>
+
+      <.card_drawer variants={@card_variants} locale={@locale} selected_variant_id={@card && @card.variant_id} />
     </Layouts.admin>
     """
   end
@@ -397,6 +452,14 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   def handle_event("remove_line", %{"path" => path}, socket) do
     {:noreply, update(socket, :form, &AshPhoenix.Form.remove_form(&1, path))}
+  end
+
+  def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
+    {:noreply, assign(socket, :card_variant_id, variant_id)}
+  end
+
+  def handle_event("remove_card", _params, socket) do
+    {:noreply, assign(socket, :card_variant_id, nil)}
   end
 
   def handle_event("save", %{"form" => params}, socket) do
@@ -504,7 +567,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   # sold at. A line Jennie priced herself carries its price in the form, so it
   # is entered afresh.
   defp build_form(:edit, order, actor, tax_rates) do
-    {catalogue, custom} = Enum.split_with(order.line_items, & &1.product_variant_id)
+    {catalogue, custom} =
+      order.line_items
+      |> Enum.reject(& &1.is_card)
+      |> Enum.split_with(& &1.product_variant_id)
 
     form =
       AshPhoenix.Form.for_update(order, :edit,
@@ -568,8 +634,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     Pricing.list_selectable_tax_rates!(%{percentages: percentages}, actor: actor)
   end
 
+  # Cards are chosen as the order's card, not added as items.
   defp variant_options(actor) do
     ProductVariant
+    |> Ash.Query.filter(product.product_category.slug != "cards")
     |> Ash.Query.load(:product)
     |> Ash.read!(actor: actor)
     |> Enum.sort_by(&{&1.product.name, &1.price})
@@ -578,6 +646,29 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
        variant.id}
     end)
   end
+
+  # A card the drawer no longer offers, as it has sold out since, is still the order's own.
+  defp chosen_card(_card_variants, _order, nil), do: nil
+
+  defp chosen_card(card_variants, order, variant_id) do
+    case Enum.find(card_variants, &(&1.id == variant_id)) do
+      nil ->
+        line_item = Enum.find(order.line_items, &(&1.is_card && &1.product_variant_id == variant_id))
+
+        %{
+          variant_id: variant_id,
+          name: line_item.product_name,
+          image_slug: line_item.product_image_slug,
+          size: line_item.variant_size
+        }
+
+      variant ->
+        %{variant_id: variant.id, name: variant.product.name, image_slug: variant.image_slug, size: variant.size}
+    end
+  end
+
+  defp card_message_max(%{size: size}) when not is_nil(size), do: ProductVariantSize.max_message_length(size)
+  defp card_message_max(_card), do: ProductVariantSize.max_message_length(:large)
 
   defp customer_phone(customer_id, actor) do
     last =

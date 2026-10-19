@@ -538,6 +538,48 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert order.card_message == "Rest in peace"
     end
 
+    test "picks the card from the card drawer, not the items", ctx do
+      cards = generate(product_category(slug: "cards", visibility: :public))
+
+      product =
+        generate(product(tax_rate_id: ctx.tax_rate.id, product_category_id: cards.id, name: "Thank you", draft: false))
+
+      card = generate(product_variant(product_id: product.id, size: :small, price: "3.00", draft: false))
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+
+      render_click(view, "add_line", %{"kind" => "catalogue"})
+      refute has_element?(view, ~s|option[value="#{card.id}"]|)
+
+      view |> form("#order-form", form: %{gift: "true"}) |> render_change()
+      view |> element(~s|[data-testid="card-option-#{card.id}"]|) |> render_click()
+
+      assert has_element?(view, ~s|[data-testid="order-card-choice"]|, "Thank you")
+      assert has_element?(view, ~s|textarea[name="form[card_message]"][maxlength="80"]|)
+
+      assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
+               view
+               |> form("#order-form",
+                 form: %{
+                   customer_name: "Mrs Holm",
+                   customer_phone_number: "040 123 4567",
+                   fulfillment_option_id: ctx.pickup.id,
+                   fulfillment_date: Date.to_iso8601(tomorrow()),
+                   recipient_name: "Ada",
+                   card_message: "Thank you!",
+                   line_items: %{"0" => %{"product_variant_id" => ctx.variant.id}}
+                 }
+               )
+               |> render_submit()
+
+      order = Orders.get_order_for_admin!(id, actor: ctx.admin, load: [:line_items])
+      assert [%{is_card: true, product_name: "Thank you"}] = Enum.filter(order.line_items, & &1.is_card)
+
+      {:ok, order_page, _html} = live(ctx.conn, ~p"/admin/orders/#{id}")
+      refute has_element?(order_page, "#order-items", "Thank you")
+      assert has_element?(order_page, "#order-card", "Thank you")
+    end
+
     test "warns about a closed day without refusing it", ctx do
       shop_calendar(available_days: [])
 

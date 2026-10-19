@@ -209,11 +209,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.widget>
 
             <.widget id="order-items" title={~t"To make"}>
-              <.readonly_line_items line_items={@order.line_items} />
+              <.readonly_line_items line_items={Enum.reject(@order.line_items, & &1.is_card)} />
             </.widget>
 
-            <.widget :if={present?(@order.card_message)} id="order-card" title={~t"Card to write"}>
+            <.widget
+              :if={present?(@order.card_message) or Enum.any?(@order.line_items, & &1.is_card)}
+              id="order-card"
+              title={~t"Card to write"}
+            >
+              <div :if={Enum.any?(@order.line_items, & &1.is_card)} class="mb-4">
+                <.readonly_line_items line_items={Enum.filter(@order.line_items, & &1.is_card)} />
+              </div>
               <blockquote
+                :if={present?(@order.card_message)}
                 phx-no-format
                 class="text-base-content font-serif whitespace-pre-wrap break-words text-xl italic leading-relaxed"
               >{@order.card_message}</blockquote>
