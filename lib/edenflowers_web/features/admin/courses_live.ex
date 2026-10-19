@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           {~t"No upcoming courses"}
         </p>
 
-        <div class="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+        <div class="space-y-6">
           <.course
             :for={course <- @courses}
             course={course}
@@ -242,7 +242,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       id={"course-#{@course.id}"}
       open={Enum.any?(@course.bookings, &(&1.id == @highlighted_booking_id))}
       phx-mounted={JS.ignore_attributes(["open"])}
-      class="admin-card group"
+      class="group/course border-base-content/12 border-y"
     >
       <summary class="list-none p-4 sm:p-5">
         <div class="flex items-start justify-between gap-3">
@@ -260,33 +260,26 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           </div>
           <.icon
             name="hero-chevron-down"
-            class="text-base-content/50 h-5 w-5 shrink-0 transition-transform group-open:rotate-180"
+            class="text-base-content/50 h-5 w-5 shrink-0 group-open/course:rotate-180"
           />
         </div>
-        <div class="mt-3 flex items-center gap-3 text-sm tabular-nums">
-          <progress class="progress progress-primary w-full" value={@seats} max={@course.total_places} />
+        <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm tabular-nums">
           <span class="whitespace-nowrap">{~t"#{@seats} / #{total = @course.total_places} seats"}</span>
+          <progress
+            class="progress progress-primary h-1 w-24"
+            value={@seats}
+            max={@course.total_places}
+            aria-label={~t"Seats"}
+          />
+          <span :if={@still_to_pay > 0} class="text-base-content/65">
+            {~t"#{count = @still_to_pay} to collect"}
+          </span>
         </div>
       </summary>
 
       <div class="border-base-content/12 border-t p-4 sm:p-5">
         <p :if={@registrations == []} class="text-base-content/65 mb-4 text-sm">{~t"No bookings yet"}</p>
-        <p :if={@still_to_pay > 0} class="text-base-content/65 mb-4 text-sm">
-          {~t"#{count = @still_to_pay} to collect"}
-        </p>
-
-        <div class="mb-4 flex flex-wrap gap-2">
-          <.button
-            :if={@registrations != []}
-            href={fastmail_compose(bcc: @bcc)}
-            target="_blank"
-            rel="noopener"
-            variant="neutral"
-            size="sm"
-          >
-            <.icon name="hero-envelope" class="h-4 w-4" />
-            {~t"Email everyone"}
-          </.button>
+        <div class="mb-5 flex flex-wrap items-center gap-2">
           <.button
             :if={is_nil(@booking_form)}
             type="button"
@@ -297,6 +290,17 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           >
             <.icon name="hero-plus" class="h-4 w-4" />
             {~t"Add booking"}
+          </.button>
+          <.button
+            :if={@registrations != []}
+            href={fastmail_compose(bcc: @bcc)}
+            target="_blank"
+            rel="noopener"
+            variant="ghost"
+            size="sm"
+          >
+            <.icon name="hero-envelope" class="h-4 w-4" />
+            {~t"Email everyone"}
           </.button>
           <.button navigate={~p"/admin/courses/#{@course.id}"} variant="ghost" size="sm">
             <.icon name="hero-pencil-square" class="h-4 w-4" />
@@ -350,21 +354,21 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           </div>
         </.form>
 
-        <ul class="divide-base-content/12 divide-y">
+        <ul class="divide-base-content/8 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y sm:grid-cols-[minmax(0,1fr)_auto_2rem]">
           <li
             :for={registration <- @registrations}
             id={"registration-#{registration.id}"}
             aria-current={registration.id == @highlighted_booking_id && "true"}
-            class={["py-3.5 sm:py-2.5", registration.id == @highlighted_booking_id && highlighted_row_class()]}
+            class={["grid-cols-subgrid col-span-full grid items-center gap-y-3 py-4", registration.id == @highlighted_booking_id && highlighted_row_class()]}
           >
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-3">
-              <div class="min-w-0 flex-1 sm:min-w-48">
-                <p class="text-base-content truncate font-medium">
-                  {registration.name}
+            <div class="contents">
+              <div class="col-start-1 row-start-1 min-w-0">
+                <p class="text-base-content flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
+                  <span class="min-w-0 break-words">{registration.name}</span>
                   <span :if={registration.seats_held > 1} class="text-base-content/65 tabular-nums">
                     +{registration.seats_held - 1}
                   </span>
-                  <.badge :if={to_collect?(registration)} tone={:warning} class="ml-1 align-middle">
+                  <.badge :if={to_collect?(registration)} tone={:warning}>
                     {~t"To collect"}
                   </.badge>
                   <.to_refund_badge registration={registration} locale={@locale} />
@@ -373,143 +377,110 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   href={fastmail_compose(to: registration.email)}
                   target="_blank"
                   rel="noopener"
-                  class="text-base-content/65 truncate text-sm pointer-coarse:py-3 hover:underline"
+                  class="text-base-content/65 block truncate text-sm pointer-coarse:py-3 hover:underline"
                 >
                   {registration.email}
                 </a>
               </div>
-              <%!-- On a phone the menu stays beside the name and these take their own full-width line below. --%>
-              <div
-                :if={to_collect?(registration) or to_refund?(registration)}
-                class="order-last flex w-full items-center gap-1 sm:order-none sm:ml-auto sm:w-auto sm:shrink-0"
-              >
-                <%!-- Recording a payment stays out of the menu: it's what the florist taps at the course itself. --%>
-                <form
-                  :if={to_collect?(registration)}
-                  id={"mark-paid-#{registration.id}"}
-                  phx-submit="mark_paid"
-                  class="flex flex-1 items-center gap-1 sm:flex-none"
-                >
-                  <input type="hidden" name="registration_id" value={registration.id} />
-                  <label for={"mark-paid-method-#{registration.id}"} class="sr-only">{~t"How"}</label>
-                  <select
-                    id={"mark-paid-method-#{registration.id}"}
-                    name="payment_method"
-                    class="select select-sm flex-1 sm:w-auto sm:flex-none"
+              <.settlement_button registration={registration} />
+              <div class="col-start-2 row-start-1 justify-self-end sm:col-start-3">
+                <.actions_menu id={"registration-actions-#{registration.id}"}>
+                  <li :if={stripe_payment_intent_id(registration)}>
+                    <.link
+                      href={StripeAPI.dashboard_payment_url(stripe_payment_intent_id(registration))}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      Stripe <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                    </.link>
+                  </li>
+                  <.actions_menu_button
+                    :if={to_collect?(registration)}
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click="email_payment_link"
+                    phx-value-id={registration.id}
+                    data-confirm={email_payment_link_confirmation(registration, @locale)}
                   >
-                    {Phoenix.HTML.Form.options_for_select(payment_method_options(), :zettle)}
-                  </select>
-                  <label
-                    :if={registration.status == :confirmed}
-                    class="flex shrink-0 items-center gap-1.5 text-xs pointer-coarse:min-h-11"
+                    {if payment_link_emailed?(registration),
+                      do: ~t"Resend payment link",
+                      else: ~t"Email payment link"}
+                  </.actions_menu_button>
+                  <.actions_menu_button
+                    :if={to_collect?(registration) and registration.payment_link_open?}
+                    id={"copy-payment-link-#{registration.id}"}
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click={
+                      JS.dispatch("edenflowers:copy", to: "#payment-link-url-#{registration.id}")
+                      |> JS.push("payment_link_copied")
+                    }
                   >
-                    <input type="hidden" name="email_receipt" value="false" />
-                    <input type="checkbox" name="email_receipt" value="true" checked class="checkbox checkbox-sm" />
-                    {~t"Email a receipt"}
-                  </label>
-                  <.button type="submit" variant="neutral" size="sm">{~t"Record payment"}</.button>
-                </form>
-                <.refund_controls registration={registration} />
+                    {~t"Copy payment link"}
+                    <span id={"payment-link-url-#{registration.id}"} hidden>
+                      {EdenflowersWeb.PaymentLink.url_for(registration)}
+                    </span>
+                  </.actions_menu_button>
+                  <.actions_menu_button
+                    :if={to_collect?(registration) and not registration.payment_link_open?}
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click="open_payment_link"
+                    phx-value-id={registration.id}
+                  >
+                    {~t"Create payment link"}
+                  </.actions_menu_button>
+                  <.actions_menu_button
+                    :for={payment <- registration.payments}
+                    :if={payment.undoable?}
+                    id={"undo-payment-#{payment.id}"}
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click="undo_payment"
+                    phx-value-id={registration.id}
+                    phx-value-payment-id={payment.id}
+                    data-confirm={undo_confirmation(payment, @locale)}
+                  >
+                    {undo_label(payment, @locale)}
+                  </.actions_menu_button>
+                  <.actions_menu_button
+                    :if={registration.seats_held > 1}
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click="remove_seat"
+                    phx-value-id={registration.id}
+                    data-confirm={remove_seat_confirmation(registration)}
+                  >
+                    {~t"Remove a seat"}
+                  </.actions_menu_button>
+                  <.actions_menu_button
+                    menu={"registration-actions-#{registration.id}"}
+                    phx-click="cancel"
+                    phx-value-id={registration.id}
+                    data-confirm={cancel_confirmation(registration)}
+                    class="text-error"
+                  >
+                    {pgettext("course booking", "Cancel")}
+                  </.actions_menu_button>
+                </.actions_menu>
               </div>
-              <.actions_menu id={"registration-actions-#{registration.id}"}>
-                <li :if={stripe_payment_intent_id(registration)}>
-                  <.link
-                    href={StripeAPI.dashboard_payment_url(stripe_payment_intent_id(registration))}
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    Stripe <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-                  </.link>
-                </li>
-                <.actions_menu_button
-                  :if={to_collect?(registration)}
-                  menu={"registration-actions-#{registration.id}"}
-                  phx-click="email_payment_link"
-                  phx-value-id={registration.id}
-                  data-confirm={email_payment_link_confirmation(registration, @locale)}
-                >
-                  {if payment_link_emailed?(registration),
-                    do: ~t"Resend payment link",
-                    else: ~t"Email payment link"}
-                </.actions_menu_button>
-                <.actions_menu_button
-                  :if={to_collect?(registration) and registration.payment_link_open?}
-                  id={"copy-payment-link-#{registration.id}"}
-                  menu={"registration-actions-#{registration.id}"}
-                  phx-click={
-                    JS.dispatch("edenflowers:copy", to: "#payment-link-url-#{registration.id}")
-                    |> JS.push("payment_link_copied")
-                  }
-                >
-                  {~t"Copy payment link"}
-                  <span id={"payment-link-url-#{registration.id}"} hidden>
-                    {EdenflowersWeb.PaymentLink.url_for(registration)}
-                  </span>
-                </.actions_menu_button>
-                <.actions_menu_button
-                  :if={to_collect?(registration) and not registration.payment_link_open?}
-                  menu={"registration-actions-#{registration.id}"}
-                  phx-click="open_payment_link"
-                  phx-value-id={registration.id}
-                >
-                  {~t"Create payment link"}
-                </.actions_menu_button>
-                <.actions_menu_button
-                  :for={payment <- registration.payments}
-                  :if={payment.undoable?}
-                  id={"undo-payment-#{payment.id}"}
-                  menu={"registration-actions-#{registration.id}"}
-                  phx-click="undo_payment"
-                  phx-value-id={registration.id}
-                  phx-value-payment-id={payment.id}
-                  data-confirm={undo_confirmation(payment, @locale)}
-                >
-                  {undo_label(payment, @locale)}
-                </.actions_menu_button>
-                <.actions_menu_button
-                  :if={registration.seats_held > 1}
-                  menu={"registration-actions-#{registration.id}"}
-                  phx-click="remove_seat"
-                  phx-value-id={registration.id}
-                  data-confirm={remove_seat_confirmation(registration)}
-                >
-                  {~t"Remove a seat"}
-                </.actions_menu_button>
-                <.actions_menu_button
-                  menu={"registration-actions-#{registration.id}"}
-                  phx-click="cancel"
-                  phx-value-id={registration.id}
-                  data-confirm={cancel_confirmation(registration)}
-                  class="text-error"
-                >
-                  {pgettext("course booking", "Cancel")}
-                </.actions_menu_button>
-              </.actions_menu>
             </div>
+            <.settlement_panel registration={registration} />
           </li>
           <li
             :for={registration <- @cancelled}
             id={"registration-#{registration.id}"}
             data-status="cancelled"
             aria-current={registration.id == @highlighted_booking_id && "true"}
-            class={["flex flex-wrap items-center gap-x-3 gap-y-3 py-3.5 sm:py-2.5", registration.id == @highlighted_booking_id && highlighted_row_class()]}
+            class={["grid-cols-subgrid col-span-full grid items-center gap-y-3 py-4", registration.id == @highlighted_booking_id && highlighted_row_class()]}
           >
-            <div class="min-w-0 flex-1 sm:min-w-48">
-              <p class="text-base-content/50 truncate">
+            <div class="col-start-1 row-start-1 min-w-0">
+              <p class="text-base-content/65 flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span class="line-through">
                   {registration.name}
                   <span :if={registration.seats_held > 1} class="tabular-nums">+{registration.seats_held - 1}</span>
                 </span>
                 <.to_refund_badge registration={registration} locale={@locale} />
               </p>
-              <p class="text-base-content/50 truncate text-sm">{registration.email}</p>
+              <p class="text-base-content/65 truncate text-sm">{registration.email}</p>
             </div>
-            <div
-              :if={to_refund?(registration)}
-              class="flex w-full items-center gap-1 sm:ml-auto sm:w-auto sm:shrink-0"
-            >
-              <.refund_controls registration={registration} />
-            </div>
+            <.settlement_button registration={registration} />
+            <.settlement_panel registration={registration} />
           </li>
         </ul>
       </div>
@@ -537,7 +508,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     <.badge
       :if={to_refund?(@registration)}
       tone={:error}
-      class="ml-1 align-middle tabular-nums"
+      class="tabular-nums"
     >
       {~t"To refund #{amount = Format.currency(Decimal.abs(@registration.balance), @locale)}"}
     </.badge>
@@ -546,7 +517,66 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   attr :registration, :map, required: true
 
-  # Sits beside "Record payment" so a refund is settled from the row the same way a payment is.
+  defp settlement_button(assigns) do
+    ~H"""
+    <.button
+      :if={to_collect?(@registration) or to_refund?(@registration)}
+      id={"settlement-toggle-#{@registration.id}"}
+      type="button"
+      variant="ghost"
+      size="sm"
+      class="col-start-1 row-start-2 justify-self-start sm:col-start-2 sm:row-start-1"
+      aria-expanded="false"
+      aria-controls={"settlement-#{@registration.id}"}
+      phx-click={
+        JS.toggle(to: "#settlement-#{@registration.id}")
+        |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+      }
+    >
+      {if to_collect?(@registration), do: ~t"Record payment", else: ~t"Record refund"}
+      <.icon name="hero-chevron-down" class="h-4 w-4" />
+    </.button>
+    """
+  end
+
+  attr :registration, :map, required: true
+
+  defp settlement_panel(assigns) do
+    ~H"""
+    <div
+      :if={to_collect?(@registration) or to_refund?(@registration)}
+      id={"settlement-#{@registration.id}"}
+      role="region"
+      aria-labelledby={"settlement-toggle-#{@registration.id}"}
+      class="bg-base-200/50 col-span-full row-start-3 hidden min-w-0 p-4 sm:row-start-2"
+    >
+      <form
+        :if={to_collect?(@registration)}
+        id={"mark-paid-#{@registration.id}"}
+        phx-submit="mark_paid"
+        class="flex flex-wrap items-end gap-4"
+      >
+        <input type="hidden" name="registration_id" value={@registration.id} />
+        <label class="flex w-full flex-col gap-1 text-sm sm:w-auto">
+          {~t"Payment method"}
+          <select id={"mark-paid-method-#{@registration.id}"} name="payment_method" class="select select-sm w-full sm:w-48">
+            {Phoenix.HTML.Form.options_for_select(payment_method_options(), :zettle)}
+          </select>
+        </label>
+        <label class="flex h-8 items-center gap-2 text-sm pointer-coarse:min-h-11">
+          <input type="hidden" name="email_receipt" value="false" />
+          <input type="checkbox" name="email_receipt" value="true" checked class="checkbox checkbox-sm" />
+          {~t"Email a receipt"}
+        </label>
+        <.button type="submit" variant="primary" size="sm">{~t"Record payment"}</.button>
+      </form>
+      <.refund_controls :if={to_refund?(@registration)} registration={@registration} />
+    </div>
+    """
+  end
+
+  attr :registration, :map, required: true
+
   # Money taken by card goes back through Stripe; cash or Zettle money is recorded as handed back.
   # The amount starts at the balance, which leaves out a late-cancellation fee, and Jennie can change it.
   defp refund_controls(assigns) do
@@ -554,18 +584,20 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     <form
       id={"refund-#{@registration.id}"}
       phx-submit="refund"
-      class="flex flex-1 flex-wrap items-center gap-1 sm:flex-none"
+      class="flex flex-wrap items-end gap-4"
     >
       <input type="hidden" name="record_id" value={@registration.id} />
-      <label for={"refund-amount-#{@registration.id}"} class="sr-only">{~t"Amount to refund (€)"}</label>
-      <input
-        id={"refund-amount-#{@registration.id}"}
-        name="refund[amount]"
-        type="text"
-        inputmode="decimal"
-        value={Decimal.to_string(Decimal.abs(@registration.balance), :normal)}
-        class="input input-sm w-24 tabular-nums"
-      />
+      <label class="flex w-full flex-col gap-1 text-sm sm:w-auto">
+        {~t"Amount to refund (€)"}
+        <input
+          id={"refund-amount-#{@registration.id}"}
+          name="refund[amount]"
+          type="text"
+          inputmode="decimal"
+          value={Decimal.to_string(Decimal.abs(@registration.balance), :normal)}
+          class="input input-sm w-full tabular-nums sm:w-40"
+        />
+      </label>
       <.button
         :if={Decimal.positive?(@registration.stripe_refund)}
         name="refund[by]"
@@ -575,19 +607,20 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         data-confirm={~t"Refund this amount to the customer's card with Stripe?"}
         variant="neutral"
         size="sm"
-        class="flex-1 sm:flex-none"
       >
         {~t"Refund with Stripe"}
       </.button>
       <%= if Decimal.positive?(@registration.outside_stripe_refund) do %>
-        <label for={"refund-method-#{@registration.id}"} class="sr-only">{~t"How"}</label>
-        <select
-          id={"refund-method-#{@registration.id}"}
-          name="refund[payment_method]"
-          class="select select-sm flex-1 sm:w-auto sm:flex-none"
-        >
-          {Phoenix.HTML.Form.options_for_select(payment_method_options(), :zettle)}
-        </select>
+        <label class="flex w-full flex-col gap-1 text-sm sm:w-auto">
+          {~t"Payment method"}
+          <select
+            id={"refund-method-#{@registration.id}"}
+            name="refund[payment_method]"
+            class="select select-sm w-full sm:w-48"
+          >
+            {Phoenix.HTML.Form.options_for_select(payment_method_options(), :zettle)}
+          </select>
+        </label>
         <.button
           name="refund[by]"
           value="record"

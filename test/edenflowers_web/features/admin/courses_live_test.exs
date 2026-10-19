@@ -92,6 +92,8 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
 
       assert has_element?(view, "#registration-#{registration.id}", "To refund €70.00")
+      assert has_element?(view, ~s|#settlement-toggle-#{registration.id}[aria-expanded="false"]|, "Record refund")
+      assert has_element?(view, "#settlement-#{registration.id}.hidden #refund-#{registration.id}")
       assert has_element?(view, ~s|#refund-#{registration.id} input[name="refund[amount]"][value="70.00"]|)
     end
 
@@ -211,10 +213,20 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
+    assert has_element?(
+             view,
+             ~s|#settlement-toggle-#{registration.id}[aria-expanded="false"][aria-controls="settlement-#{registration.id}"]|,
+             "Record payment"
+           )
+
+    assert has_element?(view, "#settlement-#{registration.id}.hidden #mark-paid-#{registration.id}")
+
     view |> form("#mark-paid-#{registration.id}", %{payment_method: "mobilepay"}) |> render_submit()
 
     refute has_element?(view, "li", "To collect")
     refute render(view) =~ ~r"\d+ to collect"
+    refute has_element?(view, "#settlement-toggle-#{registration.id}")
+    refute has_element?(view, "#settlement-#{registration.id}")
 
     assert [%{method: :mobilepay}] = Ash.load!(registration, :payments, authorize?: false).payments
   end
