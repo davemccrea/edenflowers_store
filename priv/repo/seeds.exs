@@ -19,7 +19,56 @@ alias Edenflowers.Orders.Calculations.Vat
 alias Edenflowers.Pricing.{TaxRate, Promotion}
 alias Edenflowers.Expenses.Expense
 
+alias Edenflowers.External.StripeAPI
+
 require Ash.Query
+
+# With `just db-seed <target> --stripe`, every seeded Stripe payment, refund and
+# subscription customer is created in Stripe test mode. Without it, nothing
+# calls Stripe and the ids are made up. Stripe can't backdate, so its objects
+# are all dated the day of seeding while the seeded payments keep their
+# relative dates: the monthly report's Stripe sheet only matches this month.
+seed_stripe? = Process.get(:seed_stripe, false)
+
+if seed_stripe? and not String.starts_with?(Application.fetch_env!(:stripity_stripe, :api_key), "sk_test_") do
+  raise "Seeding with Stripe needs a test-mode key (sk_test_…). Nothing was written."
+end
+
+# Returns the PaymentIntent, real and confirmed with Stripe's test card for
+# the brand, or a made-up one with the same fields.
+seed_payment_intent = fn amount, card_brand, metadata ->
+  cents = StripeAPI.to_stripe_amount(amount)
+
+  if seed_stripe? do
+    {:ok, payment_intent} =
+      StripeAPI.charge_off_session(
+        cents,
+        %{payment_method: "pm_card_#{card_brand}", metadata: metadata},
+        "seed-#{Ecto.UUID.generate()}"
+      )
+
+    payment_intent
+  else
+    %{id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}", amount_received: cents, metadata: metadata}
+  end
+end
+
+# Refunds a seeded Stripe payment in full and records it as the webhook would.
+seed_refund = fn payment, fake_id ->
+  cents = StripeAPI.to_stripe_amount(payment.amount)
+
+  refund =
+    if seed_stripe? do
+      {:ok, refund} = StripeAPI.create_refund(payment.payment_intent_id, cents, "seed-#{Ecto.UUID.generate()}")
+      refund
+    else
+      %{id: fake_id, payment_intent: payment.payment_intent_id, amount: cents, status: "succeeded"}
+    end
+
+  # On staging, the refund.created webhook can record it first.
+  {:ok, outcome} = Edenflowers.Payments.record_stripe_refund(refund)
+  true = outcome in [:recorded, :already_recorded]
+end
 
 Code.eval_file("seeds/production.exs", __DIR__)
 
@@ -316,7 +365,7 @@ today = Date.utc_today()
       course_registration_id: registration.id,
       amount: registration.amount,
       method: :stripe,
-      payment_intent_id: "pi_seed_#{System.unique_integer([:positive])}",
+      payment_intent_id: seed_payment_intent.(registration.amount, "mastercard", %{}).id,
       paid_at: registration.confirmed_at,
       payment_method_type: "card",
       card_brand: "mastercard",
@@ -340,13 +389,7 @@ elin_payment =
   |> Ash.Query.filter(course_registration.email == "elin.sjoberg@example.com")
   |> Ash.read_one!(authorize?: false)
 
-{:ok, :recorded} =
-  Edenflowers.Payments.record_stripe_refund(%{
-    id: "re_seed_elin",
-    payment_intent: elin_payment.payment_intent_id,
-    amount: Edenflowers.External.StripeAPI.to_stripe_amount(elin_payment.amount),
-    status: "succeeded"
-  })
+seed_refund.(elin_payment, "re_seed_elin")
 
 # One of Anna's group of three dropped out, and is still owed a refund.
 CourseRegistration
@@ -482,7 +525,7 @@ seed_placed_order = fn attrs ->
       order_id: order.id,
       amount: order.grand_total,
       method: :stripe,
-      payment_intent_id: "pi_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
+      payment_intent_id: seed_payment_intent.(order.grand_total, card_brand, %{}).id,
       paid_at: order.ordered_at,
       payment_method_type: "card",
       card_brand: card_brand,
@@ -621,8 +664,8 @@ end
 # runs on whole intervals from the first order's date: each Occurrence is the
 # next date on it, and next_fulfillment_date the one after the latest. Active
 # next dates sit beyond the lead time and the change cutoff, so the hourly
-# occurrence job doesn't try to charge the fake Stripe ids in dev, and
-# customers can still change them.
+# occurrence job doesn't charge them as soon as they're seeded, and customers
+# can still change them.
 alias Edenflowers.Orders.Subscription
 
 weekly_bouquet = fn size -> variant_for.("Florist's choice bouquet", size) end
@@ -721,6 +764,16 @@ for attrs <- subscriptions do
   first_date = fulfillment_date_for.(attrs.first_days_out)
   scheduled_date = fn n -> Date.add(first_date, n * attrs.interval_weeks * 7) end
 
+  {customer_id, payment_method_id} =
+    if seed_stripe? do
+      {:ok, customer} = StripeAPI.create_customer(%{email: attrs.email, name: attrs.name})
+      {:ok, payment_method} = StripeAPI.attach_payment_method("pm_card_visa", customer.id)
+      {customer.id, payment_method.id}
+    else
+      {"cus_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
+       "pm_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}"}
+    end
+
   subscription =
     Ash.Seed.seed!(Subscription, %{
       user_id: user.id,
@@ -734,8 +787,8 @@ for attrs <- subscriptions do
       delivery_address: nearby_address.delivery_address,
       card_message: attrs[:card_message],
       locale: attrs.locale,
-      stripe_customer_id: "cus_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
-      stripe_payment_method_id: "pm_seed_#{:crypto.strong_rand_bytes(4) |> Base.encode16()}",
+      stripe_customer_id: customer_id,
+      stripe_payment_method_id: payment_method_id,
       card_brand: "visa",
       card_last4: "4242",
       card_exp_month: 8,
@@ -766,8 +819,9 @@ end
 # Custom orders, payments and edits. Unlike the orders above, these go through
 # the real actions as Jennie, so the order log, the payment rows, balances and
 # payment links come out exactly as the app makes them. All pickups, so no
-# address is geocoded, and nothing calls Stripe. Every customer email is marked
-# as already sent, for the same reason as above.
+# address is geocoded, and only the seeded Stripe payments and refunds call
+# Stripe. Every customer email is marked as already sent, for the same reason
+# as above.
 alias Edenflowers.Orders
 alias Edenflowers.Payments
 
@@ -854,7 +908,7 @@ Orders.edit_order!(erik, %{line_items: kept_lines ++ [catalogue_line.("Plant", :
 Orders.open_payment_link!(erik, actor: jennie)
 
 # A custom order paid in part by link, the rest still owed. The link payment
-# is recorded as the Stripe webhook would.
+# is recorded as the Stripe webhook would, which on staging may get there first.
 part_paid =
   place_custom.(%{
     customer_name: "Johanna Lind",
@@ -865,21 +919,20 @@ part_paid =
   })
 
 part_paid = Orders.get_order_for_admin!(part_paid.id, actor: jennie)
-Ash.Seed.update!(part_paid, %{payment_intent_id: "pi_seed_part_paid"})
+link_payment = seed_payment_intent.(part_paid.balance, "visa", %{"order_id" => part_paid.id})
+Ash.Seed.update!(part_paid, %{payment_intent_id: link_payment.id})
 
-{:ok, :completed} =
-  Payments.complete(%{
-    id: "pi_seed_part_paid",
-    metadata: %{"order_id" => part_paid.id},
-    amount_received: Edenflowers.External.StripeAPI.to_stripe_amount(part_paid.balance)
-  })
+{:ok, outcome} = Payments.complete(link_payment)
+true = outcome in [:completed, :already_completed]
 
-# complete/1 looks the method up in Stripe from a real payment_method id,
-# which a seed can't have, so the payment is named here instead.
-Payment
-|> Ash.Query.filter(payment_intent_id == "pi_seed_part_paid")
-|> Ash.read_one!(authorize?: false)
-|> Ash.Seed.update!(%{payment_method_type: "mobilepay"})
+# complete/1 looks the method up in Stripe, which a made-up PaymentIntent
+# isn't in, so the payment is named here instead.
+unless seed_stripe? do
+  Payment
+  |> Ash.Query.filter(payment_intent_id == ^link_payment.id)
+  |> Ash.read_one!(authorize?: false)
+  |> Ash.Seed.update!(%{payment_method_type: "mobilepay"})
+end
 
 part_paid = Orders.get_order_for_admin!(part_paid.id, actor: jennie, load: [:line_items])
 Ash.Seed.update!(part_paid, %{receipt_emailed_at: DateTime.utc_now()})
@@ -908,13 +961,7 @@ petra = online_order.("Petra Holm")
 Orders.cancel_order!(petra, actor: jennie)
 [petra_payment] = petra.payments
 
-{:ok, :recorded} =
-  Payments.record_stripe_refund(%{
-    id: "re_seed_#{petra.order_reference}",
-    payment_intent: petra_payment.payment_intent_id,
-    amount: Edenflowers.External.StripeAPI.to_stripe_amount(petra_payment.amount),
-    status: "succeeded"
-  })
+seed_refund.(petra_payment, "re_seed_#{petra.order_reference}")
 
 # Called off, but Jennie hasn't refunded it yet.
 Orders.cancel_order!(online_order.("Oskar Wikström"), actor: jennie)

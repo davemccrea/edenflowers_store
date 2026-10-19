@@ -9,6 +9,8 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
   @callback create_payment_intent_saving_card(amount_cents :: integer(), metadata :: map(), customer_id :: String.t()) ::
               {:ok, map()} | {:error, term()}
   @callback create_customer(params :: map()) :: {:ok, map()} | {:error, term()}
+  @callback attach_payment_method(payment_method_id :: String.t(), customer_id :: String.t()) ::
+              {:ok, map()} | {:error, term()}
   @callback create_customer_session(customer_id :: String.t()) :: {:ok, map()} | {:error, term()}
   @callback charge_off_session(amount_cents :: integer(), params :: map(), idempotency_key :: String.t()) ::
               {:ok, map()} | {:error, term()}
@@ -94,6 +96,11 @@ defmodule Edenflowers.External.StripeAPI do
   @impl true
   def create_customer(params) do
     Stripe.Customer.create(params)
+  end
+
+  @impl true
+  def attach_payment_method(payment_method_id, customer_id) do
+    Stripe.PaymentMethod.attach(payment_method_id, %{customer: customer_id})
   end
 
   # Lets the Payment Element list the Customer's saved cards, offer to save
