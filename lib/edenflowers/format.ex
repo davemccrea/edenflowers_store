@@ -44,6 +44,10 @@ defmodule Edenflowers.Format do
     Localize.Number.to_string!(value, locale: locale, currency: iso)
   end
 
+  @doc """
+  A Finnish-style numeric date in every language, e.g. "16.5.2026". Every
+  customer is in Finland, so English uses the dotted form too.
+  """
   @spec date(Date.t() | DateTime.t() | String.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
   def date(nil, _locale), do: nil
 
@@ -54,31 +58,8 @@ defmodule Edenflowers.Format do
     |> date(locale)
   end
 
-  def date(date, "en-GB" = locale) do
-    Localize.Date.to_string!(date, locale: locale, format: "dd/MM/yyyy")
-  end
-
   def date(date, locale) do
-    Localize.Date.to_string!(date, locale: locale, format: :short)
-  end
-
-  @doc """
-  `date/2` with its weekday, e.g. "Saturday 16/05/2026" / "lördag 16.5.2026".
-
-  For fulfillment dates, where the weekday is the part the customer acts on and
-  the year still has to be there. `weekday_date/2` is the prose form and omits
-  the year. Swedish and Finnish lowercase weekday names — that's CLDR being
-  right, not a missing capitalization.
-  """
-  @spec weekday_numeric_date(Date.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
-  def weekday_numeric_date(nil, _locale), do: nil
-
-  def weekday_numeric_date(date, "en-GB" = locale) do
-    Localize.Date.to_string!(date, locale: locale, format: "EEEE dd/MM/yyyy")
-  end
-
-  def weekday_numeric_date(date, locale) do
-    Localize.Date.to_string!(date, locale: locale, format: "EEEE d.M.yyyy")
+    Localize.Date.to_string!(date, locale: locale, format: "d.M.yyyy")
   end
 
   @doc "Localized clock time, e.g. \"10:00\" / \"10.00\"."
@@ -107,25 +88,19 @@ defmodule Edenflowers.Format do
   def distance(meters, locale),
     do: "#{Localize.Number.to_string!(meters / 1000, locale: locale, fractional_digits: 1)} km"
 
-  @doc "Localized day-and-month, e.g. \"8 Jun\" / \"8 juni\" / \"8.6.\". For agenda labels."
+  @doc "Day and month without the year, e.g. \"8.6.\". For labels where space is short."
   @spec day_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
-  def day_month(date, locale) do
-    format = if language(locale) == "fi", do: "d.M.", else: "d MMM"
-    Localize.Date.to_string!(date, locale: locale, format: format)
-  end
+  def day_month(date, locale), do: Localize.Date.to_string!(date, locale: locale, format: "d.M.")
 
   @doc """
-  Localized weekday with day-and-month, e.g. "Monday 8 Jun" / "måndag 8 juni" /
+  Weekday with day and month, e.g. "Monday 8.6." / "måndag 8.6." /
   "maanantai 8.6.". For labels.
 
   Finnish uses the standalone weekday (`cccc`): CLDR's format-context weekday is
   the essive "maanantaina", which only reads right inside a sentence.
   """
   @spec weekday_day_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
-  def weekday_day_month(date, locale) do
-    format = if language(locale) == "fi", do: "cccc d.M.", else: "EEEE d MMM"
-    Localize.Date.to_string!(date, locale: locale, format: format)
-  end
+  def weekday_day_month(date, locale), do: Localize.Date.to_string!(date, locale: locale, format: "cccc d.M.")
 
   @doc "Localized weekday name for a `Fulfillment.Weekday`, e.g. \"Friday\" / \"fredag\"."
   @spec weekday_name(Edenflowers.Fulfillment.Weekday.t(), Localize.Locale.locale_id()) :: String.t()
@@ -137,34 +112,22 @@ defmodule Edenflowers.Format do
   end
 
   @doc """
-  Localized weekday with day and full month, for prose: "Monday 8 June" /
-  "måndag den 8 juni" / "maanantaina 8. kesäkuuta".
+  Weekday with the full date, for customer-facing prose and receipts:
+  "Monday 8.6.2026" / "måndag 8.6.2026" / "maanantaina 8.6.2026". The weekday is
+  the part the customer acts on; the year keeps far-off dates unambiguous.
 
   The Finnish form is essive ("on Monday"), so Finnish translations must not put
-  a postposition such as "alkaen" or "asti" after it.
+  a postposition such as "alkaen" or "asti" after it. Swedish and Finnish
+  lowercase weekday names: that's CLDR being right, not a missing capitalization.
   """
-  @spec weekday_date(Date.t(), Localize.Locale.locale_id()) :: String.t()
-  def weekday_date(date, locale) do
-    format =
-      case language(locale) do
-        "fi" -> "EEEE d. MMMM"
-        "sv" -> "EEEE 'den' d MMMM"
-        _ -> "EEEE d MMMM"
-      end
-
-    Localize.Date.to_string!(date, locale: locale, format: format)
-  end
-
-  # Locales arrive both as atoms from `locale/0` (:"sv-FI") and as strings
-  # stored on orders ("sv-FI").
-  defp language(locale), do: locale |> to_string() |> String.split("-") |> hd()
+  @spec weekday_date(Date.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
+  def weekday_date(nil, _locale), do: nil
+  def weekday_date(date, locale), do: Localize.Date.to_string!(date, locale: locale, format: "EEEE d.M.yyyy")
 
   @spec datetime(DateTime.t(), Localize.Locale.locale_id(), String.t()) :: String.t()
   def datetime(datetime, locale, time_zone \\ Edenflowers.ShopTime.timezone()) do
     shifted = DateTime.shift_zone!(datetime, time_zone)
-    {:ok, date_part} = Localize.Date.to_string(shifted, locale: locale, format: :short)
-    {:ok, time_part} = Localize.Time.to_string(shifted, locale: locale, format: :short)
-    "#{date_part} #{time_part}"
+    "#{date(DateTime.to_date(shifted), locale)} #{time(DateTime.to_time(shifted), locale)}"
   end
 
   # `fractional_digits: 1` — default rounds 25.5% (Finnish VAT) to "26%".

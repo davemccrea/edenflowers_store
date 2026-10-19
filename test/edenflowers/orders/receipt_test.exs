@@ -63,7 +63,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
                "lauantaina 16.5.2026"
 
       assert Receipt.build_payload(build_delivery_order(locale: "en-GB")).fulfillment_date ==
-               "Saturday 16/05/2026"
+               "Saturday 16.5.2026"
     end
 
     test "renders tax_rate with a single fractional digit" do
@@ -196,8 +196,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
         ])
 
       assert [
-               %{method: "card", card_brand: "visa", card_last4: "4242", paid_on: "13/05/2026", amount: "€30.00"},
-               %{method: "cash", card_brand: nil, card_last4: nil, paid_on: "14/05/2026", amount: "€15.00"}
+               %{method: "card", card_brand: "visa", card_last4: "4242", paid_on: "13.5.2026", amount: "€30.00"},
+               %{method: "cash", card_brand: nil, card_last4: nil, paid_on: "14.5.2026", amount: "€15.00"}
              ] = Receipt.build_payload(order).payments
     end
 
@@ -240,7 +240,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
         }
       }
 
-      assert [%{method: "card", card_brand: "amex", card_last4: "0005", paid_on: "22/09/2026", amount: "€85.00"}] =
+      assert [%{method: "card", card_brand: "amex", card_last4: "0005", paid_on: "22.9.2026", amount: "€85.00"}] =
                Receipt.build_payload(registration).payments
 
       assert Receipt.build_payload(%{registration | payments: []}).payments == []

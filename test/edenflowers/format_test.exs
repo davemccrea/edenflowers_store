@@ -14,17 +14,24 @@ defmodule Edenflowers.FormatTest do
     end
   end
 
-  describe "Finnish and Swedish dates" do
-    test "use each language's own date grammar, whether the locale is an atom or a string" do
-      for locale <- [:fi, "fi"] do
-        assert Format.weekday_date(~D[2026-06-08], locale) == "maanantaina 8. kesäkuuta"
-        assert Format.weekday_day_month(~D[2026-06-08], locale) == "maanantai 8.6."
-        assert Format.day_month(~D[2026-06-08], locale) == "8.6."
-        assert Format.weekday_name(:monday, locale) == "maanantai"
-      end
+  describe "dates" do
+    test "use the Finnish numeric style in every language" do
+      date = ~D[2026-06-08]
 
-      for locale <- [:"sv-FI", "sv-FI"] do
-        assert Format.weekday_date(~D[2026-06-08], locale) == "måndag den 8 juni"
+      assert Format.date(date, "en-GB") == "8.6.2026"
+      assert Format.weekday_date(date, "en-GB") == "Monday 8.6.2026"
+      assert Format.weekday_day_month(date, "en-GB") == "Monday 8.6."
+      assert Format.day_month(date, "en-GB") == "8.6."
+
+      assert Format.weekday_date(date, "sv-FI") == "måndag 8.6.2026"
+      assert Format.datetime(~U[2026-06-08 09:30:00Z], "en-GB") == "8.6.2026 12:30"
+    end
+
+    test "put the Finnish weekday in the essive in prose and in the nominative in labels" do
+      for locale <- [:fi, "fi"] do
+        assert Format.weekday_date(~D[2026-06-08], locale) == "maanantaina 8.6.2026"
+        assert Format.weekday_day_month(~D[2026-06-08], locale) == "maanantai 8.6."
+        assert Format.weekday_name(:monday, locale) == "maanantai"
       end
     end
   end

@@ -25,7 +25,7 @@ defmodule Edenflowers.WeddingEnquiry.SendEmailsTest do
       assert email.to == [{"Anna Svensson", "anna@example.com"}]
       assert email.bcc == [from_address]
       assert email.text_body =~ "Hi Anna,"
-      assert email.text_body =~ "12/06/2027"
+      assert email.text_body =~ "Saturday 12.6.2027"
       assert email.text_body =~ "- 1 × Bridal bouquet"
       assert email.text_body =~ "Estimate: €110–€190"
     end)

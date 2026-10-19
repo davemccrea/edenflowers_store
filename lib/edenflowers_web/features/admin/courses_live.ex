@@ -268,7 +268,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               <.badge :if={@past?} tone={:tag} class="ml-1 align-middle">{pgettext("course", "Past")}</.badge>
             </h2>
             <p class="text-base-content/65 text-sm">
-              {Format.weekday_date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}–{Format.time(
+              {Format.date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}–{Format.time(
                 @course.end_time,
                 @locale
               )}

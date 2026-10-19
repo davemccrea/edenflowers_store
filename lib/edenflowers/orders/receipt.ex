@@ -54,7 +54,7 @@ defmodule Edenflowers.Orders.Receipt do
       customer_name: order.customer_name,
       customer_email: order.customer_email,
       fulfillment_method: to_string(order.fulfillment_method),
-      fulfillment_date: Format.weekday_numeric_date(order.fulfillment_date, locale),
+      fulfillment_date: Format.weekday_date(order.fulfillment_date, locale),
       recipient_name: order.recipient_name,
       recipient_phone_number: order.recipient_phone_number,
       # Customer's typed address, not `geocoded_address` — HERE strips flat numbers and stair codes.
@@ -90,7 +90,7 @@ defmodule Edenflowers.Orders.Receipt do
       customer_email: registration.email,
       fulfillment_method: "course",
       fulfillment_date:
-        "#{Format.weekday_numeric_date(course.date, locale)}, " <>
+        "#{Format.weekday_date(course.date, locale)}, " <>
           "#{Format.time(course.start_time, locale)}–#{Format.time(course.end_time, locale)}",
       venue_name: course.location_name,
       venue_address: course.location_address,
