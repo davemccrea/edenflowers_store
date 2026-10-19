@@ -25,6 +25,7 @@ defmodule Edenflowers.Orders.Order do
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
+  import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
 
   alias Edenflowers.Accounts.Calculations, as: AccountCalculations
@@ -105,6 +106,12 @@ defmodule Edenflowers.Orders.Order do
 
   @checkout_states [:contact_details, :gift_options, :delivery, :payment]
 
+  @fulfillment_email_pending expr(
+                               state == :placed and fulfillment_status == :fulfilled and
+                                 not is_nil(customer_email) and is_nil(delivered_emailed_at) and
+                                 not skip_delivered_email
+                             )
+
   postgres do
     repo Edenflowers.Repo
     table "orders"
@@ -132,6 +139,10 @@ defmodule Edenflowers.Orders.Order do
   end
 
   def checkout_states, do: @checkout_states
+
+  def fulfillment_email_pending?(order) do
+    Ash.Expr.eval!(@fulfillment_email_pending, record: order, resource: __MODULE__)
+  end
 
   state_machine do
     # A custom order skips checkout: Jennie creates it already placed. An
@@ -228,10 +239,7 @@ defmodule Edenflowers.Orders.Order do
         scheduler_module_name Edenflowers.Orders.Schedulers.SendDeliveredEmail
         default_actor system_actor()
 
-        where expr(
-                state == :placed and fulfillment_method == :delivery and fulfillment_status == :fulfilled and
-                  not is_nil(customer_email) and is_nil(delivered_emailed_at) and not skip_delivered_email
-              )
+        where @fulfillment_email_pending
       end
 
       trigger :reconcile_payment do
@@ -845,9 +853,9 @@ defmodule Edenflowers.Orders.Order do
 
     update :send_delivered_email do
       accept []
-      transaction? false
       require_atomic? false
-      change Changes.SendDeliveredEmail, where: [attribute_equals(:skip_delivered_email, false)]
+      change get_and_lock_for_update()
+      change Changes.SendDeliveredEmail
     end
 
     action :sales_summary, :map do
@@ -865,13 +873,32 @@ defmodule Edenflowers.Orders.Order do
       run Actions.SalesSummary
     end
 
+    update :retry_fulfillment_email do
+      accept []
+      validate attribute_equals(:state, :placed)
+      validate attribute_equals(:fulfillment_status, :fulfilled)
+      validate present(:customer_email)
+      validate absent(:delivered_emailed_at)
+      validate attribute_equals(:skip_delivered_email, false)
+      change {Changes.QueueFulfillmentEmail, retry?: true}
+    end
+
     update :mark_fulfilled do
       accept [:delivery_photo_slug, :email_delivery_photo]
       argument :email_customer?, :boolean, default: true
       validate attribute_equals(:fulfillment_status, :pending)
       change set_attribute(:fulfillment_status, :fulfilled)
       change set_attribute(:skip_delivered_email, true), where: [argument_equals(:email_customer?, false)]
-      change run_oban_trigger(:send_delivered_email), where: [argument_equals(:email_customer?, true)]
+      change set_attribute(:email_delivery_photo, false), where: [argument_equals(:email_customer?, false)]
+
+      validate present(:delivery_photo_slug),
+        where: [
+          argument_equals(:email_customer?, true),
+          attribute_equals(:fulfillment_method, :delivery),
+          attribute_equals(:email_delivery_photo, true)
+        ]
+
+      change Changes.QueueFulfillmentEmail
       change load(@admin_show_load)
     end
 
@@ -939,6 +966,7 @@ defmodule Edenflowers.Orders.Order do
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action([
                      :mark_fulfilled,
+                     :retry_fulfillment_email,
                      :sales_summary,
                      :place_custom,
                      :edit,

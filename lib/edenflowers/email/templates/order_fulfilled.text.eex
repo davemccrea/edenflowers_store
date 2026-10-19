@@ -1,0 +1,14 @@
+<%= if @order.customer_first_name, do: ~t"Hi #{name = @order.customer_first_name},", else: ~t"Hi," %>
+
+<%= cond do
+  @order.fulfillment_method == :pickup -> ~t"Your order has been collected."
+  @order.recipient_first_name -> ~t"Your order for #{recipient = @order.recipient_first_name} has been delivered."
+  true -> ~t"Your order has been delivered."
+end %>
+
+<%= ~t"Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it." %>
+
+<%= ~t"Warm wishes," %>
+
+Jennie
+Eden Flowers
