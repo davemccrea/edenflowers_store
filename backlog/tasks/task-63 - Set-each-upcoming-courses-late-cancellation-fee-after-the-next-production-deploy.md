@@ -3,10 +3,10 @@ id: TASK-63
 title: >-
   Set each upcoming course's late-cancellation fee after the next production
   deploy
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-19 10:11'
-updated_date: '2026-10-19 13:03'
+updated_date: '2026-10-19 13:52'
 labels:
   - admin
   - quick
@@ -29,7 +29,7 @@ Decided: Jennie sets each upcoming course's fee by hand in the course form after
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 After the production deploy, every upcoming course's late-cancellation fee is what Jennie wants it to be
+- [x] #1 After the production deploy, every upcoming course's late-cancellation fee is what Jennie wants it to be
 <!-- AC:END -->
 
 ## Comments
@@ -41,6 +41,15 @@ created: 2026-10-19 10:11
 ---
 
 Left for Jennie: after deploying to production, open each upcoming course in the admin and set its late-cancellation fee (0 to keep the old full-refund terms).
+
+---
+
+author: @claude
+created: 2026-10-19 13:52
+
+---
+
+Done by the user on 2026-10-19: each upcoming course's late-cancellation fee is set.
 
 ---
 <!-- COMMENTS:END -->

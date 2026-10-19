@@ -1,10 +1,10 @@
 ---
 id: TASK-11.7
 title: Download the accountant report from Overview
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-19 13:44'
-updated_date: '2026-10-19 13:44'
+updated_date: '2026-10-19 13:52'
 labels:
   - quick
 dependencies: []
@@ -43,6 +43,15 @@ created: 2026-10-19 13:44
 ---
 
 Left for a human: click Download on /admin in a real browser and check the new tab closes and the zip saves. The response and its contents are covered by tests; the browser side is not.
+
+---
+
+author: @claude
+created: 2026-10-19 13:52
+
+---
+
+Verified by the user on 2026-10-19: Download on the Overview's Accountant report card saved the zip.
 
 ---
 <!-- COMMENTS:END -->
