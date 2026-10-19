@@ -124,7 +124,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                 field={@form[:language]}
                 type="select"
                 label={~t"Language"}
-                options={[{~t"Swedish", :sv}, {~t"English", :en}]}
+                options={[{~t"Swedish", :sv}, {~t"Finnish", :fi}, {~t"English", :en}]}
                 class="select max-w-48 w-full"
               />
             </.form_section>
