@@ -468,7 +468,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </div>
           </div>
           <div :if={!@order.customer_email} class="text-base-content/75 space-y-2 text-sm">
-            <p>{~t"No confirmation will be emailed — this order has no email address."}</p>
+            <p>{~t"This order has no email address, so no confirmation will be emailed."}</p>
             <.link navigate={~p"/admin/orders/#{@order.id}/edit"} class="link link-primary">
               {~t"Edit customer details"}
             </.link>

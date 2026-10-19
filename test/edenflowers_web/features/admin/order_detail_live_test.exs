@@ -211,7 +211,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
     view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
     refute has_element?(view, ~s|#confirm-fulfillment-form input[type="checkbox"]|)
-    assert has_element?(view, "#confirm-fulfillment-form", "No confirmation will be emailed")
+    assert has_element?(view, "#confirm-fulfillment-form", "no confirmation will be emailed")
     view |> form("#confirm-fulfillment-form") |> render_submit()
 
     assert has_element?(view, "#order-status", "Fulfilled")
