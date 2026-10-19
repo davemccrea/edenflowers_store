@@ -692,6 +692,38 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert Exception.message(error) =~ "has a payment"
     end
 
+    test "cancels its payment link before deleting it", ctx do
+      {:ok, order} = place(ctx)
+      order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_link"} -> {:ok, %{id: "pi_link"}} end)
+
+      assert :ok = Orders.delete_custom_order(order, actor: ctx.admin)
+      assert {:error, _} = Orders.get_order_by_id(order.id, authorize?: false)
+    end
+
+    test "deletes it when its payment link was already cancelled in Stripe", ctx do
+      {:ok, order} = place(ctx)
+      order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn _ -> {:error, :unexpected_state} end)
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn _ -> {:ok, %{id: "pi_link", status: "canceled"}} end)
+
+      capture_log(fn -> assert :ok = Orders.delete_custom_order(order, actor: ctx.admin) end)
+    end
+
+    test "keeps it while a payment is under way, so the payment has an order to land on", ctx do
+      {:ok, order} = place(ctx)
+      order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn _ -> {:error, :unexpected_state} end)
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn _ -> {:ok, %{id: "pi_link", status: "processing"}} end)
+
+      capture_log(fn ->
+        assert {:error, error} = Orders.delete_custom_order(order, actor: ctx.admin)
+        assert Exception.message(error) =~ "payment for this order is under way"
+      end)
+
+      assert {:ok, %{payment_intent_id: "pi_link"}} = Orders.get_order_by_id(order.id, authorize?: false)
+    end
+
     test "refuses an online order", ctx do
       order = generate(order(state: :placed, origin: :online))
 

@@ -6079,223 +6079,223 @@ msgstr "Betalningsdag"
 msgid "The report couldn't be built. Please try again."
 msgstr "Rapporten kunde inte skapas. Försök igen."
 
-#: lib/edenflowers/accounting/monthly_report.ex:221
+#: lib/edenflowers/accounting/monthly_report.ex:222
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Category"
 msgstr "Kategori"
 
-#: lib/edenflowers/accounting/monthly_report.ex:223
+#: lib/edenflowers/accounting/monthly_report.ex:224
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Currency"
 msgstr "Valuta"
 
-#: lib/edenflowers/accounting/monthly_report.ex:222
-#: lib/edenflowers/accounting/monthly_report.ex:282
+#: lib/edenflowers/accounting/monthly_report.ex:223
+#: lib/edenflowers/accounting/monthly_report.ex:283
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Description"
 msgstr "Beskrivning"
 
-#: lib/edenflowers/accounting/monthly_report.ex:218
+#: lib/edenflowers/accounting/monthly_report.ex:219
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Invoice date"
 msgstr "Fakturadatum"
 
-#: lib/edenflowers/accounting/monthly_report.ex:108
-#: lib/edenflowers/accounting/monthly_report.ex:226
+#: lib/edenflowers/accounting/monthly_report.ex:109
+#: lib/edenflowers/accounting/monthly_report.ex:227
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Net"
 msgstr "Exkl. moms"
 
-#: lib/edenflowers/accounting/monthly_report.ex:103
-#: lib/edenflowers/accounting/monthly_report.ex:217
+#: lib/edenflowers/accounting/monthly_report.ex:104
+#: lib/edenflowers/accounting/monthly_report.ex:218
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Paid date"
 msgstr "Betalningsdag"
 
-#: lib/edenflowers/accounting/monthly_report.ex:228
+#: lib/edenflowers/accounting/monthly_report.ex:229
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Receipt file"
 msgstr "Kvittofil"
 
-#: lib/edenflowers/accounting/monthly_report.ex:227
+#: lib/edenflowers/accounting/monthly_report.ex:228
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Reviewed"
 msgstr "Granskad"
 
-#: lib/edenflowers/accounting/monthly_report.ex:216
+#: lib/edenflowers/accounting/monthly_report.ex:217
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Row number"
 msgstr "Nr"
 
-#: lib/edenflowers/accounting/monthly_report.ex:224
+#: lib/edenflowers/accounting/monthly_report.ex:225
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Total"
 msgstr "Totalt"
 
-#: lib/edenflowers/accounting/monthly_report.ex:109
-#: lib/edenflowers/accounting/monthly_report.ex:225
+#: lib/edenflowers/accounting/monthly_report.ex:110
+#: lib/edenflowers/accounting/monthly_report.ex:226
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "VAT"
 msgstr "Moms"
 
-#: lib/edenflowers/accounting/monthly_report.ex:219
+#: lib/edenflowers/accounting/monthly_report.ex:220
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Vendor"
 msgstr "Leverantör"
 
-#: lib/edenflowers/accounting/monthly_report.ex:220
+#: lib/edenflowers/accounting/monthly_report.ex:221
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Vendor VAT number"
 msgstr "Leverantörens momsnummer"
 
-#: lib/edenflowers/accounting/monthly_report.ex:250
+#: lib/edenflowers/accounting/monthly_report.ex:251
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "no"
 msgstr "nej"
 
-#: lib/edenflowers/accounting/monthly_report.ex:250
+#: lib/edenflowers/accounting/monthly_report.ex:251
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "yes"
 msgstr "ja"
 
-#: lib/edenflowers/accounting/monthly_report.ex:121
-#: lib/edenflowers/accounting/monthly_report.ex:261
+#: lib/edenflowers/accounting/monthly_report.ex:122
+#: lib/edenflowers/accounting/monthly_report.ex:262
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Sum"
 msgstr "Summa"
 
-#: lib/edenflowers/accounting/monthly_report.ex:110
+#: lib/edenflowers/accounting/monthly_report.ex:111
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Gross"
 msgstr "Inkl. moms"
 
-#: lib/edenflowers/accounting/monthly_report.ex:106
+#: lib/edenflowers/accounting/monthly_report.ex:107
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Payment method"
 msgstr "Betalningssätt"
 
-#: lib/edenflowers/accounting/monthly_report.ex:104
+#: lib/edenflowers/accounting/monthly_report.ex:105
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Reference"
 msgstr "Referens"
 
-#: lib/edenflowers/accounting/monthly_report.ex:105
+#: lib/edenflowers/accounting/monthly_report.ex:106
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Source"
 msgstr "Källa"
 
-#: lib/edenflowers/accounting/monthly_report.ex:118
+#: lib/edenflowers/accounting/monthly_report.ex:119
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Total per VAT rate"
 msgstr "Summa per momssats"
 
-#: lib/edenflowers/accounting/monthly_report.ex:107
+#: lib/edenflowers/accounting/monthly_report.ex:108
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "VAT rate"
 msgstr "Momssats"
 
-#: lib/edenflowers/accounting/monthly_report.ex:136
+#: lib/edenflowers/accounting/monthly_report.ex:137
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "course"
 msgstr "kurs"
 
-#: lib/edenflowers/accounting/monthly_report.ex:132
+#: lib/edenflowers/accounting/monthly_report.ex:133
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "order"
 msgstr "beställning"
 
-#: lib/edenflowers/accounting/monthly_report.ex:328
+#: lib/edenflowers/accounting/monthly_report.ex:329
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Adjustment"
 msgstr "Justering"
 
-#: lib/edenflowers/accounting/monthly_report.ex:325
+#: lib/edenflowers/accounting/monthly_report.ex:326
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Charge"
 msgstr "Debitering"
 
-#: lib/edenflowers/accounting/monthly_report.ex:282
+#: lib/edenflowers/accounting/monthly_report.ex:283
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Date"
 msgstr "Datum"
 
-#: lib/edenflowers/accounting/monthly_report.ex:282
-#: lib/edenflowers/accounting/monthly_report.ex:331
+#: lib/edenflowers/accounting/monthly_report.ex:283
+#: lib/edenflowers/accounting/monthly_report.ex:332
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Fee"
 msgstr "Avgift"
 
-#: lib/edenflowers/accounting/monthly_report.ex:282
+#: lib/edenflowers/accounting/monthly_report.ex:283
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Gross amount"
 msgstr "Brutto"
 
-#: lib/edenflowers/accounting/monthly_report.ex:282
+#: lib/edenflowers/accounting/monthly_report.ex:283
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Net amount"
 msgstr "Netto"
 
-#: lib/edenflowers/accounting/monthly_report.ex:318
+#: lib/edenflowers/accounting/monthly_report.ex:319
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Paid out to bank"
 msgstr "Utbetalt till bank"
 
-#: lib/edenflowers/accounting/monthly_report.ex:327
+#: lib/edenflowers/accounting/monthly_report.ex:328
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Payout"
 msgstr "Utbetalning"
 
-#: lib/edenflowers/accounting/monthly_report.ex:282
+#: lib/edenflowers/accounting/monthly_report.ex:283
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Payout id"
 msgstr "Utbetalnings-id"
 
-#: lib/edenflowers/accounting/monthly_report.ex:326
+#: lib/edenflowers/accounting/monthly_report.ex:327
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Refund"
 msgstr "Återbetalning"
 
-#: lib/edenflowers/accounting/monthly_report.ex:317
+#: lib/edenflowers/accounting/monthly_report.ex:318
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Total fees"
 msgstr "Avgifter totalt"
 
-#: lib/edenflowers/accounting/monthly_report.ex:282
+#: lib/edenflowers/accounting/monthly_report.ex:283
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Type"
@@ -6544,7 +6544,7 @@ msgstr "Betalningssätt"
 msgid "Receipts missing from the report: %{count}. Papra couldn't serve them, so their rows in the spreadsheet say so."
 msgstr "Kvitton som saknas i rapporten: %{count}. Papra kunde inte lämna ut dem, så det står på deras rader i kalkylbladet."
 
-#: lib/edenflowers/accounting/monthly_report.ex:251
+#: lib/edenflowers/accounting/monthly_report.ex:252
 #, elixir-autogen, elixir-format
 msgctxt "accounting report"
 msgid "Missing: couldn't be fetched from Papra"
@@ -6634,3 +6634,8 @@ msgstr "Kvittot kunde inte mejlas"
 #, elixir-autogen, elixir-format
 msgid "Building report…"
 msgstr "Skapar rapporten…"
+
+#: lib/edenflowers/payments/changes/cancel_open_payment_intent.ex:35
+#, elixir-autogen, elixir-format
+msgid "A payment for this order is under way. Wait for it to arrive, then cancel the order instead."
+msgstr "En betalning för beställningen pågår. Vänta tills den har kommit in och avbeställ sedan beställningen i stället."

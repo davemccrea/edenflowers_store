@@ -4,7 +4,7 @@ title: Delete a custom order that has no payments
 status: done
 assignee: []
 created_date: '2026-10-18 18:22'
-updated_date: '2026-10-18 18:49'
+updated_date: '2026-10-19 09:44'
 labels:
   - spec
   - admin
@@ -28,3 +28,16 @@ Add a destroy action for custom orders with no recorded payments, and a Delete b
 - [x] #2 Its stock is returned
 - [x] #3 Online orders and orders with a payment have no Delete button and the action refuses them
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-19 09:44
+
+---
+
+Delete now cancels the PaymentIntent before the order goes and refuses while a payment is under way (processing or succeeded), so a payment always has an order to land on. Found in the 2026-10-18 commit review.
+
+---
+<!-- COMMENTS:END -->
