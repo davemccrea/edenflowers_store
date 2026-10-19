@@ -51,7 +51,7 @@ defmodule Edenflowers.Orders.LineItem do
     # A line Jennie enters when she places or edits an order: a size from the
     # catalogue, priced from it, or one she describes and prices herself.
     create :enter do
-      accept [:product_variant_id, :product_name, :unit_price, :quantity]
+      accept [:product_variant_id, :product_name, :unit_price, :quantity, :is_card]
       # A catalogue line takes them from its variant; a custom one is checked below.
       allow_nil_input [:product_name, :unit_price]
       argument :kind, :atom, allow_nil?: false, constraints: [one_of: [:catalogue, :custom]]

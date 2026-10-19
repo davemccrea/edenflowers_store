@@ -1,9 +1,10 @@
 ---
 id: TASK-50
 title: Pick the card on a custom order as checkout does
-status: needs-triage
+status: in-progress
 assignee: []
 created_date: '2026-10-18 19:03'
+updated_date: '2026-10-19 20:56'
 labels:
   - spec
   - admin
@@ -35,8 +36,14 @@ Jennie picks the card for a gift custom order from the same card choice as check
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Jennie can pick a card for a gift custom order from the same choice as checkout
-- [ ] #2 The picked card is the order's card line, replaced when she picks another and removed when she switches to For me
-- [ ] #3 The card message is limited by the picked card's size
+- [x] #1 Jennie can pick a card for a gift custom order from the same choice as checkout
+- [x] #2 The picked card is the order's card line, replaced when she picks another and removed when she switches to For me
+- [x] #3 The card message is limited by the picked card's size
 - [ ] #4 The section heading matches its For me / For somebody else question
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Built: `card_variant_id` argument on place_custom and edit; Changes.EnterCardLine adds it to the line_items argument (the order's own card kept by id at its sold price; any other card removed, as when not a gift). CardMessageLength limits the message to the chosen card's size. Checkout's card_drawer moved to EdenflowersWeb.CardDrawer and used by both forms. Cards are no longer offered as catalogue items on the form. The order page lists the card under Card to write, not To make. Existing orders with a card entered as a catalogue line are left as they are. The gift options now read The customer / Somebody else. Left open: AC #4, the section heading (still Recipient and card), waiting on Jennie.
+<!-- SECTION:NOTES:END -->

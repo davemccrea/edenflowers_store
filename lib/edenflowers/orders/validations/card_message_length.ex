@@ -2,13 +2,14 @@ defmodule Edenflowers.Orders.Validations.CardMessageLength do
   @moduledoc """
   Enforces the per-card-size length limit for card_message.
 
-  An order Jennie enters or edits needs no card in its lines: she writes the
-  card or ribbon herself and adds a card product only when she charges for
-  one. It is held to the longest card's limit instead.
+  An order Jennie enters or edits is held to the card she chose
+  (`card_variant_id`). It needs no card: she may write a card or ribbon of her
+  own, which is held to the longest card's limit.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
+  alias Edenflowers.Catalog
   alias Edenflowers.Catalog.ProductVariantSize
 
   @impl true
@@ -19,7 +20,7 @@ defmodule Edenflowers.Orders.Validations.CardMessageLength do
 
       message ->
         if Ash.Changeset.get_attribute(changeset, :origin) == :custom or changeset.action.name == :edit do
-          check_length(message, ProductVariantSize.max_message_length(:large))
+          check_length(message, ProductVariantSize.max_message_length(chosen_card_size(changeset)))
         else
           validate_against_card(changeset, message)
         end
@@ -41,6 +42,15 @@ defmodule Edenflowers.Orders.Validations.CardMessageLength do
       {:error, field: :card_message, message: ~t"Must be at most #{max} characters"}
     else
       :ok
+    end
+  end
+
+  defp chosen_card_size(changeset) do
+    with variant_id when not is_nil(variant_id) <- Ash.Changeset.get_argument(changeset, :card_variant_id),
+         {:ok, %{size: size}} when not is_nil(size) <- Catalog.get_variant_by_id(variant_id, authorize?: false) do
+      size
+    else
+      _ -> :large
     end
   end
 

@@ -488,6 +488,7 @@ defmodule Edenflowers.Orders.Order do
       validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
       change set_new_attribute(:payment_terms, :payment_link)
       argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
+      argument :card_variant_id, :uuid
       argument :email_customer?, :boolean, default: true
       argument :customer_id, :uuid
 
@@ -520,6 +521,8 @@ defmodule Edenflowers.Orders.Order do
 
       change Changes.UpsertUserAndAssignToOrder,
         where: [present(:customer_email), argument_equals(:customer_id, nil)]
+
+      change Changes.EnterCardLine
 
       change manage_relationship(:line_items,
                type: :direct_control,
@@ -698,6 +701,7 @@ defmodule Edenflowers.Orders.Order do
       argument :line_items, {:array, :map}, default: []
       validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
       argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
+      argument :card_variant_id, :uuid
 
       validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
@@ -727,6 +731,8 @@ defmodule Edenflowers.Orders.Order do
       change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
       # The old lines go back on the shelf before the new ones are taken.
       change {Changes.AdjustStock, direction: :return}
+
+      change Changes.EnterCardLine
 
       change manage_relationship(:line_items,
                type: :direct_control,
