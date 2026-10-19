@@ -141,6 +141,7 @@ defmodule EdenflowersWeb.Router do
       live "/promotions/:id", EdenflowersWeb.Admin.PromotionFormLive
       live "/expenses", EdenflowersWeb.Admin.ExpensesLive
       live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive
+      live "/emails", EdenflowersWeb.Admin.EmailsLive
       live "/account", EdenflowersWeb.Admin.AccountLive
       live "/search", EdenflowersWeb.Admin.SearchLive
     end
