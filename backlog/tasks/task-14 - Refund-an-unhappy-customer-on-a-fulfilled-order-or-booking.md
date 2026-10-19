@@ -4,7 +4,7 @@ title: Refund an unhappy customer on a fulfilled order or booking
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-17 18:40'
-updated_date: '2026-10-19 13:55'
+updated_date: '2026-10-19 13:56'
 labels:
   - spec
   - admin
@@ -40,7 +40,7 @@ The reason for refusing doesn't hold. The monthly report is cash-basis VAT (mont
 3. **A Stripe refund beyond what was owed back is goodwill.** `record_stripe_refund` marks the part beyond `-balance` as goodwill, so a refund made in the Stripe dashboard on a settled order no longer reads as "To collect". A refund that straddles (owed back €20, refunded €50) is €20 ordinary and €30 goodwill; split it into two rows (the `unique_stripe_refund` identity then includes `goodwill`) or store the goodwill part as an amount on one row, whichever reads simpler. This replaces decision 3's "one beyond what was owed back leaves a balance to collect".
 
 4. **Where Jennie does it.** "Refund" in the order page's menu and in the booking's ⋯ menu on the courses page, shown when decision 2 allows one. A small form: amount (prefilled with nothing), how (Stripe when anything was paid through it, otherwise the outside-Stripe methods), confirm naming the amount. The order log reads "Goodwill refund €X · how"; the payments list labels it the same way.
-5. **No reason field.** A goodwill refund doesn't ask for a reason, so `Payment` gets no `note`. On an order, Jennie writes the reason in the Florist Note if she wants one kept. A course booking has no Florist Note, so its goodwill refund has no reason recorded.
+5. **Jennie can note why.** The refund form has an optional short reason ("Customer unhappy with the bouquet"), stored as a nullable `note` on `Payment`. It shows after the refund in the order log and the payments list, on orders and bookings alike. A Stripe refund made in the dashboard has none.
 
 ### Out of scope
 
