@@ -1,10 +1,10 @@
 ---
 id: TASK-40
 title: Show the wedding hero photo at full size on Safari desktop
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
-updated_date: '2026-10-18 20:04'
+updated_date: '2026-10-19 06:53'
 labels:
   - spec
   - customers
@@ -24,7 +24,7 @@ Reproduce on `weddings_live.ex` in WebKit at desktop widths, find what sizes the
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 On Safari desktop the hero photo fills its area as it does in Chrome
+- [x] #1 On Safari desktop the hero photo fills its area as it does in Chrome
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -51,6 +51,15 @@ created: 2026-10-18 20:04
 ---
 
 Check on Jennie's Safari: open /weddings (and /condolences) at full window width after this deploys to staging. The hero photo should reach from just under the header to near the bottom of the window, about as wide as the right-hand column, same as in Chrome. If it still looks small, note the window size and the image's width (Develop > Show Web Inspector) so we can see what differs.
+
+---
+
+author: @claude
+created: 2026-10-19 06:53
+
+---
+
+Human verification: user confirms the photo looks correct. Accepted the hero image sizing and closed the task.
 
 ---
 <!-- COMMENTS:END -->
