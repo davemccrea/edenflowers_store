@@ -1,12 +1,14 @@
 ---
 id: TASK-59
 title: Admin email gallery with localized scenario previews
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-19 06:39'
+updated_date: '2026-10-19 14:20'
 labels:
   - spec
   - admin
+  - wontfix
 dependencies: []
 priority: medium
 type: feature
@@ -53,3 +55,16 @@ Scope is read-only inspection; copy editing remains a code change.
 - [ ] #6 Previewing performs no email delivery, real order creation, remote photo fetching or receipt-PDF generation.
 - [ ] #7 Automated checks verify email-type coverage, admin access control, filtering/locale behavior and representative branch rendering; documentation requires scenario updates when conditional email copy changes.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-19 14:20
+
+---
+
+Replaced by test/edenflowers/email_snapshot_test.exs, which renders every English wording variant into a checked-in snapshot so copy changes show up as a diff. A gallery for proofreading only did not justify the LiveView and scenario upkeep.
+
+---
+<!-- COMMENTS:END -->
