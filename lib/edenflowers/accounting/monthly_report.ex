@@ -38,7 +38,11 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
       with {:ok, payments} <- payments(first, last),
            {:ok, expenses} <- paid_expenses(first, last),
-           rows = expenses |> Enum.with_index(1) |> Enum.map(&fetch_receipt/1),
+           rows =
+             expenses
+             |> Enum.with_index(1)
+             |> Task.async_stream(&fetch_receipt/1, max_concurrency: 5, timeout: :infinity)
+             |> Enum.map(fn {:ok, row} -> row end),
            receipts = for({_n, _expense, name, body} <- rows, body, do: {~c"kvitton/#{name}", body}),
            {:ok, transactions} <-
              StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
