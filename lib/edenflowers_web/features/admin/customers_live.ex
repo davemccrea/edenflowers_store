@@ -12,6 +12,8 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:orders")
+
     {:ok,
      socket
      |> assign(:page_title, ~t"Customers")
@@ -82,6 +84,10 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
     </Layouts.admin>
     """
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
+    do: {:noreply, Cinder.refresh_table(socket, "customers-table")}
 
   defp search_customers(query, _searchable_columns, search_term) do
     require Ash.Query

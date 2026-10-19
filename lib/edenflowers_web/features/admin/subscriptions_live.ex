@@ -17,6 +17,8 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:subscriptions")
+
     {:ok,
      socket
      |> assign(:page_title, ~t"Subscriptions")
@@ -92,6 +94,10 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
     </Layouts.admin>
     """
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:subscriptions"}, socket),
+    do: {:noreply, Cinder.refresh_table(socket, "subscriptions-table")}
 
   defp state_options do
     Enum.map([:active, :paused, :payment_failed, :cancelled], &{subscription_state_label(&1), &1})

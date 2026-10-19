@@ -46,7 +46,8 @@ defmodule Edenflowers.Expenses.Expense do
   use Ash.Resource,
     domain: Edenflowers.Expenses,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
 
   alias Edenflowers.Expenses.Changes
 
@@ -149,6 +150,16 @@ defmodule Edenflowers.Expenses.Expense do
     policy always() do
       forbid_if always()
     end
+  end
+
+  # Expenses arrive in the background from Papra; this refreshes the admin's
+  # Expenses page, which has no pull to refresh.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, ["admin", "expenses"]
+    publish_all :update, ["admin", "expenses"]
+    publish_all :destroy, ["admin", "expenses"]
   end
 
   # Claude's draft may lack these, so ingest takes it as it is; Jennie fills

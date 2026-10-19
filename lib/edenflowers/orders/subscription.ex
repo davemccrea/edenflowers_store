@@ -8,6 +8,7 @@ defmodule Edenflowers.Orders.Subscription do
     domain: Edenflowers.Orders,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshStateMachine, AshOban, AshPaperTrail.Resource]
 
   import Edenflowers.Actors
@@ -255,6 +256,14 @@ defmodule Edenflowers.Orders.Subscription do
     policy action([:read, :mine, :pause, :resume, :cancel, :change, :replace_card]) do
       authorize_if expr(user_id == ^actor(:id))
     end
+  end
+
+  # Refreshes the admin's subscription pages, which have no pull to refresh.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, ["admin", "subscriptions"]
+    publish_all :update, ["admin", "subscriptions"]
   end
 
   attributes do

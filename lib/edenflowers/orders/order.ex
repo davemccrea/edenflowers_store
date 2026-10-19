@@ -1042,19 +1042,13 @@ defmodule Edenflowers.Orders.Order do
     publish :restart_checkout, ["order", "checkout_restarted", :id]
     publish :finalize_checkout, ["order", "placed", :id]
     publish :record_link_payment, ["order", "paid", :id]
-    # Keeps open admin pages current when an order is placed or paid.
-    publish :finalize_checkout, ["admin", "orders"]
-    publish :place_unpaid_occurrence, ["admin", "orders"]
+    # The admin is an installed app without pull to refresh, so every change
+    # to a placed order, by anyone, refreshes the admin pages showing it.
+    # Carts are left out: they change with every checkout step.
     publish :place_custom, ["admin", "orders"]
-    publish :record_link_payment, ["admin", "orders"]
-    publish :cancel_by_customer, ["admin", "orders"]
-    # An email sent or failed in the background: an open order page reloads.
-    publish :send_fulfillment_email, ["order", "email", :id]
-    publish :record_fulfillment_email_failure, ["order", "email", :id]
-    publish :send_receipt_email, ["order", "email", :id]
-    publish :record_receipt_email_failure, ["order", "email", :id]
-    publish :send_order_details_email, ["order", "email", :id]
-    publish :record_order_details_email_failure, ["order", "email", :id]
+    publish_all :update, ["admin", "orders"], filter: fn %{data: order} -> order.state == :placed end
+    publish :delete_custom, ["admin", "orders"]
+    publish_all :update, ["order", "changed", :id], filter: fn %{data: order} -> order.state == :placed end
     publish :add_promotion_with_code, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
   end

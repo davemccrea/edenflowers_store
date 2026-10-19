@@ -17,6 +17,8 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
   def mount(%{"id" => id}, _session, socket) do
     case Accounts.get_customer_for_admin(id, actor: socket.assigns.current_user) do
       {:ok, %User{} = customer} ->
+        if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:orders")
+
         {:ok,
          socket
          |> assign(:page_title, customer.name || to_string(customer.email))
@@ -118,4 +120,8 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
     </Layouts.admin>
     """
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
+    do: {:noreply, Cinder.refresh_table(socket, "customer-orders-table")}
 end

@@ -17,6 +17,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:bookings")
+
     {:ok,
      socket
      |> assign(:page_title, ~t"Courses")
@@ -184,6 +186,11 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
     {:noreply, load_courses(socket)}
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:bookings"}, socket), do: {:noreply, load_courses(socket)}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp with_registration(socket, id, payment_action) do
     socket =

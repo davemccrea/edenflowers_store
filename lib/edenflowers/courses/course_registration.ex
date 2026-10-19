@@ -267,6 +267,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
     module EdenflowersWeb.Endpoint
 
     publish :record_link_payment, ["course_registration", "paid", :id]
+    # Refreshes the admin's Courses and Overview pages, which have no pull to refresh.
+    publish_all :create, ["admin", "bookings"]
+    publish_all :update, ["admin", "bookings"]
   end
 
   attributes do
