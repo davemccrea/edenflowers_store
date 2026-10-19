@@ -218,9 +218,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
 
     send(view.pid, :refresh_fulfillment_email)
-    assert has_element?(view, "#order-confirmation-email", "Confirmation emailed at")
-    assert has_element?(view, "#order-confirmation-email", "To: ada@example.com")
+    refute has_element?(view, "#order-confirmation-email")
+    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
     refute has_element?(view, ~s|button[phx-click="retry_fulfillment_email"]|)
+  end
+
+  test "the log keeps the address a confirmation went to after the customer's email changes", %{conn: conn} do
+    order = placed_order(fulfillment_status: :fulfilled)
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    view |> element(~s|button[phx-click="retry_fulfillment_email"]|) |> render_click()
+    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+
+    order |> Ash.reload!(authorize?: false) |> Ash.Seed.update!(%{customer_email: "new@example.com"})
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
+    refute has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*new@example\.com/s)
   end
 
   describe "confirming a delivery" do

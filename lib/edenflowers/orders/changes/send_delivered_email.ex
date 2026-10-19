@@ -26,7 +26,11 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmail do
       case Mailer.deliver(email) do
         {:ok, _result} ->
           Logger.info("Sent fulfillment email for order #{order.id}")
-          Ash.Changeset.force_change_attribute(changeset, :delivered_emailed_at, DateTime.utc_now())
+
+          Ash.Changeset.force_change_attributes(changeset,
+            delivered_emailed_at: DateTime.utc_now(),
+            delivered_emailed_to: order.customer_email
+          )
 
         {:error, error} ->
           Ash.Changeset.add_error(changeset, email_error(error))

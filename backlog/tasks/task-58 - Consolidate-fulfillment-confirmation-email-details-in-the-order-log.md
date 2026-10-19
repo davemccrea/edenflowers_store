@@ -1,9 +1,10 @@
 ---
 id: TASK-58
 title: Consolidate fulfillment confirmation email details in the order log
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-19 06:39'
+updated_date: '2026-10-19 07:29'
 labels:
   - spec
   - admin
@@ -32,9 +33,15 @@ Historical recipients must reflect the address used at send time, not the curren
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Successful sends appear in the log as ‘Fulfillment confirmation emailed’, with no duplicate success section.
-- [ ] #2 The log includes locale-formatted send date/time and the recipient recorded at send time; later customer email edits cannot change historical recipient information.
-- [ ] #3 Older records without a recorded recipient do not present the current customer email as the historical recipient.
-- [ ] #4 Unsent and failed states remain visible near fulfillment, with existing automatic refresh, error guidance, and retry actions preserved.
-- [ ] #5 Affected tests and translations cover the updated wording, successful-send display, recipient history, and unsent/error behavior.
+- [x] #1 Successful sends appear in the log as ‘Fulfillment confirmation emailed’, with no duplicate success section.
+- [x] #2 The log includes locale-formatted send date/time and the recipient recorded at send time; later customer email edits cannot change historical recipient information.
+- [x] #3 Older records without a recorded recipient do not present the current customer email as the historical recipient.
+- [x] #4 Unsent and failed states remain visible near fulfillment, with existing automatic refresh, error guidance, and retry actions preserved.
+- [x] #5 Affected tests and translations cover the updated wording, successful-send display, recipient history, and unsent/error behavior.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Order gets delivered_emailed_to, set with delivered_emailed_at when the email sends, so the send version records the address. The log entry 'Fulfillment confirmation emailed' shows it under 'Sent to' ('To' was taken by date ranges). The confirmation section on the order page hides once sent. No older records to backfill: not in production yet.
+<!-- SECTION:NOTES:END -->

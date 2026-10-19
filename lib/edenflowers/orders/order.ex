@@ -1103,6 +1103,8 @@ defmodule Edenflowers.Orders.Order do
     attribute :receipt_emailed_at, :utc_datetime
     attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
     attribute :delivered_emailed_at, :utc_datetime
+    # The customer's email can change later; the log names who was sent it.
+    attribute :delivered_emailed_to, :string
     # Where Jennie left a delivery nobody answered the door for.
     attribute :delivery_photo_slug, :string
     # Sends the photo in place of the delivered email.
