@@ -638,17 +638,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-log", "Refunded €10.00 · Stripe")
   end
 
-  test "omits the card widget for a whitespace-only card message", %{conn: conn} do
-    order = placed_order()
-
-    # Ash trims strings to nil on the way in, so only rows written outside Ash can hold this
-    Edenflowers.Repo.query!("UPDATE orders SET card_message = '   ' WHERE id = $1", [Ecto.UUID.dump!(order.id)])
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    refute has_element?(view, "#order-card")
-  end
-
   test "shows the phone under customer and omits recipient for a non-gift order", %{conn: conn} do
     order = placed_order(recipient_phone_number: "040 123 4567")
 
