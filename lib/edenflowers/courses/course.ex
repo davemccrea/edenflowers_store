@@ -96,7 +96,7 @@ defmodule Edenflowers.Courses.Course do
       constraints: [min: 0, scale: 2]
 
     # The language the course is taught in, not the language of its page.
-    attribute :language, :atom, allow_nil?: false, default: :sv, constraints: [one_of: [:sv, :en]]
+    attribute :language, :atom, allow_nil?: false, default: :sv, constraints: [one_of: [:sv, :fi, :en]]
 
     timestamps()
   end

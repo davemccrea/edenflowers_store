@@ -103,6 +103,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
   end
 
   defp taught_in(:sv), do: ~t"In Swedish"
+  defp taught_in(:fi), do: ~t"In Finnish"
   defp taught_in(:en), do: ~t"In English"
 
   defp availability(%{seats_left: seats_left}) when seats_left <= 0, do: ~t"Fully booked"

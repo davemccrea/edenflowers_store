@@ -1815,8 +1815,8 @@ msgid_plural "%{count} place(s) for %{name}"
 msgstr[0] ""
 msgstr[1] ""
 
-#: lib/edenflowers_web/features/courses/course_live.ex:303
-#: lib/edenflowers_web/features/courses/courses_live.ex:110
+#: lib/edenflowers_web/features/courses/course_live.ex:304
+#: lib/edenflowers_web/features/courses/courses_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) left"
 msgid_plural "%{count} place(s) left"
@@ -1829,7 +1829,7 @@ msgstr[1] ""
 msgid "Booking cancelled"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:109
+#: lib/edenflowers_web/features/courses/courses_live.ex:110
 #, elixir-autogen, elixir-format
 msgid "Booking closed"
 msgstr ""
@@ -1869,8 +1869,8 @@ msgstr ""
 msgid "Course not found."
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_live.ex:302
-#: lib/edenflowers_web/features/courses/courses_live.ex:108
+#: lib/edenflowers_web/features/courses/course_live.ex:303
+#: lib/edenflowers_web/features/courses/courses_live.ex:109
 #, elixir-autogen, elixir-format
 msgid "Fully booked"
 msgstr ""
@@ -1958,7 +1958,7 @@ msgstr ""
 msgid "Change booking"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_live.ex:315
+#: lib/edenflowers_web/features/courses/course_live.ex:316
 #, elixir-autogen, elixir-format
 msgid "(opens a map in a new tab)"
 msgstr ""
@@ -5933,12 +5933,12 @@ msgid "Estimate your price"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:127
-#: lib/edenflowers_web/features/courses/course_live.ex:300
+#: lib/edenflowers_web/features/courses/course_live.ex:301
 #, elixir-autogen, elixir-format
 msgid "English"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:106
+#: lib/edenflowers_web/features/courses/courses_live.ex:107
 #, elixir-autogen, elixir-format
 msgid "In English"
 msgstr ""
@@ -6638,4 +6638,15 @@ msgstr ""
 #: lib/edenflowers/payments/changes/cancel_open_payment_intent.ex:35
 #, elixir-autogen, elixir-format
 msgid "A payment for this order is under way. Wait for it to arrive, then cancel the order instead."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/course_form_live.ex:127
+#: lib/edenflowers_web/features/courses/course_live.ex:300
+#, elixir-autogen, elixir-format
+msgid "Finnish"
+msgstr ""
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:106
+#, elixir-autogen, elixir-format
+msgid "In Finnish"
 msgstr ""
