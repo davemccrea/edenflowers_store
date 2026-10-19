@@ -1,0 +1,32 @@
+defmodule EdenflowersWeb.Admin.EmailsLiveTest do
+  use EdenflowersWeb.ConnCase, async: true
+
+  import Generator
+  import Phoenix.LiveViewTest
+
+  alias AshAuthentication.Plug.Helpers
+
+  defp sign_in(conn, user) do
+    conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(with_token(user))
+  end
+
+  test "shows every email in the chosen language", %{conn: conn} do
+    conn = sign_in(conn, generate(admin_user()))
+
+    {:ok, view, html} = live(conn, ~p"/admin/emails")
+    assert html =~ "Your receipt for Eden Flowers order EF-1042"
+    assert has_element?(view, "section h2", "Order confirmation")
+    assert has_element?(view, "details summary", "not yet fulfilled, cancellable")
+
+    html = view |> element("a", "Suomi") |> render_click()
+    assert_patch(view, ~p"/admin/emails?lang=fi")
+    assert html =~ "lauantaina 14.11.2026"
+    refute html =~ "Your receipt for Eden Flowers order EF-1042"
+  end
+
+  test "non-admins cannot open it", %{conn: conn} do
+    conn = sign_in(conn, generate(admin_user(admin: false)))
+
+    assert {:error, {:redirect, _}} = live(conn, ~p"/admin/emails")
+  end
+end

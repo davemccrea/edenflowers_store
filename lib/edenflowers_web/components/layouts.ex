@@ -173,7 +173,8 @@ defmodule EdenflowersWeb.Layouts do
       {"/admin/fulfillments", ~t"Fulfillments", true, "hero-calendar-days"},
       {"/admin/courses", ~t"Courses", true, "hero-academic-cap"},
       {"/admin/products", ~t"Products", true, "hero-gift"},
-      {EdenflowersWeb.Admin.PromotionsLive.default_path(), ~t"Promotions", true, "hero-receipt-percent"}
+      {EdenflowersWeb.Admin.PromotionsLive.default_path(), ~t"Promotions", true, "hero-receipt-percent"},
+      {"/admin/emails", ~t"Emails", true, "hero-envelope"}
     ]
 
     system_nav = [
