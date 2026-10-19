@@ -660,6 +660,35 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|button[aria-label="Remove item 1"]|)
     end
 
+    test "prices the order as Jennie enters it", ctx do
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+
+      assert has_element?(view, "#order-price", "Add an item to see the price.")
+
+      render_click(view, "add_line", %{"kind" => "catalogue"})
+      render_click(view, "add_line", %{"kind" => "custom"})
+
+      view
+      |> form("#order-form",
+        form: %{
+          fulfillment_option_id: ctx.pickup.id,
+          line_items: %{
+            "0" => %{"product_variant_id" => ctx.variant.id, "quantity" => "2"},
+            "1" => %{"product_name" => "Wreath", "unit_price" => "85,50", "quantity" => "1"}
+          }
+        }
+      )
+      |> render_change()
+
+      assert has_element?(view, "#order-price", "2 × Spring Bouquet")
+      assert has_element?(view, "#order-price", "1 × Wreath")
+      assert has_element?(view, "#order-price", "€183.50")
+
+      view |> form("#order-form", form: %{fulfillment_fee_override: "10"}) |> render_change()
+
+      assert has_element?(view, "#order-price", "€193.50")
+    end
+
     test "keeps quiet about missing items until Jennie tries to save", ctx do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 
@@ -682,6 +711,18 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
   end
 
   describe "editing" do
+    test "prices the order's own lines, and what is still owed on a paid order", ctx do
+      order = place_custom_order(ctx)
+      generate(payment(order_id: order.id, amount: "50.00"))
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
+
+      assert has_element?(view, "#order-price", "1 × Funeral spray")
+      assert has_element?(view, "#order-price", "€85.00")
+      assert has_element?(view, "#order-price", "Balance")
+      assert has_element?(view, "#order-price", "€35.00")
+    end
+
     test "an unpaid custom order opens in the full form", ctx do
       order = place_custom_order(ctx)
 

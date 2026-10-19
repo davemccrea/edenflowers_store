@@ -21,6 +21,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Fulfillment.DeliveryError
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.EnteredPrice
   alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders.Order
   alias Edenflowers.Pricing
@@ -74,10 +75,15 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       |> assign(:gift?, assigns.form[:gift].value in [true, "true"])
       |> assign(:time_choice, to_string(assigns.form[:fulfillment_time].value || "any"))
       |> assign(:card, chosen_card(assigns.card_variants, assigns.order, assigns.card_variant_id))
-      |> assign(
-        :quote,
-        assigns.delivery_quote |> current_quote(assigns.form, current_option_id(assigns)) |> charge(assigns.order)
-      )
+
+    quote = current_quote(assigns.delivery_quote, assigns.form, current_option_id(assigns))
+    # Priced on render, so it follows every change to the form, the card and the quote.
+    price = EnteredPrice.calculate(assigns.order, price_params(assigns), ok_quote(quote))
+
+    assigns =
+      assigns
+      |> assign(:price, price)
+      |> assign(:quote, charge(quote, price.free_delivery?))
 
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -375,7 +381,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </.form_section>
           </aside>
 
-          <%!-- After the aside, so once stacked it is the last thing before the button. --%>
+          <%!-- After the aside, so once stacked the price and payment are the last things before the button. --%>
+          <.form_section title={~t"Price"} class="xl:col-start-1">
+            <.price_summary price={@price} order={@order} method={@method} locale={@locale} />
+          </.form_section>
+
           <.form_section :if={@mode == :new} title={~t"Payment"} class="xl:col-start-1">
             <div class="space-y-4">
               <.input :let={option} field={@form[:payment_terms]} type="radio-card" options={payment_options()}>
@@ -781,14 +791,20 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   defp stored_quote(_mode, _order), do: nil
 
-  # ponytail: charged on the lines the order was saved with, not the lines in
-  # the form; saving prices the new lines. Track the form's lines if Jennie misreads it.
-  defp charge(%{status: :ok} = quote, order) do
-    free_delivery? = !!(order && order.free_delivery?)
+  defp charge(%{status: :ok} = quote, free_delivery?) do
     %{quote | fee: Orders.charged_fulfillment_fee!(quote.fee, quote.in_free_delivery_zone, free_delivery?)}
   end
 
-  defp charge(quote, _order), do: quote
+  defp charge(quote, _free_delivery?), do: quote
+
+  defp ok_quote(%{status: :ok} = quote), do: %{fee: quote.fee, in_free_delivery_zone: quote.in_free_delivery_zone}
+  defp ok_quote(_quote), do: nil
+
+  defp price_params(assigns) do
+    assigns.form
+    |> AshPhoenix.Form.params()
+    |> Map.put("card_variant_id", assigns.card && assigns.card.variant_id)
+  end
 
   # A quote for an address or option no longer in the form says nothing.
   defp current_quote(quote, form, option_id) do
@@ -970,6 +986,57 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         </.icon_button>
       </div>
     </fieldset>
+    """
+  end
+
+  attr :price, :map, required: true
+  attr :order, :map, default: nil
+  attr :method, :atom, default: nil
+  attr :locale, :string, required: true
+
+  # What Jennie tells a customer on the phone, priced as saving will price it.
+  defp price_summary(assigns) do
+    assigns = assign(assigns, :paid, assigns.order && assigns.order.amount_paid)
+
+    ~H"""
+    <p :if={@price.lines == []} id="order-price" class="text-base-content/65 text-sm">
+      {~t"Add an item to see the price."}
+    </p>
+    <dl :if={@price.lines != []} id="order-price" class="text-sm">
+      <.money_row
+        :for={line <- @price.lines}
+        label={"#{line.quantity} × #{line.name}"}
+        amount={line.total}
+        locale={@locale}
+      />
+      <.money_row
+        :if={@price.fulfillment_fee}
+        label={if @method == :delivery, do: ~t"Delivery", else: ~t"Fulfillment fee"}
+        amount={@price.fulfillment_fee}
+        locale={@locale}
+      />
+      <div :if={is_nil(@price.fulfillment_fee)} class="text-base-content/65 py-0.5">
+        {if @method == :delivery,
+          do: ~t"Delivery is added once the address is priced.",
+          else: ~t"The fee is added once you choose delivery or pickup."}
+      </div>
+      <.money_row strong label={~t"Total"} amount={@price.total} locale={@locale} />
+      <.money_row muted label={~t"Includes VAT"} amount={@price.vat} locale={@locale} />
+      <.money_row
+        :if={@paid && Decimal.positive?(@paid)}
+        ruled
+        label={~t"Paid"}
+        amount={Decimal.negate(@paid)}
+        locale={@locale}
+      />
+      <.money_row
+        :if={@paid && Decimal.positive?(@paid)}
+        strong
+        label={~t"Balance"}
+        amount={Decimal.sub(@price.total, @paid)}
+        locale={@locale}
+      />
+    </dl>
     """
   end
 end
