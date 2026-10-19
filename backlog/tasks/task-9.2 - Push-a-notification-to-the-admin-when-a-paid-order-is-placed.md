@@ -4,7 +4,7 @@ title: Push a notification to the admin when a paid order is placed
 status: done
 assignee: []
 created_date: '2026-10-15 23:06'
-updated_date: '2026-10-18 08:25'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies:
   - TASK-9.1
@@ -93,20 +93,20 @@ The installed app's icon shows how many new orders Jennie hasn't looked at yet.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Turning on the "This device" switch on an installed admin app saves a subscription; turning it off deletes it
+- [x] #1 Turning on the "This device" switch on an installed admin app saves a subscription; turning it off deletes it
 - [ ] #2 The switch shows each device's own state: on for the subscribed phone, off for an unsubscribed laptop
 - [ ] #3 Unsupported and blocked states show their help text in place of a working switch
 - [ ] #4 The Overview card appears once on a freshly installed app, "Turn on" subscribes, and neither button brings it back
 - [ ] #5 The Overview card never appears in a normal browser tab
-- [ ] #6 A customer checkout that completes payment sends one notification to each subscribed device
-- [ ] #7 A same-day order is marked as same-day in the notification
+- [x] #6 A customer checkout that completes payment sends one notification to each subscribed device
+- [x] #7 A same-day order is marked as same-day in the notification
 - [ ] #8 Tapping the notification opens `/admin/orders/<id>` in the admin app
 - [ ] #9 Two orders arriving while the app is closed show a badge of 2 on the home-screen icon; opening the app clears it and the notifications
-- [ ] #10 Orders from `:place_custom` and subscription occurrences don't notify
-- [ ] #11 An expired subscription (`410`) is deleted and doesn't stop the others being sent
-- [ ] #12 A failing push service doesn't fail or slow checkout
-- [ ] #13 Non-admins can't create or read push subscriptions (policy test)
-- [ ] #14 User-facing strings use `~t` and are translated
+- [x] #10 Orders from `:place_custom` and subscription occurrences don't notify
+- [x] #11 An expired subscription (`410`) is deleted and doesn't stop the others being sent
+- [x] #12 A failing push service doesn't fail or slow checkout
+- [x] #13 Non-admins can't create or read push subscriptions (policy test)
+- [x] #14 User-facing strings use `~t` and are translated
 <!-- AC:END -->
 
 ## Comments
@@ -127,6 +127,15 @@ Implemented 2026-10-15, with these departures from the spec above:
 - Without `VAPID_PUBLIC_KEY` the setting and offer are hidden and nothing is queued, so staging stays quiet.
 
 Still to check by hand on an iPhone: install, subscribe, receive, badge, tap-through.
+
+---
+
+author: @claude
+created: 2026-10-19 20:30
+
+---
+
+Criteria checked against the code and tests on 2026-10-19. #2-#5 (per-device switch state, unsupported and blocked help text, the Overview card only in the installed app), #8 (tapping opens the order in the app) and #9 (home-screen badge) are browser or device behaviour, so they stay unticked until checked on Jennie's phone.
 
 ---
 <!-- COMMENTS:END -->

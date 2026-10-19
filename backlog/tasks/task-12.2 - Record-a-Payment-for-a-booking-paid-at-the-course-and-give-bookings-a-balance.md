@@ -4,7 +4,7 @@ title: Record a Payment for a booking paid at the course and give bookings a bal
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies:
   - TASK-12.1
@@ -30,8 +30,8 @@ Decisions 4 and 5 of the spec for money taken at the course.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Marking a booking paid records one positive `Payment` with the method Jennie picked
-- [ ] #2 A booking added manually and not yet paid shows as still to pay, and its confirmation email says to pay at the course
-- [ ] #3 `balance` is positive on an unpaid manual booking, zero once paid, and negative after `remove_seat` or `cancel` on a paid booking
-- [ ] #4 A pending online booking never paid isn't counted as still to pay
+- [x] #1 Marking a booking paid records one positive `Payment` with the method Jennie picked
+- [x] #2 A booking added manually and not yet paid shows as still to pay, and its confirmation email says to pay at the course
+- [x] #3 `balance` is positive on an unpaid manual booking, zero once paid, and negative after `remove_seat` or `cancel` on a paid booking
+- [x] #4 A pending online booking never paid isn't counted as still to pay
 <!-- AC:END -->

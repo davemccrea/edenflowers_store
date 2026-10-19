@@ -4,7 +4,7 @@ title: Show one balance panel on orders and bookings
 status: done
 assignee: []
 created_date: '2026-10-17 16:35'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies:
   - TASK-13.2
@@ -44,6 +44,19 @@ LiveView tests, each run on the order page and the courses page:
 <!-- AC:BEGIN -->
 - [ ] #1 Both pages render the same panel, and neither LiveView computes balance, settled or refund limits itself
 - [ ] #2 Every case above passes on both pages
-- [ ] #3 gettext extracted and merged, with fuzzy msgstrs cleared in en, fi and sv
-- [ ] #4 The existing suite passes
+- [x] #3 gettext extracted and merged, with fuzzy msgstrs cleared in en, fi and sv
+- [x] #4 The existing suite passes
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-19 20:30
+
+---
+
+#1 and #2 were overtaken by TASK-13.5 and TASK-17.3: the courses page now has its own compact settlement controls on each row, and only the order page renders balance_panel. Left unticked because they no longer describe the code.
+
+---
+<!-- COMMENTS:END -->

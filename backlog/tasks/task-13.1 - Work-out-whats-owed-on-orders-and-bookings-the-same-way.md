@@ -4,7 +4,7 @@ title: Work out what's owed on orders and bookings the same way
 status: done
 assignee: []
 created_date: '2026-10-17 16:35'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies: []
 parent_task_id: TASK-13
@@ -52,8 +52,8 @@ Order-only, in the existing order tests:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every case in the shared module passes for both an order and a booking
-- [ ] #2 Receipts, the VAT breakdown, sales figures and the customer's account page are unchanged
-- [ ] #3 Neither resource computes balance, settled or refund limits outside the fragment
-- [ ] #4 The existing suite passes
+- [x] #1 Every case in the shared module passes for both an order and a booking
+- [x] #2 Receipts, the VAT breakdown, sales figures and the customer's account page are unchanged
+- [x] #3 Neither resource computes balance, settled or refund limits outside the fragment
+- [x] #4 The existing suite passes
 <!-- AC:END -->

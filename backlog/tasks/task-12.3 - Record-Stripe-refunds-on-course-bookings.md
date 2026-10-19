@@ -4,7 +4,7 @@ title: Record Stripe refunds on course bookings
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies:
   - TASK-12.1
@@ -26,7 +26,7 @@ Decision 4 of the spec for Stripe refunds. Jennie refunds course bookings in the
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A Stripe refund on a booking is recorded once as a negative `Payment`, even with webhook redelivery
-- [ ] #2 A partial refund records only the refunded amount
-- [ ] #3 Order refunds behave exactly as before
+- [x] #1 A Stripe refund on a booking is recorded once as a negative `Payment`, even with webhook redelivery
+- [x] #2 A partial refund records only the refunded amount
+- [x] #3 Order refunds behave exactly as before
 <!-- AC:END -->

@@ -4,7 +4,7 @@ title: Let a customer pay a booking's payment link on its own page
 status: done
 assignee: []
 created_date: '2026-10-17 18:41'
-updated_date: '2026-10-18 07:27'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies:
   - TASK-15.1
@@ -33,6 +33,6 @@ Spec decision 4.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every case above passes
-- [ ] #2 The existing suite passes
+- [x] #1 Every case above passes
+- [x] #2 The existing suite passes
 <!-- AC:END -->

@@ -4,7 +4,7 @@ title: Record a Payment when a course booking is paid online
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
-updated_date: '2026-10-18 08:25'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies: []
 parent_task_id: TASK-12
@@ -29,8 +29,8 @@ The tracer bullet for the spec: the `payments` table takes course bookings, and 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A booking paid online has exactly one positive `:stripe` `Payment` with its `paid_at`, even with webhook redelivery or reconciliation
-- [ ] #2 A `Payment` with both or neither parent is refused by the database
-- [ ] #3 The course receipt shows the same payment details as before
-- [ ] #4 Order payments and refunds behave exactly as before
+- [x] #1 A booking paid online has exactly one positive `:stripe` `Payment` with its `paid_at`, even with webhook redelivery or reconciliation
+- [x] #2 A `Payment` with both or neither parent is refused by the database
+- [x] #3 The course receipt shows the same payment details as before
+- [x] #4 Order payments and refunds behave exactly as before
 <!-- AC:END -->

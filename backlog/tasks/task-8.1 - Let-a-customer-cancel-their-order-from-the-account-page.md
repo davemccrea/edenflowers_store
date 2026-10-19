@@ -4,7 +4,7 @@ title: Let a customer cancel their order from the account page
 status: done
 assignee: []
 created_date: '2026-10-15 22:23'
-updated_date: '2026-10-18 08:25'
+updated_date: '2026-10-19 20:30'
 labels: []
 dependencies: []
 parent_task_id: TASK-8
@@ -33,10 +33,10 @@ A signed-in customer can cancel one of their own Online Orders from the account 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A customer cancels their eligible order; it is cancelled, refunded in full, stock returned, and they get the email (shop BCC'd)
-- [ ] #2 An order 4 days or fewer away shows no cancel option and the action refuses it
-- [ ] #3 Custom Orders, orders with an In-person Payment, and other customers' orders can't be cancelled by the customer
-- [ ] #4 A failed Stripe refund leaves the order placed and shows an error
-- [ ] #5 A single-use promotion used on a cancelled order can be used again
-- [ ] #6 FAQ and confirmation email describe the policy
+- [x] #1 A customer cancels their eligible order; it is cancelled, refunded in full, stock returned, and they get the email (shop BCC'd)
+- [x] #2 An order 4 days or fewer away shows no cancel option and the action refuses it
+- [x] #3 Custom Orders, orders with an In-person Payment, and other customers' orders can't be cancelled by the customer
+- [x] #4 A failed Stripe refund leaves the order placed and shows an error
+- [x] #5 A single-use promotion used on a cancelled order can be used again
+- [x] #6 FAQ and confirmation email describe the policy
 <!-- AC:END -->
