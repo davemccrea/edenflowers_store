@@ -151,6 +151,16 @@ defmodule Edenflowers.Expenses.Expense do
     end
   end
 
+  # Claude's draft may lack these, so ingest takes it as it is; Jennie fills
+  # them in before she can save or review it. One each, so the form marks each
+  # missing field.
+  validations do
+    validate present(:date), on: :update
+    validate present(:vendor_name), on: :update
+    validate present(:total_amount), on: :update
+    validate present(:currency), on: :update
+  end
+
   attributes do
     uuid_primary_key :id
 
