@@ -1037,10 +1037,6 @@ defmodule Edenflowers.Orders.Order do
     publish :record_receipt_email_failure, ["order", "email", :id]
     publish :send_order_details_email, ["order", "email", :id]
     publish :record_details_email_failure, ["order", "email", :id]
-    publish :send_delivered_email, ["admin", "orders"]
-    publish :record_fulfillment_email_failure, ["admin", "orders"]
-    publish :record_receipt_email_failure, ["admin", "orders"]
-    publish :record_details_email_failure, ["admin", "orders"]
     publish :add_promotion_with_code, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
   end

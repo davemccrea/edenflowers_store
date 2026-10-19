@@ -32,7 +32,7 @@ Apply TASK-61's decisions to the fulfillment confirmation.
 - Trigger: `scheduler_cron false`, `max_attempts 3`, `on_error :record_fulfillment_email_failure`. `mark_fulfilled` with `email_customer?` queues it after the fulfillment is saved. `SendDeliveredEmail` sends unconditionally when it runs (no pending check), sets `delivered_emailed_at` and `delivered_emailed_to` and clears `delivered_email_failed_at`.
 - `record_fulfillment_email_failure`: accepts the `error` argument AshOban passes, sets `delivered_email_failed_at`. Logged as "Fulfillment confirmation failed".
 - `email_fulfillment_confirmation`: admin action, valid on a placed, fulfilled order with a customer email; queues the job. Actions-menu item "Email confirmation" / "Resend confirmation" (after `delivered_emailed_at`), with `confirm_send`, and flash "Confirmation queued." It uses the photo choice stored on the order (`email_delivery_photo`).
-- PubSub: publish the send and the failure on `["order", "fulfillment_email", :id]`; the order page subscribes, reloads, and flashes "Couldn't email the confirmation." on failure. Publish both on `["admin", "orders"]` too.
+- PubSub: publish the send and the failure on `["order", "fulfillment_email", :id]`; the order page subscribes, reloads, and flashes "Couldn't email the confirmation." on failure.
 - The order page shows a warning near fulfillment while `delivered_email_failed_at` is set, with the photo/errors guidance the status section gave.
 
 Generate the migration from the resource.
