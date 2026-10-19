@@ -299,17 +299,3 @@ body:has(.admin-theme) {
     margin-block: -0.75rem;
   }
 }
-
-/* Safari before 26 lacks anchor positioning, where daisyUI centres the menu
-   over a backdrop like a modal. Open it below its ⋯ button instead, from the
-   button's position that app.js records. */
-@supports not (position-area: bottom) {
-  .dropdown[popover] {
-    inset: var(--open-menu-top) var(--open-menu-right) auto auto;
-    margin: 0.5rem 0 0;
-  }
-
-  .dropdown[popover]::backdrop {
-    background: none;
-  }
-}

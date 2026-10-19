@@ -1,10 +1,10 @@
 ---
 id: TASK-39
 title: Anchor the admin popovers on Safari before version 26
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
-updated_date: '2026-10-18 20:00'
+updated_date: '2026-10-19 06:53'
 labels:
   - spec
   - admin
@@ -53,6 +53,24 @@ created: 2026-10-18 20:00
 ---
 
 Check on Jennie's Safari (pre-26, e.g. iOS/macOS Safari 18): open Admin > Courses, expand a course, tap a booking's ⋯ menu. It should open just below the button, right-aligned to it, with no dark backdrop, not centred on screen. Also tap ⋯ in an order or expense page header.
+
+---
+
+author: @claude
+created: 2026-10-19 06:51
+
+---
+
+Human review: pre-26 Safari verification waived. The affected popovers are admin-only, and the admin will not use Safari before version 26. Existing implementation and automated/simulated checks are sufficient to close; actual pre-26 Safari behavior remains unverified. Retain the implemented fallback.
+
+---
+
+author: @claude
+created: 2026-10-19 06:53
+
+---
+
+Supersedes the previous decision to retain the fallback: at the user's request, removed the custom pre-26 Safari popover positioning listener from assets/js/app.js and the matching CSS override from assets/css/admin.css. Admin menus rely on native CSS anchor positioning; Safari before 26 is outside the required admin browser support. Task remains done; old-Safari acceptance criteria are historical and no longer required.
 
 ---
 <!-- COMMENTS:END -->

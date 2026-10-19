@@ -347,32 +347,6 @@ function openDrawer(dialog) {
 window.addEventListener("drawer:open", (event) => openDrawer(event.target));
 window.addEventListener("drawer:close", (event) => closeDrawer(event.target));
 
-// Safari before 26 can't anchor an actions menu to its ⋯ button, so admin.css
-// places the menu from these, set on <html> because LiveView rewrites the
-// menu's own style. Only one menu is open at a time.
-if (!CSS.supports("position-area: bottom")) {
-  document.addEventListener(
-    "beforetoggle",
-    ({ target, newState }) => {
-      if (newState !== "open" || !target.matches(".dropdown[popover]")) return;
-
-      const trigger = document.querySelector(
-        `[popovertarget="${target.id}"]:not([popovertargetaction="hide"])`,
-      );
-      if (!trigger) return;
-
-      const rect = trigger.getBoundingClientRect();
-      const root = document.documentElement;
-      root.style.setProperty("--open-menu-top", `${rect.bottom}px`);
-      root.style.setProperty(
-        "--open-menu-right",
-        `${root.clientWidth - rect.right}px`,
-      );
-    },
-    true,
-  );
-}
-
 document.addEventListener(
   "cancel",
   (event) => {
