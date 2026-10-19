@@ -4,7 +4,7 @@ title: 'Download a month''s income, expenses and receipts for the accountant'
 status: ready-for-human
 assignee: []
 created_date: '2026-10-17 00:38'
-updated_date: '2026-10-19 07:19'
+updated_date: '2026-10-19 07:27'
 labels:
   - spec
   - admin
@@ -139,6 +139,15 @@ created: 2026-10-19 07:19
 ---
 
 Changed decision 6: a receipt Papra can't serve no longer fails the download. Its row in Inköp reads "Saknas: kunde inte hämtas från Papra", the PDF is left out, and the controller broadcasts the count to the open expenses page, which flashes it (a file download can't carry a flash). Stripe failures still fail the download.
+
+---
+
+author: @claude
+created: 2026-10-19 07:27
+
+---
+
+Deployed 44ef1432 to staging. Waiting on the user's final approval. To check: download a month's report from Expenses > Export; the Stripe sheet's rows, fees and payout total match Stripe's balance report for that month (TASK-11.4); if a receipt can't be fetched from Papra, its row says Saknas and the expenses page flashes the count. Keep TASK-11 and TASK-11.4 open until approved.
 
 ---
 <!-- COMMENTS:END -->
