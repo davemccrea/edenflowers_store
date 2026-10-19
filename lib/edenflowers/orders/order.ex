@@ -642,7 +642,7 @@ defmodule Edenflowers.Orders.Order do
 
       # Starts the Subscription straight away, so the confirmation page's link
       # to it has something to show. Outside the transaction, so a failed
-      # enqueue never stops the order being placed; the minute scheduler
+      # enqueue never stops the order being placed; the trigger's scheduler
       # picks it up instead.
       change after_transaction(fn
                _changeset, {:ok, order} = result, _context ->
