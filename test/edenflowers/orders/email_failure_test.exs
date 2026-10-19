@@ -11,7 +11,7 @@ defmodule Edenflowers.Orders.EmailFailureTest do
 
   test "a receipt that fails its last attempt is recorded, logged and published" do
     order = placed_order(paid: true)
-    EdenflowersWeb.Endpoint.subscribe("order:email:#{order.id}")
+    EdenflowersWeb.Endpoint.subscribe("order:changed:#{order.id}")
 
     fail_last_attempt(SendReceiptEmail, order)
 
@@ -22,7 +22,7 @@ defmodule Edenflowers.Orders.EmailFailureTest do
 
   test "order details that fail their last attempt are recorded, and a resend clears them" do
     order = placed_order(origin: :custom)
-    EdenflowersWeb.Endpoint.subscribe("order:email:#{order.id}")
+    EdenflowersWeb.Endpoint.subscribe("order:changed:#{order.id}")
 
     fail_last_attempt(SendOrderDetailsEmail, order)
 

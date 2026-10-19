@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   def mount(%{"id" => id}, _session, socket) do
     case Orders.get_order_for_admin(id, actor: socket.assigns.current_user) do
       {:ok, %Order{} = order} ->
-        if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("order:email:#{order.id}")
+        if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("order:changed:#{order.id}")
 
         {:ok,
          socket
@@ -688,7 +688,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:email:" <> _, event: event}, socket) do
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:changed:" <> _, event: event}, socket) do
     socket = assign_order(socket, reload(socket.assigns.order, socket))
 
     case email_failed_message(event) do

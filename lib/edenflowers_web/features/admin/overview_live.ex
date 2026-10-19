@@ -13,7 +13,10 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:orders")
+    if connected?(socket) do
+      EdenflowersWeb.Endpoint.subscribe("admin:orders")
+      EdenflowersWeb.Endpoint.subscribe("admin:bookings")
+    end
 
     {:ok,
      socket
@@ -64,8 +67,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
-    do: {:noreply, assign_orders(socket)}
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket), do: {:noreply, assign_orders(socket)}
 
   defp greeting(%{first_name: first_name}) when is_binary(first_name), do: ~t"Hi, #{first_name}"
 
@@ -93,7 +95,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> assign(:balances, balances(actor))
   end
 
-  # Bookings don't broadcast on admin:orders, so one settles here at the next page load.
   defp balances(actor) do
     order_rows =
       for order <- Orders.list_unsettled_orders!(actor: actor) do

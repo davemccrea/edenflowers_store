@@ -19,6 +19,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   def mount(%{"id" => id}, _session, socket) do
     case get_subscription(id, socket.assigns.current_user) do
       {:ok, subscription} ->
+        if connected?(socket) do
+          EdenflowersWeb.Endpoint.subscribe("admin:subscriptions")
+          EdenflowersWeb.Endpoint.subscribe("admin:orders")
+        end
+
         {:ok,
          socket
          |> assign(:page_title, subscription.user.name || to_string(subscription.user.email))
@@ -231,6 +236,18 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   def handle_event("cancel", _params, socket) do
     {:noreply, change_subscription(socket, &Orders.cancel_subscription/2, ~t"Subscription cancelled.")}
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket) do
+    {:ok, subscription} = get_subscription(socket.assigns.subscription.id, socket.assigns.current_user)
+
+    {:noreply,
+     socket
+     |> assign_subscription(subscription)
+     |> Cinder.refresh_table("subscription-orders-table")}
+  end
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp change_subscription(socket, action, success_message) do
     actor = socket.assigns.current_user

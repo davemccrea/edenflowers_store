@@ -12,6 +12,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:expenses")
+
     {:ok,
      socket
      |> assign(:page_title, ~t"Expenses")
@@ -122,6 +124,10 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
     </Layouts.admin>
     """
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:expenses"}, socket),
+    do: {:noreply, Cinder.refresh_table(socket, "expenses-table")}
 
   defp search_expenses(query, _searchable_columns, search_term) do
     require Ash.Query
