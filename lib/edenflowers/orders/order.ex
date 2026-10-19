@@ -320,7 +320,7 @@ defmodule Edenflowers.Orders.Order do
     # For test orders and ones added by mistake.
     destroy :delete_custom do
       validate Validations.Deletable
-      change PaymentChanges.CancelOpenPaymentIntent
+      change {PaymentChanges.CancelOpenPaymentIntent, before_commit?: true}
 
       change {Changes.AdjustStock, direction: :return},
         where: [negate(attribute_equals(:fulfillment_status, :cancelled))]

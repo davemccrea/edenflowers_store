@@ -578,6 +578,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       :ok ->
         {:noreply, socket |> put_flash(:info, ~t"Order deleted.") |> push_navigate(to: ~p"/admin/orders")}
 
+      # Says why, e.g. a payment still under way.
+      {:error, %{errors: [%{message: message} | _]}} when is_binary(message) ->
+        {:noreply, put_flash(socket, :error, message)}
+
       {:error, _} ->
         {:noreply, put_flash(socket, :error, ~t"Could not delete the order.")}
     end
