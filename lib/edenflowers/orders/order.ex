@@ -192,7 +192,7 @@ defmodule Edenflowers.Orders.Order do
       trigger :send_payment_failed_email do
         action :send_payment_failed_email
         queue :default
-        max_attempts 20
+        max_attempts 3
         lock_for_update? false
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendPaymentFailedEmail

@@ -25,6 +25,7 @@ defmodule Edenflowers.Courses do
       define :confirm_registration_payment, action: :confirm_payment, args: [:payment_intent_id]
       define :open_registration_payment_link, action: :open_payment_link
       define :email_registration_payment_link, action: :email_payment_link
+      define :email_registration_confirmation, action: :email_receipt
       define :get_registration_by_payment_link_token, action: :by_payment_link_token, args: [:token]
       define :record_registration_payment, action: :record_payment, args: [:amount, :payment_method]
       define :undo_registration_payment, action: :undo_payment, args: [:payment_id]

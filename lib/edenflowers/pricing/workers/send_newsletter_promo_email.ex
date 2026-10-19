@@ -1,6 +1,7 @@
 defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
   use Oban.Worker,
     queue: :default,
+    max_attempts: 3,
     unique: [
       fields: [:args],
       keys: [:email],

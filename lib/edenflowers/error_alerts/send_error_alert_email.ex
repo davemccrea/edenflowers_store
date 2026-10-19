@@ -6,7 +6,7 @@ defmodule Edenflowers.ErrorAlerts.SendErrorAlertEmail do
   """
 
   # Several occurrences can arrive before the first job runs.
-  use Oban.Worker, queue: :default, unique: [keys: [:error_id], period: 300]
+  use Oban.Worker, queue: :default, max_attempts: 3, unique: [keys: [:error_id], period: 300]
 
   require Logger
 

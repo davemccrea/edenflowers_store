@@ -164,7 +164,6 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       registration = add_booking(view, course, "true", "true")
       assert registration.payment_link_token
-      refute registration.skip_confirmation_email
 
       assert %{success: 1} = Oban.drain_queue(queue: :default)
 
@@ -178,17 +177,29 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       assert render(view) =~ "Resend payment link"
     end
 
-    test "without emailing sends nothing, even from the scheduler", %{conn: conn} do
+    test "the confirmation can be sent again from the booking's menu", %{conn: conn} do
+      registration = generate(course_registration(status: :confirmed, email: "birgitta@example.com"))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      button = element(view, ~s|button[phx-click="email_confirmation"][phx-value-id="#{registration.id}"]|)
+      assert render(button) =~ "Email confirmation"
+      assert render_click(button) =~ "Confirmation emailed."
+
+      assert_email_sent(fn email -> assert email.to == [{"", "birgitta@example.com"}] end)
+
+      button = element(view, ~s|button[phx-click="email_confirmation"][phx-value-id="#{registration.id}"]|)
+      assert render(button) =~ "Resend confirmation"
+      assert render(button) =~ "Last sent"
+    end
+
+    test "without emailing queues nothing", %{conn: conn} do
       course = generate(course(total_places: 10))
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
       registration = add_booking(view, course, "true", "false")
       assert registration.payment_link_token
-      assert registration.skip_confirmation_email
       refute registration.confirmation_emailed_at
 
-      refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
-      perform_job(Edenflowers.Courses.Schedulers.SendConfirmationEmail, %{})
       refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
       assert_no_email_sent()
     end
