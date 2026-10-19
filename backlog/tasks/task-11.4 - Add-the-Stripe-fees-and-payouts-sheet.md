@@ -4,7 +4,7 @@ title: Add the Stripe fees and payouts sheet
 status: ready-for-human
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-19 13:52'
+updated_date: '2026-10-19 13:54'
 labels: []
 dependencies:
   - TASK-11.2
@@ -41,6 +41,8 @@ Add the Stripe sheet so the accountant can book Stripe's fees and match its payo
 
 <!-- SECTION:NOTES:BEGIN -->
 StripeAPI.list_balance_transactions/2 follows pages through the stubbable callback list_balance_transactions_page/2, so tests cover pagination. Stripe sheet is the third sheet. Total fees = every row's fee plus Stripe's own fee rows (stripe_fee, stripe_fx_fee, tax_fee, application_fee), whose net is the fee. Paid out = minus the net of payout rows. Payout id is filled on payout rows only (the transaction's source); a charge's payout isn't on its balance transaction. Other transaction types show Stripe's raw type. Gross/Net headings are Brutto/Netto, not the VAT terms.
+
+The sheet keeps Stripe's own English terms (Created, Type, Amount, Fee, Net, Payout; raw types like charge and stripe_fee) instead of Swedish, so it reads like the Stripe dashboard. The user's call on 2026-10-19.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
