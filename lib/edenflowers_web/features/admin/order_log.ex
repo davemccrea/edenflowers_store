@@ -78,6 +78,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
       :send_confirmation_email -> ~t"Receipt emailed"
       :email_receipt -> ~t"Receipt emailed"
       :send_delivered_email -> ~t"Fulfillment confirmation emailed"
+      :record_fulfillment_email_failure -> ~t"Fulfillment confirmation failed"
       other -> to_string(other)
     end
   end

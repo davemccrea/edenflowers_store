@@ -24,6 +24,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   def mount(%{"id" => id}, _session, socket) do
     case Orders.get_order_for_admin(id, actor: socket.assigns.current_user) do
       {:ok, %Order{} = order} ->
+        if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("order:email:#{order.id}")
+
         {:ok,
          socket
          |> assign(:page_title, ~t"Order #{order.order_reference}")
@@ -173,36 +175,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </div>
 
               <div
-                :if={@order.fulfillment_status == :fulfilled and @fulfillment_email_status.state != :sent}
-                id="order-confirmation-email"
-                role="status"
-                aria-live="polite"
-                class="border-base-content/12 mt-5 border-t pt-4"
+                :if={@order.delivered_email_failed_at}
+                id="order-confirmation-failed"
+                class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
               >
-                <h3 class="text-base-content text-sm font-semibold">{~t"Confirmation email"}</h3>
-                <p class="text-base-content/75 mt-1 text-sm">
-                  {confirmation_status_label(@fulfillment_email_status, @locale)}
-                </p>
-                <p :if={@order.customer_email} class="text-base-content/65 mt-1 break-all text-sm">
-                  {~t"To: #{email = @order.customer_email}"}
-                </p>
-                <p :if={@fulfillment_email_status.reason == :photo_unavailable} class="text-warning-content mt-2 text-sm">
-                  {~t"The delivery photo is unavailable. Check the photo before retrying."}
-                </p>
-                <p :if={@fulfillment_email_status.reason == :send_failed} class="text-base-content/75 mt-2 text-sm">
-                  {~t"An error prevented sending. Check the error details before retrying."}
-                  <.link navigate={~p"/admin/errors"} class="link link-primary">{~t"View errors"}</.link>
-                </p>
-                <.button
-                  :if={@fulfillment_email_status.retry?}
-                  type="button"
-                  phx-click="retry_fulfillment_email"
-                  variant="ghost"
-                  size="sm"
-                  class="mt-2"
-                >
-                  {~t"Retry confirmation"}
-                </.button>
+                <.icon name="hero-envelope" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
+                <div class="text-sm">
+                  <p class="text-warning-content font-semibold">{~t"Couldn't email the confirmation."}</p>
+                  <p class="text-base-content mt-0.5">
+                    <%= if @order.email_delivery_photo do %>
+                      {~t"Check the delivery photo below, then send it again from the menu."}
+                    <% else %>
+                      {~t"Check the error, then send it again from the menu."}
+                    <% end %>
+                    <.link navigate={~p"/admin/errors"} class="link link-primary">{~t"View errors"}</.link>
+                  </p>
+                </div>
               </div>
 
               <figure :if={@order.delivery_photo_slug} id="order-delivery-photo" class="mt-5">
@@ -506,19 +494,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, socket |> PhotoUpload.forget([@photo_field]) |> assign(:fulfillment_form, nil)}
   end
 
-  def handle_event("retry_fulfillment_email", _params, socket) do
-    case Orders.retry_fulfillment_email(socket.assigns.order, actor: socket.assigns.current_user) do
-      {:ok, _order} ->
-        {:noreply,
-         socket
-         |> refresh_fulfillment_email()
-         |> put_flash(:info, ~t"Confirmation queued.")}
-
-      {:error, _} ->
-        {:noreply,
-         socket
-         |> refresh_fulfillment_email()
-         |> put_flash(:error, ~t"Could not retry the confirmation. Check its current status.")}
+  def handle_event("email_fulfillment_confirmation", _params, socket) do
+    case Orders.email_fulfillment_confirmation(socket.assigns.order, actor: socket.assigns.current_user) do
+      {:ok, _order} -> {:noreply, put_flash(socket, :info, ~t"Confirmation queued.")}
+      {:error, _} -> {:noreply, put_flash(socket, :error, ~t"Could not queue the confirmation.")}
     end
   end
 
@@ -651,8 +630,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   @impl true
-  def handle_info(:refresh_fulfillment_email, socket) do
-    {:noreply, refresh_fulfillment_email(socket)}
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:email:" <> _, event: event}, socket) do
+    socket = assign_order(socket, reload(socket.assigns.order, socket))
+
+    case email_failed_message(event) do
+      nil -> {:noreply, socket}
+      message -> {:noreply, put_flash(socket, :error, message)}
+    end
   end
 
   def handle_info(_message, socket), do: {:noreply, socket}
@@ -664,22 +648,27 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> put_flash(kind, message)
   end
 
+  defp email_failed_message("record_fulfillment_email_failure"), do: ~t"Couldn't email the confirmation."
+  defp email_failed_message(_event), do: nil
+
   defp mark_fulfilled(socket, attrs) do
     case Orders.mark_order_fulfilled(socket.assigns.order, attrs, actor: socket.assigns.current_user) do
       {:ok, order} ->
-        socket = socket |> assign_order(reload(order, socket)) |> assign(:fulfillment_form, nil)
-
         message =
           if order.fulfillment_method == :delivery,
             do: ~t"Order marked as delivered.",
             else: ~t"Order marked as collected."
 
+        message =
+          if attrs.email_customer? && order.customer_email,
+            do: message <> " " <> ~t"Confirmation queued.",
+            else: message
+
         {:noreply,
          socket
-         |> put_flash(
-           :info,
-           message <> " " <> confirmation_status_label(socket.assigns.fulfillment_email_status, socket.assigns.locale)
-         )}
+         |> assign_order(reload(order, socket))
+         |> assign(:fulfillment_form, nil)
+         |> put_flash(:info, message)}
 
       {:error, _} ->
         {:noreply, assign(socket, :fulfillment_error, ~t"Could not mark order as fulfilled.")}
@@ -691,7 +680,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
     socket
     |> assign(:order, order)
-    |> assign_fulfillment_email(order)
     |> assign(:pickup_message_urls, pickup_message_urls(order))
     |> assign(:payment_message_urls, payment_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
@@ -699,40 +687,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
   end
-
-  defp assign_fulfillment_email(socket, order) do
-    if timer = socket.assigns[:fulfillment_email_timer], do: Process.cancel_timer(timer)
-    status = Orders.fulfillment_email_status(order)
-
-    timer =
-      if connected?(socket) && status.poll?,
-        do: Process.send_after(self(), :refresh_fulfillment_email, 5_000)
-
-    socket
-    |> assign(:fulfillment_email_status, status)
-    |> assign(:fulfillment_email_timer, timer)
-  end
-
-  defp refresh_fulfillment_email(socket) do
-    order = reload(socket.assigns.order, socket)
-
-    socket
-    |> assign(:order, order)
-    |> assign_fulfillment_email(order)
-    |> assign(:log, order_log(order, socket.assigns.payments, socket.assigns.locale))
-  end
-
-  defp confirmation_status_label(%{state: :sent, sent_at: at}, locale),
-    do: ~t"Confirmation emailed at #{time = Format.datetime(at, locale)}."
-
-  defp confirmation_status_label(%{state: :no_email}, _locale), do: ~t"Not sent — no customer email address"
-  defp confirmation_status_label(%{state: :skipped}, _locale), do: ~t"Not sent — email confirmation was deselected"
-  defp confirmation_status_label(%{state: :pending}, _locale), do: ~t"Confirmation pending"
-  defp confirmation_status_label(%{state: :queued}, _locale), do: ~t"Confirmation queued."
-  defp confirmation_status_label(%{state: :sending}, _locale), do: ~t"Sending confirmation…"
-  defp confirmation_status_label(%{state: :retrying}, _locale), do: ~t"Confirmation delayed — retrying automatically."
-  defp confirmation_status_label(%{state: :failed}, _locale), do: ~t"Confirmation could not be emailed."
-  defp confirmation_status_label(_status, _locale), do: ~t"Confirmation not requested"
 
   defp payments(order) do
     order
@@ -1082,6 +1036,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       |> assign(:email_details_unavailable, email_details_unavailable(assigns.order))
       |> assign(:no_email, no_email(assigns.order))
       |> assign(:receipt_unavailable, receipt_unavailable(assigns.order))
+      |> assign(:confirmation_unavailable, confirmation_unavailable(assigns.order))
       |> assign(:paid_through_stripe?, paid_through_stripe?(assigns.payments))
       |> assign(:cancel_unavailable, cancel_unavailable(assigns.order))
       |> assign(:deletable?, assigns.order.origin == :custom and assigns.payments == [])
@@ -1124,6 +1079,27 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         </.actions_menu_button>
         <.unavailable_menu_item :if={@email_details_unavailable} reason={@email_details_unavailable}>
           {~t"Email order details"}
+        </.unavailable_menu_item>
+      <% end %>
+
+      <%!-- A cancelled order is never fulfilled, so it has nothing to confirm. --%>
+      <%= if @order.fulfillment_status != :cancelled do %>
+        <.actions_menu_button
+          :if={!@confirmation_unavailable}
+          menu="order-actions"
+          phx-click="email_fulfillment_confirmation"
+          data-confirm={
+            confirm_send(
+              ~t"Email the fulfillment confirmation to #{email = @order.customer_email}?",
+              @order.delivered_emailed_at,
+              @locale
+            )
+          }
+        >
+          {if @order.delivered_emailed_at, do: ~t"Resend confirmation", else: ~t"Email confirmation"}
+        </.actions_menu_button>
+        <.unavailable_menu_item :if={@confirmation_unavailable} reason={@confirmation_unavailable}>
+          {~t"Email confirmation"}
         </.unavailable_menu_item>
       <% end %>
 
@@ -1189,6 +1165,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       true -> no_email(order)
     end
   end
+
+  defp confirmation_unavailable(%{fulfillment_status: :fulfilled} = order), do: no_email(order)
+  defp confirmation_unavailable(_order), do: ~t"Not fulfilled yet"
 
   defp receipt_unavailable(%{payment_status: :paid}), do: nil
   defp receipt_unavailable(%{payment_status: :refunded}), do: ~t"The order was refunded"

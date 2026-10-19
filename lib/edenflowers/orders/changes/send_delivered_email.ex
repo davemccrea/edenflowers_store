@@ -6,17 +6,10 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmail do
 
   alias Edenflowers.Email
   alias Edenflowers.Mailer
-  alias Edenflowers.Orders.Order
 
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.before_action(changeset, fn changeset ->
-      if Order.fulfillment_email_pending?(changeset.data) do
-        send_email(changeset)
-      else
-        Ash.Changeset.set_context(changeset, %{skip_version_when_unchanged?: true})
-      end
-    end)
+    Ash.Changeset.before_action(changeset, &send_email/1)
   end
 
   defp send_email(changeset) do
@@ -29,7 +22,8 @@ defmodule Edenflowers.Orders.Changes.SendDeliveredEmail do
 
           Ash.Changeset.force_change_attributes(changeset,
             delivered_emailed_at: DateTime.utc_now(),
-            delivered_emailed_to: order.customer_email
+            delivered_emailed_to: order.customer_email,
+            delivered_email_failed_at: nil
           )
 
         {:error, error} ->

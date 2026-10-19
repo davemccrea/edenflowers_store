@@ -106,12 +106,6 @@ defmodule Edenflowers.Orders.Order do
 
   @checkout_states [:contact_details, :gift_options, :delivery, :payment]
 
-  @fulfillment_email_pending expr(
-                               state == :placed and fulfillment_status == :fulfilled and
-                                 not is_nil(customer_email) and is_nil(delivered_emailed_at) and
-                                 not skip_delivered_email
-                             )
-
   postgres do
     repo Edenflowers.Repo
     table "orders"
@@ -139,10 +133,6 @@ defmodule Edenflowers.Orders.Order do
   end
 
   def checkout_states, do: @checkout_states
-
-  def fulfillment_email_pending?(order) do
-    Ash.Expr.eval!(@fulfillment_email_pending, record: order, resource: __MODULE__)
-  end
 
   state_machine do
     # A custom order skips checkout: Jennie creates it already placed. An
@@ -229,17 +219,19 @@ defmodule Edenflowers.Orders.Order do
         where expr(state == :placed and origin == :online and subscription? and is_nil(subscription_id))
       end
 
+      # Queued only when Jennie asks for it, on :mark_fulfilled or
+      # :email_fulfillment_confirmation. A job that runs out of attempts records
+      # the failure for her to see and send again.
       trigger :send_delivered_email do
         action :send_delivered_email
         queue :default
-        max_attempts 20
+        max_attempts 3
         lock_for_update? false
-        scheduler_cron "*/10 * * * *"
+        scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendDeliveredEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendDeliveredEmail
         default_actor system_actor()
-
-        where @fulfillment_email_pending
+        on_error :record_fulfillment_email_failure
       end
 
       trigger :reconcile_payment do
@@ -316,6 +308,7 @@ defmodule Edenflowers.Orders.Order do
       :send_payment_failed_email,
       :send_confirmation_email,
       :send_delivered_email,
+      :record_fulfillment_email_failure,
       :email_receipt
     ]
   end
@@ -853,9 +846,15 @@ defmodule Edenflowers.Orders.Order do
 
     update :send_delivered_email do
       accept []
+      transaction? false
       require_atomic? false
-      change get_and_lock_for_update()
       change Changes.SendDeliveredEmail
+    end
+
+    # AshOban passes the error, which the errors page already shows.
+    update :record_fulfillment_email_failure do
+      accept []
+      change set_attribute(:delivered_email_failed_at, &DateTime.utc_now/0)
     end
 
     action :sales_summary, :map do
@@ -873,14 +872,13 @@ defmodule Edenflowers.Orders.Order do
       run Actions.SalesSummary
     end
 
-    update :retry_fulfillment_email do
+    # Sends with the photo choice stored by :mark_fulfilled.
+    update :email_fulfillment_confirmation do
       accept []
-      validate attribute_equals(:state, :placed)
-      validate attribute_equals(:fulfillment_status, :fulfilled)
-      validate present(:customer_email)
-      validate absent(:delivered_emailed_at)
-      validate attribute_equals(:skip_delivered_email, false)
-      change {Changes.QueueFulfillmentEmail, retry?: true}
+      validate attribute_equals(:state, :placed), message: "hasn't been placed"
+      validate attribute_equals(:fulfillment_status, :fulfilled), message: "isn't fulfilled"
+      validate present(:customer_email), message: "has no email address"
+      change run_oban_trigger(:send_delivered_email)
     end
 
     update :mark_fulfilled do
@@ -888,7 +886,6 @@ defmodule Edenflowers.Orders.Order do
       argument :email_customer?, :boolean, default: true
       validate attribute_equals(:fulfillment_status, :pending)
       change set_attribute(:fulfillment_status, :fulfilled)
-      change set_attribute(:skip_delivered_email, true), where: [argument_equals(:email_customer?, false)]
       change set_attribute(:email_delivery_photo, false), where: [argument_equals(:email_customer?, false)]
 
       validate present(:delivery_photo_slug),
@@ -898,8 +895,11 @@ defmodule Edenflowers.Orders.Order do
           attribute_equals(:email_delivery_photo, true)
         ]
 
-      change Changes.QueueFulfillmentEmail
+      change run_oban_trigger(:send_delivered_email),
+        where: [argument_equals(:email_customer?, true), present(:customer_email)]
+
       change load(@admin_show_load)
+      require_atomic? false
     end
 
     update :add_promotion_with_code do
@@ -950,6 +950,7 @@ defmodule Edenflowers.Orders.Order do
                      :mark_payment_cancelled,
                      :send_confirmation_email,
                      :send_delivered_email,
+                     :record_fulfillment_email_failure,
                      :send_order_details_email,
                      :record_link_payment,
                      :record_stripe_refund,
@@ -966,7 +967,7 @@ defmodule Edenflowers.Orders.Order do
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action([
                      :mark_fulfilled,
-                     :retry_fulfillment_email,
+                     :email_fulfillment_confirmation,
                      :sales_summary,
                      :place_custom,
                      :edit,
@@ -1017,6 +1018,11 @@ defmodule Edenflowers.Orders.Order do
     publish :place_custom, ["admin", "orders"]
     publish :record_link_payment, ["admin", "orders"]
     publish :cancel_by_customer, ["admin", "orders"]
+    # An email sent or failed in the background: an open order page reloads.
+    publish :send_delivered_email, ["order", "email", :id]
+    publish :record_fulfillment_email_failure, ["order", "email", :id]
+    publish :send_delivered_email, ["admin", "orders"]
+    publish :record_fulfillment_email_failure, ["admin", "orders"]
     publish :add_promotion_with_code, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
   end
@@ -1109,8 +1115,8 @@ defmodule Edenflowers.Orders.Order do
     attribute :delivery_photo_slug, :string
     # Sends the photo in place of the delivered email.
     attribute :email_delivery_photo, :boolean, allow_nil?: false, default: false
-    # Jennie marked the order fulfilled and chose not to email the customer.
-    attribute :skip_delivered_email, :boolean, allow_nil?: false, default: false
+    # The last queued send ran out of attempts. Cleared by a successful send.
+    attribute :delivered_email_failed_at, :utc_datetime
     # The order details a custom order's customer is sent when it is placed.
     attribute :details_emailed_at, :utc_datetime
 
