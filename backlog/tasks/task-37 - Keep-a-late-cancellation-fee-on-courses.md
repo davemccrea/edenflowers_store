@@ -4,7 +4,7 @@ title: Keep a late-cancellation fee on courses
 status: done
 assignee: []
 created_date: '2026-10-18 18:22'
-updated_date: '2026-10-18 19:55'
+updated_date: '2026-10-19 10:21'
 labels:
   - spec
   - customers
@@ -22,3 +22,16 @@ A booking cancelled at least 7 days before the course is refunded in full; a lat
 
 **Why:** Late cancellations leave Jennie with materials bought and a seat she can't refill. Today the site promises a full refund only up to 7 days before and says nothing after, so customers don't know where they stand.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-19 10:21
+
+---
+
+The migration gives every existing course the €15 default. Jennie sets each upcoming course's fee by hand after the next production deploy: TASK-63.
+
+---
+<!-- COMMENTS:END -->
