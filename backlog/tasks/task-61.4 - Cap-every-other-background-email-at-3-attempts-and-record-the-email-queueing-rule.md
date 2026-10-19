@@ -6,6 +6,7 @@ title: >-
 status: done
 assignee: []
 created_date: '2026-10-19 20:08'
+updated_date: '2026-10-19 20:16'
 labels: []
 dependencies: []
 parent_task_id: TASK-61
@@ -23,6 +24,6 @@ Set `max_attempts 3` on each, keeping the payment-failed `where` because it chec
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every background email job has max_attempts 3
-- [ ] #2 ADR 0005 records when an email gets a failure field
+- [x] #1 Every background email job has max_attempts 3
+- [x] #2 ADR 0005 records when an email gets a failure field
 <!-- AC:END -->
