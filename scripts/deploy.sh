@@ -65,10 +65,20 @@ fi
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
+if [[ -f .env ]]; then
+  set -a
+  source .env
+  set +a
+fi
+
 if [[ "$TARGET" == "staging" ]]; then
   if [[ "$BRANCH" == "HEAD" ]]; then
     fail "detached HEAD, check out a branch first"
   fi
+
+  # The push below skips the pre-push hook, so run its checks here.
+  section "Running precommit checks"
+  mix precommit
 
   section "Ready to push"
   echo "  staging → $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)  ($BRANCH)"
@@ -157,12 +167,6 @@ TAG="v$VERSION"
 
 if git rev-parse "$TAG" &>/dev/null; then
   fail "tag $TAG already exists"
-fi
-
-if [[ -f .env ]]; then
-  set -a
-  source .env
-  set +a
 fi
 
 section "Installing deps"
