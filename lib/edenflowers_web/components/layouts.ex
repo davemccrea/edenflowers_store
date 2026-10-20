@@ -176,11 +176,6 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def admin(assigns) do
-    current_locale =
-      Localize.get_locale().language
-      |> Localize.Language.display_name!(fallback: true)
-      |> String.capitalize()
-
     primary_nav = [
       {"/admin", ~t"Overview", true, "hero-squares-2x2"},
       {~p"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
@@ -202,7 +197,6 @@ defmodule EdenflowersWeb.Layouts do
 
     assigns =
       assigns
-      |> assign(:current_locale, current_locale)
       |> assign(:primary_nav, primary_nav)
       |> assign(:system_nav, system_nav)
 
@@ -225,7 +219,6 @@ defmodule EdenflowersWeb.Layouts do
           primary_nav={@primary_nav}
           system_nav={@system_nav}
           current_path={@current_path}
-          current_locale={@current_locale}
           closeable={true}
         />
       </.drawer>
@@ -239,7 +232,6 @@ defmodule EdenflowersWeb.Layouts do
           primary_nav={@primary_nav}
           system_nav={@system_nav}
           current_path={@current_path}
-          current_locale={@current_locale}
           closeable={false}
         />
       </aside>
@@ -249,15 +241,25 @@ defmodule EdenflowersWeb.Layouts do
              Equal side columns keep the wordmark centred on the bar.
              It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
              blur over the top edge unless a sticky or fixed element covers it. --%>
-        <div class="[view-transition-name:admin-topbar] grid-cols-[3rem_1fr_3rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
-          <button
-            type="button"
-            class="h-12 w-12"
-            phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
-            aria-label={~t"Open navigation menu"}
-          >
-            <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
-          </button>
+        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
+          <div class="flex items-center">
+            <button
+              type="button"
+              class="flex h-12 w-12 items-center justify-center"
+              phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
+              aria-label={~t"Open navigation menu"}
+            >
+              <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
+            </button>
+            <.link
+              id="store-shortcut-compact"
+              href={~q"/#{language}"}
+              aria-label={~t"View store"}
+              class="touch-target group flex h-12 w-8 items-center justify-center"
+            >
+              <.icon name="hero-building-storefront" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+            </.link>
+          </div>
           <.link
             navigate={~p"/admin"}
             class="text-primary logo-wordmark touch-target justify-self-center whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl"
@@ -287,32 +289,6 @@ defmodule EdenflowersWeb.Layouts do
         </main>
       </div>
     </div>
-
-    <.app_switch_link
-      id="store-shortcut"
-      href={~q"/#{language}"}
-      label={~t"View store"}
-      class="lg:left-[calc(16rem+1.5rem)]"
-    />
-    """
-  end
-
-  attr :id, :string, required: true
-  attr :href, :string, required: true
-  attr :label, :string, required: true
-  attr :class, :string, default: nil
-
-  defp app_switch_link(assigns) do
-    ~H"""
-    <.link
-      id={@id}
-      href={@href}
-      aria-label={@label}
-      title={@label}
-      class={["bg-base-100 border-base-content/12 bottom-[calc(1rem+env(safe-area-inset-bottom))] group fixed left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border shadow-md sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] sm:left-6", @class]}
-    >
-      <.icon name="hero-arrows-right-left" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-    </.link>
     """
   end
 
@@ -348,17 +324,10 @@ defmodule EdenflowersWeb.Layouts do
   attr :primary_nav, :list, required: true
   attr :system_nav, :list, required: true
   attr :current_path, :string, required: true
-  attr :current_locale, :string, required: true
   attr :closeable, :boolean, required: true
 
   defp admin_sidebar_content(assigns) do
-    assigns =
-      assign(
-        assigns,
-        :locale_picker_id,
-        if(assigns.closeable, do: "admin-locale-picker-mobile", else: "admin-locale-picker-desktop")
-      )
-      |> assign(:version, "v#{Application.spec(:edenflowers, :vsn)}")
+    assigns = assign(assigns, :version, "v#{Application.spec(:edenflowers, :vsn)}")
 
     ~H"""
     <div class="flex h-full flex-col py-5">
@@ -389,14 +358,6 @@ defmodule EdenflowersWeb.Layouts do
       </nav>
 
       <div class="border-base-content/12 mt-auto border-t px-3 pt-4">
-        <.locale_picker id={@locale_picker_id} current_path={@current_path} class="mb-3 w-full">
-          <span class="text-base-content/65 flex items-center gap-3 border-l-2 border-transparent px-3 py-2 text-sm transition-colors hover:bg-base-300/40 hover:text-base-content">
-            <.icon name="hero-globe-alt" class="text-base-content/60 h-4 w-4 shrink-0" />
-            <span class="flex-1 text-left">{@current_locale}</span>
-            <.icon name="hero-chevron-up-down" class="text-base-content/60 h-4 w-4 shrink-0" />
-          </span>
-        </.locale_picker>
-
         <p class="text-base-content/65 mb-1 px-3 text-xs">{~t"System"}</p>
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @system_nav}
@@ -505,6 +466,12 @@ defmodule EdenflowersWeb.Layouts do
           <.link navigate={~p"/admin/account"}>
             <.icon name="hero-user-circle" class="h-4 w-4" />
             {~t"Account"}
+          </.link>
+        </li>
+        <li>
+          <.link href={~q"/#{language}"}>
+            <.icon name="hero-building-storefront" class="h-4 w-4" />
+            {~t"View store"}
           </.link>
         </li>
         <li>
@@ -657,6 +624,17 @@ defmodule EdenflowersWeb.Layouts do
                 </button>
               </div>
 
+              <%!-- Sits beside the menu button below lg because the right side is already wider, which pushes the logo off-centre --%>
+              <.link
+                :if={@current_user && @current_user.admin}
+                id="admin-shortcut-compact"
+                href={~p"/admin"}
+                aria-label="Admin"
+                class="touch-target group flex h-12 w-8 items-center justify-center lg:hidden"
+              >
+                <.icon name="hero-squares-2x2" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+              </.link>
+
               <nav class="hidden xl:block">
                 <ul class="flex gap-6">
                   <li :for={{url, name} <- @nav}>
@@ -681,7 +659,17 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="flex items-center justify-end md:gap-4">
-              <%!-- Sign in (tablet and up, phones use the nav drawer) --%>
+              <%!-- Below lg admin sits beside the menu button, and below md sign in moves to the nav drawer --%>
+              <.link
+                :if={@current_user && @current_user.admin}
+                id="admin-shortcut"
+                href={~p"/admin"}
+                class="group hidden shrink-0 items-center gap-2 lg:flex"
+              >
+                <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-squares-2x2" />
+                <span class="text-base-content whitespace-nowrap text-sm group-hover:text-base-content/60">Admin</span>
+              </.link>
+
               <.link
                 navigate={if @current_user, do: ~p"/account"}
                 href={unless @current_user, do: sign_in_href(@current_path)}
@@ -742,8 +730,6 @@ defmodule EdenflowersWeb.Layouts do
         </section>
       </header>
     </div>
-
-    <.app_switch_link :if={@current_user && @current_user.admin} id="admin-shortcut" href={~p"/admin"} label="Admin" />
 
     <.flash_group flash={@flash} />
 
