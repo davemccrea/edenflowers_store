@@ -1143,7 +1143,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         else: ~t"Email payment link"}
     </.button>
     <.button :if={!@order.payment_link_open?} type="button" phx-click="open_payment_link" variant="secondary" size="sm">
-      {~t"Create payment link"}
+      {~t"Get payment link"}
     </.button>
     """
   end

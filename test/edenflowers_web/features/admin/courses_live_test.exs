@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       assert has_element?(view, "#registration-#{registration.id}", "To refund €70.00")
       refute has_element?(view, "#refund-#{registration.id}")
 
-      view |> element("#settle-#{registration.id}", "Record refund") |> render_click()
+      view |> element("#settle-#{registration.id}", "To refund") |> render_click()
 
       assert has_element?(view, "#settlement-drawer", registration.name)
       assert has_element?(view, "#settlement-drawer dl", "Kept as cancellation fee")
@@ -250,7 +250,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     refute has_element?(view, "#mark-paid-#{registration.id}")
 
-    view |> element("#settle-#{registration.id}", "Record payment") |> render_click()
+    view |> element("#settle-#{registration.id}", "To collect") |> render_click()
 
     assert has_element?(view, "#settlement-drawer", "Birgitta")
     assert has_element?(view, "#settlement-drawer dl", "To collect")

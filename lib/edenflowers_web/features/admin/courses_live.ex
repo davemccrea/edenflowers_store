@@ -313,7 +313,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
     assigns =
       assigns
-      |> assign(:cancelled, cancelled)
+      |> assign(:cancelled_to_refund, Enum.filter(cancelled, &to_refund?/1))
+      |> assign(:cancelled_settled, Enum.reject(cancelled, &to_refund?/1))
       |> assign(:registrations, registrations)
       |> assign(:seats, Enum.sum_by(registrations, & &1.seats_held))
       |> assign(:still_to_pay, Enum.count(registrations, &to_collect?/1))
@@ -390,7 +391,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           </.button>
         </div>
 
-        <ul class="divide-base-content/8 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y sm:grid-cols-[minmax(0,1fr)_auto_2rem]">
+        <ul class="divide-base-content/8 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y">
           <li
             :for={registration <- @registrations}
             id={"registration-#{registration.id}"}
@@ -404,10 +405,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   <span :if={registration.seats_held > 1} class="text-base-content/65 tabular-nums">
                     +{registration.seats_held - 1}
                   </span>
-                  <.badge :if={to_collect?(registration)} tone={:warning}>
-                    {~t"To collect"}
-                  </.badge>
-                  <.to_refund_badge registration={registration} locale={@locale} />
+                  <.settlement_badge registration={registration} locale={@locale} />
                 </p>
                 <a
                   href={fastmail_compose(to: registration.email)}
@@ -419,8 +417,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 </a>
                 <.goodwill_refunds registration={registration} locale={@locale} />
               </div>
-              <.settlement_button registration={registration} />
-              <div class="col-start-2 row-start-1 justify-self-end sm:col-start-3">
+              <div class="col-start-2 row-start-1 justify-self-end">
                 <.actions_menu id={"registration-actions-#{registration.id}"}>
                   <li :if={stripe_payment_intent_id(registration)}>
                     <.link
@@ -472,7 +469,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                     phx-click="open_payment_link"
                     phx-value-id={registration.id}
                   >
-                    {~t"Create payment link"}
+                    {~t"Get payment link"}
                   </.actions_menu_button>
                   <.actions_menu_button
                     :if={registration.goodwill_refundable?}
@@ -517,28 +514,62 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               </div>
             </div>
           </li>
-          <li
-            :for={registration <- @cancelled}
-            id={"registration-#{registration.id}"}
-            data-status="cancelled"
-            aria-current={registration.id == @highlighted_booking_id && "true"}
-            class={["grid-cols-subgrid col-span-full grid items-center gap-y-3 py-4", registration.id == @highlighted_booking_id && highlighted_row_class()]}
-          >
-            <div class="col-start-1 row-start-1 min-w-0">
-              <p class="text-base-content/65 flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span class="line-through">
-                  {registration.name}
-                  <span :if={registration.seats_held > 1} class="tabular-nums">+{registration.seats_held - 1}</span>
-                </span>
-                <.to_refund_badge registration={registration} locale={@locale} />
-              </p>
-              <p class="text-base-content/65 truncate text-sm">{registration.email}</p>
-            </div>
-            <.settlement_button registration={registration} />
-          </li>
+          <.cancelled_row
+            :for={registration <- @cancelled_to_refund}
+            registration={registration}
+            highlighted_booking_id={@highlighted_booking_id}
+            locale={@locale}
+          />
         </ul>
+
+        <details
+          :if={@cancelled_settled != []}
+          id={"cancelled-#{@course.id}"}
+          open={Enum.any?(@cancelled_settled, &(&1.id == @highlighted_booking_id))}
+          phx-mounted={JS.ignore_attributes(["open"])}
+          class="group/cancelled border-base-content/8 border-t"
+        >
+          <summary class="text-base-content/65 touch-target flex cursor-pointer list-none items-center gap-1 py-3 text-sm">
+            {~t"Cancelled (#{count = length(@cancelled_settled)})"}
+            <.icon name="hero-chevron-down" class="h-4 w-4 group-open/cancelled:rotate-180" />
+          </summary>
+          <ul class="divide-base-content/8 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y">
+            <.cancelled_row
+              :for={registration <- @cancelled_settled}
+              registration={registration}
+              highlighted_booking_id={@highlighted_booking_id}
+              locale={@locale}
+            />
+          </ul>
+        </details>
       </div>
     </details>
+    """
+  end
+
+  attr :registration, :map, required: true
+  attr :highlighted_booking_id, :string, required: true
+  attr :locale, :any, required: true
+
+  defp cancelled_row(assigns) do
+    ~H"""
+    <li
+      id={"registration-#{@registration.id}"}
+      data-status="cancelled"
+      aria-current={@registration.id == @highlighted_booking_id && "true"}
+      class={["grid-cols-subgrid col-span-full grid items-center gap-y-3 py-4", @registration.id == @highlighted_booking_id && highlighted_row_class()]}
+    >
+      <div class="col-start-1 row-start-1 min-w-0">
+        <p class="text-base-content/65 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span class="line-through">
+            {@registration.name}
+            <span :if={@registration.seats_held > 1} class="tabular-nums">+{@registration.seats_held - 1}</span>
+          </span>
+          <.settlement_badge registration={@registration} locale={@locale} />
+        </p>
+        <p class="text-base-content/65 truncate text-sm">{@registration.email}</p>
+      </div>
+    </li>
     """
   end
 
@@ -557,14 +588,24 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   attr :registration, :map, required: true
   attr :locale, :string, required: true
 
-  defp to_refund_badge(assigns) do
+  # Opens the settlement drawer, so the amount owed doubles as the way to settle it.
+  defp settlement_badge(assigns) do
     ~H"""
     <.badge
-      :if={to_refund?(@registration)}
-      tone={:error}
+      :if={to_collect?(@registration) or to_refund?(@registration)}
+      id={"settle-#{@registration.id}"}
+      type="button"
+      tone={if to_collect?(@registration), do: :warning, else: :error}
       class="tabular-nums"
+      aria-haspopup="dialog"
+      aria-controls="settlement-drawer"
+      phx-click="open_settlement"
+      phx-value-id={@registration.id}
     >
-      {~t"To refund #{amount = Format.currency(Decimal.abs(@registration.balance), @locale)}"}
+      {if to_collect?(@registration),
+        do: ~t"To collect #{amount = Format.currency(@registration.balance, @locale)}",
+        else: ~t"To refund #{amount = Format.currency(Decimal.abs(@registration.balance), @locale)}"}
+      <.icon name="hero-chevron-right" class="-mr-0.5 h-3.5 w-3.5 shrink-0" />
     </.badge>
     """
   end
@@ -588,28 +629,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       {~t"Goodwill refund #{amount = Format.currency(Decimal.abs(refund.amount), @locale)} · #{how = OrderLog.payment_method_label(refund.method)}"}
       <span :if={refund.note}>· {refund.note}</span>
     </p>
-    """
-  end
-
-  attr :registration, :map, required: true
-
-  defp settlement_button(assigns) do
-    ~H"""
-    <.button
-      :if={to_collect?(@registration) or to_refund?(@registration)}
-      id={"settle-#{@registration.id}"}
-      type="button"
-      variant="secondary"
-      size="sm"
-      class="col-start-1 row-start-2 justify-self-start sm:col-start-2 sm:row-start-1"
-      aria-haspopup="dialog"
-      aria-controls="settlement-drawer"
-      phx-click="open_settlement"
-      phx-value-id={@registration.id}
-    >
-      <.icon name={if to_collect?(@registration), do: "hero-banknotes", else: "hero-arrow-uturn-left"} class="h-4 w-4" />
-      {if to_collect?(@registration), do: ~t"Record payment", else: ~t"Record refund"}
-    </.button>
     """
   end
 
