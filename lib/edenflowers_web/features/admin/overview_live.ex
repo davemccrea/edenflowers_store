@@ -112,8 +112,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         [
           {"overdue-orders", "hero-clock", ~t"Overdue orders",
            Enum.map(Map.get(orders_by_day, :overdue, []), &overdue_order_row/1)},
-          {"missing-phone", "hero-phone-x-mark", ~t"Missing recipient phone",
-           for(order <- today_orders ++ tomorrow_orders, order.missing_delivery_phone?, do: order_row_link(order))},
           {"failed-subscriptions", "hero-credit-card", ~t"Subscription payment failed",
            Enum.map(Orders.list_failed_subscriptions!(actor: actor), &subscription_row/1)},
           {"refund", "hero-arrow-uturn-left", ~t"To refund", to_refund},

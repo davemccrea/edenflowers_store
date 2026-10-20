@@ -156,7 +156,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       refute has_element?(view, "#still-owed")
     end
 
-    test "lists overdue orders and orders missing the recipient's phone", %{conn: conn} do
+    test "lists overdue orders but leaves a missing phone to the order row badge", %{conn: conn} do
       today = Edenflowers.ShopTime.today()
 
       overdue =
@@ -169,24 +169,23 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
           )
         )
 
-      unreachable =
-        generate(
-          order(
-            state: :placed,
-            customer_name: "No Phone",
-            fulfillment_method: :delivery,
-            fulfillment_date: Date.add(today, 1),
-            fulfillment_status: :pending,
-            gift: true
-          )
+      generate(
+        order(
+          state: :placed,
+          customer_name: "No Phone",
+          fulfillment_method: :delivery,
+          fulfillment_date: Date.add(today, 1),
+          fulfillment_status: :pending,
+          gift: true
         )
+      )
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
       assert has_element?(view, "#attention-overdue-orders summary", "Overdue orders · 1")
       assert has_element?(view, ~s|#attention-overdue-orders a[href="/admin/orders/#{overdue.id}"]|, "Late")
-      assert has_element?(view, "#attention-missing-phone summary", "Missing recipient phone · 1")
-      assert has_element?(view, ~s|#attention-missing-phone a[href="/admin/orders/#{unreachable.id}"]|, "No Phone")
+      refute has_element?(view, "#attention-missing-phone")
+      assert render(view) =~ "Missing recipient phone"
     end
 
     test "lists subscriptions whose payment failed", %{conn: conn} do
