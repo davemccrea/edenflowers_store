@@ -1,13 +1,13 @@
 ---
 id: TASK-77
 title: Give product pages a single h1
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 10:26'
+updated_date: '2026-10-20 12:34'
 labels:
   - spec
   - customers
-  - quick
 dependencies: []
 priority: low
 type: refactor
@@ -26,5 +26,11 @@ Keep the layout as it looks today; the `product-name` test id stays on the remai
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Product pages contain exactly one h1 at every breakpoint and look unchanged
+- [x] #1 Product pages contain exactly one h1 at every breakpoint and look unchanged
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Removed the mobile-only header. The remaining header sits in the product grid: above the image on mobile, top of the right column on desktop (md:col-start-2 md:row-start-1), with the image spanning both rows and md:grid-rows-[auto_1fr] so a tall image doesn't push the details down. md:gap-y-8 keeps the old header-to-description spacing. Checked at 1280px and 390px: one h1, layout unchanged. Desktop reading order now puts the heading before the image.
+<!-- SECTION:NOTES:END -->
