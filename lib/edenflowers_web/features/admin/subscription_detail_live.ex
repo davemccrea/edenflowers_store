@@ -94,41 +94,79 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
           </:menu>
         </.admin_page_header>
 
-        <div class="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
-          <.widget id="subscription-fulfillment" title={~t"Fulfillment"}>
-            <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
-              <.summary_fact label={~t"Next delivery"}>
-                <%!-- Only an active subscription makes orders; resuming works out a fresh date. --%>
-                <span :if={@subscription.state == :active} class="tabular-nums">
-                  {Format.weekday_day_month(@subscription.next_fulfillment_date, @locale)}
-                </span>
-                <.blank :if={@subscription.state != :active} />
-              </.summary_fact>
-              <.summary_fact label={~t"Method"}>
-                <.fulfillment_method
-                  method={@subscription.fulfillment_option.fulfillment_method}
-                  label={Translations.translate(@subscription.fulfillment_option).name}
-                  class="whitespace-normal"
-                />
-              </.summary_fact>
-              <.summary_fact :if={@subscription.delivery_address} label={~t"Deliver to"}>
-                {@subscription.delivery_address}
-              </.summary_fact>
-            </div>
-
-            <div
-              :if={@subscription.delivery_instructions}
-              class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
-            >
-              <.icon name="hero-information-circle" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
-              <div>
-                <p class="text-warning-content text-sm font-semibold">{~t"Delivery instructions"}</p>
-                <p class="text-base-content mt-0.5 whitespace-pre-wrap break-words">
-                  {@subscription.delivery_instructions}
-                </p>
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
+          <div class="flex min-w-0 flex-col gap-6">
+            <.widget id="subscription-fulfillment" title={~t"Fulfillment"}>
+              <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
+                <.summary_fact label={~t"Next delivery"}>
+                  <%!-- Only an active subscription makes orders; resuming works out a fresh date. --%>
+                  <span :if={@subscription.state == :active} class="tabular-nums">
+                    {Format.weekday_day_month(@subscription.next_fulfillment_date, @locale)}
+                  </span>
+                  <.blank :if={@subscription.state != :active} />
+                </.summary_fact>
+                <.summary_fact label={~t"Method"}>
+                  <.fulfillment_method
+                    method={@subscription.fulfillment_option.fulfillment_method}
+                    label={Translations.translate(@subscription.fulfillment_option).name}
+                    class="whitespace-normal"
+                  />
+                </.summary_fact>
+                <.summary_fact :if={@subscription.delivery_address} label={~t"Deliver to"}>
+                  {@subscription.delivery_address}
+                </.summary_fact>
               </div>
-            </div>
-          </.widget>
+
+              <div
+                :if={@subscription.delivery_instructions}
+                class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
+              >
+                <.icon name="hero-information-circle" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
+                <div>
+                  <p class="text-warning-content text-sm font-semibold">{~t"Delivery instructions"}</p>
+                  <p class="text-base-content mt-0.5 whitespace-pre-wrap break-words">
+                    {@subscription.delivery_instructions}
+                  </p>
+                </div>
+              </div>
+            </.widget>
+
+            <section>
+              <h2 class="text-base-content mb-4 text-base font-semibold">{~t"Orders"}</h2>
+
+              <Cinder.collection
+                id="subscription-orders-table"
+                query={@orders_query}
+                action={:admin_list}
+                actor={@current_user}
+                sort_mode="exclusive"
+                page_size={[default: 25, options: [10, 25, 50, 100]]}
+                theme={EdenflowersWeb.Admin.CinderTheme}
+                click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
+              >
+                <:col :let={order} field="fulfillment_date" sort={[cycle: [:desc, :asc]]} label={~t"Fulfillment date"}>
+                  <.link
+                    navigate={~p"/admin/orders/#{order.id}"}
+                    class="touch-target whitespace-nowrap font-medium tabular-nums hover:underline"
+                  >
+                    {Format.date(order.fulfillment_date, @locale)}
+                  </.link>
+                </:col>
+                <:col :let={order} label={~t"Reference"} class="max-sm:hidden">
+                  <span class="text-base-content/65 tabular-nums">{order.order_reference}</span>
+                </:col>
+                <:col :let={order} field="fulfillment_status" sort label={~t"Fulfillment"}>
+                  <.fulfillment_status_badge status={order.fulfillment_status} />
+                </:col>
+                <:col :let={order} field="payment_status" sort label={~t"Payment"} class="max-sm:hidden">
+                  <.order_payment_badge order={order} locale={@locale} />
+                </:col>
+                <:col :let={order} field="grand_total" sort label={~t"Total"} class="text-right">
+                  <span class="whitespace-nowrap tabular-nums">{Format.currency(order.grand_total, @locale)}</span>
+                </:col>
+              </Cinder.collection>
+            </section>
+          </div>
 
           <aside class="flex flex-col gap-6">
             <.widget id="subscription-customer" title={~t"Customer"}>
@@ -185,40 +223,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
             </.widget>
           </aside>
         </div>
-
-        <h2 class="text-base-content mb-4 text-base font-semibold">{~t"Orders"}</h2>
-
-        <Cinder.collection
-          id="subscription-orders-table"
-          query={@orders_query}
-          action={:admin_list}
-          actor={@current_user}
-          sort_mode="exclusive"
-          page_size={[default: 25, options: [10, 25, 50, 100]]}
-          theme={EdenflowersWeb.Admin.CinderTheme}
-          click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
-        >
-          <:col :let={order} field="fulfillment_date" sort={[cycle: [:desc, :asc]]} label={~t"Fulfillment date"}>
-            <.link
-              navigate={~p"/admin/orders/#{order.id}"}
-              class="touch-target whitespace-nowrap font-medium tabular-nums hover:underline"
-            >
-              {Format.date(order.fulfillment_date, @locale)}
-            </.link>
-          </:col>
-          <:col :let={order} label={~t"Reference"} class="max-sm:hidden">
-            <span class="text-base-content/65 tabular-nums">{order.order_reference}</span>
-          </:col>
-          <:col :let={order} field="fulfillment_status" sort label={~t"Fulfillment"}>
-            <.fulfillment_status_badge status={order.fulfillment_status} />
-          </:col>
-          <:col :let={order} field="payment_status" sort label={~t"Payment"} class="max-sm:hidden">
-            <.order_payment_badge order={order} locale={@locale} />
-          </:col>
-          <:col :let={order} field="grand_total" sort label={~t"Total"} class="text-right">
-            <span class="whitespace-nowrap tabular-nums">{Format.currency(order.grand_total, @locale)}</span>
-          </:col>
-        </Cinder.collection>
       </.admin_page>
     </Layouts.admin>
     """
