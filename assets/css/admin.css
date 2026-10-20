@@ -10,10 +10,10 @@
   --color-error-content: var(--color-red-700);
 }
 
-/* Treat rapid taps as activation rather than page zoom while keeping native
-   scrolling and pinch-to-zoom available in the installed admin app. */
+/* The installed admin app should feel native, so neither pinch nor double tap
+   zooms. iOS ignores the viewport's maximum-scale for pinches; this stops them. */
 .admin-theme {
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
   background-color: var(--color-base-100);
 }
 

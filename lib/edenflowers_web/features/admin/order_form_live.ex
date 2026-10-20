@@ -147,7 +147,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               </div>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
-                  <.input field={@form[:customer_name]} type="text" label={~t"Name"} class="input w-full" />
+                  <.input
+                    field={@form[:customer_name]}
+                    type="text"
+                    label={~t"Name"}
+                    class="input w-full"
+                    autocapitalize="words"
+                  />
                 </div>
                 <.input
                   field={@form[:customer_phone_number]}
@@ -255,6 +261,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     type="text"
                     label={~t"Delivery address"}
                     class="input w-full"
+                    autocomplete="off"
                     phx-blur="quote_delivery"
                     loading={match?(%{status: :loading}, @quote)}
                     confirmed={match?(%{status: :ok}, @quote)}
@@ -299,6 +306,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   type="text"
                   label={~t"Recipient name"}
                   class="input w-full"
+                  autocapitalize="words"
                 />
                 <%!-- An online order keeps the buyer's own number here when it isn't a gift. --%>
                 <.input
@@ -307,6 +315,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   type="tel"
                   label={if @method == :delivery, do: ~t"Recipient phone (for the delivery)", else: ~t"Recipient phone"}
                   class="input w-full"
+                  autocomplete="off"
                 />
                 <div :if={@gift?} class="sm:col-span-2" data-testid="order-card-choice">
                   <input type="hidden" name={@form[:card_variant_id].name} value={@card && @card.variant_id} />

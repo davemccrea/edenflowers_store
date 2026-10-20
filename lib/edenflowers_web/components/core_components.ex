@@ -357,7 +357,7 @@ defmodule EdenflowersWeb.CoreComponents do
     doc: "opt out of the blur-first debounce and validate from the first keystroke (e.g. search inputs)"
 
   attr :rest, :global,
-    include: ~w(accept autocomplete capture cols disabled form inputmode list max maxlength min minlength
+    include: ~w(accept autocomplete autocorrect capture cols disabled form inputmode list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step
                 phx-blur phx-debounce phx-focus phx-change)
 
@@ -540,6 +540,7 @@ defmodule EdenflowersWeb.CoreComponents do
             aria-invalid={@errors != [] && "true"}
             aria-describedby={describedby(@id, @errors, @help)}
             phx-debounce={if not @used? and not @validate_live?, do: "blur"}
+            inputmode={if @type == "number", do: "numeric"}
             {@rest}
           />
           <div
