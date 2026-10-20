@@ -1,9 +1,10 @@
 ---
 id: TASK-71
 title: 'Redirect http://edenflowers.fi to https'
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-20 10:12'
+updated_date: '2026-10-20 17:40'
 labels:
   - spec
   - customers
@@ -26,5 +27,18 @@ Turn on **SSL/TLS > Edge Certificates > Always Use HTTPS** in Cloudflare for ede
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `curl -sI http://edenflowers.fi/some/path` returns 301 to `https://edenflowers.fi/some/path`
+- [x] #1 `curl -sI http://edenflowers.fi/some/path` returns 301 to `https://edenflowers.fi/some/path`
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-20 17:40
+
+---
+
+Verified: http://edenflowers.fi/some/path and http://www.edenflowers.fi/ both 301 to their https URLs.
+
+---
+<!-- COMMENTS:END -->
