@@ -19,6 +19,7 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
   postgres do
     table "shop_calendar"
     repo Edenflowers.Repo
+    migration_defaults available_days: "nil"
   end
 
   actions do
