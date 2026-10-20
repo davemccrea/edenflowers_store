@@ -14,11 +14,19 @@
    zooms. iOS ignores the viewport's maximum-scale for pinches; this stops them. */
 .admin-theme {
   touch-action: pan-x pan-y;
-  background-color: color-mix(
-    in oklab,
-    var(--color-base-200) 60%,
-    var(--color-base-100)
-  );
+  background-color: var(--color-base-100);
+}
+
+/* The tint only reads as a page behind boxed cards. On phones, where cards run
+   edge to edge (see admin-card), it would stripe the page between sections. */
+@media (width >= 40rem) {
+  .admin-theme {
+    background-color: color-mix(
+      in oklab,
+      var(--color-base-200) 60%,
+      var(--color-base-100)
+    );
+  }
 }
 
 /* Admin secondary buttons use warm neutrals instead of the green outline. */
