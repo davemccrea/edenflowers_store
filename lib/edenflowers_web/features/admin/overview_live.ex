@@ -574,7 +574,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               {@order.customer_name || ~t"Unnamed customer"}
             </span>
             <.gift_badge :if={@order.gift} recipient_name={presence(@order.recipient_name)} />
-            <.badge :if={present?(@order.card_message)} tone={:warning} icon="hero-pencil-square">
+            <.badge :if={present?(@order.card_message)} tone={:neutral} icon="hero-pencil-square">
               {~t"Card to write"}
             </.badge>
             <.badge :if={@order.missing_delivery_phone?} tone={:warning} icon="hero-phone-x-mark">
