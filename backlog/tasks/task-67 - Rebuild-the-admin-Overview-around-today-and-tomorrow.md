@@ -4,6 +4,7 @@ title: Rebuild the admin Overview around today and tomorrow
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-20 06:52'
+updated_date: '2026-10-20 07:28'
 labels:
   - spec
   - admin
@@ -28,3 +29,9 @@ The Overview answers what Jennie needs right now: what's wrong, what to make tod
 - No "Mark fulfilled" on the Overview: fulfilling stays on the order page, where she checks the card message.
 - The make list counts products and sizes, not stems. Wholesale buying is done anywhere from a day to a week ahead and Jennie is flexible, so no recipe data.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+To collect left the Overview (2026-10-20): what's owed but not overdue needs no action, and today's and tomorrow's rows already badge unpaid orders. This month shows the total still owed on orders as one line instead.
+<!-- SECTION:NOTES:END -->

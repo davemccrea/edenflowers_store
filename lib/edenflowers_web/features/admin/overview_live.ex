@@ -34,11 +34,11 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
         <.admin_page_header title={greeting(@current_user)}>
-          <:actions>
+          <:menu>
             <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
             </.button>
-          </:actions>
+          </:menu>
         </.admin_page_header>
 
         <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
@@ -46,31 +46,35 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <.attention_widget :if={@attention != []} groups={@attention} locale={@locale} />
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
-          <div class="flex min-w-0 flex-col gap-6">
-            <.day_widget
+          <section class="admin-card min-w-0 p-4 sm:p-5">
+            <.day_section
               id="orders-today"
               title={~t"Today"}
+              date={@today}
               orders={@today_orders}
               empty={~t"Nothing to make today"}
               locale={@locale}
             />
-            <.day_widget
+            <.day_section
               id="orders-tomorrow"
               title={~t"Tomorrow"}
+              date={Date.add(@today, 1)}
               orders={@tomorrow_orders}
               empty={~t"Nothing to make tomorrow"}
               locale={@locale}
+              class="border-base-content/12 mt-5 border-t pt-5"
             />
-            <.link
-              navigate={~p"/admin/orders"}
-              class="text-primary touch-target -mt-3 inline-block self-start py-1 text-sm hover:underline"
-            >
-              {~t"View all orders"} →
-            </.link>
-          </div>
+            <div class="border-base-content/12 mt-5 border-t pt-3">
+              <.link
+                navigate={~p"/admin/orders"}
+                class="text-primary touch-target inline-block py-1 text-sm hover:underline"
+              >
+                {~t"View all orders"} →
+              </.link>
+            </div>
+          </section>
           <aside class="flex min-w-0 flex-col gap-6">
-            <.balances_widget :if={@to_collect != []} rows={@to_collect} locale={@locale} />
-            <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
+            <.sales_widget sales_count={@sales_count} revenue={@revenue} owed={@owed} locale={@locale} />
             <.report_widget month={@report_month} />
           </aside>
         </div>
@@ -101,21 +105,23 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     today_orders = Map.get(orders_by_day, :today, [])
     tomorrow_orders = Map.get(orders_by_day, :tomorrow, [])
     {owed, to_refund} = actor |> balance_rows() |> Enum.split_with(&Decimal.positive?(&1.amount))
-    {payment_overdue, to_collect} = Enum.split_with(owed, & &1.overdue?)
+    payment_overdue = Enum.filter(owed, & &1.overdue?)
 
     attention =
       Enum.reject(
         [
-          {"overdue-orders", ~t"Overdue orders", Enum.map(Map.get(orders_by_day, :overdue, []), &overdue_order_row/1)},
-          {"missing-phone", ~t"Missing recipient phone",
+          {"overdue-orders", "hero-clock", ~t"Overdue orders",
+           Enum.map(Map.get(orders_by_day, :overdue, []), &overdue_order_row/1)},
+          {"missing-phone", "hero-phone-x-mark", ~t"Missing recipient phone",
            for(order <- today_orders ++ tomorrow_orders, order.missing_delivery_phone?, do: order_row_link(order))},
-          {"failed-subscriptions", ~t"Subscription payment failed",
+          {"failed-subscriptions", "hero-credit-card", ~t"Subscription payment failed",
            Enum.map(Orders.list_failed_subscriptions!(actor: actor), &subscription_row/1)},
-          {"refund", ~t"To refund", to_refund},
-          {"payment-overdue", ~t"Payment overdue", payment_overdue},
-          {"sold-out", ~t"Sold out", Enum.map(Catalog.list_sold_out_variants!(actor: actor), &sold_out_row/1)}
+          {"refund", "hero-arrow-uturn-left", ~t"To refund", to_refund},
+          {"payment-overdue", "hero-banknotes", ~t"Payment overdue", payment_overdue},
+          {"sold-out", "hero-archive-box-x-mark", ~t"Sold out",
+           Enum.map(Catalog.list_sold_out_variants!(actor: actor), &sold_out_row/1)}
         ],
-        fn {_key, _title, rows} -> rows == [] end
+        fn {_key, _icon, _title, rows} -> rows == [] end
       )
 
     sales = Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor)
@@ -124,7 +130,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> assign(:today_orders, today_orders)
     |> assign(:tomorrow_orders, tomorrow_orders)
     |> assign(:attention, attention)
-    |> assign(:to_collect, to_collect)
+    |> assign(:today, today)
+    |> assign(:owed, owed |> Enum.filter(&(&1.kind == :order)) |> sum_amounts())
     |> assign(:sales_count, sales.order_count)
     |> assign(:revenue, sales.revenue)
   end
@@ -137,6 +144,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           id: "order-#{order.id}",
           who: order.customer_name || order.order_reference,
           what: if(order.customer_name, do: order.order_reference),
+          kind: :order,
           amount: order.balance,
           overdue?: order.payment_overdue?,
           href: ~p"/admin/orders/#{order.id}"
@@ -149,6 +157,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           id: "booking-#{registration.id}",
           who: registration.name,
           what: registration.course.name,
+          kind: :booking,
           amount: registration.balance,
           overdue?: registration.payment_overdue?,
           href: ~p"/admin/courses?#{[booking: registration.id]}" <> "#registration-#{registration.id}"
@@ -224,6 +233,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   attr :sales_count, :integer, required: true
   attr :revenue, :any, required: true
+  attr :owed, :any, required: true, doc: "what placed orders still owe, overdue or not"
   attr :locale, :any, required: true
 
   defp sales_widget(assigns) do
@@ -239,6 +249,14 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <dd class="text-base-content text-2xl font-semibold tabular-nums">{Format.currency(@revenue, @locale)}</dd>
         </div>
       </dl>
+      <p
+        :if={Decimal.positive?(@owed)}
+        id="still-owed"
+        class="border-base-content/12 text-base-content/65 mt-4 flex items-baseline justify-between gap-4 border-t pt-3 text-sm"
+      >
+        {~t"Still to come in"}
+        <span class="text-base-content font-medium tabular-nums">{Format.currency(@owed, @locale)}</span>
+      </p>
     </.widget>
     """
   end
@@ -279,65 +297,44 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> String.slice(0, 7)
   end
 
-  attr :groups, :list, required: true, doc: "`{key, title, rows}`, each with at least one row"
+  attr :groups, :list, required: true, doc: "`{key, icon, title, rows}`, each with at least one row"
   attr :locale, :any, required: true
 
-  # Collapsed to a line per kind of problem, so the strip stays short on a phone.
+  # Collapsed to a line per kind of problem, so it stays short on a phone.
   defp attention_widget(assigns) do
     ~H"""
-    <.widget id="attention" title={~t"Needs attention"} class="ring-warning/40 mb-6 ring-1">
-      <ul class="divide-base-content/12 -my-2 divide-y">
-        <li :for={{key, title, rows} <- @groups}>
+    <section
+      id="attention"
+      aria-labelledby="attention-title"
+      class="admin-card border-warning/40 bg-warning/5 mb-6 p-4 sm:p-5"
+    >
+      <h2 id="attention-title" class="text-base-content mb-2 flex items-center gap-2 text-base font-semibold">
+        <.icon name="hero-exclamation-triangle" class="text-warning h-5 w-5" />
+        {~t"Needs attention"}
+      </h2>
+      <ul class="divide-warning/20 divide-y">
+        <li :for={{key, icon, title, rows} <- @groups}>
           <details id={"attention-#{key}"} phx-mounted={JS.ignore_attributes(["open"])} class="group">
-            <summary class="touch-target flex cursor-pointer list-none items-center justify-between gap-4 py-2">
-              <span class="text-base-content flex min-w-0 items-baseline gap-1.5 font-medium">
-                <.icon
-                  name="hero-chevron-right"
-                  class="text-base-content/50 h-4 w-4 shrink-0 self-center transition-transform group-open:rotate-90"
-                />
-                <span>{title} · <span class="tabular-nums">{length(rows)}</span></span>
+            <summary class="touch-target flex cursor-pointer list-none items-center gap-3 py-2.5">
+              <.icon name={icon} class="text-warning-content h-5 w-5 shrink-0" />
+              <span class="text-base-content min-w-0 flex-1 font-medium">
+                {title} · <span class="tabular-nums">{length(rows)}</span>
               </span>
               <span :if={Map.has_key?(hd(rows), :amount)} class="text-base-content shrink-0 tabular-nums">
                 {Format.currency(sum_amounts(rows), @locale)}
               </span>
+              <.icon
+                name="hero-chevron-down"
+                class="text-base-content/50 h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+              />
             </summary>
-            <ul class="divide-base-content/12 border-base-content/12 mb-2 ml-5 divide-y border-t">
+            <ul class="divide-warning/20 mb-2 ml-8 divide-y">
               <.link_row :for={row <- rows} id={"attention-#{key}-#{row.id}"} row={row} locale={@locale} />
             </ul>
           </details>
         </li>
       </ul>
-    </.widget>
-    """
-  end
-
-  attr :rows, :list, required: true, doc: "largest first"
-  attr :locale, :any, required: true
-  attr :shown, :integer, default: 5
-
-  defp balances_widget(assigns) do
-    ~H"""
-    <.widget id="balances" title={~t"To collect"} count={length(@rows)}>
-      <p class="text-base-content/65 -mt-2 pb-1.5 text-sm tabular-nums">
-        {Format.currency(sum_amounts(@rows), @locale)}
-      </p>
-      <ul class="divide-base-content/12 divide-y">
-        <.link_row :for={row <- Enum.take(@rows, @shown)} id={"balance-#{row.id}"} row={row} locale={@locale} />
-      </ul>
-      <details
-        :if={length(@rows) > @shown}
-        id="balances-more"
-        phx-mounted={JS.ignore_attributes(["open"])}
-        class="group"
-      >
-        <summary class="text-primary touch-target flex cursor-pointer list-none items-center py-1 text-sm hover:underline group-open:hidden">
-          {~t"Show #{count = length(@rows) - @shown} more"}
-        </summary>
-        <ul class="divide-base-content/12 border-base-content/12 divide-y border-t">
-          <.link_row :for={row <- Enum.drop(@rows, @shown)} id={"balance-#{row.id}"} row={row} locale={@locale} />
-        </ul>
-      </details>
-    </.widget>
+    </section>
     """
   end
 
@@ -368,34 +365,43 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   attr :id, :string, required: true
   attr :title, :string, required: true
+  attr :date, Date, required: true
   attr :orders, :list, required: true
   attr :empty, :string, required: true
   attr :locale, :any, required: true
+  attr :class, :any, default: nil
 
-  defp day_widget(assigns) do
+  defp day_section(assigns) do
     ~H"""
-    <.widget id={@id} title={@title} count={length(@orders)}>
+    <section id={@id} aria-labelledby={"#{@id}-title"} class={@class}>
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <h2 id={"#{@id}-title"} class="text-base-content text-base font-semibold">
+          {@title}
+          <span class="text-base-content/65 ml-1 text-sm font-normal">{Format.weekday_day_month(@date, @locale)}</span>
+        </h2>
+        <.count_badge count={length(@orders)} active={@orders != []} />
+      </div>
+
       <div class="space-y-4">
         <section :for={{method, orders} <- by_method(@orders)} aria-label={method_heading(method)}>
           <p class="eyebrow text-base-content/65 px-3 pb-1.5">
             {method_heading(method)} · <span class="tabular-nums">{length(orders)}</span>
           </p>
           <ul class="divide-base-content/8 divide-y">
-            <.order_row :for={order <- orders} order={order} hover_class="hover:bg-base-200/60" />
+            <.order_row :for={order <- orders} order={order} />
           </ul>
         </section>
       </div>
 
       <p :if={@orders == []} class="text-base-content/65 text-sm">{@empty}</p>
-    </.widget>
+    </section>
     """
   end
 
   attr :order, :map, required: true
-  attr :hover_class, :string, required: true
 
   # What the florist needs to act on, in reading order: whose order, what to make,
-  # whether there's a card to write, and how it leaves the shop. Price lives on the
+  # whether there's a card to write, and when it leaves the shop. Price lives on the
   # order page; it doesn't change what gets made.
   defp order_row(assigns) do
     assigns = assign(assigns, :items, Enum.reject(assigns.order.line_items, & &1.is_card))
@@ -404,7 +410,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <li>
       <.link
         navigate={~p"/admin/orders/#{@order.id}"}
-        class={["grid-cols-[minmax(0,1fr)_auto] grid items-start gap-x-4 px-3 py-2.5 transition-colors focus-visible:-outline-offset-2", @hover_class]}
+        class="grid-cols-[minmax(0,1fr)_auto] grid items-start gap-x-4 px-3 py-2.5 transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2"
       >
         <div class="min-w-0">
           <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -444,10 +450,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         </div>
 
         <div class="flex shrink-0 flex-col items-end gap-0.5 pt-0.5 text-right">
-          <.fulfillment_method method={@order.fulfillment_method} class="text-base-content text-sm font-medium" />
           <span
             :if={Format.fulfillment_time(@order, Format.locale())}
-            class="text-base-content text-xs tabular-nums"
+            class="text-base-content text-sm font-medium tabular-nums"
             data-testid="fulfillment-time"
           >
             {Format.fulfillment_time(@order, Format.locale())}
