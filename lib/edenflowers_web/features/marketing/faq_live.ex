@@ -5,7 +5,12 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok,
+     assign(socket,
+       page_title: ~t"Frequently Asked Questions",
+       page_description:
+         ~t"Answers about delivery, pickup, flower care, subscriptions and course bookings at Eden Flowers in Vaasa."
+     )}
   end
 
   @impl true

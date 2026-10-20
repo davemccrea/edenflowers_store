@@ -25,10 +25,16 @@ defmodule EdenflowersWeb.Store.StoreLive do
       category_slug ->
         case load_products(category_slug) do
           {:ok, products, selected_category} ->
-            {:noreply, assign(socket, products: products, selected_category: selected_category)}
+            {:noreply,
+             assign(socket,
+               page_title: selected_category.name,
+               page_description: selected_category.description,
+               products: products,
+               selected_category: selected_category
+             )}
 
           :error when category_slug == "bouquets" ->
-            {:noreply, assign(socket, products: [], selected_category: nil)}
+            {:noreply, assign(socket, page_title: ~t"Store", products: [], selected_category: nil)}
 
           :error ->
             {:noreply, push_patch(socket, to: ~p"/store/bouquets", replace: true)}

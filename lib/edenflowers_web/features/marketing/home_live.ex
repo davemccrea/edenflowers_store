@@ -10,7 +10,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   def mount(_params, _session, socket) do
     products = Catalog.list_featured_products!() |> Translations.translate()
 
-    {:ok, socket |> assign(products: products)}
+    {:ok,
+     assign(socket,
+       page_title: ~t"Florist in Vaasa",
+       page_description:
+         ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within 5 km of Minimossen.",
+       products: products
+     )}
   end
 
   @impl true

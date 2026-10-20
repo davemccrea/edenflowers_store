@@ -59,6 +59,11 @@ defmodule EdenflowersWeb.Store.ProductLive do
      socket
      |> assign(order_id: order_id)
      |> assign(product: product)
+     |> assign(
+       page_title: product.name,
+       page_description: product.description,
+       og_image: image_url(product.image_slug, 1200, 630)
+     )
      |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)

@@ -16,6 +16,11 @@
       {assigns[:page_title] || if(assigns[:status] == 404, do: ~t"Page not found")}
     </.live_title>
     <meta :if={assigns[:page_description]} name="description" content={@page_description} />
+    <link
+      :if={!admin_path?(@conn.request_path) and assigns[:status] != 404}
+      rel="canonical"
+      href={Phoenix.VerifiedRoutes.unverified_url(@conn, @conn.request_path)}
+    />
     <meta :if={assigns[:page_title]} property="og:title" content={"Eden Flowers | #{@page_title}"} />
     <meta :if={assigns[:page_description]} property="og:description" content={@page_description} />
     <meta :if={assigns[:og_image]} property="og:image" content={@og_image} />
