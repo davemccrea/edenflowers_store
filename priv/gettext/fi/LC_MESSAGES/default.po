@@ -7150,10 +7150,10 @@ msgstr "Floristiikkakurssit Vaasa"
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:11
 #, elixir-autogen, elixir-format
-msgid "Funeral Flowers in Vaasa & Korsholm"
-msgstr "Hautajaiskukat Vaasa ja Mustasaari"
+msgid "Funeral Flowers in Vaasa"
+msgstr "Hautajaiskukat Vaasa"
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:24
 #, elixir-autogen, elixir-format
-msgid "Wedding Flowers in Vaasa & Korsholm"
-msgstr "Hääkukat Vaasa ja Mustasaari"
+msgid "Wedding Flowers in Vaasa"
+msgstr "Hääkukat Vaasa"

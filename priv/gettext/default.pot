@@ -7150,10 +7150,10 @@ msgstr ""
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:11
 #, elixir-autogen, elixir-format
-msgid "Funeral Flowers in Vaasa & Korsholm"
+msgid "Funeral Flowers in Vaasa"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:24
 #, elixir-autogen, elixir-format
-msgid "Wedding Flowers in Vaasa & Korsholm"
+msgid "Wedding Flowers in Vaasa"
 msgstr ""
