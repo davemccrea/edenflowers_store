@@ -4,6 +4,7 @@ title: Give the admin a Reports page
 status: needs-triage
 assignee: []
 created_date: '2026-10-20 06:53'
+updated_date: '2026-10-20 17:19'
 labels:
   - spec
   - admin
@@ -25,3 +26,16 @@ One admin page where every downloadable report lives, and where Jennie can see h
 - Which reports and charts come first. Candidates: sales by month, by product, by fulfillment method; course revenue; expenses against sales.
 - Whether the accountant report moves off the Overview entirely once this exists. TASK-67.8 keeps it there early in the month in the meantime; if it moves, that widget becomes a link here.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-20 17:19
+
+---
+
+From David (2026-10-20): wants visual tools for sales, e.g. a chart of this month against last. An expense tally is interesting too, but expenses get entered late, so a month-to-date expense figure undercounts what was actually spent; it's only reliable for closed months (expenses against sales by month).
+
+---
+<!-- COMMENTS:END -->
