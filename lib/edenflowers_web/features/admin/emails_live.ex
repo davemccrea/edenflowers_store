@@ -99,7 +99,7 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
                     name="hero-chevron-right"
                     class="text-base-content/50 h-4 w-4 shrink-0 transition-transform group-open/scenario:rotate-90"
                   />
-                  <span lang="en" class="first-letter:uppercase">{scenario}</span>
+                  <span class="first-letter:uppercase">{Gettext.gettext(EdenflowersWeb.Gettext, scenario)}</span>
                 </summary>
                 <div class="px-4 pb-4 pl-10 sm:px-5 sm:pl-11" lang={@lang}>
                   <p class="text-base-content mb-3 font-semibold">{email.subject}</p>
