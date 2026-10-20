@@ -151,7 +151,7 @@ defmodule EdenflowersWeb.AdminCalendar do
         :open -> "cursor-pointer text-base-content/85 hover:bg-primary/10"
         :weekday_disabled -> closed_class
         :date_disabled -> closed_class
-        :past -> "cursor-not-allowed text-base-content/60"
+        :past -> "cursor-not-allowed text-base-content/25"
       end
 
     today_class = if today?, do: " underline", else: ""
