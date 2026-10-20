@@ -7150,10 +7150,10 @@ msgstr "Blomsterkurser i Vasa"
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:11
 #, elixir-autogen, elixir-format
-msgid "Funeral Flowers in Vaasa & Korsholm"
-msgstr "Begravningsblommor i Vasa och Korsholm"
+msgid "Funeral Flowers in Vaasa"
+msgstr "Begravningsblommor i Vasa"
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:24
 #, elixir-autogen, elixir-format
-msgid "Wedding Flowers in Vaasa & Korsholm"
-msgstr "Bröllopsblommor i Vasa och Korsholm"
+msgid "Wedding Flowers in Vaasa"
+msgstr "Bröllopsblommor i Vasa"

@@ -17,8 +17,8 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     weddings = conn |> get("/fi/haat") |> html_response(200)
     bouquets = conn |> get("/sv/butik/buketter") |> html_response(200)
 
-    assert weddings =~ ~r/<title[^>]*>\s*Hääkukat Vaasa ja Mustasaari\s*\| Eden Flowers<\/title>/
-    assert weddings =~ ~s(<meta property="og:title" content="Hääkukat Vaasa ja Mustasaari | Eden Flowers")
+    assert weddings =~ ~r/<title[^>]*>\s*Hääkukat Vaasa\s*\| Eden Flowers<\/title>/
+    assert weddings =~ ~s(<meta property="og:title" content="Hääkukat Vaasa | Eden Flowers")
     assert bouquets =~ ~r/<title[^>]*>\s*Buketter i Vasa\s*\| Eden Flowers<\/title>/
   end
 
