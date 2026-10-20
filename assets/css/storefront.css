@@ -12,15 +12,85 @@
   }
 }
 
+/* The headline comes into focus rather than sliding, matching the rotator below. */
+@keyframes hero-focus {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-focus {
+    animation: hero-focus 1100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+}
+
+/* Endings share one grid cell so the h1 is sized for the longest and never jumps.
+   The sentence opens and settles on the same ending, with the others passing through once between. */
+.hero-rotator {
+  display: grid;
+}
+.hero-rotator > * {
+  grid-area: 1 / 1;
+}
+.hero-rotator > :not(:last-child) {
+  opacity: 0;
+}
+@keyframes hero-rotator-pass {
+  0%,
+  100% {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  25%,
+  75% {
+    opacity: 1;
+    filter: none;
+  }
+}
+@keyframes hero-rotator-leave {
+  to {
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* Waits for the subtitle and button to land before the first change. */
+  .hero-rotator > * {
+    --step: 1800ms;
+    animation-delay: calc(800ms + var(--i) * var(--step));
+  }
+  .hero-rotator > :not(:last-child) {
+    animation-name: hero-rotator-pass;
+    animation-duration: 2200ms;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: both;
+  }
+  /* The opening line is already showing, so it only leaves, as the next one arrives. */
+  .hero-rotator > :first-child {
+    opacity: 1;
+    animation-name: hero-rotator-leave;
+    animation-duration: 550ms;
+    animation-delay: calc(800ms + var(--step));
+  }
+  .hero-rotator > :last-child {
+    animation-name: hero-focus;
+    animation-duration: 900ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-fill-mode: both;
+  }
+}
+
 /* Transform-only, so LCP is unaffected. The parent needs overflow-hidden. */
 @keyframes hero-zoom-settle {
   from {
-    transform: scale(1.06);
+    transform: scale(1.04);
   }
 }
 @media (prefers-reduced-motion: no-preference) {
   .hero-zoom {
-    animation: hero-zoom-settle 7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: hero-zoom-settle 10s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }
 
