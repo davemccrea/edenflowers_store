@@ -1,6 +1,8 @@
 defmodule EdenflowersWeb.Marketing.ContactLive do
   use EdenflowersWeb, :live_view
 
+  alias EdenflowersWeb.Business
+
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
@@ -10,7 +12,8 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
        page_title: ~t"Contact",
        alternates: alternates("/#{language}/contact"),
        page_description:
-         ~t"Get in touch with Eden Flowers in Vaasa about an order, a wedding or a funeral, or visit the shop in Minimossen at Myrvägen 1."
+         ~t"Get in touch with Eden Flowers in Vaasa about an order, a wedding or a funeral, or visit the shop in Minimossen at Myrvägen 1.",
+       json_ld: Business.florist()
      )}
   end
 
@@ -44,32 +47,30 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
 
           <dl class="grid gap-10">
             <.contact_item label={~t"Email"}>
-              <a class="link-underline-static-body" href="mailto:info@edenflowers.fi">info@edenflowers.fi</a>
+              <a class="link-underline-static-body" href={"mailto:#{Business.email()}"}>{Business.email()}</a>
             </.contact_item>
 
             <.contact_item label={~t"Phone"}>
-              <a class="link-underline-static-body" href="tel:+358402209494">040 220 9494</a>
+              <a class="link-underline-static-body" href={"tel:#{Business.phone()}"}>{Business.phone_display()}</a>
             </.contact_item>
 
             <.contact_item label={~t"Address"}>
               <address class="not-italic">
                 <a
                   class="link-underline-static-body"
-                  href="https://www.google.com/maps/search/?api=1&amp;query=Minimossen%2C+Myrv%C3%A4gen+1%2C+65230+Vasa"
+                  href={Business.maps_url()}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   Minimossen<br />
-                  {~t"Myrvägen 1"}<br />
-                  {~t"65230 Vasa"}
+                  {Business.street_address()}<br />
+                  {Business.postal_town()}
                 </a>
               </address>
             </.contact_item>
 
             <.contact_item label={~t"Opening hours"}>
-              {~t"Mon–Fri: 10:00–18:00"}<br />
-              {~t"Sat: 10:00–15:00"}<br />
-              {~t"Sun: closed"}
+              <p :for={line <- Business.opening_hours_lines()}>{line}</p>
             </.contact_item>
           </dl>
         </div>

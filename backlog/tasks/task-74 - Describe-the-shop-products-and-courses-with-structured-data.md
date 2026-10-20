@@ -1,9 +1,10 @@
 ---
 id: TASK-74
 title: 'Describe the shop, products and courses with structured data'
-status: ready-for-agent
+status: in-progress
 assignee: []
 created_date: '2026-10-20 10:26'
+updated_date: '2026-10-20 18:07'
 labels:
   - spec
   - customers
@@ -34,8 +35,14 @@ Only mark up what the page visibly shows. Validate with Google's Rich Results Te
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Home and contact pages render valid Florist JSON-LD matching the footer details
-- [ ] #2 Product pages render valid Product JSON-LD with EUR prices and availability
-- [ ] #3 Upcoming course pages render valid Event JSON-LD; past course pages render none
+- [x] #1 Home and contact pages render valid Florist JSON-LD matching the footer details
+- [x] #2 Product pages render valid Product JSON-LD with EUR prices and availability
+- [x] #3 Upcoming course pages render valid Event JSON-LD; past course pages render none
 - [ ] #4 Google's Rich Results Test reports no errors for one page of each type on staging
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Business facts (contact, address, hours) live in EdenflowersWeb.Business; footer, contact page and Florist JSON-LD read them. Product/Event JSON-LD built from the page's own records at mount, rendered in the root layout via the json_ld assign. sameAs gets the Business Profile once TASK-73 exists. AC4 needs a Rich Results Test on staging.
+<!-- SECTION:NOTES:END -->

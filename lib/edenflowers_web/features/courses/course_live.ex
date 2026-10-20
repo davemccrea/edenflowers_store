@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
   alias Edenflowers.Payments
+  alias Edenflowers.ShopTime
   alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -23,6 +24,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
            alternates: alternates("/#{language}/courses/#{course.id}"),
            page_description: course.description,
            og_image: image_url(course.image_slug, 1200, 630),
+           json_ld: json_ld(course),
            locale: Format.locale(),
            course: course
          )
@@ -242,6 +244,36 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     Courses.list_my_registrations!(actor: user, query: [filter: [course_id: course.id]], load: [:seats_held])
     |> Enum.map(& &1.seats_held)
     |> Enum.sum()
+  end
+
+  defp json_ld(course) do
+    if Date.before?(course.date, ShopTime.today()) do
+      nil
+    else
+      %{
+        "@context" => "https://schema.org",
+        "@type" => "Event",
+        "name" => course.name,
+        "description" => course.description,
+        "image" => image_url(course.image_slug, 1200, 1200),
+        "startDate" => course.date |> DateTime.new!(course.start_time, ShopTime.timezone()) |> DateTime.to_iso8601(),
+        "endDate" => course.date |> DateTime.new!(course.end_time, ShopTime.timezone()) |> DateTime.to_iso8601(),
+        "eventStatus" => "https://schema.org/EventScheduled",
+        "eventAttendanceMode" => "https://schema.org/OfflineEventAttendanceMode",
+        "location" => %{
+          "@type" => "Place",
+          "name" => course.location_name,
+          "address" => course.location_address
+        },
+        "offers" => %{
+          "@type" => "Offer",
+          "price" => Decimal.to_string(course.price, :normal),
+          "priceCurrency" => "EUR",
+          "availability" =>
+            if(course.seats_left > 0, do: "https://schema.org/InStock", else: "https://schema.org/SoldOut")
+        }
+      }
+    end
   end
 
   defp load_course(id) do

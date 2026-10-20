@@ -63,7 +63,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
        page_title: product.name,
        alternates: alternates("/#{language}/product/#{product.id}"),
        page_description: product.description,
-       og_image: image_url(product.image_slug, 1200, 630)
+       og_image: image_url(product.image_slug, 1200, 630),
+       json_ld: json_ld(product, product_variants)
      )
      |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
@@ -355,6 +356,36 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   defp sold_out?(variant), do: variant.stock_quantity == 0
+
+  defp json_ld(product, variants) do
+    availability =
+      if Enum.all?(variants, &sold_out?/1), do: "https://schema.org/OutOfStock", else: "https://schema.org/InStock"
+
+    offers =
+      case variants do
+        [variant] ->
+          %{"@type" => "Offer", "price" => Decimal.to_string(variant.price, :normal)}
+
+        _ ->
+          prices = Enum.map(variants, & &1.price)
+
+          %{
+            "@type" => "AggregateOffer",
+            "lowPrice" => prices |> Enum.min(Decimal) |> Decimal.to_string(:normal),
+            "highPrice" => prices |> Enum.max(Decimal) |> Decimal.to_string(:normal),
+            "offerCount" => length(variants)
+          }
+      end
+
+    %{
+      "@context" => "https://schema.org",
+      "@type" => "Product",
+      "name" => product.name,
+      "description" => product.description,
+      "image" => image_url(product.image_slug, 1200, 1200),
+      "offers" => Map.merge(offers, %{"priceCurrency" => "EUR", "availability" => availability})
+    }
+  end
 
   # A single size-less variant has nothing to choose; the header shows its price.
   defp one_size?([%{size: nil}]), do: true
