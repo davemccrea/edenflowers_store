@@ -39,7 +39,6 @@ msgid "Cart"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:559
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:11
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:34
 #, elixir-autogen, elixir-format
 msgid "Condolences"
@@ -59,7 +58,6 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/courses_live.ex:24
 #: lib/edenflowers_web/features/admin/courses_live.ex:39
 #: lib/edenflowers_web/features/courses/course_live.ex:69
-#: lib/edenflowers_web/features/courses/courses_live.ex:19
 #: lib/edenflowers_web/features/courses/courses_live.ex:41
 #: lib/edenflowers_web/features/marketing/faq_live.ex:60
 #: lib/edenflowers_web/features/marketing/home_live.ex:180
@@ -125,7 +123,6 @@ msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:558
 #: lib/edenflowers_web/features/marketing/home_live.ex:175
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:24
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:55
 #, elixir-autogen, elixir-format
 msgid "Weddings"
@@ -7139,4 +7136,24 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/emails_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "Collapse all"
+msgstr ""
+
+#: lib/edenflowers_web/features/store/store_live.ex:39
+#, elixir-autogen, elixir-format
+msgid "%{category} in Vaasa"
+msgstr ""
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:19
+#, elixir-autogen, elixir-format
+msgid "Floristry Courses in Vaasa"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:11
+#, elixir-autogen, elixir-format
+msgid "Funeral Flowers in Vaasa & Korsholm"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:24
+#, elixir-autogen, elixir-format
+msgid "Wedding Flowers in Vaasa & Korsholm"
 msgstr ""

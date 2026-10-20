@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     {:ok, view, html} = live(conn, ~p"/admin")
 
     assert has_element?(view, "h1", "Hi, Jane")
-    assert html =~ "Eden Flowers | Overview"
+    assert html =~ "Overview | Eden Flowers"
     assert html =~ "Admin account menu"
     assert html =~ "Jane"
     assert html =~ "jane@example.com"

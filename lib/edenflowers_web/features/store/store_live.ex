@@ -36,7 +36,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
             {:noreply,
              assign(socket,
                alternates: alternates,
-               page_title: selected_category.name,
+               page_title: ~t"#{category = selected_category.name} in Vaasa",
                page_description: selected_category.description,
                products: products,
                selected_category: selected_category

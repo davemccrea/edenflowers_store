@@ -1,9 +1,10 @@
 ---
 id: TASK-75
 title: Name the service and place in page titles
-status: ready-for-agent
+status: ready-for-human
 assignee: []
 created_date: '2026-10-20 10:26'
+updated_date: '2026-10-20 17:09'
 labels:
   - spec
   - customers
@@ -37,6 +38,25 @@ Page titles say what the page offers and where, with the brand last: "Wedding Fl
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Titles end in " | Eden Flowers" on every page, including og:title
-- [ ] #2 Home, Weddings, Condolences, Courses and store category pages use the titles above in en, fi and sv
+- [x] #1 Titles end in " | Eden Flowers" on every page, including og:title
+- [x] #2 Home, Weddings, Condolences, Courses and store category pages use the titles above in en, fi and sv
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Brand moved to a live_title suffix and og:title. Category titles use ~t"%{category} in Vaasa". fi titles are search-phrased without inflection (Hääkukat Vaasa ja Mustasaari, Hautajaiskukat Vaasa ja Mustasaari, Floristiikkakurssit Vaasa, %{category} Vaasa); sv: Bröllopsblommor/Begravningsblommor i Vasa och Korsholm, Blomsterkurser i Vasa, %{category} i Vasa. Home keeps its existing Kukkakauppa Vaasassa / Blomsterhandel i Vasa.
+<!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-20 17:09
+
+---
+
+Built. Left: Jennie reads the Finnish and Swedish titles.
+
+---
+<!-- COMMENTS:END -->

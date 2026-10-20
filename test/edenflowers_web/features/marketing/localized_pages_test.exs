@@ -12,6 +12,16 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     assert get_session(conn |> get("/fi/haat"), Localize.Plug.PutLocale.session_key()) == "fi"
   end
 
+  test "a page's title names what it offers and where, with the brand last", %{conn: conn} do
+    generate(bouquets())
+    weddings = conn |> get("/fi/haat") |> html_response(200)
+    bouquets = conn |> get("/sv/butik/buketter") |> html_response(200)
+
+    assert weddings =~ ~r/<title[^>]*>\s*Hääkukat Vaasa ja Mustasaari\s*\| Eden Flowers<\/title>/
+    assert weddings =~ ~s(<meta property="og:title" content="Hääkukat Vaasa ja Mustasaari | Eden Flowers")
+    assert bouquets =~ ~r/<title[^>]*>\s*Buketter i Vasa\s*\| Eden Flowers<\/title>/
+  end
+
   test "a page links to its other languages, with the category's slug in each", %{conn: conn} do
     generate(bouquets())
     html = conn |> get("/sv/butik/buketter") |> html_response(200)

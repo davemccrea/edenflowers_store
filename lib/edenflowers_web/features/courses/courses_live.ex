@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
 
     {:ok,
      assign(socket,
-       page_title: ~t"Courses",
+       page_title: ~t"Floristry Courses in Vaasa",
        alternates: alternates("/#{language}/courses"),
        page_description:
          ~t"Floristry courses with Jennie at Eden Flowers in Vaasa. See upcoming dates and book your seat.",
