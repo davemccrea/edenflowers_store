@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
   def render(assigns) do
     ~H"""
     <section class="max-w-md space-y-5">
-      <h3 class="eyebrow text-base-content/70">{~t"Newsletter"}</h3>
+      <h2 class="eyebrow text-base-content/70">{~t"Newsletter"}</h2>
 
       <p class="font-serif text-2xl leading-snug tracking-tight md:text-3xl">
         {~t"Get 15% off your first order."}

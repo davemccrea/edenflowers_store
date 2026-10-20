@@ -396,7 +396,7 @@ defmodule EdenflowersWeb.CoreComponents do
     <fieldset class={["fieldset mb-2", @hidden && "hidden"]}>
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
-        <span class="fieldset-label pointer-coarse:min-h-11">
+        <span class="fieldset-label text-base-content/65 pointer-coarse:min-h-11">
           <input
             type="checkbox"
             id={@id}
@@ -856,6 +856,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   attr :navigate, :string, required: true
   attr :locale, :string, required: true
+  attr :heading, :string, default: "h3", doc: "h2 where the card sits directly under the page's h1"
 
   def product_card(assigns) do
     ~H"""
@@ -876,18 +877,18 @@ defmodule EdenflowersWeb.CoreComponents do
       </figure>
 
       <div class="text-base-content flex flex-col gap-1.5">
-        <h3 class="card-heading link-underline-group-hover">
+        <.dynamic_tag tag_name={@heading} class="card-heading link-underline-group-hover">
           {@product.name}
-        </h3>
+        </.dynamic_tag>
         <p class="font-serif text-base-content text-lg leading-none">
-          <span class="text-base-content/60 font-sans tracking-[0.18em] mr-1 text-xs uppercase">
+          <span class="text-base-content/65 font-sans tracking-[0.18em] mr-1 text-xs uppercase">
             {~t"From"}
           </span>
           {Edenflowers.Format.storefront_price(@product.cheapest_price, @locale)}
         </p>
         <p
           :if={@product.sold_out? or @product.free_delivery or @product.subscribable}
-          class="text-base-content/60 font-sans tracking-[0.18em] text-xs uppercase leading-snug"
+          class="text-base-content/65 font-sans tracking-[0.18em] text-xs uppercase leading-snug"
         >
           <span :if={@product.sold_out?} class="text-base-content/80 font-bold" data-testid="sold-out">{~t"Sold out"}</span>
           <span :if={@product.sold_out? and (@product.free_delivery or @product.subscribable)} aria-hidden="true">·</span>

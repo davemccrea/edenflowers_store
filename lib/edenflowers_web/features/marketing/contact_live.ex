@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
   defp contact_item(assigns) do
     ~H"""
     <div class="space-y-2">
-      <dt class="eyebrow text-base-content/60">{@label}</dt>
+      <dt class="eyebrow text-base-content/65">{@label}</dt>
       <dd class="text-lg leading-relaxed">{render_slot(@inner_block)}</dd>
     </div>
     """
