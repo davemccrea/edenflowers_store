@@ -29,6 +29,19 @@ watch_deploy() {
   gh run watch "$run_id" --compact --exit-status
 }
 
+run_checks() {
+  section "Installing deps"
+  mix deps.get
+  ok "deps installed"
+
+  section "Downloading locales"
+  mix localize.download_locales
+  ok "locales downloaded"
+
+  section "Running precommit checks"
+  mix precommit
+}
+
 offer_watch() {
   echo
   read -r -p "  Watch the deploy? [Y/n] " REPLY
@@ -77,8 +90,7 @@ if [[ "$TARGET" == "staging" ]]; then
   fi
 
   # The push below skips the pre-push hook, so run its checks here.
-  section "Running precommit checks"
-  mix precommit
+  run_checks
 
   section "Ready to push"
   echo "  staging → $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)  ($BRANCH)"
@@ -169,16 +181,7 @@ if git rev-parse "$TAG" &>/dev/null; then
   fail "tag $TAG already exists"
 fi
 
-section "Installing deps"
-mix deps.get
-ok "deps installed"
-
-section "Downloading locales"
-mix localize.download_locales
-ok "locales downloaded"
-
-section "Running precommit checks"
-mix precommit
+run_checks
 
 # Before tagging, so a failed sync doesn't leave a local version-bump commit and tag behind.
 scripts/sync-images.sh production
