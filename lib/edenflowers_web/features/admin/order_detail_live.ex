@@ -168,15 +168,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               />
 
               <div
-                :if={@order.missing_delivery_phone?}
-                id="order-missing-phone"
-                class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
-              >
-                <.icon name="hero-phone-x-mark" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
-                <p class="text-warning-content text-sm font-semibold">{~t"Missing recipient phone"}</p>
-              </div>
-
-              <div
                 :if={present?(@order.delivery_instructions)}
                 class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
               >
@@ -366,11 +357,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.widget>
 
             <.widget
-              :if={@order.gift && present?(@order.recipient_name)}
+              :if={(@order.gift && present?(@order.recipient_name)) || @order.missing_delivery_phone?}
               id="order-recipient"
               title={~t"Recipient"}
             >
-              <.person_block name={@order.recipient_name}>
+              <.person_block :if={@order.gift && present?(@order.recipient_name)} name={@order.recipient_name}>
                 <:contact :if={
                   (present?(@order.customer_phone_number) || !customer_phone?(@order)) &&
                     present?(@order.recipient_phone_number)
@@ -378,6 +369,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
               </.person_block>
+
+              <div
+                :if={@order.missing_delivery_phone?}
+                id="order-missing-phone"
+                class={["bg-warning/15 border-warning/40 flex gap-2.5 border px-3 py-2.5", @order.gift && present?(@order.recipient_name) && "mt-5"]}
+              >
+                <.icon name="hero-phone-x-mark" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
+                <p class="text-warning-content text-sm font-semibold">{~t"Missing recipient phone"}</p>
+              </div>
             </.widget>
 
             <.widget id="order-log" title={~t"History"}>

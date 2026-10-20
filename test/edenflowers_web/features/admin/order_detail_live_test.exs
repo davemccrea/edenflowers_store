@@ -57,7 +57,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     phoned = placed_order(fulfillment_method: :delivery, recipient_phone_number: "+358401234567")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{missing.id}")
-    assert has_element?(view, "#order-missing-phone", "Missing recipient phone")
+    assert has_element?(view, "#order-recipient #order-missing-phone", "Missing recipient phone")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{phoned.id}")
     refute has_element?(view, "#order-missing-phone")
