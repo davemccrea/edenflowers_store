@@ -216,15 +216,15 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         id="enquiry-drawer"
         placement="right"
         label={~t"Request a quote"}
-        class="bg-base-100 w-[92vw] h-full overflow-y-auto sm:w-[34rem]"
+        class="bg-base-100 w-[92vw] h-full overflow-y-auto overscroll-contain sm:w-[34rem]"
       >
-        <div class="flex flex-col gap-6 p-6 sm:p-10">
-          <header class="flex items-center justify-between">
-            <h2 class="section-title">{~t"Request a quote"}</h2>
-            <.icon_button aria_label={~t"Close"} phx-click={JS.exec("phx-hide", to: "#enquiry-drawer")}>
-              <.icon name="hero-x-mark" class="h-6 w-6" />
-            </.icon_button>
-          </header>
+        <header class="flex flex-row items-center justify-between gap-4 pt-6 pr-4 pl-4 sm:pt-8 sm:pl-8">
+          <h2 class="section-title">{~t"Request a quote"}</h2>
+          <.icon_button aria_label={~t"Close"} phx-click={JS.exec("phx-hide", to: "#enquiry-drawer")}>
+            <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
+          </.icon_button>
+        </header>
+        <div class="flex flex-col gap-6 p-4 sm:p-8">
           <p :if={!@enquiry_sent?} class="text-base-content/80 leading-relaxed">
             {~t"Tell me about your wedding and I'll send you a quote."}
           </p>

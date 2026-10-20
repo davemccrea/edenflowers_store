@@ -29,19 +29,14 @@ defmodule EdenflowersWeb.CardDrawer do
       label={gettext("Select a card")}
       class="bg-base-100 w-[80vw] flex h-full flex-col overflow-y-auto overscroll-contain sm:w-[25rem] lg:w-[34rem]"
     >
-      <div class="flex flex-col gap-6 p-6" data-testid="card-drawer">
-        <div class="flex flex-row items-center justify-between">
-          <h2 class="section-title">{gettext("Select a card")}</h2>
-          <button
-            type="button"
-            phx-click={JS.exec("phx-hide", to: "#card-drawer")}
-            class="-mr-2.5 flex h-11 w-11 items-center justify-center"
-            aria-label={~t"close"}
-          >
-            <.icon name="hero-x-mark" class="h-6 w-6" />
-          </button>
-        </div>
+      <header class="flex flex-row items-center justify-between gap-4 pt-6 pr-4 pl-4 sm:pt-8 sm:pl-8">
+        <h2 class="section-title">{gettext("Select a card")}</h2>
+        <.icon_button aria_label={~t"Close"} phx-click={JS.exec("phx-hide", to: "#card-drawer")}>
+          <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
+        </.icon_button>
+      </header>
 
+      <div class="flex flex-col gap-6 p-4 sm:p-8" data-testid="card-drawer">
         <div :for={{size, min_price, variants} <- @size_groups} class="flex flex-col gap-3">
           <div class="flex items-end justify-between gap-3">
             <div class="flex flex-col gap-1">

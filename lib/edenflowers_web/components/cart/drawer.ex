@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
         label={gettext("Shopping cart")}
         class="bg-base-200 border-l-1 w-[88vw] flex h-full flex-col sm:w-[25rem]"
       >
-        <header class="flex flex-row items-center justify-between pt-6 pr-4 pl-4 sm:pt-8 sm:pl-8">
+        <header class="flex flex-row items-center justify-between gap-4 pt-6 pr-4 pl-4 sm:pt-8 sm:pl-8">
           <h2 class="section-title">
             <%= if @order.total_items_in_cart > 0 do %>
               {~t"Cart"} ({@order.total_items_in_cart})

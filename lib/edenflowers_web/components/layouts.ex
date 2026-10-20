@@ -569,7 +569,7 @@ defmodule EdenflowersWeb.Layouts do
       label={~t"Navigation menu"}
       class="bg-base-200 border-r-1 w-[80vw] flex h-full flex-col overflow-y-auto overscroll-contain sm:w-[25rem]"
     >
-      <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
+      <header class="flex flex-row items-center justify-between gap-4 pt-6 pr-4 pl-4 sm:pt-8 sm:pl-8">
         <.link
           navigate={~q"/#{language}"}
           class="text-primary logo-wordmark whitespace-nowrap text-xl sm:text-3xl"
@@ -582,7 +582,7 @@ defmodule EdenflowersWeb.Layouts do
         </.icon_button>
       </header>
 
-      <div class="flex flex-1 flex-col justify-between p-8">
+      <div class="flex flex-1 flex-col justify-between p-4 sm:p-8">
         <nav>
           <ul class="space-y-4">
             <li :for={{url, name} <- @nav}>

@@ -92,14 +92,37 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
 
       assert has_element?(view, "#registration-#{registration.id}", "To refund €70.00")
-      assert has_element?(view, ~s|#settlement-toggle-#{registration.id}[aria-expanded="false"]|, "Record refund")
-      assert has_element?(view, "#settlement-#{registration.id}.hidden #refund-#{registration.id}")
+      refute has_element?(view, "#refund-#{registration.id}")
+
+      view |> element("#settle-#{registration.id}", "Record refund") |> render_click()
+
+      assert has_element?(view, "#settlement-drawer", registration.name)
+      assert has_element?(view, "#settlement-drawer dl", "Kept as cancellation fee")
+      assert has_element?(view, "#settlement-drawer dl", "€15.00")
       assert has_element?(view, ~s|#refund-#{registration.id} input[name="refund[amount]"][value="70.00"]|)
+      assert has_element?(view, "#refund-#{registration.id}", "Records money you have already handed back")
+      refute has_element?(view, ~s|#refund-#{registration.id} button[value="stripe"]|)
+    end
+
+    test "an invalid amount keeps the drawer open with the error", %{conn: conn, registration: registration} do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
+      view |> element("#settle-#{registration.id}") |> render_click()
+
+      view
+      |> form("#refund-#{registration.id}", refund: %{amount: "0", payment_method: "cash"})
+      |> put_submitter(~s|#refund-#{registration.id} button[value="record"]|)
+      |> render_submit()
+
+      assert has_element?(view, "#settlement-drawer [role=alert]")
+      assert has_element?(view, "#refund-#{registration.id}")
+      assert has_element?(view, "#registration-#{registration.id}", "To refund €70.00")
     end
 
     test "refunds the amount Jennie changes it to", %{conn: conn, registration: registration} do
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
       view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
+      view |> element("#settle-#{registration.id}") |> render_click()
 
       view
       |> form("#refund-#{registration.id}", refund: %{amount: "85,00", payment_method: "cash"})
@@ -138,9 +161,10 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       assert has_element?(view, ~s|button[phx-value-course-id="#{course.id}"]|)
       view |> element(~s|button[phx-value-course-id="#{course.id}"]|) |> render_click()
-      assert has_element?(view, "#booking-form-#{course.id}", "Send a payment link")
+      assert has_element?(view, "#booking-drawer #booking-form-#{course.id}", "Send a payment link")
       assert has_element?(view, "#booking-form-#{course.id}", "Record the payment later")
-      view |> element("#booking-form-#{course.id} button", "Close") |> render_click()
+      view |> element("#booking-form-#{course.id} button", "Cancel") |> render_click()
+      refute has_element?(view, "#booking-form-#{course.id}")
 
       registration = add_booking(view, course, "false", "true")
 
@@ -224,26 +248,25 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-    assert has_element?(
-             view,
-             ~s|#settlement-toggle-#{registration.id}[aria-expanded="false"][aria-controls="settlement-#{registration.id}"]|,
-             "Record payment"
-           )
+    refute has_element?(view, "#mark-paid-#{registration.id}")
 
-    assert has_element?(view, "#settlement-#{registration.id}.hidden #mark-paid-#{registration.id}")
+    view |> element("#settle-#{registration.id}", "Record payment") |> render_click()
+
+    assert has_element?(view, "#settlement-drawer", "Birgitta")
+    assert has_element?(view, "#settlement-drawer dl", "To collect")
 
     view |> form("#mark-paid-#{registration.id}", %{payment_method: "mobilepay"}) |> render_submit()
 
     refute has_element?(view, "li", "To collect")
     refute render(view) =~ ~r"\d+ to collect"
-    refute has_element?(view, "#settlement-toggle-#{registration.id}")
-    refute has_element?(view, "#settlement-#{registration.id}")
+    refute has_element?(view, "#settle-#{registration.id}")
+    refute has_element?(view, "#mark-paid-#{registration.id}")
 
     assert [%{method: :mobilepay}] = Ash.load!(registration, :payments, authorize?: false).payments
   end
 
   describe "payment link" do
-    test "only a booking owing money offers one, alongside the quick payment form", %{conn: conn} do
+    test "only a booking owing money offers one, alongside Record payment", %{conn: conn} do
       owing = generate(course_registration(status: :confirmed, name: "Birgitta"))
       paid = generate(course_registration(status: :confirmed, name: "Anna"))
 
@@ -256,7 +279,8 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-      assert has_element?(view, "#mark-paid-#{owing.id}")
+      assert has_element?(view, "#settle-#{owing.id}")
+      refute has_element?(view, "#settle-#{paid.id}")
       assert has_element?(view, ~s|button[phx-click="email_payment_link"][phx-value-id="#{owing.id}"]|)
       assert has_element?(view, ~s|button[phx-click="open_payment_link"][phx-value-id="#{owing.id}"]|)
       refute has_element?(view, ~s|button[phx-value-id="#{paid.id}"]|, "payment link")
@@ -294,6 +318,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       registration = generate(course_registration(status: :confirmed, name: "Birgitta"))
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
       view |> element(~s|button[phx-click="open_payment_link"][phx-value-id="#{registration.id}"]|) |> render_click()
+      view |> element("#settle-#{registration.id}") |> render_click()
 
       view |> form("#mark-paid-#{registration.id}", %{payment_method: "cash"}) |> render_submit()
 
@@ -369,15 +394,20 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
       refute has_element?(view, refund_menu_item(unpaid), "Refund")
-      refute has_element?(view, "#goodwill-refund-#{unpaid.id}")
       assert has_element?(view, refund_menu_item(paid), "Refund")
-      assert has_element?(view, "#goodwill-refund-#{paid.id}.hidden")
+      refute has_element?(view, "#goodwill-refund-#{paid.id}")
+
+      view |> element(refund_menu_item(paid), "Refund") |> render_click()
+
+      assert has_element?(view, "#settlement-drawer #goodwill-refund-#{paid.id}")
+      refute has_element?(view, "#goodwill-refund-#{paid.id}.hidden")
     end
 
     test "a part refund by cash is recorded with its reason and leaves nothing to collect", %{conn: conn} do
       registration = paid_booking(method: :cash)
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      view |> element(refund_menu_item(registration), "Refund") |> render_click()
 
       view
       |> form("#goodwill-refund-#{registration.id}-form",
@@ -389,6 +419,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       assert has_element?(view, "#registration-#{registration.id}", "Ran short of moss")
       refute has_element?(view, "#registration-#{registration.id}", "To collect")
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
+      refute has_element?(view, "#goodwill-refund-#{registration.id}")
     end
 
     test "a part refund by Stripe is sent and recorded, leaving nothing to collect", %{conn: conn} do
@@ -401,6 +432,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      view |> element(refund_menu_item(registration), "Refund") |> render_click()
 
       view
       |> form("#goodwill-refund-#{registration.id}-form", goodwill_refund: %{amount: "20.00", how: "stripe"})

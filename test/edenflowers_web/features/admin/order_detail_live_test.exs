@@ -780,7 +780,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{placed_order(paid: true).id}")
       assert has_element?(view, "#order-actions button", "Refund")
-      assert has_element?(view, "#order-goodwill-refund.hidden")
+      refute has_element?(view, "#order-goodwill-refund")
+
+      view |> element("#order-actions button", "Refund") |> render_click()
+
+      assert has_element?(view, "#settlement-drawer #order-goodwill-refund")
+      refute has_element?(view, "#order-goodwill-refund.hidden")
     end
 
     test "a part refund by cash is recorded with its reason and leaves nothing to collect", %{conn: conn} do
@@ -788,6 +793,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       generate(payment(order_id: order.id, method: :cash, amount: Decimal.new("88.50")))
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element("#order-actions button", "Refund") |> render_click()
 
       view
       |> form("#order-goodwill-refund-form", goodwill_refund: %{amount: "20,00", how: "cash", note: "Wilted early"})
@@ -811,6 +817,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element("#order-actions button", "Refund") |> render_click()
       assert has_element?(view, ~s|#order-goodwill-refund-how option[value="stripe"][selected]|)
 
       view
