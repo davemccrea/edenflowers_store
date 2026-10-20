@@ -17,6 +17,31 @@
   background-color: var(--color-base-100);
 }
 
+/* Admin secondary buttons use warm neutrals instead of the green outline. */
+.admin-theme
+  .btn-primary.btn-outline:not(
+    :disabled,
+    [disabled],
+    [aria-disabled="true"],
+    .btn-disabled
+  ) {
+  background-color: var(--color-base-200);
+  border-color: var(--color-base-300);
+  color: var(--color-base-content);
+  box-shadow: none;
+  background-image: none;
+
+  &:active {
+    background-color: var(--color-base-300);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-base-300);
+    }
+  }
+}
+
 /* Pulling past the top reveals the page canvas above the sticky topbar, so it
    matches the topbar instead of showing a white band. iOS takes the canvas
    colour from body, which covers any html background, so body carries it and
