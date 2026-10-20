@@ -44,7 +44,7 @@
   <body class="bg-base-100 flex min-h-screen flex-col antialiased">
     <a href="#main-content" class="skip-link">{~t"Skip to main content"}</a>
     <%!-- Admin pages keep their mobile topbar outside the LiveView, and page transitions
-         run on #admin-page alone, so the topbar stays put through them (see app.js). --%>
+         capture #admin-page alone, so the topbar stays live through them (see admin.css). --%>
     <%= if admin_path?(@conn.request_path) && @conn.assigns[:current_user] do %>
       <.admin_topbar current_user={@conn.assigns.current_user} />
       <div id="admin-page" class="flex flex-1 flex-col *:flex *:flex-1 *:flex-col">
