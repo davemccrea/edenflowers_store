@@ -354,28 +354,64 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   attr :id, :string, required: true
-
-  attr :record, :map,
-    required: true,
-    doc: "an order or booking, with `balance`, `settled?`, `outside_stripe_refund` and `stripe_refund` loaded"
-
+  attr :record, :map, required: true, doc: "an order, with `balance` and `settled?` loaded"
   attr :locale, :string, required: true
-  attr :params, :map, default: %{}, doc: "the payment form as Jennie has filled it in so far"
-  attr :receipt_email?, :boolean, default: false, doc: "whether the customer can be emailed a receipt"
   attr :class, :any, default: nil
   slot :inner_block, doc: "more ways to settle it, like the order page's payment link"
 
   @doc """
-  What's still owed on an order or booking, and how to settle it. Hidden once
-  settled. Sends `record_payment` with `payment` params and the record's id as
-  `record_id`, `change_payment` with `payment` params as the form is filled
-  in, and `refund_with_stripe` with the record's id as `id`.
+  What's still owed on an order. Hidden once settled. Its button sends
+  `open_settlement`, for the page to open a drawer with `record_payment_form`.
   """
   def balance_panel(%{record: %{settled?: true}} = assigns) do
     ~H""
   end
 
   def balance_panel(assigns) do
+    assigns = assign(assigns, :collect?, Decimal.positive?(assigns.record.balance))
+
+    ~H"""
+    <div id={@id} class={["border-warning/40 border-t pt-4", @class]}>
+      <p class="text-base-content flex items-baseline justify-between gap-4 text-base font-semibold">
+        {if @collect?, do: ~t"To collect", else: ~t"To refund"}
+        <span class="tabular-nums">{Edenflowers.Format.currency(Decimal.abs(@record.balance), @locale)}</span>
+      </p>
+
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <.button
+          id={"#{@id}-settle"}
+          type="button"
+          variant="neutral"
+          size="sm"
+          aria-haspopup="dialog"
+          aria-controls="settlement-drawer"
+          phx-click="open_settlement"
+        >
+          <.icon name={if @collect?, do: "hero-banknotes", else: "hero-arrow-uturn-left"} class="h-4 w-4" />
+          {if @collect?, do: ~t"Record payment", else: ~t"Record refund"}
+        </.button>
+        {render_slot(@inner_block)}
+      </div>
+    </div>
+    """
+  end
+
+  attr :id, :string, required: true
+
+  attr :record, :map,
+    required: true,
+    doc: "an order, with `balance` and `outside_stripe_refund` loaded"
+
+  attr :locale, :string, required: true
+  attr :params, :map, default: %{}, doc: "the payment form as Jennie has filled it in so far"
+  attr :receipt_email?, :boolean, default: false, doc: "whether the customer can be emailed a receipt"
+
+  @doc """
+  Records money Jennie took or handed back herself. Sends `record_payment` with
+  `payment` params and the record's id as `record_id`, and `change_payment` with
+  `payment` params as the form is filled in.
+  """
+  def record_payment_form(assigns) do
     form = balance_form(assigns.record, assigns.params)
 
     assigns =
@@ -385,90 +421,54 @@ defmodule EdenflowersWeb.Admin.Components do
       |> assign(:settles?, settles?(assigns.record, form[:amount].value))
 
     ~H"""
-    <div id={@id} class={["border-warning/40 border-t pt-4", @class]}>
-      <p class="text-base-content flex items-baseline justify-between gap-4 text-base font-semibold">
-        {if @collect?, do: ~t"To collect", else: ~t"To refund"}
-        <span class="tabular-nums">{Edenflowers.Format.currency(Decimal.abs(@record.balance), @locale)}</span>
+    <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="space-y-4">
+      <input type="hidden" name="record_id" value={@record.id} />
+      <p :if={!@collect?} class="text-base-content/75 text-sm">
+        {~t"Records money you have already handed back. Nothing is sent to the customer."}
       </p>
-
-      <div class="mt-3 flex flex-wrap items-center gap-2 empty:hidden">
-        {render_slot(@inner_block)}
-        <.button
-          :if={Decimal.positive?(@record.stripe_refund)}
-          type="button"
-          phx-click="refund_with_stripe"
-          phx-value-id={@record.id}
-          phx-disable-with={~t"Refunding…"}
-          data-confirm={
-            ~t"Refund #{amount = Edenflowers.Format.currency(@record.stripe_refund, @locale)} to the customer's card with Stripe?"
-          }
-          variant="primary"
-        >
-          {~t"Refund with Stripe"}
-        </.button>
-      </div>
-
-      <details
-        :if={@collect? or Decimal.positive?(@record.outside_stripe_refund)}
-        id={"#{@id}-record"}
-        phx-mounted={JS.ignore_attributes(["open"])}
-        class="group mt-4"
-      >
-        <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-medium">
-          {if @collect?, do: ~t"Record a payment", else: ~t"Record a refund"}
-          <.icon
-            name="hero-chevron-right"
-            class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
+      <fieldset aria-describedby={if !@collect?, do: "#{@id}-help"} class="space-y-4">
+        <div class="grid grid-cols-2 items-end gap-x-3 gap-y-4">
+          <.input
+            field={@form[:payment_method]}
+            id={"#{@id}-method"}
+            type="select"
+            label={~t"How"}
+            class="select w-full"
+            options={payment_method_options()}
           />
-        </summary>
-        <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="mt-3">
-          <input type="hidden" name="record_id" value={@record.id} />
-          <fieldset aria-describedby={if !@collect?, do: "#{@id}-help"}>
-            <div class="grid grid-cols-2 items-end gap-2">
-              <.input
-                field={@form[:payment_method]}
-                id={"#{@id}-method"}
-                type="select"
-                label={~t"How"}
-                class="select w-full"
-                options={payment_method_options()}
-              />
-              <.input
-                field={@form[:amount]}
-                id={"#{@id}-amount"}
-                type="text"
-                inputmode="decimal"
-                label={~t"Amount (€)"}
-                class="input w-full tabular-nums"
-              />
-              <div :if={@collect? and @settles? and @receipt_email?} class="col-span-2">
-                <.input
-                  field={@form[:email_receipt]}
-                  id={"#{@id}-email-receipt"}
-                  type="checkbox"
-                  label={~t"Email a receipt"}
-                />
-              </div>
-              <.button
-                type="submit"
-                variant="primary"
-                class="col-span-2"
-                data-confirm={
-                  if @collect?,
-                    do: ~t"Record this payment? A mistake can be undone afterwards.",
-                    else: ~t"Record this refund? A mistake can be undone afterwards."
-                }
-              >
-                {if @collect?, do: ~t"Record payment", else: ~t"Record refund"}
-              </.button>
-            </div>
-            <p :if={!@collect?} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-sm">
-              {~t"A minus amount records a refund."}
-            </p>
-          </fieldset>
-        </.form>
-      </details>
-    </div>
+          <.input
+            field={@form[:amount]}
+            id={"#{@id}-amount"}
+            type="text"
+            inputmode="decimal"
+            label={~t"Amount (€)"}
+            class="input w-full tabular-nums"
+          />
+        </div>
+        <p :if={!@collect?} id={"#{@id}-help"} class="text-base-content/65 text-sm">
+          {~t"A minus amount records a refund."}
+        </p>
+        <.input
+          :if={@collect? and @settles? and @receipt_email?}
+          field={@form[:email_receipt]}
+          id={"#{@id}-email-receipt"}
+          type="checkbox"
+          label={~t"Email a receipt"}
+        />
+      </fieldset>
+      <.button
+        type="submit"
+        variant="primary"
+        phx-disable-with={~t"Recording…"}
+        data-confirm={
+          if @collect?,
+            do: ~t"Record this payment? A mistake can be undone afterwards.",
+            else: ~t"Record this refund? A mistake can be undone afterwards."
+        }
+      >
+        {if @collect?, do: ~t"Record payment", else: ~t"Record refund"}
+      </.button>
+    </.form>
     """
   end
 
@@ -515,11 +515,12 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :locale, :string, required: true
   attr :params, :map, default: %{}, doc: "the form as Jennie has filled it in so far"
+  attr :hidden, :boolean, default: true, doc: "false when it's already in view, like in a drawer"
   attr :class, :any, default: nil
 
   @doc """
   Hands money back to an unhappy customer without lowering what was sold.
-  Hidden until something shows it, like a menu's "Refund". Sends
+  Hidden until something shows it, like a menu's "Refund", unless `hidden` is false. Sends
   `goodwill_refund` with `goodwill_refund` params and the record's id as
   `record_id`, and `change_goodwill_refund` as the form is filled in, so the
   confirmation can name the amount.
@@ -533,13 +534,13 @@ defmodule EdenflowersWeb.Admin.Components do
     assigns = assign(assigns, form: form, how_options: goodwill_method_options(assigns.record))
 
     ~H"""
-    <div id={@id} class={["hidden", @class]}>
+    <div id={@id} class={[@hidden && "hidden", @class]}>
       <.form
         for={@form}
         id={"#{@id}-form"}
         phx-change="change_goodwill_refund"
         phx-submit="goodwill_refund"
-        class="grid grid-cols-2 items-end gap-2"
+        class="grid grid-cols-2 items-end gap-x-3 gap-y-4"
       >
         <input type="hidden" name="record_id" value={@record.id} />
         <p class="text-base-content col-span-2 text-sm font-medium">{~t"Refund the customer"}</p>
@@ -607,6 +608,62 @@ defmodule EdenflowersWeb.Admin.Components do
     else
       _invalid -> nil
     end
+  end
+
+  attr :id, :string, required: true
+  attr :title, :string, required: true
+  attr :on_close, JS, default: %JS{}, doc: "runs after the drawer hides, like telling the server"
+  slot :inner_block, required: true
+
+  @doc """
+  The admin's right-hand drawer: a titled panel with a close button, so every
+  admin drawer has one width and one header. Put the content in `drawer_body`
+  and any buttons in `drawer_footer`; a form can wrap both.
+  Open it with `JS.exec("phx-show", to: "#id")` or the `js-exec` event.
+  """
+  def admin_drawer(assigns) do
+    ~H"""
+    <.drawer
+      id={@id}
+      placement="right"
+      label={@title}
+      class="bg-base-100 border-base-content/12 w-[88vw] flex h-full flex-col border-l sm:w-[28rem]"
+    >
+      <header class="border-base-content/12 flex shrink-0 items-center justify-between gap-4 border-b p-4">
+        <h2 class="text-lg font-semibold">{@title}</h2>
+        <.icon_button
+          phx-click={JS.exec("phx-hide", to: "##{@id}") |> JS.concat(@on_close)}
+          size="sm"
+          aria_label={~t"Close"}
+        >
+          <.icon name="hero-x-mark" class="h-5 w-5" />
+        </.icon_button>
+      </header>
+      {render_slot(@inner_block)}
+    </.drawer>
+    """
+  end
+
+  slot :inner_block, required: true
+
+  @doc "An `admin_drawer`'s content, which scrolls under the header."
+  def drawer_body(assigns) do
+    ~H"""
+    <div class="flex-1 space-y-5 overflow-y-auto overscroll-contain p-4">
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  slot :inner_block, required: true
+
+  @doc "An `admin_drawer`'s buttons, pinned to its bottom."
+  def drawer_footer(assigns) do
+    ~H"""
+    <div class="border-base-content/12 flex shrink-0 flex-wrap gap-2 border-t p-4">
+      {render_slot(@inner_block)}
+    </div>
+    """
   end
 
   attr :title, :string, required: true

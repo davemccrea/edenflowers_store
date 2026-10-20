@@ -54,17 +54,21 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
   defp parent_key(:order), do: :order_id
   defp parent_key(:booking), do: :course_registration_id
 
+  # Both pages settle a balance in the drawer the balance's button opens.
   defp open(conn, :order, order) do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    if has_element?(view, "#order-balance-settle"), do: view |> element("#order-balance-settle") |> render_click()
     {view, "#order-balance"}
   end
 
   defp open(conn, :booking, registration) do
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
+    settle = "#settle-#{registration.id}"
+    if has_element?(view, settle), do: view |> element(settle) |> render_click()
     {view, "#registration-#{registration.id}"}
   end
 
-  defp stripe_refund_button(:order, _order), do: ~s|#order-balance button[phx-click="refund_with_stripe"]|
+  defp stripe_refund_button(:order, _order), do: ~s|#settlement-drawer button[phx-click="refund_with_stripe"]|
   defp stripe_refund_button(:booking, registration), do: ~s|#refund-#{registration.id} button[value="stripe"]|
 
   # The order's refund is a minus payment; a booking's is the amount handed back.
@@ -257,16 +261,17 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     assert view |> form("#{panel}-form", payment: %{amount: "100,00"}) |> render_submit() =~
              "That&#39;s more than is owed"
 
+    assert has_element?(view, "#settlement-drawer [role=alert]", "more than is owed")
+    assert has_element?(view, ~s|#order-balance-form input[name="payment[amount]"][value="100,00"]|)
     assert Decimal.equal?(balance(order), "88.50")
   end
 
-  # At the course it's one tap on the row, so the row stays one line.
-  test "a booking to collect has the quick payment form and no panel", %{conn: conn} do
+  test "a booking to collect is settled from the drawer, not a panel on its row", %{conn: conn} do
     registration = build(:booking)
-    {:ok, view, _html} = live(conn, ~p"/admin/courses")
+    {view, _panel} = open(conn, :booking, registration)
 
     refute has_element?(view, "#balance-#{registration.id}")
-    assert has_element?(view, "#mark-paid-#{registration.id}")
+    assert has_element?(view, "#settlement-drawer #mark-paid-#{registration.id}")
 
     view |> form("#mark-paid-#{registration.id}", payment_method: "cash") |> render_submit()
 

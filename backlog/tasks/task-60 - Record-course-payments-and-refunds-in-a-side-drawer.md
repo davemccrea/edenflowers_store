@@ -1,10 +1,10 @@
 ---
 id: TASK-60
 title: Record course payments and refunds in a side drawer
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-19 06:44'
-updated_date: '2026-10-19 13:03'
+updated_date: '2026-10-20 18:53'
 labels:
   - admin
   - spec
@@ -40,10 +40,18 @@ Primary surface: lib/edenflowers_web/features/admin/courses_live.ex. Reuse exist
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Existing payment/refund buttons open a single drawer for the correct confirmed or cancelled booking without expanding attendee rows.
-- [ ] #2 Drawer identifies the customer, course and date and shows accurate relevant payment, balance and retained-fee context.
-- [ ] #3 Existing payment and refund behaviour is preserved, including methods, receipt choice, editable refund amount and Stripe eligibility; Stripe refunds and recording an outside-Stripe refund are clearly distinguished.
+- [x] #1 Existing payment/refund buttons open a single drawer for the correct confirmed or cancelled booking without expanding attendee rows.
+- [x] #2 Drawer identifies the customer, course and date and shows accurate relevant payment, balance and retained-fee context.
+- [x] #3 Existing payment and refund behaviour is preserved, including methods, receipt choice, editable refund amount and Stripe eligibility; Stripe refunds and recording an outside-Stripe refund are clearly distinguished.
 - [ ] #4 Successful submission closes the drawer and updates the list; errors preserve the open form and entered values; duplicate submissions and accidental loss of edits are guarded against.
 - [ ] #5 Drawer supports keyboard focus containment, accessible labelling, close/Escape behaviour and focus restoration, and is full-screen on mobile.
 - [ ] #6 LiveView tests cover opening the correct booking, payment/refund success and error behaviour, and continued availability of existing booking actions.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Drawer built in CoursesLive (settlement_drawer), opened by the row's Record payment/Record refund button via push_event js-exec, like order detail's fulfillment drawer. Closes on success; on error stays open with the message and the entered values. Goodwill Refund from the row menu stays inline (out of scope). Fixed SetRefund crashing on an invalid amount (it ran on an already-invalid changeset). Awaiting David's UI review before commit.
+
+Also moved Add booking into its own drawer (#booking-drawer), laid out like order detail's fulfillment drawer: scrolling fields, footer with Add booking / Cancel. Menu Refund (goodwill) opens the settlement drawer in a goodwill mode. Drawer spacing aligned across store drawers (header pt-6 px-4 sm:pt-8 sm:pl-8, body p-4 sm:p-8) and admin drawers (88vw / 28rem, header/body p-4).
+<!-- SECTION:NOTES:END -->

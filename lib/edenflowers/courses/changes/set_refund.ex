@@ -8,6 +8,8 @@ defmodule Edenflowers.Courses.Changes.SetRefund do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   @impl true
+  def change(%{valid?: false} = changeset, _opts, _context), do: changeset
+
   def change(changeset, _opts, _context) do
     amount = Ash.Changeset.get_argument(changeset, :amount)
     registration = Ash.load!(changeset.data, [:balance], authorize?: false, reuse_values?: false)
