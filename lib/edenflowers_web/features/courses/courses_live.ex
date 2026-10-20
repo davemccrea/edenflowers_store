@@ -14,7 +14,14 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
       |> Courses.list_upcoming_courses!()
       |> Translations.translate()
 
-    {:ok, assign(socket, page_title: ~t"Courses", locale: Format.locale(), courses: courses)}
+    {:ok,
+     assign(socket,
+       page_title: ~t"Courses",
+       page_description:
+         ~t"Floristry courses with Jennie at Eden Flowers in Vaasa. See upcoming dates and book your seat.",
+       locale: Format.locale(),
+       courses: courses
+     )}
   end
 
   @impl true

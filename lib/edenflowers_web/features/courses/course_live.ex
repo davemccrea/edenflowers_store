@@ -18,7 +18,13 @@ defmodule EdenflowersWeb.Courses.CourseLive do
       {:ok, course} ->
         {:ok,
          socket
-         |> assign(page_title: course.name, locale: Format.locale(), course: course)
+         |> assign(
+           page_title: course.name,
+           page_description: course.description,
+           og_image: image_url(course.image_slug, 1200, 630),
+           locale: Format.locale(),
+           course: course
+         )
          |> assign(booked_seats: booked_seats(socket.assigns.current_user, course))
          |> assign(registration: nil, client_secret: nil, focus_booking?: false)
          |> assign_form()}

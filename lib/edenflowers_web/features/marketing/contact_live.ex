@@ -5,7 +5,12 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok,
+     assign(socket,
+       page_title: ~t"Contact",
+       page_description:
+         ~t"Get in touch with Eden Flowers in Vaasa about an order, a wedding or a funeral, or visit the shop in Minimossen at Myrvägen 1."
+     )}
   end
 
   @impl true
