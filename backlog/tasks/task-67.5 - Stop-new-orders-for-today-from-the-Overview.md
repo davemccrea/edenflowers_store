@@ -1,10 +1,10 @@
 ---
 id: TASK-67.5
 title: Stop new orders for today from the Overview
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-20 06:52'
+updated_date: '2026-10-20 16:58'
 labels: []
 dependencies:
   - TASK-67.1
@@ -26,7 +26,13 @@ ordinal: 146000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Turning it off makes today unavailable at checkout, and on reopens it
-- [ ] #2 Tomorrow is unaffected
-- [ ] #3 The existing suite passes
+- [x] #1 Turning it off makes today unavailable at checkout, and on reopens it
+- [x] #2 Tomorrow is unaffected
+- [x] #3 The existing suite passes
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Each day section on Overview (Today, Tomorrow) has a Stop orders / Reopen orders button using ShopCalendar toggle_date. Shown only while the day is bookable or closed by a one-day override; same_day is never touched.
+<!-- SECTION:FINAL_SUMMARY:END -->
