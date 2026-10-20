@@ -30,8 +30,11 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-20 sm:pb-28 md:justify-center md:pb-0">
           <h1 class="hero-display hero-reveal max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
-            {~t"Flowers for every stage of life"}
+            {~t"Flowers made by Jennie in Vaasa"}
           </h1>
+          <p class="hero-reveal mt-6 max-w-md text-lg leading-relaxed text-white" style="--reveal-delay: 180ms;">
+            {~t"Choose your flowers online for delivery or pickup at Minimossen."}
+          </p>
           <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
             <.button
               navigate={~p"/store"}
@@ -39,7 +42,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               size="lg"
               class="group w-fit"
             >
-              {~t"Shop Now"}
+              {~t"Shop flowers"}
               <.icon
                 name="hero-arrow-right-mini"
                 class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
@@ -130,7 +133,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
             <p id="location-heading" class="eyebrow text-base-content/70 mb-4">{~t"Made in Minimossen"}</p>
             <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-              {~t"Every arrangement is made with fresh cut flowers, and delivery is free within 5 km of Minimossen."}
+              {~t"Order online for delivery or pick up your flowers at my shop in Minimossen, Myrvägen 1."}
             </p>
           </div>
 
@@ -159,13 +162,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <div class="flex flex-col items-start gap-10 px-4 py-20 sm:px-8 md:justify-center md:px-12 lg:px-20">
             <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
             <p class="pull-quote text-forest-content max-w-xl">
-              {~t"Hi, I'm Jennie. I've been making flowers in Vaasa since 2018, and every arrangement still passes through my hands."}
+              {~t"Hi, I'm Jennie. I make every arrangement myself at my shop in Minimossen, from a bouquet for your kitchen table to flowers for your wedding."}
             </p>
             <.link
               navigate={~p"/about"}
               class="eyebrow text-forest-content link-underline-hover touch-target"
             >
-              {~t"Learn more"}
+              {~t"Meet Jennie"}
             </.link>
           </div>
         </div>
@@ -173,7 +176,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="not-last:border-b">
         <div class="container py-20 md:py-28">
-          <h2 class="section-title mb-10">{~t"For bigger occasions"}</h2>
+          <h2 class="section-title mb-10">{~t"Weddings and flower courses"}</h2>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <.category_tile
               navigate={~p"/weddings"}
