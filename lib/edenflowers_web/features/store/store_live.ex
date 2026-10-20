@@ -11,8 +11,8 @@ defmodule EdenflowersWeb.Store.StoreLive do
     categories = Catalog.list_categories!()
     # Found before translating, as translation replaces the English slug.
     bouquets_id = Enum.find_value(categories, &(&1.slug == "bouquets" && &1.id))
-    categories = categories |> Translations.translate() |> Enum.with_index(1)
-    bouquets = Enum.find_value(categories, fn {category, _idx} -> category.id == bouquets_id && category end)
+    categories = Translations.translate(categories)
+    bouquets = Enum.find(categories, &(&1.id == bouquets_id))
 
     {:ok,
      assign(socket,
@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
       assign(
         assigns,
         :other_categories?,
-        Enum.any?(assigns.categories, fn {category, _idx} ->
+        Enum.any?(assigns.categories, fn category ->
           is_nil(assigns.selected_category) or category.id != assigns.selected_category.id
         end)
       )
@@ -74,14 +74,20 @@ defmodule EdenflowersWeb.Store.StoreLive do
       alternates={@alternates}
     >
       <.container>
-        <h1 class="page-title mb-12 md:mb-16">
+        <h1 class="page-title mb-4">
           {if @selected_category, do: @selected_category.name, else: ~t"Store"}
         </h1>
+        <p
+          :if={@selected_category && @selected_category.description}
+          class="font-serif text-base-content/85 max-w-[48ch] text-lg italic"
+        >
+          {@selected_category.description}
+        </p>
 
-        <nav :if={@categories != []} aria-label={~t"Categories"} class="mb-20 md:mb-28">
-          <ol class="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3 md:gap-10">
+        <nav :if={@categories != []} aria-label={~t"Categories"} class="mt-8 mb-12 md:mb-16">
+          <ol class="[scrollbar-width:none] m-0 flex list-none gap-x-8 overflow-x-auto whitespace-nowrap p-0">
             <li
-              :for={{category, idx} <- @categories}
+              :for={category <- @categories}
               id={"category-item-#{category.id}"}
               class="category-index__item"
               data-active={@selected_category && @selected_category.id == category.id && "true"}
@@ -95,21 +101,10 @@ defmodule EdenflowersWeb.Store.StoreLive do
                   |> JS.set_attribute({"aria-current", "page"}, to: "#category-link-#{category.id}")
                   |> JS.remove_attribute("aria-current", to: ".category-index__link:not(#category-link-#{category.id})")
                 }
-                class="category-index__link grid-cols-[auto_1fr] text-base-content group grid items-baseline gap-x-3.5 no-underline"
+                class="category-index__link text-base-content touch-target block py-2 no-underline"
                 aria-current={@selected_category && @selected_category.id == category.id && "page"}
               >
-                <span
-                  class="eyebrow text-base-content/70 [font-variant-numeric:tabular-nums] self-center"
-                  aria-hidden="true"
-                >
-                  {String.pad_leading(Integer.to_string(idx), 2, "0")}
-                </span>
-                <span class="category-index__name font-serif w-max max-w-full text-xl leading-snug tracking-normal md:text-2xl">
-                  {category.name}
-                </span>
-                <span class="font-serif text-base-content/85 max-w-[32ch] col-start-2 pt-2.5 italic">
-                  {category.description}
-                </span>
+                <span class="category-index__name font-serif text-lg md:text-xl">{category.name}</span>
               </.link>
             </li>
           </ol>
