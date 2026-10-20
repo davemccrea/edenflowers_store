@@ -43,19 +43,34 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
-          <aside class="flex flex-col gap-6 xl:order-last">
+          <div class="flex min-w-0 flex-col gap-6">
+            <.day_widget
+              id="orders-today"
+              title={~t"Today"}
+              orders={@today_orders}
+              overdue={@overdue_orders}
+              empty={~t"Nothing to make today"}
+              locale={@locale}
+            />
+            <.day_widget
+              id="orders-tomorrow"
+              title={~t"Tomorrow"}
+              orders={@tomorrow_orders}
+              empty={~t"Nothing to make tomorrow"}
+              locale={@locale}
+            />
+            <.link
+              navigate={~p"/admin/orders"}
+              class="text-primary touch-target -mt-3 inline-block self-start py-1 text-sm hover:underline"
+            >
+              {~t"View all orders"} →
+            </.link>
+          </div>
+          <aside class="flex min-w-0 flex-col gap-6">
+            <.balances_widget :if={@balances != []} balances={@balances} locale={@locale} />
             <.sales_widget sales_count={@sales_count} revenue={@revenue} locale={@locale} />
             <.report_widget month={@report_month} />
           </aside>
-          <div class="flex min-w-0 flex-col gap-6">
-            <.orders_widget
-              orders_by_date={@orders_by_date}
-              open_order_count={@open_order_count}
-              today={@today}
-              locale={@locale}
-            />
-            <.balances_widget :if={@balances != []} balances={@balances} locale={@locale} />
-          </div>
         </div>
       </.admin_page>
     </Layouts.admin>
@@ -75,23 +90,20 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   defp assign_orders(socket) do
     actor = socket.assigns.current_user
-    open_orders = Orders.list_open_orders!(actor: actor)
-
     today = Edenflowers.ShopTime.today()
+
+    orders_by_day =
+      Orders.list_orders_due_by_tomorrow!(actor: actor)
+      |> Enum.group_by(&day(&1.fulfillment_date, today))
 
     sales = Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor)
 
-    orders_by_date =
-      open_orders
-      |> Enum.group_by(& &1.fulfillment_date)
-      |> Enum.sort_by(fn {date, _} -> date end, Date)
-
     socket
-    |> assign(:orders_by_date, orders_by_date)
-    |> assign(:open_order_count, length(open_orders))
+    |> assign(:overdue_orders, Map.get(orders_by_day, :overdue, []))
+    |> assign(:today_orders, Map.get(orders_by_day, :today, []))
+    |> assign(:tomorrow_orders, Map.get(orders_by_day, :tomorrow, []))
     |> assign(:sales_count, sales.order_count)
     |> assign(:revenue, sales.revenue)
-    |> assign(:today, today)
     |> assign(:balances, balances(actor))
   end
 
@@ -277,43 +289,42 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   defp sum_balances(rows), do: rows |> Enum.map(&Decimal.abs(&1.balance)) |> Enum.reduce(Decimal.new(0), &Decimal.add/2)
 
-  attr :orders_by_date, :list, required: true
-  attr :open_order_count, :integer, required: true
-  attr :today, :any, required: true
+  attr :id, :string, required: true
+  attr :title, :string, required: true
+  attr :orders, :list, required: true
+  attr :overdue, :list, default: [], doc: "orders whose date has passed, listed first and by date"
+  attr :empty, :string, required: true
   attr :locale, :any, required: true
 
-  defp orders_widget(assigns) do
+  defp day_widget(assigns) do
     ~H"""
-    <.widget title={~t"Upcoming orders"} count={@open_order_count}>
-      <div :if={@orders_by_date == []} class="text-base-content/65 flex flex-col items-center gap-2 py-6 text-center">
-        <.icon name="hero-check-circle" class="text-base-content/30 h-7 w-7" />
-        <p class="text-sm">{~t"No upcoming orders right now"}</p>
-      </div>
-
-      <div :if={@orders_by_date != []} class="space-y-3">
+    <.widget id={@id} title={@title} count={length(@overdue) + length(@orders)}>
+      <div class="space-y-4">
         <section
-          :for={{date, orders} <- @orders_by_date}
-          class={date_group_class(date_group(date, @today))}
+          :for={{date, orders} <- @overdue |> Enum.group_by(& &1.fulfillment_date) |> Enum.sort_by(&elem(&1, 0), Date)}
+          aria-label={~t"Overdue"}
+          class="bg-error/5 ring-error/30 pb-1 ring-1"
         >
-          <p class={["eyebrow flex items-center gap-1.5 px-3 pt-2.5 pb-1.5", date_heading_class(date_group(date, @today))]}>
-            <span :if={date == @today} aria-hidden="true" class="relative flex h-2 w-2">
-              <span class="bg-success/75 absolute inline-flex h-full w-full rounded-full motion-safe:animate-ping" />
-              <span class="bg-success relative inline-flex h-2 w-2 rounded-full" />
-            </span>
-            <.icon :if={date_group(date, @today) == :overdue} name="hero-exclamation-circle" class="h-4 w-4" />
-            {format_order_date(date, @today, @locale)}
+          <p class="eyebrow text-error-content flex items-center gap-1.5 px-3 pt-2.5 pb-1.5 font-bold">
+            <.icon name="hero-exclamation-circle" class="h-4 w-4" />
+            {~t"Overdue · #{Format.weekday_day_month(date, @locale)}"}
           </p>
-          <ul class={["divide-y", date_divider_class(date_group(date, @today))]}>
-            <.order_row :for={order <- orders} order={order} hover_class={date_row_hover_class(date_group(date, @today))} />
+          <ul class="divide-error/15 divide-y">
+            <.order_row :for={order <- orders} order={order} hover_class="hover:bg-error/10" />
+          </ul>
+        </section>
+
+        <section :for={{method, orders} <- by_method(@orders)} aria-label={method_heading(method)}>
+          <p class="eyebrow text-base-content/65 px-3 pb-1.5">
+            {method_heading(method)} · <span class="tabular-nums">{length(orders)}</span>
+          </p>
+          <ul class="divide-base-content/8 divide-y">
+            <.order_row :for={order <- orders} order={order} hover_class="hover:bg-base-200/60" />
           </ul>
         </section>
       </div>
 
-      <div :if={@orders_by_date != []} class="border-base-content/12 mt-4 border-t pt-3">
-        <.link navigate={~p"/admin/orders"} class="text-primary touch-target inline-block py-1 text-sm hover:underline">
-          {~t"View all orders"} →
-        </.link>
-      </div>
+      <p :if={@overdue == [] and @orders == []} class="text-base-content/65 text-sm">{@empty}</p>
     </.widget>
     """
   end
@@ -388,36 +399,22 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     """
   end
 
-  defp date_group(date, today) do
+  defp day(date, today) do
     case Date.compare(date, today) do
       :lt -> :overdue
       :eq -> :today
-      :gt -> :upcoming
+      :gt -> :tomorrow
     end
   end
 
-  defp date_group_class(:overdue), do: "bg-error/5 ring-error/30 pb-1 ring-1"
-  defp date_group_class(:today), do: "bg-success/10 ring-success/30 pb-1 ring-1"
-  defp date_group_class(:upcoming), do: nil
-
-  defp date_heading_class(:overdue), do: "text-error-content font-bold"
-  defp date_heading_class(:today), do: "text-success-content font-bold"
-  defp date_heading_class(:upcoming), do: "text-base-content/65"
-
-  defp date_divider_class(:overdue), do: "divide-error/15"
-  defp date_divider_class(:today), do: "divide-success/20"
-  defp date_divider_class(:upcoming), do: "divide-base-content/8"
-
-  defp date_row_hover_class(:overdue), do: "hover:bg-error/10"
-  defp date_row_hover_class(:today), do: "hover:bg-success/15"
-  defp date_row_hover_class(:upcoming), do: "hover:bg-base-200/60"
-
-  defp format_order_date(date, today, locale) do
-    cond do
-      Date.before?(date, today) -> ~t"Overdue · #{Format.weekday_day_month(date, locale)}"
-      date == today -> ~t"Today"
-      date == Date.add(today, 1) -> ~t"Tomorrow · #{Format.day_month(date, locale)}"
-      true -> Format.weekday_day_month(date, locale)
-    end
+  # Deliveries go out on a run, so they come first; the read already sorts each by time and distance.
+  defp by_method(orders) do
+    for method <- [:delivery, :pickup],
+        group = Enum.filter(orders, &(&1.fulfillment_method == method)),
+        group != [],
+        do: {method, group}
   end
+
+  defp method_heading(:delivery), do: ~t"Deliveries"
+  defp method_heading(:pickup), do: ~t"Pickups"
 end

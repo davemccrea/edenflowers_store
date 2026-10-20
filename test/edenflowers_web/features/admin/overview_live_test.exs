@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     refute html =~ "Jane Doe"
   end
 
-  test "links upcoming order rows to the order detail page", %{conn: conn} do
+  test "links order rows to the order detail page", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
 
     conn =
@@ -49,6 +49,51 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin")
 
     assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
+  end
+
+  describe "today and tomorrow" do
+    setup %{conn: conn} do
+      admin = generate(admin_user()) |> with_token()
+      %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
+    end
+
+    defp open_order(name, method, days_from_today) do
+      generate(
+        order(
+          state: :placed,
+          customer_name: name,
+          fulfillment_method: method,
+          fulfillment_date: Date.add(Edenflowers.ShopTime.today(), days_from_today),
+          fulfillment_status: :pending
+        )
+      )
+    end
+
+    test "lists today's and tomorrow's orders by method, and nothing later", %{conn: conn} do
+      open_order("Today Delivery", :delivery, 0)
+      open_order("Today Pickup", :pickup, 0)
+      open_order("Tomorrow Pickup", :pickup, 1)
+      open_order("Next Week", :pickup, 7)
+      open_order("Last Week", :pickup, -7)
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      assert has_element?(view, ~s|#orders-today section[aria-label="Deliveries"]|, "Today Delivery")
+      assert has_element?(view, ~s|#orders-today section[aria-label="Pickups"]|, "Today Pickup")
+      assert has_element?(view, ~s|#orders-today section[aria-label="Overdue"]|, "Last Week")
+      assert has_element?(view, ~s|#orders-tomorrow section[aria-label="Pickups"]|, "Tomorrow Pickup")
+      refute has_element?(view, ~s|#orders-tomorrow section[aria-label="Deliveries"]|)
+      refute render(view) =~ "Next Week"
+    end
+
+    test "says so when a day has nothing to make", %{conn: conn} do
+      open_order("Tomorrow Pickup", :pickup, 1)
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      assert has_element?(view, "#orders-today", "Nothing to make today")
+      refute has_element?(view, "#orders-tomorrow", "Nothing to make tomorrow")
+    end
   end
 
   test "flags a delivery with no phone to call", %{conn: conn} do
