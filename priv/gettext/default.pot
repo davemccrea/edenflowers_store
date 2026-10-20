@@ -840,12 +840,6 @@ msgstr ""
 msgid "Address"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:803
-#: lib/edenflowers_web/features/marketing/contact_live.ex:70
-#, elixir-autogen, elixir-format
-msgid "Mon–Fri: 10:00–18:00"
-msgstr ""
-
 #: lib/edenflowers/email/templates.ex:40
 #: lib/edenflowers_web/components/layouts.ex:793
 #: lib/edenflowers_web/features/marketing/contact_live.ex:63
@@ -860,14 +854,7 @@ msgstr ""
 msgid "Phone"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:804
-#: lib/edenflowers_web/features/marketing/contact_live.ex:71
-#, elixir-autogen, elixir-format
-msgid "Sat: 10:00–15:00"
-msgstr ""
-
-#: lib/edenflowers_web/components/layouts.ex:805
-#: lib/edenflowers_web/features/marketing/contact_live.ex:72
+#: lib/edenflowers_web/business.ex:22
 #, elixir-autogen, elixir-format
 msgid "Sun: closed"
 msgstr ""
@@ -7448,4 +7435,14 @@ msgstr ""
 #: lib/edenflowers/email/previews.ex:123
 #, elixir-autogen, elixir-format
 msgid "zero delivery fee, with delivery time window"
+msgstr ""
+
+#: lib/edenflowers_web/business.ex:22
+#, elixir-autogen, elixir-format
+msgid "Mon–Fri: %{weekdays}"
+msgstr ""
+
+#: lib/edenflowers_web/business.ex:22
+#, elixir-autogen, elixir-format
+msgid "Sat: %{saturday}"
 msgstr ""

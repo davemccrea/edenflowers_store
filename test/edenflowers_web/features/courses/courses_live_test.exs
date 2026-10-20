@@ -177,4 +177,28 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert registration.payment_intent_id == nil
     end
   end
+
+  describe "structured data" do
+    test "an upcoming course is an event in Helsinki time", %{conn: conn} do
+      course = generate(course(date: ~D[2099-06-01], start_time: ~T[10:00:00], end_time: ~T[14:00:00]))
+
+      json_ld = conn |> get(~p"/en/courses/#{course.id}") |> html_response(200) |> json_ld()
+
+      assert %{"@type" => "Event", "startDate" => "2099-06-01T10:00:00+03:00", "offers" => offers} = json_ld
+      assert %{"price" => "85.00", "availability" => "https://schema.org/InStock"} = offers
+    end
+
+    test "a past course has none", %{conn: conn} do
+      course = generate(course(date: Date.add(Edenflowers.ShopTime.today(), -1)))
+
+      assert conn |> get(~p"/en/courses/#{course.id}") |> html_response(200) |> json_ld() == nil
+    end
+  end
+
+  defp json_ld(html) do
+    case Regex.run(~r|<script type="application/ld\+json">(.*?)</script>|s, html) do
+      [_, json] -> Jason.decode!(json)
+      nil -> nil
+    end
+  end
 end

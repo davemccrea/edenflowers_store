@@ -5,6 +5,8 @@ defmodule EdenflowersWeb.Layouts do
   """
   use EdenflowersWeb, :html
 
+  alias EdenflowersWeb.Business
+
   embed_templates "layouts/*"
 
   attr :conn, Plug.Conn, required: true
@@ -19,6 +21,16 @@ defmodule EdenflowersWeb.Layouts do
       href={Phoenix.VerifiedRoutes.unverified_url(@conn, path)}
     />
     <link rel="alternate" hreflang="x-default" href={url(~p"/")} />
+    """
+  end
+
+  attr :data, :map, required: true
+
+  def json_ld(assigns) do
+    ~H"""
+    <script type="application/ld+json">
+      <%= raw(Jason.encode!(@data, escape: :html_safe)) %>
+    </script>
     """
   end
 
@@ -784,14 +796,14 @@ defmodule EdenflowersWeb.Layouts do
             <div class="footer-grid__location space-y-2">
               <h3 class="eyebrow text-base-content/70">{~t"Address"}</h3>
               <a
-                href="https://www.google.com/maps/search/?api=1&amp;query=Minimossen%2C+Myrv%C3%A4gen+1%2C+65230+Vasa"
+                href={Business.maps_url()}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="link-underline-static-body block space-y-2"
               >
                 <p class="footer-line whitespace-nowrap">Minimossen</p>
-                <p class="footer-line whitespace-nowrap">{~t"Myrvägen 1"}</p>
-                <p class="footer-line whitespace-nowrap">{~t"65230 Vasa"}</p>
+                <p class="footer-line whitespace-nowrap">{Business.street_address()}</p>
+                <p class="footer-line whitespace-nowrap">{Business.postal_town()}</p>
               </a>
             </div>
 
@@ -800,9 +812,7 @@ defmodule EdenflowersWeb.Layouts do
                 {~t"Opening hours"}
               </h3>
               <div class="space-y-1">
-                <p class="footer-line whitespace-nowrap">{~t"Mon–Fri: 10:00–18:00"}</p>
-                <p class="footer-line whitespace-nowrap">{~t"Sat: 10:00–15:00"}</p>
-                <p class="footer-line whitespace-nowrap">{~t"Sun: closed"}</p>
+                <p :for={line <- Business.opening_hours_lines()} class="footer-line whitespace-nowrap">{line}</p>
               </div>
             </div>
 

@@ -42,4 +42,23 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     assert has_element?(view, "#subscription", "Florist's choice")
     assert has_element?(view, ~s(nav a[href="#subscription"]))
   end
+
+  test "states the shop's details to search engines, matching the footer", %{conn: conn} do
+    html = conn |> get(~p"/en") |> html_response(200)
+
+    assert %{"@type" => "Florist", "telephone" => "+358402209494", "openingHoursSpecification" => [weekdays, saturday]} =
+             json_ld(html)
+
+    assert %{"opens" => "10:00", "closes" => "18:00"} = weekdays
+    assert %{"dayOfWeek" => ["Saturday"], "closes" => "15:00"} = saturday
+    assert html =~ "Mon–Fri: 10:00–18:00"
+    assert html =~ "Sat: 10:00–15:00"
+  end
+
+  defp json_ld(html) do
+    case Regex.run(~r|<script type="application/ld\+json">(.*?)</script>|s, html) do
+      [_, json] -> Jason.decode!(json)
+      nil -> nil
+    end
+  end
 end
