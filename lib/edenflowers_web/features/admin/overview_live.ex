@@ -456,8 +456,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <details id={"attention-#{key}"} phx-mounted={JS.ignore_attributes(["open"])} class="group">
             <summary class="touch-target flex cursor-pointer list-none items-center gap-3 py-2">
               <.icon name={icon} class="text-base-content/50 h-4 w-4 shrink-0" />
-              <span class="text-base-content min-w-0 flex-1">
-                {title} · <span class="tabular-nums">{length(rows)}</span>
+              <span class="text-base-content flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                {title}
+                <.count_badge count={length(rows)} active={true} />
               </span>
               <span :if={Map.has_key?(hd(rows), :amount)} class="text-base-content shrink-0 tabular-nums">
                 {Format.currency(sum_amounts(rows), @locale)}
@@ -538,8 +539,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
       <div class="space-y-3">
         <div :for={{method, orders} <- by_method(@orders)} id={"#{@id}-#{method}"}>
-          <h3 class="eyebrow text-base-content/65 pb-1">
-            {method_heading(method)} · <span class="tabular-nums">{length(orders)}</span>
+          <h3 class="eyebrow text-base-content/65 flex items-center gap-2 pb-1">
+            {method_heading(method)}
+            <.count_badge count={length(orders)} active={true} />
           </h3>
           <ul class="divide-base-content/8 -mx-3 divide-y">
             <.order_row :for={order <- orders} order={order} />
