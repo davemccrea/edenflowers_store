@@ -11,6 +11,8 @@ defmodule Edenflowers.Catalog do
     resource Edenflowers.Catalog.Product do
       define :list_store_products, action: :for_store
       define :list_featured_products, action: :featured
+      define :list_subscribable_products, action: :subscribable
+      define :list_bouquets, action: :bouquets
       define :list_products_by_category, action: :by_category, args: [:category_id]
       define :get_product_by_id, action: :read, get_by: [:id]
     end

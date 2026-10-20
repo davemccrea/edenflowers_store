@@ -901,46 +901,6 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  @doc """
-  Renders a category tile: a clickable image card with an overlaid label.
-
-  ## Examples
-
-      <.category_tile navigate={~p"/store"} label="Store" image_src="..." />
-  """
-  attr :navigate, :string, required: true
-  attr :label, :string, required: true
-  attr :image_src, :string, required: true
-
-  def category_tile(assigns) do
-    ~H"""
-    <.link navigate={@navigate} class="group relative block overflow-hidden">
-      <%!-- Decorative: the heading below carries the same label, so alt text would repeat it. --%>
-      <.image
-        src={@image_src}
-        alt=""
-        width={800}
-        height={800}
-        sizes="(min-width: 768px) 33vw, 100vw"
-        class="h-72 w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04] sm:h-80 md:h-96"
-      />
-      <%!-- Static gradient keeps the label legible on any photograph; the
-            second layer deepens the whole image slightly on hover. --%>
-      <div class="from-black/50 via-black/15 absolute inset-0 bg-gradient-to-t to-transparent" />
-      <div class="bg-black/10 absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100" />
-      <div class="absolute inset-0 flex items-end p-6">
-        <h3 class="tile-title flex items-center gap-2.5 text-white transition-transform duration-500 ease-out group-hover:-translate-y-1.5">
-          {@label}
-          <.icon
-            name="hero-arrow-right"
-            class="h-4 w-4 -translate-x-1 opacity-0 transition duration-500 ease-out group-hover:translate-x-0 group-hover:opacity-100"
-          />
-        </h3>
-      </div>
-    </.link>
-    """
-  end
-
   def social_media_links(assigns) do
     ~H"""
     <div class="flex flex-row gap-4">

@@ -44,6 +44,19 @@ defmodule Edenflowers.Fulfillment.Availability do
   end
 
   @doc """
+  The first date an order placed at `now` could be fulfilled, or nil when the
+  shop is closed for the next 60 days.
+  """
+  @spec next_open_date(ShopCalendar.t(), DateTime.t()) :: Date.t() | nil
+  def next_open_date(%ShopCalendar{} = calendar, %DateTime{} = now) do
+    now
+    |> DateTime.to_date()
+    |> Stream.iterate(&Date.add(&1, 1))
+    |> Enum.take(60)
+    |> Enum.find(&is_nil(unavailable_reason(calendar, &1, now)))
+  end
+
+  @doc """
   Cell state for the customer checkout calendar. A customer can't act on *why*
   a date is unavailable, so every blocked weekday or date reads as `:closed`,
   and a today that's past its deadline collapses to `:past`.

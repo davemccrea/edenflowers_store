@@ -32,6 +32,18 @@ defmodule Edenflowers.Catalog.Product do
       prepare build(sort: [position: :asc_nils_last, name: :asc])
     end
 
+    # Categories are data, so the bouquet category is found by its English slug.
+    read :bouquets do
+      filter expr(product_category.slug == "bouquets")
+      prepare Preparations.VisibleInStore
+    end
+
+    read :subscribable do
+      filter expr(subscribable == true)
+      prepare Preparations.VisibleInStore
+      prepare build(sort: [position: :asc_nils_last, name: :asc])
+    end
+
     read :by_category do
       argument :category_id, :uuid, allow_nil?: false
 
