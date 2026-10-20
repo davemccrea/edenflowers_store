@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.Plugs.Maintenance do
   import Plug.Conn
 
   @maintenance_path "/back-soon"
-  @bypass_prefixes ["/admin", "/sign-in", "/sign-out", "/auth"]
+  @bypass_prefixes ["/admin", "/sign-in", "/sign-out", "/auth", "/pay"]
 
   def init(opts), do: opts
 
@@ -36,13 +36,8 @@ defmodule EdenflowersWeb.Plugs.Maintenance do
     |> halt()
   end
 
-  # The pay page's path differs per language, so it's matched by its LiveView.
   defp bypass?(conn) do
-    match?(
-      %{phoenix_live_view: {EdenflowersWeb.Checkout.PayLive, _action, _opts, _live_session}},
-      Phoenix.Router.route_info(EdenflowersWeb.Router, "GET", conn.request_path, conn.host)
-    ) or
-      Enum.any?(@bypass_prefixes, &(conn.request_path == &1 or String.starts_with?(conn.request_path, &1 <> "/")))
+    Enum.any?(@bypass_prefixes, &(conn.request_path == &1 or String.starts_with?(conn.request_path, &1 <> "/")))
   end
 
   defp admin?(conn), do: match?(%{admin: true}, conn.assigns[:current_user])

@@ -17,10 +17,13 @@ defmodule EdenflowersWeb.Checkout.PayLive do
 
   @impl true
   def mount(%{"token" => token} = params, _session, socket) do
-    socket = assign(socket, alternates: alternates("/#{language}/pay/#{token}"), noindex: true)
-
     case load_order(token) do
       {:ok, order} ->
+        Localize.Plug.put_locale_from_session(
+          %{Localize.Plug.PutLocale.session_key() => order.locale},
+          gettext: EdenflowersWeb.Gettext
+        )
+
         if connected?(socket) do
           Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:paid:#{order.id}")
         end
@@ -39,13 +42,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app
-      current_user={@current_user}
-      order={@order}
-      flash={@flash}
-      current_path={@current_path}
-      alternates={@alternates}
-    >
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <div class="max-w-xl">
           <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />
@@ -72,7 +69,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
                 {~t"This delivery is part of your subscription. Paying for it restarts the subscription if it's on hold."}
                 {~t"It doesn't change the card your later deliveries are charged to."}
                 <.link
-                  navigate={~q"/#{language}/account/subscriptions/#{@payable.subscription_id}/card"}
+                  navigate={~p"/account/subscriptions/#{@payable.subscription_id}/card"}
                   class="link-underline-hover text-primary"
                 >
                   {~t"Update your card"}

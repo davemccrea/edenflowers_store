@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
       {:ok, %{id: "seti_1", client_secret: "seti_1_secret"}}
     end)
 
-    {:ok, view, _html} = live(conn, ~p"/en/account/subscriptions/#{subscription.id}/card")
+    {:ok, view, _html} = live(conn, ~p"/account/subscriptions/#{subscription.id}/card")
 
     assert has_element?(view, ~s|#card-form[data-intent="setup"][data-client-secret="seti_1_secret"]|)
   end
@@ -53,9 +53,9 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
         )
       )
 
-      {:ok, view, _html} = live(conn, ~p"/en/account/subscriptions/#{subscription.id}/card")
+      {:ok, view, _html} = live(conn, ~p"/account/subscriptions/#{subscription.id}/card")
 
-      assert has_element?(view, ~s|[data-testid=unpaid-occurrence] a[href="/en/pay/tok_held"]|, "Pay now")
+      assert has_element?(view, ~s|[data-testid=unpaid-occurrence] a[href="/pay/tok_held"]|, "Pay now")
     end
   end
 
@@ -70,8 +70,8 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
 
     {:ok, _view, html} =
       conn
-      |> live(~p"/en/account/subscriptions/#{subscription.id}/card?setup_intent=seti_1&redirect_status=succeeded")
-      |> follow_redirect(conn, ~p"/en/account")
+      |> live(~p"/account/subscriptions/#{subscription.id}/card?setup_intent=seti_1&redirect_status=succeeded")
+      |> follow_redirect(conn, ~p"/account")
 
     assert html =~ "Your card has been updated."
     assert Ash.reload!(subscription, authorize?: false).stripe_payment_method_id == "pm_new"
@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
     end)
 
     {:ok, view, _html} =
-      live(conn, ~p"/en/account/subscriptions/#{subscription.id}/card?setup_intent=seti_1&redirect_status=succeeded")
+      live(conn, ~p"/account/subscriptions/#{subscription.id}/card?setup_intent=seti_1&redirect_status=succeeded")
 
     assert render(view) =~ "Your card couldn&#39;t be saved."
     assert has_element?(view, ~s|#card-form[data-client-secret="seti_2_secret"]|)
@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
   test "won't open someone else's subscription", %{conn: conn} do
     theirs = generate(subscription(user_id: generate(admin_user(admin: false)).id))
 
-    assert {:error, {:live_redirect, %{to: "/en/account"}}} =
-             live(conn, ~p"/en/account/subscriptions/#{theirs.id}/card")
+    assert {:error, {:live_redirect, %{to: "/account"}}} =
+             live(conn, ~p"/account/subscriptions/#{theirs.id}/card")
   end
 end

@@ -153,7 +153,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       assert %{success: 1} = Oban.drain_queue(queue: :default)
 
       assert_email_sent(fn email ->
-        refute email.text_body =~ "/courses/pay/"
+        refute email.text_body =~ "/pay/"
         assert email.text_body =~ "You pay at the course"
       end)
     end
@@ -169,7 +169,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "birgitta@example.com"}]
-        assert email.text_body =~ "/en/courses/pay/#{registration.payment_link_token}"
+        assert email.text_body =~ "/pay/#{registration.payment_link_token}"
         assert email.text_body =~ "Or pay at the course if you prefer."
       end)
 
@@ -286,7 +286,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       assert has_element?(
                view,
                "#payment-link-url-#{registration.id}",
-               "/en/courses/pay/#{registration.payment_link_token}"
+               "/courses/pay/#{registration.payment_link_token}"
              )
     end
 
@@ -299,7 +299,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       refute has_element?(view, "li", "To collect")
       registration = Ash.reload!(registration, authorize?: false)
-      {:ok, pay_view, _html} = live(build_conn(), ~p"/en/courses/pay/#{registration.payment_link_token}")
+      {:ok, pay_view, _html} = live(build_conn(), ~p"/courses/pay/#{registration.payment_link_token}")
       assert has_element?(pay_view, "[data-testid=pay-paid]")
     end
   end

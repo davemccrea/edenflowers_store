@@ -102,7 +102,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
         {:ok, %{id: "pi_subscription", client_secret: "subscription_secret", amount: 0}}
       end)
 
-      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/en/checkout")
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
       assert Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id == "pi_one_off_0"
 
       Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
@@ -143,13 +143,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
         conn
         |> Plug.Test.init_test_session(%{order_id: order.id})
         |> Helpers.store_in_session(user)
-        |> live(~p"/en/checkout")
+        |> live(~p"/checkout")
 
       assert render(view) =~ ~s|data-customer-session-client-secret="cuss_ada"|
     end
 
     test "gives a guest no CustomerSession", %{conn: conn, order: order} do
-      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/en/checkout")
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
 
       assert render(view) =~ "data-client-secret"
       refute render(view) =~ "data-customer-session-client-secret"
@@ -164,7 +164,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> Helpers.store_in_session(user)
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid=customer-name-input]", value: "Ada Lovelace")
       |> assert_has("[data-testid=customer-email-input]", value: "ada@example.com")
     end
@@ -172,7 +172,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     test "successfully submits and progresses to step 2", %{conn: conn, order: order} do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Your name *", with: "John Doe")
       |> fill_in("Email *", with: "john@example.com")
       |> click_button("Next")
@@ -182,7 +182,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     test "rejects an invalid email and stays on step 1", %{conn: conn, order: order} do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Your name *", with: "John Doe")
       |> fill_in("Email *", with: "notanemail")
       |> click_button("Next")
@@ -196,7 +196,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     test "newsletter checkbox is unchecked by default", %{conn: conn, order: order} do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox'][checked]")
     end
 
@@ -206,7 +206,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     } do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Your name *", with: "Subscriber")
       |> fill_in("Email *", with: "subscriber@example.com")
       |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
@@ -225,7 +225,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     test "leaving the newsletter box unchecked does not opt the user in", %{conn: conn, order: order} do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Your name *", with: "Bystander")
       |> fill_in("Email *", with: "bystander@example.com")
       |> click_button("Next")
@@ -241,7 +241,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     test "newsletter checkbox is hidden after a guest opts in and returns to step 1", %{conn: conn, order: order} do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Your name *", with: "Returning Guest")
       |> fill_in("Email *", with: "returning@example.com")
       |> check("Subscribe to the newsletter to receive 15% off your first order by email.")
@@ -261,7 +261,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     } do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Your name *", with: "Undecided Guest")
       |> fill_in("Email *", with: "undecided@example.com")
       |> click_button("Next")
@@ -279,7 +279,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Your name *", with: "Already Subscribed")
       |> fill_in("Email *", with: "subscribed@example.com")
       |> click_button("Next")
@@ -298,7 +298,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='account-note']", text: "set up an account with this email")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
@@ -313,7 +313,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> Helpers.store_in_session(user)
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='account-note']")
     end
@@ -324,7 +324,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> Helpers.store_in_session(user)
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
@@ -335,7 +335,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn
       |> Plug.Test.init_test_session(%{order_id: order.id})
       |> Helpers.store_in_session(user)
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='checkout-step-1']")
       |> assert_has("[data-testid='newsletter-opt-in-checkbox']")
     end
@@ -346,7 +346,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       session =
         conn
         |> Plug.Test.init_test_session(%{order_id: order.id})
-        |> visit("/en/checkout")
+        |> visit("/checkout")
         |> fill_in("Your name *", with: "John Doe")
         |> fill_in("Email *", with: "john@example.com")
         |> click_button("Next")
@@ -379,7 +379,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='select-card-button']")
     end
 
@@ -390,7 +390,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='first-delivery-card']", text: "The card comes with your first delivery.")
     end
 
@@ -400,7 +400,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='select-card-button']")
       |> refute_has("[data-testid='first-delivery-card']")
     end
@@ -449,7 +449,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='card-message-textarea']")
     end
 
@@ -465,7 +465,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       # The card line item is rendered in the cart so the customer can see it
       # on the totals breakdown and remove it if they change their mind.
       |> assert_has("#checkout-line-items", text: card_product.name)
@@ -483,7 +483,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='select-card-button']")
       |> click_button("[data-testid='card-option-#{card_variant.id}']", card_product.name)
       |> assert_has("[data-testid='card-message-textarea']")
@@ -503,7 +503,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-        |> live("/en/checkout")
+        |> live("/checkout")
 
       view |> element("#checkout-line-items-remove-#{card.id}") |> render_click()
       # The checkout picks up the removal from the line_item:changed broadcast.
@@ -524,7 +524,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Card message", with: "Happy birthday!")
       |> click_button("Next")
 
@@ -542,7 +542,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Card message", with: "Happy birthday!")
       |> fill_in("Recipient name *", with: "Updated Recipient")
       |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
@@ -558,7 +558,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> assert_has("[data-testid='card-message-recipient']", text: "For Original")
       |> fill_in("Recipient name *", with: "Anna Lindqvist")
       |> assert_has("[data-testid='card-message-recipient']", text: "For Anna")
@@ -579,7 +579,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, _view, html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-        |> live("/en/checkout")
+        |> live("/checkout")
 
       assert html =~ ~s(maxlength="80")
     end
@@ -598,7 +598,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-        |> live("/en/checkout")
+        |> live("/checkout")
 
       assert html =~ ~s(maxlength="80")
 
@@ -620,7 +620,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Card message", with: "Happy birthday!")
       |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
       |> unwrap(fn view ->
@@ -641,7 +641,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/en/checkout")
+      |> visit("/checkout")
       |> fill_in("Card message", with: oversize)
       |> click_button("Next")
       |> assert_has("p", text: "at most")
@@ -661,7 +661,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-        |> live("/en/checkout")
+        |> live("/checkout")
 
       view |> element("#checkout-line-items-remove-#{card.id}") |> render_click()
 
@@ -682,7 +682,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-        |> live("/en/checkout")
+        |> live("/checkout")
 
       view
       |> element("[data-testid='checkout-form-2']")
@@ -701,7 +701,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: order.id})
-        |> live("/en/checkout")
+        |> live("/checkout")
 
       view
       |> element("[data-testid='checkout-form-1']")
@@ -719,7 +719,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-        |> live("/en/checkout")
+        |> live("/checkout")
 
       assert_push_event(view, "focus-element", %{id: "checkout-section-gift_options", focus: false})
     end
@@ -728,7 +728,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: order.id})
-        |> live("/en/checkout")
+        |> live("/checkout")
 
       refute_push_event(view, "focus-element", %{})
     end
@@ -739,20 +739,20 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} =
         conn
         |> Plug.Test.init_test_session(%{order_id: order.id})
-        |> live("/en/checkout")
+        |> live("/checkout")
 
       view
       |> element("[data-testid='checkout-form-1']")
       |> render_submit(%{"form" => %{"customer_name" => "Back Button", "customer_email" => "back@example.com"}})
 
-      assert_patch(view, "/en/checkout?step=gift_options")
+      assert_patch(view, "/checkout?step=gift_options")
 
-      render_patch(view, "/en/checkout?step=contact_details")
+      render_patch(view, "/checkout?step=contact_details")
       assert has_element?(view, "[data-testid='checkout-step-1']")
       assert Orders.get_order_by_id!(order.id, authorize?: false).state == :contact_details
 
-      render_patch(view, "/en/checkout?step=gift_options")
-      assert_patch(view, "/en/checkout?step=contact_details")
+      render_patch(view, "/checkout?step=gift_options")
+      assert_patch(view, "/checkout?step=contact_details")
       assert has_element?(view, "[data-testid='checkout-step-1']")
       assert Orders.get_order_by_id!(order.id, authorize?: false).state == :contact_details
     end
@@ -793,7 +793,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn = Plug.Test.init_test_session(conn, %{order_id: stale.id})
 
       capture_log(fn ->
-        assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, "/en/checkout")
+        assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, "/checkout")
       end)
 
       reloaded = Orders.get_order_for_checkout!(stale.id, actor: nil)
@@ -808,7 +808,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       [non_card_line_item] = Enum.reject(order.line_items, & &1.is_card)
 
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
-      {:ok, view, _html} = live(conn, "/en/checkout")
+      {:ok, view, _html} = live(conn, "/checkout")
 
       capture_log(fn ->
         Orders.remove_line_item!(order, non_card_line_item.id, authorize?: false)
@@ -828,7 +828,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       Orders.add_line_item!(order.id, generate(product_variant(product_id: chocolate.id)).id, 1, authorize?: false)
 
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
-      {:ok, view, _html} = live(conn, "/en/checkout")
+      {:ok, view, _html} = live(conn, "/checkout")
       Orders.remove_line_item!(order, flowers.id, authorize?: false)
 
       assert {:error, {:live_redirect, %{to: "/en/store"}}} = render_click(view, "pay", %{})
@@ -841,7 +841,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       order = generate(order(state: :payment, customer_name: "Jane Doe", customer_email: "jane@example.com"))
       line_item = Orders.add_line_item!(order.id, wreath.id, 2, authorize?: false)
 
-      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), "/en/checkout")
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), "/checkout")
 
       # Someone else buys one while this customer is checking out.
       wreath |> Ash.Changeset.for_update(:update, %{stock_quantity: 1}) |> Ash.update!(authorize?: false)

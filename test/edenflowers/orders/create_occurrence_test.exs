@@ -343,7 +343,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
         assert_email_sent(fn email ->
           assert email.to == [{"", "ada@example.com"}]
           assert email.subject =~ order.order_reference
-          assert email.text_body =~ "/fi/maksa/#{order.payment_link_token}"
+          assert email.text_body =~ "/pay/#{order.payment_link_token}"
         end)
       end
     end

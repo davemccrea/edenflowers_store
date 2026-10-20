@@ -2,6 +2,9 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Catalog
+  alias Edenflowers.Format
+  alias Edenflowers.Fulfillment
+  alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -9,15 +12,55 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   @impl true
   def mount(_params, _session, socket) do
     products = Catalog.list_featured_products!() |> Translations.translate()
+    locale = Format.locale()
 
     {:ok,
      assign(socket,
        page_title: ~t"Florist in Vaasa",
        alternates: alternates("/#{language}"),
        page_description:
-         ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within 5 km of Minimossen.",
-       products: products
+         ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within 5 km of Minimossen on selected bouquets.",
+       products: products,
+       subscribable_products: Catalog.list_subscribable_products!() |> Translations.translate(),
+       price_from: price_from(products, locale),
+       next_fulfillment: next_fulfillment(locale),
+       delivery_fee: delivery_fee(locale)
      )}
+  end
+
+  defp price_from(products, locale) do
+    case products |> Enum.map(& &1.cheapest_price) |> Enum.reject(&is_nil/1) do
+      [] -> nil
+      prices -> Format.storefront_price(Enum.min(prices, Decimal), locale)
+    end
+  end
+
+  defp next_fulfillment(locale) do
+    calendar = Fulfillment.get_shop_calendar!()
+    now = Edenflowers.ShopTime.now()
+
+    case Availability.next_open_date(calendar, now) do
+      nil ->
+        nil
+
+      date ->
+        if date == DateTime.to_date(now),
+          do: ~t"Today, if you order by #{time = Format.time(calendar.order_deadline, locale)}",
+          else: date |> Format.weekday_day_month(locale) |> String.capitalize()
+    end
+  end
+
+  defp delivery_fee(locale) do
+    case Fulfillment.distance_priced_delivery() do
+      nil ->
+        nil
+
+      %{free_dist_km: km, base_price: base} when is_integer(km) and km > 0 ->
+        ~t"Free within #{km = km} km on bouquets marked Free delivery, otherwise from #{base = Format.storefront_price(base, locale)}."
+
+      %{base_price: base} ->
+        ~t"From #{base = Format.storefront_price(base, locale)} across Vaasa."
+    end
   end
 
   @impl true

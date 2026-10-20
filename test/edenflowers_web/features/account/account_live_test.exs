@@ -26,13 +26,13 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
   describe "details" do
     test "greets the customer by first name", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "h1", "Hi, Ada")
     end
 
     test "changes the customer's name", %{conn: conn, user: user} do
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       view
       |> form("#details-form", %{"details" => %{"name" => "Grace Hopper", "email" => to_string(user.email)}})
@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "changes the email only once the code sent to it is entered", %{conn: conn, user: user} do
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       view
       |> form("#details-form", %{"details" => %{"name" => "Ada Lovelace", "email" => "new@example.com"}})
@@ -63,7 +63,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "gives up on the email change after too many wrong codes", %{conn: conn, user: user} do
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       view
       |> form("#details-form", %{"details" => %{"name" => "Ada Lovelace", "email" => "new@example.com"}})
@@ -90,7 +90,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
         {:ok, %{id: "re_account_cancel", payment_intent: "pi_account_cancel", amount: 8850, status: "succeeded"}}
       end)
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#cancel-order-#{order.id}", "We'll refund €88.50")
       refute has_element?(view, "#cancel-order-#{too_late.id}")
@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "lists the customer's own orders with a receipt link", %{conn: conn, user: user} do
       order = placed_order(user_id: user.id, paid: true)
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=past]", order.order_reference)
       assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|, "Receipt")
@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "hides the receipt link for an order that isn't paid", %{conn: conn, user: user} do
       order = placed_order(user_id: user.id, refunded: true)
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=past]", "Refunded")
       refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
@@ -123,9 +123,9 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "offers to pay an unpaid custom order through its payment link", %{conn: conn, user: user} do
       order = placed_order(user_id: user.id, origin: :custom, payment_link_token: "tok123")
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, ~s|[data-testid=order-unpaid] a[href="/en/pay/tok123"]|, "Pay now")
+      assert has_element?(view, ~s|[data-testid=order-unpaid] a[href="/pay/tok123"]|, "Pay now")
       refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
     end
 
@@ -140,7 +140,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "tells a customer paying in person when to pay", %{conn: conn, user: user} do
       placed_order(user_id: user.id, origin: :custom)
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=order-unpaid]", "Pay at collection")
     end
@@ -148,7 +148,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "shows a cancelled order as cancelled", %{conn: conn, user: user} do
       placed_order(user_id: user.id, origin: :custom, fulfillment_status: :cancelled)
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=past]", "Cancelled")
       refute has_element?(view, "[data-testid=order-unpaid]")
@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       other = generate(admin_user(admin: false))
       order = placed_order(user_id: other.id, paid: true)
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       refute has_element?(view, "[data-testid=past]")
       refute render(view) =~ order.order_reference
@@ -173,13 +173,13 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       refute render(view) =~ order.order_reference
     end
 
     test "points a customer with no orders at the shop", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#upcoming-heading")
       assert has_element?(view, ~s|a[href="/en/store"]|, "Visit the shop")
@@ -197,7 +197,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       done_early =
         placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(today, 2), fulfillment_status: :fulfilled)
 
-      {:ok, _view, html} = live(conn, ~p"/en/account")
+      {:ok, _view, html} = live(conn, ~p"/account")
 
       assert references_in(html, "upcoming") == [tomorrow.order_reference, next_week.order_reference]
 
@@ -210,7 +210,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "names what was ordered", %{conn: conn, user: user} do
       placed_order(user_id: user.id, paid: true)
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       [line_item] = Ash.read!(Edenflowers.Orders.LineItem, authorize?: false)
       assert has_element?(view, "[data-testid=past] li", "2 × #{line_item.product_name}")
@@ -220,7 +220,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       for days <- 1..7,
           do: placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(ShopTime.today(), -days))
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=past-more] li")
       assert has_element?(view, "summary", "Show 2 more")
@@ -229,7 +229,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "shows an active subscription's next delivery as coming up", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id))
       generate(subscription(user_id: user.id, state: :paused))
-      {:ok, _view, html} = live(conn, ~p"/en/account")
+      {:ok, _view, html} = live(conn, ~p"/account")
 
       assert [entry] = entries_in(html, "upcoming")
       assert entry =~ Edenflowers.Format.day_month(subscription.next_fulfillment_date, @locale)
@@ -294,7 +294,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       registration =
         generate(course_registration(course_id: course.id, user_id: user.id, status: :confirmed, seats: 2))
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, ~s|li a[href="/en/courses/#{course.id}"]|, "Autumn Wreaths")
       assert has_element?(view, "li", "2 places")
@@ -332,7 +332,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       course = generate(course(name: "Spring Posies"))
       generate(course_registration(course_id: course.id, user_id: user.id, status: :pending))
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       refute render(view) =~ "Spring Posies"
     end
@@ -341,7 +341,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       course = generate(course(name: "Winter Bouquets"))
       generate(course_registration(course_id: course.id, user_id: nil, email: to_string(user.email)))
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       refute render(view) =~ "Winter Bouquets"
     end
@@ -354,13 +354,13 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       refute render(view) =~ "Midsummer Garlands"
     end
 
     test "points a customer with no registrations at the courses page", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, ~s|a[href="/en/courses"]|, "See what's coming up")
     end
@@ -380,7 +380,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       mine = generate(subscription(user_id: user.id))
       theirs = generate(subscription(user_id: generate(admin_user(admin: false)).id))
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       variant = Ash.load!(mine, product_variant: :product).product_variant
       next = mine.next_fulfillment_date
@@ -414,7 +414,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "shows a delivery that's already booked as the next one", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(30)))
       placed_order(user_id: user.id, subscription_id: subscription.id, fulfillment_date: days_from_today(2), paid: true)
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(
                view,
@@ -438,7 +438,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
           subscription(user_id: user.id, state: :cancelled, updated_at: DateTime.add(DateTime.utc_now(), -31, :day))
         )
 
-      {:ok, _view, html} = live(conn, ~p"/en/account")
+      {:ok, _view, html} = live(conn, ~p"/account")
 
       ids = Regex.scan(~r/<li[^>]* id="subscription-([0-9a-f-]{36})"/, html, capture: :all_but_first) |> List.flatten()
       assert ids == [active.id, cancelled.id]
@@ -453,7 +453,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
         generate(product(subscribable: true, free_delivery: true, draft: false, product_category_id: category.id))
 
       generate(product_variant(product_id: product.id))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=no-subscriptions]", "No subscriptions yet.")
       assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/en/product/#{product.id}"]|)
@@ -466,7 +466,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
         )
 
       cancelled = generate(subscription(user_id: user.id, state: :cancelled))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#{drawer(gift)} [data-testid=subscription-recipient]", "Ingrid Nyman")
       assert has_element?(view, "#{drawer(gift)} [data-testid=subscription-recipient]", "Gerbyntie 16, Vaasa")
@@ -483,14 +483,14 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "marks subscription deliveries in the orders", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id))
       placed_order(user_id: user.id, subscription_id: subscription.id, paid: true)
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=past] [data-testid=order-subscription]", "Subscription order")
     end
 
     test "pauses and resumes", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       view |> element("#subscription-#{subscription.id}-pause", "Pause") |> render_click()
       assert reload(subscription).state == :paused
@@ -508,7 +508,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "cancels", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#cancel-subscription-#{subscription.id}", "Want a break instead?")
       view |> element("#cancel-subscription-#{subscription.id} button", "Stop subscription") |> render_click()
@@ -532,7 +532,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
           paid: true
         )
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#cancel-subscription-#{subscription.id} [data-testid=final-delivery-warning]")
       view |> element("#cancel-subscription-#{subscription.id} button", "Stop subscription") |> render_click()
@@ -550,7 +550,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "pauses from the cancel dialog instead", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       view |> element("#cancel-subscription-#{subscription.id} button", "Pause it") |> render_click()
 
@@ -559,7 +559,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "offers only cancellation inside the cutoff", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(4)))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(
                view,
@@ -583,12 +583,12 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
           payment_link_token: "tok_held"
         )
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       date = weekday_date(unpaid.fulfillment_date)
 
       assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "Payment failed")
-      assert has_element?(view, ~s|#{row(subscription)} [data-testid=subscription-pay-now][href="/en/pay/tok_held"]|)
+      assert has_element?(view, ~s|#{row(subscription)} [data-testid=subscription-pay-now][href="/pay/tok_held"]|)
 
       assert has_element?(
                view,
@@ -598,7 +598,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       assert has_element?(
                view,
-               ~s|#{drawer(subscription)} [data-testid=subscription-update-card][href="/en/account/subscriptions/#{subscription.id}/card"]|
+               ~s|#{drawer(subscription)} [data-testid=subscription-update-card][href="/account/subscriptions/#{subscription.id}/card"]|
              )
 
       refute has_element?(view, "#change-subscription-#{subscription.id}")
@@ -616,11 +616,11 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
         payment_link_token: "tok_held"
       )
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "Unpaid")
       assert has_element?(view, "#{drawer(subscription)} [data-testid=subscription-payment]", "is still unpaid")
-      assert has_element?(view, ~s|#{drawer(subscription)} [data-testid=subscription-pay-now][href="/en/pay/tok_held"]|)
+      assert has_element?(view, ~s|#{drawer(subscription)} [data-testid=subscription-pay-now][href="/pay/tok_held"]|)
       refute has_element?(view, "#{drawer(subscription)} [data-testid=subscription-update-card]")
     end
 
@@ -628,7 +628,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       subscription = generate(subscription(user_id: user.id))
       variant = Ash.get!(Edenflowers.Catalog.ProductVariant, subscription.product_variant_id)
       large = generate(product_variant(product_id: variant.product_id, size: :large, draft: false))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       save = "#change-subscription-#{subscription.id} button[type=submit]"
       assert has_element?(view, "#{save}[disabled]")
@@ -653,7 +653,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       subscription = generate(subscription(user_id: user.id))
       next = subscription.next_fulfillment_date
       day = Edenflowers.Fulfillment.Weekday.from_date(Date.add(next, 1))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       changes = %{
         "product_variant_id" => subscription.product_variant_id,
@@ -674,7 +674,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
           subscription(user_id: user.id, card_brand: "visa", card_last4: "4242", card_exp_month: 8, card_exp_year: 2027)
         )
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       card = "#{drawer(subscription)} [data-testid=subscription-card]"
       assert has_element?(view, ~s|#{card} img[alt="Visa"][src="/images/cards/visa.svg"]|)
@@ -693,7 +693,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
           )
         )
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       card = "#{drawer(subscription)} [data-testid=subscription-card]"
       refute has_element?(view, "#{card} img")
@@ -702,16 +702,16 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "links to updating the card, even inside the cutoff", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(4)))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       refute has_element?(view, "#change-subscription-#{subscription.id}")
-      assert has_element?(view, ~s|a[href="/en/account/subscriptions/#{subscription.id}/card"]|, "Update card")
+      assert has_element?(view, ~s|a[href="/account/subscriptions/#{subscription.id}/card"]|, "Update card")
     end
 
     test "refuses a change to a subscription that isn't the customer's", %{conn: conn, user: user} do
       ours = generate(subscription(user_id: user.id))
       theirs = generate(subscription(user_id: generate(admin_user(admin: false)).id))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       view |> with_target("#subscription-#{ours.id}") |> render_click("pause_subscription", %{"id" => theirs.id})
 
@@ -720,7 +720,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "says why a change is refused once the cutoff passes with the page open", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id))
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       Ash.Seed.update!(subscription, %{next_fulfillment_date: days_from_today(4)})
       view |> element("#subscription-#{subscription.id}-pause", "Pause") |> render_click()
@@ -734,7 +734,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "saves the preference as soon as the box is ticked", %{conn: conn, user: user} do
       refute user.newsletter_opt_in
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       view
       |> form("#newsletter-preference", %{"newsletter_opt_in" => "true"})
@@ -745,7 +745,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "a superseded timer leaves a fresh confirmation up", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       view
       |> form("#newsletter-preference", %{"newsletter_opt_in" => "true"})
@@ -759,7 +759,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "unticking opts the customer back out", %{conn: conn, user: user} do
       Edenflowers.Accounts.update_newsletter_preference!(user, true, actor: user)
 
-      {:ok, view, _html} = live(conn, ~p"/en/account")
+      {:ok, view, _html} = live(conn, ~p"/account")
 
       view
       |> form("#newsletter-preference", %{"newsletter_opt_in" => "false"})
@@ -770,7 +770,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   end
 
   test "names the page in the browser tab", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/en/account")
+    {:ok, view, _html} = live(conn, ~p"/account")
 
     assert page_title(view) =~ "Account"
   end
@@ -778,7 +778,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   test "sends a signed-out visitor to sign in" do
     conn = Phoenix.ConnTest.build_conn() |> Plug.Test.init_test_session(%{})
 
-    assert {:error, {:redirect, %{to: to}}} = live(conn, ~p"/en/account")
+    assert {:error, {:redirect, %{to: to}}} = live(conn, ~p"/account")
     assert to =~ "/sign-in"
   end
 

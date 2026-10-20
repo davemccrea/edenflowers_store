@@ -52,14 +52,22 @@ defmodule EdenflowersWeb.Router do
         live "/#{language}/product/:id", Store.ProductLive
         live "/#{language}/courses", Courses.CoursesLive
         live "/#{language}/courses/:id", Courses.CourseLive
+      end
 
-        live "/#{language}/courses/bookings/:id", Courses.CourseBookingLive
-        live "/#{language}/courses/pay/:token", Courses.CoursePayLive
-        live "/#{language}/checkout", Checkout.CheckoutLive
-        live "/#{language}/order/:id", Checkout.OrderLive
-        live "/#{language}/pay/:token", Checkout.PayLive
-        live "/#{language}/account", Account.AccountLive
-        live "/#{language}/account/subscriptions/:id/card", Account.SubscriptionCardLive
+      scope "/", Courses do
+        live "/courses/bookings/:id", CourseBookingLive
+        live "/courses/pay/:token", CoursePayLive
+      end
+
+      scope "/", Checkout do
+        live "/checkout", CheckoutLive
+        live "/order/:id", OrderLive
+        live "/pay/:token", PayLive
+      end
+
+      scope "/", Account do
+        live "/account", AccountLive
+        live "/account/subscriptions/:id/card", SubscriptionCardLive
       end
     end
 

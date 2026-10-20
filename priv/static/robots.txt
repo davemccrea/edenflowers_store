@@ -1,8 +1,11 @@
 User-agent: *
 Disallow: /admin
-Disallow: /checkout/complete/
+Disallow: /account
+Disallow: /checkout
 Disallow: /order/
+Disallow: /pay/
 Disallow: /courses/bookings/
+Disallow: /courses/pay/
 Disallow: /auth
 Disallow: /sign-in
 Disallow: /sign-out
