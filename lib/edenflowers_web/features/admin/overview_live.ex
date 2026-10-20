@@ -6,6 +6,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Catalog
   alias Edenflowers.Courses
   alias Edenflowers.Format
+  alias Edenflowers.Fulfillment
+  alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Orders
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
@@ -25,6 +27,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
      |> assign(:locale, Localize.get_locale())
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
      |> assign(:report_month, previous_month())
+     |> assign(:calendar, Fulfillment.get_shop_calendar!(actor: socket.assigns.current_user))
      |> assign_orders()}
   end
 
@@ -53,6 +56,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               date={@today}
               orders={@today_orders}
               empty={~t"Nothing to make today"}
+              booking={booking(@calendar, @today)}
               locale={@locale}
             />
             <.day_section
@@ -61,6 +65,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               date={Date.add(@today, 1)}
               orders={@tomorrow_orders}
               empty={~t"Nothing to make tomorrow"}
+              booking={booking(@calendar, Date.add(@today, 1))}
               locale={@locale}
               class="border-base-content/12 mt-5 border-t pt-5"
             />
@@ -87,8 +92,33 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   def handle_event("push_subscribed", params, socket),
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
 
+  # Refuses past days, so a page left open overnight can't toggle yesterday.
+  def handle_event("toggle-date", %{"date" => date}, socket) do
+    date = Date.from_iso8601!(date)
+    %{calendar: calendar, current_user: actor} = socket.assigns
+
+    if booking(calendar, date) do
+      {:noreply, assign(socket, :calendar, Fulfillment.toggle_date!(calendar, date, actor: actor))}
+    else
+      {:noreply, socket}
+    end
+  end
+
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{}, socket), do: {:noreply, assign_orders(socket)}
+
+  # Whether customers can book `date` (:open), Jennie closed just that day (:closed),
+  # or neither, when the weekday rule, same-day setting or deadline already shut it.
+  defp booking(calendar, date) do
+    now = Edenflowers.ShopTime.now()
+
+    cond do
+      Date.before?(date, DateTime.to_date(now)) -> nil
+      date in calendar.disabled_dates -> :closed
+      is_nil(Availability.unavailable_reason(calendar, date, now)) -> :open
+      true -> nil
+    end
+  end
 
   defp greeting(%{first_name: first_name}) when is_binary(first_name), do: ~t"Hi, #{first_name}"
 
@@ -366,6 +396,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   attr :date, Date, required: true
   attr :orders, :list, required: true
   attr :empty, :string, required: true
+  attr :booking, :atom, required: true, doc: "`:open`, `:closed` or nil, see `booking/2`"
   attr :locale, :any, required: true
   attr :class, :any, default: nil
 
@@ -377,8 +408,28 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           {@title}
           <span class="text-base-content/65 ml-1 text-sm font-normal">{Format.weekday_day_month(@date, @locale)}</span>
         </h2>
-        <.count_badge count={length(@orders)} active={@orders != []} />
+        <div class="flex items-center gap-2">
+          <.button
+            :if={@booking}
+            id={"#{@id}-toggle"}
+            type="button"
+            variant={if @booking == :open, do: "ghost", else: "secondary"}
+            size="sm"
+            phx-click="toggle-date"
+            phx-value-date={Date.to_iso8601(@date)}
+          >
+            <%= if @booking == :open do %>
+              <.icon name="hero-no-symbol" class="h-4 w-4" /> {~t"Stop orders"}
+            <% else %>
+              <.icon name="hero-arrow-path" class="h-4 w-4" /> {~t"Reopen orders"}
+            <% end %>
+          </.button>
+          <.count_badge count={length(@orders)} active={@orders != []} />
+        </div>
       </div>
+      <p :if={@booking == :closed} class="text-warning-content mb-3 text-sm">
+        {~t"Closed to new orders."}
+      </p>
 
       <div class="space-y-4">
         <div :for={{method, orders} <- by_method(@orders)} id={"#{@id}-#{method}"}>

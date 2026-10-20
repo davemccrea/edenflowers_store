@@ -94,6 +94,28 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(view, "#orders-today", "Nothing to make today")
       refute has_element?(view, "#orders-tomorrow", "Nothing to make tomorrow")
     end
+
+    test "stops and reopens new orders for a day", %{conn: conn} do
+      tomorrow = Date.add(Edenflowers.ShopTime.today(), 1)
+      shop_calendar(available_days: Edenflowers.Fulfillment.Weekday.all(), disabled_dates: [], enabled_dates: [])
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      view |> element("#orders-tomorrow-toggle", "Stop orders") |> render_click()
+      assert tomorrow in Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates
+      assert has_element?(view, "#orders-tomorrow", "Closed to new orders")
+
+      view |> element("#orders-tomorrow-toggle", "Reopen orders") |> render_click()
+      refute tomorrow in Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates
+    end
+
+    test "offers no toggle for a day the weekly rules already close", %{conn: conn} do
+      shop_calendar(same_day: false, disabled_dates: [], enabled_dates: [])
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      refute has_element?(view, "#orders-today-toggle")
+    end
   end
 
   test "flags a delivery with no phone to call", %{conn: conn} do
