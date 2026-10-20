@@ -891,11 +891,12 @@ defmodule Edenflowers.Orders.Order do
 
     action :sales_summary, :map do
       description "Counts paid orders placed between two dates, inclusive, in Helsinki time, and sums the money " <>
-                    "received in that range, refunds taken off."
+                    "received in that range, refunds taken off, in total and for each day."
 
       constraints fields: [
                     order_count: [type: :integer, allow_nil?: false],
-                    revenue: [type: :decimal, allow_nil?: false, constraints: [scale: 2]]
+                    revenue: [type: :decimal, allow_nil?: false, constraints: [scale: 2]],
+                    revenue_by_day: [type: {:array, :map}, allow_nil?: false]
                   ]
 
       argument :from, :date, allow_nil?: false

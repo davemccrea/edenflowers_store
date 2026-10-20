@@ -43,6 +43,13 @@ defmodule Edenflowers.Orders.SalesSummaryTest do
 
     assert summary.order_count == 3
     assert Decimal.equal?(summary.revenue, "124.00")
+
+    assert length(summary.revenue_by_day) == 30
+    by_date = Map.new(summary.revenue_by_day, &{&1.date, &1.revenue})
+    assert Decimal.equal?(by_date[~D[2026-09-01]], "45.00")
+    assert Decimal.equal?(by_date[~D[2026-09-15]], "120.00")
+    assert Decimal.equal?(by_date[~D[2026-09-16]], "-45.00")
+    assert Decimal.equal?(by_date[~D[2026-09-02]], 0)
   end
 
   test "reports zero for a range without paid orders" do

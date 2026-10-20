@@ -79,7 +79,15 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             </div>
           </section>
           <aside class="flex min-w-0 flex-col gap-6">
-            <.sales_widget sales_count={@sales_count} revenue={@revenue} owed={@owed} locale={@locale} />
+            <.sales_widget
+              sales={@sales}
+              last_month={@last_month_sales}
+              last_month_whole={@last_month_whole}
+              last_month_to={@last_month_to}
+              today={@today}
+              owed={@owed}
+              locale={@locale}
+            />
             <.report_widget month={@report_month} />
           </aside>
         </div>
@@ -152,7 +160,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         fn {_key, _icon, _title, rows} -> rows == [] end
       )
 
-    sales = Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor)
+    # Date.shift clamps to the month's last day, so 31.3. compares with 28.2.
+    same_day_last_month = Date.shift(today, month: -1)
 
     socket
     |> assign(:today_orders, today_orders)
@@ -160,8 +169,20 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     |> assign(:attention, attention)
     |> assign(:today, today)
     |> assign(:owed, owed |> Enum.filter(&(&1.kind == :order)) |> sum_amounts())
-    |> assign(:sales_count, sales.order_count)
-    |> assign(:revenue, sales.revenue)
+    |> assign(:sales, Orders.sales_summary!(Date.beginning_of_month(today), today, actor: actor))
+    |> assign(:last_month_to, same_day_last_month)
+    |> assign(
+      :last_month_whole,
+      Orders.sales_summary!(
+        Date.beginning_of_month(same_day_last_month),
+        Date.end_of_month(same_day_last_month),
+        actor: actor
+      )
+    )
+    |> assign(
+      :last_month_sales,
+      Orders.sales_summary!(Date.beginning_of_month(same_day_last_month), same_day_last_month, actor: actor)
+    )
   end
 
   # Largest first, either way.
@@ -259,28 +280,83 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     """
   end
 
-  attr :sales_count, :integer, required: true
-  attr :revenue, :any, required: true
+  attr :sales, :map, required: true, doc: "this month to today, from `sales_summary`"
+  attr :last_month, :map, required: true, doc: "last month to `last_month_to`"
+  attr :last_month_whole, :map, required: true, doc: "all of last month, for the chart"
+  attr :last_month_to, Date, required: true
+  attr :today, Date, required: true
   attr :owed, :any, required: true, doc: "what placed orders still owe, overdue or not"
   attr :locale, :any, required: true
 
   defp sales_widget(assigns) do
+    assigns =
+      assign(assigns, :chart, pace_chart(assigns.sales.revenue_by_day, assigns.last_month_whole.revenue_by_day))
+
     ~H"""
     <.widget title={~t"This month"}>
-      <dl class="grid grid-cols-2 gap-4 xl:grid-cols-1">
-        <div>
-          <dt class="text-base-content/65 text-sm">{~t"Sales"}</dt>
-          <dd class="text-base-content text-2xl font-semibold tabular-nums">{@sales_count}</dd>
-        </div>
-        <div>
-          <dt class="text-base-content/65 text-sm">{~t"Revenue"}</dt>
-          <dd class="text-base-content text-2xl font-semibold tabular-nums">{Format.currency(@revenue, @locale)}</dd>
-        </div>
+      <dl id="revenue">
+        <dt class="text-base-content/65 text-sm">{~t"Revenue"}</dt>
+        <dd class="text-base-content text-3xl font-semibold tabular-nums tracking-tight">
+          {Format.currency(@sales.revenue, @locale)}
+        </dd>
+        <dd id="revenue-last-month" class="text-base-content/65 mt-0.5 text-sm tabular-nums">
+          {~t"#{amount = Format.currency(@last_month.revenue, @locale)} last month by #{date = Format.day_month(@last_month_to, @locale)}"}
+        </dd>
       </dl>
+
+      <figure id="revenue-pace" class="mt-4" aria-hidden="true">
+        <div class="border-base-content/20 relative h-24 border-b">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">
+            <path d={@chart.this_area} class="fill-primary/12" />
+            <path
+              d={@chart.last_line}
+              fill="none"
+              stroke-dasharray="3 3"
+              vector-effect="non-scaling-stroke"
+              class="stroke-base-content/35 stroke-[1.5]"
+            />
+            <path
+              d={@chart.this_line}
+              fill="none"
+              stroke-linejoin="round"
+              vector-effect="non-scaling-stroke"
+              class="stroke-primary stroke-2"
+            />
+          </svg>
+          <span
+            class="bg-primary ring-base-100 absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2"
+            style={"left: #{@chart.today_x}%; top: #{@chart.today_y}%"}
+          />
+        </div>
+        <div class="text-base-content/50 mt-1 flex justify-between text-xs tabular-nums">
+          <span>{Format.day_month(Date.beginning_of_month(@today), @locale)}</span>
+          <span>{Format.day_month(Date.end_of_month(@today), @locale)}</span>
+        </div>
+        <figcaption class="text-base-content/65 mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+          <span class="flex items-center gap-1.5">
+            <span class="bg-primary h-0.5 w-4 rounded-full" /> {~t"This month"}
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="border-base-content/35 border-t-[1.5px] w-4 border-dashed" />
+            {~t"Last month"}
+            <span class="text-base-content/85 tabular-nums">{Format.currency(@last_month_whole.revenue, @locale)}</span>
+          </span>
+        </figcaption>
+      </figure>
+
+      <div class="border-base-content/12 mt-4 border-t pt-3 text-sm">
+        <dl id="sales" class="flex items-baseline justify-between gap-4">
+          <dt class="text-base-content/65">{~t"Sales"}</dt>
+          <dd class="text-base-content text-base font-semibold tabular-nums">{@sales.order_count}</dd>
+        </dl>
+        <p id="sales-last-month" class="text-base-content/65 text-xs tabular-nums">
+          {~t"#{count = @last_month.order_count} last month by #{date = Format.day_month(@last_month_to, @locale)}"}
+        </p>
+      </div>
       <p
         :if={Decimal.positive?(@owed)}
         id="still-owed"
-        class="border-base-content/12 text-base-content/65 mt-4 flex items-baseline justify-between gap-4 border-t pt-3 text-sm"
+        class="border-base-content/12 text-base-content/65 mt-3 flex items-baseline justify-between gap-4 border-t pt-3 text-sm"
       >
         {~t"Still to come in"}
         <span class="text-base-content font-medium tabular-nums">{Format.currency(@owed, @locale)}</span>
@@ -288,6 +364,42 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     </.widget>
     """
   end
+
+  # Running revenue totals by day of month, in a 100×100 box with the y-axis
+  # flipped, so this month reads against where last month stood on the same day.
+  defp pace_chart(this_month, last_month) do
+    this = running_totals(this_month)
+    last = running_totals(last_month)
+    span = max(Date.days_in_month(hd(this_month).date), length(last_month))
+    values = this ++ last
+    low = min(0, Enum.min(values))
+    high = max(Enum.max(values), low + 1)
+
+    point = fn index, value ->
+      {Float.round(index / (span - 1) * 100, 2), Float.round(96 - (value - low) / (high - low) * 92, 2)}
+    end
+
+    this_points = this |> Enum.with_index() |> Enum.map(fn {value, index} -> point.(index, value) end)
+    last_points = last |> Enum.with_index() |> Enum.map(fn {value, index} -> point.(index, value) end)
+    {today_x, today_y} = List.last(this_points)
+    {_, baseline} = point.(0, low)
+
+    %{
+      this_line: svg_path(this_points),
+      this_area: svg_path(this_points) <> " L#{today_x},#{baseline} L0,#{baseline} Z",
+      last_line: svg_path(last_points),
+      today_x: today_x,
+      today_y: today_y
+    }
+  end
+
+  defp running_totals(days) do
+    days
+    |> Enum.scan(Decimal.new(0), &Decimal.add(&1.revenue, &2))
+    |> Enum.map(&Decimal.to_float/1)
+  end
+
+  defp svg_path([{x, y} | rest]), do: Enum.reduce(rest, "M#{x},#{y}", fn {x, y}, path -> path <> " L#{x},#{y}" end)
 
   attr :month, :string, required: true
 

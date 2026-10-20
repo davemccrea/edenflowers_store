@@ -1,9 +1,10 @@
 ---
 id: TASK-67.7
 title: Compare this month's sales with the same point last month
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
+updated_date: '2026-10-20 17:19'
 labels:
   - quick
 dependencies: []
@@ -25,6 +26,6 @@ ordinal: 148000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Last month's figures cover the matching days, including at month ends
-- [ ] #2 The existing suite passes
+- [x] #1 Last month's figures cover the matching days, including at month ends
+- [x] #2 The existing suite passes
 <!-- AC:END -->

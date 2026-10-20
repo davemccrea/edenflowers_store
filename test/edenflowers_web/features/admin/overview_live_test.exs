@@ -304,8 +304,31 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin")
 
-    sales = view |> element("dl") |> render()
-    assert sales =~ ~r/>\s*2\s*</
-    assert sales =~ "90.00"
+    assert view |> element("#sales dd") |> render() =~ ~r/>\s*2\s*</
+    assert has_element?(view, "#revenue dd", "€90.00")
+  end
+
+  test "compares with last month up to the same day", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+
+    conn =
+      conn
+      |> Plug.Test.init_test_session(%{})
+      |> Helpers.store_in_session(admin)
+
+    same_day = Date.shift(Edenflowers.ShopTime.today(), month: -1)
+    noon = fn date -> DateTime.new!(date, ~T[12:00:00], Edenflowers.ShopTime.timezone()) end
+
+    placed_order(ordered_at: noon.(Date.beginning_of_month(same_day)), paid: "30.00")
+    placed_order(ordered_at: noon.(same_day), paid: "20.00")
+    # Past the matching day, so it doesn't count even when it falls in last month.
+    placed_order(ordered_at: noon.(Date.add(same_day, 1)), paid: "45.00")
+
+    {:ok, view, _html} = live(conn, ~p"/admin")
+
+    to = Edenflowers.Format.day_month(same_day, Edenflowers.Format.locale())
+    assert has_element?(view, "#sales-last-month", "2 last month by #{to}")
+    assert has_element?(view, "#revenue-last-month", "€50.00 last month by #{to}")
+    assert has_element?(view, "#revenue-pace", "Last month")
   end
 end
