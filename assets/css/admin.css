@@ -41,9 +41,21 @@ html[data-admin-transition] {
   view-transition-name: admin-page;
 }
 
-/* A scrolled page's snapshot reaches up behind the topbar. */
-html[data-admin-transition]::view-transition {
-  clip-path: inset(var(--admin-topbar-bottom) 0 0 0);
+/* The page is pinned to the screen for its old snapshot (app.js). Moving it
+   from there to the new page's place would slide it vertically, so the
+   snapshot stays put and the old page is shifted back to where it was. Above
+   the new page, the search bar is already back, so the old one is cut off
+   there rather than covering it. */
+html[data-admin-transition] {
+  &::view-transition {
+    clip-path: inset(var(--admin-page-top) 0 0 0);
+  }
+  &::view-transition-group(admin-page) {
+    animation: none;
+  }
+  &::view-transition-old(admin-page) {
+    top: var(--admin-page-shift);
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
