@@ -287,6 +287,32 @@ defmodule EdenflowersWeb.Layouts do
         </main>
       </div>
     </div>
+
+    <.app_switch_link
+      id="store-shortcut"
+      href={~q"/#{language}"}
+      label={~t"View store"}
+      class="lg:left-[calc(16rem+1.5rem)]"
+    />
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :href, :string, required: true
+  attr :label, :string, required: true
+  attr :class, :string, default: nil
+
+  defp app_switch_link(assigns) do
+    ~H"""
+    <.link
+      id={@id}
+      href={@href}
+      aria-label={@label}
+      title={@label}
+      class={["bg-base-100 border-base-content/12 bottom-[calc(1rem+env(safe-area-inset-bottom))] group fixed left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border shadow-md sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] sm:left-6", @class]}
+    >
+      <.icon name="hero-arrows-right-left" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+    </.link>
     """
   end
 
@@ -482,12 +508,6 @@ defmodule EdenflowersWeb.Layouts do
           </.link>
         </li>
         <li>
-          <.link href={~q"/#{language}"}>
-            <.icon name="hero-building-storefront" class="h-4 w-4" />
-            {~t"View store"}
-          </.link>
-        </li>
-        <li>
           <.link href={~p"/sign-out"} method="delete">
             <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
             {~t"Sign out"}
@@ -637,17 +657,6 @@ defmodule EdenflowersWeb.Layouts do
                 </button>
               </div>
 
-              <%!-- Sits beside the menu button below xl because the right side is already wider, which pushes the logo off-centre --%>
-              <.link
-                :if={@current_user && @current_user.admin}
-                id="admin-shortcut-compact"
-                navigate={~p"/admin"}
-                aria-label="Admin"
-                class="touch-target group flex h-12 w-8 items-center justify-center xl:hidden"
-              >
-                <.icon name="hero-squares-2x2" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-              </.link>
-
               <nav class="hidden xl:block">
                 <ul class="flex gap-6">
                   <li :for={{url, name} <- @nav}>
@@ -672,16 +681,6 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="flex items-center justify-end md:gap-4">
-              <.link
-                :if={@current_user && @current_user.admin}
-                id="admin-shortcut"
-                navigate={~p"/admin"}
-                class="group hidden items-center gap-2 xl:flex"
-              >
-                <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-squares-2x2" />
-                <span class="text-base-content whitespace-nowrap text-sm group-hover:text-base-content/60">Admin</span>
-              </.link>
-
               <%!-- Sign in (tablet and up, phones use the nav drawer) --%>
               <.link
                 navigate={if @current_user, do: ~p"/account"}
@@ -743,6 +742,8 @@ defmodule EdenflowersWeb.Layouts do
         </section>
       </header>
     </div>
+
+    <.app_switch_link :if={@current_user && @current_user.admin} id="admin-shortcut" href={~p"/admin"} label="Admin" />
 
     <.flash_group flash={@flash} />
 
