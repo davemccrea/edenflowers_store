@@ -525,7 +525,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             :if={@booking}
             id={"#{@id}-toggle"}
             type="button"
-            variant={if @booking == :open, do: "ghost", else: "secondary"}
+            variant="secondary"
             size="sm"
             phx-click="toggle-date"
             phx-value-date={Date.to_iso8601(@date)}

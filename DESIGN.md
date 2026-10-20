@@ -251,6 +251,19 @@ A tinted divider that carries meaning (the admin Overview's overdue `divide-erro
 - **Inverse:** white outline at 80% over photography; on hover and focus it fills white with `base-content` text. Its focus ring is overridden to white via `--focus-color`, because the default green ring disappears on a dark photograph.
 - **Ghost / Destructive:** `btn-ghost`, and `btn-error btn-outline`.
 - **Text:** not a button at all — it drops the `btn` class entirely and renders as an inline link with the static body underline, going to full-opacity underline on hover.
+
+**Which variant.** Pick by the action's role, never by how loud it should feel:
+
+| Variant | Use for | Examples |
+|---|---|---|
+| Primary | The one action a surface (page header, card, drawer, form) exists for. At most one per surface. | Save, Place order, Mark as delivered, New order on a list page, Turn on |
+| Secondary | Every other action. The default. | Edit, Pause, Add booking, Translate, View in store, Undo |
+| Destructive | A remove, delete or reset shown on the page itself. In a ⋯ menu, use an `actions_menu_button` with `text-error` instead. | Remove size, Reset calendar |
+| Ghost | Only Cancel or a dismiss beside a primary, and icon-only buttons (`icon_button`). A ghost button with a text label reads as plain text, so it is never the only way to act. | Cancel, Not now |
+| Text | An action inside a sentence or a row of prose. | Storefront inline links |
+| Inverse | Over photography only. | Hero calls to action |
+
+Size follows place: `sm` in page headers, cards and table rows; `md` for a form's submit and a drawer's footer.
 - **Press:** `opacity: 0.9; translate: 0 1px; transition: none` on `:active`, excluding disabled and link variants. Modelled on the Nord Design System.
 - **Focus:** a 2px `currentColor` outline at 2px offset, recoloured to `--focus-color` (default primary) — applied globally, including on compound daisyUI fields that draw their outline on a wrapper rather than the input.
 

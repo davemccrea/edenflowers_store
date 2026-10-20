@@ -144,7 +144,7 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
         <h3 id={@id} class="text-base-content font-medium">{@label}</h3>
         <.button
           type="button"
-          variant="neutral"
+          variant="secondary"
           size="sm"
           phx-click="translate"
           phx-value-from={@locale}

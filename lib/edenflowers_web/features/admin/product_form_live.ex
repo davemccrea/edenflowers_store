@@ -57,7 +57,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               :if={@form.source.type == :update && !@form.source.data.draft}
               href={~q"/#{language}/product/#{@form.source.data.id}"}
               target="_blank"
-              variant="ghost"
+              variant="secondary"
               size="sm"
             >
               <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" /> {~t"View in store"}
@@ -127,9 +127,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                           type="button"
                           phx-click="remove_variant"
                           phx-value-path={variant.name}
-                          variant="ghost"
+                          variant="destructive"
                           size="sm"
-                          class="text-error ml-auto"
+                          class="ml-auto"
                         >
                           {~t"Remove"}
                         </.button>
@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     class="select w-full"
                   />
                 </div>
-                <.button type="button" phx-click="mark_sold_out" variant="ghost" size="sm" data-testid="mark-sold-out">
+                <.button type="button" phx-click="mark_sold_out" variant="secondary" size="sm" data-testid="mark-sold-out">
                   {~t"Mark every size sold out"}
                 </.button>
               </div>

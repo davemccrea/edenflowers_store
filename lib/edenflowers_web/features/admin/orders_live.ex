@@ -37,7 +37,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
       <.admin_page>
         <.admin_page_header title={~t"Orders"}>
           <:actions>
-            <.button navigate={~p"/admin/orders/new"} variant="neutral" size="sm">
+            <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
             </.button>
           </:actions>
