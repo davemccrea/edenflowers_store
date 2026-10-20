@@ -4,7 +4,7 @@ title: Show what needs Jennie's attention at the top of the Overview
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-20 06:52'
+updated_date: '2026-10-20 06:57'
 labels: []
 dependencies:
   - TASK-67.1
@@ -36,3 +36,9 @@ Each count comes from a domain read action; no filtering in the LiveView. Refres
 - [ ] #2 Counts come from domain read actions
 - [ ] #3 The existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Remove the Overdue groups from the Today widget (the overdue: attr on day_widget) when the strip lands.
+<!-- SECTION:NOTES:END -->

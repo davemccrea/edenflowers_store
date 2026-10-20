@@ -3,9 +3,10 @@ id: TASK-67.1
 title: >-
   List only today's and tomorrow's orders on the Overview, deliveries and
   pickups apart
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
+updated_date: '2026-10-20 06:57'
 labels: []
 dependencies: []
 parent_task_id: TASK-67
@@ -29,8 +30,14 @@ ordinal: 142000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Only today's and tomorrow's open orders are listed
-- [ ] #2 Deliveries and pickups are grouped apart within each day
-- [ ] #3 The layout reads well at phone and desktop widths
-- [ ] #4 The existing suite passes
+- [x] #1 Only today's and tomorrow's open orders are listed
+- [x] #2 Deliveries and pickups are grouped apart within each day
+- [x] #3 The layout reads well at phone and desktop widths
+- [x] #4 The existing suite passes
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Overdue orders stay at the top of Today, grouped by date, until TASK-67.2 moves them to Needs attention; hiding them before then would lose them.
+<!-- SECTION:NOTES:END -->

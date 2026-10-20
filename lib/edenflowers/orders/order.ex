@@ -380,11 +380,15 @@ defmodule Edenflowers.Orders.Order do
       prepare build(sort: [ordered_at: :desc], limit: 1)
     end
 
-    read :open do
-      filter expr(state == :placed and fulfillment_status == :pending)
+    # What the Overview lists: everything still to make up to tomorrow, overdue included.
+    read :due_by_tomorrow do
+      filter expr(
+               state == :placed and fulfillment_status == :pending and
+                 fulfillment_date <= date_add(helsinki_today(), 1, :day)
+             )
 
       prepare build(
-                sort: [fulfillment_date: :asc],
+                sort: [fulfillment_date: :asc, fulfillment_time_start: :asc_nils_last, distance: :asc_nils_last],
                 load: [
                   :customer_name,
                   :order_reference,
@@ -408,8 +412,8 @@ defmodule Edenflowers.Orders.Order do
               )
     end
 
-    # Table feed for /admin/orders, kept apart from :open so the table's loads
-    # and sorting stay out of the Overview's read.
+    # Table feed for /admin/orders, kept apart from :due_by_tomorrow so the table's
+    # loads and sorting stay out of the Overview's read.
     read :admin_list do
       pagination offset?: true, keyset?: true, countable: true, required?: false
 
