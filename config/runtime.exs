@@ -119,20 +119,6 @@ if config_env() == :prod do
       System.get_env("TOKEN_SIGNING_SECRET") || raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
 
   config :edenflowers, Edenflowers.Mailer,
-    adapter: Swoosh.Adapters.SMTP,
-    relay: "smtp.fastmail.com",
-    port: 587,
-    tls: :always,
-    auth: :always,
-    no_mx_lookups: true,
-    username: System.get_env("SMTP_USERNAME") || raise("environment variable SMTP_USERNAME is missing."),
-    password: System.get_env("SMTP_PASSWORD") || raise("environment variable SMTP_PASSWORD is missing."),
-    tls_options: [
-      verify: :verify_peer,
-      # gen_smtp defaults to depth 0, which rejects Fastmail's intermediate CA.
-      depth: 3,
-      cacerts: :public_key.cacerts_get(),
-      server_name_indication: ~c"smtp.fastmail.com",
-      customize_hostname_check: [match_fun: :public_key.pkix_verify_hostname_match_fun(:https)]
-    ]
+    adapter: Swoosh.Adapters.Brevo,
+    api_key: System.get_env("BREVO_API_KEY") || raise("environment variable BREVO_API_KEY is missing.")
 end

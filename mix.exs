@@ -117,7 +117,6 @@ defmodule Edenflowers.MixProject do
       {:req_llm, "~> 1.18"},
       {:stripity_stripe, "~> 3.2"},
       {:swoosh, "~> 1.16"},
-      {:gen_smtp, "~> 1.2"},
       # Utilities
       {:hammer, "~> 7.0"},
       {:ex_phone_number, "~> 0.4"},

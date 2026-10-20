@@ -1,9 +1,10 @@
 ---
 id: TASK-51
 title: Send the store's email through a dedicated provider instead of Fastmail
-status: needs-triage
+status: ready-for-human
 assignee: []
 created_date: '2026-10-18 19:07'
+updated_date: '2026-10-20 21:00'
 labels:
   - spec
   - customers
@@ -39,8 +40,31 @@ Sources: https://www.fastmail.com/policies/terms-of-service/ (sections 3 and 4),
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A provider is chosen and recorded in this task
+- [x] #1 A provider is chosen and recorded in this task
 - [ ] #2 Production sends all store email through the new provider, not smtp.fastmail.com
 - [ ] #3 SPF, DKIM and DMARC records for edenflowers.fi cover the new provider, and a test email passes all three
 - [ ] #4 A sign-in code and an order confirmation arrive in a real inbox from staging and production
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Chose Brevo (2026-10-21): EU-based, transactional email and campaigns, SMS and WhatsApp, and Swoosh ships an adapter. Maileroo was considered: cheaper and SMTP-compatible, but its SMS/WhatsApp only sends verification codes.
+
+Mailer now uses Swoosh.Adapters.Brevo with BREVO_API_KEY (prod already uses Swoosh.ApiClient.Req); gen_smtp dropped. phoenix-ansible passes BREVO_API_KEY from vault_brevo_api_key in place of the SMTP vars.
+
+Left for a human: create the Brevo account, verify edenflowers.fi and the sender, add Brevo's DKIM/SPF/DMARC records, put vault_brevo_api_key in vault.yml for staging and production, then test real inboxes.
+<!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-20 21:00
+
+---
+
+Code side is done (Brevo adapter, phoenix-ansible vars). Left: Brevo account and domain verification, DNS records, vault_brevo_api_key in vault.yml, then deploy and check a sign-in code and order confirmation arrive (AC 2-4).
+
+---
+<!-- COMMENTS:END -->
