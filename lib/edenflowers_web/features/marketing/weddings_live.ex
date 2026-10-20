@@ -527,12 +527,10 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
   defp price_list(assigns) do
     ~H"""
     <dl class="border-t">
-      <div :for={item <- @items} class="flex items-center justify-between gap-6 border-b py-3">
-        <div>
-          <dt class="text-lg">{item.label}</dt>
-          <dd class="text-base-content font-serif text-lg tabular-nums">{price_label(item.price)}</dd>
-        </div>
-        <dd class="shrink-0">
+      <div :for={item <- @items} class="grid-cols-[1fr_auto] grid items-center gap-x-6 border-b py-3">
+        <dt class="text-lg">{item.label}</dt>
+        <dd class="text-base-content font-serif text-lg tabular-nums">{price_label(item.price)}</dd>
+        <dd class="col-start-2 row-span-2 row-start-1">
           <.quantity_picker item={item} quantity={Map.get(@quantities, item.id, 0)} />
         </dd>
       </div>

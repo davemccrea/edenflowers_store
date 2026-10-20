@@ -130,6 +130,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
                   product={product}
                   navigate={~p"/product/#{product}"}
                   locale={Edenflowers.Format.locale()}
+                  heading="h2"
                 />
               </li>
             </ul>
