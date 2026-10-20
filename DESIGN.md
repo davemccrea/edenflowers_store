@@ -247,7 +247,7 @@ A tinted divider that carries meaning (the admin Overview's overdue `divide-erro
 ### Buttons
 - **Shape:** hard corners (`0`), no shadow, sans, weight 500, normal case, normal tracking. Sizing comes from daisyUI's `btn-sm` / `btn-md` / `btn-lg` scale.
 - **Primary:** deep green fill, near-white text (`btn-primary`).
-- **Secondary:** green outline on transparent (`btn-primary btn-outline`).
+- **Secondary:** green outline on transparent (`btn-primary btn-outline`) on the storefront. In the admin interface, a warm-neutral fill (`base-200`), subtle border (`base-300`), and dark text (`base-content`); hover and press deepen the fill to `base-300`.
 - **Inverse:** white outline at 80% over photography; on hover and focus it fills white with `base-content` text. Its focus ring is overridden to white via `--focus-color`, because the default green ring disappears on a dark photograph.
 - **Ghost / Destructive:** `btn-ghost`, and `btn-error btn-outline`.
 - **Text:** not a button at all — it drops the `btn` class entirely and renders as an inline link with the static body underline, going to full-opacity underline on hover.
