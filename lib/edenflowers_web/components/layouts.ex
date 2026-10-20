@@ -231,7 +231,7 @@ defmodule EdenflowersWeb.Layouts do
         id="admin-nav-drawer"
         placement="left"
         label={~t"Admin navigation"}
-        class="bg-base-200 border-base-content/12 flex h-full w-64 flex-col border-r"
+        class="bg-base-200 border-base-content/20 flex h-full w-64 flex-col border-r"
       >
         <.admin_sidebar_content
           nav_sections={@nav_sections}
@@ -244,7 +244,7 @@ defmodule EdenflowersWeb.Layouts do
       <%!-- Desktop: persistent sidebar, pinned so it stays in view while content scrolls --%>
       <aside
         aria-label={~t"Admin navigation"}
-        class="[view-transition-name:admin-sidebar] bg-base-200 border-base-content/12 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
+        class="[view-transition-name:admin-sidebar] bg-base-200 border-base-content/20 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
       >
         <.admin_sidebar_content
           nav_sections={@nav_sections}
@@ -259,7 +259,7 @@ defmodule EdenflowersWeb.Layouts do
              Equal side columns keep the wordmark centred on the bar.
              It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
              blur over the top edge unless a sticky or fixed element covers it. --%>
-        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
+        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] bg-base-200 border-base-content/20 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
           <div class="flex items-center">
             <button
               type="button"
@@ -289,11 +289,11 @@ defmodule EdenflowersWeb.Layouts do
           </div>
         </div>
 
-        <div class="[view-transition-name:admin-search] border-base-content/12 border-b px-4 py-2 lg:hidden">
+        <div class="[view-transition-name:admin-search] border-base-content/20 border-b px-4 py-2 lg:hidden">
           <.admin_search id="admin-search-mobile" />
         </div>
 
-        <div class="[view-transition-name:admin-header] border-base-content/12 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
+        <div class="[view-transition-name:admin-header] border-base-content/20 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
           <.admin_search id="admin-search" class="w-full max-w-md" />
           <.admin_account_menu current_user={@current_user} />
         </div>
