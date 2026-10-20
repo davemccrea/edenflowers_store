@@ -623,11 +623,11 @@ defmodule EdenflowersWeb.Layouts do
       <header class="w-full">
         <section class="bg-base-100 border-b px-3 py-2 sm:px-6 sm:py-4">
           <div class="grid-cols-[1fr_auto_1fr] grid items-center xl:gap-x-8">
-            <div class="flex justify-start">
-              <div class="block xl:hidden">
+            <div class="flex items-center justify-start">
+              <div class="flex xl:hidden">
                 <button
                   type="button"
-                  class="h-12 w-12"
+                  class="flex h-12 w-12 items-center justify-center"
                   aria-label={~t"Open navigation menu"}
                   aria-controls="nav-drawer"
                   aria-expanded="false"
@@ -643,7 +643,7 @@ defmodule EdenflowersWeb.Layouts do
                 id="admin-shortcut-compact"
                 navigate={~p"/admin"}
                 aria-label="Admin"
-                class="touch-target group flex h-12 w-10 items-center justify-center xl:hidden"
+                class="touch-target group flex h-12 w-8 items-center justify-center xl:hidden"
               >
                 <.icon name="hero-squares-2x2" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
               </.link>
