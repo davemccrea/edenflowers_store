@@ -1,10 +1,10 @@
 ---
 id: TASK-75
 title: Name the service and place in page titles
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-20 10:26'
-updated_date: '2026-10-20 17:12'
+updated_date: '2026-10-20 17:44'
 labels:
   - spec
   - customers
