@@ -152,6 +152,8 @@ msgstr "Kassa"
 msgid "Payment"
 msgstr "Maksu"
 
+#: lib/edenflowers/email/previews.ex:335
+#: lib/edenflowers/email/previews.ex:336
 #: lib/edenflowers_web/components/layouts.ex:491
 #: lib/edenflowers_web/components/layouts.ex:612
 #: lib/edenflowers_web/components/layouts.ex:704
@@ -600,6 +602,10 @@ msgstr "Jos et ole paikalla, kukat jätetään turvalliseen ja varjoisaan paikka
 msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr "Vaasan kartta, johon Minimossen on merkitty"
 
+#: lib/edenflowers/email/previews.ex:327
+#: lib/edenflowers/email/previews.ex:329
+#: lib/edenflowers/email/previews.ex:331
+#: lib/edenflowers/email/previews.ex:333
 #: lib/edenflowers_web/components/newsletter_signup.ex:14
 #: lib/edenflowers_web/features/account/account_live.ex:171
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:65
@@ -3209,6 +3215,11 @@ msgstr "Muistiinpano tallennettu."
 msgid "Order %{reference}"
 msgstr "Tilaus %{reference}"
 
+#: lib/edenflowers/email/previews.ex:223
+#: lib/edenflowers/email/previews.ex:225
+#: lib/edenflowers/email/previews.ex:227
+#: lib/edenflowers/email/previews.ex:238
+#: lib/edenflowers/email/previews.ex:254
 #: lib/edenflowers_web/features/checkout/pay_live.ex:52
 #, elixir-autogen, elixir-format
 msgid "Order cancelled"
@@ -6348,12 +6359,12 @@ msgstr "Summa on suurempi kuin on vastaanotettu."
 
 #: lib/edenflowers_web/components/layouts.ex:194
 #: lib/edenflowers_web/features/admin/emails_live.ex:21
-#: lib/edenflowers_web/features/admin/emails_live.ex:38
+#: lib/edenflowers_web/features/admin/emails_live.ex:42
 #, elixir-autogen, elixir-format
 msgid "Emails"
 msgstr "Sähköpostit"
 
-#: lib/edenflowers_web/features/admin/emails_live.ex:39
+#: lib/edenflowers_web/features/admin/emails_live.ex:43
 #, elixir-autogen, elixir-format
 msgid "Every email customers can get, with example details."
 msgstr "Kaikki sähköpostit, joita asiakkaat voivat saada, esimerkkitiedoin."
@@ -6617,6 +6628,7 @@ msgstr "Myöhässä olevat tilaukset"
 msgid "Payment overdue"
 msgstr "Maksu erääntynyt"
 
+#: lib/edenflowers/email/previews.ex:159
 #: lib/edenflowers_web/features/admin/overview_live.ex:145
 #, elixir-autogen, elixir-format
 msgid "Subscription payment failed"
@@ -7077,3 +7089,44 @@ msgstr "Avaa tilaukset"
 #, elixir-autogen, elixir-format
 msgid "Stop orders"
 msgstr "Sulje tilaukset"
+
+#: lib/edenflowers/email/previews.ex:272
+#, elixir-autogen, elixir-format
+msgid "Course confirmation"
+msgstr "Kurssivahvistus"
+
+#: lib/edenflowers/email/previews.ex:283
+#, elixir-autogen, elixir-format
+msgid "Course payment link"
+msgstr "Kurssin maksulinkki"
+
+#: lib/edenflowers/email/previews.ex:68
+#, elixir-autogen, elixir-format
+msgid "Order confirmation"
+msgstr "Tilausvahvistus"
+
+#: lib/edenflowers/email/previews.ex:149
+#, elixir-autogen, elixir-format
+msgid "Order details (custom order)"
+msgstr "Tilauksen tiedot (tilaustyö)"
+
+#: lib/edenflowers/email/previews.ex:197
+#, elixir-autogen, elixir-format
+msgid "Order fulfilled"
+msgstr "Tilaus toimitettu"
+
+#: lib/edenflowers/email/previews.ex:203
+#, elixir-autogen, elixir-format
+msgid "Order left at door (photo)"
+msgstr "Tilaus jätetty ovelle (kuva)"
+
+#: lib/edenflowers/email/previews.ex:188
+#, elixir-autogen, elixir-format
+msgid "Subscription set up"
+msgstr "Kestotilaus aloitettu"
+
+#: lib/edenflowers/email/previews.ex:317
+#: lib/edenflowers/email/previews.ex:318
+#, elixir-autogen, elixir-format
+msgid "Wedding enquiry copy"
+msgstr "Kopio hääkyselystä"

@@ -8,6 +8,8 @@ defmodule Edenflowers.Email.Previews do
   here so Jennie can proofread it.
   """
 
+  use Gettext, backend: EdenflowersWeb.Gettext
+
   alias Edenflowers.Email
 
   @payment_link "https://buy.stripe.com/test_example"
@@ -63,7 +65,7 @@ defmodule Edenflowers.Email.Previews do
         payments: [%{amount: Decimal.new("64.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}]
       }
 
-      {"Order confirmation", title, :order_confirmation,
+      {gettext_noop("Order confirmation"), title, :order_confirmation,
        Email.order_confirmation(order(Map.merge(paid_attrs, attrs), locale))}
     end
   end
@@ -144,7 +146,8 @@ defmodule Edenflowers.Email.Previews do
            }, nil},
           {"no customer first name", %{customer_first_name: nil}, @payment_link}
         ] do
-      {"Order details (custom order)", title, :order_details, Email.order_details(order(attrs, locale), link)}
+      {gettext_noop("Order details (custom order)"), title, :order_details,
+       Email.order_details(order(attrs, locale), link)}
     end
   end
 
@@ -153,7 +156,8 @@ defmodule Edenflowers.Email.Previews do
           {"delivery", %{}},
           {"pickup, no customer first name", %{fulfillment_method: :pickup, customer_first_name: nil}}
         ] do
-      {"Subscription payment failed", title, :payment_failed, Email.payment_failed(order(attrs, locale), @payment_link)}
+      {gettext_noop("Subscription payment failed"), title, :payment_failed,
+       Email.payment_failed(order(attrs, locale), @payment_link)}
     end
   end
 
@@ -181,7 +185,8 @@ defmodule Edenflowers.Email.Previews do
           {"delivery, discount only", %{first_order_discounted?: true, card_message: nil}},
           {"delivery, card message only", %{first_order_discounted?: false, card_message: "Thinking of you!"}}
         ] do
-      {"Subscription set up", title, :subscription_set_up, Email.subscription_set_up(subscription(attrs, locale))}
+      {gettext_noop("Subscription set up"), title, :subscription_set_up,
+       Email.subscription_set_up(subscription(attrs, locale))}
     end
   end
 
@@ -189,13 +194,13 @@ defmodule Edenflowers.Email.Previews do
     for {title, attrs} <-
           fulfillment_variants() ++
             [{"pickup", %{fulfillment_method: :pickup, gift: false, recipient_first_name: nil}}] do
-      {"Order fulfilled", title, :order_fulfilled, Email.order_fulfilled(order(attrs, locale))}
+      {gettext_noop("Order fulfilled"), title, :order_fulfilled, Email.order_fulfilled(order(attrs, locale))}
     end
   end
 
   defp order_left_at_door(locale) do
     for {title, attrs} <- fulfillment_variants() do
-      {"Order left at door (photo)", title, :order_left_at_door,
+      {gettext_noop("Order left at door (photo)"), title, :order_left_at_door,
        Email.order_left_at_door(order(attrs, locale), "fictional-jpeg-bytes")}
     end
   end
@@ -215,11 +220,11 @@ defmodule Edenflowers.Email.Previews do
     paid_attrs = %{amount_paid: Decimal.new("64.00"), balance: Decimal.new(0)}
 
     [
-      {"Order cancelled", "refunded to a card", :order_cancelled,
+      {gettext_noop("Order cancelled"), "refunded to a card", :order_cancelled,
        Email.order_cancelled(order(Map.merge(paid_attrs, %{payments: [card]}), locale), Decimal.new("64.00"))},
-      {"Order cancelled", "refunded to MobilePay", :order_cancelled,
+      {gettext_noop("Order cancelled"), "refunded to MobilePay", :order_cancelled,
        Email.order_cancelled(order(Map.merge(paid_attrs, %{payments: mobilepay}), locale), Decimal.new("64.00"))},
-      {"Order cancelled", "refunded, paid more than one way", :order_cancelled,
+      {gettext_noop("Order cancelled"), "refunded, paid more than one way", :order_cancelled,
        Email.order_cancelled(
          order(
            Map.merge(
@@ -230,7 +235,7 @@ defmodule Edenflowers.Email.Previews do
          ),
          Decimal.new("64.00")
        )},
-      {"Order cancelled", "pickup, refunded", :order_cancelled,
+      {gettext_noop("Order cancelled"), "pickup, refunded", :order_cancelled,
        Email.order_cancelled(
          order(
            %{
@@ -246,7 +251,7 @@ defmodule Edenflowers.Email.Previews do
          ),
          Decimal.new("54.00")
        )},
-      {"Order cancelled", "nothing to refund, no customer first name", :order_cancelled,
+      {gettext_noop("Order cancelled"), "nothing to refund, no customer first name", :order_cancelled,
        Email.order_cancelled(order(%{customer_first_name: nil, payments: []}, locale), Decimal.new(0))}
     ]
   end
@@ -264,7 +269,8 @@ defmodule Edenflowers.Email.Previews do
            @payment_link},
           {"no first name", %{first_name: nil}, @payment_link}
         ] do
-      {"Course confirmation", title, :course_confirmation, Email.course_confirmation(registration(attrs, locale), link)}
+      {gettext_noop("Course confirmation"), title, :course_confirmation,
+       Email.course_confirmation(registration(attrs, locale), link)}
     end
   end
 
@@ -274,7 +280,7 @@ defmodule Edenflowers.Email.Previews do
           {"partially paid", %{amount_paid: Decimal.new("25.00"), balance: Decimal.new("20.00")}},
           {"no first name", %{first_name: nil}}
         ] do
-      {"Course payment link", title, :course_payment_link,
+      {gettext_noop("Course payment link"), title, :course_payment_link,
        Email.course_payment_link(registration(attrs, locale), @payment_link)}
     end
   end
@@ -308,8 +314,9 @@ defmodule Edenflowers.Email.Previews do
     minimal = Map.merge(full, %{"venue" => nil, "guests" => nil, "selection" => [], "message" => nil})
 
     [
-      {"Wedding enquiry copy", "everything filled in", :wedding_enquiry, Email.wedding_enquiry(full)},
-      {"Wedding enquiry copy", "only the required fields", :wedding_enquiry, Email.wedding_enquiry(minimal)}
+      {gettext_noop("Wedding enquiry copy"), "everything filled in", :wedding_enquiry, Email.wedding_enquiry(full)},
+      {gettext_noop("Wedding enquiry copy"), "only the required fields", :wedding_enquiry,
+       Email.wedding_enquiry(minimal)}
     ]
   end
 
@@ -317,16 +324,17 @@ defmodule Edenflowers.Email.Previews do
     promo = %{code: "WELCOME-7K2P", expiration_date: ~D[2026-11-18]}
 
     [
-      {"Newsletter", "welcome with promo code", :newsletter_promo,
+      {gettext_noop("Newsletter"), "welcome with promo code", :newsletter_promo,
        Email.newsletter_promo("maria@example.com", promo, locale)},
-      {"Newsletter", "already subscribed", :newsletter_already_subscribed,
+      {gettext_noop("Newsletter"), "already subscribed", :newsletter_already_subscribed,
        Email.newsletter_already_subscribed("maria@example.com", promo, locale)},
-      {"Newsletter", "resubscribed, code already used", :newsletter_resubscribed,
+      {gettext_noop("Newsletter"), "resubscribed, code already used", :newsletter_resubscribed,
        Email.newsletter_resubscribed("maria@example.com")},
-      {"Newsletter", "resubscribed, code expired", :newsletter_resubscribed,
+      {gettext_noop("Newsletter"), "resubscribed, code expired", :newsletter_resubscribed,
        Email.newsletter_resubscribed("maria@example.com")},
-      {"Account", "sign-in code", :otp_sign_in, Email.otp_sign_in("maria@example.com", "482913")},
-      {"Account", "email change code", :email_change_code, Email.email_change_code("maria@example.com", "730184")}
+      {gettext_noop("Account"), "sign-in code", :otp_sign_in, Email.otp_sign_in("maria@example.com", "482913")},
+      {gettext_noop("Account"), "email change code", :email_change_code,
+       Email.email_change_code("maria@example.com", "730184")}
     ]
   end
 

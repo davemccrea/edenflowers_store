@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Admin.EmailsLiveTest do
 
     {:ok, view, html} = live(conn, ~p"/admin/emails")
     assert html =~ "Your receipt for Eden Flowers order EF-1042"
-    assert has_element?(view, "section h2", "Order confirmation")
+    assert has_element?(view, "details > summary", "Order confirmation")
     assert has_element?(view, "details summary", "not yet fulfilled, cancellable")
 
     html = view |> element("a", "Suomi") |> render_click()
