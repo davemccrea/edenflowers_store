@@ -153,7 +153,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin")
 
       refute has_element?(view, "#attention")
-      refute has_element?(view, "#balances")
+      refute has_element?(view, "#still-owed")
     end
 
     test "lists overdue orders and orders missing the recipient's phone", %{conn: conn} do
@@ -214,16 +214,15 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(view, ~s|#attention-sold-out a[href="/admin/products/#{product.id}"]|, "Peony bouquet")
     end
 
-    test "flags refunds and overdue payments, and lists the rest to collect", %{conn: conn} do
+    test "flags refunds and overdue payments, and totals what orders still owe", %{conn: conn} do
       overdue = placed_order(customer_name: "Ada Lovelace", fulfillment_status: :fulfilled, payment_intent_id: nil)
 
-      recent =
-        placed_order(
-          customer_name: "Grace Hopper",
-          fulfillment_status: :fulfilled,
-          fulfillment_date: Date.add(Edenflowers.ShopTime.today(), -3),
-          payment_intent_id: nil
-        )
+      placed_order(
+        customer_name: "Grace Hopper",
+        fulfillment_status: :fulfilled,
+        fulfillment_date: Date.add(Edenflowers.ShopTime.today(), -3),
+        payment_intent_id: nil
+      )
 
       course = generate(course(name: "Autumn wreaths"))
 
@@ -249,30 +248,22 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
                "Autumn wreaths"
              )
 
-      assert has_element?(view, ~s|#balance-order-#{recent.id} a[href="/admin/orders/#{recent.id}"]|, "Grace Hopper")
-      refute has_element?(view, "#balances", "Ada Lovelace")
-    end
-
-    test "shows the five largest still to collect and tucks the rest behind Show more", %{conn: conn} do
-      for _ <- 1..7, do: placed_order(fulfillment_date: Edenflowers.ShopTime.today(), payment_intent_id: nil)
-
-      {:ok, view, _html} = live(conn, ~p"/admin")
-
-      assert has_element?(view, "#balances-more summary", "Show 2 more")
+      refute has_element?(view, "#attention", "Grace Hopper")
+      assert has_element?(view, "#still-owed", "€177.00")
     end
 
     test "settles an order paid while the Overview is open", %{conn: conn} do
       order = placed_order(payment_intent_id: "pi_link", fulfillment_date: Edenflowers.ShopTime.today())
 
       {:ok, view, _html} = live(conn, ~p"/admin")
-      assert has_element?(view, "#balance-order-#{order.id}")
+      assert has_element?(view, "#still-owed", "€88.50")
 
       {:ok, _order} =
         Edenflowers.Orders.record_link_payment(order, "pi_link", %{amount_paid: order.grand_total},
           actor: Edenflowers.Actors.system_actor()
         )
 
-      refute has_element?(view, "#balance-order-#{order.id}")
+      refute has_element?(view, "#still-owed")
     end
   end
 

@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :count, :integer, required: true
   attr :active, :boolean, required: true
 
-  defp count_badge(assigns) do
+  def count_badge(assigns) do
     ~H"""
     <span class={["badge badge-sm rounded-full border-0 font-semibold tabular-nums", if(@active, do: "bg-primary/10 text-primary", else: "bg-base-300/60 text-base-content/65")]}>
       {@count}
