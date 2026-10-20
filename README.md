@@ -2,6 +2,17 @@
 
 ## Development
 
+### Email copy review
+
+Run `just email-previews` to export the customer email scenarios to
+`tmp/email-previews/{en-GB,sv,fi}.md`. The command uses fictional data and the
+real email builders without starting the database, job workers or HTTP server.
+It does not send email. The same scenarios are available at `/admin/emails`.
+
+When changing conditional email copy, update `Edenflowers.Email.Previews` so
+the affected wording can be reviewed. The catalogue covers curated scenarios,
+not every possible combination of data.
+
 ### First-time setup
 
 ```bash
