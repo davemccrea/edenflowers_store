@@ -43,6 +43,22 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
           <:subtitle>{~t"Every email customers can get, with example details."}</:subtitle>
           <:actions>
             <div class="join">
+              <button
+                type="button"
+                phx-click={JS.dispatch("details:open", to: "#emails details")}
+                class="join-item btn btn-sm"
+              >
+                {~t"Expand all"}
+              </button>
+              <button
+                type="button"
+                phx-click={JS.dispatch("details:close", to: "#emails details")}
+                class="join-item btn btn-sm"
+              >
+                {~t"Collapse all"}
+              </button>
+            </div>
+            <div class="join">
               <.link
                 :for={{lang, _locale, name} <- @languages}
                 patch={~p"/admin/emails?lang=#{lang}"}
@@ -56,7 +72,7 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
           </:actions>
         </.admin_page_header>
 
-        <div class="admin-card divide-base-content/8 divide-y">
+        <div id="emails" class="admin-card divide-base-content/8 divide-y">
           <details
             :for={{[{email_type, _, _, _} | _] = previews, type_index} <- Enum.with_index(@email_types)}
             id={"email-type-#{type_index}"}

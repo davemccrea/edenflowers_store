@@ -7130,3 +7130,13 @@ msgstr "Prenumeration startad"
 #, elixir-autogen, elixir-format
 msgid "Wedding enquiry copy"
 msgstr "Kopia av bröllopsförfrågan"
+
+#: lib/edenflowers_web/features/admin/emails_live.ex:51
+#, elixir-autogen, elixir-format
+msgid "Expand all"
+msgstr "Fäll ut alla"
+
+#: lib/edenflowers_web/features/admin/emails_live.ex:58
+#, elixir-autogen, elixir-format
+msgid "Collapse all"
+msgstr "Fäll ihop alla"
