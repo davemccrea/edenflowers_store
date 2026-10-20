@@ -287,9 +287,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 />
                 <.money_row strong label={~t"Total"} amount={@order.grand_total} locale={@locale} />
                 <.money_row muted label={~t"Includes VAT"} amount={@order.vat} locale={@locale} />
-                <div :if={@payments != []} id="order-payments" class="border-base-content/12 mt-1.5 border-t pt-2">
-                  <.payment_row :for={payment <- @payments} payment={payment} locale={@locale} />
-                </div>
+              </dl>
+              <dl :if={@payments != []} id="order-payments" class="border-base-content/12 mt-1.5 border-t pt-2 text-sm">
+                <.payment_row :for={payment <- @payments} payment={payment} locale={@locale} />
               </dl>
 
               <.balance_panel

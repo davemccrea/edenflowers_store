@@ -28,7 +28,8 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   # whether a cell holds plain text, a badge or an icon button. The vertical padding
   # is trimmed so the tallest of those still fits inside the row height.
   set :row_class, "h-12"
-  set :th_class, "text-left font-semibold whitespace-nowrap max-sm:whitespace-normal max-sm:px-2"
+  # daisyUI's thead colour lands just under AA on the table's background.
+  set :th_class, "text-base-content/70 text-left font-semibold whitespace-nowrap max-sm:whitespace-normal max-sm:px-2"
   set :td_class, "py-2 align-middle whitespace-nowrap max-sm:px-2"
 
   set :filter_toggle_class, "cursor-pointer select-none inline-flex items-center gap-1 pointer-coarse:min-h-11"

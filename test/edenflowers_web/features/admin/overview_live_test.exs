@@ -78,11 +78,11 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      assert has_element?(view, ~s|#orders-today section[aria-label="Deliveries"]|, "Today Delivery")
-      assert has_element?(view, ~s|#orders-today section[aria-label="Pickups"]|, "Today Pickup")
+      assert has_element?(view, ~s|#orders-today-delivery|, "Today Delivery")
+      assert has_element?(view, ~s|#orders-today-pickup|, "Today Pickup")
       refute has_element?(view, "#orders-today", "Last Week")
-      assert has_element?(view, ~s|#orders-tomorrow section[aria-label="Pickups"]|, "Tomorrow Pickup")
-      refute has_element?(view, ~s|#orders-tomorrow section[aria-label="Deliveries"]|)
+      assert has_element?(view, ~s|#orders-tomorrow-pickup|, "Tomorrow Pickup")
+      refute has_element?(view, ~s|#orders-tomorrow-delivery|)
       refute render(view) =~ "Next Week"
     end
 

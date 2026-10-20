@@ -22,6 +22,16 @@
   outline-color: var(--focus-color, var(--color-primary));
 }
 
+/* daisyUI drops the outline on dropdown triggers and menu items. */
+.dropdown > :not(summary):focus-visible,
+.menu li > :is(a, button):focus-visible {
+  outline-style: solid;
+}
+
+.menu li > :is(a, button):focus-visible {
+  outline-offset: -2px;
+}
+
 /* Invalid fields stay red when focused. */
 [aria-invalid="true"],
 .input:has([aria-invalid="true"]) {
