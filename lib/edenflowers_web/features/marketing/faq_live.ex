@@ -34,7 +34,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             {~t"Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."}
           </.faq_item>
           <.faq_item question={~t"What is your delivery policy?"}>
-            {~t"Same-day delivery is available for orders placed before 2 PM on weekdays. For weekend deliveries, please order by Friday 2 PM."}
+            {delivery_answer()}
           </.faq_item>
           <.faq_item question={~t"Can I include a personal message with my order?"}>
             {~t"Yes. Add a personal message during checkout and it'll be included on a card with the delivery. Messages can be up to 200 characters."}
@@ -85,6 +85,18 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
       {~t"What if my card doesn't go through?",
        ~t"Your bouquet still comes, and I'll email you a link to pay for it. Your subscription waits until that's sorted."}
     ]
+  end
+
+  defp delivery_answer do
+    calendar = Edenflowers.Fulfillment.get_shop_calendar!()
+
+    if calendar.same_day do
+      time = Edenflowers.Format.time(calendar.order_deadline, Edenflowers.Format.locale())
+
+      ~t"Order by #{time = time} and I'll deliver the same day, on any day the shop is open. You can also choose a later day at checkout."
+    else
+      ~t"Choose your delivery day at checkout. The earliest is the next day the shop is open."
+    end
   end
 
   # Free-delivery products, subscriptions among them, get the free distance;
