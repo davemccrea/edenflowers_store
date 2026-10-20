@@ -106,17 +106,27 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         />
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-16 sm:pb-28 md:justify-center md:pb-0">
-          <h1 class="hero-display hero-reveal max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
-            {~t"Flowers for every stage of life"}
+          <h1 class="hero-display hero-focus max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
+            <span class="sr-only">{~t"Flowers for every stage of life"}</span>
+            <span aria-hidden="true">
+              {~t"Flowers for"}
+              <span class="hero-rotator">
+                <span style="--i: 0;">{~t"every stage of life"}</span>
+                <span style="--i: 1;">{~t"everyday moments"}</span>
+                <span style="--i: 2;">{~t"a new arrival"}</span>
+                <span style="--i: 3;">{~t"your wedding day"}</span>
+                <span style="--i: 4;">{~t"every stage of life"}</span>
+              </span>
+            </span>
           </h1>
-          <p class="hero-reveal mt-6 max-w-md text-lg leading-relaxed text-white" style="--reveal-delay: 180ms;">
+          <p class="hero-reveal mt-6 max-w-md text-lg leading-relaxed text-white" style="--reveal-delay: 600ms;">
             <%= if @price_from do %>
               {~t"Bouquets made by hand the day they're delivered, from #{price = @price_from}."}
             <% else %>
               {~t"Bouquets made by hand the day they're delivered."}
             <% end %>
           </p>
-          <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
+          <div class="hero-reveal mt-10" style="--reveal-delay: 750ms;">
             <.button
               navigate={~q"/#{language}/store"}
               variant="inverse"

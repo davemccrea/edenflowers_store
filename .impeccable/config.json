@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.25, 0.64, 1)",
+        "createdAt": "2026-10-20T12:43:41.072Z",
+        "reason": "code comment on .card-tuck in storefront.css: 'The easing curve supplies the overshoot' (deliberate, predates this session)"
+      }
+    ]
+  }
+}
