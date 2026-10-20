@@ -176,6 +176,11 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def admin(assigns) do
+    current_locale =
+      Localize.get_locale().language
+      |> Localize.Language.display_name!(fallback: true)
+      |> String.capitalize()
+
     primary_nav = [
       {"/admin", ~t"Overview", true, "hero-squares-2x2"},
       {~p"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
@@ -197,6 +202,7 @@ defmodule EdenflowersWeb.Layouts do
 
     assigns =
       assigns
+      |> assign(:current_locale, current_locale)
       |> assign(:primary_nav, primary_nav)
       |> assign(:system_nav, system_nav)
 
@@ -219,6 +225,7 @@ defmodule EdenflowersWeb.Layouts do
           primary_nav={@primary_nav}
           system_nav={@system_nav}
           current_path={@current_path}
+          current_locale={@current_locale}
           closeable={true}
         />
       </.drawer>
@@ -232,6 +239,7 @@ defmodule EdenflowersWeb.Layouts do
           primary_nav={@primary_nav}
           system_nav={@system_nav}
           current_path={@current_path}
+          current_locale={@current_locale}
           closeable={false}
         />
       </aside>
@@ -324,10 +332,17 @@ defmodule EdenflowersWeb.Layouts do
   attr :primary_nav, :list, required: true
   attr :system_nav, :list, required: true
   attr :current_path, :string, required: true
+  attr :current_locale, :string, required: true
   attr :closeable, :boolean, required: true
 
   defp admin_sidebar_content(assigns) do
-    assigns = assign(assigns, :version, "v#{Application.spec(:edenflowers, :vsn)}")
+    assigns =
+      assign(
+        assigns,
+        :locale_picker_id,
+        if(assigns.closeable, do: "admin-locale-picker-mobile", else: "admin-locale-picker-desktop")
+      )
+      |> assign(:version, "v#{Application.spec(:edenflowers, :vsn)}")
 
     ~H"""
     <div class="flex h-full flex-col py-5">
@@ -358,6 +373,14 @@ defmodule EdenflowersWeb.Layouts do
       </nav>
 
       <div class="border-base-content/12 mt-auto border-t px-3 pt-4">
+        <.locale_picker id={@locale_picker_id} current_path={@current_path} class="mb-3 w-full">
+          <span class="text-base-content/65 flex items-center gap-3 border-l-2 border-transparent px-3 py-2 text-sm transition-colors hover:bg-base-300/40 hover:text-base-content">
+            <.icon name="hero-globe-alt" class="text-base-content/60 h-4 w-4 shrink-0" />
+            <span class="flex-1 text-left">{@current_locale}</span>
+            <.icon name="hero-chevron-up-down" class="text-base-content/60 h-4 w-4 shrink-0" />
+          </span>
+        </.locale_picker>
+
         <p class="text-base-content/65 mb-1 px-3 text-xs">{~t"System"}</p>
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @system_nav}
