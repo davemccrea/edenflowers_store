@@ -4,10 +4,13 @@ title: Send a course booking a payment link
 status: done
 assignee: []
 created_date: '2026-10-17 18:41'
-updated_date: '2026-10-18 08:27'
+updated_date: '2026-10-20 12:33'
 labels:
   - spec
+  - admin
+  - customers
 dependencies: []
+priority: medium
 type: feature
 ordinal: 42000
 ---

@@ -4,10 +4,12 @@ title: Simplify dev seeds
 status: done
 assignee: []
 created_date: '2026-10-10 22:45'
-updated_date: '2026-10-18 08:27'
+updated_date: '2026-10-20 12:33'
 labels:
   - spec
+  - developers
 dependencies: []
+priority: low
 type: chore
 ordinal: 8000
 ---
