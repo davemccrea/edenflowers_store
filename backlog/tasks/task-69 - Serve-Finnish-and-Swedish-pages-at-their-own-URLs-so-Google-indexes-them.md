@@ -1,17 +1,17 @@
 ---
 id: TASK-69
 title: Serve Finnish and Swedish pages at their own URLs so Google indexes them
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-20 10:12'
-updated_date: '2026-10-20 11:15'
+updated_date: '2026-10-20 17:50'
 labels:
   - spec
   - customers
 dependencies: []
 priority: high
 type: feature
-ordinal: 151000
+ordinal: 160000
 ---
 
 ## Description
