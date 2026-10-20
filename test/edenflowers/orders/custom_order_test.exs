@@ -250,7 +250,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert_email_sent(fn email ->
         assert email.to == [{"", "son@example.com"}]
         assert email.text_body =~ "Funeral spray"
-        assert email.text_body =~ "/pay/#{order.payment_link_token}"
+        assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(order)
       end)
     end
 
@@ -263,7 +263,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert_email_sent(fn email ->
         refute email.text_body =~ "Here is what we agreed"
-        assert email.text_body =~ "Here is your order as it stands now"
+        assert email.text_body =~ "Here are your order details:"
       end)
     end
 

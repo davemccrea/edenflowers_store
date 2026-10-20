@@ -52,22 +52,14 @@ defmodule EdenflowersWeb.Router do
         live "/#{language}/product/:id", Store.ProductLive
         live "/#{language}/courses", Courses.CoursesLive
         live "/#{language}/courses/:id", Courses.CourseLive
-      end
 
-      scope "/", Courses do
-        live "/courses/bookings/:id", CourseBookingLive
-        live "/courses/pay/:token", CoursePayLive
-      end
-
-      scope "/", Checkout do
-        live "/checkout", CheckoutLive
-        live "/order/:id", OrderLive
-        live "/pay/:token", PayLive
-      end
-
-      scope "/", Account do
-        live "/account", AccountLive
-        live "/account/subscriptions/:id/card", SubscriptionCardLive
+        live "/#{language}/courses/bookings/:id", Courses.CourseBookingLive
+        live "/#{language}/courses/pay/:token", Courses.CoursePayLive
+        live "/#{language}/checkout", Checkout.CheckoutLive
+        live "/#{language}/order/:id", Checkout.OrderLive
+        live "/#{language}/pay/:token", Checkout.PayLive
+        live "/#{language}/account", Account.AccountLive
+        live "/#{language}/account/subscriptions/:id/card", Account.SubscriptionCardLive
       end
     end
 
@@ -75,10 +67,7 @@ defmodule EdenflowersWeb.Router do
     get "/order/:id/receipt", Checkout.ReceiptController, :show
     get "/order/:id/pickup.ics", Checkout.PickupCalendarController, :show
 
-    for path <-
-          ~w(/ /weddings /condolences /about /contact /faq /store /store/:category /product/:id /courses /courses/:id) do
-      get path, Marketing.LocalizedRedirectController, :show
-    end
+    get "/", Marketing.LocalizedRedirectController, :show
   end
 
   scope "/", EdenflowersWeb do

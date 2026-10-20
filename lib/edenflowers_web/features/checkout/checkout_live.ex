@@ -40,6 +40,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   @impl true
   def mount(_params, _session, %{assigns: %{order: order}} = socket) do
+    socket = assign(socket, alternates: alternates("/#{language}/checkout"), noindex: true)
+
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
@@ -116,7 +118,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <div class="max-w-[58rem] mx-auto w-full">
           <h1 class="page-title mb-10 md:mb-12">{~t"Checkout"}</h1>
@@ -481,7 +489,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   def handle_event("edit_step", %{"state" => state}, socket) do
-    {:noreply, push_patch(socket, to: ~p"/checkout?step=#{state}")}
+    {:noreply, push_patch(socket, to: ~q"/#{language}/checkout?step=#{state}")}
   end
 
   # A day that isn't open is still clickable, only marked aria-disabled.
@@ -1033,7 +1041,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp step_index(state), do: Enum.find_index(@checkout_states, &(&1 == state))
 
-  defp step_path(state), do: ~p"/checkout?step=#{state}"
+  defp step_path(state), do: ~q"/#{language}/checkout?step=#{state}"
 
   # Replaced rather than pushed, so a correction adds no history entry for back to return to.
   defp correct_step_url(socket) do

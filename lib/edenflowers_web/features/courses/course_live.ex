@@ -20,6 +20,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
          socket
          |> assign(
            page_title: course.name,
+           alternates: alternates("/#{language}/courses/#{course.id}"),
            page_description: course.description,
            og_image: image_url(course.image_slug, 1200, 630),
            locale: Format.locale(),
@@ -40,7 +41,13 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <div class="grid gap-10 md:grid-cols-[minmax(0,480px)_1fr] md:items-start md:gap-16">
           <figure class="bg-cream aspect-[4/5] relative overflow-hidden">
@@ -98,7 +105,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
             <p :if={@booked_seats > 0} data-testid="already-booked">
               {~t"You have #{count = @booked_seats} place(s) on this course."N}
-              <.link navigate={~p"/account#courses-heading"} class="link-underline-hover">
+              <.link navigate={~q"/#{language}/account#courses-heading"} class="link-underline-hover">
                 {~t"See your bookings"}
               </.link>
             </p>
@@ -178,7 +185,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 id="course-payment-form"
                 phx-submit="pay"
                 client_secret={@client_secret}
-                return_url={url(~p"/courses/bookings/#{@registration.id}")}
+                return_url={url(~q"/#{language}/courses/bookings/#{@registration.id}")}
                 billing_name={@registration.name}
                 billing_email={@registration.email}
               >

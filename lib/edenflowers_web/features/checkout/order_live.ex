@@ -9,6 +9,8 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   # `@order` is taken by the PutOrder hook (the cart), hence `@shown_order`.
   @impl true
   def mount(%{"id" => id}, session, socket) do
+    socket = assign(socket, alternates: alternates("/#{language}/order/#{id}"), noindex: true)
+
     user = socket.assigns.current_user
     guest_order_id = session["guest_order_id"]
 
@@ -42,7 +44,13 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <div class="max-w-xl">
           <.flower
@@ -83,7 +91,12 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             </dl>
 
             <%= if @current_user do %>
-              <.button navigate={~p"/account"} variant="secondary" class="mt-6" data-testid="manage-subscription">
+              <.button
+                navigate={~q"/#{language}/account"}
+                variant="secondary"
+                class="mt-6"
+                data-testid="manage-subscription"
+              >
                 {~t"Manage subscription"}
               </.button>
             <% else %>

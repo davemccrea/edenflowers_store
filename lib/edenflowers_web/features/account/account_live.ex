@@ -29,6 +29,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    socket = assign(socket, alternates: alternates("/#{language}/account"), noindex: true)
+
     user = Ash.load!(socket.assigns.current_user, :first_name, actor: socket.assigns.current_user)
 
     {:ok,
@@ -55,7 +57,13 @@ defmodule EdenflowersWeb.Account.AccountLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container class="max-w-3xl">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
           <h1 class="page-title">
@@ -611,7 +619,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
         <% @order.payment_link_open? -> %>
           <span class="text-error">{~t"Unpaid"}</span>
           ·
-          <.link navigate={~p"/pay/#{@order.payment_link_token}"} class="link-underline-hover text-primary">
+          <.link navigate={~q"/#{language}/pay/#{@order.payment_link_token}"} class="link-underline-hover text-primary">
             {~t"Pay now"}
           </.link>
         <% @order.fulfillment_method == :delivery -> %>

@@ -61,6 +61,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(product: product)
      |> assign(
        page_title: product.name,
+       alternates: alternates("/#{language}/product/#{product.id}"),
        page_description: product.description,
        og_image: image_url(product.image_slug, 1200, 630)
      )
@@ -88,7 +89,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
       )
 
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <div class="grid gap-10 md:grid-cols-[minmax(0,480px)_1fr] md:items-start md:gap-16">
           <header class="order-first md:hidden">
@@ -247,7 +254,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                   <p>{~t"Pause or cancel anytime."}</p>
                   <p :if={@has_subscription?} data-testid="already-subscribed">
                     {~t"You already have a subscription."}
-                    <.link navigate={~p"/account"} class="link-underline-hover text-base-content">
+                    <.link navigate={~q"/#{language}/account"} class="link-underline-hover text-base-content">
                       {~t"Manage it from your account."}
                     </.link>
                   </p>

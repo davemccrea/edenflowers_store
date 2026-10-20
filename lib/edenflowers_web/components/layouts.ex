@@ -5,28 +5,26 @@ defmodule EdenflowersWeb.Layouts do
   """
   use EdenflowersWeb, :html
 
-  alias EdenflowersWeb.LocalizedPaths
-
   embed_templates "layouts/*"
 
   attr :conn, Plug.Conn, required: true
+  attr :alternates, :map, required: true
 
   def hreflang_links(assigns) do
-    assigns = assign(assigns, :alternates, LocalizedPaths.alternates(assigns.conn.request_path))
-
     ~H"""
     <link
-      :for={{hreflang, path} <- @alternates}
+      :for={{code, path} <- @alternates}
       rel="alternate"
-      hreflang={hreflang}
+      hreflang={code |> String.split("-") |> hd()}
       href={Phoenix.VerifiedRoutes.unverified_url(@conn, path)}
     />
-    <link :if={@alternates != []} rel="alternate" hreflang="x-default" href={url(~p"/")} />
+    <link rel="alternate" hreflang="x-default" href={url(~p"/")} />
     """
   end
 
   attr :id, :string, required: true
   attr :current_path, :string, required: true
+  attr :alternates, :map, default: %{}, doc: "the page in each language, for pages with a URL per language"
   attr :class, :any, default: nil
   slot :inner_block, required: true
 
@@ -59,7 +57,7 @@ defmodule EdenflowersWeb.Layouts do
       >
         <option
           :for={{code, name, current?} <- @locales}
-          value={LocalizedPaths.translate(@current_path, code) || ~p"/locale/#{code}?redirect_to=#{@current_path}"}
+          value={@alternates[code] || ~p"/locale/#{code}?redirect_to=#{@current_path}"}
           selected={current?}
         >
           {name}
@@ -70,11 +68,12 @@ defmodule EdenflowersWeb.Layouts do
   end
 
   attr :current_path, :string, required: true
+  attr :alternates, :map, default: %{}
   attr :current_locale, :string, required: true
 
   defp footer_locale_picker(assigns) do
     ~H"""
-    <.locale_picker id="locale-picker-footer" current_path={@current_path}>
+    <.locale_picker id="locale-picker-footer" current_path={@current_path} alternates={@alternates}>
       <span class="group inline-flex cursor-pointer items-center gap-1">
         <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
         <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
@@ -534,6 +533,7 @@ defmodule EdenflowersWeb.Layouts do
   attr :flash, :map, required: true
   attr :order, :map, required: true
   attr :current_path, :string, required: true
+  attr :alternates, :map, default: %{}
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -594,7 +594,7 @@ defmodule EdenflowersWeb.Layouts do
         <.link
           class="text-base-content group flex w-fit items-center gap-2 text-base tracking-wide"
           phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
-          navigate={if @current_user, do: ~p"/account"}
+          navigate={if @current_user, do: ~q"/#{language}/account"}
           href={unless @current_user, do: sign_in_href(@current_path)}
         >
           <.icon name="hero-user-circle" class="h-5 w-5" />
@@ -684,7 +684,7 @@ defmodule EdenflowersWeb.Layouts do
 
               <%!-- Sign in (tablet and up, phones use the nav drawer) --%>
               <.link
-                navigate={if @current_user, do: ~p"/account"}
+                navigate={if @current_user, do: ~q"/#{language}/account"}
                 href={unless @current_user, do: sign_in_href(@current_path)}
                 class="group hidden h-10 w-10 shrink-0 items-center justify-center gap-1 md:flex md:h-auto md:w-auto md:gap-2"
               >
@@ -697,7 +697,7 @@ defmodule EdenflowersWeb.Layouts do
               </.link>
 
               <%!-- Below xl the full language name crowds the logo, so show the short code instead --%>
-              <.locale_picker id="locale-picker-header" current_path={@current_path}>
+              <.locale_picker id="locale-picker-header" current_path={@current_path} alternates={@alternates}>
                 <span class="group flex h-10 cursor-pointer items-center gap-1 px-1 xl:gap-2 xl:px-0">
                   <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
                   <span
@@ -827,7 +827,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <div class="container">
         <div class="flex flex-col items-center gap-3 py-6">
-          <.footer_locale_picker current_path={@current_path} current_locale={@current_locale} />
+          <.footer_locale_picker current_path={@current_path} alternates={@alternates} current_locale={@current_locale} />
 
           <span class="text-xs">
             © Eden Flowers {Edenflowers.ShopTime.now() |> Map.get(:year)} • {~t"Business ID:"}

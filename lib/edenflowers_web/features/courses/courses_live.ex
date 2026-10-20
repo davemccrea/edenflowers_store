@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
     {:ok,
      assign(socket,
        page_title: ~t"Courses",
+       alternates: alternates("/#{language}/courses"),
        page_description:
          ~t"Floristry courses with Jennie at Eden Flowers in Vaasa. See upcoming dates and book your seat.",
        locale: Format.locale(),
@@ -27,7 +28,13 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <section class="flex flex-col gap-12 md:flex-row md:items-center md:gap-16 lg:gap-24">
           <div class="flex max-w-2xl flex-col gap-6">

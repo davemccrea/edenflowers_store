@@ -3,26 +3,25 @@ defmodule EdenflowersWeb.Marketing.SitemapController do
 
   alias Edenflowers.Catalog
   alias Edenflowers.Courses
-  alias EdenflowersWeb.LocalizedPaths
 
   def index(conn, _params) do
     pages = [
-      ~p"/en",
-      ~p"/en/weddings",
-      ~p"/en/condolences",
-      ~p"/en/about",
-      ~p"/en/contact",
-      ~p"/en/faq",
-      ~p"/en/courses"
+      alternates("/#{language}"),
+      alternates("/#{language}/weddings"),
+      alternates("/#{language}/condolences"),
+      alternates("/#{language}/about"),
+      alternates("/#{language}/contact"),
+      alternates("/#{language}/faq"),
+      alternates("/#{language}/courses")
     ]
 
-    categories = Enum.map(Catalog.list_categories!(), &~p"/en/store/#{&1.slug}")
-    products = Enum.map(Catalog.list_store_products!(), &~p"/en/product/#{&1.id}")
-    courses = Enum.map(Courses.list_upcoming_courses!(), &~p"/en/courses/#{&1.id}")
+    categories = Enum.map(Catalog.list_categories!(), &category_alternates/1)
+    products = for product <- Catalog.list_store_products!(), do: alternates("/#{language}/product/#{product.id}")
+    courses = for course <- Courses.list_upcoming_courses!(), do: alternates("/#{language}/courses/#{course.id}")
 
     urls =
-      for page <- pages ++ categories ++ products ++ courses,
-          {_hreflang, path} <- LocalizedPaths.alternates(page),
+      for alternates <- pages ++ categories ++ products ++ courses,
+          {_code, path} <- alternates,
           do: "<url><loc>#{unverified_url(conn, path)}</loc></url>"
 
     conn

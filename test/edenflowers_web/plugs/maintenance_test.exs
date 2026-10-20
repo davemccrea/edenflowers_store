@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
     end
 
     test "redirects store pages to /back-soon", %{conn: conn} do
-      assert conn |> get("/store") |> redirected_to() == "/back-soon"
+      assert conn |> get("/en/store") |> redirected_to() == "/back-soon"
     end
 
     test "lets the sign-in page through", %{conn: conn} do
@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
     end
 
     test "lets payment links through", %{conn: conn} do
-      assert conn |> get("/pay/unknown-token") |> redirected_to() == "/en"
+      assert conn |> get("/en/pay/unknown-token") |> redirected_to() == "/en"
     end
 
     test "lets admin paths reach their own auth check", %{conn: conn} do

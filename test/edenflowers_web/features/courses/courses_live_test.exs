@@ -117,7 +117,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
 
       assert has_element?(view, "[data-testid=already-booked]", "You have 2 places on this course.")
-      assert has_element?(view, ~s|[data-testid=already-booked] a[href="/account#courses-heading"]|)
+      assert has_element?(view, ~s|[data-testid=already-booked] a[href="/en/account#courses-heading"]|)
       assert has_element?(view, "#book-heading", "Book more places")
     end
 
@@ -135,7 +135,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     test "shows the booking straight away, before payment confirms", %{conn: conn} do
       registration = generate(course_registration(payment_intent_id: "pi_x"))
 
-      {:ok, _view, html} = live(conn, ~p"/courses/bookings/#{registration.id}")
+      {:ok, _view, html} = live(conn, ~p"/en/courses/bookings/#{registration.id}")
       assert html =~ "You&#39;re booked"
     end
 
@@ -143,7 +143,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       course = generate(course(late_cancellation_fee: "15.00"))
       registration = generate(course_registration(course_id: course.id, payment_intent_id: "pi_x"))
 
-      {:ok, _view, html} = live(conn, ~p"/courses/bookings/#{registration.id}")
+      {:ok, _view, html} = live(conn, ~p"/en/courses/bookings/#{registration.id}")
       assert html =~ "a €15.00 late-cancellation fee is kept"
     end
 
@@ -152,7 +152,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_x"} -> {:ok, %{id: "pi_x"}} end)
 
       assert {:error, {:live_redirect, %{to: to, flash: flash}}} =
-               live(conn, ~p"/courses/bookings/#{registration.id}?redirect_status=failed")
+               live(conn, ~p"/en/courses/bookings/#{registration.id}?redirect_status=failed")
 
       assert to == ~p"/en/courses/#{registration.course_id}"
       assert flash["error"] =~ "didn't go through"

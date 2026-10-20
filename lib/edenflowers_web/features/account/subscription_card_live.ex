@@ -18,6 +18,8 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
   @impl true
   def mount(%{"id" => id} = params, _session, socket) do
+    socket = assign(socket, alternates: alternates("/#{language}/account/subscriptions/#{id}/card"), noindex: true)
+
     user = socket.assigns.current_user
 
     case Orders.get_subscription(id, actor: user) do
@@ -40,14 +42,22 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
       _not_found_or_cancelled ->
         {:ok,
-         socket |> put_flash(:error, ~t"Your subscription couldn't be changed.") |> push_navigate(to: ~p"/account")}
+         socket
+         |> put_flash(:error, ~t"Your subscription couldn't be changed.")
+         |> push_navigate(to: ~q"/#{language}/account")}
     end
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container class="max-w-xl">
         <h1 class="page-title mb-6">{~t"Update your card"}</h1>
         <p class="leading-relaxed">
@@ -58,7 +68,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
         </p>
         <p :if={@unpaid} class="mt-4 leading-relaxed" data-testid="unpaid-occurrence">
           {~t"Your delivery on #{date = Edenflowers.Format.date(@unpaid.fulfillment_date, Edenflowers.Format.locale())} is still unpaid, and a new card doesn't pay it."}
-          <.link navigate={~p"/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
+          <.link navigate={~q"/#{language}/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
             {~t"Pay now"}
           </.link>
         </p>
@@ -70,7 +80,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
             phx-submit="save_card"
             intent="setup"
             client_secret={@client_secret}
-            return_url={url(~p"/account/subscriptions/#{@subscription.id}/card")}
+            return_url={url(~q"/#{language}/account/subscriptions/#{@subscription.id}/card")}
             billing_name={@current_user.name}
             billing_email={to_string(@current_user.email)}
           >
@@ -86,7 +96,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
           </div>
         </section>
 
-        <.button navigate={~p"/account"} variant="text" class="mt-6">{~t"Back to your account"}</.button>
+        <.button navigate={~q"/#{language}/account"} variant="text" class="mt-6">{~t"Back to your account"}</.button>
       </.container>
     </Layouts.app>
     """
@@ -136,7 +146,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
       {:ok, _subscription} ->
         socket
         |> put_flash(:info, ~t"Your card has been updated.")
-        |> push_navigate(to: ~p"/account")
+        |> push_navigate(to: ~q"/#{language}/account")
 
       error ->
         Logger.error("Could not save the card for subscription #{subscription.id}: #{inspect(error)}")

@@ -324,12 +324,13 @@ defmodule Edenflowers.Email do
     |> text_body(Templates.email_change_code(%{code: code}))
   end
 
-  defp account_url, do: EdenflowersWeb.Endpoint.url() <> "/account"
+  # Links in the language the email is written in.
+  defp account_url, do: EdenflowersWeb.LocalizedPaths.account_url(email_locale())
+  defp store_url, do: EdenflowersWeb.LocalizedPaths.store_url(email_locale())
 
-  # In the language the email is written in.
-  defp store_url do
+  defp email_locale do
     {:ok, locale} = Localize.validate_locale(Gettext.get_locale(EdenflowersWeb.Gettext))
-    EdenflowersWeb.Endpoint.url() <> EdenflowersWeb.LocalizedPaths.translate("/en/store", locale.cldr_locale_id)
+    locale.cldr_locale_id
   end
 
   defp from_address, do: Application.fetch_env!(:edenflowers, :mailer_from_address)

@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
     {:ok,
      assign(socket,
        page_title: ~t"About",
+       alternates: alternates("/#{language}/about"),
        page_description:
          ~t"Meet Jennie, the florist behind Eden Flowers in Vaasa. Visit the shop in Minimossen at Myrvägen 1 for bouquets, houseplants and second-hand pots and vases."
      )}
@@ -16,7 +17,13 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <section class="flex flex-col gap-12 md:flex-row md:items-center md:gap-16 lg:gap-24">
           <div class="text-base-content/80 flex max-w-2xl flex-col gap-6 text-lg leading-relaxed">

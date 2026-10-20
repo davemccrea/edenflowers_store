@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
      socket
      |> assign(
        page_title: ~t"Condolences",
+       alternates: alternates("/#{language}/condolences"),
        page_description:
          ~t"Funeral flowers in Vaasa and Korsholm: sprays, hearts, wreaths and casket sprays by Jennie at Eden Flowers, delivered to churches and chapels.",
        og_image: image_url("local:///condolence/condolence_5.jpg", 1200, 630)
@@ -19,7 +20,13 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <section class="flex items-center not-last:border-b md:min-h-dvh">
         <div class="container pt-28 pb-20 sm:pt-(--header-clearance) md:pb-16">
           <div class="grid items-center gap-10 md:grid-cols-2 md:gap-16">

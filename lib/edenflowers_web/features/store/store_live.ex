@@ -14,7 +14,14 @@ defmodule EdenflowersWeb.Store.StoreLive do
     categories = categories |> Translations.translate() |> Enum.with_index(1)
     bouquets = Enum.find_value(categories, fn {category, _idx} -> category.id == bouquets_id && category end)
 
-    {:ok, assign(socket, categories: categories, bouquets: bouquets, products: [], selected_category: nil)}
+    {:ok,
+     assign(socket,
+       alternates: alternates("/#{language}/store"),
+       categories: categories,
+       bouquets: bouquets,
+       products: [],
+       selected_category: nil
+     )}
   end
 
   @impl true
@@ -25,9 +32,10 @@ defmodule EdenflowersWeb.Store.StoreLive do
 
       category_slug ->
         case load_products(category_slug) do
-          {:ok, products, selected_category} ->
+          {:ok, products, selected_category, alternates} ->
             {:noreply,
              assign(socket,
+               alternates: alternates,
                page_title: selected_category.name,
                page_description: selected_category.description,
                products: products,
@@ -58,7 +66,13 @@ defmodule EdenflowersWeb.Store.StoreLive do
       )
 
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <h1 class="page-title mb-12 md:mb-16">
           {if @selected_category, do: @selected_category.name, else: ~t"Store"}
@@ -154,7 +168,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
     case Catalog.get_category_by_slug(category_slug, Edenflowers.Format.locale()) do
       {:ok, category} ->
         products = category.id |> Catalog.list_products_by_category!() |> Translations.translate()
-        {:ok, products, Translations.translate(category)}
+        {:ok, products, Translations.translate(category), category_alternates(category)}
 
       {:error, _} ->
         :error

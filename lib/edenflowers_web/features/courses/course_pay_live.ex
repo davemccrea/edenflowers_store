@@ -19,13 +19,10 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
 
   @impl true
   def mount(%{"token" => token} = params, _session, socket) do
+    socket = assign(socket, alternates: alternates("/#{language}/courses/pay/#{token}"), noindex: true)
+
     case load_registration(token) do
       {:ok, registration} ->
-        Localize.Plug.put_locale_from_session(
-          %{Localize.Plug.PutLocale.session_key() => registration.locale},
-          gettext: EdenflowersWeb.Gettext
-        )
-
         if connected?(socket) do
           Phoenix.PubSub.subscribe(Edenflowers.PubSub, "course_registration:paid:#{registration.id}")
         end
@@ -44,7 +41,13 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <div class="max-w-xl">
           <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />

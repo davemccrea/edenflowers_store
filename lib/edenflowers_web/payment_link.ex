@@ -20,10 +20,15 @@ defmodule EdenflowersWeb.PaymentLink do
   alias Edenflowers.Format
   alias Edenflowers.Payments
 
-  def url_for(payable), do: EdenflowersWeb.Endpoint.url() <> path_for(payable)
+  @doc "The link to send the customer, in the language they ordered or booked in."
+  def url_for(%CourseRegistration{payment_link_token: token, locale: locale}) when is_binary(token),
+    do: url_for(String.to_existing_atom(locale), "/#{language}/courses/pay/#{token}")
 
-  def path_for(%CourseRegistration{payment_link_token: token}) when is_binary(token), do: ~p"/courses/pay/#{token}"
-  def path_for(%{payment_link_token: token}) when is_binary(token), do: ~p"/pay/#{token}"
+  def url_for(%{payment_link_token: token, locale: locale}) when is_binary(token),
+    do: url_for(String.to_existing_atom(locale), "/#{language}/pay/#{token}")
+
+  defp path_for(%CourseRegistration{payment_link_token: token}), do: ~q"/#{language}/courses/pay/#{token}"
+  defp path_for(%{payment_link_token: token}), do: ~q"/#{language}/pay/#{token}"
 
   @doc """
   Assigns `payable` and sets up its payment. `reload` reads it again by its

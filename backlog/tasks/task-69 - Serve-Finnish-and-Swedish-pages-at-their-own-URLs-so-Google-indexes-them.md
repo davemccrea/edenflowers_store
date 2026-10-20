@@ -25,8 +25,8 @@ Each language gets its own URL under /fi, /sv and /en, with hreflang links betwe
 
 - **All three languages are prefixed**: /fi/..., /sv/..., /en/... No language gets the bare URLs.
 - **Path segments are translated** through `priv/gettext/<locale>/LC_MESSAGES/routes.po`, e.g. /fi/haat, /sv/brollop, /fi/kauppa/kukkakimput, /sv/butik/buketter. Category slugs are translated like the category name, in its `translations` (`slug` stays the English slug and the fallback). Jennie reviews the Finnish and Swedish words before launch, since URLs are costly to change once indexed. Product and course ids stay as they are.
-- **Only public, indexable pages are localized**: home, weddings, condolences, about, contact, FAQ, store categories, products, courses and course pages. Checkout, account, order, pay, booking, sign-in and admin keep their current unprefixed URLs and use the session locale, which visiting a prefixed page sets. Email links to orders and payments don't change.
-- **Bare / and old unprefixed public URLs redirect by preference**: session locale, then Accept-Language, then Swedish. A 302 with `Vary: Accept-Language, Cookie`, since the target depends on the visitor. Prefixed URLs never redirect, so crawlers see each language as it is. hreflang `x-default` points at /.
+- **Public and customer pages are localized**: home, weddings, condolences, about, contact, FAQ, store categories, products, courses and course pages, plus the customer's checkout, account, order, pay and booking pages, so customers see their language in the URL. Customer pages are `noindex` with no canonical or hreflang. Sign-in, auth and admin keep unprefixed URLs and use the session locale, which visiting a prefixed page sets. Email links to the account and payment pages use the customer's language (the order's or booking's locale). Receipts, the pickup calendar file and Stripe's checkout completion stay unprefixed.
+- **Bare / redirects by preference**: session locale, then Accept-Language, then Swedish. A 302 with `Vary: Accept-Language, Cookie`, since the target depends on the visitor. Prefixed URLs never redirect, so crawlers see each language as it is. hreflang `x-default` points at /.
 
 ### Approach
 
@@ -46,8 +46,8 @@ Also update: the canonical link (per language), `<html lang>`, the sitemap (one 
 - [x] #2 Each public page has hreflang alternates for en, fi, sv and x-default, and a canonical pointing at its own language URL
 - [x] #3 The sitemap lists every language version
 - [x] #4 The language switcher links to the same page in the other language
-- [x] #5 Bare / and old unprefixed public URLs redirect (302) to the visitor's session language, else Accept-Language, else Swedish
-- [x] #6 Checkout, account, order, pay and booking URLs are unchanged and render in the session language
+- [x] #5 Bare / redirects (302) to the visitor's session language, else Accept-Language, else Swedish
+- [x] #6 Checkout, account, order, pay and booking pages have a URL per language, are noindex, and emails link to them in the customer's language
 <!-- AC:END -->
 
 ## Comments
@@ -67,7 +67,7 @@ created: 2026-10-20 11:15
 
 ---
 
-Built. Fallback language changed to Swedish (Edenflowers.Locales.default is now sv-FI). Category slugs are translated in the category's translations, with slug as the English key and fallback. Left before launch: (1) Jennie reviews the URL words in priv/gettext/{fi,sv}/LC_MESSAGES/routes.po (fi: haat, hautajaiset, tietoa, yhteystiedot, ukk, kauppa, tuote, kurssit; sv: brollop, begravning, om, kontakt, vanliga-fragor, butik, produkt, kurser) and the category slugs (bouquets kukkakimput/buketter, plants kasvit/vaxter, cards kortit/kort, pre-loved kaytetty/begagnat). (2) Set those category slugs on the production categories' translations; priv/repo/seeds/production.exs only covers an empty database.
+Built. Fallback language changed to Swedish (Edenflowers.Locales.default is now sv-FI). Category slugs are translated in the category's translations, with slug as the English key and fallback. Left before launch: (1) Jennie reviews the URL words in priv/gettext/{fi,sv}/LC_MESSAGES/routes.po (fi: haat, hautajaiset, tietoa, yhteystiedot, ukk, kauppa, tuote, kurssit, kassa, tilaus, maksa, tili, kestotilaukset, kortti, varaukset; sv: brollop, begravning, om, kontakt, vanliga-fragor, butik, produkt, kurser, kassa, bestallning, betala, konto, prenumerationer, kort, bokningar) and the category slugs (bouquets kukkakimput/buketter, plants kasvit/vaxter, cards kortit/kort, pre-loved kaytetty/begagnat). (2) Set those category slugs on the production categories' translations; priv/repo/seeds/production.exs only covers an empty database.
 
 ---
 <!-- COMMENTS:END -->
