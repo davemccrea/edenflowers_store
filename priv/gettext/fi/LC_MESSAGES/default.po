@@ -7180,3 +7180,272 @@ msgstr "%{count} viime kuussa %{date} mennessä"
 #, elixir-autogen, elixir-format
 msgid "Last month"
 msgstr "Viime kuu"
+
+#: lib/edenflowers/email/previews.ex:266
+#, elixir-autogen, elixir-format
+msgid "2 places, paid"
+msgstr "2 paikkaa, maksettu"
+
+#: lib/edenflowers/email/previews.ex:267
+#, elixir-autogen, elixir-format
+msgid "2 places, unpaid, payment link"
+msgstr "2 paikkaa, maksamatta, maksulinkki"
+
+#: lib/edenflowers/email/previews.ex:329
+#, elixir-autogen, elixir-format
+msgid "already subscribed"
+msgstr "on jo tilaaja"
+
+#: lib/edenflowers/email/previews.ex:156
+#, elixir-autogen, elixir-format
+msgid "delivery"
+msgstr "toimitus"
+
+#: lib/edenflowers/email/previews.ex:186
+#, elixir-autogen, elixir-format
+msgid "delivery, card message only"
+msgstr "toimitus, vain korttiviesti"
+
+#: lib/edenflowers/email/previews.ex:185
+#, elixir-autogen, elixir-format
+msgid "delivery, discount only"
+msgstr "toimitus, vain alennus"
+
+#: lib/edenflowers/email/previews.ex:166
+#, elixir-autogen, elixir-format
+msgid "delivery, every 2 weeks, discounted first order, card message"
+msgstr "toimitus, 2 viikon välein, alennettu ensimmäinen tilaus, korttiviesti"
+
+#: lib/edenflowers/email/previews.ex:179
+#, elixir-autogen, elixir-format
+msgid "delivery, every 4 weeks, large"
+msgstr "toimitus, 4 viikon välein, suuri"
+
+#: lib/edenflowers/email/previews.ex:336
+#, elixir-autogen, elixir-format
+msgid "email change code"
+msgstr "sähköpostin vaihtokoodi"
+
+#: lib/edenflowers/email/previews.ex:317
+#, elixir-autogen, elixir-format
+msgid "everything filled in"
+msgstr "kaikki kentät täytetty"
+
+#: lib/edenflowers/email/previews.ex:75
+#, elixir-autogen, elixir-format
+msgid "first send, delivery to a recipient, unpaid, payment link"
+msgstr "ensimmäinen lähetys, toimitus vastaanottajalle, maksamatta, maksulinkki"
+
+#: lib/edenflowers/email/previews.ex:43
+#, elixir-autogen, elixir-format
+msgid "fulfilled at checkout (counter sale)"
+msgstr "luovutettu kassalla (tiskimyynti)"
+
+#: lib/edenflowers/email/previews.ex:210
+#, elixir-autogen, elixir-format
+msgid "gift to a named recipient"
+msgstr "lahja nimetylle vastaanottajalle"
+
+#: lib/edenflowers/email/previews.ex:211
+#, elixir-autogen, elixir-format
+msgid "gift without a recipient name"
+msgstr "lahja ilman vastaanottajan nimeä"
+
+#: lib/edenflowers/email/previews.ex:60
+#: lib/edenflowers/email/previews.ex:147
+#: lib/edenflowers/email/previews.ex:213
+#, elixir-autogen, elixir-format
+msgid "no customer first name"
+msgstr "ei asiakkaan etunimeä"
+
+#: lib/edenflowers/email/previews.ex:270
+#: lib/edenflowers/email/previews.ex:281
+#, elixir-autogen, elixir-format
+msgid "no first name"
+msgstr "ei etunimeä"
+
+#: lib/edenflowers/email/previews.ex:212
+#, elixir-autogen, elixir-format
+msgid "not a gift, recipient name filled in"
+msgstr "ei lahja, vastaanottajan nimi täytetty"
+
+#: lib/edenflowers/email/previews.ex:41
+#, elixir-autogen, elixir-format
+msgid "not yet fulfilled, cancellable"
+msgstr "ei vielä luovutettu, peruttavissa"
+
+#: lib/edenflowers/email/previews.ex:42
+#, elixir-autogen, elixir-format
+msgid "not yet fulfilled, past the cancellation deadline"
+msgstr "ei vielä luovutettu, peruutusaika umpeutunut"
+
+#: lib/edenflowers/email/previews.ex:254
+#, elixir-autogen, elixir-format
+msgid "nothing to refund, no customer first name"
+msgstr "ei palautettavaa, ei asiakkaan etunimeä"
+
+#: lib/edenflowers/email/previews.ex:77
+#, elixir-autogen, elixir-format
+msgid "online order edited after payment, part paid"
+msgstr "verkkotilausta muokattu maksun jälkeen, osittain maksettu"
+
+#: lib/edenflowers/email/previews.ex:318
+#, elixir-autogen, elixir-format
+msgid "only the required fields"
+msgstr "vain pakolliset kentät"
+
+#: lib/edenflowers/email/previews.ex:139
+#, elixir-autogen, elixir-format
+msgid "overpaid, credit balance"
+msgstr "ylimaksettu, saldo asiakkaan hyväksi"
+
+#: lib/edenflowers/email/previews.ex:263
+#, elixir-autogen, elixir-format
+msgid "paid, late-cancellation fee"
+msgstr "maksettu, myöhäisen peruutuksen maksu"
+
+#: lib/edenflowers/email/previews.ex:264
+#, elixir-autogen, elixir-format
+msgid "paid, no late-cancellation fee"
+msgstr "maksettu, ei myöhäisen peruutuksen maksua"
+
+#: lib/edenflowers/email/previews.ex:95
+#, elixir-autogen, elixir-format
+msgid "part paid, payment link"
+msgstr "osittain maksettu, maksulinkki"
+
+#: lib/edenflowers/email/previews.ex:280
+#, elixir-autogen, elixir-format
+msgid "partially paid"
+msgstr "osittain maksettu"
+
+#: lib/edenflowers/email/previews.ex:268
+#, elixir-autogen, elixir-format
+msgid "partially paid, payment link"
+msgstr "osittain maksettu, maksulinkki"
+
+#: lib/edenflowers/email/previews.ex:46
+#: lib/edenflowers/email/previews.ex:196
+#, elixir-autogen, elixir-format
+msgid "pickup"
+msgstr "nouto"
+
+#: lib/edenflowers/email/previews.ex:167
+#, elixir-autogen, elixir-format
+msgid "pickup, every week, no discount, no card message, no first name"
+msgstr "nouto, viikoittain, ei alennusta, ei korttiviestiä, ei etunimeä"
+
+#: lib/edenflowers/email/previews.ex:157
+#, elixir-autogen, elixir-format
+msgid "pickup, no customer first name"
+msgstr "nouto, ei asiakkaan etunimeä"
+
+#: lib/edenflowers/email/previews.ex:86
+#, elixir-autogen, elixir-format
+msgid "pickup, no recipient, no delivery fee"
+msgstr "nouto, ei vastaanottajaa, ei toimitusmaksua"
+
+#: lib/edenflowers/email/previews.ex:238
+#, elixir-autogen, elixir-format
+msgid "pickup, refunded"
+msgstr "nouto, hyvitetty"
+
+#: lib/edenflowers/email/previews.ex:76
+#, elixir-autogen, elixir-format
+msgid "re-sent after an edit"
+msgstr "lähetetty uudelleen muokkauksen jälkeen"
+
+#: lib/edenflowers/email/previews.ex:225
+#, elixir-autogen, elixir-format
+msgid "refunded to MobilePay"
+msgstr "hyvitetty MobilePayhin"
+
+#: lib/edenflowers/email/previews.ex:223
+#, elixir-autogen, elixir-format
+msgid "refunded to a card"
+msgstr "hyvitetty kortille"
+
+#: lib/edenflowers/email/previews.ex:227
+#, elixir-autogen, elixir-format
+msgid "refunded, paid more than one way"
+msgstr "hyvitetty, maksettu usealla tavalla"
+
+#: lib/edenflowers/email/previews.ex:331
+#, elixir-autogen, elixir-format
+msgid "resubscribed, code already used"
+msgstr "tilannut uudelleen, koodi jo käytetty"
+
+#: lib/edenflowers/email/previews.ex:333
+#, elixir-autogen, elixir-format
+msgid "resubscribed, code expired"
+msgstr "tilannut uudelleen, koodi vanhentunut"
+
+#: lib/edenflowers/email/previews.ex:131
+#, elixir-autogen, elixir-format
+msgid "settled, paid in full"
+msgstr "maksettu kokonaan"
+
+#: lib/edenflowers/email/previews.ex:335
+#, elixir-autogen, elixir-format
+msgid "sign-in code"
+msgstr "kirjautumiskoodi"
+
+#: lib/edenflowers/email/previews.ex:59
+#, elixir-autogen, elixir-format
+msgid "subscription order"
+msgstr "kestotilauksen tilaus"
+
+#: lib/edenflowers/email/previews.ex:279
+#, elixir-autogen, elixir-format
+msgid "unpaid"
+msgstr "maksamatta"
+
+#: lib/edenflowers/email/previews.ex:103
+#, elixir-autogen, elixir-format
+msgid "unpaid, invoice after delivery"
+msgstr "maksamatta, lasku toimituksen jälkeen"
+
+#: lib/edenflowers/email/previews.ex:104
+#, elixir-autogen, elixir-format
+msgid "unpaid, invoice after pickup"
+msgstr "maksamatta, lasku noudon jälkeen"
+
+#: lib/edenflowers/email/previews.ex:261
+#, elixir-autogen, elixir-format
+msgid "unpaid, payment link"
+msgstr "maksamatta, maksulinkki"
+
+#: lib/edenflowers/email/previews.ex:114
+#, elixir-autogen, elixir-format
+msgid "unpaid, pays at pickup"
+msgstr "maksamatta, maksetaan noudettaessa"
+
+#: lib/edenflowers/email/previews.ex:262
+#, elixir-autogen, elixir-format
+msgid "unpaid, pays at the course"
+msgstr "maksamatta, maksetaan kurssilla"
+
+#: lib/edenflowers/email/previews.ex:113
+#, elixir-autogen, elixir-format
+msgid "unpaid, pays on delivery"
+msgstr "maksamatta, maksetaan toimituksen yhteydessä"
+
+#: lib/edenflowers/email/previews.ex:327
+#, elixir-autogen, elixir-format
+msgid "welcome with promo code"
+msgstr "tervetuloa ja alennuskoodi"
+
+#: lib/edenflowers/email/previews.ex:44
+#, elixir-autogen, elixir-format
+msgid "with a delivery time"
+msgstr "toimitusajalla"
+
+#: lib/edenflowers/email/previews.ex:45
+#, elixir-autogen, elixir-format
+msgid "with a delivery time window"
+msgstr "toimitusaikaikkunalla"
+
+#: lib/edenflowers/email/previews.ex:123
+#, elixir-autogen, elixir-format
+msgid "zero delivery fee, with delivery time window"
+msgstr "ei toimitusmaksua, toimitusaikaikkunalla"

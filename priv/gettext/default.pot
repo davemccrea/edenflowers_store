@@ -7180,3 +7180,272 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Last month"
 msgstr ""
+
+#: lib/edenflowers/email/previews.ex:266
+#, elixir-autogen, elixir-format
+msgid "2 places, paid"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:267
+#, elixir-autogen, elixir-format
+msgid "2 places, unpaid, payment link"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:329
+#, elixir-autogen, elixir-format
+msgid "already subscribed"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:156
+#, elixir-autogen, elixir-format
+msgid "delivery"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:186
+#, elixir-autogen, elixir-format
+msgid "delivery, card message only"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:185
+#, elixir-autogen, elixir-format
+msgid "delivery, discount only"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:166
+#, elixir-autogen, elixir-format
+msgid "delivery, every 2 weeks, discounted first order, card message"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:179
+#, elixir-autogen, elixir-format
+msgid "delivery, every 4 weeks, large"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:336
+#, elixir-autogen, elixir-format
+msgid "email change code"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:317
+#, elixir-autogen, elixir-format
+msgid "everything filled in"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:75
+#, elixir-autogen, elixir-format
+msgid "first send, delivery to a recipient, unpaid, payment link"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:43
+#, elixir-autogen, elixir-format
+msgid "fulfilled at checkout (counter sale)"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:210
+#, elixir-autogen, elixir-format
+msgid "gift to a named recipient"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:211
+#, elixir-autogen, elixir-format
+msgid "gift without a recipient name"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:60
+#: lib/edenflowers/email/previews.ex:147
+#: lib/edenflowers/email/previews.ex:213
+#, elixir-autogen, elixir-format
+msgid "no customer first name"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:270
+#: lib/edenflowers/email/previews.ex:281
+#, elixir-autogen, elixir-format
+msgid "no first name"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:212
+#, elixir-autogen, elixir-format
+msgid "not a gift, recipient name filled in"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:41
+#, elixir-autogen, elixir-format
+msgid "not yet fulfilled, cancellable"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:42
+#, elixir-autogen, elixir-format
+msgid "not yet fulfilled, past the cancellation deadline"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:254
+#, elixir-autogen, elixir-format
+msgid "nothing to refund, no customer first name"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:77
+#, elixir-autogen, elixir-format
+msgid "online order edited after payment, part paid"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:318
+#, elixir-autogen, elixir-format
+msgid "only the required fields"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:139
+#, elixir-autogen, elixir-format
+msgid "overpaid, credit balance"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:263
+#, elixir-autogen, elixir-format
+msgid "paid, late-cancellation fee"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:264
+#, elixir-autogen, elixir-format
+msgid "paid, no late-cancellation fee"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:95
+#, elixir-autogen, elixir-format
+msgid "part paid, payment link"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:280
+#, elixir-autogen, elixir-format
+msgid "partially paid"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:268
+#, elixir-autogen, elixir-format
+msgid "partially paid, payment link"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:46
+#: lib/edenflowers/email/previews.ex:196
+#, elixir-autogen, elixir-format
+msgid "pickup"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:167
+#, elixir-autogen, elixir-format
+msgid "pickup, every week, no discount, no card message, no first name"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:157
+#, elixir-autogen, elixir-format
+msgid "pickup, no customer first name"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:86
+#, elixir-autogen, elixir-format
+msgid "pickup, no recipient, no delivery fee"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:238
+#, elixir-autogen, elixir-format
+msgid "pickup, refunded"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:76
+#, elixir-autogen, elixir-format
+msgid "re-sent after an edit"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:225
+#, elixir-autogen, elixir-format
+msgid "refunded to MobilePay"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:223
+#, elixir-autogen, elixir-format
+msgid "refunded to a card"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:227
+#, elixir-autogen, elixir-format
+msgid "refunded, paid more than one way"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:331
+#, elixir-autogen, elixir-format
+msgid "resubscribed, code already used"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:333
+#, elixir-autogen, elixir-format
+msgid "resubscribed, code expired"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:131
+#, elixir-autogen, elixir-format
+msgid "settled, paid in full"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:335
+#, elixir-autogen, elixir-format
+msgid "sign-in code"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:59
+#, elixir-autogen, elixir-format
+msgid "subscription order"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:279
+#, elixir-autogen, elixir-format
+msgid "unpaid"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:103
+#, elixir-autogen, elixir-format
+msgid "unpaid, invoice after delivery"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:104
+#, elixir-autogen, elixir-format
+msgid "unpaid, invoice after pickup"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:261
+#, elixir-autogen, elixir-format
+msgid "unpaid, payment link"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:114
+#, elixir-autogen, elixir-format
+msgid "unpaid, pays at pickup"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:262
+#, elixir-autogen, elixir-format
+msgid "unpaid, pays at the course"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:113
+#, elixir-autogen, elixir-format
+msgid "unpaid, pays on delivery"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:327
+#, elixir-autogen, elixir-format
+msgid "welcome with promo code"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:44
+#, elixir-autogen, elixir-format
+msgid "with a delivery time"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:45
+#, elixir-autogen, elixir-format
+msgid "with a delivery time window"
+msgstr ""
+
+#: lib/edenflowers/email/previews.ex:123
+#, elixir-autogen, elixir-format
+msgid "zero delivery fee, with delivery time window"
+msgstr ""
