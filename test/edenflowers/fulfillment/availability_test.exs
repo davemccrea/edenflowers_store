@@ -164,4 +164,27 @@ defmodule Edenflowers.Fulfillment.AvailabilityTest do
       refute Availability.override?(calendar, ~D[2024-04-10])
     end
   end
+
+  describe "next_open_date/2" do
+    test "today when same day is on and the deadline hasn't passed" do
+      calendar = shop_calendar(same_day: true, order_deadline: ~T[14:00:00])
+      now = DateTime.from_naive!(~N[2023-06-01 13:00:00], "Europe/Helsinki")
+
+      assert ~D[2023-06-01] == Availability.next_open_date(calendar, now)
+    end
+
+    test "skips today after the deadline and closed days" do
+      calendar = shop_calendar(same_day: true, order_deadline: ~T[14:00:00], disabled_dates: [~D[2023-06-02]])
+      now = DateTime.from_naive!(~N[2023-06-01 15:00:00], "Europe/Helsinki")
+
+      assert ~D[2023-06-03] == Availability.next_open_date(calendar, now)
+    end
+
+    test "nil when the shop is closed every day" do
+      calendar = shop_calendar(available_days: [])
+      now = DateTime.from_naive!(~N[2023-06-01 10:00:00], "Europe/Helsinki")
+
+      assert nil == Availability.next_open_date(calendar, now)
+    end
+  end
 end
