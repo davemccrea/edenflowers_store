@@ -96,14 +96,6 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               </dd>
             </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt class="text-base-content/65 text-sm sm:pt-1.5">{~t"Language"}</dt>
-              <dd>
-                <Layouts.locale_picker id="admin-locale-picker" current_path={@current_path} class="w-full sm:max-w-xs">
-                  <span class="select w-full">{current_language()}</span>
-                </Layouts.locale_picker>
-              </dd>
-            </div>
-            <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
               <dt class="text-base-content/65 text-sm">{~t"Access"}</dt>
               <dd class="text-base-content text-sm">{~t"Admin"}</dd>
             </div>
@@ -215,12 +207,6 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   defp avatar_error(:too_large), do: ~t"The picture must be under 2 MB."
   defp avatar_error(:not_accepted), do: ~t"Use a JPG, PNG or WebP image."
   defp avatar_error(_), do: ~t"Could not upload the picture."
-
-  defp current_language do
-    Localize.get_locale().language
-    |> Localize.Language.display_name!(fallback: true)
-    |> String.capitalize()
-  end
 
   defp display_name(user) do
     user

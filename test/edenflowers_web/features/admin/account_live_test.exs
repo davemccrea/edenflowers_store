@@ -34,23 +34,6 @@ defmodule EdenflowersWeb.Admin.AccountLiveTest do
     assert get(conn, ~p"/admin/account/avatar").status == 404
   end
 
-  test "admin picks the admin language in account settings", %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/account")
-
-    for locale <- Edenflowers.Locales.all() do
-      assert has_element?(
-               view,
-               ~s|#admin-locale-picker option[value="/locale/#{locale}?redirect_to=%2Fadmin%2Faccount"]|
-             )
-    end
-
-    {:ok, _view, html} = live(conn, ~p"/admin/orders")
-    refute html =~ "/locale/"
-  end
-
   test "non-admins cannot fetch an avatar", %{conn: conn} do
     user = generate(admin_user(admin: false)) |> with_token()
     conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(user)
