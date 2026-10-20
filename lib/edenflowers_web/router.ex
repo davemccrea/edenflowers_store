@@ -79,6 +79,10 @@ defmodule EdenflowersWeb.Router do
   end
 
   scope "/", EdenflowersWeb do
+    get "/sitemap.xml", Marketing.SitemapController, :index
+  end
+
+  scope "/", EdenflowersWeb do
     pipe_through :browser
 
     live_session :maintenance do
