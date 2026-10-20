@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
     {:ok,
      socket
      |> assign(
-       page_title: ~t"Condolences",
+       page_title: ~t"Funeral Flowers in Vaasa & Korsholm",
        alternates: alternates("/#{language}/condolences"),
        page_description:
          ~t"Funeral flowers in Vaasa and Korsholm: sprays, hearts, wreaths and casket sprays by Jennie at Eden Flowers, delivered to churches and chapels.",

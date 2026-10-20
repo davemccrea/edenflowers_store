@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     {:ok,
      socket
      |> assign(
-       page_title: ~t"Weddings",
+       page_title: ~t"Wedding Flowers in Vaasa & Korsholm",
        alternates: alternates("/#{language}/weddings"),
        page_description:
          ~t"Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers. Prices and past weddings.",
