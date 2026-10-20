@@ -269,39 +269,21 @@ function onDocumentPatch(start) {
 
   const root = document.documentElement;
   root.dataset.adminTransition = kind;
-
-  // A snapshot covers the whole page, not just the part on screen, so the old
-  // page would show from its top, far off screen on a scrolled page. Pinned
-  // below the topbar and scrolled inside itself, it snapshots as it looked.
-  // The topbar is hidden on desktop, where its bottom comes out as 0.
-  const page = document.getElementById("admin-page");
+  // The transition draws over the live topbar, so admin.css clips it to the
+  // page below. The topbar is hidden on desktop, where this comes out as 0.
   const topbarBottom = document
     .getElementById("admin-topbar")
     .getBoundingClientRect().bottom;
-  const pageTop = page.getBoundingClientRect().top;
-  const pinnedTop = Math.max(pageTop, topbarBottom);
-  Object.assign(page.style, {
-    position: "fixed",
-    inset: `${pinnedTop}px 0 0 0`,
-    overflow: "hidden",
-  });
-  page.scrollTop = pinnedTop - pageTop;
-
+  root.style.setProperty("--admin-topbar-bottom", `${topbarBottom}px`);
   heldPatches = [];
   document
     .startViewTransition(() => {
-      page.removeAttribute("style");
       try {
         start();
       } finally {
         const held = heldPatches;
         heldPatches = null;
         held.forEach((patch) => patch());
-        // admin.css holds the snapshot where the new page sits, puts the old
-        // one back where it was pinned, and leaves what is above it live.
-        const newTop = page.getBoundingClientRect().top;
-        root.style.setProperty("--admin-page-top", `${newTop}px`);
-        root.style.setProperty("--admin-page-shift", `${pinnedTop - newTop}px`);
       }
     })
     .finished.finally(() => delete root.dataset.adminTransition);
