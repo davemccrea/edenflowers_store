@@ -37,6 +37,22 @@ body:has(.admin-theme) {
   z-index: 1;
 }
 
+/* A link in the navigation drawer slides the drawer away as the new page fades
+   in. Its own name lifts it above the topbar, which it covers. */
+#admin-nav-drawer-dialog {
+  view-transition-name: admin-nav-drawer;
+}
+
+::view-transition-group(admin-nav-drawer) {
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(admin-nav-drawer) {
+    animation: var(--drawer-duration) var(--ease-in-out) both admin-drawer-close;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html[data-admin-transition="push"],
   html[data-admin-transition="pop"] {
@@ -97,6 +113,12 @@ body:has(.admin-theme) {
   from {
     opacity: 0;
     scale: 0.92;
+  }
+}
+
+@keyframes admin-drawer-close {
+  to {
+    translate: -100% 0;
   }
 }
 
