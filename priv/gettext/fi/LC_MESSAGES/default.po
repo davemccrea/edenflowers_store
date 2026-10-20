@@ -113,11 +113,6 @@ msgstr "Yhteensä"
 msgid "Weddings"
 msgstr "Häät"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:42
-#, elixir-autogen, elixir-format
-msgid "Shop Now"
-msgstr "Osta nyt"
-
 #: lib/edenflowers_web/components/cart/drawer.ex:72
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:58
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:122
@@ -208,11 +203,6 @@ msgstr "Kuinka kauan kukkani pysyvät tuoreina?"
 #, elixir-autogen, elixir-format
 msgid "Increment"
 msgstr "Lisää"
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:168
-#, elixir-autogen, elixir-format
-msgid "Learn more"
-msgstr "Lue lisää"
 
 #: lib/edenflowers_web/components/layouts.ex:237
 #: lib/edenflowers_web/components/layouts.ex:610
@@ -1411,11 +1401,6 @@ msgstr "Rannekorsaasit persikanvärisistä ruusuista"
 msgid "Funeral flowers"
 msgstr "Surukukat"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:162
-#, elixir-autogen, elixir-format
-msgid "Hi, I'm Jennie. I've been making flowers in Vaasa since 2018, and every arrangement still passes through my hands."
-msgstr "Hei, olen Jennie. Olen sitonut kukkia Vaasassa vuodesta 2018, ja jokainen asetelma kulkee yhä omien käsieni kautta."
-
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:387
 #, elixir-autogen, elixir-format
 msgid "Blue hydrangea in a glass vase beside bridal shoes"
@@ -2152,16 +2137,6 @@ msgstr "Käsitellään…"
 msgid "Overdue"
 msgstr "Myöhässä"
 
-#: lib/edenflowers_web/features/store/store_live.ex:101
-#, elixir-autogen, elixir-format
-msgid "Check back soon, or browse another collection in the meantime."
-msgstr "Palaa pian tai tutustu sillä välin toiseen valikoimaan."
-
-#: lib/edenflowers_web/features/store/store_live.ex:98
-#, elixir-autogen, elixir-format
-msgid "I'm preparing the next collection"
-msgstr "Valmistelen seuraavaa valikoimaa"
-
 #: lib/edenflowers_web/features/store/store_live.ex:103
 #, elixir-autogen, elixir-format
 msgid "Need flowers before then? Get in touch and I'll gladly help."
@@ -2288,11 +2263,6 @@ msgstr "Kaksi ruukkuasetelmaa korallinvärisistä ruusuista ja ritarinkannuksist
 #, elixir-autogen, elixir-format
 msgid "Wooden flower gate with white drapes and summer flowers"
 msgstr "Puinen kukkaportti valkoisin verhoin ja kesäkukin"
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:176
-#, elixir-autogen, elixir-format
-msgid "For bigger occasions"
-msgstr "Suurempiin tilaisuuksiin"
 
 #: lib/edenflowers_web/components/core_components.ex:841
 #, elixir-autogen, elixir-format
@@ -5573,16 +5543,6 @@ msgstr "Varaus on peruttu, joten maksettavaa ei ole. Ota yhteyttä, jos tämä t
 msgid "This booking is paid. Thank you!"
 msgstr "Varaus on maksettu. Kiitos!"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:133
-#, elixir-autogen, elixir-format
-msgid "Every arrangement is made with fresh cut flowers, and delivery is free within 5 km of Minimossen."
-msgstr "Jokainen asetelma tehdään tuoreista leikkokukista, ja toimitus on maksuton 5 km:n säteellä Minimossenista."
-
-#: lib/edenflowers_web/features/marketing/home_live.ex:33
-#, elixir-autogen, elixir-format
-msgid "Flowers for every stage of life"
-msgstr "Kukkia elämän kaikkiin vaiheisiin"
-
 #: lib/edenflowers_web/features/marketing/about_live.ex:20
 #, elixir-autogen, elixir-format
 msgid "Hi, I'm Jennie! I've run Eden Flowers in Vaasa since January 2019. I have a small shop in Minimossen, the recycling mall at Myrvägen 1. There you'll find my popular pick-up bouquets, trendy houseplants, and second-hand pots and vases."
@@ -6789,3 +6749,48 @@ msgstr "Tilauksen hyvitys"
 #, elixir-autogen, elixir-format
 msgid "To cancel, reply at least 7 days before the course. If you cancel later, I keep up to %{fee} of what you've paid as a cancellation fee."
 msgstr "Peru vastaamalla vähintään 7 päivää ennen kurssia. Myöhemmästä peruutuksesta pidätän enintään %{fee} jo maksamastasi summasta peruutusmaksuna."
+
+#: lib/edenflowers_web/features/store/store_live.ex:107
+#, elixir-autogen, elixir-format
+msgid "Browse another collection, or get in touch to ask about flowers for your occasion."
+msgstr "Tutustu muihin valikoimiin tai ota yhteyttä, niin autan sinua löytämään kukat tilaisuuteesi."
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:42
+#, elixir-autogen, elixir-format
+msgid "Choose your flowers online for delivery or pickup at Minimossen."
+msgstr "Valitse kukkasi verkosta ja tilaa toimitus tai nouda Minimossenista."
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:39
+#, elixir-autogen, elixir-format
+msgid "Flowers made by Jennie in Vaasa"
+msgstr "Jennien tekemiä kukkia Vaasassa"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:171
+#, elixir-autogen, elixir-format
+msgid "Hi, I'm Jennie. I make every arrangement myself at my shop in Minimossen, from a bouquet for your kitchen table to flowers for your wedding."
+msgstr "Hei, olen Jennie. Sidon kaikki kukat itse liikkeessäni Minimossenissa, keittiön pöydän kimpusta hääkukkiin."
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:177
+#, elixir-autogen, elixir-format
+msgid "Meet Jennie"
+msgstr "Tutustu Jennieen"
+
+#: lib/edenflowers_web/features/store/store_live.ex:104
+#, elixir-autogen, elixir-format
+msgid "No flowers listed here just now"
+msgstr "Täällä ei ole juuri nyt kukkia"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:142
+#, elixir-autogen, elixir-format
+msgid "Order online for delivery or pick up your flowers at my shop in Minimossen, Myrvägen 1."
+msgstr "Tilaa kukat verkosta toimituksella tai nouda ne liikkeestäni Minimossenista, Muurahaistie 1."
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:51
+#, elixir-autogen, elixir-format
+msgid "Shop flowers"
+msgstr "Tilaa kukkia"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:185
+#, elixir-autogen, elixir-format
+msgid "Weddings and flower courses"
+msgstr "Häät ja kukkakurssit"

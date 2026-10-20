@@ -1,9 +1,10 @@
 ---
 id: TASK-72
 title: Settle the year Eden Flowers started and make the site agree
-status: needs-info
+status: done
 assignee: []
 created_date: '2026-10-20 10:12'
+updated_date: '2026-10-20 10:26'
 labels:
   - spec
   - customers
@@ -26,5 +27,18 @@ Both may be true (flowers from 2018, the business from 2019); if so, make the wo
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The About and home page wording agrees with the confirmed facts in all three languages
+- [x] #1 The About and home page wording agrees with the confirmed facts in all three languages
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-20 10:26
+
+---
+
+The new home copy no longer names a year, so About's "since January 2019" is the only claim and nothing conflicts.
+
+---
+<!-- COMMENTS:END -->
