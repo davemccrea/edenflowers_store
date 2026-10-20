@@ -73,13 +73,19 @@ defmodule Edenflowers.Format do
   around it.
   """
   @spec fulfillment_time(map(), Localize.Locale.locale_id()) :: String.t() | nil
-  def fulfillment_time(%{fulfillment_time_start: nil}, _locale), do: nil
+  def fulfillment_time(order, locale) do
+    if time = fulfillment_time_range(order, locale), do: ~t"at #{time}"
+  end
 
-  def fulfillment_time(%{fulfillment_time_start: start, fulfillment_time_end: nil}, locale),
-    do: ~t"at #{time = time(start, locale)}"
+  @doc "An order's time of day without the \"at\", e.g. \"14:00–15:00\", or nil when any time will do."
+  @spec fulfillment_time_range(map(), Localize.Locale.locale_id()) :: String.t() | nil
+  def fulfillment_time_range(%{fulfillment_time_start: nil}, _locale), do: nil
 
-  def fulfillment_time(%{fulfillment_time_start: start, fulfillment_time_end: finish}, locale),
-    do: ~t"at #{time = "#{time(start, locale)}–#{time(finish, locale)}"}"
+  def fulfillment_time_range(%{fulfillment_time_start: start, fulfillment_time_end: nil}, locale),
+    do: time(start, locale)
+
+  def fulfillment_time_range(%{fulfillment_time_start: start, fulfillment_time_end: finish}, locale),
+    do: "#{time(start, locale)}–#{time(finish, locale)}"
 
   @doc "Localized delivery distance from metres, e.g. \"850 m\" / \"3,4 km\"."
   @spec distance(non_neg_integer(), Localize.Locale.locale_id()) :: String.t()
