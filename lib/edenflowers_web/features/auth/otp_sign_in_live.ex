@@ -106,6 +106,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
           <.form
             class="flex w-full flex-col space-y-4"
             for={@request_form}
+            id={@request_form.id}
             phx-change="change"
             phx-submit="request"
             method="POST"
