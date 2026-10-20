@@ -1,5 +1,15 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
-#
-# To ban all spiders from the entire site uncomment the next two lines:
-# User-agent: *
-# Disallow: /
+User-agent: *
+Disallow: /admin
+Disallow: /account
+Disallow: /checkout
+Disallow: /order/
+Disallow: /pay/
+Disallow: /courses/bookings/
+Disallow: /courses/pay/
+Disallow: /auth
+Disallow: /sign-in
+Disallow: /sign-out
+Disallow: /locale/
+Disallow: /back-soon
+
+Sitemap: https://edenflowers.fi/sitemap.xml
