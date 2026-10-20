@@ -36,7 +36,7 @@ defmodule Edenflowers.Courses.Changes.SendPaymentLinkEmail do
   # Read fresh: the courses page's copy can predate a payment, and the email says what's owed.
   defp load_for_send(registration) do
     CourseRegistration
-    |> Ash.get!(registration.id, load: [:course, :first_name, :balance], actor: system_actor())
+    |> Ash.get!(registration.id, load: [:course, :first_name, :amount_paid, :balance], actor: system_actor())
     |> Map.update!(:course, &Translations.translate(&1, String.to_existing_atom(registration.locale)))
   end
 end

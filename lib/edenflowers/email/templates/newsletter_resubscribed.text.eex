@@ -1,8 +1,8 @@
 <%= gettext("Hi,") %>
 
-<%= gettext("Welcome back to the Eden Flowers newsletter. It's lovely to have you back.") %>
+<%= gettext("You're subscribed to the Eden Flowers newsletter.") %>
 
-<%= gettext("See what's in season in the shop:") %>
+<%= gettext("Browse the flowers in the shop:") %>
 <%= @shop_url %>
 
 <%= gettext("Warm wishes,") %>

@@ -2,9 +2,10 @@
 
 <%= if @order.origin == :subscription do %><%= gettext("Your next subscription order is paid.") %><% else %><%= gettext("Thank you for your order.") %><% end %><%= cond do %><% @order.fulfillment_status == :fulfilled -> %><% @order.fulfillment_method == :delivery -> %> <%= gettext("I'll deliver it on %{date} to %{address}.", date: @fulfillment_on, address: @order.delivery_address) %><% true -> %> <%= gettext("You can collect it on %{date} from %{shop}.", date: @fulfillment_on, shop: shop_address()) %><% end %>
 
-<%= gettext("Your receipt is attached. If anything needs changing, just reply and I'll take care of it.") %>
+<%= gettext("Your receipt is attached. If you have a question about your order, reply to this email.") %>
 <%= cond do %><% @order.origin == :subscription -> %>
-<%= gettext("You can pause or change your subscription from your account: %{url}", url: @account_url) %>
+<%= gettext("You can manage your upcoming subscription orders from your account:") %>
+<%= @account_url %>
 <% @order.cancellable_by_customer? -> %>
 <%= gettext("Plans changed? You can cancel from your account until %{date} for a full refund: %{url}", date: @format_date.(@order.cancellable_until), url: @account_url) %>
 <% true -> %><% end %>

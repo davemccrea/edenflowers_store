@@ -174,7 +174,7 @@ defmodule Edenflowers.Email do
           refunded: refunded_amount,
           refunded_to: refunded_to(order.payments),
           format_currency: &Format.currency(&1, order.locale),
-          format_date: &Format.weekday_date(&1, order.locale)
+          format_date: &Format.date(&1, order.locale)
         })
       )
     end)
@@ -262,8 +262,10 @@ defmodule Edenflowers.Email do
     new()
     |> from(automated_from_address())
     |> to(email_address)
-    |> subject(~t"Welcome to Eden Flowers: your 15% off code inside")
-    |> text_body(Templates.newsletter_promo(%{promo_code: promo.code, use_by: use_by(promo, locale)}))
+    |> subject(~t"Your 15% welcome code for Eden Flowers")
+    |> text_body(
+      Templates.newsletter_promo(%{promo_code: promo.code, use_by: use_by(promo, locale), store_url: store_url()})
+    )
   end
 
   def newsletter_already_subscribed(email_address, promo, locale) do
@@ -271,7 +273,13 @@ defmodule Edenflowers.Email do
     |> from(automated_from_address())
     |> to(email_address)
     |> subject(~t"Your Eden Flowers promo code")
-    |> text_body(Templates.newsletter_already_subscribed(%{promo_code: promo.code, use_by: use_by(promo, locale)}))
+    |> text_body(
+      Templates.newsletter_already_subscribed(%{
+        promo_code: promo.code,
+        use_by: use_by(promo, locale),
+        store_url: store_url()
+      })
+    )
   end
 
   defp use_by(promo, locale), do: Format.weekday_date(promo.expiration_date, locale)
@@ -280,8 +288,8 @@ defmodule Edenflowers.Email do
     new()
     |> from(automated_from_address())
     |> to(email_address)
-    |> subject(~t"Welcome back to the Eden Flowers newsletter")
-    |> text_body(Templates.newsletter_resubscribed(%{shop_url: EdenflowersWeb.Endpoint.url()}))
+    |> subject(~t"Your Eden Flowers newsletter subscription")
+    |> text_body(Templates.newsletter_resubscribed(%{shop_url: store_url()}))
   end
 
   def error_alert(error) do
@@ -312,11 +320,13 @@ defmodule Edenflowers.Email do
     new()
     |> from(automated_from_address())
     |> to(email_address)
-    |> subject(~t"#{code} is your code to confirm your new Eden Flowers email")
+    |> subject(~t"#{code} is your email change code for Eden Flowers")
     |> text_body(Templates.email_change_code(%{code: code}))
   end
 
   defp account_url, do: EdenflowersWeb.Endpoint.url() <> "/account"
+
+  defp store_url, do: EdenflowersWeb.Endpoint.url() <> "/store"
 
   defp from_address, do: Application.fetch_env!(:edenflowers, :mailer_from_address)
 

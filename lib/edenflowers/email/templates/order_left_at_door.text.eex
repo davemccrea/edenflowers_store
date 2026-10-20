@@ -1,9 +1,9 @@
 <%= if @order.customer_first_name, do: ~t"Hi #{name = @order.customer_first_name},", else: ~t"Hi," %>
 
 <%= if @order.gift && @order.recipient_first_name do
-  ~t"Your order for #{recipient = @order.recipient_first_name} was delivered while nobody was home, so I left it in the spot shown in the attached photo."
+  ~t"Nobody was home when I delivered your order for #{recipient = @order.recipient_first_name}. The attached photo shows where I left it."
 else
-  ~t"Nobody was home when I delivered your order, so I left it in the spot shown in the attached photo."
+  ~t"Nobody was home when I delivered your order. The attached photo shows where I left it."
 end %>
 
 <%= ~t"Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it." %>
