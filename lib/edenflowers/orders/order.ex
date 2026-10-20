@@ -45,6 +45,7 @@ defmodule Edenflowers.Orders.Order do
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Validations
   alias Edenflowers.Payments.Changes, as: PaymentChanges
+  alias Edenflowers.Payments.Payment
   alias Edenflowers.Payments.Validations, as: PaymentValidations
 
   @locales Edenflowers.Locales.all()
@@ -451,7 +452,7 @@ defmodule Edenflowers.Orders.Order do
     # What the Overview lists as still to collect or refund.
     read :unsettled do
       filter expr(committed? and not settled?)
-      prepare build(load: [:balance, :customer_name, :order_reference])
+      prepare build(load: [:balance, :payment_overdue?, :customer_name, :order_reference])
     end
 
     read :to_fulfil do
@@ -1175,6 +1176,13 @@ defmodule Edenflowers.Orders.Order do
   end
 
   calculations do
+    calculate :payment_overdue?,
+              :boolean,
+              expr(
+                fulfillment_status == :fulfilled and balance > 0 and
+                  fulfillment_date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
+              )
+
     calculate :customer_first_name, :string, {AccountCalculations.FirstName, source: :customer_name}
     calculate :recipient_first_name, :string, {AccountCalculations.FirstName, source: :recipient_name}
 

@@ -22,6 +22,12 @@ defmodule Edenflowers.Payments.Payment do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
+  # Customers pay after delivery, on the usual Finnish invoice term; what's
+  # still owed this long after an order is fulfilled or a course held is overdue.
+  @overdue_after_days 14
+
+  def overdue_after_days, do: @overdue_after_days
+
   postgres do
     repo Edenflowers.Repo
     table "payments"

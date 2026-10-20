@@ -17,6 +17,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
   alias Edenflowers.Courses.Changes
   alias Edenflowers.Courses.Validations
   alias Edenflowers.Payments.Changes, as: PaymentChanges
+  alias Edenflowers.Payments.Payment
   alias Edenflowers.Payments.Validations, as: PaymentValidations
 
   @locales Edenflowers.Locales.all()
@@ -85,7 +86,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # What the Overview lists as still to collect or refund.
     read :unsettled do
       filter expr(committed? and not settled?)
-      prepare build(load: [:balance, :course])
+      prepare build(load: [:balance, :payment_overdue?, :course])
     end
 
     read :by_payment_link_token do
@@ -334,6 +335,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
     calculate :holds_seats?,
               :boolean,
               expr(status == :confirmed or (status == :pending and inserted_at > ago(@hold_minutes, :minute)))
+
+    calculate :payment_overdue?,
+              :boolean,
+              expr(
+                balance > 0 and
+                  course.date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
+              )
 
     calculate :payment_link_open?,
               :boolean,
