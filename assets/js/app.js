@@ -256,7 +256,8 @@ function onDocumentPatch(start) {
   pendingAdminTransition = null;
 
   // An open drawer or modal would be snapshotted mid-page, so those navigations
-  // swap instantly, as they did before.
+  // swap instantly, as they did before. The navigation drawer is the exception:
+  // it slides away in its own snapshot (admin.css).
   // Only the installed app animates, as a native one would. In a browser tab
   // pages swap straight away, as on most web apps.
   const animate =
@@ -264,7 +265,7 @@ function onDocumentPatch(start) {
     document.startViewTransition &&
     document.querySelector(".admin-theme") &&
     matchMedia("(display-mode: standalone)").matches &&
-    !document.querySelector("dialog[open]");
+    !document.querySelector("dialog[open]:not(#admin-nav-drawer-dialog)");
   if (!animate) return start();
 
   const root = document.documentElement;
