@@ -231,7 +231,7 @@ defmodule EdenflowersWeb.Layouts do
         id="admin-nav-drawer"
         placement="left"
         label={~t"Admin navigation"}
-        class="bg-base-200 border-base-content/20 flex h-full w-64 flex-col border-r"
+        class="bg-base-200 border-base-content/20 w-[80vw] flex h-full flex-col border-r sm:w-[25rem]"
       >
         <.admin_sidebar_content
           nav_sections={@nav_sections}
