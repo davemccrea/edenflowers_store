@@ -97,24 +97,26 @@ defmodule EdenflowersWeb.Store.ProductLive do
       alternates={@alternates}
     >
       <.container>
-        <div class="grid gap-10 md:grid-cols-[minmax(0,480px)_1fr] md:items-start md:gap-16">
-          <header class="order-first md:hidden">
+        <div class="grid gap-10 md:grid-cols-[minmax(0,480px)_1fr] md:grid-rows-[auto_1fr] md:items-start md:gap-x-16 md:gap-y-8">
+          <header class="md:col-start-2 md:row-start-1 md:max-w-prose">
             <.link
               navigate={~q"/#{language}/store/#{@product_category.slug}"}
               class="eyebrow text-base-content/70 link-underline-hover touch-target mb-5 inline-block w-fit"
             >
               {@product_category.name}
             </.link>
-            <h1 class="page-title mb-3">
+            <h1 id="product-details-heading" data-testid="product-name" class="page-title mb-3">
               {@product.name}
             </h1>
-            <p class="font-serif text-base-content text-2xl">
+            <p data-testid="product-price" class="font-serif text-base-content text-2xl">
               {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
-              <span :if={@subscribe?} class="text-base-content/70 text-lg">{~t"per delivery"}</span>
+              <span :if={@subscribe?} class="text-base-content/70 text-lg" data-testid="per-delivery">
+                {~t"per delivery"}
+              </span>
             </p>
           </header>
 
-          <figure class="bg-cream aspect-[4/5] relative overflow-hidden">
+          <figure class="bg-cream aspect-[4/5] relative overflow-hidden md:col-start-1 md:row-span-2 md:row-start-1">
             <.image
               data-testid="product-image"
               src={@selected_variant.image_slug}
@@ -127,25 +129,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
             />
           </figure>
 
-          <div class="flex flex-col gap-8 md:max-w-prose">
-            <header class="hidden md:block">
-              <.link
-                navigate={~q"/#{language}/store/#{@product_category.slug}"}
-                class="eyebrow text-base-content/70 link-underline-hover touch-target mb-5 inline-block w-fit"
-              >
-                {@product_category.name}
-              </.link>
-              <h1 id="product-details-heading" data-testid="product-name" class="page-title mb-3">
-                {@product.name}
-              </h1>
-              <p data-testid="product-price" class="font-serif text-base-content text-2xl">
-                {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
-                <span :if={@subscribe?} class="text-base-content/70 text-lg" data-testid="per-delivery">
-                  {~t"per delivery"}
-                </span>
-              </p>
-            </header>
-
+          <div class="flex flex-col gap-8 md:col-start-2 md:row-start-2 md:max-w-prose">
             <p data-testid="product-description" class="text-base-content text-lg leading-relaxed">
               {@product.description}
             </p>
