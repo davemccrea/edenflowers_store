@@ -80,8 +80,11 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       assert has_element?(view, ~s|#orders-today-delivery|, "Today Delivery")
       assert has_element?(view, ~s|#orders-today-pickup|, "Today Pickup")
+      assert has_element?(view, "#orders-today-delivery h3 .badge", "1")
+      assert has_element?(view, "#orders-today-pickup h3 .badge", "1")
       refute has_element?(view, "#orders-today", "Last Week")
       assert has_element?(view, ~s|#orders-tomorrow-pickup|, "Tomorrow Pickup")
+      assert has_element?(view, "#orders-tomorrow-pickup h3 .badge", "1")
       refute has_element?(view, ~s|#orders-tomorrow-delivery|)
       refute render(view) =~ "Next Week"
     end
@@ -204,7 +207,8 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      assert has_element?(view, "#attention-overdue-orders summary", "Overdue orders · 1")
+      assert has_element?(view, "#attention-overdue-orders summary", "Overdue orders 1")
+      assert has_element?(view, "#attention-overdue-orders summary .badge", "1")
       assert has_element?(view, ~s|#attention-overdue-orders a[href="/admin/orders/#{overdue.id}"]|, "Late")
       refute has_element?(view, "#attention-missing-phone")
       assert render(view) =~ "Missing recipient phone"
@@ -216,7 +220,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      assert has_element?(view, "#attention-failed-subscriptions summary", "Subscription payment failed · 1")
+      assert has_element?(view, "#attention-failed-subscriptions summary", "Subscription payment failed 1")
       assert has_element?(view, ~s|#attention-failed-subscriptions a[href="/admin/subscriptions/#{failed.id}"]|)
     end
 
@@ -231,7 +235,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      assert has_element?(view, "#attention-sold-out summary", "Sold out · 1")
+      assert has_element?(view, "#attention-sold-out summary", "Sold out 1")
       assert has_element?(view, ~s|#attention-sold-out a[href="/admin/products/#{product.id}"]|, "Peony bouquet")
     end
 
@@ -256,11 +260,11 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      assert has_element?(view, "#attention-payment-overdue summary", "Payment overdue · 1")
+      assert has_element?(view, "#attention-payment-overdue summary", "Payment overdue 1")
       assert has_element?(view, "#attention-payment-overdue summary", "€88.50")
       assert has_element?(view, ~s|#attention-payment-overdue a[href="/admin/orders/#{overdue.id}"]|, "Ada Lovelace")
 
-      assert has_element?(view, "#attention-refund summary", "To refund · 1")
+      assert has_element?(view, "#attention-refund summary", "To refund 1")
       assert has_element?(view, "#attention-refund summary", "€85.00")
 
       assert has_element?(
