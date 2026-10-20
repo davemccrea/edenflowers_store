@@ -1,6 +1,8 @@
 <%= if @first_name do %><%= gettext("Hi %{name},", name: @first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= gettext("Thank you for your enquiry. Here's a copy of what you sent. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it.") %>
+<%= gettext("Thank you for your enquiry. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it.") %>
+
+<%= gettext("Here's a copy of what you sent:") %>
 
 <%= gettext("Name: %{name}", name: @enquiry["name"]) %>
 <%= gettext("Email: %{email}", email: @enquiry["email"]) %>
@@ -12,6 +14,7 @@
 <%= for line <- @enquiry["selection"] do %>- <%= line %>
 <% end %><%= gettext("Rough estimate, not a quote: %{estimate}", estimate: @enquiry["estimate"]) %>
 <% end %><%= if @enquiry["message"] do %>
+<%= gettext("Your message:") %>
 <%= @enquiry["message"] %>
 <% end %>
 <%= gettext("Warm wishes,") %>

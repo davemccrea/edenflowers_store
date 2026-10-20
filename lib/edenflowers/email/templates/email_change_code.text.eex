@@ -1,6 +1,6 @@
 <%= gettext("Hi,") %>
 
-<%= gettext("Here's your code to confirm this as the email for your Eden Flowers account:") %>
+<%= gettext("Enter this code in your account to confirm your new email address:") %>
 
 <%= @code %>
 
