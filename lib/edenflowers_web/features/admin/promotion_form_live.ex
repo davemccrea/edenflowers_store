@@ -84,6 +84,9 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                       type="text"
                       label={~t"Code"}
                       class="input font-mono w-full"
+                      autocapitalize="characters"
+                      autocorrect="off"
+                      spellcheck="false"
                     />
                   </div>
                   <.icon_button
