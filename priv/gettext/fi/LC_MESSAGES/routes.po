@@ -1,0 +1,111 @@
+msgid ""
+msgstr ""
+"Language: fi\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "about"
+msgstr "tietoa"
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "condolences"
+msgstr "hautajaiset"
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "contact"
+msgstr "yhteystiedot"
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "courses"
+msgstr "kurssit"
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "en"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "faq"
+msgstr "ukk"
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "fi"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "product"
+msgstr "tuote"
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "store"
+msgstr "kauppa"
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "sv"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "weddings"
+msgstr "haat"

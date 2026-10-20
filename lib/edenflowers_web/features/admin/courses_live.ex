@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       <.admin_page>
         <.admin_page_header title={~t"Courses"}>
           <:actions>
-            <.button href={~p"/courses"} target="_blank" variant="ghost" size="sm">
+            <.button href={~q"/#{language}/courses"} target="_blank" variant="ghost" size="sm">
               <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" /> {~t"View in store"}
             </.button>
             <.button navigate={~p"/admin/courses/new"} variant="neutral" size="sm">

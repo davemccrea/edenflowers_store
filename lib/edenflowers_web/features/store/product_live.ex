@@ -93,7 +93,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
         <div class="grid gap-10 md:grid-cols-[minmax(0,480px)_1fr] md:items-start md:gap-16">
           <header class="order-first md:hidden">
             <.link
-              navigate={~p"/store/#{@product.product_category.slug}"}
+              navigate={~q"/#{language}/store/#{@product_category.slug}"}
               class="eyebrow text-base-content/70 link-underline-hover touch-target mb-5 inline-block w-fit"
             >
               {@product_category.name}
@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
           <div class="flex flex-col gap-8 md:max-w-prose">
             <header class="hidden md:block">
               <.link
-                navigate={~p"/store/#{@product.product_category.slug}"}
+                navigate={~q"/#{language}/store/#{@product_category.slug}"}
                 class="eyebrow text-base-content/70 link-underline-hover touch-target mb-5 inline-block w-fit"
               >
                 {@product_category.name}
@@ -310,7 +310,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
             <p class="text-base-content/75 text-base">
               {~t"Have a question?"}
-              <.link navigate={~p"/faq"} class="link-underline-hover whitespace-nowrap">
+              <.link navigate={~q"/#{language}/faq"} class="link-underline-hover whitespace-nowrap">
                 {~t"See the FAQ"}
               </.link>
             </p>

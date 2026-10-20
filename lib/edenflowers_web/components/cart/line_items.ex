@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
           <li :for={line_item <- @order.line_items} class="flex flex-row gap-3 text-base sm:gap-4">
             <%= if not line_item.is_card do %>
               <.link
-                navigate={~p"/product/#{line_item.product_id}"}
+                navigate={~q"/#{language}/product/#{line_item.product_id}"}
                 class="shrink-0 transition-opacity hover:opacity-70"
               >
                 <.image
@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                 <div class="flex min-w-0 flex-col gap-0.5 break-words">
                   <%= if not line_item.is_card do %>
                     <.link
-                      navigate={~p"/product/#{line_item.product_id}"}
+                      navigate={~q"/#{language}/product/#{line_item.product_id}"}
                       class="link-underline-hover"
                     >
                       {line_item.product_name}
@@ -151,7 +151,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
         <div class="flex flex-col items-center gap-5 py-10 text-center">
           <.flower name="flower-30" class="text-primary/70 h-20 w-20" />
           <p class="font-serif text-lg">{~t"Your cart is empty."}</p>
-          <.button navigate={~p"/store"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
+          <.button navigate={~q"/#{language}/store"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
             {~t"Browse the store"}
           </.button>
         </div>

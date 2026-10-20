@@ -39,7 +39,7 @@ defmodule EdenflowersWeb.PaymentLink do
   def broken_link(socket) do
     socket
     |> put_flash(:error, ~t"This payment link doesn't work. Please get in touch.")
-    |> push_navigate(to: ~p"/")
+    |> push_navigate(to: ~q"/#{language}")
   end
 
   @doc """

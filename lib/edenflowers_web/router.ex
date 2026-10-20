@@ -2,6 +2,7 @@ defmodule EdenflowersWeb.Router do
   use EdenflowersWeb, :router
   use AshAuthentication.Phoenix.Router
   use ErrorTracker.Web, :router
+  use Localize.Routes, gettext: EdenflowersWeb.Gettext, helpers: false
 
   import AshAdmin.Router
   import Oban.Web.Router
@@ -15,9 +16,9 @@ defmodule EdenflowersWeb.Router do
     plug :put_secure_browser_headers
 
     plug Localize.Plug.PutLocale,
-      from: [:session, :accept_language],
+      from: [:route, :session, :accept_language],
       gettext: EdenflowersWeb.Gettext,
-      default: "en-GB"
+      default: Edenflowers.Locales.default()
 
     plug EdenflowersWeb.Plugs.PutLocaleSession
     plug EdenflowersWeb.Plugs.CaptureReturnTo
@@ -39,26 +40,23 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutOrder,
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
-      scope "/", Marketing do
-        live "/", HomeLive
-        live "/weddings", WeddingsLive
-        live "/condolences", CondolencesLive
-        live "/about", AboutLive
-        live "/contact", ContactLive
-        live "/faq", FaqLive
-      end
-
-      scope "/", Store do
-        live "/store", StoreLive
-        live "/store/:category", StoreLive
-        live "/product/:id", ProductLive
+      localize do
+        live "/#{language}", Marketing.HomeLive
+        live "/#{language}/weddings", Marketing.WeddingsLive
+        live "/#{language}/condolences", Marketing.CondolencesLive
+        live "/#{language}/about", Marketing.AboutLive
+        live "/#{language}/contact", Marketing.ContactLive
+        live "/#{language}/faq", Marketing.FaqLive
+        live "/#{language}/store", Store.StoreLive
+        live "/#{language}/store/:category", Store.StoreLive
+        live "/#{language}/product/:id", Store.ProductLive
+        live "/#{language}/courses", Courses.CoursesLive
+        live "/#{language}/courses/:id", Courses.CourseLive
       end
 
       scope "/", Courses do
-        live "/courses", CoursesLive
         live "/courses/bookings/:id", CourseBookingLive
         live "/courses/pay/:token", CoursePayLive
-        live "/courses/:id", CourseLive
       end
 
       scope "/", Checkout do
@@ -76,6 +74,11 @@ defmodule EdenflowersWeb.Router do
     get "/checkout/complete/:id", Checkout.CheckoutCompleteController, :index
     get "/order/:id/receipt", Checkout.ReceiptController, :show
     get "/order/:id/pickup.ics", Checkout.PickupCalendarController, :show
+
+    for path <-
+          ~w(/ /weddings /condolences /about /contact /faq /store /store/:category /product/:id /courses /courses/:id) do
+      get path, Marketing.LocalizedRedirectController, :show
+    end
   end
 
   scope "/", EdenflowersWeb do

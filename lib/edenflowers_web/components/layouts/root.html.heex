@@ -21,6 +21,7 @@
       rel="canonical"
       href={Phoenix.VerifiedRoutes.unverified_url(@conn, @conn.request_path)}
     />
+    <.hreflang_links :if={assigns[:status] != 404} conn={@conn} />
     <meta :if={assigns[:page_title]} property="og:title" content={"Eden Flowers | #{@page_title}"} />
     <meta :if={assigns[:page_description]} property="og:description" content={@page_description} />
     <meta :if={assigns[:og_image]} property="og:image" content={@og_image} />

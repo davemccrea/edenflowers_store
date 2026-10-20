@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.Auth.LiveUserAuth do
       socket =
         socket
         |> Phoenix.LiveView.put_flash(:error, nil)
-        |> Phoenix.LiveView.redirect(to: ~p"/")
+        |> Phoenix.LiveView.redirect(to: ~q"/#{language}")
 
       {:halt, socket}
     else

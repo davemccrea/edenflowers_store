@@ -8,19 +8,20 @@ defmodule EdenflowersWeb.Store.StoreLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    categories =
-      Catalog.list_categories!()
-      |> Translations.translate()
-      |> Enum.with_index(1)
+    categories = Catalog.list_categories!()
+    # Found before translating, as translation replaces the English slug.
+    bouquets_id = Enum.find_value(categories, &(&1.slug == "bouquets" && &1.id))
+    categories = categories |> Translations.translate() |> Enum.with_index(1)
+    bouquets = Enum.find_value(categories, fn {category, _idx} -> category.id == bouquets_id && category end)
 
-    {:ok, assign(socket, categories: categories, products: [], selected_category: nil)}
+    {:ok, assign(socket, categories: categories, bouquets: bouquets, products: [], selected_category: nil)}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
     case Map.get(params, "category") do
       nil ->
-        {:noreply, push_patch(socket, to: ~p"/store/bouquets", replace: true)}
+        show_bouquets(socket)
 
       category_slug ->
         case load_products(category_slug) do
@@ -33,14 +34,17 @@ defmodule EdenflowersWeb.Store.StoreLive do
                selected_category: selected_category
              )}
 
-          :error when category_slug == "bouquets" ->
-            {:noreply, assign(socket, page_title: ~t"Store", products: [], selected_category: nil)}
-
           :error ->
-            {:noreply, push_patch(socket, to: ~p"/store/bouquets", replace: true)}
+            show_bouquets(socket)
         end
     end
   end
+
+  defp show_bouquets(%{assigns: %{bouquets: nil}} = socket),
+    do: {:noreply, assign(socket, page_title: ~t"Store", products: [], selected_category: nil)}
+
+  defp show_bouquets(socket),
+    do: {:noreply, push_patch(socket, to: ~q"/#{language}/store/#{socket.assigns.bouquets.slug}", replace: true)}
 
   @impl true
   def render(assigns) do
@@ -70,7 +74,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
             >
               <.link
                 id={"category-link-#{category.id}"}
-                patch={~p"/store/#{category.slug}"}
+                patch={~q"/#{language}/store/#{category.slug}"}
                 phx-click={
                   JS.set_attribute({"data-active", "true"}, to: "#category-item-#{category.id}")
                   |> JS.remove_attribute("data-active", to: ".category-index__item:not(#category-item-#{category.id})")
@@ -110,15 +114,15 @@ defmodule EdenflowersWeb.Store.StoreLive do
                 <% end %>
               </p>
               <.button
-                :if={@selected_category && @selected_category.slug != "bouquets"}
-                patch={~p"/store/bouquets"}
+                :if={@selected_category && @bouquets && @selected_category.id != @bouquets.id}
+                patch={~q"/#{language}/store/#{@bouquets.slug}"}
                 variant="secondary"
                 class="mt-2"
               >
                 {~t"Browse bouquets"}
               </.button>
               <.button
-                navigate={~p"/contact"}
+                navigate={~q"/#{language}/contact"}
                 variant="secondary"
                 class="mt-2"
               >
@@ -133,7 +137,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
               <li :for={product <- @products}>
                 <.product_card
                   product={product}
-                  navigate={~p"/product/#{product}"}
+                  navigate={~q"/#{language}/product/#{product}"}
                   locale={Edenflowers.Format.locale()}
                   heading="h2"
                 />
@@ -147,7 +151,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
   end
 
   defp load_products(category_slug) do
-    case Catalog.get_category_by_slug(category_slug) do
+    case Catalog.get_category_by_slug(category_slug, Edenflowers.Format.locale()) do
       {:ok, category} ->
         products = category.id |> Catalog.list_products_by_category!() |> Translations.translate()
         {:ok, products, Translations.translate(category)}

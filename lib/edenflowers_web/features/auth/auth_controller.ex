@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Auth.AuthController do
   use AshAuthentication.Phoenix.Controller
 
   def success(conn, activity, user, _token) do
-    return_to = get_session(conn, :return_to) || ~p"/"
+    return_to = get_session(conn, :return_to) || ~q"/#{language}"
 
     message =
       case activity do
@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.Auth.AuthController do
   defp put_otp_email(conn, _activity), do: conn
 
   def sign_out(conn, _params) do
-    return_to = get_session(conn, :return_to) || ~p"/"
+    return_to = get_session(conn, :return_to) || ~q"/#{language}"
 
     conn
     |> clear_session(:edenflowers)

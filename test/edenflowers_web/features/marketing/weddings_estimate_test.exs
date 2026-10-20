@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
   @enquiry %{"name" => "Anna Svensson", "email" => "anna@example.com", "wedding_date" => "2027-06-12"}
 
   test "the hero leads to the work and the estimator, not a quote", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/weddings")
+    {:ok, view, _html} = live(conn, ~p"/en/weddings")
 
     assert has_element?(view, ~s|a[href="#my-work"]|, "See my work")
     assert has_element?(view, ~s|a[href="#prices"]|, "Estimate your price")
@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
   end
 
   test "the estimate sums the lowest prices and goes along with the enquiry", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/weddings")
+    {:ok, view, _html} = live(conn, ~p"/en/weddings")
 
     assert view |> element("#wedding-estimate") |> render() =~ "€110–€190"
 
@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
   end
 
   test "an enquiry without a wedding date isn't sent", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/weddings")
+    {:ok, view, _html} = live(conn, ~p"/en/weddings")
 
     view |> form("#enquiry-form", enquiry: Map.delete(@enquiry, "wedding_date")) |> render_submit()
 
@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
   end
 
   test "a filled-in honeypot looks sent but nothing goes out", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/weddings")
+    {:ok, view, _html} = live(conn, ~p"/en/weddings")
 
     view |> form("#enquiry-form", enquiry: @enquiry) |> render_submit(%{enquiry: %{website: "spam.example"}})
 

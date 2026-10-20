@@ -457,7 +457,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply,
      socket
      |> put_flash(:info, ~t"Add-ons are sold with flowers. Add a bouquet to check out.")
-     |> push_navigate(to: ~p"/store")}
+     |> push_navigate(to: ~q"/#{language}/store")}
   end
 
   def handle_event("pay", _, %{assigns: %{client_secret: nil}} = socket) do
@@ -558,7 +558,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
-    {:noreply, push_navigate(socket, to: ~p"/")}
+    {:noreply, push_navigate(socket, to: ~q"/#{language}")}
   end
 
   def handle_info(:focus_first_error, socket) do
@@ -837,7 +837,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:ok,
      socket
      |> put_flash(:error, flash_message)
-     |> push_navigate(to: ~p"/")}
+     |> push_navigate(to: ~q"/#{language}")}
   end
 
   defp recipient_first_name(recipient_name) do

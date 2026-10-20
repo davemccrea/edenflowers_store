@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
         {:ok,
          socket
          |> put_flash(:error, ~t"Your payment didn't go through. Please try again or choose another payment method.")
-         |> push_navigate(to: ~p"/courses/#{registration.course_id}")}
+         |> push_navigate(to: ~q"/#{language}/courses/#{registration.course_id}")}
 
       {:ok, registration} ->
         {:ok, assign(socket, page_title: ~t"Your booking", locale: Format.locale(), registration: registration)}
@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
         {:ok,
          socket
          |> put_flash(:error, ~t"Booking not found.")
-         |> push_navigate(to: ~p"/courses")}
+         |> push_navigate(to: ~q"/#{language}/courses")}
     end
   end
 

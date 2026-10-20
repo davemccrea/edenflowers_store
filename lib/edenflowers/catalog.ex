@@ -23,7 +23,7 @@ defmodule Edenflowers.Catalog do
 
     resource Edenflowers.Catalog.ProductCategory do
       define :list_categories, action: :public
-      define :get_category_by_slug, action: :public, get_by: [:slug]
+      define :get_category_by_slug, action: :public_by_slug, args: [:slug, :locale]
     end
   end
 end

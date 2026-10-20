@@ -1,0 +1,119 @@
+## This file is a PO Template file.
+##
+## "msgid"s here are often extracted from source code.
+## Add new messages manually only if they're dynamic
+## messages that can't be statically extracted.
+##
+## Run "mix gettext.extract" to bring this file up to
+## date. Leave "msgstr"s empty as changing them here has no
+## effect: edit them in PO (.po) files instead.
+#
+msgid ""
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "about"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "condolences"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "contact"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "courses"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "en"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "faq"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "fi"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "product"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "store"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "sv"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "weddings"
+msgstr ""

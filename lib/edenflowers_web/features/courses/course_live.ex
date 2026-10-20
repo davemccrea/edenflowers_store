@@ -33,7 +33,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
         {:ok,
          socket
          |> put_flash(:error, ~t"Course not found.")
-         |> push_navigate(to: ~p"/courses")}
+         |> push_navigate(to: ~q"/#{language}/courses")}
     end
   end
 
@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
           <div class="flex flex-col gap-8 md:max-w-prose">
             <header>
               <.link
-                navigate={~p"/courses"}
+                navigate={~q"/#{language}/courses"}
                 class="eyebrow text-base-content/70 link-underline-hover touch-target mb-5 inline-block w-fit"
               >
                 {~t"Courses"}
@@ -253,7 +253,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
       {:error, _} ->
         socket
         |> put_flash(:error, ~t"Course not found.")
-        |> push_navigate(to: ~p"/courses")
+        |> push_navigate(to: ~q"/#{language}/courses")
     end
   end
 

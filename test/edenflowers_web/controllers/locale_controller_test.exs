@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.LocaleControllerTest do
         build_conn()
         |> get("/locale/de-DE")
 
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == "/sv"
       refute get_session(conn, @session_key) == "de-DE"
     end
   end
@@ -40,13 +40,13 @@ defmodule EdenflowersWeb.LocaleControllerTest do
       end
     end
 
-    test "unsupported Accept-Language falls back to default" do
+    test "an unsupported Accept-Language falls back to English" do
       conn =
         build_conn()
         |> put_req_header("accept-language", "de-DE")
         |> get("/")
 
-      assert get_session(conn, @session_key) == Edenflowers.Locales.default()
+      assert get_session(conn, @session_key) == "en-GB"
     end
   end
 end

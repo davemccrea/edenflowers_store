@@ -793,7 +793,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       conn = Plug.Test.init_test_session(conn, %{order_id: stale.id})
 
       capture_log(fn ->
-        assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, "/checkout")
+        assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, "/checkout")
       end)
 
       reloaded = Orders.get_order_for_checkout!(stale.id, actor: nil)
@@ -813,7 +813,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       capture_log(fn ->
         Orders.remove_line_item!(order, non_card_line_item.id, authorize?: false)
         # Destroy, reset and PubSub all run before the redirect; slow under a full suite.
-        assert_redirect(view, "/", 1_000)
+        assert_redirect(view, "/en", 1_000)
       end)
 
       reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
@@ -831,7 +831,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} = live(conn, "/checkout")
       Orders.remove_line_item!(order, flowers.id, authorize?: false)
 
-      assert {:error, {:live_redirect, %{to: "/store"}}} = render_click(view, "pay", %{})
+      assert {:error, {:live_redirect, %{to: "/en/store"}}} = render_click(view, "pay", %{})
     end
   end
 

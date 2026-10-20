@@ -5,7 +5,25 @@ defmodule EdenflowersWeb.Layouts do
   """
   use EdenflowersWeb, :html
 
+  alias EdenflowersWeb.LocalizedPaths
+
   embed_templates "layouts/*"
+
+  attr :conn, Plug.Conn, required: true
+
+  def hreflang_links(assigns) do
+    assigns = assign(assigns, :alternates, LocalizedPaths.alternates(assigns.conn.request_path))
+
+    ~H"""
+    <link
+      :for={{hreflang, path} <- @alternates}
+      rel="alternate"
+      hreflang={hreflang}
+      href={Phoenix.VerifiedRoutes.unverified_url(@conn, path)}
+    />
+    <link :if={@alternates != []} rel="alternate" hreflang="x-default" href={url(~p"/")} />
+    """
+  end
 
   attr :id, :string, required: true
   attr :current_path, :string, required: true
@@ -41,7 +59,7 @@ defmodule EdenflowersWeb.Layouts do
       >
         <option
           :for={{code, name, current?} <- @locales}
-          value={~p"/locale/#{code}?redirect_to=#{@current_path}"}
+          value={LocalizedPaths.translate(@current_path, code) || ~p"/locale/#{code}?redirect_to=#{@current_path}"}
           selected={current?}
         >
           {name}
@@ -129,7 +147,7 @@ defmodule EdenflowersWeb.Layouts do
       <header class="px-3 py-2 sm:px-6 sm:py-4">
         <div class="flex h-12 items-center justify-center xl:h-10">
           <.link
-            navigate={~p"/"}
+            navigate={~q"/#{language}"}
             class="text-primary logo-wordmark touch-target whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
           >
             Eden Flowers
@@ -465,7 +483,7 @@ defmodule EdenflowersWeb.Layouts do
           </.link>
         </li>
         <li>
-          <.link href={~p"/"}>
+          <.link href={~q"/#{language}"}>
             <.icon name="hero-building-storefront" class="h-4 w-4" />
             {~t"View store"}
           </.link>
@@ -525,12 +543,12 @@ defmodule EdenflowersWeb.Layouts do
       assigns
       |> assign(
         nav: [
-          {~p"/store/bouquets", ~t"Store"},
-          {~p"/courses", ~t"Courses"},
-          {~p"/weddings", ~t"Weddings"},
-          {~p"/condolences", ~t"Condolences"},
-          {~p"/about", ~t"About"},
-          {~p"/contact", ~t"Contact"}
+          {~q"/#{language}/store", ~t"Store"},
+          {~q"/#{language}/courses", ~t"Courses"},
+          {~q"/#{language}/weddings", ~t"Weddings"},
+          {~q"/#{language}/condolences", ~t"Condolences"},
+          {~q"/#{language}/about", ~t"About"},
+          {~q"/#{language}/contact", ~t"Contact"}
         ]
       )
       |> assign(current_locale: String.capitalize(current_locale))
@@ -545,7 +563,7 @@ defmodule EdenflowersWeb.Layouts do
     >
       <header class="flex flex-row items-center justify-between pt-8 pr-4 pl-8">
         <.link
-          navigate={~p"/"}
+          navigate={~q"/#{language}"}
           class="text-primary logo-wordmark whitespace-nowrap text-xl sm:text-3xl"
         >
           Eden Flowers
@@ -646,7 +664,7 @@ defmodule EdenflowersWeb.Layouts do
 
             <div class="flex items-center justify-center">
               <.link
-                navigate={~p"/"}
+                navigate={~q"/#{language}"}
                 class="text-primary logo-wordmark touch-target whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl lg:text-3xl"
               >
                 Eden Flowers
@@ -774,7 +792,7 @@ defmodule EdenflowersWeb.Layouts do
               <ul class="space-y-1">
                 <li>
                   <.link
-                    navigate={~p"/faq"}
+                    navigate={~q"/#{language}/faq"}
                     class="footer-line link-underline-hover pointer-coarse:inline-block pointer-coarse:py-2.5"
                   >
                     {~t"FAQ"}
@@ -782,7 +800,7 @@ defmodule EdenflowersWeb.Layouts do
                 </li>
                 <li>
                   <.link
-                    navigate={~p"/contact"}
+                    navigate={~q"/#{language}/contact"}
                     class="footer-line link-underline-hover pointer-coarse:inline-block pointer-coarse:py-2.5"
                   >
                     {~t"Contact"}
@@ -790,7 +808,7 @@ defmodule EdenflowersWeb.Layouts do
                 </li>
                 <li>
                   <.link
-                    navigate={~p"/about"}
+                    navigate={~q"/#{language}/about"}
                     class="footer-line link-underline-hover pointer-coarse:inline-block pointer-coarse:py-2.5"
                   >
                     {~t"About"}

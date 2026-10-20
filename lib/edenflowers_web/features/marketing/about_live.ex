@@ -26,9 +26,9 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
             </p>
             <p>
               {~t"I make flowers for every occasion: christenings, weddings, funerals and everything in between."}
-              <.link navigate={~p"/store"} class="link-underline-static-body">{~t"Order easily online"}</.link>
+              <.link navigate={~q"/#{language}/store"} class="link-underline-static-body">{~t"Order easily online"}</.link>
               {~t"or"}
-              <.link navigate={~p"/contact"} class="link-underline-static-body">{~t"get in touch"}</.link>
+              <.link navigate={~q"/#{language}/contact"} class="link-underline-static-body">{~t"get in touch"}</.link>
               {~t"for a more specific order."}
             </p>
           </div>

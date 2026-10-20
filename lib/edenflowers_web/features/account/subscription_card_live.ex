@@ -81,7 +81,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
             <p class="text-error">{~t"Payment is temporarily unavailable. Please try again in a moment."}</p>
             <p class="mt-2">
               {~t"Your current card stays in place until you save a new one. If this keeps happening,"}
-              <.link navigate={~p"/contact"} class="link-underline-hover text-primary">{~t"contact us"}</.link>.
+              <.link navigate={~q"/#{language}/contact"} class="link-underline-hover text-primary">{~t"contact us"}</.link>.
             </p>
           </div>
         </section>

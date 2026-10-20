@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
   test "View in store opens the public courses listing in a new tab", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-    assert has_element?(view, ~s|a[href="/courses"][target="_blank"]|, "View in store")
+    assert has_element?(view, ~s|a[href="/en/courses"][target="_blank"]|, "View in store")
   end
 
   test "a link from the Overview opens the booking's course and highlights the booking", %{conn: conn} do

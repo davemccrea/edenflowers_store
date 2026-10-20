@@ -450,7 +450,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
             <p :if={@subscription.changes_closed?} class="text-base-content/70 mt-2 text-sm" data-testid="changes-closed">
               {~t"Your next delivery is already being prepared. You can make changes again from #{date = Format.weekday_date(Subscription.changes_reopen_on(@subscription), @locale)}."}
-              <.link navigate={~p"/contact"} class="link-underline-hover text-base-content">
+              <.link navigate={~q"/#{language}/contact"} class="link-underline-hover text-base-content">
                 {~t"Need to change this one? Contact us."}
               </.link>
             </p>
@@ -495,7 +495,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
             <.button
               :if={@subscription.state == :cancelled}
-              navigate={~p"/product/#{@subscription.product_variant.product_id}"}
+              navigate={~q"/#{language}/product/#{@subscription.product_variant.product_id}"}
               variant="secondary"
               class="mt-3"
             >
@@ -577,7 +577,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
             </p>
             <p class="text-base-content/70 mt-1 text-sm">
               {~t"Moving?"}
-              <.link navigate={~p"/contact"} class="link-underline-hover text-base-content">
+              <.link navigate={~q"/#{language}/contact"} class="link-underline-hover text-base-content">
                 {~t"Contact us to change the address."}
               </.link>
             </p>

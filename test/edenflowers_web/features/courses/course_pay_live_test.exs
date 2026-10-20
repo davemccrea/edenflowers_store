@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
   end
 
   test "rejects a link that doesn't match a booking", %{conn: conn} do
-    assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, ~p"/courses/pay/not-a-token")
+    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/courses/pay/not-a-token")
   end
 
   test "back from Stripe, shows the booking paid once the payment is recorded", %{
