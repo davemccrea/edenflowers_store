@@ -214,7 +214,10 @@ defmodule EdenflowersWeb.Layouts do
       </.drawer>
 
       <%!-- Desktop: persistent sidebar, pinned so it stays in view while content scrolls --%>
-      <aside class="[view-transition-name:admin-sidebar] bg-base-200 border-base-content/12 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col">
+      <aside
+        aria-label={~t"Admin navigation"}
+        class="[view-transition-name:admin-sidebar] bg-base-200 border-base-content/12 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
+      >
         <.admin_sidebar_content
           primary_nav={@primary_nav}
           system_nav={@system_nav}
@@ -366,7 +369,7 @@ defmodule EdenflowersWeb.Layouts do
           href={"https://github.com/davemccrea/edenflowers_store/releases/tag/#{@version}"}
           target="_blank"
           rel="noopener"
-          class="text-base-content/50 mt-3 block px-3 text-xs hover:text-base-content/80"
+          class="text-base-content/65 mt-3 block px-3 text-xs hover:text-base-content"
         >
           {@version}
         </a>

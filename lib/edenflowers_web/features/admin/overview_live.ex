@@ -383,14 +383,14 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       </div>
 
       <div class="space-y-4">
-        <section :for={{method, orders} <- by_method(@orders)} aria-label={method_heading(method)}>
-          <p class="eyebrow text-base-content/65 px-3 pb-1.5">
+        <div :for={{method, orders} <- by_method(@orders)} id={"#{@id}-#{method}"}>
+          <h3 class="eyebrow text-base-content/65 px-3 pb-1.5">
             {method_heading(method)} · <span class="tabular-nums">{length(orders)}</span>
-          </p>
+          </h3>
           <ul class="divide-base-content/8 divide-y">
             <.order_row :for={order <- orders} order={order} />
           </ul>
-        </section>
+        </div>
       </div>
 
       <p :if={@orders == []} class="text-base-content/65 text-sm">{@empty}</p>

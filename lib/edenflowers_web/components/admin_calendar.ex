@@ -99,7 +99,7 @@ defmodule EdenflowersWeb.AdminCalendar do
   """
   def legend(assigns) do
     ~H"""
-    <aside class="text-sm md:max-w-xs md:pt-2">
+    <div class="text-sm md:max-w-xs md:pt-2">
       <h2 class="eyebrow text-base-content/65 mb-3">{~t"Legend"}</h2>
       <ul class="text-base-content/85 space-y-2 leading-snug">
         <li class="flex items-start">
@@ -111,7 +111,7 @@ defmodule EdenflowersWeb.AdminCalendar do
           <span>{~t"Differs from the weekly schedule"}</span>
         </li>
       </ul>
-    </aside>
+    </div>
     """
   end
 
