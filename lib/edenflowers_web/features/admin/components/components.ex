@@ -685,11 +685,12 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   attr :label, :string, required: true
+  attr :class, :any, default: nil
   slot :inner_block, required: true
 
   def summary_fact(assigns) do
     ~H"""
-    <div>
+    <div class={@class}>
       <p class="eyebrow text-base-content/65 mb-1.5">{@label}</p>
       <div class="text-base-content text-base font-medium leading-relaxed">{render_slot(@inner_block)}</div>
     </div>

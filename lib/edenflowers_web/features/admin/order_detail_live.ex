@@ -139,14 +139,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
                 <.summary_fact label={~t"Date"}>
                   {Format.weekday_day_month(@order.fulfillment_date, @locale)}
-                  <span :if={Format.fulfillment_time(@order, @locale)} id="order-fulfillment-time" class="block">
-                    {Format.fulfillment_time(@order, @locale)}
-                  </span>
                   <.relative_date_badge
                     :if={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
                     label={fulfillment_relative(@order.fulfillment_date, @locale, @order.fulfillment_status)}
                     tone={date_tone(@order.fulfillment_date)}
                   />
+                </.summary_fact>
+                <.summary_fact :if={Format.fulfillment_time_range(@order, @locale)} label={~t"Time"}>
+                  <span id="order-fulfillment-time" class="tabular-nums">
+                    {Format.fulfillment_time_range(@order, @locale)}
+                  </span>
                 </.summary_fact>
                 <.summary_fact label={~t"Method"}>
                   <.fulfillment_method
@@ -155,13 +157,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                     class="whitespace-normal"
                   />
                 </.summary_fact>
-                <.summary_fact :if={delivery_address?(@order)} label={~t"Deliver to"}>
-                  {@order.delivery_address}
-                  <span :if={@order.distance_km} class="text-base-content/65 block text-sm font-normal tabular-nums">
-                    {@order.distance_km} km
-                  </span>
-                </.summary_fact>
               </div>
+
+              <.delivery_location
+                :if={@order.fulfillment_method == :delivery}
+                position={parse_position(@order.position)}
+                token={@mapbox_token}
+                address={@order.delivery_address}
+                distance_km={@order.distance_km}
+              />
 
               <div
                 :if={@order.missing_delivery_phone?}
@@ -249,14 +253,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <.button type="submit" variant="secondary">{~t"Save note"}</.button>
               </.form>
             </.widget>
-
-            <%!-- Last in the job: only needed once the order is leaving the shop. --%>
-            <.delivery_map
-              :if={@order.fulfillment_method == :delivery}
-              position={parse_position(@order.position)}
-              token={@mapbox_token}
-              address={@order.delivery_address}
-            />
           </div>
 
           <%!-- Payment comes first beside the job, but after the contacts once stacked,
@@ -1033,31 +1029,44 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :position, :any, required: true
   attr :token, :string, default: nil
   attr :address, :string, default: nil
+  attr :distance_km, :any, default: nil
 
-  defp delivery_map(assigns) do
+  defp delivery_location(assigns) do
     assigns = assign(assigns, :directions, directions_url(assigns.position, assigns.address))
 
     ~H"""
-    <div :if={@directions} id="order-directions" class="border-base-content/12 overflow-hidden border">
+    <div :if={@directions} id="order-directions" class="border-base-content/12 mt-5 border-t pt-5">
+      <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <.summary_fact label={~t"Deliver to"}>
+          {@address}
+          <span :if={@distance_km} class="text-base-content/65 block text-sm font-normal tabular-nums">
+            {@distance_km} km
+          </span>
+        </.summary_fact>
+        <a
+          href={@directions}
+          target="_blank"
+          rel="noopener"
+          class="link link-primary inline-flex items-center gap-1.5 text-sm"
+        >
+          {~t"Get directions"}
+          <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
+        </a>
+      </div>
       <a
+        :if={@position && present?(@token)}
         href={@directions}
         target="_blank"
         rel="noopener"
-        class="group block"
+        class="mt-3 block overflow-hidden"
         aria-label={~t"Open directions in Google Maps"}
       >
         <img
-          :if={@position && present?(@token)}
           src={mapbox_static_url(@position, @token)}
           alt={@address || ~t"Delivery location map"}
           loading="lazy"
           class="block h-48 w-full object-cover"
         />
-        <div class="bg-base-100 flex items-center justify-center gap-1.5 px-3 py-2 text-sm transition-colors group-hover:bg-base-200/50">
-          <.icon name="hero-map-pin" class="text-base-content/60 h-4 w-4" />
-          <span class="link link-primary">{~t"Get directions"}</span>
-          <.icon name="hero-arrow-top-right-on-square" class="text-base-content/60 h-3.5 w-3.5" />
-        </div>
       </a>
     </div>
     """
@@ -1463,8 +1472,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp relative_date_badge_tone(:overdue), do: :error
   defp relative_date_badge_tone(:today), do: :success
-
-  defp delivery_address?(order), do: order.fulfillment_method == :delivery && present?(order.delivery_address)
 
   # `position` is stored as a `"lat,lng"` string by HERE geocoding.
   defp parse_position(nil), do: nil
