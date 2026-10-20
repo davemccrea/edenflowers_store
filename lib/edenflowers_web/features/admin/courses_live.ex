@@ -39,10 +39,10 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       <.admin_page>
         <.admin_page_header title={~t"Courses"}>
           <:actions>
-            <.button href={~q"/#{language}/courses"} target="_blank" variant="ghost" size="sm">
+            <.button href={~q"/#{language}/courses"} target="_blank" variant="secondary" size="sm">
               <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" /> {~t"View in store"}
             </.button>
-            <.button navigate={~p"/admin/courses/new"} variant="neutral" size="sm">
+            <.button navigate={~p"/admin/courses/new"} variant="primary" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" />
               {~t"New course"}
             </.button>
@@ -327,7 +327,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       phx-mounted={JS.ignore_attributes(["open"])}
       class="group/course border-base-content/12 border-y"
     >
-      <summary class="list-none p-4 sm:p-5">
+      <summary class="cursor-pointer list-none p-4 hover:bg-base-200/60 sm:p-5">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
             <h2 class="text-base-content font-semibold">
@@ -367,7 +367,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             type="button"
             phx-click="new_booking"
             phx-value-course-id={@course.id}
-            variant="neutral"
+            variant="secondary"
             size="sm"
           >
             <.icon name="hero-plus" class="h-4 w-4" />
@@ -378,13 +378,13 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             href={fastmail_compose(bcc: @bcc)}
             target="_blank"
             rel="noopener"
-            variant="ghost"
+            variant="secondary"
             size="sm"
           >
             <.icon name="hero-envelope" class="h-4 w-4" />
             {~t"Email everyone"}
           </.button>
-          <.button navigate={~p"/admin/courses/#{@course.id}"} variant="ghost" size="sm">
+          <.button navigate={~p"/admin/courses/#{@course.id}"} variant="secondary" size="sm">
             <.icon name="hero-pencil-square" class="h-4 w-4" />
             {~t"Edit course"}
           </.button>
@@ -599,7 +599,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       :if={to_collect?(@registration) or to_refund?(@registration)}
       id={"settle-#{@registration.id}"}
       type="button"
-      variant="neutral"
+      variant="secondary"
       size="sm"
       class="col-start-1 row-start-2 justify-self-start sm:col-start-2 sm:row-start-1"
       aria-haspopup="dialog"

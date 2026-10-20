@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               :if={@subscription.state == :active}
               type="button"
               phx-click="pause"
-              variant="ghost"
+              variant="secondary"
               size="sm"
             >
               {~t"Pause"}
@@ -74,7 +74,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               :if={@subscription.state == :paused}
               type="button"
               phx-click="resume"
-              variant="ghost"
+              variant="secondary"
               size="sm"
             >
               {~t"Resume"}

@@ -36,7 +36,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               href={Edenflowers.External.PapraAPI.documents_url()}
               target="_blank"
               rel="noopener"
-              variant="neutral"
+              variant="secondary"
               size="sm"
             >
               {~t"Open Papra"}

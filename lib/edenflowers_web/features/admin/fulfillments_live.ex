@@ -232,9 +232,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           type="button"
           phx-click="reset-calendar"
           data-confirm={~t"Reset the calendar? All closed days reopen."}
-          variant="ghost"
+          variant="destructive"
           size="sm"
-          class="text-error self-start"
+          class="self-start"
         >
           <.icon name="hero-arrow-path" class="h-4 w-4" />
           {~t"Reset calendar"}

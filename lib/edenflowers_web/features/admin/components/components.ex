@@ -381,7 +381,7 @@ defmodule EdenflowersWeb.Admin.Components do
         <.button
           id={"#{@id}-settle"}
           type="button"
-          variant="neutral"
+          variant="secondary"
           size="sm"
           aria-haspopup="dialog"
           aria-controls="settlement-drawer"

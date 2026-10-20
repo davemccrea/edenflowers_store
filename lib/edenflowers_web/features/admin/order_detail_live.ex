@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <.button
               :if={@order.fulfillment_status == :pending}
               navigate={~p"/admin/orders/#{@order.id}/edit"}
-              variant="ghost"
+              variant="secondary"
               size="sm"
             >
               <.icon name="hero-pencil-square" class="h-4 w-4" /> {~t"Edit"}
@@ -246,7 +246,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   placeholder={~t"Only you see this."}
                   class="textarea w-full"
                 />
-                <.button type="submit" variant="neutral">{~t"Save note"}</.button>
+                <.button type="submit" variant="secondary">{~t"Save note"}</.button>
               </.form>
             </.widget>
 
@@ -1088,16 +1088,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         >
           <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
         </a>
-        <button
+        <.button
           :if={@payment.undoable?}
           type="button"
           phx-click="undo_payment"
           phx-value-id={@payment.id}
           data-confirm={undo_confirmation(@payment, @locale)}
-          class="text-base-content/60 touch-target ml-1 text-xs hover:text-base-content hover:underline"
+          size="sm"
+          class="ml-1"
         >
           {~t"Undo"}
-        </button>
+        </.button>
         <span :if={@payment.note} class="text-base-content/65 block">{@payment.note}</span>
       </dt>
       <dd class="text-base-content/90 tabular-nums">
@@ -1132,7 +1133,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         do: ~t"Resend payment link",
         else: ~t"Email payment link"}
     </.button>
-    <.button :if={!@order.payment_link_open?} type="button" phx-click="open_payment_link" variant="ghost" size="sm">
+    <.button :if={!@order.payment_link_open?} type="button" phx-click="open_payment_link" variant="secondary" size="sm">
       {~t"Create payment link"}
     </.button>
     """

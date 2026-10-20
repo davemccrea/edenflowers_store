@@ -198,10 +198,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                 <.error :for={error <- @form[:line_items].errors}>{translate_error(error)}</.error>
               </div>
               <div class="mt-4 flex flex-wrap gap-2">
-                <.button type="button" phx-click="add_line" phx-value-kind="catalogue" variant="neutral" size="sm">
+                <.button type="button" phx-click="add_line" phx-value-kind="catalogue" variant="secondary" size="sm">
                   <.icon name="hero-plus" class="h-4 w-4" /> {~t"Catalogue item"}
                 </.button>
-                <.button type="button" phx-click="add_line" phx-value-kind="custom" variant="neutral" size="sm">
+                <.button type="button" phx-click="add_line" phx-value-kind="custom" variant="secondary" size="sm">
                   <.icon name="hero-plus" class="h-4 w-4" /> {~t"Item with your own price"}
                 </.button>
               </div>
@@ -337,12 +337,12 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                       type="button"
                       phx-click={JS.exec("phx-show", to: "#card-drawer")}
                       aria-haspopup="dialog"
-                      variant="neutral"
+                      variant="secondary"
                       size="sm"
                     >
                       {~t"Change"}
                     </.button>
-                    <.button type="button" phx-click="remove_card" variant="neutral" size="sm">
+                    <.button type="button" phx-click="remove_card" variant="secondary" size="sm">
                       {~t"Remove"}
                     </.button>
                   </div>
@@ -351,7 +351,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     type="button"
                     phx-click={JS.exec("phx-show", to: "#card-drawer")}
                     aria-haspopup="dialog"
-                    variant="neutral"
+                    variant="secondary"
                     size="sm"
                   >
                     <.icon name="hero-gift" class="h-4 w-4" /> {~t"Choose a card"}
