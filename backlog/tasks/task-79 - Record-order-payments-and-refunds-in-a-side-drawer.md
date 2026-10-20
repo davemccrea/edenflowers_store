@@ -4,7 +4,7 @@ title: Record order payments and refunds in a side drawer
 status: done
 assignee: []
 created_date: '2026-10-20 18:46'
-updated_date: '2026-10-20 18:53'
+updated_date: '2026-10-20 18:55'
 labels:
   - spec
   - admin
@@ -43,3 +43,16 @@ Jennie records an order's payment, refund or goodwill refund in the same side dr
 <!-- SECTION:NOTES:BEGIN -->
 balance_panel now only summarises and opens the drawer; its form moved to record_payment_form in Admin.Components. Order page settlement_drawer mirrors CoursesLive's. Awaiting David's UI review before commit.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-20 18:55
+
+---
+
+Shipped in 3d0fd5ad, alongside TASK-60.
+
+---
+<!-- COMMENTS:END -->
