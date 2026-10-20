@@ -23,9 +23,6 @@ defmodule EdenflowersWeb.LocalizedPaths do
   @doc "The store's URL in `locale`, for emails, which aren't rendered in a request's locale."
   def store_url(locale), do: url_for(locale, "/#{language}/store")
 
-  @doc "The account page's URL in `locale`, for emails."
-  def account_url(locale), do: url_for(locale, "/#{language}/account")
-
   @doc "A store category's alternates, from the untranslated category, whose slug differs per language."
   def category_alternates(category) do
     Map.new(Edenflowers.Locales.all(), fn code ->

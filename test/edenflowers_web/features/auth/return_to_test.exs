@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.Auth.ReturnToTest do
 
   describe "safe_path/1" do
     test "accepts path-only same-origin URLs" do
-      assert ReturnTo.safe_path("/en/account") == "/en/account"
+      assert ReturnTo.safe_path("/account") == "/account"
       assert ReturnTo.safe_path("/order/abc123") == "/order/abc123"
       assert ReturnTo.safe_path("/store?category=bouquets") == "/store?category=bouquets"
       assert ReturnTo.safe_path("/") == "/"

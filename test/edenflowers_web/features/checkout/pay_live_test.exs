@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
       {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 8500}}
     end)
 
-    {:ok, view, _html} = live(conn, ~p"/en/pay/#{order.payment_link_token}")
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
     assert has_element?(view, "h1", "Pay for your order")
     assert has_element?(view, "dl", "Funeral spray")
@@ -69,7 +69,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
 
     expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
 
-    {:ok, view, _html} = live(conn, ~p"/en/pay/#{order.payment_link_token}")
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
     assert has_element?(view, "#pay-form")
   end
@@ -84,7 +84,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
 
     expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
 
-    {:ok, view, _html} = live(conn, ~p"/en/pay/#{order.payment_link_token}")
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
     Ash.Seed.update!(order, %{quoted_fulfillment_fee: Decimal.new("10.00")})
 
     view |> element("#pay-form") |> render_submit()
@@ -96,7 +96,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     {:ok, _order} =
       Orders.record_payment(order, "85.00", :cash, actor: admin)
 
-    {:ok, view, _html} = live(conn, ~p"/en/pay/#{order.payment_link_token}")
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
     assert has_element?(view, "[data-testid=pay-paid]")
     refute has_element?(view, "#pay-form")
@@ -105,20 +105,20 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
   test "says so once the order is cancelled", %{conn: conn, admin: admin, order: order} do
     {:ok, _order} = Orders.cancel_order(order, actor: admin)
 
-    {:ok, view, _html} = live(conn, ~p"/en/pay/#{order.payment_link_token}")
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
     assert has_element?(view, "[data-testid=pay-cancelled]")
     refute has_element?(view, "#pay-form")
   end
 
   test "rejects a link that doesn't match an order", %{conn: conn} do
-    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/en/pay/not-a-token")
+    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/pay/not-a-token")
   end
 
   test "updates when the payment arrives while the customer waits", %{conn: conn, order: order} do
     order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
 
-    {:ok, view, _html} = live(conn, ~p"/en/pay/#{order.payment_link_token}?redirect_status=succeeded")
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}?redirect_status=succeeded")
 
     assert has_element?(view, "[data-testid=pay-confirming]")
 

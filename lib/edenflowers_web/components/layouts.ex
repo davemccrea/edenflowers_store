@@ -594,7 +594,7 @@ defmodule EdenflowersWeb.Layouts do
         <.link
           class="text-base-content group flex w-fit items-center gap-2 text-base tracking-wide"
           phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
-          navigate={if @current_user, do: ~q"/#{language}/account"}
+          navigate={if @current_user, do: ~p"/account"}
           href={unless @current_user, do: sign_in_href(@current_path)}
         >
           <.icon name="hero-user-circle" class="h-5 w-5" />
@@ -684,7 +684,7 @@ defmodule EdenflowersWeb.Layouts do
 
               <%!-- Sign in (tablet and up, phones use the nav drawer) --%>
               <.link
-                navigate={if @current_user, do: ~q"/#{language}/account"}
+                navigate={if @current_user, do: ~p"/account"}
                 href={unless @current_user, do: sign_in_href(@current_path)}
                 class="group hidden h-10 w-10 shrink-0 items-center justify-center gap-1 md:flex md:h-auto md:w-auto md:gap-2"
               >

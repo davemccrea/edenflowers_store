@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
       {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 12_000}}
     end)
 
-    {:ok, view, _html} = live(conn, ~p"/en/courses/pay/#{registration.payment_link_token}")
+    {:ok, view, _html} = live(conn, ~p"/courses/pay/#{registration.payment_link_token}")
 
     assert has_element?(view, "h1", "Pay for your booking")
     assert has_element?(view, "dl", "Autumn wreaths")
@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
       {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 8500}}
     end)
 
-    {:ok, view, _html} = live(conn, ~p"/en/courses/pay/#{registration.payment_link_token}")
+    {:ok, view, _html} = live(conn, ~p"/courses/pay/#{registration.payment_link_token}")
 
     assert has_element?(view, "[data-testid=pay-total]", "85.00")
     refute has_element?(view, "[data-testid=pay-balance]")
@@ -60,14 +60,14 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
   test "says so once the booking is settled", %{conn: conn, admin: admin, registration: registration} do
     {:ok, _paid} = Courses.record_registration_payment(registration, "120.00", :cash, actor: admin)
 
-    {:ok, view, _html} = live(conn, ~p"/en/courses/pay/#{registration.payment_link_token}")
+    {:ok, view, _html} = live(conn, ~p"/courses/pay/#{registration.payment_link_token}")
 
     assert has_element?(view, "[data-testid=pay-paid]")
     refute has_element?(view, "#pay-form")
   end
 
   test "rejects a link that doesn't match a booking", %{conn: conn} do
-    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/en/courses/pay/not-a-token")
+    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/courses/pay/not-a-token")
   end
 
   test "back from Stripe, shows the booking paid once the payment is recorded", %{
@@ -76,7 +76,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
   } do
     registration = Ash.Seed.update!(registration, %{payment_intent_id: "pi_link"})
 
-    {:ok, view, _html} = live(conn, ~p"/en/courses/pay/#{registration.payment_link_token}?redirect_status=succeeded")
+    {:ok, view, _html} = live(conn, ~p"/courses/pay/#{registration.payment_link_token}?redirect_status=succeeded")
 
     assert has_element?(view, "[data-testid=pay-confirming]")
 

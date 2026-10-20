@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
             <p :if={@booked_seats > 0} data-testid="already-booked">
               {~t"You have #{count = @booked_seats} place(s) on this course."N}
-              <.link navigate={~q"/#{language}/account#courses-heading"} class="link-underline-hover">
+              <.link navigate={~p"/account#courses-heading"} class="link-underline-hover">
                 {~t"See your bookings"}
               </.link>
             </p>
@@ -185,7 +185,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 id="course-payment-form"
                 phx-submit="pay"
                 client_secret={@client_secret}
-                return_url={url(~q"/#{language}/courses/bookings/#{@registration.id}")}
+                return_url={url(~p"/courses/bookings/#{@registration.id}")}
                 billing_name={@registration.name}
                 billing_email={@registration.email}
               >

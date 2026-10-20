@@ -37,7 +37,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     } do
       stub_successful_geocode()
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -52,7 +52,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     } do
       stub_successful_geocode()
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3")
@@ -78,7 +78,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
 
-      {:ok, view, _html} = live(conn, ~p"/sv/kassa")
+      conn = Plug.Test.init_test_session(conn, %{Localize.Plug.PutLocale.session_key() => "sv-FI"})
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3")
@@ -90,7 +91,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     test "address not found shows field error", %{conn: conn, delivery_option: delivery_option} do
       stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query -> {:error, :address_not_found} end)
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Nonsense 999")
@@ -107,7 +108,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:error, :out_of_delivery_range} end)
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Somewhere Far Away 1, 99999 Nowhere")
@@ -120,7 +121,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     test "blurring an empty address field does nothing", %{conn: conn, delivery_option: delivery_option} do
       expect(Edenflowers.External.HereAPI.Mock, :geocode, 0, fn _query -> :should_not_be_called end)
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "")
@@ -136,7 +137,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       conn: conn,
       delivery_option: delivery_option
     } do
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       type_address(view, "Stadsgatan")
@@ -147,7 +148,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     test "clearing a confirmed address shows a required error", %{conn: conn, delivery_option: delivery_option} do
       stub_successful_geocode()
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -162,7 +163,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       conn: conn,
       delivery_option: delivery_option
     } do
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
 
@@ -181,7 +182,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     } do
       stub_successful_geocode()
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -203,7 +204,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       expect(Edenflowers.External.HereAPI.Mock, :route_distance, 1, fn _position -> {:ok, 3000} end)
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -220,7 +221,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       pickup_option = generate(fulfillment_option(fulfillment_method: :pickup, rate_type: :fixed, base_price: "0.00"))
       stub_successful_geocode()
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -241,7 +242,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       pickup_option = generate(fulfillment_option(fulfillment_method: :pickup, rate_type: :fixed, base_price: "0.00"))
       stub_successful_geocode()
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -265,7 +266,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       seed_confirmed_address(order, delivery_option)
 
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
-      {:ok, _view, html} = live(conn, ~p"/en/checkout")
+      {:ok, _view, html} = live(conn, ~p"/checkout")
 
       assert html =~ ~s(data-testid="input-confirmed")
       assert html =~ ~s(data-testid="address-confirmation")
@@ -280,7 +281,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     } do
       stub_successful_geocode()
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -299,7 +300,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     } do
       stub_successful_geocode()
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -338,7 +339,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     } do
       stub_successful_geocode()
 
-      {:ok, view, _html} = live(conn, ~p"/en/checkout")
+      {:ok, view, _html} = live(conn, ~p"/checkout")
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -379,7 +380,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     free = generate(product_variant(product_id: generate(product(free_delivery: true)).id))
     free_item = Orders.add_line_item!(order.id, free.id, 1, authorize?: false)
 
-    {:ok, view, _html} = live(conn, ~p"/en/checkout")
+    {:ok, view, _html} = live(conn, ~p"/checkout")
 
     select_delivery_option(view, nearby.id)
     blur_address(view, "Stadsgatan 3, 65300 Vasa")
@@ -399,7 +400,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   } do
     stub_successful_geocode()
 
-    {:ok, view, _html} = live(conn, ~p"/en/checkout")
+    {:ok, view, _html} = live(conn, ~p"/checkout")
 
     select_delivery_option(view, delivery_option.id)
     refute view |> element("[data-testid='delivery-cost']") |> render() =~ "5.00"

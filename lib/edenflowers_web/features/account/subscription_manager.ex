@@ -250,7 +250,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       <div class="flex flex-wrap gap-3">
         <.button
           :if={@held?}
-          navigate={~q"/#{language}/account/subscriptions/#{@subscription.id}/card"}
+          navigate={~p"/account/subscriptions/#{@subscription.id}/card"}
           variant="primary"
           data-testid="subscription-update-card"
         >
@@ -258,7 +258,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
         </.button>
         <.button
           :if={@unpaid}
-          navigate={~q"/#{language}/pay/#{@unpaid.payment_link_token}"}
+          navigate={~p"/pay/#{@unpaid.payment_link_token}"}
           variant={if @held?, do: "secondary", else: "primary"}
           data-testid="subscription-pay-now"
         >
@@ -320,7 +320,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     <span class="block text-sm">
       <.link
         :if={@unpaid}
-        navigate={~q"/#{language}/pay/#{@unpaid.payment_link_token}"}
+        navigate={~p"/pay/#{@unpaid.payment_link_token}"}
         class="link-underline-hover text-primary"
         data-testid="subscription-pay-now"
       >
@@ -328,7 +328,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       </.link>
       <span :if={@unpaid}>·</span>
       <.link
-        navigate={~q"/#{language}/account/subscriptions/#{@subscription.id}/card"}
+        navigate={~p"/account/subscriptions/#{@subscription.id}/card"}
         class="link-underline-hover text-primary"
         data-testid="subscription-update-card"
       >
@@ -384,7 +384,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     <span :if={@unpaid} class="text-base-content/70 block text-sm">
       <span class="text-error">{~t"Unpaid"}</span>
       ·
-      <.link navigate={~q"/#{language}/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
+      <.link navigate={~p"/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
         {~t"Pay now"}
       </.link>
     </span>
@@ -590,7 +590,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 <span :if={!@subscription.card_brand}>{~t"Saved card"}</span>
               </p>
               <.link
-                navigate={~q"/#{language}/account/subscriptions/#{@id}/card"}
+                navigate={~p"/account/subscriptions/#{@id}/card"}
                 class="link-underline-hover text-primary min-h-11 inline-flex shrink-0 items-center"
               >
                 {~t"Update card"}

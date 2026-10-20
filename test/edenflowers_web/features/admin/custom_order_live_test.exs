@@ -818,7 +818,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
-      assert has_element?(view, ~s|#payment-link-url[value$="/en/pay/#{order.payment_link_token}"]|)
+      assert has_element?(view, ~s|#payment-link-url[value$="/pay/#{order.payment_link_token}"]|)
       assert has_element?(view, "header", "Unpaid")
     end
 
@@ -850,10 +850,10 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "son@example.com"}]
-        assert email.text_body =~ "/en/pay/#{order.payment_link_token}"
+        assert email.text_body =~ "/pay/#{order.payment_link_token}"
       end)
 
-      assert has_element?(view, ~s|#payment-link-url[value$="/en/pay/#{order.payment_link_token}"]|)
+      assert has_element?(view, ~s|#payment-link-url[value$="/pay/#{order.payment_link_token}"]|)
     end
 
     test "records a payment", ctx do

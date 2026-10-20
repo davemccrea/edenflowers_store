@@ -16,13 +16,12 @@
       {assigns[:page_title] || if(assigns[:status] == 404, do: ~t"Page not found")}
     </.live_title>
     <meta :if={assigns[:page_description]} name="description" content={@page_description} />
-    <meta :if={assigns[:noindex]} name="robots" content="noindex" />
     <link
-      :if={!admin_path?(@conn.request_path) and assigns[:status] != 404 and !assigns[:noindex]}
+      :if={!admin_path?(@conn.request_path) and assigns[:status] != 404}
       rel="canonical"
       href={Phoenix.VerifiedRoutes.unverified_url(@conn, @conn.request_path)}
     />
-    <.hreflang_links :if={assigns[:alternates] && !assigns[:noindex]} conn={@conn} alternates={@alternates} />
+    <.hreflang_links :if={assigns[:alternates]} conn={@conn} alternates={@alternates} />
     <meta :if={assigns[:page_title]} property="og:title" content={"Eden Flowers | #{@page_title}"} />
     <meta :if={assigns[:page_description]} property="og:description" content={@page_description} />
     <meta :if={assigns[:og_image]} property="og:image" content={@og_image} />

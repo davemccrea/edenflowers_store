@@ -140,7 +140,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
       view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 
-      assert has_element?(view, ~s|[data-testid=already-subscribed] a[href="/en/account"]|)
+      assert has_element?(view, ~s|[data-testid=already-subscribed] a[href="/account"]|)
     end
 
     test "says before the click that a subscription can't join other products", %{

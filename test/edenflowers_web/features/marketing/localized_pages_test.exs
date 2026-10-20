@@ -36,20 +36,6 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     assert has_element?(view, ~s|#locale-picker-footer option[value="/sv/om"]|)
   end
 
-  test "customer pages have a URL per language but stay out of search engines", %{conn: conn} do
-    user = generate(admin_user(admin: false)) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> AshAuthentication.Plug.Helpers.store_in_session(user)
-    html = conn |> get("/sv/konto") |> html_response(200)
-
-    assert html =~ ~s(<html lang="sv)
-    assert html =~ ~s(<meta name="robots" content="noindex">)
-    refute html =~ ~s(rel="canonical")
-    refute html =~ ~s(hreflang=)
-
-    {:ok, view, _html} = live(conn, "/sv/konto")
-    assert has_element?(view, ~s|#locale-picker-footer option[value="/fi/tili"]|)
-  end
-
   test "pages that aren't localized switch language through the session", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/sign-in")
 

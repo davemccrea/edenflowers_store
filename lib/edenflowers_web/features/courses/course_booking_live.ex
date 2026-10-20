@@ -14,8 +14,6 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   # booker already knows: never the email address.
   @impl true
   def mount(%{"id" => id} = params, _session, socket) do
-    socket = assign(socket, alternates: alternates("/#{language}/courses/bookings/#{id}"), noindex: true)
-
     payment_failed? = params["redirect_status"] == "failed"
 
     case load_registration(id) do
@@ -44,13 +42,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app
-      current_user={@current_user}
-      order={@order}
-      flash={@flash}
-      current_path={@current_path}
-      alternates={@alternates}
-    >
+    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <div class="max-w-xl">
           <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />

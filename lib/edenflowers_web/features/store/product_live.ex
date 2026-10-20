@@ -254,7 +254,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                   <p>{~t"Pause or cancel anytime."}</p>
                   <p :if={@has_subscription?} data-testid="already-subscribed">
                     {~t"You already have a subscription."}
-                    <.link navigate={~q"/#{language}/account"} class="link-underline-hover text-base-content">
+                    <.link navigate={~p"/account"} class="link-underline-hover text-base-content">
                       {~t"Manage it from your account."}
                     </.link>
                   </p>

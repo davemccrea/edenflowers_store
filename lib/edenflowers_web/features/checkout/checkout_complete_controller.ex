@@ -16,13 +16,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutCompleteController do
   def index(conn, %{"redirect_status" => "failed"}) do
     conn
     |> put_flash(:error, ~t"Your payment didn't go through. Please try again or choose another payment method.")
-    |> redirect(to: ~q"/#{language}/checkout")
+    |> redirect(to: ~p"/checkout")
   end
 
   def index(conn, %{"id" => order_id}) do
     conn
     |> claim_cart(order_id)
-    |> redirect(to: ~q"/#{language}/order/#{order_id}")
+    |> redirect(to: ~p"/order/#{order_id}")
   end
 
   # Only the cart being completed: a cross-site link here must not empty someone's cart.

@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
     end
 
     test "lets payment links through", %{conn: conn} do
-      assert conn |> get("/en/pay/unknown-token") |> redirected_to() == "/en"
+      assert conn |> get("/pay/unknown-token") |> redirected_to() == "/en"
     end
 
     test "lets admin paths reach their own auth check", %{conn: conn} do
