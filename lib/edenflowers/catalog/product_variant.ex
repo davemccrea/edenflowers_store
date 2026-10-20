@@ -61,6 +61,16 @@ defmodule Edenflowers.Catalog.ProductVariant do
       validate {Validations.NotReferencedByCurrentSubscription, reference: :product_variant, field: :id}
     end
 
+    # Sizes on sale that have run out, for the Overview. Cards count, as checkout offers them.
+    read :sold_out do
+      filter expr(
+               stock_quantity == 0 and draft == false and product.draft == false and
+                 product.product_category.visibility != :draft
+             )
+
+      prepare build(sort: [size: :asc], load: [:product])
+    end
+
     read :for_card_drawer do
       # Cards are hidden from the storefront and offered only at checkout.
       filter expr(

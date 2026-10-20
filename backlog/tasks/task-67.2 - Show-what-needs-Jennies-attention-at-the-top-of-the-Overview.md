@@ -1,10 +1,10 @@
 ---
 id: TASK-67.2
 title: Show what needs Jennie's attention at the top of the Overview
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-20 06:57'
+updated_date: '2026-10-20 07:11'
 labels: []
 dependencies:
   - TASK-67.1
@@ -18,23 +18,28 @@ ordinal: 143000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 **Why:** Problems that block an order or lose a sale are easy to miss while they sit in separate lists.
 
-### What to build
+### What was built
 
-A strip at the top, hidden when empty, with one line per kind of problem: its count and a link to where she fixes it.
+A Needs attention strip at the top of the Overview, hidden when empty. One collapsed line per kind of problem with its count (and sum, for money), opening to rows that link to where she fixes each one:
 
-- Overdue orders: placed, pending, fulfillment date before today.
-- Subscriptions at `payment_failed`: no occurrence is made until she acts.
-- Sold-out sizes: `stock_quantity` 0 on a live product.
-- Orders for today or tomorrow missing the recipient's phone.
+- Overdue orders: placed, pending, fulfillment date before today. They left the Today section.
+- Missing recipient phone on today's or tomorrow's deliveries.
+- Subscriptions at `payment_failed` (`Orders.list_failed_subscriptions`).
+- To refund: every negative balance, orders and bookings.
+- Payment overdue: still owed 14 days after an order is fulfilled or a course is held (`payment_overdue?` on Order and CourseRegistration, the term in `Payment.overdue_after_days/0`).
+- Sold out: sizes with `stock_quantity` 0 on a live product, cards included (`Catalog.list_sold_out_variants`).
 
-Each count comes from a domain read action; no filtering in the LiveView. Refreshes on the existing `admin:orders` broadcast.
+### Decisions
+
+- Refunds and overdue payments moved here from Open balances, which is now a To collect section for what's owed but not yet overdue. Customers pay after delivery, so most of what's owed isn't a problem.
+- 14 days follows the usual Finnish invoice term.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each kind shows with the right count and link, and the strip is absent when all are zero
-- [ ] #2 Counts come from domain read actions
-- [ ] #3 The existing suite passes
+- [x] #1 Each kind shows with the right count and link, and the strip is absent when all are zero
+- [x] #2 Counts come from domain read actions
+- [x] #3 The existing suite passes
 <!-- AC:END -->
 
 ## Implementation Notes

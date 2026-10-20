@@ -130,6 +130,12 @@ defmodule Edenflowers.Orders.Subscription do
       prepare build(sort: [next_fulfillment_date: :asc], load: [:user, :product_variant])
     end
 
+    # Held until Jennie sorts out the card: no Occurrence is made meanwhile.
+    read :payment_failed do
+      filter expr(state == :payment_failed)
+      prepare build(sort: [next_fulfillment_date: :asc], load: [:user, product_variant: :product])
+    end
+
     # A cancelled subscription drops off the account page a month after.
     read :mine do
       filter expr(user_id == ^actor(:id) and (state != :cancelled or updated_at > ago(30, :day)))
