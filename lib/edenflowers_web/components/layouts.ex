@@ -331,7 +331,7 @@ defmodule EdenflowersWeb.Layouts do
       />
       <kbd
         aria-hidden="true"
-        class="kbd kbd-sm text-base-content/50 pointer-events-none absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 lg:inline-flex"
+        class="kbd kbd-sm text-base-content/65 pointer-events-none absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 lg:inline-flex"
       >
         /
       </kbd>
