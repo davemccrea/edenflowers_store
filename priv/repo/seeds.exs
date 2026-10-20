@@ -131,7 +131,14 @@ create_product.(%{product_category_id: category.("plants").id, name: "Plant"}, s
 # added during checkout.
 create_product.(%{product_category_id: category.("cards").id, name: "Card"}, small: "5", medium: "7", large: "10")
 
-create_product.(%{product_category_id: category.("pre-loved").id, name: "Pre-Loved Item"}, small: "15", medium: "25")
+# One of a kind, and the small one has sold, so the Overview flags it as sold out.
+pre_loved =
+  create_product.(%{product_category_id: category.("pre-loved").id, name: "Pre-Loved Item"}, small: "15", medium: "25")
+
+ProductVariant
+|> Ash.Query.filter(product_id == ^pre_loved.id)
+|> Ash.read!(authorize?: false)
+|> Enum.each(&Ash.Seed.update!(&1, %{stock_quantity: if(&1.size == :small, do: 0, else: 1)}))
 
 # Chocolate is an add-on: it shows in the store but can only be checked out
 # alongside flowers.
@@ -643,7 +650,38 @@ orders = [
     fulfillment_option: store_pickup,
     fulfillment_date: fulfillment_date_for.(4),
     items: [line_item.("Bouquet 1", :small, 1), line_item.("Plant", :medium, 1)]
-  }
+  },
+  # With Mikael's, today's Overview has a timed delivery ahead of an untimed one,
+  # and a pickup.
+  Map.merge(nearby_address, %{
+    customer_name: "Karin Öst",
+    customer_email: "karin.ost@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: today,
+    fulfillment_time_start: ~T[10:00:00],
+    fulfillment_time_end: ~T[12:00:00],
+    recipient_name: "Karin Öst",
+    recipient_phone_number: "040 1112233",
+    items: [line_item.("Bouquet 2", :medium, 1)]
+  }),
+  %{
+    customer_name: "Ida Nyberg",
+    customer_email: "ida.nyberg@example.fi",
+    fulfillment_option: store_pickup,
+    fulfillment_date: today,
+    fulfillment_time_start: ~T[15:00:00],
+    items: [line_item.("Bouquet 1", :medium, 2)]
+  },
+  # Tomorrow itself, not the next open day, so the Overview's Tomorrow always has a delivery.
+  Map.merge(distant_address, %{
+    customer_name: "Anders Björk",
+    customer_email: "anders.bjork@example.fi",
+    fulfillment_option: home_delivery,
+    fulfillment_date: Date.add(today, 1),
+    gift: true,
+    recipient_name: "Maja Björk",
+    items: [line_item.("Bouquet 3", :small, 1)]
+  })
 ]
 
 for {attrs, index} <- Enum.with_index(orders) do
@@ -657,6 +695,24 @@ for {attrs, index} <- Enum.with_index(orders) do
     })
   )
 end
+
+# Delivered three weeks ago and still unpaid, so the Overview flags the payment as overdue.
+sven = Accounts.upsert_user!("sven.dahl@example.fi", "Sven Dahl", actor: Actors.system_actor())
+
+seed_placed_order.(
+  Map.merge(nearby_address, %{
+    customer_name: "Sven Dahl",
+    customer_email: "sven.dahl@example.fi",
+    user_id: sven.id,
+    fulfillment_option: home_delivery,
+    ordered_at: DateTime.add(DateTime.utc_now(), -24, :day),
+    fulfillment_date: fulfillment_date_for.(-21),
+    recipient_name: "Sven Dahl",
+    recipient_phone_number: "050 4443322",
+    fulfillment_status: :fulfilled,
+    items: [line_item.("Bouquet 1", :large, 1)]
+  })
+)
 
 # Subscriptions, one per state the admin list and account page show, each with
 # the order that started it and some with later deliveries (Occurrences).
