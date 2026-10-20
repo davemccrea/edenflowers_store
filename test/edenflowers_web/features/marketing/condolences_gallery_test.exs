@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesGalleryTest do
   import Phoenix.LiveViewTest
 
   test "each gallery link requests the exact size it tells PhotoSwipe to expect", %{conn: conn} do
-    {:ok, _view, html} = live(conn, ~p"/condolences")
+    {:ok, _view, html} = live(conn, ~p"/en/condolences")
 
     links =
       Regex.scan(

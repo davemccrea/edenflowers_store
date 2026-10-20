@@ -93,9 +93,10 @@ defmodule EdenflowersWeb do
 
   def verified_routes do
     quote do
-      use Phoenix.VerifiedRoutes,
+      use Localize.VerifiedRoutes,
         endpoint: EdenflowersWeb.Endpoint,
         router: EdenflowersWeb.Router,
+        gettext: EdenflowersWeb.Gettext,
         statics: EdenflowersWeb.static_paths()
     end
   end

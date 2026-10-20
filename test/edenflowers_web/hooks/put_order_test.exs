@@ -8,20 +8,20 @@ defmodule EdenflowersWeb.Hooks.PutOrderTest do
   # later live/2 only does the connected mount, like a reconnecting tab.
   setup %{conn: conn} do
     order = generate(order())
-    conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/about")
+    conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/en/about")
     %{conn: conn, order: order}
   end
 
   test "redirects to the same page when the session cart has been purged", %{conn: conn, order: order} do
     Ash.destroy!(order, action: :purge_abandoned_cart, authorize?: false)
 
-    assert {:error, {:redirect, %{to: "/about"}}} = live(conn)
+    assert {:error, {:redirect, %{to: "/en/about"}}} = live(conn)
   end
 
   test "redirects when a guest's session order has been placed", %{conn: conn, order: order} do
     Ash.Seed.update!(order, %{state: :placed})
 
-    assert {:error, {:redirect, %{to: "/about"}}} = live(conn)
+    assert {:error, {:redirect, %{to: "/en/about"}}} = live(conn)
   end
 
   test "mounts with a valid cart", %{conn: conn, order: order} do

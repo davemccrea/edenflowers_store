@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.Admin.OrderNotificationsTest do
 
   test "admin pages install as the admin app, the storefront as the shop", %{conn: conn} do
     assert conn |> get(~p"/admin/account") |> html_response(200) =~ ~s(href="/admin.webmanifest)
-    assert conn |> get(~p"/") |> html_response(200) =~ ~s(href="/site.webmanifest)
+    assert conn |> get(~p"/en") |> html_response(200) =~ ~s(href="/site.webmanifest)
   end
 
   test "the account page's switch saves and forgets this device", %{conn: conn, admin: admin} do

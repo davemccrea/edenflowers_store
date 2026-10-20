@@ -10,6 +10,8 @@ defmodule Edenflowers.Catalog.ProductCategory do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTranslation.Resource]
 
+  require Ash.Query
+
   postgres do
     table "product_categories"
     repo Edenflowers.Repo
@@ -17,7 +19,7 @@ defmodule Edenflowers.Catalog.ProductCategory do
 
   translations do
     locales Edenflowers.Locales.translatable_atoms()
-    fields [:name, :description]
+    fields [:name, :description, :slug]
   end
 
   actions do
@@ -26,6 +28,30 @@ defmodule Edenflowers.Catalog.ProductCategory do
 
     read :public do
       filter expr(visibility == :public)
+    end
+
+    # A store URL carries the slug in its own language, falling back to the
+    # English `slug` where the category has no translation.
+    read :public_by_slug do
+      get? true
+      argument :slug, :string, allow_nil?: false
+      argument :locale, :atom, allow_nil?: false
+      filter expr(visibility == :public)
+
+      prepare fn query, _context ->
+        url_slug = Ash.Query.get_argument(query, :slug)
+        locale = Ash.Query.get_argument(query, :locale)
+
+        if locale in Edenflowers.Locales.translatable_atoms() do
+          Ash.Query.filter(
+            query,
+            get_path(translations, ^[locale, :slug]) == ^url_slug or
+              (is_nil(get_path(translations, ^[locale, :slug])) and slug == ^url_slug)
+          )
+        else
+          Ash.Query.filter(query, slug == ^url_slug)
+        end
+      end
     end
   end
 

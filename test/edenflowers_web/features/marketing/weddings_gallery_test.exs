@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsGalleryTest do
   import Phoenix.LiveViewTest
 
   setup %{conn: conn} do
-    {:ok, _view, html} = live(conn, ~p"/weddings")
+    {:ok, _view, html} = live(conn, ~p"/en/weddings")
     %{html: html}
   end
 

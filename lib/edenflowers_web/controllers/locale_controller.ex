@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.LocaleController do
       |> put_session(Localize.Plug.PutLocale.session_key(), locale)
       |> redirect(to: get_redirect_path(conn, params))
     else
-      redirect(conn, to: ~p"/")
+      redirect(conn, to: ~q"/#{language}")
     end
   end
 
@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.LocaleController do
          %URI{path: path} when is_binary(path) <- URI.parse(referer) do
       path
     else
-      _ -> ~p"/"
+      _ -> ~q"/#{language}"
     end
   end
 end

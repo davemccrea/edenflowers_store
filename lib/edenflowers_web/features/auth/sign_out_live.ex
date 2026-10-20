@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Auth.SignOutLive do
             </.button>
 
             <div class="text-center text-sm">
-              <.button navigate={~p"/"} variant="text">
+              <.button navigate={~q"/#{language}"} variant="text">
                 {~t"Stay signed in"}
               </.button>
             </div>
@@ -39,7 +39,7 @@ defmodule EdenflowersWeb.Auth.SignOutLive do
             </p>
           </div>
 
-          <.button navigate={~p"/"} variant="primary" size="lg">
+          <.button navigate={~q"/#{language}"} variant="primary" size="lg">
             {~t"Back to the shop"}
             <.icon name="hero-arrow-right" />
           </.button>

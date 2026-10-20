@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     product = generate(product(draft: false))
     generate(product_variant(product_id: product.id, size: nil, price: "6.00"))
 
-    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
     refute has_element?(view, "legend", "Size")
     assert has_element?(view, "[data-testid=product-price]", "6")
@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     generate(product_variant(product_id: product.id, size: :medium, price: "50.00", stock_quantity: 0))
     generate(product_variant(product_id: product.id, size: :large, price: "60.00"))
 
-    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
     assert has_element?(view, "[data-testid=variant-option-medium][disabled]")
     assert has_element?(view, "label", "Sold out")
@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     product = generate(product(draft: false))
     generate(product_variant(product_id: product.id, size: nil, stock_quantity: 0))
 
-    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
     assert has_element?(view, "[data-testid=add-to-cart-button][disabled]", "Sold out")
   end
@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     variant = generate(product_variant(product_id: product.id, size: nil, stock_quantity: 1))
     line_item = Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
 
-    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
     view |> element("#cart-line-items-increment-#{line_item.id}") |> render_click()
 
@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     end
 
     test "starts as a one-time purchase", %{conn: conn, product: product, order: order} do
-      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
       refute has_element?(view, "[data-testid=subscribe-option][checked]")
       assert has_element?(view, "[data-testid=subscription-faq] summary", "When do I pay?")
@@ -81,7 +81,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     end
 
     test "can be subscribed to every few weeks", %{conn: conn, product: product, variant: variant, order: order} do
-      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
       view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 
       assert has_element?(view, "[data-testid=interval-option-4]")
@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       order: order
     } do
       Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
-      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
       assert has_element?(view, "[data-testid=interval-option-2][checked]")
       assert has_element?(view, "[data-testid=add-to-cart-button]", "Show cart")
@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
     test "counts the bouquets subscribing replaces", %{conn: conn, product: product, variant: variant, order: order} do
       Orders.add_line_item!(order.id, variant.id, 3, authorize?: false)
-      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
       view
       |> form("[data-testid=product-form]", %{product_variant_id: variant.id, subscribe: "true"})
@@ -137,7 +137,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       generate(subscription(user_id: user.id, product_variant_id: variant.id))
 
       conn = AshAuthentication.Plug.Helpers.store_in_session(conn, user)
-      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
       view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 
       assert has_element?(view, ~s|[data-testid=already-subscribed] a[href="/account"]|)
@@ -151,7 +151,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       other = generate(product(draft: false))
       other_variant = generate(product_variant(product_id: other.id))
       Orders.add_line_item!(order.id, other_variant.id, 1, authorize?: false)
-      {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
       view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 
       assert has_element?(view, "[data-testid=blocked-note]", "checked out on its own")
@@ -160,15 +160,15 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
   end
 
   test "an unknown product is a 404", %{conn: conn} do
-    assert_error_sent 404, fn -> get(conn, ~p"/product/#{Ash.UUID.generate()}") end
-    assert_error_sent 404, fn -> get(conn, ~p"/product/not-a-uuid") end
+    assert_error_sent 404, fn -> get(conn, ~p"/en/product/#{Ash.UUID.generate()}") end
+    assert_error_sent 404, fn -> get(conn, ~p"/en/product/not-a-uuid") end
   end
 
   test "an ordinary product offers no subscription", %{conn: conn} do
     product = generate(product(draft: false))
     generate(product_variant(product_id: product.id))
 
-    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
     refute has_element?(view, "[data-testid=product-subscribable]")
     refute has_element?(view, "[data-testid=subscribe-option]")
@@ -178,7 +178,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
   test "says why an add to the cart was refused", %{conn: conn, order: order} do
     product = generate(product(draft: false))
     variant = generate(product_variant(product_id: product.id))
-    {:ok, view, _html} = live(conn, ~p"/product/#{product.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
     render_change(view, "change", %{product_variant_id: variant.id, subscribe: "true", interval_weeks: "2"})
     render_submit(view, "submit", %{})
@@ -192,7 +192,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     product = generate(product(product_category_id: category.id, subscribable: true, free_delivery: true, draft: false))
     generate(product_variant(product_id: product.id, draft: false))
 
-    {:ok, view, _html} = live(conn, ~p"/store/bouquets")
+    {:ok, view, _html} = live(conn, ~p"/en/store/bouquets")
 
     assert has_element?(view, "#store-products", "Subscription")
   end

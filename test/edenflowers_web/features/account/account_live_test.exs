@@ -182,7 +182,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#upcoming-heading")
-      assert has_element?(view, ~s|a[href="/store"]|, "Visit the shop")
+      assert has_element?(view, ~s|a[href="/en/store"]|, "Visit the shop")
     end
   end
 
@@ -296,7 +296,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, ~s|li a[href="/courses/#{course.id}"]|, "Autumn Wreaths")
+      assert has_element?(view, ~s|li a[href="/en/courses/#{course.id}"]|, "Autumn Wreaths")
       assert has_element?(view, "li", "2 places")
       assert has_element?(view, ~s|a[href="/courses/bookings/#{registration.id}/receipt"]|, "Receipt")
     end
@@ -362,7 +362,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "points a customer with no registrations at the courses page", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, ~s|a[href="/courses"]|, "See what's coming up")
+      assert has_element?(view, ~s|a[href="/en/courses"]|, "See what's coming up")
     end
   end
 
@@ -456,7 +456,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=no-subscriptions]", "No subscriptions yet.")
-      assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/product/#{product.id}"]|)
+      assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/en/product/#{product.id}"]|)
     end
 
     test "shows who a subscription delivers to, and offers a fresh start once cancelled", %{conn: conn, user: user} do
@@ -475,7 +475,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       assert has_element?(
                view,
-               ~s|#{drawer(cancelled)} a[href="/product/#{variant.product_id}"]|,
+               ~s|#{drawer(cancelled)} a[href="/en/product/#{variant.product_id}"]|,
                "Start a new subscription"
              )
     end
@@ -567,7 +567,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
                "You can make changes again from #{weekday_date(days_from_today(1))}."
              )
 
-      assert has_element?(view, ~s|#{drawer(subscription)} [data-testid=changes-closed] a[href="/contact"]|)
+      assert has_element?(view, ~s|#{drawer(subscription)} [data-testid=changes-closed] a[href="/en/contact"]|)
       refute has_element?(view, "#subscription-#{subscription.id}-pause")
       refute has_element?(view, "#change-subscription-#{subscription.id}")
       assert has_element?(view, "#cancel-subscription-#{subscription.id}")

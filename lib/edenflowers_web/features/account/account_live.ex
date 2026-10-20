@@ -91,8 +91,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
           <div :if={@upcoming == []} class="mt-6">
             <p>{~t"Nothing on its way."}</p>
             <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
-              <.button navigate={~p"/store"} variant="text">{~t"Visit the shop"}</.button>
-              <.button navigate={~p"/courses"} variant="text">{~t"See what's coming up"}</.button>
+              <.button navigate={~q"/#{language}/store"} variant="text">{~t"Visit the shop"}</.button>
+              <.button navigate={~q"/#{language}/courses"} variant="text">{~t"See what's coming up"}</.button>
             </div>
           </div>
 
@@ -457,7 +457,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     ~H"""
     <div class="min-w-0">
       <h3 class="card-heading text-balance">
-        <.link navigate={~p"/courses/#{@registration.course.id}"} class="link-underline-hover">
+        <.link navigate={~q"/#{language}/courses/#{@registration.course.id}"} class="link-underline-hover">
           {@registration.course.name}
         </.link>
       </h3>
@@ -505,8 +505,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
     path =
       case Catalog.list_store_products!(query: query) do
         [] -> nil
-        [product] -> ~p"/product/#{product.id}"
-        _several -> ~p"/store"
+        [product] -> ~q"/#{language}/product/#{product.id}"
+        _several -> ~q"/#{language}/store"
       end
 
     assign(socket, subscription_path: path)

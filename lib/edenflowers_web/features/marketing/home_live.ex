@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </p>
           <div class="hero-reveal mt-10" style="--reveal-delay: 280ms;">
             <.button
-              navigate={~p"/store"}
+              navigate={~q"/#{language}/store"}
               variant="inverse"
               size="lg"
               class="group w-fit"
@@ -118,7 +118,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 >
                   <.product_card
                     product={product}
-                    navigate={~p"/product/#{product}"}
+                    navigate={~q"/#{language}/product/#{product}"}
                     locale={Edenflowers.Format.locale()}
                   />
                 </div>
@@ -171,7 +171,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               {~t"Hi, I'm Jennie. I make every arrangement myself at my shop in Minimossen, from a bouquet for your kitchen table to flowers for your wedding."}
             </p>
             <.link
-              navigate={~p"/about"}
+              navigate={~q"/#{language}/about"}
               class="eyebrow text-forest-content link-underline-hover touch-target"
             >
               {~t"Meet Jennie"}
@@ -185,12 +185,12 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <h2 class="section-title mb-10">{~t"Weddings and flower courses"}</h2>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <.category_tile
-              navigate={~p"/weddings"}
+              navigate={~q"/#{language}/weddings"}
               label={~t"Weddings"}
               image_src="local:///wedding/bjorn_yrjans.jpg"
             />
             <.category_tile
-              navigate={~p"/courses"}
+              navigate={~q"/#{language}/courses"}
               label={~t"Courses"}
               image_src="local:///image_1.jpg"
             />
@@ -198,7 +198,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <%!-- Stands in for a condolences tile until there is a real photograph of funeral work. --%>
           <p class="tile-title text-balance mt-12 max-w-2xl">
             {~t"Would you like to order flowers for a funeral? I deliver to churches and chapels in Vaasa and Korsholm."}
-            <.link navigate={~p"/condolences"} class="link-underline-static-body whitespace-nowrap">
+            <.link navigate={~q"/#{language}/condolences"} class="link-underline-static-body whitespace-nowrap">
               {~t"Funeral flowers"}
             </.link>
           </p>

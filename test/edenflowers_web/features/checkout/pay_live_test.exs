@@ -112,7 +112,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
   end
 
   test "rejects a link that doesn't match an order", %{conn: conn} do
-    assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, ~p"/pay/not-a-token")
+    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/pay/not-a-token")
   end
 
   test "updates when the payment arrives while the customer waits", %{conn: conn, order: order} do

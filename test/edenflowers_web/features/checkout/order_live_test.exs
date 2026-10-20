@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     other = generate(admin_user(admin: false))
     order = placed_order(user_id: other.id, paid: true)
 
-    assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, ~p"/order/#{order.id}")
+    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/order/#{order.id}")
     assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
     assert conn |> get(~p"/order/#{order.id}/pickup.ics") |> response(404)
   end
@@ -100,7 +100,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     other = generate(admin_user(admin: false))
     order = placed_order(user_id: other.id, state: :payment, ordered_at: nil)
 
-    assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, ~p"/order/#{order.id}")
+    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/order/#{order.id}")
   end
 
   @tag :typst
@@ -135,7 +135,10 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
   describe "guest" do
     setup do
-      %{conn: Phoenix.ConnTest.build_conn() |> Plug.Test.init_test_session(%{})}
+      %{
+        conn:
+          Phoenix.ConnTest.build_conn() |> put_req_header("accept-language", "en") |> Plug.Test.init_test_session(%{})
+      }
     end
 
     test "sees their order when the webhook placed it before Stripe's redirect", %{conn: conn} do

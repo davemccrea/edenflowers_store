@@ -24,8 +24,8 @@ defmodule EdenflowersWeb.Auth.OtpSignInLiveTest do
       |> AshAuthentication.Plug.Helpers.store_in_session(user)
       |> get(~p"/sign-in?return_to=/account")
 
-    assert redirected_to(conn) == ~p"/"
+    assert redirected_to(conn) == ~p"/en"
 
-    refute conn |> recycle() |> get(~p"/") |> html_response(200) =~ "You must sign in"
+    refute conn |> recycle() |> get(~p"/en") |> html_response(200) =~ "You must sign in"
   end
 end

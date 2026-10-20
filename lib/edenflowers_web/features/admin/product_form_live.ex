@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           <:actions>
             <.button
               :if={@form.source.type == :update && !@form.source.data.draft}
-              href={~p"/product/#{@form.source.data.id}"}
+              href={~q"/#{language}/product/#{@form.source.data.id}"}
               target="_blank"
               variant="ghost"
               size="sm"

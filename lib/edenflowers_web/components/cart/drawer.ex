@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
             <p class="text-base-content/70">
               {~t"Add-ons are sold with flowers. Add a bouquet to check out."}
             </p>
-            <.button navigate={~p"/store"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
+            <.button navigate={~q"/#{language}/store"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
               {~t"Browse the store"}
             </.button>
           </div>

@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
         {:ok,
          socket
          |> put_flash(:error, ~t"Order not found.")
-         |> push_navigate(to: ~p"/")}
+         |> push_navigate(to: ~q"/#{language}")}
     end
   end
 
@@ -128,7 +128,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
               <.icon name="hero-calendar" class="size-4" />
               {~t"Add to calendar"}
             </.button>
-            <.button navigate={~p"/store"} variant="text">{~t"Back to the shop"}</.button>
+            <.button navigate={~q"/#{language}/store"} variant="text">{~t"Back to the shop"}</.button>
           </div>
         </div>
       </.container>

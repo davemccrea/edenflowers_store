@@ -5,11 +5,11 @@ defmodule EdenflowersWeb.Store.StoreLiveTest do
   import Phoenix.LiveViewTest
 
   test "offers contact when the catalogue has no categories", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/store/bouquets")
+    {:ok, view, _html} = live(conn, ~p"/en/store/bouquets")
 
     assert has_element?(view, "h1", "Store")
     assert has_element?(view, "#store-products h2", "No flowers listed here just now")
-    assert has_element?(view, "#store-products a[href='/contact']", "Get in touch")
+    assert has_element?(view, "#store-products a[href='/en/contact']", "Get in touch")
     refute has_element?(view, "nav[aria-label='Categories']")
   end
 
@@ -22,9 +22,9 @@ defmodule EdenflowersWeb.Store.StoreLiveTest do
     generate(product_variant(product_id: partly.id, size: :small, stock_quantity: 0))
     generate(product_variant(product_id: partly.id, size: :large, stock_quantity: 2))
 
-    {:ok, view, _html} = live(conn, ~p"/store/wreaths")
+    {:ok, view, _html} = live(conn, ~p"/en/store/wreaths")
 
-    assert has_element?(view, "a[href='/product/#{sold_out.id}'] [data-testid=sold-out]")
-    refute has_element?(view, "a[href='/product/#{partly.id}'] [data-testid=sold-out]")
+    assert has_element?(view, "a[href='/en/product/#{sold_out.id}'] [data-testid=sold-out]")
+    refute has_element?(view, "a[href='/en/product/#{partly.id}'] [data-testid=sold-out]")
   end
 end

@@ -46,7 +46,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
           <:actions>
             <.button
               :if={@form.source.type == :update}
-              href={~p"/courses/#{@form.source.data.id}"}
+              href={~q"/#{language}/courses/#{@form.source.data.id}"}
               target="_blank"
               variant="ghost"
               size="sm"

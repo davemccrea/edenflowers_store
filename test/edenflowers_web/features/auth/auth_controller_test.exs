@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
         |> init_auth_session(%{})
         |> AuthController.success({:password, :sign_in}, admin, nil)
 
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/en"
     end
 
     test "redirects non-admin users to / when no return_to was captured", %{conn: conn} do
@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
         |> init_auth_session(%{})
         |> AuthController.success({:password, :sign_in}, user, nil)
 
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/en"
     end
 
     test "preserves captured return_to for admins", %{conn: conn} do
@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
         |> Plug.Test.init_test_session(%{})
         |> Helpers.store_in_session(admin)
 
-      assert {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/sign-in")
+      assert {:error, {:redirect, %{to: "/en"}}} = live(conn, ~p"/sign-in")
     end
 
     test "redirects an already-signed-in non-admin user to /", %{conn: conn} do
@@ -86,7 +86,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
         |> Plug.Test.init_test_session(%{})
         |> Helpers.store_in_session(user)
 
-      assert {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/sign-in")
+      assert {:error, {:redirect, %{to: "/en"}}} = live(conn, ~p"/sign-in")
     end
   end
 

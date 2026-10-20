@@ -90,7 +90,11 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
 
       <div>
         <h3 class="card-heading text-balance">
-          <.link :if={@course.booking_open?} navigate={~p"/courses/#{@course.id}"} class="link-underline-hover touch-target">
+          <.link
+            :if={@course.booking_open?}
+            navigate={~q"/#{language}/courses/#{@course.id}"}
+            class="link-underline-hover touch-target"
+          >
             {@course.name}
           </.link>
           <span :if={!@course.booking_open?} class="text-base-content/70">{@course.name}</span>

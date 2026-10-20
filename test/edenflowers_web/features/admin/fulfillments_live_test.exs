@@ -311,7 +311,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       product = generate(product(free_delivery: true, draft: false))
       generate(product_variant(product_id: product.id))
-      {:ok, _view, html} = live(conn, ~p"/product/#{product.id}")
+      {:ok, _view, html} = live(conn, ~p"/en/product/#{product.id}")
       assert html =~ "Free delivery within 9 km"
     end
 
