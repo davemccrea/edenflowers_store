@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
 
           <.button
             :if={Enum.any?(@order.line_items) and not @order.add_ons_only?}
-            navigate={~p"/checkout"}
+            navigate={~q"/#{language}/checkout"}
             variant="primary"
             phx-click={JS.exec("phx-hide", to: "#cart-drawer")}
           >

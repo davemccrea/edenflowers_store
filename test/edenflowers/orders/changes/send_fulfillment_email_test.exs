@@ -199,7 +199,10 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert_email_sent(fn email ->
         assert email.subject == "Your Eden Flowers order 1400 has been delivered (photo attached)"
         assert email.text_body =~ "Nobody was home"
-        assert email.text_body =~ "I delivered your order, so I left it in the spot shown in the attached photo."
+
+        assert email.text_body =~
+                 "Nobody was home when I delivered your order. The attached photo shows where I left it."
+
         assert email.text_body =~ "If anything isn't as it should be, just reply and I'll take care of it."
         refute email.text_body =~ "can't find them"
         assert [%{data: "small jpeg", content_type: "image/jpeg"}] = email.attachments
@@ -221,7 +224,7 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert {:ok, _} = perform_job(SendFulfillmentEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
-        assert email.text_body =~ "Your order for Grace was delivered while nobody was home"
+        assert email.text_body =~ "delivered your order for Grace"
       end)
     end
 

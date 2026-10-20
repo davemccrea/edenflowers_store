@@ -98,6 +98,8 @@ defmodule EdenflowersWeb do
         router: EdenflowersWeb.Router,
         gettext: EdenflowersWeb.Gettext,
         statics: EdenflowersWeb.static_paths()
+
+      import EdenflowersWeb.LocalizedPaths, only: [alternates: 1, category_alternates: 1]
     end
   end
 

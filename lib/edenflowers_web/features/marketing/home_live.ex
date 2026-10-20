@@ -13,6 +13,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
     {:ok,
      assign(socket,
        page_title: ~t"Florist in Vaasa",
+       alternates: alternates("/#{language}"),
        page_description:
          ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within 5 km of Minimossen.",
        products: products
@@ -22,7 +23,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <section class="relative overflow-hidden not-last:border-b">
         <.image
           src="local:///wedding/daniela_streng_1.jpg"

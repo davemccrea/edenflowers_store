@@ -3,8 +3,8 @@ defmodule EdenflowersWeb.Plugs.CaptureReturnToTest do
 
   describe "GET /sign-in" do
     test "stores a safe return_to in the session", %{conn: conn} do
-      conn = get(conn, "/sign-in", return_to: "/account")
-      assert get_session(conn, :return_to) == "/account"
+      conn = get(conn, "/sign-in", return_to: "/en/account")
+      assert get_session(conn, :return_to) == "/en/account"
     end
 
     test "stores a path with a query string", %{conn: conn} do
@@ -35,16 +35,16 @@ defmodule EdenflowersWeb.Plugs.CaptureReturnToTest do
     test "no query param leaves the session value untouched", %{conn: conn} do
       conn =
         conn
-        |> init_test_session(return_to: "/account")
+        |> init_test_session(return_to: "/en/account")
         |> get("/sign-in")
 
-      assert get_session(conn, :return_to) == "/account"
+      assert get_session(conn, :return_to) == "/en/account"
     end
   end
 
   describe "other paths" do
     test "does not write the session", %{conn: conn} do
-      conn = get(conn, "/", return_to: "/account")
+      conn = get(conn, "/", return_to: "/en/account")
       assert get_session(conn, :return_to) == nil
     end
   end

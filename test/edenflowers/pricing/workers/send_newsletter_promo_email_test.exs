@@ -16,7 +16,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "new@example.com"}]
-        assert email.subject =~ "Welcome"
+        assert email.subject == "Your 15% welcome code for Eden Flowers"
       end)
 
       {:ok, user} = Accounts.get_user_by_email(user.email, authorize?: false, load: [:newsletter_promo])
@@ -51,7 +51,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
 
       assert_email_sent(fn email ->
         refute email.text_body =~ to_string(promo.code)
-        assert email.subject =~ "Welcome back to the Eden Flowers newsletter"
+        assert email.subject == "Your Eden Flowers newsletter subscription"
       end)
     end
   end
@@ -67,7 +67,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
 
       assert_email_sent(fn email ->
         email.to == [{"", "returning@example.com"}] and
-          email.subject =~ "Welcome back to the Eden Flowers newsletter" and
+          email.subject == "Your Eden Flowers newsletter subscription" and
           not (email.text_body =~ to_string(promo.code))
       end)
     end

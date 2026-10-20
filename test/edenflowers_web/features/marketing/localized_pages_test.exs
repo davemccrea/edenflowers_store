@@ -36,31 +36,38 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     assert has_element?(view, ~s|#locale-picker-footer option[value="/sv/om"]|)
   end
 
+  test "customer pages have a URL per language but stay out of search engines", %{conn: conn} do
+    user = generate(admin_user(admin: false)) |> with_token()
+    conn = conn |> Plug.Test.init_test_session(%{}) |> AshAuthentication.Plug.Helpers.store_in_session(user)
+    html = conn |> get("/sv/konto") |> html_response(200)
+
+    assert html =~ ~s(<html lang="sv)
+    assert html =~ ~s(<meta name="robots" content="noindex">)
+    refute html =~ ~s(rel="canonical")
+    refute html =~ ~s(hreflang=)
+
+    {:ok, view, _html} = live(conn, "/sv/konto")
+    assert has_element?(view, ~s|#locale-picker-footer option[value="/fi/tili"]|)
+  end
+
   test "pages that aren't localized switch language through the session", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/sign-in")
 
     assert has_element?(view, ~s|#locale-picker-footer option[value="/locale/fi?redirect_to=%2Fsign-in"]|)
   end
 
-  describe "an old or bare URL" do
+  describe "the bare URL" do
     test "goes to the session's language", %{conn: conn} do
-      conn = conn |> get("/fi") |> recycle() |> get("/weddings")
+      conn = conn |> get("/fi") |> recycle() |> get("/")
 
-      assert redirected_to(conn, 302) == "/fi/haat"
+      assert redirected_to(conn, 302) == "/fi"
       assert get_resp_header(conn, "vary") == ["accept-language, cookie"]
     end
 
-    test "keeps the category, in the new language's slug", %{conn: conn} do
-      generate(bouquets())
-      conn = conn |> put_req_header("accept-language", "sv") |> get("/store/bouquets")
-
-      assert redirected_to(conn, 302) == "/sv/butik/buketter"
-    end
-
     test "goes to the browser's language without a session", %{conn: conn} do
-      conn = conn |> put_req_header("accept-language", "fi-FI") |> get("/product/abc")
+      conn = conn |> put_req_header("accept-language", "fi-FI") |> get("/")
 
-      assert redirected_to(conn, 302) == "/fi/tuote/abc"
+      assert redirected_to(conn, 302) == "/fi"
     end
 
     test "goes to Swedish without a preference" do

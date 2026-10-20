@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     {:ok,
      assign(socket,
        page_title: ~t"Frequently Asked Questions",
+       alternates: alternates("/#{language}/faq"),
        page_description:
          ~t"Answers about delivery, pickup, flower care, subscriptions and course bookings at Eden Flowers in Vaasa."
      )}
@@ -16,7 +17,13 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <h1 class="page-title mb-16 md:mb-20">
           {~t"Frequently Asked Questions"}

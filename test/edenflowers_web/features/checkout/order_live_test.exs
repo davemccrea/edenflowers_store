@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   test "shows a placed order to its owner", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, paid: true)
 
-    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/order/#{order.id}")
 
     assert has_element?(view, "h1", "Thank you, Ada.")
     assert has_element?(view, "#order-status", "ready at the shop")
@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   test "says a text will follow when a pickup order has a phone number", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, recipient_phone_number: "045 1505141", paid: true)
 
-    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/order/#{order.id}")
 
     assert has_element?(view, "#order-status", "I'll send a text message when it's ready.")
   end
@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     variant = generate(product_variant(product_id: generate(product(subscribable: true, free_delivery: true)).id))
     generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1, interval_weeks: 2))
 
-    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/order/#{order.id}")
 
     assert has_element?(view, "[data-testid=order-subscription]", "Every 2 weeks")
 
@@ -62,13 +62,13 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     charged = Edenflowers.Format.weekday_date(~D[2026-06-21], "en-GB")
     assert has_element?(view, "[data-testid=order-next-delivery]", next)
     assert has_element?(view, "[data-testid=order-next-charge]", "on #{charged}")
-    assert has_element?(view, ~s|[data-testid=order-subscription] a[href="/account"]|, "Manage subscription")
+    assert has_element?(view, ~s|[data-testid=order-subscription] a[href="/en/account"]|, "Manage subscription")
   end
 
   test "says nothing about a subscription for a one-off order", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, paid: true)
 
-    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/order/#{order.id}")
 
     refute has_element?(view, "[data-testid=order-subscription]")
   end
@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     other = generate(admin_user(admin: false))
     order = placed_order(user_id: other.id, paid: true)
 
-    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/order/#{order.id}")
+    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/en/order/#{order.id}")
     assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
     assert conn |> get(~p"/order/#{order.id}/pickup.ics") |> response(404)
   end
@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   test "shows the order while the webhook is still in flight, then confirms payment", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, state: :payment, ordered_at: nil)
 
-    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/order/#{order.id}")
     assert has_element?(view, "h1", "Thank you, Ada.")
     refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
 
@@ -100,7 +100,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     other = generate(admin_user(admin: false))
     order = placed_order(user_id: other.id, state: :payment, ordered_at: nil)
 
-    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/order/#{order.id}")
+    assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/en/order/#{order.id}")
   end
 
   @tag :typst
@@ -116,7 +116,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   test "offers a calendar event for a pickup", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, paid: true)
 
-    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/order/#{order.id}")
     assert has_element?(view, ~s|a[href="/order/#{order.id}/pickup.ics"]|)
 
     ics = conn |> get(~p"/order/#{order.id}/pickup.ics") |> response(200)
@@ -128,7 +128,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   test "offers no calendar event for a delivery", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, fulfillment_method: :delivery, paid: true)
 
-    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    {:ok, view, _html} = live(conn, ~p"/en/order/#{order.id}")
     refute has_element?(view, "[data-testid=add-to-calendar]")
     assert conn |> get(~p"/order/#{order.id}/pickup.ics") |> response(404)
   end
@@ -145,10 +145,10 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       order = placed_order(paid: true)
 
       conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
-      assert redirected_to(conn) == ~p"/order/#{order.id}"
+      assert redirected_to(conn) == ~p"/en/order/#{order.id}"
       refute get_session(conn, :order_id) == order.id
 
-      {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/order/#{order.id}")
       assert has_element?(view, "h1", "Thank you")
     end
 
@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
       refute get_session(conn, :order_id) == order.id
 
-      {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/order/#{order.id}")
       assert has_element?(view, "h1", "Thank you")
       refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
 
@@ -177,7 +177,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
         |> Plug.Test.init_test_session(%{order_id: order.id})
         |> get(~p"/checkout/complete/#{order.id}?redirect_status=failed")
 
-      assert redirected_to(conn) == ~p"/checkout"
+      assert redirected_to(conn) == ~p"/en/checkout"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "didn't go through"
       assert get_session(conn, :order_id) == order.id
       assert Ash.reload!(order, authorize?: false).state == :payment
@@ -190,7 +190,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       conn = conn |> Plug.Test.init_test_session(%{order_id: cart.id}) |> get(~p"/checkout/complete/#{order.id}")
       assert get_session(conn, :order_id) == cart.id
 
-      assert {:error, {:redirect, %{to: to}}} = live(conn, ~p"/order/#{order.id}")
+      assert {:error, {:redirect, %{to: to}}} = live(conn, ~p"/en/order/#{order.id}")
       assert to =~ "/sign-in?return_to="
       assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
     end

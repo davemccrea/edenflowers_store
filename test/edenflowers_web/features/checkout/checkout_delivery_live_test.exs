@@ -63,7 +63,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
 
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
       assert has_element?(view, "#checkout-line-items [data-testid=line-item-interval]", "Every 2 weeks")
       assert has_element?(view, "label", "Fulfillment Option")
@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
         {:ok, %{id: "pi_sub", client_secret: "pi_sub_secret", setup_future_usage: "off_session"}}
       end)
 
-      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/en/checkout")
 
       amount = Edenflowers.Format.currency(Decimal.add(variant.price, "5.00"), "en")
       second_delivery = Edenflowers.Format.weekday_date(Date.add(first_delivery, 14), "en")
@@ -116,7 +116,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       Orders.add_promotion_with_code!(order, generate(promotion()).code, authorize?: false)
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
 
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
       assert has_element?(view, "[data-testid='discount-section']")
 
@@ -143,7 +143,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
 
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
       refute has_element?(view, "[data-testid='first-delivery-discount']")
     end
@@ -154,7 +154,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       Orders.add_promotion_with_code!(order, generate(promotion()).code, authorize?: false)
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
 
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
       assert has_element?(view, "[data-testid='discount-section']")
       refute has_element?(view, "[data-testid='first-delivery-discount']")
@@ -165,7 +165,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
 
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
       refute has_element?(view, "#checkout-line-items", "Subscription")
       assert has_element?(view, "label", "Fulfillment Option")
@@ -178,7 +178,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       step_3_order: step_3_order,
       delivery_option: delivery_option
     } do
-      {:ok, _view, html} = live(conn, ~p"/checkout")
+      {:ok, _view, html} = live(conn, ~p"/en/checkout")
 
       pickup_option =
         Edenflowers.Fulfillment.list_options!()
@@ -203,7 +203,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       Orders.update_fulfillment_option!(step_3_order, pickup_option.id, actor: nil)
 
-      {:ok, _view, html} = live(conn, ~p"/checkout")
+      {:ok, _view, html} = live(conn, ~p"/en/checkout")
 
       assert html =~ ~s(value="#{pickup_option.id}" checked)
       refute html =~ ~s(value="#{delivery_option.id}" checked)
@@ -223,7 +223,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
 
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
       view
       |> element("#address-input-field")
@@ -258,7 +258,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
 
       submit_delivery = fn ->
-        {:ok, view, _html} = live(conn, ~p"/checkout")
+        {:ok, view, _html} = live(conn, ~p"/en/checkout")
         view |> element("#address-input-field") |> render_blur(%{"value" => "Stadsgatan 3, 65300 Vasa"})
         render_async(view, 500)
 
@@ -289,7 +289,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
     end
 
     test "formats the phone number every time the customer tabs out of it", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
       phone_input = ~s|#checkout-form-3b input[name="form[recipient_phone_number]"]|
 
@@ -303,7 +303,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
     end
 
     test "delivery option renders before pickup regardless of insertion order", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/checkout")
+      {:ok, _view, html} = live(conn, ~p"/en/checkout")
 
       options = Edenflowers.Fulfillment.list_options!()
       delivery_id = Enum.find(options, &(&1.fulfillment_method == :delivery)).id
@@ -316,7 +316,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
     end
 
     test "switching fulfillment option keeps the selected date", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
       pickup_option =
         Edenflowers.Fulfillment.list_options!()
@@ -339,7 +339,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
     test "picking a closed date keeps the form as it was", %{conn: conn} do
       closed = Edenflowers.ShopTime.today() |> Date.add(7)
       shop_calendar(disabled_dates: [closed])
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
       render_click(view, "select-date", %{"date" => Date.to_string(closed)})
 

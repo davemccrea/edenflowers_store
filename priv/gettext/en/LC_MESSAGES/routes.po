@@ -38,10 +38,23 @@ msgstr ""
 #: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
 #, elixir-autogen, elixir-format
 msgid "courses"
 msgstr ""
 
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
@@ -64,6 +77,13 @@ msgstr ""
 msgid "faq"
 msgstr ""
 
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
@@ -107,6 +127,13 @@ msgstr ""
 #: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
 #: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
 #, elixir-autogen, elixir-format
 msgid "sv"
 msgstr ""
@@ -116,4 +143,59 @@ msgstr ""
 #: lib/edenflowers_web/router.ex:43
 #, elixir-autogen, elixir-format
 msgid "weddings"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "account"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "bookings"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "card"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "checkout"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "order"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "pay"
+msgstr ""
+
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#: lib/edenflowers_web/router.ex:43
+#, elixir-autogen, elixir-format
+msgid "subscriptions"
 msgstr ""

@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     order: order,
     fulfillment_option: fulfillment_option
   } do
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     view
     |> form("#checkout-form-1", %{
@@ -140,7 +140,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     card_variant =
       generate(product_variant(product_id: card_product.id, size: :small, draft: false))
 
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     view
     |> form("#checkout-form-1", %{
@@ -236,7 +236,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
 
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     view
     |> form("#checkout-form-1", %{
@@ -314,7 +314,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
   } do
     promotion = generate(promotion(code: "SAVE20", discount_rate: "0.20"))
 
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     # The promo form is collapsed behind a toggle.
     view
@@ -385,7 +385,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
   } do
     promotion = generate(promotion(code: "SAVE20", discount_rate: "0.20"))
 
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     # Type into step 1 without submitting — phx-change ships the values
     # to the server so they live on the form's params.
@@ -419,7 +419,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
   test "a promo code can be re-applied after being removed", %{conn: conn} do
     promotion = generate(promotion(code: "SAVE20", discount_rate: "0.20"))
 
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     apply_promo = fn ->
       view
@@ -447,7 +447,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
   test "the promo code can be removed from the checkout discount line", %{conn: conn} do
     promotion = generate(promotion(code: "SAVE20", discount_rate: "0.20"))
 
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     view
     |> element("#checkout-promo [data-testid='promo-toggle']")
@@ -472,7 +472,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     minimum = Decimal.mult(line_item.unit_price, 2)
     promotion = generate(promotion(code: "BIGSPEND", minimum_cart_total: minimum))
 
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     view
     |> element("#checkout-promo [data-testid='promo-toggle']")
@@ -507,7 +507,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     card_variant =
       generate(product_variant(product_id: card_product.id, size: :small, draft: false))
 
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     view
     |> form("#checkout-form-1", %{
@@ -552,7 +552,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
       {:error, :stripe_down}
     end)
 
-    {:ok, view, _html} = live(conn, ~p"/checkout")
+    {:ok, view, _html} = live(conn, ~p"/en/checkout")
 
     view
     |> form("#checkout-form-1", %{

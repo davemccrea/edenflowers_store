@@ -65,14 +65,14 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
     end
 
     test "names the course's late-cancellation fee" do
-      assert paid_confirmation("15.00") =~ ~r/After that, I keep €15\.00 of the booking as a late-cancellation fee\./
+      assert paid_confirmation("15.00") =~ "If you cancel later, I keep €15.00 as a cancellation fee."
     end
 
-    test "keeps the full-refund wording when there is no fee" do
+    test "only asks for notice when there is no fee" do
       body = paid_confirmation("0.00")
 
-      assert body =~ "I'll refund you in full."
-      refute body =~ "late-cancellation fee"
+      assert body =~ "Please let me know at least 7 days before the course if you can."
+      refute body =~ "cancellation fee"
     end
   end
 end

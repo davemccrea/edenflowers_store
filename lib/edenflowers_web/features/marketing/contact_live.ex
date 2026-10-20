@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
     {:ok,
      assign(socket,
        page_title: ~t"Contact",
+       alternates: alternates("/#{language}/contact"),
        page_description:
          ~t"Get in touch with Eden Flowers in Vaasa about an order, a wedding or a funeral, or visit the shop in Minimossen at Myrvägen 1."
      )}
@@ -16,7 +17,13 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      alternates={@alternates}
+    >
       <.container>
         <div class="grid gap-12 md:grid-cols-2 md:gap-x-24">
           <div>
