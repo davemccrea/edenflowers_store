@@ -1,0 +1,42 @@
+---
+id: TASK-75
+title: Name the service and place in page titles
+status: ready-for-agent
+assignee: []
+created_date: '2026-10-20 10:26'
+labels:
+  - spec
+  - customers
+  - quick
+dependencies: []
+priority: medium
+type: feature
+ordinal: 157000
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+Page titles say what the page offers and where, with the brand last: "Wedding Flowers in Vaasa & Korsholm | Eden Flowers".
+
+**Why:** The title is the blue link in search results. "Eden Flowers | Weddings" tells a searcher less than the page offers, and putting the brand first spends the part that is never truncated on the shop's name (docs/reviews/seo-audit.md, finding 4).
+
+### Decisions
+
+- Move the brand to a suffix: `live_title` gets `suffix=" | Eden Flowers"` instead of the prefix, and `og:title` matches.
+- English titles:
+  - Home: Florist in Vaasa
+  - Weddings: Wedding Flowers in Vaasa & Korsholm
+  - Condolences: Funeral Flowers in Vaasa & Korsholm
+  - Courses: Floristry Courses in Vaasa
+  - Store category: "<Category> in Vaasa", e.g. Bouquets in Vaasa
+  - Products, course pages, About, Contact, FAQ, checkout and admin keep their current titles.
+- Write the Finnish and Swedish titles as local searchers would phrase them (e.g. "Hääkukat Vaasa ja Mustasaari", "Bröllopsblommor i Vasa och Korsholm"), not word-for-word translations. Have Jennie read them.
+- Visible H1s stay as they are; they are part of the page design, and the title and description already carry the place.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Titles end in " | Eden Flowers" on every page, including og:title
+- [ ] #2 Home, Weddings, Condolences, Courses and store category pages use the titles above in en, fi and sv
+<!-- AC:END -->
