@@ -5,14 +5,19 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :count, :integer, required: true
   attr :active, :boolean, required: true
+  attr :tone, :atom, default: :primary, values: [:primary, :warning]
 
   def count_badge(assigns) do
     ~H"""
-    <span class={["badge badge-sm rounded-full border-0 font-semibold tabular-nums", if(@active, do: "bg-primary/10 text-primary", else: "bg-base-300/60 text-base-content/65")]}>
+    <span class={["badge badge-sm rounded-full font-semibold tabular-nums", count_badge_class(@active, @tone)]}>
       {@count}
     </span>
     """
   end
+
+  defp count_badge_class(false, _tone), do: "border-0 bg-base-300/60 text-base-content/65"
+  defp count_badge_class(true, :primary), do: "border-0 bg-primary/10 text-primary"
+  defp count_badge_class(true, :warning), do: "admin-badge-warning"
 
   attr :tone, :atom, required: true, values: [:success, :warning, :attention, :error, :neutral, :tag]
   attr :icon, :string, default: nil
@@ -185,9 +190,9 @@ defmodule EdenflowersWeb.Admin.Components do
   def variant_size_label(:large), do: ~t"Large"
   def variant_size_label(value), do: to_string(value)
 
-  defp fulfillment_method_icon(:delivery), do: "hero-truck"
-  defp fulfillment_method_icon(:pickup), do: "hero-building-storefront"
-  defp fulfillment_method_icon(_), do: "hero-question-mark-circle"
+  def fulfillment_method_icon(:delivery), do: "hero-truck"
+  def fulfillment_method_icon(:pickup), do: "hero-building-storefront"
+  def fulfillment_method_icon(_), do: "hero-question-mark-circle"
 
   def category_options do
     Edenflowers.Expenses.Expense.Category.values()
