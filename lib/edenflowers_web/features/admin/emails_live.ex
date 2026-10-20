@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
                 class="text-base-content/50 h-4 w-4 shrink-0 transition-transform group-open/type:rotate-90"
               />
               <span>{Gettext.gettext(EdenflowersWeb.Gettext, email_type)}</span>
-              <span class="text-base-content/50 ml-auto font-normal tabular-nums">{length(previews)}</span>
+              <span class="text-base-content/65 ml-auto font-normal tabular-nums">{length(previews)}</span>
             </summary>
             <div class="border-base-content/8 divide-base-content/8 ml-6 divide-y border-t border-l sm:ml-7">
               <details

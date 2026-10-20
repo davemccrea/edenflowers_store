@@ -345,7 +345,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             style={"left: #{@chart.today_x}%; top: #{@chart.today_y}%"}
           />
         </div>
-        <div class="text-base-content/50 mt-1 flex justify-between text-xs tabular-nums">
+        <div class="text-base-content/65 mt-1 flex justify-between text-xs tabular-nums">
           <span>{Format.day_month(Date.beginning_of_month(@today), @locale)}</span>
           <span>{Format.day_month(Date.end_of_month(@today), @locale)}</span>
         </div>
