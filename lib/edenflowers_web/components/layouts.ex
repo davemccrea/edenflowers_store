@@ -370,7 +370,7 @@ defmodule EdenflowersWeb.Layouts do
 
   @doc """
   The admin's mobile topbar and search bar. The root layout renders them outside
-  the LiveView, so they stay live while a page transition swaps the page.
+  the LiveView, so they stay on screen while a page transition swaps the page.
   """
   attr :current_user, :map, required: true
 
@@ -380,10 +380,7 @@ defmodule EdenflowersWeb.Layouts do
          Equal side columns keep the wordmark centred on the bar.
          It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
          blur over the top edge unless a sticky or fixed element covers it. --%>
-    <div
-      id="admin-topbar"
-      class="grid-cols-[3rem_1fr_3rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid touch-pan-x touch-pan-y items-center border-b px-3 pb-2 sm:px-6 lg:hidden"
-    >
+    <div class="grid-cols-[3rem_1fr_3rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid touch-pan-x touch-pan-y items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
       <button
         type="button"
         class="h-12 w-12"
