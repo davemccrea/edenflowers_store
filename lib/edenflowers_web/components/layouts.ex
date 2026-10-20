@@ -152,10 +152,6 @@ defmodule EdenflowersWeb.Layouts do
   attr :current_path, :string, required: true
   attr :current_user, :map, required: true
 
-  attr :fill_viewport, :boolean,
-    default: false,
-    doc: "pins the page to the window height so the content manages its own scrolling"
-
   slot :inner_block, required: true
 
   def admin(assigns) do
@@ -195,7 +191,7 @@ defmodule EdenflowersWeb.Layouts do
     <div
       id="admin-app"
       phx-hook="AdminApp"
-      class={["admin-theme", if(@fill_viewport, do: "h-dvh flex flex-col lg:flex-row", else: "min-h-screen lg:flex")]}
+      class="admin-theme flex-1 lg:flex"
     >
       <%!-- Mobile: slide-in drawer --%>
       <.drawer
@@ -224,35 +220,7 @@ defmodule EdenflowersWeb.Layouts do
         />
       </aside>
 
-      <div class={["flex min-w-0 flex-1 flex-col", @fill_viewport && "min-h-0"]}>
-        <%!-- Mobile topbar mirrors the store header's menu button and wordmark.
-             Equal side columns keep the wordmark centred on the bar.
-             It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
-             blur over the top edge unless a sticky or fixed element covers it. --%>
-        <div class="[view-transition-name:admin-topbar] grid-cols-[3rem_1fr_3rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
-          <button
-            type="button"
-            class="h-12 w-12"
-            phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
-            aria-label={~t"Open navigation menu"}
-          >
-            <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
-          </button>
-          <.link
-            navigate={~p"/admin"}
-            class="text-primary logo-wordmark touch-target justify-self-center whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl"
-          >
-            Eden Flowers
-          </.link>
-          <div class="justify-self-end">
-            <.admin_account_menu current_user={@current_user} compact={true} />
-          </div>
-        </div>
-
-        <div class="[view-transition-name:admin-search] border-base-content/12 border-b px-4 py-2 lg:hidden">
-          <.admin_search id="admin-search-mobile" />
-        </div>
-
+      <div class="flex min-w-0 flex-1 flex-col">
         <div class="[view-transition-name:admin-header] border-base-content/12 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
           <.admin_search id="admin-search" class="w-full max-w-md" />
           <.admin_account_menu current_user={@current_user} />
@@ -261,7 +229,7 @@ defmodule EdenflowersWeb.Layouts do
         <main
           id="main-content"
           tabindex="-1"
-          class={["outline-hidden", if(@fill_viewport, do: "flex min-h-0 flex-1 flex-col", else: "flex-grow pb-12")]}
+          class="flex-grow pb-12 outline-hidden"
         >
           {render_slot(@inner_block)}
         </main>
@@ -397,6 +365,44 @@ defmodule EdenflowersWeb.Layouts do
       <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/60")]} />
       {@label}
     </.link>
+    """
+  end
+
+  @doc """
+  The admin's mobile topbar and search bar. The root layout renders them outside
+  the LiveView, so they stay on screen while a page transition swaps the page.
+  """
+  attr :current_user, :map, required: true
+
+  def admin_topbar(assigns) do
+    ~H"""
+    <%!-- Mobile topbar mirrors the store header's menu button and wordmark.
+         Equal side columns keep the wordmark centred on the bar.
+         It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
+         blur over the top edge unless a sticky or fixed element covers it. --%>
+    <div class="grid-cols-[3rem_1fr_3rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid touch-pan-x touch-pan-y items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
+      <button
+        type="button"
+        class="h-12 w-12"
+        phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
+        aria-label={~t"Open navigation menu"}
+      >
+        <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
+      </button>
+      <.link
+        navigate={~p"/admin"}
+        class="text-primary logo-wordmark touch-target justify-self-center whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl"
+      >
+        Eden Flowers
+      </.link>
+      <div class="justify-self-end">
+        <.admin_account_menu current_user={@current_user} compact={true} />
+      </div>
+    </div>
+
+    <div class="bg-base-100 border-base-content/12 touch-pan-x touch-pan-y border-b px-4 py-2 lg:hidden">
+      <.admin_search id="admin-search-mobile" />
+    </div>
     """
   end
 
