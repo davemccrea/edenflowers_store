@@ -1,9 +1,10 @@
 ---
 id: TASK-76
 title: Return 404 for unknown store categories and courses
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 10:26'
+updated_date: '2026-10-20 16:52'
 labels:
   - spec
   - customers
@@ -30,7 +31,13 @@ A store category or course URL that doesn't exist answers 404 Not Found, the way
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 GET /store/<unknown slug> returns 404
-- [ ] #2 GET /courses/<unknown or malformed id> returns 404
-- [ ] #3 /store still redirects to /store/bouquets, and a past course still renders
+- [x] #1 GET /store/<unknown slug> returns 404
+- [x] #2 GET /courses/<unknown or malformed id> returns 404
+- [x] #3 /store still redirects to /store/bouquets, and a past course still renders
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+A slug that isn't a category in the page's language (e.g. /fi/kauppa/buketter) now 404s too, instead of falling back to bouquets.
+<!-- SECTION:NOTES:END -->

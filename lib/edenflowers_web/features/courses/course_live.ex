@@ -30,11 +30,9 @@ defmodule EdenflowersWeb.Courses.CourseLive do
          |> assign(registration: nil, client_secret: nil, focus_booking?: false)
          |> assign_form()}
 
+      # A malformed id is an invalid-filter error rather than NotFound; both should 404.
       {:error, _} ->
-        {:ok,
-         socket
-         |> put_flash(:error, ~t"Course not found.")
-         |> push_navigate(to: ~q"/#{language}/courses")}
+        raise Ash.Error.Query.NotFound, resource: Courses.Course
     end
   end
 

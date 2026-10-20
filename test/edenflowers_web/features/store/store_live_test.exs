@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.Store.StoreLiveTest do
   import Phoenix.LiveViewTest
 
   test "offers contact when the catalogue has no categories", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/en/store/bouquets")
+    {:ok, view, _html} = live(conn, ~p"/en/store")
 
     assert has_element?(view, "h1", "Store")
     assert has_element?(view, "#store-products h2", "No flowers listed here just now")
@@ -26,5 +26,15 @@ defmodule EdenflowersWeb.Store.StoreLiveTest do
 
     assert has_element?(view, "a[href='/en/product/#{sold_out.id}'] [data-testid=sold-out]")
     refute has_element?(view, "a[href='/en/product/#{partly.id}'] [data-testid=sold-out]")
+  end
+
+  test "/store opens on bouquets", %{conn: conn} do
+    generate(product_category(slug: "bouquets", visibility: :public))
+
+    assert {:error, {:live_redirect, %{to: "/en/store/bouquets"}}} = live(conn, ~p"/en/store")
+  end
+
+  test "an unknown category is a 404", %{conn: conn} do
+    assert_error_sent 404, fn -> get(conn, ~p"/en/store/no-such-category") end
   end
 end

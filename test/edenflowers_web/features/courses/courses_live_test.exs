@@ -96,6 +96,19 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert has_element?(view, "[data-testid=booking-closed]")
       refute has_element?(view, "#booking-form")
     end
+
+    test "a past course still renders", %{conn: conn} do
+      course = generate(course(date: Date.add(Date.utc_today(), -7), register_before: Date.add(Date.utc_today(), -8)))
+
+      {:ok, _view, html} = live(conn, ~p"/en/courses/#{course.id}")
+
+      assert html =~ course.name
+    end
+
+    test "an unknown course is a 404", %{conn: conn} do
+      assert_error_sent 404, fn -> get(conn, ~p"/en/courses/#{Ash.UUID.generate()}") end
+      assert_error_sent 404, fn -> get(conn, ~p"/en/courses/not-a-uuid") end
+    end
   end
 
   describe "/courses/:id when already booked" do

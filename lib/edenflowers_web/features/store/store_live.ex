@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
              )}
 
           :error ->
-            show_bouquets(socket)
+            raise Ash.Error.Query.NotFound, resource: Catalog.ProductCategory
         end
     end
   end

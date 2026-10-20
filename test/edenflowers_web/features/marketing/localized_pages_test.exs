@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     generate(bouquets())
 
     assert conn |> get("/fi/kauppa/kukkakimput") |> html_response(200) =~ "<h1"
-    {:error, {:live_redirect, %{to: "/fi/kauppa/kukkakimput"}}} = live(conn, "/fi/kauppa/buketter")
+    assert_error_sent 404, fn -> get(conn, "/fi/kauppa/buketter") end
   end
 
   test "the language switcher goes to the same page in the other language", %{conn: conn} do
