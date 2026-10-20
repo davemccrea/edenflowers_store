@@ -1034,7 +1034,7 @@ cash =
     customer_name: "Greta Lund",
     customer_phone_number: "040 5557788",
     days_out: 2,
-    payment_link?: false,
+    payment_terms: :on_fulfillment,
     line_items: [catalogue_line.("Bouquet 2", :medium, 1), custom_line.("Gift wrapping", "5.00")]
   })
 
@@ -1050,7 +1050,7 @@ place_custom.(%{
   customer_email: "liisa.makinen@example.fi",
   locale: "fi",
   days_out: 1,
-  payment_link?: false,
+  payment_terms: :on_fulfillment,
   florist_note: "Replaces her earlier delivery, which wilted the next day.",
   line_items: [custom_line.("Replacement bouquet", "0.00")]
 })
