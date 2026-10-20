@@ -4720,14 +4720,6 @@ msgstr "Grundpris (€)"
 msgid "Free delivery distance (km)"
 msgstr "Avstånd för gratis leverans (km)"
 
-#: lib/edenflowers_web/components/layouts.ex:190
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:49
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:88
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:195
-#, elixir-autogen, elixir-format
-msgid "Fulfillments"
-msgstr "Leveranser"
-
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:310
 #, elixir-autogen, elixir-format
 msgid "Maximum distance (km)"
@@ -6880,6 +6872,10 @@ msgstr "Buketter gjorda för hand samma dag som de levereras."
 msgid "Choose bouquet"
 msgstr "Välj bukett"
 
+#: lib/edenflowers_web/components/layouts.ex:190
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:49
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:88
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:195
 #: lib/edenflowers_web/features/marketing/home_live.ex:361
 #, elixir-autogen, elixir-format
 msgid "Delivery and pickup"
@@ -7157,3 +7153,13 @@ msgstr "Begravningsblommor i Vasa"
 #, elixir-autogen, elixir-format
 msgid "Wedding Flowers in Vaasa"
 msgstr "Bröllopsblommor i Vasa"
+
+#: lib/edenflowers_web/components/layouts.ex:199
+#, elixir-autogen, elixir-format
+msgid "Finances"
+msgstr "Ekonomi"
+
+#: lib/edenflowers_web/components/layouts.ex:192
+#, elixir-autogen, elixir-format
+msgid "Shop"
+msgstr "Butik"

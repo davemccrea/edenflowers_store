@@ -4720,14 +4720,6 @@ msgstr "Perushinta (€)"
 msgid "Free delivery distance (km)"
 msgstr "Ilmaisen toimituksen etäisyys (km)"
 
-#: lib/edenflowers_web/components/layouts.ex:190
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:49
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:88
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:195
-#, elixir-autogen, elixir-format
-msgid "Fulfillments"
-msgstr "Toimitukset"
-
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:310
 #, elixir-autogen, elixir-format
 msgid "Maximum distance (km)"
@@ -6880,6 +6872,10 @@ msgstr "Kimput käsin tehtyinä toimituspäivänä."
 msgid "Choose bouquet"
 msgstr "Valitse kimppu"
 
+#: lib/edenflowers_web/components/layouts.ex:190
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:49
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:88
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:195
 #: lib/edenflowers_web/features/marketing/home_live.ex:361
 #, elixir-autogen, elixir-format
 msgid "Delivery and pickup"
@@ -7157,3 +7153,13 @@ msgstr "Hautajaiskukat Vaasa"
 #, elixir-autogen, elixir-format
 msgid "Wedding Flowers in Vaasa"
 msgstr "Hääkukat Vaasa"
+
+#: lib/edenflowers_web/components/layouts.ex:199
+#, elixir-autogen, elixir-format
+msgid "Finances"
+msgstr "Talous"
+
+#: lib/edenflowers_web/components/layouts.ex:192
+#, elixir-autogen, elixir-format
+msgid "Shop"
+msgstr "Kauppa"

@@ -181,20 +181,26 @@ defmodule EdenflowersWeb.Layouts do
       |> Localize.Language.display_name!(fallback: true)
       |> String.capitalize()
 
-    primary_nav = [
-      {"/admin", ~t"Overview", true, "hero-squares-2x2"},
-      {~p"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
-      {"/admin/customers", ~t"Customers", true, "hero-users"},
-      {"/admin/subscriptions", ~t"Subscriptions", true, "hero-arrow-path"},
-      {"/admin/expenses", ~t"Expenses", true, "hero-document-text"},
-      {"/admin/fulfillments", ~t"Fulfillments", true, "hero-calendar-days"},
-      {"/admin/courses", ~t"Courses", true, "hero-academic-cap"},
-      {"/admin/products", ~t"Products", true, "hero-gift"},
-      {EdenflowersWeb.Admin.PromotionsLive.default_path(), ~t"Promotions", true, "hero-receipt-percent"},
-      {"/admin/emails", ~t"Emails", true, "hero-envelope"}
+    nav_sections = [
+      {nil, [{~p"/admin", ~t"Overview", true, "hero-squares-2x2"}]},
+      {~t"Sales",
+       [
+         {~p"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
+         {~p"/admin/subscriptions", ~t"Subscriptions", true, "hero-arrow-path"},
+         {~p"/admin/customers", ~t"Customers", true, "hero-users"}
+       ]},
+      {~t"Shop",
+       [
+         {~p"/admin/products", ~t"Products", true, "hero-gift"},
+         {~p"/admin/courses", ~t"Courses", true, "hero-academic-cap"},
+         {EdenflowersWeb.Admin.PromotionsLive.default_path(), ~t"Promotions", true, "hero-receipt-percent"},
+         {~p"/admin/fulfillments", ~t"Delivery and pickup", true, "hero-calendar-days"}
+       ]},
+      {~t"Finances", [{~p"/admin/expenses", ~t"Expenses", true, "hero-banknotes"}]}
     ]
 
     system_nav = [
+      {~p"/admin/emails", ~t"Emails", true, "hero-envelope"},
       {"/admin/errors", ~t"Errors", false, "hero-exclamation-triangle"},
       {"/admin/oban", "Oban", false, "hero-cpu-chip"},
       {"/admin/ash", "AshAdmin", false, "hero-circle-stack"}
@@ -203,7 +209,7 @@ defmodule EdenflowersWeb.Layouts do
     assigns =
       assigns
       |> assign(:current_locale, current_locale)
-      |> assign(:primary_nav, primary_nav)
+      |> assign(:nav_sections, nav_sections)
       |> assign(:system_nav, system_nav)
 
     ~H"""
@@ -222,7 +228,7 @@ defmodule EdenflowersWeb.Layouts do
         class="bg-base-200 border-base-content/12 flex h-full w-64 flex-col border-r"
       >
         <.admin_sidebar_content
-          primary_nav={@primary_nav}
+          nav_sections={@nav_sections}
           system_nav={@system_nav}
           current_path={@current_path}
           current_locale={@current_locale}
@@ -236,7 +242,7 @@ defmodule EdenflowersWeb.Layouts do
         class="[view-transition-name:admin-sidebar] bg-base-200 border-base-content/12 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
       >
         <.admin_sidebar_content
-          primary_nav={@primary_nav}
+          nav_sections={@nav_sections}
           system_nav={@system_nav}
           current_path={@current_path}
           current_locale={@current_locale}
@@ -329,7 +335,7 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
-  attr :primary_nav, :list, required: true
+  attr :nav_sections, :list, required: true
   attr :system_nav, :list, required: true
   attr :current_path, :string, required: true
   attr :current_locale, :string, required: true
@@ -360,16 +366,19 @@ defmodule EdenflowersWeb.Layouts do
         </.icon_button>
       </div>
 
-      <nav class="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3">
-        <.admin_nav_item
-          :for={{path, label, live?, icon} <- @primary_nav}
-          path={path}
-          label={label}
-          live?={live?}
-          icon={icon}
-          current_path={@current_path}
-          exact={path == "/admin"}
-        />
+      <nav class="min-h-0 flex-1 space-y-4 overflow-y-auto px-3">
+        <div :for={{heading, items} <- @nav_sections} class="space-y-0.5">
+          <p :if={heading} class="text-base-content/65 mb-1 px-3 text-xs">{heading}</p>
+          <.admin_nav_item
+            :for={{path, label, live?, icon} <- items}
+            path={path}
+            label={label}
+            live?={live?}
+            icon={icon}
+            current_path={@current_path}
+            exact={path == "/admin"}
+          />
+        </div>
       </nav>
 
       <div class="border-base-content/12 mt-auto border-t px-3 pt-4">

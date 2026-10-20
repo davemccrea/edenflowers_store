@@ -46,7 +46,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={~t"Fulfillments"} />
+        <.admin_page_header title={~t"Delivery and pickup"} />
 
         <.form_section title={~t"Calendar"}>
           <:description>{~t"Delivery and pickup share these days."}</:description>
@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={{~t"Fulfillments", ~p"/admin/fulfillments"}} />
+        <.admin_page_header title={@page_title} back={{~t"Delivery and pickup", ~p"/admin/fulfillments"}} />
 
         <%!-- On a wide screen the graph sits beside the prices, so it stays in view while they're typed. --%>
         <div class={@form.source.data.rate_type == :dynamic && "lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:grid lg:items-start lg:gap-6"}>
@@ -192,7 +192,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   defp mount_action(:index, _params, socket) do
     {:ok,
      socket
-     |> assign(:page_title, ~t"Fulfillments")
+     |> assign(:page_title, ~t"Delivery and pickup")
      |> assign_calendar(Fulfillment.get_shop_calendar!(actor: socket.assigns.current_user))}
   end
 
