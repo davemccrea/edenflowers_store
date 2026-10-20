@@ -259,10 +259,13 @@ function onDocumentPatch(start) {
   // swap instantly, as they did before.
   // Only the installed app animates, as a native one would. In a browser tab
   // pages swap straight away, as on most web apps.
+  // The transition runs on the page under the topbar, which the root layout
+  // keeps outside the LiveView. A document-wide transition hides the sticky
+  // topbar, and without one at the top edge iOS standalone blurs it.
+  const page = document.getElementById("admin-page");
   const animate =
     kind &&
-    document.startViewTransition &&
-    document.querySelector(".admin-theme") &&
+    page?.startViewTransition &&
     matchMedia("(display-mode: standalone)").matches &&
     !document.querySelector("dialog[open]");
   if (!animate) return start();
@@ -270,7 +273,7 @@ function onDocumentPatch(start) {
   const root = document.documentElement;
   root.dataset.adminTransition = kind;
   heldPatches = [];
-  document
+  page
     .startViewTransition(() => {
       try {
         start();
