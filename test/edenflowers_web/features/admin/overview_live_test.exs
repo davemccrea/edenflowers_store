@@ -84,7 +84,8 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(view, "#orders-today-pickup h3 .badge", "1")
       refute has_element?(view, "#orders-today", "Last Week")
       assert has_element?(view, ~s|#orders-tomorrow-pickup|, "Tomorrow Pickup")
-      assert has_element?(view, "#orders-tomorrow-pickup h3 .badge", "1")
+      assert has_element?(view, "#orders-tomorrow-title .badge", "1")
+      refute has_element?(view, "#orders-tomorrow-pickup h3 .badge")
       refute has_element?(view, ~s|#orders-tomorrow-delivery|)
       refute render(view) =~ "Next Week"
     end
