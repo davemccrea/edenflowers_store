@@ -25,7 +25,11 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
   def handle_params(params, _uri, socket) do
     {lang, locale, _name} = List.keyfind(@languages, params["lang"], 0, hd(@languages))
 
-    email_types = locale |> Previews.all() |> Enum.chunk_by(fn {email_type, _, _, _} -> email_type end)
+    email_types =
+      locale
+      |> Previews.all()
+      |> Enum.chunk_by(fn {email_type, _, _, _} -> email_type end)
+      |> Enum.sort_by(fn [{email_type, _, _, _} | _] -> Gettext.gettext(EdenflowersWeb.Gettext, email_type) end)
 
     {:noreply, socket |> assign(:lang, lang) |> assign(:email_types, email_types)}
   end
@@ -52,15 +56,32 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
           </:actions>
         </.admin_page_header>
 
-        <div class="space-y-6">
-          <section :for={[{email_type, _, _, _} | _] = previews <- @email_types}>
-            <h2 class="text-base-content mb-2 text-sm font-semibold">{email_type}</h2>
-            <div class="admin-card divide-base-content/8 divide-y">
-              <details :for={{_, scenario, _, email} <- previews} class="group">
+        <div class="admin-card divide-base-content/8 divide-y">
+          <details
+            :for={{[{email_type, _, _, _} | _] = previews, type_index} <- Enum.with_index(@email_types)}
+            id={"email-type-#{type_index}"}
+            phx-mounted={JS.ignore_attributes(["open"])}
+            class="group/type"
+          >
+            <summary class="text-base-content flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold hover:bg-base-300/40 sm:px-5">
+              <.icon
+                name="hero-chevron-right"
+                class="text-base-content/50 h-4 w-4 shrink-0 transition-transform group-open/type:rotate-90"
+              />
+              <span>{Gettext.gettext(EdenflowersWeb.Gettext, email_type)}</span>
+              <span class="text-base-content/50 ml-auto font-normal tabular-nums">{length(previews)}</span>
+            </summary>
+            <div class="border-base-content/8 divide-base-content/8 ml-6 divide-y border-t border-l sm:ml-7">
+              <details
+                :for={{{_, scenario, _, email}, scenario_index} <- Enum.with_index(previews)}
+                id={"email-#{type_index}-#{scenario_index}"}
+                phx-mounted={JS.ignore_attributes(["open"])}
+                class="group/scenario"
+              >
                 <summary class="text-base-content/80 flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm hover:bg-base-300/40 sm:px-5">
                   <.icon
                     name="hero-chevron-right"
-                    class="text-base-content/50 h-4 w-4 shrink-0 transition-transform group-open:rotate-90"
+                    class="text-base-content/50 h-4 w-4 shrink-0 transition-transform group-open/scenario:rotate-90"
                   />
                   <span lang="en" class="first-letter:uppercase">{scenario}</span>
                 </summary>
@@ -70,7 +91,7 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
                 </div>
               </details>
             </div>
-          </section>
+          </details>
         </div>
       </.admin_page>
     </Layouts.admin>
