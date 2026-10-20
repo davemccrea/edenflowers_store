@@ -1,12 +1,12 @@
 ---
 id: TASK-67.8
 title: Show the accountant report on the Overview only early in the month
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-20 06:53'
+updated_date: '2026-10-20 17:15'
 labels:
-  - quick
+  - wontfix
 dependencies: []
 parent_task_id: TASK-67
 type: feature
@@ -38,6 +38,15 @@ created: 2026-10-20 06:53
 ---
 
 A Reports page is planned (TASK-68). Once it exists, the accountant report may move there and this widget becomes a link.
+
+---
+
+author: @claude
+created: 2026-10-20 17:15
+
+---
+
+Closed by David: not worth doing. The report widget stays on the Overview as it is; TASK-68 (Reports page) is where the report's placement gets revisited.
 
 ---
 <!-- COMMENTS:END -->
