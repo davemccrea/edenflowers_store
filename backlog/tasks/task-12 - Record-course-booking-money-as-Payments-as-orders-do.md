@@ -4,10 +4,12 @@ title: 'Record course booking money as Payments, as orders do'
 status: done
 assignee: []
 created_date: '2026-10-17 09:39'
-updated_date: '2026-10-18 08:27'
+updated_date: '2026-10-20 12:33'
 labels:
   - spec
+  - admin
 dependencies: []
+priority: high
 type: feature
 ordinal: 27000
 ---

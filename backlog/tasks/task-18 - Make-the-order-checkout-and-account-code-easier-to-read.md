@@ -4,9 +4,10 @@ title: 'Make the order, checkout and account code easier to read'
 status: done
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 11:35'
+updated_date: '2026-10-20 12:33'
 labels:
   - spec
+  - developers
 dependencies: []
 priority: low
 type: refactor

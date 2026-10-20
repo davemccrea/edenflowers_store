@@ -4,10 +4,13 @@ title: Close the stale-order race and let Ash do the hand-rolled work
 status: done
 assignee: []
 created_date: '2026-10-18 03:24'
-updated_date: '2026-10-18 11:03'
+updated_date: '2026-10-20 12:33'
 labels:
   - spec
+  - admin
+  - developers
 dependencies: []
+priority: medium
 type: refactor
 ordinal: 60000
 ---

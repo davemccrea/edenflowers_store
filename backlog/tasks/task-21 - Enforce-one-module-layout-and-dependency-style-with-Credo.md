@@ -4,9 +4,10 @@ title: Enforce one module layout and dependency style with Credo
 status: done
 assignee: []
 created_date: '2026-10-18 04:05'
-updated_date: '2026-10-18 11:30'
+updated_date: '2026-10-20 12:33'
 labels:
   - spec
+  - developers
 dependencies: []
 priority: low
 type: chore
