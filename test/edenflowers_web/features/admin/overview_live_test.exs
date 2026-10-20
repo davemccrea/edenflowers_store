@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       view |> element("#orders-tomorrow-toggle", "Stop orders") |> render_click()
       assert tomorrow in Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates
-      assert has_element?(view, "#orders-tomorrow", "Closed to new orders")
+      assert has_element?(view, "#orders-tomorrow-closed")
 
       view |> element("#orders-tomorrow-toggle", "Reopen orders") |> render_click()
       refute tomorrow in Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates

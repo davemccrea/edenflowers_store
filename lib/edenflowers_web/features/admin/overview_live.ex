@@ -46,8 +46,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
         <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
 
-        <.attention_widget :if={@attention != []} groups={@attention} locale={@locale} />
-
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <section class="admin-card min-w-0 p-4 sm:p-5">
             <.day_section
@@ -67,7 +65,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               empty={~t"Nothing to make tomorrow"}
               booking={booking(@calendar, Date.add(@today, 1))}
               locale={@locale}
-              class="border-base-content/12 mt-5 border-t pt-5"
+              class="border-base-content/12 mt-4 border-t pt-4"
             />
             <div class="border-base-content/12 mt-5 border-t pt-3">
               <.link
@@ -79,6 +77,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             </div>
           </section>
           <aside class="flex min-w-0 flex-col gap-6">
+            <.attention_widget :if={@attention != []} groups={@attention} locale={@locale} />
             <.sales_widget
               sales={@sales}
               last_month={@last_month_sales}
@@ -446,18 +445,18 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <section
       id="attention"
       aria-labelledby="attention-title"
-      class="admin-card border-warning/40 bg-warning/5 mb-6 p-4 sm:p-5"
+      class="admin-card p-4 sm:p-5"
     >
       <h2 id="attention-title" class="text-base-content mb-2 flex items-center gap-2 text-base font-semibold">
         <.icon name="hero-exclamation-triangle" class="text-warning h-5 w-5" />
         {~t"Needs attention"}
       </h2>
-      <ul class="divide-warning/20 divide-y">
+      <ul class="divide-base-content/8 divide-y text-sm">
         <li :for={{key, icon, title, rows} <- @groups}>
           <details id={"attention-#{key}"} phx-mounted={JS.ignore_attributes(["open"])} class="group">
-            <summary class="touch-target flex cursor-pointer list-none items-center gap-3 py-2.5">
-              <.icon name={icon} class="text-warning-content h-5 w-5 shrink-0" />
-              <span class="text-base-content min-w-0 flex-1 font-medium">
+            <summary class="touch-target flex cursor-pointer list-none items-center gap-3 py-2">
+              <.icon name={icon} class="text-base-content/50 h-4 w-4 shrink-0" />
+              <span class="text-base-content min-w-0 flex-1">
                 {title} · <span class="tabular-nums">{length(rows)}</span>
               </span>
               <span :if={Map.has_key?(hd(rows), :amount)} class="text-base-content shrink-0 tabular-nums">
@@ -468,7 +467,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
                 class="text-base-content/50 h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
               />
             </summary>
-            <ul class="divide-warning/20 mb-2 ml-8 divide-y">
+            <ul class="divide-base-content/8 mb-2 ml-7 divide-y">
               <.link_row :for={row <- rows} id={"attention-#{key}-#{row.id}"} row={row} locale={@locale} />
             </ul>
           </details>
@@ -516,39 +515,33 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     ~H"""
     <section id={@id} aria-labelledby={"#{@id}-title"} class={@class}>
       <div class="mb-3 flex items-center justify-between gap-3">
-        <h2 id={"#{@id}-title"} class="text-base-content text-base font-semibold">
+        <h2 id={"#{@id}-title"} class="text-base-content flex items-center gap-2 text-base font-semibold">
           {@title}
-          <span class="text-base-content/65 ml-1 text-sm font-normal">{Format.weekday_day_month(@date, @locale)}</span>
+          <.badge :if={@booking == :closed} id={"#{@id}-closed"} tone={:warning}>{~t"Closed"}</.badge>
         </h2>
-        <div class="flex items-center gap-2">
-          <.button
-            :if={@booking}
-            id={"#{@id}-toggle"}
-            type="button"
-            variant="secondary"
-            size="sm"
-            phx-click="toggle-date"
-            phx-value-date={Date.to_iso8601(@date)}
-          >
-            <%= if @booking == :open do %>
-              <.icon name="hero-no-symbol" class="h-4 w-4" /> {~t"Stop orders"}
-            <% else %>
-              <.icon name="hero-arrow-path" class="h-4 w-4" /> {~t"Reopen orders"}
-            <% end %>
-          </.button>
-          <.count_badge count={length(@orders)} active={@orders != []} />
-        </div>
+        <.button
+          :if={@booking}
+          id={"#{@id}-toggle"}
+          type="button"
+          variant="ghost"
+          size="sm"
+          phx-click="toggle-date"
+          phx-value-date={Date.to_iso8601(@date)}
+        >
+          <%= if @booking == :open do %>
+            <.icon name="hero-no-symbol" class="h-4 w-4" /> {~t"Stop orders"}
+          <% else %>
+            <.icon name="hero-arrow-path" class="h-4 w-4" /> {~t"Reopen orders"}
+          <% end %>
+        </.button>
       </div>
-      <p :if={@booking == :closed} class="text-warning-content mb-3 text-sm">
-        {~t"Closed to new orders."}
-      </p>
 
-      <div class="space-y-4">
+      <div class="space-y-3">
         <div :for={{method, orders} <- by_method(@orders)} id={"#{@id}-#{method}"}>
-          <h3 class="eyebrow text-base-content/65 px-3 pb-1.5">
+          <h3 class="eyebrow text-base-content/65 pb-1">
             {method_heading(method)} · <span class="tabular-nums">{length(orders)}</span>
           </h3>
-          <ul class="divide-base-content/8 divide-y">
+          <ul class="divide-base-content/8 -mx-3 divide-y">
             <.order_row :for={order <- orders} order={order} />
           </ul>
         </div>
@@ -612,11 +605,12 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
         <div class="flex shrink-0 flex-col items-end gap-0.5 pt-0.5 text-right">
           <span
-            :if={Format.fulfillment_time(@order, Format.locale())}
-            class="text-base-content text-sm font-medium tabular-nums"
+            :if={Format.fulfillment_time_range(@order, Format.locale())}
+            class="text-base-content flex items-center gap-1 text-sm font-medium tabular-nums"
             data-testid="fulfillment-time"
           >
-            {Format.fulfillment_time(@order, Format.locale())}
+            <.icon name="hero-clock" class="text-base-content/50 h-3.5 w-3.5" />
+            {Format.fulfillment_time_range(@order, Format.locale())}
           </span>
           <span :if={@order.distance_km} class="text-base-content/65 text-xs tabular-nums">
             {@order.distance_km} km
