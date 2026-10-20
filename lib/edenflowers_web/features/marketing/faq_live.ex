@@ -100,13 +100,13 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
   end
 
   # Free-delivery products, subscriptions among them, get the free distance;
-  # past it, the option's usual rate applies to the kilometres beyond.
+  # past it, the option's usual fee applies, counted from the shop.
   defp pickup_answer do
     case Edenflowers.Fulfillment.distance_priced_delivery() do
       %{free_dist_km: km, base_price: base, price_per_km: per_km} when km > 0 ->
         locale = Edenflowers.Format.locale()
 
-        ~t"Of course. Choose delivery or pickup at checkout. The first #{km = km} km of delivery are free. Further out, it's #{base = Edenflowers.Format.currency(base, locale)} plus #{per_km = Edenflowers.Format.currency(per_km, locale)} for each km after that."
+        ~t"Of course. Choose delivery or pickup at checkout. Delivery is free within #{km = km} km. Further out, it's #{base = Edenflowers.Format.currency(base, locale)} plus #{per_km = Edenflowers.Format.currency(per_km, locale)} for each km from the shop."
 
       _ ->
         ~t"Of course. Choose delivery or pickup at checkout."

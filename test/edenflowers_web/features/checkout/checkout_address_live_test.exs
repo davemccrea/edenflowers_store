@@ -391,7 +391,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
     delivery_cost = view |> element("[data-testid='delivery-cost']") |> render()
     refute delivery_cost =~ "Free"
-    assert delivery_cost =~ "4.50"
+    assert delivery_cost =~ "9.30"
   end
 
   test "the order summary prices a looked-up address before the step is submitted", %{

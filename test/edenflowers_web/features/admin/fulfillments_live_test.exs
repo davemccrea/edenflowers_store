@@ -315,6 +315,52 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       assert html =~ "Free delivery within 9 km"
     end
 
+    test "previews what customers pay with the prices as typed", %{conn: conn, home_delivery: home_delivery} do
+      {:ok, _} =
+        Fulfillment.update_pricing(
+          home_delivery,
+          %{base_price: "3.00", price_per_km: "1.50", free_dist_km: 5, max_dist_km: 20},
+          authorize?: false
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{home_delivery.id}")
+
+      assert %{"fee" => 15.0, "now" => nil} = preview_point(view, 8)
+
+      view
+      |> form("#pricing-form", %{"pricing" => %{"price_per_km" => "1.00", "free_dist_km" => "6"}})
+      |> render_change()
+
+      assert %{"fee" => 11.0, "now" => 15.0} = preview_point(view, 8)
+      assert %{"fee" => nil} = preview_point(view, 20)
+      refute Decimal.equal?(Fulfillment.get_option_by_id!(home_delivery.id, authorize?: false).price_per_km, "1.00")
+    end
+
+    test "shows the car and fuel cost of each delivery once they're filled in", %{
+      conn: conn,
+      home_delivery: home_delivery
+    } do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{home_delivery.id}")
+      refute has_element?(view, "#fee-explorer [data-value=car]")
+
+      view
+      |> form("#pricing-form", %{
+        "pricing" => %{"mileage_rate" => "0.55", "fuel_price" => "1.80", "fuel_consumption" => "7"}
+      })
+      |> render_submit()
+
+      assert %{"car" => 8.8, "fuel" => 2.02, "now" => nil} = preview_point(view, 8)
+      assert has_element?(view, "#fee-explorer [data-value=car]")
+
+      saved = Fulfillment.get_option_by_id!(home_delivery.id, authorize?: false)
+      assert Decimal.equal?(saved.mileage_rate, "0.55")
+    end
+
+    test "shows the fee preview only for distance-priced options", %{conn: conn, pickup: pickup} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{pickup.id}")
+      refute render(view) =~ "What customers pay"
+    end
+
     test "shows distance fields only for distance-priced options", %{
       conn: conn,
       home_delivery: home_delivery,
@@ -388,5 +434,16 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
     today = Edenflowers.ShopTime.today()
     offset = Enum.find(1..21, &(Date.day_of_week(Date.add(today, &1)) == target))
     Date.add(today, offset)
+  end
+
+  defp preview_point(view, km) do
+    view
+    |> render()
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query("#fee-explorer")
+    |> LazyHTML.attribute("data-points")
+    |> hd()
+    |> Jason.decode!()
+    |> Enum.at(round(km * 10))
   end
 end
