@@ -76,11 +76,11 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       nil ->
         nil
 
-      %{free_dist_km: km, base_price: base} when is_integer(km) and km > 0 ->
-        ~t"Free within #{km = km} km on bouquets marked Free delivery, otherwise from #{base = Format.storefront_price(base, locale)}."
+      %{free_dist_km: km, base_price: base, price_per_km: per_km} when is_integer(km) and km > 0 ->
+        ~t"#{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km. Free within #{km = km} km for chosen bouquets."
 
-      %{base_price: base} ->
-        ~t"From #{base = Format.storefront_price(base, locale)} across Vaasa."
+      %{base_price: base, price_per_km: per_km} ->
+        ~t"#{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km."
     end
   end
 
@@ -361,7 +361,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <h2 id="location-heading" class="section-title mb-8">{~t"Delivery and pickup"}</h2>
             <dl class="grid max-w-prose gap-6 text-lg leading-relaxed">
               <div :if={@next_fulfillment}>
-                <dt class="eyebrow text-base-content/70 mb-1">{~t"Next delivery or pickup"}</dt>
+                <dt class="eyebrow text-base-content/70 mb-1">{~t"Next available day"}</dt>
                 <dd>{@next_fulfillment}</dd>
               </div>
               <div :if={@delivery_fee}>
@@ -370,7 +370,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               </div>
               <div>
                 <dt class="eyebrow text-base-content/70 mb-1">{~t"Pickup"}</dt>
-                <dd>{~t"At my shop in Minimossen, Myrvägen 1."}</dd>
+                <dd>{~t"Free from Minimossen."}</dd>
               </div>
             </dl>
           </div>

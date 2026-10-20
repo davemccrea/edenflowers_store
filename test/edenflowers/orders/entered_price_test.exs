@@ -115,7 +115,7 @@ defmodule Edenflowers.Orders.EnteredPriceTest do
     price = EnteredPrice.calculate(nil, params, delivery_quote(ctx.delivery, 5000))
     {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
 
-    assert Decimal.equal?(price.fulfillment_fee, "8.00")
+    assert Decimal.equal?(price.fulfillment_fee, "10.00")
     assert_priced_as_saved(price, order)
   end
 

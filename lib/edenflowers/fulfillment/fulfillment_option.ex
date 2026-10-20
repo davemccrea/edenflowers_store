@@ -72,10 +72,18 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     end
 
     update :update_pricing do
-      description "Admin-only update narrowed to prices and distances. " <>
+      description "Admin-only update narrowed to prices, distances and running costs. " <>
                     "Prevents accidental writes to the fulfillment method or rate type."
 
-      accept [:base_price, :price_per_km, :free_dist_km, :max_dist_km]
+      accept [
+        :base_price,
+        :price_per_km,
+        :free_dist_km,
+        :max_dist_km,
+        :mileage_rate,
+        :fuel_price,
+        :fuel_consumption
+      ]
     end
 
     action :calculate_delivery, :map do
@@ -128,6 +136,11 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     attribute :price_per_km, :decimal, public?: true, constraints: [min: 0, scale: 2]
     attribute :free_dist_km, :integer, public?: true, constraints: [min: 0]
     attribute :max_dist_km, :integer, public?: true, constraints: [min: 1]
+
+    # What a delivery costs Jennie, shown in admin beside the fee and never charged.
+    attribute :mileage_rate, :decimal, public?: true, constraints: [min: 0], description: "Kilometrikorvaus, € per km"
+    attribute :fuel_price, :decimal, public?: true, constraints: [min: 0], description: "€ per litre"
+    attribute :fuel_consumption, :decimal, public?: true, constraints: [min: 0], description: "Litres per 100 km"
   end
 
   relationships do

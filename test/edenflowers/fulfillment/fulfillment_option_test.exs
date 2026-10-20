@@ -191,20 +191,20 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
                Fulfillment.Fee.calculate(option, 0)
     end
 
-    test "charges the base price within the free delivery zone", %{option: option} do
+    test "charges the base price plus every km from the shop", %{option: option} do
       assert %{error: nil, fulfillment_fee: Decimal.new("4.50"), in_free_delivery_zone: true} ==
                Fulfillment.Fee.calculate(option, 0)
 
-      assert %{error: nil, fulfillment_fee: Decimal.new("4.50"), in_free_delivery_zone: true} ==
-               Fulfillment.Fee.calculate(option, 5000)
-
-      assert %{error: nil, fulfillment_fee: Decimal.new("4.50"), in_free_delivery_zone: false} ==
-               Fulfillment.Fee.calculate(option, 5001)
+      assert %{error: nil, fulfillment_fee: Decimal.new("16.10"), in_free_delivery_zone: false} ==
+               Fulfillment.Fee.calculate(option, 7250)
     end
 
-    test "returns value when distance is within paid delivery range", %{option: option} do
-      assert %{error: nil, fulfillment_fee: Decimal.new("8.10"), in_free_delivery_zone: false} ==
-               Fulfillment.Fee.calculate(option, 7250)
+    test "the free distance only marks the free delivery zone", %{option: option} do
+      assert %{error: nil, fulfillment_fee: Decimal.new("12.50"), in_free_delivery_zone: true} ==
+               Fulfillment.Fee.calculate(option, 5000)
+
+      assert %{error: nil, fulfillment_fee: Decimal.new("12.50"), in_free_delivery_zone: false} ==
+               Fulfillment.Fee.calculate(option, 5001)
     end
 
     test "returns :out_of_delivery_range when distance is beyond the max", %{option: option} do
@@ -240,7 +240,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       assert {:ok, %{error: nil, fulfillment_fee: fee, distance: 7250}} =
                Fulfillment.calculate_delivery("Stadsgatan 3", option.id)
 
-      assert Decimal.eq?(fee, Decimal.new("8.10"))
+      assert Decimal.eq?(fee, Decimal.new("16.10"))
     end
   end
 end
