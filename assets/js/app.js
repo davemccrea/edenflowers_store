@@ -413,7 +413,7 @@ document.addEventListener("pointerdown", (down) => {
   window.addEventListener("pointercancel", end, options);
 });
 
-// On touch screens, swiping right pulls the navigation drawer out under the
+// On touch screens, swiping right pulls the admin navigation drawer out under the
 // finger, and lets go the same way as the swipe-to-close. The left
 // edge is left to the iOS swipe back, text fields to selecting text, and
 // anything scrolled sideways to scrolling back. These are touch events rather
@@ -472,11 +472,11 @@ document.addEventListener("touchstart", (start) => {
   window.addEventListener("touchcancel", end, options);
 });
 
-// From lg up the admin has a persistent sidebar instead of its drawer.
+// Only the admin opens its drawer by swipe; from lg up it has a persistent
+// sidebar instead.
 function navDrawer() {
-  const admin = document.getElementById("admin-nav-drawer-dialog");
-  if (admin) return matchMedia("(min-width: 64rem)").matches ? null : admin;
-  return document.getElementById("nav-drawer-dialog");
+  if (matchMedia("(min-width: 64rem)").matches) return null;
+  return document.getElementById("admin-nav-drawer-dialog");
 }
 
 function scrolledSideways(element) {
