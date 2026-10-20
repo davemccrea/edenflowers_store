@@ -4,7 +4,7 @@ title: Give a goodwill refund on a fulfilled order or a booking
 status: done
 assignee: []
 created_date: '2026-10-17 18:40'
-updated_date: '2026-10-19 14:17'
+updated_date: '2026-10-20 18:55'
 labels: []
 dependencies: []
 parent_task_id: TASK-14
@@ -78,6 +78,15 @@ created: 2026-10-19 14:17
 ---
 
 Built on 2026-10-19. Two calls made before building: an order offers Refund whenever it's placed and not cancelled, fulfilled or not (decision 2 as written, over Out of scope); and once a price drops below what was paid after a goodwill refund, only money still held above the price is owed back. Refunds made here carry a reason (owed or goodwill) in Stripe metadata, so only a dashboard refund is split by the balance.
+
+---
+
+author: @claude
+created: 2026-10-20 18:55
+
+---
+
+Since TASK-60 and TASK-79 (3d0fd5ad), the Refund in the order menu and the booking menu opens goodwill_refund_form in the page's settlement drawer instead of showing it inline.
 
 ---
 <!-- COMMENTS:END -->

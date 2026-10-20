@@ -4,7 +4,7 @@ title: Show one balance panel on orders and bookings
 status: done
 assignee: []
 created_date: '2026-10-17 16:35'
-updated_date: '2026-10-19 20:30'
+updated_date: '2026-10-20 18:55'
 labels: []
 dependencies:
   - TASK-13.2
@@ -57,6 +57,15 @@ created: 2026-10-19 20:30
 ---
 
 #1 and #2 were overtaken by TASK-13.5 and TASK-17.3: the courses page now has its own compact settlement controls on each row, and only the order page renders balance_panel. Left unticked because they no longer describe the code.
+
+---
+
+author: @claude
+created: 2026-10-20 18:55
+
+---
+
+Superseded in part by TASK-79 (3d0fd5ad): balance_panel is now only on the order page and only shows the amount, the payment-link buttons and a Record payment / Record refund button. Its form moved to record_payment_form, shown with Refund with Stripe in the order page's settlement drawer. The courses page records money in its own drawer (TASK-60).
 
 ---
 <!-- COMMENTS:END -->

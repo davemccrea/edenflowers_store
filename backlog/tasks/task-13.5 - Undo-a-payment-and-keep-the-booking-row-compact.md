@@ -4,6 +4,7 @@ title: 'Undo a payment, and keep the booking row compact'
 status: done
 assignee: []
 created_date: '2026-10-17 18:35'
+updated_date: '2026-10-20 18:55'
 labels: []
 dependencies:
   - TASK-13.2
@@ -38,3 +39,16 @@ Follow-ups to 02 and 03, from the decisions left open when they shipped.
 - [x] #1 Every case above passes
 - [x] #2 The existing suite passes
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-20 18:55
+
+---
+
+Superseded by TASK-60 (3d0fd5ad): no booking row on the courses page holds a payment form or panel any more. Record payment / Record refund on the row opens a drawer with the booking's money context and the form.
+
+---
+<!-- COMMENTS:END -->

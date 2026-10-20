@@ -4,7 +4,7 @@ title: Record course payments and refunds in a side drawer
 status: done
 assignee: []
 created_date: '2026-10-19 06:44'
-updated_date: '2026-10-20 18:53'
+updated_date: '2026-10-20 18:55'
 labels:
   - admin
   - spec
@@ -55,3 +55,16 @@ Drawer built in CoursesLive (settlement_drawer), opened by the row's Record paym
 
 Also moved Add booking into its own drawer (#booking-drawer), laid out like order detail's fulfillment drawer: scrolling fields, footer with Add booking / Cancel. Menu Refund (goodwill) opens the settlement drawer in a goodwill mode. Drawer spacing aligned across store drawers (header pt-6 px-4 sm:pt-8 sm:pl-8, body p-4 sm:p-8) and admin drawers (88vw / 28rem, header/body p-4).
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-20 18:55
+
+---
+
+Shipped in 3d0fd5ad. Differs from the spec: on phones the drawer is 88vw like every other admin drawer, not full-screen, after David asked for drawers to be consistent. Beyond the spec: the menu's goodwill Refund and Add booking also open drawers, and TASK-79 brought the same drawer to the order page.
+
+---
+<!-- COMMENTS:END -->

@@ -4,7 +4,7 @@ title: Share Jennie's payment controls between the order page and the courses pa
 status: done
 assignee: []
 created_date: '2026-10-18 03:08'
-updated_date: '2026-10-18 12:28'
+updated_date: '2026-10-20 18:55'
 labels: []
 dependencies:
   - TASK-17.1
@@ -46,6 +46,15 @@ created: 2026-10-18 12:28
 ---
 
 Decided: share the handlers, not a LiveComponent. The courses page keeps each booking's payment controls in its actions menu next to seat and cancel actions, and reloads every course after one, so a per-booking component would need its own parent messaging and split the menu.
+
+---
+
+author: @claude
+created: 2026-10-20 18:55
+
+---
+
+The drawer this mentions now exists: TASK-60 and TASK-79 (3d0fd5ad) give both pages a settlement drawer built on the shared admin_drawer, record_payment_form and goodwill_refund_form. The handlers stay per page, because the course refund sets an amount to hand back while the order refund records a minus payment.
 
 ---
 <!-- COMMENTS:END -->
