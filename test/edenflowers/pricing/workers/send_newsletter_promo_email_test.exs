@@ -76,6 +76,22 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
     end
   end
 
+  describe "enqueue" do
+    test "is not swallowed by another worker's recent job for the same email" do
+      {:ok, _} =
+        Edenflowers.Accounts.Workers.SendOtpEmail.enqueue(%{
+          "email" => "otp@example.com",
+          "otp_code" => "123456",
+          "locale" => "en"
+        })
+
+      {:ok, job} = SendNewsletterPromoEmail.enqueue(%{"email" => "otp@example.com", "locale" => "en"})
+
+      refute job.conflict?
+      assert_enqueued(worker: SendNewsletterPromoEmail, args: %{"email" => "otp@example.com"})
+    end
+  end
+
   describe "locale scoping" do
     test "does not leak job's locale into the caller's process state" do
       Gettext.put_locale(EdenflowersWeb.Gettext, "en")
