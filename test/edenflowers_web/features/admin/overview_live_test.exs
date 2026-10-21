@@ -88,14 +88,25 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     test "counts each day and shows the one tapped", %{conn: conn} do
       in_three_days = Date.add(Edenflowers.ShopTime.today(), 3)
       in_four_days = Date.add(Edenflowers.ShopTime.today(), 4)
-      shop_calendar(available_days: Edenflowers.Fulfillment.Weekday.all(), disabled_dates: [in_four_days])
+      in_five_days = Date.add(Edenflowers.ShopTime.today(), 5)
+
+      shop_calendar(
+        available_days: Edenflowers.Fulfillment.Weekday.all(),
+        disabled_dates: [in_four_days, in_five_days]
+      )
+
       open_order("Later", :pickup, 3)
+      open_order("Taken anyway", :pickup, 5)
       open_order("Too far", :pickup, 9)
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      assert has_element?(view, "#day-#{in_three_days}", "1")
-      assert has_element?(view, "#day-#{in_four_days}", "Closed")
+      assert has_element?(view, "#day-#{in_three_days} .badge", "1")
+      assert has_element?(view, ~s|#day-#{in_three_days} a[aria-label$=", 1 order"]|)
+      refute has_element?(view, "#day-#{in_four_days} .badge")
+      assert has_element?(view, ~s|#day-#{in_four_days} a[aria-label$=", Closed"]|)
+      assert has_element?(view, ~s|#day-#{in_five_days} a[aria-label$=", Closed, 1 order"]|)
+      assert has_element?(view, "#day-#{in_five_days} .badge", "1")
       refute has_element?(view, "#day-#{Date.add(in_three_days, 6)}")
 
       view |> element("#day-#{in_three_days} a") |> render_click()
