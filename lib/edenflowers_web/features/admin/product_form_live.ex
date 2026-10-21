@@ -66,7 +66,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               </:subtitle>
               <:nav>
                 <div class="[&_.fieldset]:mb-0 flex items-center gap-2">
-                  <.input field={@form[:draft]} type="checkbox" label={~t"Draft"} class="toggle toggle-primary" />
+                  <.live_toggle field={@form[:draft]} label={~t"Published"} />
                   <.button
                     :if={@form.source.type == :update && !@form.source.data.draft}
                     href={~q"/#{language}/product/#{@form.source.data.id}"}
@@ -217,9 +217,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               phx-click="make_main_photo"
               phx-value-slug={slug}
               aria-label={~t"Make photo #{n = index + 1} main"}
-              class="btn-square absolute top-1.5 left-1.5"
+              class="btn-square absolute top-1.5 left-1.5 max-sm:btn-xs"
             >
-              <.icon name="hero-star" class="text-primary size-4" />
+              <.icon name="hero-star" class="text-primary size-3.5 sm:size-4" />
             </.button>
             <%!-- A product always has a photo, so the last one is replaced rather than removed. --%>
             <.button
@@ -229,9 +229,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               phx-click="remove_photo"
               phx-value-slug={slug}
               aria-label={~t"Remove photo #{n = index + 1}"}
-              class="btn-square absolute top-1.5 right-1.5"
+              class="btn-square absolute top-1.5 right-1.5 max-sm:btn-xs"
             >
-              <.icon name="hero-x-mark" class="size-4" />
+              <.icon name="hero-x-mark" class="size-3.5 sm:size-4" />
             </.button>
           </span>
         </li>
@@ -334,7 +334,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             placeholder={~t"Unlimited"}
             class="input w-full tabular-nums"
           />
-          <.input field={@variant[:draft]} type="checkbox" label={~t"Draft"} class="toggle toggle-primary" />
+          <.live_toggle field={@variant[:draft]} label={~t"Visible"} />
         </div>
         <.icon_button
           phx-click="remove_variant"
@@ -381,6 +381,34 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         </.drawer_body>
       </.admin_drawer>
     </li>
+    """
+  end
+
+  attr :field, Phoenix.HTML.FormField, required: true
+  attr :label, :string, required: true
+
+  # On means live: it shows the opposite of a draft field. The checkbox follows the
+  # hidden input, so when checked its "false" is the value submitted. Anything but
+  # an explicit false is a draft, as both resources default to draft.
+  defp live_toggle(assigns) do
+    assigns = assign(assigns, :live?, assigns.field.value in [false, "false"])
+
+    ~H"""
+    <fieldset class="fieldset mb-2">
+      <label>
+        <input type="hidden" name={@field.name} value="true" />
+        <span class="fieldset-label text-base-content/65 pointer-coarse:min-h-11">
+          <input
+            type="checkbox"
+            id={@field.id}
+            name={@field.name}
+            value="false"
+            checked={@live?}
+            class="toggle toggle-primary"
+          />{@label}
+        </span>
+      </label>
+    </fieldset>
     """
   end
 

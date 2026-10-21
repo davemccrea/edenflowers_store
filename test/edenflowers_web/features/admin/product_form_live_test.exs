@@ -192,6 +192,20 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert slug == product.main_photo_slug
   end
 
+  test "the Published and Visible toggles save as the opposite of draft", %{conn: conn} do
+    product = generate(product(draft: false))
+    visible = generate(product_variant(product_id: product.id, size: :small, price: "40.00", draft: false))
+    hidden = generate(product_variant(product_id: product.id, size: :large, price: "60.00", draft: true))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+    assert has_element?(view, ~s|input[type=checkbox][name="form[draft]"][checked]|)
+    view |> form("#product-form") |> render_submit()
+
+    refute Ash.get!(Product, product.id, authorize?: false).draft
+    refute Ash.get!(Edenflowers.Catalog.ProductVariant, visible.id, authorize?: false).draft
+    assert Ash.get!(Edenflowers.Catalog.ProductVariant, hidden.id, authorize?: false).draft
+  end
+
   test "removing a saved size archives it, keeping it on past orders", %{conn: conn} do
     product = generate(product(draft: false))
     kept = generate(product_variant(product_id: product.id, size: :small, price: "40.00", draft: false))
