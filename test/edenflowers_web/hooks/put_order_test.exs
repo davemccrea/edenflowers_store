@@ -25,7 +25,11 @@ defmodule EdenflowersWeb.Hooks.PutOrderTest do
   end
 
   test "mounts with a valid cart", %{conn: conn, order: order} do
+    variant = generate(product_variant(product_id: generate(product()).id))
+    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
     {:ok, view, _html} = live(conn)
-    assert :sys.get_state(view.pid).socket.assigns.order.id == order.id
+
+    assert has_element?(view, ~s|button[aria-label="Cart, 1 item"]|)
   end
 end

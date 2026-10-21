@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
 
   test "an order links through to its customer", %{conn: conn} do
     ada = customer("Ada Lovelace", "ada@example.com")
-    order = placed_order(user_id: ada.id, fulfillment_date: Date.utc_today())
+    order = placed_order(user_id: ada.id, fulfillment_date: Edenflowers.ShopTime.today())
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 

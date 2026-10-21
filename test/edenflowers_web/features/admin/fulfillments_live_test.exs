@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
-  use EdenflowersWeb.ConnCase, async: true
+  use EdenflowersWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
   import Generator

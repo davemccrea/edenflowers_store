@@ -82,7 +82,7 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
   end
 
   test "flags orders still to fulfil whose fulfillment date has passed", %{conn: conn} do
-    last_week = Date.add(Date.utc_today(), -7)
+    last_week = Date.add(Edenflowers.ShopTime.today(), -7)
     late = placed_order(customer_name: "Late", fulfillment_date: last_week, fulfillment_status: :pending)
     done = placed_order(customer_name: "Done", fulfillment_date: last_week, fulfillment_status: :fulfilled)
 

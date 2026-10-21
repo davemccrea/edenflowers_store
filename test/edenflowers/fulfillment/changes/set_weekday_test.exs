@@ -1,19 +1,14 @@
 defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
-  use Edenflowers.DataCase, async: true
-  import Generator
+  use ExUnit.Case, async: true
   alias Edenflowers.Fulfillment.Changes.SetWeekday
+  alias Edenflowers.Fulfillment.ShopCalendar
 
   describe "set_weekday/3" do
-    test "is idempotent — :on on an already-on weekday is a no-op" do
-      calendar = shop_calendar()
-      %{available_days: days} = SetWeekday.set_weekday(calendar, :sunday, :on)
-      assert Enum.sort(days) == Enum.sort(calendar.available_days)
-    end
-
     test "turning a weekday :on prunes stale enabled_dates on that weekday" do
       # 2024-04-15 is a Monday. Start with Mondays off and an on-override.
       calendar =
-        shop_calendar(
+        struct!(
+          ShopCalendar,
           available_days: [:tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
           enabled_dates: [~D[2024-04-15]]
         )
@@ -29,7 +24,8 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
       # Mondays off, with Mon 2024-04-15 in disabled_dates (redundant but present).
       # After turning Mondays on, the off-override is a genuine exception and must survive.
       calendar =
-        shop_calendar(
+        struct!(
+          ShopCalendar,
           available_days: [:tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
           disabled_dates: [~D[2024-04-15]]
         )
@@ -43,7 +39,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
     test "turning a weekday :off prunes stale disabled_dates on that weekday" do
       # Mondays on, with Mon 2024-04-15 in disabled_dates as an off-override.
       calendar =
-        shop_calendar(disabled_dates: [~D[2024-04-15]])
+        struct!(ShopCalendar, disabled_dates: [~D[2024-04-15]])
 
       result = SetWeekday.set_weekday(calendar, :monday, :off)
 
@@ -56,7 +52,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
       # Mondays on, with Mon 2024-04-15 in enabled_dates (redundant but present).
       # After turning Mondays off, the on-override is a genuine exception and must survive.
       calendar =
-        shop_calendar(enabled_dates: [~D[2024-04-15]])
+        struct!(ShopCalendar, enabled_dates: [~D[2024-04-15]])
 
       result = SetWeekday.set_weekday(calendar, :monday, :off)
 
@@ -68,7 +64,8 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
       # 2024-04-15 is Monday, 2024-04-16 is Tuesday.
       # Setting Monday off should leave Tuesday's override completely alone.
       calendar =
-        shop_calendar(
+        struct!(
+          ShopCalendar,
           enabled_dates: [~D[2024-04-15]],
           disabled_dates: [~D[2024-04-16]]
         )
@@ -86,7 +83,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
 
     test "set_weekday :off preserves an open key date by adding an enabled override" do
       # Sundays currently on. Mother's Day is open by the rule.
-      calendar = shop_calendar()
+      calendar = %ShopCalendar{}
 
       result = SetWeekday.set_weekday(calendar, :sunday, :off)
 
@@ -98,7 +95,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
     test "set_weekday :on preserves a closed key date by adding a disabled override" do
       # Sundays currently off. Mother's Day is closed by the rule.
       calendar =
-        shop_calendar(available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday])
+        struct!(ShopCalendar, available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday])
 
       result = SetWeekday.set_weekday(calendar, :sunday, :on)
 
@@ -107,14 +104,11 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
       assert ~D[2026-05-10] in result.disabled_dates
     end
 
-    test "set_weekday is a no-op for the rule when direction matches current state" do
-      calendar = shop_calendar()
-      result = SetWeekday.set_weekday(calendar, :sunday, :on)
+    test "turning an already-on weekday :on changes nothing, key dates included" do
+      calendar = %ShopCalendar{}
 
-      assert :sunday in result.available_days
-      # No protection override should appear since nothing changed.
-      refute ~D[2026-05-10] in result.enabled_dates
-      refute ~D[2026-05-10] in result.disabled_dates
+      assert SetWeekday.set_weekday(calendar, :sunday, :on) ==
+               Map.take(calendar, [:available_days, :enabled_dates, :disabled_dates])
     end
   end
 end

@@ -1,5 +1,5 @@
 defmodule Edenflowers.Fulfillment.ShopCalendarTest do
-  use Edenflowers.DataCase, async: true
+  use Edenflowers.DataCase, async: false
   import Generator
   alias Edenflowers.Fulfillment
 

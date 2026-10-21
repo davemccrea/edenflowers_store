@@ -586,6 +586,9 @@ defmodule Edenflowers.Orders.Order do
 
       argument :newsletter_opt_in, :boolean, default: false
 
+      # On an update require_attributes only refuses an explicit nil, so an
+      # email never given would reach the upsert and fail there instead.
+      validate present(:customer_email)
       change Changes.UpsertUserAndAssignToOrder
       change transition_state(:gift_options)
       require_atomic? false

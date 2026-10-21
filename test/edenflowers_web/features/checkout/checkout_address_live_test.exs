@@ -41,9 +41,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       select_delivery_option(view, delivery_option.id)
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
+      render_async(view, 500)
 
-      html = render_async(view, 500)
-      assert html =~ ~s(data-testid="input-confirmed")
+      # The quote reaches the parent in a message the lookup sends once it
+      # finishes, so it renders after render_async's own render.
+      assert render(view) =~ ~s(data-testid="input-confirmed")
     end
 
     test "shows the address HERE resolved without rewriting the field", %{
@@ -313,7 +315,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
           "delivery_address" => "Stadsgatan 3, 65300 Vasa",
           "recipient_phone_number" => "045 1234567",
           "delivery_instructions" => "Leave at back door 99B",
-          "fulfillment_date" => Date.utc_today() |> Date.add(7) |> Date.to_string()
+          "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
         }
       })
 
@@ -327,7 +329,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       assert Decimal.eq?(reloaded.fulfillment_fee, Decimal.new("5.00"))
       assert reloaded.recipient_phone_number == "045 1234567"
       assert reloaded.delivery_instructions == "Leave at back door 99B"
-      assert reloaded.fulfillment_date == Date.utc_today() |> Date.add(7)
+      assert reloaded.fulfillment_date == Edenflowers.ShopTime.today() |> Date.add(7)
     end
 
     # AddressInput's input has no form[...] prefix, so save_form must bridge it
@@ -352,7 +354,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
         "form" => %{
           "recipient_phone_number" => "045 1234567",
           "delivery_instructions" => "",
-          "fulfillment_date" => Date.utc_today() |> Date.add(7) |> Date.to_string()
+          "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
         }
       })
 

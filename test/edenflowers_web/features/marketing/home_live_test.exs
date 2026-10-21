@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.Marketing.HomeLiveTest do
-  use EdenflowersWeb.ConnCase, async: true
+  use EdenflowersWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
   import Generator

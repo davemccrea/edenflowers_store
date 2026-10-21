@@ -89,7 +89,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     end
 
     test "a closed course offers the newsletter instead of a form", %{conn: conn} do
-      course = generate(course(register_before: Date.add(Date.utc_today(), -1)))
+      course = generate(course(register_before: Date.add(Edenflowers.ShopTime.today(), -1)))
 
       {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
 
@@ -98,7 +98,13 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     end
 
     test "a past course still renders", %{conn: conn} do
-      course = generate(course(date: Date.add(Date.utc_today(), -7), register_before: Date.add(Date.utc_today(), -8)))
+      course =
+        generate(
+          course(
+            date: Date.add(Edenflowers.ShopTime.today(), -7),
+            register_before: Date.add(Edenflowers.ShopTime.today(), -8)
+          )
+        )
 
       {:ok, _view, html} = live(conn, ~p"/en/courses/#{course.id}")
 

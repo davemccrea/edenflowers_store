@@ -43,7 +43,10 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
   describe "re-subscription with an expired, unused code" do
     test "sends welcome-back email without offering the expired code" do
       {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
-      {:ok, promo} = Ash.update(promo, %{expiration_date: Date.add(Date.utc_today(), -2)}, authorize?: false)
+
+      {:ok, promo} =
+        Ash.update(promo, %{expiration_date: Date.add(Edenflowers.ShopTime.today(), -2)}, authorize?: false)
+
       {:ok, user} = Accounts.subscribe_to_newsletter("lapsed@example.com", authorize?: false)
       {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
 

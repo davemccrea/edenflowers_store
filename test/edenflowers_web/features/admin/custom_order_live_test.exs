@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
-  use EdenflowersWeb.ConnCase, async: true
+  use EdenflowersWeb.ConnCase, async: false
 
   import Generator
   import Mox
@@ -221,7 +221,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
           )
 
         {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
-        render_click(view, "add_line", %{"kind" => "custom"})
+        view |> element(~s|button[phx-click="add_line"][phx-value-kind="custom"]|) |> render_click()
         view |> form("#order-form", form: %{gift: "true"}) |> render_change()
 
         view
@@ -299,7 +299,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|#form_customer_phone_number:not([value])|)
       assert has_element?(view, ~s|#form_customer_email[value="returning@example.com"]|)
 
-      render_click(view, "add_line", %{"kind" => "custom"})
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="custom"]|) |> render_click()
 
       assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
                view
@@ -392,8 +392,8 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
     test "Jennie enters the order and lands on its page", ctx do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 
-      render_click(view, "add_line", %{"kind" => "catalogue"})
-      render_click(view, "add_line", %{"kind" => "custom"})
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="catalogue"]|) |> render_click()
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="custom"]|) |> render_click()
 
       assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
                view
@@ -454,7 +454,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       view |> form("#order-form", form: %{fulfillment_time: "between"}) |> render_change()
       assert has_element?(view, ~s|input[name="form[fulfillment_time_end]"]|)
 
-      render_click(view, "add_line", %{"kind" => "custom"})
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="custom"]|) |> render_click()
 
       assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
                view
@@ -512,7 +512,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|input[name="form[recipient_phone_number]"]|)
       assert has_element?(view, ~s|textarea[name="form[card_message]"]|)
 
-      render_click(view, "add_line", %{"kind" => "custom"})
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="custom"]|) |> render_click()
 
       assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
                view
@@ -548,7 +548,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 
-      render_click(view, "add_line", %{"kind" => "catalogue"})
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="catalogue"]|) |> render_click()
       refute has_element?(view, ~s|option[value="#{card.id}"]|)
 
       view |> form("#order-form", form: %{gift: "true"}) |> render_change()
@@ -644,7 +644,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
     test "shows a line's problem inside that line, after saving", ctx do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
-      render_click(view, "add_line", %{"kind" => "custom"})
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="custom"]|) |> render_click()
 
       view
       |> form("#order-form",
@@ -665,8 +665,8 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert has_element?(view, "#order-price", "Add an item to see the price.")
 
-      render_click(view, "add_line", %{"kind" => "catalogue"})
-      render_click(view, "add_line", %{"kind" => "custom"})
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="catalogue"]|) |> render_click()
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="custom"]|) |> render_click()
 
       view
       |> form("#order-form",
@@ -844,7 +844,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
       assert has_element?(view, "#order-balance", "To collect €85.00")
-      render_click(view, "email_payment_link")
+      view |> element(~s|button[phx-click="email_payment_link"]|) |> render_click()
 
       order = Ash.reload!(order, authorize?: false)
 
@@ -912,7 +912,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
-      render_click(view, "cancel_order")
+      view |> element(~s|[phx-click="cancel_order"]|) |> render_click()
 
       assert has_element?(view, "header", "Cancelled")
       refute has_element?(view, "header", "Unpaid")

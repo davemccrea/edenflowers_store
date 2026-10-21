@@ -241,7 +241,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
   end
 
   defp past_course(name),
-    do: generate(course(name: name)) |> Ash.Seed.update!(%{date: Date.add(Date.utc_today(), -7)})
+    do: generate(course(name: name)) |> Ash.Seed.update!(%{date: Date.add(Edenflowers.ShopTime.today(), -7)})
 
   test "marking a booking paid clears it from the still-to-pay list", %{conn: conn} do
     registration = generate(course_registration(status: :confirmed, name: "Birgitta"))

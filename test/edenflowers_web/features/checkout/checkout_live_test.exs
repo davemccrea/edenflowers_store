@@ -10,8 +10,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       live: 2,
       render: 1,
       render_click: 1,
-      render_click: 3,
       render_change: 2,
+      render_submit: 1,
       render_submit: 2,
       element: 2,
       assert_redirect: 3,
@@ -583,7 +583,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       assert html =~ ~s(maxlength="80")
 
-      html = render_click(view, "select_card", %{"variant-id" => large_variant.id})
+      html = view |> element("[data-testid='card-option-#{large_variant.id}']") |> render_click()
 
       assert html =~ ~s(maxlength="200")
     end
@@ -605,7 +605,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> fill_in("Card message", with: "Happy birthday!")
       |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
       |> unwrap(fn view ->
-        render_click(view, "select_card", %{"variant-id" => large_variant.id})
+        view |> element("[data-testid='card-option-#{large_variant.id}']") |> render_click()
       end)
       |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
     end
@@ -649,7 +649,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       view |> element("#checkout-line-items-remove-#{card.id}") |> render_click()
       render(view)
-      html = render_click(view, "select_card", %{"variant-id" => card_variant.id})
+      html = view |> element("[data-testid='card-option-#{card_variant.id}']") |> render_click()
 
       assert html =~ ~r{<textarea[^>]*data-testid="card-message-textarea"[^>]*>\s*</textarea>}
     end
@@ -781,8 +781,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
   end
 
   describe "Cart with only add-ons" do
-    test "paying after the flowers are removed sends the customer to the store", %{conn: conn, order: order} do
-      [flowers] = order.line_items
+    test "paying after the flowers are removed sends the customer to the store", %{conn: conn, variant: variant} do
+      order = generate(order(state: :payment, customer_name: "Jane Doe", customer_email: "jane@example.com"))
+      flowers = Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
       chocolate = generate(product(product_category_id: generate(product_category(add_on: true)).id))
       Orders.add_line_item!(order.id, generate(product_variant(product_id: chocolate.id)).id, 1, authorize?: false)
 
@@ -790,7 +791,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} = live(conn, "/checkout")
       Orders.remove_line_item!(order, flowers.id, authorize?: false)
 
-      assert {:error, {:live_redirect, %{to: "/en/store"}}} = render_click(view, "pay", %{})
+      assert {:error, {:live_redirect, %{to: "/en/store"}}} = view |> element("#checkout-form-4") |> render_submit()
     end
   end
 
@@ -809,14 +810,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     end
 
     test "paying is refused and names what's short", %{view: view, line_item: line_item} do
-      assert render_click(view, "pay", %{}) =~ "#{line_item.product_name}: Only 1 left."
+      assert view |> element("#checkout-form-4") |> render_submit() =~ "#{line_item.product_name}: Only 1 left."
       refute_push_event(view, "stripe:process_payment", %{})
     end
 
     test "paying goes ahead once the cart fits the stock", %{view: view, line_item: line_item} do
       Orders.decrement_line_item!(line_item, authorize?: false)
 
-      render_click(view, "pay", %{})
+      view |> element("#checkout-form-4") |> render_submit()
 
       assert_push_event(view, "stripe:process_payment", %{})
     end

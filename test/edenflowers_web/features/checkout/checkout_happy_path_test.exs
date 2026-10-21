@@ -82,7 +82,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> element("#checkout-form-3a")
     |> render_change(%{"form" => %{"fulfillment_option_id" => fulfillment_option.id}})
 
-    fulfillment_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
+    fulfillment_date = Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
 
     view
     |> element("#checkout-form-3b")
@@ -178,7 +178,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> element("#checkout-form-3a")
     |> render_change(%{"form" => %{"fulfillment_option_id" => fulfillment_option.id}})
 
-    fulfillment_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
+    fulfillment_date = Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
 
     view
     |> element("#checkout-form-3b")
@@ -262,7 +262,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
 
     render_async(view, 500)
 
-    fulfillment_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
+    fulfillment_date = Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
 
     view
     |> element("#checkout-form-3b")
@@ -344,7 +344,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> element("#checkout-form-3a")
     |> render_change(%{"form" => %{"fulfillment_option_id" => fulfillment_option.id}})
 
-    fulfillment_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
+    fulfillment_date = Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
 
     view
     |> element("#checkout-form-3b")
@@ -571,7 +571,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> element("#checkout-form-3a")
     |> render_change(%{"form" => %{"fulfillment_option_id" => fulfillment_option.id}})
 
-    fulfillment_date = Date.utc_today() |> Date.add(7) |> Date.to_string()
+    fulfillment_date = Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
 
     view
     |> element("#checkout-form-3b")
