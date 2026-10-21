@@ -210,7 +210,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       )
 
     ~H"""
-    <div phx-drop-target={@upload.ref}>
+    <div phx-drop-target={@upload.ref} class="group/drop">
       <%!-- The blank value lets an empty list through, which sends no inputs otherwise. --%>
       <input type="hidden" name={@hidden_field.name <> "[]"} value="" />
       <input :for={slug <- @hidden} type="hidden" name={@hidden_field.name <> "[]"} value={slug} />
@@ -284,11 +284,12 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           </div>
         </li>
         <li :if={length(@photo_slugs) + length(@upload.entries) < @max}>
-          <label class="group outline-primary block has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-            <span class="border-base-content/25 text-cream-content/70 bg-cream aspect-[4/5] flex flex-col items-center justify-center gap-1 border border-dashed px-2 text-center transition-colors group-hover:border-base-content/50">
-              <.icon name="hero-camera" class="size-7" />
+          <label class="group outline-primary block cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+            <span class="border-base-content/20 text-cream-content/70 aspect-[4/5] flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-hover:border-base-content/40 group-hover:text-cream-content group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid">
+              <span class="bg-cream grid size-9 place-items-center rounded-full">
+                <.icon name="hero-plus" class="size-4" />
+              </span>
               <span class="text-sm font-medium">{~t"Add photos"}</span>
-              <span class="text-xs pointer-coarse:hidden">{~t"or drop them here"}</span>
             </span>
             <.live_file_input upload={@upload} class="sr-only" />
           </label>
