@@ -48,15 +48,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:grid-rows-[max-content_max-content_1fr] xl:items-start">
           <.attention_widget :if={@attention != []} groups={@attention} locale={@locale} />
-          <p
-            :if={@attention == []}
-            id="attention-clear"
-            role="status"
-            class="text-base-content/75 flex items-center gap-2 text-sm xl:col-start-2"
-          >
-            <.icon name="hero-check-circle" class="text-success-content h-5 w-5 shrink-0" />
-            {~t"Nothing needs attention right now."}
-          </p>
           <div class="min-w-0 space-y-6 xl:col-start-1 xl:row-span-3 xl:row-start-1">
             <.days_card
               days={@days}
@@ -541,7 +532,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           phx-value-date={Date.to_iso8601(@date)}
         >
           <%= if @booking == :open do %>
-            <.icon name="hero-no-symbol" class="h-4 w-4" /> {~t"Stop new orders"}
+            <.icon name="hero-no-symbol" class="h-4 w-4" /> {~t"Stop orders"}
           <% else %>
             <.icon name="hero-arrow-path" class="h-4 w-4" /> {~t"Reopen orders"}
           <% end %>
@@ -556,7 +547,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             <.count_badge :if={length(orders) < length(@orders)} count={length(orders)} active={true} />
           </h3>
           <ul class="divide-base-content/12 -mx-4 divide-y sm:-mx-5">
-            <.order_row :for={order <- orders} order={order} date={@date} />
+            <.order_row :for={order <- orders} order={order} />
           </ul>
         </div>
       </div>
@@ -633,7 +624,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       patch={if @today?, do: ~p"/admin", else: ~p"/admin?#{[day: Date.to_iso8601(@date)]}"}
       aria-current={@selected? && "true"}
       aria-label={day_cell_label(@date, @count, @closed?, @locale)}
-      class={["flex flex-col items-center gap-0.5 py-2 transition-colors", day_cell_class(@selected?, @closed?)]}
+      class={["flex flex-col items-center gap-0.5 rounded-lg py-2 transition-colors", day_cell_class(@selected?, @closed?)]}
     >
       <span class={["text-xs", !@selected? && !@closed? && "text-base-content/75"]}>
         {Localize.Date.to_string!(@date, locale: @locale, format: "ccc")}
@@ -678,7 +669,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   attr :order, :map, required: true
-  attr :date, Date, required: true
 
   # What the florist needs to act on, in reading order: whose order, what to make,
   # whether there's a card to write, and when it leaves the shop. Price lives on the
@@ -689,7 +679,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     ~H"""
     <li>
       <.link
-        navigate={~p"/admin/orders/#{@order.id}?#{[overview_day: Date.to_iso8601(@date)]}"}
+        navigate={~p"/admin/orders/#{@order.id}"}
         class="grid-cols-[minmax(0,1fr)_auto] grid items-start gap-x-3 px-4 py-3.5 transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2 sm:px-5"
       >
         <div class="min-w-0">
