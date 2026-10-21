@@ -4778,6 +4778,7 @@ msgstr "%{variant_size_label}: loppuunmyyty"
 #: lib/edenflowers_web/components/core_components.ex:894
 #: lib/edenflowers_web/features/admin/overview_live.ex:150
 #: lib/edenflowers_web/features/admin/product_form_live.ex:62
+#: lib/edenflowers_web/features/admin/product_form_live.ex:130
 #: lib/edenflowers_web/features/admin/products_live.ex:136
 #: lib/edenflowers_web/features/store/product_live.ex:179
 #: lib/edenflowers_web/features/store/product_live.ex:289
@@ -4809,11 +4810,6 @@ msgstr "%{product}: %{stock}."
 #, elixir-autogen, elixir-format
 msgid "Change your cart to continue."
 msgstr "Muuta ostoskoriasi jatkaaksesi."
-
-#: lib/edenflowers_web/features/admin/product_form_live.ex:130
-#, elixir-autogen, elixir-format
-msgid "Mark every size sold out"
-msgstr "Merkitse kaikki koot loppuunmyydyiksi"
 
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:324
 #, elixir-autogen, elixir-format

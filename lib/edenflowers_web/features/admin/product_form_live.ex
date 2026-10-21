@@ -127,7 +127,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     size="sm"
                     data-testid="mark-sold-out"
                   >
-                    {~t"Mark every size sold out"}
+                    {~t"Sold out"}
                   </.button>
                 </div>
               </.form_section>
