@@ -71,11 +71,14 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
   # Read from the form rather than its params: an edit form that hasn't been
   # touched yet has no params, only the saved record.
   defp current_fields(%Phoenix.HTML.Form{source: form}) do
-    translations = form.forms[:translations].forms
+    # Params without translations drop their forms until the next full submit.
+    translations = if form.forms[:translations], do: form.forms[:translations].forms, else: %{}
 
     Map.new(@translations, fn {locale, _, _} -> {to_string(locale), fields(translations[locale])} end)
     |> Map.put("en-GB", fields(form))
   end
+
+  defp fields(nil), do: %{"name" => nil, "description" => nil}
 
   defp fields(form) do
     %{
@@ -89,13 +92,46 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
   attr :form, Phoenix.HTML.Form, required: true
   attr :translating, :string, default: nil, doc: "the locale being translated from, while Claude works"
 
+  @doc """
+  One tab per language, English open first. A dot marks a language missing its
+  name or description. Every tab's inputs stay in the form, hidden, so
+  switching tabs never drops a language's params.
+  """
   def language_fields(assigns) do
-    assigns = assign(assigns, :translations, @translations)
+    fields = current_fields(assigns.form)
+
+    languages =
+      for {locale, label} <- [
+            {"en-GB", "English"} | Enum.map(@translations, fn {l, label, _} -> {to_string(l), label} end)
+          ] do
+        %{
+          locale: locale,
+          label: label,
+          missing?: blank?(fields[locale]["name"]) or blank?(fields[locale]["description"])
+        }
+      end
+
+    assigns = assign(assigns, languages: languages, translations: @translations)
 
     ~H"""
-    <%!-- Side by side once each language has room for a readable description. --%>
-    <div class="divide-base-content/8 divide-y 2xl:grid 2xl:grid-cols-3 2xl:gap-6 2xl:divide-y-0">
-      <.language label="English" locale="en-GB" translating={@translating}>
+    <div id="language-tabs">
+      <div role="tablist" class="tabs tabs-border mb-4">
+        <button
+          :for={{language, index} <- Enum.with_index(@languages)}
+          type="button"
+          role="tab"
+          id={"language-tab-#{language.locale}"}
+          aria-controls={"language-panel-#{language.locale}"}
+          aria-selected={to_string(index == 0)}
+          class={["tab gap-1.5", index == 0 && "tab-active"]}
+          phx-click={show_language(language.locale)}
+        >
+          {language.label}
+          <span :if={language.missing?} class="status status-warning" aria-hidden="true"></span>
+          <span :if={language.missing?} class="sr-only">{~t"(missing text)"}</span>
+        </button>
+      </div>
+      <.language locale="en-GB" translating={@translating} hidden={false}>
         <.input field={@form[:name]} type="text" label={~t"Name"} lang="en" class="input w-full" />
         <.input
           field={@form[:description]}
@@ -108,10 +144,10 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
       </.language>
       <.inputs_for :let={translations} field={@form[:translations]}>
         <.language
-          :for={{locale, label, lang} <- @translations}
-          label={label}
+          :for={{locale, _label, lang} <- @translations}
           locale={to_string(locale)}
           translating={@translating}
+          hidden={true}
         >
           <.inputs_for :let={t} field={translations[locale]}>
             <.input field={t[:name]} type="text" label={~t"Name"} lang={lang} class="input w-full" />
@@ -130,31 +166,40 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
     """
   end
 
-  attr :label, :string, required: true
+  # JS commands survive LiveView patches, so the open tab stays open while typing.
+  defp show_language(locale) do
+    JS.add_class("hidden", to: "#language-tabs [role=tabpanel]")
+    |> JS.remove_class("hidden", to: "#language-panel-#{locale}")
+    |> JS.remove_class("tab-active", to: "#language-tabs [role=tab]")
+    |> JS.set_attribute({"aria-selected", "false"}, to: "#language-tabs [role=tab]")
+    |> JS.add_class("tab-active")
+    |> JS.set_attribute({"aria-selected", "true"})
+  end
+
   attr :locale, :string, required: true
   attr :translating, :string, default: nil
+  attr :hidden, :boolean, required: true
   slot :inner_block, required: true
 
   defp language(assigns) do
-    assigns = assign(assigns, :id, "language-" <> String.downcase(assigns.label))
-
     ~H"""
-    <div role="group" aria-labelledby={@id} class="space-y-3 py-5 first:pt-0 last:pb-0 2xl:py-0">
-      <div class="flex items-center gap-3">
-        <h3 id={@id} class="text-base-content font-medium">{@label}</h3>
-        <.button
-          type="button"
-          variant="secondary"
-          size="sm"
-          phx-click="translate"
-          phx-value-from={@locale}
-          disabled={@translating != nil}
-          title={~t"Fill the other languages from this one"}
-        >
-          {if @translating == @locale, do: ~t"Translating…", else: ~t"Translate"}
-        </.button>
-      </div>
+    <div
+      role="tabpanel"
+      id={"language-panel-#{@locale}"}
+      aria-labelledby={"language-tab-#{@locale}"}
+      class={["space-y-3", @hidden && "hidden"]}
+    >
       {render_slot(@inner_block)}
+      <.button
+        type="button"
+        variant="secondary"
+        size="sm"
+        phx-click="translate"
+        phx-value-from={@locale}
+        disabled={@translating != nil}
+      >
+        {if @translating == @locale, do: ~t"Translating…", else: ~t"Fill the other languages from this one"}
+      </.button>
     </div>
     """
   end
