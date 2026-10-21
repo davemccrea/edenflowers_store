@@ -48,7 +48,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
             fn: &search_subscriptions/3
           ]}
           url_state={@url_state}
-          show_filters={:toggle}
           sort_mode="exclusive"
           page_size={[default: 25, options: [10, 25, 50, 100]]}
           theme={EdenflowersWeb.Admin.CinderTheme}
