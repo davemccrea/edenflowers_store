@@ -116,7 +116,7 @@ db-seed target *flags:
         echo "Unknown target '{{ target }}', use local, staging or production" >&2; exit 1 ;;
     esac
 
-# Back up a server's database (staging or production) to tmp/
+# Back up a server's database (staging or production) to tmp/, named after the release it is running
 [group('database')]
 db-backup target:
     #!/usr/bin/env bash
@@ -126,10 +126,54 @@ db-backup target:
       production) db=edenflowers_store_prod ;;
       *) echo "Unknown target '{{ target }}', use staging or production" >&2; exit 1 ;;
     esac
+    # `bin/edenflowers version` prints "edenflowers 1.7.0"
+    version=$(ssh edenflowers-{{ target }} "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers version" | awk '{print "v"$2}') || version=unknown
     mkdir -p tmp
-    file="tmp/{{ target }}-$(date +%F).dump"
-    ssh edenflowers-{{ target }} "sudo -u postgres pg_dump -Fc $db" > "$file"
+    file="tmp/{{ target }}-$version-$(date +%Y%m%dT%H%M%S).dump"
+    ssh edenflowers-{{ target }} "sudo -u postgres pg_dump -Fc $db" > "$file.partial"
+    mv "$file.partial" "$file"
     ls -lh "$file"
+
+# Roll a server back to a release tag (e.g. v1.6.0) and restore a database backup taken while it ran
+[group('database')]
+db-rollback target tag dump:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{ target }}" in
+      staging) db=edenflowers_store_staging ;;
+      production) db=edenflowers_store_prod ;;
+      *) echo "Unknown target '{{ target }}', use staging or production" >&2; exit 1 ;;
+    esac
+    [[ "{{ tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Tag must look like v1.6.0" >&2; exit 1; }
+    [[ -s "{{ dump }}" ]] || { echo "No dump at {{ dump }}" >&2; exit 1; }
+    [[ "{{ dump }}" == *"{{ tag }}"* ]] || echo "Warning: {{ dump }} was not taken while {{ tag }} was running."
+    echo "This replaces the {{ target }} database with {{ dump }} and runs {{ tag }}."
+    echo "Anything written since that backup (orders, payments) is lost; check Stripe for payments to reconcile."
+    read -r -p "Roll back {{ target }}? [y/N] " answer
+    [[ "$answer" =~ ^[yY]$ ]] || exit 1
+    # The rollback itself must be undoable
+    just db-backup {{ target }}
+    ssh -T edenflowers-{{ target }} "sudo -u postgres tee /tmp/rollback.dump >/dev/null" < "{{ dump }}"
+    ssh -T edenflowers-{{ target }} bash -s <<EOF
+    set -euo pipefail
+    cd /opt/edenflowers_store
+    # Compose runs a moving tag (latest or staging), so point it at the old release's image
+    image=\$(docker compose config --images app)
+    docker pull "\${image%:*}:{{ trim_start_match(tag, "v") }}"
+    docker tag "\${image%:*}:{{ trim_start_match(tag, "v") }}" "\$image"
+    docker compose stop app
+    sudo -u postgres dropdb --force $db
+    # --create restores the database's owner and grants along with it
+    sudo -u postgres pg_restore --create --exit-on-error -d postgres /tmp/rollback.dump
+    sudo rm /tmp/rollback.dump
+    docker compose up -d app
+    for _ in \$(seq 60); do
+      docker compose exec -T app /app/bin/edenflowers rpc ':ok' >/dev/null 2>&1 && exit 0
+      sleep 2
+    done
+    echo "The app didn't come up within 2 minutes" >&2; exit 1
+    EOF
+    echo "{{ target }} is on {{ tag }}. The next deploy pulls the moving tag again."
 
 # Deploy to staging or production (asks if no target is given)
 [group('deployment')]
