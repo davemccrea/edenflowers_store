@@ -208,7 +208,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         <li :for={{slug, index} <- Enum.with_index(@photo_slugs)} data-testid="product-photo">
           <input type="hidden" name={@field.name <> "[]"} value={slug} />
           <%!-- Keep overflow visible so the photo buttons' expanded touch targets are not clipped. --%>
-          <span class="bg-cream aspect-[4/5] relative block">
+          <span class="bg-base-200 aspect-[4/5] relative block">
             <.image
               src={slug}
               alt=""
@@ -265,7 +265,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             </.button>
           </span>
         </li>
-        <li :for={entry <- @upload.entries} class="bg-cream aspect-[4/5] relative overflow-hidden">
+        <li :for={entry <- @upload.entries} class="bg-base-200 aspect-[4/5] relative overflow-hidden">
           <.live_img_preview entry={entry} class="absolute inset-0 h-full w-full object-cover opacity-50" />
           <div class="absolute inset-0 grid place-items-center">
             <div
@@ -280,8 +280,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         </li>
         <li :if={length(@photo_slugs) + length(@upload.entries) < @max}>
           <label class="group outline-primary block cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-            <span class="border-base-content/12 text-cream-content/70 aspect-[4/5] flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid group-hover:bg-base-200/50 group-hover:text-cream-content">
-              <span class="bg-cream size-9 grid place-items-center rounded-full">
+            <span class="bg-base-200 border-base-content/20 text-base-content/70 aspect-[4/5] flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid group-hover:border-primary/50 group-hover:bg-primary/5 group-hover:text-primary">
+              <span class="bg-base-100 size-9 grid place-items-center rounded-full">
                 <.icon name="hero-plus" class="size-4" />
               </span>
               <span class="text-sm font-medium">{~t"Add photos"}</span>
