@@ -331,13 +331,13 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           phx-click={JS.exec("phx-show", to: "##{@drawer}")}
           aria-label={~t"Photo for #{size = @size_label}"}
           aria-controls={@drawer}
-          class="bg-cream aspect-[4/5] outline-primary relative row-span-2 block w-12 self-start overflow-hidden outline-offset-2 hover:outline-1 focus-visible:outline-2 sm:row-span-1 sm:w-8 sm:self-auto"
+          class="bg-base-200 aspect-[4/5] outline-primary relative row-span-2 block w-12 self-start overflow-hidden outline-offset-2 hover:outline-1 focus-visible:outline-2 sm:row-span-1 sm:w-8 sm:self-auto"
         >
           <.image src={@own || @main} alt="" width={96} height={120} class="absolute inset-0 h-full w-full object-cover" />
         </button>
         <span
           :if={!@picks?}
-          class="bg-cream aspect-[4/5] relative row-span-2 block w-12 self-start overflow-hidden sm:row-span-1 sm:w-8 sm:self-auto"
+          class={["bg-base-200 aspect-[4/5] relative row-span-2 block w-12 self-start overflow-hidden sm:row-span-1 sm:w-8 sm:self-auto", is_nil(@main) && "border-base-content/20 border border-dashed"]}
         >
           <.image
             :if={@main}
@@ -406,7 +406,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                 phx-click={JS.exec("phx-hide", to: "##{@drawer}")}
                 class="border-base-content/12 block cursor-pointer border p-1.5 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5 hover:border-primary"
               >
-                <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
+                <span class="bg-base-200 aspect-[4/5] relative block overflow-hidden">
                   <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
                 </span>
                 <span class="flex items-center gap-2 px-1 pt-2 pb-0.5 text-sm">
