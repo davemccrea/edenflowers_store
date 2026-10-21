@@ -101,11 +101,11 @@ body {
    rather than width-based, so a desktop keeps daisyUI's denser sizes and a
    tablet still gets the larger ones. */
 @media (pointer: coarse) {
-  :is(.btn, .input, .select, .file-input) {
+  :is(.btn, .input, .select, .file-input):not(.touch-target) {
     min-height: 2.75rem;
   }
 
-  .btn-square {
+  .btn-square:not(.touch-target) {
     min-width: 2.75rem;
   }
 
