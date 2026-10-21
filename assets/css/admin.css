@@ -304,6 +304,54 @@ body:has(.admin-theme) {
   }
 }
 
+/* Fades whichever edge has more to scroll to, so a cut-off item reads as
+   "swipe for more". Driven by the list's own scroll, like the table cue above.
+   Phones only, where the Overview's day strip overflows; browsers without
+   scroll timelines get a fixed fade on the end edge. */
+@property --scroll-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --scroll-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@media (width < theme(--breakpoint-sm)) {
+  .admin-scroll-fade {
+    --scroll-fade-end: 2.5rem;
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--scroll-fade-start),
+      #000 calc(100% - var(--scroll-fade-end)),
+      transparent
+    );
+    animation: admin-scroll-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+
+@keyframes admin-scroll-fade {
+  from {
+    --scroll-fade-start: 0px;
+    --scroll-fade-end: 2.5rem;
+  }
+  15% {
+    --scroll-fade-start: 2.5rem;
+  }
+  85% {
+    --scroll-fade-end: 2.5rem;
+  }
+  to {
+    --scroll-fade-start: 2.5rem;
+    --scroll-fade-end: 0px;
+  }
+}
+
 /* Calendar cells and legend swatches. The strike marks a closed day; the
    corner marks an override of the weekday rule. They use ::after and ::before
    so both can apply. */
