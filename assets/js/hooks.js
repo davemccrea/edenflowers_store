@@ -982,6 +982,22 @@ Hooks.ArrowKeyNav = {
 };
 
 /**
+ * Scrolls a sideways list so its `aria-current` item is in view, such as the
+ * Overview's day strip opened on a day further out. Only on mount: a tapped
+ * item is already in view.
+ */
+Hooks.ScrollToCurrent = {
+  mounted() {
+    const current = this.el.querySelector("[aria-current]")?.closest("li");
+    if (!(current instanceof HTMLElement)) return;
+
+    // scrollLeft rather than scrollIntoView, which can also scroll the page.
+    this.el.scrollLeft =
+      current.offsetLeft - (this.el.clientWidth - current.offsetWidth) / 2;
+  },
+};
+
+/**
  * On the admin layout. Clears new-order notifications and the app icon badge
  * whenever the admin comes into view.
  */

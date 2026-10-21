@@ -571,8 +571,14 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   defp days_card(assigns) do
     ~H"""
     <div class="admin-card p-4 sm:p-5">
-      <ol id="days" aria-label={~t"Days"} class="grid grid-cols-9 gap-0.5 sm:gap-1">
-        <li :for={date <- @days} id={"day-#{date}"}>
+      <%!-- Scrolls sideways on a phone, bleeding to the card's edges. --%>
+      <ol
+        id="days"
+        phx-hook="ScrollToCurrent"
+        aria-label={~t"Days"}
+        class="admin-scroll-fade [scrollbar-width:none] relative -mx-4 flex snap-x scroll-px-4 gap-1 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-9 sm:overflow-visible sm:px-0"
+      >
+        <li :for={date <- @days} id={"day-#{date}"} class="w-13 shrink-0 snap-start sm:w-auto">
           <.day_cell
             date={date}
             count={length(Map.get(@orders_by_date, date, []))}
