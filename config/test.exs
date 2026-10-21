@@ -12,7 +12,8 @@ else
     username: "david",
     password: nil,
     hostname: "localhost",
-    database: "edenflowers_test#{System.get_env("MIX_TEST_PARTITION")}",
+    # Worktrees set DATABASE_NAME in .env so parallel test runs don't share a database
+    database: "#{System.get_env("DATABASE_NAME", "edenflowers")}_test#{System.get_env("MIX_TEST_PARTITION")}",
     pool: Ecto.Adapters.SQL.Sandbox,
     pool_size: System.schedulers_online() * 2
 end
