@@ -18,6 +18,6 @@ locales = "bash -c 'source .env && mix localize.download_locales'"
 [[pre-start]]
 db = "bash -c 'source .env && (mix ecto.drop --quiet 2>/dev/null; true) && mix ash.setup --quiet && mix run priv/repo/seeds.exs'"
 
-# Drop this worktree's database
+# Drop this worktree's dev and test databases
 [[pre-remove]]
-db = "bash -c 'source .env && mix ecto.drop --quiet'"
+db = "bash -c 'source .env && mix ecto.drop --quiet; MIX_ENV=test mix ecto.drop --quiet'"
