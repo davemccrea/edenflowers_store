@@ -77,7 +77,12 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               {~t"Sold out"}
             </.badge>
             <div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
-              <.live_toggle field={@form[:draft]} label={~t"Published"} class="pointer-coarse:min-h-11" />
+              <.live_toggle
+                field={@form[:draft]}
+                label={~t"Published"}
+                label_class="max-sm:sr-only"
+                class="pointer-coarse:min-h-11"
+              />
               <.button
                 :if={@form.source.type == :update && !@form.source.data.draft}
                 href={~q"/#{language}/product/#{@form.source.data.id}"}
@@ -447,6 +452,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
   attr :field, Phoenix.HTML.FormField, required: true
   attr :label, :string, required: true
+  attr :label_class, :any, default: nil
   attr :class, :any, default: nil
 
   # On means live: it shows the opposite of a draft field. The checkbox follows the
@@ -465,7 +471,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         value="false"
         checked={@live?}
         class="toggle toggle-primary"
-      /><span>{@label}</span>
+      /><span class={@label_class}>{@label}</span>
     </label>
     """
   end
