@@ -18,6 +18,12 @@ dev: check-typst
 test *args: check-typst
     mix test {{ args }}
 
+# Format all Elixir, JS and CSS files (the pre-commit hook only checks)
+[group('development')]
+format:
+    mix format
+    git ls-files '*.js' '*.mjs' '*.cjs' '*.css' ':!:*/vendor/*' | xargs npx --yes prettier@3.3.3 --write
+
 # Export customer email wording scenarios in English, Swedish and Finnish
 [group('development')]
 email-previews:
