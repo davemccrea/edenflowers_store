@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           </:actions>
         </.admin_page_header>
 
-        <p :if={@courses == []} class="text-base-content/75 py-6 text-center text-sm">
+        <p :if={@courses == []} class="admin-card text-base-content/75 px-4 py-8 text-center text-sm sm:px-5">
           {~t"No upcoming courses"}
         </p>
 
@@ -330,36 +330,34 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       id={"course-#{@course.id}"}
       open={Enum.any?(@course.bookings, &(&1.id == @highlighted_booking_id))}
       phx-mounted={JS.ignore_attributes(["open"])}
-      class="group/course border-base-content/12 border-y"
+      class="admin-card group/course"
     >
-      <summary class="cursor-pointer list-none p-4 hover:bg-base-200/60 sm:p-5">
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <h2 class="text-base-content font-semibold">
+      <summary class="cursor-pointer list-none p-4 hover:bg-base-300/40 focus-visible:outline-offset-[-2px] focus-visible:outline-primary focus-visible:outline-2 sm:p-5">
+        <div class="flex items-start gap-3">
+          <div class="min-w-0 flex-1">
+            <h2 class="text-base-content text-base font-semibold">
               {@course.name}
               <.badge :if={@past?} tone={:tag} class="ml-1 align-middle">{pgettext("course", "Past")}</.badge>
             </h2>
-            <p class="text-base-content/75 text-sm">
+            <p class="text-base-content/75 mt-0.5 text-sm tabular-nums">
               {Format.date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}–{Format.time(
                 @course.end_time,
                 @locale
               )}
             </p>
           </div>
+          <div class="text-base-content/75 hidden shrink-0 items-center gap-4 text-sm tabular-nums lg:flex">
+            <span class="whitespace-nowrap">{~t"#{@seats} / #{total = @course.total_places} seats"}</span>
+            <span :if={@still_to_pay > 0} class="whitespace-nowrap">{~t"#{count = @still_to_pay} to collect"}</span>
+          </div>
           <.icon
             name="hero-chevron-down"
-            class="text-base-content/50 h-5 w-5 shrink-0 group-open/course:rotate-180"
+            class="text-base-content/50 h-4 w-4 shrink-0 transition-transform group-open/course:rotate-180"
           />
         </div>
-        <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm tabular-nums">
+        <div class="text-base-content/75 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm tabular-nums lg:hidden">
           <span class="whitespace-nowrap">{~t"#{@seats} / #{total = @course.total_places} seats"}</span>
-          <progress
-            class="progress progress-primary h-1 w-24"
-            value={@seats}
-            max={@course.total_places}
-            aria-label={~t"Seats"}
-          />
-          <span :if={@still_to_pay > 0} class="text-base-content/75">
+          <span :if={@still_to_pay > 0} class="whitespace-nowrap">
             {~t"#{count = @still_to_pay} to collect"}
           </span>
         </div>
