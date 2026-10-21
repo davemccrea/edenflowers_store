@@ -217,7 +217,7 @@ if ! just db-backup production; then
   git reset --hard --quiet HEAD~1
   fail "backup failed, cleaned up local commit and tag. Nothing was pushed."
 fi
-ok "rollback: just db-rollback production v$CURRENT <that dump>"
+ok "rollback: just rollback production v$CURRENT [that dump]"
 
 SKIP_HOOKS=1 git push --atomic origin main "refs/tags/$TAG"
 
