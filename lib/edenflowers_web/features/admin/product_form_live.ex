@@ -169,7 +169,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     class="input max-w-48 w-full tabular-nums"
                   />
                   <div class="[&_.fieldset]:mb-0">
-                    <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />
+                    <.input field={@form[:featured]} type="checkbox" label={~t"Favourite"} />
                     <.input
                       :if={@free_dist_km}
                       field={@form[:free_delivery]}

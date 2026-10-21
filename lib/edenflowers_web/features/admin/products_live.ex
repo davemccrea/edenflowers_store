@@ -107,10 +107,10 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
             <.badge :if={product.draft} tone={:neutral}>{~t"Draft"}</.badge>
             <.badge :if={!product.draft} tone={:success}>{~t"Published"}</.badge>
           </:col>
-          <:col :let={product} field="featured" sort label={~t"Featured"} class="max-sm:hidden">
+          <:col :let={product} field="featured" sort label={~t"Favourite"} class="max-sm:hidden">
             <span :if={product.featured}>
               <.icon name="hero-star-solid" class="text-primary h-4 w-4" />
-              <span class="sr-only">{~t"Featured on the home page"}</span>
+              <span class="sr-only">{~t"Favourite"}</span>
             </span>
             <.blank :if={!product.featured} />
           </:col>
