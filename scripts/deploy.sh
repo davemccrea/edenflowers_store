@@ -210,6 +210,15 @@ if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
   exit 1
 fi
 
+# Taken last, so the backup is as close as possible to the migrations it guards against.
+section "Backing up production database"
+if ! just db-backup production; then
+  git tag -d "$TAG" >/dev/null
+  git reset --hard --quiet HEAD~1
+  fail "backup failed, cleaned up local commit and tag. Nothing was pushed."
+fi
+ok "rollback: just db-rollback production v$CURRENT <that dump>"
+
 SKIP_HOOKS=1 git push --atomic origin main "refs/tags/$TAG"
 
 printf '\n%s%s✓ Pushed %s%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
