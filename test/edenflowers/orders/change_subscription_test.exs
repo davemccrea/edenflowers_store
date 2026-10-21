@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.ChangeSubscriptionTest do
-  use Edenflowers.DataCase, async: true
+  use Edenflowers.DataCase, async: false
 
   import Generator
   import Mox

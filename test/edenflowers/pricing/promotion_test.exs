@@ -187,14 +187,14 @@ defmodule Edenflowers.Pricing.PromotionTest do
       promotion = limited_promotion("LIMITED", 5)
       use_promotion(promotion, 5)
 
-      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("LIMITED", Date.utc_today())
+      assert {:error, %Ash.Error.Invalid{}} = Pricing.get_promotion_by_code("LIMITED", Edenflowers.ShopTime.today())
     end
 
     test "allows promotion code when usage is below usage_limit" do
       promotion = limited_promotion("LIMITED10", 5)
       use_promotion(promotion, 4)
 
-      assert {:ok, %Promotion{id: id}} = Pricing.get_promotion_by_code("LIMITED10", Date.utc_today())
+      assert {:ok, %Promotion{id: id}} = Pricing.get_promotion_by_code("LIMITED10", Edenflowers.ShopTime.today())
       assert id == promotion.id
     end
 
@@ -203,14 +203,14 @@ defmodule Edenflowers.Pricing.PromotionTest do
       use_promotion(promotion)
 
       assert {:error, %Ash.Error.Invalid{}} =
-               Pricing.get_promotion_by_code("GUESTLIMIT", Date.utc_today(), actor: nil)
+               Pricing.get_promotion_by_code("GUESTLIMIT", Edenflowers.ShopTime.today(), actor: nil)
     end
 
     test "allows unlimited usage when usage_limit is nil" do
       promotion = limited_promotion("UNLIMITED", nil)
       use_promotion(promotion, 20)
 
-      assert {:ok, %Promotion{id: id}} = Pricing.get_promotion_by_code("UNLIMITED", Date.utc_today())
+      assert {:ok, %Promotion{id: id}} = Pricing.get_promotion_by_code("UNLIMITED", Edenflowers.ShopTime.today())
       assert id == promotion.id
     end
 

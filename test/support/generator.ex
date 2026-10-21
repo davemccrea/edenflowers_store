@@ -233,7 +233,7 @@ defmodule Generator do
           customer_email: "john.smith@example.com",
           user_id: user.id,
           fulfillment_option_id: fulfillment_option.id,
-          fulfillment_date: Date.utc_today(),
+          fulfillment_date: Edenflowers.ShopTime.today(),
           quoted_fulfillment_fee: fulfillment_fee,
           payment_intent_id: "pi_test_#{System.unique_integer([:positive])}"
         ],
@@ -311,7 +311,13 @@ defmodule Generator do
     )
   end
 
-  @doc "Sets the shop calendar, which every test starts with open every day and same-day off."
+  @doc """
+  Sets the shop calendar, which every test starts with open every day and same-day off.
+
+  The update locks the one row until the test's transaction rolls back, so
+  modules that write the calendar run `async: false`. Tests of pure calendar
+  logic build a `%ShopCalendar{}` instead.
+  """
   def shop_calendar(attrs \\ []) do
     Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
     |> Ash.Seed.update!(Map.new(attrs))
@@ -329,10 +335,10 @@ defmodule Generator do
         location_name: "Minimossen",
         location_address: "Myrvägen 1, 65230 Vasa",
         image_slug: "local:///image_1.jpg",
-        date: Date.add(Date.utc_today(), 30),
+        date: Date.add(Edenflowers.ShopTime.today(), 30),
         start_time: ~T[10:00:00],
         end_time: ~T[14:00:00],
-        register_before: Date.add(Date.utc_today(), 20),
+        register_before: Date.add(Edenflowers.ShopTime.today(), 20),
         total_places: 8,
         price: "85.00",
         tax_rate_id: tax_rate_id

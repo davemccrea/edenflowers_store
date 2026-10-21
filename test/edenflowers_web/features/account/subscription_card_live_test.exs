@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
           subscription_id: subscription.id,
           customer_name: "Ada Lovelace",
           customer_email: "ada@example.com",
-          fulfillment_date: Date.add(Date.utc_today(), 2),
+          fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 2),
           quoted_fulfillment_fee: "5.00",
           ordered_at: DateTime.utc_now(),
           locale: "en",

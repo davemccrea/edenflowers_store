@@ -119,7 +119,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     end
 
     test "is allowed after register_before but not beyond the course's places" do
-      course = generate(course(register_before: Date.add(Date.utc_today(), -2), total_places: 3))
+      course = generate(course(register_before: Date.add(ShopTime.today(), -2), total_places: 3))
       admin = generate(admin_user())
 
       assert {:ok, _} = add_manually(course, 2, admin)

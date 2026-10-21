@@ -363,7 +363,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
             locale: "fi",
             fulfillment_option_id: ctx.delivery.id,
             fulfillment_method: :delivery,
-            fulfillment_date: Date.add(Date.utc_today(), 3),
+            fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 3),
             quoted_fulfillment_fee: Decimal.new("0"),
             payment_intent_id: "pi_#{System.unique_integer([:positive])}"
           ] ++ opts
@@ -381,7 +381,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
   defp submit_delivery(order, params) do
     params =
       Map.merge(
-        %{fulfillment_date: Date.add(Date.utc_today(), 3), recipient_phone_number: "040 1234567"},
+        %{fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 3), recipient_phone_number: "040 1234567"},
         params
       )
 

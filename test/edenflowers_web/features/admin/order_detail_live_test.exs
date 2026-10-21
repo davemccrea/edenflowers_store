@@ -407,7 +407,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "true"}) |> render_change()
       assert has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
 
-      render_click(view, "cancel_fulfillment")
+      view |> element("#confirm-fulfillment-form button", "Cancel") |> render_click()
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
     end

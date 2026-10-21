@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
-  use EdenflowersWeb.ConnCase, async: true
+  use EdenflowersWeb.ConnCase, async: false
 
   import Generator
   import Mox
@@ -237,7 +237,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
         "form" => %{
           "delivery_address" => "Stadsgatan 3, 65300 Vasa",
           "recipient_phone_number" => "045 1234567",
-          "fulfillment_date" => Date.utc_today() |> Date.add(7) |> Date.to_string()
+          "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
         }
       })
 
@@ -268,7 +268,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
           "form" => %{
             "delivery_address" => "Stadsgatan 3, 65300 Vasa",
             "recipient_phone_number" => "045 1234567",
-            "fulfillment_date" => Date.utc_today() |> Date.add(7) |> Date.to_string()
+            "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
           }
         })
 

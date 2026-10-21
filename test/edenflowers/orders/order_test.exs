@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.OrderTest do
-  use Edenflowers.DataCase, async: true
+  use Edenflowers.DataCase, async: false
 
   import Ecto.Query
   import ExUnit.CaptureLog
@@ -729,16 +729,10 @@ defmodule Edenflowers.Orders.OrderTest do
 
       order2 = Orders.create_for_checkout!(authorize?: false)
 
-      {result, _log} =
-        with_log(fn ->
-          order2
-          |> Ash.Changeset.for_update(:submit_contact_details, %{customer_name: "Test User"})
-          |> Ash.update(authorize?: false)
-        end)
-
-      assert {:error, error} = result
-
-      assert %Ash.Error.Invalid{} = error
+      assert {:error, %Ash.Error.Invalid{errors: [%{field: :customer_email}]}} =
+               order2
+               |> Ash.Changeset.for_update(:submit_contact_details, %{customer_name: "Test User"})
+               |> Ash.update(authorize?: false)
     end
   end
 
@@ -852,8 +846,10 @@ defmodule Edenflowers.Orders.OrderTest do
         )
       )
 
-      assert {:error, error} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
-      assert %Ash.Error.Invalid{} = error
+      assert {:error, %Ash.Error.Invalid{errors: [error]}} =
+               Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
+
+      assert error.message =~ "Cart total must be at least"
     end
 
     test "applies promotion when cart total exactly meets minimum requirement" do
@@ -884,13 +880,15 @@ defmodule Edenflowers.Orders.OrderTest do
       assert Decimal.equal?(order.items_total, "42.50")
     end
 
-    test "rejects promotion when cart is empty" do
+    test "rejects promotion on an empty cart, as it is below the minimum" do
       promotion = generate(promotion(discount_rate: "0.10", minimum_cart_total: "20.00"))
 
       order = Orders.create_for_checkout!(authorize?: false)
 
-      assert {:error, error} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
-      assert %Ash.Error.Invalid{} = error
+      assert {:error, %Ash.Error.Invalid{errors: [error]}} =
+               Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
+
+      assert error.message =~ "Cart total must be at least"
     end
 
     test "applies promotion with 0 minimum cart total to any order" do
@@ -991,14 +989,15 @@ defmodule Edenflowers.Orders.OrderTest do
     test "save_step_3 requires fulfillment_date", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
 
-      assert {:error, error} =
+      assert {:error, %Ash.Error.Invalid{errors: errors}} =
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
-                 fulfillment_option_id: pickup_option.id
+                 fulfillment_option_id: pickup_option.id,
+                 recipient_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
 
-      assert %Ash.Error.Invalid{} = error
+      assert Enum.any?(errors, &(&1.field == :fulfillment_date))
     end
 
     test "save_step_3 requires a phone number", %{pickup_option: pickup_option} do
@@ -1008,7 +1007,7 @@ defmodule Edenflowers.Orders.OrderTest do
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
-                 fulfillment_date: Date.add(Date.utc_today(), 1)
+                 fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1)
                })
                |> Ash.update(authorize?: false)
 
@@ -1042,7 +1041,7 @@ defmodule Edenflowers.Orders.OrderTest do
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
-                 fulfillment_date: Date.add(Date.utc_today(), 1),
+                 fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
                  recipient_phone_number: "123"
                })
                |> Ash.update(authorize?: false)
@@ -1076,34 +1075,36 @@ defmodule Edenflowers.Orders.OrderTest do
     test "save_step_3 validates fulfillment_date is not in the past", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
 
-      yesterday = Date.add(Date.utc_today(), -1)
+      yesterday = Date.add(Edenflowers.ShopTime.today(), -1)
 
-      assert {:error, error} =
+      assert {:error, %Ash.Error.Invalid{errors: errors}} =
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
-                 fulfillment_date: yesterday
+                 fulfillment_date: yesterday,
+                 recipient_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
 
-      assert %Ash.Error.Invalid{} = error
+      assert Enum.any?(errors, &(&1.field == :fulfillment_date))
     end
 
     test "save_step_3 rejects a date the shop has closed", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
-      closed_date = Date.add(Date.utc_today(), 3)
+      closed_date = Date.add(Edenflowers.ShopTime.today(), 3)
 
       shop_calendar(disabled_dates: [closed_date])
 
-      assert {:error, error} =
+      assert {:error, %Ash.Error.Invalid{errors: errors}} =
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
-                 fulfillment_date: closed_date
+                 fulfillment_date: closed_date,
+                 recipient_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
 
-      assert %Ash.Error.Invalid{} = error
+      assert Enum.any?(errors, &(&1.field == :fulfillment_date))
     end
 
     test "save_step_3 reports an unknown option instead of raising" do
@@ -1113,7 +1114,7 @@ defmodule Edenflowers.Orders.OrderTest do
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: Ash.UUID.generate(),
-                 fulfillment_date: Date.add(Date.utc_today(), 1)
+                 fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1)
                })
                |> Ash.update(authorize?: false)
 
@@ -1210,7 +1211,7 @@ defmodule Edenflowers.Orders.OrderTest do
             recipient_phone_number: "+358401234567",
             delivery_address: "Test Address",
             delivery_instructions: "Ring twice",
-            fulfillment_date: Date.add(Date.utc_today(), 1),
+            fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
             quoted_fulfillment_fee: "5.00",
             geocoded_address: "Calculated Address",
             here_id: "here123",

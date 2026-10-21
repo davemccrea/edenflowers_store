@@ -1,11 +1,11 @@
 defmodule Edenflowers.Fulfillment.Changes.SetWeekTest do
-  use Edenflowers.DataCase, async: true
-  import Generator
+  use ExUnit.Case, async: true
   alias Edenflowers.Fulfillment.Changes.SetWeek
+  alias Edenflowers.Fulfillment.ShopCalendar
 
   describe "set_week/4" do
     test ":closed adds overrides for every open weekday in the week" do
-      calendar = shop_calendar()
+      calendar = %ShopCalendar{}
       # Mon 2024-04-08 .. Sun 2024-04-14, no key dates in that range.
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
 
@@ -17,7 +17,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekTest do
 
     test ":open clears off-overrides without writing redundant on-overrides" do
       calendar =
-        shop_calendar(disabled_dates: [~D[2024-04-08], ~D[2024-04-09]])
+        struct!(ShopCalendar, disabled_dates: [~D[2024-04-08], ~D[2024-04-09]])
 
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
 
@@ -29,7 +29,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekTest do
     end
 
     test "ignores past cells" do
-      calendar = shop_calendar()
+      calendar = %ShopCalendar{}
       week = Enum.map(0..6, &Date.add(~D[2024-04-08], &1))
       # Today mid-week — only Wed..Sun get overrides.
       today = ~D[2024-04-10]
@@ -48,7 +48,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekTest do
 
     test "set_week :closed skips key dates in the week" do
       # All weekdays open. Week containing Mother's Day 2026-05-10 (Sunday).
-      calendar = shop_calendar()
+      calendar = %ShopCalendar{}
       week = Enum.map(0..6, &Date.add(~D[2026-05-04], &1))
       today = ~D[2026-04-01]
 
@@ -64,7 +64,8 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekTest do
     test "set_week :open skips key dates in the week" do
       # Sundays off, so Mother's Day is closed by the rule.
       calendar =
-        shop_calendar(
+        struct!(
+          ShopCalendar,
           available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday],
           disabled_dates: [~D[2026-05-04], ~D[2026-05-05]]
         )

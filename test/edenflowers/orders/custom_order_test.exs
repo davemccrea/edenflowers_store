@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.CustomOrderTest do
-  use Edenflowers.DataCase, async: true
+  use Edenflowers.DataCase, async: false
 
   import ExUnit.CaptureLog
   import Generator

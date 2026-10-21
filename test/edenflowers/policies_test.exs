@@ -488,7 +488,7 @@ defmodule Edenflowers.PoliciesTest do
         customer_phone_number: "040 123 4567",
         locale: "en-GB",
         fulfillment_option_id: pickup.id,
-        fulfillment_date: Date.add(Date.utc_today(), 7),
+        fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 7),
         line_items: [
           %{
             "kind" => "custom",
