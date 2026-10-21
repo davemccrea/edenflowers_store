@@ -4,7 +4,7 @@ title: Store a product's photos as an ordered list that sizes pick from
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-21 15:35'
-updated_date: '2026-10-21 15:39'
+updated_date: '2026-10-21 15:40'
 labels: []
 dependencies: []
 parent_task_id: TASK-84
@@ -27,7 +27,7 @@ Already in place (groundwork commit, 2026-10-21): a size's photo is optional and
 - **Validation on Product create and update:** each submitted size's `own_photo_slug` is nil or one of `photo_slugs`. Both are in the one changeset, so the size doesn't re-read its product.
 - **Change on Product update:** sizes whose `own_photo_slug` is no longer in `photo_slugs` are cleared in one bulk update. Callers never do this.
 - **Loading:** read actions whose callers show a photo load it with `prepare build(load: ...)`, as `for_card_drawer` does, rather than each page passing `load:`.
-- Generate the migration with `mix ash.codegen`; update the seeds. Courses keep `image_slug`.
+- Generate the migration with `mix ash.codegen`; update the seeds. Courses keep `image_slug` until TASK-85.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
