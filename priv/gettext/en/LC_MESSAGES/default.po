@@ -2730,7 +2730,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:201
 #, elixir-autogen, elixir-format
-msgid "Fill the other languages from this one"
+msgid "Translate"
 msgstr ""
 
 #: lib/edenflowers_web/components/cart/promo_code.ex:45
