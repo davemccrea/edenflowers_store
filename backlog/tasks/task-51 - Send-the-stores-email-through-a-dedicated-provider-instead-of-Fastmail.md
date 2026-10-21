@@ -4,7 +4,7 @@ title: Send the store's email through a dedicated provider instead of Fastmail
 status: ready-for-human
 assignee: []
 created_date: '2026-10-18 19:07'
-updated_date: '2026-10-20 21:00'
+updated_date: '2026-10-20 21:46'
 labels:
   - spec
   - customers
@@ -65,6 +65,15 @@ created: 2026-10-20 21:00
 ---
 
 Code side is done (Brevo adapter, phoenix-ansible vars). Left: Brevo account and domain verification, DNS records, vault_brevo_api_key in vault.yml, then deploy and check a sign-in code and order confirmation arrive (AC 2-4).
+
+---
+
+author: @claude
+created: 2026-10-20 21:46
+
+---
+
+Staging sends through Brevo (2026-10-21): sign-in code and order confirmation arrived in a real inbox. Production still to provision, deploy and check.
 
 ---
 <!-- COMMENTS:END -->
