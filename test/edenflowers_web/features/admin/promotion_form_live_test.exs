@@ -48,10 +48,11 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{active.id}")
     assert has_element?(view, "#promotion-status", "Active")
-    assert has_element?(view, "#promotion-status", "Used 0 / 10")
+    assert has_element?(view, "#promotion-usage", "0 / 10")
 
     {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{scheduled.id}")
     assert has_element?(view, "#promotion-status", "Scheduled")
+    assert has_element?(view, "#promotion-status", "Starts")
 
     {:ok, view, _html} = live(conn, ~p"/admin/promotions/#{expired.id}")
     assert has_element?(view, "#promotion-status", "Expired")

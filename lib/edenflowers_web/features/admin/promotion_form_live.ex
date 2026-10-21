@@ -36,16 +36,13 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   @impl true
   def render(assigns) do
+    promotion_status = if assigns.form.source.type == :update, do: status(assigns.form.source.data)
+    assigns = assign(assigns, :promotion_status, promotion_status)
+
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
         <.admin_page_header title={@page_title} back={{~t"Promotions", PromotionsLive.default_path()}} sticky>
-          <:subtitle :if={@form.source.type == :update}>
-            <span id="promotion-status" class="inline-flex flex-wrap items-center gap-1.5">
-              <.badge tone={elem(status(@form.source.data), 1)}>{elem(status(@form.source.data), 0)}</.badge>
-              <.badge tone={:tag} class="tabular-nums">{usage_label(@form.source.data)}</.badge>
-            </span>
-          </:subtitle>
           <:actions>
             <.button type="submit" form="promotion-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
               {~t"Save"}
@@ -66,13 +63,37 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
         </.admin_page_header>
 
         <div class={["grid grid-cols-1 gap-6 xl:items-start", @history != [] && "xl:grid-cols-[minmax(0,1fr)_20rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]"]}>
+          <section
+            :if={@form.source.type == :update}
+            id="promotion-status"
+            class="admin-card grid grid-cols-2 gap-4 p-4 sm:p-5 xl:col-start-1"
+          >
+            <div class="min-w-0">
+              <h2 class="eyebrow text-base-content/75 mb-2">{~t"Status"}</h2>
+              <.badge tone={elem(@promotion_status, 1)} icon={elem(@promotion_status, 2)}>
+                {elem(@promotion_status, 0)}
+              </.badge>
+              <p :if={scheduled?(@form.source.data)} class="text-base-content/75 mt-2 text-sm tabular-nums">
+                {~t"Starts"} {Format.date(@form.source.data.start_date, @locale)}
+              </p>
+            </div>
+            <div id="promotion-usage" class="border-base-content/12 min-w-0 border-l pl-4 sm:pl-5">
+              <h2 class="eyebrow text-base-content/75 mb-2">{~t"Used"}</h2>
+              <p class="text-base-content tabular-nums">
+                <span class="text-xl font-semibold">{@form.source.data.usage}</span>
+                <span :if={@form.source.data.usage_limit} class="text-base-content/65 text-sm">
+                  / {@form.source.data.usage_limit}
+                </span>
+              </p>
+            </div>
+          </section>
           <.form
             for={@form}
             id="promotion-form"
             data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
             phx-change="validate"
             phx-submit="save"
-            class={["min-w-0 space-y-6", @history == [] && "max-w-3xl"]}
+            class={["min-w-0 space-y-6 xl:col-start-1", @history == [] && "max-w-3xl"]}
           >
             <div class="admin-card divide-base-content/12 divide-y">
               <.form_section title={~t"Details"} joined>
@@ -146,7 +167,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
             </div>
           </.form>
 
-          <aside :if={@history != []} class="flex flex-col gap-6">
+          <aside :if={@history != []} class="flex flex-col gap-6 xl:col-start-2 xl:row-span-2 xl:row-start-1">
             <.widget id="promotion-history-widget" title={~t"History"}>
               <ol id="promotion-history" class="divide-base-content/12 divide-y text-sm">
                 <.history_entry
@@ -296,15 +317,22 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     today = ShopTime.today()
 
     cond do
-      promotion.start_date && Date.after?(promotion.start_date, today) -> {~t"Scheduled", :neutral}
-      promotion.expiration_date && Date.before?(promotion.expiration_date, today) -> {~t"Expired", :neutral}
-      promotion.usage_limit && promotion.usage >= promotion.usage_limit -> {~t"Used up", :neutral}
-      true -> {~t"Active", :success}
+      scheduled?(promotion) ->
+        {~t"Scheduled", :neutral, "hero-calendar-days"}
+
+      promotion.expiration_date && Date.before?(promotion.expiration_date, today) ->
+        {~t"Expired", :neutral, "hero-clock"}
+
+      promotion.usage_limit && promotion.usage >= promotion.usage_limit ->
+        {~t"Used up", :neutral, "hero-minus-circle"}
+
+      true ->
+        {~t"Active", :success, "hero-check"}
     end
   end
 
-  defp usage_label(%{usage_limit: nil, usage: usage}), do: ~t"Used #{usage}"
-  defp usage_label(%{usage_limit: limit, usage: usage}), do: ~t"Used #{usage} / #{limit}"
+  defp scheduled?(%{start_date: nil}), do: false
+  defp scheduled?(%{start_date: date}), do: Date.after?(date, ShopTime.today())
 
   defp show(nil, _field, _locale), do: "—"
   defp show(value, :discount_rate, locale), do: Format.percentage(Decimal.new(value), locale)
