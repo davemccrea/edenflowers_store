@@ -184,6 +184,72 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </ul>
       </nav>
 
+      <section :if={@products != []} id="store" class="not-last:border-b">
+        <div class="container py-24 xl:max-w-[70vw]">
+          <div class="mb-4 flex items-end justify-between gap-4 px-2">
+            <h2 class="section-title">{~t"Favourites"}</h2>
+
+            <div class="hidden items-center gap-2 md:flex">
+              <.icon_button
+                type="button"
+                class="embla__prev"
+                aria_label={~t"Previous slide"}
+                aria-controls="featured-blooms-viewport"
+              >
+                <.icon name="hero-chevron-left" class="h-5 w-5" />
+              </.icon_button>
+              <.icon_button
+                type="button"
+                class="embla__next"
+                aria_label={~t"Next slide"}
+                aria-controls="featured-blooms-viewport"
+              >
+                <.icon name="hero-chevron-right" class="h-5 w-5" />
+              </.icon_button>
+            </div>
+          </div>
+
+          <div
+            class="embla"
+            role="group"
+            aria-roledescription="carousel"
+            aria-label={~t"Favourites"}
+          >
+            <div
+              id="featured-blooms-viewport"
+              phx-hook="FeaturedCarousel"
+              phx-update="ignore"
+              class="embla__viewport"
+              data-dot-label-template={~t"Go to slide __N__"}
+            >
+              <div class="embla__container">
+                <div
+                  :for={{product, idx} <- Enum.with_index(@products)}
+                  class="embla__slide"
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={"#{idx + 1} / #{length(@products)}: #{product.name}"}
+                >
+                  <.product_card
+                    product={product}
+                    navigate={~q"/#{language}/product/#{product}"}
+                    locale={Edenflowers.Format.locale()}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex" />
+          </div>
+
+          <div class="mt-10 text-center">
+            <.link navigate={~q"/#{language}/store"} class="eyebrow link-underline-hover touch-target">
+              {~t"Shop all flowers"}
+            </.link>
+          </div>
+        </div>
+      </section>
+
       <section class="not-last:border-b">
         <div class="container py-12 md:py-16">
           <p class="eyebrow text-base-content/70 mb-8 text-center">{~t"Trusted by"}</p>
@@ -264,72 +330,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               </a>
             </li>
           </ul>
-        </div>
-      </section>
-
-      <section :if={@products != []} id="store" class="not-last:border-b">
-        <div class="container py-24 xl:max-w-[70vw]">
-          <div class="mb-4 flex items-end justify-between gap-4 px-2">
-            <h2 class="section-title">{~t"Favourites"}</h2>
-
-            <div class="hidden items-center gap-2 md:flex">
-              <.icon_button
-                type="button"
-                class="embla__prev"
-                aria_label={~t"Previous slide"}
-                aria-controls="featured-blooms-viewport"
-              >
-                <.icon name="hero-chevron-left" class="h-5 w-5" />
-              </.icon_button>
-              <.icon_button
-                type="button"
-                class="embla__next"
-                aria_label={~t"Next slide"}
-                aria-controls="featured-blooms-viewport"
-              >
-                <.icon name="hero-chevron-right" class="h-5 w-5" />
-              </.icon_button>
-            </div>
-          </div>
-
-          <div
-            class="embla"
-            role="group"
-            aria-roledescription="carousel"
-            aria-label={~t"Favourites"}
-          >
-            <div
-              id="featured-blooms-viewport"
-              phx-hook="FeaturedCarousel"
-              phx-update="ignore"
-              class="embla__viewport"
-              data-dot-label-template={~t"Go to slide __N__"}
-            >
-              <div class="embla__container">
-                <div
-                  :for={{product, idx} <- Enum.with_index(@products)}
-                  class="embla__slide"
-                  role="group"
-                  aria-roledescription="slide"
-                  aria-label={"#{idx + 1} / #{length(@products)}: #{product.name}"}
-                >
-                  <.product_card
-                    product={product}
-                    navigate={~q"/#{language}/product/#{product}"}
-                    locale={Edenflowers.Format.locale()}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex" />
-          </div>
-
-          <div class="mt-10 text-center">
-            <.link navigate={~q"/#{language}/store"} class="eyebrow link-underline-hover touch-target">
-              {~t"Shop all flowers"}
-            </.link>
-          </div>
         </div>
       </section>
 
