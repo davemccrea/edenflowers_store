@@ -107,16 +107,7 @@ defmodule Edenflowers.Payments do
     metadata = %{"order_id" => order.id}
 
     with {:ok, order} <- Ash.load(order, :subscription?, actor: system_actor()) do
-      if order.subscription? do
-        with {:ok, customer} <-
-               StripeAPI.impl().create_customer(%{email: order.customer_email, name: order.customer_name}) do
-          StripeAPI.impl().create_payment_intent_saving_card(amount_cents, metadata, customer.id)
-        end
-      else
-        with {:ok, customer_id} <- saved_card_customer(order, actor) do
-          create_one_off_payment_intent(amount_cents, metadata, customer_id, actor)
-        end
-      end
+      create_order_payment_intent(order, amount_cents, metadata, actor)
     end
   end
 
@@ -126,6 +117,19 @@ defmodule Edenflowers.Payments do
       %{metadata_key(payable) => payable.id},
       nil
     )
+  end
+
+  defp create_order_payment_intent(%{subscription?: true} = order, amount_cents, metadata, _actor) do
+    with {:ok, customer} <-
+           StripeAPI.impl().create_customer(%{email: order.customer_email, name: order.customer_name}) do
+      StripeAPI.impl().create_payment_intent_saving_card(amount_cents, metadata, customer.id)
+    end
+  end
+
+  defp create_order_payment_intent(order, amount_cents, metadata, actor) do
+    with {:ok, customer_id} <- saved_card_customer(order, actor) do
+      create_one_off_payment_intent(amount_cents, metadata, customer_id, actor)
+    end
   end
 
   # A Customer deleted in Stripe would block every checkout for the user, so
@@ -193,15 +197,7 @@ defmodule Edenflowers.Payments do
   def customer_session(%Order{} = order, %User{} = user) do
     with {:ok, %{subscription?: false}} <- Ash.load(order, :subscription?, actor: system_actor()),
          {:ok, %{stripe_customer_id: customer_id}} when is_binary(customer_id) <- Ash.reload(user, actor: user) do
-      case StripeAPI.impl().create_customer_session(customer_id) do
-        {:ok, session} ->
-          session.client_secret
-
-        {:error, reason} ->
-          if StripeAPI.missing_customer?(reason), do: forget_stripe_customer(user, customer_id)
-          Logger.error("Failed to create CustomerSession for #{describe(order)}: #{inspect(reason)}")
-          nil
-      end
+      create_customer_session(order, user, customer_id)
     else
       {:ok, _subscription_or_no_customer} ->
         nil
@@ -213,6 +209,18 @@ defmodule Edenflowers.Payments do
   end
 
   def customer_session(_order, _guest), do: nil
+
+  defp create_customer_session(order, user, customer_id) do
+    case StripeAPI.impl().create_customer_session(customer_id) do
+      {:ok, session} ->
+        session.client_secret
+
+      {:error, reason} ->
+        if StripeAPI.missing_customer?(reason), do: forget_stripe_customer(user, customer_id)
+        Logger.error("Failed to create CustomerSession for #{describe(order)}: #{inspect(reason)}")
+        nil
+    end
+  end
 
   @doc """
   Brings the PaymentIntent of an order or booking, with `balance` loaded, in
@@ -250,26 +258,30 @@ defmodule Edenflowers.Payments do
           {:ok, :completed}
 
         {:error, error} ->
-          cond do
-            find_error(error, AlreadyPaid) ->
-              {:ok, :already_completed}
-
-            # A concurrent completion got there first. The loser sees a
-            # mismatch at checkout, which clears the PaymentIntent, or the
-            # unique payment_intent_id on a payment link.
-            recorded?(payment_intent.id) ->
-              {:ok, :already_completed}
-
-            mismatch = find_error(error, PaymentIntentMismatch) ->
-              {:error, {:payment_intent_mismatch, id, mismatch.expected, mismatch.actual}}
-
-            mismatch = find_error(error, AmountMismatch) ->
-              {:error, {:amount_mismatch, id, mismatch.expected, mismatch.actual}}
-
-            true ->
-              {:error, {:payment_update_failed, id, error}}
-          end
+          completion_failed(error, payment_intent, id)
       end
+    end
+  end
+
+  defp completion_failed(error, payment_intent, id) do
+    cond do
+      find_error(error, AlreadyPaid) ->
+        {:ok, :already_completed}
+
+      # A concurrent completion got there first. The loser sees a
+      # mismatch at checkout, which clears the PaymentIntent, or the
+      # unique payment_intent_id on a payment link.
+      recorded?(payment_intent.id) ->
+        {:ok, :already_completed}
+
+      mismatch = find_error(error, PaymentIntentMismatch) ->
+        {:error, {:payment_intent_mismatch, id, mismatch.expected, mismatch.actual}}
+
+      mismatch = find_error(error, AmountMismatch) ->
+        {:error, {:amount_mismatch, id, mismatch.expected, mismatch.actual}}
+
+      true ->
+        {:error, {:payment_update_failed, id, error}}
     end
   end
 
@@ -282,13 +294,17 @@ defmodule Edenflowers.Payments do
           {:ok, record}
 
         {:error, error} ->
-          # A PaymentIntent the order has moved on from, such as the one a
-          # payment link drops when Jennie records a payment.
-          if find_error(error, PaymentIntentMismatch),
-            do: {:ok, :unchanged},
-            else: {:error, {:payment_update_failed, id, error}}
+          cancel_failed(error, id)
       end
     end
+  end
+
+  # A PaymentIntent the order has moved on from, such as the one a payment
+  # link drops when Jennie records a payment.
+  defp cancel_failed(error, id) do
+    if find_error(error, PaymentIntentMismatch),
+      do: {:ok, :unchanged},
+      else: {:error, {:payment_update_failed, id, error}}
   end
 
   @doc """
@@ -496,10 +512,12 @@ defmodule Edenflowers.Payments do
   def parent_key(%CourseRegistration{}), do: :course_registration_id
 
   defp find_payment(payment_intent_id) do
-    Payment
-    |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)
-    |> Ash.read_one(authorize?: false)
-    |> case do
+    payment =
+      Payment
+      |> Ash.Query.filter(payment_intent_id == ^payment_intent_id)
+      |> Ash.read_one(authorize?: false)
+
+    case payment do
       {:ok, nil} -> :not_found
       result -> result
     end

@@ -10,25 +10,29 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
 
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.after_action(changeset, fn _changeset, subscription ->
-      query =
-        Ash.Query.filter(
-          Order,
-          subscription_id == ^subscription.id and origin == :subscription and state == :placed and
-            fulfillment_status == :pending
-        )
+    Ash.Changeset.after_action(changeset, fn _changeset, subscription -> cancel_open(subscription) end)
+  end
 
-      with {:ok, orders} <- Ash.read(query, authorize?: false) do
-        orders
-        |> Enum.filter(&cancellable?/1)
-        |> Enum.reduce_while({:ok, subscription}, fn order, result ->
-          case Orders.cancel_order(order, authorize?: false) do
-            {:ok, _order} -> {:cont, result}
-            {:error, error} -> {:halt, {:error, error}}
-          end
-        end)
-      end
-    end)
+  defp cancel_open(subscription) do
+    query =
+      Ash.Query.filter(
+        Order,
+        subscription_id == ^subscription.id and origin == :subscription and state == :placed and
+          fulfillment_status == :pending
+      )
+
+    with {:ok, orders} <- Ash.read(query, authorize?: false) do
+      orders
+      |> Enum.filter(&cancellable?/1)
+      |> Enum.reduce_while({:ok, subscription}, &cancel/2)
+    end
+  end
+
+  defp cancel(order, result) do
+    case Orders.cancel_order(order, authorize?: false) do
+      {:ok, _order} -> {:cont, result}
+      {:error, error} -> {:halt, {:error, error}}
+    end
   end
 
   defp cancellable?(order) do

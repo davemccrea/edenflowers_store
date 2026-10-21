@@ -158,7 +158,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
     end
 
     test "returns :out_of_delivery_range when distance is beyond the max", %{option: option} do
-      assert %{error: :out_of_delivery_range, fulfillment_fee: nil} = Fulfillment.Fee.calculate(option, 20000)
+      assert %{error: :out_of_delivery_range, fulfillment_fee: nil} = Fulfillment.Fee.calculate(option, 20_000)
     end
   end
 

@@ -82,19 +82,21 @@ defmodule Edenflowers.Orders.Changes.CreateOccurrence do
   # next one's window. This keeps closed periods from piling up deliveries.
   defp occur_unless_missed(subscription, date) do
     with {:ok, subscription} <- Ash.load(subscription, :user, actor: system_actor()) do
-      case first_open_day(date, subscription.interval_weeks) do
-        nil ->
-          Logger.error(
-            "Subscription #{subscription.id} missed its delivery on #{date}: " <>
-              "there was no open fulfillment date before the next scheduled date. No order was made or charged."
-          )
-
-          :ok
-
-        fulfillment_date ->
-          with {:ok, order} <- create_occurrence(subscription, date, fulfillment_date), do: pay(order, subscription)
-      end
+      occur_on(subscription, date, first_open_day(date, subscription.interval_weeks))
     end
+  end
+
+  defp occur_on(subscription, date, nil) do
+    Logger.error(
+      "Subscription #{subscription.id} missed its delivery on #{date}: " <>
+        "there was no open fulfillment date before the next scheduled date. No order was made or charged."
+    )
+
+    :ok
+  end
+
+  defp occur_on(subscription, date, fulfillment_date) do
+    with {:ok, order} <- create_occurrence(subscription, date, fulfillment_date), do: pay(order, subscription)
   end
 
   defp find_occurrence(subscription, date) do

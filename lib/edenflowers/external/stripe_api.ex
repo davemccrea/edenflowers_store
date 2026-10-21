@@ -6,8 +6,11 @@ defmodule Edenflowers.External.StripeAPI.Behaviour do
 
   @callback create_payment_intent(amount_cents :: integer(), metadata :: map(), customer_id :: String.t() | nil) ::
               {:ok, map()} | {:error, term()}
-  @callback create_payment_intent_saving_card(amount_cents :: integer(), metadata :: map(), customer_id :: String.t()) ::
-              {:ok, map()} | {:error, term()}
+  @callback create_payment_intent_saving_card(
+              amount_cents :: integer(),
+              metadata :: map(),
+              customer_id :: String.t()
+            ) :: {:ok, map()} | {:error, term()}
   @callback create_customer(params :: map()) :: {:ok, map()} | {:error, term()}
   @callback attach_payment_method(payment_method_id :: String.t(), customer_id :: String.t()) ::
               {:ok, map()} | {:error, term()}

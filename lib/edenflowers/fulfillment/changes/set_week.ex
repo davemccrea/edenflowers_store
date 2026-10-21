@@ -45,8 +45,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeek do
     initial = %{enabled_dates: calendar.enabled_dates, disabled_dates: calendar.disabled_dates}
 
     week
-    |> Enum.reject(&(Date.compare(&1, today) == :lt))
-    |> Enum.reject(&KeyDates.key_date?/1)
+    |> Enum.reject(&(Date.before?(&1, today) or KeyDates.key_date?(&1)))
     |> Enum.reduce(initial, fn date, acc -> set_date(calendar, acc, date, direction) end)
   end
 

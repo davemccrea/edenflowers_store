@@ -12,13 +12,12 @@ defmodule Edenflowers.Orders.Validations.Deletable do
 
   @impl true
   def validate(%{data: %{origin: :custom} = order}, _opts, context) do
-    Payment
-    |> Ash.Query.filter(order_id == ^order.id)
-    |> Ash.exists?(Ash.Context.to_opts(context, authorize?: false))
-    |> case do
-      false -> :ok
-      true -> {:error, message: ~t"has a payment, so it can only be cancelled"}
-    end
+    paid? =
+      Payment
+      |> Ash.Query.filter(order_id == ^order.id)
+      |> Ash.exists?(Ash.Context.to_opts(context, authorize?: false))
+
+    if paid?, do: {:error, message: ~t"has a payment, so it can only be cancelled"}, else: :ok
   end
 
   def validate(_changeset, _opts, _context), do: {:error, message: ~t"isn't a custom order"}

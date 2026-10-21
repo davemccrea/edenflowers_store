@@ -31,22 +31,24 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
       method = opts[:method] || Ash.Changeset.get_argument(changeset, :payment_method)
       goodwill = Keyword.get_lazy(opts, :goodwill, fn -> Map.get(changeset.arguments, :goodwill) || false end)
 
-      Payment
-      |> Ash.Changeset.for_create(
-        :record,
-        Map.merge(paid_with(changeset, method), %{
-          Edenflowers.Payments.parent_key(record) => record.id,
-          amount: Ash.Changeset.get_argument(changeset, opts[:amount]),
-          method: method,
-          payment_intent_id: Map.get(changeset.arguments, :payment_intent_id),
-          stripe_refund_id: Map.get(changeset.arguments, :stripe_refund_id),
-          reverses_payment_id: Map.get(changeset.arguments, :reverses_payment_id),
-          goodwill: goodwill,
-          note: if(goodwill, do: Map.get(changeset.arguments, :note))
-        })
-      )
-      |> Ash.create(authorize?: false)
-      |> case do
+      payment =
+        Payment
+        |> Ash.Changeset.for_create(
+          :record,
+          Map.merge(paid_with(changeset, method), %{
+            Edenflowers.Payments.parent_key(record) => record.id,
+            amount: Ash.Changeset.get_argument(changeset, opts[:amount]),
+            method: method,
+            payment_intent_id: Map.get(changeset.arguments, :payment_intent_id),
+            stripe_refund_id: Map.get(changeset.arguments, :stripe_refund_id),
+            reverses_payment_id: Map.get(changeset.arguments, :reverses_payment_id),
+            goodwill: goodwill,
+            note: if(goodwill, do: Map.get(changeset.arguments, :note))
+          })
+        )
+        |> Ash.create(authorize?: false)
+
+      case payment do
         {:ok, _payment} -> reload(record)
         error -> error
       end

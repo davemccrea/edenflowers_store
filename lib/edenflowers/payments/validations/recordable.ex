@@ -13,6 +13,7 @@ defmodule Edenflowers.Payments.Validations.Recordable do
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   @impl true
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def validate(changeset, opts, _context) do
     amount = Ash.Changeset.get_argument(changeset, :amount)
 

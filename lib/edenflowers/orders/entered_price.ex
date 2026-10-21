@@ -85,22 +85,24 @@ defmodule Edenflowers.Orders.EnteredPrice do
   end
 
   defp line(params, order) do
-    with quantity when is_integer(quantity) and quantity > 0 <- quantity(params["quantity"]) do
-      cond do
-        id = blank_to_nil(params["id"]) ->
-          order && order.line_items |> Enum.find(&(&1.id == id)) |> from_line_item(quantity)
+    case quantity(params["quantity"]) do
+      quantity when is_integer(quantity) and quantity > 0 ->
+        cond do
+          id = blank_to_nil(params["id"]) ->
+            order && order.line_items |> Enum.find(&(&1.id == id)) |> from_line_item(quantity)
 
-        params["kind"] == "custom" ->
-          custom(params, quantity)
+          params["kind"] == "custom" ->
+            custom(params, quantity)
 
-        variant_id = blank_to_nil(params["product_variant_id"]) ->
-          from_variant(variant_id, quantity)
+          variant_id = blank_to_nil(params["product_variant_id"]) ->
+            from_variant(variant_id, quantity)
 
-        true ->
-          nil
-      end
-    else
-      _ -> nil
+          true ->
+            nil
+        end
+
+      _ ->
+        nil
     end
   end
 

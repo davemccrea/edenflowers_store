@@ -23,30 +23,32 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
 
   @impl true
   def perform(%Oban.Job{args: %{"email" => email, "locale" => locale}}) do
-    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
-      case Accounts.get_user_by_email(email, authorize?: false, load: [newsletter_promo: [:usage]]) do
-        # The code is kept only once its email has gone, so a failed send is
-        # retried as a welcome rather than as "you're already subscribed".
-        {:ok, %{newsletter_promo: nil} = user} ->
-          {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn -> send_email(email, locale) end)
+  end
 
-          with {:ok, _result} <- email |> Email.newsletter_promo(promo, locale) |> Mailer.deliver() do
-            {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
-            :ok
-          end
+  defp send_email(email, locale) do
+    case Accounts.get_user_by_email(email, authorize?: false, load: [newsletter_promo: [:usage]]) do
+      # The code is kept only once its email has gone, so a failed send is
+      # retried as a welcome rather than as "you're already subscribed".
+      {:ok, %{newsletter_promo: nil} = user} ->
+        {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
 
-        {:ok, %{newsletter_promo: promo}} ->
-          message =
-            if still_usable?(promo),
-              do: Email.newsletter_already_subscribed(email, promo, locale),
-              else: Email.newsletter_resubscribed(email)
+        with {:ok, _result} <- email |> Email.newsletter_promo(promo, locale) |> Mailer.deliver() do
+          {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
+          :ok
+        end
 
-          with {:ok, _result} <- Mailer.deliver(message), do: :ok
+      {:ok, %{newsletter_promo: promo}} ->
+        message =
+          if still_usable?(promo),
+            do: Email.newsletter_already_subscribed(email, promo, locale),
+            else: Email.newsletter_resubscribed(email)
 
-        {:error, reason} ->
-          {:error, reason}
-      end
-    end)
+        with {:ok, _result} <- Mailer.deliver(message), do: :ok
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   # Mirrors the expiry in Promotion's :by_code read, so the email never offers

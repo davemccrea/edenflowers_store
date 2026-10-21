@@ -62,7 +62,7 @@ defmodule Edenflowers.Format do
     Localize.Date.to_string!(date, locale: locale, format: "d.M.yyyy")
   end
 
-  @doc "Localized clock time, e.g. \"10:00\" / \"10.00\"."
+  @doc ~s(Localized clock time, e.g. "10:00" / "10.00".)
   @spec time(Time.t() | nil, Localize.Locale.locale_id()) :: String.t() | nil
   def time(nil, _locale), do: nil
   def time(time, locale), do: Localize.Time.to_string!(time, locale: locale, format: :short)
@@ -77,7 +77,7 @@ defmodule Edenflowers.Format do
     if time = fulfillment_time_range(order, locale), do: ~t"at #{time}"
   end
 
-  @doc "An order's time of day without the \"at\", e.g. \"14:00–15:00\", or nil when any time will do."
+  @doc ~s(An order's time of day without the "at", e.g. "14:00–15:00", or nil when any time will do.)
   @spec fulfillment_time_range(map(), Localize.Locale.locale_id()) :: String.t() | nil
   def fulfillment_time_range(%{fulfillment_time_start: nil}, _locale), do: nil
 
@@ -87,7 +87,7 @@ defmodule Edenflowers.Format do
   def fulfillment_time_range(%{fulfillment_time_start: start, fulfillment_time_end: finish}, locale),
     do: "#{time(start, locale)}–#{time(finish, locale)}"
 
-  @doc "Localized delivery distance from metres, e.g. \"850 m\" / \"3,4 km\"."
+  @doc ~s(Localized delivery distance from metres, e.g. "850 m" / "3,4 km".)
   @spec distance(non_neg_integer(), Localize.Locale.locale_id()) :: String.t()
   def distance(meters, _locale) when meters < 1000, do: "#{meters} m"
 
@@ -108,7 +108,7 @@ defmodule Edenflowers.Format do
   @spec weekday_day_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
   def weekday_day_month(date, locale), do: Localize.Date.to_string!(date, locale: locale, format: "cccc d.M.")
 
-  @doc "Localized weekday name for a `Fulfillment.Weekday`, e.g. \"Friday\" / \"fredag\"."
+  @doc ~s(Localized weekday name for a `Fulfillment.Weekday`, e.g. "Friday" / "fredag".)
   @spec weekday_name(Edenflowers.Fulfillment.Weekday.t(), Localize.Locale.locale_id()) :: String.t()
   def weekday_name(weekday, locale) do
     # 1 January 2024 was a Monday.

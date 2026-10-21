@@ -18,21 +18,21 @@ defmodule Edenflowers.Orders.Changes.RemoveLineItem do
 
     Ash.Changeset.after_action(changeset, fn _changeset, order ->
       with {:ok, line_item} <- fetch_line_item(line_item_id, order.id),
-           :ok <- Ash.destroy(line_item, action: :remove_item, authorize?: false),
-           {:ok, order} <- maybe_restart_checkout(order) do
-        {:ok, order}
+           :ok <- Ash.destroy(line_item, action: :remove_item, authorize?: false) do
+        maybe_restart_checkout(order)
       end
     end)
   end
 
   defp fetch_line_item(line_item_id, order_id) do
-    LineItem
-    |> Ash.Query.filter(id == ^line_item_id and order_id == ^order_id)
-    |> Ash.read_one(authorize?: false)
-    |> case do
+    line_item =
+      LineItem
+      |> Ash.Query.filter(id == ^line_item_id and order_id == ^order_id)
+      |> Ash.read_one(authorize?: false)
+
+    case line_item do
       {:ok, nil} -> {:error, :line_item_not_found}
-      {:ok, line_item} -> {:ok, line_item}
-      {:error, error} -> {:error, error}
+      result -> result
     end
   end
 

@@ -1324,12 +1324,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
-  defp email_details_unavailable(order) do
-    cond do
-      order.fulfillment_status == :cancelled -> ~t"The order is cancelled"
-      true -> no_email(order)
-    end
-  end
+  defp email_details_unavailable(%{fulfillment_status: :cancelled}), do: ~t"The order is cancelled"
+  defp email_details_unavailable(order), do: no_email(order)
 
   defp confirmation_unavailable(%{fulfillment_status: :fulfilled} = order), do: no_email(order)
   defp confirmation_unavailable(_order), do: ~t"Not fulfilled yet"

@@ -22,6 +22,7 @@ defmodule Edenflowers.Payments.Validations.GoodwillRefundable do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def check(record, amount, method) do
     record =
       Ash.load!(

@@ -513,9 +513,7 @@ defmodule EdenflowersWeb.Layouts do
   end
 
   defp admin_user_display_name(user) do
-    user
-    |> Map.get(:first_name)
-    |> case do
+    case Map.get(user, :first_name) do
       first_name when is_binary(first_name) ->
         first_name = String.trim(first_name)
         if first_name == "", do: admin_user_email(user), else: first_name
@@ -528,9 +526,7 @@ defmodule EdenflowersWeb.Layouts do
   defp admin_user_email(user), do: user |> Map.get(:email) |> to_string()
 
   defp admin_user_initials(user) do
-    user
-    |> Map.get(:initials)
-    |> case do
+    case Map.get(user, :initials) do
       initials when is_binary(initials) ->
         initials = String.trim(initials)
         if initials == "", do: fallback_admin_initial(user), else: initials

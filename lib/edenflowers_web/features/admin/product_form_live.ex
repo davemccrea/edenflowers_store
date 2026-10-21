@@ -324,10 +324,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
     case params do
       %{"product_variants" => sizes} when is_binary(product_photo) ->
-        sizes =
-          Map.new(sizes, fn {key, size} ->
-            if key in new_sizes, do: {key, Map.put_new(size, "image_slug", product_photo)}, else: {key, size}
-          end)
+        sizes = Map.new(sizes, fn {key, size} -> {key, size_photo(size, key in new_sizes, product_photo)} end)
 
         Map.put(params, "product_variants", sizes)
 
@@ -335,6 +332,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         params
     end
   end
+
+  defp size_photo(size, true = _new?, product_photo), do: Map.put_new(size, "image_slug", product_photo)
+  defp size_photo(size, false = _new?, _product_photo), do: size
 
   defp photo_fields(form), do: ["form[image_slug]" | variant_photo_fields(form)]
 
