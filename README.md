@@ -51,6 +51,7 @@ just db-reset local|staging     # drop and migrate dev + test, or staging
 just db-seed local|staging      # seed the local or staging database (run after db-reset)
 just db-seed production         # one-off base seed of an empty production database
 just db-backup staging|production # pg_dump a server's database into tmp/
+just db-rollback production v1.6.0 tmp/<dump> # run an old release and restore its dump
 just deploy staging             # push current branch and deploy it to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
 just deploy-watch               # follow the latest deploy run
@@ -94,6 +95,39 @@ wt remove
 ## Deployment
 
 Servers are provisioned by [phoenix-ansible](https://github.com/davemccrea/phoenix-ansible). Deploys run via `.github/workflows/deploy.yml`. See [Commands](#commands).
+
+### Rolling back
+
+A rollback lasts until the next deploy, which pulls the newest image again. Fix forward on `main`, then deploy as usual.
+
+**Code only.** If the bad release's migrations only added columns or tables, the old code runs fine on the new schema and no data is lost. Point the server's moving image tag at the old release:
+
+```bash
+ssh edenflowers-production
+cd /opt/edenflowers_store
+image=$(docker compose config --images app)
+docker pull "${image%:*}:1.6.0" && docker tag "${image%:*}:1.6.0" "$image"
+docker compose up -d app
+```
+
+**Code and database.** Needed when a migration renamed or dropped something, or corrupted data. Everything written since the dump is lost, so check Stripe for payments to reconcile afterwards.
+
+```bash
+just db-rollback production v1.6.0 tmp/production-v1.6.0-20261021T114210.dump
+```
+
+It asks before doing anything, backs up the current database first (so the rollback can be undone the same way), then restores the dump and starts that release. The dump must come from the same server, and from while that tag was running.
+
+Where to find the dump:
+
+- `just deploy production` backs up just before pushing, into `tmp/production-v<running release>-<timestamp>.dump`, and prints the rollback command.
+- Otherwise use a nightly dump. The server keeps 30 days of them, taken at 02:00. Copy one into `tmp/`, naming it after the release that was live then (the last tag before 02:00, from `git for-each-ref --sort=-creatordate --format='%(creatordate:iso) %(refname:short)' refs/tags`):
+
+  ```bash
+  ssh edenflowers-production "sudo ls -lt /opt/edenflowers_store/backups/"
+  ssh edenflowers-production "sudo cat /opt/edenflowers_store/backups/edenflowers_store_prod_20261021T020000.dump" \
+    > tmp/production-v1.6.0-20261021T020000.dump
+  ```
 
 ## Maintenance mode
 
