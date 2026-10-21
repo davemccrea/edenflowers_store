@@ -573,17 +573,14 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <div class="admin-card p-4 sm:p-5">
       <ol id="days" aria-label={~t"Days"} class="grid grid-cols-9 gap-0.5 sm:gap-1">
         <li :for={date <- @days} id={"day-#{date}"}>
-          <.link
-            patch={if date == @today, do: ~p"/admin", else: ~p"/admin?#{[day: Date.to_iso8601(date)]}"}
-            aria-current={date == @day && "true"}
-            class={["flex flex-col items-center rounded-lg py-2 transition-colors", if(date == @day, do: "bg-primary text-primary-content", else: "hover:bg-base-200/60")]}
-          >
-            <span class={["text-xs", date != @day && "text-base-content/65"]}>
-              {Localize.Date.to_string!(date, locale: @locale, format: "ccc")}
-            </span>
-            <span class="text-sm font-medium tabular-nums">{date.day}</span>
-            <.day_count count={length(Map.get(@orders_by_date, date, []))} calendar={@calendar} date={date} />
-          </.link>
+          <.day_cell
+            date={date}
+            count={length(Map.get(@orders_by_date, date, []))}
+            closed?={Availability.customer_cell_state(@calendar, date) == :closed}
+            selected?={date == @day}
+            today?={date == @today}
+            locale={@locale}
+          />
         </li>
       </ol>
 
@@ -606,24 +603,54 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     """
   end
 
-  attr :count, :integer, required: true
-  attr :calendar, :map, required: true
   attr :date, Date, required: true
+  attr :count, :integer, required: true
+  attr :closed?, :boolean, required: true
+  attr :selected?, :boolean, required: true
+  attr :today?, :boolean, required: true
+  attr :locale, :any, required: true
 
-  defp day_count(assigns) do
+  # The count sits in a badge so it can't be read as part of the date. A closed day
+  # is muted but still shows its orders, such as a custom order taken anyway.
+  defp day_cell(assigns) do
     ~H"""
-    <%= if @count == 0 and Availability.customer_cell_state(@calendar, @date) == :closed do %>
-      <span class="mt-0.5 flex h-6 items-center opacity-60">
-        <.icon name="hero-no-symbol" class="h-4 w-4" />
-        <span class="sr-only">{~t"Closed"}</span>
+    <.link
+      patch={if @today?, do: ~p"/admin", else: ~p"/admin?#{[day: Date.to_iso8601(@date)]}"}
+      aria-current={@selected? && "true"}
+      aria-label={day_cell_label(@date, @count, @closed?, @locale)}
+      class={["flex flex-col items-center gap-0.5 rounded-lg py-2 transition-colors", day_cell_class(@selected?, @closed?)]}
+    >
+      <span class={["text-xs", !@selected? && !@closed? && "text-base-content/65"]}>
+        {Localize.Date.to_string!(@date, locale: @locale, format: "ccc")}
       </span>
-    <% else %>
-      <span class={["mt-0.5 h-6 text-base font-semibold tabular-nums", @count == 0 && "opacity-50"]}>
-        {@count}
-        <span class="sr-only">{~t"orders"}</span>
+      <span class={["text-sm font-medium tabular-nums", @today? && "underline decoration-2 underline-offset-4"]}>
+        {@date.day}
       </span>
-    <% end %>
+      <span class="flex h-5 items-center">
+        <span
+          :if={@count > 0}
+          class={["badge badge-sm rounded-full border-0 font-semibold tabular-nums", if(@selected?, do: "bg-primary-content/20 text-primary-content", else: "bg-primary/10 text-primary")]}
+        >
+          {@count}
+        </span>
+        <.icon :if={@count == 0 and @closed?} name="hero-no-symbol" class="h-4 w-4" />
+      </span>
+    </.link>
     """
+  end
+
+  defp day_cell_class(true = _selected?, _closed?), do: "bg-primary text-primary-content"
+  defp day_cell_class(false, true), do: "bg-base-200/70 text-base-content/40 hover:bg-base-200"
+  defp day_cell_class(false, false), do: "hover:bg-base-200/60"
+
+  defp day_cell_label(date, count, closed?, locale) do
+    [
+      Format.weekday_day_month(date, locale),
+      closed? && ~t"Closed",
+      count > 0 && ~t"#{count = count} order(s)"N
+    ]
+    |> Enum.filter(& &1)
+    |> Enum.join(", ")
   end
 
   # `{label, empty}`; further out than tomorrow the heading is the date itself.
