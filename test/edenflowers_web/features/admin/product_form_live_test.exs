@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
   end
 
   test "adding and removing sizes in any order never needs a photo upload", %{conn: conn} do
-    product = generate(product())
+    product = generate(product(photo_slugs: ["a.jpg", "b.jpg"]))
     generate(product_variant(product_id: product.id))
     generate(product_variant(product_id: product.id))
 
@@ -126,6 +126,21 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
 
     assert Ash.get!(Product, product.id, authorize?: false).photo_slugs == ["c.jpg", "b.jpg"]
     assert Ash.get!(Edenflowers.Catalog.ProductVariant, variant.id, authorize?: false).own_photo_slug == "b.jpg"
+  end
+
+  test "hides a size's photo picker while the product has one photo", %{conn: conn} do
+    product = generate(product(photo_slugs: ["a.jpg", "b.jpg"]))
+    generate(product_variant(product_id: product.id))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+
+    radio = ~s|input[type=radio][name="form[product_variants][0][own_photo_slug]"]|
+    assert has_element?(view, radio <> ~s|[value=""][checked]|)
+    refute has_element?(view, radio <> ~s|[value="a.jpg"]|)
+
+    view |> element(~s|button[phx-click=remove_photo][phx-value-slug="b.jpg"]|) |> render_click()
+
+    refute has_element?(view, radio)
   end
 
   test "keeps uploaded photos when the first save fails validation", %{conn: conn} do
@@ -216,6 +231,20 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
 
     assert html =~ "Red roses"
     assert html =~ "Punaiset ruusut"
+  end
+
+  test "marks a language tab missing its name or description", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/products/new")
+
+    view
+    |> form("#product-form",
+      form: %{name: "Roses", description: "Red.", translations: %{"sv-FI": %{name: "Rosor", description: "Röda."}}}
+    )
+    |> render_change()
+
+    refute has_element?(view, "#language-tab-en-GB .status")
+    refute has_element?(view, "#language-tab-sv-FI .status")
+    assert has_element?(view, "#language-tab-fi .status")
   end
 
   defp upload_photos(view, names) do

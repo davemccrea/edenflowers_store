@@ -50,140 +50,87 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={{~t"Products", ~p"/admin/products"}}>
-          <:subtitle :if={@form.source.type == :update}>
-            <span id="product-status" class="inline-flex flex-wrap items-center gap-1.5">
-              <.badge :if={@form.source.data.draft} tone={:neutral}>{~t"Draft"}</.badge>
-              <.badge :if={!@form.source.data.draft} tone={:success}>{~t"Published"}</.badge>
-              <.badge :if={@form.source.data.sold_out?} tone={:warning}>{~t"Sold out"}</.badge>
-            </span>
-          </:subtitle>
-          <:actions>
-            <.button
-              :if={@form.source.type == :update && !@form.source.data.draft}
-              href={~q"/#{language}/product/#{@form.source.data.id}"}
-              target="_blank"
-              variant="secondary"
-              size="sm"
-            >
-              <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" /> {~t"View in store"}
-            </.button>
-            <.button type="submit" form="product-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
-              {~t"Save"}
-            </.button>
-          </:actions>
-        </.admin_page_header>
-
         <.form
           for={@form}
           id="product-form"
           data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
           phx-change="validate"
           phx-submit="save"
-          class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start"
         >
-          <div class="space-y-6">
-            <.form_section title={~t"Name and description"}>
-              <.language_fields form={@form} translating={@translating} />
-            </.form_section>
+          <%!-- Below the phone topbar, which is sticky too; from lg it's gone. --%>
+          <div class="bg-base-100 border-base-content/12 top-[calc(env(safe-area-inset-top)+4rem)] sticky z-20 -mx-4 mb-6 border-b px-4 pt-3 sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-6">
+            <.admin_page_header title={@page_title} back={{~t"Products", ~p"/admin/products"}}>
+              <:subtitle :if={@form.source.type == :update && @form.source.data.sold_out?}>
+                <.badge tone={:warning}>{~t"Sold out"}</.badge>
+              </:subtitle>
+              <:actions>
+                <.input field={@form[:draft]} type="checkbox" label={~t"Draft"} class="toggle toggle-sm" />
+                <.button
+                  :if={@form.source.type == :update && !@form.source.data.draft}
+                  href={~q"/#{language}/product/#{@form.source.data.id}"}
+                  target="_blank"
+                  variant="secondary"
+                  size="sm"
+                >
+                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                  <span class="max-sm:sr-only">{~t"View in store"}</span>
+                </.button>
+                <.button type="submit" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+                  {~t"Save"}
+                </.button>
+              </:actions>
+            </.admin_page_header>
+          </div>
 
-            <.form_section title={~t"Sizes and prices"}>
-              <:description>{~t"A size shows the main photo unless you pick another."}</:description>
-              <ul class="border-base-content/12 divide-base-content/8 divide-y border">
-                <.inputs_for :let={variant} field={@form[:product_variants]}>
-                  <li class="space-y-3 p-4">
-                    <div class="min-w-0 space-y-3 min-[1800px]:flex min-[1800px]:items-end min-[1800px]:gap-6 min-[1800px]:space-y-0">
-                      <div class="grid grid-cols-1 gap-3 min-[1800px]:flex-1 sm:grid-cols-3">
-                        <.input
-                          field={variant[:size]}
-                          type="select"
-                          label={~t"Size"}
-                          prompt={~t"One size"}
-                          options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
-                          class="select w-full"
-                        />
-                        <.input
-                          field={variant[:price]}
-                          type="text"
-                          inputmode="decimal"
-                          label={~t"Price (€)"}
-                          class="input w-full tabular-nums"
-                        />
-                        <%!-- ponytail: saving sends the count shown when the form opened, so a sale made
-                             meanwhile is undone and may oversell later. Send only changed counts if that bites. --%>
-                        <.input
-                          field={variant[:stock_quantity]}
-                          type="number"
-                          min="0"
-                          label={~t"In stock"}
-                          placeholder={~t"Unlimited"}
-                          class="input w-full tabular-nums"
-                        />
-                      </div>
-                      <div class="flex flex-wrap items-center gap-x-6 gap-y-2 min-[1800px]:shrink-0 min-[1800px]:flex-nowrap">
-                        <.input field={variant[:draft]} type="checkbox" label={~t"Draft"} />
-                        <.button
-                          type="button"
-                          phx-click="remove_variant"
-                          phx-value-path={variant.name}
-                          variant="destructive"
-                          size="sm"
-                          class="ml-auto"
-                        >
-                          {~t"Remove"}
-                        </.button>
-                      </div>
-                    </div>
-                    <.size_photo_picker
-                      field={variant[:own_photo_slug]}
+          <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
+            <div class="space-y-6">
+              <.form_section title={~t"Photos"}>
+                <:description>
+                  {~t"Up to #{count = @max_photos}. The main photo shows in the store's listings."}
+                </:description>
+                <.photo_gallery
+                  field={@form[:photo_slugs]}
+                  photo_slugs={photo_slugs(@form)}
+                  upload={@uploads.photos}
+                  max={@max_photos}
+                  show_errors={@form.source.submitted_once?}
+                />
+              </.form_section>
+
+              <.form_section title={~t"Sizes and prices"}>
+                <ul class="border-base-content/12 divide-base-content/8 divide-y border">
+                  <.inputs_for :let={variant} field={@form[:product_variants]}>
+                    <.size_row
+                      variant={variant}
                       photo_slugs={photo_slugs(@form)}
                       show_errors={@form.source.submitted_once?}
                     />
-                  </li>
-                </.inputs_for>
-                <li>
-                  <button
+                  </.inputs_for>
+                </ul>
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <.button type="button" phx-click="add_variant" variant="secondary" size="sm">
+                    <.icon name="hero-plus" class="h-4 w-4" /> {~t"Add size"}
+                  </.button>
+                  <.button
                     type="button"
-                    phx-click="add_variant"
-                    class="text-base-content/80 flex w-full items-center gap-2 p-4 text-sm font-medium transition-colors hover:bg-base-200/60 hover:text-base-content"
+                    phx-click="mark_sold_out"
+                    variant="secondary"
+                    size="sm"
+                    data-testid="mark-sold-out"
                   >
-                    <.icon name="hero-plus" class="h-4 w-4" />
-                    {~t"Add size"}
-                  </button>
-                </li>
-              </ul>
-              <div class="mt-3 flex flex-wrap items-end justify-between gap-4">
-                <div class="w-full sm:w-64">
-                  <.input
-                    field={@form[:tax_rate_id]}
-                    type="select"
-                    label={~t"VAT"}
-                    options={Enum.map(@tax_rates, &{&1.name, &1.id})}
-                    class="select w-full"
-                  />
+                    {~t"Mark every size sold out"}
+                  </.button>
                 </div>
-                <.button type="button" phx-click="mark_sold_out" variant="secondary" size="sm" data-testid="mark-sold-out">
-                  {~t"Mark every size sold out"}
-                </.button>
-              </div>
-            </.form_section>
-          </div>
+              </.form_section>
 
-          <aside class="flex flex-col gap-6 xl:row-span-2">
-            <.form_section title={~t"Photos"}>
-              <:description>{~t"Up to #{count = @max_photos}. The main photo shows in the store's listings."}</:description>
-              <.photo_gallery
-                field={@form[:photo_slugs]}
-                photo_slugs={photo_slugs(@form)}
-                upload={@uploads.photos}
-                max={@max_photos}
-                show_errors={@form.source.submitted_once?}
-              />
-            </.form_section>
+              <.form_section title={~t"Name and description"}>
+                <.language_fields form={@form} translating={@translating} />
+              </.form_section>
+            </div>
 
-            <.form_section title={~t"In the store"}>
-              <div class="space-y-4">
-                <div class="grid grid-cols-1 gap-4">
+            <aside class="xl:sticky xl:top-36">
+              <.form_section title={~t"In the store"}>
+                <div class="space-y-4">
                   <.input
                     field={@form[:product_category_id]}
                     type="select"
@@ -193,41 +140,37 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     class="select w-full"
                   />
                   <.input
+                    field={@form[:tax_rate_id]}
+                    type="select"
+                    label={~t"VAT"}
+                    options={Enum.map(@tax_rates, &{&1.name, &1.id})}
+                    class="select w-full"
+                  />
+                  <.input
                     field={@form[:position]}
                     type="number"
                     min="0"
                     label={~t"Position in store (0 = first)"}
                     class="input max-w-48 w-full tabular-nums"
                   />
+                  <div>
+                    <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />
+                    <.input
+                      :if={@free_dist_km}
+                      field={@form[:free_delivery]}
+                      type="checkbox"
+                      label={~t"Free delivery within #{km = @free_dist_km} km"}
+                    />
+                    <.input
+                      field={@form[:subscribable]}
+                      type="checkbox"
+                      label={~t"Can be bought as a subscription"}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <.input field={@form[:draft]} type="checkbox" label={~t"Draft"} />
-                  <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />
-                  <.input
-                    :if={@free_dist_km}
-                    field={@form[:free_delivery]}
-                    type="checkbox"
-                    label={~t"Free delivery within #{km = @free_dist_km} km"}
-                  />
-                  <.input
-                    field={@form[:subscribable]}
-                    type="checkbox"
-                    label={~t"Can be bought as a subscription"}
-                  />
-                </div>
-              </div>
-            </.form_section>
-          </aside>
-
-          <%!-- After the aside so its fields sit above Save once stacked. --%>
-          <.button
-            type="submit"
-            variant="primary"
-            phx-disable-with={~t"Saving…"}
-            class="w-full sm:w-auto sm:justify-self-start xl:col-start-1"
-          >
-            {~t"Save product"}
-          </.button>
+              </.form_section>
+            </aside>
+          </div>
         </.form>
       </.admin_page>
     </Layouts.admin>
@@ -250,93 +193,188 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       )
 
     ~H"""
-    <ul id="product-photos" class="grid grid-cols-3 gap-3">
-      <li :for={{slug, index} <- Enum.with_index(@photo_slugs)} data-testid="product-photo">
-        <input type="hidden" name={@field.name <> "[]"} value={slug} />
-        <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
-          <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
-          <.badge :if={index == 0} tone={:neutral} class="absolute top-1.5 left-1.5">{~t"Main"}</.badge>
-        </span>
-        <span class="mt-1.5 flex flex-wrap gap-x-3 text-sm">
-          <button
-            :if={index > 0}
-            type="button"
-            phx-click="make_main_photo"
-            phx-value-slug={slug}
-            class="link-underline-static-body"
-          >
-            {~t"Make main"}
-          </button>
-          <%!-- A product always has a photo, so the last one is replaced rather than removed. --%>
-          <button
-            :if={length(@photo_slugs) > 1}
-            type="button"
-            phx-click="remove_photo"
-            phx-value-slug={slug}
-            class="link-underline-static-body"
-          >
-            {~t"Remove"}
-          </button>
-        </span>
-      </li>
-      <li :for={entry <- @upload.entries}>
-        <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
-          <.live_img_preview entry={entry} class="absolute inset-0 h-full w-full object-cover opacity-60" />
-        </span>
-        <progress value={entry.progress} max="100" class="progress mt-1.5 h-1 w-full">{entry.progress}%</progress>
-      </li>
-      <li :if={length(@photo_slugs) + length(@upload.entries) < @max}>
-        <label
-          phx-drop-target={@upload.ref}
-          class="group outline-primary block has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
-        >
-          <span class="border-base-content/25 text-cream-content/70 bg-cream aspect-[4/5] flex flex-col items-center justify-center gap-1.5 border border-dashed transition-colors group-hover:border-base-content/50">
-            <.icon name="hero-plus" class="size-6" />
-            <span class="px-2 text-center text-sm">{~t"Add photos"}</span>
+    <div phx-drop-target={@upload.ref}>
+      <ul id="product-photos" class="grid grid-cols-3 gap-3 sm:grid-cols-5">
+        <li :for={{slug, index} <- Enum.with_index(@photo_slugs)} data-testid="product-photo">
+          <input type="hidden" name={@field.name <> "[]"} value={slug} />
+          <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
+            <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
+            <.badge :if={index == 0} tone={:neutral} icon="hero-star-solid" class="absolute top-1.5 left-1.5">
+              {~t"Main"}
+            </.badge>
+            <.icon_button
+              :if={index > 0}
+              phx-click="make_main_photo"
+              phx-value-slug={slug}
+              aria_label={~t"Make photo #{n = index + 1} main"}
+              class="bg-base-100/85 absolute top-1 left-1"
+            >
+              <.icon name="hero-star" class="size-5" />
+            </.icon_button>
+            <%!-- A product always has a photo, so the last one is replaced rather than removed. --%>
+            <.icon_button
+              :if={length(@photo_slugs) > 1}
+              phx-click="remove_photo"
+              phx-value-slug={slug}
+              aria_label={~t"Remove photo #{n = index + 1}"}
+              class="bg-base-100/85 absolute top-1 right-1"
+            >
+              <.icon name="hero-x-mark" class="size-5" />
+            </.icon_button>
           </span>
-          <.live_file_input upload={@upload} class="sr-only" />
-        </label>
-      </li>
-    </ul>
+        </li>
+        <li :for={entry <- @upload.entries} class="bg-cream aspect-[4/5] relative overflow-hidden">
+          <.live_img_preview entry={entry} class="absolute inset-0 h-full w-full object-cover opacity-50" />
+          <div class="absolute inset-0 grid place-items-center">
+            <div
+              class="radial-progress bg-base-100/80 [--size:3.5rem] text-sm"
+              style={"--value:#{entry.progress}"}
+              role="progressbar"
+              aria-valuenow={entry.progress}
+            >
+              {entry.progress}%
+            </div>
+          </div>
+        </li>
+        <li :if={length(@photo_slugs) + length(@upload.entries) < @max}>
+          <label class="group outline-primary block has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+            <span class="border-base-content/25 text-cream-content/70 bg-cream aspect-[4/5] flex flex-col items-center justify-center gap-1 border border-dashed px-2 text-center transition-colors group-hover:border-base-content/50">
+              <.icon name="hero-camera" class="size-7" />
+              <span class="text-sm font-medium">{~t"Add photos"}</span>
+              <span class="text-xs">{~t"or drop them here"}</span>
+            </span>
+            <.live_file_input upload={@upload} class="sr-only" />
+          </label>
+        </li>
+      </ul>
+    </div>
     <p :for={err <- @upload_errors} class="text-error mt-1.5 text-sm">{photo_upload_error(err)}</p>
     <.error :for={msg <- Enum.map(@errors, &translate_error/1)}>{msg}</.error>
     """
   end
 
-  attr :field, Phoenix.HTML.FormField, required: true
+  attr :variant, Phoenix.HTML.Form, required: true
   attr :photo_slugs, :list, required: true
   attr :show_errors, :boolean, required: true
 
-  # A size whose photo was just removed from the gallery shows as "Main photo",
-  # which is what saving gives it.
-  defp size_photo_picker(assigns) do
+  # One line per size from sm; on a phone the photo, size and remove sit above
+  # the price, stock and draft.
+  defp size_row(assigns) do
+    variant = assigns.variant
+    [main | others] = assigns.photo_slugs ++ [nil]
+    own = Enum.find(others, &(&1 && &1 == variant[:own_photo_slug].value))
+
     assigns =
       assign(assigns,
-        own: Enum.find(assigns.photo_slugs, &(&1 == assigns.field.value)),
-        errors: if(assigns.show_errors, do: assigns.field.errors, else: [])
+        main: main,
+        own: own,
+        size_label: size_label(variant[:size].value),
+        drawer: "size-photo-#{variant.index}",
+        picks?: length(assigns.photo_slugs) > 1,
+        errors: if(assigns.show_errors, do: variant[:own_photo_slug].errors, else: [])
       )
 
     ~H"""
-    <fieldset>
-      <legend class="text-base-content/80 mb-1.5 text-sm">{~t"Photo"}</legend>
-      <div class="flex flex-wrap gap-2">
-        <label class="outline-primary border-base-content/25 flex h-12 cursor-pointer items-center border px-3 text-sm has-[:checked]:outline-2 has-[:checked]:outline-offset-1 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-          <input type="radio" name={@field.name} value="" checked={is_nil(@own)} class="sr-only" />
-          {~t"Main photo"}
-        </label>
-        <label
-          :for={{slug, index} <- Enum.with_index(@photo_slugs, 1)}
-          class="outline-primary bg-cream aspect-[4/5] relative block h-12 cursor-pointer overflow-hidden has-[:checked]:outline-2 has-[:checked]:outline-offset-1 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+    <li class="p-3">
+      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 sm:grid-cols-[3rem_minmax(0,1fr)_7rem_7rem_auto_auto]">
+        <button
+          :if={@picks?}
+          type="button"
+          phx-click={JS.exec("phx-show", to: "##{@drawer}")}
+          aria-label={~t"Photo for #{size = @size_label}"}
+          aria-controls={@drawer}
+          class="bg-cream aspect-[4/5] outline-primary relative mb-2 block w-12 overflow-hidden outline-offset-2 hover:outline-1 focus-visible:outline-2"
         >
-          <input type="radio" name={@field.name} value={slug} checked={@own == slug} class="sr-only" />
-          <span class="sr-only">{~t"Photo #{index}"}</span>
-          <.image src={slug} alt="" width={80} height={100} class="absolute inset-0 h-full w-full object-cover" />
-        </label>
+          <.size_thumbnail slug={@own || @main} main?={is_nil(@own)} />
+        </button>
+        <span :if={!@picks?} class="bg-cream aspect-[4/5] relative mb-2 block w-12 overflow-hidden">
+          <.size_thumbnail :if={@main} slug={@main} main?={false} />
+        </span>
+        <.input
+          field={@variant[:size]}
+          type="select"
+          label={~t"Size"}
+          prompt={~t"One size"}
+          options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
+          class="select w-full"
+        />
+        <.icon_button
+          phx-click="remove_variant"
+          phx-value-path={@variant.name}
+          aria_label={~t"Remove #{size = @size_label}"}
+          class="mb-1 sm:order-last"
+        >
+          <.icon name="hero-trash" class="size-5" />
+        </.icon_button>
+        <div class="grid-cols-[1fr_1fr_auto] col-span-3 mt-3 grid items-end gap-3 sm:col-span-1 sm:contents">
+          <.input
+            field={@variant[:price]}
+            type="text"
+            inputmode="decimal"
+            label={~t"Price (€)"}
+            class="input w-full tabular-nums"
+          />
+          <%!-- ponytail: saving sends the count shown when the form opened, so a sale made
+               meanwhile is undone and may oversell later. Send only changed counts if that bites. --%>
+          <.input
+            field={@variant[:stock_quantity]}
+            type="number"
+            min="0"
+            label={~t"In stock"}
+            placeholder={~t"Unlimited"}
+            class="input w-full tabular-nums"
+          />
+          <.input field={@variant[:draft]} type="checkbox" label={~t"Draft"} class="toggle toggle-sm" />
+        </div>
       </div>
       <.error :for={msg <- Enum.map(@errors, &translate_error/1)}>{msg}</.error>
-    </fieldset>
+
+      <.admin_drawer :if={@picks?} id={@drawer} title={~t"Photo for #{size = @size_label}"}>
+        <.drawer_body>
+          <fieldset>
+            <legend class="sr-only">{~t"Photo for #{size = @size_label}"}</legend>
+            <div class="grid grid-cols-2 gap-3">
+              <%!-- The main photo submits "", so the size follows whichever photo is main. --%>
+              <label
+                :for={{slug, index} <- Enum.with_index(@photo_slugs)}
+                phx-click={JS.exec("phx-hide", to: "##{@drawer}")}
+                class="bg-cream aspect-[4/5] outline-primary relative block cursor-pointer overflow-hidden has-[:checked]:outline-3 has-[:checked]:outline-offset-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+              >
+                <input
+                  type="radio"
+                  name={@variant[:own_photo_slug].name}
+                  value={if index == 0, do: "", else: slug}
+                  checked={if index == 0, do: is_nil(@own), else: @own == slug}
+                  class="sr-only"
+                />
+                <span class="sr-only">{if index == 0, do: ~t"Main photo", else: ~t"Photo #{n = index + 1}"}</span>
+                <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
+                <.badge :if={index == 0} tone={:neutral} icon="hero-star-solid" class="absolute top-1.5 left-1.5">
+                  {~t"Main"}
+                </.badge>
+              </label>
+            </div>
+          </fieldset>
+          <p class="text-base-content/65 text-sm">{~t"Pick Main to follow whichever photo is main."}</p>
+        </.drawer_body>
+      </.admin_drawer>
+    </li>
     """
   end
+
+  attr :slug, :string, required: true
+  attr :main?, :boolean, required: true
+
+  defp size_thumbnail(assigns) do
+    ~H"""
+    <.image src={@slug} alt="" width={96} height={120} class="absolute inset-0 h-full w-full object-cover" />
+    <span :if={@main?} class="bg-base-100/85 absolute inset-x-0 bottom-0 text-center text-xs">{~t"Main"}</span>
+    """
+  end
+
+  defp size_label(size) when size in [nil, ""], do: ~t"One size"
+  defp size_label(size) when is_binary(size), do: size |> String.to_existing_atom() |> variant_size_label()
+  defp size_label(size), do: variant_size_label(size)
 
   @impl true
   def handle_event("validate", %{"form" => params}, socket) do
