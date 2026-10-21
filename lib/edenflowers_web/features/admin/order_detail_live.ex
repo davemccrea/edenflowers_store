@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   @photo_field "fulfillment[photo]"
 
   @impl true
-  def mount(%{"id" => id}, _session, socket) do
+  def mount(%{"id" => id} = params, _session, socket) do
     case Orders.get_order_for_admin(id, actor: socket.assigns.current_user) do
       {:ok, %Order{} = order} ->
         if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("order:changed:#{order.id}")
@@ -30,6 +30,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          socket
          |> assign(:page_title, ~t"Order #{order.order_reference}")
          |> assign(:locale, Localize.get_locale())
+         |> assign(:overview_day, overview_day(params["overview_day"]))
          |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
          |> assign_order(order)
          |> assign(:fulfillment_form, nil)
@@ -53,10 +54,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <.admin_page>
         <.admin_page_header
           title={@order.customer_name || @order.order_reference}
-          back={{~t"Orders", ~p"/admin/orders"}}
+          back={order_back(@overview_day)}
         >
           <:nav :if={@queue}>
-            <.queue_nav queue={@queue} fulfilled={@order.fulfillment_status == :fulfilled} />
+            <.queue_nav queue={@queue} fulfilled={@order.fulfillment_status == :fulfilled} overview_day={@overview_day} />
           </:nav>
           <:subtitle>
             <span class="flex flex-col gap-2.5">
@@ -897,6 +898,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   attr :queue, :map, required: true
   attr :fulfilled, :boolean, required: true
+  attr :overview_day, :any, required: true
 
   defp queue_nav(assigns) do
     ~H"""
@@ -912,6 +914,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         label={~t"Previous order"}
         arrow_key="ArrowLeft"
         transition="pop"
+        overview_day={@overview_day}
       />
       <span class="text-base-content/80 flex items-center px-3 tabular-nums">
         <%= if @fulfilled do %>
@@ -926,6 +929,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         label={~t"Next order"}
         arrow_key="ArrowRight"
         transition="push"
+        overview_day={@overview_day}
       />
     </nav>
     """
@@ -936,6 +940,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :label, :string, required: true
   attr :arrow_key, :string, required: true
   attr :transition, :string, required: true, doc: "Page transition in app.js, matching the arrow's direction"
+  attr :overview_day, :any, required: true
 
   defp queue_link(%{to: nil} = assigns) do
     ~H"""
@@ -948,7 +953,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp queue_link(assigns) do
     ~H"""
     <.link
-      navigate={~p"/admin/orders/#{@to}"}
+      navigate={order_path(@to, @overview_day)}
       class="text-base-content/80 flex w-9 items-center justify-center transition-colors pointer-coarse:w-11 hover:bg-base-200 hover:text-base-content"
       aria-label={@label}
       aria-keyshortcuts={@arrow_key}
@@ -1357,6 +1362,21 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp cancel_unavailable(%{fulfillment_status: :pending}), do: nil
   defp cancel_unavailable(%{fulfillment_status: :fulfilled}), do: ~t"Already fulfilled"
   defp cancel_unavailable(%{fulfillment_status: :cancelled}), do: ~t"Already cancelled"
+
+  defp overview_day(value) when not is_binary(value), do: nil
+
+  defp overview_day(value) do
+    case Date.from_iso8601(value) do
+      {:ok, date} -> date
+      {:error, _} -> nil
+    end
+  end
+
+  defp order_back(nil), do: {~t"Orders", ~p"/admin/orders"}
+  defp order_back(date), do: {~t"Overview", ~p"/admin?#{[day: Date.to_iso8601(date)]}"}
+
+  defp order_path(id, nil), do: ~p"/admin/orders/#{id}"
+  defp order_path(id, date), do: ~p"/admin/orders/#{id}?#{[overview_day: Date.to_iso8601(date)]}"
 
   # Muted rows inherit the row's own muted tone.
 

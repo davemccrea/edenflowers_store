@@ -746,6 +746,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{later.id}"]|)
   end
 
+  test "returns to the selected Overview day and keeps it while stepping through orders", %{conn: conn} do
+    day = Edenflowers.ShopTime.today()
+    current = placed_order(order_reference: "CURRENT", fulfillment_date: day)
+    later = placed_order(order_reference: "LATER", fulfillment_date: Date.add(day, 1))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{current.id}?#{[overview_day: Date.to_iso8601(day)]}")
+
+    assert has_element?(view, ~s|a[href="/admin?day=#{day}"]|, "Overview")
+    assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{later.id}?overview_day=#{day}"]|)
+
+    view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+    view |> form("#confirm-fulfillment-form") |> render_submit()
+
+    assert has_element?(view, "#order-queue-nav", "Fulfilled")
+  end
+
   test "keeps stepping after marking an order fulfilled and counts what is left", %{conn: conn} do
     current = placed_order(order_reference: "CURRENT", fulfillment_date: ~D[2026-06-11])
     later = placed_order(order_reference: "LATER", fulfillment_date: ~D[2026-06-12])

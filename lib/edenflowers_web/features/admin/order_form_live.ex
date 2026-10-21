@@ -97,7 +97,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             {~t"This order is paid. If the total changes, the order page shows the balance to collect or refund."}
           </:subtitle>
           <:actions>
-            <.button type="submit" form="order-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+            <.button
+              type="submit"
+              form="order-form"
+              variant="primary"
+              size="sm"
+              phx-disable-with={if @mode == :new, do: ~t"Placing…", else: ~t"Saving…"}
+            >
               {if @mode == :new, do: ~t"Place order", else: ~t"Save"}
             </.button>
           </:actions>
@@ -197,7 +203,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   />
                 </.inputs_for>
                 <p :if={@form[:line_items].value in [nil, []]} class="text-base-content/75 text-sm">
-                  {~t"No items yet."}
+                  {~t"Add an item to the order."}
                 </p>
               </div>
               <div :if={@form.source.submitted_once?}>
