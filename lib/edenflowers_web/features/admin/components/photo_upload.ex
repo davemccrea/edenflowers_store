@@ -148,7 +148,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
         class="group/drop outline-primary block cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
       >
         <span class="sr-only">{@label}</span>
-        <span class={["bg-cream aspect-[4/5] relative block w-full", (@errors != [] or @upload_errors != []) && "outline-error outline-1"]}>
+        <span class={["bg-base-200 aspect-[4/5] relative block w-full", (@errors != [] or @upload_errors != []) && "outline-error outline-1"]}>
           <.live_img_preview
             :for={entry <- @upload.entries}
             entry={entry}
@@ -179,9 +179,9 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
           />
           <span
             :if={@upload.entries == [] and is_nil(@photo)}
-            class="border-base-content/12 text-cream-content/70 absolute inset-0 flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid group-hover/drop:bg-base-200/50 group-hover/drop:text-cream-content"
+            class="border-base-content/20 text-base-content/70 absolute inset-0 flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid group-hover/drop:border-primary/50 group-hover/drop:bg-primary/5 group-hover/drop:text-primary"
           >
-            <span class="bg-cream size-9 grid place-items-center rounded-full">
+            <span class="bg-base-100 size-9 grid place-items-center rounded-full">
               <.icon name="hero-plus" class="size-4" />
             </span>
             <span class="text-sm font-medium">{~t"Add photo"}</span>
