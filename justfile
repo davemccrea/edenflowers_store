@@ -134,50 +134,15 @@ db-backup target:
     mv "$file.partial" "$file"
     ls -lh "$file"
 
-# Roll a server back to a release tag (e.g. v1.6.0) and restore a database backup taken while it ran
-[group('database')]
-db-rollback target tag dump:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    case "{{ target }}" in
-      staging) db=edenflowers_store_staging ;;
-      production) db=edenflowers_store_prod ;;
-      *) echo "Unknown target '{{ target }}', use staging or production" >&2; exit 1 ;;
-    esac
-    [[ -s "{{ dump }}" ]] || { echo "No dump at {{ dump }}" >&2; exit 1; }
-    [[ "{{ dump }}" == *"{{ tag }}"* ]] || echo "Warning: {{ dump }} was not taken while {{ tag }} was running."
-    echo "This replaces the {{ target }} database with {{ dump }} and runs {{ tag }}."
-    echo "Anything written since that backup (orders, payments) is lost; check Stripe for payments to reconcile."
-    read -r -p "Roll back {{ target }}? [y/N] " answer
-    [[ "$answer" =~ ^[yY]$ ]] || exit 1
-    # The rollback itself must be undoable
-    just db-backup {{ target }}
-    ssh -T edenflowers-{{ target }} "sudo -u postgres tee /tmp/rollback.dump >/dev/null" < "{{ dump }}"
-    ssh -T edenflowers-{{ target }} bash -s <<EOF
-    set -euo pipefail
-    cd /opt/edenflowers_store
-    # Compose runs a moving tag (latest or staging), so point it at the old release's image
-    image=\$(docker compose config --images app)
-    docker pull "\${image%:*}:{{ trim_start_match(tag, "v") }}"
-    docker tag "\${image%:*}:{{ trim_start_match(tag, "v") }}" "\$image"
-    docker compose stop app
-    sudo -u postgres dropdb --force $db
-    # --create restores the database's owner and grants along with it
-    sudo -u postgres pg_restore --create --exit-on-error -d postgres /tmp/rollback.dump
-    sudo rm /tmp/rollback.dump
-    docker compose up -d app
-    for _ in \$(seq 60); do
-      docker compose exec -T app /app/bin/edenflowers rpc ':ok' >/dev/null 2>&1 && exit 0
-      sleep 2
-    done
-    echo "The app didn't come up within 2 minutes" >&2; exit 1
-    EOF
-    echo "{{ target }} is on {{ tag }}. The next deploy pulls the moving tag again."
-
 # Deploy to staging or production (asks if no target is given)
 [group('deployment')]
 deploy *args:
     ./scripts/deploy.sh {{ args }}
+
+# Roll a server back to a release tag (e.g. v1.6.0), restoring a database backup taken while it ran if one is given
+[group('deployment')]
+rollback target tag dump="":
+    ./scripts/rollback.sh {{ target }} {{ tag }} {{ dump }}
 
 # Follow the latest deploy until it finishes
 [group('deployment')]

@@ -51,7 +51,7 @@ just db-reset local|staging     # drop and migrate dev + test, or staging
 just db-seed local|staging      # seed the local or staging database (run after db-reset)
 just db-seed production         # one-off base seed of an empty production database
 just db-backup staging|production # pg_dump a server's database into tmp/
-just db-rollback production v1.6.0 tmp/<dump> # run an old release and restore its dump
+just rollback production v1.6.0 [tmp/<dump>] # run an old release, restoring a dump if given
 just deploy staging             # push current branch and deploy it to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
 just deploy-watch               # follow the latest deploy run
@@ -100,20 +100,18 @@ Servers are provisioned by [phoenix-ansible](https://github.com/davemccrea/phoen
 
 A rollback lasts until the next deploy, which pulls the newest image again. Fix forward on `main`, then deploy as usual.
 
-**Code only.** If the bad release's migrations only added columns or tables, the old code runs fine on the new schema and no data is lost. Point the server's moving image tag at the old release:
+**Code only.** If the bad release's migrations only added columns or tables, the old code runs fine on the new schema and no data is lost:
 
 ```bash
-ssh edenflowers-production
-cd /opt/edenflowers_store
-image=$(docker compose config --images app)
-docker pull "${image%:*}:1.6.0" && docker tag "${image%:*}:1.6.0" "$image"
-docker compose up -d app
+just rollback production v1.6.0
 ```
+
+It lists the migrations the old release will run without and asks before starting it.
 
 **Code and database.** Needed when a migration renamed or dropped something, or corrupted data. Everything written since the dump is lost, so check Stripe for payments to reconcile afterwards.
 
 ```bash
-just db-rollback production v1.6.0 tmp/production-v1.6.0-20261021T114210.dump
+just rollback production v1.6.0 tmp/production-v1.6.0-20261021T114210.dump
 ```
 
 It asks before doing anything, backs up the current database first (so the rollback can be undone the same way), then restores the dump and starts that release. The dump must come from the same server, and from while that tag was running.
