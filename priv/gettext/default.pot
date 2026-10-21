@@ -4778,6 +4778,7 @@ msgstr ""
 #: lib/edenflowers_web/components/core_components.ex:894
 #: lib/edenflowers_web/features/admin/overview_live.ex:150
 #: lib/edenflowers_web/features/admin/product_form_live.ex:62
+#: lib/edenflowers_web/features/admin/product_form_live.ex:130
 #: lib/edenflowers_web/features/admin/products_live.ex:136
 #: lib/edenflowers_web/features/store/product_live.ex:179
 #: lib/edenflowers_web/features/store/product_live.ex:289
@@ -4808,11 +4809,6 @@ msgstr ""
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:775
 #, elixir-autogen, elixir-format
 msgid "Change your cart to continue."
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/product_form_live.ex:130
-#, elixir-autogen, elixir-format
-msgid "Mark every size sold out"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:324
