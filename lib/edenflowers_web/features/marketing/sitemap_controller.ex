@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Marketing.SitemapController do
       alternates("/#{language}/courses")
     ]
 
-    categories = Enum.map(Catalog.list_categories!(), &category_alternates/1)
+    categories = for category <- Catalog.list_categories!(), do: alternates("/#{language}/store/#{category.slug}")
     products = for product <- Catalog.list_store_products!(), do: alternates("/#{language}/product/#{product.id}")
     courses = for course <- Courses.list_upcoming_courses!(), do: alternates("/#{language}/courses/#{course.id}")
 

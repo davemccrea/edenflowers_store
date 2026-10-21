@@ -160,10 +160,10 @@ defmodule EdenflowersWeb.Store.StoreLive do
   end
 
   defp load_products(category_slug) do
-    case Catalog.get_category_by_slug(category_slug, Edenflowers.Format.locale()) do
+    case Catalog.get_category_by_slug(category_slug) do
       {:ok, category} ->
         products = category.id |> Catalog.list_products_by_category!() |> Translations.translate()
-        {:ok, products, Translations.translate(category), category_alternates(category)}
+        {:ok, products, Translations.translate(category), alternates("/#{language}/store/#{category.slug}")}
 
       {:error, _} ->
         :error

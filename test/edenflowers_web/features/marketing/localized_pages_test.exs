@@ -15,28 +15,21 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
   test "a page's title names what it offers and where, with the brand last", %{conn: conn} do
     generate(bouquets())
     weddings = conn |> get("/fi/haat") |> html_response(200)
-    bouquets = conn |> get("/sv/butik/buketter") |> html_response(200)
+    bouquets = conn |> get("/sv/butik/bouquets") |> html_response(200)
 
     assert weddings =~ ~r/<title[^>]*>\s*Hääkukat Vaasa\s*\| Eden Flowers<\/title>/
     assert weddings =~ ~s(<meta property="og:title" content="Hääkukat Vaasa | Eden Flowers")
     assert bouquets =~ ~r/<title[^>]*>\s*Buketter i Vasa\s*\| Eden Flowers<\/title>/
   end
 
-  test "a page links to its other languages, with the category's slug in each", %{conn: conn} do
+  test "a page links to its other languages", %{conn: conn} do
     generate(bouquets())
-    html = conn |> get("/sv/butik/buketter") |> html_response(200)
+    html = conn |> get("/sv/butik/bouquets") |> html_response(200)
 
     assert html =~ ~s(<link rel="alternate" hreflang="en" href="http://localhost:4002/en/store/bouquets")
-    assert html =~ ~s(<link rel="alternate" hreflang="fi" href="http://localhost:4002/fi/kauppa/kukkakimput")
-    assert html =~ ~s(<link rel="alternate" hreflang="sv" href="http://localhost:4002/sv/butik/buketter")
+    assert html =~ ~s(<link rel="alternate" hreflang="fi" href="http://localhost:4002/fi/kauppa/bouquets")
+    assert html =~ ~s(<link rel="alternate" hreflang="sv" href="http://localhost:4002/sv/butik/bouquets")
     assert html =~ ~s(<link rel="alternate" hreflang="x-default" href="http://localhost:4002/")
-  end
-
-  test "a category's own-language slug is the only one its URL takes", %{conn: conn} do
-    generate(bouquets())
-
-    assert conn |> get("/fi/kauppa/kukkakimput") |> html_response(200) =~ "<h1"
-    assert_error_sent 404, fn -> get(conn, "/fi/kauppa/buketter") end
   end
 
   test "the language switcher goes to the same page in the other language", %{conn: conn} do
@@ -75,7 +68,7 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     product_category(
       slug: "bouquets",
       visibility: :public,
-      translations: %{fi: %{name: "Kukkakimput", slug: "kukkakimput"}, "sv-FI": %{name: "Buketter", slug: "buketter"}}
+      translations: %{fi: %{name: "Kukkakimput"}, "sv-FI": %{name: "Buketter"}}
     )
   end
 end

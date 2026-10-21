@@ -86,12 +86,10 @@ Repo.transaction(fn ->
       translations: %{
         "sv-FI": %{
           name: "Buketter",
-          slug: "buketter",
           description: "Handgjorda blomsterarrangemang med säsongens blommor i eleganta kompositioner."
         },
         fi: %{
           name: "Kukkakimput",
-          slug: "kukkakimput",
           description: "Käsintehtyjä kukka-asetelmia sesongin kukista eleganteissa sommitelmissa."
         }
       }
@@ -104,12 +102,10 @@ Repo.transaction(fn ->
       translations: %{
         "sv-FI": %{
           name: "Växter",
-          slug: "vaxter",
           description: "Krukväxter och grönska för hemmet, valda för sin karaktär."
         },
         fi: %{
           name: "Kasvit",
-          slug: "kasvit",
           description: "Ruukkukasveja ja viherkasveja kotiin, valittuna luonteensa mukaan."
         }
       }
@@ -126,12 +122,10 @@ Repo.transaction(fn ->
       translations: %{
         "sv-FI": %{
           name: "Kort",
-          slug: "kort",
           description: "Omsorgsfullt designade gratulationskort för varje tillfälle och känsla."
         },
         fi: %{
           name: "Kortit",
-          slug: "kortit",
           description: "Huolellisesti suunniteltuja onnittelukortteja jokaiseen tilanteeseen."
         }
       }
@@ -144,12 +138,10 @@ Repo.transaction(fn ->
       translations: %{
         "sv-FI": %{
           name: "Begagnat",
-          slug: "begagnat",
           description: "Utvalda vintage- och varsamt använda föremål som hittar nya hem och berättelser."
         },
         fi: %{
           name: "Käytetty",
-          slug: "kaytetty",
           description: "Valittuja vintage- ja hellävaraisesti käytettyjä esineitä uusiin koteihin."
         }
       }
