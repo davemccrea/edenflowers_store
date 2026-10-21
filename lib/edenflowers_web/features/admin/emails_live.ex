@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(:page_title, ~t"Emails") |> assign(:languages, @languages)}
+    {:ok, socket |> assign(:page_title, ~t"Email previews") |> assign(:languages, @languages)}
   end
 
   @impl true
@@ -39,7 +39,7 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={~t"Emails"}>
+        <.admin_page_header title={~t"Email previews"}>
           <:subtitle>{~t"Every email customers can get, with example details."}</:subtitle>
           <:actions>
             <div class="join">

@@ -203,11 +203,12 @@ defmodule EdenflowersWeb.Layouts do
          {EdenflowersWeb.Admin.PromotionsLive.default_path(), ~t"Promotions", true, "hero-receipt-percent"},
          {~p"/admin/fulfillments", ~t"Delivery and pickup", true, "hero-calendar-days"}
        ]},
+      {~t"Marketing", [{"https://app.brevo.com", "Brevo", false, "hero-paper-airplane"}]},
       {~t"Finances", [{~p"/admin/expenses", ~t"Expenses", true, "hero-banknotes"}]}
     ]
 
     system_nav = [
-      {~p"/admin/emails", ~t"Emails", true, "hero-envelope"},
+      {~p"/admin/emails", ~t"Email previews", true, "hero-envelope"},
       {"/admin/errors", ~t"Errors", false, "hero-exclamation-triangle"},
       {"/admin/oban", "Oban", false, "hero-cpu-chip"},
       {"/admin/ash", "AshAdmin", false, "hero-circle-stack"}
@@ -411,12 +412,17 @@ defmodule EdenflowersWeb.Layouts do
   attr :exact, :boolean, default: false
 
   defp admin_nav_item(assigns) do
+    external = String.starts_with?(assigns.path, "https://")
+
     assigns =
-      assign(assigns, :active, admin_nav_active?(assigns.current_path, assigns.path, assigns.exact))
+      assigns
+      |> assign(:external, external)
+      |> assign(:active, not external and admin_nav_active?(assigns.current_path, assigns.path, assigns.exact))
 
     ~H"""
     <.link
       {if @live?, do: [navigate: @path], else: [href: @path]}
+      {if @external, do: [target: "_blank", rel: "noopener"], else: []}
       aria-current={@active && "page"}
       class={["flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
     do: "border-primary text-base-content bg-base-300/50 border-l-2 font-medium",
