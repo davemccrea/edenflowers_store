@@ -270,14 +270,6 @@ defmodule EdenflowersWeb.Layouts do
             >
               <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
             </button>
-            <.link
-              id="store-shortcut-compact"
-              href={~q"/#{language}"}
-              aria-label={~t"View store"}
-              class="touch-target group flex h-12 w-8 items-center justify-center"
-            >
-              <.icon name="hero-building-storefront" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-            </.link>
           </div>
           <.link
             navigate={~p"/admin"}
@@ -298,17 +290,7 @@ defmodule EdenflowersWeb.Layouts do
              the user menu to open over a page's sticky header. --%>
         <div class="[view-transition-name:admin-header] border-base-content/20 relative z-30 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
           <.admin_search id="admin-search" class="w-full max-w-md" />
-          <div class="flex items-center gap-4">
-            <.link
-              id="store-shortcut"
-              href={~q"/#{language}"}
-              class="text-base-content/75 flex items-center gap-2 text-sm hover:text-base-content"
-            >
-              <.icon name="hero-building-storefront" class="h-5 w-5" />
-              {~t"View store"}
-            </.link>
-            <.admin_account_menu current_user={@current_user} />
-          </div>
+          <.admin_account_menu current_user={@current_user} />
         </div>
 
         <main
