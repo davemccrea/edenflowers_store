@@ -436,7 +436,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               </label>
             </div>
           </fieldset>
-          <p class="text-base-content/65 text-sm">{~t"Pick Main to follow whichever photo is main."}</p>
+          <p class="text-base-content/75 text-sm">{~t"Pick Main to follow whichever photo is main."}</p>
         </.drawer_body>
       </.admin_drawer>
     </li>
