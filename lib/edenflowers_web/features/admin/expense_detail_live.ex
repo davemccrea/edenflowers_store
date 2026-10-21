@@ -1,9 +1,9 @@
 defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   use EdenflowersWeb, :live_view
 
-  import EdenflowersWeb.Admin.Components
-
   require Logger
+
+  import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Expenses
   alias Edenflowers.Expenses.Expense
