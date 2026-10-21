@@ -23,6 +23,12 @@
   background-color: var(--color-base-100);
 }
 
+.admin-sidebar {
+  /* Keep the edge visible beside the page's sticky form header (z-20). */
+  z-index: 40;
+  box-shadow: 4px 0 12px -6px color-mix(in oklab, var(--color-base-content) 24%, transparent);
+}
+
 /* The tint only reads as a page behind boxed cards. On phones, where cards run
    edge to edge (see admin-card), it would stripe the page between sections. */
 @media (width >= 40rem) {
