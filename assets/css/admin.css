@@ -44,7 +44,7 @@
     .btn-disabled
   ) {
   background-color: var(--color-base-200);
-  border-color: var(--color-base-300);
+  border-color: color-mix(in oklab, var(--color-base-content) 12%, transparent);
   color: var(--color-base-content);
   box-shadow: none;
   background-image: none;
@@ -241,33 +241,32 @@ body:has(.admin-theme) {
   }
 }
 
-/* Tailwind UI-style pills: a 50-tint fill, 700 text, inset 600/20 ring. */
+/* Status lives in the fill and text; every badge keeps the same quiet edge. */
+.admin-theme .badge[class*="admin-badge-"] {
+  border-color: color-mix(in oklab, var(--color-base-content) 12%, transparent);
+}
+
 .badge.admin-badge-success {
-  border-color: color-mix(in oklab, var(--color-emerald-600) 20%, transparent);
   background-color: var(--color-emerald-50);
   color: var(--color-emerald-700);
 }
 
 .badge.admin-badge-warning {
-  border-color: color-mix(in oklab, var(--color-amber-600) 25%, transparent);
   background-color: var(--color-amber-50);
   color: var(--color-amber-800);
 }
 
 .badge.admin-badge-attention {
-  border-color: color-mix(in oklab, var(--color-orange-600) 20%, transparent);
   background-color: var(--color-orange-50);
   color: var(--color-orange-700);
 }
 
 .badge.admin-badge-error {
-  border-color: color-mix(in oklab, var(--color-red-600) 20%, transparent);
   background-color: var(--color-red-50);
   color: var(--color-red-700);
 }
 
 .badge.admin-badge-neutral {
-  border-color: color-mix(in oklab, var(--color-base-content) 14%, transparent);
   background-color: color-mix(
     in oklab,
     var(--color-base-content) 9%,
@@ -300,11 +299,6 @@ body:has(.admin-theme) {
 @keyframes admin-table-overflow-cue {
   from,
   90% {
-    border-right-color: color-mix(
-      in oklab,
-      var(--color-primary) 55%,
-      transparent
-    );
     box-shadow: inset -0.75rem 0 0.75rem -0.75rem
       color-mix(in oklab, var(--color-base-content) 38%, transparent);
   }

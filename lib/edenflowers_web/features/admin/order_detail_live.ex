@@ -169,7 +169,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
               <div
                 :if={present?(@order.delivery_instructions)}
-                class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
+                class="bg-warning/15 border-base-content/12 mt-5 flex gap-2.5 border px-3 py-2.5"
               >
                 <.icon name="hero-information-circle" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
                 <div>
@@ -181,7 +181,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               <div
                 :if={@order.fulfillment_email_failed_at}
                 id="order-confirmation-failed"
-                class="bg-warning/15 border-warning/40 mt-5 flex gap-2.5 border px-3 py-2.5"
+                class="bg-warning/15 border-base-content/12 mt-5 flex gap-2.5 border px-3 py-2.5"
               >
                 <.icon name="hero-envelope" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
                 <div class="text-sm">
@@ -252,7 +252,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <section
               id="order-payment-summary"
               class={["border p-4 sm:p-5 xl:order-first", if(!@order.settled?,
-    do: "bg-warning/10 border-warning/40",
+    do: "bg-warning/10 border-base-content/12",
     else: "bg-base-100 border-base-content/12")]}
             >
               <h2 class="text-base-content mb-4 text-base font-semibold">{~t"Payment"}</h2>
@@ -304,7 +304,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               <div
                 :if={@order.receipt_email_failed_at || @order.order_details_email_failed_at}
                 id="order-email-failed"
-                class="bg-warning/15 border-warning/40 mt-4 flex gap-2.5 border px-3 py-2.5 text-sm"
+                class="bg-warning/15 border-base-content/12 mt-4 flex gap-2.5 border px-3 py-2.5 text-sm"
               >
                 <.icon name="hero-envelope" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
                 <div>
@@ -373,7 +373,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               <div
                 :if={@order.missing_delivery_phone?}
                 id="order-missing-phone"
-                class={["bg-warning/15 border-warning/40 flex gap-2.5 border px-3 py-2.5", @order.gift && present?(@order.recipient_name) && "mt-5"]}
+                class={["bg-warning/15 border-base-content/12 flex gap-2.5 border px-3 py-2.5", @order.gift && present?(@order.recipient_name) && "mt-5"]}
               >
                 <.icon name="hero-phone-x-mark" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
                 <p class="text-warning-content text-sm font-semibold">{~t"Missing recipient phone"}</p>
@@ -381,7 +381,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.widget>
 
             <.widget id="order-log" title={~t"History"}>
-              <ol class="divide-base-content/8 divide-y text-sm">
+              <ol class="divide-base-content/12 divide-y text-sm">
                 <.history_entry
                   :for={{entry, index} <- Enum.with_index(@log)}
                   id={"order-log-entry-#{index}"}
@@ -429,7 +429,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           <p :if={@order.customer_name} class="text-base-content font-medium">{@order.customer_name}</p>
           <p class="text-base-content/75 text-sm tabular-nums">{@order.order_reference}</p>
         </div>
-        <dl class="divide-base-content/8 border-base-content/12 divide-y border-y text-sm tabular-nums">
+        <dl class="divide-base-content/12 border-base-content/12 divide-y border-y text-sm tabular-nums">
           <div class="flex justify-between gap-4 py-2">
             <dt class="text-base-content/75">{~t"Total"}</dt>
             <dd>{Format.currency(@order.grand_total, @locale)}</dd>
@@ -966,7 +966,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   # What to make, not what it costs: the prices are in the Payment section.
   defp readonly_line_items(assigns) do
     ~H"""
-    <ul class="divide-base-content/8 divide-y">
+    <ul class="divide-base-content/12 divide-y">
       <li :for={line_item <- @line_items} class="flex gap-4 py-4 first:pt-0 last:pb-0">
         <div
           :if={is_nil(line_item.product_image_slug)}

@@ -102,7 +102,7 @@ defmodule EdenflowersWeb.Admin.Components do
       id={@id}
       popover
       style={"position-anchor: --#{@id}"}
-      class={["dropdown dropdown-end menu bg-base-100 border-base-300 mt-2 border p-1 shadow", @class]}
+      class={["dropdown dropdown-end menu bg-base-100 border-base-content/12 mt-2 border p-1 shadow", @class]}
     >
       {render_slot(@inner_block)}
     </ul>
@@ -385,7 +385,7 @@ defmodule EdenflowersWeb.Admin.Components do
     assigns = assign(assigns, :collect?, Decimal.positive?(assigns.record.balance))
 
     ~H"""
-    <div id={@id} class={["border-warning/40 border-t pt-4", @class]}>
+    <div id={@id} class={["border-base-content/12 border-t pt-4", @class]}>
       <p class="text-base-content flex items-baseline justify-between gap-4 text-base font-semibold">
         {if @collect?, do: ~t"To collect", else: ~t"To refund"}
         <span class="tabular-nums">{Edenflowers.Format.currency(Decimal.abs(@record.balance), @locale)}</span>

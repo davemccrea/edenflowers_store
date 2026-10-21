@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
           </:actions>
         </.admin_page_header>
 
-        <div id="emails" class="admin-card divide-base-content/8 divide-y">
+        <div id="emails" class="admin-card divide-base-content/12 divide-y">
           <details
             :for={{[{email_type, _, _, _} | _] = previews, type_index} <- Enum.with_index(@email_types)}
             id={"email-type-#{type_index}"}
@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
               <span>{Gettext.gettext(EdenflowersWeb.Gettext, email_type)}</span>
               <span class="text-base-content/75 ml-auto font-normal tabular-nums">{length(previews)}</span>
             </summary>
-            <div class="border-base-content/8 divide-base-content/8 ml-6 divide-y border-t border-l sm:ml-7">
+            <div class="border-base-content/12 divide-base-content/12 ml-6 divide-y border-t border-l sm:ml-7">
               <details
                 :for={{{_, scenario, _, email}, scenario_index} <- Enum.with_index(previews)}
                 id={"email-#{type_index}-#{scenario_index}"}

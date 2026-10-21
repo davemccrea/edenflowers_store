@@ -150,7 +150,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
           <aside :if={@history != []} class="flex flex-col gap-6">
             <.widget id="promotion-history-widget" title={~t"History"}>
-              <ol id="promotion-history" class="divide-base-content/8 divide-y text-sm">
+              <ol id="promotion-history" class="divide-base-content/12 divide-y text-sm">
                 <.history_entry
                   :for={{entry, index} <- Enum.with_index(@history)}
                   id={"promotion-history-entry-#{index}"}

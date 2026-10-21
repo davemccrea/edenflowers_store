@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
 
         <div :if={@term != ""} class="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
           <.widget id="search-orders" title={~t"Orders"} count={length(@orders)}>
-            <ul :if={@orders != []} class="divide-base-content/8 -my-2 divide-y">
+            <ul :if={@orders != []} class="divide-base-content/12 -my-2 divide-y">
               <li :for={order <- @orders}>
                 <.link
                   navigate={~p"/admin/orders/#{order.id}"}
@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
           </.widget>
 
           <.widget id="search-customers" title={~t"Customers"} count={length(@customers)}>
-            <ul :if={@customers != []} class="divide-base-content/8 -my-2 divide-y">
+            <ul :if={@customers != []} class="divide-base-content/12 -my-2 divide-y">
               <li :for={customer <- @customers}>
                 <.link navigate={~p"/admin/customers/#{customer.id}"} class="block py-2.5 hover:underline">
                   <span class="text-base-content block truncate font-medium">{customer.name || customer.email}</span>
