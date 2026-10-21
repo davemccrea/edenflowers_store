@@ -4,7 +4,7 @@ title: Streamline the product form
 status: in-progress
 assignee: []
 created_date: '2026-10-21 17:33'
-updated_date: '2026-10-21 17:57'
+updated_date: '2026-10-21 21:10'
 labels:
   - spec
   - admin
@@ -36,12 +36,14 @@ Jennie edits a product's stock, price and status without scrolling past three de
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 A size's price and stock can be edited without scrolling on a 1440x900 screen with three sizes
-- [ ] #2 The form has one Save, reachable at any scroll position
-- [ ] #3 Every photo action and the size photo choice work by touch
+- [x] #2 The form has one Save, reachable at any scroll position
+- [x] #3 Every photo action and the size photo choice work by touch
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Prototype verdict (TASK-86.1): layout A as grilled. Build with app components first, then DaisyUI, custom only if required.
+
+2026-10-22 status audit: TASK-86.2, .4, .5 and .6 are done. TASK-86.3 remains ready-for-agent for the whole-card photo drop target. AC #1 still needs a 1440x900 layout check with three sizes after name and description moved above Photos (db603ce1).
 <!-- SECTION:NOTES:END -->

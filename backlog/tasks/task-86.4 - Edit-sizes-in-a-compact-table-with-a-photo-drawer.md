@@ -1,10 +1,10 @@
 ---
 id: TASK-86.4
 title: Edit sizes in a compact table with a photo drawer
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-21 17:33'
-updated_date: '2026-10-21 17:57'
+updated_date: '2026-10-21 21:10'
 labels: []
 dependencies:
   - TASK-86.1
@@ -23,7 +23,7 @@ See TASK-86 Sizes and Size photo. Replaces the inline thumbnail picker (includin
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each size is one line at desktop width and two at phone width
-- [ ] #2 Clicking a size's thumbnail opens a drawer where one click picks its photo or the main photo
-- [ ] #3 Add size and Mark every size sold out sit in the table footer
+- [x] #1 Each size is one line at desktop width and two at phone width
+- [x] #2 Clicking a size's thumbnail opens a drawer where one click picks its photo or the main photo
+- [x] #3 Add size and Mark every size sold out sit in the table footer
 <!-- AC:END -->
