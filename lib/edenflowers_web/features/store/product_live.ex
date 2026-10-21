@@ -36,6 +36,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      socket
      |> assign(order_id: order_id)
      |> assign(product: product)
+     |> assign(gallery: product.photo_slugs -- product.hidden_photo_slugs)
      |> assign(
        page_title: product.name,
        alternates: alternates("/#{language}/product/#{product.id}"),
@@ -110,12 +111,12 @@ defmodule EdenflowersWeb.Store.ProductLive do
             </figure>
             <%!-- Eight columns whatever the count, so eight photos still fit one row on a phone. --%>
             <ul
-              :if={length(@product.photo_slugs) > 1}
+              :if={length(@gallery) > 1}
               aria-label={~t"Photos"}
               class="mt-2 grid grid-cols-8 gap-2"
               data-testid="product-photos"
             >
-              <li :for={{slug, index} <- Enum.with_index(@product.photo_slugs, 1)}>
+              <li :for={{slug, index} <- Enum.with_index(@gallery, 1)}>
                 <button
                   type="button"
                   phx-click="show_photo"
@@ -348,7 +349,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   def handle_event("show_photo", %{"slug" => slug}, socket) do
-    if slug in socket.assigns.product.photo_slugs,
+    if slug in socket.assigns.gallery,
       do: {:noreply, assign(socket, photo_slug: slug)},
       else: {:noreply, socket}
   end

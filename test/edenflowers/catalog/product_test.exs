@@ -163,6 +163,16 @@ defmodule Edenflowers.Catalog.ProductTest do
       assert Ash.get!(Catalog.ProductVariant, keeps.id, authorize?: false).own_photo_slug == "a.jpg"
       assert Ash.get!(Catalog.ProductVariant, loses.id, authorize?: false, load: [:photo_slug]).photo_slug == "a.jpg"
     end
+
+    test "hidden photos stay among its photos and never include the main one" do
+      product = generate(product(photo_slugs: ["a.jpg", "b.jpg", "c.jpg"]))
+
+      assert update!(product, %{hidden_photo_slugs: ["a.jpg", "b.jpg", "z.jpg"]}).hidden_photo_slugs == ["b.jpg"]
+
+      product = update!(product, %{hidden_photo_slugs: ["b.jpg", "c.jpg"]})
+      product = update!(product, %{photo_slugs: ["b.jpg", "a.jpg"]})
+      assert product.hidden_photo_slugs == []
+    end
   end
 
   defp update(product, params),

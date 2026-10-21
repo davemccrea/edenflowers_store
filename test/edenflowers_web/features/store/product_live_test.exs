@@ -198,6 +198,21 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       view |> form("[data-testid=product-form]", %{product_variant_id: large.id}) |> render_change()
       assert has_element?(view, ~s|[data-testid=product-image][src*="a.jpg"]|)
     end
+
+    test "a hidden photo has no thumbnail but still shows for its size", %{conn: conn} do
+      product = generate(product(draft: false, photo_slugs: ["a.jpg", "b.jpg", "c.jpg"], hidden_photo_slugs: ["b.jpg"]))
+      small = generate(product_variant(product_id: product.id, size: :small, price: "40.00", own_photo_slug: "b.jpg"))
+      generate(product_variant(product_id: product.id, size: :large, price: "60.00"))
+
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+
+      assert has_element?(view, "[data-testid=product-photos] button", "Photo 2")
+      refute has_element?(view, "[data-testid=product-photos] button", "Photo 3")
+      refute has_element?(view, ~s|[data-testid=product-photos] img[src*="b.jpg"]|)
+
+      view |> form("[data-testid=product-form]", %{product_variant_id: small.id}) |> render_change()
+      assert has_element?(view, ~s|[data-testid=product-image][src*="b.jpg"]|)
+    end
   end
 
   test "an unknown product is a 404", %{conn: conn} do
