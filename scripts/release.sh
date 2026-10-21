@@ -32,7 +32,8 @@ Output only the Markdown notes, with no title and no preamble."
 NOTES="$(mktemp -t release-notes)"
 trap 'rm -f "$NOTES"' EXIT
 
-printf '%s\n' "$COMMITS" | claude -p "$PROMPT" --tools "" --no-session-persistence > "$NOTES"
+# .env exports the app's ANTHROPIC_API_KEY (just loads it too); drop it so claude uses the claude.ai login
+printf '%s\n' "$COMMITS" | env -u ANTHROPIC_API_KEY claude -p "$PROMPT" --tools "" --no-session-persistence > "$NOTES"
 ok "draft written"
 
 "${VISUAL:-${EDITOR:-vi}}" "$NOTES"
