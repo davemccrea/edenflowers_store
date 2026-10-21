@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={{~t"Courses", ~p"/admin/courses"}}>
+        <.admin_page_header title={@page_title} back={{~t"Courses", ~p"/admin/courses"}} sticky>
           <:actions>
             <.button
               :if={@form.source.type == :update}
@@ -50,8 +50,10 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
               target="_blank"
               variant="secondary"
               size="sm"
+              class="max-md:btn-square"
             >
-              <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" /> {~t"View in store"}
+              <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+              <span class="max-md:sr-only">{~t"View in store"}</span>
             </.button>
             <.button type="submit" form="course-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
               {~t"Save"}
@@ -137,7 +139,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
             </.form_section>
           </div>
 
-          <aside class="flex flex-col gap-6 xl:row-span-2">
+          <aside class="flex flex-col gap-6">
             <.form_section title={~t"Photo"}>
               <.photo_input
                 field={@form[:image_slug]}
@@ -147,16 +149,6 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
               />
             </.form_section>
           </aside>
-
-          <%!-- After the aside so its fields sit above Save once stacked. --%>
-          <.button
-            type="submit"
-            variant="primary"
-            phx-disable-with={~t"Saving…"}
-            class="w-full sm:w-auto sm:justify-self-start xl:col-start-1"
-          >
-            {~t"Save course"}
-          </.button>
         </.form>
       </.admin_page>
     </Layouts.admin>

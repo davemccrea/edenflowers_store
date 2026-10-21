@@ -682,13 +682,14 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :title, :string, required: true
   attr :class, :any, default: nil
+  attr :joined, :boolean, default: false, doc: "render inside a shared admin-card with divided sections"
   slot :description
   slot :inner_block, required: true
 
   @doc "A titled group of fields in an admin form, framed like a `widget` so forms and detail pages match."
   def form_section(assigns) do
     ~H"""
-    <section class={["admin-card p-4 sm:p-5", @class]}>
+    <section class={["p-4 sm:p-5", !@joined && "admin-card", @class]}>
       <header class="mb-4">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
         <p :if={@description != []} class="text-base-content/75 mt-1 text-sm">{render_slot(@description)}</p>
@@ -800,14 +801,39 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :title, :string, required: true
 
   attr :back, :any, default: nil, doc: "{label, path} of the page above this one, shown as a back link"
+  attr :sticky, :boolean, default: false, doc: "compact persistent header for long admin forms"
   slot :subtitle, doc: "supporting text rendered under the title"
+  slot :status, doc: "brief state beside a sticky title, hidden on phones"
   slot :actions
   slot :menu, doc: "the page's `actions_menu`, kept beside the title on phones while the actions wrap below it"
   slot :nav, doc: "sibling navigation rendered opposite the back link"
 
   def admin_page_header(assigns) do
     ~H"""
-    <header class="mb-6 sm:mb-8">
+    <header
+      :if={@sticky}
+      class="bg-base-100 border-base-content/12 top-[calc(env(safe-area-inset-top)+4rem)] sticky z-20 -mx-4 -mt-5 mb-6 flex items-center gap-3 border-b px-4 py-2.5 sm:-mx-6 sm:-mt-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-8 lg:mb-8 lg:px-8 lg:py-3"
+    >
+      <.link
+        :if={@back}
+        navigate={elem(@back, 1)}
+        class="text-base-content/70 -m-2 inline-flex shrink-0 items-center gap-1.5 p-2 text-sm font-medium transition-colors hover:text-base-content"
+      >
+        <.icon name="hero-arrow-left" class="h-4 w-4" />
+        <span class="max-sm:sr-only">{elem(@back, 0)}</span>
+      </.link>
+      <span :if={@back} class="bg-base-content/15 h-5 w-px shrink-0 max-sm:hidden" aria-hidden="true"></span>
+      <h1 class="text-base-content min-w-0 truncate text-lg font-semibold tracking-tight">{@title}</h1>
+      <div :if={@status != []} class="shrink-0 max-sm:hidden">{render_slot(@status)}</div>
+      <div :if={@actions != [] || @menu != []} class="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+        {render_slot(@actions)}
+        {render_slot(@menu)}
+      </div>
+    </header>
+    <p :if={@sticky && @subtitle != []} class="text-base-content/75 mb-6 text-sm leading-relaxed sm:mb-8">
+      {render_slot(@subtitle)}
+    </p>
+    <header :if={!@sticky} class="mb-6 sm:mb-8">
       <div :if={@back || @nav != []} class="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
         <.link
           :if={@back}
