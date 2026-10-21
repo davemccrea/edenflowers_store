@@ -80,7 +80,7 @@ msgstr "Toimitus"
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1443
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:111
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:291
-#: lib/edenflowers_web/features/admin/promotions_live.ex:84
+#: lib/edenflowers_web/features/admin/promotions_live.ex:86
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:354
 #, elixir-autogen, elixir-format
 msgid "Discount"
@@ -634,8 +634,8 @@ msgstr "Ostoskori"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:5
 #: lib/edenflowers_web/features/account/subscription_manager.ex:541
-#: lib/edenflowers_web/features/admin/product_form_live.ex:351
-#: lib/edenflowers_web/features/admin/product_form_live.ex:430
+#: lib/edenflowers_web/features/admin/product_form_live.ex:363
+#: lib/edenflowers_web/features/admin/product_form_live.ex:442
 #: lib/edenflowers_web/features/admin/subscription_log.ex:76
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:67
 #: lib/edenflowers_web/features/store/product_live.ex:157
@@ -886,7 +886,7 @@ msgstr "Ylläpidon navigointi"
 #: lib/edenflowers_web/features/admin/orders_live.ex:125
 #: lib/edenflowers_web/features/admin/products_live.ex:75
 #: lib/edenflowers_web/features/admin/products_live.ex:102
-#: lib/edenflowers_web/features/admin/promotions_live.ex:63
+#: lib/edenflowers_web/features/admin/promotions_live.ex:64
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:86
 #, elixir-autogen, elixir-format
 msgid "All"
@@ -1897,7 +1897,7 @@ msgid "Book by"
 msgstr "Varaa viimeistään"
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:394
-#: lib/edenflowers_web/features/admin/product_form_live.ex:430
+#: lib/edenflowers_web/features/admin/product_form_live.ex:442
 #: lib/edenflowers_web/features/courses/course_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "Price"
@@ -2411,7 +2411,7 @@ msgstr "Kieli"
 #: lib/edenflowers_web/features/admin/products_live.ex:63
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:79
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:289
-#: lib/edenflowers_web/features/admin/promotions_live.ex:65
+#: lib/edenflowers_web/features/admin/promotions_live.ex:67
 #, elixir-autogen, elixir-format
 msgid "Name"
 msgstr "Nimi"
@@ -2510,13 +2510,6 @@ msgstr "Muokkaa kurssia"
 msgid "Ends"
 msgstr "Päättyy"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:172
-#: lib/edenflowers_web/features/admin/products_live.ex:110
-#: lib/edenflowers_web/features/admin/products_live.ex:113
-#, elixir-autogen, elixir-format
-msgid "Favourite"
-msgstr "Suosikki"
-
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:14
 #, elixir-autogen, elixir-format
 msgid "Funeral flowers in Vaasa and Korsholm: sprays, hearts, wreaths and casket sprays by Jennie at Eden Flowers, delivered to churches and chapels."
@@ -2527,8 +2520,8 @@ msgstr "Surukukat Vaasassa ja Mustasaaressa: surulaitteet, sydämet, seppeleet j
 msgid "Hand-tied bouquet of red roses tied with a hessian bow"
 msgstr "Käsin sidottu punaisten ruusujen kimppu juuttirusetilla"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:370
-#: lib/edenflowers_web/features/admin/product_form_live.ex:430
+#: lib/edenflowers_web/features/admin/product_form_live.ex:382
+#: lib/edenflowers_web/features/admin/product_form_live.ex:442
 #, elixir-autogen, elixir-format
 msgid "In stock"
 msgstr "Varastossa"
@@ -2550,7 +2543,7 @@ msgstr "Nimi ja kuvaus"
 msgid "New course"
 msgstr "Uusi kurssi"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:562
+#: lib/edenflowers_web/features/admin/product_form_live.ex:559
 #: lib/edenflowers_web/features/admin/products_live.ex:42
 #, elixir-autogen, elixir-format
 msgid "New product"
@@ -2561,8 +2554,8 @@ msgstr "Uusi tuote"
 msgid "No sizes"
 msgstr "Ei kokoja"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:352
-#: lib/edenflowers_web/features/admin/product_form_live.ex:476
+#: lib/edenflowers_web/features/admin/product_form_live.ex:364
+#: lib/edenflowers_web/features/admin/product_form_live.ex:473
 #, elixir-autogen, elixir-format
 msgid "One size"
 msgstr "Yksi koko"
@@ -2598,7 +2591,7 @@ msgstr "Tilaaminen hautajaisiin"
 msgid "Photo"
 msgstr "Kuva"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:361
+#: lib/edenflowers_web/features/admin/product_form_live.ex:373
 #, elixir-autogen, elixir-format
 msgid "Price (€)"
 msgstr "Hinta (€)"
@@ -2697,7 +2690,7 @@ msgstr "Surulaite keltaisista ruusuista ja valkoisista neilikoista"
 #: lib/edenflowers_web/features/admin/course_form_live.ex:78
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:134
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:293
-#: lib/edenflowers_web/features/admin/promotions_live.ex:94
+#: lib/edenflowers_web/features/admin/promotions_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "Starts"
 msgstr "Alkaa"
@@ -2748,7 +2741,7 @@ msgstr "Koodin käyttö edellyttää vähintään %{edenflowers_format_currency}
 #: lib/edenflowers_web/features/account/account_live.ex:159
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:85
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:290
-#: lib/edenflowers_web/features/admin/promotions_live.ex:73
+#: lib/edenflowers_web/features/admin/promotions_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "Code"
 msgstr "Koodi"
@@ -2765,7 +2758,7 @@ msgstr "Alennus (%)"
 
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:135
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:294
-#: lib/edenflowers_web/features/admin/promotions_live.ex:106
+#: lib/edenflowers_web/features/admin/promotions_live.ex:108
 #, elixir-autogen, elixir-format
 msgid "Expires"
 msgstr "Päättyy"
@@ -2780,7 +2773,7 @@ msgstr "Jätä tyhjäksi, jos rajoitusta ei ole."
 msgid "Limits"
 msgstr "Rajoitukset"
 
-#: lib/edenflowers_web/features/admin/promotions_live.ex:87
+#: lib/edenflowers_web/features/admin/promotions_live.ex:89
 #, elixir-autogen, elixir-format
 msgid "Minimum"
 msgstr "Vähimmäissumma"
@@ -2825,7 +2818,7 @@ msgstr "Tallenna kampanja"
 msgid "This promotion has been used, so it can't be deleted. Set an expiry date to stop it being used."
 msgstr "Kampanjaa on käytetty, joten sitä ei voi poistaa. Aseta päättymispäivä, niin sitä ei voi enää käyttää."
 
-#: lib/edenflowers_web/features/admin/promotions_live.ex:114
+#: lib/edenflowers_web/features/admin/promotions_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Used"
 msgstr "Käytetty"
@@ -2836,13 +2829,13 @@ msgid "Autogenerated"
 msgstr "Automaattisesti luotu"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:523
-#: lib/edenflowers_web/features/admin/promotions_live.ex:63
+#: lib/edenflowers_web/features/admin/promotions_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "No"
 msgstr "Ei"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:523
-#: lib/edenflowers_web/features/admin/promotions_live.ex:63
+#: lib/edenflowers_web/features/admin/promotions_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "Yes"
 msgstr "Kyllä"
@@ -2853,7 +2846,7 @@ msgid "Add to calendar"
 msgstr "Lisää kalenteriin"
 
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:104
-#: lib/edenflowers_web/features/admin/promotions_live.ex:79
+#: lib/edenflowers_web/features/admin/promotions_live.ex:81
 #, elixir-autogen, elixir-format
 msgid "Copy code"
 msgstr "Kopioi koodi"
@@ -4383,7 +4376,7 @@ msgstr "Kuvan lataaminen epäonnistui."
 msgid "Course saved."
 msgstr "Kurssi tallennettu."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:530
+#: lib/edenflowers_web/features/admin/product_form_live.ex:527
 #, elixir-autogen, elixir-format
 msgid "Product saved."
 msgstr "Tuote tallennettu."
@@ -4817,7 +4810,7 @@ msgstr "Loppuunmyyty"
 msgid "Stock"
 msgstr "Varasto"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:371
+#: lib/edenflowers_web/features/admin/product_form_live.ex:383
 #, elixir-autogen, elixir-format
 msgid "Unlimited"
 msgstr "Rajaton"
@@ -4896,7 +4889,7 @@ msgstr "Kurssia ei tallennettu. Tarkista alla merkityt kentät."
 msgid "The expense wasn't saved. Check the fields marked below."
 msgstr "Kulua ei tallennettu. Tarkista alla merkityt kentät."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:537
+#: lib/edenflowers_web/features/admin/product_form_live.ex:534
 #, elixir-autogen, elixir-format
 msgid "The product wasn't saved. Check the fields marked below."
 msgstr "Tuotetta ei tallennettu. Tarkista alla merkityt kentät."
@@ -7490,22 +7483,18 @@ msgid_plural "%{count} order(s)"
 msgstr[0] "%{count} tilaus"
 msgstr[1] "%{count} tilausta"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:586
+#: lib/edenflowers_web/features/admin/product_form_live.ex:583
 #, elixir-autogen, elixir-format
 msgid "Add at most %{count} photos."
 msgstr "Lisää enintään %{count} kuvaa."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:290
+#: lib/edenflowers_web/features/admin/product_form_live.ex:296
 #, elixir-autogen, elixir-format
 msgid "Add photos"
 msgstr "Lisää kuvia"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:234
-#, elixir-autogen, elixir-format
-msgid "Main"
-msgstr "Pääkuva"
-
-#: lib/edenflowers_web/features/admin/product_form_live.ex:417
+#: lib/edenflowers_web/features/admin/product_form_live.ex:232
+#: lib/edenflowers_web/features/admin/product_form_live.ex:429
 #, elixir-autogen, elixir-format
 msgid "Main photo"
 msgstr "Pääkuva"
@@ -7531,49 +7520,61 @@ msgstr "Kuvat"
 msgid "(missing text)"
 msgstr "(teksti puuttuu)"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:242
+#: lib/edenflowers_web/features/admin/product_form_live.ex:243
 #, elixir-autogen, elixir-format
 msgid "Make photo %{n} main"
 msgstr "Tee kuvasta %{n} pääkuva"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:417
+#: lib/edenflowers_web/features/admin/product_form_live.ex:429
 #, elixir-autogen, elixir-format
 msgid "Photo %{n}"
 msgstr "Kuva %{n}"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:336
-#: lib/edenflowers_web/features/admin/product_form_live.ex:394
-#: lib/edenflowers_web/features/admin/product_form_live.ex:397
+#: lib/edenflowers_web/features/admin/product_form_live.ex:341
+#: lib/edenflowers_web/features/admin/product_form_live.ex:406
+#: lib/edenflowers_web/features/admin/product_form_live.ex:409
 #, elixir-autogen, elixir-format
 msgid "Photo for %{size}"
 msgstr "Kuva koolle %{size}"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:422
+#: lib/edenflowers_web/features/admin/product_form_live.ex:434
 #, elixir-autogen, elixir-format
 msgid "Pick Main to follow whichever photo is main."
 msgstr "Valitse Pääkuva, niin koko näyttää aina pääkuvaksi valitun kuvan."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:384
+#: lib/edenflowers_web/features/admin/product_form_live.ex:396
 #, elixir-autogen, elixir-format
 msgid "Remove %{size}"
 msgstr "Poista %{size}"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:254
+#: lib/edenflowers_web/features/admin/product_form_live.ex:255
 #, elixir-autogen, elixir-format
 msgid "Remove photo %{n}"
 msgstr "Poista kuva %{n}"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:377
+#: lib/edenflowers_web/features/admin/product_form_live.ex:389
 #, elixir-autogen, elixir-format
 msgid "Visible"
 msgstr "Näkyvissä"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:266
+#: lib/edenflowers_web/features/admin/product_form_live.ex:269
 #, elixir-autogen, elixir-format
 msgid "Hide photo %{n} from the store's gallery"
 msgstr "Piilota kuva %{n} kaupan kuvagalleriasta"
 
+#: lib/edenflowers_web/features/admin/product_form_live.ex:172
+#: lib/edenflowers_web/features/admin/products_live.ex:110
+#: lib/edenflowers_web/features/admin/products_live.ex:113
+#, elixir-autogen, elixir-format
+msgid "Favourite"
+msgstr "Suosikki"
+
+#: lib/edenflowers_web/features/admin/product_form_live.ex:268
+#, elixir-autogen, elixir-format
+msgid "Show photo %{n} in the store's gallery"
+msgstr "Näytä kuva %{n} kaupan kuvagalleriassa"
+
 #: lib/edenflowers_web/features/admin/product_form_live.ex:102
 #, elixir-autogen, elixir-format
-msgid "Up to %{count}. The main photo shows in the store's listings. A hidden photo shows only for a size that picks it."
-msgstr "Enintään %{count}. Pääkuva näkyy kaupan tuotelistoissa. Piilotettu kuva näkyy vain koolle, joka on valinnut sen."
+msgid "Shown on the product page. A hidden photo only shows when a customer picks its size."
+msgstr "Näkyvät tuotesivulla. Piilotettu kuva näkyy vain, kun asiakas valitsee sen koon."

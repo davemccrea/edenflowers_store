@@ -145,19 +145,20 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
 
   test "hides a photo from the store's gallery and shows it again", %{conn: conn} do
     product = generate(product(photo_slugs: ["a.jpg", "b.jpg", "c.jpg"]))
-    generate(product_variant(product_id: product.id))
+    generate(product_variant(product_id: product.id, size: :large, own_photo_slug: "b.jpg"))
 
     {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
 
     refute has_element?(view, ~s|button[phx-click=toggle_photo_hidden][phx-value-slug="a.jpg"]|)
     view |> element(~s|button[phx-click=toggle_photo_hidden][phx-value-slug="b.jpg"]|) |> render_click()
     view |> element(~s|button[phx-click=toggle_photo_hidden][phx-value-slug="c.jpg"]|) |> render_click()
-    view |> form("#product-form") |> render_submit()
 
+    assert has_element?(view, ~s|button[phx-value-slug="c.jpg"][aria-label="Show photo 3 in the store's gallery"]|)
+
+    view |> form("#product-form") |> render_submit()
     assert Ash.get!(Product, product.id, authorize?: false).hidden_photo_slugs == ["b.jpg", "c.jpg"]
 
     {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
-    assert has_element?(view, ~s|button[phx-value-slug="b.jpg"][aria-pressed=true]|)
     view |> element(~s|button[phx-click=toggle_photo_hidden][phx-value-slug="b.jpg"]|) |> render_click()
     view |> element(~s|button[phx-click=toggle_photo_hidden][phx-value-slug="c.jpg"]|) |> render_click()
     view |> form("#product-form") |> render_submit()

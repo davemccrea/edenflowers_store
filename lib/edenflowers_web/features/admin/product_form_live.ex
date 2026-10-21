@@ -99,7 +99,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             <div class="space-y-6">
               <.form_section title={~t"Photos"}>
                 <:description>
-                  {~t"Up to #{count = @max_photos}. The main photo shows in the store's listings. A hidden photo shows only for a size that picks it."}
+                  {~t"Shown on the product page. A hidden photo only shows when a customer picks its size."}
                 </:description>
                 <.photo_gallery
                   field={@form[:photo_slugs]}
@@ -225,14 +225,15 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               height={300}
               class={["absolute inset-0 h-full w-full object-cover", index > 0 && slug in @hidden && "opacity-40"]}
             />
-            <.badge
+            <%!-- Drawn like the other photos' "make main" buttons, but filled and inert. --%>
+            <span
               :if={index == 0}
-              tone={:neutral}
-              icon="hero-star-solid"
-              class="[&_.hero-star-solid]:text-primary absolute top-2 left-1.5 sm:top-3"
+              role="img"
+              aria-label={~t"Main photo"}
+              class="btn btn-primary btn-outline btn-sm btn-square pointer-events-none absolute top-1.5 left-1.5 max-sm:btn-xs"
             >
-              {~t"Main"}
-            </.badge>
+              <.icon name="hero-star-solid" class="text-primary size-3.5 sm:size-4" />
+            </span>
             <.button
               :if={index > 0}
               type="button"
@@ -262,8 +263,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               size="sm"
               phx-click="toggle_photo_hidden"
               phx-value-slug={slug}
-              aria-pressed={to_string(slug in @hidden)}
-              aria-label={~t"Hide photo #{n = index + 1} from the store's gallery"}
+              aria-label={
+                if slug in @hidden,
+                  do: ~t"Show photo #{n = index + 1} in the store's gallery",
+                  else: ~t"Hide photo #{n = index + 1} from the store's gallery"
+              }
               class="btn-square absolute right-1.5 bottom-1.5 max-sm:btn-xs"
             >
               <.icon name={if slug in @hidden, do: "hero-eye-slash", else: "hero-eye"} class="size-3.5 sm:size-4" />
@@ -285,8 +289,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         </li>
         <li :if={length(@photo_slugs) + length(@upload.entries) < @max}>
           <label class="group outline-primary block cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-            <span class="border-base-content/20 text-cream-content/70 aspect-[4/5] flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-hover:border-base-content/40 group-hover:text-cream-content group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid">
-              <span class="bg-cream grid size-9 place-items-center rounded-full">
+            <span class="border-base-content/20 text-cream-content/70 aspect-[4/5] flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid group-hover:border-base-content/40 group-hover:text-cream-content">
+              <span class="bg-cream size-9 grid place-items-center rounded-full">
                 <.icon name="hero-plus" class="size-4" />
               </span>
               <span class="text-sm font-medium">{~t"Add photos"}</span>
@@ -338,13 +342,20 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           aria-controls={@drawer}
           class="bg-cream aspect-[4/5] outline-primary relative row-span-2 block w-12 self-start overflow-hidden outline-offset-2 hover:outline-1 focus-visible:outline-2 sm:row-span-1 sm:w-8 sm:self-auto"
         >
-          <.size_thumbnail slug={@own || @main} main?={is_nil(@own)} />
+          <.image src={@own || @main} alt="" width={96} height={120} class="absolute inset-0 h-full w-full object-cover" />
         </button>
         <span
           :if={!@picks?}
           class="bg-cream aspect-[4/5] relative row-span-2 block w-12 self-start overflow-hidden sm:row-span-1 sm:w-8 sm:self-auto"
         >
-          <.size_thumbnail :if={@main} slug={@main} main?={false} />
+          <.image
+            :if={@main}
+            src={@main}
+            alt=""
+            width={96}
+            height={120}
+            class="absolute inset-0 h-full w-full object-cover"
+          />
         </span>
         <.input
           field={@variant[:size]}
@@ -456,21 +467,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         class="toggle toggle-primary"
       /><span>{@label}</span>
     </label>
-    """
-  end
-
-  attr :slug, :string, required: true
-  attr :main?, :boolean, required: true
-
-  defp size_thumbnail(assigns) do
-    ~H"""
-    <.image src={@slug} alt="" width={96} height={120} class="absolute inset-0 h-full w-full object-cover" />
-    <%!-- The light glow keeps the star readable on dark photos. --%>
-    <.icon
-      :if={@main?}
-      name="hero-star-solid"
-      class="drop-shadow-[0_0_1.5px_rgb(255_255_255/0.9)] size-3 text-primary absolute top-0.5 left-0.5"
-    />
     """
   end
 
