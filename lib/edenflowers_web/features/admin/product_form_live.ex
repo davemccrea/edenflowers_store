@@ -102,6 +102,10 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
           <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
             <div class="space-y-6">
+              <.form_section title={~t"Name and description"}>
+                <.language_fields form={@form} translating={@translating} />
+              </.form_section>
+
               <.form_section title={~t"Photos"}>
                 <:description>
                   {~t"Every photo appears in the product page's thumbnails. Hide one with the eye button and it only appears when a customer picks a size that uses it."}
@@ -141,10 +145,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     {~t"Mark every size sold out"}
                   </.button>
                 </div>
-              </.form_section>
-
-              <.form_section title={~t"Name and description"}>
-                <.language_fields form={@form} translating={@translating} />
               </.form_section>
             </div>
 
