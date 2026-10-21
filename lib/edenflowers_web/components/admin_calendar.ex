@@ -100,7 +100,7 @@ defmodule EdenflowersWeb.AdminCalendar do
   def legend(assigns) do
     ~H"""
     <div class="text-sm md:max-w-xs md:pt-2">
-      <h2 class="eyebrow text-base-content/65 mb-3">{~t"Legend"}</h2>
+      <h2 class="eyebrow text-base-content/75 mb-3">{~t"Legend"}</h2>
       <ul class="text-base-content/85 space-y-2 leading-snug">
         <li class="flex items-start">
           <span class={legend_swatch(:closed)}></span>
@@ -144,7 +144,7 @@ defmodule EdenflowersWeb.AdminCalendar do
     base = "relative aspect-square text-sm font-medium leading-none flex items-center justify-center"
 
     closed_class =
-      "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after hover:after:bg-error"
+      "cursor-pointer bg-base-content/10 text-base-content/75 hover:bg-primary/10 calendar-strike-after hover:after:bg-error"
 
     state_class =
       case state do
@@ -170,7 +170,7 @@ defmodule EdenflowersWeb.AdminCalendar do
       :open ->
         # Click re-opens what's closed by override. Muted to signal that the
         # default direction is "open" — the opposite of every other state.
-        "#{base} cursor-pointer text-base-content/65 hover:bg-primary/10 hover:text-base-content"
+        "#{base} cursor-pointer text-base-content/75 hover:bg-primary/10 hover:text-base-content"
 
       :closed ->
         "#{base} cursor-pointer hover:bg-primary/10 hover:text-base-content/85"
@@ -182,9 +182,9 @@ defmodule EdenflowersWeb.AdminCalendar do
 
     state_class =
       if open? do
-        "cursor-pointer text-base-content/65 hover:text-base-content/85 hover:bg-primary/10"
+        "cursor-pointer text-base-content/75 hover:text-base-content/85 hover:bg-primary/10"
       else
-        "cursor-pointer bg-base-content/10 text-base-content/65 hover:bg-primary/10 calendar-strike-after-tight hover:after:bg-error"
+        "cursor-pointer bg-base-content/10 text-base-content/75 hover:bg-primary/10 calendar-strike-after-tight hover:after:bg-error"
       end
 
     "#{base} #{state_class}"

@@ -262,7 +262,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <h2 id="notifications-offer-title" class="text-base-content text-base font-semibold">
             {~t"Get new orders on this phone"}
           </h2>
-          <p class="text-base-content/65 text-sm">{~t"Same-day orders arrive straight away."}</p>
+          <p class="text-base-content/75 text-sm">{~t"Same-day orders arrive straight away."}</p>
         </div>
       </div>
       <div class="flex justify-end gap-2">
@@ -289,21 +289,21 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <.widget title={~t"This month"}>
       <div class="grid-cols-[minmax(0,1fr)_auto] grid items-start gap-x-6">
         <dl id="revenue" class="min-w-0">
-          <dt class="text-base-content/65 text-sm">{~t"Revenue"}</dt>
+          <dt class="text-base-content/75 text-sm">{~t"Revenue"}</dt>
           <dd class="text-base-content text-3xl font-semibold tabular-nums tracking-tight">
             {Format.currency(@sales.revenue, @locale)}
           </dd>
-          <dd id="revenue-last-month" class="text-base-content/65 mt-0.5 text-xs tabular-nums">
+          <dd id="revenue-last-month" class="text-base-content/75 mt-0.5 text-xs tabular-nums">
             {~t"#{amount = Format.currency(@last_month.revenue, @locale)} last month by #{date = Format.day_month(@last_month_to, @locale)}"}
           </dd>
         </dl>
 
         <div class="text-right">
           <dl id="sales">
-            <dt class="text-base-content/65 text-sm">{~t"Sales"}</dt>
+            <dt class="text-base-content/75 text-sm">{~t"Sales"}</dt>
             <dd class="text-base-content text-3xl font-semibold tabular-nums tracking-tight">{@sales.order_count}</dd>
           </dl>
-          <p id="sales-last-month" class="text-base-content/65 mt-0.5 text-xs tabular-nums">
+          <p id="sales-last-month" class="text-base-content/75 mt-0.5 text-xs tabular-nums">
             {~t"#{count = @last_month.order_count} last month by #{date = Format.day_month(@last_month_to, @locale)}"}
           </p>
         </div>
@@ -333,11 +333,11 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             style={"left: #{@chart.today_x}%; top: #{@chart.today_y}%"}
           />
         </div>
-        <div class="text-base-content/65 mt-1 flex justify-between text-xs tabular-nums">
+        <div class="text-base-content/75 mt-1 flex justify-between text-xs tabular-nums">
           <span>{Format.day_month(Date.beginning_of_month(@today), @locale)}</span>
           <span>{Format.day_month(Date.end_of_month(@today), @locale)}</span>
         </div>
-        <figcaption class="text-base-content/65 mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        <figcaption class="text-base-content/75 mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
           <span class="flex items-center gap-1.5">
             <span class="bg-primary h-0.5 w-4 rounded-full" /> {~t"This month"}
           </span>
@@ -352,7 +352,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       <p
         :if={Decimal.positive?(@owed)}
         id="still-owed"
-        class="border-base-content/12 text-base-content/65 mt-4 flex items-baseline justify-between gap-4 border-t pt-3 text-sm"
+        class="border-base-content/12 text-base-content/75 mt-4 flex items-baseline justify-between gap-4 border-t pt-3 text-sm"
       >
         {~t"Still to come in"}
         <span class="text-base-content font-medium tabular-nums">{Format.currency(@owed, @locale)}</span>
@@ -488,7 +488,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       >
         <span class="min-w-0">
           <span class="text-base-content block truncate font-medium">{@row.who}</span>
-          <span :if={@row.what} class="text-base-content/65 block truncate text-sm">{@row.what}</span>
+          <span :if={@row.what} class="text-base-content/75 block truncate text-sm">{@row.what}</span>
         </span>
         <span :if={@row[:amount]} class="text-base-content shrink-0 tabular-nums">
           {Format.currency(Decimal.abs(@row.amount), @locale)}
@@ -541,7 +541,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
       <div class="space-y-4">
         <div :for={{method, orders} <- by_method(@orders)} id={"#{@id}-#{method}"}>
-          <h3 class="eyebrow text-base-content/65 flex items-center gap-1.5 pb-1">
+          <h3 class="eyebrow text-base-content/75 flex items-center gap-1.5 pb-1">
             <.icon name={fulfillment_method_icon(method)} class="text-base-content/50 h-4 w-4 shrink-0" />
             {method_heading(method)}
             <.count_badge :if={length(orders) < length(@orders)} count={length(orders)} active={true} />
@@ -552,7 +552,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         </div>
       </div>
 
-      <p :if={@orders == []} class="text-base-content/65 flex items-center gap-2 py-5 text-sm">
+      <p :if={@orders == []} class="text-base-content/75 flex items-center gap-2 py-5 text-sm">
         <.icon name="hero-check-circle" class="h-5 w-5 shrink-0" />
         {@empty}
       </p>
@@ -626,7 +626,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       aria-label={day_cell_label(@date, @count, @closed?, @locale)}
       class={["flex flex-col items-center gap-0.5 rounded-lg py-2 transition-colors", day_cell_class(@selected?, @closed?)]}
     >
-      <span class={["text-xs", !@selected? && !@closed? && "text-base-content/65"]}>
+      <span class={["text-xs", !@selected? && !@closed? && "text-base-content/75"]}>
         {Localize.Date.to_string!(@date, locale: @locale, format: "ccc")}
       </span>
       <span class={["text-sm font-medium tabular-nums", @today? && ["underline underline-offset-4", if(@selected?, do: "decoration-primary-content/50", else: "decoration-base-content/30")]]}>
@@ -692,7 +692,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <ul :if={@items != []} class="text-base-content mt-1 space-y-0.5 text-sm">
             <li :for={item <- @items} class="break-words" phx-no-format>
               <span class="font-semibold tabular-nums">{item.quantity} ×</span>
-              <span class="font-medium">{item.product_name}</span><span :if={item.variant_size} class="text-base-content/65">, {variant_size_label(item.variant_size)}</span>
+              <span class="font-medium">{item.product_name}</span><span :if={item.variant_size} class="text-base-content/75">, {variant_size_label(item.variant_size)}</span>
             </li>
           </ul>
 
@@ -731,7 +731,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             <.icon name="hero-clock" class="text-base-content/50 h-3.5 w-3.5" />
             {Format.fulfillment_time_range(@order, Format.locale())}
           </span>
-          <span :if={@order.distance_km} class="text-base-content/65 text-xs tabular-nums">
+          <span :if={@order.distance_km} class="text-base-content/75 text-xs tabular-nums">
             {@order.distance_km} km
           </span>
         </div>

@@ -57,7 +57,7 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
             </.link>
           </:col>
           <:col :let={customer} field="email" label={~t"Email"} class="max-sm:hidden">
-            <span class="text-base-content/65">{customer.email}</span>
+            <span class="text-base-content/75">{customer.email}</span>
           </:col>
           <:col :let={customer} field="placed_order_count" sort label={~t"Orders"} class="text-right">
             <span class="tabular-nums">{customer.placed_order_count}</span>

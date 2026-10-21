@@ -397,7 +397,7 @@ defmodule EdenflowersWeb.CoreComponents do
     <fieldset class={["fieldset mb-2", @hidden && "hidden"]}>
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
-        <span class="fieldset-label text-base-content/65 pointer-coarse:min-h-11">
+        <span class="fieldset-label text-base-content/75 pointer-coarse:min-h-11">
           <input
             type="checkbox"
             id={@id}
@@ -411,7 +411,7 @@ defmodule EdenflowersWeb.CoreComponents do
           />{@label}
         </span>
       </label>
-      <p :if={@help} id={"#{@id}-help"} class="text-base-content/65 text-sm">{@help}</p>
+      <p :if={@help} id={"#{@id}-help"} class="text-base-content/75 text-sm">{@help}</p>
       <div :if={@errors != []} id={"#{@id}-error"}>
         <.error :for={msg <- @errors}>{msg}</.error>
       </div>
@@ -437,7 +437,7 @@ defmodule EdenflowersWeb.CoreComponents do
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
-      <p :if={@help} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-sm">{@help}</p>
+      <p :if={@help} id={"#{@id}-help"} class="text-base-content/75 mt-1.5 text-sm">{@help}</p>
       <div :if={@errors != []} id={"#{@id}-error"}>
         <.error :for={msg <- @errors}>{msg}</.error>
       </div>
@@ -459,7 +459,7 @@ defmodule EdenflowersWeb.CoreComponents do
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
-      <p :if={@help} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-sm">{@help}</p>
+      <p :if={@help} id={"#{@id}-help"} class="text-base-content/75 mt-1.5 text-sm">{@help}</p>
       <div :if={@errors != []} id={"#{@id}-error"}>
         <.error :for={msg <- @errors}>{msg}</.error>
       </div>
@@ -561,7 +561,7 @@ defmodule EdenflowersWeb.CoreComponents do
         </div>
       </label>
       <%!-- Outside the label, so it describes the field rather than becoming part of its name. --%>
-      <p :if={@help} id={"#{@id}-help"} class="text-base-content/65 mt-1.5 text-sm">{@help}</p>
+      <p :if={@help} id={"#{@id}-help"} class="text-base-content/75 mt-1.5 text-sm">{@help}</p>
       <div :if={@errors != []} id={"#{@id}-error"}>
         <.error :for={msg <- @errors}>{msg}</.error>
       </div>

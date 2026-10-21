@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               </h2>
               <p
                 :if={display_name(@current_user) != user_email(@current_user)}
-                class="text-base-content/65 truncate text-sm"
+                class="text-base-content/75 truncate text-sm"
               >
                 {user_email(@current_user)}
               </p>
@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
           <dl class="divide-base-content/8 divide-y">
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt id="avatar-label" class="text-base-content/65 text-sm sm:pt-1.5">{~t"Picture"}</dt>
+              <dt id="avatar-label" class="text-base-content/75 text-sm sm:pt-1.5">{~t"Picture"}</dt>
               <dd>
                 <form id="avatar-form" phx-change="validate_avatar" class="grid gap-2">
                   <div class="flex items-center gap-2">
@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
                     max="100"
                   />
                   <p id="avatar-help" class="text-sm" aria-live="polite">
-                    <span :if={avatar_errors(@uploads.avatar) == []} class="text-base-content/65">
+                    <span :if={avatar_errors(@uploads.avatar) == []} class="text-base-content/75">
                       {~t"JPG, PNG or WebP, up to 2 MB."}
                     </span>
                     <span :for={err <- avatar_errors(@uploads.avatar)} class="text-error block">
@@ -98,7 +98,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               </dd>
             </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt class="text-base-content/65 text-sm sm:pt-1.5">{~t"Language"}</dt>
+              <dt class="text-base-content/75 text-sm sm:pt-1.5">{~t"Language"}</dt>
               <dd>
                 <Layouts.locale_picker id="admin-locale-picker" current_path={@current_path} class="w-full sm:max-w-xs">
                   <span class="select w-full">{current_language()}</span>
@@ -106,7 +106,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               </dd>
             </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt class="text-base-content/65 text-sm">{~t"Access"}</dt>
+              <dt class="text-base-content/75 text-sm">{~t"Access"}</dt>
               <dd class="text-base-content text-sm">{~t"Admin"}</dd>
             </div>
           </dl>
@@ -192,13 +192,13 @@ defmodule EdenflowersWeb.Admin.AccountLive do
             {~t"New order notifications"}
           </label>
           <p id="push-toggle-help" class="mt-0.5 text-sm" aria-live="polite">
-            <span class="text-base-content/65 hidden group-data-[state=checking]:inline group-data-[state=off]:inline group-data-[state=on]:inline">
+            <span class="text-base-content/75 hidden group-data-[state=checking]:inline group-data-[state=off]:inline group-data-[state=on]:inline">
               {~t"Shown on this device only."}
             </span>
-            <span class="text-base-content/65 hidden group-data-[state=unsupported]:inline">
+            <span class="text-base-content/75 hidden group-data-[state=unsupported]:inline">
               {~t"Add Eden Admin to your home screen to get notifications."}
             </span>
-            <span class="text-base-content/65 hidden group-data-[state=denied]:inline">
+            <span class="text-base-content/75 hidden group-data-[state=denied]:inline">
               {~t"Notifications are blocked. Allow them for Eden Admin in your phone's Settings."}
             </span>
             <span class="text-error hidden group-data-[state=error]:inline">

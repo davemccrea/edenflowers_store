@@ -161,7 +161,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                   <:details :if={entry.changes != []}>
                     <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
                       <div :for={{label, from, to} <- entry.changes}>
-                        <dt class="text-base-content/65 text-xs">{label}</dt>
+                        <dt class="text-base-content/75 text-xs">{label}</dt>
                         <dd class="text-base-content/85 break-words">{from} → {to}</dd>
                       </div>
                     </dl>

@@ -153,7 +153,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                   </.link>
                 </:col>
                 <:col :let={order} label={~t"Reference"} class="max-sm:hidden">
-                  <span class="text-base-content/65 tabular-nums">{order.order_reference}</span>
+                  <span class="text-base-content/75 tabular-nums">{order.order_reference}</span>
                 </:col>
                 <:col :let={order} field="fulfillment_status" sort label={~t"Fulfillment"}>
                   <.fulfillment_status_badge status={order.fulfillment_status} />
@@ -212,7 +212,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                   <:details :if={entry.details != []}>
                     <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
                       <div :for={{label, value} <- entry.details}>
-                        <dt class="text-base-content/65 text-xs">{label}</dt>
+                        <dt class="text-base-content/75 text-xs">{label}</dt>
                         <dd class="text-base-content/85 break-words">{value}</dd>
                       </div>
                     </dl>

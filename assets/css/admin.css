@@ -10,6 +10,12 @@
   --color-error-content: var(--color-red-700);
 }
 
+/* A darker edge than the storefront's so cards and dividers hold up against
+   the tinted admin page. */
+.admin-theme {
+  --color-base-300: oklch(90% 0.014 75);
+}
+
 /* The installed admin app should feel native, so neither pinch nor double tap
    zooms. iOS ignores the viewport's maximum-scale for pinches; this stops them. */
 .admin-theme {

@@ -198,7 +198,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </div>
 
               <figure :if={@order.delivery_photo_slug} id="order-delivery-photo" class="mt-5">
-                <figcaption class="text-base-content/65 mb-2 text-sm">
+                <figcaption class="text-base-content/75 mb-2 text-sm">
                   {~t"Nobody was home. The order was left here."}
                 </figcaption>
                 <.image
@@ -392,7 +392,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <:details :if={entry.details != []}>
                     <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
                       <div :for={{label, value} <- entry.details}>
-                        <dt :if={label} class="text-base-content/65 text-xs">{label}</dt>
+                        <dt :if={label} class="text-base-content/75 text-xs">{label}</dt>
                         <dd class="text-base-content/85 break-words">
                           <ul :if={is_list(value)}>
                             <li :for={item <- value}>{item}</li>
@@ -427,19 +427,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <.drawer_body>
         <div class="space-y-1">
           <p :if={@order.customer_name} class="text-base-content font-medium">{@order.customer_name}</p>
-          <p class="text-base-content/65 text-sm tabular-nums">{@order.order_reference}</p>
+          <p class="text-base-content/75 text-sm tabular-nums">{@order.order_reference}</p>
         </div>
         <dl class="divide-base-content/8 border-base-content/12 divide-y border-y text-sm tabular-nums">
           <div class="flex justify-between gap-4 py-2">
-            <dt class="text-base-content/65">{~t"Total"}</dt>
+            <dt class="text-base-content/75">{~t"Total"}</dt>
             <dd>{Format.currency(@order.grand_total, @locale)}</dd>
           </div>
           <div class="flex justify-between gap-4 py-2">
-            <dt class="text-base-content/65">{~t"Paid"}</dt>
+            <dt class="text-base-content/75">{~t"Paid"}</dt>
             <dd>{Format.currency(@order.amount_paid, @locale)}</dd>
           </div>
           <div :if={not @order.settled?} class="flex justify-between gap-4 py-2">
-            <dt class="text-base-content/65">{if @collect?, do: ~t"To collect", else: ~t"To refund"}</dt>
+            <dt class="text-base-content/75">{if @collect?, do: ~t"To collect", else: ~t"To refund"}</dt>
             <dd class="font-semibold">{Format.currency(Decimal.abs(@order.balance), @locale)}</dd>
           </div>
         </dl>
@@ -479,7 +479,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             receipt_email?={!!@order.customer_email}
           />
         <% end %>
-        <p :if={nothing_to_settle?(@order, @mode)} class="text-base-content/65 text-sm">
+        <p :if={nothing_to_settle?(@order, @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this order."}
         </p>
       </.drawer_body>
@@ -538,7 +538,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               }
             />
             <div class="ml-7 space-y-3">
-              <p class="text-base-content/65 break-all text-sm">{~t"To: #{email = @order.customer_email}"}</p>
+              <p class="text-base-content/75 break-all text-sm">{~t"To: #{email = @order.customer_email}"}</p>
               <.input
                 :if={@form[:customer_home].value == "false" && @form[:email_customer].value != "false"}
                 field={@form[:email_photo]}
@@ -1026,7 +1026,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp relative_date_badge(%{tone: :upcoming} = assigns) do
     ~H"""
-    <span class="text-base-content/65 block text-sm font-normal">{@label}</span>
+    <span class="text-base-content/75 block text-sm font-normal">{@label}</span>
     """
   end
 
@@ -1049,7 +1049,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <.summary_fact label={~t"Deliver to"}>
           {@address}
-          <span :if={@distance_km} class="text-base-content/65 block text-sm font-normal tabular-nums">
+          <span :if={@distance_km} class="text-base-content/75 block text-sm font-normal tabular-nums">
             {@distance_km} km
           </span>
         </.summary_fact>
@@ -1118,7 +1118,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         >
           {~t"Undo"}
         </.button>
-        <span :if={@payment.note} class="text-base-content/65 block">{@payment.note}</span>
+        <span :if={@payment.note} class="text-base-content/75 block">{@payment.note}</span>
       </dt>
       <dd class="text-base-content/90 tabular-nums">
         {Format.currency(negate(@payment.amount), @locale)}
@@ -1164,7 +1164,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp payment_link(assigns) do
     ~H"""
     <div id="order-payment-link" class="mt-4">
-      <label for="payment-link-url" class="eyebrow text-base-content/65 mb-1.5 block">
+      <label for="payment-link-url" class="eyebrow text-base-content/75 mb-1.5 block">
         {~t"Payment link"}
       </label>
       <div class="flex gap-2">
