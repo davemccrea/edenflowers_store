@@ -2510,15 +2510,11 @@ msgstr ""
 msgid "Ends"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/products_live.ex:110
-#, elixir-autogen, elixir-format
-msgid "Featured"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/product_form_live.ex:172
+#: lib/edenflowers_web/features/admin/products_live.ex:110
 #: lib/edenflowers_web/features/admin/products_live.ex:113
 #, elixir-autogen, elixir-format
-msgid "Featured on the home page"
+msgid "Favourite"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:14

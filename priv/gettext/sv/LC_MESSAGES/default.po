@@ -2510,16 +2510,12 @@ msgstr "Redigera kurs"
 msgid "Ends"
 msgstr "Slutar"
 
-#: lib/edenflowers_web/features/admin/products_live.ex:110
-#, elixir-autogen, elixir-format
-msgid "Featured"
-msgstr "Utvald"
-
 #: lib/edenflowers_web/features/admin/product_form_live.ex:172
+#: lib/edenflowers_web/features/admin/products_live.ex:110
 #: lib/edenflowers_web/features/admin/products_live.ex:113
 #, elixir-autogen, elixir-format
-msgid "Featured on the home page"
-msgstr "Visas på startsidan"
+msgid "Favourite"
+msgstr "Favorit"
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:14
 #, elixir-autogen, elixir-format
