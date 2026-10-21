@@ -19,11 +19,11 @@ ordinal: 163000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Every nightly production database dump is copied to the Hetzner Storage Box, with about 30 days of history that survives a lost or compromised server.
 
-**Why:** The only backups are the nightly pg_dump files in /opt/edenflowers_store/backups/ on the production server itself, so losing that server loses every order, customer and payment record along with its backups. Nothing prunes that folder either, so it will eventually fill the disk and take Postgres down.
+**Why:** The only backups are the nightly pg_dump files in /opt/edenflowers_store/backups/ on the production server itself, so losing that server loses every order, customer and payment record along with its backups.
 
 Decisions:
 - rsync, not restic. Each dump is already a complete, dated, compressed file, so restic's snapshots and dedup add little. Restoring is copying a file back. The one thing restic would add is encryption at rest. Revisit if the box gets used for other things or that matters for GDPR.
-- The server mirrors its last 7 days to the box with `rsync -a --delete`. Longer history comes from the Storage Box's automatic snapshots, which are managed in the Hetzner console, not over SSH, so a compromised server can't delete them.
+- The server mirrors its backup folder, which the nightly cron already prunes to 30 days, to the box with `rsync -a --delete`. The Storage Box's automatic snapshots keep that history safe: they are managed in the Hetzner console, not over SSH, so a compromised server that wipes the mirror can't delete them.
 - A dedicated Storage Box sub-account, so the server's key can only reach its own folder.
 - Production only. Staging holds test data.
 - Server work lives in phoenix-ansible (roles/common/tasks/backups.yml), next to the existing 02:00 pg_dump cron.
