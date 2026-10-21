@@ -118,7 +118,12 @@ if config_env() == :prod do
     token_signing_secret:
       System.get_env("TOKEN_SIGNING_SECRET") || raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
 
-  config :edenflowers, Edenflowers.Mailer,
-    adapter: Swoosh.Adapters.Brevo,
-    api_key: System.get_env("BREVO_API_KEY") || raise("environment variable BREVO_API_KEY is missing.")
+  brevo_api_key = System.get_env("BREVO_API_KEY") || raise("environment variable BREVO_API_KEY is missing.")
+
+  config :edenflowers, Edenflowers.Mailer, adapter: Swoosh.Adapters.Brevo, api_key: brevo_api_key
+
+  config :edenflowers, :brevo_api_key, brevo_api_key
+
+  # Unset on staging, so its test users stay out of the shop's real list.
+  config :edenflowers, :brevo_newsletter_list_id, System.get_env("BREVO_NEWSLETTER_LIST_ID")
 end

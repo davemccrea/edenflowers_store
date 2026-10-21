@@ -66,10 +66,10 @@ defmodule EdenflowersWeb.NewsletterSignup do
   def handle_event("submit", %{"email_address" => email_address} = params, socket) do
     socket = assign(socket, form: to_form(params))
 
-    case Edenflowers.Accounts.subscribe_to_newsletter(email_address) do
-      {:ok, _} ->
-        locale = Gettext.get_locale(EdenflowersWeb.Gettext)
+    locale = to_string(Edenflowers.Format.locale())
 
+    case Edenflowers.Accounts.subscribe_to_newsletter(email_address, locale) do
+      {:ok, _} ->
         Edenflowers.Pricing.Workers.SendNewsletterPromoEmail.enqueue(%{"email" => email_address, "locale" => locale})
         {:noreply, assign(socket, submitted: true)}
 

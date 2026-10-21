@@ -278,7 +278,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     user = socket.assigns.current_user
     opt_in = params["newsletter_opt_in"] == "true"
 
-    case Accounts.update_newsletter_preference(user, opt_in, actor: user) do
+    case Accounts.update_newsletter_preference(user, opt_in, to_string(Format.locale()), actor: user) do
       {:ok, user} ->
         token = System.unique_integer()
         Process.send_after(self(), {:clear_newsletter_saved, token}, @saved_visible_ms)

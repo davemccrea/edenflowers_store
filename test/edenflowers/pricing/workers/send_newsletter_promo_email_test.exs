@@ -10,7 +10,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
 
   describe "first subscription" do
     test "creates a promo, sends welcome email, and sets newsletter_promo_id on user" do
-      {:ok, user} = Accounts.subscribe_to_newsletter("new@example.com", authorize?: false)
+      {:ok, user} = Accounts.subscribe_to_newsletter("new@example.com", "en-GB", authorize?: false)
 
       assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "new@example.com", "locale" => "en"})
 
@@ -28,7 +28,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
   describe "re-subscription with unused code" do
     test "sends reminder email containing the existing code" do
       {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
-      {:ok, user} = Accounts.subscribe_to_newsletter("existing@example.com", authorize?: false)
+      {:ok, user} = Accounts.subscribe_to_newsletter("existing@example.com", "en-GB", authorize?: false)
       {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
 
       assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "existing@example.com", "locale" => "en"})
@@ -47,7 +47,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
       {:ok, promo} =
         Ash.update(promo, %{expiration_date: Date.add(Edenflowers.ShopTime.today(), -2)}, authorize?: false)
 
-      {:ok, user} = Accounts.subscribe_to_newsletter("lapsed@example.com", authorize?: false)
+      {:ok, user} = Accounts.subscribe_to_newsletter("lapsed@example.com", "en-GB", authorize?: false)
       {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
 
       assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "lapsed@example.com", "locale" => "en"})
@@ -63,7 +63,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
     test "sends welcome-back email without including the code" do
       {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
       Generator.use_promotion(promo)
-      {:ok, user} = Accounts.subscribe_to_newsletter("returning@example.com", authorize?: false)
+      {:ok, user} = Accounts.subscribe_to_newsletter("returning@example.com", "en-GB", authorize?: false)
       {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
 
       assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "returning@example.com", "locale" => "en"})
@@ -79,7 +79,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
   describe "locale scoping" do
     test "does not leak job's locale into the caller's process state" do
       Gettext.put_locale(EdenflowersWeb.Gettext, "en")
-      {:ok, _user} = Accounts.subscribe_to_newsletter("scope@example.com", authorize?: false)
+      {:ok, _user} = Accounts.subscribe_to_newsletter("scope@example.com", "en-GB", authorize?: false)
 
       assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "scope@example.com", "locale" => "fi"})
 
