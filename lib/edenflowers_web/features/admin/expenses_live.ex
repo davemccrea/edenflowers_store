@@ -56,7 +56,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             fn: &search_expenses/3
           ]}
           url_state={@url_state}
-          show_filters={:toggle}
           sort_mode="exclusive"
           page_size={[default: 25, options: [10, 25, 50, 100]]}
           theme={EdenflowersWeb.Admin.CinderTheme}
@@ -97,9 +96,10 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             field="reviewed"
             sort
             filter={[
-              type: :boolean,
+              type: :select,
               label: ~t"Review",
-              labels: %{true: ~t"Reviewed", false: ~t"Not reviewed"}
+              prompt: ~t"All",
+              options: [{~t"Reviewed", true}, {~t"Not reviewed", false}]
             ]}
             label={~t"Reviewed"}
           >
