@@ -49,12 +49,12 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
           <%!-- Hidden on phones so the dates, which are what people came for, sit above the fold. --%>
           <div class="hidden flex-shrink-0 md:block md:w-80 lg:w-96">
             <.image
-              src="local:///image_1.jpg"
+              src="local:///jennie_4.jpg"
               alt=""
               width={800}
-              height={1000}
+              height={1200}
               sizes="(min-width: 1024px) 24rem, 20rem"
-              class="aspect-[4/5] w-full object-cover"
+              class="aspect-[2/3] w-full object-cover"
             />
           </div>
         </section>
