@@ -294,7 +294,9 @@ defmodule EdenflowersWeb.Layouts do
           <.admin_search id="admin-search-mobile" />
         </div>
 
-        <div class="[view-transition-name:admin-header] border-base-content/20 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
+        <%!-- The view-transition name makes this a stacking context, so it needs a z-index for
+             the user menu to open over a page's sticky header. --%>
+        <div class="[view-transition-name:admin-header] border-base-content/20 relative z-30 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
           <.admin_search id="admin-search" class="w-full max-w-md" />
           <div class="flex items-center gap-4">
             <.link
