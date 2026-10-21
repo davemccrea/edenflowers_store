@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
 
   set :filter_input_wrapper_class, "form-control min-w-0"
 
-  set :filter_label_class, "label-text mb-1 block text-xs font-medium text-base-content/65"
+  set :filter_label_class, "label-text mb-1 block text-xs font-medium text-base-content/75"
 
   set :filter_text_input_class, "input input-sm w-full"
   set :filter_date_input_class, "input input-sm w-full sm:w-40"
@@ -57,14 +57,14 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   # Outlined rather than the stock `btn-ghost`, which hides a lone "×" until hover.
   # Phones drop the empty placeholder Cinder keeps beside every filter, giving its width back to the control.
   set :filter_clear_button_class,
-      "btn btn-outline btn-sm btn-square ml-2 border-base-content/20 text-base-content/65 hover:border-error hover:bg-error/10 hover:text-error max-sm:[&.invisible]:hidden"
+      "btn btn-outline btn-sm btn-square ml-2 border-base-content/20 text-base-content/75 hover:border-error hover:bg-error/10 hover:text-error max-sm:[&.invisible]:hidden"
 
   # `pl-10` leaves room for the search icon the renderer overlays.
   set :search_input_class, "input input-sm w-full pl-10"
 
   set :pagination_container_class, "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
   set :pagination_info_class, "text-sm"
-  set :pagination_count_class, "text-base-content/65 block text-xs sm:ml-2 sm:inline"
+  set :pagination_count_class, "text-base-content/75 block text-xs sm:ml-2 sm:inline"
   set :pagination_nav_class, "flex flex-wrap items-center gap-1 sm:flex-nowrap"
   set :page_size_container_class, "flex items-center gap-2"
 end
