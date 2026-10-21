@@ -3,6 +3,8 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
 
   import EdenflowersWeb.Admin.Components
 
+  require Logger
+
   alias Edenflowers.Expenses
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.Format
@@ -209,7 +211,9 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
          |> push_navigate(to: ~p"/admin/expenses")}
 
       # Deleting removes the tags in Papra first, which is what usually fails.
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Expense #{socket.assigns.expense.id} not deleted: #{inspect(error)}")
+
         {:noreply,
          put_flash(
            socket,
@@ -228,7 +232,9 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
          |> push_event("admin-form-saved", %{id: "expense-form"})
          |> put_flash(:info, ~t"Expense saved and marked as reviewed.")}
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Expense #{expense.id} not marked reviewed: #{inspect(error)}")
+
         {:noreply,
          socket
          |> assign_expense(expense)

@@ -3,6 +3,8 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
   import EdenflowersWeb.Admin.Components
 
+  require Logger
+
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
 
@@ -136,8 +138,12 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     user = socket.assigns.current_user
 
     case Ash.update(user, %{}, action: :remove_avatar, actor: user) do
-      {:ok, _user} -> {:noreply, redirect(socket, to: ~p"/admin/account")}
-      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Could not remove the profile picture.")}
+      {:ok, _user} ->
+        {:noreply, redirect(socket, to: ~p"/admin/account")}
+
+      {:error, error} ->
+        Logger.error("Profile picture of user #{user.id} not removed: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, ~t"Could not remove the profile picture.")}
     end
   end
 
@@ -156,8 +162,12 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
     case result do
       # A full reload so the browser refetches the image at the unchanged URL.
-      {:ok, _user} -> {:noreply, redirect(socket, to: ~p"/admin/account")}
-      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Could not save the profile picture.")}
+      {:ok, _user} ->
+        {:noreply, redirect(socket, to: ~p"/admin/account")}
+
+      {:error, error} ->
+        Logger.error("Profile picture of user #{user.id} not saved: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, ~t"Could not save the profile picture.")}
     end
   end
 

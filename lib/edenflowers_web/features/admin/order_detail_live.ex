@@ -598,8 +598,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   def handle_event("email_fulfillment_confirmation", _params, socket) do
     case Orders.email_fulfillment_confirmation(socket.assigns.order, actor: socket.assigns.current_user) do
-      {:ok, _order} -> {:noreply, put_flash(socket, :info, ~t"Confirmation queued.")}
-      {:error, _} -> {:noreply, put_flash(socket, :error, ~t"Could not queue the confirmation.")}
+      {:ok, _order} ->
+        {:noreply, put_flash(socket, :info, ~t"Confirmation queued.")}
+
+      {:error, error} ->
+        Logger.error("Fulfillment confirmation for order #{socket.assigns.order.id} not queued: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, ~t"Could not queue the confirmation.")}
     end
   end
 
@@ -639,7 +643,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:ok, order} ->
         {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Note saved.")}
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Florist note for order #{socket.assigns.order.id} not saved: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, ~t"Could not save the note.")}
     end
   end
@@ -649,9 +654,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:ok, order} ->
         {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Order cancelled.")}
 
-      {:error, _} ->
+      {:error, error} ->
         case reload(socket.assigns.order, socket) do
           %{fulfillment_status: :pending} ->
+            Logger.error("Order #{socket.assigns.order.id} not cancelled: #{inspect(error)}")
             {:noreply, put_flash(socket, :error, ~t"Could not cancel the order.")}
 
           order ->
@@ -672,7 +678,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:error, %{errors: [%{message: message} | _]}} when is_binary(message) ->
         {:noreply, put_flash(socket, :error, message)}
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Order #{socket.assigns.order.id} not deleted: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, ~t"Could not delete the order.")}
     end
   end
@@ -724,7 +731,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:ok, order} ->
         {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Order details sent.")}
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Order details for order #{socket.assigns.order.id} not sent: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, ~t"Could not send the email. Try again in a moment.")}
     end
   end
@@ -734,7 +742,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:ok, order} ->
         {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Receipt sent.")}
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Receipt for order #{socket.assigns.order.id} not sent: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, ~t"Could not send the receipt. Try again in a moment.")}
     end
   end
@@ -827,7 +836,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:fulfillment_form, nil)
          |> put_flash(:info, message)}
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Order #{socket.assigns.order.id} not marked fulfilled: #{inspect(error)}")
         {:noreply, assign(socket, :fulfillment_error, ~t"Could not mark order as fulfilled.")}
     end
   end
