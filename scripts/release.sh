@@ -1,5 +1,5 @@
 #!/bin/bash
-# Publish a GitHub release for an already-pushed tag, with notes drafted by Claude
+# Publish a GitHub release for an already-pushed tag, with notes drafted by Claude or Codex
 # from the commits since the previous tag. Rerun it for any tag that lacks a release.
 set -euo pipefail
 
@@ -32,8 +32,24 @@ Output only the Markdown notes, with no title and no preamble."
 NOTES="$(mktemp -t release-notes)"
 trap 'rm -f "$NOTES"' EXIT
 
-# .env exports the app's ANTHROPIC_API_KEY (just loads it too); drop it so claude uses the claude.ai login
-printf '%s\n' "$COMMITS" | env -u ANTHROPIC_API_KEY claude -p "$PROMPT" --tools "" --no-session-persistence > "$NOTES"
+# .env exports the app's ANTHROPIC_API_KEY (just loads it too); drop it so claude uses the claude.ai login.
+DRAFTED=false
+if command -v claude >/dev/null 2>&1; then
+  if printf '%s\n' "$COMMITS" | env -u ANTHROPIC_API_KEY claude -p "$PROMPT" --tools "" --no-session-persistence > "$NOTES" \
+    && grep -q '[^[:space:]]' "$NOTES"; then
+    DRAFTED=true
+  fi
+fi
+
+if [[ "$DRAFTED" == false ]]; then
+  section "Claude unavailable; drafting with Codex"
+  command -v codex >/dev/null 2>&1 || fail "Claude failed and Codex is not installed"
+  : > "$NOTES"
+  if ! printf '%s\n' "$COMMITS" | codex exec --ephemeral --sandbox read-only \
+    --output-last-message "$NOTES" "$PROMPT" >/dev/null; then
+    fail "Codex could not draft release notes"
+  fi
+fi
 ok "draft written"
 
 "${VISUAL:-${EDITOR:-vi}}" "$NOTES"
