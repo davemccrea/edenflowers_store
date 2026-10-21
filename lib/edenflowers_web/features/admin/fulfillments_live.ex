@@ -400,23 +400,23 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     >
       <dl aria-live="polite" class="mb-4 grid grid-cols-2 gap-x-6 gap-y-3 tabular-nums sm:grid-cols-4">
         <div>
-          <dt class="text-base-content/65 text-xs">{~t"Distance"}</dt>
+          <dt class="text-base-content/75 text-xs">{~t"Distance"}</dt>
           <dd class="text-lg font-medium" data-value="km"></dd>
         </div>
         <div>
-          <dt class="text-base-content/65 text-xs">{if @changed?, do: ~t"After saving", else: ~t"Fee"}</dt>
+          <dt class="text-base-content/75 text-xs">{if @changed?, do: ~t"After saving", else: ~t"Fee"}</dt>
           <dd class="text-lg font-medium" data-value="fee"></dd>
         </div>
         <div :if={@changed?}>
-          <dt class="text-base-content/65 text-xs">{~t"Now"}</dt>
+          <dt class="text-base-content/75 text-xs">{~t"Now"}</dt>
           <dd class="text-base-content/70 text-lg" data-value="now"></dd>
         </div>
         <div :if={@paths.car}>
-          <dt class="text-base-content/65 text-xs">{~t"Car cost"}</dt>
+          <dt class="text-base-content/75 text-xs">{~t"Car cost"}</dt>
           <dd class="text-base-content/70 text-lg" data-value="car"></dd>
         </div>
         <div :if={@paths.fuel}>
-          <dt class="text-base-content/65 text-xs">{~t"Fuel cost"}</dt>
+          <dt class="text-base-content/75 text-xs">{~t"Fuel cost"}</dt>
           <dd class="text-base-content/70 text-lg" data-value="fuel"></dd>
         </div>
       </dl>

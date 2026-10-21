@@ -145,7 +145,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   {~t"No amount"}
                 </span>
               </p>
-              <p class="text-base-content/65 mt-3 flex items-center gap-2 text-sm">
+              <p class="text-base-content/75 mt-3 flex items-center gap-2 text-sm">
                 {~t"Confidence"} <.confidence_badge confidence={@expense.confidence} />
               </p>
             </.widget>
@@ -161,10 +161,10 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   {~t"Open receipt in Papra"}
                   <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
                 </a>
-                <p :if={@expense.processed_at} class="text-base-content/65">
+                <p :if={@expense.processed_at} class="text-base-content/75">
                   {~t"Processed"} {Format.datetime(@expense.processed_at, @locale)}
                 </p>
-                <p :if={@expense.reviewed_at} class="text-base-content/65">
+                <p :if={@expense.reviewed_at} class="text-base-content/75">
                   {~t"Reviewed"} {Format.datetime(@expense.reviewed_at, @locale)}
                 </p>
               </div>

@@ -62,7 +62,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
             </.link>
           </:col>
           <:col :let={subscription} field="user.email" label={~t"Email"} class="max-sm:hidden">
-            <span class="text-base-content/65">{subscription.user.email}</span>
+            <span class="text-base-content/75">{subscription.user.email}</span>
           </:col>
           <:col :let={subscription} field="product_variant.size" sort label={~t"Size"} class="max-sm:hidden">
             {variant_size_label(subscription.product_variant.size)}

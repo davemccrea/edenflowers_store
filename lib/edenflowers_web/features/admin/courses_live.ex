@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           </:actions>
         </.admin_page_header>
 
-        <p :if={@courses == []} class="text-base-content/65 py-6 text-center text-sm">
+        <p :if={@courses == []} class="text-base-content/75 py-6 text-center text-sm">
           {~t"No upcoming courses"}
         </p>
 
@@ -339,7 +339,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               {@course.name}
               <.badge :if={@past?} tone={:tag} class="ml-1 align-middle">{pgettext("course", "Past")}</.badge>
             </h2>
-            <p class="text-base-content/65 text-sm">
+            <p class="text-base-content/75 text-sm">
               {Format.date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}–{Format.time(
                 @course.end_time,
                 @locale
@@ -359,14 +359,14 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             max={@course.total_places}
             aria-label={~t"Seats"}
           />
-          <span :if={@still_to_pay > 0} class="text-base-content/65">
+          <span :if={@still_to_pay > 0} class="text-base-content/75">
             {~t"#{count = @still_to_pay} to collect"}
           </span>
         </div>
       </summary>
 
       <div class="border-base-content/12 border-t p-4 sm:p-5">
-        <p :if={@registrations == []} class="text-base-content/65 mb-4 text-sm">{~t"No bookings yet"}</p>
+        <p :if={@registrations == []} class="text-base-content/75 mb-4 text-sm">{~t"No bookings yet"}</p>
         <div class="mb-5 flex flex-wrap items-center gap-2">
           <.button
             type="button"
@@ -406,7 +406,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               <div class="col-start-1 row-start-1 min-w-0">
                 <p class="text-base-content flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
                   <span class="min-w-0 break-words">{registration.name}</span>
-                  <span :if={registration.seats_held > 1} class="text-base-content/65 tabular-nums">
+                  <span :if={registration.seats_held > 1} class="text-base-content/75 tabular-nums">
                     +{registration.seats_held - 1}
                   </span>
                   <.settlement_badge registration={registration} locale={@locale} />
@@ -415,7 +415,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   href={fastmail_compose(to: registration.email)}
                   target="_blank"
                   rel="noopener"
-                  class="text-base-content/65 block w-fit truncate text-sm pointer-coarse:py-3 hover:underline"
+                  class="text-base-content/75 block w-fit truncate text-sm pointer-coarse:py-3 hover:underline"
                 >
                   {registration.email}
                 </a>
@@ -533,7 +533,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           phx-mounted={JS.ignore_attributes(["open"])}
           class="group/cancelled border-base-content/8 border-t"
         >
-          <summary class="text-base-content/65 touch-target flex cursor-pointer list-none items-center gap-1 py-3 text-sm">
+          <summary class="text-base-content/75 touch-target flex cursor-pointer list-none items-center gap-1 py-3 text-sm">
             {~t"Cancelled (#{count = length(@cancelled_settled)})"}
             <.icon name="hero-chevron-down" class="h-4 w-4 group-open/cancelled:rotate-180" />
           </summary>
@@ -564,14 +564,14 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       class={["grid-cols-subgrid col-span-full grid items-center gap-y-3 py-4", @registration.id == @highlighted_booking_id && highlighted_row_class()]}
     >
       <div class="col-start-1 row-start-1 min-w-0">
-        <p class="text-base-content/65 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <p class="text-base-content/75 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span class="line-through">
             {@registration.name}
             <span :if={@registration.seats_held > 1} class="tabular-nums">+{@registration.seats_held - 1}</span>
           </span>
           <.settlement_badge registration={@registration} locale={@locale} />
         </p>
-        <p class="text-base-content/65 truncate text-sm">{@registration.email}</p>
+        <p class="text-base-content/75 truncate text-sm">{@registration.email}</p>
       </div>
     </li>
     """
@@ -629,7 +629,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       )
 
     ~H"""
-    <p :for={refund <- @refunds} class="text-base-content/65 text-sm">
+    <p :for={refund <- @refunds} class="text-base-content/75 text-sm">
       {~t"Goodwill refund #{amount = Format.currency(Decimal.abs(refund.amount), @locale)} · #{how = OrderLog.payment_method_label(refund.method)}"}
       <span :if={refund.note}>· {refund.note}</span>
     </p>
@@ -652,7 +652,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         class="flex min-h-0 flex-1 flex-col"
       >
         <.drawer_body>
-          <p class="text-base-content/65 text-sm">
+          <p class="text-base-content/75 text-sm">
             {@course.name} · {Format.date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}
           </p>
           <div class="space-y-4">
@@ -722,7 +722,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         />
         <.mark_paid_form :if={@mode == :settle and to_collect?(elem(@settling, 1))} registration={elem(@settling, 1)} />
         <.refund_controls :if={@mode == :settle and to_refund?(elem(@settling, 1))} registration={elem(@settling, 1)} />
-        <p :if={nothing_to_settle?(elem(@settling, 1), @mode)} class="text-base-content/65 text-sm">
+        <p :if={nothing_to_settle?(elem(@settling, 1), @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this booking."}
         </p>
       </.drawer_body>
@@ -750,36 +750,36 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     <div class="space-y-1">
       <p class="text-base-content font-medium">
         {@registration.name}
-        <span :if={@registration.seats_held > 1} class="text-base-content/65 tabular-nums">
+        <span :if={@registration.seats_held > 1} class="text-base-content/75 tabular-nums">
           +{@registration.seats_held - 1}
         </span>
         <.badge :if={@registration.status == :cancelled} tone={:tag} class="ml-1 align-middle">
           {~t"Cancelled"}
         </.badge>
       </p>
-      <p class="text-base-content/65 break-all text-sm">{@registration.email}</p>
-      <p class="text-base-content/65 text-sm">
+      <p class="text-base-content/75 break-all text-sm">{@registration.email}</p>
+      <p class="text-base-content/75 text-sm">
         {@course.name} · {Format.date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}
       </p>
     </div>
     <dl class="divide-base-content/8 border-base-content/12 divide-y border-y text-sm tabular-nums">
       <div class="flex justify-between gap-4 py-2">
-        <dt class="text-base-content/65">{~t"Paid"}</dt>
+        <dt class="text-base-content/75">{~t"Paid"}</dt>
         <dd>{Format.currency(@registration.amount_paid, @locale)}</dd>
       </div>
       <div :if={to_collect?(@registration)} class="flex justify-between gap-4 py-2">
-        <dt class="text-base-content/65">{~t"To collect"}</dt>
+        <dt class="text-base-content/75">{~t"To collect"}</dt>
         <dd class="font-semibold">{Format.currency(@registration.balance, @locale)}</dd>
       </div>
       <div
         :if={@registration.status == :cancelled and Decimal.positive?(@registration.kept_amount)}
         class="flex justify-between gap-4 py-2"
       >
-        <dt class="text-base-content/65">{~t"Kept as cancellation fee"}</dt>
+        <dt class="text-base-content/75">{~t"Kept as cancellation fee"}</dt>
         <dd>{Format.currency(@registration.kept_amount, @locale)}</dd>
       </div>
       <div :if={to_refund?(@registration)} class="flex justify-between gap-4 py-2">
-        <dt class="text-base-content/65">{~t"To refund"}</dt>
+        <dt class="text-base-content/75">{~t"To refund"}</dt>
         <dd class="font-semibold">{Format.currency(Decimal.abs(@registration.balance), @locale)}</dd>
       </div>
     </dl>

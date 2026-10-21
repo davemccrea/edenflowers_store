@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
           <:subtitle :if={@term != ""}>{~t"Results for “#{term = @term}”"}</:subtitle>
         </.admin_page_header>
 
-        <p :if={@term == ""} class="text-base-content/65 text-sm">
+        <p :if={@term == ""} class="text-base-content/75 text-sm">
           {~t"Search orders by name, reference, phone, email or delivery address, and customers by name or email."}
         </p>
 
@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
                 >
                   <span class="min-w-0">
                     <span class="text-base-content block truncate font-medium">{order.customer_name}</span>
-                    <span class="text-base-content/65 text-sm tabular-nums">
+                    <span class="text-base-content/75 text-sm tabular-nums">
                       {order.order_reference} · {Format.date(order.fulfillment_date, @locale)}
                     </span>
                   </span>
@@ -69,7 +69,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
                 </.link>
               </li>
             </ul>
-            <p :if={@orders == []} class="text-base-content/65 text-sm">{~t"No orders found."}</p>
+            <p :if={@orders == []} class="text-base-content/75 text-sm">{~t"No orders found."}</p>
             <.link
               :if={length(@orders) == @limit}
               navigate={~p"/admin/orders?#{%{search: @term}}"}
@@ -84,11 +84,11 @@ defmodule EdenflowersWeb.Admin.SearchLive do
               <li :for={customer <- @customers}>
                 <.link navigate={~p"/admin/customers/#{customer.id}"} class="block py-2.5 hover:underline">
                   <span class="text-base-content block truncate font-medium">{customer.name || customer.email}</span>
-                  <span :if={customer.name} class="text-base-content/65 text-sm">{customer.email}</span>
+                  <span :if={customer.name} class="text-base-content/75 text-sm">{customer.email}</span>
                 </.link>
               </li>
             </ul>
-            <p :if={@customers == []} class="text-base-content/65 text-sm">{~t"No customers found."}</p>
+            <p :if={@customers == []} class="text-base-content/75 text-sm">{~t"No customers found."}</p>
             <.link
               :if={length(@customers) == @limit}
               navigate={~p"/admin/customers?#{%{search: @term}}"}

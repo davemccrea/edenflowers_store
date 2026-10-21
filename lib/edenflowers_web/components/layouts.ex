@@ -302,7 +302,7 @@ defmodule EdenflowersWeb.Layouts do
             <.link
               id="store-shortcut"
               href={~q"/#{language}"}
-              class="text-base-content/65 flex items-center gap-2 text-sm hover:text-base-content"
+              class="text-base-content/75 flex items-center gap-2 text-sm hover:text-base-content"
             >
               <.icon name="hero-building-storefront" class="h-5 w-5" />
               {~t"View store"}
@@ -344,7 +344,7 @@ defmodule EdenflowersWeb.Layouts do
       />
       <kbd
         aria-hidden="true"
-        class="kbd kbd-sm text-base-content/65 pointer-events-none absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 lg:inline-flex"
+        class="kbd kbd-sm text-base-content/75 pointer-events-none absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 lg:inline-flex"
       >
         /
       </kbd>
@@ -378,7 +378,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <nav class="min-h-0 flex-1 space-y-4 overflow-y-auto px-3">
         <div :for={{heading, items} <- @nav_sections} class="space-y-0.5">
-          <p :if={heading} class="text-base-content/65 mb-1 px-3 text-xs">{heading}</p>
+          <p :if={heading} class="text-base-content/75 mb-1 px-3 text-xs">{heading}</p>
           <.admin_nav_item
             :for={{path, label, live?, icon} <- items}
             path={path}
@@ -392,7 +392,7 @@ defmodule EdenflowersWeb.Layouts do
       </nav>
 
       <div class="border-base-content/12 mt-auto border-t px-3 pt-4">
-        <p class="text-base-content/65 mb-1 px-3 text-xs">{~t"System"}</p>
+        <p class="text-base-content/75 mb-1 px-3 text-xs">{~t"System"}</p>
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @system_nav}
           path={path}
@@ -407,7 +407,7 @@ defmodule EdenflowersWeb.Layouts do
           href={"https://github.com/davemccrea/edenflowers_store/releases/tag/#{@version}"}
           target="_blank"
           rel="noopener"
-          class="text-base-content/65 mt-3 block px-3 text-xs hover:text-base-content"
+          class="text-base-content/75 mt-3 block px-3 text-xs hover:text-base-content"
         >
           {@version}
         </a>
@@ -438,7 +438,7 @@ defmodule EdenflowersWeb.Layouts do
       aria-current={@active && "page"}
       class={["flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
     do: "border-primary text-base-content bg-base-300/50 border-l-2 font-medium",
-    else: "text-base-content/65 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
+    else: "text-base-content/75 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
     >
       <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/60")]} />
       {@label}
@@ -485,7 +485,7 @@ defmodule EdenflowersWeb.Layouts do
         </span>
         <span :if={!@compact} class="min-w-0 text-left">
           <span class="text-base-content max-w-44 block truncate text-sm font-medium">{@display_name}</span>
-          <span class="text-base-content/65 max-w-44 block truncate text-xs">{@email}</span>
+          <span class="text-base-content/75 max-w-44 block truncate text-xs">{@email}</span>
         </span>
         <.icon :if={!@compact} name="hero-chevron-down" class="text-base-content/60 h-4 w-4 shrink-0" />
       </button>
@@ -497,7 +497,7 @@ defmodule EdenflowersWeb.Layouts do
         <li :if={@compact} class="px-3 py-2">
           <span class="block p-0 hover:bg-transparent">
             <span class="text-base-content block truncate text-sm font-medium">{@display_name}</span>
-            <span class="text-base-content/65 block truncate text-xs">{@email}</span>
+            <span class="text-base-content/75 block truncate text-xs">{@email}</span>
           </span>
         </li>
         <li :if={@compact}></li>

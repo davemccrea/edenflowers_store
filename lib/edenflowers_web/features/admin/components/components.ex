@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
-  defp count_badge_class(false, _tone), do: "border-0 bg-base-300/60 text-base-content/65"
+  defp count_badge_class(false, _tone), do: "border-0 bg-base-300/60 text-base-content/75"
   defp count_badge_class(true, :primary), do: "border-0 bg-primary/10 text-primary"
   defp count_badge_class(true, :warning), do: "admin-badge-warning"
 
@@ -459,7 +459,7 @@ defmodule EdenflowersWeb.Admin.Components do
             class="input w-full tabular-nums"
           />
         </div>
-        <p :if={!@collect?} id={"#{@id}-help"} class="text-base-content/65 text-sm">
+        <p :if={!@collect?} id={"#{@id}-help"} class="text-base-content/75 text-sm">
           {~t"A minus amount records a refund."}
         </p>
         <.input
@@ -691,7 +691,7 @@ defmodule EdenflowersWeb.Admin.Components do
     <section class={["admin-card p-4 sm:p-5", @class]}>
       <header class="mb-4">
         <h2 class="text-base-content text-base font-semibold">{@title}</h2>
-        <p :if={@description != []} class="text-base-content/65 mt-1 text-sm">{render_slot(@description)}</p>
+        <p :if={@description != []} class="text-base-content/75 mt-1 text-sm">{render_slot(@description)}</p>
       </header>
       {render_slot(@inner_block)}
     </section>
@@ -705,7 +705,7 @@ defmodule EdenflowersWeb.Admin.Components do
   def summary_fact(assigns) do
     ~H"""
     <div class={@class}>
-      <p class="eyebrow text-base-content/65 mb-1.5">{@label}</p>
+      <p class="eyebrow text-base-content/75 mb-1.5">{@label}</p>
       <div class="text-base-content text-base font-medium leading-relaxed">{render_slot(@inner_block)}</div>
     </div>
     """
@@ -789,7 +789,7 @@ defmodule EdenflowersWeb.Admin.Components do
       <time
         datetime={DateTime.to_iso8601(@at)}
         title={Edenflowers.Format.datetime(@at, @locale)}
-        class="text-base-content/65 shrink-0 text-xs tabular-nums"
+        class="text-base-content/75 shrink-0 text-xs tabular-nums"
       >
         {history_time(@at, @locale)}
       </time>
@@ -825,7 +825,7 @@ defmodule EdenflowersWeb.Admin.Components do
             <h1 class="font-sans text-base-content text-xl font-semibold tracking-tight sm:text-2xl">
               {@title}
             </h1>
-            <p :if={@subtitle != []} class="text-base-content/65 mt-1.5 text-sm leading-relaxed">
+            <p :if={@subtitle != []} class="text-base-content/75 mt-1.5 text-sm leading-relaxed">
               {render_slot(@subtitle)}
             </p>
           </div>
@@ -897,7 +897,7 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "A label and an amount in a list of money, as the order page's Payment section shows them."
   def money_row(assigns) do
     ~H"""
-    <div class={["flex items-center justify-between gap-4 py-0.5", @ruled && "border-base-content/12 mt-1.5 border-t pt-2", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 font-semibold", @muted && "text-base-content/65"]}>
+    <div class={["flex items-center justify-between gap-4 py-0.5", @ruled && "border-base-content/12 mt-1.5 border-t pt-2", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 font-semibold", @muted && "text-base-content/75"]}>
       <dt class={money_row_tone(@strong, @muted, "text-base-content/75")}>
         {@label}
       </dt>

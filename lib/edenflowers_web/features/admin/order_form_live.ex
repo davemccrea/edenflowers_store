@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   active_option_class="bg-primary text-primary-content"
                   available_option_class="cursor-pointer"
                   selected_option_class="cursor-pointer font-semibold"
-                  text_input_class="input w-full pr-10 placeholder:text-base-content/65"
+                  text_input_class="input w-full pr-10 placeholder:text-base-content/75"
                   text_input_selected_class=""
                   no_basic_styles_for_clear_buttons
                   clear_button_class="btn btn-ghost btn-square absolute inset-y-0 right-0 h-full"
@@ -136,11 +136,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     <span class="sr-only">{~t"Clear customer selection"}</span>
                   </:clear_button>
                 </LiveSelect.live_select>
-                <p id="customer-search-help" class="text-base-content/65 mt-1.5 text-sm">
+                <p id="customer-search-help" class="text-base-content/75 mt-1.5 text-sm">
                   {~t"Search by name or email."}
                 </p>
                 <div id="customer-results" role="status">
-                  <p :if={@customer_search_empty?} class="text-base-content/65 mt-2 text-sm">
+                  <p :if={@customer_search_empty?} class="text-base-content/75 mt-2 text-sm">
                     {~t"No customers found."}
                   </p>
                 </div>
@@ -190,7 +190,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     tax_rate_options={tax_rate_options(@tax_rates)}
                   />
                 </.inputs_for>
-                <p :if={@form[:line_items].value in [nil, []]} class="text-base-content/65 text-sm">
+                <p :if={@form[:line_items].value in [nil, []]} class="text-base-content/75 text-sm">
                   {~t"No items yet."}
                 </p>
               </div>
@@ -331,7 +331,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     />
                     <div class="min-w-0 flex-1">
                       <p class="font-medium">{@card.name}</p>
-                      <p class="text-base-content/65 text-sm">{variant_size_label(@card.size)}</p>
+                      <p class="text-base-content/75 text-sm">{variant_size_label(@card.size)}</p>
                     </div>
                     <.button
                       type="button"
@@ -356,7 +356,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   >
                     <.icon name="hero-gift" class="h-4 w-4" /> {~t"Choose a card"}
                   </.button>
-                  <p :if={is_nil(@card)} class="text-base-content/65 mt-1 text-sm">
+                  <p :if={is_nil(@card)} class="text-base-content/75 mt-1 text-sm">
                     {~t"Or none, if you write a card or ribbon of your own."}
                   </p>
                 </div>
@@ -369,7 +369,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     maxlength={card_message_max(@card)}
                     class="textarea w-full"
                   />
-                  <p class="text-base-content/65 mt-1 text-right text-sm tabular-nums">
+                  <p class="text-base-content/75 mt-1 text-right text-sm tabular-nums">
                     <span id="char-count">0</span>/{card_message_max(@card)}
                   </p>
                 </div>
@@ -888,7 +888,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp delivery_quote(assigns) do
     ~H"""
     <div aria-live="polite">
-      <div :if={match?(%{status: :ok}, @quote)} id="delivery-quote" class="text-base-content/65 mt-1.5 text-sm">
+      <div :if={match?(%{status: :ok}, @quote)} id="delivery-quote" class="text-base-content/75 mt-1.5 text-sm">
         <p :if={@quote.geocoded_address}>{~t"Delivering to #{address = @quote.geocoded_address}"}</p>
         <p>
           {Format.currency(@quote.fee, Format.locale())} ({Format.distance(@quote.distance, Format.locale())})
@@ -981,7 +981,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp line_row(assigns) do
     ~H"""
     <fieldset class="border-base-content/12 border p-3" data-testid="order-line">
-      <legend class="text-base-content/65 px-1 text-xs">{~t"Item #{number = @line.index + 1}"}</legend>
+      <legend class="text-base-content/75 px-1 text-xs">{~t"Item #{number = @line.index + 1}"}</legend>
       <%!-- Top-aligned so an error under one field leaves the others in line. --%>
       <div class="flex flex-wrap items-start gap-3">
         {render_slot(@inner_block)}
@@ -1008,7 +1008,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     assigns = assign(assigns, :paid, assigns.order && assigns.order.amount_paid)
 
     ~H"""
-    <p :if={@price.lines == []} id="order-price" class="text-base-content/65 text-sm">
+    <p :if={@price.lines == []} id="order-price" class="text-base-content/75 text-sm">
       {~t"Add an item to see the price."}
     </p>
     <dl :if={@price.lines != []} id="order-price" class="text-sm">
@@ -1024,7 +1024,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         amount={@price.fulfillment_fee}
         locale={@locale}
       />
-      <div :if={is_nil(@price.fulfillment_fee)} class="text-base-content/65 py-0.5">
+      <div :if={is_nil(@price.fulfillment_fee)} class="text-base-content/75 py-0.5">
         {if @method == :delivery,
           do: ~t"Delivery is added once the address is priced.",
           else: ~t"The fee is added once you choose delivery or pickup."}

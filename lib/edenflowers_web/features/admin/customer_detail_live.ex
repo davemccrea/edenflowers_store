@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
             </.link>
           </:col>
           <:col :let={order} label={~t"Reference"} class="max-sm:hidden">
-            <span class="text-base-content/65 tabular-nums">{order.order_reference}</span>
+            <span class="text-base-content/75 tabular-nums">{order.order_reference}</span>
           </:col>
           <:col
             :let={order}
