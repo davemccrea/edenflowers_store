@@ -23,10 +23,11 @@ defmodule Edenflowers.Accounts do
       define :search_customers, action: :search, args: [:term]
       define :get_user_by_email, action: :get_by_email, args: [:email]
       define :upsert_user, action: :upsert, args: [:email, :name]
-      define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email]
+      define :list_newsletter_subscribers, action: :newsletter_subscribers
+      define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email, :locale]
       define :update_name, action: :update, args: [:name]
       define :change_email, action: :change_email, args: [:email]
-      define :update_newsletter_preference, action: :update, args: [:newsletter_opt_in]
+      define :update_newsletter_preference, action: :update, args: [:newsletter_opt_in, :locale]
       define :ensure_stripe_customer, action: :ensure_stripe_customer
       define :forget_stripe_customer, action: :forget_stripe_customer
       define :set_newsletter_promo, action: :set_newsletter_promo, args: [:newsletter_promo_id]

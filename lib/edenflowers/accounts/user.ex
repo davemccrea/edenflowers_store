@@ -86,7 +86,7 @@ defmodule Edenflowers.Accounts.User do
     end
 
     update :update do
-      accept [:name, :newsletter_opt_in]
+      accept [:name, :newsletter_opt_in, :locale]
     end
 
     # Only for an address the customer has proved they own; AccountLive emails
@@ -96,7 +96,7 @@ defmodule Edenflowers.Accounts.User do
     end
 
     create :subscribe_to_newsletter do
-      accept [:email]
+      accept [:email, :locale]
       upsert? true
       upsert_identity :unique_email
       change set_attribute(:newsletter_opt_in, true)
@@ -148,6 +148,11 @@ defmodule Edenflowers.Accounts.User do
       change set_attribute(:stripe_customer_id, nil)
     end
 
+    read :newsletter_subscribers do
+      filter expr(newsletter_opt_in)
+      prepare build(load: [:first_name])
+    end
+
     update :set_newsletter_promo do
       accept [:newsletter_promo_id]
       require_attributes [:newsletter_promo_id]
@@ -180,12 +185,20 @@ defmodule Edenflowers.Accounts.User do
     end
   end
 
+  validations do
+    validate attribute_in(:locale, Edenflowers.Locales.all()), where: present(:locale)
+  end
+
   attributes do
     uuid_primary_key :id
 
     attribute :name, :string, allow_nil?: true, public?: true
     attribute :email, :ci_string, allow_nil?: false, public?: true
     attribute :newsletter_opt_in, :boolean, allow_nil?: false, default: false, public?: true
+
+    # The language they last opted in to the newsletter in, so campaigns can be
+    # split by language. Nil for users who opted in before this was kept.
+    attribute :locale, :string, allow_nil?: true, public?: true
 
     attribute :admin, :boolean, default: false, public?: true, writable?: false
 

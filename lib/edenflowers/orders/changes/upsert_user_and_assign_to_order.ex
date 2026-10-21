@@ -39,19 +39,15 @@ defmodule Edenflowers.Orders.Changes.UpsertUserAndAssignToOrder do
   defp maybe_opt_in_to_newsletter(user, false, _changeset), do: {:ok, user}
 
   defp maybe_opt_in_to_newsletter(user, true, changeset) do
-    case Accounts.update_newsletter_preference(user, true, actor: system_actor()) do
+    locale = Ash.Changeset.get_attribute(changeset, :locale) || to_string(Edenflowers.Format.locale())
+
+    case Accounts.update_newsletter_preference(user, true, locale, actor: system_actor()) do
       {:ok, user} ->
-        enqueue_newsletter_email(user.email, changeset)
+        SendNewsletterPromoEmail.enqueue(%{"email" => to_string(user.email), "locale" => locale})
         {:ok, user}
 
       {:error, _} = error ->
         error
     end
-  end
-
-  defp enqueue_newsletter_email(email, changeset) do
-    locale = Ash.Changeset.get_attribute(changeset, :locale) || Gettext.get_locale(EdenflowersWeb.Gettext)
-
-    SendNewsletterPromoEmail.enqueue(%{"email" => to_string(email), "locale" => locale})
   end
 end

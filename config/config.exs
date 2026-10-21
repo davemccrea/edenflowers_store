@@ -10,7 +10,7 @@ config :edenflowers, Oban,
   repo: Edenflowers.Repo,
   plugins: [
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
-    {Oban.Plugins.Cron, crontab: []}
+    {Oban.Plugins.Cron, crontab: [{"0 3 * * *", Edenflowers.Accounts.Workers.SyncNewsletterList}]}
   ]
 
 config :localize,

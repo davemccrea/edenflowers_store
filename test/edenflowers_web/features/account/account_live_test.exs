@@ -737,7 +737,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "unticking opts the customer back out", %{conn: conn, user: user} do
-      Edenflowers.Accounts.update_newsletter_preference!(user, true, actor: user)
+      Edenflowers.Accounts.update_newsletter_preference!(user, true, "en-GB", actor: user)
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
