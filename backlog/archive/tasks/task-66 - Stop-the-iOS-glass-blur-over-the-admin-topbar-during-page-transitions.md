@@ -1,12 +1,14 @@
 ---
 id: TASK-66
 title: Stop the iOS glass blur over the admin topbar during page transitions
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-20 06:18'
+updated_date: '2026-10-21 11:56'
 labels:
   - spec
   - admin
+  - wontfix
 dependencies: []
 priority: low
 type: research
@@ -34,3 +36,16 @@ What to check: whether Safari now supports element-scoped view transitions (`Ele
 - [ ] #1 Checked whether the current iOS Safari supports element-scoped view transitions or stops blurring the top edge during view transitions
 - [ ] #2 If it does, the admin topbar stays sharp through page transitions in the installed app
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-21 11:56
+
+---
+
+Closed as wontfix: the blur is minor and not worth a workaround while Safari lacks element-scoped view transitions.
+
+---
+<!-- COMMENTS:END -->
