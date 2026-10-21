@@ -3145,6 +3145,11 @@ msgstr ""
 msgid "New order"
 msgstr ""
 
+#: lib/edenflowers_web/features/admin/order_form_live.ex:200
+#, elixir-autogen, elixir-format
+msgid "No items yet."
+msgstr ""
+
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:644
 #, elixir-autogen, elixir-format
 msgid "Note saved."
@@ -6990,6 +6995,11 @@ msgstr ""
 msgid "Reopen orders"
 msgstr ""
 
+#: lib/edenflowers_web/features/admin/overview_live.ex:535
+#, elixir-autogen, elixir-format
+msgid "Stop orders"
+msgstr ""
+
 #: lib/edenflowers/email/previews.ex:276
 #, elixir-autogen, elixir-format
 msgid "Course confirmation"
@@ -7548,24 +7558,4 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:153
 #, elixir-autogen, elixir-format
 msgid "Validity and limits"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_form_live.ex:206
-#, elixir-autogen, elixir-format
-msgid "Add an item to the order."
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/overview_live.ex:58
-#, elixir-autogen, elixir-format
-msgid "Nothing needs attention right now."
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_form_live.ex:105
-#, elixir-autogen, elixir-format
-msgid "Placing…"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/overview_live.ex:544
-#, elixir-autogen, elixir-format
-msgid "Stop new orders"
 msgstr ""
