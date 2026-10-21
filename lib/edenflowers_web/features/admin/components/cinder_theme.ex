@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   extends :daisy_ui
 
   set :container_class, "min-w-0"
-  set :controls_class, "card card-sm card-border border-base-content/12 bg-base-100 mb-4 overflow-visible"
+  set :controls_class, "card card-sm card-border border-base-content/12 bg-base-100 mb-3 sm:mb-4 overflow-visible"
 
   set :table_wrapper_class,
       "admin-table-scroll card card-border border-base-content/12 bg-base-100 overflow-x-auto max-w-full"
@@ -34,9 +34,13 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
 
   set :filter_toggle_class, "cursor-pointer select-none inline-flex items-center gap-1 pointer-coarse:min-h-11"
   set :filter_count_class, "badge badge-primary badge-sm tabular-nums"
-  set :filter_container_class, "card-body p-4 sm:p-5"
+  set :filter_container_class, "card-body px-3 py-1.5 sm:p-5"
   # The gap sits on the inputs, not the header, so a collapsed panel has no dead space under its title.
-  set :filter_inputs_class, "fieldset mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap"
+  # Phones get two columns of selects under a full-width search (Cinder renders it first);
+  # a lone select left over at the end takes the whole row.
+  set :filter_inputs_class,
+      "fieldset mt-1 mb-1.5 grid grid-cols-2 gap-x-2 gap-y-3 max-sm:*:first:col-span-2 max-sm:*:last:even:col-span-2 sm:my-0 sm:mt-4 sm:gap-4 lg:flex lg:flex-wrap"
+
   set :filter_input_wrapper_class, "form-control min-w-0"
 
   set :filter_label_class, "label-text mb-1 block text-xs font-medium text-base-content/65"
@@ -51,8 +55,9 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   set :filter_range_container_class, "flex flex-col gap-2 sm:flex-row sm:items-center"
 
   # Outlined rather than the stock `btn-ghost`, which hides a lone "×" until hover.
+  # Phones drop the empty placeholder Cinder keeps beside every filter, giving its width back to the control.
   set :filter_clear_button_class,
-      "btn btn-outline btn-sm btn-square ml-2 border-base-content/20 text-base-content/65 hover:border-error hover:bg-error/10 hover:text-error"
+      "btn btn-outline btn-sm btn-square ml-2 border-base-content/20 text-base-content/65 hover:border-error hover:bg-error/10 hover:text-error max-sm:[&.invisible]:hidden"
 
   # `pl-10` leaves room for the search icon the renderer overlays.
   set :search_input_class, "input input-sm w-full pl-10"
