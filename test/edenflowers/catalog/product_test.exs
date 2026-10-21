@@ -120,4 +120,54 @@ defmodule Edenflowers.Catalog.ProductTest do
       assert Enum.map(products, & &1.name) == ["C", "B", "A"]
     end
   end
+
+  describe "a product's photos" do
+    test "must number 1 to 8" do
+      for photo_slugs <- [[], Enum.map(1..9, &"#{&1}.jpg")] do
+        assert {:error, %Ash.Error.Invalid{errors: [%{field: :photo_slugs}]}} =
+                 update(generate(product()), %{photo_slugs: photo_slugs})
+      end
+    end
+
+    test "the first is the main photo, which a size without its own follows" do
+      product = generate(product(photo_slugs: ["a.jpg", "b.jpg"]))
+      generate(product_variant(product_id: product.id))
+
+      product = update!(product, %{photo_slugs: ["b.jpg", "a.jpg"]})
+
+      assert [%{photo_slug: "b.jpg"}] =
+               Ash.load!(product, [:main_photo_slug, product_variants: [:photo_slug]]).product_variants
+
+      assert Ash.load!(product, :main_photo_slug).main_photo_slug == "b.jpg"
+    end
+
+    test "a size can only pick one of its product's photos" do
+      product = generate(product(photo_slugs: ["a.jpg", "b.jpg"]))
+      variant = generate(product_variant(product_id: product.id))
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{field: :own_photo_slug, path: [:product_variants, 0]}]}} =
+               update(product, %{product_variants: [%{id: variant.id, own_photo_slug: "c.jpg"}]})
+
+      product = update!(product, %{product_variants: [%{id: variant.id, own_photo_slug: "b.jpg"}]})
+
+      assert [%{own_photo_slug: "b.jpg"}] = Ash.load!(product, :product_variants).product_variants
+    end
+
+    test "removing the photo a size uses sends it back to the main photo" do
+      product = generate(product(photo_slugs: ["a.jpg", "b.jpg"]))
+      keeps = generate(product_variant(product_id: product.id, own_photo_slug: "a.jpg"))
+      loses = generate(product_variant(product_id: product.id, own_photo_slug: "b.jpg"))
+
+      update!(product, %{photo_slugs: ["a.jpg"]})
+
+      assert Ash.get!(Catalog.ProductVariant, keeps.id, authorize?: false).own_photo_slug == "a.jpg"
+      assert Ash.get!(Catalog.ProductVariant, loses.id, authorize?: false, load: [:photo_slug]).photo_slug == "a.jpg"
+    end
+  end
+
+  defp update(product, params),
+    do: product |> Ash.Changeset.for_update(:update, params) |> Ash.update(authorize?: false)
+
+  defp update!(product, params),
+    do: product |> Ash.Changeset.for_update(:update, params) |> Ash.update!(authorize?: false)
 end

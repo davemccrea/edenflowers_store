@@ -1,10 +1,10 @@
 ---
 id: TASK-84.1
 title: Store a product's photos as an ordered list that sizes pick from
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-21 15:35'
-updated_date: '2026-10-21 15:40'
+updated_date: '2026-10-21 15:50'
 labels: []
 dependencies: []
 parent_task_id: TASK-84
@@ -32,8 +32,8 @@ Already in place (groundwork commit, 2026-10-21): a size's photo is optional and
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Saving a product with no photos or more than 8 fails with a field error
-- [ ] #2 Saving a size whose photo isn't one of its product's fails with a field error
-- [ ] #3 Removing a product photo that a size uses leaves that size showing the main photo
-- [ ] #4 Every place that showed the product photo shows the first photo in the list
+- [x] #1 Saving a product with no photos or more than 8 fails with a field error
+- [x] #2 Saving a size whose photo isn't one of its product's fails with a field error
+- [x] #3 Removing a product photo that a size uses leaves that size showing the main photo
+- [x] #4 Every place that showed the product photo shows the first photo in the list
 <!-- AC:END -->

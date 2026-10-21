@@ -1,10 +1,10 @@
 ---
 id: TASK-84
 title: Give each product a photo gallery that its sizes pick from
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-21 15:35'
-updated_date: '2026-10-21 15:39'
+updated_date: '2026-10-21 15:50'
 labels:
   - spec
   - customers
@@ -38,7 +38,7 @@ Works the way Shopify does: photos belong to the product, sizes point at one.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A product holds 1 to 8 ordered photos and the first is shown wherever a single product photo is shown today
-- [ ] #2 A size with no photo of its own shows the product's main photo, and follows it when the main photo changes
-- [ ] #3 The product form can't crash on a size photo whatever sizes are added or removed
+- [x] #1 A product holds 1 to 8 ordered photos and the first is shown wherever a single product photo is shown today
+- [x] #2 A size with no photo of its own shows the product's main photo, and follows it when the main photo changes
+- [x] #3 The product form can't crash on a size photo whatever sizes are added or removed
 <!-- AC:END -->

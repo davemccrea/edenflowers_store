@@ -20,11 +20,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/products/new")
 
     view |> element("button", "Add size") |> render_click()
-
-    for name <-
-          ~w(photo_form[image_slug] photo_form[product_variants][0][image_slug] photo_form[product_variants][1][image_slug]) do
-      view |> file_input("#product-form", name, [photo()]) |> render_upload("rose.jpg")
-    end
+    upload_photos(view, ["rose.jpg"])
 
     assert {:error, {:live_redirect, %{to: "/admin/products"}}} =
              view
@@ -47,8 +43,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert product.name == "Rose bouquet"
     refute product.draft
     assert product.product_variants |> Enum.map(& &1.size) |> Enum.sort() == [:large, :small]
-    assert String.starts_with?(product.image_slug, "local:///uploads/rose-")
-    assert Enum.all?(product.product_variants, &String.starts_with?(&1.image_slug, "local:///uploads/rose-"))
+    assert ["local:///uploads/rose-" <> _] = product.photo_slugs
+    assert Enum.all?(product.product_variants, &is_nil(&1.own_photo_slug))
   end
 
   test "edits a size's price without touching the others", %{conn: conn} do
@@ -95,7 +91,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert Ash.get!(Product, product.id, authorize?: false).name == "Christmas wreath"
   end
 
-  test "a size that only arrives in the submitted params gets a photo picker", %{conn: conn} do
+  test "adding and removing sizes in any order never needs a photo upload", %{conn: conn} do
     product = generate(product())
     generate(product_variant(product_id: product.id))
     generate(product_variant(product_id: product.id))
@@ -104,8 +100,32 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
 
     sizes = Map.new(~w(0 1 2), &{&1, %{"price" => "30"}})
     render_change(view, "validate", %{"form" => %{"product_variants" => sizes}})
+    view |> element(~s|button[phx-value-path="form[product_variants][0]"]|) |> render_click()
+    view |> element("button", "Add size") |> render_click()
+    view |> element(~s|button[phx-value-path="form[product_variants][1]"]|) |> render_click()
+    view |> element("button", "Add size") |> render_click()
 
-    assert has_element?(view, "input[name='photo_form[product_variants][2][image_slug]']")
+    assert has_element?(view, "input[type=radio][name='form[product_variants][2][own_photo_slug]']")
+  end
+
+  test "makes a photo main, removes one, and lets a size pick another", %{conn: conn} do
+    product = generate(product(photo_slugs: ["a.jpg", "b.jpg", "c.jpg"]))
+    variant = generate(product_variant(product_id: product.id, own_photo_slug: "a.jpg"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+
+    view |> element(~s|button[phx-click=make_main_photo][phx-value-slug="c.jpg"]|) |> render_click()
+    view |> element(~s|button[phx-click=remove_photo][phx-value-slug="a.jpg"]|) |> render_click()
+
+    # The size's photo is gone, so it shows as the main photo.
+    assert has_element?(view, ~s|input[name="form[product_variants][0][own_photo_slug]"][value=""][checked]|)
+
+    view
+    |> form("#product-form", form: %{product_variants: %{"0" => %{own_photo_slug: "b.jpg"}}})
+    |> render_submit()
+
+    assert Ash.get!(Product, product.id, authorize?: false).photo_slugs == ["c.jpg", "b.jpg"]
+    assert Ash.get!(Edenflowers.Catalog.ProductVariant, variant.id, authorize?: false).own_photo_slug == "b.jpg"
   end
 
   test "keeps uploaded photos when the first save fails validation", %{conn: conn} do
@@ -113,10 +133,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     tax_rate = generate(tax_rate())
 
     {:ok, view, _html} = live(conn, ~p"/admin/products/new")
-
-    for name <- ~w(photo_form[image_slug] photo_form[product_variants][0][image_slug]) do
-      view |> file_input("#product-form", name, [photo()]) |> render_upload("rose.jpg")
-    end
+    upload_photos(view, ["rose.jpg", "rose-side.jpg"])
 
     fields = %{
       description: "Roses.",
@@ -131,18 +148,17 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert {:error, {:live_redirect, _}} =
              view |> form("#product-form", form: Map.put(fields, :name, "Rose bouquet")) |> render_submit()
 
-    [product] = Ash.read!(Product, authorize?: false, load: [:product_variants])
-    assert String.starts_with?(product.image_slug, "local:///uploads/rose-")
-    assert [%{image_slug: "local:///uploads/rose-" <> _}] = product.product_variants
+    [product] = Ash.read!(Product, authorize?: false)
+    assert ["local:///uploads/rose-" <> _, "local:///uploads/rose-side-" <> _] = product.photo_slugs
   end
 
-  test "a size without its own photo shows the product photo", %{conn: conn} do
+  test "a size without its own photo shows the main photo", %{conn: conn} do
     category = generate(product_category())
     tax_rate = generate(tax_rate())
 
     {:ok, view, _html} = live(conn, ~p"/admin/products/new")
 
-    view |> file_input("#product-form", "photo_form[image_slug]", [photo()]) |> render_upload("rose.jpg")
+    upload_photos(view, ["rose.jpg"])
 
     view
     |> form("#product-form",
@@ -156,9 +172,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     )
     |> render_submit()
 
-    [product] = Ash.read!(Product, authorize?: false, load: [product_variants: [:photo_slug]])
-    assert [%{image_slug: nil, photo_slug: slug}] = product.product_variants
-    assert slug == product.image_slug
+    [product] = Ash.read!(Product, authorize?: false, load: [:main_photo_slug, product_variants: [:photo_slug]])
+    assert [%{own_photo_slug: nil, photo_slug: slug}] = product.product_variants
+    assert slug == product.main_photo_slug
   end
 
   test "removing a saved size archives it, keeping it on past orders", %{conn: conn} do
@@ -202,5 +218,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert html =~ "Punaiset ruusut"
   end
 
-  defp photo, do: %{name: "rose.jpg", content: "jpeg bytes", type: "image/jpeg"}
+  defp upload_photos(view, names) do
+    files = for name <- names, do: %{name: name, content: "jpeg bytes", type: "image/jpeg"}
+    upload = file_input(view, "#product-form", :photos, files)
+    for name <- names, do: render_upload(upload, name)
+  end
 end

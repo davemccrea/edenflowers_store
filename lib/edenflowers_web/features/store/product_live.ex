@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   @impl true
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
     product =
-      case Catalog.get_product_by_id(id, load: [:product_category, :tax_rate, product_variants: [:photo_slug]]) do
+      case Catalog.get_product_by_id(id) do
         {:ok, product} -> product
         # A malformed id is an invalid-filter error rather than NotFound; both should 404.
         {:error, _} -> raise Ash.Error.Query.NotFound, resource: Edenflowers.Catalog.Product
@@ -40,12 +40,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
        page_title: product.name,
        alternates: alternates("/#{language}/product/#{product.id}"),
        page_description: product.description,
-       og_image: image_url(product.image_slug, 1200, 630),
+       og_image: image_url(product.main_photo_slug, 1200, 630),
        json_ld: json_ld(product, product_variants)
      )
      |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)
+     |> assign(photo_slug: selected_variant.photo_slug)
      |> assign(subscribe?: if(cart_line, do: cart_line.interval_weeks != nil, else: false))
      |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 1))
      |> assign(has_subscription?: has_subscription?(socket.assigns.current_user))
@@ -94,18 +95,40 @@ defmodule EdenflowersWeb.Store.ProductLive do
             </p>
           </header>
 
-          <figure class="bg-cream aspect-[4/5] relative overflow-hidden md:col-start-1 md:row-span-2 md:row-start-1">
-            <.image
-              data-testid="product-image"
-              src={@selected_variant.photo_slug}
-              alt={"#{@product.name} #{AdminComponents.variant_size_label(@selected_variant.size)}"}
-              width={1000}
-              height={1250}
-              sizes="(min-width: 768px) 480px, 100vw"
-              priority
-              class="h-full w-full object-cover"
-            />
-          </figure>
+          <div class="md:col-start-1 md:row-span-2 md:row-start-1">
+            <figure class="bg-cream aspect-[4/5] relative overflow-hidden">
+              <.image
+                data-testid="product-image"
+                src={@photo_slug}
+                alt={"#{@product.name} #{AdminComponents.variant_size_label(@selected_variant.size)}"}
+                width={1000}
+                height={1250}
+                sizes="(min-width: 768px) 480px, 100vw"
+                priority
+                class="h-full w-full object-cover"
+              />
+            </figure>
+            <%!-- Eight columns whatever the count, so eight photos still fit one row on a phone. --%>
+            <ul
+              :if={length(@product.photo_slugs) > 1}
+              aria-label={~t"Photos"}
+              class="mt-2 grid grid-cols-8 gap-2"
+              data-testid="product-photos"
+            >
+              <li :for={{slug, index} <- Enum.with_index(@product.photo_slugs, 1)}>
+                <button
+                  type="button"
+                  phx-click="show_photo"
+                  phx-value-slug={slug}
+                  aria-pressed={to_string(slug == @photo_slug)}
+                  class={["bg-cream aspect-[4/5] outline-primary relative block w-full overflow-hidden outline-offset-2 focus-visible:outline-2", slug == @photo_slug && "outline-base-content outline-1", slug != @photo_slug && "opacity-70 hover:opacity-100"]}
+                >
+                  <span class="sr-only">{~t"Photo #{index}"}</span>
+                  <.image src={slug} alt="" width={120} height={150} class="absolute inset-0 h-full w-full object-cover" />
+                </button>
+              </li>
+            </ul>
+          </div>
 
           <div class="flex flex-col gap-8 md:col-start-2 md:row-start-2 md:max-w-prose">
             <p data-testid="product-description" class="text-base-content text-lg leading-relaxed">
@@ -311,13 +334,23 @@ defmodule EdenflowersWeb.Store.ProductLive do
   @impl true
   def handle_event("change", %{"product_variant_id" => id} = params, socket) do
     variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
+    # Toggling a subscription also sends the size, which mustn't undo a thumbnail pick.
+    photo_slug =
+      if variant.id == socket.assigns.selected_variant.id, do: socket.assigns.photo_slug, else: variant.photo_slug
 
     {:noreply,
      assign(socket,
        selected_variant: variant,
+       photo_slug: photo_slug,
        subscribe?: params["subscribe"] == "true",
        interval_weeks: params["interval_weeks"] || socket.assigns.interval_weeks
      )}
+  end
+
+  def handle_event("show_photo", %{"slug" => slug}, socket) do
+    if slug in socket.assigns.product.photo_slugs,
+      do: {:noreply, assign(socket, photo_slug: slug)},
+      else: {:noreply, socket}
   end
 
   def handle_event("submit", _params, socket) do
@@ -370,7 +403,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
       "@type" => "Product",
       "name" => product.name,
       "description" => product.description,
-      "image" => image_url(product.image_slug, 1200, 1200),
+      "image" => image_url(product.main_photo_slug, 1200, 1200),
       "offers" => Map.merge(offers, %{"priceCurrency" => "EUR", "availability" => availability})
     }
   end

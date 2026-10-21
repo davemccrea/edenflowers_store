@@ -2,7 +2,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.Components
-  import EdenflowersWeb.Admin.PhotoUpload, only: [photo_input: 1]
   import EdenflowersWeb.Admin.TranslationFields
 
   alias Edenflowers.Catalog.Product
@@ -14,6 +13,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
+
+  @max_photos 8
 
   @impl true
   def mount(params, _session, socket) do
@@ -27,8 +28,14 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          |> assign(:categories, Ash.read!(ProductCategory, actor: actor))
          |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
          |> assign(:free_dist_km, Edenflowers.Fulfillment.free_dist_km())
-         |> assign_form(form)
-         |> assign(:translating, nil)}
+         |> assign(:form, form)
+         |> assign(:translating, nil)
+         |> assign(:max_photos, @max_photos)
+         |> PhotoUpload.allow_many(:photos,
+           max_entries: @max_photos,
+           auto_upload: true,
+           progress: &handle_photo_progress/3
+         )}
 
       :error ->
         {:ok,
@@ -81,19 +88,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             </.form_section>
 
             <.form_section title={~t"Sizes and prices"}>
-              <:description>{~t"A size without its own photo shows the product photo."}</:description>
+              <:description>{~t"A size shows the main photo unless you pick another."}</:description>
               <ul class="border-base-content/12 divide-base-content/8 divide-y border">
                 <.inputs_for :let={variant} field={@form[:product_variants]}>
-                  <li class="flex gap-4 p-4">
-                    <.photo_input
-                      field={variant[:image_slug]}
-                      fallback={@form[:image_slug].value}
-                      uploads={@uploads}
-                      label={~t"Photo"}
-                      size="sm"
-                      show_errors={@form.source.submitted_once?}
-                    />
-                    <div class="min-w-0 flex-1 space-y-3 min-[1800px]:flex min-[1800px]:items-end min-[1800px]:gap-6 min-[1800px]:space-y-0">
+                  <li class="space-y-3 p-4">
+                    <div class="min-w-0 space-y-3 min-[1800px]:flex min-[1800px]:items-end min-[1800px]:gap-6 min-[1800px]:space-y-0">
                       <div class="grid grid-cols-1 gap-3 min-[1800px]:flex-1 sm:grid-cols-3">
                         <.input
                           field={variant[:size]}
@@ -135,6 +134,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                         </.button>
                       </div>
                     </div>
+                    <.size_photo_picker
+                      field={variant[:own_photo_slug]}
+                      photo_slugs={photo_slugs(@form)}
+                      show_errors={@form.source.submitted_once?}
+                    />
                   </li>
                 </.inputs_for>
                 <li>
@@ -166,11 +170,13 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           </div>
 
           <aside class="flex flex-col gap-6 xl:row-span-2">
-            <.form_section title={~t"Photo"}>
-              <.photo_input
-                field={@form[:image_slug]}
-                uploads={@uploads}
-                label={~t"Photo"}
+            <.form_section title={~t"Photos"}>
+              <:description>{~t"Up to #{count = @max_photos}. The main photo shows in the store's listings."}</:description>
+              <.photo_gallery
+                field={@form[:photo_slugs]}
+                photo_slugs={photo_slugs(@form)}
+                upload={@uploads.photos}
+                max={@max_photos}
                 show_errors={@form.source.submitted_once?}
               />
             </.form_section>
@@ -228,12 +234,120 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     """
   end
 
+  attr :field, Phoenix.HTML.FormField, required: true
+  attr :photo_slugs, :list, required: true
+  attr :upload, Phoenix.LiveView.UploadConfig, required: true
+  attr :max, :integer, required: true
+  attr :show_errors, :boolean, required: true
+
+  defp photo_gallery(assigns) do
+    upload = assigns.upload
+
+    assigns =
+      assign(assigns,
+        upload_errors: Enum.uniq(upload_errors(upload) ++ Enum.flat_map(upload.entries, &upload_errors(upload, &1))),
+        errors: if(assigns.show_errors, do: assigns.field.errors, else: [])
+      )
+
+    ~H"""
+    <ul id="product-photos" class="grid grid-cols-3 gap-3">
+      <li :for={{slug, index} <- Enum.with_index(@photo_slugs)} data-testid="product-photo">
+        <input type="hidden" name={@field.name <> "[]"} value={slug} />
+        <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
+          <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
+          <.badge :if={index == 0} tone={:neutral} class="absolute top-1.5 left-1.5">{~t"Main"}</.badge>
+        </span>
+        <span class="mt-1.5 flex flex-wrap gap-x-3 text-sm">
+          <button
+            :if={index > 0}
+            type="button"
+            phx-click="make_main_photo"
+            phx-value-slug={slug}
+            class="link-underline-static-body"
+          >
+            {~t"Make main"}
+          </button>
+          <%!-- A product always has a photo, so the last one is replaced rather than removed. --%>
+          <button
+            :if={length(@photo_slugs) > 1}
+            type="button"
+            phx-click="remove_photo"
+            phx-value-slug={slug}
+            class="link-underline-static-body"
+          >
+            {~t"Remove"}
+          </button>
+        </span>
+      </li>
+      <li :for={entry <- @upload.entries}>
+        <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
+          <.live_img_preview entry={entry} class="absolute inset-0 h-full w-full object-cover opacity-60" />
+        </span>
+        <progress value={entry.progress} max="100" class="progress mt-1.5 h-1 w-full">{entry.progress}%</progress>
+      </li>
+      <li :if={length(@photo_slugs) + length(@upload.entries) < @max}>
+        <label
+          phx-drop-target={@upload.ref}
+          class="group outline-primary block has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+        >
+          <span class="border-base-content/25 text-cream-content/70 bg-cream aspect-[4/5] flex flex-col items-center justify-center gap-1.5 border border-dashed transition-colors group-hover:border-base-content/50">
+            <.icon name="hero-plus" class="size-6" />
+            <span class="px-2 text-center text-sm">{~t"Add photos"}</span>
+          </span>
+          <.live_file_input upload={@upload} class="sr-only" />
+        </label>
+      </li>
+    </ul>
+    <p :for={err <- @upload_errors} class="text-error mt-1.5 text-sm">{photo_upload_error(err)}</p>
+    <.error :for={msg <- Enum.map(@errors, &translate_error/1)}>{msg}</.error>
+    """
+  end
+
+  attr :field, Phoenix.HTML.FormField, required: true
+  attr :photo_slugs, :list, required: true
+  attr :show_errors, :boolean, required: true
+
+  # A size whose photo was just removed from the gallery shows as "Main photo",
+  # which is what saving gives it.
+  defp size_photo_picker(assigns) do
+    assigns =
+      assign(assigns,
+        own: Enum.find(assigns.photo_slugs, &(&1 == assigns.field.value)),
+        errors: if(assigns.show_errors, do: assigns.field.errors, else: [])
+      )
+
+    ~H"""
+    <fieldset>
+      <legend class="text-base-content/80 mb-1.5 text-sm">{~t"Photo"}</legend>
+      <div class="flex flex-wrap gap-2">
+        <label class="outline-primary border-base-content/25 flex h-12 cursor-pointer items-center border px-3 text-sm has-[:checked]:outline-2 has-[:checked]:outline-offset-1 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
+          <input type="radio" name={@field.name} value="" checked={is_nil(@own)} class="sr-only" />
+          {~t"Main photo"}
+        </label>
+        <label
+          :for={{slug, index} <- Enum.with_index(@photo_slugs, 1)}
+          class="outline-primary bg-cream aspect-[4/5] relative block h-12 cursor-pointer overflow-hidden has-[:checked]:outline-2 has-[:checked]:outline-offset-1 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+        >
+          <input type="radio" name={@field.name} value={slug} checked={@own == slug} class="sr-only" />
+          <span class="sr-only">{~t"Photo #{index}"}</span>
+          <.image src={slug} alt="" width={80} height={100} class="absolute inset-0 h-full w-full object-cover" />
+        </label>
+      </div>
+      <.error :for={msg <- Enum.map(@errors, &translate_error/1)}>{msg}</.error>
+    </fieldset>
+    """
+  end
+
   @impl true
   def handle_event("validate", %{"form" => params}, socket) do
-    params = PhotoUpload.merge_slugs(params, socket, photo_fields(socket.assigns.form))
-
-    {:noreply, assign_form(socket, AshPhoenix.Form.validate(socket.assigns.form, params))}
+    {:noreply, update(socket, :form, &AshPhoenix.Form.validate(&1, params))}
   end
+
+  def handle_event("remove_photo", %{"slug" => slug}, socket),
+    do: {:noreply, update_photos(socket, &List.delete(&1, slug))}
+
+  def handle_event("make_main_photo", %{"slug" => slug}, socket),
+    do: {:noreply, update_photos(socket, &[slug | List.delete(&1, slug)])}
 
   # Fills each size's stock with 0; nothing is saved until Jennie saves.
   def handle_event("mark_sold_out", _params, socket) do
@@ -247,17 +361,14 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       end
 
     params = Map.put(params, "product_variants", Map.merge(params["product_variants"] || %{}, sizes))
-    {:noreply, assign_form(socket, AshPhoenix.Form.validate(form, params))}
+    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
   end
 
   def handle_event("add_variant", _params, socket) do
-    {:noreply, assign_form(socket, AshPhoenix.Form.add_form(socket.assigns.form, "form[product_variants]"))}
+    {:noreply, update(socket, :form, &AshPhoenix.Form.add_form(&1, "form[product_variants]"))}
   end
 
-  # Removing a size renumbers the ones after it, so pending size photos would
-  # land on the wrong size. Clearing them is simpler than remapping.
   def handle_event("remove_variant", %{"path" => path}, socket) do
-    socket = PhotoUpload.forget(socket, variant_photo_fields(socket.assigns.form))
     {:noreply, update(socket, :form, &AshPhoenix.Form.remove_form(&1, path))}
   end
 
@@ -265,10 +376,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     do: {:noreply, TranslationFields.translate(socket, from)}
 
   def handle_event("save", %{"form" => params}, socket) do
-    names = photo_fields(socket.assigns.form)
-    socket = PhotoUpload.store_uploads(socket, names)
-    params = PhotoUpload.merge_slugs(params, socket, names)
-
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, _product} ->
         {:noreply,
@@ -279,7 +386,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       {:error, form} ->
         {:noreply,
          socket
-         |> assign_form(form)
+         |> assign(:form, form)
          |> put_flash(:error, ~t"The product wasn't saved. Check the fields marked below.")}
     end
   end
@@ -308,17 +415,25 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     {:ok, ~t"New product", to_form(form)}
   end
 
-  # Validating can add sizes too, when the params name an index the form
-  # doesn't have yet, so every form change allows uploads for its sizes.
-  defp assign_form(socket, form) do
-    socket
-    |> assign(:form, form)
-    |> PhotoUpload.allow(photo_fields(form))
+  # Each photo is stored as soon as it arrives, so sizes can pick it before the
+  # product is saved. An abandoned form leaves its files behind.
+  defp handle_photo_progress(:photos, %{done?: false}, socket), do: {:noreply, socket}
+
+  defp handle_photo_progress(:photos, entry, socket) do
+    slug = consume_uploaded_entry(socket, entry, &PhotoUpload.store_file(&1, entry))
+    {:noreply, update_photos(socket, &(&1 ++ [slug]))}
   end
 
-  defp photo_fields(form), do: ["form[image_slug]" | variant_photo_fields(form)]
-
-  defp variant_photo_fields(form) do
-    Enum.map(form.source.forms[:product_variants] || [], &(&1.name <> "[image_slug]"))
+  defp update_photos(socket, fun) do
+    form = socket.assigns.form
+    slugs = fun.(photo_slugs(form))
+    # From the whole form, as its own params miss the size a new form starts with.
+    params = form |> AshPhoenix.Form.params() |> Map.put("photo_slugs", slugs)
+    assign(socket, :form, AshPhoenix.Form.validate(form, params))
   end
+
+  defp photo_slugs(form), do: form[:photo_slugs].value || []
+
+  defp photo_upload_error(:too_many_files), do: ~t"Add at most #{count = @max_photos} photos."
+  defp photo_upload_error(error), do: PhotoUpload.upload_error_message(error)
 end

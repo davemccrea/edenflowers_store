@@ -159,6 +159,47 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     end
   end
 
+  describe "photos" do
+    test "a product with one photo shows no thumbnails", %{conn: conn} do
+      product = generate(product(draft: false))
+      generate(product_variant(product_id: product.id))
+
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+
+      refute has_element?(view, "[data-testid=product-photos]")
+    end
+
+    test "a thumbnail swaps the photo without changing the size", %{conn: conn} do
+      product = generate(product(draft: false, photo_slugs: ["a.jpg", "b.jpg"]))
+      generate(product_variant(product_id: product.id, size: :small, price: "40.00"))
+      generate(product_variant(product_id: product.id, size: :large, price: "60.00"))
+
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+      assert has_element?(view, ~s|[data-testid=product-photos] button[aria-pressed=true]|, "Photo 1")
+
+      view |> element("[data-testid=product-photos] button", "Photo 2") |> render_click()
+
+      assert has_element?(view, ~s|[data-testid=product-image][src*="b.jpg"]|)
+      assert has_element?(view, ~s|[data-testid=product-photos] button[aria-pressed=true]|, "Photo 2")
+      assert has_element?(view, "[data-testid=variant-option-small][checked]")
+      assert has_element?(view, "[data-testid=product-price]", "40")
+    end
+
+    test "choosing a size shows its photo, or the main photo without one", %{conn: conn} do
+      product = generate(product(draft: false, photo_slugs: ["a.jpg", "b.jpg"]))
+      small = generate(product_variant(product_id: product.id, size: :small, price: "40.00", own_photo_slug: "b.jpg"))
+      large = generate(product_variant(product_id: product.id, size: :large, price: "60.00"))
+
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+
+      view |> form("[data-testid=product-form]", %{product_variant_id: small.id}) |> render_change()
+      assert has_element?(view, ~s|[data-testid=product-image][src*="b.jpg"]|)
+
+      view |> form("[data-testid=product-form]", %{product_variant_id: large.id}) |> render_change()
+      assert has_element?(view, ~s|[data-testid=product-image][src*="a.jpg"]|)
+    end
+  end
+
   test "an unknown product is a 404", %{conn: conn} do
     assert_error_sent 404, fn -> get(conn, ~p"/en/product/#{Ash.UUID.generate()}") end
     assert_error_sent 404, fn -> get(conn, ~p"/en/product/not-a-uuid") end

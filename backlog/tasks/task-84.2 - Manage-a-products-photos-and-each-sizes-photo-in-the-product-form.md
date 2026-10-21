@@ -1,10 +1,10 @@
 ---
 id: TASK-84.2
 title: Manage a product's photos and each size's photo in the product form
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-21 15:35'
-updated_date: '2026-10-21 15:40'
+updated_date: '2026-10-21 15:50'
 labels: []
 dependencies:
   - TASK-84.1
@@ -26,8 +26,8 @@ ordinal: 171000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Jennie can add up to 8 photos, remove one, and make any photo the main one
-- [ ] #2 A size's photo is chosen from the product's photos or left as the main photo
-- [ ] #3 Adding and removing sizes in any order never crashes the form
-- [ ] #4 Course and delivery photo uploads work as before
+- [x] #1 Jennie can add up to 8 photos, remove one, and make any photo the main one
+- [x] #2 A size's photo is chosen from the product's photos or left as the main photo
+- [x] #3 Adding and removing sizes in any order never crashes the form
+- [x] #4 Course and delivery photo uploads work as before
 <!-- AC:END -->

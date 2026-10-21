@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
   @moduledoc """
   Photo uploads for `image_slug` fields in admin forms.
 
-  Callers pass form field names (e.g. `form[product_variants][0][image_slug]`),
+  Callers pass form field names (e.g. `form[image_slug]`),
   so on save the stored photo's slug can be merged back into the submitted
   params at that same path. The upload itself is registered under a prefixed
   name: its file input posts an empty value, which would blank the field.
@@ -30,6 +30,10 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
     end)
   end
 
+  @doc "Allows several photos at once under `name`; `opts` go to `allow_upload/3`, e.g. `progress:`."
+  def allow_many(socket, name, opts),
+    do: Phoenix.LiveView.allow_upload(socket, name, [accept: @accept, max_file_size: @max_file_size] ++ opts)
+
   @doc "Drops pending and stored photos for `names`, e.g. when removing a form shifts the indexes."
   def forget(socket, names) do
     socket = Phoenix.Component.update(socket, :photo_slugs, &Map.drop(&1, names))
@@ -51,7 +55,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
   """
   def store_uploads(socket, names, opts \\ []) do
     Enum.reduce(names, socket, fn name, socket ->
-      case Phoenix.LiveView.consume_uploaded_entries(socket, upload_name(name), &store(&1, &2, opts)) do
+      case Phoenix.LiveView.consume_uploaded_entries(socket, upload_name(name), &store_file(&1, &2, opts)) do
         [slug] -> Phoenix.Component.update(socket, :photo_slugs, &Map.put(&1, name, slug))
         [] -> socket
       end
@@ -69,7 +73,8 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
 
   defp upload_name(field_name), do: "photo_" <> field_name
 
-  defp store(%{path: path}, entry, opts) do
+  @doc "Copies an upload into `:uploads_dir`; use as a `consume_uploaded_entry` callback."
+  def store_file(%{path: path}, entry, opts \\ []) do
     dir = Application.fetch_env!(:edenflowers, :uploads_dir)
 
     filename =
@@ -120,9 +125,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
   attr :field, Phoenix.HTML.FormField, required: true
   attr :uploads, :map, required: true
   attr :label, :string, required: true
-  attr :fallback, :string, default: nil, doc: "photo shown while the field has none of its own"
   attr :show_errors, :boolean, default: false
-  attr :size, :string, default: "lg", values: ~w(lg sm), doc: "`sm` is a thumbnail for list rows"
 
   @doc """
   The photo itself is the picker: click it (or drop a file on it) to choose a
@@ -135,12 +138,12 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
     assigns =
       assigns
       |> assign(:upload, upload)
-      |> assign(:photo, present(assigns.field.value) || present(assigns.fallback))
+      |> assign(:photo, present(assigns.field.value))
       |> assign(:upload_errors, Enum.flat_map(upload.entries, &upload_errors(upload, &1)))
       |> assign(:errors, if(assigns.show_errors, do: assigns.field.errors, else: []))
 
     ~H"""
-    <div class={if @size == "sm", do: "w-16 shrink-0", else: "max-w-60"}>
+    <div class="max-w-60">
       <label
         phx-drop-target={@upload.ref}
         class="group outline-primary block has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
@@ -156,34 +159,30 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
             :if={@upload.entries == [] and @photo}
             src={@photo}
             alt=""
-            width={if @size == "sm", do: 128, else: 640}
-            height={if @size == "sm", do: 160, else: 800}
+            width={640}
+            height={800}
             class="absolute inset-0 h-full w-full object-cover"
           />
           <span
             :if={@upload.entries == [] and is_nil(@photo)}
             class="border-base-content/25 text-cream-content/70 absolute inset-0 flex flex-col items-center justify-center gap-2 border border-dashed transition-colors group-hover:border-base-content/50"
           >
-            <.icon name="hero-photo" class={if @size == "sm", do: "size-5", else: "size-8"} />
-            <span :if={@size == "lg"} class="px-4 text-center text-sm">{~t"Click or drop a photo here"}</span>
+            <.icon name="hero-photo" class="size-8" />
+            <span class="px-4 text-center text-sm">{~t"Click or drop a photo here"}</span>
           </span>
         </span>
         <span
-          :if={@size == "lg" and (@photo || @upload.entries != [])}
+          :if={@photo || @upload.entries != []}
           class="link-underline-static-body mt-2 inline-block text-sm"
         >
           {~t"Replace photo"}
         </span>
         <.live_file_input upload={@upload} class="sr-only" />
       </label>
-      <%!-- A thumbnail is too narrow for a sentence; its red outline carries the error, and a
-           missing size photo is really the missing product photo, which says so in full. --%>
-      <p :for={err <- @upload_errors} class={["text-error mt-1.5 text-sm", @size == "sm" && "sr-only"]}>
+      <p :for={err <- @upload_errors} class="text-error mt-1.5 text-sm">
         {upload_error_message(err)}
       </p>
-      <div :if={@size == "lg"}>
-        <.error :for={msg <- Enum.map(@errors, &translate_error/1)}>{msg}</.error>
-      </div>
+      <.error :for={msg <- Enum.map(@errors, &translate_error/1)}>{msg}</.error>
     </div>
     """
   end
@@ -191,7 +190,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
   defp present(value) when is_binary(value) and value != "", do: value
   defp present(_value), do: nil
 
-  defp upload_error_message(:too_large), do: ~t"The photo must be under 40 MB."
-  defp upload_error_message(:not_accepted), do: ~t"Use a JPG, PNG or WebP photo."
-  defp upload_error_message(_), do: ~t"Could not upload the photo."
+  def upload_error_message(:too_large), do: ~t"The photo must be under 40 MB."
+  def upload_error_message(:not_accepted), do: ~t"Use a JPG, PNG or WebP photo."
+  def upload_error_message(_), do: ~t"Could not upload the photo."
 end
