@@ -6,7 +6,7 @@ title: >-
 status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-20 06:57'
+updated_date: '2026-10-21 21:07'
 labels: []
 dependencies: []
 parent_task_id: TASK-67
@@ -41,3 +41,16 @@ ordinal: 142000
 <!-- SECTION:NOTES:BEGIN -->
 Overdue orders stay at the top of Today, grouped by date, until TASK-67.2 moves them to Needs attention; hiding them before then would lose them.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @codex
+created: 2026-10-21 21:07
+
+---
+
+Commit 2e39dabd (2026-10-22): links from Overview orders now carry the selected day; the order page Back link returns to that Overview day, and queue navigation preserves it.
+
+---
+<!-- COMMENTS:END -->
