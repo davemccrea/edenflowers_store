@@ -75,16 +75,16 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
             </.form_section>
 
             <.form_section title={~t"When"}>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <.input field={@form[:date]} type="date" label={~t"Date"} class="input w-full" />
-                <.input field={@form[:start_time]} type="time" label={~t"Starts"} class="input w-full" />
-                <.input field={@form[:end_time]} type="time" label={~t"Ends"} class="input w-full" />
                 <.input
                   field={@form[:register_before]}
                   type="date"
                   label={~t"Book by"}
                   class="input w-full"
                 />
+                <.input field={@form[:start_time]} type="time" label={~t"Starts"} class="input w-full" />
+                <.input field={@form[:end_time]} type="time" label={~t"Ends"} class="input w-full" />
               </div>
             </.form_section>
 
@@ -95,21 +95,21 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                   type="number"
                   min="1"
                   label={~t"Seats"}
-                  class="input max-w-48 w-full tabular-nums"
+                  class="input w-full tabular-nums"
                 />
                 <.input
                   field={@form[:price]}
                   type="text"
                   inputmode="decimal"
                   label={~t"Price per seat (€)"}
-                  class="input max-w-48 w-full tabular-nums"
+                  class="input w-full tabular-nums"
                 />
                 <.input
                   field={@form[:late_cancellation_fee]}
                   type="text"
                   inputmode="decimal"
                   label={~t"Late-cancellation fee (€)"}
-                  class="input max-w-48 w-full tabular-nums"
+                  class="input w-full tabular-nums"
                 />
                 <.input
                   field={@form[:tax_rate_id]}
@@ -122,13 +122,15 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
             </.form_section>
 
             <.form_section title={~t"Taught in"}>
-              <.input
-                field={@form[:language]}
-                type="select"
-                label={~t"Language"}
-                options={[{~t"Swedish", :sv}, {~t"Finnish", :fi}, {~t"English", :en}]}
-                class="select max-w-48 w-full"
-              />
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <.input
+                  field={@form[:language]}
+                  type="select"
+                  label={~t"Language"}
+                  options={[{~t"Swedish", :sv}, {~t"Finnish", :fi}, {~t"English", :en}]}
+                  class="select w-full"
+                />
+              </div>
             </.form_section>
 
             <.form_section title={~t"Where"}>
