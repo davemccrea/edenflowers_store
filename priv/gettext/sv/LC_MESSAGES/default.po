@@ -7576,5 +7576,5 @@ msgstr "Visa bild %{n} i butikens bildgalleri"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:102
 #, elixir-autogen, elixir-format
-msgid "Shown on the product page. A hidden photo only shows when a customer picks its size."
-msgstr "Visas på produktsidan. En dold bild visas bara när kunden väljer dess storlek."
+msgid "Every photo appears in the product page's thumbnails. Hide one with the eye button and it only appears when a customer picks a size that uses it."
+msgstr "Alla bilder visas bland miniatyrerna på produktsidan. Dölj en bild med ögonknappen så visas den bara när kunden väljer en storlek som använder den."
