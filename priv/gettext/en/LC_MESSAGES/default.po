@@ -11,8 +11,8 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers_web/components/layouts.ex:558
-#: lib/edenflowers_web/components/layouts.ex:820
+#: lib/edenflowers_web/components/layouts.ex:564
+#: lib/edenflowers_web/components/layouts.ex:826
 #: lib/edenflowers_web/features/marketing/about_live.ex:10
 #: lib/edenflowers_web/features/marketing/about_live.ex:30
 #, elixir-autogen, elixir-format
@@ -31,21 +31,21 @@ msgstr ""
 
 #: lib/edenflowers_web/components/cart/drawer.ex:22
 #: lib/edenflowers_web/components/cart/drawer.ex:24
-#: lib/edenflowers_web/components/layouts.ex:743
-#: lib/edenflowers_web/components/layouts.ex:745
+#: lib/edenflowers_web/components/layouts.ex:749
+#: lib/edenflowers_web/components/layouts.ex:751
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:326
 #, elixir-autogen, elixir-format
 msgid "Cart"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:557
+#: lib/edenflowers_web/components/layouts.ex:563
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:34
 #, elixir-autogen, elixir-format
 msgid "Condolences"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:559
-#: lib/edenflowers_web/components/layouts.ex:812
+#: lib/edenflowers_web/components/layouts.ex:565
+#: lib/edenflowers_web/components/layouts.ex:818
 #: lib/edenflowers_web/features/marketing/contact_live.ex:12
 #: lib/edenflowers_web/features/marketing/contact_live.ex:42
 #, elixir-autogen, elixir-format
@@ -53,7 +53,7 @@ msgid "Contact"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:202
-#: lib/edenflowers_web/components/layouts.ex:555
+#: lib/edenflowers_web/components/layouts.ex:561
 #: lib/edenflowers_web/features/admin/course_form_live.ex:45
 #: lib/edenflowers_web/features/admin/courses_live.ex:24
 #: lib/edenflowers_web/features/admin/courses_live.ex:40
@@ -101,7 +101,7 @@ msgstr ""
 msgid "Previous month"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:554
+#: lib/edenflowers_web/components/layouts.ex:560
 #: lib/edenflowers_web/features/store/store_live.ex:52
 #: lib/edenflowers_web/features/store/store_live.ex:78
 #, elixir-autogen, elixir-format
@@ -122,7 +122,7 @@ msgstr ""
 msgid "Total"
 msgstr "Total"
 
-#: lib/edenflowers_web/components/layouts.ex:556
+#: lib/edenflowers_web/components/layouts.ex:562
 #: lib/edenflowers_web/features/marketing/home_live.ex:176
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:55
 #, elixir-autogen, elixir-format
@@ -152,9 +152,9 @@ msgstr "Payment"
 
 #: lib/edenflowers/email/previews.ex:340
 #: lib/edenflowers/email/previews.ex:342
-#: lib/edenflowers_web/components/layouts.ex:489
-#: lib/edenflowers_web/components/layouts.ex:610
-#: lib/edenflowers_web/components/layouts.ex:702
+#: lib/edenflowers_web/components/layouts.ex:495
+#: lib/edenflowers_web/components/layouts.ex:616
+#: lib/edenflowers_web/components/layouts.ex:708
 #: lib/edenflowers_web/features/account/account_live.ex:36
 #: lib/edenflowers_web/features/account/account_live.ex:62
 #: lib/edenflowers_web/features/admin/account_live.ex:15
@@ -163,7 +163,7 @@ msgstr "Payment"
 msgid "Account"
 msgstr "Account"
 
-#: lib/edenflowers_web/components/layouts.ex:853
+#: lib/edenflowers_web/components/layouts.ex:859
 #, elixir-autogen, elixir-format
 msgid "Built with "
 msgstr ""
@@ -223,8 +223,8 @@ msgstr ""
 msgid "Increment"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:268
-#: lib/edenflowers_web/components/layouts.ex:639
+#: lib/edenflowers_web/components/layouts.ex:269
+#: lib/edenflowers_web/components/layouts.ex:645
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr "Open navigation menu"
@@ -265,8 +265,8 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:610
-#: lib/edenflowers_web/components/layouts.ex:703
+#: lib/edenflowers_web/components/layouts.ex:616
+#: lib/edenflowers_web/components/layouts.ex:709
 #, elixir-autogen, elixir-format
 msgid "Sign In"
 msgstr ""
@@ -441,13 +441,13 @@ msgstr ""
 msgid "This field is required"
 msgstr "This field is required"
 
-#: lib/edenflowers_web/components/layouts.ex:789
+#: lib/edenflowers_web/components/layouts.ex:795
 #: lib/edenflowers_web/features/marketing/contact_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Opening hours"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:827
+#: lib/edenflowers_web/components/layouts.ex:833
 #, elixir-autogen, elixir-format
 msgid "Socials"
 msgstr ""
@@ -482,8 +482,8 @@ msgstr ""
 msgid "Close cart"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:360
-#: lib/edenflowers_web/components/layouts.ex:580
+#: lib/edenflowers_web/components/layouts.ex:361
+#: lib/edenflowers_web/components/layouts.ex:586
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr "Close navigation menu"
@@ -541,7 +541,7 @@ msgstr ""
 msgid "Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:804
+#: lib/edenflowers_web/components/layouts.ex:810
 #, elixir-autogen, elixir-format
 msgid "FAQ"
 msgstr ""
@@ -585,7 +585,7 @@ msgstr ""
 msgid "Have a question?"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:797
+#: lib/edenflowers_web/components/layouts.ex:803
 #, elixir-autogen, elixir-format
 msgid "Help"
 msgstr ""
@@ -832,7 +832,7 @@ msgstr ""
 msgid "65230 Vasa"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:774
+#: lib/edenflowers_web/components/layouts.ex:780
 #: lib/edenflowers_web/features/admin/course_form_live.ex:135
 #: lib/edenflowers_web/features/marketing/contact_live.ex:57
 #, elixir-autogen, elixir-format
@@ -867,13 +867,13 @@ msgstr "Access"
 msgid "Admin"
 msgstr "Admin"
 
-#: lib/edenflowers_web/components/layouts.ex:453
+#: lib/edenflowers_web/components/layouts.ex:459
 #, elixir-autogen, elixir-format
 msgid "Admin account menu"
 msgstr "Admin account menu"
 
-#: lib/edenflowers_web/components/layouts.ex:233
-#: lib/edenflowers_web/components/layouts.ex:246
+#: lib/edenflowers_web/components/layouts.ex:234
+#: lib/edenflowers_web/components/layouts.ex:247
 #, elixir-autogen, elixir-format
 msgid "Admin navigation"
 msgstr "Admin navigation"
@@ -1015,7 +1015,7 @@ msgstr "Expense updated."
 msgid "Expense: %{var}"
 msgstr "Expense: %{var}"
 
-#: lib/edenflowers_web/components/layouts.ex:206
+#: lib/edenflowers_web/components/layouts.ex:207
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:39
 #: lib/edenflowers_web/features/admin/expenses_live.ex:19
 #: lib/edenflowers_web/features/admin/expenses_live.ex:33
@@ -1098,6 +1098,7 @@ msgstr "Items subtotal"
 msgid "Legend"
 msgstr "Legend"
 
+#: lib/edenflowers_web/components/layouts.ex:206
 #: lib/edenflowers_web/features/admin/components/components.ex:218
 #, elixir-autogen, elixir-format
 msgid "Marketing"
@@ -1238,7 +1239,7 @@ msgstr "Search Fastmail for this address"
 msgid "Search vendor or description…"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:501
+#: lib/edenflowers_web/components/layouts.ex:507
 #: lib/edenflowers_web/features/account/account_live.ex:65
 #: lib/edenflowers_web/features/admin/account_live.ex:115
 #: lib/edenflowers_web/features/auth/sign_out_live.ex:16
@@ -1252,7 +1253,7 @@ msgstr "Sign out"
 msgid "Software"
 msgstr "Software"
 
-#: lib/edenflowers_web/components/layouts.ex:382
+#: lib/edenflowers_web/components/layouts.ex:383
 #, elixir-autogen, elixir-format
 msgid "System"
 msgstr "System"
@@ -1562,7 +1563,7 @@ msgstr "Connection lost"
 msgid "Reconnecting…"
 msgstr "Reconnecting…"
 
-#: lib/edenflowers_web/components/layouts.ex:211
+#: lib/edenflowers_web/components/layouts.ex:212
 #, elixir-autogen, elixir-format
 msgid "Errors"
 msgstr "Errors"
@@ -2134,7 +2135,7 @@ msgctxt "expense confidence"
 msgid "Medium"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:839
+#: lib/edenflowers_web/components/layouts.ex:845
 #, elixir-autogen, elixir-format
 msgid "Business ID:"
 msgstr ""
@@ -2155,7 +2156,7 @@ msgstr ""
 msgid "Evangelical Lutheran Church of Finland"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:569
+#: lib/edenflowers_web/components/layouts.ex:575
 #, elixir-autogen, elixir-format
 msgid "Navigation menu"
 msgstr ""
@@ -4969,12 +4970,12 @@ msgstr "Results for “%{term}”"
 msgid "Search"
 msgstr "Search"
 
-#: lib/edenflowers_web/components/layouts.ex:319
+#: lib/edenflowers_web/components/layouts.ex:320
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers"
 msgstr "Search orders and customers"
 
-#: lib/edenflowers_web/components/layouts.ex:329
+#: lib/edenflowers_web/components/layouts.ex:330
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers…"
 msgstr "Search orders and customers…"
@@ -5301,8 +5302,8 @@ msgstr ""
 msgid "Hi, %{first_name}"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:275
-#: lib/edenflowers_web/components/layouts.ex:495
+#: lib/edenflowers_web/components/layouts.ex:276
+#: lib/edenflowers_web/components/layouts.ex:501
 #, elixir-autogen, elixir-format, fuzzy
 msgid "View store"
 msgstr ""
@@ -6334,13 +6335,6 @@ msgstr ""
 msgid "That's more than was received."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:210
-#: lib/edenflowers_web/features/admin/emails_live.ex:21
-#: lib/edenflowers_web/features/admin/emails_live.ex:42
-#, elixir-autogen, elixir-format
-msgid "Emails"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/emails_live.ex:43
 #, elixir-autogen, elixir-format
 msgid "Every email customers can get, with example details."
@@ -7142,7 +7136,7 @@ msgstr ""
 msgid "Last month"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:206
+#: lib/edenflowers_web/components/layouts.ex:207
 #, elixir-autogen, elixir-format
 msgid "Finances"
 msgstr ""
@@ -7489,4 +7483,11 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1146
 #, elixir-autogen, elixir-format
 msgid "Get payment link"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:211
+#: lib/edenflowers_web/features/admin/emails_live.ex:21
+#: lib/edenflowers_web/features/admin/emails_live.ex:42
+#, elixir-autogen, elixir-format
+msgid "Email previews"
 msgstr ""
