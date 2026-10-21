@@ -629,7 +629,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       <span class={["text-xs", !@selected? && !@closed? && "text-base-content/65"]}>
         {Localize.Date.to_string!(@date, locale: @locale, format: "ccc")}
       </span>
-      <span class={["text-sm font-medium tabular-nums", @today? && "underline decoration-2 underline-offset-4"]}>
+      <span class={["text-sm font-medium tabular-nums", @today? && ["underline underline-offset-4", if(@selected?, do: "decoration-primary-content/50", else: "decoration-base-content/30")]]}>
         {@date.day}
       </span>
       <span class="flex h-5 items-center">
