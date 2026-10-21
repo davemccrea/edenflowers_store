@@ -2730,8 +2730,8 @@ msgstr "lähetä sähköpostia"
 
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:201
 #, elixir-autogen, elixir-format
-msgid "Fill the other languages from this one"
-msgstr "Täytä muut kielet tästä"
+msgid "Translate"
+msgstr "Käännä"
 
 #: lib/edenflowers_web/components/cart/promo_code.ex:45
 #, elixir-autogen, elixir-format

@@ -198,7 +198,7 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
         phx-value-from={@locale}
         disabled={@translating != nil}
       >
-        {if @translating == @locale, do: ~t"Translating…", else: ~t"Fill the other languages from this one"}
+        {if @translating == @locale, do: ~t"Translating…", else: ~t"Translate"}
       </.button>
     </div>
     """
