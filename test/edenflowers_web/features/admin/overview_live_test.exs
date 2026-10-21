@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
   end
 
-  describe "today and tomorrow" do
+  describe "days" do
     setup %{conn: conn} do
       admin = generate(admin_user()) |> with_token()
       %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
@@ -69,48 +69,81 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       )
     end
 
-    test "lists today's and tomorrow's orders by method, and nothing later", %{conn: conn} do
+    test "lists today's orders by method, and only today's", %{conn: conn} do
       open_order("Today Delivery", :delivery, 0)
       open_order("Today Pickup", :pickup, 0)
       open_order("Tomorrow Pickup", :pickup, 1)
-      open_order("Next Week", :pickup, 7)
       open_order("Last Week", :pickup, -7)
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      assert has_element?(view, ~s|#orders-today-delivery|, "Today Delivery")
-      assert has_element?(view, ~s|#orders-today-pickup|, "Today Pickup")
-      assert has_element?(view, "#orders-today-delivery h3 .badge", "1")
-      assert has_element?(view, "#orders-today-pickup h3 .badge", "1")
-      refute has_element?(view, "#orders-today", "Last Week")
-      assert has_element?(view, ~s|#orders-tomorrow-pickup|, "Tomorrow Pickup")
-      assert has_element?(view, "#orders-tomorrow-title .badge", "1")
-      refute has_element?(view, "#orders-tomorrow-pickup h3 .badge")
-      refute has_element?(view, ~s|#orders-tomorrow-delivery|)
-      refute render(view) =~ "Next Week"
+      assert has_element?(view, "#day-orders-title", "Today")
+      assert has_element?(view, "#day-orders-delivery", "Today Delivery")
+      assert has_element?(view, "#day-orders-pickup", "Today Pickup")
+      assert has_element?(view, "#day-orders-delivery h3 .badge", "1")
+      refute has_element?(view, "#day-orders", "Tomorrow Pickup")
+      refute has_element?(view, "#day-orders", "Last Week")
+    end
+
+    test "counts each day and shows the one tapped", %{conn: conn} do
+      in_three_days = Date.add(Edenflowers.ShopTime.today(), 3)
+      in_four_days = Date.add(Edenflowers.ShopTime.today(), 4)
+      shop_calendar(available_days: Edenflowers.Fulfillment.Weekday.all(), disabled_dates: [in_four_days])
+      open_order("Later", :pickup, 3)
+      open_order("Too far", :pickup, 9)
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      assert has_element?(view, "#day-#{in_three_days}", "1")
+      assert has_element?(view, "#day-#{in_four_days}", "Closed")
+      refute has_element?(view, "#day-#{Date.add(in_three_days, 6)}")
+
+      view |> element("#day-#{in_three_days} a") |> render_click()
+      assert_patch(view, ~p"/admin?#{[day: Date.to_iso8601(in_three_days)]}")
+      assert has_element?(view, "#day-orders-pickup", "Later")
+      assert has_element?(view, "#day-#{in_three_days} a[aria-current]")
     end
 
     test "says so when a day has nothing to make", %{conn: conn} do
       open_order("Tomorrow Pickup", :pickup, 1)
 
       {:ok, view, _html} = live(conn, ~p"/admin")
+      assert has_element?(view, "#day-orders", "Nothing to make today")
 
-      assert has_element?(view, "#orders-today", "Nothing to make today")
-      refute has_element?(view, "#orders-tomorrow", "Nothing to make tomorrow")
+      {:ok, view, _html} = live(conn, ~p"/admin?day=#{Date.to_iso8601(Date.add(Edenflowers.ShopTime.today(), 1))}")
+      refute has_element?(view, "#day-orders", "Nothing to make tomorrow")
     end
 
-    test "stops and reopens new orders for a day", %{conn: conn} do
-      tomorrow = Date.add(Edenflowers.ShopTime.today(), 1)
-      shop_calendar(available_days: Edenflowers.Fulfillment.Weekday.all(), disabled_dates: [], enabled_dates: [])
+    test "falls back to today for a day off the strip", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin?day=#{Date.to_iso8601(Date.add(Edenflowers.ShopTime.today(), -1))}")
+
+      assert has_element?(view, "#day-orders-title", "Today")
+    end
+
+    test "stops and reopens new orders for today, and only today", %{conn: conn} do
+      today = Edenflowers.ShopTime.today()
+
+      shop_calendar(
+        available_days: Edenflowers.Fulfillment.Weekday.all(),
+        same_day: true,
+        order_deadline: ~T[23:59:59],
+        disabled_dates: [],
+        enabled_dates: []
+      )
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      view |> element("#orders-tomorrow-toggle", "Stop orders") |> render_click()
-      assert tomorrow in Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates
-      assert has_element?(view, "#orders-tomorrow-closed")
+      view |> element("#day-orders-toggle", "Stop orders") |> render_click()
+      assert today in Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates
+      assert has_element?(view, "#day-orders-closed")
 
-      view |> element("#orders-tomorrow-toggle", "Reopen orders") |> render_click()
-      refute tomorrow in Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates
+      view |> element("#day-orders-toggle", "Reopen orders") |> render_click()
+      refute today in Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates
+
+      {:ok, view, _html} = live(conn, ~p"/admin?day=#{Date.to_iso8601(Date.add(today, 1))}")
+      refute has_element?(view, "#day-orders-toggle")
+      render_hook(view, "toggle-date", %{"date" => Date.to_iso8601(Date.add(today, 1))})
+      assert Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates == []
     end
 
     test "offers no toggle for a day the weekly rules already close", %{conn: conn} do
@@ -118,7 +151,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      refute has_element?(view, "#orders-today-toggle")
+      refute has_element?(view, "#day-orders-toggle")
     end
   end
 
@@ -200,7 +233,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
           state: :placed,
           customer_name: "No Phone",
           fulfillment_method: :delivery,
-          fulfillment_date: Date.add(today, 1),
+          fulfillment_date: today,
           fulfillment_status: :pending,
           gift: true
         )

@@ -16,7 +16,7 @@ defmodule Edenflowers.Orders do
       define :search_orders, action: :search, args: [:term]
       define :get_last_order_with_customer_phone, action: :last_with_customer_phone, args: [:customer_id]
       define :list_my_orders, action: :mine
-      define :list_orders_due_by_tomorrow, action: :due_by_tomorrow
+      define :list_orders_due_soon, action: :due_soon
       define :list_orders_to_fulfil, action: :to_fulfil
       define :list_unsettled_orders, action: :unsettled
       define :sales_summary, action: :sales_summary, args: [:from, :to]

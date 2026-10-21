@@ -49,37 +49,14 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:grid-rows-[max-content_max-content_1fr] xl:items-start">
           <.attention_widget :if={@attention != []} groups={@attention} locale={@locale} />
           <div class="min-w-0 space-y-6 xl:col-start-1 xl:row-span-3 xl:row-start-1">
-            <.day_section
-              id="orders-today"
-              title={~t"Today"}
-              date={@today}
-              orders={@today_orders}
-              empty={~t"Nothing to make today"}
-              booking={booking(@calendar, @today)}
+            <.days_card
+              days={@days}
+              day={selected_day(@day, @days)}
+              orders_by_date={@orders_by_date}
+              calendar={@calendar}
+              today={@today}
               locale={@locale}
-              class="admin-card p-4 sm:p-5"
             />
-            <.day_section
-              id="orders-tomorrow"
-              title={~t"Tomorrow"}
-              date={Date.add(@today, 1)}
-              orders={@tomorrow_orders}
-              empty={~t"Nothing to make tomorrow"}
-              booking={booking(@calendar, Date.add(@today, 1))}
-              locale={@locale}
-              class="admin-card p-4 sm:p-5"
-            >
-              <:footer>
-                <div class="border-base-content/12 mt-5 border-t pt-3">
-                  <.link
-                    navigate={~p"/admin/orders"}
-                    class="text-primary touch-target inline-block py-1 text-sm hover:underline"
-                  >
-                    {~t"View all orders"} →
-                  </.link>
-                </div>
-              </:footer>
-            </.day_section>
           </div>
           <div class="min-w-0 xl:col-start-2">
             <.sales_widget
@@ -102,15 +79,26 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   @impl true
+  def handle_params(params, _uri, socket) do
+    day =
+      case Date.from_iso8601(params["day"] || "") do
+        {:ok, date} -> date
+        {:error, _} -> nil
+      end
+
+    {:noreply, assign(socket, :day, day)}
+  end
+
+  @impl true
   def handle_event("push_subscribed", params, socket),
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
 
-  # Refuses past days, so a page left open overnight can't toggle yesterday.
+  # Only today, so a page left open overnight can't toggle yesterday.
   def handle_event("toggle-date", %{"date" => date}, socket) do
     date = Date.from_iso8601!(date)
     %{calendar: calendar, current_user: actor} = socket.assigns
 
-    if booking(calendar, date) do
+    if date == Edenflowers.ShopTime.today() and booking(calendar, date) do
       {:noreply, assign(socket, :calendar, Fulfillment.toggle_date!(calendar, date, actor: actor))}
     else
       {:noreply, socket}
@@ -133,6 +121,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     end
   end
 
+  # A day off the strip, such as yesterday's after midnight, falls back to today.
+  defp selected_day(day, [today | _] = days), do: if(day in days, do: day, else: today)
+
   defp greeting(%{first_name: first_name}) when is_binary(first_name), do: ~t"Hi, #{first_name}"
 
   defp greeting(_user), do: ~t"Hi"
@@ -141,20 +132,17 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     actor = socket.assigns.current_user
     today = Edenflowers.ShopTime.today()
 
-    orders_by_day =
-      Orders.list_orders_due_by_tomorrow!(actor: actor)
-      |> Enum.group_by(&day(&1.fulfillment_date, today))
+    {overdue, due} =
+      Orders.list_orders_due_soon!(actor: actor)
+      |> Enum.split_with(&Date.before?(&1.fulfillment_date, today))
 
-    today_orders = Map.get(orders_by_day, :today, [])
-    tomorrow_orders = Map.get(orders_by_day, :tomorrow, [])
     {owed, to_refund} = actor |> balance_rows() |> Enum.split_with(&Decimal.positive?(&1.amount))
     payment_overdue = Enum.filter(owed, & &1.overdue?)
 
     attention =
       Enum.reject(
         [
-          {"overdue-orders", "hero-clock", ~t"Overdue orders",
-           Enum.map(Map.get(orders_by_day, :overdue, []), &overdue_order_row/1)},
+          {"overdue-orders", "hero-clock", ~t"Overdue orders", Enum.map(overdue, &overdue_order_row/1)},
           {"failed-subscriptions", "hero-credit-card", ~t"Subscription payment failed",
            Enum.map(Orders.list_failed_subscriptions!(actor: actor), &subscription_row/1)},
           {"refund", "hero-arrow-uturn-left", ~t"To refund", to_refund},
@@ -169,8 +157,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     same_day_last_month = Date.shift(today, month: -1)
 
     socket
-    |> assign(:today_orders, today_orders)
-    |> assign(:tomorrow_orders, tomorrow_orders)
+    |> assign(:days, Enum.to_list(Date.range(today, Date.add(today, 8))))
+    |> assign(:orders_by_date, Enum.group_by(due, & &1.fulfillment_date))
     |> assign(:attention, attention)
     |> assign(:today, today)
     |> assign(:owed, owed |> Enum.filter(&(&1.kind == :order)) |> sum_amounts())
@@ -513,28 +501,25 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   defp sum_amounts(rows), do: rows |> Enum.map(&Decimal.abs(&1.amount)) |> Enum.reduce(Decimal.new(0), &Decimal.add/2)
 
   attr :id, :string, required: true
-  attr :title, :string, required: true
+  attr :texts, :any, required: true, doc: "`{label, empty}` from `day_texts/2`"
   attr :date, Date, required: true
   attr :orders, :list, required: true
-  attr :empty, :string, required: true
   attr :booking, :atom, required: true, doc: "`:open`, `:closed` or nil, see `booking/2`"
   attr :locale, :any, required: true
   attr :class, :any, default: nil
-  slot :footer
 
   defp day_section(assigns) do
+    {label, empty} = assigns.texts
+    assigns = assign(assigns, label: label, empty: empty)
+
     ~H"""
     <section id={@id} aria-labelledby={"#{@id}-title"} class={@class}>
       <div class="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div class="min-w-0">
           <h2 id={"#{@id}-title"} class="text-base-content flex flex-wrap items-center gap-2 text-lg font-semibold">
-            {@title}
-            <.count_badge count={length(@orders)} active={@orders != []} />
+            {@label || Format.weekday_day_month(@date, @locale)}
             <.badge :if={@booking == :closed} id={"#{@id}-closed"} tone={:warning}>{~t"Closed"}</.badge>
           </h2>
-          <time datetime={Date.to_iso8601(@date)} class="text-base-content/65 mt-0.5 block text-sm">
-            {Format.weekday_day_month(@date, @locale)}
-          </time>
         </div>
         <.button
           :if={@booking}
@@ -571,10 +556,83 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <.icon name="hero-check-circle" class="h-5 w-5 shrink-0" />
         {@empty}
       </p>
-
-      {render_slot(@footer)}
     </section>
     """
+  end
+
+  attr :days, :list, required: true, doc: "today and the 8 days after it"
+  attr :day, Date, required: true, doc: "the day whose orders are listed"
+  attr :orders_by_date, :map, required: true
+  attr :calendar, :map, required: true
+  attr :today, Date, required: true
+  attr :locale, :any, required: true
+
+  # Nine days because Jennie buys from the wholesaler anywhere from a day to a week ahead.
+  defp days_card(assigns) do
+    ~H"""
+    <div class="admin-card p-4 sm:p-5">
+      <ol id="days" aria-label={~t"Days"} class="grid grid-cols-9 gap-0.5 sm:gap-1">
+        <li :for={date <- @days} id={"day-#{date}"}>
+          <.link
+            patch={if date == @today, do: ~p"/admin", else: ~p"/admin?#{[day: Date.to_iso8601(date)]}"}
+            aria-current={date == @day && "true"}
+            class={["flex flex-col items-center rounded-lg py-2 transition-colors", if(date == @day, do: "bg-primary text-primary-content", else: "hover:bg-base-200/60")]}
+          >
+            <span class={["text-xs", date != @day && "text-base-content/65"]}>
+              {Localize.Date.to_string!(date, locale: @locale, format: "ccc")}
+            </span>
+            <span class="text-sm font-medium tabular-nums">{date.day}</span>
+            <.day_count count={length(Map.get(@orders_by_date, date, []))} calendar={@calendar} date={date} />
+          </.link>
+        </li>
+      </ol>
+
+      <.day_section
+        id="day-orders"
+        texts={day_texts(@day, @today)}
+        date={@day}
+        orders={Map.get(@orders_by_date, @day, [])}
+        booking={if @day == @today, do: booking(@calendar, @day)}
+        locale={@locale}
+        class="border-base-content/12 mt-4 border-t pt-4"
+      />
+
+      <div class="border-base-content/12 mt-5 border-t pt-3">
+        <.link navigate={~p"/admin/orders"} class="text-primary touch-target inline-block py-1 text-sm hover:underline">
+          {~t"View all orders"} →
+        </.link>
+      </div>
+    </div>
+    """
+  end
+
+  attr :count, :integer, required: true
+  attr :calendar, :map, required: true
+  attr :date, Date, required: true
+
+  defp day_count(assigns) do
+    ~H"""
+    <%= if @count == 0 and Availability.customer_cell_state(@calendar, @date) == :closed do %>
+      <span class="mt-0.5 flex h-6 items-center opacity-60">
+        <.icon name="hero-no-symbol" class="h-4 w-4" />
+        <span class="sr-only">{~t"Closed"}</span>
+      </span>
+    <% else %>
+      <span class={["mt-0.5 h-6 text-base font-semibold tabular-nums", @count == 0 && "opacity-50"]}>
+        {@count}
+        <span class="sr-only">{~t"orders"}</span>
+      </span>
+    <% end %>
+    """
+  end
+
+  # `{label, empty}`; further out than tomorrow the heading is the date itself.
+  defp day_texts(date, today) do
+    case Date.diff(date, today) do
+      0 -> {~t"Today", ~t"Nothing to make today"}
+      1 -> {~t"Tomorrow", ~t"Nothing to make tomorrow"}
+      _ -> {nil, ~t"Nothing to make"}
+    end
   end
 
   attr :order, :map, required: true
@@ -647,14 +705,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       </.link>
     </li>
     """
-  end
-
-  defp day(date, today) do
-    case Date.compare(date, today) do
-      :lt -> :overdue
-      :eq -> :today
-      :gt -> :tomorrow
-    end
   end
 
   # Deliveries go out on a run, so they come first; the read already sorts each by time and distance.

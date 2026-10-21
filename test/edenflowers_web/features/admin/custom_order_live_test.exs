@@ -477,7 +477,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{id}")
       assert has_element?(view, "#order-fulfillment-time", "14:00–15:00")
 
-      {:ok, view, _html} = live(ctx.conn, ~p"/admin")
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin?day=#{Date.to_iso8601(tomorrow())}")
       assert has_element?(view, "[data-testid=fulfillment-time]", "14:00–15:00")
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{id}/edit")
