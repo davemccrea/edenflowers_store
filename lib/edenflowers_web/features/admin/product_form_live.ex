@@ -57,28 +57,31 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           phx-change="validate"
           phx-submit="save"
         >
-          <%!-- Below the phone topbar, which is sticky too; from lg it's gone. --%>
-          <div class="bg-base-100 border-base-content/12 top-[calc(env(safe-area-inset-top)+4rem)] sticky z-20 -mx-4 mb-6 border-b px-4 pt-3 sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-6">
+          <%!-- Below the phone topbar, which is sticky too; from lg it's gone. The actions share
+               the back link's row so the header stays short on a phone. --%>
+          <div class="bg-base-100 border-base-content/12 top-[calc(env(safe-area-inset-top)+4rem)] [&>header]:mb-3 [&>header>div:first-child]:mb-1 sticky z-20 -mx-4 mb-6 border-b px-4 pt-3 sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-6">
             <.admin_page_header title={@page_title} back={{~t"Products", ~p"/admin/products"}}>
               <:subtitle :if={@form.source.type == :update && @form.source.data.sold_out?}>
                 <.badge tone={:warning}>{~t"Sold out"}</.badge>
               </:subtitle>
-              <:actions>
-                <.input field={@form[:draft]} type="checkbox" label={~t"Draft"} class="toggle toggle-sm" />
-                <.button
-                  :if={@form.source.type == :update && !@form.source.data.draft}
-                  href={~q"/#{language}/product/#{@form.source.data.id}"}
-                  target="_blank"
-                  variant="secondary"
-                  size="sm"
-                >
-                  <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-                  <span class="max-sm:sr-only">{~t"View in store"}</span>
-                </.button>
-                <.button type="submit" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
-                  {~t"Save"}
-                </.button>
-              </:actions>
+              <:nav>
+                <div class="[&_.fieldset]:mb-0 flex items-center gap-2">
+                  <.input field={@form[:draft]} type="checkbox" label={~t"Draft"} class="toggle toggle-primary" />
+                  <.button
+                    :if={@form.source.type == :update && !@form.source.data.draft}
+                    href={~q"/#{language}/product/#{@form.source.data.id}"}
+                    target="_blank"
+                    variant="secondary"
+                    size="sm"
+                  >
+                    <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                    <span class="max-sm:sr-only">{~t"View in store"}</span>
+                  </.button>
+                  <.button type="submit" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+                    {~t"Save"}
+                  </.button>
+                </div>
+              </:nav>
             </.admin_page_header>
           </div>
 
@@ -153,7 +156,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     label={~t"Position in store (0 = first)"}
                     class="input max-w-48 w-full tabular-nums"
                   />
-                  <div>
+                  <div class="[&_.fieldset]:mb-0">
                     <.input field={@form[:featured]} type="checkbox" label={~t"Featured on the home page"} />
                     <.input
                       :if={@free_dist_km}
@@ -199,28 +202,37 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           <input type="hidden" name={@field.name <> "[]"} value={slug} />
           <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
             <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
-            <.badge :if={index == 0} tone={:neutral} icon="hero-star-solid" class="absolute top-1.5 left-1.5">
+            <.badge
+              :if={index == 0}
+              tone={:neutral}
+              icon="hero-star-solid"
+              class="[&_.hero-star-solid]:text-primary absolute top-1.5 left-1.5"
+            >
               {~t"Main"}
             </.badge>
-            <.icon_button
+            <.button
               :if={index > 0}
+              type="button"
+              size="sm"
               phx-click="make_main_photo"
               phx-value-slug={slug}
-              aria_label={~t"Make photo #{n = index + 1} main"}
-              class="bg-base-100/85 absolute top-1 left-1"
+              aria-label={~t"Make photo #{n = index + 1} main"}
+              class="btn-square absolute top-1.5 left-1.5"
             >
-              <.icon name="hero-star" class="size-5" />
-            </.icon_button>
+              <.icon name="hero-star" class="text-primary size-4" />
+            </.button>
             <%!-- A product always has a photo, so the last one is replaced rather than removed. --%>
-            <.icon_button
+            <.button
               :if={length(@photo_slugs) > 1}
+              type="button"
+              size="sm"
               phx-click="remove_photo"
               phx-value-slug={slug}
-              aria_label={~t"Remove photo #{n = index + 1}"}
-              class="bg-base-100/85 absolute top-1 right-1"
+              aria-label={~t"Remove photo #{n = index + 1}"}
+              class="btn-square absolute top-1.5 right-1.5"
             >
-              <.icon name="hero-x-mark" class="size-5" />
-            </.icon_button>
+              <.icon name="hero-x-mark" class="size-4" />
+            </.button>
           </span>
         </li>
         <li :for={entry <- @upload.entries} class="bg-cream aspect-[4/5] relative overflow-hidden">
@@ -257,8 +269,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   attr :photo_slugs, :list, required: true
   attr :show_errors, :boolean, required: true
 
-  # One line per size from sm; on a phone the photo, size and remove sit above
-  # the price, stock and draft.
+  # One line per size from sm. On a phone the photo spans two lines: size and
+  # remove, then price, stock and draft.
   defp size_row(assigns) do
     variant = assigns.variant
     [main | others] = assigns.photo_slugs ++ [nil]
@@ -275,19 +287,25 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       )
 
     ~H"""
-    <li class="p-3">
-      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 sm:grid-cols-[3rem_minmax(0,1fr)_7rem_7rem_auto_auto]">
+    <%!-- On a phone the select shows the size, so its label is for screen readers, and Draft's
+         label sits above its toggle like a column's. From sm the first row's labels head the
+         columns; later rows keep theirs for screen readers. --%>
+    <li class="p-3 max-sm:[&_label:has(select)>span]:sr-only sm:[&:not(:first-of-type)_label.flex-col>span]:sr-only">
+      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 max-sm:[&_.fieldset-label]:flex-col-reverse max-sm:[&_.fieldset-label]:items-start max-sm:[&_.fieldset-label]:gap-3 sm:grid-cols-[2.5rem_minmax(0,1fr)_7rem_7rem_auto_auto]">
         <button
           :if={@picks?}
           type="button"
           phx-click={JS.exec("phx-show", to: "##{@drawer}")}
           aria-label={~t"Photo for #{size = @size_label}"}
           aria-controls={@drawer}
-          class="bg-cream aspect-[4/5] outline-primary relative mb-2 block w-12 overflow-hidden outline-offset-2 hover:outline-1 focus-visible:outline-2"
+          class="bg-cream aspect-[4/5] outline-primary relative row-span-2 block w-12 self-start overflow-hidden outline-offset-2 hover:outline-1 focus-visible:outline-2 sm:row-span-1 sm:w-10 sm:self-auto"
         >
           <.size_thumbnail slug={@own || @main} main?={is_nil(@own)} />
         </button>
-        <span :if={!@picks?} class="bg-cream aspect-[4/5] relative mb-2 block w-12 overflow-hidden">
+        <span
+          :if={!@picks?}
+          class="bg-cream aspect-[4/5] relative row-span-2 block w-12 self-start overflow-hidden sm:row-span-1 sm:w-10 sm:self-auto"
+        >
           <.size_thumbnail :if={@main} slug={@main} main?={false} />
         </span>
         <.input
@@ -298,15 +316,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
           class="select w-full"
         />
-        <.icon_button
-          phx-click="remove_variant"
-          phx-value-path={@variant.name}
-          aria_label={~t"Remove #{size = @size_label}"}
-          class="mb-1 sm:order-last"
-        >
-          <.icon name="hero-trash" class="size-5" />
-        </.icon_button>
-        <div class="grid-cols-[1fr_1fr_auto] col-span-3 mt-3 grid items-end gap-3 sm:col-span-1 sm:contents">
+        <div class="grid-cols-[5rem_minmax(0,1fr)_auto] col-span-2 col-start-2 row-start-2 mt-3 grid items-end gap-3 sm:contents">
           <.input
             field={@variant[:price]}
             type="text"
@@ -324,8 +334,15 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             placeholder={~t"Unlimited"}
             class="input w-full tabular-nums"
           />
-          <.input field={@variant[:draft]} type="checkbox" label={~t"Draft"} class="toggle toggle-sm" />
+          <.input field={@variant[:draft]} type="checkbox" label={~t"Draft"} class="toggle toggle-primary" />
         </div>
+        <.icon_button
+          phx-click="remove_variant"
+          phx-value-path={@variant.name}
+          aria_label={~t"Remove #{size = @size_label}"}
+        >
+          <.icon name="hero-trash" class="size-5" />
+        </.icon_button>
       </div>
       <.error :for={msg <- Enum.map(@errors, &translate_error/1)}>{msg}</.error>
 
@@ -349,7 +366,12 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                 />
                 <span class="sr-only">{if index == 0, do: ~t"Main photo", else: ~t"Photo #{n = index + 1}"}</span>
                 <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
-                <.badge :if={index == 0} tone={:neutral} icon="hero-star-solid" class="absolute top-1.5 left-1.5">
+                <.badge
+                  :if={index == 0}
+                  tone={:neutral}
+                  icon="hero-star-solid"
+                  class="[&_.hero-star-solid]:text-primary absolute top-1.5 left-1.5"
+                >
                   {~t"Main"}
                 </.badge>
               </label>
@@ -368,7 +390,12 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   defp size_thumbnail(assigns) do
     ~H"""
     <.image src={@slug} alt="" width={96} height={120} class="absolute inset-0 h-full w-full object-cover" />
-    <span :if={@main?} class="bg-base-100/85 absolute inset-x-0 bottom-0 text-center text-xs">{~t"Main"}</span>
+    <%!-- The light glow keeps the star readable on dark photos. --%>
+    <.icon
+      :if={@main?}
+      name="hero-star-solid"
+      class="drop-shadow-[0_0_1.5px_rgb(255_255_255/0.9)] size-3.5 text-primary absolute top-1 left-1"
+    />
     """
   end
 
