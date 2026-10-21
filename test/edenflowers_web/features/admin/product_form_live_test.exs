@@ -22,7 +22,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     view |> element("button", "Add size") |> render_click()
     upload_photos(view, ["rose.jpg"])
 
-    assert {:error, {:live_redirect, %{to: "/admin/products"}}} =
+    assert {:error, {:live_redirect, %{to: "/admin/products/" <> _id}}} =
              view
              |> form("#product-form",
                form: %{

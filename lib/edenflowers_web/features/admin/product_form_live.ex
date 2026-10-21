@@ -521,11 +521,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
   def handle_event("save", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, _product} ->
+      {:ok, product} ->
         {:noreply,
          socket
          |> put_flash(:info, ~t"Product saved.")
-         |> push_navigate(to: ~p"/admin/products")}
+         |> push_navigate(to: ~p"/admin/products/#{product.id}")}
 
       {:error, form} ->
         {:noreply,
