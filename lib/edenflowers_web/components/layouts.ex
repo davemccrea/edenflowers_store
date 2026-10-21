@@ -296,7 +296,17 @@ defmodule EdenflowersWeb.Layouts do
 
         <div class="[view-transition-name:admin-header] border-base-content/20 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
           <.admin_search id="admin-search" class="w-full max-w-md" />
-          <.admin_account_menu current_user={@current_user} />
+          <div class="flex items-center gap-4">
+            <.link
+              id="store-shortcut"
+              href={~q"/#{language}"}
+              class="text-base-content/65 flex items-center gap-2 text-sm hover:text-base-content"
+            >
+              <.icon name="hero-building-storefront" class="h-5 w-5" />
+              {~t"View store"}
+            </.link>
+            <.admin_account_menu current_user={@current_user} />
+          </div>
         </div>
 
         <main
