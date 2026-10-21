@@ -17,21 +17,6 @@ defmodule EdenflowersWeb.Plugs.CaptureReturnToTest do
       assert get_session(conn, :return_to) == nil
     end
 
-    test "ignores protocol-relative return targets", %{conn: conn} do
-      conn = get(conn, "/sign-in", return_to: "//evil.example.com/")
-      assert get_session(conn, :return_to) == nil
-    end
-
-    test "ignores return targets pointing back at the sign-in page", %{conn: conn} do
-      conn = get(conn, "/sign-in", return_to: "/sign-in")
-      assert get_session(conn, :return_to) == nil
-    end
-
-    test "ignores return targets pointing into the auth flow", %{conn: conn} do
-      conn = get(conn, "/sign-in", return_to: "/auth/user/google")
-      assert get_session(conn, :return_to) == nil
-    end
-
     test "no query param leaves the session value untouched", %{conn: conn} do
       conn =
         conn

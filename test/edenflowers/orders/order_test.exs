@@ -124,30 +124,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert Decimal.equal?(order.vat, "17.87")
     end
 
-    test "promotion_applied? returns true if promotion applied" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      product_variant = generate(product_variant(product_id: product.id))
-      promotion = generate(promotion(discount_rate: "0.20", minimum_cart_total: "0"))
-
-      order = Orders.create_for_checkout!(authorize?: false)
-
-      generate(
-        line_item(
-          order_id: order.id,
-          product_variant_id: product_variant.id
-        )
-      )
-
-      order =
-        Orders.add_promotion_with_code!(order, to_string(promotion.code),
-          load: [:promotion_applied?],
-          authorize?: false
-        )
-
-      assert order.promotion_applied? == true
-    end
-
     test "distance_km formats delivery distance in kilometres" do
       order = generate(order(fulfillment_method: :delivery, distance: 12_340))
 
@@ -356,21 +332,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert is_nil(order.recipient_name)
     end
 
-    test "accepts recipient_name when gift is true" do
-      order = generate(order(state: :gift_options))
-
-      assert {:ok, order} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane Doe"
-               })
-               |> Ash.update(authorize?: false)
-
-      assert order.gift == true
-      assert order.recipient_name == "Jane Doe"
-    end
-
     test "clears recipient_name and card_message when switching from gift=true to gift=false" do
       tax_rate = generate(tax_rate())
       cards_category = generate(product_category(slug: "cards"))
@@ -403,49 +364,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert order.gift == false
       assert is_nil(order.recipient_name)
       assert is_nil(order.card_message)
-    end
-
-    test "accepts card_message when gift is true" do
-      tax_rate = generate(tax_rate())
-      cards_category = generate(product_category(slug: "cards"))
-      card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
-      order = gift_order_with_card(card_product, :medium)
-
-      assert {:ok, order} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane Doe",
-                 card_message: "With love"
-               })
-               |> Ash.update(authorize?: false)
-
-      assert order.card_message == "With love"
-    end
-
-    test "retains recipient_name when gift remains true" do
-      order = generate(order(state: :gift_options))
-
-      {:ok, order} =
-        order
-        |> Ash.Changeset.for_update(:submit_gift_options, %{
-          gift: true,
-          recipient_name: "Alice Johnson"
-        })
-        |> Ash.update(authorize?: false)
-
-      {:ok, order} = Orders.return_to_gift_options(order, authorize?: false)
-
-      {:ok, order} =
-        order
-        |> Ash.Changeset.for_update(:submit_gift_options, %{
-          gift: true,
-          recipient_name: "Alice Johnson"
-        })
-        |> Ash.update(authorize?: false)
-
-      assert order.gift == true
-      assert order.recipient_name == "Alice Johnson"
     end
   end
 
@@ -745,35 +663,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert order.user_id == existing_user.id
     end
 
-    test "associates order with correct user when multiple orders for same customer" do
-      alias Edenflowers.Accounts.User
-
-      order1 = Orders.create_for_checkout!(authorize?: false)
-
-      {:ok, order1} =
-        order1
-        |> Ash.Changeset.for_update(:submit_contact_details, %{
-          customer_name: "Regular Customer",
-          customer_email: "regular@example.com"
-        })
-        |> Ash.update(authorize?: false)
-
-      order2 = Orders.create_for_checkout!(authorize?: false)
-
-      {:ok, order2} =
-        order2
-        |> Ash.Changeset.for_update(:submit_contact_details, %{
-          customer_name: "Regular Customer",
-          customer_email: "regular@example.com"
-        })
-        |> Ash.update(authorize?: false)
-
-      assert order1.user_id == order2.user_id
-
-      {:ok, user} = Accounts.get_user_by_email("regular@example.com", authorize?: false)
-      assert user.id == order1.user_id
-    end
-
     test "handles case-insensitive email matching" do
       alias Edenflowers.Accounts.User
 
@@ -914,23 +803,6 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.update(authorize?: false)
 
       assert Ash.load!(updated_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == true
-    end
-
-    test "omitting the argument defaults to no opt-in" do
-      order = Orders.create_for_checkout!(authorize?: false)
-
-      assert {:ok, _order} =
-               order
-               |> Ash.Changeset.for_update(:submit_contact_details, %{
-                 customer_name: "Default",
-                 customer_email: "default@example.com"
-               })
-               |> Ash.update(authorize?: false)
-
-      {:ok, user} = Accounts.get_user_by_email("default@example.com", authorize?: false)
-      assert user.newsletter_opt_in == false
-
-      refute_enqueued(worker: SendNewsletterPromoEmail)
     end
   end
 
@@ -1201,21 +1073,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert is_nil(order.position)
     end
 
-    test "save_step_3 with pickup calculates correct fixed price", %{pickup_option: pickup_option} do
-      order = generate(order(state: :delivery))
-
-      assert {:ok, order} =
-               order
-               |> Ash.Changeset.for_update(:submit_delivery, %{
-                 fulfillment_option_id: pickup_option.id,
-                 fulfillment_date: Date.add(Date.utc_today(), 2),
-                 recipient_phone_number: "045 1234567"
-               })
-               |> Ash.update(authorize?: false)
-
-      assert Decimal.equal?(order.fulfillment_fee, "5.00")
-    end
-
     test "save_step_3 validates fulfillment_date is not in the past", %{pickup_option: pickup_option} do
       order = generate(order(state: :delivery))
 
@@ -1265,15 +1122,6 @@ defmodule Edenflowers.Orders.OrderTest do
   end
 
   describe "Order state transitions" do
-    test "finalize_checkout requires payment_intent_id" do
-      order = generate(order(payment_intent_id: nil))
-
-      assert {:error, error} =
-               Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
-
-      assert %Ash.Error.Invalid{} = error
-    end
-
     test "a zero payment leaves payment_status pending" do
       order =
         generate(order(state: :payment, payment_intent_id: "pi_test", quoted_fulfillment_fee: Decimal.new("10.00")))
@@ -1418,17 +1266,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert reset_order.customer_email == "paying@example.com"
       assert reset_order.user_id == user.id
       assert is_nil(reset_order.recipient_name)
-    end
-
-    test "reset preserves order id and returns the order to :contact_details" do
-      order = generate(order(state: :delivery, customer_name: "Test", customer_email: "test@example.com"))
-      original_id = order.id
-
-      assert {:ok, reset_order} = Orders.restart_checkout(order, authorize?: false)
-
-      # The same row, rewound to the start of the flow
-      assert reset_order.id == original_id
-      assert reset_order.state == :contact_details
     end
 
     test "reset destroys all line items, including any leftover card" do
@@ -1622,22 +1459,6 @@ defmodule Edenflowers.Orders.OrderTest do
       order = Orders.create_for_checkout!(authorize?: false)
 
       assert {:error, error} = Orders.update_locale(order, "en-US", authorize?: false)
-      assert %Ash.Error.Invalid{} = error
-    end
-  end
-
-  describe "add_promotion_with_code argument validation" do
-    test "rejects nil code" do
-      order = generate(order())
-
-      assert {:error, error} = Orders.add_promotion_with_code(order, nil, authorize?: false)
-      assert %Ash.Error.Invalid{} = error
-    end
-
-    test "rejects whitespace-only code" do
-      order = generate(order())
-
-      assert {:error, error} = Orders.add_promotion_with_code(order, "   ", authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
   end

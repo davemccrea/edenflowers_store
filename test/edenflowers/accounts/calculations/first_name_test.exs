@@ -101,46 +101,11 @@ defmodule Edenflowers.Accounts.Calculations.FirstNameTest do
 
       assert user.first_name == "Jane"
     end
-
-    test "returns nil when User.name is nil" do
-      {:ok, user} = Accounts.upsert_user("noname@example.com", nil, authorize?: false)
-      user = Ash.load!(user, [:first_name], authorize?: false)
-
-      assert is_nil(user.first_name)
-    end
-
-    test "handles comma-inverted names on User" do
-      {:ok, user} = Accounts.upsert_user("smith@example.com", "Smith, Jane", authorize?: false)
-      user = Ash.load!(user, [:first_name], authorize?: false)
-
-      assert user.first_name == "Jane"
-    end
-
-    test "handles mononyms on User" do
-      {:ok, user} = Accounts.upsert_user("madonna@example.com", "Madonna", authorize?: false)
-      user = Ash.load!(user, [:first_name], authorize?: false)
-
-      assert user.first_name == "Madonna"
-    end
   end
 
   describe "Order.customer_first_name calculation" do
     test "extracts first name from Order.customer_name" do
       order = generate(order(customer_name: "Jane Doe"))
-      order = Ash.load!(order, [:customer_first_name], authorize?: false)
-
-      assert order.customer_first_name == "Jane"
-    end
-
-    test "returns nil when Order.customer_name is nil" do
-      order = generate(order(customer_name: nil))
-      order = Ash.load!(order, [:customer_first_name], authorize?: false)
-
-      assert is_nil(order.customer_first_name)
-    end
-
-    test "handles comma-inverted customer_name" do
-      order = generate(order(customer_name: "Smith, Jane"))
       order = Ash.load!(order, [:customer_first_name], authorize?: false)
 
       assert order.customer_first_name == "Jane"

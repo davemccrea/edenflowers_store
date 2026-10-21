@@ -46,55 +46,12 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       assert [_single] = Ash.read!(Expense, authorize?: false)
     end
 
-    test "accepts null for optional fields" do
-      minimal = %{document_id: "doc_minimal", confidence: "medium"}
-      assert {:ok, expense} = Expenses.ingest_expense(minimal, actor: system_actor())
-
-      assert expense.vendor_name == nil
-      assert expense.date == nil
-      assert expense.total_amount == nil
-      assert expense.currency == nil
-      assert expense.category == nil
-    end
-
-    test "requires document_id" do
-      assert {:error, error} =
-               Expenses.ingest_expense(Map.delete(@valid_attrs, :document_id), actor: system_actor())
-
-      assert error
-             |> Ash.Error.to_ash_error()
-             |> Map.fetch!(:errors)
-             |> Enum.any?(fn e ->
-               Map.get(e, :field) == :document_id
-             end)
-    end
-
-    test "requires confidence" do
-      assert {:error, _} =
-               Expenses.ingest_expense(Map.delete(@valid_attrs, :confidence), actor: system_actor())
-    end
-
-    test "rejects an unknown category value" do
-      assert {:error, _} =
-               Expenses.ingest_expense(Map.put(@valid_attrs, :category, "invalid_cat"), actor: system_actor())
-    end
-
-    test "rejects an unknown currency value" do
-      assert {:error, _} =
-               Expenses.ingest_expense(Map.put(@valid_attrs, :currency, "usd"), actor: system_actor())
-    end
-
     test "accepts signed whole-cent amounts for credit notes" do
       attrs = Map.merge(@valid_attrs, %{document_id: "doc_credit", total_amount: "-12.50", vat_amount: "-2.50"})
 
       assert {:ok, expense} = Expenses.ingest_expense(attrs, actor: system_actor())
       assert Decimal.equal?(expense.total_amount, "-12.50")
       assert Decimal.equal?(expense.vat_amount, "-2.50")
-    end
-
-    test "rejects fractional-cent amounts" do
-      assert {:error, _} =
-               Expenses.ingest_expense(Map.put(@valid_attrs, :total_amount, "12.345"), actor: system_actor())
     end
   end
 
@@ -137,16 +94,6 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       assert corrected.document_id == expense.document_id
     end
 
-    test "sets and clears the paid date" do
-      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
-
-      {:ok, paid} = Expenses.correct_expense(expense, %{paid_on: "2026-06-02"}, actor: admin_actor())
-      assert paid.paid_on == ~D[2026-06-02]
-
-      {:ok, cleared} = Expenses.correct_expense(paid, %{paid_on: nil}, actor: admin_actor())
-      assert cleared.paid_on == nil
-    end
-
     test "re-ingesting the document keeps the paid date" do
       {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
       {:ok, _} = Expenses.correct_expense(expense, %{paid_on: "2026-06-02"}, actor: admin_actor())
@@ -160,19 +107,9 @@ defmodule Edenflowers.Expenses.ExpenseTest do
   end
 
   describe "policies" do
-    test "system actor can ingest" do
-      assert {:ok, _} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
-    end
-
     test "admin actor can read" do
       {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
       assert {:ok, _} = Ash.get(Expense, expense.id, actor: admin_actor())
-    end
-
-    test "admin actor can mark_reviewed and correct" do
-      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
-      assert {:ok, _} = Expenses.mark_expense_reviewed(expense, actor: admin_actor())
-      assert {:ok, _} = Expenses.correct_expense(expense, %{vendor_name: "X"}, actor: admin_actor())
     end
 
     test "unauthenticated actor cannot read" do

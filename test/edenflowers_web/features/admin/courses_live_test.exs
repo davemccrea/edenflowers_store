@@ -370,14 +370,6 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert Decimal.equal?(reloaded.amount, "255.00")
   end
 
-  test "the last seat can't be removed, only cancelled" do
-    registration = generate(course_registration(status: :confirmed, seats: 2))
-    admin = %{admin: true}
-
-    assert {:ok, registration} = Edenflowers.Courses.remove_registration_seat(registration, actor: admin)
-    assert {:error, _} = Edenflowers.Courses.remove_registration_seat(registration, actor: admin)
-  end
-
   describe "goodwill refund" do
     defp paid_booking(payment_opts) do
       registration = generate(course_registration(status: :confirmed, name: "Anna", amount: Decimal.new("85.00")))

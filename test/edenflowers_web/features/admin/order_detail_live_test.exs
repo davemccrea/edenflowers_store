@@ -430,11 +430,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     end
 
     test "no: fulfils without queueing the fulfillment email", %{conn: conn} do
-      order = placed_order()
+      # A gift starts ticked, so unticking is a real choice.
+      order = placed_order(fulfillment_method: :delivery, gift: true, recipient_name: "Grace Hopper")
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
-      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "false"}) |> render_change()
+
+      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_change()
+
+      view
+      |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true", email_customer: "false"})
+      |> render_change()
+
       view |> form("#confirm-fulfillment-form") |> render_submit()
 
       assert has_element?(view, "#order-status", "Fulfilled")

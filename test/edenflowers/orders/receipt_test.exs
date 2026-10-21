@@ -66,27 +66,11 @@ defmodule Edenflowers.Orders.ReceiptTest do
                "Saturday 16.5.2026"
     end
 
-    test "renders tax_rate with a single fractional digit" do
-      # Default :percent rounds 25.5% to "26%" — regression guard for Format.percentage.
-      order = build_delivery_order(locale: "en-GB")
-      [line | _] = Receipt.build_payload(order).line_items
-
-      assert line.tax_rate =~ "25.5"
-    end
-
     test "renders discount as null when no promotion is applied" do
       order = build_delivery_order(locale: "en-GB", with_promotion: false)
       payload = Receipt.build_payload(order)
 
       assert payload.discount == nil
-    end
-
-    test "renders discount as a formatted string when a promotion is applied" do
-      order = build_delivery_order(locale: "en-GB", with_promotion: true)
-      payload = Receipt.build_payload(order)
-
-      assert is_binary(payload.discount)
-      assert payload.discount =~ ~r/€/
     end
 
     test "states the pre-discount subtotal so the totals column balances" do

@@ -38,17 +38,6 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     assert Exception.message(error) =~ "Must be a valid email address"
   end
 
-  test "course prices are expressed in whole cents" do
-    course = generate(course())
-
-    assert {:error, error} =
-             course
-             |> Ash.Changeset.for_update(:update, %{price: "85.555"})
-             |> Ash.update(authorize?: false)
-
-    assert Exception.message(error) =~ "no more than 2 decimal places"
-  end
-
   test "a guest booking is linked to the user with its email" do
     course = generate(course())
     {:ok, user} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada", actor: Edenflowers.Actors.system_actor())

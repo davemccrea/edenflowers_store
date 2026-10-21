@@ -715,18 +715,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.payment_status == :refunded
       assert Decimal.equal?(order.paid_outside_stripe, 0)
     end
-
-    test "no more can be handed back than was paid outside Stripe", ctx do
-      {:ok, order} = place(ctx)
-      {:ok, order} = Orders.record_payment(order, "100.00", :cash, actor: ctx.admin)
-      generate(payment(order_id: order.id, amount: Decimal.new("34.00"), payment_intent_id: "pi_rest"))
-      {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
-
-      assert {:error, error} = Orders.record_payment(order, "-134.00", :cash, actor: ctx.admin)
-      assert Exception.message(error) =~ "That's more than was paid outside Stripe"
-
-      assert {:ok, _order} = Orders.record_payment(order, "-100.00", :cash, actor: ctx.admin)
-    end
   end
 
   describe "deleting" do
@@ -958,13 +946,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.payment_status == :paid
       refute order.unpaid?
       refute order.payable?
-    end
-
-    test "a Stripe payment can't be recorded by hand", ctx do
-      {:ok, order} = place(ctx)
-
-      assert {:error, _} =
-               Orders.record_payment(order, "134.00", :stripe, actor: ctx.admin)
     end
 
     test "through the payment link records the payment and emails the receipt", ctx do

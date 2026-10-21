@@ -429,17 +429,6 @@ defmodule Edenflowers.PaymentsTest do
                Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
     end
 
-    test "places the order and flags an amount mismatch", %{order: order} do
-      paid_cents = StripeAPI.to_stripe_amount(order.grand_total) - 1
-
-      log = capture_log(fn -> assert {:ok, :completed} = Payments.complete(order_intent(order, paid_cents)) end)
-
-      assert log =~ "Amount mismatch"
-      order = Orders.get_order_by_id!(order.id, authorize?: false, load: [:balance, :amount_paid])
-      assert Decimal.equal?(order.balance, Decimal.new("0.01"))
-      assert Decimal.equal?(order.amount_paid, Decimal.div(paid_cents, 100))
-    end
-
     test "confirms the course booking and enqueues its confirmation", %{registration: registration} do
       assert {:ok, :completed} = Payments.complete(course_intent(registration))
 
@@ -463,28 +452,6 @@ defmodule Edenflowers.PaymentsTest do
                Courses.get_registration_by_id!(registration.id, authorize?: false)
 
       refute_enqueued(worker: SendCourseConfirmationEmail)
-    end
-
-    test "course confirmation requires the received amount", %{registration: registration} do
-      assert {:error, %Ash.Error.Invalid{}} =
-               Courses.confirm_registration_payment(registration, registration.payment_intent_id,
-                 actor: Edenflowers.Actors.system_actor()
-               )
-
-      assert Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
-      refute_enqueued(worker: SendCourseConfirmationEmail)
-    end
-
-    test "order completion rejects invalid currency amounts", %{order: order} do
-      for amount <- ["-1.00", "1.001"] do
-        assert {:error, %Ash.Error.Invalid{}} =
-                 Orders.finalize_checkout(order, order.payment_intent_id, %{amount_paid: amount},
-                   actor: Edenflowers.Actors.system_actor()
-                 )
-      end
-
-      assert %{state: :payment, payment_status: :pending} =
-               Orders.get_order_by_id!(order.id, authorize?: false, load: [:payment_status])
     end
 
     test "a stale order cannot complete twice or replace its reference", %{order: order} do

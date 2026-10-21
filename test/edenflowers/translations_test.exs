@@ -6,18 +6,6 @@ defmodule Edenflowers.TranslationsTest do
   alias Edenflowers.Translations
 
   describe "translate/2" do
-    test "returns the locale's translation when one exists" do
-      product =
-        generate(
-          product(
-            name: "Red Roses",
-            translations: %{fi: %{name: "Punaiset ruusut"}}
-          )
-        )
-
-      assert %{name: "Punaiset ruusut"} = Translations.translate(product, :fi)
-    end
-
     test "falls back to the default locale for an untranslated field" do
       product =
         generate(

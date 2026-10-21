@@ -29,7 +29,7 @@ defmodule Edenflowers.Accounts.Workers.SendOtpEmailTest do
              })
 
     assert_email_sent(fn email ->
-      assert email.text_body =~ "ABC123"
+      assert email.subject == "ABC123 on Eden Flowers -kirjautumiskoodisi"
     end)
   end
 
