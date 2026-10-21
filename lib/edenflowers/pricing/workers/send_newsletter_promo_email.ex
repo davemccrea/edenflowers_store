@@ -3,7 +3,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
     queue: :default,
     max_attempts: 3,
     unique: [
-      fields: [:args],
+      fields: [:args, :worker],
       keys: [:email],
       period: 3600,
       states: [:suspended, :scheduled, :available, :executing, :retryable, :completed]
