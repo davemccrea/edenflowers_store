@@ -148,9 +148,11 @@ defmodule Edenflowers.Accounts.User do
       change set_attribute(:stripe_customer_id, nil)
     end
 
-    read :newsletter_subscribers do
-      filter expr(newsletter_opt_in)
-      prepare build(load: [:first_name])
+    # Everyone Brevo should know: newsletter subscribers, plus customers with a
+    # phone number so order texts can reach them.
+    read :brevo_contacts do
+      filter expr(newsletter_opt_in or not is_nil(phone_number))
+      prepare build(load: [:first_name, :last_name, :phone_number, :placed_order_count, :last_ordered_at, :total_spent])
     end
 
     update :set_newsletter_promo do
@@ -219,6 +221,7 @@ defmodule Edenflowers.Accounts.User do
 
   calculations do
     calculate :first_name, :string, {Calculations.FirstName, source: :name}
+    calculate :last_name, :string, {Calculations.LastName, source: :name}
     calculate :initials, :string, {Calculations.Initials, source: :name}
     # A user without a promo has no usage, so the `if` turns that NULL into a strict false.
     calculate :newsletter_offer_hidden?,
@@ -229,6 +232,11 @@ defmodule Edenflowers.Accounts.User do
   aggregates do
     count :placed_order_count, :placed_orders
     max :last_ordered_at, :placed_orders, :ordered_at
+
+    # Users keep no phone number of their own; the latest order's is the freshest.
+    first :phone_number, :placed_orders, :customer_phone_number do
+      sort ordered_at: :desc
+    end
 
     # Money received, refunds taken off (see ADR 0001), which can differ from
     # the orders' totals.
