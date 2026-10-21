@@ -673,7 +673,7 @@ defmodule EdenflowersWeb.CoreComponents do
   ## Examples
 
       <.image src="local:///hero.jpg" alt="" width={1920} height={1080} priority />
-      <.image src={@product.image_slug} alt={@product.name} width={1000} height={1250} priority />
+      <.image src={@product.main_photo_slug} alt={@product.name} width={1000} height={1250} priority />
       <.image src={@slug} alt={~t"Map"} width={1600} height={1880} sizes="(min-width: 768px) 50vw, 100vw" />
       <.image src="local:///portrait.jpg" alt="" width={200} height={200} crop="800:800:fp:0.5:0.3" />
   """
@@ -853,7 +853,7 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :product, :map,
     required: true,
-    doc: "must respond to :name, :image_slug, :cheapest_price, :free_delivery, :subscribable, :sold_out?"
+    doc: "must respond to :name, :main_photo_slug, :cheapest_price, :free_delivery, :subscribable, :sold_out?"
 
   attr :navigate, :string, required: true
   attr :locale, :string, required: true
@@ -867,7 +867,7 @@ defmodule EdenflowersWeb.CoreComponents do
     >
       <figure class="bg-cream aspect-[4/5] relative mb-4 overflow-hidden sm:aspect-square">
         <.image
-          src={@product.image_slug}
+          src={@product.main_photo_slug}
           alt=""
           width={600}
           height={750}

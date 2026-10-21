@@ -92,7 +92,7 @@ create_product = fn attrs, prices ->
       Map.merge(
         %{
           tax_rate_id: tax_rate.id,
-          image_slug: "https://placehold.co/400x400",
+          photo_slugs: ["https://placehold.co/1000x1250", "https://placehold.co/1000x1250?text=Side"],
           description:
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
           draft: false
@@ -107,7 +107,6 @@ create_product = fn attrs, prices ->
       product_id: product.id,
       price: price,
       size: size,
-      image_slug: "https://placehold.co/400x400",
       draft: false
     })
     |> Ash.create!(authorize?: false)
@@ -426,7 +425,7 @@ end
 
 variants =
   ProductVariant
-  |> Ash.Query.load(product: [:tax_rate])
+  |> Ash.Query.load([:photo_slug, product: [:tax_rate]])
   |> Ash.read!(authorize?: false)
 
 variant_for = fn product_name, size ->
@@ -445,7 +444,7 @@ line_item = fn product_name, size, quantity ->
     unit_price: variant.price,
     tax_rate: variant.product.tax_rate.percentage,
     product_name: variant.product.name,
-    product_image_slug: variant.image_slug,
+    product_image_slug: variant.photo_slug,
     variant_size: variant.size,
     free_delivery: variant.product.free_delivery,
     is_card: false

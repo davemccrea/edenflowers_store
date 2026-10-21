@@ -40,8 +40,8 @@ defmodule Edenflowers.Catalog.ProductVariant do
   actions do
     defaults [
       :read,
-      create: [:price, :size, :image_slug, :stock_quantity, :product_id, :draft],
-      update: [:price, :size, :image_slug, :stock_quantity, :draft]
+      create: [:price, :size, :own_photo_slug, :stock_quantity, :product_id, :draft],
+      update: [:price, :size, :own_photo_slug, :stock_quantity, :draft]
     ]
 
     # Stock never goes below 0; see Orders.Changes.AdjustStock.
@@ -108,8 +108,8 @@ defmodule Edenflowers.Catalog.ProductVariant do
     uuid_primary_key :id
     attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :size, Edenflowers.Catalog.ProductVariantSize
-    # Nil shows the product photo; see `photo_slug`.
-    attribute :image_slug, :string
+    # One of the product's photos, or nil to show its main photo; see `photo_slug`.
+    attribute :own_photo_slug, :string
     # Nil for a size made to order, which never runs out.
     attribute :stock_quantity, :integer, constraints: [min: 0]
     attribute :draft, :boolean, allow_nil?: false, default: true
@@ -120,6 +120,6 @@ defmodule Edenflowers.Catalog.ProductVariant do
   end
 
   calculations do
-    calculate :photo_slug, :string, expr(image_slug || product.image_slug)
+    calculate :photo_slug, :string, expr(own_photo_slug || product.main_photo_slug)
   end
 end

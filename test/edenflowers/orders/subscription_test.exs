@@ -46,7 +46,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
              Ash.Changeset.for_create(Edenflowers.Catalog.Product, :create, %{
                name: "Subscription",
                description: "Florist's choice",
-               image_slug: "image.png",
+               photo_slugs: ["image.png"],
                tax_rate_id: generate(tax_rate()).id,
                product_category_id: generate(product_category()).id,
                subscribable: true,

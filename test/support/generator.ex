@@ -88,7 +88,7 @@ defmodule Generator do
         tax_rate_id: tax_rate_id,
         name: StreamData.repeatedly(fn -> "Product #{System.unique_integer([:positive])}" end),
         description: "Product description",
-        image_slug: "image.png",
+        photo_slugs: ["image.png"],
         free_delivery: false,
         subscribable: false
       },
@@ -102,7 +102,6 @@ defmodule Generator do
       defaults: %{
         price: "35.00",
         size: :medium,
-        image_slug: "image.png",
         stock_quantity: nil
       },
       overrides: opts,

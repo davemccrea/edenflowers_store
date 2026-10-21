@@ -14,7 +14,7 @@ defmodule Edenflowers.Catalog do
       define :list_subscribable_products, action: :subscribable
       define :list_bouquets, action: :bouquets
       define :list_products_by_category, action: :by_category, args: [:category_id]
-      define :get_product_by_id, action: :read, get_by: [:id]
+      define :get_product_by_id, action: :for_product_page, get_by: [:id]
     end
 
     resource Edenflowers.Catalog.ProductVariant do

@@ -106,7 +106,7 @@ defmodule Edenflowers.PoliciesTest do
                |> Ash.Changeset.for_create(:create, %{
                  name: "Test product",
                  description: "Test description",
-                 image_slug: "x.png",
+                 photo_slugs: ["x.png"],
                  tax_rate_id: tax_rate.id,
                  product_category_id: pc.id
                })
@@ -126,7 +126,7 @@ defmodule Edenflowers.PoliciesTest do
                |> Ash.Changeset.for_create(:create, %{
                  name: "Test product",
                  description: "Test description",
-                 image_slug: "x.png",
+                 photo_slugs: ["x.png"],
                  tax_rate_id: tax_rate.id,
                  product_category_id: pc.id
                })
@@ -158,7 +158,6 @@ defmodule Edenflowers.PoliciesTest do
                |> Ash.Changeset.for_create(:create, %{
                  price: "10.00",
                  size: :small,
-                 image_slug: "x.png",
                  product_id: product.id
                })
                |> Ash.create(actor: nil)
@@ -186,7 +185,6 @@ defmodule Edenflowers.PoliciesTest do
                |> Ash.Changeset.for_create(:create, %{
                  price: "10.00",
                  size: :small,
-                 image_slug: "x.png",
                  product_id: product.id
                })
                |> Ash.create(actor: customer)

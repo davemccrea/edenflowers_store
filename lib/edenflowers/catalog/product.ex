@@ -6,8 +6,9 @@ defmodule Edenflowers.Catalog.Product do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTranslation.Resource]
 
+  alias Edenflowers.Catalog.Changes
   alias Edenflowers.Catalog.Preparations
-  alias Edenflowers.Orders.Validations
+  alias Edenflowers.Catalog.Validations
 
   postgres do
     table "products"
@@ -21,6 +22,10 @@ defmodule Edenflowers.Catalog.Product do
 
   actions do
     defaults [:read, :destroy]
+
+    read :for_product_page do
+      prepare build(load: [:main_photo_slug, :product_category, :tax_rate, product_variants: [:photo_slug]])
+    end
 
     read :for_store do
       prepare Preparations.VisibleInStore
@@ -55,7 +60,7 @@ defmodule Edenflowers.Catalog.Product do
     create :create do
       accept [
         :name,
-        :image_slug,
+        :photo_slugs,
         :description,
         :tax_rate_id,
         :product_category_id,
@@ -69,6 +74,8 @@ defmodule Edenflowers.Catalog.Product do
 
       argument :product_variants, {:array, :map}
 
+      validate Validations.SizePhotosAreProducts
+
       change manage_relationship(:product_variants,
                type: :direct_control,
                on_no_match: {:create, :create},
@@ -80,7 +87,7 @@ defmodule Edenflowers.Catalog.Product do
     update :update do
       accept [
         :name,
-        :image_slug,
+        :photo_slugs,
         :description,
         :tax_rate_id,
         :product_category_id,
@@ -95,10 +102,12 @@ defmodule Edenflowers.Catalog.Product do
       argument :product_variants, {:array, :map}
       require_atomic? false
 
-      validate {Validations.NotReferencedByCurrentSubscription,
+      validate Validations.SizePhotosAreProducts
+
+      validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
                 reference: :product, field: :subscribable, changing_to: {:subscribable, false}}
 
-      validate {Validations.NotReferencedByCurrentSubscription,
+      validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
                 reference: :product, field: :free_delivery, changing_to: {:free_delivery, false}}
 
       # A size left out of the form was removed; destroying archives it.
@@ -108,6 +117,8 @@ defmodule Edenflowers.Catalog.Product do
                on_match: {:update, :update},
                on_missing: {:destroy, :destroy}
              )
+
+      change Changes.ClearRemovedSizePhotos
     end
   end
 
@@ -129,9 +140,8 @@ defmodule Edenflowers.Catalog.Product do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
-    attribute :image_slug, :string, allow_nil?: false
-    # Filled from image_slug on each server before the photo gallery replaces it (TASK-84).
-    attribute :photo_slugs, {:array, :string}
+    # In display order; the first is the main photo, see `main_photo_slug`.
+    attribute :photo_slugs, {:array, :string}, allow_nil?: false, constraints: [min_length: 1, max_length: 8]
     attribute :description, :string, allow_nil?: false
     attribute :draft, :boolean, allow_nil?: false, default: true
     attribute :featured, :boolean, allow_nil?: false, default: false
@@ -151,6 +161,8 @@ defmodule Edenflowers.Catalog.Product do
   end
 
   calculations do
+    calculate :main_photo_slug, :string, expr(at(photo_slugs, 0))
+
     calculate :sold_out?,
               :boolean,
               expr(

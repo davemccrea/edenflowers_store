@@ -1,9 +1,10 @@
 ---
 id: TASK-84.3
 title: Show a product's photos as a gallery on its store page
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-21 15:35'
+updated_date: '2026-10-21 15:50'
 labels: []
 dependencies:
   - TASK-84.1
@@ -25,8 +26,8 @@ ordinal: 172000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A product with several photos shows a thumbnail row; one with a single photo looks as it does today
-- [ ] #2 Clicking a thumbnail swaps the photo without changing size or price
-- [ ] #3 Choosing a size shows its photo, or the main photo when it has none
-- [ ] #4 The thumbnails are keyboard reachable and announce which photo is shown
+- [x] #1 A product with several photos shows a thumbnail row; one with a single photo looks as it does today
+- [x] #2 Clicking a thumbnail swaps the photo without changing size or price
+- [x] #3 Choosing a size shows its photo, or the main photo when it has none
+- [x] #4 The thumbnails are keyboard reachable and announce which photo is shown
 <!-- AC:END -->
