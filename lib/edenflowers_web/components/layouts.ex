@@ -245,7 +245,7 @@ defmodule EdenflowersWeb.Layouts do
       <%!-- Desktop: persistent sidebar, pinned so it stays in view while content scrolls --%>
       <aside
         aria-label={~t"Admin navigation"}
-        class="[view-transition-name:admin-sidebar] bg-base-200 border-base-content/20 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
+        class="admin-sidebar [view-transition-name:admin-sidebar] bg-base-200 border-base-content/20 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
       >
         <.admin_sidebar_content
           nav_sections={@nav_sections}

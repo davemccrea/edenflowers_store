@@ -820,9 +820,8 @@ defmodule EdenflowersWeb.Admin.Components do
         class="text-base-content/70 -m-2 inline-flex shrink-0 items-center gap-1.5 p-2 text-sm font-medium transition-colors hover:text-base-content"
       >
         <.icon name="hero-arrow-left" class="h-4 w-4" />
-        <span class="max-sm:sr-only">{elem(@back, 0)}</span>
+        <span class="sr-only">{elem(@back, 0)}</span>
       </.link>
-      <span :if={@back} class="bg-base-content/15 h-5 w-px shrink-0 max-sm:hidden" aria-hidden="true"></span>
       <h1 class="text-base-content min-w-0 truncate text-lg font-semibold tracking-tight">{@title}</h1>
       <div :if={@status != []} class="shrink-0 max-sm:hidden">{render_slot(@status)}</div>
       <div :if={@actions != [] || @menu != []} class="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
