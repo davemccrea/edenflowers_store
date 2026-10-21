@@ -177,11 +177,11 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
     params = PhotoUpload.merge_slugs(params, socket, @photo_fields)
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, _course} ->
+      {:ok, course} ->
         {:noreply,
          socket
          |> put_flash(:info, ~t"Course saved.")
-         |> push_navigate(to: ~p"/admin/courses")}
+         |> push_navigate(to: ~p"/admin/courses/#{course.id}")}
 
       {:error, form} ->
         {:noreply,

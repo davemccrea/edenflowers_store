@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     photo = file_input(view, "#course-form", "photo_form[image_slug]", [photo("Kransar ä.jpg")])
     render_upload(photo, "Kransar ä.jpg")
 
-    assert {:error, {:live_redirect, %{to: "/admin/courses"}}} =
+    assert {:error, {:live_redirect, %{to: "/admin/courses/" <> _id}}} =
              view
              |> form("#course-form",
                form: %{

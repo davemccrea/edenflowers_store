@@ -189,11 +189,11 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   def handle_event("save", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, _promotion} ->
+      {:ok, promotion} ->
         {:noreply,
          socket
          |> put_flash(:info, ~t"Promotion saved.")
-         |> push_navigate(to: PromotionsLive.default_path())}
+         |> push_navigate(to: ~p"/admin/promotions/#{promotion.id}")}
 
       {:error, form} ->
         {:noreply,
