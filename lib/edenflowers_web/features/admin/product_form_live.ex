@@ -57,33 +57,43 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           phx-change="validate"
           phx-submit="save"
         >
-          <%!-- Below the phone topbar, which is sticky too; from lg it's gone. The actions share
-               the back link's row so the header stays short on a phone. --%>
-          <div class="bg-base-100 border-base-content/12 top-[calc(env(safe-area-inset-top)+4rem)] [&>header]:mb-3 [&>header>div:first-child]:mb-1 sticky z-20 -mx-4 mb-6 border-b px-4 pt-3 sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-6">
-            <.admin_page_header title={@page_title} back={{~t"Products", ~p"/admin/products"}}>
-              <:subtitle :if={@form.source.type == :update && @form.source.data.sold_out?}>
-                <.badge tone={:warning}>{~t"Sold out"}</.badge>
-              </:subtitle>
-              <:nav>
-                <div class="flex items-center gap-2">
-                  <.live_toggle field={@form[:draft]} label={~t"Published"} class="pointer-coarse:min-h-11" />
-                  <.button
-                    :if={@form.source.type == :update && !@form.source.data.draft}
-                    href={~q"/#{language}/product/#{@form.source.data.id}"}
-                    target="_blank"
-                    variant="secondary"
-                    size="sm"
-                  >
-                    <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-                    <span class="max-sm:sr-only">{~t"View in store"}</span>
-                  </.button>
-                  <.button type="submit" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
-                    {~t"Save"}
-                  </.button>
-                </div>
-              </:nav>
-            </.admin_page_header>
-          </div>
+          <%!-- Below the phone topbar, which is sticky too; from lg it's gone. One row, so it
+               covers little of the form: on a phone the back link is just its arrow. --%>
+          <header class="bg-base-100 border-base-content/12 top-[calc(env(safe-area-inset-top)+4rem)] sticky z-20 -mx-4 -mt-5 mb-6 flex items-center gap-3 border-b px-4 py-2.5 sm:-mx-6 sm:-mt-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-8 lg:px-8 lg:py-3">
+            <.link
+              navigate={~p"/admin/products"}
+              class="text-base-content/70 -m-2 inline-flex shrink-0 items-center gap-1.5 p-2 text-sm font-medium transition-colors hover:text-base-content"
+            >
+              <.icon name="hero-arrow-left" class="h-4 w-4" />
+              <span class="max-sm:sr-only">{~t"Products"}</span>
+            </.link>
+            <span class="bg-base-content/15 h-5 w-px shrink-0 max-sm:hidden" aria-hidden="true"></span>
+            <h1 class="text-base-content min-w-0 truncate text-lg font-semibold tracking-tight">{@page_title}</h1>
+            <.badge
+              :if={@form.source.type == :update && @form.source.data.sold_out?}
+              tone={:warning}
+              class="shrink-0 max-sm:hidden"
+            >
+              {~t"Sold out"}
+            </.badge>
+            <div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+              <.live_toggle field={@form[:draft]} label={~t"Published"} class="pointer-coarse:min-h-11" />
+              <.button
+                :if={@form.source.type == :update && !@form.source.data.draft}
+                href={~q"/#{language}/product/#{@form.source.data.id}"}
+                target="_blank"
+                variant="secondary"
+                size="sm"
+                class="max-md:btn-square"
+              >
+                <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                <span class="max-md:sr-only">{~t"View in store"}</span>
+              </.button>
+              <.button type="submit" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+                {~t"Save"}
+              </.button>
+            </div>
+          </header>
 
           <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
             <div class="space-y-6">
@@ -131,7 +141,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               </.form_section>
             </div>
 
-            <aside class="xl:sticky xl:top-32">
+            <aside class="xl:sticky xl:top-20">
               <.form_section title={~t"In the store"}>
                 <div class="space-y-4">
                   <.input
@@ -292,8 +302,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          first row's labels head the columns; later rows keep theirs for screen readers. Field
          errors would push their column out of line, so they're read with their input and shown
          under the row. --%>
-    <li class="[&_[id$=-error]]:sr-only p-3 max-sm:[&_label:has(select)>span]:sr-only sm:[&:not(:first-of-type)_label.flex-col>span]:sr-only">
-      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 sm:grid-cols-[2rem_minmax(0,1fr)_7rem_7rem_auto_auto]">
+    <li class="[&_[id$=-error]]:sr-only p-3 max-sm:[&_label:has(select)>span]:sr-only sm:[&:not(:first-of-type)_label.flex-col>span]:sr-only sm:[&:not(:first-of-type)_label:has(.toggle)>span]:sr-only">
+      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 sm:grid-cols-[2rem_minmax(0,1fr)_7rem_6.5rem_4.5rem_auto]">
         <button
           :if={@picks?}
           type="button"
@@ -336,11 +346,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             placeholder={~t"Unlimited"}
             class="input w-full tabular-nums"
           />
-          <%!-- Lined up with the inputs: on a phone its label sits above it like theirs. --%>
+          <%!-- Its label sits above it like the inputs', so from sm only the first row shows it. --%>
           <.live_toggle
             field={@variant[:draft]}
             label={~t"Visible"}
-            class="max-sm:flex-col-reverse max-sm:items-start max-sm:gap-3.5 max-sm:pb-2.5 sm:h-10"
+            class="flex-col-reverse items-start gap-3.5 pb-2.5"
           />
         </div>
         <.icon_button
@@ -360,30 +370,27 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         <.drawer_body>
           <fieldset>
             <legend class="sr-only">{~t"Photo for #{size = @size_label}"}</legend>
+            <%!-- Framed like the radio cards elsewhere in the admin. --%>
             <div class="grid grid-cols-2 gap-3">
               <%!-- The main photo submits "", so the size follows whichever photo is main. --%>
               <label
                 :for={{slug, index} <- Enum.with_index(@photo_slugs)}
                 phx-click={JS.exec("phx-hide", to: "##{@drawer}")}
-                class="bg-cream aspect-[4/5] outline-primary relative block cursor-pointer overflow-hidden has-[:checked]:outline-3 has-[:checked]:outline-offset-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+                class="border-base-content/12 block cursor-pointer border p-1.5 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5 hover:border-primary"
               >
-                <input
-                  type="radio"
-                  name={@variant[:own_photo_slug].name}
-                  value={if index == 0, do: "", else: slug}
-                  checked={if index == 0, do: is_nil(@own), else: @own == slug}
-                  class="sr-only"
-                />
-                <span class="sr-only">{if index == 0, do: ~t"Main photo", else: ~t"Photo #{n = index + 1}"}</span>
-                <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
-                <.badge
-                  :if={index == 0}
-                  tone={:neutral}
-                  icon="hero-star-solid"
-                  class="[&_.hero-star-solid]:text-primary absolute top-1.5 left-1.5"
-                >
-                  {~t"Main"}
-                </.badge>
+                <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
+                  <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
+                </span>
+                <span class="flex items-center gap-2 px-1 pt-2 pb-0.5 text-sm">
+                  <input
+                    type="radio"
+                    name={@variant[:own_photo_slug].name}
+                    value={if index == 0, do: "", else: slug}
+                    checked={if index == 0, do: is_nil(@own), else: @own == slug}
+                    class="radio radio-xs radio-primary"
+                  />
+                  {if index == 0, do: ~t"Main photo", else: ~t"Photo #{n = index + 1}"}
+                </span>
               </label>
             </div>
           </fieldset>
@@ -412,7 +419,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     assigns = assign(assigns, :live?, assigns.field.value in [false, "false"])
 
     ~H"""
-    <label class={["text-base-content/65 flex cursor-pointer items-center gap-1.5 text-sm", @class]}>
+    <label class={["text-base-content flex cursor-pointer items-center gap-1.5 text-sm", @class]}>
       <input type="hidden" name={@field.name} value="true" />
       <input
         type="checkbox"
@@ -421,7 +428,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         value="false"
         checked={@live?}
         class="toggle toggle-primary"
-      />{@label}
+      /><span>{@label}</span>
     </label>
     """
   end
@@ -436,7 +443,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     <.icon
       :if={@main?}
       name="hero-star-solid"
-      class="drop-shadow-[0_0_1.5px_rgb(255_255_255/0.9)] size-3.5 text-primary absolute top-1 left-1"
+      class="drop-shadow-[0_0_1.5px_rgb(255_255_255/0.9)] size-3 text-primary absolute top-0.5 left-0.5"
     />
     """
   end
