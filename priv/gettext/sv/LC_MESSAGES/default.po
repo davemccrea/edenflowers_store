@@ -5379,8 +5379,8 @@ msgstr "Beställd och betald med Stripe"
 
 #: lib/edenflowers_web/features/admin/courses_live.ex:579
 #, elixir-autogen, elixir-format
-msgid "Record the payment later"
-msgstr "Registrera betalningen senare"
+msgid "Pays later"
+msgstr "Betalar senare"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:466
 #, elixir-autogen, elixir-format

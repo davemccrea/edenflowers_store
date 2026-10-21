@@ -5379,8 +5379,8 @@ msgstr "Tilattu ja maksettu Stripellä"
 
 #: lib/edenflowers_web/features/admin/courses_live.ex:579
 #, elixir-autogen, elixir-format
-msgid "Record the payment later"
-msgstr "Kirjaa maksu myöhemmin"
+msgid "Pays later"
+msgstr "Maksaa myöhemmin"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:466
 #, elixir-autogen, elixir-format

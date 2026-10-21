@@ -5379,7 +5379,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/courses_live.ex:579
 #, elixir-autogen, elixir-format
-msgid "Record the payment later"
+msgid "Pays later"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:466
