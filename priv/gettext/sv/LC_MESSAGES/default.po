@@ -3145,11 +3145,6 @@ msgstr "Ny egen beställning"
 msgid "New order"
 msgstr "Ny beställning"
 
-#: lib/edenflowers_web/features/admin/order_form_live.ex:200
-#, elixir-autogen, elixir-format
-msgid "No items yet."
-msgstr "Inga artiklar ännu."
-
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:644
 #, elixir-autogen, elixir-format
 msgid "Note saved."
@@ -6995,11 +6990,6 @@ msgstr "Bilkostnader"
 msgid "Reopen orders"
 msgstr "Öppna beställningar"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:535
-#, elixir-autogen, elixir-format
-msgid "Stop orders"
-msgstr "Stoppa beställningar"
-
 #: lib/edenflowers/email/previews.ex:276
 #, elixir-autogen, elixir-format
 msgid "Course confirmation"
@@ -7559,3 +7549,23 @@ msgstr "Laddar upp bild"
 #, elixir-autogen, elixir-format
 msgid "Validity and limits"
 msgstr "Giltighet och begränsningar"
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:206
+#, elixir-autogen, elixir-format
+msgid "Add an item to the order."
+msgstr "Lägg till en artikel i beställningen."
+
+#: lib/edenflowers_web/features/admin/overview_live.ex:58
+#, elixir-autogen, elixir-format
+msgid "Nothing needs attention right now."
+msgstr "Inget kräver uppmärksamhet just nu."
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:105
+#, elixir-autogen, elixir-format
+msgid "Placing…"
+msgstr "Lägger beställning…"
+
+#: lib/edenflowers_web/features/admin/overview_live.ex:544
+#, elixir-autogen, elixir-format
+msgid "Stop new orders"
+msgstr "Stoppa nya beställningar"

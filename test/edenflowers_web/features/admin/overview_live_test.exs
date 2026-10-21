@@ -49,7 +49,8 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin")
 
-    assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
+    today = Edenflowers.ShopTime.today()
+    assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}?overview_day=#{today}"]|, "Ada Lovelace")
   end
 
   describe "days" do
@@ -145,7 +146,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
-      view |> element("#day-orders-toggle", "Stop orders") |> render_click()
+      view |> element("#day-orders-toggle", "Stop new orders") |> render_click()
       assert today in Edenflowers.Fulfillment.get_shop_calendar!().disabled_dates
       assert has_element?(view, "#day-orders-closed")
 
@@ -184,8 +185,15 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin")
 
-    assert has_element?(view, ~s|a[href="/admin/orders/#{missing.id}"]|, "Missing recipient phone")
-    refute has_element?(view, ~s|a[href="/admin/orders/#{phoned.id}"]|, "Missing recipient phone")
+    today = Edenflowers.ShopTime.today()
+
+    assert has_element?(
+             view,
+             ~s|a[href="/admin/orders/#{missing.id}?overview_day=#{today}"]|,
+             "Missing recipient phone"
+           )
+
+    refute has_element?(view, ~s|a[href="/admin/orders/#{phoned.id}?overview_day=#{today}"]|, "Missing recipient phone")
   end
 
   test "shows an order placed elsewhere without a refresh", %{conn: conn} do
@@ -218,12 +226,13 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
     end
 
-    test "is hidden when nothing needs Jennie", %{conn: conn} do
+    test "shows an all-clear status when nothing needs Jennie", %{conn: conn} do
       placed_order(paid: true, fulfillment_status: :fulfilled)
 
       {:ok, view, _html} = live(conn, ~p"/admin")
 
       refute has_element?(view, "#attention")
+      assert has_element?(view, "#attention-clear[role=status]", "Nothing needs attention right now.")
       refute has_element?(view, "#still-owed")
     end
 
