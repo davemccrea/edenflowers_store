@@ -1,9 +1,9 @@
 defmodule EdenflowersWeb.Admin.AccountLive do
   use EdenflowersWeb, :live_view
 
-  import EdenflowersWeb.Admin.Components
-
   require Logger
+
+  import EdenflowersWeb.Admin.Components
 
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
