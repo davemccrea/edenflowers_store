@@ -6,6 +6,7 @@ Install the CLI with `npm i -g backlog.md`. `backlog browser` serves a local boa
 
 ## Conventions
 
+- A task you create without having grilled the user on it (`grilling` skill, in this conversation, until you share an understanding) starts as `needs-triage`. Only grilling moves it to `ready-for-agent` or `ready-for-human`. Never implement a `needs-triage` task: grill the user on it first
 - One feature is one **parent task**. Its description is the spec, opening with a one-line summary of what the feature does for the shop
 - A spec is one deliverable with a finish line: something true once it's done that isn't true now. A theme ("tidy the checkout code", "remove unused machinery") is not a spec. Each piece of work under a theme is a spec of its own
 - Each implementation ticket is a **subtask** of the feature: `backlog task create "<title>" -p TASK-N`. Subtasks number themselves `TASK-N.1`, `TASK-N.2`, … Never combine several tickets into one task
