@@ -576,7 +576,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   defp payment_options do
-    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Record the payment later", value: "false"}]
+    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Pays later", value: "false"}]
   end
 
   # A paid booking's PaymentIntent is on its Payment; a pending one's is still on the booking.

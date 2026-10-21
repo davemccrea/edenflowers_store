@@ -162,7 +162,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       assert has_element?(view, ~s|button[phx-value-course-id="#{course.id}"]|)
       view |> element(~s|button[phx-value-course-id="#{course.id}"]|) |> render_click()
       assert has_element?(view, "#booking-drawer #booking-form-#{course.id}", "Send a payment link")
-      assert has_element?(view, "#booking-form-#{course.id}", "Record the payment later")
+      assert has_element?(view, "#booking-form-#{course.id}", "Pays later")
       view |> element("#booking-form-#{course.id} button", "Cancel") |> render_click()
       refute has_element?(view, "#booking-form-#{course.id}")
 
