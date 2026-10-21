@@ -7567,11 +7567,6 @@ msgstr ""
 msgid "Remove photo %{n}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:291
-#, elixir-autogen, elixir-format
-msgid "or drop them here"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/product_form_live.ex:377
 #, elixir-autogen, elixir-format
 msgid "Visible"
