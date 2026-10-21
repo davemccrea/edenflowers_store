@@ -1,10 +1,10 @@
 ---
 id: TASK-86.2
 title: Give the product form a sticky header with its status and only Save
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-21 17:33'
-updated_date: '2026-10-21 17:57'
+updated_date: '2026-10-21 21:10'
 labels: []
 dependencies:
   - TASK-86.1
@@ -23,7 +23,7 @@ See TASK-86 Header.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The header stays visible while scrolling and holds the Published/Draft switch, View in store and Save
-- [ ] #2 Flipping the switch changes nothing until Save
-- [ ] #3 The bottom Save product button is gone
+- [x] #1 The header stays visible while scrolling and holds the Published/Draft switch, View in store and Save
+- [x] #2 Flipping the switch changes nothing until Save
+- [x] #3 The bottom Save product button is gone
 <!-- AC:END -->

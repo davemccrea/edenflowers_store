@@ -1,10 +1,10 @@
 ---
 id: TASK-86.6
 title: Narrow the product form's sidebar to In the store
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-21 17:33'
-updated_date: '2026-10-21 17:57'
+updated_date: '2026-10-21 21:10'
 labels: []
 dependencies:
   - TASK-86.1
@@ -23,6 +23,6 @@ See TASK-86 Sidebar.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The sidebar holds category, position, featured, free delivery, subscription and VAT
-- [ ] #2 VAT no longer sits under sizes
+- [x] #1 The sidebar holds category, position, featured, free delivery, subscription and VAT
+- [x] #2 VAT no longer sits under sizes
 <!-- AC:END -->
