@@ -65,8 +65,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                 <.badge tone={:warning}>{~t"Sold out"}</.badge>
               </:subtitle>
               <:nav>
-                <div class="[&_.fieldset]:mb-0 flex items-center gap-2">
-                  <.live_toggle field={@form[:draft]} label={~t"Published"} />
+                <div class="flex items-center gap-2">
+                  <.live_toggle field={@form[:draft]} label={~t"Published"} class="pointer-coarse:min-h-11" />
                   <.button
                     :if={@form.source.type == :update && !@form.source.data.draft}
                     href={~q"/#{language}/product/#{@form.source.data.id}"}
@@ -131,7 +131,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               </.form_section>
             </div>
 
-            <aside class="xl:sticky xl:top-36">
+            <aside class="xl:sticky xl:top-32">
               <.form_section title={~t"In the store"}>
                 <div class="space-y-4">
                   <.input
@@ -206,7 +206,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               :if={index == 0}
               tone={:neutral}
               icon="hero-star-solid"
-              class="[&_.hero-star-solid]:text-primary absolute top-1.5 left-1.5"
+              class="[&_.hero-star-solid]:text-primary absolute top-2 left-1.5 sm:top-3"
             >
               {~t"Main"}
             </.badge>
@@ -253,7 +253,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             <span class="border-base-content/25 text-cream-content/70 bg-cream aspect-[4/5] flex flex-col items-center justify-center gap-1 border border-dashed px-2 text-center transition-colors group-hover:border-base-content/50">
               <.icon name="hero-camera" class="size-7" />
               <span class="text-sm font-medium">{~t"Add photos"}</span>
-              <span class="text-xs">{~t"or drop them here"}</span>
+              <span class="text-xs pointer-coarse:hidden">{~t"or drop them here"}</span>
             </span>
             <.live_file_input upload={@upload} class="sr-only" />
           </label>
@@ -283,28 +283,30 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         size_label: size_label(variant[:size].value),
         drawer: "size-photo-#{variant.index}",
         picks?: length(assigns.photo_slugs) > 1,
+        field_errors: field_errors(variant),
         errors: if(assigns.show_errors, do: variant[:own_photo_slug].errors, else: [])
       )
 
     ~H"""
-    <%!-- On a phone the select shows the size, so its label is for screen readers, and Draft's
-         label sits above its toggle like a column's. From sm the first row's labels head the
-         columns; later rows keep theirs for screen readers. --%>
-    <li class="p-3 max-sm:[&_label:has(select)>span]:sr-only sm:[&:not(:first-of-type)_label.flex-col>span]:sr-only">
-      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 max-sm:[&_.fieldset-label]:flex-col-reverse max-sm:[&_.fieldset-label]:items-start max-sm:[&_.fieldset-label]:gap-3 sm:grid-cols-[2.5rem_minmax(0,1fr)_7rem_7rem_auto_auto]">
+    <%!-- On a phone the select shows the size, so its label is for screen readers. From sm the
+         first row's labels head the columns; later rows keep theirs for screen readers. Field
+         errors would push their column out of line, so they're read with their input and shown
+         under the row. --%>
+    <li class="[&_[id$=-error]]:sr-only p-3 max-sm:[&_label:has(select)>span]:sr-only sm:[&:not(:first-of-type)_label.flex-col>span]:sr-only">
+      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 sm:grid-cols-[2rem_minmax(0,1fr)_7rem_7rem_auto_auto]">
         <button
           :if={@picks?}
           type="button"
           phx-click={JS.exec("phx-show", to: "##{@drawer}")}
           aria-label={~t"Photo for #{size = @size_label}"}
           aria-controls={@drawer}
-          class="bg-cream aspect-[4/5] outline-primary relative row-span-2 block w-12 self-start overflow-hidden outline-offset-2 hover:outline-1 focus-visible:outline-2 sm:row-span-1 sm:w-10 sm:self-auto"
+          class="bg-cream aspect-[4/5] outline-primary relative row-span-2 block w-12 self-start overflow-hidden outline-offset-2 hover:outline-1 focus-visible:outline-2 sm:row-span-1 sm:w-8 sm:self-auto"
         >
           <.size_thumbnail slug={@own || @main} main?={is_nil(@own)} />
         </button>
         <span
           :if={!@picks?}
-          class="bg-cream aspect-[4/5] relative row-span-2 block w-12 self-start overflow-hidden sm:row-span-1 sm:w-10 sm:self-auto"
+          class="bg-cream aspect-[4/5] relative row-span-2 block w-12 self-start overflow-hidden sm:row-span-1 sm:w-8 sm:self-auto"
         >
           <.size_thumbnail :if={@main} slug={@main} main?={false} />
         </span>
@@ -316,7 +318,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
           class="select w-full"
         />
-        <div class="grid-cols-[5rem_minmax(0,1fr)_auto] col-span-2 col-start-2 row-start-2 mt-3 grid items-end gap-3 sm:contents">
+        <div class="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] col-span-2 col-start-2 row-start-2 mt-3 grid items-end gap-3 sm:contents">
           <.input
             field={@variant[:price]}
             type="text"
@@ -334,7 +336,12 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             placeholder={~t"Unlimited"}
             class="input w-full tabular-nums"
           />
-          <.live_toggle field={@variant[:draft]} label={~t"Visible"} />
+          <%!-- Lined up with the inputs: on a phone its label sits above it like theirs. --%>
+          <.live_toggle
+            field={@variant[:draft]}
+            label={~t"Visible"}
+            class="max-sm:flex-col-reverse max-sm:items-start max-sm:gap-3.5 max-sm:pb-2.5 sm:h-10"
+          />
         </div>
         <.icon_button
           phx-click="remove_variant"
@@ -343,6 +350,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         >
           <.icon name="hero-trash" class="size-5" />
         </.icon_button>
+      </div>
+      <div :if={@field_errors != []} aria-hidden="true">
+        <.error :for={msg <- @field_errors}>{msg}</.error>
       </div>
       <.error :for={msg <- Enum.map(@errors, &translate_error/1)}>{msg}</.error>
 
@@ -384,8 +394,16 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     """
   end
 
+  defp field_errors(variant) do
+    for {key, label} <- [size: ~t"Size", price: ~t"Price", stock_quantity: ~t"In stock"],
+        Phoenix.Component.used_input?(variant[key]),
+        error <- variant[key].errors,
+        do: "#{label}: #{translate_error(error)}"
+  end
+
   attr :field, Phoenix.HTML.FormField, required: true
   attr :label, :string, required: true
+  attr :class, :any, default: nil
 
   # On means live: it shows the opposite of a draft field. The checkbox follows the
   # hidden input, so when checked its "false" is the value submitted. Anything but
@@ -394,21 +412,17 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     assigns = assign(assigns, :live?, assigns.field.value in [false, "false"])
 
     ~H"""
-    <fieldset class="fieldset mb-2">
-      <label>
-        <input type="hidden" name={@field.name} value="true" />
-        <span class="fieldset-label text-base-content/65 pointer-coarse:min-h-11">
-          <input
-            type="checkbox"
-            id={@field.id}
-            name={@field.name}
-            value="false"
-            checked={@live?}
-            class="toggle toggle-primary"
-          />{@label}
-        </span>
-      </label>
-    </fieldset>
+    <label class={["text-base-content/65 flex cursor-pointer items-center gap-1.5 text-sm", @class]}>
+      <input type="hidden" name={@field.name} value="true" />
+      <input
+        type="checkbox"
+        id={@field.id}
+        name={@field.name}
+        value="false"
+        checked={@live?}
+        class="toggle toggle-primary"
+      />{@label}
+    </label>
     """
   end
 
