@@ -130,6 +130,8 @@ defmodule Edenflowers.Catalog.Product do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
     attribute :image_slug, :string, allow_nil?: false
+    # Filled from image_slug on each server before the photo gallery replaces it (TASK-84).
+    attribute :photo_slugs, {:array, :string}
     attribute :description, :string, allow_nil?: false
     attribute :draft, :boolean, allow_nil?: false, default: true
     attribute :featured, :boolean, allow_nil?: false, default: false
