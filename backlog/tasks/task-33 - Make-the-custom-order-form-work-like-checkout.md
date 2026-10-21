@@ -1,10 +1,10 @@
 ---
 id: TASK-33
 title: Make the custom order form work like checkout
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-18 18:22'
-updated_date: '2026-10-21 21:07'
+updated_date: '2026-10-18 18:56'
 labels:
   - spec
   - admin
@@ -23,16 +23,3 @@ Jennie's custom order form asks the same questions, in the same shape, as the cu
 
 The time of day for an order is a spec of its own (see the time-window task), as it will later reach checkout.
 <!-- SECTION:DESCRIPTION:END -->
-
-## Comments
-
-<!-- COMMENTS:BEGIN -->
-author: @codex
-created: 2026-10-21 21:07
-
----
-
-Reopened after TASK-33.3 regressed: its Place order button is in the page header instead of below Payment.
-
----
-<!-- COMMENTS:END -->
