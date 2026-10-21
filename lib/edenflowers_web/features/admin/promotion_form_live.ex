@@ -39,7 +39,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={{~t"Promotions", PromotionsLive.default_path()}}>
+        <.admin_page_header title={@page_title} back={{~t"Promotions", PromotionsLive.default_path()}} sticky>
           <:subtitle :if={@form.source.type == :update}>
             <span id="promotion-status" class="inline-flex flex-wrap items-center gap-1.5">
               <.badge tone={elem(status(@form.source.data), 1)}>{elem(status(@form.source.data), 0)}</.badge>
@@ -65,20 +65,20 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
           </:menu>
         </.admin_page_header>
 
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
+        <div class={["grid grid-cols-1 gap-6 xl:items-start", @history != [] && "xl:grid-cols-[minmax(0,1fr)_20rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]"]}>
           <.form
             for={@form}
             id="promotion-form"
             data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
             phx-change="validate"
             phx-submit="save"
-            class="space-y-6"
+            class={["min-w-0 space-y-6", @history == [] && "max-w-3xl"]}
           >
-            <.form_section title={~t"Promotion"}>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <.input field={@form[:name]} type="text" label={~t"Name"} class="input w-full" />
-                <div class="flex items-start gap-2">
-                  <div class="flex-1">
+            <div class="admin-card divide-base-content/12 divide-y">
+              <.form_section title={~t"Details"} joined>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <.input field={@form[:name]} type="text" label={~t"Name"} class="input w-full" />
+                  <div class="min-w-0">
                     <.input
                       field={@form[:code]}
                       type="text"
@@ -88,64 +88,62 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
                       autocorrect="off"
                       spellcheck="false"
                     />
+                    <div class="mt-2 flex justify-end gap-2">
+                      <.icon_button
+                        phx-click="generate_code"
+                        size="sm"
+                        class="pointer-coarse:min-h-11 pointer-coarse:min-w-11"
+                        title={~t"Generate code"}
+                        aria_label={~t"Generate code"}
+                      >
+                        <.icon name="hero-arrow-path" class="h-4 w-4" />
+                      </.icon_button>
+                      <.copy_button
+                        id="copy-promotion-code"
+                        target={"##{@form[:code].id}"}
+                        label={~t"Copy code"}
+                        class="pointer-coarse:min-h-11 pointer-coarse:min-w-11"
+                      />
+                    </div>
                   </div>
-                  <.icon_button
-                    phx-click="generate_code"
-                    size="sm"
-                    class="mt-7"
-                    title={~t"Generate code"}
-                    aria_label={~t"Generate code"}
-                  >
-                    <.icon name="hero-arrow-path" class="h-4 w-4" />
-                  </.icon_button>
-                  <.copy_button
-                    id="copy-promotion-code"
-                    target={"##{@form[:code].id}"}
-                    label={~t"Copy code"}
-                    class="mt-7"
+                </div>
+              </.form_section>
+
+              <.form_section title={~t"Discount"} joined>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <.input
+                    field={@form[:discount_rate]}
+                    value={rate_to_percent(@form[:discount_rate].value)}
+                    type="text"
+                    inputmode="decimal"
+                    label={~t"Discount (%)"}
+                    class="input w-full tabular-nums"
+                  />
+                  <.input
+                    field={@form[:minimum_cart_total]}
+                    type="text"
+                    inputmode="decimal"
+                    label={~t"Minimum cart total (€)"}
+                    class="input w-full tabular-nums"
                   />
                 </div>
-              </div>
-            </.form_section>
+              </.form_section>
 
-            <.form_section title={~t"Discount"}>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <.input
-                  field={@form[:discount_rate]}
-                  value={rate_to_percent(@form[:discount_rate].value)}
-                  type="text"
-                  inputmode="decimal"
-                  label={~t"Discount (%)"}
-                  class="input max-w-48 w-full tabular-nums"
-                />
-                <.input
-                  field={@form[:minimum_cart_total]}
-                  type="text"
-                  inputmode="decimal"
-                  label={~t"Minimum cart total (€)"}
-                  class="input max-w-48 w-full tabular-nums"
-                />
-              </div>
-            </.form_section>
-
-            <.form_section title={~t"Limits"}>
-              <:description>{~t"Leave blank for no limit."}</:description>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <.input field={@form[:start_date]} type="date" label={~t"Starts"} class="input w-full" />
-                <.input field={@form[:expiration_date]} type="date" label={~t"Expires"} class="input w-full" />
-                <.input
-                  field={@form[:usage_limit]}
-                  type="number"
-                  min="1"
-                  label={~t"Usage limit"}
-                  class="input max-w-48 w-full tabular-nums"
-                />
-              </div>
-            </.form_section>
-
-            <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"} class="w-full sm:w-auto">
-              {~t"Save promotion"}
-            </.button>
+              <.form_section title={~t"Validity and limits"} joined>
+                <:description>{~t"Leave blank for no limit."}</:description>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <.input field={@form[:start_date]} type="date" label={~t"Starts"} class="input w-full" />
+                  <.input field={@form[:expiration_date]} type="date" label={~t"Expires"} class="input w-full" />
+                  <.input
+                    field={@form[:usage_limit]}
+                    type="number"
+                    min="1"
+                    label={~t"Usage limit"}
+                    class="input w-full tabular-nums"
+                  />
+                </div>
+              </.form_section>
+            </div>
           </.form>
 
           <aside :if={@history != []} class="flex flex-col gap-6">

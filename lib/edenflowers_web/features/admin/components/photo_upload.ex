@@ -129,8 +129,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
 
   @doc """
   The photo itself is the picker: click it (or drop a file on it) to choose a
-  new one. Framed in the store's 4:5 product crop so Jennie sees roughly what
-  customers will.
+  new one. It uses the product gallery's 4:5 tile and add-photo treatment.
   """
   def photo_input(assigns) do
     upload = assigns.uploads[upload_name(assigns.field.name)]
@@ -146,15 +145,30 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
     <div class="max-w-60">
       <label
         phx-drop-target={@upload.ref}
-        class="group outline-primary block has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+        class="group/drop outline-primary block cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
       >
         <span class="sr-only">{@label}</span>
-        <span class={["bg-cream aspect-[4/5] relative block w-full overflow-hidden", (@errors != [] or @upload_errors != []) && "outline-error outline-1"]}>
+        <span class={["bg-cream aspect-[4/5] relative block w-full", (@errors != [] or @upload_errors != []) && "outline-error outline-1"]}>
           <.live_img_preview
             :for={entry <- @upload.entries}
             entry={entry}
             class="absolute inset-0 h-full w-full object-cover"
           />
+          <span
+            :for={entry <- @upload.entries}
+            :if={entry.progress < 100}
+            class="bg-base-100/40 absolute inset-0 grid place-items-center"
+          >
+            <span
+              class="radial-progress bg-base-100/80 [--size:3.5rem] text-sm"
+              style={"--value:#{entry.progress}"}
+              role="progressbar"
+              aria-valuenow={entry.progress}
+              aria-label={~t"Uploading photo"}
+            >
+              {entry.progress}%
+            </span>
+          </span>
           <.image
             :if={@upload.entries == [] and @photo}
             src={@photo}
@@ -165,10 +179,19 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
           />
           <span
             :if={@upload.entries == [] and is_nil(@photo)}
-            class="border-base-content/12 text-cream-content/70 absolute inset-0 flex flex-col items-center justify-center gap-2 border border-dashed transition-colors group-hover:bg-base-200/50"
+            class="border-base-content/12 text-cream-content/70 absolute inset-0 flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid group-hover/drop:bg-base-200/50 group-hover/drop:text-cream-content"
           >
-            <.icon name="hero-photo" class="size-8" />
-            <span class="px-4 text-center text-sm">{~t"Click or drop a photo here"}</span>
+            <span class="bg-cream size-9 grid place-items-center rounded-full">
+              <.icon name="hero-plus" class="size-4" />
+            </span>
+            <span class="text-sm font-medium">{~t"Add photo"}</span>
+          </span>
+          <span
+            :if={@photo || @upload.entries != []}
+            aria-hidden="true"
+            class="btn btn-sm btn-square pointer-events-none absolute top-1.5 right-1.5 max-sm:btn-xs"
+          >
+            <.icon name="hero-arrow-path" class="size-3.5 sm:size-4" />
           </span>
         </span>
         <span

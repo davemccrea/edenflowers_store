@@ -57,26 +57,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           phx-change="validate"
           phx-submit="save"
         >
-          <%!-- Below the phone topbar, which is sticky too; from lg it's gone. One row, so it
-               covers little of the form: on a phone the back link is just its arrow. --%>
-          <header class="bg-base-100 border-base-content/12 top-[calc(env(safe-area-inset-top)+4rem)] sticky z-20 -mx-4 -mt-5 mb-6 flex items-center gap-3 border-b px-4 py-2.5 sm:-mx-6 sm:-mt-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-8 lg:px-8 lg:py-3">
-            <.link
-              navigate={~p"/admin/products"}
-              class="text-base-content/70 -m-2 inline-flex shrink-0 items-center gap-1.5 p-2 text-sm font-medium transition-colors hover:text-base-content"
-            >
-              <.icon name="hero-arrow-left" class="h-4 w-4" />
-              <span class="max-sm:sr-only">{~t"Products"}</span>
-            </.link>
-            <span class="bg-base-content/15 h-5 w-px shrink-0 max-sm:hidden" aria-hidden="true"></span>
-            <h1 class="text-base-content min-w-0 truncate text-lg font-semibold tracking-tight">{@page_title}</h1>
-            <.badge
-              :if={@form.source.type == :update && @form.source.data.sold_out?}
-              tone={:warning}
-              class="shrink-0 max-sm:hidden"
-            >
-              {~t"Sold out"}
-            </.badge>
-            <div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          <.admin_page_header title={@page_title} back={{~t"Products", ~p"/admin/products"}} sticky>
+            <:status :if={@form.source.type == :update && @form.source.data.sold_out?}>
+              <.badge tone={:warning}>{~t"Sold out"}</.badge>
+            </:status>
+            <:actions>
               <.live_toggle
                 field={@form[:draft]}
                 label={~t"Published"}
@@ -97,8 +82,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               <.button type="submit" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
                 {~t"Save"}
               </.button>
-            </div>
-          </header>
+            </:actions>
+          </.admin_page_header>
 
           <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
             <div class="space-y-6">
@@ -108,7 +93,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
               <.form_section title={~t"Photos"}>
                 <:description>
-                  {~t"Every photo appears in the product page's thumbnails. Hide one with the eye button and it only appears when a customer picks a size that uses it."}
+                  {~t"Use the eye button to hide a photo from the product page's thumbnails. A hidden photo still appears whenever the selected size uses it."}
                 </:description>
                 <.photo_gallery
                   field={@form[:photo_slugs]}
@@ -222,7 +207,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       <ul id="product-photos" class="grid grid-cols-3 gap-3 sm:grid-cols-5">
         <li :for={{slug, index} <- Enum.with_index(@photo_slugs)} data-testid="product-photo">
           <input type="hidden" name={@field.name <> "[]"} value={slug} />
-          <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
+          <%!-- Keep overflow visible so the photo buttons' expanded touch targets are not clipped. --%>
+          <span class="bg-cream aspect-[4/5] relative block">
             <.image
               src={slug}
               alt=""

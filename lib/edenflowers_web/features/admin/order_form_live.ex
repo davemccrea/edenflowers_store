@@ -91,10 +91,16 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         <.admin_page_header
           title={@page_title}
           back={order_form_back(@order)}
+          sticky
         >
           <:subtitle :if={@order && @order.payment_status == :paid}>
             {~t"This order is paid. If the total changes, the order page shows the balance to collect or refund."}
           </:subtitle>
+          <:actions>
+            <.button type="submit" form="order-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+              {if @mode == :new, do: ~t"Place order", else: ~t"Save"}
+            </.button>
+          </:actions>
         </.admin_page_header>
 
         <.form
@@ -390,7 +396,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </.form_section>
           </aside>
 
-          <%!-- After the aside, so once stacked the price and payment are the last things before the button. --%>
+          <%!-- After the aside, so price and payment follow the florist note once stacked. --%>
           <.form_section title={~t"Price"} class="xl:col-start-1">
             <.price_summary price={@price} order={@order} method={@method} locale={@locale} />
           </.form_section>
@@ -407,16 +413,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               />
             </div>
           </.form_section>
-
-          <%!-- After the aside so its fields sit above Save once stacked. --%>
-          <.button
-            type="submit"
-            variant="primary"
-            phx-disable-with={~t"Saving…"}
-            class="w-full sm:w-auto sm:justify-self-start xl:col-start-1"
-          >
-            {if @mode == :new, do: ~t"Place order", else: ~t"Save changes"}
-          </.button>
         </.form>
       </.admin_page>
 
