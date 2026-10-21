@@ -99,7 +99,7 @@ defmodule EdenflowersWeb do
         gettext: EdenflowersWeb.Gettext,
         statics: EdenflowersWeb.static_paths()
 
-      import EdenflowersWeb.LocalizedPaths, only: [alternates: 1, category_alternates: 1]
+      import EdenflowersWeb.LocalizedPaths, only: [alternates: 1]
     end
   end
 
