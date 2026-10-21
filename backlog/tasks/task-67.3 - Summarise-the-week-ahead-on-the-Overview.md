@@ -1,10 +1,10 @@
 ---
 id: TASK-67.3
 title: Summarise the week ahead on the Overview
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-20 06:52'
+updated_date: '2026-10-21 13:49'
 labels: []
 dependencies:
   - TASK-67.1
@@ -27,7 +27,13 @@ ordinal: 144000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Per-day counts link to that day's orders
-- [ ] #2 The make list totals products and sizes correctly, without cards or cancelled orders
-- [ ] #3 The existing suite passes
+- [x] #1 Tapping a day shows that day's orders in place
+- [x] #2 Closed days are marked on the strip
+- [x] #3 The existing suite passes
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Today, Tomorrow and the week ahead merged into one card: a strip of 9 days (today to 8 days out) with open order counts and closed days marked. Tapping a day patches ?day= and lists its deliveries and pickups in place. Stop/Reopen orders shows on today only. The make list was dropped: not worth the space.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -1,10 +1,10 @@
 ---
 id: TASK-67
 title: Rebuild the admin Overview around today and tomorrow
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-20 12:33'
+updated_date: '2026-10-21 12:33'
 labels:
   - spec
   - admin
