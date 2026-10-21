@@ -57,7 +57,7 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   # Outlined rather than the stock `btn-ghost`, which hides a lone "×" until hover.
   # Phones drop the empty placeholder Cinder keeps beside every filter, giving its width back to the control.
   set :filter_clear_button_class,
-      "btn btn-outline btn-sm btn-square ml-2 border-base-content/20 text-base-content/75 hover:border-error hover:bg-error/10 hover:text-error max-sm:[&.invisible]:hidden"
+      "btn btn-outline btn-sm btn-square ml-2 border-base-content/12 text-base-content/75 hover:border-error hover:bg-error/10 hover:text-error max-sm:[&.invisible]:hidden"
 
   # `pl-10` leaves room for the search icon the renderer overlays.
   set :search_input_class, "input input-sm w-full pl-10"

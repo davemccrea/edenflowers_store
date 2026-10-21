@@ -310,7 +310,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       </div>
 
       <figure id="revenue-pace" class="mt-4" aria-hidden="true">
-        <div class="border-base-content/20 relative h-24 border-b">
+        <div class="border-base-content/12 relative h-24 border-b">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">
             <path d={@chart.this_area} class="fill-primary/12" />
             <path
@@ -442,13 +442,13 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <section
       id="attention"
       aria-labelledby="attention-title"
-      class="admin-card border-amber-600/25 bg-amber-50/40 min-w-0 p-4 sm:p-5 xl:col-start-2"
+      class="admin-card border-base-content/12 bg-amber-50/40 min-w-0 p-4 sm:p-5 xl:col-start-2"
     >
       <h2 id="attention-title" class="text-base-content mb-2 flex items-center gap-2 text-base font-semibold">
         <.icon name="hero-exclamation-triangle" class="text-warning h-5 w-5" />
         {~t"Needs attention"}
       </h2>
-      <ul class="divide-amber-900/10 divide-y text-sm">
+      <ul class="divide-base-content/12 divide-y text-sm">
         <li :for={{key, icon, title, rows} <- @groups}>
           <details id={"attention-#{key}"} phx-mounted={JS.ignore_attributes(["open"])} class="group">
             <summary class="touch-target flex cursor-pointer list-none items-center gap-3 py-2">
@@ -465,7 +465,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
                 class="text-amber-800/60 h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
               />
             </summary>
-            <ul class="border-amber-600/25 divide-amber-900/10 mb-2 ml-2 divide-y border-l pl-5">
+            <ul class="border-base-content/12 divide-base-content/12 mb-2 ml-2 divide-y border-l pl-5">
               <.link_row :for={row <- rows} id={"attention-#{key}-#{row.id}"} row={row} locale={@locale} />
             </ul>
           </details>
@@ -546,7 +546,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             {method_heading(method)}
             <.count_badge :if={length(orders) < length(@orders)} count={length(orders)} active={true} />
           </h3>
-          <ul class="divide-base-content/8 -mx-4 divide-y sm:-mx-5">
+          <ul class="divide-base-content/12 -mx-4 divide-y sm:-mx-5">
             <.order_row :for={order <- orders} order={order} />
           </ul>
         </div>

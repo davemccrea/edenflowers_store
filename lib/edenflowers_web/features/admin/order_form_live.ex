@@ -118,7 +118,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   update_min_len={0}
                   style={:daisyui}
                   container_class="relative"
-                  dropdown_class="absolute z-10 mt-2 max-h-64 w-full overflow-y-auto menu bg-base-100 border-base-300 border p-1 shadow"
+                  dropdown_class="absolute z-10 mt-2 max-h-64 w-full overflow-y-auto menu bg-base-100 border-base-content/12 border p-1 shadow"
                   option_class="break-words whitespace-normal pointer-coarse:min-h-11"
                   active_option_class="bg-primary text-primary-content"
                   available_option_class="cursor-pointer"

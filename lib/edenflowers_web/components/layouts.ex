@@ -260,7 +260,7 @@ defmodule EdenflowersWeb.Layouts do
              Equal side columns keep the wordmark centred on the bar.
              It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
              blur over the top edge unless a sticky or fixed element covers it. --%>
-        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] bg-base-200 border-base-content/20 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
+        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
           <div class="flex items-center">
             <button
               type="button"
@@ -282,13 +282,13 @@ defmodule EdenflowersWeb.Layouts do
           </div>
         </div>
 
-        <div class="[view-transition-name:admin-search] border-base-content/20 border-b px-4 py-2 lg:hidden">
+        <div class="[view-transition-name:admin-search] border-base-content/12 border-b px-4 py-2 lg:hidden">
           <.admin_search id="admin-search-mobile" />
         </div>
 
         <%!-- The view-transition name makes this a stacking context, so it needs a z-index for
              the user menu to open over a page's sticky header. --%>
-        <div class="[view-transition-name:admin-header] border-base-content/20 relative z-30 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
+        <div class="[view-transition-name:admin-header] border-base-content/12 relative z-30 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
           <.admin_search id="admin-search" class="w-full max-w-md" />
           <.admin_account_menu current_user={@current_user} />
         </div>
@@ -419,8 +419,8 @@ defmodule EdenflowersWeb.Layouts do
       {if @external, do: [target: "_blank", rel: "noopener"], else: []}
       aria-current={@active && "page"}
       class={["flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
-    do: "border-primary text-base-content bg-base-300/50 border-l-2 font-medium",
-    else: "text-base-content/75 border-l-2 border-transparent hover:bg-base-300/40 hover:text-base-content")]}
+    do: "text-base-content bg-base-300/50 font-medium",
+    else: "text-base-content/75 hover:bg-base-300/40 hover:text-base-content")]}
     >
       <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/60")]} />
       {@label}
@@ -474,7 +474,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <ul
         tabindex="0"
-        class="dropdown-content menu bg-base-100 border-base-300 mt-2 w-56 border p-1 shadow"
+        class="dropdown-content menu bg-base-100 border-base-content/12 mt-2 w-56 border p-1 shadow"
       >
         <li :if={@compact} class="px-3 py-2">
           <span class="block p-0 hover:bg-transparent">

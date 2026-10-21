@@ -165,7 +165,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
           />
           <span
             :if={@upload.entries == [] and is_nil(@photo)}
-            class="border-base-content/25 text-cream-content/70 absolute inset-0 flex flex-col items-center justify-center gap-2 border border-dashed transition-colors group-hover:border-base-content/50"
+            class="border-base-content/12 text-cream-content/70 absolute inset-0 flex flex-col items-center justify-center gap-2 border border-dashed transition-colors group-hover:bg-base-200/50"
           >
             <.icon name="hero-photo" class="size-8" />
             <span class="px-4 text-center text-sm">{~t"Click or drop a photo here"}</span>

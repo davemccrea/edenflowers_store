@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
             </div>
           </div>
 
-          <dl class="divide-base-content/8 divide-y">
+          <dl class="divide-base-content/12 divide-y">
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
               <dt id="avatar-label" class="text-base-content/75 text-sm sm:pt-1.5">{~t"Picture"}</dt>
               <dd>

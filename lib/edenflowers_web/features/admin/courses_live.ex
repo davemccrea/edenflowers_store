@@ -395,7 +395,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           </.button>
         </div>
 
-        <ul class="divide-base-content/8 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y">
+        <ul class="divide-base-content/12 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y">
           <li
             :for={registration <- @registrations}
             id={"registration-#{registration.id}"}
@@ -531,13 +531,13 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           id={"cancelled-#{@course.id}"}
           open={Enum.any?(@cancelled_settled, &(&1.id == @highlighted_booking_id))}
           phx-mounted={JS.ignore_attributes(["open"])}
-          class="group/cancelled border-base-content/8 border-t"
+          class="group/cancelled border-base-content/12 border-t"
         >
           <summary class="text-base-content/75 touch-target flex cursor-pointer list-none items-center gap-1 py-3 text-sm">
             {~t"Cancelled (#{count = length(@cancelled_settled)})"}
             <.icon name="hero-chevron-down" class="h-4 w-4 group-open/cancelled:rotate-180" />
           </summary>
-          <ul class="divide-base-content/8 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y">
+          <ul class="divide-base-content/12 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y">
             <.cancelled_row
               :for={registration <- @cancelled_settled}
               registration={registration}
@@ -762,7 +762,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         {@course.name} · {Format.date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}
       </p>
     </div>
-    <dl class="divide-base-content/8 border-base-content/12 divide-y border-y text-sm tabular-nums">
+    <dl class="divide-base-content/12 border-base-content/12 divide-y border-y text-sm tabular-nums">
       <div class="flex justify-between gap-4 py-2">
         <dt class="text-base-content/75">{~t"Paid"}</dt>
         <dd>{Format.currency(@registration.amount_paid, @locale)}</dd>

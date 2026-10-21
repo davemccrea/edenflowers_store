@@ -118,7 +118,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               </.form_section>
 
               <.form_section title={~t"Sizes and prices"}>
-                <ul class="border-base-content/12 divide-base-content/8 divide-y border">
+                <ul class="border-base-content/12 divide-base-content/12 divide-y border">
                   <.inputs_for :let={variant} field={@form[:product_variants]}>
                     <.size_row
                       variant={variant}
@@ -294,7 +294,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         </li>
         <li :if={length(@photo_slugs) + length(@upload.entries) < @max}>
           <label class="group outline-primary block cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2">
-            <span class="border-base-content/20 text-cream-content/70 aspect-[4/5] flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid group-hover:border-base-content/40 group-hover:text-cream-content">
+            <span class="border-base-content/12 text-cream-content/70 aspect-[4/5] flex flex-col items-center justify-center gap-2.5 border border-dashed px-2 text-center transition-colors group-[.phx-drop-target-active]/drop:border-primary group-[.phx-drop-target-active]/drop:bg-primary/5 group-[.phx-drop-target-active]/drop:text-primary group-[.phx-drop-target-active]/drop:border-solid group-hover:bg-base-200/50 group-hover:text-cream-content">
               <span class="bg-cream size-9 grid place-items-center rounded-full">
                 <.icon name="hero-plus" class="size-4" />
               </span>
