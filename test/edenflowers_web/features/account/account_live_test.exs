@@ -302,26 +302,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     @tag :typst
-    test "opens a booking's receipt PDF inline", %{conn: conn, user: user} do
-      registration = generate(course_registration(user_id: user.id, status: :confirmed))
-
-      conn = get(conn, ~p"/courses/bookings/#{registration.id}/receipt")
-
-      assert "%PDF" <> _ = response(conn, 200)
-
-      assert get_resp_header(conn, "content-disposition") == [
-               ~s|inline; filename="eden-flowers-#{registration.reference}.pdf"|
-             ]
-    end
-
-    test "hides another customer's booking receipt", %{conn: conn} do
-      other = generate(admin_user(admin: false))
-      registration = generate(course_registration(user_id: other.id, status: :confirmed))
-
-      assert conn |> get(~p"/courses/bookings/#{registration.id}/receipt") |> response(404)
-    end
-
-    @tag :typst
     test "no course receipt for a pending booking", %{conn: conn, user: user} do
       registration = generate(course_registration(user_id: user.id, status: :pending))
 

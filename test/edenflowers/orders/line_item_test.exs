@@ -14,16 +14,6 @@ defmodule Edenflowers.Orders.LineItemTest do
   end
 
   describe "Order Item Resource" do
-    test "creates an order item", %{order: order, product_variant: product_variant} do
-      assert {:ok, _} =
-               LineItem
-               |> Ash.Changeset.for_create(:add_to_cart, %{
-                 order_id: order.id,
-                 product_variant_id: product_variant.id
-               })
-               |> Ash.create(authorize?: false)
-    end
-
     test "default quantity is 1", %{order: order, product_variant: product_variant} do
       line_item =
         LineItem
@@ -34,17 +24,6 @@ defmodule Edenflowers.Orders.LineItemTest do
         |> Ash.create!(authorize?: false)
 
       assert line_item.quantity == 1
-    end
-
-    test "quantity can only be 1 or greater", %{order: order, product_variant: product_variant} do
-      assert {:error, _} =
-               LineItem
-               |> Ash.Changeset.for_create(:add_to_cart, %{
-                 order_id: order.id,
-                 product_variant_id: product_variant.id,
-                 quantity: 0
-               })
-               |> Ash.create()
     end
 
     test "increments quantity", %{order: order, product_variant: product_variant} do

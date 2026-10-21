@@ -648,9 +648,13 @@ defmodule Edenflowers.PoliciesTest do
                |> Ash.destroy(actor: %{admin: true})
     end
 
-    test "owner cannot mutate their own placed order's line item", %{line_item: line_item, order: order} do
+    test "owner cannot mutate their own placed order's line item", %{
+      line_item: line_item,
+      order: order,
+      customer: owner
+    } do
       # Owner reads are allowed; writes are not.
-      owner = %{id: order.user_id || Ash.UUID.generate()}
+      Ash.Seed.update!(order, %{user_id: owner.id})
 
       assert {:error, %Ash.Error.Forbidden{}} =
                line_item

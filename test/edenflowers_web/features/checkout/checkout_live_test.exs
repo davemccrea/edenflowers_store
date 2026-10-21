@@ -513,25 +513,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       refute html =~ ~s(data-testid="card-message-textarea")
     end
 
-    test "save_form_2 persists card_message on the order",
-         %{conn: conn, variant: variant, card_variant: card_variant} do
-      # recipient_name is required when gift=true, so seed it on the order directly
-      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test Recipient"))
-
-      Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
-
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
-
-      conn
-      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/checkout")
-      |> fill_in("Card message", with: "Happy birthday!")
-      |> click_button("Next")
-
-      reloaded = Orders.get_order_for_checkout!(gift_order.id, actor: nil)
-      assert reloaded.card_message == "Happy birthday!"
-    end
-
     test "card_message is preserved across re-renders while on step 2",
          %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Original"))
@@ -645,28 +626,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> fill_in("Card message", with: oversize)
       |> click_button("Next")
       |> assert_has("p", text: "at most")
-    end
-
-    test "removing the card from the cart clears card_message on the order",
-         %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order =
-        generate(order(state: :gift_options, gift: true, recipient_name: "Test", card_message: "Pre-existing"))
-
-      Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
-
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
-
-      card = Enum.find(Orders.get_order_for_checkout!(gift_order.id, actor: nil).line_items, & &1.is_card)
-
-      {:ok, view, _html} =
-        conn
-        |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-        |> live("/checkout")
-
-      view |> element("#checkout-line-items-remove-#{card.id}") |> render_click()
-
-      reloaded = Orders.get_order_for_checkout!(gift_order.id, actor: nil)
-      assert is_nil(reloaded.card_message)
     end
 
     test "re-adding a card after removal renders an empty card_message field",

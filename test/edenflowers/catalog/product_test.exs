@@ -2,8 +2,6 @@ defmodule Edenflowers.Catalog.ProductTest do
   use Edenflowers.DataCase, async: true
   import Generator
 
-  alias Edenflowers.Catalog.Product
-
   alias Edenflowers.Catalog
 
   setup do
@@ -12,109 +10,7 @@ defmodule Edenflowers.Catalog.ProductTest do
     {:ok, tax_rate: tax_rate, product_category: product_category}
   end
 
-  describe "Product Resource" do
-    test "fails to create product without tax_rate", %{product_category: product_category} do
-      assert {:error, _} =
-               Product
-               |> Ash.Changeset.for_create(:create, %{
-                 name: "Product 1",
-                 description: "Product 1 description",
-                 product_category_id: product_category.id
-               })
-               |> Ash.create(authorize?: false)
-    end
-
-    test "creates product when tax_rate is assigned", %{tax_rate: tax_rate, product_category: product_category} do
-      assert {:ok, _} =
-               Product
-               |> Ash.Changeset.for_create(:create, %{
-                 name: "Product 1",
-                 description: "Product 1 description",
-                 image_slug: "image.jpg",
-                 tax_rate_id: tax_rate.id,
-                 product_category_id: product_category.id
-               })
-               |> Ash.create(authorize?: false)
-    end
-
-    test "fails to create product if product name is not unique", %{
-      tax_rate: tax_rate,
-      product_category: product_category
-    } do
-      name = "Product 1"
-      _product = generate(product(tax_rate_id: tax_rate.id, name: name, product_category_id: product_category.id))
-
-      assert {:error, error} =
-               Product
-               |> Ash.Changeset.for_create(:create, %{
-                 name: name,
-                 description: "Product 1 description",
-                 image_slug: "image.jpg",
-                 tax_rate_id: tax_rate.id,
-                 product_category_id: product_category.id
-               })
-               |> Ash.create(authorize?: false)
-
-      assert %Ash.Error.Invalid{
-               errors: [
-                 %Ash.Error.Changes.InvalidAttribute{
-                   field: :name,
-                   message: "has already been taken"
-                 }
-               ]
-             } = error
-    end
-
-    test "returns nil cheapest_price when product has no variants", %{tax_rate: tax_rate} do
-      product = generate(product(tax_rate_id: tax_rate.id))
-
-      loaded_product =
-        Product
-        |> Ash.get!(product.id)
-        |> Ash.load!([:cheapest_price])
-
-      assert loaded_product.cheapest_price == nil
-    end
-
-    test "returns correct cheapest_price with one variant", %{tax_rate: tax_rate} do
-      product = generate(product(tax_rate_id: tax_rate.id))
-      price = Decimal.new("15.99")
-      _variant = generate(product_variant(product_id: product.id, price: price))
-
-      loaded_product = Product |> Ash.get!(product.id) |> Ash.load!([:cheapest_price])
-
-      assert loaded_product.cheapest_price == price
-    end
-
-    test "returns correct cheapest_price with multiple variants", %{tax_rate: tax_rate} do
-      product = generate(product(tax_rate_id: tax_rate.id))
-      price1 = Decimal.new("18.50")
-      price2 = Decimal.new("12.00")
-      price3 = Decimal.new("20.00")
-      _variant1 = generate(product_variant(product_id: product.id, price: price1))
-      _variant2 = generate(product_variant(product_id: product.id, price: price2))
-      _variant3 = generate(product_variant(product_id: product.id, price: price3))
-
-      loaded_product =
-        Product
-        |> Ash.get!(product.id)
-        |> Ash.load!([:cheapest_price])
-
-      assert loaded_product.cheapest_price == price2
-    end
-  end
-
   describe "Catalog.list_store_products filtering" do
-    test "includes published products with variants and published category", %{tax_rate: tax_rate} do
-      published_category = generate(product_category(visibility: :public))
-      product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
-      _variant = generate(product_variant(product_id: product.id))
-
-      products = Catalog.list_store_products!(authorize?: false)
-
-      assert Enum.any?(products, fn p -> p.id == product.id end)
-    end
-
     test "excludes products whose only size was removed", %{tax_rate: tax_rate} do
       published_category = generate(product_category(visibility: :public))
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))

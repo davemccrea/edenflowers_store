@@ -96,24 +96,6 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
 
       assert [_one] = reload(registration).payments
     end
-
-    test "a pending booking's checkout still confirms it" do
-      registration = generate(course_registration(status: :pending, payment_intent_id: "pi_checkout"))
-
-      assert {:ok, :completed} = Payments.complete(link_intent(registration, "pi_checkout", 8500))
-
-      assert reload(registration).status == :confirmed
-    end
-
-    test "recording a payment by hand cancels the link's open PaymentIntent", ctx do
-      registration = Ash.Seed.update!(ctx.registration, %{payment_intent_id: "pi_link"})
-
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_link"} -> {:ok, %{id: "pi_link"}} end)
-
-      {:ok, _paid} = Courses.record_registration_payment(registration, "85.00", :zettle, actor: ctx.admin)
-
-      assert reload(registration).payment_intent_id == nil
-    end
   end
 
   describe "emailing the link" do

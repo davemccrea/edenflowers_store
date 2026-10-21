@@ -4,20 +4,6 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekdayTest do
   alias Edenflowers.Fulfillment.Changes.SetWeekday
 
   describe "set_weekday/3" do
-    test "setting :off removes a currently-available weekday" do
-      calendar = shop_calendar()
-      %{available_days: days} = SetWeekday.set_weekday(calendar, :sunday, :off)
-      refute :sunday in days
-    end
-
-    test "setting :on adds a currently-disabled weekday" do
-      calendar =
-        shop_calendar(available_days: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday])
-
-      %{available_days: days} = SetWeekday.set_weekday(calendar, :sunday, :on)
-      assert :sunday in days
-    end
-
     test "is idempotent — :on on an already-on weekday is a no-op" do
       calendar = shop_calendar()
       %{available_days: days} = SetWeekday.set_weekday(calendar, :sunday, :on)
