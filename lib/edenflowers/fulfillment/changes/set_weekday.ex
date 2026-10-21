@@ -88,7 +88,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekday do
     end
   end
 
-  defp restore(attrs, date, _was_open? = true) do
+  defp restore(attrs, date, true = _was_open?) do
     %{
       attrs
       | enabled_dates: Enum.uniq([date | attrs.enabled_dates]),
@@ -96,7 +96,7 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekday do
     }
   end
 
-  defp restore(attrs, date, _was_open? = false) do
+  defp restore(attrs, date, false = _was_open?) do
     %{
       attrs
       | disabled_dates: Enum.uniq([date | attrs.disabled_dates]),

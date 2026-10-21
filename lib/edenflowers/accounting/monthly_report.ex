@@ -28,31 +28,33 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   alias Elixlsx.Workbook
 
   def build(year, month) do
-    Gettext.with_locale(EdenflowersWeb.Gettext, "sv", fn ->
-      first = Date.new!(year, month, 1)
-      label = first |> Date.to_iso8601() |> String.slice(0, 7)
-      spreadsheet = "rapport-#{label}.xlsx"
+    Gettext.with_locale(EdenflowersWeb.Gettext, "sv", fn -> build_zip(year, month) end)
+  end
 
-      last = Date.end_of_month(first)
+  defp build_zip(year, month) do
+    first = Date.new!(year, month, 1)
+    label = first |> Date.to_iso8601() |> String.slice(0, 7)
+    spreadsheet = "rapport-#{label}.xlsx"
 
-      with {:ok, payments} <- payments(first, last),
-           {:ok, expenses} <- paid_expenses(first, last),
-           rows =
-             expenses
-             |> Enum.with_index(1)
-             |> Task.async_stream(&fetch_receipt/1, max_concurrency: 5, timeout: :infinity)
-             |> Enum.map(fn {:ok, row} -> row end),
-           receipts = for({_n, _expense, name, body} <- rows, body, do: {~c"kvitton/#{name}", body}),
-           {:ok, transactions} <-
-             StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
-           sheets = [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions)],
-           workbook = %Workbook{sheets: Enum.map(sheets, &with_basic_font/1)},
-           {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
-           files = [{~c"#{spreadsheet}", xlsx} | receipts],
-           {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
-        {:ok, "redovisning-#{label}.zip", zip}
-      end
-    end)
+    last = Date.end_of_month(first)
+
+    with {:ok, payments} <- payments(first, last),
+         {:ok, expenses} <- paid_expenses(first, last),
+         rows =
+           expenses
+           |> Enum.with_index(1)
+           |> Task.async_stream(&fetch_receipt/1, max_concurrency: 5, timeout: :infinity)
+           |> Enum.map(fn {:ok, row} -> row end),
+         receipts = for({_n, _expense, name, body} <- rows, body, do: {~c"kvitton/#{name}", body}),
+         {:ok, transactions} <-
+           StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
+         sheets = [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions)],
+         workbook = %Workbook{sheets: Enum.map(sheets, &with_basic_font/1)},
+         {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
+         files = [{~c"#{spreadsheet}", xlsx} | receipts],
+         {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
+      {:ok, "redovisning-#{label}.zip", zip}
+    end
   end
 
   defp payments(first, last) do

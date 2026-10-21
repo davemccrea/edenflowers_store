@@ -30,6 +30,7 @@ defmodule Edenflowers.Fulfillment.Availability do
   which is stored in Helsinki local time.
   """
   @spec unavailable_reason(ShopCalendar.t(), Date.t(), DateTime.t()) :: unavailable_reason() | nil
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def unavailable_reason(%ShopCalendar{} = calendar, %Date{} = date, %DateTime{} = now) do
     today? = Date.compare(date, now) == :eq
 

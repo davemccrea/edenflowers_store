@@ -64,27 +64,23 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     }
   end
 
-  defp title(%{version_action_name: action}) do
-    case action do
-      :place_custom -> ~t"Placed by Jennie"
-      :finalize_checkout -> ~t"Placed and paid with Stripe"
-      :place_unpaid_occurrence -> ~t"Placed, but the saved card was refused"
-      :edit -> ~t"Edited"
-      :update_florist_note -> ~t"Florist note changed"
-      :cancel -> ~t"Cancelled"
-      :mark_fulfilled -> ~t"Fulfilled"
-      :open_payment_link -> ~t"Payment link created"
-      :send_order_details_email -> ~t"Order details emailed"
-      :send_payment_failed_email -> ~t"Payment link emailed"
-      :send_receipt_email -> ~t"Receipt emailed"
-      :email_receipt -> ~t"Receipt emailed"
-      :send_fulfillment_email -> ~t"Fulfillment confirmation emailed"
-      :record_fulfillment_email_failure -> ~t"Fulfillment confirmation failed"
-      :record_receipt_email_failure -> ~t"Receipt failed"
-      :record_order_details_email_failure -> ~t"Order details failed"
-      other -> to_string(other)
-    end
-  end
+  defp title(%{version_action_name: :place_custom}), do: ~t"Placed by Jennie"
+  defp title(%{version_action_name: :finalize_checkout}), do: ~t"Placed and paid with Stripe"
+  defp title(%{version_action_name: :place_unpaid_occurrence}), do: ~t"Placed, but the saved card was refused"
+  defp title(%{version_action_name: :edit}), do: ~t"Edited"
+  defp title(%{version_action_name: :update_florist_note}), do: ~t"Florist note changed"
+  defp title(%{version_action_name: :cancel}), do: ~t"Cancelled"
+  defp title(%{version_action_name: :mark_fulfilled}), do: ~t"Fulfilled"
+  defp title(%{version_action_name: :open_payment_link}), do: ~t"Payment link created"
+  defp title(%{version_action_name: :send_order_details_email}), do: ~t"Order details emailed"
+  defp title(%{version_action_name: :send_payment_failed_email}), do: ~t"Payment link emailed"
+  defp title(%{version_action_name: :send_receipt_email}), do: ~t"Receipt emailed"
+  defp title(%{version_action_name: :email_receipt}), do: ~t"Receipt emailed"
+  defp title(%{version_action_name: :send_fulfillment_email}), do: ~t"Fulfillment confirmation emailed"
+  defp title(%{version_action_name: :record_fulfillment_email_failure}), do: ~t"Fulfillment confirmation failed"
+  defp title(%{version_action_name: :record_receipt_email_failure}), do: ~t"Receipt failed"
+  defp title(%{version_action_name: :record_order_details_email_failure}), do: ~t"Order details failed"
+  defp title(%{version_action_name: other}), do: to_string(other)
 
   # A creation's fields are the whole order, already on the page; its items show.
   defp field_details(%{version_action_type: :create}, _locale), do: []

@@ -26,19 +26,20 @@ defmodule Edenflowers.Orders.Changes.AdjustStock do
   @impl true
   def change(changeset, opts, _context) do
     case opts[:direction] do
-      :return ->
-        Ash.Changeset.before_action(changeset, fn changeset ->
-          case adjust_order(changeset.data, opts) do
-            :ok -> changeset
-            {:error, error} -> Ash.Changeset.add_error(changeset, error)
-          end
-        end)
-
-      :take ->
-        Ash.Changeset.after_action(changeset, fn _changeset, order ->
-          with :ok <- adjust_order(order, opts), do: {:ok, order}
-        end)
+      :return -> Ash.Changeset.before_action(changeset, &return_stock(&1, opts))
+      :take -> Ash.Changeset.after_action(changeset, fn _changeset, order -> take_stock(order, opts) end)
     end
+  end
+
+  defp return_stock(changeset, opts) do
+    case adjust_order(changeset.data, opts) do
+      :ok -> changeset
+      {:error, error} -> Ash.Changeset.add_error(changeset, error)
+    end
+  end
+
+  defp take_stock(order, opts) do
+    with :ok <- adjust_order(order, opts), do: {:ok, order}
   end
 
   # Occurrences are made fresh and never take stock, so they have none to return.
@@ -66,9 +67,8 @@ defmodule Edenflowers.Orders.Changes.AdjustStock do
 
   defp quantities_by_variant(line_items) do
     line_items
-    |> Enum.reject(&is_nil(&1.product_variant_id))
     # A subscription's bouquets are made fresh, its first one included.
-    |> Enum.filter(&is_nil(&1.interval_weeks))
+    |> Enum.filter(&(not is_nil(&1.product_variant_id) and is_nil(&1.interval_weeks)))
     |> Enum.group_by(& &1.product_variant_id, & &1.quantity)
     |> Map.new(fn {variant_id, quantities} -> {variant_id, Enum.sum(quantities)} end)
   end
@@ -76,28 +76,29 @@ defmodule Edenflowers.Orders.Changes.AdjustStock do
   # adjust_stock alone is safe. The lock is only so the oversell report reads
   # the count the update will act on.
   defp adjust(order, variant_id, quantity, opts) do
-    ProductVariant
-    |> Ash.Query.filter(id == ^variant_id and not is_nil(stock_quantity))
-    |> Ash.Query.lock(:for_update)
-    |> Ash.read_one(authorize?: false)
-    |> case do
-      {:ok, nil} ->
-        :ok
+    variant =
+      ProductVariant
+      |> Ash.Query.filter(id == ^variant_id and not is_nil(stock_quantity))
+      |> Ash.Query.lock(:for_update)
+      |> Ash.read_one(authorize?: false)
 
-      {:ok, variant} ->
-        if Keyword.get(opts, :report_oversell?, false) and quantity > variant.stock_quantity do
-          Logger.error(
-            "Order #{order.id} took #{quantity} of variant #{variant.id} with only " <>
-              "#{variant.stock_quantity} in stock."
-          )
-        end
-
-        by = if opts[:direction] == :take, do: -quantity, else: quantity
-
-        with {:ok, _variant} <- Ash.update(variant, %{by: by}, action: :adjust_stock, authorize?: false), do: :ok
-
-      {:error, error} ->
-        {:error, error}
+    case variant do
+      {:ok, nil} -> :ok
+      {:ok, variant} -> adjust_variant(order, variant, quantity, opts)
+      {:error, error} -> {:error, error}
     end
+  end
+
+  defp adjust_variant(order, variant, quantity, opts) do
+    if Keyword.get(opts, :report_oversell?, false) and quantity > variant.stock_quantity do
+      Logger.error(
+        "Order #{order.id} took #{quantity} of variant #{variant.id} with only " <>
+          "#{variant.stock_quantity} in stock."
+      )
+    end
+
+    by = if opts[:direction] == :take, do: -quantity, else: quantity
+
+    with {:ok, _variant} <- Ash.update(variant, %{by: by}, action: :adjust_stock, authorize?: false), do: :ok
   end
 end

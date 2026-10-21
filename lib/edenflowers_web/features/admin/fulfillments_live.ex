@@ -528,11 +528,13 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         nil
 
       plotted ->
-        Enum.map_join(plotted, " ", fn {point, step} ->
-          command = if step == 0, do: "M", else: "L"
-          "#{command}#{Float.round(x.(step / @steps_per_km) / 1, 1)},#{Float.round(y.(point[key]) / 1, 1)}"
-        end)
+        Enum.map_join(plotted, " ", fn {point, step} -> path_command(step, point[key], x, y) end)
     end
+  end
+
+  defp path_command(step, value, x, y) do
+    command = if step == 0, do: "M", else: "L"
+    "#{command}#{Float.round(x.(step / @steps_per_km) / 1, 1)},#{Float.round(y.(value) / 1, 1)}"
   end
 
   # The option with the prices as typed. A field that's empty or doesn't parse

@@ -28,32 +28,9 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     cart_line = cart_line(socket.assigns.order, product.id)
 
-    # Sold-out sizes can't be picked, unless every size is sold out.
-    selectable_variants =
-      case Enum.reject(product_variants, &sold_out?/1) do
-        [] -> product_variants
-        in_stock -> in_stock
-      end
-
-    default_variant =
-      case length(selectable_variants) do
-        1 ->
-          List.first(selectable_variants)
-
-        2 ->
-          List.first(selectable_variants)
-
-        _ ->
-          middle_index =
-            selectable_variants
-            |> length()
-            |> div(2)
-
-          Enum.at(selectable_variants, middle_index)
-      end
-
     selected_variant =
-      (cart_line && Enum.find(product_variants, &(&1.id == cart_line.product_variant_id))) || default_variant
+      (cart_line && Enum.find(product_variants, &(&1.id == cart_line.product_variant_id))) ||
+        default_variant(selectable_variants(product_variants))
 
     {:ok,
      socket
@@ -356,6 +333,17 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   defp sold_out?(variant), do: variant.stock_quantity == 0
+
+  # Sold-out sizes can't be picked, unless every size is sold out.
+  defp selectable_variants(variants) do
+    case Enum.reject(variants, &sold_out?/1) do
+      [] -> variants
+      in_stock -> in_stock
+    end
+  end
+
+  defp default_variant([first, _second]), do: first
+  defp default_variant(variants), do: Enum.at(variants, div(length(variants), 2))
 
   defp json_ld(product, variants) do
     availability =

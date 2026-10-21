@@ -30,14 +30,13 @@ defmodule Edenflowers.Courses.Changes.ReserveSeats do
   # Locked without loads: Postgres refuses FOR UPDATE on a query whose
   # aggregates arrive through outer joins, so seats are counted separately.
   defp lock_course(course_id) do
-    Course
-    |> Ash.Query.filter(id == ^course_id)
-    |> Ash.Query.lock(:for_update)
-    |> Ash.read_one!(authorize?: false)
-    |> case do
-      nil -> nil
-      course -> Ash.load!(course, [:seats_left, :tax_rate], authorize?: false)
-    end
+    course =
+      Course
+      |> Ash.Query.filter(id == ^course_id)
+      |> Ash.Query.lock(:for_update)
+      |> Ash.read_one!(authorize?: false)
+
+    if course, do: Ash.load!(course, [:seats_left, :tax_rate], authorize?: false)
   end
 
   defp reserve(changeset, course, seats, allow_after_cutoff?) do

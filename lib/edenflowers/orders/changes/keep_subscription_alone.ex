@@ -32,11 +32,13 @@ defmodule Edenflowers.Orders.Changes.KeepSubscriptionAlone do
     if Ash.Changeset.get_attribute(changeset, :is_card) do
       changeset
     else
-      changeset
-      |> Ash.Changeset.get_attribute(:order_id)
-      |> non_card_lines()
-      |> Ash.read(Ash.Context.to_opts(context))
-      |> case do
+      lines =
+        changeset
+        |> Ash.Changeset.get_attribute(:order_id)
+        |> non_card_lines()
+        |> Ash.read(Ash.Context.to_opts(context))
+
+      case lines do
         {:ok, lines} -> check_against(changeset, lines, context)
         {:error, error} -> Ash.Changeset.add_error(changeset, error)
       end
@@ -63,15 +65,17 @@ defmodule Edenflowers.Orders.Changes.KeepSubscriptionAlone do
   end
 
   defp replace(changeset, context) do
-    changeset
-    |> Ash.Changeset.get_attribute(:order_id)
-    |> non_card_lines()
-    |> Ash.bulk_destroy(
-      :remove_item,
-      %{},
-      Ash.Context.to_opts(context, strategy: [:atomic, :stream], notify?: true, return_errors?: true)
-    )
-    |> case do
+    result =
+      changeset
+      |> Ash.Changeset.get_attribute(:order_id)
+      |> non_card_lines()
+      |> Ash.bulk_destroy(
+        :remove_item,
+        %{},
+        Ash.Context.to_opts(context, strategy: [:atomic, :stream], notify?: true, return_errors?: true)
+      )
+
+    case result do
       %Ash.BulkResult{status: :success} -> changeset
       %Ash.BulkResult{errors: errors} -> Ash.Changeset.add_error(changeset, errors)
     end

@@ -28,9 +28,7 @@ defmodule Edenflowers.Accounts.Calculations.Initials do
   defp extract(nil), do: nil
 
   defp extract(value) when is_binary(value) do
-    value
-    |> String.trim()
-    |> case do
+    case String.trim(value) do
       "" -> nil
       name -> name |> initials_parts() |> initials()
     end
@@ -47,13 +45,12 @@ defmodule Edenflowers.Accounts.Calculations.Initials do
     parts
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
-    |> case do
-      [] -> nil
-      [single] -> initial(single)
-      [first | rest] -> initial(first) <> initial(List.last(rest))
-    end
-    |> String.upcase()
+    |> initials_of_words()
   end
+
+  defp initials_of_words([]), do: nil
+  defp initials_of_words([single]), do: String.upcase(initial(single))
+  defp initials_of_words([first | rest]), do: String.upcase(initial(first) <> initial(List.last(rest)))
 
   defp initial(value), do: value |> String.first() |> Kernel.||("")
 end

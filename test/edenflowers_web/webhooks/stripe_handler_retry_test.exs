@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Webhooks.StripeHandlerRetryTest do
   # Sync because the tests add a CHECK (false) constraint, and ALTER TABLE locks
   # the table against every other test writing to it.
-  use Edenflowers.DataCase
+  use Edenflowers.DataCase, async: false
 
   import ExUnit.CaptureLog
   import Generator

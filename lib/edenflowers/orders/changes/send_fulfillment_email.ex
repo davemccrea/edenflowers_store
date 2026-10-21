@@ -15,24 +15,29 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmail do
   defp send_email(changeset) do
     order = Ash.load!(changeset.data, [:customer_first_name, :recipient_first_name], authorize?: false)
 
-    with {:ok, email} <- email(order) do
-      case Mailer.deliver(email) do
-        {:ok, _result} ->
-          Logger.info("Sent fulfillment email for order #{order.id}")
+    case email(order) do
+      {:ok, email} ->
+        deliver(changeset, order, email)
 
-          changeset
-          |> Ash.Changeset.force_change_attributes(
-            fulfillment_emailed_at: DateTime.utc_now(),
-            fulfillment_emailed_to: order.customer_email
-          )
-          |> clear_failure()
-
-        {:error, error} ->
-          Ash.Changeset.add_error(changeset, email_error(error))
-      end
-    else
       {:error, error} ->
         Ash.Changeset.add_error(changeset, field: :delivery_photo_slug, message: email_error(error))
+    end
+  end
+
+  defp deliver(changeset, order, email) do
+    case Mailer.deliver(email) do
+      {:ok, _result} ->
+        Logger.info("Sent fulfillment email for order #{order.id}")
+
+        changeset
+        |> Ash.Changeset.force_change_attributes(
+          fulfillment_emailed_at: DateTime.utc_now(),
+          fulfillment_emailed_to: order.customer_email
+        )
+        |> clear_failure()
+
+      {:error, error} ->
+        Ash.Changeset.add_error(changeset, email_error(error))
     end
   end
 

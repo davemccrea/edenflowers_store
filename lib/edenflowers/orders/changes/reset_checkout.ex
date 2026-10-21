@@ -48,15 +48,17 @@ defmodule Edenflowers.Orders.Changes.ResetCheckout do
   end
 
   defp destroy_line_items(_changeset, order) do
-    LineItem
-    |> Ash.Query.filter(order_id == ^order.id)
-    |> Ash.bulk_destroy(:remove_item, %{},
-      strategy: [:atomic, :stream],
-      notify?: true,
-      return_errors?: true,
-      authorize?: false
-    )
-    |> case do
+    result =
+      LineItem
+      |> Ash.Query.filter(order_id == ^order.id)
+      |> Ash.bulk_destroy(:remove_item, %{},
+        strategy: [:atomic, :stream],
+        notify?: true,
+        return_errors?: true,
+        authorize?: false
+      )
+
+    case result do
       %Ash.BulkResult{status: :success} -> {:ok, order}
       %Ash.BulkResult{errors: errors} -> {:error, errors}
     end

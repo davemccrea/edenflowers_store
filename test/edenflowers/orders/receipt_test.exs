@@ -87,7 +87,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
     test "line item totals sum to the subtotal row above them" do
       payload = Receipt.build_payload(build_delivery_order(locale: "en-GB", with_promotion: true))
 
-      assert payload.line_items |> Enum.map(& &1.total) |> Enum.map(&parse_eur/1) |> Enum.sum() ==
+      assert payload.line_items |> Enum.map(&parse_eur(&1.total)) |> Enum.sum() ==
                parse_eur(payload.items_subtotal)
     end
 

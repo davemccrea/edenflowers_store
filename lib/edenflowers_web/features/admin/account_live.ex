@@ -223,9 +223,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   end
 
   defp display_name(user) do
-    user
-    |> Map.get(:name)
-    |> case do
+    case Map.get(user, :name) do
       name when is_binary(name) ->
         name = String.trim(name)
         if name == "", do: user_email(user), else: name
@@ -238,9 +236,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   defp user_email(user), do: user |> Map.get(:email) |> to_string()
 
   defp user_initials(user) do
-    user
-    |> Map.get(:initials)
-    |> case do
+    case Map.get(user, :initials) do
       initials when is_binary(initials) ->
         initials = String.trim(initials)
         if initials == "", do: fallback_initial(user), else: initials

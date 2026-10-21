@@ -44,20 +44,16 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
 
   defp title(version), do: event(version)
 
-  defp event(%{version_action_name: action}) do
-    case action do
-      :activate -> ~t"Started"
-      :send_setup_email -> ~t"Confirmation emailed"
-      :create_occurrence -> ~t"Card refused, held until the payment link is paid"
-      :reactivate -> ~t"Payment received, deliveries restarted"
-      :pause -> ~t"Paused"
-      :resume -> ~t"Resumed"
-      :change -> ~t"Changed"
-      :replace_card -> ~t"Card replaced"
-      :cancel -> pgettext("subscription", "Cancelled")
-      other -> to_string(other)
-    end
-  end
+  defp event(%{version_action_name: :activate}), do: ~t"Started"
+  defp event(%{version_action_name: :send_setup_email}), do: ~t"Confirmation emailed"
+  defp event(%{version_action_name: :create_occurrence}), do: ~t"Card refused, held until the payment link is paid"
+  defp event(%{version_action_name: :reactivate}), do: ~t"Payment received, deliveries restarted"
+  defp event(%{version_action_name: :pause}), do: ~t"Paused"
+  defp event(%{version_action_name: :resume}), do: ~t"Resumed"
+  defp event(%{version_action_name: :change}), do: ~t"Changed"
+  defp event(%{version_action_name: :replace_card}), do: ~t"Card replaced"
+  defp event(%{version_action_name: :cancel}), do: pgettext("subscription", "Cancelled")
+  defp event(%{version_action_name: other}), do: to_string(other)
 
   # A creation's fields are the whole subscription, already on the page.
   defp details(%{version_action_type: :create}, _sizes, _locale), do: []
