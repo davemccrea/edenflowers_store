@@ -682,7 +682,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         }
 
       variant ->
-        %{variant_id: variant.id, name: variant.product.name, image_slug: variant.image_slug, size: variant.size}
+        %{variant_id: variant.id, name: variant.product.name, image_slug: variant.photo_slug, size: variant.size}
     end
   end
 

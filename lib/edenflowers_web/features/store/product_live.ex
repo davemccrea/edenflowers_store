@@ -16,7 +16,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   @impl true
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
     product =
-      case Catalog.get_product_by_id(id, load: [:product_category, :product_variants, :tax_rate]) do
+      case Catalog.get_product_by_id(id, load: [:product_category, :tax_rate, product_variants: [:photo_slug]]) do
         {:ok, product} -> product
         # A malformed id is an invalid-filter error rather than NotFound; both should 404.
         {:error, _} -> raise Ash.Error.Query.NotFound, resource: Edenflowers.Catalog.Product
@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
           <figure class="bg-cream aspect-[4/5] relative overflow-hidden md:col-start-1 md:row-span-2 md:row-start-1">
             <.image
               data-testid="product-image"
-              src={@selected_variant.image_slug}
+              src={@selected_variant.photo_slug}
               alt={"#{@product.name} #{AdminComponents.variant_size_label(@selected_variant.size)}"}
               width={1000}
               height={1250}

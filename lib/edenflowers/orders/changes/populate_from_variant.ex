@@ -14,11 +14,11 @@ defmodule Edenflowers.Orders.Changes.PopulateFromVariant do
 
     with id when not is_nil(id) <- variant_id,
          {:ok, variant} <-
-           Catalog.get_variant_by_id(id, load: [product: [:tax_rate]], authorize?: false) do
+           Catalog.get_variant_by_id(id, load: [:photo_slug, product: [:tax_rate]], authorize?: false) do
       attrs = %{
         product_id: variant.product.id,
         product_name: variant.product.name,
-        product_image_slug: variant.image_slug,
+        product_image_slug: variant.photo_slug,
         unit_price: variant.price,
         tax_rate: variant.product.tax_rate.percentage,
         variant_size: variant.size,

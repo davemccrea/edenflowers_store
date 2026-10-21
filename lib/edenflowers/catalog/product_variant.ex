@@ -81,7 +81,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
                  product.product_category.visibility != :draft
              )
 
-      prepare build(sort: [size: :asc], load: [product: [:tax_rate]])
+      prepare build(sort: [size: :asc], load: [:photo_slug, product: [:tax_rate]])
     end
   end
 
@@ -108,7 +108,8 @@ defmodule Edenflowers.Catalog.ProductVariant do
     uuid_primary_key :id
     attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :size, Edenflowers.Catalog.ProductVariantSize
-    attribute :image_slug, :string, allow_nil?: false
+    # Nil shows the product photo; see `photo_slug`.
+    attribute :image_slug, :string
     # Nil for a size made to order, which never runs out.
     attribute :stock_quantity, :integer, constraints: [min: 0]
     attribute :draft, :boolean, allow_nil?: false, default: true
@@ -116,5 +117,9 @@ defmodule Edenflowers.Catalog.ProductVariant do
 
   relationships do
     belongs_to :product, Edenflowers.Catalog.Product, allow_nil?: false
+  end
+
+  calculations do
+    calculate :photo_slug, :string, expr(image_slug || product.image_slug)
   end
 end
