@@ -61,6 +61,7 @@ defmodule Edenflowers.Catalog.Product do
       accept [
         :name,
         :photo_slugs,
+        :hidden_photo_slugs,
         :description,
         :tax_rate_id,
         :product_category_id,
@@ -76,6 +77,8 @@ defmodule Edenflowers.Catalog.Product do
 
       validate Validations.SizePhotosAreProducts
 
+      change Changes.TidyHiddenPhotos
+
       change manage_relationship(:product_variants,
                type: :direct_control,
                on_no_match: {:create, :create},
@@ -88,6 +91,7 @@ defmodule Edenflowers.Catalog.Product do
       accept [
         :name,
         :photo_slugs,
+        :hidden_photo_slugs,
         :description,
         :tax_rate_id,
         :product_category_id,
@@ -118,6 +122,7 @@ defmodule Edenflowers.Catalog.Product do
                on_missing: {:destroy, :destroy}
              )
 
+      change Changes.TidyHiddenPhotos
       change Changes.ClearRemovedSizePhotos
     end
   end
@@ -142,6 +147,8 @@ defmodule Edenflowers.Catalog.Product do
     attribute :name, :string, allow_nil?: false
     # In display order; the first is the main photo, see `main_photo_slug`.
     attribute :photo_slugs, {:array, :string}, allow_nil?: false, constraints: [min_length: 1, max_length: 8]
+    # Left out of the store's gallery but still pickable by a size. Never the main photo.
+    attribute :hidden_photo_slugs, {:array, :string}, allow_nil?: false, default: []
     attribute :description, :string, allow_nil?: false
     attribute :draft, :boolean, allow_nil?: false, default: true
     attribute :featured, :boolean, allow_nil?: false, default: false

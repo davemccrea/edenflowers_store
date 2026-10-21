@@ -99,11 +99,13 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             <div class="space-y-6">
               <.form_section title={~t"Photos"}>
                 <:description>
-                  {~t"Up to #{count = @max_photos}. The main photo shows in the store's listings."}
+                  {~t"Up to #{count = @max_photos}. The main photo shows in the store's listings. A hidden photo shows only for a size that picks it."}
                 </:description>
                 <.photo_gallery
                   field={@form[:photo_slugs]}
                   photo_slugs={photo_slugs(@form)}
+                  hidden_field={@form[:hidden_photo_slugs]}
+                  hidden={hidden_photo_slugs(@form)}
                   upload={@uploads.photos}
                   max={@max_photos}
                   show_errors={@form.source.submitted_once?}
@@ -192,6 +194,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
   attr :field, Phoenix.HTML.FormField, required: true
   attr :photo_slugs, :list, required: true
+  attr :hidden_field, Phoenix.HTML.FormField, required: true
+  attr :hidden, :list, required: true
   attr :upload, Phoenix.LiveView.UploadConfig, required: true
   attr :max, :integer, required: true
   attr :show_errors, :boolean, required: true
@@ -207,11 +211,20 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
     ~H"""
     <div phx-drop-target={@upload.ref}>
+      <%!-- The blank value lets an empty list through, which sends no inputs otherwise. --%>
+      <input type="hidden" name={@hidden_field.name <> "[]"} value="" />
+      <input :for={slug <- @hidden} type="hidden" name={@hidden_field.name <> "[]"} value={slug} />
       <ul id="product-photos" class="grid grid-cols-3 gap-3 sm:grid-cols-5">
         <li :for={{slug, index} <- Enum.with_index(@photo_slugs)} data-testid="product-photo">
           <input type="hidden" name={@field.name <> "[]"} value={slug} />
           <span class="bg-cream aspect-[4/5] relative block overflow-hidden">
-            <.image src={slug} alt="" width={240} height={300} class="absolute inset-0 h-full w-full object-cover" />
+            <.image
+              src={slug}
+              alt=""
+              width={240}
+              height={300}
+              class={["absolute inset-0 h-full w-full object-cover", index > 0 && slug in @hidden && "opacity-40"]}
+            />
             <.badge
               :if={index == 0}
               tone={:neutral}
@@ -242,6 +255,18 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               class="btn-square absolute top-1.5 right-1.5 max-sm:btn-xs"
             >
               <.icon name="hero-x-mark" class="size-3.5 sm:size-4" />
+            </.button>
+            <.button
+              :if={index > 0}
+              type="button"
+              size="sm"
+              phx-click="toggle_photo_hidden"
+              phx-value-slug={slug}
+              aria-pressed={to_string(slug in @hidden)}
+              aria-label={~t"Hide photo #{n = index + 1} from the store's gallery"}
+              class="btn-square absolute right-1.5 bottom-1.5 max-sm:btn-xs"
+            >
+              <.icon name={if slug in @hidden, do: "hero-eye-slash", else: "hero-eye"} class="size-3.5 sm:size-4" />
             </.button>
           </span>
         </li>
@@ -460,6 +485,14 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   def handle_event("remove_photo", %{"slug" => slug}, socket),
     do: {:noreply, update_photos(socket, &List.delete(&1, slug))}
 
+  def handle_event("toggle_photo_hidden", %{"slug" => slug}, socket) do
+    form = socket.assigns.form
+    hidden = hidden_photo_slugs(form)
+    hidden = if slug in hidden, do: List.delete(hidden, slug), else: hidden ++ [slug]
+    params = form |> AshPhoenix.Form.params() |> Map.put("hidden_photo_slugs", hidden)
+    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
+  end
+
   def handle_event("make_main_photo", %{"slug" => slug}, socket),
     do: {:noreply, update_photos(socket, &[slug | List.delete(&1, slug)])}
 
@@ -547,6 +580,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   end
 
   defp photo_slugs(form), do: form[:photo_slugs].value || []
+
+  defp hidden_photo_slugs(form), do: List.delete(form[:hidden_photo_slugs].value || [], "")
 
   defp photo_upload_error(:too_many_files), do: ~t"Add at most #{count = @max_photos} photos."
   defp photo_upload_error(error), do: PhotoUpload.upload_error_message(error)
