@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             <div class="space-y-6">
               <.form_section title={~t"Photos"}>
                 <:description>
-                  {~t"Shown on the product page. A hidden photo only shows when a customer picks its size."}
+                  {~t"Every photo appears in the product page's thumbnails. Hide one with the eye button and it only appears when a customer picks a size that uses it."}
                 </:description>
                 <.photo_gallery
                   field={@form[:photo_slugs]}
@@ -235,7 +235,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               :if={index == 0}
               role="img"
               aria-label={~t"Main photo"}
-              class="btn btn-primary btn-outline btn-sm btn-square touch-target pointer-events-none absolute top-1.5 left-1.5 max-sm:btn-xs"
+              class="btn btn-primary btn-outline btn-sm btn-square pointer-events-none absolute top-1.5 left-1.5 max-sm:btn-xs"
             >
               <.icon name="hero-star-solid" class="text-primary size-3.5 sm:size-4" />
             </span>
@@ -246,7 +246,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               phx-click="make_main_photo"
               phx-value-slug={slug}
               aria-label={~t"Make photo #{n = index + 1} main"}
-              class="btn-square touch-target absolute top-1.5 left-1.5 max-sm:btn-xs"
+              class="btn-square absolute top-1.5 left-1.5 max-sm:btn-xs"
             >
               <.icon name="hero-star" class="text-primary size-3.5 sm:size-4" />
             </.button>
@@ -258,7 +258,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               phx-click="remove_photo"
               phx-value-slug={slug}
               aria-label={~t"Remove photo #{n = index + 1}"}
-              class="btn-square touch-target absolute top-1.5 right-1.5 max-sm:btn-xs"
+              class="btn-square absolute top-1.5 right-1.5 max-sm:btn-xs"
             >
               <.icon name="hero-x-mark" class="size-3.5 sm:size-4" />
             </.button>
@@ -273,7 +273,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                   do: ~t"Show photo #{n = index + 1} in the store's gallery",
                   else: ~t"Hide photo #{n = index + 1} from the store's gallery"
               }
-              class="btn-square touch-target absolute right-1.5 bottom-1.5 max-sm:btn-xs"
+              class="btn-square absolute right-1.5 bottom-1.5 max-sm:btn-xs"
             >
               <.icon name={if slug in @hidden, do: "hero-eye-slash", else: "hero-eye"} class="size-3.5 sm:size-4" />
             </.button>

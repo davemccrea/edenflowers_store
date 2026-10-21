@@ -99,13 +99,14 @@ body {
 
 /* Touch screens get 44px targets (Apple HIG, WCAG 2.5.5). Pointer-based
    rather than width-based, so a desktop keeps daisyUI's denser sizes and a
-   tablet still gets the larger ones. */
+   tablet still gets the larger ones. Small buttons keep their drawn size and
+   get the 44px as an invisible tap area instead (see touch-target below). */
 @media (pointer: coarse) {
-  :is(.btn, .input, .select, .file-input):not(.touch-target) {
+  :is(.btn:not(.btn-xs, .btn-sm), .input, .select, .file-input) {
     min-height: 2.75rem;
   }
 
-  .btn-square:not(.touch-target) {
+  .btn-square:not(.btn-xs, .btn-sm) {
     min-width: 2.75rem;
   }
 
@@ -130,5 +131,12 @@ body {
       height: max(100%, 2.75rem);
       transform: translate(-50%, -50%);
     }
+  }
+}
+
+/* At base priority so a button placed with absolute keeps its position. */
+@layer base {
+  .btn:is(.btn-xs, .btn-sm) {
+    @apply touch-target;
   }
 }

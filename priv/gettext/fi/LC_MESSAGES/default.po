@@ -7576,5 +7576,5 @@ msgstr "Näytä kuva %{n} kaupan kuvagalleriassa"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:102
 #, elixir-autogen, elixir-format
-msgid "Shown on the product page. A hidden photo only shows when a customer picks its size."
-msgstr "Näkyvät tuotesivulla. Piilotettu kuva näkyy vain, kun asiakas valitsee sen koon."
+msgid "Every photo appears in the product page's thumbnails. Hide one with the eye button and it only appears when a customer picks a size that uses it."
+msgstr "Kaikki kuvat näkyvät tuotesivun pikkukuvissa. Piilota kuva silmäpainikkeella, niin se näkyy vain, kun asiakas valitsee koon, jolla on tämä kuva."
