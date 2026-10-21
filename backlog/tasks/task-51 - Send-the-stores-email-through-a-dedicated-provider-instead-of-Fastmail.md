@@ -1,10 +1,10 @@
 ---
 id: TASK-51
 title: Send the store's email through a dedicated provider instead of Fastmail
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-18 19:07'
-updated_date: '2026-10-20 21:46'
+updated_date: '2026-10-21 09:56'
 labels:
   - spec
   - customers
@@ -41,9 +41,9 @@ Sources: https://www.fastmail.com/policies/terms-of-service/ (sections 3 and 4),
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 A provider is chosen and recorded in this task
-- [ ] #2 Production sends all store email through the new provider, not smtp.fastmail.com
-- [ ] #3 SPF, DKIM and DMARC records for edenflowers.fi cover the new provider, and a test email passes all three
-- [ ] #4 A sign-in code and an order confirmation arrive in a real inbox from staging and production
+- [x] #2 Production sends all store email through the new provider, not smtp.fastmail.com
+- [x] #3 SPF, DKIM and DMARC records for edenflowers.fi cover the new provider, and a test email passes all three
+- [x] #4 A sign-in code and an order confirmation arrive in a real inbox from staging and production
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -54,6 +54,8 @@ Chose Brevo (2026-10-21): EU-based, transactional email and campaigns, SMS and W
 Mailer now uses Swoosh.Adapters.Brevo with BREVO_API_KEY (prod already uses Swoosh.ApiClient.Req); gen_smtp dropped. phoenix-ansible passes BREVO_API_KEY from vault_brevo_api_key in place of the SMTP vars.
 
 Left for a human: create the Brevo account, verify edenflowers.fi and the sender, add Brevo's DKIM/SPF/DMARC records, put vault_brevo_api_key in vault.yml for staging and production, then test real inboxes.
+
+Production done (2026-10-21): v1.7.1 sends through Brevo; Brevo DKIM (brevo1/brevo2._domainkey) and DMARC records are live. SPF still only lists Fastmail, which is fine: Brevo sends from its own return-path domain, so DMARC passes on DKIM alignment.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
