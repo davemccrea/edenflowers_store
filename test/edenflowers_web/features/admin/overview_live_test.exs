@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
   import Generator
 
   alias AshAuthentication.Plug.Helpers
+  alias Edenflowers.Fulfillment.Weekday
 
   test "renders the current admin account menu using the first-name calculation", %{conn: conn} do
     admin = generate(admin_user(name: "Jane Doe", email: "jane@example.com")) |> with_token()
@@ -91,7 +92,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       in_five_days = Date.add(Edenflowers.ShopTime.today(), 5)
 
       shop_calendar(
-        available_days: Edenflowers.Fulfillment.Weekday.all(),
+        available_days: Weekday.all(),
         disabled_dates: [in_four_days, in_five_days]
       )
 
@@ -135,7 +136,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       today = Edenflowers.ShopTime.today()
 
       shop_calendar(
-        available_days: Edenflowers.Fulfillment.Weekday.all(),
+        available_days: Weekday.all(),
         same_day: true,
         order_deadline: ~T[23:59:59],
         disabled_dates: [],
