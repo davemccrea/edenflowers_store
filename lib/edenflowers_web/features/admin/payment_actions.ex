@@ -32,8 +32,15 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
 
   def undo_payment(payable, payment_id, actor) do
     case Ash.update(payable, %{payment_id: payment_id}, action: :undo_payment, actor: actor) do
-      {:ok, _payable} -> {:info, ~t"Payment undone."}
-      {:error, _error} -> {:error, ~t"Could not undo the payment."}
+      {:ok, _payable} ->
+        {:info, ~t"Payment undone."}
+
+      {:error, error} ->
+        Logger.error(
+          "Payment #{payment_id} on #{inspect(payable.__struct__)} #{payable.id} not undone: #{inspect(error)}"
+        )
+
+        {:error, ~t"Could not undo the payment."}
     end
   end
 
@@ -85,15 +92,23 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
 
   def open_payment_link(payable, actor) do
     case Ash.update(payable, %{}, action: :open_payment_link, actor: actor) do
-      {:ok, _payable} -> {:info, ~t"Payment link created."}
-      {:error, _error} -> {:error, ~t"Could not create a payment link."}
+      {:ok, _payable} ->
+        {:info, ~t"Payment link created."}
+
+      {:error, error} ->
+        Logger.error("Payment link for #{inspect(payable.__struct__)} #{payable.id} not created: #{inspect(error)}")
+        {:error, ~t"Could not create a payment link."}
     end
   end
 
   def email_payment_link(payable, actor) do
     case send_payment_link(payable, actor) do
-      {:ok, _payable} -> {:info, ~t"Payment link emailed."}
-      {:error, _error} -> {:error, ~t"Could not email the payment link."}
+      {:ok, _payable} ->
+        {:info, ~t"Payment link emailed."}
+
+      {:error, error} ->
+        Logger.error("Payment link for #{inspect(payable.__struct__)} #{payable.id} not emailed: #{inspect(error)}")
+        {:error, ~t"Could not email the payment link."}
     end
   end
 

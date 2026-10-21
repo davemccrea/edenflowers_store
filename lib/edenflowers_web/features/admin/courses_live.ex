@@ -257,8 +257,12 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   defp email_confirmation(registration, actor) do
     case Courses.email_registration_confirmation(registration, actor: actor) do
-      {:ok, _registration} -> {:info, ~t"Confirmation emailed."}
-      {:error, _error} -> {:error, ~t"Could not email the confirmation."}
+      {:ok, _registration} ->
+        {:info, ~t"Confirmation emailed."}
+
+      {:error, error} ->
+        Logger.error("Confirmation for course registration #{registration.id} not emailed: #{inspect(error)}")
+        {:error, ~t"Could not email the confirmation."}
     end
   end
 
