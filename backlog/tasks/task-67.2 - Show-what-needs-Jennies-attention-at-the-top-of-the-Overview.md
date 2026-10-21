@@ -4,7 +4,7 @@ title: Show what needs Jennie's attention at the top of the Overview
 status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-21 21:07'
+updated_date: '2026-10-20 07:11'
 labels: []
 dependencies:
   - TASK-67.1
@@ -47,16 +47,3 @@ A Needs attention strip at the top of the Overview, hidden when empty. One colla
 <!-- SECTION:NOTES:BEGIN -->
 Remove the Overdue groups from the Today widget (the overdue: attr on day_widget) when the strip lands.
 <!-- SECTION:NOTES:END -->
-
-## Comments
-
-<!-- COMMENTS:BEGIN -->
-author: @codex
-created: 2026-10-21 21:07
-
----
-
-Commit 2e39dabd (2026-10-22): when the attention strip is empty, Overview now shows an all-clear status message: “Nothing needs attention right now.”
-
----
-<!-- COMMENTS:END -->

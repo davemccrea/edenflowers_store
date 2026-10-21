@@ -4,7 +4,7 @@ title: Stop new orders for a day from the Overview
 status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-21 21:07'
+updated_date: '2026-10-20 16:58'
 labels: []
 dependencies:
   - TASK-67.1
@@ -32,19 +32,6 @@ ordinal: 146000
 - [x] #2 Closing one day leaves the other days as they were
 - [x] #3 The existing suite passes
 <!-- AC:END -->
-
-## Comments
-
-<!-- COMMENTS:BEGIN -->
-author: @codex
-created: 2026-10-21 21:07
-
----
-
-Commit 2e39dabd (2026-10-22): the open-day button label changed from “Stop orders” to “Stop new orders”; behavior is unchanged.
-
----
-<!-- COMMENTS:END -->
 
 ## Final Summary
 

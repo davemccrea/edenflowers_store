@@ -1,10 +1,10 @@
 ---
 id: TASK-67
 title: Rebuild the admin Overview around today and tomorrow
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-21 21:07'
+updated_date: '2026-10-21 12:33'
 labels:
   - spec
   - admin
@@ -35,16 +35,3 @@ The Overview answers what Jennie needs right now: what's wrong, what to make tod
 <!-- SECTION:NOTES:BEGIN -->
 To collect left the Overview (2026-10-20): what's owed but not overdue needs no action, and today's and tomorrow's rows already badge unpaid orders. This month shows the total still owed on orders as one line instead.
 <!-- SECTION:NOTES:END -->
-
-## Comments
-
-<!-- COMMENTS:BEGIN -->
-author: @codex
-created: 2026-10-21 21:07
-
----
-
-Reopened after the 2026-10-22 commit audit: TASK-67.4 and TASK-67.6 remain ready-for-agent, so the parent is not complete.
-
----
-<!-- COMMENTS:END -->
