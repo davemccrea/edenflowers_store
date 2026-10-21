@@ -17,3 +17,7 @@ locales = "bash -c 'source .env && mix localize.download_locales'"
 # Create, migrate, and seed a per-worktree database
 [[pre-start]]
 db = "bash -c 'source .env && (mix ecto.drop --quiet 2>/dev/null; true) && mix ash.setup --quiet && mix run priv/repo/seeds.exs'"
+
+# Drop this worktree's database
+[[pre-remove]]
+db = "bash -c 'source .env && mix ecto.drop --quiet'"
