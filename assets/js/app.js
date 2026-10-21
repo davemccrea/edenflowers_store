@@ -360,7 +360,10 @@ window.addEventListener("drawer:close", (event) => closeDrawer(event.target));
 
 // Expand/collapse-all buttons dispatch these to each <details>.
 window.addEventListener("details:open", (event) => (event.target.open = true));
-window.addEventListener("details:close", (event) => (event.target.open = false));
+window.addEventListener(
+  "details:close",
+  (event) => (event.target.open = false),
+);
 
 document.addEventListener(
   "cancel",
