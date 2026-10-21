@@ -10,6 +10,9 @@ config :edenflowers, Oban,
   repo: Edenflowers.Repo,
   plugins: [
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
+    # A job killed mid-run stays `executing`, and AshOban's uniqueness then
+    # blocks that record's trigger for good. Rescued after an hour.
+    Oban.Plugins.Lifeline,
     {Oban.Plugins.Cron, crontab: [{"0 3 * * *", Edenflowers.Accounts.Workers.SyncNewsletterList}]}
   ]
 
