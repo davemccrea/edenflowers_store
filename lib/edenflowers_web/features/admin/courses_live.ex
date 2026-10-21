@@ -411,7 +411,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   href={fastmail_compose(to: registration.email)}
                   target="_blank"
                   rel="noopener"
-                  class="text-base-content/65 block truncate text-sm pointer-coarse:py-3 hover:underline"
+                  class="text-base-content/65 block w-fit truncate text-sm pointer-coarse:py-3 hover:underline"
                 >
                   {registration.email}
                 </a>
