@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.CardDrawer do
                 <.icon name="hero-check-mini" class="h-3.5 w-3.5" />
               </span>
               <.image
-                src={variant.image_slug}
+                src={variant.photo_slug}
                 alt=""
                 width={240}
                 height={240}

@@ -27,9 +27,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          |> assign(:categories, Ash.read!(ProductCategory, actor: actor))
          |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
          |> assign(:free_dist_km, Edenflowers.Fulfillment.free_dist_km())
-         |> assign(:form, form)
-         |> assign(:translating, nil)
-         |> PhotoUpload.allow(photo_fields(form))}
+         |> assign_form(form)
+         |> assign(:translating, nil)}
 
       :error ->
         {:ok,
@@ -82,12 +81,13 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             </.form_section>
 
             <.form_section title={~t"Sizes and prices"}>
-              <:description>{~t"A new size without a photo gets the product photo."}</:description>
+              <:description>{~t"A size without its own photo shows the product photo."}</:description>
               <ul class="border-base-content/12 divide-base-content/8 divide-y border">
                 <.inputs_for :let={variant} field={@form[:product_variants]}>
                   <li class="flex gap-4 p-4">
                     <.photo_input
                       field={variant[:image_slug]}
+                      fallback={@form[:image_slug].value}
                       uploads={@uploads}
                       label={~t"Photo"}
                       size="sm"
@@ -230,12 +230,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
   @impl true
   def handle_event("validate", %{"form" => params}, socket) do
-    params =
-      params
-      |> PhotoUpload.merge_slugs(socket, photo_fields(socket.assigns.form))
-      |> default_size_photos(socket.assigns.form)
+    params = PhotoUpload.merge_slugs(params, socket, photo_fields(socket.assigns.form))
 
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
+    {:noreply, assign_form(socket, AshPhoenix.Form.validate(socket.assigns.form, params))}
   end
 
   # Fills each size's stock with 0; nothing is saved until Jennie saves.
@@ -250,12 +247,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       end
 
     params = Map.put(params, "product_variants", Map.merge(params["product_variants"] || %{}, sizes))
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
+    {:noreply, assign_form(socket, AshPhoenix.Form.validate(form, params))}
   end
 
   def handle_event("add_variant", _params, socket) do
-    socket = update(socket, :form, &AshPhoenix.Form.add_form(&1, "form[product_variants]"))
-    {:noreply, PhotoUpload.allow(socket, photo_fields(socket.assigns.form))}
+    {:noreply, assign_form(socket, AshPhoenix.Form.add_form(socket.assigns.form, "form[product_variants]"))}
   end
 
   # Removing a size renumbers the ones after it, so pending size photos would
@@ -271,7 +267,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   def handle_event("save", %{"form" => params}, socket) do
     names = photo_fields(socket.assigns.form)
     socket = PhotoUpload.store_uploads(socket, names)
-    params = params |> PhotoUpload.merge_slugs(socket, names) |> default_size_photos(socket.assigns.form)
+    params = PhotoUpload.merge_slugs(params, socket, names)
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, _product} ->
@@ -283,7 +279,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       {:error, form} ->
         {:noreply,
          socket
-         |> assign(:form, form)
+         |> assign_form(form)
          |> put_flash(:error, ~t"The product wasn't saved. Check the fields marked below.")}
     end
   end
@@ -312,29 +308,13 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     {:ok, ~t"New product", to_form(form)}
   end
 
-  # A new size without its own photo shows the product's. Saved sizes are left
-  # alone: they already have a photo, and it may differ on purpose.
-  defp default_size_photos(params, form) do
-    product_photo = params["image_slug"] || (form.source.data && form.source.data.image_slug)
-
-    new_sizes =
-      for size <- form.source.forms[:product_variants] || [], size.type == :create do
-        size.name |> String.split(["[", "]"], trim: true) |> List.last()
-      end
-
-    case params do
-      %{"product_variants" => sizes} when is_binary(product_photo) ->
-        sizes = Map.new(sizes, fn {key, size} -> {key, size_photo(size, key in new_sizes, product_photo)} end)
-
-        Map.put(params, "product_variants", sizes)
-
-      _ ->
-        params
-    end
+  # Validating can add sizes too, when the params name an index the form
+  # doesn't have yet, so every form change allows uploads for its sizes.
+  defp assign_form(socket, form) do
+    socket
+    |> assign(:form, form)
+    |> PhotoUpload.allow(photo_fields(form))
   end
-
-  defp size_photo(size, true = _new?, product_photo), do: Map.put_new(size, "image_slug", product_photo)
-  defp size_photo(size, false = _new?, _product_photo), do: size
 
   defp photo_fields(form), do: ["form[image_slug]" | variant_photo_fields(form)]
 

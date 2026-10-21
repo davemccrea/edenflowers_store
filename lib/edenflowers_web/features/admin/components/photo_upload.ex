@@ -120,6 +120,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
   attr :field, Phoenix.HTML.FormField, required: true
   attr :uploads, :map, required: true
   attr :label, :string, required: true
+  attr :fallback, :string, default: nil, doc: "photo shown while the field has none of its own"
   attr :show_errors, :boolean, default: false
   attr :size, :string, default: "lg", values: ~w(lg sm), doc: "`sm` is a thumbnail for list rows"
 
@@ -134,7 +135,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
     assigns =
       assigns
       |> assign(:upload, upload)
-      |> assign(:photo, if(is_binary(assigns.field.value) and assigns.field.value != "", do: assigns.field.value))
+      |> assign(:photo, present(assigns.field.value) || present(assigns.fallback))
       |> assign(:upload_errors, Enum.flat_map(upload.entries, &upload_errors(upload, &1)))
       |> assign(:errors, if(assigns.show_errors, do: assigns.field.errors, else: []))
 
@@ -186,6 +187,9 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
     </div>
     """
   end
+
+  defp present(value) when is_binary(value) and value != "", do: value
+  defp present(_value), do: nil
 
   defp upload_error_message(:too_large), do: ~t"The photo must be under 40 MB."
   defp upload_error_message(:not_accepted), do: ~t"Use a JPG, PNG or WebP photo."

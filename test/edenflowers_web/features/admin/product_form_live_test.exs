@@ -95,6 +95,19 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert Ash.get!(Product, product.id, authorize?: false).name == "Christmas wreath"
   end
 
+  test "a size that only arrives in the submitted params gets a photo picker", %{conn: conn} do
+    product = generate(product())
+    generate(product_variant(product_id: product.id))
+    generate(product_variant(product_id: product.id))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+
+    sizes = Map.new(~w(0 1 2), &{&1, %{"price" => "30"}})
+    render_change(view, "validate", %{"form" => %{"product_variants" => sizes}})
+
+    assert has_element?(view, "input[name='photo_form[product_variants][2][image_slug]']")
+  end
+
   test "keeps uploaded photos when the first save fails validation", %{conn: conn} do
     category = generate(product_category())
     tax_rate = generate(tax_rate())
@@ -123,7 +136,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert [%{image_slug: "local:///uploads/rose-" <> _}] = product.product_variants
   end
 
-  test "a new size without its own photo uses the product photo", %{conn: conn} do
+  test "a size without its own photo shows the product photo", %{conn: conn} do
     category = generate(product_category())
     tax_rate = generate(tax_rate())
 
@@ -143,8 +156,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     )
     |> render_submit()
 
-    [product] = Ash.read!(Product, authorize?: false, load: [:product_variants])
-    assert [%{image_slug: slug}] = product.product_variants
+    [product] = Ash.read!(Product, authorize?: false, load: [product_variants: [:photo_slug]])
+    assert [%{image_slug: nil, photo_slug: slug}] = product.product_variants
     assert slug == product.image_slug
   end
 
