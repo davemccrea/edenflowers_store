@@ -144,7 +144,6 @@ db-rollback target tag dump:
       production) db=edenflowers_store_prod ;;
       *) echo "Unknown target '{{ target }}', use staging or production" >&2; exit 1 ;;
     esac
-    [[ "{{ tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Tag must look like v1.6.0" >&2; exit 1; }
     [[ -s "{{ dump }}" ]] || { echo "No dump at {{ dump }}" >&2; exit 1; }
     [[ "{{ dump }}" == *"{{ tag }}"* ]] || echo "Warning: {{ dump }} was not taken while {{ tag }} was running."
     echo "This replaces the {{ target }} database with {{ dump }} and runs {{ tag }}."

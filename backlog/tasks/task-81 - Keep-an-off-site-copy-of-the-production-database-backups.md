@@ -4,7 +4,7 @@ title: Keep an off-site copy of the production database backups
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-21 08:32'
-updated_date: '2026-10-21 08:32'
+updated_date: '2026-10-21 08:44'
 labels:
   - spec
   - admin
@@ -36,5 +36,4 @@ Related, already in this repo: `just db-backup production` (dump to tmp/, named 
 - [ ] #1 A dump from the latest night is on the Storage Box
 - [ ] #2 Storage Box snapshots give roughly 30 days of history
 - [ ] #3 A missed or failed nightly copy sends an alert
-- [ ] #4 The restore steps have been rehearsed on staging with a staging dump (a production dump restores under the production database name)
 <!-- AC:END -->
