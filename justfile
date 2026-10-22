@@ -107,7 +107,7 @@ db-backup target:
       *) echo "Unknown target '{{ target }}', use production" >&2; exit 1 ;;
     esac
     # `bin/edenflowers version` prints "edenflowers 1.7.0"
-    version=$(ssh edenflowers-{{ target }} "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers version" | awk '{print "v"$2}') || version=unknown
+    version=$(ssh edenflowers-{{ target }} "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers version" | awk '{sub(/\r$/, ""); print "v"$2}') || version=unknown
     mkdir -p tmp
     file="tmp/{{ target }}-$version-$(date +%Y%m%dT%H%M%S).dump"
     ssh edenflowers-{{ target }} "sudo -u postgres pg_dump -Fc $db" > "$file.partial"
