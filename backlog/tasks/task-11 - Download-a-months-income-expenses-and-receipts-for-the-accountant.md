@@ -1,10 +1,10 @@
 ---
 id: TASK-11
 title: 'Download a month''s income, expenses and receipts for the accountant'
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-17 00:38'
-updated_date: '2026-10-19 13:52'
+updated_date: '2026-10-22 04:37'
 labels:
   - spec
   - admin
