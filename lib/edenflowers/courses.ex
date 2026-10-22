@@ -31,6 +31,7 @@ defmodule Edenflowers.Courses do
       define :undo_registration_payment, action: :undo_payment, args: [:payment_id]
       define :remove_registration_seat, action: :remove_seat
       define :cancel_registration, action: :cancel
+      define :release_registration_hold, action: :release_hold
     end
   end
 end

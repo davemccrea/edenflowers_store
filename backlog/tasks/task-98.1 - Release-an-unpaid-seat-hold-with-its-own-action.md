@@ -1,9 +1,10 @@
 ---
 id: TASK-98.1
 title: Release an unpaid seat hold with its own action
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-22 19:47'
+updated_date: '2026-10-22 19:50'
 labels: []
 dependencies: []
 parent_task_id: TASK-98
@@ -21,6 +22,6 @@ Add `CourseRegistration :release_hold`, pending only, used by the system actor w
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Seat holds are released through :release_hold, only on pending bookings
-- [ ] #2 SendCancelledEmail no longer skips unconfirmed bookings
+- [x] #1 Seat holds are released through :release_hold, only on pending bookings
+- [x] #2 SendCancelledEmail no longer skips unconfirmed bookings
 <!-- AC:END -->

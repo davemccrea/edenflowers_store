@@ -197,10 +197,19 @@ defmodule Edenflowers.Courses.CourseRegistration do
              )
     end
 
+    # Frees the seats of a booking the customer never paid for, when they
+    # change it or their payment fails. Nothing was paid, so nobody is told.
+    update :release_hold do
+      validate attribute_equals(:status, :pending), message: "is no longer a hold"
+      change filter expr(status == :pending)
+      change set_attribute(:status, :cancelled)
+      change PaymentChanges.CancelOpenPaymentIntent
+      require_atomic? false
+    end
+
     # Frees the seats and refunds everything paid apart from `kept_amount`:
     # card payments through Stripe, and anything paid in person is left as a
-    # balance for Jennie to hand back. Also releases a hold the customer never
-    # paid for.
+    # balance for Jennie to hand back.
     update :cancel do
       accept [:kept_amount, :cancellation_reason]
       argument :email_customer?, :boolean, default: true
@@ -240,7 +249,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :record_stripe_refund,
                      :send_confirmation_email,
                      :reconcile_payment,
-                     :cancel
+                     :release_hold
                    ])
 
       authorize_if action_type(:read)

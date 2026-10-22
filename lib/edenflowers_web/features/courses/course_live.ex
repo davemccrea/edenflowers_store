@@ -293,8 +293,9 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   defp release_hold(%{assigns: %{registration: nil}} = socket), do: socket
 
+  # A hold paid for meanwhile is a booking now, so it stays.
   defp release_hold(socket) do
-    Courses.cancel_registration!(socket.assigns.registration, actor: system_actor())
+    Courses.release_registration_hold(socket.assigns.registration, actor: system_actor())
     assign(socket, registration: nil, client_secret: nil)
   end
 
