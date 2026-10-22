@@ -62,7 +62,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
   end
 
   defp open(conn, :booking, registration) do
-    {:ok, view, _html} = live(conn, ~p"/admin/courses")
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
     settle = "#settle-#{registration.id}"
     if has_element?(view, settle), do: view |> element(settle) |> render_click()
     {view, "#registration-#{registration.id}"}

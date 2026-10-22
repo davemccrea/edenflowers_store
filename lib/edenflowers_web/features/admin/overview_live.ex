@@ -205,7 +205,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           kind: :booking,
           amount: registration.balance,
           overdue?: registration.payment_overdue?,
-          href: ~p"/admin/courses?#{[booking: registration.id]}" <> "#registration-#{registration.id}"
+          href:
+            ~p"/admin/courses/#{registration.course_id}?#{[booking: registration.id]}" <>
+              "#registration-#{registration.id}"
         }
       end
 

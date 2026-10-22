@@ -11,7 +11,6 @@ defmodule Edenflowers.Courses do
     resource Edenflowers.Courses.Course do
       define :get_course_by_id, action: :read, get_by: [:id]
       define :list_upcoming_courses, action: :upcoming
-      define :list_admin_courses, action: :admin_list
     end
 
     resource Edenflowers.Courses.CourseRegistration do

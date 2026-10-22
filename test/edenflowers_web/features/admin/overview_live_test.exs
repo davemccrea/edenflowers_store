@@ -315,7 +315,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       assert has_element?(
                view,
-               ~s|#attention-refund a[href="/admin/courses?booking=#{registration.id}#registration-#{registration.id}"]|,
+               ~s|#attention-refund a[href="/admin/courses/#{registration.course_id}?booking=#{registration.id}#registration-#{registration.id}"]|,
                "Autumn wreaths"
              )
 

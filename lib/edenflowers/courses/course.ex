@@ -48,14 +48,9 @@ defmodule Edenflowers.Courses.Course do
       prepare build(default_sort: [date: :asc, start_time: :asc])
     end
 
-    # The upcoming courses, and past ones until every booking on them is settled.
     read :admin_list do
-      filter expr(
-               date >= helsinki_today() or
-                 exists(bookings, committed? and not settled?)
-             )
-
-      prepare build(default_sort: [date: :asc, start_time: :asc])
+      pagination offset?: true, countable: true, required?: false
+      prepare build(default_sort: [date: :asc, start_time: :asc], load: [:seats_booked, :to_settle?])
     end
   end
 
@@ -118,6 +113,14 @@ defmodule Edenflowers.Courses.Course do
                 register_before >= helsinki_today() and
                   seats_left > 0
               )
+
+    calculate :to_settle?, :boolean, expr(exists(bookings, committed? and not settled?))
+
+    # A past course stays current until every booking on it is settled.
+    calculate :period,
+              :atom,
+              expr(if date >= helsinki_today() or to_settle?, do: :current, else: :past),
+              constraints: [one_of: [:current, :past]]
   end
 
   aggregates do
@@ -127,6 +130,12 @@ defmodule Edenflowers.Courses.Course do
       filter expr(holds_seats?)
       default 0
       authorize? false
+    end
+
+    # Leaves out holds still at checkout, so the admin counts only who is coming.
+    sum :seats_booked, :course_registrations, :seats_held do
+      filter expr(status == :confirmed)
+      default 0
     end
   end
 end

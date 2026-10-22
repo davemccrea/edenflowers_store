@@ -137,7 +137,8 @@ defmodule EdenflowersWeb.Router do
       live "/fulfillments/:id", EdenflowersWeb.Admin.FulfillmentsLive, :edit
       live "/courses", EdenflowersWeb.Admin.CoursesLive
       live "/courses/new", EdenflowersWeb.Admin.CourseFormLive
-      live "/courses/:id", EdenflowersWeb.Admin.CourseFormLive
+      live "/courses/:id", EdenflowersWeb.Admin.CourseDetailLive
+      live "/courses/:id/edit", EdenflowersWeb.Admin.CourseFormLive
       live "/products", EdenflowersWeb.Admin.ProductsLive
       live "/products/new", EdenflowersWeb.Admin.ProductFormLive
       live "/products/:id", EdenflowersWeb.Admin.ProductFormLive
