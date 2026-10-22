@@ -125,12 +125,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           order={@order}
           uploads={@uploads}
         />
-        <.cancel_order
+        <.cancel_drawer
           :if={@order.fulfillment_status == :pending}
+          title={~t"Cancel order"}
+          submit_label={~t"Cancel order"}
+          keep_label={~t"Keep order"}
           form={@cancel_form}
           error={@cancel_error}
           held={@cancel_held}
-          order={@order}
+          email={@order.customer_email}
           locale={@locale}
         />
         <.settlement_drawer
@@ -507,66 +510,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   attr :form, :any, default: nil
   attr :error, :string, default: nil
-  attr :held, :any, default: nil
-  attr :order, Order, required: true
-  attr :locale, :string, required: true
-
-  defp cancel_order(assigns) do
-    ~H"""
-    <.admin_drawer id="cancel-order" title={~t"Cancel order"} on_close={JS.push("close_cancel")}>
-      <.form
-        :if={@form}
-        for={@form}
-        id="cancel-order-form"
-        phx-change="validate_cancel"
-        phx-submit="cancel_order"
-        class="flex min-h-0 flex-1 flex-col"
-      >
-        <.drawer_body>
-          <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
-          <div :if={Decimal.positive?(@held)} class="space-y-2">
-            <.input
-              field={@form[:refund]}
-              type="text"
-              inputmode="decimal"
-              label={~t"Amount to refund (€)"}
-              class="input w-full tabular-nums"
-            />
-            <p class="text-base-content/75 text-sm">
-              {~t"Paid #{amount = Format.currency(@held, @locale)}. Card payments go back through Stripe; anything paid in person you hand back yourself. Whatever you don't refund you keep."}
-            </p>
-          </div>
-          <.input
-            field={@form[:reason]}
-            type="textarea"
-            rows="3"
-            label={~t"Reason (optional)"}
-            placeholder={~t"Shown in the customer's email and the order's history."}
-            class="textarea w-full"
-          />
-          <div :if={@order.customer_email} class="space-y-2">
-            <.input field={@form[:email_customer]} type="checkbox" label={~t"Email the customer"} />
-            <p class="text-base-content/75 ml-7 break-all text-sm">{~t"To: #{email = @order.customer_email}"}</p>
-          </div>
-          <p :if={!@order.customer_email} class="text-base-content/75 text-sm">
-            {~t"This order has no email address, so the customer won't be emailed."}
-          </p>
-        </.drawer_body>
-        <.drawer_footer>
-          <.button type="submit" variant="destructive" phx-disable-with={~t"Cancelling…"}>{~t"Cancel order"}</.button>
-          <.button
-            type="button"
-            phx-click={JS.exec("phx-hide", to: "#cancel-order") |> JS.push("close_cancel")}
-            variant="ghost"
-          >{~t"Keep order"}</.button>
-        </.drawer_footer>
-      </.form>
-    </.admin_drawer>
-    """
-  end
-
-  attr :form, :any, default: nil
-  attr :error, :string, default: nil
   attr :order, Order, required: true
   attr :uploads, :map, required: true
 
@@ -732,7 +675,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply,
      socket
      |> assign(cancel_form: to_form(params, as: :cancel), cancel_error: nil, cancel_held: order.amount_held)
-     |> push_event("js-exec", %{to: "#cancel-order", attr: "phx-show"})}
+     |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
 
   def handle_event("close_cancel", _params, socket) do
@@ -743,10 +686,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, assign(socket, :cancel_form, to_form(params, as: :cancel))}
   end
 
-  def handle_event("cancel_order", %{"cancel" => params}, socket) do
+  def handle_event("submit_cancel", %{"cancel" => params}, socket) do
     socket = assign(socket, :cancel_form, to_form(params, as: :cancel))
 
-    case kept_amount(socket.assigns.cancel_held, params["refund"]) do
+    case PaymentActions.kept_amount(socket.assigns.cancel_held, params["refund"]) do
       {:ok, kept} ->
         input = %{
           kept_amount: kept,
@@ -912,18 +855,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp email_by_default(_order, "false"), do: "true"
   defp email_by_default(_order, _customer_home), do: "false"
 
-  defp kept_amount(held, nil), do: {:ok, held}
-
-  defp kept_amount(held, refund) do
-    case refund |> String.trim() |> String.replace(",", ".") |> Decimal.parse() do
-      {refund, ""} ->
-        if Decimal.negative?(refund) or Decimal.gt?(refund, held), do: :error, else: {:ok, Decimal.sub(held, refund)}
-
-      _invalid ->
-        :error
-    end
-  end
-
   defp cancel_order(socket, input) do
     case Orders.cancel_order(socket.assigns.order, input, actor: socket.assigns.current_user) do
       {:ok, order} ->
@@ -931,7 +862,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          socket
          |> assign_order(reload(order, socket))
          |> assign(cancel_form: nil, cancel_error: nil)
-         |> push_event("js-exec", %{to: "#cancel-order", attr: "phx-hide"})
+         |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
          |> put_flash(:info, ~t"Order cancelled.")}
 
       {:error, error} ->
@@ -945,7 +876,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
              socket
              |> assign_order(order)
              |> assign(cancel_form: nil, cancel_error: nil)
-             |> push_event("js-exec", %{to: "#cancel-order", attr: "phx-hide"})
+             |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
              |> put_flash(:error, ~t"This order changed while you had it open, so it wasn't cancelled.")}
         end
     end

@@ -31,6 +31,7 @@ defmodule Edenflowers.Email.Previews do
         order_cancelled(locale) ++
         course_confirmation(locale) ++
         course_payment_link(locale) ++
+        booking_cancelled(locale) ++
         wedding_enquiry(locale) ++
         account_and_newsletter(locale)
     end)
@@ -323,6 +324,39 @@ defmodule Edenflowers.Email.Previews do
     end
   end
 
+  defp booking_cancelled(locale) do
+    card = %{
+      amount: Decimal.new("45.00"),
+      method: :stripe,
+      payment_method_type: "card",
+      card_brand: "visa",
+      card_last4: "4242"
+    }
+
+    cash = %{amount: Decimal.new("45.00"), method: :cash, payment_method_type: nil, card_brand: nil, card_last4: nil}
+
+    for {title, attrs, money} <- [
+          {gettext_noop("refunded to a card"), %{payments: [card]},
+           %{refunded: Decimal.new("45.00"), to_return: Decimal.new(0)}},
+          {gettext_noop("with a reason, paid in cash"),
+           %{payments: [cash], cancellation_reason: course_cancellation_reason(locale)},
+           %{refunded: Decimal.new(0), to_return: Decimal.new("45.00")}},
+          {gettext_noop("nothing paid, no first name"), %{first_name: nil, payments: []},
+           %{refunded: Decimal.new(0), to_return: Decimal.new(0)}}
+        ] do
+      {gettext_noop("Booking cancelled"), title, :booking_cancelled,
+       Email.booking_cancelled(registration(attrs, locale), money)}
+    end
+  end
+
+  defp course_cancellation_reason(locale) do
+    cond do
+      String.starts_with?(locale, "fi") -> "Olen pahoillani, mutta olen sairastunut ja joudun perumaan kurssin."
+      String.starts_with?(locale, "sv") -> "Jag är ledsen, men jag har blivit sjuk och måste ställa in kursen."
+      true -> "I'm so sorry, but I'm ill and have to cancel the course."
+    end
+  end
+
   defp wedding_enquiry(locale) do
     {selection, message} =
       cond do
@@ -481,7 +515,8 @@ defmodule Edenflowers.Email.Previews do
       locale: locale,
       seats: 1,
       balance: Decimal.new("45.00"),
-      amount_paid: Decimal.new(0)
+      amount_paid: Decimal.new(0),
+      cancellation_reason: nil
     }
     |> Map.merge(Map.delete(attrs, :course))
     |> Map.put(:course, course)

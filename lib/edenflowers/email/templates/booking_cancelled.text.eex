@@ -1,0 +1,15 @@
+<%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("Your booking on %{course} on %{date} is cancelled.", course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
+
+<%= if @registration.cancellation_reason do %><%= @registration.cancellation_reason %>
+
+<% end %><%= if Decimal.positive?(@refunded) do %><%= case @refunded_to do %><% {:card, brand, last4} -> %><%= gettext("I've refunded %{amount} to your %{brand} card ending in %{last4}.", amount: @format_currency.(@refunded), brand: brand, last4: last4) %><% :mobilepay -> %><%= gettext("I've refunded %{amount} to your MobilePay.", amount: @format_currency.(@refunded)) %><% :unknown -> %><%= gettext("I've refunded %{amount} the way you paid.", amount: @format_currency.(@refunded)) %><% end %>
+
+<% end %><%= if Decimal.positive?(@to_return) do %><%= gettext("I'll return the %{amount} you paid me directly.", amount: @format_currency.(@to_return)) %>
+
+<% end %><%= gettext("If you have any questions, just reply to this email.") %>
+
+<%= gettext("Warm wishes,") %>
+
+<%= signature() %>

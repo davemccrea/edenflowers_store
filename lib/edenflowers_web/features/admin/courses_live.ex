@@ -25,6 +25,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
      |> assign(:locale, Localize.get_locale())
      |> assign(booking_form: nil, booking_course_id: nil, goodwill_params: %{})
      |> assign(settling_id: nil, settlement_mode: :settle, settlement_error: nil)
+     |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil, cancel_held: nil)
      |> load_courses()}
   end
 
@@ -66,6 +67,16 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       <.booking_drawer
         form={@booking_form}
         course={Enum.find(@courses, &(&1.id == @booking_course_id))}
+        locale={@locale}
+      />
+      <.cancel_drawer
+        title={~t"Cancel booking"}
+        submit_label={~t"Cancel booking"}
+        keep_label={~t"Keep booking"}
+        form={@cancel_form}
+        error={@cancel_error}
+        held={@cancel_held}
+        email={@cancelling && @cancelling.email}
         locale={@locale}
       />
       <.settlement_drawer
@@ -188,18 +199,48 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:noreply, load_courses(socket)}
   end
 
-  def handle_event("cancel", %{"id" => id}, socket) do
-    actor = socket.assigns.current_user
+  # What the booking held is kept from when the drawer opened, so a retry after
+  # Stripe refunded but the cancel failed works out the same amount to keep,
+  # and refunds nothing twice.
+  def handle_event("open_cancel", %{"id" => id}, socket) do
+    {_course, registration} = find_booking(socket.assigns.courses, id)
+    held = Decimal.max(registration.amount_held, 0)
+    params = %{"refund" => Decimal.to_string(held, :normal), "reason" => "", "email_customer" => "true"}
 
-    socket =
-      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
-           {:ok, _} <- Courses.cancel_registration(registration, actor: actor) do
-        put_flash(socket, :info, ~t"Booking cancelled.")
-      else
-        _ -> put_flash(socket, :error, ~t"Could not cancel the booking.")
-      end
+    {:noreply,
+     socket
+     |> assign(cancelling: registration, cancel_held: held, cancel_error: nil)
+     |> assign(:cancel_form, to_form(params, as: :cancel))
+     |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
+  end
 
-    {:noreply, load_courses(socket)}
+  def handle_event("close_cancel", _params, socket) do
+    {:noreply, assign(socket, cancelling: nil, cancel_form: nil, cancel_error: nil)}
+  end
+
+  def handle_event("validate_cancel", %{"cancel" => params}, socket) do
+    {:noreply, assign(socket, :cancel_form, to_form(params, as: :cancel))}
+  end
+
+  def handle_event("submit_cancel", %{"cancel" => params}, socket) do
+    socket = assign(socket, :cancel_form, to_form(params, as: :cancel))
+
+    case PaymentActions.kept_amount(socket.assigns.cancel_held, params["refund"]) do
+      {:ok, kept} ->
+        input = %{
+          kept_amount: kept,
+          cancellation_reason: params["reason"],
+          email_customer?: params["email_customer"] != "false"
+        }
+
+        cancel_booking(socket, input)
+
+      :error ->
+        message =
+          ~t"Enter an amount from €0 to #{amount = Format.currency(socket.assigns.cancel_held, socket.assigns.locale)}."
+
+        {:noreply, assign(socket, :cancel_error, message)}
+    end
   end
 
   @impl true
@@ -246,6 +287,26 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:noreply, load_courses(socket)}
   end
 
+  defp cancel_booking(socket, input) do
+    case Courses.cancel_registration(socket.assigns.cancelling, input, actor: socket.assigns.current_user) do
+      {:ok, _registration} ->
+        {:noreply,
+         socket
+         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
+         |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
+         |> put_flash(:info, ~t"Booking cancelled.")
+         |> load_courses()}
+
+      {:error, error} ->
+        Logger.error("Course registration #{socket.assigns.cancelling.id} not cancelled: #{inspect(error)}")
+        {:noreply, socket |> assign(:cancel_error, cancel_error_message(error)) |> load_courses()}
+    end
+  end
+
+  # Says why, e.g. Stripe refusing the refund.
+  defp cancel_error_message(%{errors: [%{message: message} | _]}) when is_binary(message), do: message
+  defp cancel_error_message(_error), do: ~t"Could not cancel the booking."
+
   defp find_booking(_courses, nil), do: nil
 
   defp find_booking(courses, id) do
@@ -266,19 +327,10 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     end
   end
 
-  # The amount Jennie leaves in the form is what's handed back; the rest of the balance is kept.
-  defp refund(registration, %{"amount" => amount} = params, actor) do
-    amount = String.replace(amount, ",", ".")
+  defp refund(registration, %{"by" => "stripe"}, _actor), do: PaymentActions.refund_with_stripe(registration)
 
-    case Courses.set_registration_refund(registration, amount, actor: actor, load: [:outside_stripe_refund]) do
-      {:ok, registration} -> refund_by(registration, params, actor)
-      {:error, error} -> {:error, PaymentActions.payment_error(error)}
-    end
-  end
-
-  defp refund_by(registration, %{"by" => "stripe"}, _actor), do: PaymentActions.refund_with_stripe(registration)
-
-  defp refund_by(registration, %{"payment_method" => payment_method}, actor) do
+  defp refund(registration, %{"payment_method" => payment_method}, actor) do
+    registration = Ash.load!(registration, :outside_stripe_refund, actor: actor)
     amount = registration.outside_stripe_refund |> Decimal.negate() |> Decimal.to_string(:normal)
     PaymentActions.record_payment(registration, %{"amount" => amount, "payment_method" => payment_method}, actor)
   end
@@ -290,6 +342,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         load: [
           bookings: [
             :amount_paid,
+            :amount_held,
             :balance,
             :settled?,
             :outside_stripe_refund,
@@ -507,9 +560,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                   </.actions_menu_button>
                   <.actions_menu_button
                     menu={"registration-actions-#{registration.id}"}
-                    phx-click="cancel"
+                    phx-click="open_cancel"
                     phx-value-id={registration.id}
-                    data-confirm={cancel_confirmation(registration)}
                     class="text-error"
                   >
                     {pgettext("course booking", "Cancel")}
@@ -721,7 +773,11 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           hidden={false}
         />
         <.mark_paid_form :if={@mode == :settle and to_collect?(elem(@settling, 1))} registration={elem(@settling, 1)} />
-        <.refund_controls :if={@mode == :settle and to_refund?(elem(@settling, 1))} registration={elem(@settling, 1)} />
+        <.refund_controls
+          :if={@mode == :settle and to_refund?(elem(@settling, 1))}
+          registration={elem(@settling, 1)}
+          locale={@locale}
+        />
         <p :if={nothing_to_settle?(elem(@settling, 1), @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this booking."}
         </p>
@@ -783,6 +839,16 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         <dd class="font-semibold">{Format.currency(Decimal.abs(@registration.balance), @locale)}</dd>
       </div>
     </dl>
+    <div :if={@registration.status == :cancelled} class="space-y-2 text-sm">
+      <p :if={@registration.cancellation_reason} class="whitespace-pre-line">
+        <span class="text-base-content/75">{~t"Reason"}:</span> {@registration.cancellation_reason}
+      </p>
+      <p class="text-base-content/75 break-all">
+        {if @registration.cancellation_emailed_to,
+          do: ~t"Cancellation emailed to #{email = @registration.cancellation_emailed_to}.",
+          else: ~t"The customer wasn't emailed."}
+      </p>
+    </div>
     """
   end
 
@@ -808,22 +874,13 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   attr :registration, :map, required: true
+  attr :locale, :string, required: true
 
   # Money taken by card goes back through Stripe; cash or Zettle money is recorded as handed back.
-  # The amount starts at the balance, and Jennie can change it.
   defp refund_controls(assigns) do
     ~H"""
     <form id={"refund-#{@registration.id}"} phx-submit="refund" class="space-y-4">
       <input type="hidden" name="record_id" value={@registration.id} />
-      <.input
-        id={"refund-amount-#{@registration.id}"}
-        name="refund[amount]"
-        type="text"
-        inputmode="decimal"
-        label={~t"Amount to refund (€)"}
-        value={Decimal.to_string(Decimal.abs(@registration.balance), :normal)}
-        class="input w-full tabular-nums"
-      />
       <div :if={Decimal.positive?(@registration.stripe_refund)} class="space-y-4">
         <p class="text-base-content/75 text-sm">
           {~t"Sends the money back to the customer's card. Stripe moves the money."}
@@ -833,7 +890,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           value="stripe"
           type="submit"
           phx-disable-with={~t"Refunding…"}
-          data-confirm={~t"Refund this amount to the customer's card with Stripe?"}
+          data-confirm={
+            ~t"Refund #{amount = Format.currency(@registration.stripe_refund, @locale)} to the customer's card with Stripe?"
+          }
           variant="primary"
         >
           {~t"Refund with Stripe"}
@@ -858,7 +917,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           type="submit"
           phx-disable-with={~t"Recording…"}
           variant="primary"
-          data-confirm={~t"Record this amount as refunded? A mistake can be undone afterwards."}
+          data-confirm={
+            ~t"Record #{amount = Format.currency(@registration.outside_stripe_refund, @locale)} as refunded? A mistake can be undone afterwards."
+          }
         >
           {~t"Record refund"}
         </.button>
@@ -903,14 +964,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       ~t"This does not refund. Refund the seat here afterwards. Remove one seat from this booking?"
     else
       ~t"Remove one seat from this booking?"
-    end
-  end
-
-  defp cancel_confirmation(registration) do
-    if paid?(registration) do
-      ~t"This frees the seats but does not refund. Refund here afterwards. Cancel this booking?"
-    else
-      ~t"This frees the seats. Cancel this booking?"
     end
   end
 

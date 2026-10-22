@@ -405,8 +405,10 @@ defmodule Edenflowers.PaymentsTest do
       registration = Courses.get_registration_by_id!(registration.id, authorize?: false)
       assert registration.payment_intent_id == nil
 
-      # Mox fails the test if cancelling calls cancel_payment_intent.
-      assert {:ok, %{status: :cancelled}} = Courses.cancel_registration(registration, authorize?: false)
+      # Mox fails the test if cancelling calls cancel_payment_intent. Keeping
+      # everything paid leaves Stripe's refunds out of it.
+      assert {:ok, %{status: :cancelled}} =
+               Courses.cancel_registration(registration, %{kept_amount: "170.00"}, authorize?: false)
     end
 
     test "places an order the customer stepped back from while paying", %{order: order} do
@@ -621,13 +623,14 @@ defmodule Edenflowers.PaymentsTest do
       |> Enum.filter(&Decimal.negative?(&1.amount))
     end
 
-    test "refunds a cancelled booking what was paid, once", %{registration: registration, pi: pi} do
+    test "cancelling refunds what was paid, and refunding again finds it in Stripe", %{
+      registration: registration,
+      pi: pi
+    } do
       expect(StripeAPI.Mock, :create_refund, fn ^pi, 17_000, _key, _metadata -> {:ok, succeeded_refund(pi, 17_000)} end)
 
       {:ok, registration} = Courses.cancel_registration(registration, authorize?: false)
-      assert {:ok, [_refund]} = Payments.refund_balance(registration)
 
-      # The second click finds the first refund in Stripe.
       stub(StripeAPI.Mock, :list_refunds, fn ^pi -> {:ok, [succeeded_refund(pi, 17_000)]} end)
 
       assert {:ok, []} = Payments.refund_balance(registration)
@@ -646,11 +649,11 @@ defmodule Edenflowers.PaymentsTest do
       assert Decimal.equal?(amount, "-85.00")
     end
 
-    test "cancelling refunds nothing by itself", %{registration: registration} do
-      {:ok, registration} = Courses.cancel_registration(registration, authorize?: false)
+    test "cancelling refunds nothing Jennie keeps", %{registration: registration} do
+      {:ok, registration} = Courses.cancel_registration(registration, %{kept_amount: "170.00"}, authorize?: false)
 
       assert [] = refunds(registration)
-      assert Decimal.equal?(Ash.load!(registration, :balance, authorize?: false).balance, "-170.00")
+      assert Decimal.equal?(Ash.load!(registration, :balance, authorize?: false).balance, 0)
     end
   end
 

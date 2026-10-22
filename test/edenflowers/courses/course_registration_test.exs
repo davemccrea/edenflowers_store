@@ -185,17 +185,40 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert Decimal.equal?(balance(registration), "-85.00")
     end
 
-    test "Jennie can refund more or less than suggested, but not more than was paid", %{admin: admin} do
-      {:ok, registration} = Courses.cancel_registration(paid_booking(1, admin), actor: admin)
+    test "emails the customer the reason, unless Jennie unticks it", %{admin: admin} do
+      {:ok, registration} =
+        Courses.cancel_registration(paid_booking(1, admin), %{cancellation_reason: "Jag är sjuk."}, actor: admin)
 
-      {:ok, registration} = Courses.set_registration_refund(registration, "85.00", actor: admin)
-      assert Decimal.equal?(balance(registration), "-85.00")
+      assert registration.cancellation_emailed_to == "ada@example.com"
+      [job] = all_enqueued(worker: Edenflowers.Courses.Workers.SendCancelledEmail)
+      assert :ok = perform_job(Edenflowers.Courses.Workers.SendCancelledEmail, job.args)
 
-      {:ok, registration} = Courses.set_registration_refund(registration, "50.00", actor: admin)
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.to == [{"", "ada@example.com"}]
+        assert email.text_body =~ "Jag är sjuk."
+      end)
+
+      {:ok, quiet} = Courses.cancel_registration(paid_booking(1, admin), %{email_customer?: false}, actor: admin)
+      assert quiet.cancellation_emailed_to == nil
+      assert [_only_the_first] = all_enqueued(worker: Edenflowers.Courses.Workers.SendCancelledEmail)
+    end
+
+    test "releasing a hold the customer never paid for emails nobody" do
+      {:ok, hold} = register(generate(course()), 1)
+
+      {:ok, _released} = Courses.cancel_registration(hold, actor: Edenflowers.Actors.system_actor())
+
+      refute_enqueued(worker: Edenflowers.Courses.Workers.SendCancelledEmail)
+    end
+
+    test "Jennie keeps what she chooses, but not more than was paid", %{admin: admin} do
+      {:ok, registration} = Courses.cancel_registration(paid_booking(1, admin), %{kept_amount: "35.00"}, actor: admin)
       assert Decimal.equal?(balance(registration), "-50.00")
 
-      assert {:error, error} = Courses.set_registration_refund(registration, "85.01", actor: admin)
-      assert Exception.message(error) =~ "more than is owed back"
+      assert {:error, error} =
+               Courses.cancel_registration(paid_booking(1, admin), %{kept_amount: "85.01"}, actor: admin)
+
+      assert Exception.message(error) =~ "more than was paid"
     end
   end
 

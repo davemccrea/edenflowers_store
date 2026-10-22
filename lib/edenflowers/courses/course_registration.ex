@@ -197,18 +197,17 @@ defmodule Edenflowers.Courses.CourseRegistration do
              )
     end
 
-    # Frees the seats and leaves what was paid as a negative balance for
-    # Jennie to refund.
+    # Frees the seats and refunds everything paid apart from `kept_amount`:
+    # card payments through Stripe, and anything paid in person is left as a
+    # balance for Jennie to hand back. Also releases a hold the customer never
+    # paid for.
     update :cancel do
+      accept [:kept_amount, :cancellation_reason]
+      argument :email_customer?, :boolean, default: true
       change set_attribute(:status, :cancelled)
       change PaymentChanges.CancelOpenPaymentIntent
-      require_atomic? false
-    end
-
-    # Jennie's choice of what to hand back, instead of the whole negative balance.
-    update :set_refund do
-      argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
-      change Changes.SetRefund
+      change {PaymentChanges.RefundAllButKept, cancelled_by: :shop}
+      change Changes.SendCancelledEmail, where: [argument_equals(:email_customer?, true)]
       require_atomic? false
     end
 
@@ -296,6 +295,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :payment_link_emailed_at, :utc_datetime
     attribute :confirmed_at, :utc_datetime
     attribute :confirmation_emailed_at, :utc_datetime
+    # Why Jennie cancelled, for the customer's email and the courses page.
+    attribute :cancellation_reason, :string
+    # The customer's email can change later; this names who was told.
+    attribute :cancellation_emailed_to, :string
     attribute :receipt_emailed_at, :utc_datetime
 
     timestamps()

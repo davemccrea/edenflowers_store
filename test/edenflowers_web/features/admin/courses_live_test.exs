@@ -65,14 +65,16 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-    view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
+    view |> element(~s|button[phx-click="open_cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
+    refute has_element?(view, ~s|#cancel-form input[name="cancel[refund]"]|)
+    view |> form("#cancel-form") |> render_submit()
 
     assert has_element?(view, "[data-status=cancelled]", "Anna")
-    refute has_element?(view, ~s|button[phx-value-id="#{registration.id}"]|)
+    refute has_element?(view, ~s|button[phx-click="open_cancel"][phx-value-id="#{registration.id}"]|)
     assert Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false).status == :cancelled
   end
 
-  describe "refunding a cancellation" do
+  describe "cancelling a paid booking" do
     setup do
       today = Edenflowers.ShopTime.today()
 
@@ -86,50 +88,46 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       %{registration: registration}
     end
 
-    test "suggests what was paid", %{conn: conn, registration: registration} do
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-      view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
+    defp open_cancel(view, registration) do
+      view |> element(~s|button[phx-click="open_cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
+    end
 
-      assert has_element?(view, "#registration-#{registration.id}", "To refund €85.00")
-      refute has_element?(view, "#refund-#{registration.id}")
+    test "keeps what Jennie doesn't refund and leaves the rest to hand back", %{conn: conn, registration: registration} do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      open_cancel(view, registration)
+      assert has_element?(view, ~s|#cancel-form input[name="cancel[refund]"][value="85.00"]|)
+
+      view |> form("#cancel-form", cancel: %{refund: "50,00", reason: "Ill that day"}) |> render_submit()
+
+      assert has_element?(view, "#registration-#{registration.id}", "To refund €50.00")
 
       view |> element("#settle-#{registration.id}", "To refund") |> render_click()
-
-      assert has_element?(view, "#settlement-drawer", registration.name)
-      refute has_element?(view, "#settlement-drawer dl", "Kept")
-      assert has_element?(view, ~s|#refund-#{registration.id} input[name="refund[amount]"][value="85.00"]|)
-      assert has_element?(view, "#refund-#{registration.id}", "Records money you have already handed back")
-      refute has_element?(view, ~s|#refund-#{registration.id} button[value="stripe"]|)
-    end
-
-    test "an invalid amount keeps the drawer open with the error", %{conn: conn, registration: registration} do
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-      view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
-      view |> element("#settle-#{registration.id}") |> render_click()
+      assert has_element?(view, "#settlement-drawer dl", "Kept")
+      assert has_element?(view, "#settlement-drawer dl", "€35.00")
+      assert has_element?(view, "#settlement-drawer", "Ill that day")
+      assert has_element?(view, "#settlement-drawer", "Cancellation emailed to #{registration.email}.")
 
       view
-      |> form("#refund-#{registration.id}", refund: %{amount: "0", payment_method: "cash"})
-      |> put_submitter(~s|#refund-#{registration.id} button[value="record"]|)
-      |> render_submit()
-
-      assert has_element?(view, "#settlement-drawer [role=alert]")
-      assert has_element?(view, "#refund-#{registration.id}")
-      assert has_element?(view, "#registration-#{registration.id}", "To refund €85.00")
-    end
-
-    test "refunds the amount Jennie changes it to", %{conn: conn, registration: registration} do
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-      view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
-      view |> element("#settle-#{registration.id}") |> render_click()
-
-      view
-      |> form("#refund-#{registration.id}", refund: %{amount: "50,00", payment_method: "cash"})
+      |> form("#refund-#{registration.id}", refund: %{payment_method: "cash"})
       |> put_submitter(~s|#refund-#{registration.id} button[value="record"]|)
       |> render_submit()
 
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
       registration = Ash.load!(registration, [:amount_paid], authorize?: false, reuse_values?: false)
       assert Decimal.equal?(registration.amount_paid, "35.00")
+    end
+
+    test "an amount over what was paid keeps the drawer open with the error", %{
+      conn: conn,
+      registration: registration
+    } do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      open_cancel(view, registration)
+
+      view |> form("#cancel-form", cancel: %{refund: "90"}) |> render_submit()
+
+      assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from €0 to €85.00.")
+      assert Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false).status == :confirmed
     end
   end
 

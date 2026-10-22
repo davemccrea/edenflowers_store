@@ -1,10 +1,10 @@
 ---
 id: TASK-92
 title: Tell the customer when Jennie cancels their order or booking
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-22 14:39'
-updated_date: '2026-10-22 16:01'
+updated_date: '2026-10-22 17:37'
 labels:
   - spec
   - customers
@@ -41,8 +41,8 @@ Update `CONTEXT.md`: "Cancelled", "Total due" and the late-fee wording. Emailing
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Jennie can cancel an order or booking, refunding any amount up to what's held, in one step
-- [ ] #2 The customer is emailed with the reason and what was refunded, unless Jennie unticks it
-- [ ] #3 A refused Stripe refund leaves the record uncancelled and sends nothing
-- [ ] #4 Courses have no late-cancellation fee
+- [x] #1 Jennie can cancel an order or booking, refunding any amount up to what's held, in one step
+- [x] #2 The customer is emailed with the reason and what was refunded, unless Jennie unticks it
+- [x] #3 A refused Stripe refund leaves the record uncancelled and sends nothing
+- [x] #4 Courses have no late-cancellation fee
 <!-- AC:END -->
