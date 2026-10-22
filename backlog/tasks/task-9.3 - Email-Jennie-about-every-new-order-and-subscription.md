@@ -54,7 +54,7 @@ created: 2026-10-22 06:36
 
 ---
 
-Built and covered by tests. Left for a human: run the phoenix-ansible provisioning (adds SHOP_NOTICE_EMAIL to production) before deploying, or production sends no shop email; then check on Jennie's phone that reopening the app re-saves its subscription (#5).
+Built and covered by tests. Left for a human: run `just provision production` (adds SHOP_NOTICE_EMAIL to production) before deploying, or production sends no shop email; then check on Jennie's phone that reopening the app re-saves its subscription (#5).
 
 ---
 <!-- COMMENTS:END -->

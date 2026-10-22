@@ -1,0 +1,83 @@
+services:
+  app:
+    image: ghcr.io/{{ github_username }}/{{ project_name }}:{{ image_tag }}
+    container_name: "{{ project_name }}"
+    restart: unless-stopped
+    # Oban waits up to 15s for running jobs; Docker's default 10s kills them mid-run.
+    stop_grace_period: 20s
+    network_mode: host
+    environment:
+      PHX_SERVER: "true"
+      PHX_HOST: "{{ project_url }}"
+      PORT: "{{ app_port }}"
+      SECRET_KEY_BASE: "{{ secret_key_base }}"
+      TOKEN_SIGNING_SECRET: "{{ token_signing_secret }}"
+      RELEASE_COOKIE: "{{ release_cookie }}"
+      RELEASE_DISTRIBUTION: name
+      RELEASE_NODE: "{{ project_name }}@127.0.0.1"
+      MAINTENANCE_MODE: "{{ maintenance_mode | string | lower }}"
+      DATABASE_URL: "{{ database_url }}"
+      STRIPE_SECRET_KEY: "{{ stripe_secret_key }}"
+      STRIPE_PUBLISHABLE_KEY: "{{ stripe_publishable_key }}"
+      STRIPE_WEBHOOK_SECRET: "{{ stripe_webhook_secret }}"
+      HERE_API_KEY: "{{ here_api_key }}"
+      MAPBOX_TOKEN: "{{ mapbox_token }}"
+      IMGPROXY_PREFIX: "{{ imgproxy_prefix }}"
+      IMGPROXY_KEY: "{{ imgproxy_key }}"
+      IMGPROXY_SALT: "{{ imgproxy_salt }}"
+      PAPRA_BASE_URL: "{{ papra_base_url }}"
+      PAPRA_API_KEY: "{{ papra_api_key }}"
+      PAPRA_WEBHOOK_SECRET: "{{ papra_webhook_secret }}"
+      PAPRA_ORGANIZATION_ID: "{{ papra_organization_id }}"
+      ANTHROPIC_API_KEY: "{{ anthropic_api_key }}"
+      BREVO_API_KEY: "{{ brevo_api_key }}"
+      MAILER_FROM_NAME: "{{ mailer_from_name }}"
+      MAILER_FROM_EMAIL: "{{ mailer_from_email }}"
+      UPLOADS_DIR: /app/uploads
+{% if error_alert_email is defined %}
+      ERROR_ALERT_EMAIL: "{{ error_alert_email }}"
+{% endif %}
+{% if shop_notice_email is defined %}
+      SHOP_NOTICE_EMAIL: "{{ shop_notice_email }}"
+{% endif %}
+{% if brevo_newsletter_list_id is defined %}
+      BREVO_NEWSLETTER_LIST_ID: "{{ brevo_newsletter_list_id }}"
+{% endif %}
+{% if vapid_public_key is defined %}
+      VAPID_PUBLIC_KEY: "{{ vapid_public_key }}"
+      VAPID_PRIVATE_KEY: "{{ vapid_private_key }}"
+{% endif %}
+    volumes:
+      - /opt/{{ project_name }}/images/uploads:/app/uploads
+
+  imgproxy:
+    image: darthsim/imgproxy:v3
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      IMGPROXY_KEY: "{{ imgproxy_key }}"
+      IMGPROXY_SALT: "{{ imgproxy_salt }}"
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /images
+    volumes:
+      - /opt/{{ project_name }}/images:/images
+
+  papra:
+    image: ghcr.io/papra-hq/papra:latest
+    container_name: papra
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      APP_BASE_URL: "{{ papra_base_url }}"
+      AUTH_SECRET: "{{ papra_auth_secret }}"
+      AUTH_IS_REGISTRATION_ENABLED: false
+    volumes:
+      - ./papra:/app/app-data
+    user: 1000:1000
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    network_mode: host
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: "{{ cloudflare_tunnel_token }}"

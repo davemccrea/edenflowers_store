@@ -53,6 +53,8 @@ just deploy-watch               # follow the latest deploy run
 just images-sync                # push images/ to production and pull its uploads
 just server-logs production     # tail app logs on a server
 just server-console production  # remote IEx on a server
+just provision production       # apply infra/ (Ansible) to a server; provision-check for a dry run
+just vault [production]         # edit the shared or a host's Ansible vault
 ```
 
 `just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. Plain pushes deploy nothing.
@@ -91,7 +93,7 @@ wt remove
 
 ## Deployment
 
-Servers are provisioned by [phoenix-ansible](https://github.com/davemccrea/phoenix-ansible). Deploys run via `.github/workflows/deploy.yml`. See [Commands](#commands).
+Servers are provisioned by Ansible in `infra/`, see [infra/README.md](infra/README.md). Deploys run via `.github/workflows/deploy.yml`. See [Commands](#commands).
 
 ### Rolling back
 

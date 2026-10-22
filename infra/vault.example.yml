@@ -1,0 +1,66 @@
+# Example vault file. Copy to `vault.yml` and encrypt with:
+#
+#   cp vault.example.yml host_vars/production/vault.yml
+#   # edit values, then:
+#   ansible-vault encrypt host_vars/production/vault.yml
+#
+# Or create from scratch with `ansible-vault create host_vars/production/vault.yml`
+# and paste the keys below.
+#
+# Every variable here is referenced from `group_vars/all/vars.yml`.
+#
+# Secrets shared by all hosts (Database, GitHub, HERE, Mapbox, Anthropic, SMTP, Tailscale, imgproxy,
+# maintenance bypass, Papra auth) live in
+# `group_vars/all/vault.yml` instead. A host vault can override any of them.
+
+# App
+vault_secret_key_base: "generate with: mix phx.gen.secret"
+vault_token_signing_secret: "generate with: mix phx.gen.secret"
+vault_release_cookie: "generate with: openssl rand -base64 32"
+
+# Database
+vault_db_user: "your_db_user"
+vault_db_password: "your_db_password"
+
+# GitHub (personal access token with read:packages scope for ghcr.io pulls)
+vault_github_token: "ghp_..."
+
+# Tailscale (auth key from https://login.tailscale.com/admin/settings/keys)
+vault_tailscale_authkey: "tskey-auth-..."
+
+# Stripe (https://dashboard.stripe.com/apikeys)
+vault_stripe_secret_key: "sk_live_..."
+vault_stripe_publishable_key: "pk_live_..."
+vault_stripe_webhook_secret: "whsec_..."
+
+# HERE Maps API (https://platform.here.com)
+vault_here_api_key: "your_here_api_key"
+
+# Mapbox public token for the admin order map (https://console.mapbox.com).
+# Rendered into page HTML, so restrict it to your domains in the Mapbox console.
+vault_mapbox_token: "pk...."
+
+# imgproxy (generate with: xxd -g 2 -l 64 -p /dev/random | tr -d '\n')
+vault_imgproxy_key: "hex-encoded key"
+vault_imgproxy_salt: "hex-encoded salt"
+
+# Cloudflare Tunnel (token from Cloudflare Zero Trust dashboard)
+vault_cloudflare_tunnel_token: "eyJ..."
+
+# Papra (generate with: openssl rand -base64 32)
+vault_papra_auth_secret: "your_papra_auth_secret"
+vault_papra_api_key: "ppapi_..."
+vault_papra_webhook_secret: "your_papra_webhook_secret"
+vault_papra_organization_id: "your_papra_organization_id"
+
+# Anthropic (https://console.anthropic.com/settings/keys)
+vault_anthropic_api_key: "sk-ant-..."
+
+# Brevo API key (SMTP & API > API keys)
+vault_brevo_api_key: "your_brevo_api_key"
+
+# Web Push VAPID private key for admin order notifications. The matching public
+# key goes in host_vars/<host>/vars.yml.
+# Generate a pair in the app repo with:
+#   mix run -e 'Edenflowers.WebPush.generate_keys() |> IO.inspect()'
+vault_vapid_private_key: "base64url private key"

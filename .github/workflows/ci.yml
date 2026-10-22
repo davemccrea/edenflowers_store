@@ -3,8 +3,10 @@ name: CI
 on:
   pull_request:
     branches: [main]
+    paths-ignore: ["infra/**"]
   push:
     branches: [main]
+    paths-ignore: ["infra/**"]
 
 jobs:
   test:
