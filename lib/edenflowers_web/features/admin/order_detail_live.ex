@@ -622,7 +622,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("mark_fulfilled", %{"fulfillment" => %{"customer_home" => "false"} = params}, socket) do
-    socket = PhotoUpload.store_uploads(socket, [@photo_field], private: true)
+    socket = PhotoUpload.store_uploads(socket, [@photo_field])
 
     case socket.assigns.photo_slugs[@photo_field] do
       nil ->

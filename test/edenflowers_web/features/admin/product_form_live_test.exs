@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert product.name == "Rose bouquet"
     refute product.draft
     assert product.product_variants |> Enum.map(& &1.size) |> Enum.sort() == [:large, :small]
-    assert ["local:///uploads/rose-" <> _] = product.photo_slugs
+    assert ["local:///uploads/" <> _] = product.photo_slugs
     assert Enum.all?(product.product_variants, &is_nil(&1.own_photo_slug))
   end
 
@@ -187,7 +187,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
              view |> form("#product-form", form: Map.put(fields, :name, "Rose bouquet")) |> render_submit()
 
     [product] = Ash.read!(Product, authorize?: false)
-    assert ["local:///uploads/rose-" <> _, "local:///uploads/rose-side-" <> _] = product.photo_slugs
+    assert Enum.map(product.photo_slugs, &uploaded_content/1) == ["rose.jpg", "rose-side.jpg"]
   end
 
   test "a size without its own photo shows the main photo", %{conn: conn} do
@@ -285,8 +285,12 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
   end
 
   defp upload_photos(view, names) do
-    files = for name <- names, do: %{name: name, content: "jpeg bytes", type: "image/jpeg"}
+    # Each file's content is its name, so a test can tell stored photos apart.
+    files = for name <- names, do: %{name: name, content: name, type: "image/jpeg"}
     upload = file_input(view, "#product-form", :photos, files)
     for name <- names, do: render_upload(upload, name)
   end
+
+  defp uploaded_content("local:///uploads/" <> filename),
+    do: File.read!(Path.join(Application.fetch_env!(:edenflowers, :uploads_dir), filename))
 end
