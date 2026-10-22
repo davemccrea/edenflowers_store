@@ -700,10 +700,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           Map.merge(params, %{
             "customer_name" => customer.name || "",
             "customer_email" => to_string(customer.email),
-            "customer_phone_number" => (last && (last.customer_phone_number || last.recipient_phone_number)) || "",
+            "customer_phone_number" => last_phone_number(last),
             # Only a newsletter signup saves a customer's language, so most have
             # just the one their last order was placed in.
-            "locale" => customer.locale || (last && last.locale) || params["locale"]
+            "locale" => customer.locale || last_locale(last) || params["locale"]
           })
 
         _ ->
@@ -713,6 +713,12 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   defp prefill_customer(params, _assigns), do: params
+
+  defp last_phone_number(nil), do: ""
+  defp last_phone_number(order), do: order.customer_phone_number || order.recipient_phone_number || ""
+
+  defp last_locale(nil), do: nil
+  defp last_locale(order), do: order.locale
 
   defp validate_form(socket, params) do
     option_before = current_option_id(socket.assigns)
