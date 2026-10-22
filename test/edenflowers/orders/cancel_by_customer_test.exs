@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Workers.SendCancelledEmail
+  alias Edenflowers.Payments.Workers.SendCancelledEmail
   alias Edenflowers.ShopTime
 
   setup do

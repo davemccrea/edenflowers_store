@@ -1,6 +1,7 @@
 defmodule Edenflowers.Payments.Changes.SplitOffGoodwill do
   @moduledoc """
-  Splits a Stripe refund's negative `amount` into the part that was owed back,
+  Splits a refund's negative amount, from the argument named by the `amount`
+  option (`:amount` by default), into the part that was owed back,
   `owed_back`, and the rest, `goodwill_refund`, handed back on top. Either is
   left unset when it's nothing. A `goodwill` argument of true or false says
   it's all one or the other.
@@ -8,8 +9,10 @@ defmodule Edenflowers.Payments.Changes.SplitOffGoodwill do
   use Ash.Resource.Change
 
   @impl true
-  def change(changeset, _opts, _context) do
-    case {Ash.Changeset.get_argument(changeset, :amount), Ash.Changeset.get_argument(changeset, :goodwill)} do
+  def change(changeset, opts, _context) do
+    amount = Ash.Changeset.get_argument(changeset, opts[:amount] || :amount)
+
+    case {amount, Ash.Changeset.get_argument(changeset, :goodwill)} do
       {%Decimal{} = amount, true} ->
         Ash.Changeset.set_argument(changeset, :goodwill_refund, amount)
 

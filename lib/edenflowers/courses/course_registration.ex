@@ -207,7 +207,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change set_attribute(:status, :cancelled)
       change PaymentChanges.CancelOpenPaymentIntent
       change {PaymentChanges.RefundAllButKept, cancelled_by: :shop}
-      change Changes.SendCancelledEmail, where: [argument_equals(:email_customer?, true)]
+      change PaymentChanges.SendCancelledEmail, where: [argument_equals(:email_customer?, true)]
       require_atomic? false
     end
 

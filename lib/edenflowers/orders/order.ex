@@ -801,7 +801,7 @@ defmodule Edenflowers.Orders.Order do
       change {PaymentChanges.RefundAllButKept, cancelled_by: :shop}
       change {Changes.AdjustStock, direction: :return}
 
-      change {Changes.SendCancelledEmail, cancelled_by: :shop},
+      change {PaymentChanges.SendCancelledEmail, cancelled_by: :shop},
         where: [argument_equals(:email_customer?, true), present(:customer_email)]
 
       change load(@admin_show_load)
@@ -816,7 +816,7 @@ defmodule Edenflowers.Orders.Order do
       change PaymentChanges.CancelOpenPaymentIntent
       change {PaymentChanges.RefundAllButKept, cancelled_by: :customer}
       change {Changes.AdjustStock, direction: :return}
-      change {Changes.SendCancelledEmail, cancelled_by: :customer}
+      change {PaymentChanges.SendCancelledEmail, cancelled_by: :customer}
       require_atomic? false
     end
 
