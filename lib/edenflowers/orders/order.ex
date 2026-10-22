@@ -792,8 +792,10 @@ defmodule Edenflowers.Orders.Order do
       argument :refund, :decimal, constraints: [scale: 2]
       argument :held, :decimal, constraints: [scale: 2]
       argument :email_customer?, :boolean, default: true
+      # A subscription cancelled by its customer cancels its occurrences as them.
+      argument :cancelled_by, :atom, default: :shop, constraints: [one_of: [:shop, :customer]]
       change set_attribute(:fulfillment_status, :cancelled)
-      change {PaymentChanges.Cancel, cancelled_by: :shop}
+      change PaymentChanges.Cancel
       change {Changes.AdjustStock, direction: :return}
       change load(@admin_show_load)
       require_atomic? false

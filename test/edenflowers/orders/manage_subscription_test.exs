@@ -102,6 +102,24 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
     assert Ash.get!(Edenflowers.Payments.Payment, payment.id, authorize?: false).amount == payment.amount
   end
 
+  test "each occurrence's cancelled email says who cancelled the subscription", context do
+    by_customer = subscription_for(context)
+    by_customer_occurrence = by_customer |> occurrence(5) |> Ash.Seed.update!(%{customer_email: "ada@example.com"})
+    by_shop = subscription_for(context)
+    by_shop_occurrence = by_shop |> occurrence(5) |> Ash.Seed.update!(%{customer_email: "ada@example.com"})
+
+    Orders.cancel_subscription!(by_customer, actor: context.customer)
+    Orders.cancel_subscription!(by_shop, actor: context.admin)
+
+    cancelled_by =
+      Map.new(
+        all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail),
+        &{&1.args["order_id"], &1.args["cancelled_by"]}
+      )
+
+    assert cancelled_by == %{by_customer_occurrence.id => "customer", by_shop_occurrence.id => "shop"}
+  end
+
   test "cancel leaves a booked occurrence in place after its customer-change deadline", context do
     subscription = subscription_for(context)
     occurrence = occurrence(subscription, 4)
