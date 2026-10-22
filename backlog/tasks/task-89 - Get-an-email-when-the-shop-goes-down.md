@@ -1,10 +1,10 @@
 ---
 id: TASK-89
 title: Get an email when the shop goes down
-status: ready-for-agent
+status: ready-for-human
 assignee: []
 created_date: '2026-10-21 19:46'
-updated_date: '2026-10-21 19:51'
+updated_date: '2026-10-22 04:41'
 labels:
   - spec
   - admin
@@ -35,6 +35,25 @@ The nightly backup cron already pings healthchecks.io (TASK-81.2); that covers j
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 An external service checks production at least every 5 minutes
-- [ ] #2 The check fails when the app or database is down, not only when the server is unreachable
+- [x] #2 The check fails when the app or database is down, not only when the server is unreachable
 - [ ] #3 A failed check sends an email to the agreed people
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Added GET /health (EdenflowersWeb.HealthController): runs SELECT 1 against the Repo and answers 200 "ok" with cache-control: no-store; a down database raises, so the check gets a 500. Lives outside the :browser pipeline, so maintenance mode doesn't redirect it.
+<!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-22 04:41
+
+---
+
+Code is in. Left for David, once /health is deployed to production: create a Better Stack free account, add an uptime monitor for https://<production host>/health, 'URL becomes unavailable', check frequency 3 minutes, enable confirmation from another region (recovery period default), on-call email to David only, recovery notifications on. Then stop the app briefly (or point the monitor at a bad path) to confirm an alert email and a recovery email arrive, and check off AC #1 and #3.
+
+---
+<!-- COMMENTS:END -->
