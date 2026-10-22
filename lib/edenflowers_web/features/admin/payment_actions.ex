@@ -13,6 +13,22 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   alias Edenflowers.Orders
   alias Edenflowers.Payments
 
+  @doc """
+  What to keep on cancelling, from the refund Jennie typed and what was held
+  when she opened the drawer. `:error` for anything outside 0 to `held`.
+  """
+  def kept_amount(held, nil), do: {:ok, held}
+
+  def kept_amount(held, refund) do
+    case refund |> String.trim() |> String.replace(",", ".") |> Decimal.parse() do
+      {refund, ""} ->
+        if Decimal.negative?(refund) or Decimal.gt?(refund, held), do: :error, else: {:ok, Decimal.sub(held, refund)}
+
+      _invalid ->
+        :error
+    end
+  end
+
   def record_payment(payable, %{"amount" => amount, "payment_method" => payment_method} = params, actor) do
     input = %{
       amount: String.replace(amount, ",", "."),

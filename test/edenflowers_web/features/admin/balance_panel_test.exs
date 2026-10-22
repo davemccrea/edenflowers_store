@@ -76,7 +76,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     do: ~s|#order-balance-form input[name="payment[amount]"][value="-#{amount}"]|
 
   defp prefilled_refund(:booking, registration, amount),
-    do: ~s|#refund-#{registration.id} input[name="refund[amount]"][value="#{amount}"]|
+    do: ~s|#refund-#{registration.id} button[value="record"][data-confirm*="€#{amount}"]|
 
   defp record_refund_button(:order, _order), do: "#order-balance-form button[type=submit]"
   defp record_refund_button(:booking, registration), do: ~s|#refund-#{registration.id} button[value="record"]|

@@ -19,6 +19,74 @@ defmodule EdenflowersWeb.Admin.Components do
   defp count_badge_class(true, :primary), do: "border-0 bg-primary/10 text-primary"
   defp count_badge_class(true, :warning), do: "admin-badge-warning"
 
+  attr :title, :string, required: true
+  attr :submit_label, :string, required: true
+  attr :keep_label, :string, required: true
+  attr :form, :any, default: nil
+  attr :error, :string, default: nil
+  attr :held, :any, default: nil, doc: "what was held when the drawer opened"
+  attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
+  attr :locale, :string, required: true
+
+  @doc """
+  Cancels an order or a booking: how much to refund, an optional reason, and
+  whether to email the customer. Sends `validate_cancel` and `submit_cancel`
+  with `cancel` params, and `close_cancel` when it closes.
+  """
+  def cancel_drawer(assigns) do
+    ~H"""
+    <.admin_drawer id="cancel-drawer" title={@title} on_close={JS.push("close_cancel")}>
+      <.form
+        :if={@form}
+        for={@form}
+        id="cancel-form"
+        phx-change="validate_cancel"
+        phx-submit="submit_cancel"
+        class="flex min-h-0 flex-1 flex-col"
+      >
+        <.drawer_body>
+          <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
+          <div :if={Decimal.positive?(@held)} class="space-y-2">
+            <.input
+              field={@form[:refund]}
+              type="text"
+              inputmode="decimal"
+              label={~t"Amount to refund (€)"}
+              class="input w-full tabular-nums"
+            />
+            <p class="text-base-content/75 text-sm">
+              {~t"Paid #{amount = Edenflowers.Format.currency(@held, @locale)}. Card payments go back through Stripe; anything paid in person you hand back yourself. Whatever you don't refund you keep."}
+            </p>
+          </div>
+          <.input
+            field={@form[:reason]}
+            type="textarea"
+            rows="3"
+            label={~t"Reason (optional)"}
+            placeholder={~t"Shown in the customer's email and kept on record."}
+            class="textarea w-full"
+          />
+          <div :if={@email} class="space-y-2">
+            <.input field={@form[:email_customer]} type="checkbox" label={~t"Email the customer"} />
+            <p class="text-base-content/75 ml-7 break-all text-sm">{~t"To: #{email = @email}"}</p>
+          </div>
+          <p :if={!@email} class="text-base-content/75 text-sm">
+            {~t"There's no email address, so the customer won't be emailed."}
+          </p>
+        </.drawer_body>
+        <.drawer_footer>
+          <.button type="submit" variant="destructive" phx-disable-with={~t"Cancelling…"}>{@submit_label}</.button>
+          <.button
+            type="button"
+            phx-click={JS.exec("phx-hide", to: "#cancel-drawer") |> JS.push("close_cancel")}
+            variant="ghost"
+          >{@keep_label}</.button>
+        </.drawer_footer>
+      </.form>
+    </.admin_drawer>
+    """
+  end
+
   attr :tone, :atom, required: true, values: [:success, :warning, :attention, :error, :neutral, :tag]
   attr :icon, :string, default: nil
   attr :class, :any, default: nil

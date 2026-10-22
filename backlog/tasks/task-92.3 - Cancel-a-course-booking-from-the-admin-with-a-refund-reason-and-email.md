@@ -1,10 +1,10 @@
 ---
 id: TASK-92.3
 title: 'Cancel a course booking from the admin with a refund, reason and email'
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-22 14:39'
-updated_date: '2026-10-22 16:12'
+updated_date: '2026-10-22 17:37'
 labels: []
 dependencies:
   - TASK-92.1
@@ -28,8 +28,14 @@ ordinal: 199000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Cancelling a booking refunds the chosen amount through Stripe, keeps the rest and leaves a 0 balance
-- [ ] #2 A refused Stripe refund leaves the booking confirmed and queues no email
-- [ ] #3 The customer gets a booking_cancelled email with the reason and refund, unless unticked
-- [ ] #4 The history shows the reason and whether the customer was emailed
+- [x] #1 Cancelling a booking refunds the chosen amount through Stripe, keeps the rest and leaves a 0 balance
+- [x] #2 A refused Stripe refund leaves the booking confirmed and queues no email
+- [x] #3 The customer gets a booking_cancelled email with the reason and refund, unless unticked
+- [x] #4 The history shows the reason and whether the customer was emailed
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Bookings have no paper trail, so the reason and whether the customer was emailed show in the booking's drawer on the courses page instead of a history. The drawer itself is shared with orders (Admin.Components.cancel_drawer).
+<!-- SECTION:NOTES:END -->

@@ -11,7 +11,7 @@ An order the shop has committed to make. An Online Order is placed when its paym
 _Avoid_: Confirmed, submitted
 
 **Cancelled**:
-A placed order that will not be made. When Jennie cancels, she chooses how much to refund and keeps the rest: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. She can give a reason, and the customer is emailed unless she unticks it. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
+A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to refund and keeps the rest: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. She can give a reason, and the customer is emailed unless she unticks it. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Online Order**:

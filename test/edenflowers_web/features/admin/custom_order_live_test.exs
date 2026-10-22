@@ -914,7 +914,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
       view |> element(~s|[phx-click="open_cancel"]|) |> render_click()
-      view |> form("#cancel-order-form") |> render_submit()
+      view |> form("#cancel-form") |> render_submit()
 
       assert has_element?(view, "header", "Cancelled")
       refute has_element?(view, "header", "Unpaid")
@@ -927,12 +927,12 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|[phx-click="open_cancel"]|) |> render_click()
-      assert has_element?(view, ~s|#cancel-order-form input[name="cancel[refund]"][value="50.00"]|)
+      assert has_element?(view, ~s|#cancel-form input[name="cancel[refund]"][value="50.00"]|)
 
-      view |> form("#cancel-order-form", cancel: %{refund: "60", reason: "Ill that day"}) |> render_submit()
-      assert has_element?(view, "#cancel-order [role=alert]", "Enter an amount from €0 to €50.00.")
+      view |> form("#cancel-form", cancel: %{refund: "60", reason: "Ill that day"}) |> render_submit()
+      assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from €0 to €50.00.")
 
-      view |> form("#cancel-order-form", cancel: %{refund: "30,00", reason: "Ill that day"}) |> render_submit()
+      view |> form("#cancel-form", cancel: %{refund: "30,00", reason: "Ill that day"}) |> render_submit()
 
       assert has_element?(view, "header", "Cancelled")
       assert has_element?(view, "#order-log", "Ill that day")

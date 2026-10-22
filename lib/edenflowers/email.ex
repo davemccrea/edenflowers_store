@@ -222,6 +222,32 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
+  Tells the customer Jennie cancelled their booking, and what was refunded.
+  Expects `:course` translated, `:first_name` and `:payments` loaded. `money`
+  holds what went back through Stripe (`refunded`) and what Jennie still
+  hands back herself (`to_return`).
+  """
+  def booking_cancelled(registration, money) do
+    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(registration.email)
+      |> bcc(record_copy_address())
+      |> subject(~t"Your booking on #{course = registration.course.name} is cancelled")
+      |> text_body(
+        Templates.booking_cancelled(%{
+          registration: registration,
+          refunded: money.refunded,
+          to_return: money.to_return,
+          refunded_to: refunded_to(registration.payments),
+          format_date: &Format.weekday_date(&1, registration.locale),
+          format_currency: &Format.currency(&1, registration.locale)
+        })
+      )
+    end)
+  end
+
+  @doc """
   A link to pay a course booking online, for what it still owes. Expects
   `:course` translated, `:first_name` and `:balance` loaded.
   """
