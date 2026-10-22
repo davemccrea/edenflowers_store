@@ -1,10 +1,10 @@
 ---
 id: TASK-86
 title: Streamline the product form
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-21 17:33'
-updated_date: '2026-10-21 21:10'
+updated_date: '2026-10-22 04:38'
 labels:
   - spec
   - admin
