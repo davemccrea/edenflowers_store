@@ -76,9 +76,10 @@ config :edenflowers,
     Edenflowers.Expenses
   ]
 
-# Admin photo uploads. Production sets UPLOADS_DIR to a folder inside
-# imgproxy's images dir; `just images-sync` leaves that folder alone.
-config :edenflowers, :uploads_dir, "images/uploads"
+# Admin photo uploads. Dev keeps them out of images/, the photos synced to the
+# servers; `just imgproxy` serves them. Production sets UPLOADS_DIR to a folder
+# inside imgproxy's images dir.
+config :edenflowers, :uploads_dir, "tmp/uploads"
 
 config :edenflowers, :ash_rate_limiter, hammer: Edenflowers.RateLimiter
 

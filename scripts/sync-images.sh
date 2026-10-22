@@ -36,3 +36,11 @@ for HOST in "${HOSTS[@]}"; do
   rsync -avz --chmod=D755,F644 --exclude=/images/uploads/ images "$HOST:/opt/edenflowers_store/"
   ok "synced"
 done
+
+# The admin's uploads live only on the production server, so keep a copy here.
+# No --delete: a photo lost on the server stays on this machine.
+if [[ " ${HOSTS[*]} " == *" edenflowers-production "* ]]; then
+  section "Pulling uploads from edenflowers-production"
+  rsync -avz edenflowers-production:/opt/edenflowers_store/images/uploads/ images/uploads/
+  ok "pulled"
+fi
