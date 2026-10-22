@@ -608,12 +608,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   # Answering "Was the customer home?" picks the email default again; ticking
-  # the box by hand otherwise sticks.
+  # the box by hand otherwise sticks. The photo checkbox only posts while it's
+  # shown, so while it's hidden it keeps its last value.
   def handle_event("validate_fulfillment", %{"fulfillment" => params}, socket) do
     params =
       if params["customer_home"] == socket.assigns.fulfillment_form[:customer_home].value,
         do: params,
         else: Map.put(params, "email_customer", email_by_default(socket.assigns.order, params["customer_home"]))
+
+    params = Map.put_new(params, "email_photo", socket.assigns.fulfillment_form[:email_photo].value || "true")
 
     {:noreply, assign(socket, :fulfillment_form, to_form(params, as: :fulfillment))}
   end
