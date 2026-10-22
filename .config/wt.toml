@@ -1,7 +1,9 @@
 # Copy gitignored files from main (deps/, .env). _build/ is left out so a stale
 # or half-compiled build in main can't leak in; each worktree compiles its own.
+# images/uploads/ holds the customer photos pulled from production, which dev
+# never serves.
 [step.copy-ignored]
-exclude = ["_build/"]
+exclude = ["_build/", "images/uploads/"]
 
 [[pre-start]]
 copy = "wt step copy-ignored"
@@ -25,3 +27,7 @@ db = "bash -c 'source .env && (mix ecto.drop --quiet 2>/dev/null; true) && mix a
 # Drop this worktree's dev and test databases
 [[pre-remove]]
 db = "bash -c 'source .env && mix ecto.drop --quiet; MIX_ENV=test mix ecto.drop --quiet'"
+
+# Stop this worktree's local imgproxy (see `just imgproxy`)
+[[pre-remove]]
+imgproxy = "bash -c 'source .env && docker rm -f edenflowers-imgproxy-$((PORT + 1)) >/dev/null 2>&1; true'"

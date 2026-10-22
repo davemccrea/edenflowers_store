@@ -42,7 +42,7 @@ Host edenflowers-production
 Run `just` to see the commands grouped by purpose.
 
 ```bash
-just dev                        # dev server at localhost:4000, with .env loaded
+just dev                        # dev server at localhost:4000, with .env loaded and a local imgproxy on 4001
 PORT=4001 just dev              # same, on another port (also honoured by stripe-listen)
 just test [args]                # run the test suite
 just stripe-listen              # forward Stripe webhooks to the dev server
@@ -55,14 +55,16 @@ just rollback production v1.6.0 [tmp/<dump>] # run an old release, restoring a d
 just deploy staging             # push current branch and deploy it to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
 just deploy-watch               # follow the latest deploy run
-just images-sync [staging|production] # sync images/ to servers (both if omitted)
+just images-sync [staging|production] # push images/ to servers (both if omitted); production also pulls uploads
 just server-logs staging        # tail app logs on a server
 just server-console production  # remote IEx on a server
 ```
 
 `just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. `just deploy staging` pushes the current branch and triggers the deploy workflow on it; plain pushes deploy nothing.
 
-`images/` is gitignored, so photos reach the servers only through `just images-sync`, which `just deploy` runs for its target before pushing. It doesn't delete: files removed locally stay on the server, as do photos uploaded through the admin (`images/uploads/`, never pushed to). Filenames must be ASCII.
+`images/` is gitignored, so photos reach the servers only through `just images-sync`, which `just deploy` runs for its target before pushing. It doesn't delete: files removed locally stay on the server, as do photos uploaded through the admin (`images/uploads/`, never pushed to). Syncing to production also pulls those uploads into the local `images/uploads/` without deleting anything, so this machine keeps a copy. Filenames must be ASCII.
+
+In dev, `just dev` starts imgproxy in Docker (OrbStack) on `PORT+1` and points `IMGPROXY_PREFIX` at it, so unsynced photos and admin uploads show up locally. It reads `images/` read-only; uploads land in `tmp/uploads`. The container keeps running after the server stops.
 
 ### Database
 
