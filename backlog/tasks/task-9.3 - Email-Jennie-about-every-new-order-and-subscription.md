@@ -4,7 +4,7 @@ title: Email Jennie about every new order and subscription
 status: ready-for-human
 assignee: []
 created_date: '2026-10-22 06:35'
-updated_date: '2026-10-22 06:36'
+updated_date: '2026-10-22 07:02'
 labels: []
 dependencies: []
 parent_task_id: TASK-9
@@ -19,7 +19,7 @@ ordinal: 186000
 
 ### What was built
 
-- Every new order and subscription emails `SHOP_NOTICE_EMAIL` (info@ on production), in Swedish: the title as subject, "Öppna beställningen:" or "Öppna prenumerationen:" and the admin link as the body, plus the date and time first for an order with one.
+- Every new order and subscription emails `SHOP_NOTICE_EMAIL` (info@ on production), in Swedish: the title as subject, "Öppna i adminpanelen:" and the admin link as the body, plus the date and time first for an order with one.
 - Sent for a paid checkout, a subscription's order (charged or card refused) and a new subscription. Not for Jennie's own custom orders.
 - The push now sends the same titles in the device's language, with no body, for the same events, so both channels say the same thing.
 - One change, `NotifyShop`, queues both; `Orders.ShopNotice` holds the wording.
