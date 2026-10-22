@@ -41,9 +41,6 @@ defmodule Edenflowers.Orders.ShopNotice do
       else: ~t"Delivery #{time}, order #{order.order_reference}"
   end
 
-  def link_label({_kind, %Order{}}), do: ~t"Open the order:"
-  def link_label({_kind, %Subscription{}}), do: ~t"Open the subscription:"
-
   def path({_kind, %Order{id: id}}), do: "/admin/orders/#{id}"
   def path({_kind, %Subscription{id: id}}), do: "/admin/subscriptions/#{id}"
 

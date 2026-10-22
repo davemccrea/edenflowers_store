@@ -320,7 +320,7 @@ defmodule Edenflowers.Email do
       |> to(Application.fetch_env!(:edenflowers, :shop_notice_email))
       |> subject(ShopNotice.title(notice, "sv-FI"))
       |> text_body("""
-      #{shop_notice_time(notice)}#{ShopNotice.link_label(notice)}
+      #{shop_notice_time(notice)}#{~t"Open in the admin:"}
       #{EdenflowersWeb.Endpoint.url()}#{ShopNotice.path(notice)}
       """)
     end)
