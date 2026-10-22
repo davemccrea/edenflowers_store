@@ -91,8 +91,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     # What its cancelled and refunded emails need.
     read :for_customer_email do
-      prepare build(load: [:first_name, :payments])
-      prepare Edenflowers.Courses.Preparations.TranslateCourse
+      prepare build(load: [:course, :first_name, :payments])
     end
 
     read :by_payment_link_token do

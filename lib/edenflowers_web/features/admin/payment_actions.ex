@@ -33,13 +33,9 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
       email_customer?: params["email_customer"] != "false"
     }
 
-    case Ash.update(payable, input, action: :cancel, actor: actor) do
-      {:ok, payable} ->
-        {:ok, payable}
-
-      {:error, error} ->
-        Logger.error("#{inspect(payable.__struct__)} #{payable.id} not cancelled: #{inspect(error)}")
-        {:error, payment_error(error)}
+    with {:error, error} <- Ash.update(payable, input, action: :cancel, actor: actor) do
+      Logger.error("#{inspect(payable.__struct__)} #{payable.id} not cancelled: #{inspect(error)}")
+      {:error, payment_error(error)}
     end
   end
 

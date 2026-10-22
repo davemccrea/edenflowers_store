@@ -38,6 +38,7 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.Payments.Errors.AmountMismatch
   alias Edenflowers.Payments.Errors.PaymentIntentMismatch
   alias Edenflowers.Payments.Payment
+  alias Edenflowers.Translations
 
   @metadata_keys ["order_id", "course_registration_id"]
 
@@ -506,8 +507,11 @@ defmodule Edenflowers.Payments do
   def get_for_customer_email!(%{"order_id" => id}),
     do: Ash.get!(Order, id, action: :for_customer_email, actor: system_actor())
 
-  def get_for_customer_email!(%{"course_registration_id" => id}),
-    do: Ash.get!(CourseRegistration, id, action: :for_customer_email, actor: system_actor())
+  # A booking's course is in the booking's own language.
+  def get_for_customer_email!(%{"course_registration_id" => id}) do
+    registration = Ash.get!(CourseRegistration, id, action: :for_customer_email, actor: system_actor())
+    Map.update!(registration, :course, &Translations.translate(&1, String.to_existing_atom(registration.locale)))
+  end
 
   defp find_payment(payment_intent_id) do
     payment =
