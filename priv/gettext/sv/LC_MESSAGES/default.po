@@ -58,7 +58,7 @@ msgstr "Kontakt"
 #: lib/edenflowers_web/features/admin/courses_live.ex:24
 #: lib/edenflowers_web/features/admin/courses_live.ex:41
 #: lib/edenflowers_web/features/courses/course_live.ex:71
-#: lib/edenflowers_web/features/courses/courses_live.ex:41
+#: lib/edenflowers_web/features/courses/courses_live.ex:42
 #: lib/edenflowers_web/features/marketing/faq_live.ex:60
 #: lib/edenflowers_web/features/marketing/home_live.ex:181
 #, elixir-autogen, elixir-format
@@ -1751,7 +1751,7 @@ msgstr[0] "%{count} plats för %{name}"
 msgstr[1] "%{count} platser för %{name}"
 
 #: lib/edenflowers_web/features/courses/course_live.ex:344
-#: lib/edenflowers_web/features/courses/courses_live.ex:129
+#: lib/edenflowers_web/features/courses/courses_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) left"
 msgid_plural "%{count} place(s) left"
@@ -1765,7 +1765,7 @@ msgstr[1] "%{count} platser kvar"
 msgid "Booking cancelled"
 msgstr "Bokningen avbokad"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:128
+#: lib/edenflowers_web/features/courses/courses_live.ex:159
 #, elixir-autogen, elixir-format
 msgid "Booking closed"
 msgstr "Bokningen har stängt"
@@ -1778,7 +1778,7 @@ msgid "Booking not found."
 msgstr "Bokningen hittades inte."
 
 #: lib/edenflowers_web/features/account/account_live.ex:90
-#: lib/edenflowers_web/features/courses/courses_live.ex:68
+#: lib/edenflowers_web/features/courses/courses_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "Coming up"
 msgstr "Kommande"
@@ -1795,12 +1795,12 @@ msgid "Course not found."
 msgstr "Kursen hittades inte."
 
 #: lib/edenflowers_web/features/courses/course_live.ex:343
-#: lib/edenflowers_web/features/courses/courses_live.ex:127
+#: lib/edenflowers_web/features/courses/courses_live.ex:158
 #, elixir-autogen, elixir-format
 msgid "Fully booked"
 msgstr "Fullbokad"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:43
+#: lib/edenflowers_web/features/courses/courses_live.ex:44
 #, elixir-autogen, elixir-format
 msgid "Come along and learn to make different kinds of floral arrangements. I show you the technique step by step and help you all the way, and of course you take your arrangement home. Materials and teaching are included, and you don't need any previous experience."
 msgstr "Kom med och lär dig olika typer av binderier. Jag visar tekniken steg för steg och hjälper dig hela vägen, och binderiet tar du självklart med dig hem. Material och undervisning ingår och du behöver ingen tidigare erfarenhet."
@@ -1820,12 +1820,12 @@ msgid "See you there,"
 msgstr "Vi ses,"
 
 #: lib/edenflowers_web/features/courses/course_live.ex:117
-#: lib/edenflowers_web/features/courses/courses_live.ex:74
+#: lib/edenflowers_web/features/courses/courses_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "Sign up for the newsletter"
 msgstr "Prenumerera på nyhetsbrevet"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:72
+#: lib/edenflowers_web/features/courses/courses_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "There are no courses on the calendar right now. I announce new dates in the newsletter first."
 msgstr "Just nu finns inga kurser i kalendern. Nya datum meddelar jag först i nyhetsbrevet."
@@ -2343,7 +2343,7 @@ msgstr "Blommor spelar en viktig roll i hela bröllopet. Jag hjälper er att hit
 msgid "Your payment didn't go through. Please try again or choose another payment method."
 msgstr "Betalningen gick inte igenom. Försök igen eller välj ett annat betalningssätt."
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:46
+#: lib/edenflowers_web/features/courses/courses_live.ex:47
 #, elixir-autogen, elixir-format
 msgid "See upcoming courses"
 msgstr "Se kommande kurser"
@@ -5514,12 +5514,12 @@ msgstr "Räkna ut ditt pris"
 msgid "English"
 msgstr "Engelska"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:125
+#: lib/edenflowers_web/features/courses/courses_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "In English"
 msgstr "På engelska"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:123
+#: lib/edenflowers_web/features/courses/courses_live.ex:154
 #, elixir-autogen, elixir-format
 msgid "In Swedish"
 msgstr "På svenska"
@@ -6078,7 +6078,7 @@ msgstr "En betalning för beställningen pågår. Vänta tills den har kommit in
 msgid "Finnish"
 msgstr "Finska"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:124
+#: lib/edenflowers_web/features/courses/courses_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "In Finnish"
 msgstr "På finska"
@@ -6409,7 +6409,7 @@ msgstr "Svar om leverans, avhämtning, skötsel av blommor, prenumerationer och 
 msgid "Florist in Vaasa"
 msgstr "Blomsterhandel i Vasa"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:22
+#: lib/edenflowers_web/features/courses/courses_live.ex:23
 #, elixir-autogen, elixir-format
 msgid "Floristry courses with Jennie at Eden Flowers in Vaasa. See upcoming dates and book your seat."
 msgstr "Blomsterkurser med Jennie på Eden Flowers i Vasa. Se kommande datum och boka din plats."
@@ -6902,7 +6902,7 @@ msgstr "Fäll ihop alla"
 msgid "%{category} in Vaasa"
 msgstr "%{category} i Vasa"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:19
+#: lib/edenflowers_web/features/courses/courses_live.ex:20
 #, elixir-autogen, elixir-format
 msgid "Floristry Courses in Vaasa"
 msgstr "Blomsterkurser i Vasa"
@@ -7651,3 +7651,18 @@ msgstr "Höjd (cm)"
 #, elixir-autogen, elixir-format
 msgid "Stems"
 msgstr "Stjälkar"
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:102
+#, elixir-autogen, elixir-format
+msgid "A course for your group"
+msgstr "Kurs för er grupp"
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:106
+#, elixir-autogen, elixir-format
+msgid "Email or call me, and we'll find a day."
+msgstr "Mejla eller ring mig, så hittar vi en dag."
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:104
+#, elixir-autogen, elixir-format
+msgid "I also run private courses, for example at a Christmas party, a staff wellbeing day or a hen party. We can meet in the shop in Minimossen or at your place, and in summer we're happy to make flower crowns in a park. Bouquet courses take up to 15 people, because I help each of you with your hands. Wreath courses take up to 30."
+msgstr "Jag håller också privata kurser, till exempel på julfesten, en tyky-dag eller en möhippa. Vi kan ses i butiken i Minimossen eller hos er, och på sommaren binder vi gärna hårkransar i en park. Bukettkurser tar upp till 15 personer, eftersom jag hjälper var och en med händerna. Kranskurser tar upp till 30."

@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
   alias Edenflowers.Courses
   alias Edenflowers.Format
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Business
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -81,6 +82,36 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
             </ol>
           </div>
         </section>
+
+        <section
+          id="groups"
+          class="bg-cream text-cream-content scroll-anchor-below-header mt-16 grid sm:mt-24 md:grid-cols-[2fr_3fr]"
+          aria-labelledby="groups-heading"
+        >
+          <.image
+            src="local:///image_5.jpg"
+            alt=""
+            width={1500}
+            height={1000}
+            sizes="(min-width: 768px) 40vw, 100vw"
+            class="aspect-[4/3] object-[69%_30%] h-full w-full object-cover md:aspect-auto"
+          />
+
+          <div class="flex flex-col items-start gap-6 px-6 py-12 sm:px-10 md:justify-center md:px-12 md:py-16 lg:px-16 lg:py-20">
+            <.flower name="flower-30" class="text-cream-content/60 h-12 w-12" />
+            <h2 id="groups-heading" class="section-title text-balance">{~t"A course for your group"}</h2>
+            <p class="max-w-prose text-lg leading-relaxed">
+              {~t"I also run private courses, for example at a Christmas party, a staff wellbeing day or a hen party. We can meet in the shop in Minimossen or at your place, and in summer we're happy to make flower crowns in a park. Bouquet courses take up to 15 people, because I help each of you with your hands. Wreath courses take up to 30."}
+            </p>
+            <p class="max-w-prose">{~t"Email or call me, and we'll find a day."}</p>
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <.button href={"mailto:#{Business.email()}"} variant="primary">{Business.email()}</.button>
+              <a href={"tel:#{Business.phone()}"} class="link-underline-static-body whitespace-nowrap">
+                {Business.phone_display()}
+              </a>
+            </div>
+          </div>
+        </section>
       </.container>
     </Layouts.app>
     """
@@ -92,15 +123,16 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
   # A full or closed course keeps its row: it still tells people courses happen.
   defp course_row(assigns) do
     ~H"""
-    <div class="grid-cols-[5rem_1fr] grid items-baseline gap-x-4 gap-y-2 py-6 sm:grid-cols-[8rem_1fr_auto] sm:gap-x-8">
+    <div class="grid-cols-[5rem_1fr] relative grid items-baseline gap-x-4 gap-y-2 py-6 sm:grid-cols-[8rem_1fr_auto] sm:gap-x-8">
       <p class="text-base-content/70 tabular-nums">{Format.day_month(@course.date, @locale)}</p>
 
       <div>
         <h3 class="card-heading text-balance">
+          <%!-- The link's ::after covers the whole row, so the date and price click through too. --%>
           <.link
             :if={@course.booking_open?}
             navigate={~q"/#{language}/courses/#{@course.id}"}
-            class="link-underline-hover touch-target"
+            class="link-underline-hover after:content-[''] after:absolute after:-inset-x-3 after:inset-y-0 focus-visible:outline-hidden focus-visible:after:border-primary focus-visible:after:border-2"
           >
             {@course.name}
           </.link>
