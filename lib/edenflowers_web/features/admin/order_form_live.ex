@@ -884,9 +884,9 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   defp payment_options do
     [
-      %{name: ~t"Send a payment link", value: "payment_link"},
-      %{name: ~t"Invoice after delivery or pickup", value: "invoice"},
-      %{name: ~t"Pay on delivery or at pickup", value: "on_fulfillment"}
+      %{name: ~t"Payment link", value: "payment_link"},
+      %{name: ~t"Invoice", value: "invoice"},
+      %{name: ~t"In person", value: "on_fulfillment"}
     ]
   end
 
