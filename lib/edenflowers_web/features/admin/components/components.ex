@@ -303,6 +303,7 @@ defmodule EdenflowersWeb.Admin.Components do
     ~H"""
     <a
       href={"https://app.fastmail.com/mail/search:#{URI.encode_www_form(to_string(@email))}"}
+      data-app-href={"x-safari-https://app.fastmail.com/mail/search:#{URI.encode_www_form(to_string(@email))}"}
       target="_blank"
       rel="noopener"
       class="link link-primary touch-target inline-flex items-center gap-1.5"
