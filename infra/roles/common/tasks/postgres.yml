@@ -20,6 +20,7 @@
   community.postgresql.postgresql_alter_system:
     param: password_encryption
     value: scram-sha-256
+  become: true
   become_user: postgres
   notify: Restart postgresql
 
@@ -27,6 +28,7 @@
   community.postgresql.postgresql_db:
     state: present
     name: "{{ db_name }}"
+  become: true
   become_user: postgres
 
 - name: Create db user
@@ -34,6 +36,7 @@
     state: present
     name: "{{ db_user }}"
     password: "{{ db_password }}"
+  become: true
   become_user: postgres
 
 - name: Grant db user access to app db
@@ -42,12 +45,14 @@
     privs: ALL
     type: database
     role: "{{ db_user }}"
+  become: true
   become_user: postgres
 
 - name: Enable citext extension
   community.postgresql.postgresql_ext:
     name: citext
     login_db: "{{ db_name }}"
+  become: true
   become_user: postgres
 
 - name: Grant db user access to public schema
@@ -57,23 +62,26 @@
     type: schema
     obj: public
     role: "{{ db_user }}"
+  become: true
   become_user: postgres
 
 - name: Get PostgreSQL hba config path
   ansible.builtin.command: psql -t -c "SHOW hba_file"
+  become: true
   become_user: postgres
-  register: pg_hba_path
+  register: common_pg_hba_path
   changed_when: false
   check_mode: false
 
 - name: Allow scram-sha-256 connection for the db user
   community.postgresql.postgresql_pg_hba:
-    dest: "{{ pg_hba_path.stdout | trim }}"
+    dest: "{{ common_pg_hba_path.stdout | trim }}"
     contype: host
     databases: all
     method: scram-sha-256
     users: "{{ db_user }}"
     address: 127.0.0.1/32
     create: true
+  become: true
   become_user: postgres
   notify: Restart postgresql
