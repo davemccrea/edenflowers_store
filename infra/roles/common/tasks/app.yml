@@ -1,17 +1,13 @@
 ---
-- name: Create app directory
+- name: Create app and images directories
   ansible.builtin.file:
-    path: "/opt/{{ project_name }}"
+    path: "{{ item }}"
     state: directory
     owner: "{{ user }}"
     mode: "0755"
-
-- name: Create images directory
-  ansible.builtin.file:
-    path: "/opt/{{ project_name }}/images"
-    state: directory
-    owner: "{{ user }}"
-    mode: "0755"
+  loop:
+    - "/opt/{{ project_name }}"
+    - "/opt/{{ project_name }}/images"
 
 # The app container runs as Debian's nobody (65534) and writes admin photo
 # uploads here; imgproxy reads them through the images mount.

@@ -5,6 +5,9 @@ project_name: edenflowers_store # Should match Phoenix project name / GitHub pro
 user: david
 
 # App
+project_url: edenflowers.fi
+maintenance_mode: true
+image_tag: latest
 app_port: 4000
 secret_key_base: "{{ vault_secret_key_base }}"
 token_signing_secret: "{{ vault_token_signing_secret }}"
@@ -22,7 +25,7 @@ github_token: "{{ vault_github_token }}"
 github_actions_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFHR1/KrPvby/MpfjDv9sM6X9zRMyrAVXNqVpcYzGJDm github-actions"
 
 # Tailscale
-tailscale_tailnet_name: tailfab2f.ts.net # https://login.tailscale.com/admin/dns
+tailscale_hostname: edenflowers-server
 tailscale_authkey: "{{ vault_tailscale_authkey }}"
 
 # Stripe
@@ -37,6 +40,7 @@ here_api_key: "{{ vault_here_api_key }}"
 mapbox_token: "{{ vault_mapbox_token }}"
 
 # imgproxy
+imgproxy_prefix: https://images.edenflowers.fi
 imgproxy_key: "{{ vault_imgproxy_key }}"
 imgproxy_salt: "{{ vault_imgproxy_salt }}"
 
@@ -44,6 +48,7 @@ imgproxy_salt: "{{ vault_imgproxy_salt }}"
 cloudflare_tunnel_token: "{{ vault_cloudflare_tunnel_token }}"
 
 # Papra
+papra_base_url: "https://papra.edenflowers.fi"
 papra_auth_secret: "{{ vault_papra_auth_secret }}"
 papra_api_key: "{{ vault_papra_api_key }}"
 papra_webhook_secret: "{{ vault_papra_webhook_secret }}"
@@ -56,3 +61,10 @@ anthropic_api_key: "{{ vault_anthropic_api_key }}"
 brevo_api_key: "{{ vault_brevo_api_key }}"
 mailer_from_name: Jennie
 mailer_from_email: info@edenflowers.fi
+brevo_newsletter_list_id: "4"
+error_alert_email: mail@dmccrea.me
+shop_notice_email: info@edenflowers.fi
+
+# Web Push for admin order notifications
+vapid_public_key: "BN4aYz2NjwKIBK5pDPWGMPlW3QWeWTP2eBTJaFnra0IBZ0EW4A16OeSrEjdnRUescacckmA3CW5amnYsj4aJZbM"
+vapid_private_key: "{{ vault_vapid_private_key }}"

@@ -1,17 +1,4 @@
-# Example vault file. Copy to `vault.yml` and encrypt with:
-#
-#   cp vault.example.yml host_vars/production/vault.yml
-#   # edit values, then:
-#   ansible-vault encrypt host_vars/production/vault.yml
-#
-# Or create from scratch with `ansible-vault create host_vars/production/vault.yml`
-# and paste the keys below.
-#
-# Every variable here is referenced from `group_vars/all/vars.yml`.
-#
-# Secrets shared by all hosts (Database, GitHub, HERE, Mapbox, Anthropic, SMTP, Tailscale, imgproxy,
-# maintenance bypass, Papra auth) live in
-# `group_vars/all/vault.yml` instead. A host vault can override any of them.
+# Every key in group_vars/all/vault.yml. Start one with `ansible-vault create group_vars/all/vault.yml` and paste these in.
 
 # App
 vault_secret_key_base: "generate with: mix phx.gen.secret"
@@ -60,7 +47,7 @@ vault_anthropic_api_key: "sk-ant-..."
 vault_brevo_api_key: "your_brevo_api_key"
 
 # Web Push VAPID private key for admin order notifications. The matching public
-# key goes in host_vars/<host>/vars.yml.
+# key goes in group_vars/all/vars.yml.
 # Generate a pair in the app repo with:
 #   mix run -e 'Edenflowers.WebPush.generate_keys() |> IO.inspect()'
 vault_vapid_private_key: "base64url private key"
