@@ -54,7 +54,7 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
-        assert email.bcc == [Application.fetch_env!(:edenflowers, :mailer_from_address)]
+        assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
         assert email.subject == "Your Eden Flowers order 1400 has been collected"
         assert email.text_body =~ "Your order has been collected."
         refute email.text_body =~ "delivered"
@@ -130,7 +130,7 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
-        assert email.bcc == [Application.fetch_env!(:edenflowers, :mailer_from_address)]
+        assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
         assert email.subject == "Your Eden Flowers order 1400 has been delivered"
         assert email.text_body =~ "Hi Ada,"
         assert email.text_body =~ "Your order for Grace has been delivered."
