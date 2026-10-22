@@ -181,10 +181,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     with_registration(socket, id, &email_confirmation(&1, actor))
   end
 
-  def handle_event("payment_link_copied", _params, socket) do
-    {:noreply, put_flash(socket, :info, ~t"Payment link copied.")}
-  end
-
   def handle_event("remove_seat", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
 
@@ -447,17 +443,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                     </.link>
                   </li>
                   <.actions_menu_button
-                    :if={to_collect?(registration)}
-                    menu={"registration-actions-#{registration.id}"}
-                    phx-click="email_payment_link"
-                    phx-value-id={registration.id}
-                    data-confirm={email_payment_link_confirmation(registration, @locale)}
-                  >
-                    {if payment_link_emailed?(registration),
-                      do: ~t"Resend payment link",
-                      else: ~t"Email payment link"}
-                  </.actions_menu_button>
-                  <.actions_menu_button
                     menu={"registration-actions-#{registration.id}"}
                     phx-click="email_confirmation"
                     phx-value-id={registration.id}
@@ -466,28 +451,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                     {if registration.confirmation_emailed_at,
                       do: ~t"Resend confirmation",
                       else: ~t"Email confirmation"}
-                  </.actions_menu_button>
-                  <.actions_menu_button
-                    :if={to_collect?(registration) and registration.payment_link_open?}
-                    id={"copy-payment-link-#{registration.id}"}
-                    menu={"registration-actions-#{registration.id}"}
-                    phx-click={
-                      JS.dispatch("edenflowers:copy", to: "#payment-link-url-#{registration.id}")
-                      |> JS.push("payment_link_copied")
-                    }
-                  >
-                    {~t"Copy payment link"}
-                    <span id={"payment-link-url-#{registration.id}"} hidden>
-                      {EdenflowersWeb.PaymentLink.url_for(registration)}
-                    </span>
-                  </.actions_menu_button>
-                  <.actions_menu_button
-                    :if={to_collect?(registration) and not registration.payment_link_open?}
-                    menu={"registration-actions-#{registration.id}"}
-                    phx-click="open_payment_link"
-                    phx-value-id={registration.id}
-                  >
-                    {~t"Get payment link"}
                   </.actions_menu_button>
                   <.actions_menu_button
                     :if={registration.refundable?}
@@ -734,7 +697,11 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           locale={@locale}
           params={Map.get(@refund_params, elem(@settling, 1).id, %{})}
         />
-        <.mark_paid_form :if={@mode == :settle and to_collect?(elem(@settling, 1))} registration={elem(@settling, 1)} />
+        <.collect_payment
+          :if={@mode == :settle and to_collect?(elem(@settling, 1))}
+          registration={elem(@settling, 1)}
+          locale={@locale}
+        />
         <p :if={nothing_to_settle?(elem(@settling, 1), @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this booking."}
         </p>
@@ -744,7 +711,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   defp settlement_title(_settling, :refund), do: ~t"Refund"
-  defp settlement_title(_settling, :settle), do: ~t"Record payment"
+  defp settlement_title(_settling, :settle), do: ~t"Collect payment"
 
   defp nothing_to_settle?(registration, :refund), do: not registration.refundable?
   defp nothing_to_settle?(registration, :settle), do: not to_collect?(registration)
@@ -805,6 +772,68 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   attr :registration, :map, required: true
+  attr :locale, :string, required: true
+
+  # Every way to collect a booking's balance in one place. The link comes first,
+  # as on an order: it's how most bookings Jennie adds get paid. Once it's been
+  # emailed, recording the payment is what's left to do, so that takes the lead.
+  defp collect_payment(assigns) do
+    assigns = assign(assigns, :emailed?, payment_link_emailed?(assigns.registration))
+
+    ~H"""
+    <section class="space-y-3">
+      <h3 class="eyebrow text-base-content/75">{~t"Payment link"}</h3>
+      <div :if={@registration.payment_link_open?} class="flex gap-2">
+        <input
+          id={"payment-link-url-#{@registration.id}"}
+          type="text"
+          readonly
+          aria-label={~t"Payment link"}
+          value={EdenflowersWeb.PaymentLink.url_for(@registration)}
+          class="input input-sm font-mono min-w-0 flex-1 text-xs"
+        />
+        <.copy_button
+          id={"copy-payment-link-#{@registration.id}"}
+          target={"#payment-link-url-#{@registration.id}"}
+          label={~t"Copy payment link"}
+        />
+      </div>
+      <p :if={@emailed?} class="text-base-content/75 text-sm">
+        {~t"Emailed #{time = Format.datetime(@registration.payment_link_emailed_at, @locale)}"}
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <.button
+          type="button"
+          phx-click="email_payment_link"
+          phx-value-id={@registration.id}
+          data-confirm={email_payment_link_confirmation(@registration, @locale)}
+          variant={if @emailed?, do: "secondary", else: "primary"}
+          size="sm"
+        >
+          <.icon name="hero-envelope" class="h-4 w-4" />
+          {if @emailed?, do: ~t"Resend payment link", else: ~t"Email payment link"}
+        </.button>
+        <.button
+          :if={not @registration.payment_link_open?}
+          type="button"
+          phx-click="open_payment_link"
+          phx-value-id={@registration.id}
+          variant="secondary"
+          size="sm"
+        >
+          {~t"Get payment link"}
+        </.button>
+      </div>
+    </section>
+    <section class="border-base-content/12 space-y-3 border-t pt-4">
+      <h3 class="eyebrow text-base-content/75">{~t"Paid another way"}</h3>
+      <.mark_paid_form registration={@registration} variant={if @emailed?, do: "primary", else: "secondary"} />
+    </section>
+    """
+  end
+
+  attr :registration, :map, required: true
+  attr :variant, :string, required: true
 
   defp mark_paid_form(assigns) do
     ~H"""
@@ -814,13 +843,13 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         id={"mark-paid-method-#{@registration.id}"}
         name="payment_method"
         type="select"
-        label={~t"Payment method"}
+        label={~t"How"}
         value={:zettle}
         options={payment_method_options()}
         class="select w-full"
       />
       <.input name="email_receipt" type="checkbox" label={~t"Email a receipt"} value="true" />
-      <.button type="submit" variant="primary" phx-disable-with={~t"Recording…"}>{~t"Record payment"}</.button>
+      <.button type="submit" variant={@variant} phx-disable-with={~t"Recording…"}>{~t"Record payment"}</.button>
     </form>
     """
   end

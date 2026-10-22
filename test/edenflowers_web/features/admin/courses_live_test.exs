@@ -191,6 +191,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      view |> element("#settle-#{registration.id}") |> render_click()
       assert render(view) =~ "Resend payment link"
     end
 
@@ -259,7 +260,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
   end
 
   describe "payment link" do
-    test "only a booking owing money offers one, alongside Record payment", %{conn: conn} do
+    test "only a booking owing money offers one, in the drawer that records payment", %{conn: conn} do
       owing = generate(course_registration(status: :confirmed, name: "Birgitta"))
       paid = generate(course_registration(status: :confirmed, name: "Anna"))
 
@@ -272,17 +273,21 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-      assert has_element?(view, "#settle-#{owing.id}")
       refute has_element?(view, "#settle-#{paid.id}")
+      refute has_element?(view, ~s|button[phx-click="email_payment_link"]|)
+
+      view |> element("#settle-#{owing.id}") |> render_click()
+
       assert has_element?(view, ~s|button[phx-click="email_payment_link"][phx-value-id="#{owing.id}"]|)
       assert has_element?(view, ~s|button[phx-click="open_payment_link"][phx-value-id="#{owing.id}"]|)
-      refute has_element?(view, ~s|button[phx-value-id="#{paid.id}"]|, "payment link")
+      assert has_element?(view, "#mark-paid-#{owing.id}")
     end
 
     test "emailing opens the link, sends it, and asks before sending again", %{conn: conn} do
       registration = generate(course_registration(status: :confirmed, name: "Birgitta", email: "birgitta@example.com"))
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      view |> element("#settle-#{registration.id}") |> render_click()
 
       assert view
              |> element(~s|button[phx-click="email_payment_link"][phx-value-id="#{registration.id}"]|)
@@ -302,16 +307,15 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       assert has_element?(
                view,
-               "#payment-link-url-#{registration.id}",
-               "/courses/pay/#{registration.payment_link_token}"
+               ~s|#payment-link-url-#{registration.id}[value$="/courses/pay/#{registration.payment_link_token}"]|
              )
     end
 
     test "paying at the course after the link was sent settles the booking and its link reads paid", %{conn: conn} do
       registration = generate(course_registration(status: :confirmed, name: "Birgitta"))
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
-      view |> element(~s|button[phx-click="open_payment_link"][phx-value-id="#{registration.id}"]|) |> render_click()
       view |> element("#settle-#{registration.id}") |> render_click()
+      view |> element(~s|button[phx-click="open_payment_link"][phx-value-id="#{registration.id}"]|) |> render_click()
 
       view |> form("#mark-paid-#{registration.id}", %{payment_method: "cash"}) |> render_submit()
 
