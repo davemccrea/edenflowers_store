@@ -5,7 +5,7 @@
     regexp: '^#?\s*PasswordAuthentication\s'
     line: "PasswordAuthentication no"
     state: present
-    backup: yes
+    backup: true
   notify: Reload SSH
 
 - name: Disable root login

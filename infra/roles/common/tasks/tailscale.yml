@@ -30,26 +30,26 @@
 - name: Check Tailscale status
   ansible.builtin.command:
     cmd: tailscale status --json
-  register: tailscale_status
+  register: common_tailscale_status
   changed_when: false
   failed_when: false
 
 - name: Parse Tailscale status
   ansible.builtin.set_fact:
-    tailscale_current_hostname: "{{ (tailscale_status.stdout | from_json).Self.HostName | default('') }}"
-    tailscale_online: "{{ (tailscale_status.stdout | from_json).Self.Online | default(false) }}"
-  when: tailscale_status.rc == 0 and tailscale_status.stdout != ''
+    common_tailscale_current_hostname: "{{ (common_tailscale_status.stdout | from_json).Self.HostName | default('') }}"
+    common_tailscale_online: "{{ (common_tailscale_status.stdout | from_json).Self.Online | default(false) }}"
+  when: common_tailscale_status.rc == 0 and common_tailscale_status.stdout != ''
 
 - name: Bring Tailscale up
   ansible.builtin.command:
     cmd: tailscale up --authkey={{ tailscale_authkey }} --hostname={{ tailscale_hostname }} --accept-dns=false
-  register: tailscale_up
-  changed_when: tailscale_up.rc == 0 and tailscale_up.stderr != ''
+  register: common_tailscale_up
+  changed_when: common_tailscale_up.rc == 0 and common_tailscale_up.stderr != ''
   no_log: true
   when: >
-    tailscale_status.rc != 0
-    or not tailscale_online | default(false)
-    or tailscale_current_hostname | default('') != tailscale_hostname
+    common_tailscale_status.rc != 0
+    or not common_tailscale_online | default(false)
+    or common_tailscale_current_hostname | default('') != tailscale_hostname
 
 - name: Allow traffic on tailscale0 interface
   community.general.ufw:
