@@ -64,6 +64,7 @@
   become_user: postgres
   register: pg_hba_path
   changed_when: false
+  check_mode: false
 
 - name: Allow scram-sha-256 connection for the db user
   community.postgresql.postgresql_pg_hba:

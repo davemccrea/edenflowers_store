@@ -1,8 +1,6 @@
 # The rows the admin can't create: admins, tax rates, fulfillment options and
-# product categories. Run once against an empty database:
-#
-#     just db-seed-production
-#
+# product categories. Run once against an empty production database, see the
+# "New server" section of infra/README.md.
 # priv/repo/seeds.exs runs this first and builds its dev fixtures on top.
 
 alias Edenflowers.Accounts.User

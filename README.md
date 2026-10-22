@@ -34,10 +34,10 @@ just format                     # format Elixir, JS and CSS
 just stripe-listen              # forward Stripe webhooks to the dev server
 just issues                     # issue board at 127.0.0.1:6420 (npm i -g backlog.md)
 just db-reset                   # drop and migrate dev + test
-just db-seed local              # seed the local database (run after db-reset)
-just db-backup production       # pg_dump the production database into tmp/
-just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
-just rollback production v1.6.0 [tmp/<dump>] # run an old release, restoring a dump if given
+just db-seed [--stripe]         # seed the local database (run after db-reset)
+just deploy [0.3.0]             # tag a release from main (prompts for version if omitted)
+just rollback v1.6.0 [tmp/<dump>] # run an old release, restoring a dump if given
+just backup                     # pg_dump the production database into tmp/
 just images-sync                # push images/ to production and pull its uploads
 just server-logs                # tail app logs
 just server-console             # remote IEx
@@ -74,7 +74,7 @@ wt remove
 
 ## Deployment
 
-`just deploy production` checks the tree is clean and `main` isn't behind origin, runs `mix precommit`, syncs images, bumps `mix.exs` and tags `vX.Y.Z`. After you confirm, it backs up the production database, pushes, watches the GitHub Actions deploy and publishes release notes. Plain pushes deploy nothing.
+`just deploy` checks the tree is clean and `main` isn't behind origin, runs `mix precommit`, syncs images, bumps `mix.exs` and tags `vX.Y.Z`. After you confirm, it backs up the production database, pushes, watches the GitHub Actions deploy and publishes release notes. Plain pushes deploy nothing.
 
 `images/` is gitignored, so photos reach production only through `just images-sync`. It deletes server files removed locally, at most 20 per run (more fails the sync and the deploy), and never touches admin uploads in `images/uploads/`, which it pulls back here instead. Filenames must be ASCII.
 
@@ -87,7 +87,7 @@ A rollback lasts until the next deploy. Fix forward on `main`, then deploy as us
 **Code only.** If the bad release's migrations only added columns or tables, the old code runs fine on the new schema:
 
 ```bash
-just rollback production v1.6.0
+just rollback v1.6.0
 ```
 
 It lists the migrations the old release will run without and asks before starting it.
@@ -95,7 +95,7 @@ It lists the migrations the old release will run without and asks before startin
 **Code and database.** Needed when a migration renamed or dropped something, or corrupted data. Everything written since the dump is lost, so check Stripe for payments to reconcile afterwards.
 
 ```bash
-just rollback production v1.6.0 tmp/production-v1.6.0-20261021T114210.dump
+just rollback v1.6.0 tmp/production-v1.6.0-20261021T114210.dump
 ```
 
 It backs up the current database first, so the rollback can be undone the same way. The dump must come from while that tag was running:

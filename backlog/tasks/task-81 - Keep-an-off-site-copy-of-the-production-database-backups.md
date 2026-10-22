@@ -28,7 +28,7 @@ Decisions:
 - Production only. Staging holds test data.
 - Server work lives in `infra/roles/common/tasks/backups.yml`, next to the existing 02:00 pg_dump cron.
 
-Related, already in this repo: `just db-backup production` (dump to tmp/, named after the running release), `just rollback <target> <tag> [dump]`, and the CLAUDE.md rule to back up before touching production.
+Related, already in this repo: `just backup` (dump to tmp/, named after the running release), `just rollback <tag> [dump]`, and the CLAUDE.md rule to back up before touching production.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
