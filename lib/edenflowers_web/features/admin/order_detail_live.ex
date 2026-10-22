@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.PhoneNumber
+  alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Admin.PhotoUpload
@@ -622,7 +623,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("mark_fulfilled", %{"fulfillment" => %{"customer_home" => "false"} = params}, socket) do
-    socket = PhotoUpload.store_uploads(socket, [@photo_field])
+    basename = Calendar.strftime(ShopTime.now(), "%Y%m%d-%H%M%S_") <> socket.assigns.order.order_reference
+    socket = PhotoUpload.store_uploads(socket, [@photo_field], basename)
 
     case socket.assigns.photo_slugs[@photo_field] do
       nil ->
