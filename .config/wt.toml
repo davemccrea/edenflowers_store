@@ -16,6 +16,10 @@ env = "bash -c 'echo >> .env && echo export DATABASE_NAME=edenflowers_{{ branch 
 [[pre-start]]
 deps = "bash -c 'source .env && mix deps.get && mix deps.compile'"
 
+# Tailwind's downloaded binary has an invalid signature; macOS SIGKILLs it unless re-signed
+[[pre-start]]
+tailwind = "bash -c 'source .env && mix tailwind.install --if-missing && codesign --force --sign - _build/tailwind-macos-arm64-*'"
+
 # Download translation locales
 [[pre-start]]
 locales = "bash -c 'source .env && mix localize.download_locales'"
