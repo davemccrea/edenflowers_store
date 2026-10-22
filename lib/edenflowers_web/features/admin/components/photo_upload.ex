@@ -25,7 +25,8 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
           Phoenix.LiveView.allow_upload(socket, upload_name(name),
             accept: @accept,
             max_entries: 1,
-            max_file_size: @max_file_size
+            max_file_size: @max_file_size,
+            auto_upload: true
           )
     end)
   end
