@@ -141,7 +141,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           mode={@settlement_mode}
           error={@settlement_error}
           payment_params={@payment_params}
-          goodwill_params={@goodwill_params}
+          refund_params={@refund_params}
           locale={@locale}
         />
 
@@ -425,10 +425,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   attr :order, Order, required: true
-  attr :mode, :atom, required: true, values: [:settle, :goodwill]
+  attr :mode, :atom, required: true, values: [:settle, :refund]
   attr :error, :string, default: nil
   attr :payment_params, :map, required: true
-  attr :goodwill_params, :map, required: true
+  attr :refund_params, :map, required: true
   attr :locale, :string, required: true
 
   defp settlement_drawer(assigns) do
@@ -456,41 +456,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           </div>
         </dl>
         <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
-        <%= if @mode == :goodwill do %>
-          <.goodwill_refund_form
-            :if={@order.goodwill_refundable?}
-            id="order-goodwill-refund"
-            record={@order}
-            locale={@locale}
-            params={@goodwill_params}
-            hidden={false}
-          />
-        <% else %>
-          <div :if={not @order.settled? and Decimal.positive?(@order.stripe_refund)} class="space-y-4">
-            <p class="text-base-content/75 text-sm">
-              {~t"Sends the money back to the customer's card. Stripe moves the money."}
-            </p>
-            <.button
-              type="button"
-              phx-click="refund_with_stripe"
-              phx-disable-with={~t"Refunding…"}
-              data-confirm={
-                ~t"Refund #{amount = Format.currency(@order.stripe_refund, @locale)} to the customer's card with Stripe?"
-              }
-              variant="primary"
-            >
-              {~t"Refund with Stripe"}
-            </.button>
-          </div>
-          <.record_payment_form
-            :if={not @order.settled? and (@collect? or Decimal.positive?(@order.outside_stripe_refund))}
-            id="order-balance"
-            record={@order}
-            locale={@locale}
-            params={@payment_params}
-            receipt_email?={!!@order.customer_email}
-          />
-        <% end %>
+        <.refund_form
+          :if={@mode == :refund and @order.refundable?}
+          id="order-refund"
+          record={@order}
+          email={@order.customer_email}
+          locale={@locale}
+          params={@refund_params}
+        />
+        <.record_payment_form
+          :if={@mode == :settle and @collect?}
+          id="order-balance"
+          record={@order}
+          locale={@locale}
+          params={@payment_params}
+          receipt_email?={!!@order.customer_email}
+        />
         <p :if={nothing_to_settle?(@order, @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this order."}
         </p>
@@ -499,14 +480,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
-  defp settlement_title(_order, :goodwill), do: ~t"Refund"
+  defp settlement_title(_order, :refund), do: ~t"Refund"
+  defp settlement_title(_order, :settle), do: ~t"Record payment"
 
-  defp settlement_title(order, :settle) do
-    if Decimal.negative?(order.balance), do: ~t"Record refund", else: ~t"Record payment"
-  end
-
-  defp nothing_to_settle?(order, :goodwill), do: not order.goodwill_refundable?
-  defp nothing_to_settle?(order, :settle), do: order.settled?
+  defp nothing_to_settle?(order, :refund), do: not order.refundable?
+  defp nothing_to_settle?(order, :settle), do: not Decimal.positive?(order.balance)
 
   attr :form, :any, default: nil
   attr :error, :string, default: nil
@@ -726,8 +704,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, assign(socket, :payment_params, params)}
   end
 
+  # Money owed back, or the menu's Refund, opens the refund form.
   def handle_event("open_settlement", params, socket) do
-    mode = if params["mode"] == "goodwill", do: :goodwill, else: :settle
+    mode =
+      if params["mode"] == "refund" or Decimal.negative?(socket.assigns.order.balance),
+        do: :refund,
+        else: :settle
 
     {:noreply,
      socket
@@ -740,13 +722,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, socket |> assign(:payment_params, params) |> settlement_result(result)}
   end
 
-  def handle_event("change_goodwill_refund", %{"goodwill_refund" => params}, socket) do
-    {:noreply, assign(socket, :goodwill_params, params)}
+  def handle_event("change_refund", %{"refund" => params}, socket) do
+    {:noreply, assign(socket, :refund_params, params)}
   end
 
-  def handle_event("goodwill_refund", %{"goodwill_refund" => params}, socket) do
-    result = PaymentActions.goodwill_refund(socket.assigns.order, params, socket.assigns.current_user)
-    {:noreply, socket |> assign(:goodwill_params, params) |> settlement_result(result)}
+  def handle_event("refund", %{"refund" => params}, socket) do
+    result = PaymentActions.refund(socket.assigns.order, params, socket.assigns.current_user)
+    {:noreply, socket |> assign(:refund_params, params) |> settlement_result(result)}
   end
 
   def handle_event("undo_payment", %{"id" => payment_id}, socket) do
@@ -803,10 +785,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  def handle_event("refund_with_stripe", _params, socket) do
-    {:noreply, settlement_result(socket, PaymentActions.refund_with_stripe(socket.assigns.order))}
-  end
-
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:changed:" <> _, event: event}, socket) do
     socket = assign_order(socket, reload(socket.assigns.order, socket))
@@ -836,11 +814,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp settlement_result(socket, {:error, message}) do
-    %{payment_params: payment_params, goodwill_params: goodwill_params} = socket.assigns
+    %{payment_params: payment_params, refund_params: refund_params} = socket.assigns
 
     socket
     |> assign_order(reload(socket.assigns.order, socket))
-    |> assign(payment_params: payment_params, goodwill_params: goodwill_params, settlement_error: message)
+    |> assign(payment_params: payment_params, refund_params: refund_params, settlement_error: message)
   end
 
   defp email_failed_message("record_fulfillment_email_failure"), do: ~t"Couldn't email the confirmation."
@@ -920,7 +898,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     |> assign(:payment_message_urls, payment_message_urls(order))
     |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
     |> assign(:payment_params, %{})
-    |> assign(:goodwill_params, %{})
+    |> assign(:refund_params, %{})
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
   end
@@ -949,9 +927,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp payment_label(%{reverses_payment_id: reversed, method: method}) when is_binary(reversed),
     do: ~t"Undone · #{how = OrderLog.payment_method_label(method)}"
-
-  defp payment_label(%{goodwill: true, method: method}),
-    do: ~t"Goodwill refund · #{how = OrderLog.payment_method_label(method)}"
 
   defp payment_label(%{amount: amount, method: method}) do
     if Decimal.negative?(amount),
@@ -1344,10 +1319,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       </.unavailable_menu_item>
 
       <.actions_menu_button
-        :if={@order.goodwill_refundable?}
+        :if={@order.refundable?}
         menu="order-actions"
         phx-click="open_settlement"
-        phx-value-mode="goodwill"
+        phx-value-mode="refund"
       >
         {~t"Refund"}
       </.actions_menu_button>

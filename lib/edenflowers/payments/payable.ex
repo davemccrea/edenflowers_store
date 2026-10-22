@@ -45,9 +45,9 @@ defmodule Edenflowers.Payments.Payable do
       change Changes.Reconcile
     end
 
-    # Money Jennie took or handed back by any method except Stripe.
+    # Money Jennie took by any method except Stripe.
     update :record_payment do
-      argument :amount, :decimal, allow_nil?: false, constraints: [scale: 2]
+      argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :email_receipt?, :boolean, default: false
 
@@ -61,33 +61,27 @@ defmodule Edenflowers.Payments.Payable do
       require_atomic? false
     end
 
-    # Money handed back to an unhappy customer by any method except Stripe,
-    # without lowering what was sold. Payments.refund_goodwill/3 does it
-    # through Stripe.
-    update :goodwill_refund do
+    # Money Jennie hands back, by any method, with or without cancelling.
+    # What was owed back is an ordinary refund and the rest is goodwill, so
+    # the record stays settled either way.
+    update :refund do
       argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :note, :string
-      argument :refund, :decimal, public?: false
+      argument :email_customer?, :boolean, default: true
+      argument :owed_back, :decimal, public?: false
+      argument :goodwill_refund, :decimal, public?: false
 
-      validate argument_does_not_equal(:payment_method, :stripe), message: "is refunded with Stripe"
-      validate Validations.GoodwillRefundable
-
-      change fn changeset, _context ->
-        case Ash.Changeset.get_argument(changeset, :amount) do
-          %Decimal{} = amount -> Ash.Changeset.set_argument(changeset, :refund, Decimal.negate(amount))
-          _invalid -> changeset
-        end
-      end
-
-      change {Changes.RecordPayment, amount: :refund, goodwill: true}
+      validate Validations.Refundable
+      change Changes.Refund
+      change {Changes.RecordPayment, amount: :owed_back, goodwill: false}, where: [present(:owed_back)]
+      change {Changes.RecordPayment, amount: :goodwill_refund, goodwill: true}, where: [present(:goodwill_refund)]
+      change Changes.SendRefundedEmail, where: [argument_equals(:email_customer?, true)]
       require_atomic? false
     end
 
     # Takes back a payment Jennie recorded by mistake, once, by recording the
-    # opposite amount against it. A refund on something that still stands
-    # otherwise has to wait until it's lowered (Validations.Recordable), or be
-    # a goodwill refund.
+    # opposite amount against it.
     update :undo_payment do
       argument :payment_id, :uuid, allow_nil?: false
       argument :amount, :decimal, public?: false
@@ -157,35 +151,8 @@ defmodule Edenflowers.Payments.Payable do
     # by its balance, but is settled.
     calculate :settled?, :boolean, expr(balance == 0 or refunded?)
 
-    # Money paid through Stripe goes back through Stripe, so Jennie can only
-    # hand back what she took herself.
-    calculate :outside_stripe_refund,
-              :decimal,
-              expr(
-                cond do
-                  balance >= 0 -> 0
-                  -balance < paid_outside_stripe -> -balance
-                  true -> paid_outside_stripe
-                end
-              )
-
-    # What Payments.refund_balance/1 sends back: the balance, as far as Stripe payments cover it.
-    calculate :stripe_refund,
-              :decimal,
-              expr(
-                cond do
-                  balance >= 0 or paid_through_stripe <= 0 -> 0
-                  -balance < paid_through_stripe -> -balance
-                  true -> paid_through_stripe
-                end
-              )
-
-    # Whether Jennie can hand money back without lowering what was sold
-    # (Validations.GoodwillRefundable). On something cancelled, that's money
-    # she kept, so only once nothing is owed back.
-    calculate :goodwill_refundable?,
-              :boolean,
-              expr(committed? and balance <= 0 and amount_held > 0 and (not cancelled? or balance == 0))
+    # Whether Jennie can hand money back (Validations.Refundable).
+    calculate :refundable?, :boolean, expr(committed? and balance <= 0 and amount_held > 0)
   end
 
   aggregates do

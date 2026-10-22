@@ -8,9 +8,10 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
     * `:amount` - the argument holding the amount.
     * `:method` - the payment method; read from the `:payment_method`
       argument when not given.
-    * `:goodwill` - whether it's a goodwill refund, carrying the `:note`
-      argument; read from the `:goodwill` argument when not given, as an undo
-      of one is goodwill too.
+    * `:goodwill` - whether it's a goodwill refund; read from the `:goodwill`
+      argument when not given, as an undo of one is goodwill too.
+
+  A refund carries the `:note` argument, Jennie's reason.
 
   Stripe ids come from the `:payment_intent_id` and `:stripe_refund_id`
   arguments, and the payment an undo takes back from `:reverses_payment_id`,
@@ -43,7 +44,7 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
             stripe_refund_id: Map.get(changeset.arguments, :stripe_refund_id),
             reverses_payment_id: Map.get(changeset.arguments, :reverses_payment_id),
             goodwill: goodwill,
-            note: if(goodwill, do: Map.get(changeset.arguments, :note))
+            note: Map.get(changeset.arguments, :note)
           })
         )
         |> Ash.create(authorize?: false)

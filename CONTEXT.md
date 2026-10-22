@@ -67,8 +67,12 @@ _Avoid_: Amount due, outstanding
 **Settled**:
 Nothing is owed either way, or everything taken was handed back.
 
+**Refund**:
+Money Jennie hands back on a placed order or confirmed course booking, cancelled or not, once nothing is left to collect, up to what's still held: by card through Stripe, or by recording money she handed back herself. She can give a reason, and the customer is emailed unless she unticks it. What was owed back is an ordinary refund; any more is a Goodwill refund.
+_Avoid_: Credit, reimbursement
+
 **Goodwill refund**:
-Money handed back to an unhappy customer without lowering what was sold, on a placed order or a confirmed course booking with nothing left to collect, up to what's still held. On a cancelled one, it gives back money Jennie kept, once nothing is owed back. It leaves the Balance where it was, so the order or booking stays settled, and one of everything received reads as refunded. A Stripe refund made in the dashboard beyond what was owed back is one too. Jennie can note why. The monthly report still shows it as a negative row.
+The part of a Refund beyond what was owed back, as when a customer wasn't happy. It leaves the Balance where it was, so the order or booking stays settled, and one of everything received reads as refunded. A Stripe refund made in the dashboard beyond what was owed back is one too. Jennie never chooses it: the admin just says Refund. The monthly report still shows it as a negative row.
 _Avoid_: Discount, compensation, credit
 
 **Undo** (a payment):

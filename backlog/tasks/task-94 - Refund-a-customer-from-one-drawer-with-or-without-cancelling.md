@@ -1,9 +1,10 @@
 ---
 id: TASK-94
 title: 'Refund a customer from one drawer, with or without cancelling'
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-22 15:59'
+updated_date: '2026-10-22 17:56'
 labels:
   - spec
   - customers
@@ -40,9 +41,15 @@ Copy through gettext; clear fuzzy msgstrs in en, fi and sv.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Order and booking pages have one Refund action opening the shared drawer; the three old refund entry points are gone
-- [ ] #2 A refund beyond what's owed back is split into ordinary and goodwill payments and leaves the record settled
-- [ ] #3 A refund works on standing and cancelled records, capped at what's held
-- [ ] #4 The customer gets a refunded email with amount, method and reason unless unticked
-- [ ] #5 No admin copy says goodwill
+- [x] #1 Order and booking pages have one Refund action opening the shared drawer; the three old refund entry points are gone
+- [x] #2 A refund beyond what's owed back is split into ordinary and goodwill payments and leaves the record settled
+- [x] #3 A refund works on standing and cancelled records, capped at what's held
+- [x] #4 The customer gets a refunded email with amount, method and reason unless unticked
+- [x] #5 No admin copy says goodwill
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+record_payment now takes money only; every refund goes through the refund action. A refund Jennie enters through Stripe no longer takes pending Stripe refunds off what it sends, since she names the amount; a cancel's refund still does.
+<!-- SECTION:NOTES:END -->

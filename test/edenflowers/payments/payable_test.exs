@@ -21,10 +21,8 @@ defmodule Edenflowers.Payments.PayableTest do
     :balance,
     :refunded?,
     :settled?,
-    :outside_stripe_refund,
-    :stripe_refund,
     :amount_held,
-    :goodwill_refundable?
+    :refundable?
   ]
 
   # An order or booking for 80.00, paid with `payments` like `[stripe: "50.00", cash: "30.00"]`.
@@ -93,11 +91,9 @@ defmodule Edenflowers.Payments.PayableTest do
     |> Ash.update()
   end
 
-  defp goodwill_refund(record, amount, method \\ :cash, note \\ nil) do
+  defp refund(record, amount, method \\ :cash, note \\ nil) do
     record
-    |> Ash.Changeset.for_update(:goodwill_refund, %{amount: amount, payment_method: method, note: note},
-      authorize?: false
-    )
+    |> Ash.Changeset.for_update(:refund, %{amount: amount, payment_method: method, note: note}, authorize?: false)
     |> Ash.update()
   end
 
@@ -143,8 +139,6 @@ defmodule Edenflowers.Payments.PayableTest do
         assert_money(record.total_due, "80.00")
         assert_money(record.balance, "80.00")
         refute record.settled?
-        assert_money(record.outside_stripe_refund, 0)
-        assert_money(record.stripe_refund, 0)
       end
 
       for payments <- [[stripe: "80.00"], [cash: "80.00"], [stripe: "50.00", mobilepay: "30.00"]] do
@@ -172,29 +166,12 @@ defmodule Edenflowers.Payments.PayableTest do
         assert record.settled?
       end
 
-      test "cancelled after paying by card is refunded through Stripe" do
-        record = build(@parent, state: :cancelled, payments: [stripe: "80.00"])
-
-        assert_money(record.balance, "-80.00")
-        refute record.settled?
-        assert_money(record.stripe_refund, "80.00")
-        assert_money(record.outside_stripe_refund, 0)
-      end
-
-      test "cancelled after paying cash is refunded by Jennie" do
-        record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
-
-        assert_money(record.balance, "-80.00")
-        assert_money(record.stripe_refund, 0)
-        assert_money(record.outside_stripe_refund, "80.00")
-      end
-
-      test "cancelled after paying by card and cash is refunded both ways" do
+      test "cancelled with money still held owes it back" do
         record = build(@parent, state: :cancelled, payments: [stripe: "50.00", cash: "30.00"])
 
         assert_money(record.balance, "-80.00")
-        assert_money(record.stripe_refund, "50.00")
-        assert_money(record.outside_stripe_refund, "30.00")
+        refute record.settled?
+        assert record.refundable?
       end
 
       test "cancelled and refunded in full is settled" do
@@ -219,8 +196,6 @@ defmodule Edenflowers.Payments.PayableTest do
         assert_money(record.total_due, "40.00")
         assert_money(record.balance, "-40.00")
         refute record.settled?
-        assert_money(record.stripe_refund, "40.00")
-        assert_money(record.outside_stripe_refund, "30.00")
       end
 
       test "an uncommitted one owes nothing yet" do
@@ -294,39 +269,8 @@ defmodule Edenflowers.Payments.PayableTest do
         assert Exception.message(error) =~ "Nothing can be recorded until it's placed or confirmed"
       end
 
-      test "a refund of what's owed back, up to what was paid outside Stripe, settles it" do
-        record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
-
-        assert {:ok, record} = record_payment(record, Decimal.negate(record.outside_stripe_refund), :mobilepay)
-        assert record.settled?
-      end
-
-      test "a refund larger than what was paid outside Stripe is refused" do
-        record = build(@parent, state: :cancelled, payments: [stripe: "50.00", cash: "30.00"])
-
-        assert {:error, error} = record_payment(record, "-30.01")
-        assert Exception.message(error) =~ "That's more than was paid outside Stripe"
-      end
-
-      test "a refund larger than what's owed back is refused" do
-        record = build(@parent, lowered: true, payments: [cash: "80.00"])
-
-        assert {:error, error} = record_payment(record, "-40.01")
-        assert Exception.message(error) =~ "That's more than is owed back"
-      end
-
-      test "a goodwill refund on a settled one is refused" do
-        record = build(@parent, payments: [cash: "80.00"])
-
-        assert {:error, error} = record_payment(record, "-10.00")
-        assert Exception.message(error) =~ "Nothing is owed back. Lower the price or cancel before refunding"
-      end
-
-      test "a refund while something is still to collect is refused" do
-        record = build(@parent, payments: [cash: "30.00"])
-
-        assert {:error, error} = record_payment(record, "-30.00")
-        assert Exception.message(error) =~ "Nothing is owed back. Lower the price or cancel before refunding"
+      test "a negative payment is refused: money handed back is a refund" do
+        assert {:error, _error} = record_payment(build(@parent, payments: [cash: "80.00"]), "-10.00")
       end
 
       test "undoing a whole payment recorded by mistake leaves the total owed again" do
@@ -445,11 +389,41 @@ defmodule Edenflowers.Payments.PayableTest do
                  Payments.record_stripe_refund(%{stripe_refund("pi_paid", 6_000) | id: owed.stripe_refund_id})
       end
 
-      test "a part goodwill refund leaves it settled" do
-        record = build(@parent, payments: [cash: "80.00"])
-        assert record.goodwill_refundable?
+      test "a refund of what's owed back is an ordinary refund and settles it" do
+        record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
 
-        assert {:ok, record} = goodwill_refund(record, "30.00")
+        assert {:ok, record} = refund(record, "80.00", :mobilepay)
+
+        assert record.settled?
+        assert [%{goodwill: false, method: :mobilepay}] = Enum.filter(payments(record), &Decimal.negative?(&1.amount))
+      end
+
+      test "a refund on a cancelled one pays back what's owed first" do
+        record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
+
+        assert {:ok, record} = refund(record, "30.00")
+
+        assert_money(record.balance, "-50.00")
+        assert [%{goodwill: false}] = Enum.filter(payments(record), &Decimal.negative?(&1.amount))
+      end
+
+      test "a refund beyond what's owed back marks the rest goodwill and leaves it settled" do
+        record = build(@parent, lowered: true, payments: [cash: "80.00"])
+
+        assert {:ok, record} = refund(record, "50.00")
+
+        assert record.settled?
+        refunds = record |> payments() |> Enum.filter(&Decimal.negative?(&1.amount)) |> Enum.sort_by(& &1.goodwill)
+        assert [%{goodwill: false} = owed, %{goodwill: true} = goodwill] = refunds
+        assert_money(owed.amount, "-40.00")
+        assert_money(goodwill.amount, "-10.00")
+      end
+
+      test "a part refund on a settled one leaves it settled" do
+        record = build(@parent, payments: [cash: "80.00"])
+        assert record.refundable?
+
+        assert {:ok, record} = refund(record, "30.00")
 
         assert record.settled?
         refute record.refunded?
@@ -457,62 +431,54 @@ defmodule Edenflowers.Payments.PayableTest do
         assert_money(record.amount_held, "50.00")
       end
 
-      test "a goodwill refund of everything received reads refunded" do
-        {:ok, record} = goodwill_refund(build(@parent, payments: [mobilepay: "80.00"]), "80.00", :mobilepay)
+      test "a refund of everything received reads refunded" do
+        {:ok, record} = refund(build(@parent, payments: [mobilepay: "80.00"]), "80.00", :mobilepay)
 
         assert record.refunded?
         assert record.settled?
-        refute reload(record).goodwill_refundable?
+        refute reload(record).refundable?
       end
 
-      test "a goodwill refund keeps its reason" do
-        {:ok, record} = goodwill_refund(build(@parent, payments: [cash: "80.00"]), "10.00", :cash, "Wilted early")
+      test "a refund keeps its reason" do
+        {:ok, record} = refund(build(@parent, payments: [cash: "80.00"]), "10.00", :cash, "Wilted early")
 
-        assert [%{goodwill: true, note: "Wilted early"}] = Enum.filter(payments(record), & &1.goodwill)
+        assert [%{note: "Wilted early"}] = Enum.filter(payments(record), &Decimal.negative?(&1.amount))
       end
 
-      test "a goodwill refund above what was received is refused" do
+      test "a refund above what was received is refused" do
         record = build(@parent, payments: [cash: "80.00"])
-        {:ok, record} = goodwill_refund(record, "30.00")
+        {:ok, record} = refund(record, "30.00")
 
-        assert {:error, error} = goodwill_refund(record, "50.01")
+        assert {:error, error} = refund(record, "50.01")
         assert Exception.message(error) =~ "That's more than was received"
       end
 
-      test "a goodwill refund above what was paid outside Stripe is refused outside Stripe" do
+      test "a refund above what was paid outside Stripe is refused outside Stripe" do
         record = build(@parent, payments: [stripe: "50.00", cash: "30.00"])
 
-        assert {:error, error} = goodwill_refund(record, "30.01")
+        assert {:error, error} = refund(record, "30.01")
         assert Exception.message(error) =~ "That's more than was paid outside Stripe"
-        assert {:error, _error} = goodwill_refund(record, "10.00", :stripe)
       end
 
-      test "a goodwill refund while something is to collect is refused" do
+      test "a refund while something is to collect is refused" do
         record = build(@parent, payments: [cash: "30.00"])
-        refute record.goodwill_refundable?
+        refute record.refundable?
 
-        assert {:error, error} = goodwill_refund(record, "10.00")
+        assert {:error, error} = refund(record, "10.00")
         assert Exception.message(error) =~ "Collect what's owed before refunding"
       end
 
-      test "a goodwill refund on a cancelled one still owing money back is refused" do
-        record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
-        refute record.goodwill_refundable?
-
-        assert {:error, _error} = goodwill_refund(record, "10.00")
-      end
-
-      test "a goodwill refund hands back money kept on a cancelled one" do
+      test "a refund hands back money kept on a cancelled one" do
         record = build(@parent, state: :cancelled, payments: [cash: "80.00"], kept: "80.00")
-        assert record.goodwill_refundable?
+        assert record.refundable?
 
-        assert {:ok, record} = goodwill_refund(record, "30.00")
+        assert {:ok, record} = refund(record, "30.00")
         assert record.settled?
-        assert Decimal.equal?(record.amount_held, "50.00")
+        assert_money(record.amount_held, "50.00")
       end
 
       test "a goodwill refund can be undone" do
-        {:ok, record} = goodwill_refund(build(@parent, payments: [cash: "80.00"]), "80.00")
+        {:ok, record} = refund(build(@parent, payments: [cash: "80.00"]), "80.00")
         refund = Enum.find(payments(record), & &1.goodwill)
 
         assert {:ok, record} = undo_payment(record, refund.id)
@@ -524,28 +490,28 @@ defmodule Edenflowers.Payments.PayableTest do
       end
 
       test "lowered after a goodwill refund owes back only what's still held above the price" do
-        {:ok, record} = goodwill_refund(build(@parent, payments: [cash: "80.00"]), "30.00")
+        {:ok, record} = refund(build(@parent, payments: [cash: "80.00"]), "30.00")
 
         lower(record)
 
         assert_money(reload(record).balance, "-10.00")
       end
 
-      test "a goodwill refund through Stripe is spread over the Stripe payments, newest first" do
+      test "a refund through Stripe is spread over the Stripe payments, newest first" do
         record = build(@parent)
         stripe_payment(@parent, record, "pi_old", "50.00", ~U[2026-10-01 10:00:00Z])
         stripe_payment(@parent, record, "pi_new", "30.00", ~U[2026-10-02 10:00:00Z])
 
         StripeAPI.Mock
         |> stub(:list_refunds, fn _pi -> {:ok, []} end)
-        |> expect(:create_refund, fn "pi_new", 3_000, _key, %{"reason" => "goodwill", "note" => "Late"} ->
+        |> expect(:create_refund, fn "pi_new", 3_000, _key, %{"reason" => "refund", "note" => "Late"} ->
           {:ok, stripe_refund("pi_new", 3_000)}
         end)
-        |> expect(:create_refund, fn "pi_old", 1_500, _key, %{"reason" => "goodwill", "note" => "Late"} ->
+        |> expect(:create_refund, fn "pi_old", 1_500, _key, %{"reason" => "refund", "note" => "Late"} ->
           {:ok, stripe_refund("pi_old", 1_500)}
         end)
 
-        assert {:ok, [_, _]} = Payments.refund_goodwill(reload(record), Decimal.new("45.00"), "Late")
+        assert {:ok, _record} = refund(reload(record), "45.00", :stripe, "Late")
 
         record = reload(record)
         assert record.settled?
@@ -557,11 +523,31 @@ defmodule Edenflowers.Payments.PayableTest do
                |> Enum.all?(&(&1.goodwill and &1.note == "Late"))
       end
 
-      test "a goodwill refund through Stripe above what was paid through it is refused" do
+      test "a refund through Stripe above what was paid through it is refused" do
         record = build(@parent, payments: [stripe: "50.00", cash: "30.00"])
 
-        assert {:error, "That's more than was paid through Stripe."} =
-                 Payments.refund_goodwill(record, Decimal.new("50.01"), nil)
+        assert {:error, error} = refund(record, "50.01", :stripe)
+        assert Exception.message(error) =~ "That's more than was paid through Stripe."
+      end
+
+      test "a refund emails the customer, unless Jennie unticks it" do
+        record = build(@parent, payments: [cash: "80.00"])
+
+        record =
+          if @parent == :order, do: Ash.Seed.update!(record, %{customer_email: "maria@example.com"}), else: record
+
+        record
+        |> Ash.Changeset.for_update(:refund, %{amount: "10.00", payment_method: :cash, email_customer?: false},
+          authorize?: false
+        )
+        |> Ash.update!()
+
+        refute_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
+
+        {:ok, _record} = refund(record, "10.00", :cash, "Sorry")
+        [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
+        assert %{"amount" => "10.00", "payment_method" => "cash", "note" => "Sorry"} = job.args
+        assert :ok = perform_job(Edenflowers.Payments.Workers.SendRefundedEmail, job.args)
       end
     end
   end

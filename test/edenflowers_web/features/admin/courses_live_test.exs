@@ -107,10 +107,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       assert has_element?(view, "#settlement-drawer", "Ill that day")
       assert has_element?(view, "#settlement-drawer", "Cancellation emailed to #{registration.email}.")
 
-      view
-      |> form("#refund-#{registration.id}", refund: %{payment_method: "cash"})
-      |> put_submitter(~s|#refund-#{registration.id} button[value="record"]|)
-      |> render_submit()
+      view |> form("#refund-#{registration.id}-form", refund: %{how: "cash"}) |> render_submit()
 
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
       registration = Ash.load!(registration, [:amount_paid], authorize?: false, reuse_values?: false)
@@ -366,7 +363,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert Decimal.equal?(reloaded.amount, "255.00")
   end
 
-  describe "goodwill refund" do
+  describe "refund" do
     defp paid_booking(payment_opts) do
       registration = generate(course_registration(status: :confirmed, name: "Anna", amount: Decimal.new("85.00")))
       generate(payment([course_registration_id: registration.id, amount: Decimal.new("85.00")] ++ payment_opts))
@@ -383,12 +380,10 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       refute has_element?(view, refund_menu_item(unpaid), "Refund")
       assert has_element?(view, refund_menu_item(paid), "Refund")
-      refute has_element?(view, "#goodwill-refund-#{paid.id}")
 
       view |> element(refund_menu_item(paid), "Refund") |> render_click()
 
-      assert has_element?(view, "#settlement-drawer #goodwill-refund-#{paid.id}")
-      refute has_element?(view, "#goodwill-refund-#{paid.id}.hidden")
+      assert has_element?(view, "#settlement-drawer #refund-#{paid.id}-form")
     end
 
     test "a part refund by cash is recorded with its reason and leaves nothing to collect", %{conn: conn} do
@@ -398,16 +393,14 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       view |> element(refund_menu_item(registration), "Refund") |> render_click()
 
       view
-      |> form("#goodwill-refund-#{registration.id}-form",
-        goodwill_refund: %{amount: "20", how: "cash", note: "Ran short of moss"}
-      )
+      |> form("#refund-#{registration.id}-form", refund: %{amount: "20", how: "cash", note: "Ran short of moss"})
       |> render_submit()
 
-      assert has_element?(view, "#registration-#{registration.id}", "Goodwill refund €20.00 · Cash")
+      assert has_element?(view, "#registration-#{registration.id}", "Refunded €20.00 · Cash")
       assert has_element?(view, "#registration-#{registration.id}", "Ran short of moss")
       refute has_element?(view, "#registration-#{registration.id}", "To collect")
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
-      refute has_element?(view, "#goodwill-refund-#{registration.id}")
+      assert [_job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
     end
 
     test "a part refund by Stripe is sent and recorded, leaving nothing to collect", %{conn: conn} do
@@ -415,7 +408,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       Edenflowers.External.StripeAPI.Mock
       |> Mox.stub(:list_refunds, fn "pi_booking" -> {:ok, []} end)
-      |> Mox.expect(:create_refund, fn "pi_booking", 2_000, _key, %{"reason" => "goodwill"} ->
+      |> Mox.expect(:create_refund, fn "pi_booking", 2_000, _key, %{"reason" => "refund"} ->
         {:ok, %{id: "re_booking", payment_intent: "pi_booking", amount: 2_000, status: "succeeded"}}
       end)
 
@@ -423,10 +416,10 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       view |> element(refund_menu_item(registration), "Refund") |> render_click()
 
       view
-      |> form("#goodwill-refund-#{registration.id}-form", goodwill_refund: %{amount: "20.00", how: "stripe"})
+      |> form("#refund-#{registration.id}-form", refund: %{amount: "20.00", how: "stripe"})
       |> render_submit()
 
-      assert has_element?(view, "#registration-#{registration.id}", "Goodwill refund €20.00 · Stripe")
+      assert has_element?(view, "#registration-#{registration.id}", "Refunded €20.00 · Stripe")
       refute has_element?(view, "#registration-#{registration.id}", "To collect")
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
     end
