@@ -91,6 +91,11 @@ jobs:
             # Restart app with new image
             docker compose up -d --remove-orphans
 
+      # `up -d` returns before the new container is serving, so resuming
+      # straight away catches the app mid-boot.
+      - name: Wait for app to boot
+        run: curl -fsS --retry 60 --retry-delay 2 --retry-all-errors https://edenflowers.fi/health
+
       # Resume even when the deploy fails, so a broken release still alerts.
       - name: Resume uptime monitor
         if: always()
