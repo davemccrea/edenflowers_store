@@ -333,7 +333,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
 
-    test "nobody was home: keeps the photo under a name that can't be guessed", %{conn: conn} do
+    test "nobody was home: names the photo after the time and order reference", %{conn: conn} do
       order = placed_order(fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
@@ -353,7 +353,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
       reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
       assert "local:///uploads/" <> file = reloaded.delivery_photo_slug
-      assert file =~ ~r/\A[0-9a-f]{32}\.jpg\z/
+      assert file =~ ~r/\A\d{8}-\d{6}_#{reloaded.order_reference}\.jpg\z/
       refute reloaded.email_delivery_photo
     end
 
