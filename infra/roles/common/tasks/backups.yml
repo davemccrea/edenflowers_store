@@ -1,0 +1,20 @@
+---
+- name: Create backup directory
+  ansible.builtin.file:
+    path: "/opt/{{ project_name }}/backups"
+    state: directory
+    owner: postgres
+    mode: "0750"
+
+- name: Schedule daily pg_dump
+  ansible.builtin.cron:
+    name: "Backup {{ db_name }}"
+    hour: "2"
+    minute: "0"
+    user: postgres
+    # Dump to .tmp so a failed run never leaves a .dump that looks good, and prune only after
+    # a successful dump, so a run of failing dumps can't age out the last good ones
+    job: >-
+      f=/opt/{{ project_name }}/backups/{{ db_name }}_$(date +\%Y\%m\%dT\%H\%M\%S).dump;
+      pg_dump -Fc {{ db_name }} > "$f.tmp" && mv "$f.tmp" "$f"
+      && find /opt/{{ project_name }}/backups -name '*.dump*' -mtime +30 -delete

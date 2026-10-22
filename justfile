@@ -143,3 +143,39 @@ server-logs target:
 server-console target:
     ssh -t edenflowers-{{ target }} 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
 
+
+# Install the Ansible collections used to provision servers (pass --upgrade to update them)
+[group('infra')]
+[working-directory: 'infra']
+infra-install *args:
+    ansible-galaxy collection install -r requirements.yml {{ args }}
+
+# Lint the Ansible playbooks and roles
+[group('infra')]
+[working-directory: 'infra']
+infra-lint:
+    ansible-lint
+
+# Edit a vault: `just vault` for the shared one, `just vault production` for a host's
+[group('infra')]
+[working-directory: 'infra']
+vault target="all":
+    ansible-vault edit {{ if target == "all" { "group_vars/all/vault.yml" } else { "host_vars/" + target + "/vault.yml" } }}
+
+# Bootstrap a fresh server as root (run once)
+[group('infra')]
+[working-directory: 'infra']
+bootstrap target:
+    ansible-playbook playbooks/bootstrap.yml -l {{ target }}
+
+# Dry run: show what provisioning a server would change
+[group('infra')]
+[working-directory: 'infra']
+provision-check target:
+    ansible-playbook site.yml -l {{ target }} --check --diff
+
+# Provision a server, or `all` (extra args go to ansible-playbook, e.g. --tags docker)
+[group('infra')]
+[working-directory: 'infra']
+provision target *args:
+    ansible-playbook site.yml -l {{ target }} {{ args }}

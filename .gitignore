@@ -55,3 +55,6 @@ PLAN.md
 
 # Database dumps can contain customer data.
 *.dump
+
+# Ansible vault password, never commit it.
+infra/.vault_pass

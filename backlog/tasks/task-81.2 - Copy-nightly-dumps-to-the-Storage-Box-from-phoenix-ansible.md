@@ -1,10 +1,10 @@
 ---
 id: TASK-81.2
-title: Copy nightly dumps to the Storage Box from phoenix-ansible
+title: Copy nightly dumps to the Storage Box from infra/
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-21 08:32'
-updated_date: '2026-10-21 08:49'
+updated_date: '2026-10-22 10:06'
 labels: []
 dependencies:
   - TASK-81.1
@@ -18,7 +18,7 @@ ordinal: 165000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 **Why:** This is the actual off-site copy.
 
-In phoenix-ansible roles/common/tasks/backups.yml:
+In `infra/roles/common/tasks/backups.yml`:
 - Generate an SSH key for the postgres user (it owns the backup folder) and print the public key. The human installs it with `cat key.pub | ssh -p23 <sub>@<sub>.your-storagebox.de install-ssh-key`.
 - Pin the box's host key in known_hosts.
 - Chain onto the existing dump-and-prune cron job: `rsync -a --delete -e 'ssh -p23' /opt/edenflowers_store/backups/ <sub>@<host>:edenflowers/`.

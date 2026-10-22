@@ -26,7 +26,7 @@ Decisions:
 - The server mirrors its backup folder, which the nightly cron already prunes to 30 days, to the box with `rsync -a --delete`. The Storage Box's automatic snapshots keep that history safe: they are managed in the Hetzner console, not over SSH, so a compromised server that wipes the mirror can't delete them.
 - A dedicated Storage Box sub-account, so the server's key can only reach its own folder.
 - Production only. Staging holds test data.
-- Server work lives in phoenix-ansible (roles/common/tasks/backups.yml), next to the existing 02:00 pg_dump cron.
+- Server work lives in `infra/roles/common/tasks/backups.yml`, next to the existing 02:00 pg_dump cron.
 
 Related, already in this repo: `just db-backup production` (dump to tmp/, named after the running release), `just rollback <target> <tag> [dump]`, and the CLAUDE.md rule to back up before touching production.
 <!-- SECTION:DESCRIPTION:END -->

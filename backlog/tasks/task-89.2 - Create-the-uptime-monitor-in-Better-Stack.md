@@ -23,13 +23,13 @@ Once TASK-89.1 is deployed to production, create a Better Stack monitor on the f
 - Keep the default confirmation from a second region before alerting.
 - Alert David by email only, with recovery emails on.
 - Keep the Better Stack login in the password manager.
-- Add a line to the phoenix-ansible README naming the monitor and the URL it watches.
+- Add a line to `infra/README.md` naming the monitor and the URL it watches.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 A failed /health check emails David
-- [ ] #2 The phoenix-ansible README names the monitor and its URL
+- [ ] #2 `infra/README.md` names the monitor and its URL
 <!-- AC:END -->
 
 ## Comments
