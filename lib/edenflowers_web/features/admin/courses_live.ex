@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
+  alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Layouts
@@ -346,6 +347,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           ]
         ]
       )
+      |> Translations.translate()
 
     assign(socket, :courses, courses)
   end

@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
   alias Edenflowers.Catalog.Product
   alias Edenflowers.Catalog.ProductCategory
   alias Edenflowers.Format
+  alias Edenflowers.Translations
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -22,7 +23,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
      socket
      |> assign(:page_title, ~t"Products")
      |> assign(:locale, Localize.get_locale())
-     |> assign(:category_options, Enum.map(categories, &{&1.name, &1.name}))}
+     |> assign(:category_options, Enum.zip_with(Translations.translate(categories), categories, &{&1.name, &2.name}))}
   end
 
   @impl true
@@ -65,7 +66,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
               navigate={~p"/admin/products/#{product.id}"}
               class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
             >
-              {product.name}
+              {Translations.translate(product).name}
             </.link>
           </:col>
           <:col
@@ -76,7 +77,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
             label={~t"Category"}
             class="max-sm:hidden"
           >
-            {product.product_category.name}
+            {Translations.translate(product.product_category).name}
           </:col>
           <:col :let={product} field="cheapest_price" sort label={~t"From"} class="text-right">
             <span :if={product.cheapest_price} class="whitespace-nowrap tabular-nums">
@@ -144,6 +145,13 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
 
     case_insensitive_term = Ash.CiString.new(search_term)
 
-    Ash.Query.filter(query, expr(contains(name, ^case_insensitive_term)))
+    Ash.Query.filter(
+      query,
+      expr(
+        contains(name, ^case_insensitive_term) or
+          contains(translations[:"sv-FI"][:name], ^case_insensitive_term) or
+          contains(translations[:fi][:name], ^case_insensitive_term)
+      )
+    )
   end
 end

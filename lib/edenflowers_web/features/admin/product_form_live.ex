@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias Edenflowers.Catalog.ProductCategory
   alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Pricing
+  alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
@@ -25,7 +26,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         {:ok,
          socket
          |> assign(:page_title, title)
-         |> assign(:categories, Ash.read!(ProductCategory, actor: actor))
+         |> assign(:categories, ProductCategory |> Ash.read!(actor: actor) |> Translations.translate())
          |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
          |> assign(:free_dist_km, Edenflowers.Fulfillment.free_dist_km())
          |> assign(:form, form)

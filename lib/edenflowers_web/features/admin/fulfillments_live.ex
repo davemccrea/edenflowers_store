@@ -27,6 +27,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.DeliveryCost
+  alias Edenflowers.Translations
   alias EdenflowersWeb.AdminCalendar
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -72,7 +73,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           >
             <:col :let={option} field="name" label={~t"Name"}>
               <.link navigate={~p"/admin/fulfillments/#{option.id}"} class="font-medium hover:underline">
-                {option.name}
+                {Translations.translate(option).name}
               </.link>
             </:col>
             <:col :let={option} label={~t"Prices"}>
@@ -211,7 +212,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
       {:ok, option} ->
         {:ok,
          socket
-         |> assign(:page_title, option.name)
+         |> assign(:page_title, Translations.translate(option).name)
          |> assign(:form, pricing_form(option, socket.assigns.current_user))}
     end
   end

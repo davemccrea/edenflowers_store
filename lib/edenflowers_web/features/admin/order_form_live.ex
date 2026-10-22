@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> assign(:order, order)
          |> assign(:page_title, page_title(mode, order))
          |> assign(:locale, Localize.get_locale())
-         |> assign(:fulfillment_options, Fulfillment.list_options!(actor: actor))
+         |> assign(:fulfillment_options, Fulfillment.list_options!(actor: actor) |> Translations.translate())
          |> assign(:shop_calendar, Fulfillment.get_shop_calendar!(actor: actor))
          |> assign(:variant_options, variant_options(actor))
          |> assign(
