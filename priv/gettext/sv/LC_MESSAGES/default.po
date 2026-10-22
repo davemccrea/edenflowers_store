@@ -1751,7 +1751,7 @@ msgstr[0] "%{count} plats för %{name}"
 msgstr[1] "%{count} platser för %{name}"
 
 #: lib/edenflowers_web/features/courses/course_live.ex:344
-#: lib/edenflowers_web/features/courses/courses_live.ex:160
+#: lib/edenflowers_web/features/courses/courses_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) left"
 msgid_plural "%{count} place(s) left"
@@ -1765,7 +1765,7 @@ msgstr[1] "%{count} platser kvar"
 msgid "Booking cancelled"
 msgstr "Bokningen avbokad"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:159
+#: lib/edenflowers_web/features/courses/courses_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "Booking closed"
 msgstr "Bokningen har stängt"
@@ -1795,7 +1795,7 @@ msgid "Course not found."
 msgstr "Kursen hittades inte."
 
 #: lib/edenflowers_web/features/courses/course_live.ex:343
-#: lib/edenflowers_web/features/courses/courses_live.ex:158
+#: lib/edenflowers_web/features/courses/courses_live.ex:159
 #, elixir-autogen, elixir-format
 msgid "Fully booked"
 msgstr "Fullbokad"
@@ -5514,12 +5514,12 @@ msgstr "Räkna ut ditt pris"
 msgid "English"
 msgstr "Engelska"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:156
+#: lib/edenflowers_web/features/courses/courses_live.ex:157
 #, elixir-autogen, elixir-format
 msgid "In English"
 msgstr "På engelska"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:154
+#: lib/edenflowers_web/features/courses/courses_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "In Swedish"
 msgstr "På svenska"
@@ -6078,7 +6078,7 @@ msgstr "En betalning för beställningen pågår. Vänta tills den har kommit in
 msgid "Finnish"
 msgstr "Finska"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:155
+#: lib/edenflowers_web/features/courses/courses_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "In Finnish"
 msgstr "På finska"

@@ -1751,7 +1751,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: lib/edenflowers_web/features/courses/course_live.ex:344
-#: lib/edenflowers_web/features/courses/courses_live.ex:160
+#: lib/edenflowers_web/features/courses/courses_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) left"
 msgid_plural "%{count} place(s) left"
@@ -1765,7 +1765,7 @@ msgstr[1] ""
 msgid "Booking cancelled"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:159
+#: lib/edenflowers_web/features/courses/courses_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "Booking closed"
 msgstr ""
@@ -1795,7 +1795,7 @@ msgid "Course not found."
 msgstr ""
 
 #: lib/edenflowers_web/features/courses/course_live.ex:343
-#: lib/edenflowers_web/features/courses/courses_live.ex:158
+#: lib/edenflowers_web/features/courses/courses_live.ex:159
 #, elixir-autogen, elixir-format
 msgid "Fully booked"
 msgstr ""
@@ -5514,12 +5514,12 @@ msgstr ""
 msgid "English"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:156
+#: lib/edenflowers_web/features/courses/courses_live.ex:157
 #, elixir-autogen, elixir-format
 msgid "In English"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:154
+#: lib/edenflowers_web/features/courses/courses_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "In Swedish"
 msgstr ""
@@ -6078,7 +6078,7 @@ msgstr ""
 msgid "Finnish"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:155
+#: lib/edenflowers_web/features/courses/courses_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "In Finnish"
 msgstr ""
