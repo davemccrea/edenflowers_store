@@ -32,7 +32,6 @@ PORT=4001 just dev              # same, on another port (also honoured by stripe
 just test [args]                # run the test suite
 just format                     # format Elixir, JS and CSS
 just stripe-listen              # forward Stripe webhooks to the dev server
-just email-previews             # export customer email wording to tmp/email-previews/
 just issues                     # issue board at 127.0.0.1:6420 (npm i -g backlog.md)
 just db-reset                   # drop and migrate dev + test
 just db-seed local              # seed the local database (run after db-reset)
@@ -53,7 +52,7 @@ Order finalization and the confirmation email depend on `payment_intent.succeede
 
 ### Email copy
 
-`just email-previews` renders the customer email scenarios with fictional data, in English, Swedish and Finnish, without sending anything. The same scenarios are at `/admin/emails`. When changing conditional email copy, add the case to `Edenflowers.Email.Previews`.
+`/admin/emails` shows every customer email scenario with fictional data, in English, Swedish and Finnish. When changing conditional email copy, add the case to `Edenflowers.Email.Previews`.
 
 ### Database and translations
 

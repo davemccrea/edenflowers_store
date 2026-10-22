@@ -41,11 +41,6 @@ format:
     mix format
     git ls-files '*.js' '*.mjs' '*.cjs' '*.css' ':!:*/vendor/*' | xargs npx --yes prettier@3.3.3 --write
 
-# Export customer email wording scenarios in English, Swedish and Finnish
-[group('development')]
-email-previews:
-    mix run --no-start scripts/email-previews.exs
-
 # Forward Stripe webhooks to the local dev server
 [group('development')]
 stripe-listen:
