@@ -37,8 +37,8 @@ defmodule EdenflowersWeb.Cart.Drawer do
             order={@order}
           />
 
-          <div :if={@order.add_ons_only?} class="flex flex-col gap-3 text-center">
-            <p class="text-base-content/70">
+          <div :if={@order.add_ons_only?} class="flex flex-col gap-3">
+            <p class="text-base-content/70 text-sm">
               {~t"Add-ons are sold with flowers. Add a bouquet to check out."}
             </p>
             <.button navigate={~q"/#{language}/store"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>

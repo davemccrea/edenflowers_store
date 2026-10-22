@@ -46,6 +46,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
 
     with :ok <- validate_cart_not_empty(order),
+         :ok <- validate_not_add_ons_only(order),
          {:ok, fulfillment_options} <- Fulfillment.list_options_for_checkout() do
       order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
       fulfillment_options = Translations.translate(fulfillment_options)
@@ -71,6 +72,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         # Reset so a stale step or details don't survive into the next checkout.
         Orders.restart_checkout!(order, actor: socket.assigns[:current_user])
         handle_mount_error(socket, "Cart is empty", ~t"Cart is empty")
+
+      {:error, :add_ons_only} ->
+        {:ok, back_to_store(socket)}
 
       error ->
         Logger.error("Error loading checkout: #{inspect(error)}")
@@ -451,13 +455,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     submit_form(socket, params)
   end
 
-  # The cart drawer hides Checkout for these carts; this catches a bouquet
-  # removed mid-checkout, or /checkout typed in directly.
+  # Mount and the cart-change broadcast already send these carts away; this
+  # catches a click that lands before the broadcast does.
   def handle_event("pay", _, %{assigns: %{order: %{add_ons_only?: true}}} = socket) do
-    {:noreply,
-     socket
-     |> put_flash(:info, ~t"Add-ons are sold with flowers. Add a bouquet to check out.")
-     |> push_navigate(to: ~q"/#{language}/store")}
+    {:noreply, back_to_store(socket)}
   end
 
   def handle_event("pay", _, %{assigns: %{client_secret: nil}} = socket) do
@@ -541,6 +542,23 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
     order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+
+    if order.add_ons_only?, do: {:noreply, back_to_store(socket)}, else: apply_cart_change(socket, order)
+  end
+
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
+    {:noreply, push_navigate(socket, to: ~q"/#{language}")}
+  end
+
+  def handle_info(:focus_first_error, socket) do
+    {:noreply, push_event(socket, "focus-first-error", %{})}
+  end
+
+  def handle_info({:delivery_quoted, quote}, socket) do
+    {:noreply, assign(socket, delivery_quote: quote)}
+  end
+
+  defp apply_cart_change(socket, order) do
     payment_mode_changed? = socket.assigns.order.subscription? != order.subscription?
 
     # A card removed from the cart takes its message with it; drop the typed
@@ -557,16 +575,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, socket}
   end
 
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
-    {:noreply, push_navigate(socket, to: ~q"/#{language}")}
-  end
-
-  def handle_info(:focus_first_error, socket) do
-    {:noreply, push_event(socket, "focus-first-error", %{})}
-  end
-
-  def handle_info({:delivery_quoted, quote}, socket) do
-    {:noreply, assign(socket, delivery_quote: quote)}
+  defp back_to_store(socket) do
+    socket
+    |> put_flash(:info, ~t"Add-ons are sold with flowers. Add a bouquet to check out.")
+    |> push_navigate(to: ~q"/#{language}/store")
   end
 
   defp submit_action_for(:contact_details), do: :submit_contact_details
@@ -1019,6 +1031,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp validate_cart_not_empty(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp validate_cart_not_empty(_order), do: :ok
+
+  defp validate_not_add_ons_only(%{add_ons_only?: true}), do: {:error, :add_ons_only}
+  defp validate_not_add_ons_only(_order), do: :ok
 
   defp lock_while_paying(js \\ %JS{}), do: JS.set_attribute(js, {"inert", ""}, to: @locked_while_paying)
 
