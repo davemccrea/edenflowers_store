@@ -8,8 +8,10 @@ defmodule Edenflowers.Email do
 
   import Swoosh.Email
 
+  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email.Templates
   alias Edenflowers.Format
+  alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.ShopNotice
 
   def order_confirmation(order) do
@@ -160,16 +162,19 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Expects `:payments` loaded, to say where the refund went. `money` holds what
+  Tells the customer their order or course booking is cancelled, and what was
+  refunded. Expects it read with `:for_customer_email`. `money` holds what
   went back through Stripe (`refunded`) and what Jennie still hands back
-  herself (`to_return`).
+  herself (`to_return`). `cancelled_by` is `:shop` or `:customer`: when the
+  customer cancelled, Jennie's copy reaches her inbox, as she has a bouquet
+  not to make or money to hand back.
   """
-  def order_cancelled(order, money, cancelled_by) do
+  def cancelled(%Order{} = order, money, cancelled_by) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
       |> to(order.customer_email)
-      |> bcc(from_address())
+      |> bcc(cancelled_copy_address(cancelled_by))
       |> subject(~t"Your Eden Flowers order #{order.order_reference} is cancelled")
       |> text_body(
         Templates.order_cancelled(%{
@@ -185,12 +190,32 @@ defmodule Edenflowers.Email do
     end)
   end
 
+  def cancelled(%CourseRegistration{} = registration, money, cancelled_by) do
+    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(registration.email)
+      |> bcc(cancelled_copy_address(cancelled_by))
+      |> subject(~t"Your booking on #{course = registration.course.name} is cancelled")
+      |> text_body(
+        Templates.booking_cancelled(%{
+          registration: registration,
+          refunded: money.refunded,
+          to_return: money.to_return,
+          refunded_to: refunded_to(registration.payments),
+          format_date: &Format.weekday_date(&1, registration.locale),
+          format_currency: &Format.currency(&1, registration.locale)
+        })
+      )
+    end)
+  end
+
   @doc """
-  Tells the customer what Jennie refunded on their order, and why. Expects
-  `:customer_first_name` and `:payments` loaded. `refund` holds the
+  Tells the customer what Jennie refunded on their order or course booking,
+  and why. Expects it read with `:for_customer_email`. `refund` holds the
   `amount`, the `payment_method` it went back by, and Jennie's `note`.
   """
-  def order_refunded(order, refund) do
+  def refunded(%Order{} = order, refund) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
@@ -209,11 +234,7 @@ defmodule Edenflowers.Email do
     end)
   end
 
-  @doc """
-  Tells the customer what Jennie refunded on their course booking, and why.
-  Expects `:course` translated, `:first_name` and `:payments` loaded.
-  """
-  def booking_refunded(registration, refund) do
+  def refunded(%CourseRegistration{} = registration, refund) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
       new()
       |> from(from_address())
@@ -231,6 +252,9 @@ defmodule Edenflowers.Email do
       )
     end)
   end
+
+  defp cancelled_copy_address(:customer), do: from_address()
+  defp cancelled_copy_address(:shop), do: record_copy_address()
 
   # Only Stripe payments are refunded here, almost always just one, so the
   # refund goes back the same way.
@@ -266,32 +290,6 @@ defmodule Edenflowers.Email do
       format_time: &Format.time(&1, registration.locale),
       format_currency: &Format.currency(&1, registration.locale)
     })
-  end
-
-  @doc """
-  Tells the customer Jennie cancelled their booking, and what was refunded.
-  Expects `:course` translated, `:first_name` and `:payments` loaded. `money`
-  holds what went back through Stripe (`refunded`) and what Jennie still
-  hands back herself (`to_return`).
-  """
-  def booking_cancelled(registration, money) do
-    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(registration.email)
-      |> bcc(record_copy_address())
-      |> subject(~t"Your booking on #{course = registration.course.name} is cancelled")
-      |> text_body(
-        Templates.booking_cancelled(%{
-          registration: registration,
-          refunded: money.refunded,
-          to_return: money.to_return,
-          refunded_to: refunded_to(registration.payments),
-          format_date: &Format.weekday_date(&1, registration.locale),
-          format_currency: &Format.currency(&1, registration.locale)
-        })
-      )
-    end)
   end
 
   @doc """

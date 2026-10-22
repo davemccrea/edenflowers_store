@@ -89,6 +89,12 @@ defmodule Edenflowers.Courses.CourseRegistration do
       prepare build(load: [:balance, :payment_overdue?, :course])
     end
 
+    # What its cancelled and refunded emails need.
+    read :for_customer_email do
+      prepare build(load: [:first_name, :payments])
+      prepare Edenflowers.Courses.Preparations.TranslateCourse
+    end
+
     read :by_payment_link_token do
       argument :token, :string, allow_nil?: false
       get? true

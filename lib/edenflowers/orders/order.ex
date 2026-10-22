@@ -358,6 +358,11 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
+    # What its cancelled and refunded emails need.
+    read :for_customer_email do
+      prepare build(load: [:customer_first_name, :payments])
+    end
+
     read :for_checkout do
       prepare build(load: @checkout_load)
     end

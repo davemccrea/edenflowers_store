@@ -1,9 +1,10 @@
 ---
 id: TASK-98.5
 title: Send cancelled and refunded emails through one worker each
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-22 19:47'
+updated_date: '2026-10-22 20:03'
 labels: []
 dependencies: []
 parent_task_id: TASK-98
@@ -21,6 +22,6 @@ One worker per email calling `Email.cancelled/3` and `Email.refunded/…`, which
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Neither worker branches on the resource
-- [ ] #2 The cancelled email's BCC follows cancelled_by for orders and bookings
+- [x] #1 Neither worker branches on the resource
+- [x] #2 The cancelled email's BCC follows cancelled_by for orders and bookings
 <!-- AC:END -->

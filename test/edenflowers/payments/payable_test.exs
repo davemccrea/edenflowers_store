@@ -585,6 +585,10 @@ defmodule Edenflowers.Payments.PayableTest do
         assert [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
         assert %{"refunded_amount" => "60.00", "to_return" => "0.00"} = job.args
         assert :ok = perform_job(Edenflowers.Payments.Workers.SendCancelledEmail, job.args)
+
+        Swoosh.TestAssertions.assert_email_sent(fn email ->
+          assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
+        end)
       end
 
       test "cancelling without a refund amount refunds everything held" do

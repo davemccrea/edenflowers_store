@@ -502,6 +502,13 @@ defmodule Edenflowers.Payments do
   def parent_key(%Order{}), do: :order_id
   def parent_key(%CourseRegistration{}), do: :course_registration_id
 
+  @doc "The order or course booking a job's args name by `parent_key/1`, read for emailing its customer."
+  def get_for_customer_email!(%{"order_id" => id}),
+    do: Ash.get!(Order, id, action: :for_customer_email, actor: system_actor())
+
+  def get_for_customer_email!(%{"course_registration_id" => id}),
+    do: Ash.get!(CourseRegistration, id, action: :for_customer_email, actor: system_actor())
+
   defp find_payment(payment_intent_id) do
     payment =
       Payment
