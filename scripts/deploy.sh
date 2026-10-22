@@ -21,7 +21,7 @@ watch_deploy() {
     sleep 2
   done
   if [[ -z "$run_id" ]]; then
-    printf "  %s✗ no deploy run found for %s, try 'just deploy-watch' in a moment%s\n" "$RED" "$sha" "$RESET" >&2
+    printf "  %s✗ no deploy run found for %s, try 'just watch-deploy' in a moment%s\n" "$RED" "$sha" "$RESET" >&2
     return 1
   fi
 
