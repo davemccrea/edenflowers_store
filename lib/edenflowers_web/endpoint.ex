@@ -1,11 +1,10 @@
 defmodule EdenflowersWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :edenflowers
 
-  # Read at runtime because dev names the cookie per port (see runtime.exs).
   def session_options do
     [
       store: :cookie,
-      key: Application.get_env(:edenflowers, :session_key, "_edenflowers_key"),
+      key: "_edenflowers_key",
       signing_salt: "ZUXNYtPz",
       # Matches the auth token_lifetime in Edenflowers.Accounts.User.
       max_age: 30 * 24 * 60 * 60,
