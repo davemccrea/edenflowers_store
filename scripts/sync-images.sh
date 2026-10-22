@@ -29,7 +29,8 @@ rsync -avz --chmod=D755,F644 --delete --max-delete=20 --exclude=/images/uploads/
 ok "synced"
 
 # The admin's uploads live only on the production server, so keep a copy here.
-# No --delete: a photo lost on the server stays on this machine.
+# --max-delete stops an emptied server folder from wiping this copy.
 section "Pulling uploads from edenflowers-production"
-rsync -avz edenflowers-production:/opt/edenflowers_store/images/uploads/ images/uploads/
+rsync -avz --delete --max-delete=20 --exclude=.DS_Store \
+  edenflowers-production:/opt/edenflowers_store/images/uploads/ images/uploads/
 ok "pulled"
