@@ -208,9 +208,15 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     test "releasing a hold the customer never paid for emails nobody" do
       {:ok, hold} = register(generate(course()), 1)
 
-      {:ok, _released} = Courses.cancel_registration(hold, actor: Edenflowers.Actors.system_actor())
+      {:ok, released} = Courses.release_registration_hold(hold, actor: Edenflowers.Actors.system_actor())
 
+      assert released.status == :cancelled
       refute_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
+    end
+
+    test "a hold paid for in the meantime isn't released", %{admin: admin} do
+      assert {:error, _not_a_hold} =
+               Courses.release_registration_hold(paid_booking(1, admin), actor: Edenflowers.Actors.system_actor())
     end
 
     test "Jennie keeps what she chooses, but not more than was paid", %{admin: admin} do

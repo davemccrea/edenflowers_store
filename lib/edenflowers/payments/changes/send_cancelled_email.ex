@@ -5,18 +5,12 @@ defmodule Edenflowers.Payments.Changes.SendCancelledEmail do
   out for a cancel that rolled back. Jennie is BCC'd.
 
   `cancelled_by` (`:customer` or `:shop`) picks how an order's email closes.
-  A booking's hold released before the customer paid was never a booking, so
-  nobody is told.
   """
   use Ash.Resource.Change
 
-  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Payments.Workers.SendCancelledEmail
 
   @impl true
-  def change(%{data: %CourseRegistration{status: status}} = changeset, _opts, _context) when status != :confirmed,
-    do: changeset
-
   def change(changeset, opts, _context) do
     email = Ash.Changeset.get_attribute(changeset, :customer_email) || Map.get(changeset.data, :email)
 

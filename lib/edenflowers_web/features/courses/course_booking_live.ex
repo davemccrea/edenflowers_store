@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
       # when the customer cancels or is declined in the app. Release the seat hold,
       # as "Change booking" does, and send them back to book again.
       {:ok, %{status: :pending} = registration} when payment_failed? ->
-        Courses.cancel_registration!(registration, actor: system_actor())
+        Courses.release_registration_hold!(registration, actor: system_actor())
 
         {:ok,
          socket
