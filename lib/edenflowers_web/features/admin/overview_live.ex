@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Orders
+  alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
 
@@ -148,7 +149,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           {"refund", "hero-arrow-uturn-left", ~t"To refund", to_refund},
           {"payment-overdue", "hero-banknotes", ~t"Payment overdue", payment_overdue},
           {"sold-out", "hero-archive-box-x-mark", ~t"Sold out",
-           Enum.map(Catalog.list_sold_out_variants!(actor: actor), &sold_out_row/1)}
+           Catalog.list_sold_out_variants!(actor: actor)
+           |> Translations.translate_assoc(:product)
+           |> Enum.map(&sold_out_row/1)}
         ],
         fn {_key, _icon, _title, rows} -> rows == [] end
       )
@@ -194,7 +197,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       end
 
     booking_rows =
-      for registration <- Courses.list_unsettled_registrations!(actor: actor) do
+      for registration <- Translations.translate_assoc(Courses.list_unsettled_registrations!(actor: actor), :course) do
         %{
           id: "booking-#{registration.id}",
           who: registration.name,
@@ -227,7 +230,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     %{
       id: "subscription-#{subscription.id}",
       who: subscription.user.name || ~t"Unnamed customer",
-      what: subscription.product_variant.product.name,
+      what: Translations.translate(subscription.product_variant.product).name,
       href: ~p"/admin/subscriptions/#{subscription.id}"
     }
   end
