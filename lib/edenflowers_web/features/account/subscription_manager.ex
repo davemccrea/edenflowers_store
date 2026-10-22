@@ -576,7 +576,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
               {@subscription.delivery_address}
             </p>
             <p class="text-base-content/70 mt-1 text-sm">
-              {~t"Moving?"}
               <.link navigate={~q"/#{language}/contact"} class="link-underline-hover text-base-content">
                 {~t"Contact us to change the address."}
               </.link>
@@ -640,11 +639,11 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   defp drawer_status(%{subscription: %{state: :paused}} = assigns) do
     ~H"""
     <p class="font-serif text-lg">{~t"Paused"}</p>
-    <p :if={@booked} class="text-base-content/70 text-sm">
-      {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} is already being prepared and still comes."}
-    </p>
     <p class="text-base-content/70 text-sm">
-      {~t"No deliveries or charges. Resume now and your next delivery is #{date = Format.weekday_date(Subscription.resume_date(@subscription), @locale)}."}
+      <span :if={@booked}>
+        {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} will still arrive."}
+      </span>
+      {~t"Resume now for a delivery on #{date = Format.weekday_date(Subscription.resume_date(@subscription), @locale)}."}
     </p>
     """
   end

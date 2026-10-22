@@ -479,7 +479,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       assert has_element?(
                view,
                "#{drawer(subscription)} [data-testid=subscription-drawer-status]",
-               "Resume now and your next delivery is #{weekday_date(subscription.next_fulfillment_date)}."
+               "Resume now for a delivery on #{weekday_date(subscription.next_fulfillment_date)}."
              )
 
       view |> element("#subscription-#{subscription.id}-pause", "Resume") |> render_click()
