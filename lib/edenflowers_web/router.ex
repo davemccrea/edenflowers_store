@@ -80,6 +80,7 @@ defmodule EdenflowersWeb.Router do
 
   scope "/", EdenflowersWeb do
     get "/sitemap.xml", Marketing.SitemapController, :index
+    get "/health", HealthController, :show
   end
 
   scope "/", EdenflowersWeb do
