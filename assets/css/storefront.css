@@ -94,14 +94,15 @@
   }
 }
 
-/* Unlike link-underline-hover, the category and size-option underlines snap in. */
-.category-index__item[data-active="true"] .category-index__name,
-.category-index__item:not([data-active="true"])
-  .category-index__link:hover
+/* Unlike link-underline-hover, the category and size-option underlines snap in.
+   LiveView marks a patch link phx-click-loading until the server answers, so
+   the underline moves on click without client state that outlives the patch. */
+.category-index:not(:has(.phx-click-loading))
+  [aria-current="page"]
   .category-index__name,
-.category-index__item:not([data-active="true"])
-  .category-index__link:focus-visible
-  .category-index__name {
+.category-index__link.phx-click-loading .category-index__name,
+.category-index__link:not([aria-current]):hover .category-index__name,
+.category-index__link:not([aria-current]):focus-visible .category-index__name {
   text-decoration: underline;
   text-decoration-color: var(--color-link-underline);
   text-decoration-thickness: var(--link-underline-thickness);

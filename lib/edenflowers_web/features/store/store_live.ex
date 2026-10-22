@@ -85,28 +85,10 @@ defmodule EdenflowersWeb.Store.StoreLive do
         </p>
 
         <nav :if={@categories != []} aria-label={~t"Categories"} class="mt-8 mb-12 md:mb-16">
-          <%!-- Keyed by the selection so a patch swaps in fresh items: the
-               optimistic JS attributes are sticky and would otherwise outlive
-               a back navigation. --%>
-          <ol
-            id={"categories-#{@selected_category && @selected_category.id}"}
-            class="[scrollbar-width:none] m-0 flex list-none gap-x-8 overflow-x-auto whitespace-nowrap p-0"
-          >
-            <li
-              :for={category <- @categories}
-              id={"category-item-#{category.id}"}
-              class="category-index__item"
-              data-active={@selected_category && @selected_category.id == category.id && "true"}
-            >
+          <ol class="category-index [scrollbar-width:none] m-0 flex list-none gap-x-8 overflow-x-auto whitespace-nowrap p-0">
+            <li :for={category <- @categories}>
               <.link
-                id={"category-link-#{category.id}"}
                 patch={~q"/#{language}/store/#{category.slug}"}
-                phx-click={
-                  JS.set_attribute({"data-active", "true"}, to: "#category-item-#{category.id}")
-                  |> JS.remove_attribute("data-active", to: ".category-index__item:not(#category-item-#{category.id})")
-                  |> JS.set_attribute({"aria-current", "page"}, to: "#category-link-#{category.id}")
-                  |> JS.remove_attribute("aria-current", to: ".category-index__link:not(#category-link-#{category.id})")
-                }
                 class="category-index__link text-base-content touch-target block py-2 no-underline"
                 aria-current={@selected_category && @selected_category.id == category.id && "page"}
               >
