@@ -26,6 +26,19 @@ defmodule Edenflowers.Orders.LineItemTest do
       assert line_item.quantity == 1
     end
 
+    test "names the product in the order's language" do
+      order = generate(order(locale: "fi"))
+      product = generate(product(name: "Red Roses", translations: %{fi: %{name: "Punaiset ruusut"}}))
+      variant = generate(product_variant(product_id: product.id))
+
+      line_item =
+        LineItem
+        |> Ash.Changeset.for_create(:add_to_cart, %{order_id: order.id, product_variant_id: variant.id})
+        |> Ash.create!(authorize?: false)
+
+      assert line_item.product_name == "Punaiset ruusut"
+    end
+
     test "increments quantity", %{order: order, product_variant: product_variant} do
       line_item =
         LineItem

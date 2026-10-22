@@ -781,17 +781,28 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
   end
 
   describe "Cart with only add-ons" do
-    test "paying after the flowers are removed sends the customer to the store", %{conn: conn, variant: variant} do
-      order = generate(order(state: :payment, customer_name: "Jane Doe", customer_email: "jane@example.com"))
-      flowers = Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+    setup do
       chocolate = generate(product(product_category_id: generate(product_category(add_on: true)).id))
-      Orders.add_line_item!(order.id, generate(product_variant(product_id: chocolate.id)).id, 1, authorize?: false)
+      %{chocolate_variant: generate(product_variant(product_id: chocolate.id))}
+    end
 
+    test "mounting sends the customer to the store", %{conn: conn, chocolate_variant: chocolate_variant} do
+      order = generate(order())
+      Orders.add_line_item!(order.id, chocolate_variant.id, 1, authorize?: false)
       conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
-      {:ok, view, _html} = live(conn, "/checkout")
-      Orders.remove_line_item!(order, flowers.id, authorize?: false)
 
-      assert {:error, {:live_redirect, %{to: "/en/store"}}} = view |> element("#checkout-form-4") |> render_submit()
+      assert {:error, {:live_redirect, %{to: "/en/store"}}} = live(conn, "/checkout")
+    end
+
+    test "removing the flowers mid-checkout sends the customer to the store",
+         %{conn: conn, order: order, chocolate_variant: chocolate_variant} do
+      Orders.add_line_item!(order.id, chocolate_variant.id, 1, authorize?: false)
+      [flowers] = order.line_items
+
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), "/checkout")
+      view |> element("#checkout-line-items-remove-#{flowers.id}") |> render_click()
+
+      assert_redirect(view, "/en/store", 1_000)
     end
   end
 

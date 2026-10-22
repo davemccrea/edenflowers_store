@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Store.StoreLiveTest do
     {:ok, view, _html} = live(conn, ~p"/en/store")
 
     assert has_element?(view, "h1", "Store")
-    assert has_element?(view, "#store-products h2", "No flowers listed here just now")
+    assert has_element?(view, "#store-products h2", "Nothing listed here just now")
     assert has_element?(view, "#store-products a[href='/en/contact']", "Get in touch")
     refute has_element?(view, "nav[aria-label='Categories']")
   end
