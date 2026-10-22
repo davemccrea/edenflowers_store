@@ -1,9 +1,10 @@
 ---
 id: TASK-98.3
 title: Send the cancel drawer's refund to the action
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-22 19:47'
+updated_date: '2026-10-22 19:58'
 labels: []
 dependencies: []
 parent_task_id: TASK-98
@@ -21,6 +22,6 @@ Both drawers submit `refund` and `held`; delete `PaymentActions.kept_amount/2`, 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Both pages pass refund and held straight to :cancel and show its error
-- [ ] #2 kept_amount/2 is gone
+- [x] #1 Both pages pass refund and held straight to :cancel and show its error
+- [x] #2 kept_amount/2 is gone
 <!-- AC:END -->

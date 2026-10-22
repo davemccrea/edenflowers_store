@@ -13,6 +13,11 @@ defmodule Edenflowers.Payments.Payable do
     * `calculate :committed?`: whether money is owed on it at all, so not an
       unplaced cart or a booking still holding its seats while the customer pays.
     * `calculate :cancelled?`
+    * `calculate :cancellable?`: whether it can be cancelled now
+    * `customer_email`: who's told about cancels and refunds, or nil
+    * `cancelled_at` and `cancellation_emailed_to` attributes, and a `:cancel`
+      update action with `Changes.Cancel` and its `refund`, `held` and
+      `email_customer?` arguments
   """
   use Spark.Dsl.Fragment, of: Ash.Resource
 

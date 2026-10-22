@@ -207,16 +207,14 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
-    # Frees the seats and refunds everything paid apart from `kept_amount`:
-    # card payments through Stripe, and anything paid in person is left as a
-    # balance for Jennie to hand back.
+    # Frees the seats. Payments.Changes.Cancel says what happens to the money.
     update :cancel do
-      accept [:kept_amount, :cancellation_reason]
+      accept [:cancellation_reason]
+      argument :refund, :decimal, constraints: [scale: 2]
+      argument :held, :decimal, constraints: [scale: 2]
       argument :email_customer?, :boolean, default: true
       change set_attribute(:status, :cancelled)
-      change PaymentChanges.CancelOpenPaymentIntent
-      change {PaymentChanges.RefundAllButKept, cancelled_by: :shop}
-      change PaymentChanges.SendCancelledEmail, where: [argument_equals(:email_customer?, true)]
+      change {PaymentChanges.Cancel, cancelled_by: :shop}
       require_atomic? false
     end
 
@@ -306,6 +304,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :confirmation_emailed_at, :utc_datetime
     # Why Jennie cancelled, for the customer's email and the courses page.
     attribute :cancellation_reason, :string
+    attribute :cancelled_at, :utc_datetime
     # The customer's email can change later; this names who was told.
     attribute :cancellation_emailed_to, :string
     attribute :receipt_emailed_at, :utc_datetime
@@ -339,6 +338,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # A pending booking only holds its seats while the customer pays.
     calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled])
     calculate :cancelled?, :boolean, expr(status == :cancelled)
+    calculate :cancellable?, :boolean, expr(status == :confirmed)
+    calculate :customer_email, :string, expr(email)
 
     calculate :holds_seats?,
               :boolean,

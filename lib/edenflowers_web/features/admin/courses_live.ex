@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
      |> assign(:locale, Localize.get_locale())
      |> assign(booking_form: nil, booking_course_id: nil, refund_params: %{})
      |> assign(settling_id: nil, settlement_mode: :settle, settlement_error: nil)
-     |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil, cancel_held: nil)
+     |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
      |> load_courses()}
   end
 
@@ -76,7 +76,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         keep_label={~t"Keep booking"}
         form={@cancel_form}
         error={@cancel_error}
-        held={@cancel_held}
         email={@cancelling && @cancelling.email}
         locale={@locale}
       />
@@ -200,18 +199,12 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     {:noreply, load_courses(socket)}
   end
 
-  # What the booking held is kept from when the drawer opened, so a retry after
-  # Stripe refunded but the cancel failed works out the same amount to keep,
-  # and refunds nothing twice.
   def handle_event("open_cancel", %{"id" => id}, socket) do
     {_course, registration} = find_booking(socket.assigns.courses, id)
-    held = Decimal.max(registration.amount_held, 0)
-    params = %{"refund" => Decimal.to_string(held, :normal), "reason" => "", "email_customer" => "true"}
 
     {:noreply,
      socket
-     |> assign(cancelling: registration, cancel_held: held, cancel_error: nil)
-     |> assign(:cancel_form, to_form(params, as: :cancel))
+     |> assign(cancelling: registration, cancel_form: PaymentActions.cancel_form(registration), cancel_error: nil)
      |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
 
@@ -226,21 +219,17 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   def handle_event("submit_cancel", %{"cancel" => params}, socket) do
     socket = assign(socket, :cancel_form, to_form(params, as: :cancel))
 
-    case PaymentActions.kept_amount(socket.assigns.cancel_held, params["refund"]) do
-      {:ok, kept} ->
-        input = %{
-          kept_amount: kept,
-          cancellation_reason: params["reason"],
-          email_customer?: params["email_customer"] != "false"
-        }
+    case PaymentActions.cancel(socket.assigns.cancelling, params, socket.assigns.current_user) do
+      {:ok, _registration} ->
+        {:noreply,
+         socket
+         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
+         |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
+         |> put_flash(:info, ~t"Booking cancelled.")
+         |> load_courses()}
 
-        cancel_booking(socket, input)
-
-      :error ->
-        message =
-          ~t"Enter an amount from €0 to #{amount = Format.currency(socket.assigns.cancel_held, socket.assigns.locale)}."
-
-        {:noreply, assign(socket, :cancel_error, message)}
+      {:error, message} ->
+        {:noreply, socket |> assign(:cancel_error, message) |> load_courses()}
     end
   end
 
@@ -287,26 +276,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
     {:noreply, load_courses(socket)}
   end
-
-  defp cancel_booking(socket, input) do
-    case Courses.cancel_registration(socket.assigns.cancelling, input, actor: socket.assigns.current_user) do
-      {:ok, _registration} ->
-        {:noreply,
-         socket
-         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
-         |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
-         |> put_flash(:info, ~t"Booking cancelled.")
-         |> load_courses()}
-
-      {:error, error} ->
-        Logger.error("Course registration #{socket.assigns.cancelling.id} not cancelled: #{inspect(error)}")
-        {:noreply, socket |> assign(:cancel_error, cancel_error_message(error)) |> load_courses()}
-    end
-  end
-
-  # Says why, e.g. Stripe refusing the refund.
-  defp cancel_error_message(%{errors: [%{message: message} | _]}) when is_binary(message), do: message
-  defp cancel_error_message(_error), do: ~t"Could not cancel the booking."
 
   defp find_booking(_courses, nil), do: nil
 

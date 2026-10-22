@@ -1035,7 +1035,7 @@ seed_refund.(petra_payment, "re_seed_#{petra.order_reference}")
 
 # Called off the day before, so Jennie kept the payment.
 oskar = Ash.load!(online_order.("Oskar Wikström"), :amount_held, authorize?: false)
-Orders.cancel_order!(oskar, %{kept_amount: oskar.amount_held}, actor: jennie)
+Orders.cancel_order!(oskar, %{refund: 0, held: oskar.amount_held}, actor: jennie)
 
 # Paid, then the plant was out of stock: money to hand back through Stripe.
 nora = online_order.("Nora Back")

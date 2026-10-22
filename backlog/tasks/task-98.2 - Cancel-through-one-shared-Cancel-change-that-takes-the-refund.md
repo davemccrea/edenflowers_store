@@ -1,9 +1,10 @@
 ---
 id: TASK-98.2
 title: Cancel through one shared Cancel change that takes the refund
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-22 19:47'
+updated_date: '2026-10-22 19:58'
 labels: []
 dependencies: []
 parent_task_id: TASK-98
@@ -21,8 +22,14 @@ ordinal: 206000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A booking can't be cancelled twice
-- [ ] #2 A retry after a partial Stripe refund keeps the same amount
-- [ ] #3 Money arriving while the drawer was open refuses the cancel
-- [ ] #4 One shared test runs the cancel cases against an order and a booking
+- [x] #1 A booking can't be cancelled twice
+- [x] #2 A retry after a partial Stripe refund keeps the same amount
+- [x] #3 Money arriving while the drawer was open refuses the cancel
+- [x] #4 One shared test runs the cancel cases against an order and a booking
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The fragment also requires a cancellable? calculation: an order is cancellable only while placed and pending, which committed?/cancelled? can't say. Cancel absorbed RefundAllButKept and the SendCancelledEmail change.
+<!-- SECTION:NOTES:END -->

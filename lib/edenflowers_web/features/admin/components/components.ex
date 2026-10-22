@@ -24,14 +24,14 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :keep_label, :string, required: true
   attr :form, :any, default: nil
   attr :error, :string, default: nil
-  attr :held, :any, default: nil, doc: "what was held when the drawer opened"
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
 
   @doc """
   Cancels an order or a booking: how much to refund, an optional reason, and
-  whether to email the customer. Sends `validate_cancel` and `submit_cancel`
-  with `cancel` params, and `close_cancel` when it closes.
+  whether to email the customer. Takes `PaymentActions.cancel_form/1`. Sends
+  `validate_cancel` and `submit_cancel` with `cancel` params, and
+  `close_cancel` when it closes.
   """
   def cancel_drawer(assigns) do
     ~H"""
@@ -46,7 +46,8 @@ defmodule EdenflowersWeb.Admin.Components do
       >
         <.drawer_body>
           <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
-          <div :if={Decimal.positive?(@held)} class="space-y-2">
+          <input type="hidden" name={@form[:held].name} value={@form[:held].value} />
+          <div :if={Decimal.positive?(Decimal.new(@form[:held].value))} class="space-y-2">
             <.input
               field={@form[:refund]}
               type="text"
@@ -55,7 +56,7 @@ defmodule EdenflowersWeb.Admin.Components do
               class="input w-full tabular-nums"
             />
             <p class="text-base-content/75 text-sm">
-              {~t"Paid #{amount = Edenflowers.Format.currency(@held, @locale)}. Card payments go back through Stripe; anything paid in person you hand back yourself. Whatever you don't refund you keep."}
+              {~t"Paid #{amount = Edenflowers.Format.currency(Decimal.new(@form[:held].value), @locale)}. Card payments go back through Stripe; anything paid in person you hand back yourself. Whatever you don't refund you keep."}
             </p>
           </div>
           <.input

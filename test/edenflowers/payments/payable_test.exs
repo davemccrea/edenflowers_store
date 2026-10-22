@@ -121,6 +121,27 @@ defmodule Edenflowers.Payments.PayableTest do
     }
   end
 
+  defp cancel(record, input) do
+    record
+    |> Ash.Changeset.for_update(:cancel, input, authorize?: false)
+    |> Ash.update()
+  end
+
+  defp cancelled?(record), do: Ash.load!(record, :cancelled?, authorize?: false, reuse_values?: false).cancelled?
+
+  defp with_email(%Edenflowers.Orders.Order{} = order),
+    do: Ash.Seed.update!(order, %{customer_email: "maria@example.com"})
+
+  defp with_email(registration), do: registration
+
+  defp expect_stripe_refund(payment_intent_id, cents) do
+    StripeAPI.Mock
+    |> stub(:list_refunds, fn _pi -> {:ok, []} end)
+    |> expect(:create_refund, fn ^payment_intent_id, ^cents, _key, %{"reason" => "owed"} ->
+      {:ok, stripe_refund(payment_intent_id, cents)}
+    end)
+  end
+
   defp unsettled_ids(:order), do: Enum.map(Edenflowers.Orders.list_unsettled_orders!(authorize?: false), & &1.id)
 
   defp unsettled_ids(:booking),
@@ -548,6 +569,112 @@ defmodule Edenflowers.Payments.PayableTest do
         [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
         assert %{"amount" => "10.00", "payment_method" => "cash", "note" => "Sorry"} = job.args
         assert :ok = perform_job(Edenflowers.Payments.Workers.SendRefundedEmail, job.args)
+      end
+
+      test "cancelling refunds through Stripe all but what Jennie keeps, and emails the customer" do
+        record = with_email(build(@parent))
+        stripe_payment(@parent, record, "pi_paid", "80.00", ~U[2026-10-01 10:00:00Z])
+        expect_stripe_refund("pi_paid", 6_000)
+
+        assert {:ok, cancelled} = cancel(record, %{refund: "60.00", held: "80.00"})
+
+        assert cancelled.cancelled_at
+        assert cancelled.cancellation_emailed_to
+        assert_money(cancelled.kept_amount, "20.00")
+        assert reload(cancelled).settled?
+        assert [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
+        assert %{"refunded_amount" => "60.00", "to_return" => "0.00"} = job.args
+        assert :ok = perform_job(Edenflowers.Payments.Workers.SendCancelledEmail, job.args)
+      end
+
+      test "cancelling without a refund amount refunds everything held" do
+        record = build(@parent, payments: [cash: "80.00"])
+
+        assert {:ok, cancelled} = cancel(record, %{})
+
+        assert_money(cancelled.kept_amount, "0")
+        assert_money(reload(cancelled).balance, "-80.00")
+      end
+
+      test "a cancel retried after Stripe refunded keeps the same amount and refunds nothing twice" do
+        record = build(@parent)
+        stripe_payment(@parent, record, "pi_paid", "80.00", ~U[2026-10-01 10:00:00Z])
+
+        generate(
+          payment([{parent_key(@parent), record.id}, amount: Decimal.new("-60.00"), stripe_refund_id: "re_first"])
+        )
+
+        StripeAPI.Mock
+        |> stub(:list_refunds, fn _pi -> {:ok, []} end)
+        |> expect(:create_refund, 0, fn _pi, _cents, _key, _metadata -> flunk("refunded twice") end)
+
+        assert {:ok, cancelled} = cancel(record, %{refund: "60.00", held: "80.00"})
+        assert_money(cancelled.kept_amount, "20.00")
+        assert reload(cancelled).settled?
+      end
+
+      test "money that arrived after Jennie opened the drawer refuses the cancel" do
+        record = build(@parent, payments: [cash: "80.00"])
+
+        assert {:error, error} = cancel(record, %{refund: "50.00", held: "50.00"})
+        assert Exception.message(error) =~ "This changed while you had it open"
+        refute cancelled?(record)
+      end
+
+      test "a refund outside nothing to what was held is refused" do
+        record = build(@parent, payments: [cash: "80.00"])
+
+        for refund <- ["80.01", "-1.00"] do
+          assert {:error, error} = cancel(record, %{refund: refund, held: "80.00"})
+          assert Exception.message(error) =~ "Enter an amount from €0 to €80.00."
+        end
+      end
+
+      test "money paid in person is left for Jennie to hand back" do
+        record = with_email(build(@parent, payments: [cash: "30.00"]))
+        stripe_payment(@parent, record, "pi_paid", "50.00", ~U[2026-10-01 10:00:00Z])
+        expect_stripe_refund("pi_paid", 5_000)
+
+        assert {:ok, cancelled} = cancel(record, %{})
+
+        assert_money(reload(cancelled).balance, "-30.00")
+        assert [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
+        assert %{"refunded_amount" => "50.00", "to_return" => "30.00"} = job.args
+      end
+
+      test "a refund Stripe refuses cancels nothing and emails nobody" do
+        record = with_email(build(@parent))
+        stripe_payment(@parent, record, "pi_paid", "80.00", ~U[2026-10-01 10:00:00Z])
+
+        StripeAPI.Mock
+        |> stub(:list_refunds, fn _pi -> {:ok, []} end)
+        |> expect(:create_refund, fn _pi, _cents, _key, _metadata -> {:error, :charge_disputed} end)
+
+        ExUnit.CaptureLog.capture_log(fn ->
+          assert {:error, error} = cancel(record, %{})
+          assert Exception.message(error) =~ "Stripe refused the refund"
+        end)
+
+        refute cancelled?(record)
+        refute_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
+      end
+
+      test "unticking the email emails nobody" do
+        record = with_email(build(@parent))
+
+        assert {:ok, cancelled} = cancel(record, %{email_customer?: false})
+
+        assert cancelled.cancellation_emailed_to == nil
+        refute_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
+      end
+
+      test "a cancelled one can't be cancelled again" do
+        assert {:error, error} = cancel(build(@parent, state: :cancelled), %{})
+        assert Exception.message(error) =~ "This changed while you had it open"
+      end
+
+      test "an uncommitted one can't be cancelled" do
+        assert {:error, _error} = cancel(build(@parent, state: :uncommitted), %{})
       end
     end
   end
