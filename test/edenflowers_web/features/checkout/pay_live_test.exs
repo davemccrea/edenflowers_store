@@ -92,6 +92,40 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     assert_push_event(view, "stripe:process_payment", %{})
   end
 
+  test "asks for an email when the order has none, and links the order to that customer", %{
+    conn: conn,
+    order: order
+  } do
+    order = Ash.Seed.update!(order, %{customer_email: nil, user_id: nil, payment_intent_id: "pi_link"})
+
+    expect(StripeAPI.Mock, :update_payment_intent, 2, fn "pi_link", 8500 -> {:ok, %{id: "pi_link"}} end)
+    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
+
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
+
+    view |> form("#pay-form", %{customer_email: "anna@example.com"}) |> render_submit()
+
+    assert_push_event(view, "stripe:process_payment", %{})
+    refute has_element?(view, ~s|input[name="customer_email"]|)
+    assert has_element?(view, ~s|#pay-form[data-billing-email="anna@example.com"]|)
+
+    order = Ash.get!(Orders.Order, order.id, authorize?: false)
+    assert to_string(order.customer_email) == "anna@example.com"
+    assert order.user_id
+  end
+
+  test "doesn't ask for an email the order already has", %{conn: conn, order: order} do
+    order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
+
+    expect(StripeAPI.Mock, :update_payment_intent, fn "pi_link", 8500 -> {:ok, %{id: "pi_link"}} end)
+    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
+
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
+
+    refute has_element?(view, ~s|input[name="customer_email"]|)
+    assert {:error, _} = Orders.add_customer_email(order, "someone@example.com", authorize?: false)
+  end
+
   test "says so once the order is paid", %{conn: conn, admin: admin, order: order} do
     {:ok, _order} =
       Orders.record_payment(order, "85.00", :cash, actor: admin)

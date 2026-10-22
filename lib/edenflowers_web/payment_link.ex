@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.PaymentLink do
   require Logger
 
   import Edenflowers.Actors
-  import EdenflowersWeb.CoreComponents, only: [stripe_form: 1]
+  import EdenflowersWeb.CoreComponents, only: [input: 1, stripe_form: 1]
   import Phoenix.LiveView
 
   alias Edenflowers.Courses.CourseRegistration
@@ -79,7 +79,7 @@ defmodule EdenflowersWeb.PaymentLink do
   attr :returned_from_stripe?, :boolean, required: true
   attr :locale, :string, required: true
   attr :billing_name, :string, required: true
-  attr :billing_email, :string, required: true
+  attr :billing_email, :string, required: true, doc: "nil asks the customer for one before they pay"
   attr :billing_phone, :string, default: nil
 
   def payment_form(assigns) do
@@ -95,6 +95,17 @@ defmodule EdenflowersWeb.PaymentLink do
         billing_email={@billing_email}
         billing_phone={@billing_phone}
       >
+        <:before_button>
+          <.input
+            :if={is_nil(@billing_email)}
+            name="customer_email"
+            value=""
+            type="email"
+            label={~t"Email for your receipt"}
+            autocomplete="email"
+            required
+          />
+        </:before_button>
         {~t"Pay"} {Format.currency(@payable.balance, @locale)}
       </.stripe_form>
 

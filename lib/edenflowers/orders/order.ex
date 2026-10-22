@@ -55,6 +55,7 @@ defmodule Edenflowers.Orders.Order do
     :customer_name,
     :customer_email,
     :customer_phone_number,
+    :customer_instagram,
     :gift,
     :recipient_name,
     :recipient_phone_number,
@@ -465,6 +466,7 @@ defmodule Edenflowers.Orders.Order do
                state == :placed and
                  (contains(customer_name, ^arg(:term)) or contains(order_reference, ^arg(:term)) or
                     contains(customer_phone_number, ^arg(:term)) or contains(customer_email, ^arg(:term)) or
+                    contains(customer_instagram, ^arg(:term)) or
                     contains(recipient_name, ^arg(:term)) or contains(delivery_address, ^arg(:term)))
              )
 
@@ -530,8 +532,8 @@ defmodule Edenflowers.Orders.Order do
       validate attribute_in(:locale, @locales)
       validate present(:customer_name)
 
-      validate present([:customer_email, :customer_phone_number], at_least: 1),
-        message: "enter a phone number or an email"
+      validate present([:customer_email, :customer_phone_number, :customer_instagram], at_least: 1),
+        message: "enter a phone number, an email or an Instagram handle"
 
       change Changes.SnapshotFulfillmentMethod
       validate present(:fulfillment_option_id)
@@ -752,8 +754,8 @@ defmodule Edenflowers.Orders.Order do
       validate attribute_in(:locale, @locales)
       validate present(:customer_name)
 
-      validate present([:customer_email, :customer_phone_number], at_least: 1),
-        message: "enter a phone number or an email"
+      validate present([:customer_email, :customer_phone_number, :customer_instagram], at_least: 1),
+        message: "enter a phone number, an email or an Instagram handle"
 
       change Changes.SnapshotFulfillmentMethod
       validate present(:fulfillment_option_id)
@@ -841,6 +843,17 @@ defmodule Edenflowers.Orders.Order do
       change set_context(%{skip_version_when_unchanged?: true})
       change PaymentChanges.OpenPaymentLink
       change load(@admin_show_load)
+      require_atomic? false
+    end
+
+    # The payment link page asks for an email when Jennie took the order
+    # without one, so the customer gets a receipt. An email already on the
+    # order is never replaced from the link.
+    update :add_customer_email do
+      accept [:customer_email]
+      validate present(:customer_email)
+      change filter expr(is_nil(customer_email))
+      change Changes.UpsertUserAndAssignToOrder
       require_atomic? false
     end
 
@@ -1028,6 +1041,7 @@ defmodule Edenflowers.Orders.Order do
 
       # The payment link page creates its PaymentIntent on a placed order.
       authorize_if action(:add_payment_intent_id)
+      authorize_if action(:add_customer_email)
 
       authorize_if action_type(:read)
     end
@@ -1125,6 +1139,8 @@ defmodule Edenflowers.Orders.Order do
     attribute :customer_email, Edenflowers.Types.Email
     # Only custom orders ask for it: a phone customer may have no email.
     attribute :customer_phone_number, :string
+    # Stored as Jennie typed it, with or without the @.
+    attribute :customer_instagram, :string
 
     # Step 2 - Gift Options
     attribute :gift, :boolean, allow_nil?: false, default: false

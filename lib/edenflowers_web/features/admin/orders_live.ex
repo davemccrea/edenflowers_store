@@ -158,6 +158,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           contains(order_reference, ^case_insensitive_term) or
           contains(customer_phone_number, ^case_insensitive_term) or
           contains(customer_email, ^case_insensitive_term) or
+          contains(customer_instagram, ^case_insensitive_term) or
           contains(recipient_name, ^case_insensitive_term) or
           contains(delivery_address, ^case_insensitive_term)
       )

@@ -140,11 +140,12 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert in_person.payment_link_token == nil
     end
 
-    test "needs a phone number or an email", ctx do
+    test "needs a phone number, an email or an Instagram handle", ctx do
       assert {:error, error} = place(ctx, %{customer_phone_number: nil})
-      assert Exception.message(error) =~ "enter a phone number or an email"
+      assert Exception.message(error) =~ "enter a phone number, an email or an Instagram handle"
 
       assert {:ok, _order} = place(ctx, %{customer_phone_number: nil, customer_email: "son@example.com"})
+      assert {:ok, _order} = place(ctx, %{customer_phone_number: nil, customer_instagram: "@anna.holm"})
     end
 
     test "with an email, links the order to that customer's account", ctx do

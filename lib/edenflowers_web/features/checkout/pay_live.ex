@@ -9,6 +9,8 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   """
   use EdenflowersWeb, :live_view
 
+  import Edenflowers.Actors
+
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias EdenflowersWeb.PaymentLink
@@ -143,6 +145,13 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   end
 
   @impl true
+  def handle_event("pay", %{"customer_email" => email}, socket) do
+    case Orders.add_customer_email(socket.assigns.payable, email, actor: system_actor()) do
+      {:ok, _order} -> handle_event("pay", %{}, socket)
+      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Enter a valid email address.")}
+    end
+  end
+
   def handle_event("pay", _params, socket) do
     {:noreply, PaymentLink.pay(socket, ~t"The order changed. Please try again.")}
   end

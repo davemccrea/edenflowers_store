@@ -172,10 +172,22 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   field={@form[:customer_email]}
                   type="email"
                   label={~t"Email"}
-                  help={~t"A phone or an email is needed. With an email, the order shows in their account."}
                   class="input w-full"
                   autocomplete="off"
                 />
+                <.input
+                  field={@form[:customer_instagram]}
+                  type="text"
+                  label={~t"Instagram"}
+                  help={
+                    ~t"A phone, an email or an Instagram handle is needed. With an email, the order shows in their account."
+                  }
+                  class="input w-full"
+                  autocomplete="off"
+                  autocapitalize="none"
+                >
+                  <:leading>@</:leading>
+                </.input>
                 <.input
                   field={@form[:locale]}
                   type="select"
