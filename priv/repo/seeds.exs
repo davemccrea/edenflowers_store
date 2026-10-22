@@ -1,4 +1,4 @@
-# Dev and staging fixtures, built on the production base seed. Run it with:
+# Dev fixtures, built on the production base seed. Run it with:
 #
 #     just db-seed local
 #
@@ -65,7 +65,7 @@ seed_refund = fn payment, fake_id ->
       %{id: fake_id, payment_intent: payment.payment_intent_id, amount: cents, status: "succeeded"}
     end
 
-  # On staging, the refund.created webhook can record it first.
+  # The refund.created webhook can record it first.
   {:ok, outcome} = Edenflowers.Payments.record_stripe_refund(refund)
   true = outcome in [:recorded, :already_recorded]
 end
@@ -362,7 +362,7 @@ today = Date.utc_today()
       amount: Decimal.mult(course.price, seats),
       confirmed_at: if(status != :pending, do: DateTime.utc_now()),
       # Already emailed, otherwise the SendConfirmationEmail trigger emails every
-      # seeded booking, for real on staging.
+      # seeded booking.
       confirmation_emailed_at: if(status != :pending, do: DateTime.utc_now())
     })
 
@@ -963,7 +963,7 @@ Orders.edit_order!(erik, %{line_items: kept_lines ++ [catalogue_line.("Plant", :
 Orders.open_payment_link!(erik, actor: jennie)
 
 # A custom order paid in part by link, the rest still owed. The link payment
-# is recorded as the Stripe webhook would, which on staging may get there first.
+# is recorded as the Stripe webhook would, which may get there first.
 part_paid =
   place_custom.(%{
     customer_name: "Johanna Lind",

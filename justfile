@@ -22,7 +22,7 @@ imgproxy:
     docker info >/dev/null 2>&1 || { echo "Docker isn't running: start OrbStack, dev serves photos through a local imgproxy." >&2; exit 1; }
     name=edenflowers-imgproxy-{{ imgproxy_port }}
     [[ -n "$(docker ps -q --filter "name=^$name$")" ]] && exit 0
-    # Same image as the servers. tmp/uploads is mounted over images/uploads, so dev never writes into images/;
+    # Same image as production. tmp/uploads is mounted over images/uploads, so dev never writes into images/;
     # Docker still needs that folder to exist as the mount point.
     mkdir -p tmp/uploads images/uploads
     docker run -d --rm --name "$name" -p {{ imgproxy_port }}:8080 \
@@ -65,47 +65,12 @@ typst-install:
 check-typst:
     @command -v typst >/dev/null || { echo "typst not found: receipt PDFs (and their tests) need it. Run 'just typst-install'." >&2; exit 1; }
 
-# Drop and migrate a database (local: dev and test; staging: also reseeds it with Stripe test data)
+# Drop and migrate the dev and test databases
 [group('database')]
-db-reset target:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    case "{{ target }}" in
-      local)
-        ./scripts/reset-db.sh ;;
-      staging)
-        echo "Stripe has no API to wipe test data. First use \"Delete all test data\" in the staging Stripe Dashboard,"
-        echo "or recreate the sandbox and update staging's keys and webhook secret."
-        read -r -p "Wipe and reseed the STAGING database? [y/N] " answer
-        [[ "$answer" =~ ^[yY]$ ]] || exit 1
-        ssh -T edenflowers-staging bash -s <<'EOF'
-    set -euo pipefail
-    cd /opt/edenflowers_store
-    db=edenflowers_store_staging
-    # The app role is the one granted on the database by provisioning; schema_migrations may already be gone
-    app_role=$(sudo -u postgres psql -tA -d "$db" -c "select distinct grantee::regrole from pg_database, aclexplode(datacl) where datname = current_database() and grantee <> datdba and grantee <> 0")
-    if [ -z "$app_role" ]; then echo "Could not find the app role for $db" >&2; exit 1; fi
-    docker compose stop app
-    sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" \
-      -c "drop schema public cascade" \
-      -c "create schema public" \
-      -c "grant all on schema public to $app_role" \
-      -c "create extension citext"
-    # Without </dev/null, run reads the rest of this script from stdin and the app never starts
-    docker compose run --rm -T app /app/bin/migrate </dev/null
-    docker compose up -d app
-    for _ in $(seq 60); do
-      docker compose exec -T app /app/bin/edenflowers rpc ':ok' >/dev/null 2>&1 && exit 0
-      sleep 2
-    done
-    echo "The app didn't come up within 2 minutes" >&2; exit 1
-    EOF
-        just db-seed staging --stripe ;;
-      *)
-        echo "Unknown target '{{ target }}', use local or staging" >&2; exit 1 ;;
-    esac
+db-reset:
+    ./scripts/reset-db.sh
 
-# Seed a database (local, staging, or a one-off base seed of an empty production); --stripe creates the Stripe test data behind it
+# Seed a database (local, or a one-off base seed of an empty production); --stripe creates the Stripe test data behind it
 [group('database')]
 db-seed target *flags:
     #!/usr/bin/env bash
@@ -122,26 +87,23 @@ db-seed target *flags:
     case "{{ target }}" in
       local)
         mix run -e "$flag; Code.eval_file(\"priv/repo/seeds.exs\")" ;;
-      staging)
-        ssh -T edenflowers-staging "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc '$flag; Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds.exs\"))'" ;;
       production)
-        if $stripe; then echo "--stripe is for local and staging" >&2; exit 1; fi
+        if $stripe; then echo "--stripe is for local" >&2; exit 1; fi
         read -r -p "Seed the PRODUCTION database? [y/N] " answer
         [[ "$answer" =~ ^[yY]$ ]] || exit 1
         ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds/production.exs\"))'" ;;
       *)
-        echo "Unknown target '{{ target }}', use local, staging or production" >&2; exit 1 ;;
+        echo "Unknown target '{{ target }}', use local or production" >&2; exit 1 ;;
     esac
 
-# Back up a server's database (staging or production) to tmp/, named after the release it is running
+# Back up the production database to tmp/, named after the release it is running
 [group('database')]
 db-backup target:
     #!/usr/bin/env bash
     set -euo pipefail
     case "{{ target }}" in
-      staging) db=edenflowers_store_staging ;;
       production) db=edenflowers_store_prod ;;
-      *) echo "Unknown target '{{ target }}', use staging or production" >&2; exit 1 ;;
+      *) echo "Unknown target '{{ target }}', use production" >&2; exit 1 ;;
     esac
     # `bin/edenflowers version` prints "edenflowers 1.7.0"
     version=$(ssh edenflowers-{{ target }} "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers version" | awk '{print "v"$2}') || version=unknown
@@ -151,7 +113,7 @@ db-backup target:
     mv "$file.partial" "$file"
     ls -lh "$file"
 
-# Deploy to staging or production (asks if no target is given)
+# Deploy to production
 [group('deployment')]
 deploy *args:
     ./scripts/deploy.sh {{ args }}
@@ -166,17 +128,17 @@ rollback target tag dump="":
 deploy-watch:
     @gh run watch "$(gh run list --workflow=deploy.yml --limit 1 --json databaseId -q '.[0].databaseId')" --compact --exit-status
 
-# Push images/ to servers (staging, production, or both by default); production also pulls its uploads back
+# Push images/ to production and pull its uploads back
 [group('deployment')]
-images-sync target="all":
-    ./scripts/sync-images.sh {{ target }}
+images-sync:
+    ./scripts/sync-images.sh
 
-# Tail app logs on a server (staging or production)
+# Tail app logs on a server (production)
 [group('server')]
 server-logs target:
     ssh edenflowers-{{ target }} 'cd /opt/edenflowers_store && docker compose logs -f --tail=200 app'
 
-# Open a remote IEx console on a server (staging or production)
+# Open a remote IEx console on a server (production)
 [group('server')]
 server-console target:
     ssh -t edenflowers-{{ target }} 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'

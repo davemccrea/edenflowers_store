@@ -28,10 +28,6 @@ just typst-install
 The remote commands (`just images-sync`, `server-logs`, `server-console`) connect through these aliases in `~/.ssh/config`. Server IPs stay out of this public repo; the origin is behind Cloudflare.
 
 ```
-Host edenflowers-staging
-    HostName <staging IP>
-    User <you>
-
 Host edenflowers-production
     HostName <production IP>
     User <you>
@@ -47,22 +43,21 @@ PORT=4001 just dev              # same, on another port (also honoured by stripe
 just test [args]                # run the test suite
 just stripe-listen              # forward Stripe webhooks to the dev server
 just issues                     # issue board at 127.0.0.1:6420 (npm i -g backlog.md)
-just db-reset local|staging     # drop and migrate dev + test, or staging
-just db-seed local|staging      # seed the local or staging database (run after db-reset)
+just db-reset                   # drop and migrate dev + test
+just db-seed local              # seed the local database (run after db-reset)
 just db-seed production         # one-off base seed of an empty production database
-just db-backup staging|production # pg_dump a server's database into tmp/
+just db-backup production       # pg_dump the production database into tmp/
 just rollback production v1.6.0 [tmp/<dump>] # run an old release, restoring a dump if given
-just deploy staging             # push current branch and deploy it to staging
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
 just deploy-watch               # follow the latest deploy run
-just images-sync [staging|production] # push images/ to servers (both if omitted); production also pulls uploads
-just server-logs staging        # tail app logs on a server
+just images-sync                # push images/ to production and pull its uploads
+just server-logs production     # tail app logs on a server
 just server-console production  # remote IEx on a server
 ```
 
-`just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. `just deploy staging` pushes the current branch and triggers the deploy workflow on it; plain pushes deploy nothing.
+`just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. Plain pushes deploy nothing.
 
-`images/` is gitignored, so photos reach the servers only through `just images-sync`, which `just deploy` runs for its target before pushing. It deletes files removed locally from the server, at most 20 per run (more fails the sync, and with it the deploy), but never touches photos uploaded through the admin (`images/uploads/`, never pushed to). A rollback to a release that uses a deleted photo shows it missing. Syncing to production also pulls those uploads into the local `images/uploads/` without deleting anything, so this machine keeps a copy. Filenames must be ASCII.
+`images/` is gitignored, so photos reach production only through `just images-sync`, which `just deploy` runs before pushing. It deletes files removed locally from the server, at most 20 per run (more fails the sync, and with it the deploy), but never touches photos uploaded through the admin (`images/uploads/`, never pushed to). A rollback to a release that uses a deleted photo shows it missing. The sync also pulls those uploads into the local `images/uploads/` without deleting anything, so this machine keeps a copy. Filenames must be ASCII.
 
 In dev, `just dev` starts imgproxy in Docker (OrbStack) on `PORT+1` and points `IMGPROXY_PREFIX` at it, so unsynced photos and admin uploads show up locally. It reads `images/` read-only; uploads land in `tmp/uploads`. The container keeps running after the server stops.
 

@@ -1,10 +1,12 @@
 ---
 id: TASK-81.3
 title: Rehearse restoring a database backup on staging
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-21 08:32'
-labels: []
+updated_date: '2026-10-22 09:51'
+labels:
+  - wontfix
 dependencies: []
 parent_task_id: TASK-81
 type: task
@@ -24,3 +26,16 @@ On staging: `just db-backup staging`, deploy a newer release, then `just rollbac
 - [ ] #1 `just rollback` has rolled staging back to an earlier release and its dump, and the shop works
 - [ ] #2 A dump fetched from the Storage Box passes pg_restore --list
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-22 09:51
+
+---
+
+Staging is being removed, so there is nowhere to rehearse a rollback.
+
+---
+<!-- COMMENTS:END -->

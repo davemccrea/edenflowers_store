@@ -9,15 +9,14 @@ latest_run_id() {
   gh run list --workflow=deploy.yml --commit "$(git rev-parse HEAD)" --limit 1 --json databaseId -q '.[0].databaseId // 0'
 }
 
-# Takes the latest run id from before the deploy started: a new run takes a few
-# seconds to appear, and a redeploy of the same commit already has older runs.
+# A new run takes a few seconds to appear.
 watch_deploy() {
-  local previous_run_id="${1:-0}" sha run_id=""
+  local sha run_id=""
   sha="$(git rev-parse HEAD)"
   printf '  %swaiting for the GitHub Actions run...%s\n' "$DIM" "$RESET"
   for _ in {1..30}; do
     run_id="$(latest_run_id)"
-    ((run_id > previous_run_id)) && break
+    ((run_id > 0)) && break
     run_id=""
     sleep 2
   done
@@ -42,16 +41,6 @@ run_checks() {
   mix precommit
 }
 
-offer_watch() {
-  echo
-  read -r -p "  Watch the deploy? [Y/n] " REPLY
-  if [[ "$REPLY" =~ ^[Nn]$ ]]; then
-    return
-  fi
-
-  watch_deploy "$1"
-}
-
 section "Preflight checks"
 
 if [[ -n "$(git status --porcelain)" ]]; then
@@ -59,21 +48,8 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 ok "working tree clean"
 
-TARGET="${1:-}"
-
-if [[ -z "$TARGET" ]]; then
-  section "Target selection"
-  echo "  1) staging     (deploy current branch to staging)"
-  echo "  2) production  (tag a release from main)"
-  echo
-  read -r -p "  Choice [1]: " CHOICE
-  CHOICE="${CHOICE:-1}"
-
-  case "$CHOICE" in
-    1) TARGET="staging" ;;
-    2) TARGET="production" ;;
-    *) fail "invalid choice" ;;
-  esac
+if [[ "${1:-production}" != "production" ]]; then
+  fail "target must be production"
 fi
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
@@ -82,40 +58,6 @@ if [[ -f .env ]]; then
   set -a
   source .env
   set +a
-fi
-
-if [[ "$TARGET" == "staging" ]]; then
-  if [[ "$BRANCH" == "HEAD" ]]; then
-    fail "detached HEAD, check out a branch first"
-  fi
-
-  # The push below skips the pre-push hook, so run its checks here.
-  run_checks
-
-  section "Ready to push"
-  echo "  staging → $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)  ($BRANCH)"
-  echo
-  read -r -p "  Proceed with push? [y/N] " REPLY
-  if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
-    printf '\n  %saborted%s\n' "$DIM" "$RESET"
-    exit 1
-  fi
-
-  scripts/sync-images.sh staging
-
-  # The workflow builds the ref on GitHub, so it must be pushed first.
-  SKIP_HOOKS=1 git push --quiet origin "$BRANCH"
-  PREVIOUS_RUN_ID="$(latest_run_id)"
-  gh workflow run deploy.yml --ref "$BRANCH"
-
-  printf '\n%s%s✓ Started deploying %s to staging%s  %sGitHub Actions will build and deploy the Docker image.%s\n' \
-    "$BOLD" "$GREEN" "$BRANCH" "$RESET" "$DIM" "$RESET"
-  offer_watch "$PREVIOUS_RUN_ID"
-  exit 0
-fi
-
-if [[ "$TARGET" != "production" ]]; then
-  fail "target must be staging or production"
 fi
 
 if [[ "$BRANCH" != "main" ]]; then
@@ -183,7 +125,7 @@ fi
 run_checks
 
 # Before tagging, so a failed sync doesn't leave a local version-bump commit and tag behind.
-scripts/sync-images.sh production
+scripts/sync-images.sh
 
 section "Tagging release"
 # Use -i.bak + rm so it works on both BSD sed (macOS) and GNU sed (Linux).

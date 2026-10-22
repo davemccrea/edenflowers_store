@@ -1,19 +1,18 @@
 #!/bin/bash
 # Roll a server back to a release tag, optionally restoring a database backup taken while it ran.
-# Usage: scripts/rollback.sh <staging|production> <tag> [dump]
+# Usage: scripts/rollback.sh production <tag> [dump]
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 source scripts/lib/ui.sh
 
-[[ $# -eq 2 || $# -eq 3 ]] || fail "usage: just rollback <staging|production> <tag> [dump]"
+[[ $# -eq 2 || $# -eq 3 ]] || fail "usage: just rollback production <tag> [dump]"
 TARGET=$1 TAG=$2 DUMP=${3:-}
 
 case "$TARGET" in
-  staging) DB=edenflowers_store_staging ;;
   production) DB=edenflowers_store_prod ;;
-  *) fail "unknown target '$TARGET', use staging or production" ;;
+  *) fail "unknown target '$TARGET', use production" ;;
 esac
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null || fail "no tag $TAG, try 'git fetch --tags'"
 
@@ -51,7 +50,7 @@ ssh -T "edenflowers-$TARGET" bash -s -- "$DB" "${TAG#v}" "$([[ -n "$DUMP" ]] && 
 set -euo pipefail
 db=$1 version=$2 database=$3
 cd /opt/edenflowers_store
-# Compose runs a moving tag (latest or staging), so point it at the old release's image
+# Compose runs a moving tag (latest), so point it at the old release's image
 image=$(docker compose config --images app)
 docker pull "${image%:*}:$version"
 docker tag "${image%:*}:$version" "$image"

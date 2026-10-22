@@ -15,7 +15,7 @@ defmodule Edenflowers.Orders.Workers.EmailShopTest do
     assert_enqueued worker: EmailShop, args: %{"order_id" => order.id}
   end
 
-  test "nothing is queued without a shop address, as on staging" do
+  test "nothing is queued without a shop address" do
     Application.delete_env(:edenflowers, :shop_notice_email)
     on_exit(fn -> Application.put_env(:edenflowers, :shop_notice_email, "shop@example.com") end)
     order = generate(order(state: :payment, payment_intent_id: "pi_test"))
