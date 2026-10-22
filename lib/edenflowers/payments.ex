@@ -38,7 +38,6 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.Payments.Errors.AmountMismatch
   alias Edenflowers.Payments.Errors.PaymentIntentMismatch
   alias Edenflowers.Payments.Payment
-  alias Edenflowers.Payments.Validations
 
   @metadata_keys ["order_id", "course_registration_id"]
 
@@ -312,10 +311,10 @@ defmodule Edenflowers.Payments do
   booking it paid for. Refunds not yet succeeded are left alone; Stripe sends
   `refund.updated` once a pending refund goes through.
 
-  A refund made here says in its metadata whether it was owed or goodwill,
-  with a goodwill refund's note, so it's recorded as what it was even before
-  a cancellation it pays for commits. One made in the dashboard says nothing,
-  and the part beyond what was owed back is goodwill.
+  A cancel's refund says in its metadata that it was owed, so it's recorded
+  as that even before the cancellation it pays for commits. One Jennie
+  entered carries her note; it and one made in the dashboard are split, and
+  the part beyond what was owed back is goodwill.
   """
   def record_stripe_refund(%{status: "succeeded", payment_intent: payment_intent_id} = refund)
       when is_binary(payment_intent_id) do
@@ -351,9 +350,10 @@ defmodule Edenflowers.Payments do
     end
   end
 
+  # "goodwill" is from refunds made before Jennie's refunds were one action.
   defp goodwill_reason?("goodwill"), do: true
   defp goodwill_reason?("owed"), do: false
-  defp goodwill_reason?(_made_in_dashboard), do: nil
+  defp goodwill_reason?(_entered_or_made_in_dashboard), do: nil
 
   # The webhook and the order page can record the same refund at once; the
   # unique stripe_refund_id turns the loser's insert into an error.
@@ -400,39 +400,27 @@ defmodule Edenflowers.Payments do
   end
 
   @doc """
-  Refunds an order's or course booking's negative balance through Stripe,
-  newest Stripe payment first, as far as its Stripe payments cover it.
-  Refunds that succeed at once are recorded here; pending ones arrive
-  through the refund webhook.
+  Refunds `amount` through Stripe, newest Stripe payment first, as far as
+  its Stripe payments cover it, with `note` in the refund's metadata.
+  Refunds that succeed at once are recorded here, by `record_stripe_refund/1`,
+  which counts what was owed back as an ordinary refund and the rest as
+  goodwill; pending ones arrive through the refund webhook.
 
-  Stripe is the source of truth for what's already been refunded: succeeded
-  refunds missing from our records are recorded first, and pending ones are
-  taken off what's owed, so a second click never refunds the same money twice.
-  The idempotency key covers two clicks racing each other.
+  Succeeded refunds missing from our records are recorded first, and the
+  idempotency key covers two clicks racing each other.
   """
-  def refund_balance(payable) do
-    refund(payable, fn payable -> Decimal.negate(payable.balance) end)
+  def refund_amount(payable, amount, note) do
+    refund(payable, fn _payable -> amount end, {:refund, note})
   end
 
   @doc """
-  Hands `amount` back through Stripe to an unhappy customer without lowering
-  what was sold, as far as `Validations.GoodwillRefundable` allows, spread
-  over the Stripe payments as `refund_balance/1` does. Recorded as goodwill
-  by `record_stripe_refund/1`, with `note` carried in the refund's metadata.
-  """
-  def refund_goodwill(payable, amount, note) do
-    with :ok <- Validations.GoodwillRefundable.check(payable, amount, :stripe) do
-      refund(payable, fn _payable -> amount end, {:goodwill, note})
-    end
-  end
-
-  @doc """
-  Refunds through Stripe, as `refund_balance/1` does, everything still held
+  Refunds through Stripe, as `refund_amount/3` does, everything still held
   apart from `kept`, for an order or booking that will not go ahead. Money
   paid in person is left for Jennie to hand back.
 
-  Worked out from what's still held, so a retry after the first attempt's
-  refunds were recorded never refunds twice.
+  Worked out from what's still held, and pending refunds are taken off it,
+  so a retry after the first attempt's refunds went through never refunds
+  twice.
   """
   def refund_all_but_kept(payable, kept) do
     refund(payable, fn payable -> Decimal.sub(payable.amount_held, kept) end)
@@ -456,14 +444,13 @@ defmodule Edenflowers.Payments do
   defp refund_terms(:balance, cents, refunds_by_payment, key),
     do: {cents - pending_cents(refunds_by_payment), key, %{"reason" => "owed"}}
 
-  # A goodwill refund is new money on top of any pending refund, so those
+  # A refund Jennie enters is new money on top of any pending refund, so those
   # aren't taken off it, and its amount is in the key so two different ones
   # don't collide.
-  defp refund_terms({:goodwill, nil}, cents, _refunds_by_payment, key),
-    do: {cents, "goodwill-#{key}-#{cents}", %{"reason" => "goodwill"}}
-
-  defp refund_terms({:goodwill, note}, cents, _refunds_by_payment, key),
-    do: {cents, "goodwill-#{key}-#{cents}", %{"reason" => "goodwill", "note" => note}}
+  defp refund_terms({:refund, note}, cents, _refunds_by_payment, key) do
+    metadata = if note, do: %{"reason" => "refund", "note" => note}, else: %{"reason" => "refund"}
+    {cents, "#{key}-#{cents}", metadata}
+  end
 
   defp pending_cents(refunds_by_payment) do
     refunds_by_payment

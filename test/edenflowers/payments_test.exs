@@ -603,7 +603,7 @@ defmodule Edenflowers.PaymentsTest do
     end
   end
 
-  describe "refund_balance/1 for a course booking" do
+  describe "refunding a course booking through Stripe" do
     setup %{registration: registration} do
       assert {:ok, :completed} = Payments.complete(course_intent(registration))
       stub(StripeAPI.Mock, :list_refunds, fn _payment_intent_id -> {:ok, []} end)
@@ -623,17 +623,10 @@ defmodule Edenflowers.PaymentsTest do
       |> Enum.filter(&Decimal.negative?(&1.amount))
     end
 
-    test "cancelling refunds what was paid, and refunding again finds it in Stripe", %{
-      registration: registration,
-      pi: pi
-    } do
+    test "cancelling refunds what was paid, once", %{registration: registration, pi: pi} do
       expect(StripeAPI.Mock, :create_refund, fn ^pi, 17_000, _key, _metadata -> {:ok, succeeded_refund(pi, 17_000)} end)
 
       {:ok, registration} = Courses.cancel_registration(registration, authorize?: false)
-
-      stub(StripeAPI.Mock, :list_refunds, fn ^pi -> {:ok, [succeeded_refund(pi, 17_000)]} end)
-
-      assert {:ok, []} = Payments.refund_balance(registration)
 
       assert [%{amount: amount, method: :stripe}] = refunds(registration)
       assert Decimal.equal?(amount, "-170.00")
@@ -643,9 +636,9 @@ defmodule Edenflowers.PaymentsTest do
       expect(StripeAPI.Mock, :create_refund, fn ^pi, 8_500, _key, _metadata -> {:ok, succeeded_refund(pi, 8_500)} end)
 
       {:ok, registration} = Courses.remove_registration_seat(registration, authorize?: false)
-      assert {:ok, [_refund]} = Payments.refund_balance(registration)
+      assert {:ok, [_refund]} = Payments.refund_amount(registration, Decimal.new("85.00"), nil)
 
-      assert [%{amount: amount}] = refunds(registration)
+      assert [%{amount: amount, goodwill: false}] = refunds(registration)
       assert Decimal.equal?(amount, "-85.00")
     end
 

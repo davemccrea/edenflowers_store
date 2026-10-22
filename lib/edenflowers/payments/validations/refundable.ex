@@ -1,12 +1,9 @@
-defmodule Edenflowers.Payments.Validations.GoodwillRefundable do
+defmodule Edenflowers.Payments.Validations.Refundable do
   @moduledoc """
-  What Jennie can hand back as a goodwill refund: on something placed or
-  confirmed with nothing left to collect, or cancelled with nothing owed back, up to the money
-  still held, and by Stripe only what was paid through it, by another method
-  only what was paid outside it.
-
-  `check/3` is the same rule for `Payments.refund_goodwill/3`, which refunds
-  through Stripe outside an action.
+  What Jennie can hand back: on something placed or confirmed, cancelled or
+  not, with nothing left to collect, up to the money still held, and by
+  Stripe only what was paid through it, by another method only what was
+  paid outside it.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -22,12 +19,9 @@ defmodule Edenflowers.Payments.Validations.GoodwillRefundable do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-  def check(record, amount, method) do
+  defp check(record, amount, method) do
     record =
-      Ash.load!(
-        record,
-        [:committed?, :cancelled?, :balance, :amount_held, :paid_outside_stripe, :paid_through_stripe],
+      Ash.load!(record, [:committed?, :balance, :amount_held, :paid_outside_stripe, :paid_through_stripe],
         authorize?: false,
         reuse_values?: false
       )
@@ -38,9 +32,6 @@ defmodule Edenflowers.Payments.Validations.GoodwillRefundable do
 
       Decimal.positive?(record.balance) ->
         {:error, ~t"Collect what's owed before refunding."}
-
-      record.cancelled? and Decimal.negative?(record.balance) ->
-        {:error, ~t"It's cancelled, so refund what's owed back instead."}
 
       Decimal.gt?(amount, record.amount_held) ->
         {:error, ~t"That's more than was received."}

@@ -11,7 +11,6 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Orders
-  alias Edenflowers.Payments
 
   @doc """
   What to keep on cancelling, from the refund Jennie typed and what was held
@@ -60,47 +59,16 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
-  def refund_with_stripe(payable) do
-    case Payments.refund_balance(payable) do
-      {:ok, refunds} ->
-        {:info, refund_message(refunds)}
+  def refund(payable, %{"amount" => amount, "how" => how} = params, actor) do
+    input = %{
+      amount: String.replace(amount, ",", "."),
+      payment_method: how,
+      note: params["note"],
+      email_customer?: params["email_customer"] != "false"
+    }
 
-      {:error, reason} ->
-        Logger.error("Stripe refund for #{inspect(payable.__struct__)} #{payable.id} failed: #{inspect(reason)}")
-        {:error, ~t"Could not refund with Stripe. Check the payment in Stripe."}
-    end
-  end
-
-  def goodwill_refund(payable, %{"amount" => amount, "how" => how} = params, actor) do
-    amount = String.replace(amount, ",", ".")
-    note = params |> Map.get("note", "") |> String.trim() |> then(&if(&1 == "", do: nil, else: &1))
-
-    if how == "stripe",
-      do: goodwill_refund_with_stripe(payable, amount, note),
-      else: goodwill_refund_recorded(payable, %{amount: amount, payment_method: how, note: note}, actor)
-  end
-
-  defp goodwill_refund_with_stripe(payable, amount, note) do
-    with {amount, ""} <- Decimal.parse(amount),
-         true <- Decimal.positive?(amount) do
-      case Payments.refund_goodwill(payable, amount, note) do
-        {:ok, refunds} ->
-          {:info, refund_message(refunds)}
-
-        {:error, message} when is_binary(message) ->
-          {:error, message}
-
-        {:error, reason} ->
-          Logger.error("Goodwill refund for #{inspect(payable.__struct__)} #{payable.id} failed: #{inspect(reason)}")
-          {:error, ~t"Could not refund with Stripe. Check the payment in Stripe."}
-      end
-    else
-      _invalid -> {:error, payment_error(nil)}
-    end
-  end
-
-  defp goodwill_refund_recorded(payable, input, actor) do
-    case Ash.update(payable, input, action: :goodwill_refund, actor: actor) do
+    case Ash.update(payable, input, action: :refund, actor: actor) do
+      {:ok, _payable} when how == "stripe" -> {:info, ~t"Refunded with Stripe."}
       {:ok, _payable} -> {:info, ~t"Refund recorded."}
       {:error, error} -> {:error, payment_error(error)}
     end
@@ -141,12 +109,4 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   @doc "Why recording money was refused, in the action's own words."
   def payment_error(%{errors: [%{message: message} | _]}) when is_binary(message), do: message
   def payment_error(_error), do: ~t"Could not record it. Check the amount."
-
-  defp refund_message([]), do: ~t"Nothing left to refund. Stripe already has refunds covering it."
-
-  defp refund_message(refunds) do
-    if Enum.all?(refunds, &(&1.status == "succeeded")),
-      do: ~t"Refunded with Stripe.",
-      else: ~t"Refund sent to Stripe. It shows here once it goes through."
-  end
 end

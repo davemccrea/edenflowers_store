@@ -457,7 +457,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       order = Ash.load!(order, [:balance], authorize?: false)
       assert Decimal.equal?(order.balance, "-85.00")
 
-      {:ok, _order} = Orders.record_payment(order, "-85.00", :cash, actor: ctx.admin)
+      {:ok, _order} = Ash.update(order, %{amount: "85.00", payment_method: :cash}, action: :refund, actor: ctx.admin)
       assert Decimal.equal?(Orders.get_order_for_admin!(order.id, actor: ctx.admin).balance, "0.00")
     end
 
@@ -711,7 +711,9 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert {:error, error} = Orders.record_payment(order, "10.00", :cash, actor: ctx.admin)
       assert Exception.message(error) =~ "That's more than is owed"
 
-      {:ok, order} = Orders.record_payment(order, "-134.00", :mobilepay, actor: ctx.admin)
+      {:ok, order} =
+        Ash.update(order, %{amount: "134.00", payment_method: :mobilepay}, action: :refund, actor: ctx.admin)
+
       assert order.payment_status == :refunded
       assert Decimal.equal?(order.paid_outside_stripe, 0)
     end

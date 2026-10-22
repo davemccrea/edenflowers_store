@@ -29,9 +29,11 @@ defmodule Edenflowers.Email.Previews do
         order_fulfilled(locale) ++
         order_left_at_door(locale) ++
         order_cancelled(locale) ++
+        order_refunded(locale) ++
         course_confirmation(locale) ++
         course_payment_link(locale) ++
         booking_cancelled(locale) ++
+        booking_refunded(locale) ++
         wedding_enquiry(locale) ++
         account_and_newsletter(locale)
     end)
@@ -321,6 +323,43 @@ defmodule Edenflowers.Email.Previews do
         ] do
       {gettext_noop("Course payment link"), title, :course_payment_link,
        Email.course_payment_link(registration(attrs, locale), @payment_link)}
+    end
+  end
+
+  defp order_refunded(locale) do
+    card = %{
+      amount: Decimal.new("64.00"),
+      method: :stripe,
+      payment_method_type: "card",
+      card_brand: "visa",
+      card_last4: "4242"
+    }
+
+    for {title, attrs, refund} <- [
+          {gettext_noop("to a card, with a reason"), %{payments: [card]},
+           %{amount: Decimal.new("20.00"), payment_method: :stripe, note: refund_reason(locale)}},
+          {gettext_noop("handed back in cash"), %{payments: []},
+           %{amount: Decimal.new("20.00"), payment_method: :cash, note: nil}}
+        ] do
+      {gettext_noop("Order refunded"), title, :order_refunded, Email.order_refunded(order(attrs, locale), refund)}
+    end
+  end
+
+  defp booking_refunded(locale) do
+    refund = %{amount: Decimal.new("45.00"), payment_method: :cash, note: nil}
+
+    [
+      {gettext_noop("Booking refunded"), gettext_noop("handed back in cash"), :booking_refunded,
+       Email.booking_refunded(registration(%{payments: []}, locale), refund)}
+    ]
+  end
+
+  # Jennie writes the reason herself, in the customer's language.
+  defp refund_reason(locale) do
+    cond do
+      String.starts_with?(locale, "fi") -> "Pahoittelut, että kimppu oli nuupahtanut jo seuraavana päivänä."
+      String.starts_with?(locale, "sv") -> "Förlåt att buketten hade vissnat redan nästa dag."
+      true -> "I'm sorry the bouquet had wilted by the next day."
     end
   end
 

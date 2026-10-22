@@ -444,7 +444,8 @@ defmodule EdenflowersWeb.Admin.Components do
 
   @doc """
   What's still owed on an order. Hidden once settled. Its button sends
-  `open_settlement`, for the page to open a drawer with `record_payment_form`.
+  `open_settlement`, for the page to open a drawer with `record_payment_form`
+  or, when money is owed back, `refund_form`.
   """
   def balance_panel(%{record: %{settled?: true}} = assigns) do
     ~H""
@@ -471,7 +472,7 @@ defmodule EdenflowersWeb.Admin.Components do
           phx-click="open_settlement"
         >
           <.icon name={if @collect?, do: "hero-banknotes", else: "hero-arrow-uturn-left"} class="h-4 w-4" />
-          {if @collect?, do: ~t"Record payment", else: ~t"Record refund"}
+          {if @collect?, do: ~t"Record payment", else: ~t"Refund"}
         </.button>
         {render_slot(@inner_block)}
       </div>
@@ -480,90 +481,66 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   attr :id, :string, required: true
-
-  attr :record, :map,
-    required: true,
-    doc: "an order, with `balance` and `outside_stripe_refund` loaded"
-
+  attr :record, :map, required: true, doc: "an order, with `balance` loaded"
   attr :locale, :string, required: true
   attr :params, :map, default: %{}, doc: "the payment form as Jennie has filled it in so far"
   attr :receipt_email?, :boolean, default: false, doc: "whether the customer can be emailed a receipt"
 
   @doc """
-  Records money Jennie took or handed back herself. Sends `record_payment` with
-  `payment` params and the record's id as `record_id`, and `change_payment` with
+  Records money Jennie took herself. Sends `record_payment` with `payment`
+  params and the record's id as `record_id`, and `change_payment` with
   `payment` params as the form is filled in.
   """
   def record_payment_form(assigns) do
-    form = balance_form(assigns.record, assigns.params)
+    form =
+      %{
+        "payment_method" => "zettle",
+        "amount" => Decimal.to_string(assigns.record.balance, :normal),
+        "email_receipt" => "true"
+      }
+      |> Map.merge(assigns.params)
+      |> to_form(as: :payment)
 
-    assigns =
-      assigns
-      |> assign(:collect?, Decimal.positive?(assigns.record.balance))
-      |> assign(:form, form)
-      |> assign(:settles?, settles?(assigns.record, form[:amount].value))
+    assigns = assign(assigns, form: form, settles?: settles?(assigns.record, form[:amount].value))
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="space-y-4">
       <input type="hidden" name="record_id" value={@record.id} />
-      <p :if={!@collect?} class="text-base-content/75 text-sm">
-        {~t"Records money you have already handed back. Nothing is sent to the customer."}
-      </p>
-      <fieldset aria-describedby={if !@collect?, do: "#{@id}-help"} class="space-y-4">
-        <div class="grid grid-cols-2 items-end gap-x-3 gap-y-4">
-          <.input
-            field={@form[:payment_method]}
-            id={"#{@id}-method"}
-            type="select"
-            label={~t"How"}
-            class="select w-full"
-            options={payment_method_options()}
-          />
-          <.input
-            field={@form[:amount]}
-            id={"#{@id}-amount"}
-            type="text"
-            inputmode="decimal"
-            label={~t"Amount (€)"}
-            class="input w-full tabular-nums"
-          />
-        </div>
-        <p :if={!@collect?} id={"#{@id}-help"} class="text-base-content/75 text-sm">
-          {~t"A minus amount records a refund."}
-        </p>
+      <div class="grid grid-cols-2 items-end gap-x-3 gap-y-4">
         <.input
-          :if={@collect? and @settles? and @receipt_email?}
-          field={@form[:email_receipt]}
-          id={"#{@id}-email-receipt"}
-          type="checkbox"
-          label={~t"Email a receipt"}
+          field={@form[:payment_method]}
+          id={"#{@id}-method"}
+          type="select"
+          label={~t"How"}
+          class="select w-full"
+          options={payment_method_options()}
         />
-      </fieldset>
+        <.input
+          field={@form[:amount]}
+          id={"#{@id}-amount"}
+          type="text"
+          inputmode="decimal"
+          label={~t"Amount (€)"}
+          class="input w-full tabular-nums"
+        />
+      </div>
+      <.input
+        :if={@settles? and @receipt_email?}
+        field={@form[:email_receipt]}
+        id={"#{@id}-email-receipt"}
+        type="checkbox"
+        label={~t"Email a receipt"}
+      />
       <.button
         type="submit"
         variant="primary"
         phx-disable-with={~t"Recording…"}
-        data-confirm={
-          if @collect?,
-            do: ~t"Record this payment? A mistake can be undone afterwards.",
-            else: ~t"Record this refund? A mistake can be undone afterwards."
-        }
+        data-confirm={~t"Record this payment? A mistake can be undone afterwards."}
       >
-        {if @collect?, do: ~t"Record payment", else: ~t"Record refund"}
+        {~t"Record payment"}
       </.button>
     </.form>
     """
-  end
-
-  defp balance_form(record, params) do
-    amount =
-      if Decimal.positive?(record.balance),
-        do: record.balance,
-        else: Decimal.negate(record.outside_stripe_refund)
-
-    %{"payment_method" => "zettle", "amount" => Decimal.to_string(amount, :normal), "email_receipt" => "true"}
-    |> Map.merge(params)
-    |> to_form(as: :payment)
   end
 
   defp settles?(record, amount) do
@@ -594,39 +571,38 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :record, :map,
     required: true,
-    doc: "an order or booking, with `paid_through_stripe` and `paid_outside_stripe` loaded"
+    doc: "an order or booking, with `balance`, `paid_through_stripe` and `paid_outside_stripe` loaded"
 
+  attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
   attr :params, :map, default: %{}, doc: "the form as Jennie has filled it in so far"
-  attr :hidden, :boolean, default: true, doc: "false when it's already in view, like in a drawer"
-  attr :class, :any, default: nil
 
   @doc """
-  Hands money back to an unhappy customer without lowering what was sold.
-  Hidden until something shows it, like a menu's "Refund", unless `hidden` is false. Sends
-  `goodwill_refund` with `goodwill_refund` params and the record's id as
-  `record_id`, and `change_goodwill_refund` as the form is filled in, so the
-  confirmation can name the amount.
+  Hands money back, with or without cancelling: what's owed back, or more for
+  an unhappy customer. Starts at what's owed back, if anything. Sends `refund`
+  with `refund` params and the record's id as `record_id`, and
+  `change_refund` as the form is filled in, so the confirmation can name the
+  amount.
   """
-  def goodwill_refund_form(assigns) do
-    form =
-      %{"how" => default_goodwill_method(assigns.record), "amount" => "", "note" => ""}
-      |> Map.merge(assigns.params)
-      |> to_form(as: :goodwill_refund)
+  def refund_form(assigns) do
+    owed_back = Decimal.max(Decimal.negate(assigns.record.balance), 0)
 
-    assigns = assign(assigns, form: form, how_options: goodwill_method_options(assigns.record))
+    form =
+      %{
+        "how" => default_refund_method(assigns.record),
+        "amount" => if(Decimal.positive?(owed_back), do: Decimal.to_string(owed_back, :normal), else: ""),
+        "note" => "",
+        "email_customer" => "true"
+      }
+      |> Map.merge(assigns.params)
+      |> to_form(as: :refund)
+
+    assigns = assign(assigns, form: form, how_options: refund_method_options(assigns.record))
 
     ~H"""
-    <div id={@id} class={[@hidden && "hidden", @class]}>
-      <.form
-        for={@form}
-        id={"#{@id}-form"}
-        phx-change="change_goodwill_refund"
-        phx-submit="goodwill_refund"
-        class="grid grid-cols-2 items-end gap-x-3 gap-y-4"
-      >
-        <input type="hidden" name="record_id" value={@record.id} />
-        <p class="text-base-content col-span-2 text-sm font-medium">{~t"Refund the customer"}</p>
+    <.form for={@form} id={"#{@id}-form"} phx-change="change_refund" phx-submit="refund" class="space-y-4">
+      <input type="hidden" name="record_id" value={@record.id} />
+      <div class="grid grid-cols-2 items-end gap-x-3 gap-y-4">
         <.input
           field={@form[:amount]}
           id={"#{@id}-amount"}
@@ -643,34 +619,40 @@ defmodule EdenflowersWeb.Admin.Components do
           class="select w-full"
           options={@how_options}
         />
-        <div class="col-span-2">
-          <.input
-            field={@form[:note]}
-            id={"#{@id}-note"}
-            type="text"
-            label={~t"Reason (optional)"}
-            class="input w-full"
-          />
-        </div>
-        <.button
-          type="submit"
-          variant="primary"
-          class="col-span-2"
-          phx-disable-with={~t"Refunding…"}
-          data-confirm={goodwill_confirmation(@form[:amount].value, @form[:how].value, @locale)}
-        >
-          {~t"Refund"}
-        </.button>
-      </.form>
-    </div>
+      </div>
+      <p :if={@form[:how].value != "stripe"} class="text-base-content/75 text-sm">
+        {~t"Records money you have already handed back."}
+      </p>
+      <.input
+        field={@form[:note]}
+        id={"#{@id}-note"}
+        type="textarea"
+        rows="2"
+        label={~t"Reason (optional)"}
+        placeholder={~t"Shown in the customer's email and kept on record."}
+        class="textarea w-full"
+      />
+      <div :if={@email} class="space-y-2">
+        <.input field={@form[:email_customer]} id={"#{@id}-email-customer"} type="checkbox" label={~t"Email the customer"} />
+        <p class="text-base-content/75 ml-7 break-all text-sm">{~t"To: #{email = @email}"}</p>
+      </div>
+      <.button
+        type="submit"
+        variant="primary"
+        phx-disable-with={~t"Refunding…"}
+        data-confirm={refund_confirmation(@form[:amount].value, @form[:how].value, @locale)}
+      >
+        {~t"Refund"}
+      </.button>
+    </.form>
     """
   end
 
-  defp default_goodwill_method(record),
+  defp default_refund_method(record),
     do: if(Decimal.positive?(record.paid_through_stripe), do: "stripe", else: "zettle")
 
   # Stripe money goes back through Stripe; money Jennie took herself she hands back herself.
-  defp goodwill_method_options(record) do
+  defp refund_method_options(record) do
     stripe = [{OrderLog.payment_method_label(:stripe), :stripe}]
 
     case {Decimal.positive?(record.paid_through_stripe), Decimal.positive?(record.paid_outside_stripe)} do
@@ -680,14 +662,14 @@ defmodule EdenflowersWeb.Admin.Components do
     end
   end
 
-  defp goodwill_confirmation(amount, how, locale) do
+  defp refund_confirmation(amount, how, locale) do
     with {amount, ""} <- Decimal.parse(String.replace(amount || "", ",", ".")),
          true <- Decimal.positive?(amount) do
       amount = Edenflowers.Format.currency(amount, locale)
 
       if how == "stripe",
-        do: ~t"Refund #{amount} to the customer's card with Stripe? The price stays as it is.",
-        else: ~t"Record #{amount} handed back to the customer? The price stays as it is."
+        do: ~t"Refund #{amount} to the customer's card with Stripe?",
+        else: ~t"Record #{amount} handed back to the customer?"
     else
       _invalid -> nil
     end

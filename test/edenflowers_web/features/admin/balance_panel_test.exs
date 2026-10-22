@@ -68,38 +68,12 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     {view, "#registration-#{registration.id}"}
   end
 
-  defp stripe_refund_button(:order, _order), do: ~s|#settlement-drawer button[phx-click="refund_with_stripe"]|
-  defp stripe_refund_button(:booking, registration), do: ~s|#refund-#{registration.id} button[value="stripe"]|
+  # Both pages refund with the same form.
+  defp refund_form(:order, _order), do: "#order-refund-form"
+  defp refund_form(:booking, registration), do: "#refund-#{registration.id}-form"
 
-  # The order's refund is a minus payment; a booking's is the amount handed back.
-  defp prefilled_refund(:order, _order, amount),
-    do: ~s|#order-balance-form input[name="payment[amount]"][value="-#{amount}"]|
-
-  defp prefilled_refund(:booking, registration, amount),
-    do: ~s|#refund-#{registration.id} button[value="record"][data-confirm*="€#{amount}"]|
-
-  defp record_refund_button(:order, _order), do: "#order-balance-form button[type=submit]"
-  defp record_refund_button(:booking, registration), do: ~s|#refund-#{registration.id} button[value="record"]|
-
-  defp refund_with_stripe(view, :order, order),
-    do: view |> element(stripe_refund_button(:order, order)) |> render_click()
-
-  defp refund_with_stripe(view, :booking, registration) do
-    view
-    |> form("#refund-#{registration.id}")
-    |> put_submitter(stripe_refund_button(:booking, registration))
-    |> render_submit()
-  end
-
-  defp record_cash_refund(view, :order, _order),
-    do: view |> form("#order-balance-form", payment: %{payment_method: "cash"}) |> render_submit()
-
-  defp record_cash_refund(view, :booking, registration) do
-    view
-    |> form("#refund-#{registration.id}", refund: %{payment_method: "cash"})
-    |> put_submitter(record_refund_button(:booking, registration))
-    |> render_submit()
-  end
+  defp refund(view, parent, record, params),
+    do: view |> form(refund_form(parent, record), refund: params) |> render_submit()
 
   defp balance(record), do: Ash.load!(record, :balance, authorize?: false, reuse_values?: false).balance
 
@@ -129,8 +103,8 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         {view, panel} = open(conn, @parent, record)
 
         assert has_element?(view, panel, "To refund €88.50")
-        assert has_element?(view, stripe_refund_button(@parent, record), "Refund with Stripe")
-        assert has_element?(view, record_refund_button(@parent, record))
+        assert has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="stripe"]|)
+        assert has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="cash"]|)
       end
 
       test "the payment that settles it emails a receipt, ticked by default", %{conn: conn} do
@@ -159,7 +133,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         {view, panel} = open(conn, @parent, record)
 
         refute has_element?(view, panel, "To refund")
-        refute has_element?(view, stripe_refund_button(@parent, record))
+        refute has_element?(view, refund_form(@parent, record))
       end
 
       test "a cancelled one paid by card is refunded with Stripe from the panel", %{conn: conn} do
@@ -174,8 +148,8 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         {view, panel} = open(conn, @parent, record)
 
         assert has_element?(view, panel, "To refund €88.50")
-        refute has_element?(view, record_refund_button(@parent, record))
-        assert refund_with_stripe(view, @parent, record) =~ "Refunded with Stripe."
+        refute has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="cash"]|)
+        assert refund(view, @parent, record, %{how: "stripe"}) =~ "Refunded with Stripe."
 
         refute has_element?(view, panel, "To refund")
       end
@@ -184,9 +158,9 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         record = build(@parent, cancelled: true, payments: [cash: "88.50"])
         {view, panel} = open(conn, @parent, record)
 
-        refute has_element?(view, stripe_refund_button(@parent, record))
-        assert has_element?(view, prefilled_refund(@parent, record, "88.50"))
-        record_cash_refund(view, @parent, record)
+        refute has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="stripe"]|)
+        assert has_element?(view, ~s|#{refund_form(@parent, record)} input[name="refund[amount]"][value="88.50"]|)
+        refund(view, @parent, record, %{how: "cash"})
 
         refute has_element?(view, panel, "To refund")
         assert Decimal.eq?(balance(record), 0)
@@ -230,12 +204,12 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     assert Decimal.eq?(balance(order), 0)
   end
 
-  test "an order refund above what's owed back says why and records nothing", %{conn: conn} do
+  test "an order refund above what was received says why and records nothing", %{conn: conn} do
     order = build(:order, cancelled: true, payments: [cash: "88.50"])
     {view, _panel} = open(conn, :order, order)
 
-    assert view |> form("#order-balance-form", payment: %{amount: "-100,00"}) |> render_submit() =~
-             "That&#39;s more than is owed back"
+    assert refund(view, :order, order, %{amount: "100,00", how: "cash"}) =~ "That&#39;s more than was received"
+    assert has_element?(view, ~s|#order-refund-form input[name="refund[amount]"][value="100,00"]|)
 
     assert Decimal.equal?(balance(order), "-88.50")
   end

@@ -185,6 +185,53 @@ defmodule Edenflowers.Email do
     end)
   end
 
+  @doc """
+  Tells the customer what Jennie refunded on their order, and why. Expects
+  `:customer_first_name` and `:payments` loaded. `refund` holds the
+  `amount`, the `payment_method` it went back by, and Jennie's `note`.
+  """
+  def order_refunded(order, refund) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(record_copy_address())
+      |> subject(~t"A refund for your Eden Flowers order #{order.order_reference}")
+      |> text_body(
+        Templates.order_refunded(%{
+          order: order,
+          refund: refund,
+          refunded_to: refunded_to(order.payments),
+          format_currency: &Format.currency(&1, order.locale),
+          format_date: &Format.date(&1, order.locale)
+        })
+      )
+    end)
+  end
+
+  @doc """
+  Tells the customer what Jennie refunded on their course booking, and why.
+  Expects `:course` translated, `:first_name` and `:payments` loaded.
+  """
+  def booking_refunded(registration, refund) do
+    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(registration.email)
+      |> bcc(record_copy_address())
+      |> subject(~t"A refund for your booking on #{course = registration.course.name}")
+      |> text_body(
+        Templates.booking_refunded(%{
+          registration: registration,
+          refund: refund,
+          refunded_to: refunded_to(registration.payments),
+          format_currency: &Format.currency(&1, registration.locale),
+          format_date: &Format.weekday_date(&1, registration.locale)
+        })
+      )
+    end)
+  end
+
   # Only Stripe payments are refunded here, almost always just one, so the
   # refund goes back the same way.
   defp refunded_to(payments) do

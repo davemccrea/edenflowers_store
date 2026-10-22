@@ -48,7 +48,6 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     title =
       cond do
         payment.reverses_payment_id -> ~t"Undid #{amount} · #{how}"
-        payment.goodwill -> ~t"Goodwill refund #{amount} · #{how}"
         Decimal.negative?(payment.amount) -> ~t"Refunded #{amount} · #{how}"
         true -> ~t"Paid #{amount} · #{how}"
       end

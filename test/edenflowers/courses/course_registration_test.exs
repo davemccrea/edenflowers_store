@@ -161,7 +161,9 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       {:ok, registration} = Courses.cancel_registration(registration, actor: admin)
       assert Decimal.equal?(balance(registration), "-170.00")
 
-      assert {:ok, registration} = Courses.record_registration_payment(registration, "-170.00", :cash, actor: admin)
+      assert {:ok, registration} =
+               Ash.update(registration, %{amount: "170.00", payment_method: :cash}, action: :refund, actor: admin)
+
       assert Decimal.equal?(balance(registration), 0)
     end
   end

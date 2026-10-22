@@ -23,7 +23,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
      socket
      |> assign(:page_title, ~t"Courses")
      |> assign(:locale, Localize.get_locale())
-     |> assign(booking_form: nil, booking_course_id: nil, goodwill_params: %{})
+     |> assign(booking_form: nil, booking_course_id: nil, refund_params: %{})
      |> assign(settling_id: nil, settlement_mode: :settle, settlement_error: nil)
      |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil, cancel_held: nil)
      |> load_courses()}
@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             course={course}
             locale={@locale}
             highlighted_booking_id={@highlighted_booking_id}
-            goodwill_params={@goodwill_params}
+            refund_params={@refund_params}
           />
         </div>
       </.admin_page>
@@ -82,7 +82,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       <.settlement_drawer
         settling={find_booking(@courses, @settling_id)}
         mode={@settlement_mode}
-        goodwill_params={@goodwill_params}
+        refund_params={@refund_params}
         error={@settlement_error}
         locale={@locale}
       />
@@ -130,7 +130,12 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   def handle_event("open_settlement", %{"id" => id} = params, socket) do
-    mode = if params["mode"] == "goodwill", do: :goodwill, else: :settle
+    {_course, registration} = find_booking(socket.assigns.courses, id)
+
+    mode =
+      if params["mode"] == "refund" or Decimal.negative?(registration.balance),
+        do: :refund,
+        else: :settle
 
     {:noreply,
      socket
@@ -152,18 +157,13 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     with_registration(socket, id, &PaymentActions.undo_payment(&1, payment_id, actor))
   end
 
+  def handle_event("change_refund", %{"record_id" => id, "refund" => params}, socket) do
+    {:noreply, update(socket, :refund_params, &Map.put(&1, id, params))}
+  end
+
   def handle_event("refund", %{"record_id" => id, "refund" => params}, socket) do
     actor = socket.assigns.current_user
-    settle(socket, id, &refund(&1, params, actor))
-  end
-
-  def handle_event("change_goodwill_refund", %{"record_id" => id, "goodwill_refund" => params}, socket) do
-    {:noreply, update(socket, :goodwill_params, &Map.put(&1, id, params))}
-  end
-
-  def handle_event("goodwill_refund", %{"record_id" => id, "goodwill_refund" => params}, socket) do
-    actor = socket.assigns.current_user
-    settle(socket, id, &PaymentActions.goodwill_refund(&1, params, actor))
+    settle(socket, id, &PaymentActions.refund(&1, params, actor))
   end
 
   def handle_event("open_payment_link", %{"id" => id}, socket) do
@@ -273,7 +273,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               socket
               |> put_flash(:info, message)
               |> assign(settling_id: nil, settlement_error: nil)
-              |> update(:goodwill_params, &Map.delete(&1, id))
+              |> update(:refund_params, &Map.delete(&1, id))
               |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-hide"})
 
             {:error, message} ->
@@ -327,14 +327,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     end
   end
 
-  defp refund(registration, %{"by" => "stripe"}, _actor), do: PaymentActions.refund_with_stripe(registration)
-
-  defp refund(registration, %{"payment_method" => payment_method}, actor) do
-    registration = Ash.load!(registration, :outside_stripe_refund, actor: actor)
-    amount = registration.outside_stripe_refund |> Decimal.negate() |> Decimal.to_string(:normal)
-    PaymentActions.record_payment(registration, %{"amount" => amount, "payment_method" => payment_method}, actor)
-  end
-
   defp load_courses(socket) do
     courses =
       Courses.list_admin_courses!(
@@ -345,11 +337,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             :amount_held,
             :balance,
             :settled?,
-            :outside_stripe_refund,
-            :stripe_refund,
             :paid_outside_stripe,
             :paid_through_stripe,
-            :goodwill_refundable?,
+            :refundable?,
             :seats_held,
             :payment_link_open?,
             payments: [:undoable?, :reversal]
@@ -363,7 +353,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   attr :course, :map, required: true
   attr :locale, :any, required: true
   attr :highlighted_booking_id, :string, default: nil
-  attr :goodwill_params, :map, required: true, doc: "each booking's refund form as filled in so far, by its id"
+  attr :refund_params, :map, required: true, doc: "each booking's refund form as filled in so far, by its id"
 
   defp course(assigns) do
     {registrations, cancelled} = Enum.split_with(assigns.course.bookings, &(&1.status == :confirmed))
@@ -472,7 +462,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 >
                   {registration.email}
                 </a>
-                <.goodwill_refunds registration={registration} locale={@locale} />
+                <.refunds registration={registration} locale={@locale} />
               </div>
               <div class="col-start-2 row-start-1 justify-self-end">
                 <.actions_menu id={"registration-actions-#{registration.id}"}>
@@ -529,11 +519,11 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                     {~t"Get payment link"}
                   </.actions_menu_button>
                   <.actions_menu_button
-                    :if={registration.goodwill_refundable?}
+                    :if={registration.refundable?}
                     menu={"registration-actions-#{registration.id}"}
                     phx-click="open_settlement"
                     phx-value-id={registration.id}
-                    phx-value-mode="goodwill"
+                    phx-value-mode="refund"
                   >
                     {~t"Refund"}
                   </.actions_menu_button>
@@ -669,20 +659,21 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   attr :registration, :map, required: true
   attr :locale, :string, required: true
 
-  defp goodwill_refunds(assigns) do
+  # A booking has no history, so its row lists what was handed back.
+  defp refunds(assigns) do
     assigns =
       assign(
         assigns,
         :refunds,
         Enum.filter(
           assigns.registration.payments,
-          &(&1.goodwill and Decimal.negative?(&1.amount) and is_nil(&1.reversal))
+          &(Decimal.negative?(&1.amount) and is_nil(&1.reverses_payment_id) and is_nil(&1.reversal))
         )
       )
 
     ~H"""
     <p :for={refund <- @refunds} class="text-base-content/75 text-sm">
-      {~t"Goodwill refund #{amount = Format.currency(Decimal.abs(refund.amount), @locale)} · #{how = OrderLog.payment_method_label(refund.method)}"}
+      {~t"Refunded #{amount = Format.currency(Decimal.abs(refund.amount), @locale)} · #{how = OrderLog.payment_method_label(refund.method)}"}
       <span :if={refund.note}>· {refund.note}</span>
     </p>
     """
@@ -753,8 +744,8 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   attr :settling, :any, required: true, doc: "the {course, booking} being settled, or nil"
-  attr :mode, :atom, required: true, values: [:settle, :goodwill]
-  attr :goodwill_params, :map, required: true
+  attr :mode, :atom, required: true, values: [:settle, :refund]
+  attr :refund_params, :map, required: true
   attr :error, :string, default: nil
   attr :locale, :string, required: true
 
@@ -764,20 +755,15 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       <.drawer_body :if={@settling}>
         <.settlement_details course={elem(@settling, 0)} registration={elem(@settling, 1)} locale={@locale} />
         <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
-        <.goodwill_refund_form
-          :if={@mode == :goodwill and elem(@settling, 1).goodwill_refundable?}
-          id={"goodwill-refund-#{elem(@settling, 1).id}"}
+        <.refund_form
+          :if={@mode == :refund and elem(@settling, 1).refundable?}
+          id={"refund-#{elem(@settling, 1).id}"}
           record={elem(@settling, 1)}
+          email={elem(@settling, 1).email}
           locale={@locale}
-          params={Map.get(@goodwill_params, elem(@settling, 1).id, %{})}
-          hidden={false}
+          params={Map.get(@refund_params, elem(@settling, 1).id, %{})}
         />
         <.mark_paid_form :if={@mode == :settle and to_collect?(elem(@settling, 1))} registration={elem(@settling, 1)} />
-        <.refund_controls
-          :if={@mode == :settle and to_refund?(elem(@settling, 1))}
-          registration={elem(@settling, 1)}
-          locale={@locale}
-        />
         <p :if={nothing_to_settle?(elem(@settling, 1), @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this booking."}
         </p>
@@ -786,16 +772,11 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
     """
   end
 
-  defp settlement_title(_settling, :goodwill), do: ~t"Refund"
+  defp settlement_title(_settling, :refund), do: ~t"Refund"
+  defp settlement_title(_settling, :settle), do: ~t"Record payment"
 
-  defp settlement_title({_course, registration}, :settle) do
-    if to_refund?(registration), do: ~t"Record refund", else: ~t"Record payment"
-  end
-
-  defp settlement_title(nil, :settle), do: ~t"Record payment"
-
-  defp nothing_to_settle?(registration, :goodwill), do: not registration.goodwill_refundable?
-  defp nothing_to_settle?(registration, :settle), do: not to_collect?(registration) and not to_refund?(registration)
+  defp nothing_to_settle?(registration, :refund), do: not registration.refundable?
+  defp nothing_to_settle?(registration, :settle), do: not to_collect?(registration)
 
   attr :course, :map, required: true
   attr :registration, :map, required: true
@@ -869,61 +850,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
       />
       <.input name="email_receipt" type="checkbox" label={~t"Email a receipt"} value="true" />
       <.button type="submit" variant="primary" phx-disable-with={~t"Recording…"}>{~t"Record payment"}</.button>
-    </form>
-    """
-  end
-
-  attr :registration, :map, required: true
-  attr :locale, :string, required: true
-
-  # Money taken by card goes back through Stripe; cash or Zettle money is recorded as handed back.
-  defp refund_controls(assigns) do
-    ~H"""
-    <form id={"refund-#{@registration.id}"} phx-submit="refund" class="space-y-4">
-      <input type="hidden" name="record_id" value={@registration.id} />
-      <div :if={Decimal.positive?(@registration.stripe_refund)} class="space-y-4">
-        <p class="text-base-content/75 text-sm">
-          {~t"Sends the money back to the customer's card. Stripe moves the money."}
-        </p>
-        <.button
-          name="refund[by]"
-          value="stripe"
-          type="submit"
-          phx-disable-with={~t"Refunding…"}
-          data-confirm={
-            ~t"Refund #{amount = Format.currency(@registration.stripe_refund, @locale)} to the customer's card with Stripe?"
-          }
-          variant="primary"
-        >
-          {~t"Refund with Stripe"}
-        </.button>
-      </div>
-      <div :if={Decimal.positive?(@registration.outside_stripe_refund)} class="space-y-4">
-        <p class="text-base-content/75 text-sm">
-          {~t"Records money you have already handed back. Nothing is sent to the customer."}
-        </p>
-        <.input
-          id={"refund-method-#{@registration.id}"}
-          name="refund[payment_method]"
-          type="select"
-          label={~t"Payment method"}
-          value={:zettle}
-          options={payment_method_options()}
-          class="select w-full"
-        />
-        <.button
-          name="refund[by]"
-          value="record"
-          type="submit"
-          phx-disable-with={~t"Recording…"}
-          variant="primary"
-          data-confirm={
-            ~t"Record #{amount = Format.currency(@registration.outside_stripe_refund, @locale)} as refunded? A mistake can be undone afterwards."
-          }
-        >
-          {~t"Record refund"}
-        </.button>
-      </div>
     </form>
     """
   end
