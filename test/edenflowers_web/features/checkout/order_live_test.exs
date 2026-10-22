@@ -62,7 +62,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     charged = Edenflowers.Format.weekday_date(~D[2026-06-21], "en-GB")
     assert has_element?(view, "[data-testid=order-next-delivery]", next)
     assert has_element?(view, "[data-testid=order-next-charge]", "on #{charged}")
-    assert has_element?(view, ~s|[data-testid=order-subscription] a[href="/account"]|, "Manage subscription")
+    assert has_element?(view, "[data-testid=manage-subscription]", "Manage subscription")
   end
 
   test "says nothing about a subscription for a one-off order", %{conn: conn, user: user} do

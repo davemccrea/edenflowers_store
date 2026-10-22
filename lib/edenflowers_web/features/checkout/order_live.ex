@@ -82,18 +82,12 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
               </dd>
             </dl>
 
-            <%= if @current_user do %>
-              <.button navigate={~p"/account"} variant="secondary" class="mt-6" data-testid="manage-subscription">
-                {~t"Manage subscription"}
-              </.button>
-            <% else %>
-              <p class="text-base-content/70 mt-6">
-                <.link navigate={~p"/sign-in"} class="link-underline-hover">
-                  {~t"Sign in with #{email = @shown_order.customer_email}"}
-                </.link>
-                {~t"to pause or cancel."}
-              </p>
-            <% end %>
+            <p :if={!@current_user} class="text-base-content/70 mt-6">
+              <.link navigate={~p"/sign-in"} class="link-underline-hover">
+                {~t"Sign in with #{email = @shown_order.customer_email}"}
+              </.link>
+              {~t"to pause or cancel."}
+            </p>
           </div>
 
           <figure
@@ -108,17 +102,26 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
           </figure>
 
           <div class="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
-            <.button
-              :if={@paid?}
-              href={~p"/order/#{@shown_order.id}/receipt"}
-              target="_blank"
-              rel="noopener"
-              variant="secondary"
-              size="lg"
-            >
-              {~t"View receipt"}
-              <.icon name="hero-arrow-top-right-on-square" class="size-4" />
-            </.button>
+            <div :if={@paid? || (@next_delivery && @current_user)} class="flex flex-wrap gap-3">
+              <.button
+                :if={@paid?}
+                href={~p"/order/#{@shown_order.id}/receipt"}
+                target="_blank"
+                rel="noopener"
+                variant="secondary"
+              >
+                {~t"View receipt"}
+                <.icon name="hero-arrow-top-right-on-square" class="size-4" />
+              </.button>
+              <.button
+                :if={@next_delivery && @current_user}
+                navigate={~p"/account"}
+                variant="secondary"
+                data-testid="manage-subscription"
+              >
+                {~t"Manage subscription"}
+              </.button>
+            </div>
             <.button
               :if={@paid? && @shown_order.fulfillment_method == :pickup}
               href={~p"/order/#{@shown_order.id}/pickup.ics"}
