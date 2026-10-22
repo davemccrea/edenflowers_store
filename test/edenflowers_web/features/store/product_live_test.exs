@@ -40,6 +40,24 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert has_element?(view, "[data-testid=add-to-cart-button]:not([disabled])", "Add to cart")
   end
 
+  test "shows the chosen size's height and stems, leaving out what's not filled in", %{conn: conn} do
+    product = generate(product(draft: false))
+    small = generate(product_variant(product_id: product.id, size: :small, height_cm: "30–40", stem_count: "10–12"))
+    large = generate(product_variant(product_id: product.id, size: :large, height_cm: "50–60", stem_count: nil))
+    plain = generate(product_variant(product_id: product.id, size: :medium, height_cm: nil, stem_count: nil))
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+
+    view |> form("[data-testid=product-form]", %{product_variant_id: small.id}) |> render_change()
+    assert has_element?(view, "[data-testid=variant-dimensions]", "30–40 cm · 10–12 stems")
+
+    view |> form("[data-testid=product-form]", %{product_variant_id: large.id}) |> render_change()
+    assert render(element(view, "[data-testid=variant-dimensions]")) =~ ~r/>\s*50–60 cm\s*</
+
+    view |> form("[data-testid=product-form]", %{product_variant_id: plain.id}) |> render_change()
+    refute has_element?(view, "[data-testid=variant-dimensions]")
+  end
+
   test "a product with every size sold out can't be added", %{conn: conn} do
     product = generate(product(draft: false))
     generate(product_variant(product_id: product.id, size: nil, stock_quantity: 0))
