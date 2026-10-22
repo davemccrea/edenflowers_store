@@ -105,13 +105,6 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                   class="input w-full tabular-nums"
                 />
                 <.input
-                  field={@form[:late_cancellation_fee]}
-                  type="text"
-                  inputmode="decimal"
-                  label={~t"Late-cancellation fee (€)"}
-                  class="input w-full tabular-nums"
-                />
-                <.input
                   field={@form[:tax_rate_id]}
                   type="select"
                   label={~t"VAT"}

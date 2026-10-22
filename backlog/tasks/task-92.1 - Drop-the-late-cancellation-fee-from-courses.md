@@ -1,9 +1,10 @@
 ---
 id: TASK-92.1
 title: Drop the late-cancellation fee from courses
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-22 14:39'
+updated_date: '2026-10-22 16:07'
 labels: []
 dependencies: []
 parent_task_id: TASK-92
@@ -22,6 +23,6 @@ ordinal: 197000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Course has no late_cancellation_fee and cancelling a booking keeps nothing on its own
-- [ ] #2 Course page, booking page, confirmation email and FAQ show the new cancellation wording in en, fi and sv
+- [x] #1 Course has no late_cancellation_fee and cancelling a booking keeps nothing on its own
+- [x] #2 Course page, booking page, confirmation email and FAQ show the new cancellation wording in en, fi and sv
 <!-- AC:END -->

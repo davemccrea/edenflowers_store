@@ -171,30 +171,18 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       %{admin: generate(admin_user())}
     end
 
-    defp paid_booking(days_before, admin, paid \\ "85.00") do
+    defp paid_booking(days_before, admin) do
       today = ShopTime.today()
-
-      course =
-        generate(course(date: Date.add(today, days_before), register_before: today, late_cancellation_fee: "15.00"))
+      course = generate(course(date: Date.add(today, days_before), register_before: today))
 
       {:ok, registration} = add_manually(course, 1, admin)
-      {:ok, registration} = Courses.record_registration_payment(registration, paid, :cash, actor: admin)
+      {:ok, registration} = Courses.record_registration_payment(registration, "85.00", :cash, actor: admin)
       registration
     end
 
-    test "less than 7 days before the course keeps the late-cancellation fee", %{admin: admin} do
-      {:ok, registration} = Courses.cancel_registration(paid_booking(6, admin), actor: admin)
-      assert Decimal.equal?(balance(registration), "-70.00")
-    end
-
-    test "7 days before the course refunds everything", %{admin: admin} do
-      {:ok, registration} = Courses.cancel_registration(paid_booking(7, admin), actor: admin)
+    test "leaves everything paid to refund, however close the course", %{admin: admin} do
+      {:ok, registration} = Courses.cancel_registration(paid_booking(1, admin), actor: admin)
       assert Decimal.equal?(balance(registration), "-85.00")
-    end
-
-    test "keeps no more than was paid", %{admin: admin} do
-      {:ok, registration} = Courses.cancel_registration(paid_booking(1, admin, "10.00"), actor: admin)
-      assert Decimal.equal?(balance(registration), 0)
     end
 
     test "Jennie can refund more or less than suggested, but not more than was paid", %{admin: admin} do

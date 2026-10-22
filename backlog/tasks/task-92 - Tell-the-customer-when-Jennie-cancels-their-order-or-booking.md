@@ -1,9 +1,10 @@
 ---
 id: TASK-92
 title: Tell the customer when Jennie cancels their order or booking
-status: ready-for-agent
+status: in-progress
 assignee: []
 created_date: '2026-10-22 14:39'
+updated_date: '2026-10-22 16:01'
 labels:
   - spec
   - customers

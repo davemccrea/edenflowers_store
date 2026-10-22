@@ -775,7 +775,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
         :if={@registration.status == :cancelled and Decimal.positive?(@registration.kept_amount)}
         class="flex justify-between gap-4 py-2"
       >
-        <dt class="text-base-content/75">{~t"Kept as cancellation fee"}</dt>
+        <dt class="text-base-content/75">{~t"Kept"}</dt>
         <dd>{Format.currency(@registration.kept_amount, @locale)}</dd>
       </div>
       <div :if={to_refund?(@registration)} class="flex justify-between gap-4 py-2">
@@ -810,7 +810,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   attr :registration, :map, required: true
 
   # Money taken by card goes back through Stripe; cash or Zettle money is recorded as handed back.
-  # The amount starts at the balance, which leaves out a late-cancellation fee, and Jennie can change it.
+  # The amount starts at the balance, and Jennie can change it.
   defp refund_controls(assigns) do
     ~H"""
     <form id={"refund-#{@registration.id}"} phx-submit="refund" class="space-y-4">
