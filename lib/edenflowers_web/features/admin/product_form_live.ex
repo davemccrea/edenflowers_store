@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               </.form_section>
 
               <.form_section title={~t"Sizes and prices"}>
-                <ul class="border-base-content/12 divide-base-content/12 divide-y border">
+                <ul class="@container border-base-content/12 divide-base-content/12 divide-y border">
                   <.inputs_for :let={variant} field={@form[:product_variants]}>
                     <.size_row
                       variant={variant}
@@ -301,8 +301,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   attr :photo_slugs, :list, required: true
   attr :show_errors, :boolean, required: true
 
-  # One line per size from sm. On a phone the photo spans two lines: size and
-  # remove, then price, stock and draft. Height and stems take a third.
+  # One line per size once the list is wide enough; the side panel keeps it narrow
+  # on most laptops. Narrower, the photo spans two lines: size, then price, stock
+  # and draft over height, stems and remove.
   defp size_row(assigns) do
     variant = assigns.variant
     [main | others] = assigns.photo_slugs ++ [nil]
@@ -320,25 +321,25 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       )
 
     ~H"""
-    <%!-- On a phone the select shows the size, so its label is for screen readers. From sm the
-         first row's labels head the columns; later rows keep theirs for screen readers. Field
+    <%!-- On narrow lists the select shows the size, so its label is for screen readers. On one
+         line the first row's labels head the columns; later rows keep theirs for screen readers. Field
          errors would push their column out of line, so they're read with their input and shown
          under the row. --%>
-    <li class="[&_[id$=-error]]:sr-only p-3 max-sm:[&_label:has(select)>span]:sr-only sm:[&:not(:first-of-type)_label.flex-col>span]:sr-only sm:[&:not(:first-of-type)_label:has(.toggle)>span]:sr-only">
-      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 sm:grid-cols-[2rem_minmax(0,1fr)_5rem_4.5rem_6rem_6.5rem_4.5rem_auto]">
+    <li class="[&_[id$=-error]]:sr-only p-3 @3xl:[&:not(:first-of-type)_label.flex-col>span]:sr-only @3xl:[&:not(:first-of-type)_label:has(.toggle)>span]:sr-only @max-3xl:[&_label:has(select)>span]:sr-only">
+      <div class="grid-cols-[3rem_minmax(0,1fr)] grid items-end gap-x-3 @3xl:grid-cols-[2rem_minmax(0,1fr)_5rem_4.5rem_6rem_6.5rem_4.5rem_auto]">
         <button
           :if={@picks?}
           type="button"
           phx-click={JS.exec("phx-show", to: "##{@drawer}")}
           aria-label={~t"Photo for #{size = @size_label}"}
           aria-controls={@drawer}
-          class="bg-base-200 aspect-[4/5] outline-primary relative row-span-2 block w-12 self-start overflow-hidden outline-offset-2 hover:outline-1 focus-visible:outline-2 sm:row-span-1 sm:w-8 sm:self-auto"
+          class="bg-base-200 aspect-[4/5] outline-primary relative row-span-2 block w-12 self-start overflow-hidden outline-offset-2 @3xl:row-span-1 @3xl:w-8 @3xl:self-auto hover:outline-1 focus-visible:outline-2"
         >
           <.image src={@own || @main} alt="" width={96} height={120} class="absolute inset-0 h-full w-full object-cover" />
         </button>
         <span
           :if={!@picks?}
-          class={["bg-base-200 aspect-[4/5] relative row-span-2 block w-12 self-start overflow-hidden sm:row-span-1 sm:w-8 sm:self-auto", is_nil(@main) && "border-base-content/20 border border-dashed"]}
+          class={["bg-base-200 aspect-[4/5] relative row-span-2 block w-12 self-start overflow-hidden @3xl:row-span-1 @3xl:w-8 @3xl:self-auto", is_nil(@main) && "border-base-content/20 border border-dashed"]}
         >
           <.image
             :if={@main}
@@ -357,17 +358,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
           class="select w-full"
         />
-        <div class="col-span-2 col-start-2 row-start-3 mt-3 grid grid-cols-2 items-end gap-3 sm:contents">
-          <.input
-            field={@variant[:height_cm]}
-            type="text"
-            label={~t"Height (cm)"}
-            placeholder="30–40"
-            class="input w-full"
-          />
-          <.input field={@variant[:stem_count]} type="text" label={~t"Stems"} placeholder="10–12" class="input w-full" />
-        </div>
-        <div class="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] col-span-2 col-start-2 row-start-2 mt-3 grid items-end gap-3 sm:contents">
+        <%!-- Narrower, one grid so height and stems line up under price and stock; they're first
+             in source for the one-line order, so they're placed on the second line. --%>
+        <div class="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] col-start-2 row-start-2 mt-3 grid items-end gap-3 @3xl:contents @max-3xl:[&>:nth-child(-n+2)]:row-start-2">
+          <.input field={@variant[:height_cm]} type="text" label={~t"Height (cm)"} class="input w-full" />
+          <.input field={@variant[:stem_count]} type="text" label={~t"Stems"} class="input w-full" />
           <.input
             field={@variant[:price]}
             type="text"
@@ -385,20 +380,21 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             placeholder={~t"Unlimited"}
             class="input w-full tabular-nums"
           />
-          <%!-- Its label sits above it like the inputs', so from sm only the first row shows it. --%>
+          <%!-- Its label sits above it like the inputs', so on one line only the first row shows it. --%>
           <.live_toggle
             field={@variant[:draft]}
             label={~t"Visible"}
             class="flex-col-reverse items-start gap-3.5 pb-2.5"
           />
+          <.icon_button
+            phx-click="remove_variant"
+            phx-value-path={@variant.name}
+            aria_label={~t"Remove #{size = @size_label}"}
+            class="@max-3xl:row-start-2"
+          >
+            <.icon name="hero-trash" class="size-5" />
+          </.icon_button>
         </div>
-        <.icon_button
-          phx-click="remove_variant"
-          phx-value-path={@variant.name}
-          aria_label={~t"Remove #{size = @size_label}"}
-        >
-          <.icon name="hero-trash" class="size-5" />
-        </.icon_button>
       </div>
       <div :if={@field_errors != []} aria-hidden="true">
         <.error :for={msg <- @field_errors}>{msg}</.error>
