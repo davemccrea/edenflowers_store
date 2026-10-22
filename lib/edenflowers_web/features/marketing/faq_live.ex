@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
       {~t"Can I take a break or stop?",
        ~t"Yes, from your account, where you can also change the size, how often or the day. Make any change at least #{close = days + 1} days before a bouquet; after that, it's already on its way."},
       {~t"What if my card doesn't go through?",
-       ~t"Your bouquet still comes, and I'll email you a link to pay for it. Your subscription waits until that's sorted."}
+       ~t"Your bouquet still comes, and I'll email you a link to pay for it. Your subscription then waits, and no more bouquets are sent or charged. Pay the link or add a new card in your account, and it starts again from your next date."}
     ]
   end
 

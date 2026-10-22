@@ -4447,8 +4447,8 @@ msgstr "Den första buketten betalar du i kassan. Sedan debiteras ditt kort %{da
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:86
 #, elixir-autogen, elixir-format
-msgid "Your bouquet still comes, and I'll email you a link to pay for it. Your subscription waits until that's sorted."
-msgstr "Din bukett kommer ändå, och jag mejlar dig en länk för att betala den. Prenumerationen väntar tills det är ordnat."
+msgid "Your bouquet still comes, and I'll email you a link to pay for it. Your subscription then waits, and no more bouquets are sent or charged. Pay the link or add a new card in your account, and it starts again from your next date."
+msgstr "Din bukett kommer ändå, och jag mejlar dig en länk för att betala den. Prenumerationen väntar sedan, och inga fler buketter skickas eller debiteras. Betala via länken eller lägg till ett nytt kort på ditt konto, så fortsätter den från nästa leveransdag."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:112
 #, elixir-autogen, elixir-format

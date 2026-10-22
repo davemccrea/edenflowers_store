@@ -4447,8 +4447,8 @@ msgstr "Maksat ensimmäisen kimpun kassalla. Sen jälkeen korttiasi veloitetaan 
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:86
 #, elixir-autogen, elixir-format
-msgid "Your bouquet still comes, and I'll email you a link to pay for it. Your subscription waits until that's sorted."
-msgstr "Kimppusi tulee silti, ja lähetän sinulle sähköpostilla linkin sen maksamiseen. Kestotilauksesi odottaa, kunnes asia on hoidettu."
+msgid "Your bouquet still comes, and I'll email you a link to pay for it. Your subscription then waits, and no more bouquets are sent or charged. Pay the link or add a new card in your account, and it starts again from your next date."
+msgstr "Kimppusi tulee silti, ja lähetän sinulle sähköpostilla linkin sen maksamiseen. Sen jälkeen kestotilauksesi odottaa, eikä uusia kimppuja lähetetä tai veloiteta. Kun maksat linkin tai lisäät tilillesi uuden kortin, tilaus jatkuu seuraavasta toimituspäivästä."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:112
 #, elixir-autogen, elixir-format
