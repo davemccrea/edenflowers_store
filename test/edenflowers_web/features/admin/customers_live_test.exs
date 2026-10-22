@@ -82,6 +82,18 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
       refute has_element?(view, ~s([data-item-id="#{order.id}"]), "Unpaid")
     end
 
+    test "shows the customer's subscriptions and nobody else's", %{conn: conn} do
+      ada = customer("Ada Lovelace", "ada@example.com")
+      placed_order(user_id: ada.id)
+      mine = generate(subscription(user_id: ada.id))
+      theirs = generate(subscription(user_id: customer("Grace Hopper", "grace@example.com").id))
+
+      {:ok, view, _html} = live(conn, ~p"/admin/customers/#{ada.id}")
+
+      assert has_element?(view, ~s([data-item-id="#{mine.id}"]))
+      refute has_element?(view, ~s([data-item-id="#{theirs.id}"]))
+    end
+
     test "redirects when the user has never placed an order", %{conn: conn} do
       lurker = customer("Newsletter Only", "news@example.com")
 
