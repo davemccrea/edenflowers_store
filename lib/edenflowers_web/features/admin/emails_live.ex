@@ -14,7 +14,7 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
-  @languages [{"en", "en-GB", "English"}, {"sv", "sv-FI", "Svenska"}, {"fi", "fi", "Suomi"}]
+  @languages [{"sv", "sv-FI", "Svenska"}, {"fi", "fi", "Suomi"}, {"en", "en-GB", "English"}]
 
   @impl true
   def mount(_params, _session, socket) do

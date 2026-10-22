@@ -1,7 +1,7 @@
 defmodule Edenflowers.Locales do
   @moduledoc "Single source of truth for supported locales."
 
-  @all ["en-GB", "sv-FI", "fi"]
+  @all ["sv-FI", "fi", "en-GB"]
   @default "sv-FI"
   @translatable_atoms [:"sv-FI", :fi]
 
