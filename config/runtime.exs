@@ -79,13 +79,12 @@ if config_env() == :prod do
          :uploads_dir,
          System.get_env("UPLOADS_DIR") || raise("environment variable UPLOADS_DIR is missing.")
 
-  # Set on the production server only, so staging doesn't send alerts.
+  # Set on the production server only.
   if error_alert_email = System.get_env("ERROR_ALERT_EMAIL") do
     config :edenflowers, :error_alert_email, error_alert_email
   end
 
-  # Where new orders and reminders are emailed. Production only, so staging's
-  # test orders stay out of Jennie's inbox.
+  # Where new orders and reminders are emailed. Production only.
   if shop_notice_email = System.get_env("SHOP_NOTICE_EMAIL") do
     config :edenflowers, :shop_notice_email, shop_notice_email
   end
@@ -130,6 +129,5 @@ if config_env() == :prod do
 
   config :edenflowers, :brevo_api_key, brevo_api_key
 
-  # Unset on staging, so its test users stay out of the shop's real list.
   config :edenflowers, :brevo_newsletter_list_id, System.get_env("BREVO_NEWSLETTER_LIST_ID")
 end

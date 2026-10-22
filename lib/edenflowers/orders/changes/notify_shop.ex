@@ -7,8 +7,7 @@ defmodule Edenflowers.Orders.Changes.NotifyShop do
   a failure never fails checkout.
 
   Each goes out only where it is configured: the email needs
-  `:shop_notice_email` and the push VAPID keys, both production only, so
-  staging stays quiet.
+  `:shop_notice_email` and the push VAPID keys, both production only.
   """
   use Ash.Resource.Change
 

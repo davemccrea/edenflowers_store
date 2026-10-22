@@ -4,7 +4,7 @@ defmodule Edenflowers.WebPush do
   the payload (`aes128gcm`, which Apple requires) and signs the VAPID token;
   this posts it with Req.
 
-  Unconfigured (no VAPID keys, as on staging and most dev machines), nothing is
+  Unconfigured (no VAPID keys, as on most dev machines), nothing is
   sent and the admin hides the notifications setting.
   """
 
