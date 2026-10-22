@@ -8,9 +8,10 @@ exclude = ["_build/", "images/uploads/"]
 [[pre-start]]
 copy = "wt step copy-ignored"
 
-# Append worktree-specific DATABASE_NAME and PORT to this worktree's .env
+# Append worktree-specific DATABASE_NAME, PORT and PHX_HOST to this worktree's .env.
+# Its own <branch>.localhost host keeps its cookies apart from main's and other worktrees'.
 [[pre-start]]
-env = "bash -c 'echo >> .env && echo export DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} >> .env && echo export PORT={{ branch | hash_port }} >> .env'"
+env = "bash -c 'echo >> .env && echo export DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} >> .env && echo export PORT={{ branch | hash_port }} >> .env && echo export PHX_HOST={{ branch | sanitize_db | replace(\"_\", \"-\") }}.localhost >> .env'"
 
 # Fetch and compile any dependencies added/changed since the main worktree snapshot was copied
 [[pre-start]]
