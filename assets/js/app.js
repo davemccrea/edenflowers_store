@@ -382,6 +382,17 @@ document.addEventListener("click", (event) => {
   if (event.target.matches?.("dialog.slide-drawer")) closeDrawer(event.target);
 });
 
+// Fastmail's iOS app doesn't claim app.fastmail.com links, so on phones a
+// Fastmail compose link opens the app through its fastmail:// scheme instead.
+// The scheme ignores search paths, so search links open in Safari, where
+// Jennie stays signed in, rather than the installed app's in-app browser.
+document.addEventListener("click", (event) => {
+  const link = event.target.closest?.("a[data-app-href]");
+  if (!link || !matchMedia("(pointer: coarse)").matches) return;
+  event.preventDefault();
+  location.href = link.dataset.appHref;
+});
+
 // Dragging a drawer back toward its edge closes it once it passes a third of
 // its width or is flicked. Vertical drags stay scrolls (touch-action in layout.css).
 document.addEventListener("pointerdown", (down) => {

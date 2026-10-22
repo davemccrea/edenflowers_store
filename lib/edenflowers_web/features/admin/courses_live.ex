@@ -379,6 +379,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           <.button
             :if={@registrations != []}
             href={fastmail_compose(bcc: @bcc)}
+            data-app-href={fastmail_app_compose(bcc: @bcc)}
             target="_blank"
             rel="noopener"
             variant="secondary"
@@ -411,6 +412,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
                 </p>
                 <a
                   href={fastmail_compose(to: registration.email)}
+                  data-app-href={fastmail_app_compose(to: registration.email)}
                   target="_blank"
                   rel="noopener"
                   class="text-base-content/75 block w-fit truncate text-sm pointer-coarse:py-3 hover:underline"
@@ -913,5 +915,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   # Jennie uses Fastmail on the web, so compose there rather than via mailto:.
+  # Phones open the Fastmail app instead (app.js).
   defp fastmail_compose(params), do: "https://app.fastmail.com/mail/compose?" <> URI.encode_query(params)
+  defp fastmail_app_compose(params), do: "fastmail://mail/compose?" <> URI.encode_query(params)
 end
