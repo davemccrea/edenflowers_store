@@ -70,6 +70,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :edit}), do: ~t"Edited"
   defp title(%{version_action_name: :update_florist_note}), do: ~t"Florist note changed"
   defp title(%{version_action_name: :cancel}), do: ~t"Cancelled"
+  defp title(%{version_action_name: :cancel_by_customer}), do: ~t"Cancelled by the customer"
   defp title(%{version_action_name: :mark_fulfilled}), do: ~t"Fulfilled"
   defp title(%{version_action_name: :open_payment_link}), do: ~t"Payment link created"
   defp title(%{version_action_name: :send_order_details_email}), do: ~t"Order details emailed"
@@ -88,6 +89,14 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   # The title already names the field, so the note stands alone.
   defp field_details(%{version_action_name: :update_florist_note} = version, locale) do
     [{nil, show(version.changes["florist_note"], :florist_note, locale)}]
+  end
+
+  defp field_details(%{version_action_name: action} = version, _locale) when action in [:cancel, :cancel_by_customer] do
+    reason = version.changes["cancellation_reason"]
+    emailed_to = version.changes["cancellation_emailed_to"]
+
+    if(reason, do: [{~t"Reason", reason}], else: []) ++
+      [if(emailed_to, do: {~t"Sent to", emailed_to}, else: {nil, ~t"The customer wasn't emailed."})]
   end
 
   defp field_details(%{version_action_name: :send_fulfillment_email} = version, _locale) do

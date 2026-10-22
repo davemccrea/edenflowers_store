@@ -1,7 +1,7 @@
 defmodule Edenflowers.Payments.Validations.GoodwillRefundable do
   @moduledoc """
   What Jennie can hand back as a goodwill refund: on something placed or
-  confirmed and not cancelled, with nothing left to collect, up to the money
+  confirmed with nothing left to collect, or cancelled with nothing owed back, up to the money
   still held, and by Stripe only what was paid through it, by another method
   only what was paid outside it.
 
@@ -36,11 +36,11 @@ defmodule Edenflowers.Payments.Validations.GoodwillRefundable do
       not record.committed? ->
         {:error, ~t"Nothing can be recorded until it's placed or confirmed."}
 
-      record.cancelled? ->
-        {:error, ~t"It's cancelled, so refund what's owed back instead."}
-
       Decimal.positive?(record.balance) ->
         {:error, ~t"Collect what's owed before refunding."}
+
+      record.cancelled? and Decimal.negative?(record.balance) ->
+        {:error, ~t"It's cancelled, so refund what's owed back instead."}
 
       Decimal.gt?(amount, record.amount_held) ->
         {:error, ~t"That's more than was received."}

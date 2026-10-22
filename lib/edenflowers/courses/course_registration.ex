@@ -291,9 +291,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :amount, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
-    # Money not handed back: what Jennie kept when she refunded less.
-    attribute :kept_amount, :decimal, allow_nil?: false, default: 0, constraints: [min: 0, scale: 2]
-
     attribute :payment_intent_id, :string
     attribute :payment_link_token, :string, sensitive?: true
     attribute :payment_link_emailed_at, :utc_datetime

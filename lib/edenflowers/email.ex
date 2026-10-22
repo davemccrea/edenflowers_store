@@ -160,9 +160,11 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Expects `:payments` loaded, to say where the refund went.
+  Expects `:payments` loaded, to say where the refund went. `money` holds what
+  went back through Stripe (`refunded`) and what Jennie still hands back
+  herself (`to_return`).
   """
-  def order_cancelled(order, refunded_amount) do
+  def order_cancelled(order, money, cancelled_by) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
@@ -172,8 +174,10 @@ defmodule Edenflowers.Email do
       |> text_body(
         Templates.order_cancelled(%{
           order: order,
-          refunded: refunded_amount,
+          refunded: money.refunded,
+          to_return: money.to_return,
           refunded_to: refunded_to(order.payments),
+          cancelled_by: cancelled_by,
           format_currency: &Format.currency(&1, order.locale),
           format_date: &Format.date(&1, order.locale)
         })
@@ -181,11 +185,11 @@ defmodule Edenflowers.Email do
     end)
   end
 
-  # Only orders paid through Stripe can be cancelled by the customer, and
-  # almost always with one payment, so the refund goes back the same way.
+  # Only Stripe payments are refunded here, almost always just one, so the
+  # refund goes back the same way.
   defp refunded_to(payments) do
     paid_with =
-      for payment <- payments, Decimal.positive?(payment.amount), uniq: true do
+      for payment <- payments, payment.method == :stripe, Decimal.positive?(payment.amount), uniq: true do
         {payment.payment_method_type, payment.card_brand, payment.card_last4}
       end
 

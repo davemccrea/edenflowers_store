@@ -8,8 +8,8 @@ defmodule Edenflowers.Payments.Payable do
     * an `:email_receipt` update action that emails the customer their receipt
 
     * `has_many :payments`
-    * `calculate :total_due`: what it's still to be paid for, 0 once cancelled
-      apart from anything kept when it was cancelled.
+    * `calculate :total_due`: what it's still to be paid for. Once cancelled,
+      that's `kept_amount`.
     * `calculate :committed?`: whether money is owed on it at all, so not an
       unplaced cart or a booking still holding its seats while the customer pays.
     * `calculate :cancelled?`
@@ -18,6 +18,11 @@ defmodule Edenflowers.Payments.Payable do
 
   alias Edenflowers.Payments.Changes
   alias Edenflowers.Payments.Validations
+
+  attributes do
+    # Money not handed back when it was cancelled: what Jennie chose to keep.
+    attribute :kept_amount, :decimal, allow_nil?: false, default: 0, constraints: [min: 0, scale: 2]
+  end
 
   actions do
     update :add_payment_intent_id do
@@ -176,10 +181,11 @@ defmodule Edenflowers.Payments.Payable do
               )
 
     # Whether Jennie can hand money back without lowering what was sold
-    # (Validations.GoodwillRefundable).
+    # (Validations.GoodwillRefundable). On something cancelled, that's money
+    # she kept, so only once nothing is owed back.
     calculate :goodwill_refundable?,
               :boolean,
-              expr(committed? and not cancelled? and balance <= 0 and amount_held > 0)
+              expr(committed? and balance <= 0 and amount_held > 0 and (not cancelled? or balance == 0))
   end
 
   aggregates do

@@ -427,11 +427,15 @@ defmodule Edenflowers.Payments do
   end
 
   @doc """
-  Refunds everything an order's customer has paid through Stripe, as
-  `refund_balance/1` does, for an order that will not be made.
+  Refunds through Stripe, as `refund_balance/1` does, everything still held
+  apart from `kept`, for an order or booking that will not go ahead. Money
+  paid in person is left for Jennie to hand back.
+
+  Worked out from what's still held, so a retry after the first attempt's
+  refunds were recorded never refunds twice.
   """
-  def refund_in_full(%Order{} = order) do
-    refund(order, fn order -> order.amount_held end)
+  def refund_all_but_kept(payable, kept) do
+    refund(payable, fn payable -> Decimal.sub(payable.amount_held, kept) end)
   end
 
   defp refund(%resource{id: id} = payable, owed, kind \\ :balance) do
