@@ -62,7 +62,7 @@ just server-console production  # remote IEx on a server
 
 `just deploy production` checks the tree is clean, `main` matches origin, and `mix precommit` passes, then bumps `mix.exs`, tags `vX.Y.Z` and pushes. GitHub Actions builds the image and deploys. `just deploy staging` pushes the current branch and triggers the deploy workflow on it; plain pushes deploy nothing.
 
-`images/` is gitignored, so photos reach the servers only through `just images-sync`, which `just deploy` runs for its target before pushing. It doesn't delete: files removed locally stay on the server, as do photos uploaded through the admin (`images/uploads/`, never pushed to). Syncing to production also pulls those uploads into the local `images/uploads/` without deleting anything, so this machine keeps a copy. Filenames must be ASCII.
+`images/` is gitignored, so photos reach the servers only through `just images-sync`, which `just deploy` runs for its target before pushing. It deletes files removed locally from the server, at most 20 per run (more fails the sync, and with it the deploy), but never touches photos uploaded through the admin (`images/uploads/`, never pushed to). A rollback to a release that uses a deleted photo shows it missing. Syncing to production also pulls those uploads into the local `images/uploads/` without deleting anything, so this machine keeps a copy. Filenames must be ASCII.
 
 In dev, `just dev` starts imgproxy in Docker (OrbStack) on `PORT+1` and points `IMGPROXY_PREFIX` at it, so unsynced photos and admin uploads show up locally. It reads `images/` read-only; uploads land in `tmp/uploads`. The container keeps running after the server stops.
 

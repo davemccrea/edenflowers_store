@@ -31,9 +31,11 @@ ok "filenames are ASCII"
 for HOST in "${HOSTS[@]}"; do
   section "Syncing to $HOST"
   # imgproxy returns 500 for files it can't read, so force world-readable modes.
-  # No --delete: the server holds photos uploaded in the admin that aren't here.
-  # uploads/ is the app's own folder on the server, so it's never pushed to.
-  rsync -avz --chmod=D755,F644 --exclude=/images/uploads/ --exclude=.DS_Store images "$HOST:/opt/edenflowers_store/"
+  # uploads/ is the app's own folder on the server, so it's never pushed to, and
+  # --delete leaves excluded paths alone. --max-delete stops a half-empty
+  # images/ from wiping the server: rsync fails instead, and so does the deploy.
+  rsync -avz --chmod=D755,F644 --delete --max-delete=20 --exclude=/images/uploads/ --exclude=.DS_Store \
+    images "$HOST:/opt/edenflowers_store/"
   ok "synced"
 done
 
