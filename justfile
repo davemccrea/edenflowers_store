@@ -61,6 +61,12 @@ issues:
 typst-install:
     ./scripts/install-typst.sh
 
+# Install the Ansible collections used by infra/ (pass --upgrade to update them)
+[group('setup')]
+[working-directory: 'infra']
+infra-install *args:
+    ansible-galaxy collection install -r requirements.yml {{ args }}
+
 [private]
 check-typst:
     @command -v typst >/dev/null || { echo "typst not found: receipt PDFs (and their tests) need it. Run 'just typst-install'." >&2; exit 1; }
@@ -143,18 +149,17 @@ server-logs target:
 server-console target:
     ssh -t edenflowers-{{ target }} 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
 
-
-# Install the Ansible collections used to provision servers (pass --upgrade to update them)
+# Dry run: show what provisioning the server would change
 [group('infra')]
 [working-directory: 'infra']
-infra-install *args:
-    ansible-galaxy collection install -r requirements.yml {{ args }}
+provision-check target:
+    ansible-playbook site.yml -l {{ target }} --check --diff
 
-# Lint the Ansible playbooks and roles
+# Provision the server with infra/ (extra args go to ansible-playbook, e.g. --tags docker)
 [group('infra')]
 [working-directory: 'infra']
-infra-lint:
-    ansible-lint
+provision target *args:
+    ansible-playbook site.yml -l {{ target }} {{ args }}
 
 # Edit a vault: `just vault` for the shared one, `just vault production` for a host's
 [group('infra')]
@@ -162,20 +167,14 @@ infra-lint:
 vault target="all":
     ansible-vault edit {{ if target == "all" { "group_vars/all/vault.yml" } else { "host_vars/" + target + "/vault.yml" } }}
 
-# Bootstrap a fresh server as root (run once)
+# Prepare a fresh server as root before its first provision (run once)
 [group('infra')]
 [working-directory: 'infra']
-bootstrap target:
+server-bootstrap target:
     ansible-playbook playbooks/bootstrap.yml -l {{ target }}
 
-# Dry run: show what provisioning a server would change
+# Lint the Ansible playbooks and roles
 [group('infra')]
 [working-directory: 'infra']
-provision-check target:
-    ansible-playbook site.yml -l {{ target }} --check --diff
-
-# Provision a server, or `all` (extra args go to ansible-playbook, e.g. --tags docker)
-[group('infra')]
-[working-directory: 'infra']
-provision target *args:
-    ansible-playbook site.yml -l {{ target }} {{ args }}
+infra-lint:
+    ansible-lint
