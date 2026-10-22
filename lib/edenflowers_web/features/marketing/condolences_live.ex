@@ -73,9 +73,9 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
       <section id="order" class="bg-forest scroll-anchor-below-header not-last:border-b" aria-labelledby="order-heading">
         <div class="container flex flex-col items-center gap-8 py-24 text-center md:py-32">
           <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
-          <h2 id="order-heading" class="section-title text-forest-content">{~t"Ordering for a funeral"}</h2>
+          <h2 id="order-heading" class="section-title text-forest-content">{~t"Order for a funeral"}</h2>
           <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
-            {~t"Call me and we'll choose the flowers together. Tell me the date and time of the funeral, the church or chapel, and what you'd like written on the card. If there's an arrangement here you like, mention that too."}
+            {~t"Call or email me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."}
           </p>
           <.button href="tel:+358402209494" variant="inverse">{~t"Call me on 040 220 9494"}</.button>
           <p class="text-forest-content/85">
@@ -131,7 +131,13 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
     subject = URI.encode(~t"Funeral flowers", &URI.char_unreserved?/1)
 
     body =
-      [~t"Date and time of the funeral:", ~t"Church or chapel:", ~t"Arrangement:", ~t"Card message:"]
+      [
+        ~t"Date and time of the funeral:",
+        ~t"Address of the funeral:",
+        ~t"Name of the deceased:",
+        ~t"Arrangement:",
+        ~t"Card message:"
+      ]
       |> Enum.map_join("\n", &(&1 <> " "))
       |> URI.encode(&URI.char_unreserved?/1)
 

@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
             />
             <h1 class="page-title mb-6">{~t"Contact"}</h1>
             <p class="text-base-content/80 text-lg leading-relaxed">
-              {~t"Send me an email or give me a call and I'll gladly help. You're also welcome to drop by the shop during opening hours."}
+              {~t"Send me an email or give me a call and I'll gladly help."}
             </p>
           </div>
 

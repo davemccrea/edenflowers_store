@@ -1329,8 +1329,8 @@ msgstr "ta kontakt"
 
 #: lib/edenflowers_web/features/marketing/contact_live.ex:44
 #, elixir-autogen, elixir-format
-msgid "Send me an email or give me a call and I'll gladly help. You're also welcome to drop by the shop during opening hours."
-msgstr "Skicka ett mejl eller slå en signal så hjälper jag dig gärna. Du är också välkommen att titta in i butiken under öppettiderna."
+msgid "Send me an email or give me a call and I'll gladly help."
+msgstr "Skicka ett mejl eller slå en signal så hjälper jag dig gärna."
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:190
 #: lib/edenflowers_web/features/marketing/home_live.ex:216
@@ -1802,8 +1802,8 @@ msgstr "Fullbokad"
 
 #: lib/edenflowers_web/features/courses/courses_live.ex:43
 #, elixir-autogen, elixir-format
-msgid "Join me for a few hours of hands-on floristry. I bring the flowers and show you how, and you take home what you make."
-msgstr "Kom och prova på floristik med mig i några timmar. Jag står för blommorna och visar hur man gör, och det du gör tar du med dig hem."
+msgid "Come along and learn to make different kinds of floral arrangements. I show you the technique step by step and help you all the way, and of course you take your arrangement home. Materials and teaching are included, and you don't need any previous experience."
+msgstr "Kom med och lär dig olika typer av binderier. Jag visar tekniken steg för steg och hjälper dig hela vägen, och binderiet tar du självklart med dig hem. Material och undervisning ingår och du behöver ingen tidigare erfarenhet."
 
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:74
 #: lib/edenflowers_web/features/courses/course_live.ex:99
@@ -2437,22 +2437,22 @@ msgstr "Ta bort en plats från bokningen?"
 msgid "Add size"
 msgstr "Lägg till storlek"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:134
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:138
 #, elixir-autogen, elixir-format
 msgid "Arrangement:"
 msgstr "Dekoration:"
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:78
 #, elixir-autogen, elixir-format
-msgid "Call me and we'll choose the flowers together. Tell me the date and time of the funeral, the church or chapel, and what you'd like written on the card. If there's an arrangement here you like, mention that too."
-msgstr "Ring mig så väljer vi blommorna tillsammans. Berätta datum och tid för begravningen, kyrkan eller kapellet och vad du vill att det ska stå på kortet. Om det finns en dekoration här som du tycker om, nämn den också."
+msgid "Call or email me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."
+msgstr "Ring eller maila mig så väljer vi blommorna tillsammans. Vid önskad leverans: ange datum, klockslag samt adress för begravningen, den avlidnas namn och vad du vill att det ska stå på kortet."
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:80
 #, elixir-autogen, elixir-format
 msgid "Call me on 040 220 9494"
 msgstr "Ring mig på 040 220 9494"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:134
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "Card message:"
 msgstr "Kortmeddelande:"
@@ -2472,12 +2472,17 @@ msgstr "Kistdekoration av rosa nejlikor och rosor på en träkista"
 msgid "Choose a category"
 msgstr "Välj kategori"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:134
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:136
 #, elixir-autogen, elixir-format
-msgid "Church or chapel:"
-msgstr "Kyrka eller kapell:"
+msgid "Address of the funeral:"
+msgstr "Adress för begravningen:"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:134
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:137
+#, elixir-autogen, elixir-format
+msgid "Name of the deceased:"
+msgstr "Den avlidnas namn:"
+
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:135
 #, elixir-autogen, elixir-format
 msgid "Date and time of the funeral:"
 msgstr "Datum och tid för begravningen:"
@@ -2576,8 +2581,8 @@ msgstr "Beställ begravningsblommor"
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:76
 #, elixir-autogen, elixir-format
-msgid "Ordering for a funeral"
-msgstr "Beställa till en begravning"
+msgid "Order for a funeral"
+msgstr "Beställ till en begravning"
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:138
 #: lib/edenflowers_web/features/admin/course_form_live.ex:142
@@ -4447,8 +4452,8 @@ msgstr "Den första buketten betalar du i kassan. Sedan debiteras ditt kort %{da
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:86
 #, elixir-autogen, elixir-format
-msgid "Your bouquet still comes, and I'll email you a link to pay for it. Your subscription then waits, and no more bouquets are sent or charged. Pay the link or add a new card in your account, and it starts again from your next date."
-msgstr "Din bukett kommer ändå, och jag mejlar dig en länk för att betala den. Prenumerationen väntar sedan, och inga fler buketter skickas eller debiteras. Betala via länken eller lägg till ett nytt kort på ditt konto, så fortsätter den från nästa leveransdag."
+msgid "Your bouquet still comes, and I'll email you a payment link. No more bouquets are sent or charged until you've paid it or added a new card in your account."
+msgstr "Din bukett kommer ändå, och jag mejlar dig en betalningslänk. Inga fler buketter skickas eller debiteras innan du betalat den eller lagt till ett nytt kort på ditt konto."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:112
 #, elixir-autogen, elixir-format

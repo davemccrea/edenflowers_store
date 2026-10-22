@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
           <div class="flex max-w-2xl flex-col gap-6">
             <h1 class="page-title mb-4">{~t"Courses"}</h1>
             <p class="text-base-content/80 text-lg leading-relaxed">
-              {~t"Join me for a few hours of hands-on floristry. I bring the flowers and show you how, and you take home what you make."}
+              {~t"Come along and learn to make different kinds of floral arrangements. I show you the technique step by step and help you all the way, and of course you take your arrangement home. Materials and teaching are included, and you don't need any previous experience."}
             </p>
             <div class="mt-2">
               <.button href="#coming-up" variant="primary">{~t"See upcoming courses"}</.button>
