@@ -1,0 +1,272 @@
+defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
+  @moduledoc """
+  The course page's drawers for adding a booking and for settling one's balance.
+  """
+  use EdenflowersWeb, :html
+
+  import EdenflowersWeb.Admin.Components
+
+  alias Edenflowers.Courses.CourseRegistration
+  alias Edenflowers.Format
+
+  def to_collect?(registration), do: not registration.settled? and Decimal.positive?(registration.balance)
+
+  def to_refund?(registration), do: not registration.settled? and Decimal.negative?(registration.balance)
+
+  attr :form, :any, required: true
+  attr :course, :map, required: true
+  attr :locale, :string, required: true
+
+  def booking_drawer(assigns) do
+    ~H"""
+    <.admin_drawer id="booking-drawer" title={~t"Add booking"} on_close={JS.push("close_booking")}>
+      <.form
+        :if={@form}
+        for={@form}
+        id={"booking-form-#{@course.id}"}
+        phx-change="validate_booking"
+        phx-submit="save_booking"
+        class="flex min-h-0 flex-1 flex-col"
+      >
+        <.drawer_body>
+          <p class="text-base-content/75 text-sm">
+            {@course.name} · {Format.date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}
+          </p>
+          <div class="space-y-4">
+            <.input field={@form[:name]} type="text" label={~t"Name"} class="input w-full" />
+            <.input field={@form[:email]} type="email" label={~t"Email"} class="input w-full" />
+            <div class="grid grid-cols-2 gap-x-3 gap-y-4">
+              <.input
+                field={@form[:seats]}
+                type="number"
+                label={~t"Seats"}
+                min="1"
+                max={CourseRegistration.max_seats()}
+                class="input w-full"
+              />
+              <.input
+                field={@form[:locale]}
+                type="select"
+                label={~t"Language"}
+                options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
+                class="select w-full"
+              />
+            </div>
+            <.input :let={option} field={@form[:payment_link?]} type="radio-card" options={payment_options()}>
+              {option.name}
+            </.input>
+            <.input
+              field={@form[:email_customer?]}
+              type="checkbox"
+              label={~t"Email the booking confirmation to the customer"}
+            />
+          </div>
+        </.drawer_body>
+        <.drawer_footer>
+          <.button type="submit" variant="primary" phx-disable-with={~t"Adding…"}>{~t"Add booking"}</.button>
+          <.button
+            type="button"
+            phx-click={JS.exec("phx-hide", to: "#booking-drawer") |> JS.push("close_booking")}
+            variant="ghost"
+          >
+            {~t"Cancel"}
+          </.button>
+        </.drawer_footer>
+      </.form>
+    </.admin_drawer>
+    """
+  end
+
+  attr :course, :map, required: true
+  attr :registration, :any, required: true, doc: "the booking being settled, or nil"
+  attr :mode, :atom, required: true, values: [:settle, :refund]
+  attr :refund_params, :map, required: true
+  attr :error, :string, default: nil
+  attr :locale, :string, required: true
+
+  def settlement_drawer(assigns) do
+    ~H"""
+    <.admin_drawer id="settlement-drawer" title={settlement_title(@mode)}>
+      <.drawer_body :if={@registration}>
+        <.settlement_details course={@course} registration={@registration} locale={@locale} />
+        <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
+        <.refund_form
+          :if={@mode == :refund and @registration.refundable?}
+          id={"refund-#{@registration.id}"}
+          record={@registration}
+          email={@registration.email}
+          locale={@locale}
+          params={Map.get(@refund_params, @registration.id, %{})}
+        />
+        <.collect_payment
+          :if={@mode == :settle and to_collect?(@registration)}
+          registration={@registration}
+          locale={@locale}
+        />
+        <p :if={nothing_to_settle?(@registration, @mode)} class="text-base-content/75 text-sm">
+          {~t"Nothing left to settle on this booking."}
+        </p>
+      </.drawer_body>
+    </.admin_drawer>
+    """
+  end
+
+  defp settlement_title(:refund), do: ~t"Refund"
+  defp settlement_title(:settle), do: ~t"Collect payment"
+
+  defp nothing_to_settle?(registration, :refund), do: not registration.refundable?
+  defp nothing_to_settle?(registration, :settle), do: not to_collect?(registration)
+
+  attr :course, :map, required: true
+  attr :registration, :map, required: true
+  attr :locale, :string, required: true
+
+  defp settlement_details(assigns) do
+    ~H"""
+    <div class="space-y-1">
+      <p class="text-base-content font-medium">
+        {@registration.name}
+        <span :if={@registration.seats_held > 1} class="text-base-content/75 tabular-nums">
+          +{@registration.seats_held - 1}
+        </span>
+        <.badge :if={@registration.status == :cancelled} tone={:tag} class="ml-1 align-middle">
+          {~t"Cancelled"}
+        </.badge>
+      </p>
+      <p class="text-base-content/75 break-all text-sm">{@registration.email}</p>
+      <p class="text-base-content/75 text-sm">
+        {@course.name} · {Format.date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}
+      </p>
+    </div>
+    <dl class="divide-base-content/12 border-base-content/12 divide-y border-y text-sm tabular-nums">
+      <div class="flex justify-between gap-4 py-2">
+        <dt class="text-base-content/75">{~t"Paid"}</dt>
+        <dd>{Format.currency(@registration.amount_paid, @locale)}</dd>
+      </div>
+      <div :if={to_collect?(@registration)} class="flex justify-between gap-4 py-2">
+        <dt class="text-base-content/75">{~t"To collect"}</dt>
+        <dd class="font-semibold">{Format.currency(@registration.balance, @locale)}</dd>
+      </div>
+      <div
+        :if={@registration.status == :cancelled and Decimal.positive?(@registration.kept_amount)}
+        class="flex justify-between gap-4 py-2"
+      >
+        <dt class="text-base-content/75">{~t"Kept"}</dt>
+        <dd>{Format.currency(@registration.kept_amount, @locale)}</dd>
+      </div>
+      <div :if={to_refund?(@registration)} class="flex justify-between gap-4 py-2">
+        <dt class="text-base-content/75">{~t"To refund"}</dt>
+        <dd class="font-semibold">{Format.currency(Decimal.abs(@registration.balance), @locale)}</dd>
+      </div>
+    </dl>
+    <div :if={@registration.status == :cancelled} class="space-y-2 text-sm">
+      <p :if={@registration.cancellation_reason} class="whitespace-pre-line">
+        <span class="text-base-content/75">{~t"Reason"}:</span> {@registration.cancellation_reason}
+      </p>
+      <p class="text-base-content/75 break-all">
+        {if @registration.cancellation_emailed_to,
+          do: ~t"Cancellation emailed to #{email = @registration.cancellation_emailed_to}.",
+          else: ~t"The customer wasn't emailed."}
+      </p>
+    </div>
+    """
+  end
+
+  attr :registration, :map, required: true
+  attr :locale, :string, required: true
+
+  # Every way to collect a booking's balance in one place. The link comes first,
+  # as on an order: it's how most bookings Jennie adds get paid. Once it's been
+  # emailed, recording the payment is what's left to do, so that takes the lead.
+  defp collect_payment(assigns) do
+    assigns = assign(assigns, :emailed?, payment_link_emailed?(assigns.registration))
+
+    ~H"""
+    <section class="space-y-3">
+      <h3 class="eyebrow text-base-content/75">{~t"Payment link"}</h3>
+      <div :if={@registration.payment_link_open?} class="flex gap-2">
+        <input
+          id={"payment-link-url-#{@registration.id}"}
+          type="text"
+          readonly
+          aria-label={~t"Payment link"}
+          value={EdenflowersWeb.PaymentLink.url_for(@registration)}
+          class="input input-sm font-mono min-w-0 flex-1 text-xs"
+        />
+        <.copy_button
+          id={"copy-payment-link-#{@registration.id}"}
+          target={"#payment-link-url-#{@registration.id}"}
+          label={~t"Copy payment link"}
+        />
+      </div>
+      <p :if={@emailed?} class="text-base-content/75 text-sm">
+        {~t"Emailed #{time = Format.datetime(@registration.payment_link_emailed_at, @locale)}"}
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <.button
+          type="button"
+          phx-click="email_payment_link"
+          phx-value-id={@registration.id}
+          data-confirm={email_payment_link_confirmation(@registration, @locale)}
+          variant={if @emailed?, do: "secondary", else: "primary"}
+          size="sm"
+        >
+          <.icon name="hero-envelope" class="h-4 w-4" />
+          {if @emailed?, do: ~t"Resend payment link", else: ~t"Email payment link"}
+        </.button>
+        <.button
+          :if={not @registration.payment_link_open?}
+          type="button"
+          phx-click="open_payment_link"
+          phx-value-id={@registration.id}
+          variant="secondary"
+          size="sm"
+        >
+          {~t"Get payment link"}
+        </.button>
+      </div>
+    </section>
+    <section class="border-base-content/12 space-y-3 border-t pt-4">
+      <h3 class="eyebrow text-base-content/75">{~t"Paid another way"}</h3>
+      <.mark_paid_form registration={@registration} variant={if @emailed?, do: "primary", else: "secondary"} />
+    </section>
+    """
+  end
+
+  attr :registration, :map, required: true
+  attr :variant, :string, required: true
+
+  defp mark_paid_form(assigns) do
+    ~H"""
+    <form id={"mark-paid-#{@registration.id}"} phx-submit="mark_paid" class="space-y-4">
+      <input type="hidden" name="registration_id" value={@registration.id} />
+      <.input
+        id={"mark-paid-method-#{@registration.id}"}
+        name="payment_method"
+        type="select"
+        label={~t"How"}
+        value={:zettle}
+        options={payment_method_options()}
+        class="select w-full"
+      />
+      <.input name="email_receipt" type="checkbox" label={~t"Email a receipt"} value="true" />
+      <.button type="submit" variant={@variant} phx-disable-with={~t"Recording…"}>{~t"Record payment"}</.button>
+    </form>
+    """
+  end
+
+  defp payment_link_emailed?(registration),
+    do: registration.payment_link_open? and not is_nil(registration.payment_link_emailed_at)
+
+  defp email_payment_link_confirmation(registration, locale) do
+    question = ~t"Email a payment link to #{email = registration.email}?"
+
+    if payment_link_emailed?(registration),
+      do: ~t"Last sent #{time = Format.datetime(registration.payment_link_emailed_at, locale)}." <> " " <> question,
+      else: question
+  end
+
+  defp payment_options do
+    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Pays later", value: "false"}]
+  end
+end

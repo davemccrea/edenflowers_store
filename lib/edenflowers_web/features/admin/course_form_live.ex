@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={{~t"Courses", ~p"/admin/courses"}} sticky>
+        <.admin_page_header title={@page_title} back={form_back(@form)} sticky>
           <:actions>
             <.button
               :if={@form.source.type == :update}
@@ -168,7 +168,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
         {:noreply,
          socket
          |> put_flash(:info, ~t"Course saved.")
-         |> push_navigate(to: ~p"/admin/courses/#{course.id}")}
+         |> push_navigate(to: saved_path(socket.assigns.form, course))}
 
       {:error, form} ->
         {:noreply,
@@ -181,6 +181,13 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   @impl true
   def handle_async(:translate, result, socket),
     do: {:noreply, TranslationFields.put_translations(socket, result)}
+
+  # A new course has no bookings yet, and adding them is what comes next.
+  defp saved_path(%{source: %{type: :create}}, course), do: ~p"/admin/courses/#{course.id}"
+  defp saved_path(_form, course), do: ~p"/admin/courses/#{course.id}/edit"
+
+  defp form_back(%{source: %{type: :create}}), do: {~t"Courses", ~p"/admin/courses"}
+  defp form_back(%{source: %{data: course}}), do: {course.name, ~p"/admin/courses/#{course.id}"}
 
   defp load_form(%{"id" => id}, actor) do
     case Ash.get(Course, id, actor: actor) do

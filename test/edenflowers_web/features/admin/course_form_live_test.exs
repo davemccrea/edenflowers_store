@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     photo = file_input(view, "#course-form", "photo_form[image_slug]", [photo("Kransar ä.jpg")])
     render_upload(photo, "Kransar ä.jpg")
 
-    assert {:error, {:live_redirect, %{to: "/admin/courses/" <> _id}}} =
+    assert {:error, {:live_redirect, %{to: "/admin/courses/" <> course_id}}} =
              view
              |> form("#course-form",
                form: %{
@@ -42,6 +42,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
              |> render_submit()
 
     [course] = Ash.read!(Course, authorize?: false)
+    assert course_id == course.id
     assert course.name == "Autumn wreaths"
     assert course.language == :sv
     assert course.translations."sv-FI".name == "Höstkransar"
@@ -53,11 +54,16 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
   test "edits an existing course", %{conn: conn} do
     course = generate(course(total_places: 8))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/edit")
 
-    view
-    |> form("#course-form", form: %{total_places: "12", language: "en"})
-    |> render_submit()
+    assert has_element?(view, ~s|a[href="/admin/courses/#{course.id}"]|, course.name)
+
+    edit_path = "/admin/courses/#{course.id}/edit"
+
+    assert {:error, {:live_redirect, %{to: ^edit_path}}} =
+             view
+             |> form("#course-form", form: %{total_places: "12", language: "en"})
+             |> render_submit()
 
     saved = Ash.get!(Course, course.id, authorize?: false)
     assert saved.total_places == 12
@@ -102,7 +108,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
          }}
       end)
 
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/edit")
 
       view |> element("button[phx-value-from='en-GB']") |> render_click()
       render_async(view, 500)
