@@ -287,7 +287,7 @@ defmodule Edenflowers.Email.Previews do
          order(
            Map.merge(paid_attrs, %{
              payments: [%{card | amount: Decimal.new("34.00")}, cash],
-             cancellation_reason: cancellation_reason(locale)
+             cancellation_reason: reason(locale)
            }),
            locale
          ),
@@ -337,7 +337,7 @@ defmodule Edenflowers.Email.Previews do
 
     for {title, attrs, refund} <- [
           {gettext_noop("to a card, with a reason"), %{payments: [card]},
-           %{amount: Decimal.new("20.00"), payment_method: :stripe, note: refund_reason(locale)}},
+           %{amount: Decimal.new("20.00"), payment_method: :stripe, note: reason(locale)}},
           {gettext_noop("handed back in cash"), %{payments: []},
            %{amount: Decimal.new("20.00"), payment_method: :cash, note: nil}}
         ] do
@@ -354,15 +354,6 @@ defmodule Edenflowers.Email.Previews do
     ]
   end
 
-  # Jennie writes the reason herself, in the customer's language.
-  defp refund_reason(locale) do
-    cond do
-      String.starts_with?(locale, "fi") -> "Pahoittelut, että kimppu oli nuupahtanut jo seuraavana päivänä."
-      String.starts_with?(locale, "sv") -> "Förlåt att buketten hade vissnat redan nästa dag."
-      true -> "I'm sorry the bouquet had wilted by the next day."
-    end
-  end
-
   defp booking_cancelled(locale) do
     card = %{
       amount: Decimal.new("45.00"),
@@ -377,22 +368,13 @@ defmodule Edenflowers.Email.Previews do
     for {title, attrs, money} <- [
           {gettext_noop("refunded to a card"), %{payments: [card]},
            %{refunded: Decimal.new("45.00"), to_return: Decimal.new(0)}},
-          {gettext_noop("with a reason, paid in cash"),
-           %{payments: [cash], cancellation_reason: course_cancellation_reason(locale)},
+          {gettext_noop("with a reason, paid in cash"), %{payments: [cash], cancellation_reason: reason(locale)},
            %{refunded: Decimal.new(0), to_return: Decimal.new("45.00")}},
           {gettext_noop("nothing paid, no first name"), %{first_name: nil, payments: []},
            %{refunded: Decimal.new(0), to_return: Decimal.new(0)}}
         ] do
       {gettext_noop("Booking cancelled"), title, :booking_cancelled,
        Email.booking_cancelled(registration(attrs, locale), money)}
-    end
-  end
-
-  defp course_cancellation_reason(locale) do
-    cond do
-      String.starts_with?(locale, "fi") -> "Olen pahoillani, mutta olen sairastunut ja joudun perumaan kurssin."
-      String.starts_with?(locale, "sv") -> "Jag är ledsen, men jag har blivit sjuk och måste ställa in kursen."
-      true -> "I'm so sorry, but I'm ill and have to cancel the course."
     end
   end
 
@@ -452,16 +434,11 @@ defmodule Edenflowers.Email.Previews do
   end
 
   # Jennie writes the reason herself, in the customer's language.
-  defp cancellation_reason(locale) do
+  defp reason(locale) do
     cond do
-      String.starts_with?(locale, "fi") ->
-        "Olen pahoillani, mutta olen sairaana sinä päivänä enkä pysty tekemään kimppuasi."
-
-      String.starts_with?(locale, "sv") ->
-        "Jag är ledsen, men jag är sjuk den dagen och kan inte göra din bukett."
-
-      true ->
-        "I'm so sorry, but I'm ill that day and can't make your bouquet."
+      String.starts_with?(locale, "fi") -> "Olen pahoillani, mutta olen sairaana sinä päivänä."
+      String.starts_with?(locale, "sv") -> "Jag är ledsen, men jag är sjuk den dagen."
+      true -> "I'm so sorry, but I'm ill that day."
     end
   end
 

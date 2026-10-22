@@ -192,8 +192,8 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
         Courses.cancel_registration(paid_booking(1, admin), %{cancellation_reason: "Jag är sjuk."}, actor: admin)
 
       assert registration.cancellation_emailed_to == "ada@example.com"
-      [job] = all_enqueued(worker: Edenflowers.Courses.Workers.SendCancelledEmail)
-      assert :ok = perform_job(Edenflowers.Courses.Workers.SendCancelledEmail, job.args)
+      [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
+      assert :ok = perform_job(Edenflowers.Payments.Workers.SendCancelledEmail, job.args)
 
       Swoosh.TestAssertions.assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
@@ -202,7 +202,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
 
       {:ok, quiet} = Courses.cancel_registration(paid_booking(1, admin), %{email_customer?: false}, actor: admin)
       assert quiet.cancellation_emailed_to == nil
-      assert [_only_the_first] = all_enqueued(worker: Edenflowers.Courses.Workers.SendCancelledEmail)
+      assert [_only_the_first] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
     end
 
     test "releasing a hold the customer never paid for emails nobody" do
@@ -210,7 +210,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
 
       {:ok, _released} = Courses.cancel_registration(hold, actor: Edenflowers.Actors.system_actor())
 
-      refute_enqueued(worker: Edenflowers.Courses.Workers.SendCancelledEmail)
+      refute_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
     end
 
     test "Jennie keeps what she chooses, but not more than was paid", %{admin: admin} do

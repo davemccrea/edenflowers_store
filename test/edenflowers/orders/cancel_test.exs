@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.CancelTest do
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Workers.SendCancelledEmail
+  alias Edenflowers.Payments.Workers.SendCancelledEmail
 
   setup do
     %{admin: generate(admin_user())}

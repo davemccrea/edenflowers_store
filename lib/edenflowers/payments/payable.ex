@@ -69,11 +69,13 @@ defmodule Edenflowers.Payments.Payable do
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :note, :string
       argument :email_customer?, :boolean, default: true
+      argument :refund, :decimal, public?: false
       argument :owed_back, :decimal, public?: false
       argument :goodwill_refund, :decimal, public?: false
 
       validate Validations.Refundable
       change Changes.Refund
+      change {Changes.SplitOffGoodwill, amount: :refund}
       change {Changes.RecordPayment, amount: :owed_back, goodwill: false}, where: [present(:owed_back)]
       change {Changes.RecordPayment, amount: :goodwill_refund, goodwill: true}, where: [present(:goodwill_refund)]
       change Changes.SendRefundedEmail, where: [argument_equals(:email_customer?, true)]

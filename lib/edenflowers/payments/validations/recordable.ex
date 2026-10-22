@@ -28,7 +28,9 @@ defmodule Edenflowers.Payments.Validations.Recordable do
         :ok
 
       opts[:undo?] ->
-        within_paid_outside_stripe(amount, record, ~t"Its money was since refunded. Undo the refund first.")
+        if Decimal.negative?(Decimal.add(record.paid_outside_stripe, Decimal.min(amount, 0))),
+          do: error(~t"Its money was since refunded. Undo the refund first."),
+          else: :ok
 
       Decimal.gt?(amount, record.balance) ->
         error(~t"That's more than is owed.")
@@ -36,12 +38,6 @@ defmodule Edenflowers.Payments.Validations.Recordable do
       true ->
         :ok
     end
-  end
-
-  defp within_paid_outside_stripe(amount, record, message) do
-    if Decimal.negative?(amount) and Decimal.negative?(Decimal.add(record.paid_outside_stripe, amount)),
-      do: error(message),
-      else: :ok
   end
 
   defp error(message), do: {:error, field: :amount, message: message}
