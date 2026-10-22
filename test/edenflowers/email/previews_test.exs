@@ -4,8 +4,8 @@ defmodule Edenflowers.Email.PreviewsTest do
   alias Edenflowers.Email
   alias Edenflowers.Email.Previews
 
-  # The error alert goes to the developer, not a customer, so Jennie has nothing to proofread.
-  @not_previewed [:error_alert]
+  # The error alert and shop notice aren't sent to customers, so Jennie has nothing to proofread.
+  @not_previewed [:error_alert, :shop_notice]
 
   test "every customer email has a preview" do
     builders = Email.__info__(:functions) |> Enum.map(fn {name, _arity} -> name end) |> MapSet.new()

@@ -7,6 +7,7 @@ import {
   clearOrderAlerts,
   currentSubscription,
   pushSupported,
+  resyncSubscription,
   subscribeDevice,
   unsubscribeDevice,
 } from "./push";
@@ -1031,7 +1032,7 @@ Hooks.PushToggle = {
     if (!pushSupported()) return this.setState("unsupported");
     if (Notification.permission === "denied") return this.setState("denied");
 
-    const subscription = await currentSubscription().catch(() => null);
+    const subscription = await resyncSubscription(this);
     this.setState(subscription ? "on" : "off");
   },
 
@@ -1066,6 +1067,10 @@ const PUSH_NUDGE_DISMISSED_KEY = "eden:push-nudge-dismissed";
 
 Hooks.PushNudge = {
   mounted() {
+    // The Overview is where the installed app opens, so every launch re-saves
+    // this device's subscription.
+    if (pushSupported()) resyncSubscription(this);
+
     const installed =
       window.matchMedia("(display-mode: standalone)").matches ||
       /** @type {any} */ (navigator).standalone === true;

@@ -23,6 +23,19 @@ export async function currentSubscription() {
   return registration ? registration.pushManager.getSubscription() : null;
 }
 
+/**
+ * Saves this device's subscription again, in case the server forgot it (say
+ * after a one-off 404 from the push service) or the browser replaced it.
+ *
+ * @param {any} hook
+ * @returns {Promise<PushSubscription | null>}
+ */
+export async function resyncSubscription(hook) {
+  const subscription = await currentSubscription().catch(() => null);
+  if (subscription) hook.pushEvent("push_subscribed", subscription.toJSON());
+  return subscription;
+}
+
 /** @param {string} base64url */
 const decodeKey = (base64url) => {
   const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");

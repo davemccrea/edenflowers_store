@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert order.payment_status == :paid
       assert order.payment_intent_id == nil
 
-      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+      assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
       assert_email_sent()
     end
@@ -115,7 +115,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       assert order.state == :placed
       assert order.payment_status == :paid
 
-      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+      assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
     end
 
     test "places the order and flags the mismatch when amount_received does not match grand_total", %{

@@ -12,6 +12,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Schedulers.StartSubscription, as: ScheduleStartSubscription
   alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Orders.Workers.EmailShop
   alias Edenflowers.Orders.Workers.SendSubscriptionSetupEmail
   alias Edenflowers.Orders.Workers.StartSubscription
   alias Edenflowers.Payments
@@ -236,6 +237,22 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       assert subscription.locale == "fi"
       assert subscription.stripe_customer_id == "cus_ada"
       assert subscription.stripe_payment_method_id == "pm_card"
+    end
+
+    test "the shop is told about the new subscription", ctx do
+      order = subscription_cart(ctx, state: :payment)
+
+      assert {:ok, :completed} = Payments.complete(payment_intent(order))
+      start_subscriptions()
+
+      subscription_id = Ash.get!(Order, order.id, authorize?: false).subscription_id
+      assert_enqueued(worker: EmailShop, args: %{"subscription_id" => subscription_id})
+      assert :ok = perform_job(EmailShop, %{"notice" => "new", "subscription_id" => subscription_id})
+
+      assert_email_sent(fn email ->
+        assert email.subject == "Ny prenumeration från Ada Lovelace"
+        assert email.text_body =~ "/admin/subscriptions/#{subscription_id}"
+      end)
     end
 
     test "the customer is emailed once that it is set up", ctx do
