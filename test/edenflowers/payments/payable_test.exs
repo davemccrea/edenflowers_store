@@ -37,6 +37,7 @@ defmodule Edenflowers.Payments.PayableTest do
     end
 
     if opts[:lowered], do: lower(record)
+    if opts[:kept], do: Ash.Seed.update!(record, %{kept_amount: Decimal.new(opts[:kept])})
 
     Ash.load!(record, @fields, authorize?: false, reuse_values?: false)
   end
@@ -494,11 +495,20 @@ defmodule Edenflowers.Payments.PayableTest do
         assert Exception.message(error) =~ "Collect what's owed before refunding"
       end
 
-      test "a goodwill refund on a cancelled one is refused" do
+      test "a goodwill refund on a cancelled one still owing money back is refused" do
         record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
         refute record.goodwill_refundable?
 
         assert {:error, _error} = goodwill_refund(record, "10.00")
+      end
+
+      test "a goodwill refund hands back money kept on a cancelled one" do
+        record = build(@parent, state: :cancelled, payments: [cash: "80.00"], kept: "80.00")
+        assert record.goodwill_refundable?
+
+        assert {:ok, record} = goodwill_refund(record, "30.00")
+        assert record.settled?
+        assert Decimal.equal?(record.amount_held, "50.00")
       end
 
       test "a goodwill refund can be undone" do

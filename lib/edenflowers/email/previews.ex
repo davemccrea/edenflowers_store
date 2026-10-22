@@ -219,15 +219,37 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp order_cancelled(locale) do
-    mobilepay = [%{amount: Decimal.new("64.00"), payment_method_type: "mobilepay", card_brand: nil, card_last4: nil}]
-    card = %{amount: Decimal.new("64.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}
+    mobilepay = [
+      %{
+        amount: Decimal.new("64.00"),
+        method: :stripe,
+        payment_method_type: "mobilepay",
+        card_brand: nil,
+        card_last4: nil
+      }
+    ]
+
+    card = %{
+      amount: Decimal.new("64.00"),
+      method: :stripe,
+      payment_method_type: "card",
+      card_brand: "visa",
+      card_last4: "4242"
+    }
+
+    cash = %{amount: Decimal.new("30.00"), method: :cash, payment_method_type: nil, card_brand: nil, card_last4: nil}
     paid_attrs = %{amount_paid: Decimal.new("64.00"), balance: Decimal.new(0)}
+    refunded = fn amount -> %{refunded: Decimal.new(amount), to_return: Decimal.new(0)} end
 
     [
       {gettext_noop("Order cancelled"), gettext_noop("refunded to a card"), :order_cancelled,
-       Email.order_cancelled(order(Map.merge(paid_attrs, %{payments: [card]}), locale), Decimal.new("64.00"))},
+       Email.order_cancelled(order(Map.merge(paid_attrs, %{payments: [card]}), locale), refunded.("64.00"), :customer)},
       {gettext_noop("Order cancelled"), gettext_noop("refunded to MobilePay"), :order_cancelled,
-       Email.order_cancelled(order(Map.merge(paid_attrs, %{payments: mobilepay}), locale), Decimal.new("64.00"))},
+       Email.order_cancelled(
+         order(Map.merge(paid_attrs, %{payments: mobilepay}), locale),
+         refunded.("64.00"),
+         :customer
+       )},
       {gettext_noop("Order cancelled"), gettext_noop("refunded, paid more than one way"), :order_cancelled,
        Email.order_cancelled(
          order(
@@ -237,7 +259,8 @@ defmodule Edenflowers.Email.Previews do
            ),
            locale
          ),
-         Decimal.new("64.00")
+         refunded.("64.00"),
+         :customer
        )},
       {gettext_noop("Order cancelled"), gettext_noop("pickup, refunded"), :order_cancelled,
        Email.order_cancelled(
@@ -253,10 +276,23 @@ defmodule Edenflowers.Email.Previews do
            },
            locale
          ),
-         Decimal.new("54.00")
+         refunded.("54.00"),
+         :customer
+       )},
+      {gettext_noop("Order cancelled"), gettext_noop("by the shop, with a reason, part paid in cash"), :order_cancelled,
+       Email.order_cancelled(
+         order(
+           Map.merge(paid_attrs, %{
+             payments: [%{card | amount: Decimal.new("34.00")}, cash],
+             cancellation_reason: cancellation_reason(locale)
+           }),
+           locale
+         ),
+         %{refunded: Decimal.new("34.00"), to_return: Decimal.new("30.00")},
+         :shop
        )},
       {gettext_noop("Order cancelled"), gettext_noop("nothing to refund, no customer first name"), :order_cancelled,
-       Email.order_cancelled(order(%{customer_first_name: nil, payments: []}, locale), Decimal.new(0))}
+       Email.order_cancelled(order(%{customer_first_name: nil, payments: []}, locale), refunded.("0"), :customer)}
     ]
   end
 
@@ -342,6 +378,20 @@ defmodule Edenflowers.Email.Previews do
     ]
   end
 
+  # Jennie writes the reason herself, in the customer's language.
+  defp cancellation_reason(locale) do
+    cond do
+      String.starts_with?(locale, "fi") ->
+        "Olen pahoillani, mutta olen sairaana sinä päivänä enkä pysty tekemään kimppuasi."
+
+      String.starts_with?(locale, "sv") ->
+        "Jag är ledsen, men jag är sjuk den dagen och kan inte göra din bukett."
+
+      true ->
+        "I'm so sorry, but I'm ill that day and can't make your bouquet."
+    end
+  end
+
   defp order(attrs, locale) do
     {bouquet, vase} =
       cond do
@@ -369,6 +419,7 @@ defmodule Edenflowers.Email.Previews do
         delivery_address: "Strandgatan 12, 65100 Vaasa",
         cancellable_by_customer?: true,
         cancellable_until: ~D[2026-11-09],
+        cancellation_reason: nil,
         order_details_emailed_at: nil,
         line_items: [
           %{quantity: 1, product_name: bouquet, subtotal: Decimal.new("49.00")},

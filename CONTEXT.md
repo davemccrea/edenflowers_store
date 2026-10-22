@@ -11,7 +11,7 @@ An order the shop has committed to make. An Online Order is placed when its paym
 _Avoid_: Confirmed, submitted
 
 **Cancelled**:
-A placed order that will not be made. When Jennie cancels, nothing is refunded; she refunds separately in Stripe. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
+A placed order that will not be made. When Jennie cancels, she chooses how much to refund and keeps the rest: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. She can give a reason, and the customer is emailed unless she unticks it. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Online Order**:
@@ -61,14 +61,14 @@ What is still owed on a placed order or a confirmed course booking: its Total du
 _Avoid_: Amount mismatch, outstanding, difference
 
 **Total due**:
-What a placed order or confirmed course booking is still to be paid for, before what's been paid is taken off. Zero once cancelled, apart from what a booking keeps when Jennie hands back less than was paid. The order's or booking's total itself stays as ordered, for the receipt.
+What a placed order or confirmed course booking is still to be paid for, before what's been paid is taken off. Once cancelled, only what Jennie kept. The order's or booking's total itself stays as ordered, for the receipt.
 _Avoid_: Amount due, outstanding
 
 **Settled**:
 Nothing is owed either way, or everything taken was handed back.
 
 **Goodwill refund**:
-Money handed back to an unhappy customer without lowering what was sold, on a placed order or a confirmed course booking with nothing left to collect, up to what's still held. It leaves the Balance where it was, so the order or booking stays settled, and one of everything received reads as refunded. A Stripe refund made in the dashboard beyond what was owed back is one too. Jennie can note why. The monthly report still shows it as a negative row.
+Money handed back to an unhappy customer without lowering what was sold, on a placed order or a confirmed course booking with nothing left to collect, up to what's still held. On a cancelled one, it gives back money Jennie kept, once nothing is owed back. It leaves the Balance where it was, so the order or booking stays settled, and one of everything received reads as refunded. A Stripe refund made in the dashboard beyond what was owed back is one too. Jennie can note why. The monthly report still shows it as a negative row.
 _Avoid_: Discount, compensation, credit
 
 **Undo** (a payment):

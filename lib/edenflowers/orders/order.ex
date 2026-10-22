@@ -92,6 +92,7 @@ defmodule Edenflowers.Orders.Order do
   @admin_show_load [
     :payment_status,
     :amount_paid,
+    :amount_held,
     :paid_outside_stripe,
     :paid_through_stripe,
     :goodwill_refundable?,
@@ -121,7 +122,7 @@ defmodule Edenflowers.Orders.Order do
   postgres do
     repo Edenflowers.Repo
     table "orders"
-    migration_types quoted_fulfillment_fee: :decimal, fulfillment_fee_override: :decimal
+    migration_types quoted_fulfillment_fee: :decimal, fulfillment_fee_override: :decimal, kept_amount: :decimal
 
     check_constraints do
       check_constraint :quoted_fulfillment_fee, "orders_valid_quoted_fulfillment_fee",
@@ -787,15 +788,24 @@ defmodule Edenflowers.Orders.Order do
       change set_context(%{skip_version_when_unchanged?: true})
     end
 
-    # Never refunds: Jennie refunds a paid order in the Stripe dashboard.
+    # Refunds everything paid apart from `kept_amount`: card payments through
+    # Stripe, and anything paid in person is left as a balance for Jennie to
+    # hand back.
     update :cancel do
+      accept [:kept_amount, :cancellation_reason]
+      argument :email_customer?, :boolean, default: true
       validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
       change filter expr(state == :placed and fulfillment_status == :pending)
       change set_attribute(:fulfillment_status, :cancelled)
       change set_attribute(:cancelled_at, &DateTime.utc_now/0)
       change PaymentChanges.CancelOpenPaymentIntent
+      change {PaymentChanges.RefundAllButKept, cancelled_by: :shop}
       change {Changes.AdjustStock, direction: :return}
+
+      change {Changes.SendCancelledEmail, cancelled_by: :shop},
+        where: [argument_equals(:email_customer?, true), present(:customer_email)]
+
       change load(@admin_show_load)
       require_atomic? false
     end
@@ -806,9 +816,9 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:fulfillment_status, :cancelled)
       change set_attribute(:cancelled_at, &DateTime.utc_now/0)
       change PaymentChanges.CancelOpenPaymentIntent
-      change PaymentChanges.RefundInFull
+      change {PaymentChanges.RefundAllButKept, cancelled_by: :customer}
       change {Changes.AdjustStock, direction: :return}
-      change Changes.SendCancelledEmail
+      change {Changes.SendCancelledEmail, cancelled_by: :customer}
       require_atomic? false
     end
 
@@ -1109,6 +1119,10 @@ defmodule Edenflowers.Orders.Order do
 
     attribute :fulfillment_status, __MODULE__.FulfillmentStatus, allow_nil?: false, default: :pending
     attribute :cancelled_at, :utc_datetime
+    # Why Jennie cancelled, for the customer's email and the log.
+    attribute :cancellation_reason, :string
+    # The customer's email can change later; the log names who was told.
+    attribute :cancellation_emailed_to, :string
 
     attribute :origin, __MODULE__.Origin, allow_nil?: false, default: :online
     # Custom orders only.
@@ -1274,7 +1288,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
-    calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: 0, else: grand_total)
+    calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: kept_amount, else: grand_total)
     calculate :committed?, :boolean, expr(state == :placed)
     calculate :cancelled?, :boolean, expr(fulfillment_status == :cancelled)
 

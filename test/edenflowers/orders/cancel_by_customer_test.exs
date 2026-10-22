@@ -94,7 +94,7 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
         assert {:error, %Ash.Error.Invalid{}} = Orders.cancel_order_by_customer(order, actor: customer)
       end)
 
-    assert log =~ "Could not refund order"
+    assert log =~ "Could not refund"
     assert Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_status == :pending
     refute_enqueued(worker: SendCancelledEmail)
   end

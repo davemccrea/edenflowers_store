@@ -35,6 +35,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign_order(order)
          |> assign(:fulfillment_form, nil)
          |> assign(:fulfillment_error, nil)
+         |> assign(cancel_form: nil, cancel_error: nil, cancel_held: nil)
          |> assign(settlement_mode: :settle, settlement_error: nil)
          |> PhotoUpload.allow([@photo_field])
          |> assign(:queue, queue_position(order, socket.assigns.current_user))}
@@ -123,6 +124,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           error={@fulfillment_error}
           order={@order}
           uploads={@uploads}
+        />
+        <.cancel_order
+          :if={@order.fulfillment_status == :pending}
+          form={@cancel_form}
+          error={@cancel_error}
+          held={@cancel_held}
+          order={@order}
+          locale={@locale}
         />
         <.settlement_drawer
           order={@order}
@@ -498,6 +507,66 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   attr :form, :any, default: nil
   attr :error, :string, default: nil
+  attr :held, :any, default: nil
+  attr :order, Order, required: true
+  attr :locale, :string, required: true
+
+  defp cancel_order(assigns) do
+    ~H"""
+    <.admin_drawer id="cancel-order" title={~t"Cancel order"} on_close={JS.push("close_cancel")}>
+      <.form
+        :if={@form}
+        for={@form}
+        id="cancel-order-form"
+        phx-change="validate_cancel"
+        phx-submit="cancel_order"
+        class="flex min-h-0 flex-1 flex-col"
+      >
+        <.drawer_body>
+          <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
+          <div :if={Decimal.positive?(@held)} class="space-y-2">
+            <.input
+              field={@form[:refund]}
+              type="text"
+              inputmode="decimal"
+              label={~t"Amount to refund (€)"}
+              class="input w-full tabular-nums"
+            />
+            <p class="text-base-content/75 text-sm">
+              {~t"Paid #{amount = Format.currency(@held, @locale)}. Card payments go back through Stripe; anything paid in person you hand back yourself. Whatever you don't refund you keep."}
+            </p>
+          </div>
+          <.input
+            field={@form[:reason]}
+            type="textarea"
+            rows="3"
+            label={~t"Reason (optional)"}
+            placeholder={~t"Shown in the customer's email and the order's history."}
+            class="textarea w-full"
+          />
+          <div :if={@order.customer_email} class="space-y-2">
+            <.input field={@form[:email_customer]} type="checkbox" label={~t"Email the customer"} />
+            <p class="text-base-content/75 ml-7 break-all text-sm">{~t"To: #{email = @order.customer_email}"}</p>
+          </div>
+          <p :if={!@order.customer_email} class="text-base-content/75 text-sm">
+            {~t"This order has no email address, so the customer won't be emailed."}
+          </p>
+        </.drawer_body>
+        <.drawer_footer>
+          <.button type="submit" variant="destructive" phx-disable-with={~t"Cancelling…"}>{~t"Cancel order"}</.button>
+          <.button
+            type="button"
+            phx-click={JS.exec("phx-hide", to: "#cancel-order") |> JS.push("close_cancel")}
+            variant="ghost"
+          >{~t"Keep order"}</.button>
+        </.drawer_footer>
+      </.form>
+    </.admin_drawer>
+    """
+  end
+
+  attr :form, :any, default: nil
+  attr :error, :string, default: nil
   attr :order, Order, required: true
   attr :uploads, :map, required: true
 
@@ -653,23 +722,45 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  def handle_event("cancel_order", _params, socket) do
-    case Orders.cancel_order(socket.assigns.order, actor: socket.assigns.current_user) do
-      {:ok, order} ->
-        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Order cancelled.")}
+  # What the order held is kept from when the drawer opened, so a retry after
+  # Stripe refunded but the cancel failed works out the same amount to keep,
+  # and refunds nothing twice.
+  def handle_event("open_cancel", _params, socket) do
+    order = socket.assigns.order
+    params = %{"refund" => Decimal.to_string(order.amount_held, :normal), "reason" => "", "email_customer" => "true"}
 
-      {:error, error} ->
-        case reload(socket.assigns.order, socket) do
-          %{fulfillment_status: :pending} ->
-            Logger.error("Order #{socket.assigns.order.id} not cancelled: #{inspect(error)}")
-            {:noreply, put_flash(socket, :error, ~t"Could not cancel the order.")}
+    {:noreply,
+     socket
+     |> assign(cancel_form: to_form(params, as: :cancel), cancel_error: nil, cancel_held: order.amount_held)
+     |> push_event("js-exec", %{to: "#cancel-order", attr: "phx-show"})}
+  end
 
-          order ->
-            {:noreply,
-             socket
-             |> assign_order(order)
-             |> put_flash(:error, ~t"This order changed while you had it open, so it wasn't cancelled.")}
-        end
+  def handle_event("close_cancel", _params, socket) do
+    {:noreply, assign(socket, cancel_form: nil, cancel_error: nil)}
+  end
+
+  def handle_event("validate_cancel", %{"cancel" => params}, socket) do
+    {:noreply, assign(socket, :cancel_form, to_form(params, as: :cancel))}
+  end
+
+  def handle_event("cancel_order", %{"cancel" => params}, socket) do
+    socket = assign(socket, :cancel_form, to_form(params, as: :cancel))
+
+    case kept_amount(socket.assigns.cancel_held, params["refund"]) do
+      {:ok, kept} ->
+        input = %{
+          kept_amount: kept,
+          cancellation_reason: params["reason"],
+          email_customer?: params["email_customer"] != "false"
+        }
+
+        cancel_order(socket, input)
+
+      :error ->
+        message =
+          ~t"Enter an amount from €0 to #{amount = Format.currency(socket.assigns.cancel_held, socket.assigns.locale)}."
+
+        {:noreply, assign(socket, :cancel_error, message)}
     end
   end
 
@@ -821,6 +912,49 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp email_by_default(_order, "false"), do: "true"
   defp email_by_default(_order, _customer_home), do: "false"
 
+  defp kept_amount(held, nil), do: {:ok, held}
+
+  defp kept_amount(held, refund) do
+    case refund |> String.trim() |> String.replace(",", ".") |> Decimal.parse() do
+      {refund, ""} ->
+        if Decimal.negative?(refund) or Decimal.gt?(refund, held), do: :error, else: {:ok, Decimal.sub(held, refund)}
+
+      _invalid ->
+        :error
+    end
+  end
+
+  defp cancel_order(socket, input) do
+    case Orders.cancel_order(socket.assigns.order, input, actor: socket.assigns.current_user) do
+      {:ok, order} ->
+        {:noreply,
+         socket
+         |> assign_order(reload(order, socket))
+         |> assign(cancel_form: nil, cancel_error: nil)
+         |> push_event("js-exec", %{to: "#cancel-order", attr: "phx-hide"})
+         |> put_flash(:info, ~t"Order cancelled.")}
+
+      {:error, error} ->
+        case reload(socket.assigns.order, socket) do
+          %{fulfillment_status: :pending} ->
+            Logger.error("Order #{socket.assigns.order.id} not cancelled: #{inspect(error)}")
+            {:noreply, assign(socket, :cancel_error, cancel_error_message(error))}
+
+          order ->
+            {:noreply,
+             socket
+             |> assign_order(order)
+             |> assign(cancel_form: nil, cancel_error: nil)
+             |> push_event("js-exec", %{to: "#cancel-order", attr: "phx-hide"})
+             |> put_flash(:error, ~t"This order changed while you had it open, so it wasn't cancelled.")}
+        end
+    end
+  end
+
+  # Says why, e.g. Stripe refusing the refund.
+  defp cancel_error_message(%{errors: [%{message: message} | _]}) when is_binary(message), do: message
+  defp cancel_error_message(_error), do: ~t"Could not cancel the order."
+
   defp mark_fulfilled(socket, attrs) do
     case Orders.mark_order_fulfilled(socket.assigns.order, attrs, actor: socket.assigns.current_user) do
       {:ok, order} ->
@@ -881,11 +1015,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp paid_through_stripe?(payments), do: Enum.any?(payments, & &1.payment_intent_id)
 
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)
-
-  defp cancel_confirmation(%{holds_money?: true}),
-    do: ~t"Cancel this order? It is paid, so refund it with Stripe or record a refund. This can't be undone."
-
-  defp cancel_confirmation(_order), do: ~t"Cancel this order? This can't be undone."
 
   defp payment_label(%{reverses_payment_id: reversed, method: method}) when is_binary(reversed),
     do: ~t"Undone · #{how = OrderLog.payment_method_label(method)}"
@@ -1297,13 +1426,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {~t"Fetch refunds from Stripe"}
       </.actions_menu_button>
 
-      <.actions_menu_button
-        :if={!@cancel_unavailable}
-        menu="order-actions"
-        phx-click="cancel_order"
-        data-confirm={cancel_confirmation(@order)}
-        class="text-error"
-      >
+      <.actions_menu_button :if={!@cancel_unavailable} menu="order-actions" phx-click="open_cancel" class="text-error">
         {~t"Cancel order"}
       </.actions_menu_button>
       <.unavailable_menu_item :if={@cancel_unavailable} reason={@cancel_unavailable}>

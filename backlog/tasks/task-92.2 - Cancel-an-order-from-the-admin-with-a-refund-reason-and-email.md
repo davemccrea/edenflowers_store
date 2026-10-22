@@ -1,10 +1,10 @@
 ---
 id: TASK-92.2
 title: 'Cancel an order from the admin with a refund, reason and email'
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-22 14:39'
-updated_date: '2026-10-22 16:12'
+updated_date: '2026-10-22 16:22'
 labels: []
 dependencies: []
 parent_task_id: TASK-92
@@ -28,10 +28,10 @@ ordinal: 198000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Cancelling with a partial refund refunds that much through Stripe, keeps the rest and leaves a 0 balance
-- [ ] #2 A refused Stripe refund leaves the order uncancelled and queues no email
-- [ ] #3 Retrying a cancel never refunds twice
-- [ ] #4 The email includes the reason and what was refunded or will be returned; none is sent when unticked or without an address
-- [ ] #5 Goodwill refunds work on a cancelled order with money kept
-- [ ] #6 The history shows the reason and whether the customer was emailed
+- [x] #1 Cancelling with a partial refund refunds that much through Stripe, keeps the rest and leaves a 0 balance
+- [x] #2 A refused Stripe refund leaves the order uncancelled and queues no email
+- [x] #3 Retrying a cancel never refunds twice
+- [x] #4 The email includes the reason and what was refunded or will be returned; none is sent when unticked or without an address
+- [x] #5 Goodwill refunds work on a cancelled order with money kept
+- [x] #6 The history shows the reason and whether the customer was emailed
 <!-- AC:END -->
