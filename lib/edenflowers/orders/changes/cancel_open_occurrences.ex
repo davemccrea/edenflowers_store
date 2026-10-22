@@ -9,8 +9,13 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
   alias Edenflowers.ShopTime
 
   @impl true
+  # After the transaction, so each order's Stripe refund runs outside the
+  # subscription's transaction and a rollback can't undo the DB side alone.
   def change(changeset, _opts, _context) do
-    Ash.Changeset.after_action(changeset, fn _changeset, subscription -> cancel_open(subscription) end)
+    Ash.Changeset.after_transaction(changeset, fn
+      _changeset, {:ok, subscription} -> cancel_open(subscription)
+      _changeset, error -> error
+    end)
   end
 
   defp cancel_open(subscription) do
