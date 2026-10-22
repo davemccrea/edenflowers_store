@@ -771,11 +771,11 @@ defmodule EdenflowersWeb.CoreComponents do
 
   For callers that need one concrete URL rather than a responsive image —
   a lightbox target, an `og:image`. Matches `image/1`'s defaults: fill crop
-  and WebP. External URLs pass through unchanged; local SVGs are proxied
+  (pass `"fit"` to keep the whole photo) and WebP. External URLs pass through unchanged; local SVGs are proxied
   without resizing or format conversion.
   """
-  def image_url(src, width, height) do
-    resolve_image_url(src, width, height, "fill", nil)
+  def image_url(src, width, height, crop_type \\ "fill") do
+    resolve_image_url(src, width, height, crop_type, nil)
   end
 
   defp resolve_image_url(src, width, height, crop_type, crop) do
