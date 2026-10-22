@@ -912,13 +912,7 @@ defmodule EdenflowersWeb.CoreComponents do
         aria-label={~t"Eden Flowers on Facebook"}
         class="touch-target inline-block transition duration-300 hover:opacity-60"
       >
-        <.image
-          src="local:///facebook_logo_bw_128px.png"
-          alt=""
-          width={24}
-          height={24}
-          class="h-6 w-6"
-        />
+        <img src="/images/icon-facebook.png" alt="" width="24" height="24" loading="lazy" decoding="async" class="h-6 w-6" />
       </a>
       <a
         href="https://www.instagram.com/edenflowers.fi/"
@@ -927,13 +921,7 @@ defmodule EdenflowersWeb.CoreComponents do
         aria-label={~t"Eden Flowers on Instagram"}
         class="touch-target inline-block transition duration-300 hover:opacity-60"
       >
-        <.image
-          src="local:///instagram_logo_bw_128px.png"
-          alt=""
-          width={24}
-          height={24}
-          class="h-6 w-6"
-        />
+        <img src="/images/icon-instagram.png" alt="" width="24" height="24" loading="lazy" decoding="async" class="h-6 w-6" />
       </a>
     </div>
     """

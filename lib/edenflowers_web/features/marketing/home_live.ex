@@ -319,12 +319,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 rel="noopener noreferrer"
                 aria-label="Bonnier News Finland"
               >
-                <.image
-                  src="local:///logo-bonnier-news.png"
+                <img
+                  src="/images/logo-bonnier-news.png"
                   alt="Bonnier News Finland"
-                  width={104}
-                  height={32}
-                  crop_type="fit"
+                  width="104"
+                  height="32"
+                  loading="lazy"
+                  decoding="async"
                   class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
                 />
               </a>

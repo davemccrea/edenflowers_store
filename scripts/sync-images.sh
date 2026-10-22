@@ -33,7 +33,7 @@ for HOST in "${HOSTS[@]}"; do
   # imgproxy returns 500 for files it can't read, so force world-readable modes.
   # No --delete: the server holds photos uploaded in the admin that aren't here.
   # uploads/ is the app's own folder on the server, so it's never pushed to.
-  rsync -avz --chmod=D755,F644 --exclude=/images/uploads/ images "$HOST:/opt/edenflowers_store/"
+  rsync -avz --chmod=D755,F644 --exclude=/images/uploads/ --exclude=.DS_Store images "$HOST:/opt/edenflowers_store/"
   ok "synced"
 done
 
