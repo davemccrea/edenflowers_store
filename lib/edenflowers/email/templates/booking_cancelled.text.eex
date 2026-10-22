@@ -6,7 +6,7 @@
 
 <% end %><%= if Decimal.positive?(@refunded) do %><%= case @refunded_to do %><% {:card, brand, last4} -> %><%= gettext("I've refunded %{amount} to your %{brand} card ending in %{last4}.", amount: @format_currency.(@refunded), brand: brand, last4: last4) %><% :mobilepay -> %><%= gettext("I've refunded %{amount} to your MobilePay.", amount: @format_currency.(@refunded)) %><% :unknown -> %><%= gettext("I've refunded %{amount} the way you paid.", amount: @format_currency.(@refunded)) %><% end %>
 
-<% end %><%= if Decimal.positive?(@to_return) do %><%= gettext("I'll return the %{amount} you paid me directly.", amount: @format_currency.(@to_return)) %>
+<% end %><%= if Decimal.positive?(@to_return) do %><%= if Decimal.positive?(@refunded) do %><%= gettext("I'll pay back the other %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% else %><%= gettext("I'll pay back %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% end %>
 
 <% end %><%= gettext("If you have any questions, just reply to this email.") %>
 

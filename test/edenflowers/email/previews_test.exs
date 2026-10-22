@@ -26,5 +26,8 @@ defmodule Edenflowers.Email.PreviewsTest do
     assert bodies["refunded to a card"] =~ "to your Visa card ending in 4242."
     assert bodies["refunded to MobilePay"] =~ "to your MobilePay."
     assert bodies["refunded, paid more than one way"] =~ "the way you paid."
+
+    assert bodies["by the shop, with a reason, part paid in cash"] =~
+             "I'll pay back the other €30.00 the same way you paid it."
   end
 end

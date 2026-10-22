@@ -3215,6 +3215,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/courses_live.ex:785
 #: lib/edenflowers_web/features/admin/courses_live.ex:791
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1168
+#: lib/edenflowers_web/features/admin/order_form_live.ex:887
 #, elixir-autogen, elixir-format
 msgid "Payment link"
 msgstr ""
@@ -3297,7 +3298,6 @@ msgid "Saving…"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/courses_live.ex:557
-#: lib/edenflowers_web/features/admin/order_form_live.ex:887
 #, elixir-autogen, elixir-format
 msgid "Send a payment link"
 msgstr ""
@@ -6148,11 +6148,6 @@ msgstr ""
 msgid "I'll send you an invoice after you've collected your order."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_form_live.ex:888
-#, elixir-autogen, elixir-format
-msgid "Invoice after delivery or pickup"
-msgstr ""
-
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:12
 #: lib/edenflowers/email/templates/course_payment_link.text.eex:8
 #, elixir-autogen, elixir-format
@@ -6162,11 +6157,6 @@ msgstr ""
 #: lib/edenflowers/email.ex:305
 #, elixir-autogen, elixir-format
 msgid "Pay for your booking on %{course}"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_form_live.ex:889
-#, elixir-autogen, elixir-format
-msgid "Pay on delivery or at pickup"
 msgstr ""
 
 #: lib/edenflowers/email.ex:88
@@ -7460,12 +7450,6 @@ msgstr ""
 msgid "Enter an amount from €0 to %{amount}."
 msgstr ""
 
-#: lib/edenflowers/email/templates/booking_cancelled.text.eex:9
-#: lib/edenflowers/email/templates/order_cancelled.text.eex:9
-#, elixir-autogen, elixir-format
-msgid "I'll return the %{amount} you paid me directly."
-msgstr ""
-
 #: lib/edenflowers/email/templates/booking_cancelled.text.eex:11
 #: lib/edenflowers/email/templates/booking_refunded.text.eex:9
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:11
@@ -7679,4 +7663,26 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/courses_live.ex:802
 #, elixir-autogen, elixir-format
 msgid "Emailed %{time}"
+msgstr ""
+
+#: lib/edenflowers/email/templates/booking_cancelled.text.eex:9
+#: lib/edenflowers/email/templates/order_cancelled.text.eex:9
+#, elixir-autogen, elixir-format
+msgid "I'll pay back %{amount} the same way you paid it."
+msgstr ""
+
+#: lib/edenflowers/email/templates/booking_cancelled.text.eex:9
+#: lib/edenflowers/email/templates/order_cancelled.text.eex:9
+#, elixir-autogen, elixir-format
+msgid "I'll pay back the other %{amount} the same way you paid it."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:889
+#, elixir-autogen, elixir-format
+msgid "In person"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:888
+#, elixir-autogen, elixir-format
+msgid "Invoice"
 msgstr ""
