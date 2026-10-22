@@ -4,7 +4,7 @@ title: Push a notification to the admin when a paid order is placed
 status: done
 assignee: []
 created_date: '2026-10-15 23:06'
-updated_date: '2026-10-19 20:30'
+updated_date: '2026-10-22 06:36'
 labels: []
 dependencies:
   - TASK-9.1
@@ -136,6 +136,15 @@ created: 2026-10-19 20:30
 ---
 
 Criteria checked against the code and tests on 2026-10-19. #2-#5 (per-device switch state, unsupported and blocked help text, the Overview card only in the installed app), #8 (tapping opens the order in the app) and #9 (home-screen badge) are browser or device behaviour, so they stay unticked until checked on Jennie's phone.
+
+---
+
+author: @claude
+created: 2026-10-22 06:36
+
+---
+
+Changed by TASK-9.3 and TASK-9.4: the push has no body now, only a title ("Ny beställning 1042", "Leverans för idag 1042"); subscription orders and new subscriptions notify too, superseding #10's occurrence half; and orders with a time get a reminder an hour before.
 
 ---
 <!-- COMMENTS:END -->

@@ -317,7 +317,7 @@ defmodule Edenflowers.Email do
     EdenflowersWeb.Gettext.with_app_locale("sv-FI", fn ->
       new()
       |> from(automated_from_address())
-      |> to(from_address())
+      |> to(Application.fetch_env!(:edenflowers, :shop_notice_email))
       |> subject(ShopNotice.title(notice, "sv-FI"))
       |> text_body("""
       #{shop_notice_time(notice)}#{ShopNotice.link_label(notice)}

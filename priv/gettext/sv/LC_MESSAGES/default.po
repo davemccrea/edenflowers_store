@@ -7563,32 +7563,27 @@ msgstr "Leverans för idag %{order_order_reference}"
 msgid "New subscription"
 msgstr "Ny prenumeration"
 
-#: lib/edenflowers/orders/shop_notice.ex:37
-#, elixir-autogen, elixir-format
-msgid "New subscription from %{name}"
-msgstr "Ny prenumeration från %{name}"
-
 #: lib/edenflowers/orders/shop_notice.ex:29
 #, elixir-autogen, elixir-format
 msgid "Pickup for today %{order_order_reference}"
 msgstr "Avhämtning för idag %{order_order_reference}"
 
-#: lib/edenflowers/orders/shop_notice.ex:44
+#: lib/edenflowers/orders/shop_notice.ex:41
 #, elixir-autogen, elixir-format
 msgid "Delivery %{time}, order %{order_order_reference}"
 msgstr "Leverans %{time}, beställning %{order_order_reference}"
 
-#: lib/edenflowers/orders/shop_notice.ex:47
+#: lib/edenflowers/orders/shop_notice.ex:44
 #, elixir-autogen, elixir-format
 msgid "Open the order:"
 msgstr "Öppna beställningen:"
 
-#: lib/edenflowers/orders/shop_notice.ex:48
+#: lib/edenflowers/orders/shop_notice.ex:45
 #, elixir-autogen, elixir-format
 msgid "Open the subscription:"
 msgstr "Öppna prenumerationen:"
 
-#: lib/edenflowers/orders/shop_notice.ex:43
+#: lib/edenflowers/orders/shop_notice.ex:40
 #, elixir-autogen, elixir-format
 msgid "Pickup %{time}, order %{order_order_reference}"
 msgstr "Avhämtning %{time}, beställning %{order_order_reference}"

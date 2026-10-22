@@ -34,6 +34,7 @@ config :logger, level: :warning
 config :error_tracker, enabled: false
 
 config :edenflowers, :error_alert_email, "alerts@example.com"
+config :edenflowers, :shop_notice_email, "shop@example.com"
 
 config :phoenix, :plug_init_mode, :runtime
 

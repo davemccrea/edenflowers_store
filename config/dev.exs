@@ -49,3 +49,6 @@ config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
 config :swoosh, :api_client, false
+
+# Shows the shop's new-order emails in the dev mailbox.
+config :edenflowers, :shop_notice_email, "info@edenflowers.fi"

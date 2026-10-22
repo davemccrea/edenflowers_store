@@ -84,6 +84,12 @@ if config_env() == :prod do
     config :edenflowers, :error_alert_email, error_alert_email
   end
 
+  # Where new orders and reminders are emailed. Production only, so staging's
+  # test orders stay out of Jennie's inbox.
+  if shop_notice_email = System.get_env("SHOP_NOTICE_EMAIL") do
+    config :edenflowers, :shop_notice_email, shop_notice_email
+  end
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """

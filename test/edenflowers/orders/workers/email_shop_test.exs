@@ -1,5 +1,6 @@
 defmodule Edenflowers.Orders.Workers.EmailShopTest do
-  use Edenflowers.DataCase, async: true
+  # Not async: one test unsets the shop address, which is application env.
+  use Edenflowers.DataCase, async: false
   import Swoosh.TestAssertions
   import Generator
 
@@ -14,15 +15,23 @@ defmodule Edenflowers.Orders.Workers.EmailShopTest do
     assert_enqueued worker: EmailShop, args: %{"order_id" => order.id}
   end
 
+  test "nothing is queued without a shop address, as on staging" do
+    Application.delete_env(:edenflowers, :shop_notice_email)
+    on_exit(fn -> Application.put_env(:edenflowers, :shop_notice_email, "shop@example.com") end)
+    order = generate(order(state: :payment, payment_intent_id: "pi_test"))
+
+    Orders.finalize_checkout!(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
+
+    refute_enqueued worker: EmailShop
+  end
+
   test "tells the shop's inbox about a same-day order, linking to it in the admin" do
     order = placed_order(fulfillment_date: Edenflowers.ShopTime.today(), order_reference: "1042")
 
     assert :ok = perform_job(EmailShop, %{"notice" => "new", "order_id" => order.id})
 
-    {_name, inbox} = Application.fetch_env!(:edenflowers, :mailer_from_address)
-
     assert_email_sent(fn email ->
-      assert [{_name, ^inbox}] = email.to
+      assert email.to == [{"", "shop@example.com"}]
       assert email.bcc == []
       assert email.subject == "Avhämtning för idag 1042"
       refute email.text_body =~ "kl."

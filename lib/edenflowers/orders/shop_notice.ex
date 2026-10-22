@@ -18,7 +18,7 @@ defmodule Edenflowers.Orders.ShopNotice do
   def fetch!(%{"notice" => kind} = args), do: {String.to_existing_atom(kind), record!(args)}
 
   defp record!(%{"order_id" => id}), do: Orders.get_order_by_id!(id, authorize?: false)
-  defp record!(%{"subscription_id" => id}), do: Orders.get_subscription!(id, load: [:user], authorize?: false)
+  defp record!(%{"subscription_id" => id}), do: Orders.get_subscription!(id, authorize?: false)
 
   @doc "In `locale`, which must also be the current Gettext locale."
   def title(notice, locale)
@@ -31,10 +31,7 @@ defmodule Edenflowers.Orders.ShopNotice do
     end
   end
 
-  def title({:new, %Subscription{user: %{name: nil}}}, _locale), do: ~t"New subscription"
-
-  def title({:new, %Subscription{} = subscription}, _locale),
-    do: ~t"New subscription from #{name = subscription.user.name}"
+  def title({:new, %Subscription{}}, _locale), do: ~t"New subscription"
 
   def title({:reminder, %Order{} = order}, locale) do
     time = Format.fulfillment_time(order, locale)

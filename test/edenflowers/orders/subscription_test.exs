@@ -250,7 +250,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       assert :ok = perform_job(EmailShop, %{"notice" => "new", "subscription_id" => subscription_id})
 
       assert_email_sent(fn email ->
-        assert email.subject == "Ny prenumeration från Ada Lovelace"
+        assert email.subject == "Ny prenumeration"
         assert email.text_body =~ "/admin/subscriptions/#{subscription_id}"
       end)
     end
