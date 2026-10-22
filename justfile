@@ -9,6 +9,11 @@ imgproxy_port := shell('echo $(( $1 + 1 ))', port)
 default:
     @just --list --unsorted
 
+# Install the Typst CLI used to render receipt PDFs (pinned to the version in production)
+[group('development')]
+install-typst:
+    ./scripts/install-typst.sh
+
 # Run the development server
 [group('development')]
 dev: check-typst imgproxy
@@ -75,16 +80,41 @@ imgproxy:
 check-typst:
     @command -v typst >/dev/null || { echo "typst not found: receipt PDFs (and their tests) need it. Run 'just install-typst'." >&2; exit 1; }
 
-# Install the Typst CLI used to render receipt PDFs (pinned to the version in production)
-[group('setup')]
-install-typst:
-    ./scripts/install-typst.sh
-
 # Install the Ansible collections used by infra/ (pass --upgrade to update them)
-[group('setup')]
+[group('infra')]
 [working-directory: 'infra']
 install-infra *args:
     ansible-galaxy collection install -r requirements.yml {{ args }}
+
+# Edit the Ansible vault
+[group('infra')]
+[working-directory: 'infra']
+edit-vault:
+    ansible-vault edit group_vars/all/vault.yml
+
+# Prepare a fresh server as root before its first provision (run once)
+[group('infra')]
+[working-directory: 'infra']
+bootstrap:
+    ansible-playbook bootstrap.yml
+
+# Dry run: show what provisioning the server would change
+[group('infra')]
+[working-directory: 'infra']
+check-provision:
+    ansible-playbook site.yml --check --diff
+
+# Provision the server with infra/ (extra args go to ansible-playbook)
+[group('infra')]
+[working-directory: 'infra']
+provision *args:
+    ansible-playbook site.yml {{ args }}
+
+# Lint the Ansible playbooks and roles
+[group('infra')]
+[working-directory: 'infra']
+lint-infra:
+    ansible-lint
 
 # Tag a release from main and deploy it (prompts for the version if not given)
 [group('production')]
@@ -128,33 +158,3 @@ tail-logs:
 [group('production')]
 open-console:
     ssh -t edenflowers-production 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
-
-# Edit the Ansible vault
-[group('infra')]
-[working-directory: 'infra']
-edit-vault:
-    ansible-vault edit group_vars/all/vault.yml
-
-# Prepare a fresh server as root before its first provision (run once)
-[group('infra')]
-[working-directory: 'infra']
-bootstrap:
-    ansible-playbook bootstrap.yml
-
-# Dry run: show what provisioning the server would change
-[group('infra')]
-[working-directory: 'infra']
-check-provision:
-    ansible-playbook site.yml --check --diff
-
-# Provision the server with infra/ (extra args go to ansible-playbook)
-[group('infra')]
-[working-directory: 'infra']
-provision *args:
-    ansible-playbook site.yml {{ args }}
-
-# Lint the Ansible playbooks and roles
-[group('infra')]
-[working-directory: 'infra']
-lint-infra:
-    ansible-lint
