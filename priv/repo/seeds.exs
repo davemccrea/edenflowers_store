@@ -1025,15 +1025,17 @@ online_order = fn customer_name ->
   |> Ash.read_one!(authorize?: false)
 end
 
-# Called off and refunded in full in the Stripe dashboard.
+# Called off and refunded in full. Ash.Seed because cancelling refunds through
+# Stripe, which refuses the made-up payments; seed_refund records it instead.
 petra = online_order.("Petra Holm")
-Orders.cancel_order!(petra, actor: jennie)
+Ash.Seed.update!(petra, %{fulfillment_status: :cancelled, cancelled_at: DateTime.utc_now()})
 [petra_payment] = petra.payments
 
 seed_refund.(petra_payment, "re_seed_#{petra.order_reference}")
 
-# Called off, but Jennie hasn't refunded it yet.
-Orders.cancel_order!(online_order.("Oskar Wikström"), actor: jennie)
+# Called off the day before, so Jennie kept the payment.
+oskar = Ash.load!(online_order.("Oskar Wikström"), :amount_held, authorize?: false)
+Orders.cancel_order!(oskar, %{kept_amount: oskar.amount_held}, actor: jennie)
 
 # Paid, then the plant was out of stock: money to hand back through Stripe.
 nora = online_order.("Nora Back")
