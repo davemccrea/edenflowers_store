@@ -108,7 +108,7 @@ msgid "Store"
 msgstr ""
 
 #: lib/edenflowers/email/templates/order_details.text.eex:7
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:110
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:148
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:296
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:446
 #: lib/edenflowers_web/features/admin/order_form_live.ex:1032
@@ -135,7 +135,7 @@ msgstr ""
 msgid "Checkout"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:107
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:145
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:270
 #: lib/edenflowers_web/features/admin/order_form_live.ex:404
 #: lib/edenflowers_web/features/admin/orders_live.ex:110
@@ -604,7 +604,7 @@ msgstr ""
 #: lib/edenflowers/email/previews.ex:427
 #: lib/edenflowers_web/components/newsletter_signup.ex:14
 #: lib/edenflowers_web/features/account/account_live.ex:171
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:65
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:71
 #, elixir-autogen, elixir-format
 msgid "Newsletter"
 msgstr ""
@@ -633,6 +633,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:5
 #: lib/edenflowers_web/features/account/subscription_manager.ex:541
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:89
 #: lib/edenflowers_web/features/admin/product_form_live.ex:354
 #: lib/edenflowers_web/features/admin/product_form_live.ex:443
 #: lib/edenflowers_web/features/admin/subscription_log.ex:76
@@ -1037,7 +1038,7 @@ msgstr ""
 msgid "Fulfilled"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:104
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:142
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:151
 #: lib/edenflowers_web/features/admin/orders_live.ex:96
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:99
@@ -1046,7 +1047,7 @@ msgstr ""
 msgid "Fulfillment"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:97
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:135
 #: lib/edenflowers_web/features/admin/orders_live.ex:75
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:147
 #, elixir-autogen, elixir-format
@@ -1111,7 +1112,7 @@ msgstr ""
 msgid "Marketing"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:115
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:153
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:166
 #: lib/edenflowers_web/features/admin/order_form_live.ex:221
 #: lib/edenflowers_web/features/admin/order_log.ex:112
@@ -1151,8 +1152,8 @@ msgid "Order not found."
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:195
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:55
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:70
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:61
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:108
 #: lib/edenflowers_web/features/admin/customers_live.ex:62
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:58
 #: lib/edenflowers_web/features/admin/order_form_live.ex:558
@@ -1663,6 +1664,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/account/subscription_manager.ex:43
 #: lib/edenflowers_web/features/account/subscription_manager.ex:446
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:103
 #: lib/edenflowers_web/features/admin/products_live.ex:101
 #: lib/edenflowers_web/features/admin/products_live.ex:105
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:72
@@ -1695,7 +1697,7 @@ msgstr ""
 msgid "Receipt (opens in a new tab)"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:90
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:128
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:155
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:77
 #, elixir-autogen, elixir-format
@@ -2069,7 +2071,7 @@ msgstr ""
 msgid "Unknown method"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:43
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:49
 #: lib/edenflowers_web/features/admin/customers_live.ex:56
 #: lib/edenflowers_web/features/admin/orders_live.ex:67
 #: lib/edenflowers_web/features/admin/overview_live.ex:215
@@ -2887,13 +2889,13 @@ msgstr ""
 msgid "Up to %{max_length} characters"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:32
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:38
 #, elixir-autogen, elixir-format
 msgid "Customer not found."
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:197
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:44
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:50
 #: lib/edenflowers_web/features/admin/customers_live.ex:19
 #: lib/edenflowers_web/features/admin/customers_live.ex:33
 #: lib/edenflowers_web/features/admin/search_live.ex:82
@@ -2901,18 +2903,18 @@ msgstr ""
 msgid "Customers"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:61
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:67
 #: lib/edenflowers_web/features/admin/customers_live.ex:74
 #, elixir-autogen, elixir-format
 msgid "Last order"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:66
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Not subscribed"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:82
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:120
 #, elixir-autogen, elixir-format
 msgid "Ordered"
 msgstr ""
@@ -2923,12 +2925,12 @@ msgstr ""
 msgid "Search name or email…"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:66
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Subscribed"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/customer_detail_live.ex:58
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:64
 #: lib/edenflowers_web/features/admin/customers_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "Total spent"
@@ -3828,6 +3830,7 @@ msgstr ""
 msgid "Every week"
 msgstr ""
 
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:94
 #: lib/edenflowers_web/features/admin/subscription_log.ex:77
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:70
 #, elixir-autogen, elixir-format
@@ -3837,6 +3840,7 @@ msgstr ""
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:12
 #: lib/edenflowers_web/features/account/subscription_manager.ex:43
 #: lib/edenflowers_web/features/account/subscription_manager.ex:446
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:97
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:101
 #: lib/edenflowers_web/features/admin/subscription_log.ex:78
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:73
@@ -3862,6 +3866,7 @@ msgstr ""
 #: lib/edenflowers_web/components/layouts.ex:196
 #: lib/edenflowers_web/features/account/account_live.ex:73
 #: lib/edenflowers_web/features/account/account_live.ex:118
+#: lib/edenflowers_web/features/admin/customer_detail_live.ex:76
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:49
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:24
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:38
