@@ -198,19 +198,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 </div>
               </div>
 
-              <figure :if={@order.delivery_photo_slug} id="order-delivery-photo" class="mt-5">
-                <figcaption class="text-base-content/75 mb-2 text-sm">
-                  {~t"Nobody was home. The order was left here."}
-                </figcaption>
-                <.image
-                  src={@order.delivery_photo_slug}
-                  alt={~t"Where the order was left"}
-                  width={640}
-                  height={800}
-                  crop_type="fit"
-                  class="max-w-60 h-auto w-full"
-                />
-              </figure>
+              <p :if={@order.delivery_photo_slug} id="order-delivery-photo" class="text-base-content/75 mt-5 text-sm">
+                {~t"Nobody was home. The order was left here."}
+                <a
+                  href={image_url(@order.delivery_photo_slug, 1600, 1600, "fit")}
+                  target="_blank"
+                  rel="noopener"
+                  class="link link-primary inline-flex items-center gap-1"
+                >
+                  {~t"View photo"}
+                  <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
+                </a>
+              </p>
             </.widget>
 
             <.widget id="order-items" title={~t"To make"}>

@@ -349,7 +349,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       view |> form("#confirm-fulfillment-form", fulfillment: %{email_photo: "false"}) |> render_submit()
 
       assert has_element?(view, "#order-status", "Fulfilled")
-      assert has_element?(view, "#order-delivery-photo img")
+      assert has_element?(view, "#order-delivery-photo a", "View photo")
 
       reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
       assert "local:///uploads/" <> file = reloaded.delivery_photo_slug
