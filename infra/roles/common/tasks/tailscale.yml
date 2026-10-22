@@ -5,11 +5,6 @@
     dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
     mode: "0644"
 
-- name: Remove legacy Tailscale apt source
-  ansible.builtin.file:
-    path: /etc/apt/sources.list.d/tailscale.list
-    state: absent
-
 - name: Add Tailscale apt repository
   ansible.builtin.deb822_repository:
     name: tailscale

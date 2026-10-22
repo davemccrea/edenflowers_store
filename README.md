@@ -39,9 +39,9 @@ just db-backup production       # pg_dump the production database into tmp/
 just deploy production [0.3.0]  # tag a release from main (prompts for version if omitted)
 just rollback production v1.6.0 [tmp/<dump>] # run an old release, restoring a dump if given
 just images-sync                # push images/ to production and pull its uploads
-just server-logs production     # tail app logs
-just server-console production  # remote IEx
-just provision production       # apply infra/ to the server (provision-check for a dry run)
+just server-logs                # tail app logs
+just server-console             # remote IEx
+just provision                  # apply infra/ to the server (provision-check for a dry run)
 ```
 
 In dev, `just dev` starts imgproxy in Docker (OrbStack) on `PORT+1`, reading `images/` read-only and dev uploads from `tmp/uploads`. The container keeps running after the server stops.
@@ -111,4 +111,4 @@ It backs up the current database first, so the rollback can be undone the same w
 
 ## Maintenance mode
 
-`maintenance_mode` in `infra/host_vars/production/vars.yml` sets `MAINTENANCE_MODE`, which redirects visitors to `/back-soon`. Signed-in admins, and the sign-in, admin and payment-link paths, are let through.
+`maintenance_mode` in `infra/group_vars/all/vars.yml` sets `MAINTENANCE_MODE`, which redirects visitors to `/back-soon`. Signed-in admins, and the sign-in, admin and payment-link paths, are let through.

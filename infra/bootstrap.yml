@@ -1,0 +1,51 @@
+- name: Bootstrap server
+  hosts: all
+  become: true
+  remote_user: root
+  tasks:
+    - name: Check for 'sudo' group
+      ansible.builtin.group:
+        name: sudo
+        state: present
+
+    - name: Allow sudo group to have passwordless sudo
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: "^%sudo"
+        line: "%sudo ALL=(ALL) NOPASSWD: ALL"
+
+    - name: Create a user
+      ansible.builtin.user:
+        name: "{{ user }}"
+        groups: sudo
+        append: true
+        state: present
+        shell: /bin/bash
+
+    - name: Set authorized key
+      ansible.posix.authorized_key:
+        user: "{{ user }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Set GitHub Actions authorized key
+      ansible.posix.authorized_key:
+        user: "{{ user }}"
+        state: present
+        key: "{{ github_actions_public_key }}"
+
+    # sshd uses the first value it reads, and sshd_config.d/ is read before sshd_config,
+    # so this has to be a drop-in that sorts before cloud-init's files.
+    - name: Disallow root SSH access
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/00-disable-root-login.conf
+        content: "PermitRootLogin no\n"
+        mode: "0644"
+        validate: sshd -t -f %s
+
+    # Restart, not reboot: the open connection survives, but a reboot would have to reconnect as root.
+    - name: Restart ssh
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

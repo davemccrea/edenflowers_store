@@ -134,39 +134,39 @@ deploy-watch:
 images-sync:
     ./scripts/sync-images.sh
 
-# Tail app logs on a server (production)
+# Tail the production app logs
 [group('server')]
-server-logs target:
-    ssh edenflowers-{{ target }} 'cd /opt/edenflowers_store && docker compose logs -f --tail=200 app'
+server-logs:
+    ssh edenflowers-production 'cd /opt/edenflowers_store && docker compose logs -f --tail=200 app'
 
-# Open a remote IEx console on a server (production)
+# Open a remote IEx console on production
 [group('server')]
-server-console target:
-    ssh -t edenflowers-{{ target }} 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
+server-console:
+    ssh -t edenflowers-production 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
 
 # Dry run: show what provisioning the server would change
 [group('infra')]
 [working-directory: 'infra']
-provision-check target:
-    ansible-playbook site.yml -l {{ target }} --check --diff
+provision-check:
+    ansible-playbook site.yml --check --diff
 
-# Provision the server with infra/ (extra args go to ansible-playbook, e.g. --tags docker)
+# Provision the server with infra/ (extra args go to ansible-playbook)
 [group('infra')]
 [working-directory: 'infra']
-provision target *args:
-    ansible-playbook site.yml -l {{ target }} {{ args }}
+provision *args:
+    ansible-playbook site.yml {{ args }}
 
-# Edit a vault: `just vault` for the shared one, `just vault production` for a host's
+# Edit the Ansible vault
 [group('infra')]
 [working-directory: 'infra']
-vault target="all":
-    ansible-vault edit {{ if target == "all" { "group_vars/all/vault.yml" } else { "host_vars/" + target + "/vault.yml" } }}
+vault:
+    ansible-vault edit group_vars/all/vault.yml
 
 # Prepare a fresh server as root before its first provision (run once)
 [group('infra')]
 [working-directory: 'infra']
-server-bootstrap target:
-    ansible-playbook playbooks/bootstrap.yml -l {{ target }}
+server-bootstrap:
+    ansible-playbook bootstrap.yml
 
 # Lint the Ansible playbooks and roles
 [group('infra')]

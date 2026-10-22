@@ -21,7 +21,7 @@ In the Hetzner console:
 - Turn on automatic snapshots, daily, keeping about 30.
 - If the production server is also at Hetzner, check the box is in a different location.
 
-Then record the sub-account username and hostname (uXXXXX-sub1.your-storagebox.de) on TASK-81.2, or in the Ansible vault (`just vault production`). Installing the server's SSH key on the box happens in TASK-81.2, once Ansible has generated it.
+Then record the sub-account username and hostname (uXXXXX-sub1.your-storagebox.de) on TASK-81.2, or in the Ansible vault (`just vault`). Installing the server's SSH key on the box happens in TASK-81.2, once Ansible has generated it.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
