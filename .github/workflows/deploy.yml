@@ -62,6 +62,19 @@ jobs:
     environment: ${{ github.event_name == 'push' && 'production' || 'staging' }}
 
     steps:
+      - name: Pause uptime monitor
+        if: github.event_name == 'push'
+        run: &betterstack |
+          curl --fail-with-body -sS -X PATCH \
+            "https://uptime.betterstack.com/api/v2/monitors/$BETTERSTACK_MONITOR_ID" \
+            -H "Authorization: Bearer $BETTERSTACK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"paused\": $PAUSED}"
+        env:
+          PAUSED: true
+          BETTERSTACK_API_TOKEN: ${{ secrets.BETTERSTACK_API_TOKEN }}
+          BETTERSTACK_MONITOR_ID: ${{ secrets.BETTERSTACK_MONITOR_ID }}
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -80,3 +93,12 @@ jobs:
 
             # Restart app with new image
             docker compose up -d --remove-orphans
+
+      # Resume even when the deploy fails, so a broken release still alerts.
+      - name: Resume uptime monitor
+        if: always() && github.event_name == 'push'
+        run: *betterstack
+        env:
+          PAUSED: false
+          BETTERSTACK_API_TOKEN: ${{ secrets.BETTERSTACK_API_TOKEN }}
+          BETTERSTACK_MONITOR_ID: ${{ secrets.BETTERSTACK_MONITOR_ID }}
