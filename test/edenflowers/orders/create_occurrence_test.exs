@@ -16,6 +16,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   alias Edenflowers.Orders.Schedulers.CreateOccurrence, as: ScheduleOccurrences
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Workers.CreateOccurrence
+  alias Edenflowers.Orders.Workers.EmailShop
   alias Edenflowers.Orders.Workers.SendPaymentFailedEmail
   alias Edenflowers.Orders.Workers.SendReceiptEmail
   alias Edenflowers.Payments.Payment
@@ -129,6 +130,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
     assert [%Payment{method: :stripe, payment_intent_id: "pi_occurrence"} = payment] = order.payments
     assert Decimal.equal?(payment.amount, "60.00")
     assert_enqueued(worker: SendReceiptEmail, args: %{"primary_key" => %{"id" => order.id}})
+    assert_enqueued(worker: EmailShop, args: %{"order_id" => order.id})
 
     assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 14)
   end
@@ -338,7 +340,8 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
         assert subscription.next_fulfillment_date == Date.add(ctx.date, 14)
 
         assert_enqueued(worker: SendPaymentFailedEmail, args: %{"primary_key" => %{"id" => order.id}})
-        assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+        assert_enqueued(worker: EmailShop, args: %{"order_id" => order.id})
+        assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
         assert_email_sent(fn email ->
           assert email.to == [{"", "ada@example.com"}]
@@ -378,6 +381,8 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       refuse(:card_declined)
       run_refused(ctx.subscription)
       Oban.drain_queue(queue: :default)
+      # The customer's payment link and the shop's new-order email.
+      assert_email_sent()
       assert_email_sent()
 
       # As if moving the subscription on had failed after the order was placed.

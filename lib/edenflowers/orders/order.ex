@@ -228,6 +228,24 @@ defmodule Edenflowers.Orders.Order do
         where expr(state == :placed and origin == :online and subscription? and is_nil(subscription_id))
       end
 
+      # An hour before an order's time or window starts, while it is still to
+      # be made. Only within that hour, so orders long past never get one.
+      trigger :remind_shop do
+        action :remind_shop
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron "*/5 * * * *"
+        worker_module_name Edenflowers.Orders.Workers.RemindShop
+        scheduler_module_name Edenflowers.Orders.Schedulers.RemindShop
+        default_actor system_actor()
+
+        where expr(
+                state == :placed and fulfillment_status == :pending and is_nil(shop_reminded_at) and
+                  fulfillment_starts_at > now() and fulfillment_starts_at <= datetime_add(now(), 1, :hour)
+              )
+      end
+
       # Queued only when Jennie asks for it, on :mark_fulfilled or
       # :email_fulfillment_confirmation. A job that runs out of attempts records
       # the failure for her to see and send again.
@@ -660,7 +678,7 @@ defmodule Edenflowers.Orders.Order do
       change Changes.ReportPromotionOverused
 
       change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_receipt_email}
-      change Changes.PushNewOrder
+      change Changes.NotifyShop
 
       # Starts the Subscription straight away, so the confirmation page's link
       # to it has something to show. Outside the transaction, so a failed
@@ -681,6 +699,13 @@ defmodule Edenflowers.Orders.Order do
       require_atomic? false
     end
 
+    update :remind_shop do
+      accept []
+      change set_attribute(:shop_reminded_at, &DateTime.utc_now/0)
+      change {Changes.NotifyShop, notice: :reminder}
+      require_atomic? false
+    end
+
     update :start_subscription do
       accept []
       change Changes.ActivateSubscription
@@ -697,6 +722,8 @@ defmodule Edenflowers.Orders.Order do
       change Changes.SnapshotVatBreakdown
       change PaymentChanges.OpenPaymentLink
       change run_oban_trigger(:send_payment_failed_email)
+      # A paid Occurrence notifies the shop through :finalize_checkout.
+      change Changes.NotifyShop
       require_atomic? false
     end
 
@@ -986,6 +1013,7 @@ defmodule Edenflowers.Orders.Order do
                      :mark_payment_cancelled,
                      :send_receipt_email,
                      :send_fulfillment_email,
+                     :remind_shop,
                      :record_fulfillment_email_failure,
                      :record_receipt_email_failure,
                      :record_order_details_email_failure,
@@ -1144,6 +1172,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
 
     attribute :receipt_emailed_at, :utc_datetime
+    attribute :shop_reminded_at, :utc_datetime
     # The last queued receipt ran out of attempts. Cleared by a successful send.
     attribute :receipt_email_failed_at, :utc_datetime
     attribute :vat_breakdown, {:array, Edenflowers.Orders.VatRow}
@@ -1188,6 +1217,19 @@ defmodule Edenflowers.Orders.Order do
               )
 
     calculate :customer_first_name, :string, {AccountCalculations.FirstName, source: :customer_name}
+
+    # When the order's time or window starts, in shop time. Nil when any time that day will do.
+    calculate :fulfillment_starts_at,
+              :utc_datetime,
+              expr(
+                fragment(
+                  "((? + ?) AT TIME ZONE ?)",
+                  fulfillment_date,
+                  fulfillment_time_start,
+                  ^Edenflowers.ShopTime.timezone()
+                )
+              )
+
     calculate :recipient_first_name, :string, {AccountCalculations.FirstName, source: :recipient_name}
 
     # `distance` is snapshotted in metres; expose it as a kilometre string for

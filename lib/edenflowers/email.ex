@@ -10,6 +10,7 @@ defmodule Edenflowers.Email do
 
   alias Edenflowers.Email.Templates
   alias Edenflowers.Format
+  alias Edenflowers.Orders.ShopNotice
 
   def order_confirmation(order) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
@@ -307,6 +308,31 @@ defmodule Edenflowers.Email do
     #{EdenflowersWeb.Endpoint.url()}/admin/errors/#{error.id}
     """)
   end
+
+  @doc """
+  Tells the shop's inbox what `Edenflowers.Orders.ShopNotice` says, in
+  Swedish, Jennie's language. Just enough to notice it: the rest is a tap away.
+  """
+  def shop_notice(notice) do
+    EdenflowersWeb.Gettext.with_app_locale("sv-FI", fn ->
+      new()
+      |> from(automated_from_address())
+      |> to(from_address())
+      |> subject(ShopNotice.title(notice, "sv-FI"))
+      |> text_body("""
+      #{shop_notice_time(notice)}#{ShopNotice.link_label(notice)}
+      #{EdenflowersWeb.Endpoint.url()}#{ShopNotice.path(notice)}
+      """)
+    end)
+  end
+
+  # Only a new order with a time or window says when: the title already says
+  # the day, and a reminder's title the time.
+  defp shop_notice_time({:new, %Edenflowers.Orders.Order{fulfillment_time_start: %Time{}} = order}) do
+    "#{Format.weekday_date(order.fulfillment_date, "sv-FI")} #{Format.fulfillment_time(order, "sv-FI")}\n\n"
+  end
+
+  defp shop_notice_time(_notice), do: ""
 
   def otp_sign_in(email_address, otp_code) do
     new()

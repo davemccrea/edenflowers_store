@@ -6,7 +6,7 @@ defmodule Edenflowers.WebPushTest do
 
   alias Edenflowers.Accounts
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Workers.PushNewOrder
+  alias Edenflowers.Orders.Workers.PushToAdmins
   alias Edenflowers.WebPush
 
   # The user agent keys from RFC 8291, appendix A, so the test can decrypt.
@@ -91,7 +91,7 @@ defmodule Edenflowers.WebPushTest do
 
       Orders.finalize_checkout!(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
 
-      assert_enqueued worker: PushNewOrder, args: %{"order_id" => order.id}
+      assert_enqueued worker: PushToAdmins, args: %{"order_id" => order.id}
     end
 
     test "nothing is queued without VAPID keys" do
@@ -100,7 +100,7 @@ defmodule Edenflowers.WebPushTest do
 
       Orders.finalize_checkout!(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
 
-      refute_enqueued worker: PushNewOrder
+      refute_enqueued worker: PushToAdmins
     end
 
     test "tells each device about a same-day order and forgets expired ones" do
@@ -122,12 +122,10 @@ defmodule Edenflowers.WebPushTest do
         end
       end)
 
-      assert :ok = perform_job(PushNewOrder, %{"order_id" => order.id})
+      assert :ok = perform_job(PushToAdmins, %{"notice" => "new", "order_id" => order.id})
 
       assert_received {:pushed, payload}
-      assert payload["title"] == "Same-day order 1042"
-      assert payload["body"] =~ "Pickup"
-      assert payload["body"] =~ "88.50"
+      assert payload["title"] == "Pickup for today 1042"
       assert payload["tag"] == "order-#{order.id}"
       assert payload["url"] == "/admin/orders/#{order.id}"
 
@@ -148,7 +146,7 @@ defmodule Edenflowers.WebPushTest do
         Plug.Conn.send_resp(conn, 201, "")
       end)
 
-      assert :ok = perform_job(PushNewOrder, %{"order_id" => order.id})
+      assert :ok = perform_job(PushToAdmins, %{"notice" => "new", "order_id" => order.id})
       refute_received :pushed
     end
   end

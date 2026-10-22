@@ -169,6 +169,7 @@ defmodule Edenflowers.Orders.Subscription do
       validate attribute_in(:interval_weeks, @intervals)
       change Changes.SnapshotCard
       change run_oban_trigger(:send_setup_email)
+      change Changes.NotifyShop
     end
 
     update :send_setup_email do

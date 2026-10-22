@@ -111,7 +111,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     assert finalized.state == :placed
     assert finalized.payment_status == :paid
 
-    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+    # The receipt and the shop's new-order email.
+    assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "jane@example.com"}]
@@ -209,7 +210,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     assert finalized.card_message == "Happy birthday!"
     assert Enum.any?(finalized.line_items, & &1.is_card)
 
-    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+    # The receipt and the shop's new-order email.
+    assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "jane@example.com"}]
@@ -297,7 +299,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     assert Decimal.eq?(finalized.fulfillment_fee, Decimal.new("5.00"))
     assert finalized.delivery_instructions == "Leave at back door"
 
-    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+    # The receipt and the shop's new-order email.
+    assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "jane@example.com"}]
@@ -373,7 +376,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     assert Decimal.eq?(finalized.discount, Decimal.new("7.00"))
 
     assert Ash.load!(finalized.promotion, :usage).usage == 1
-    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+    # The receipt and the shop's new-order email.
+    assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
     assert_email_sent(fn email ->
       assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
