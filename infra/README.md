@@ -2,13 +2,13 @@
 
 Ansible provisioning for the production server (Ubuntu/Debian). Docker Compose in `/opt/edenflowers_store` runs the app, `imgproxy`, `papra` and `cloudflared`. Postgres runs on the host. Deploys don't go through Ansible, see the main README.
 
-The recipes are in the repo's justfile under `infra`, and run from this folder. Install [Ansible](https://docs.ansible.com/), then `just infra-install` for its collections.
+The recipes are in the repo's justfile under `infra`, and run from this folder. Install [Ansible](https://docs.ansible.com/), then `just install-infra` for its collections.
 
 ## Vars and vault
 
 - `inventory.ini`: the one host, `production`
 - `group_vars/all/vars.yml`: settings, such as `maintenance_mode`
-- `group_vars/all/vault.yml`: encrypted secrets, edited with `just vault`. `vault.example.yml` lists every `vault_*` key
+- `group_vars/all/vault.yml`: encrypted secrets, edited with `just edit-vault`. `vault.example.yml` lists every `vault_*` key
 
 The vault password lives in `infra/.vault_pass` (gitignored).
 
@@ -17,7 +17,7 @@ A new env var for the app goes in the vars or vault, then into the app's `enviro
 ## Provision
 
 ```bash
-just provision-check    # dry run with a diff
+just check-provision    # dry run with a diff
 just provision          # extra args go to ansible-playbook
 ```
 
@@ -25,7 +25,7 @@ This updates packages (rebooting if needed), hardens SSH, fail2ban and UFW (only
 
 ## New server
 
-`just server-bootstrap` runs once, as root, on a fresh server. It creates the user from `vars.yml` with passwordless sudo, authorizes `~/.ssh/id_rsa.pub` and `github_actions_public_key`, and disables root SSH login. Then provision it, deploy, and seed the empty database with the rows the admin can't create:
+`just bootstrap` runs once, as root, on a fresh server. It creates the user from `vars.yml` with passwordless sudo, authorizes `~/.ssh/id_rsa.pub` and `github_actions_public_key`, and disables root SSH login. Then provision it, deploy, and seed the empty database with the rows the admin can't create:
 
 ```bash
 ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds/production.exs\"))'"

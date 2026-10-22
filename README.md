@@ -7,10 +7,10 @@
 ```bash
 git config core.hooksPath .githooks
 brew install just
-just typst-install
+just install-typst
 ```
 
-`just typst-install` puts the pinned [Typst](https://typst.app) CLI in `~/.local/bin`. Receipt PDFs are rendered with it, so `just dev` and `just test` stop early if it's missing.
+`just install-typst` puts the pinned [Typst](https://typst.app) CLI in `~/.local/bin`. Receipt PDFs are rendered with it, so `just dev` and `just test` stop early if it's missing.
 
 `.githooks/pre-commit` checks the formatting of staged Elixir and JS/CSS files (`just format` fixes it). `pre-push` runs `mix precommit`.
 
@@ -28,27 +28,27 @@ Run `just` to see every command, grouped by purpose.
 
 ```bash
 just dev                        # dev server at localhost:4000, with .env loaded and a local imgproxy on 4001
-PORT=4001 just dev              # same, on another port (also honoured by stripe-listen)
+PORT=4001 just dev              # same, on another port (also honoured by forward-stripe)
 just test [args]                # run the test suite
 just format                     # format Elixir, JS and CSS
-just stripe-listen              # forward Stripe webhooks to the dev server
-just issues                     # issue board at 127.0.0.1:6420 (npm i -g backlog.md)
-just db-reset                   # drop and migrate dev + test
-just db-seed [--stripe]         # seed the local database (run after db-reset)
+just forward-stripe             # forward Stripe webhooks to the dev server
+just open-issues                # issue board at 127.0.0.1:6420 (npm i -g backlog.md)
+just reset-db                   # drop and migrate dev + test
+just seed-db [--stripe]         # seed the local database (run after reset-db)
 just deploy [0.3.0]             # tag a release from main (prompts for version if omitted)
 just rollback v1.6.0 [tmp/<dump>] # run an old release, restoring a dump if given
 just backup                     # pg_dump the production database into tmp/
-just images-sync                # push images/ to production and pull its uploads
-just server-logs                # tail app logs
-just server-console             # remote IEx
-just provision                  # apply infra/ to the server (provision-check for a dry run)
+just sync-images                # push images/ to production and pull its uploads
+just tail-logs                  # tail app logs
+just open-console               # remote IEx
+just provision                  # apply infra/ to the server (check-provision for a dry run)
 ```
 
 In dev, `just dev` starts imgproxy in Docker (OrbStack) on `PORT+1`, reading `images/` read-only and dev uploads from `tmp/uploads`. The container keeps running after the server stops.
 
 ### Stripe webhooks
 
-Order finalization and the confirmation email depend on `payment_intent.succeeded`. Run `just stripe-listen` and set the `whsec_...` it prints as `STRIPE_WEBHOOK_SECRET`.
+Order finalization and the confirmation email depend on `payment_intent.succeeded`. Run `just forward-stripe` and set the `whsec_...` it prints as `STRIPE_WEBHOOK_SECRET`.
 
 ### Email copy
 
@@ -76,7 +76,7 @@ wt remove
 
 `just deploy` checks the tree is clean and `main` isn't behind origin, runs `mix precommit`, syncs images, bumps `mix.exs` and tags `vX.Y.Z`. After you confirm, it backs up the production database, pushes, watches the GitHub Actions deploy and publishes release notes. Plain pushes deploy nothing.
 
-`images/` is gitignored, so photos reach production only through `just images-sync`. It deletes server files removed locally, at most 20 per run (more fails the sync and the deploy), and never touches admin uploads in `images/uploads/`, which it pulls back here instead. Filenames must be ASCII.
+`images/` is gitignored, so photos reach production only through `just sync-images`. It deletes server files removed locally, at most 20 per run (more fails the sync and the deploy), and never touches admin uploads in `images/uploads/`, which it pulls back here instead. Filenames must be ASCII.
 
 The server itself is provisioned by Ansible in `infra/`, see [infra/README.md](infra/README.md).
 

@@ -2,7 +2,7 @@
 
 Typst project for the receipt PDF emailed with orders and course bookings. `Edenflowers.Orders.Receipt` builds the payload and shells out to `typst`.
 
-Typst is pinned to the version in `scripts/install-typst.sh` (`just typst-install`), which must match the Dockerfile and CI. Layout can shift between pre-1.0 releases.
+Typst is pinned to the version in `scripts/install-typst.sh` (`just install-typst`), which must match the Dockerfile and CI. Layout can shift between pre-1.0 releases.
 
 ## Preview locally
 

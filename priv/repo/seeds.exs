@@ -1,6 +1,6 @@
 # Dev fixtures, built on the production base seed. Run it with:
 #
-#     just db-seed
+#     just seed-db
 #
 # One example of each feature or variation the store and admin show. Add a new
 # fixture only when it shows something none of the existing ones do.
@@ -23,7 +23,7 @@ alias Edenflowers.External.StripeAPI
 
 require Ash.Query
 
-# With `just db-seed --stripe`, every seeded Stripe payment, refund and
+# With `just seed-db --stripe`, every seeded Stripe payment, refund and
 # subscription customer is created in Stripe test mode. Without it, nothing
 # calls Stripe and the ids are made up. Stripe can't backdate, so its objects
 # are all dated the day of seeding while the seeded payments keep their
