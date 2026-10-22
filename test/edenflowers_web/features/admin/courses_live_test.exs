@@ -72,12 +72,11 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false).status == :cancelled
   end
 
-  describe "refunding a late cancellation" do
+  describe "refunding a cancellation" do
     setup do
       today = Edenflowers.ShopTime.today()
 
-      course =
-        generate(course(date: Date.add(today, 3), register_before: today, late_cancellation_fee: "15.00"))
+      course = generate(course(date: Date.add(today, 3), register_before: today))
 
       registration =
         generate(course_registration(course_id: course.id, status: :confirmed, amount: Decimal.new("85.00")))
@@ -87,19 +86,18 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       %{registration: registration}
     end
 
-    test "suggests what was paid minus the fee", %{conn: conn, registration: registration} do
+    test "suggests what was paid", %{conn: conn, registration: registration} do
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
       view |> element(~s|button[phx-click="cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
 
-      assert has_element?(view, "#registration-#{registration.id}", "To refund €70.00")
+      assert has_element?(view, "#registration-#{registration.id}", "To refund €85.00")
       refute has_element?(view, "#refund-#{registration.id}")
 
       view |> element("#settle-#{registration.id}", "To refund") |> render_click()
 
       assert has_element?(view, "#settlement-drawer", registration.name)
-      assert has_element?(view, "#settlement-drawer dl", "Kept as cancellation fee")
-      assert has_element?(view, "#settlement-drawer dl", "€15.00")
-      assert has_element?(view, ~s|#refund-#{registration.id} input[name="refund[amount]"][value="70.00"]|)
+      refute has_element?(view, "#settlement-drawer dl", "Kept")
+      assert has_element?(view, ~s|#refund-#{registration.id} input[name="refund[amount]"][value="85.00"]|)
       assert has_element?(view, "#refund-#{registration.id}", "Records money you have already handed back")
       refute has_element?(view, ~s|#refund-#{registration.id} button[value="stripe"]|)
     end
@@ -116,7 +114,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
       assert has_element?(view, "#settlement-drawer [role=alert]")
       assert has_element?(view, "#refund-#{registration.id}")
-      assert has_element?(view, "#registration-#{registration.id}", "To refund €70.00")
+      assert has_element?(view, "#registration-#{registration.id}", "To refund €85.00")
     end
 
     test "refunds the amount Jennie changes it to", %{conn: conn, registration: registration} do
@@ -125,13 +123,13 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
       view |> element("#settle-#{registration.id}") |> render_click()
 
       view
-      |> form("#refund-#{registration.id}", refund: %{amount: "85,00", payment_method: "cash"})
+      |> form("#refund-#{registration.id}", refund: %{amount: "50,00", payment_method: "cash"})
       |> put_submitter(~s|#refund-#{registration.id} button[value="record"]|)
       |> render_submit()
 
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
       registration = Ash.load!(registration, [:amount_paid], authorize?: false, reuse_values?: false)
-      assert Decimal.equal?(registration.amount_paid, 0)
+      assert Decimal.equal?(registration.amount_paid, "35.00")
     end
   end
 

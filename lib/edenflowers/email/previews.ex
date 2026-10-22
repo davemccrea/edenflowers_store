@@ -264,9 +264,7 @@ defmodule Edenflowers.Email.Previews do
     for {title, attrs, link} <- [
           {gettext_noop("unpaid, payment link"), %{}, @payment_link},
           {gettext_noop("unpaid, pays at the course"), %{}, nil},
-          {gettext_noop("paid, late-cancellation fee"), %{balance: Decimal.new(0)}, nil},
-          {gettext_noop("paid, no late-cancellation fee"),
-           %{balance: Decimal.new(0), course: %{late_cancellation_fee: Decimal.new(0)}}, nil},
+          {gettext_noop("paid"), %{balance: Decimal.new(0)}, nil},
           {gettext_noop("2 places, paid"), %{seats: 2, balance: Decimal.new(0)}, nil},
           {gettext_noop("2 places, unpaid, payment link"), %{seats: 2, balance: Decimal.new("90.00")}, @payment_link},
           {gettext_noop("partially paid, payment link"),
@@ -421,8 +419,7 @@ defmodule Edenflowers.Email.Previews do
           start_time: ~T[18:00:00],
           end_time: ~T[20:00:00],
           location_name: "Eden Flowers studio",
-          location_address: "Storgatan 1, 65100 Vaasa",
-          late_cancellation_fee: Decimal.new("15.00")
+          location_address: "Storgatan 1, 65100 Vaasa"
         },
         Map.get(attrs, :course, %{})
       )

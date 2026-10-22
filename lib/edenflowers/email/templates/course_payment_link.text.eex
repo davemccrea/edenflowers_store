@@ -9,7 +9,7 @@
 
 <%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
-<%= if Decimal.positive?(@registration.amount_paid) and Decimal.positive?(@registration.course.late_cancellation_fee) do %><%= gettext("To cancel, reply at least 7 days before the course. If you cancel later, I keep up to %{fee} of what you've paid as a cancellation fee.", fee: @format_currency.(@registration.course.late_cancellation_fee)) %><% else %><%= gettext("If you need to cancel, reply to this email. Please let me know at least 7 days before the course if you can.") %><% end %>
+<%= if Decimal.positive?(@registration.amount_paid) do %><%= gettext("To cancel, reply to this email. Let me know at least 7 days before the course for a full refund. After that, we'll work something out.") %><% else %><%= gettext("If you need to cancel, reply to this email. Please let me know at least 7 days before the course if you can.") %><% end %>
 
 <%= gettext("See you there,") %>
 

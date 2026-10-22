@@ -38,16 +38,11 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert has_element?(view, "[data-testid=course-language]", "In English")
     end
 
-    test "names the course's late-cancellation fee, or promises a full refund without one", %{conn: conn} do
-      course = generate(course(late_cancellation_fee: "20.00"))
-      free = generate(course(late_cancellation_fee: "0"))
+    test "promises a full refund 7 days before the course", %{conn: conn} do
+      course = generate(course())
 
       {:ok, _view, html} = live(conn, ~p"/en/courses/#{course.id}")
-      assert html =~ "a €20.00 late-cancellation fee is kept"
-
-      {:ok, _view, html} = live(conn, ~p"/en/courses/#{free.id}")
       assert html =~ "Cancel at least 7 days before the course for a full refund."
-      refute html =~ "late-cancellation fee"
     end
 
     test "books places and shows the payment form", %{conn: conn} do
@@ -158,12 +153,11 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert html =~ "You&#39;re booked"
     end
 
-    test "names the course's late-cancellation fee", %{conn: conn} do
-      course = generate(course(late_cancellation_fee: "15.00"))
-      registration = generate(course_registration(course_id: course.id, payment_intent_id: "pi_x"))
+    test "says how to cancel", %{conn: conn} do
+      registration = generate(course_registration(payment_intent_id: "pi_x"))
 
       {:ok, _view, html} = live(conn, ~p"/courses/bookings/#{registration.id}")
-      assert html =~ "a €15.00 late-cancellation fee is kept"
+      assert html =~ "To cancel, reply to your confirmation email."
     end
 
     test "releases the hold and goes back to the course when a redirect payment fails", %{conn: conn} do

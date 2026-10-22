@@ -42,37 +42,37 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
     end)
   end
 
-  describe "a paid booking's cancellation sentence" do
-    defp paid_confirmation(fee) do
+  describe "the cancellation sentence" do
+    defp confirmation(amount_paid) do
       registration = %{
         first_name: "Anna",
         email: "anna@example.com",
         locale: "en",
         seats: 1,
         balance: Decimal.new(0),
+        amount_paid: Decimal.new(amount_paid),
         course: %{
           name: "Autumn Wreaths",
           date: ~D[2026-11-20],
           start_time: ~T[18:00:00],
           end_time: ~T[20:00:00],
           location_name: "Studio",
-          location_address: "Storgatan 1",
-          late_cancellation_fee: Decimal.new(fee)
+          location_address: "Storgatan 1"
         }
       }
 
       Edenflowers.Email.course_confirmation(registration, nil).text_body
     end
 
-    test "names the course's late-cancellation fee" do
-      assert paid_confirmation("15.00") =~ "If you cancel later, I keep €15.00 as a cancellation fee."
+    test "promises a paid booking a full refund 7 days before the course" do
+      assert confirmation("85.00") =~ "Let me know at least 7 days before the course for a full refund."
     end
 
-    test "only asks for notice when there is no fee" do
-      body = paid_confirmation("0.00")
+    test "only asks an unpaid booking for notice" do
+      body = confirmation("0")
 
       assert body =~ "Please let me know at least 7 days before the course if you can."
-      refute body =~ "cancellation fee"
+      refute body =~ "refund"
     end
   end
 end

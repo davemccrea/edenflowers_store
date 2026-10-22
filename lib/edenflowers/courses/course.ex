@@ -8,7 +8,7 @@ defmodule Edenflowers.Courses.Course do
   postgres do
     repo Edenflowers.Repo
     table "courses"
-    migration_types price: :decimal, late_cancellation_fee: :decimal
+    migration_types price: :decimal
 
     check_constraints do
       check_constraint :price, "courses_valid_price",
@@ -37,7 +37,6 @@ defmodule Edenflowers.Courses.Course do
       :register_before,
       :total_places,
       :price,
-      :late_cancellation_fee,
       :tax_rate_id,
       :language,
       :translations
@@ -88,12 +87,6 @@ defmodule Edenflowers.Courses.Course do
     attribute :register_before, :date, allow_nil?: false
     attribute :total_places, :integer, allow_nil?: false
     attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
-
-    # Kept from a refund when a booking is cancelled less than 7 days before the course. 0 means no fee.
-    attribute :late_cancellation_fee, :decimal,
-      allow_nil?: false,
-      default: Decimal.new("15.00"),
-      constraints: [min: 0, scale: 2]
 
     # The language the course is taught in, not the language of its page.
     attribute :language, :atom, allow_nil?: false, default: :sv, constraints: [one_of: [:sv, :fi, :en]]

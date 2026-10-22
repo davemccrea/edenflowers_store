@@ -201,7 +201,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # Jennie to refund.
     update :cancel do
       change set_attribute(:status, :cancelled)
-      change Changes.KeepLateCancellationFee
       change PaymentChanges.CancelOpenPaymentIntent
       require_atomic? false
     end
@@ -292,7 +291,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :tax_rate, :decimal, allow_nil?: false
     attribute :amount, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
-    # Money not handed back: a late-cancellation fee, or what Jennie kept when she refunded less.
+    # Money not handed back: what Jennie kept when she refunded less.
     attribute :kept_amount, :decimal, allow_nil?: false, default: 0, constraints: [min: 0, scale: 2]
 
     attribute :payment_intent_id, :string

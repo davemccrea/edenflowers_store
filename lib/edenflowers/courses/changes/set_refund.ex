@@ -1,7 +1,7 @@
 defmodule Edenflowers.Courses.Changes.SetRefund do
   @moduledoc """
   Leaves `amount` as the balance to refund by keeping the rest of what's owed
-  back, or giving back what was kept, like a waived late-cancellation fee.
+  back, or giving back what was kept.
   """
 
   use Ash.Resource.Change

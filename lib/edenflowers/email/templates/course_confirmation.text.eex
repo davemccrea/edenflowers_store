@@ -11,7 +11,7 @@
 
 <%= gettext("Or pay at the course if you prefer.") %> <% Decimal.positive?(@registration.balance) -> %><%= gettext("You pay at the course.") %> <% true -> %><%= gettext("Your receipt is attached.") %> <% end %>
 
-<%= cond do %><% Decimal.positive?(@registration.balance) and Decimal.positive?(@registration.amount_paid) and Decimal.positive?(@registration.course.late_cancellation_fee) -> %><%= gettext("To cancel, reply at least 7 days before the course. If you cancel later, I keep up to %{fee} of what you've paid as a cancellation fee.", fee: @format_currency.(@registration.course.late_cancellation_fee)) %><% Decimal.positive?(@registration.balance) -> %><%= gettext("If you need to cancel, reply to this email. Please let me know at least 7 days before the course if you can.") %><% Decimal.positive?(@registration.course.late_cancellation_fee) -> %><%= gettext("To cancel, reply at least 7 days before the course for a full refund. If you cancel later, I keep %{fee} as a cancellation fee.", fee: @format_currency.(@registration.course.late_cancellation_fee)) %><% true -> %><%= gettext("If you need to cancel, reply to this email. Please let me know at least 7 days before the course if you can.") %><% end %>
+<%= if Decimal.positive?(@registration.amount_paid) do %><%= gettext("To cancel, reply to this email. Let me know at least 7 days before the course for a full refund. After that, we'll work something out.") %><% else %><%= gettext("If you need to cancel, reply to this email. Please let me know at least 7 days before the course if you can.") %><% end %>
 
 <%= gettext("See you there,") %>
 
