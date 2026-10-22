@@ -37,19 +37,21 @@ defmodule Edenflowers.Payments.Changes.RefundAllButKept do
           Ash.Changeset.set_context(changeset, context)
 
         true ->
-          case Payments.refund_all_but_kept(record, kept) do
-            {:ok, _refunds} ->
-              Ash.Changeset.set_context(changeset, context)
-
-            {:error, error} ->
-              Logger.error(
-                "Could not refund #{inspect(record.__struct__)} #{record.id} on cancelling: #{inspect(error)}"
-              )
-
-              Ash.Changeset.add_error(changeset, refused_message(opts[:cancelled_by]))
-          end
+          refund(changeset, record, kept, context, opts[:cancelled_by])
       end
     end)
+  end
+
+  defp refund(changeset, record, kept, context, cancelled_by) do
+    case Payments.refund_all_but_kept(record, kept) do
+      {:ok, _refunds} ->
+        Ash.Changeset.set_context(changeset, context)
+
+      {:error, error} ->
+        Logger.error("Could not refund #{inspect(record.__struct__)} #{record.id} on cancelling: #{inspect(error)}")
+
+        Ash.Changeset.add_error(changeset, refused_message(cancelled_by))
+    end
   end
 
   defp refused_message(:customer), do: ~t"We couldn't refund your order. Please contact us to cancel it."
