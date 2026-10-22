@@ -10,7 +10,9 @@ defmodule Edenflowers.Payments.Changes.SendRefundedEmail do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.after_action(changeset, fn changeset, record ->
-      if customer_email(record), do: queue_email(record, changeset.arguments), else: {:ok, record}
+      if Ash.load!(record, :customer_email, authorize?: false).customer_email,
+        do: queue_email(record, changeset.arguments),
+        else: {:ok, record}
     end)
   end
 
@@ -19,7 +21,4 @@ defmodule Edenflowers.Payments.Changes.SendRefundedEmail do
       {:ok, record}
     end
   end
-
-  defp customer_email(%Edenflowers.Orders.Order{customer_email: email}), do: email
-  defp customer_email(%{email: email}), do: email
 end

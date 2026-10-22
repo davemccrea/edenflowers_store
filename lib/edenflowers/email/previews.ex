@@ -10,7 +10,9 @@ defmodule Edenflowers.Email.Previews do
 
   use Gettext, backend: EdenflowersWeb.Gettext
 
+  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email
+  alias Edenflowers.Orders.Order
 
   @payment_link "https://buy.stripe.com/test_example"
 
@@ -245,16 +247,16 @@ defmodule Edenflowers.Email.Previews do
     refunded = fn amount -> %{refunded: Decimal.new(amount), to_return: Decimal.new(0)} end
 
     [
-      {gettext_noop("Order cancelled"), gettext_noop("refunded to a card"), :order_cancelled,
-       Email.order_cancelled(order(Map.merge(paid_attrs, %{payments: [card]}), locale), refunded.("64.00"), :customer)},
-      {gettext_noop("Order cancelled"), gettext_noop("refunded to MobilePay"), :order_cancelled,
-       Email.order_cancelled(
+      {gettext_noop("Order cancelled"), gettext_noop("refunded to a card"), :cancelled,
+       Email.cancelled(order(Map.merge(paid_attrs, %{payments: [card]}), locale), refunded.("64.00"), :customer)},
+      {gettext_noop("Order cancelled"), gettext_noop("refunded to MobilePay"), :cancelled,
+       Email.cancelled(
          order(Map.merge(paid_attrs, %{payments: mobilepay}), locale),
          refunded.("64.00"),
          :customer
        )},
-      {gettext_noop("Order cancelled"), gettext_noop("refunded, paid more than one way"), :order_cancelled,
-       Email.order_cancelled(
+      {gettext_noop("Order cancelled"), gettext_noop("refunded, paid more than one way"), :cancelled,
+       Email.cancelled(
          order(
            Map.merge(
              paid_attrs,
@@ -265,8 +267,8 @@ defmodule Edenflowers.Email.Previews do
          refunded.("64.00"),
          :customer
        )},
-      {gettext_noop("Order cancelled"), gettext_noop("pickup, refunded"), :order_cancelled,
-       Email.order_cancelled(
+      {gettext_noop("Order cancelled"), gettext_noop("pickup, refunded"), :cancelled,
+       Email.cancelled(
          order(
            %{
              fulfillment_method: :pickup,
@@ -282,8 +284,8 @@ defmodule Edenflowers.Email.Previews do
          refunded.("54.00"),
          :customer
        )},
-      {gettext_noop("Order cancelled"), gettext_noop("by the shop, with a reason, part paid in cash"), :order_cancelled,
-       Email.order_cancelled(
+      {gettext_noop("Order cancelled"), gettext_noop("by the shop, with a reason, part paid in cash"), :cancelled,
+       Email.cancelled(
          order(
            Map.merge(paid_attrs, %{
              payments: [%{card | amount: Decimal.new("34.00")}, cash],
@@ -294,8 +296,8 @@ defmodule Edenflowers.Email.Previews do
          %{refunded: Decimal.new("34.00"), to_return: Decimal.new("30.00")},
          :shop
        )},
-      {gettext_noop("Order cancelled"), gettext_noop("nothing to refund, no customer first name"), :order_cancelled,
-       Email.order_cancelled(order(%{customer_first_name: nil, payments: []}, locale), refunded.("0"), :customer)}
+      {gettext_noop("Order cancelled"), gettext_noop("nothing to refund, no customer first name"), :cancelled,
+       Email.cancelled(order(%{customer_first_name: nil, payments: []}, locale), refunded.("0"), :customer)}
     ]
   end
 
@@ -341,7 +343,7 @@ defmodule Edenflowers.Email.Previews do
           {gettext_noop("handed back in cash"), %{payments: []},
            %{amount: Decimal.new("20.00"), payment_method: :cash, note: nil}}
         ] do
-      {gettext_noop("Order refunded"), title, :order_refunded, Email.order_refunded(order(attrs, locale), refund)}
+      {gettext_noop("Order refunded"), title, :refunded, Email.refunded(order(attrs, locale), refund)}
     end
   end
 
@@ -349,8 +351,8 @@ defmodule Edenflowers.Email.Previews do
     refund = %{amount: Decimal.new("45.00"), payment_method: :cash, note: nil}
 
     [
-      {gettext_noop("Booking refunded"), gettext_noop("handed back in cash"), :booking_refunded,
-       Email.booking_refunded(registration(%{payments: []}, locale), refund)}
+      {gettext_noop("Booking refunded"), gettext_noop("handed back in cash"), :refunded,
+       Email.refunded(registration(%{payments: []}, locale), refund)}
     ]
   end
 
@@ -373,8 +375,7 @@ defmodule Edenflowers.Email.Previews do
           {gettext_noop("nothing paid, no first name"), %{first_name: nil, payments: []},
            %{refunded: Decimal.new(0), to_return: Decimal.new(0)}}
         ] do
-      {gettext_noop("Booking cancelled"), title, :booking_cancelled,
-       Email.booking_cancelled(registration(attrs, locale), money)}
+      {gettext_noop("Booking cancelled"), title, :cancelled, Email.cancelled(registration(attrs, locale), money, :shop)}
     end
   end
 
@@ -483,6 +484,8 @@ defmodule Edenflowers.Email.Previews do
       },
       attrs
     )
+    # A struct, as Email picks an order's or a booking's template by it.
+    |> then(&Map.merge(%Order{}, &1))
   end
 
   defp subscription(attrs, locale) do
@@ -536,5 +539,6 @@ defmodule Edenflowers.Email.Previews do
     }
     |> Map.merge(Map.delete(attrs, :course))
     |> Map.put(:course, course)
+    |> then(&Map.merge(%CourseRegistration{}, &1))
   end
 end

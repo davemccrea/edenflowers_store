@@ -55,7 +55,8 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
 
     assert_email_sent(fn email ->
       assert email.subject =~ "is cancelled"
-      assert email.bcc != []
+      # Jennie's own inbox, not the record copy: she has a bouquet not to make.
+      assert email.bcc == [Application.fetch_env!(:edenflowers, :mailer_from_address)]
       assert email.text_body =~ "€88.50"
     end)
   end
