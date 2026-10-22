@@ -1,10 +1,10 @@
 ---
 id: TASK-98
 title: Cancel orders and bookings through one Cancel change
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-22 19:47'
-updated_date: '2026-10-22 19:48'
+updated_date: '2026-10-22 20:04'
 labels:
   - spec
   - developers

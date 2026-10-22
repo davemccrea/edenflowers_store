@@ -14,6 +14,10 @@ _Avoid_: Confirmed, submitted
 A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to refund and keeps the rest: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. She can give a reason, and the customer is emailed unless she unticks it. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
+**Hold**:
+The seats a course booking keeps for ten minutes while the customer pays at checkout. A hold the customer never pays for is released, not cancelled: nothing was paid, so nobody is told.
+_Avoid_: Reservation, pending booking
+
 **Online Order**:
 An order a customer places themselves through checkout.
 _Avoid_: Web order, cart order
