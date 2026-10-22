@@ -185,6 +185,14 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 </div>
               </fieldset>
 
+              <p
+                :if={dimensions(@selected_variant)}
+                class="text-base-content/80 font-serif -mt-4 text-lg italic"
+                data-testid="variant-dimensions"
+              >
+                {dimensions(@selected_variant)}
+              </p>
+
               <fieldset :if={@product.subscribable} class="flex flex-col gap-3">
                 <legend class="eyebrow text-base-content/70 mb-1">{~t"How to buy"}</legend>
                 <div class="flex flex-wrap gap-x-6 gap-y-2">
@@ -367,6 +375,18 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   defp sold_out?(variant), do: variant.stock_quantity == 0
+
+  defp dimensions(variant) do
+    parts = [
+      variant.height_cm && "#{variant.height_cm} cm",
+      variant.stem_count && ~t"#{count = variant.stem_count} stems"
+    ]
+
+    case Enum.reject(parts, &is_nil/1) do
+      [] -> nil
+      parts -> Enum.join(parts, " · ")
+    end
+  end
 
   # Sold-out sizes can't be picked, unless every size is sold out.
   defp selectable_variants(variants) do

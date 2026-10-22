@@ -301,7 +301,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   attr :show_errors, :boolean, required: true
 
   # One line per size from sm. On a phone the photo spans two lines: size and
-  # remove, then price, stock and draft.
+  # remove, then price, stock and draft. Height and stems take a third.
   defp size_row(assigns) do
     variant = assigns.variant
     [main | others] = assigns.photo_slugs ++ [nil]
@@ -324,7 +324,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          errors would push their column out of line, so they're read with their input and shown
          under the row. --%>
     <li class="[&_[id$=-error]]:sr-only p-3 max-sm:[&_label:has(select)>span]:sr-only sm:[&:not(:first-of-type)_label.flex-col>span]:sr-only sm:[&:not(:first-of-type)_label:has(.toggle)>span]:sr-only">
-      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 sm:grid-cols-[2rem_minmax(0,1fr)_7rem_6.5rem_4.5rem_auto]">
+      <div class="grid-cols-[3rem_minmax(0,1fr)_auto] grid items-end gap-x-3 sm:grid-cols-[2rem_minmax(0,1fr)_5rem_4.5rem_6rem_6.5rem_4.5rem_auto]">
         <button
           :if={@picks?}
           type="button"
@@ -356,6 +356,16 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
           class="select w-full"
         />
+        <div class="col-span-2 col-start-2 row-start-3 mt-3 grid grid-cols-2 items-end gap-3 sm:contents">
+          <.input
+            field={@variant[:height_cm]}
+            type="text"
+            label={~t"Height (cm)"}
+            placeholder="30–40"
+            class="input w-full"
+          />
+          <.input field={@variant[:stem_count]} type="text" label={~t"Stems"} placeholder="10–12" class="input w-full" />
+        </div>
         <div class="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] col-span-2 col-start-2 row-start-2 mt-3 grid items-end gap-3 sm:contents">
           <.input
             field={@variant[:price]}

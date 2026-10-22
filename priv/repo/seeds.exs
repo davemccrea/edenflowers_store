@@ -122,7 +122,21 @@ create_product.(
   bouquet_prices
 )
 
-create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 2", featured: true}, bouquet_prices)
+bouquet_2 =
+  create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 2", featured: true}, bouquet_prices)
+
+# Height and stems for every size, and one size with only a height.
+details = %{
+  small: %{height_cm: "30–40", stem_count: "10–12"},
+  medium: %{height_cm: "40–50", stem_count: "15–20"},
+  large: %{height_cm: "50–60"}
+}
+
+ProductVariant
+|> Ash.Query.filter(product_id == ^bouquet_2.id)
+|> Ash.read!(authorize?: false)
+|> Enum.each(&Ash.Seed.update!(&1, details[&1.size]))
+
 create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 3"}, bouquet_prices)
 create_product.(%{product_category_id: category.("plants").id, name: "Plant"}, small: "18", medium: "32", large: "55")
 
