@@ -786,37 +786,24 @@ defmodule Edenflowers.Orders.Order do
       change set_context(%{skip_version_when_unchanged?: true})
     end
 
-    # Refunds everything paid apart from `kept_amount`: card payments through
-    # Stripe, and anything paid in person is left as a balance for Jennie to
-    # hand back.
+    # Puts the stock back. Payments.Changes.Cancel says what happens to the money.
     update :cancel do
-      accept [:kept_amount, :cancellation_reason]
+      accept [:cancellation_reason]
+      argument :refund, :decimal, constraints: [scale: 2]
+      argument :held, :decimal, constraints: [scale: 2]
       argument :email_customer?, :boolean, default: true
-      validate attribute_equals(:state, :placed), message: "hasn't been placed"
-      validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
-      change filter expr(state == :placed and fulfillment_status == :pending)
       change set_attribute(:fulfillment_status, :cancelled)
-      change set_attribute(:cancelled_at, &DateTime.utc_now/0)
-      change PaymentChanges.CancelOpenPaymentIntent
-      change {PaymentChanges.RefundAllButKept, cancelled_by: :shop}
+      change {PaymentChanges.Cancel, cancelled_by: :shop}
       change {Changes.AdjustStock, direction: :return}
-
-      change {PaymentChanges.SendCancelledEmail, cancelled_by: :shop},
-        where: [argument_equals(:email_customer?, true), present(:customer_email)]
-
       change load(@admin_show_load)
       require_atomic? false
     end
 
     update :cancel_by_customer do
       validate Validations.CancellableByCustomer
-      change filter expr(state == :placed and fulfillment_status == :pending)
       change set_attribute(:fulfillment_status, :cancelled)
-      change set_attribute(:cancelled_at, &DateTime.utc_now/0)
-      change PaymentChanges.CancelOpenPaymentIntent
-      change {PaymentChanges.RefundAllButKept, cancelled_by: :customer}
+      change {PaymentChanges.Cancel, cancelled_by: :customer}
       change {Changes.AdjustStock, direction: :return}
-      change {PaymentChanges.SendCancelledEmail, cancelled_by: :customer}
       require_atomic? false
     end
 
@@ -1289,6 +1276,7 @@ defmodule Edenflowers.Orders.Order do
     calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: kept_amount, else: grand_total)
     calculate :committed?, :boolean, expr(state == :placed)
     calculate :cancelled?, :boolean, expr(fulfillment_status == :cancelled)
+    calculate :cancellable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
 
     calculate :payment_status,
               __MODULE__.PaymentStatus,

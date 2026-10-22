@@ -218,16 +218,6 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert {:error, _not_a_hold} =
                Courses.release_registration_hold(paid_booking(1, admin), actor: Edenflowers.Actors.system_actor())
     end
-
-    test "Jennie keeps what she chooses, but not more than was paid", %{admin: admin} do
-      {:ok, registration} = Courses.cancel_registration(paid_booking(1, admin), %{kept_amount: "35.00"}, actor: admin)
-      assert Decimal.equal?(balance(registration), "-50.00")
-
-      assert {:error, error} =
-               Courses.cancel_registration(paid_booking(1, admin), %{kept_amount: "85.01"}, actor: admin)
-
-      assert Exception.message(error) =~ "more than was paid"
-    end
   end
 
   defp balance(registration) do

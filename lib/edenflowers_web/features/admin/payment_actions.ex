@@ -13,18 +13,33 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   alias Edenflowers.Orders
 
   @doc """
-  What to keep on cancelling, from the refund Jennie typed and what was held
-  when she opened the drawer. `:error` for anything outside 0 to `held`.
+  The cancel drawer's form for an order or a booking. `held` is what it held
+  as the drawer opens, and goes back with the form, so the cancel works out
+  what's kept from what Jennie saw.
   """
-  def kept_amount(held, nil), do: {:ok, held}
+  def cancel_form(payable) do
+    held = payable.amount_held |> Decimal.max(0) |> Decimal.to_string(:normal)
 
-  def kept_amount(held, refund) do
-    case refund |> String.trim() |> String.replace(",", ".") |> Decimal.parse() do
-      {refund, ""} ->
-        if Decimal.negative?(refund) or Decimal.gt?(refund, held), do: :error, else: {:ok, Decimal.sub(held, refund)}
+    Phoenix.Component.to_form(%{"refund" => held, "held" => held, "reason" => "", "email_customer" => "true"},
+      as: :cancel
+    )
+  end
 
-      _invalid ->
-        :error
+  def cancel(payable, params, actor) do
+    input = %{
+      refund: params["refund"] && String.replace(params["refund"], ",", "."),
+      held: params["held"],
+      cancellation_reason: params["reason"],
+      email_customer?: params["email_customer"] != "false"
+    }
+
+    case Ash.update(payable, input, action: :cancel, actor: actor) do
+      {:ok, payable} ->
+        {:ok, payable}
+
+      {:error, error} ->
+        Logger.error("#{inspect(payable.__struct__)} #{payable.id} not cancelled: #{inspect(error)}")
+        {:error, payment_error(error)}
     end
   end
 

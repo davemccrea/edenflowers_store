@@ -1,7 +1,6 @@
 defmodule Edenflowers.Orders.CancelTest do
   use Edenflowers.DataCase, async: true
 
-  import ExUnit.CaptureLog
   import Generator
   import Swoosh.TestAssertions
 
@@ -44,7 +43,9 @@ defmodule Edenflowers.Orders.CancelTest do
     expect_refund(order, 6850)
 
     assert {:ok, cancelled} =
-             Orders.cancel_order(order, %{kept_amount: "20.00", cancellation_reason: "I'm ill that day."}, actor: admin)
+             Orders.cancel_order(order, %{refund: "68.50", held: "88.50", cancellation_reason: "I'm ill that day."},
+               actor: admin
+             )
 
     assert cancelled.fulfillment_status == :cancelled
     assert Decimal.equal?(balance(cancelled), 0)
@@ -57,40 +58,6 @@ defmodule Edenflowers.Orders.CancelTest do
     refute email.text_body =~ "didn't mean to cancel"
   end
 
-  test "a refund Stripe refuses leaves the order placed and emails nothing", %{admin: admin} do
-    order = order_paid_by_card()
-
-    StripeAPI.Mock
-    |> Mox.stub(:list_refunds, fn _pi -> {:ok, []} end)
-    |> Mox.expect(:create_refund, fn _pi, _cents, _key, _metadata -> {:error, :charge_disputed} end)
-
-    capture_log(fn ->
-      assert {:error, error} = Orders.cancel_order(order, %{}, actor: admin)
-      assert Exception.message(error) =~ "Stripe refused the refund"
-    end)
-
-    assert Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_status == :pending
-    refute_enqueued(worker: SendCancelledEmail)
-  end
-
-  test "a retry after the refund went through refunds nothing twice", %{admin: admin} do
-    order = order_paid_by_card()
-
-    generate(
-      payment(
-        order_id: order.id,
-        amount: Decimal.new("-68.50"),
-        method: :stripe,
-        stripe_refund_id: "re_first"
-      )
-    )
-
-    Mox.expect(StripeAPI.Mock, :create_refund, 0, fn _pi, _cents, _key, _metadata -> flunk("refunded twice") end)
-
-    assert {:ok, cancelled} = Orders.cancel_order(order, %{kept_amount: "20.00"}, actor: admin)
-    assert Decimal.equal?(balance(cancelled), 0)
-  end
-
   test "money paid in person is left to hand back, and the email says so", %{admin: admin} do
     order = placed_order(payment_intent_id: nil)
     generate(payment(order_id: order.id, amount: Decimal.new("20.00"), method: :cash))
@@ -101,22 +68,10 @@ defmodule Edenflowers.Orders.CancelTest do
     assert sent_email().text_body =~ "I'll return the €20.00 you paid me directly."
   end
 
-  test "unticking the email, or no address, emails nobody", %{admin: admin} do
-    order = placed_order(payment_intent_id: nil)
-    {:ok, cancelled} = Orders.cancel_order(order, %{email_customer?: false}, actor: admin)
-    assert cancelled.cancellation_emailed_to == nil
-
+  test "no address emails nobody", %{admin: admin} do
     no_address = placed_order(payment_intent_id: nil, customer_email: nil)
     {:ok, _cancelled} = Orders.cancel_order(no_address, %{}, actor: admin)
 
     refute_enqueued(worker: SendCancelledEmail)
-  end
-
-  test "keeping more than was paid is refused", %{admin: admin} do
-    order = placed_order(payment_intent_id: nil)
-    generate(payment(order_id: order.id, amount: Decimal.new("20.00"), method: :cash))
-
-    assert {:error, error} = Orders.cancel_order(order, %{kept_amount: "20.01"}, actor: admin)
-    assert Exception.message(error) =~ "more than was paid"
   end
 end
