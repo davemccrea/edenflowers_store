@@ -3015,7 +3015,7 @@ msgstr "Valitse…"
 msgid "Confirming your payment… You'll get a receipt by email once it's done."
 msgstr "Vahvistetaan maksuasi… Saat kuitin sähköpostiin, kun se on valmis."
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:99
+#: lib/edenflowers_web/features/admin/payment_actions.ex:95
 #, elixir-autogen, elixir-format
 msgid "Could not create a payment link."
 msgstr "Maksulinkkiä ei voitu luoda."
@@ -3216,12 +3216,12 @@ msgstr "Maksetaan toimituksen yhteydessä"
 msgid "Payment link"
 msgstr "Maksulinkki"
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:95
+#: lib/edenflowers_web/features/admin/payment_actions.ex:91
 #, elixir-autogen, elixir-format
 msgid "Payment link created."
 msgstr "Maksulinkki luotu."
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:61
+#: lib/edenflowers_web/features/admin/payment_actions.ex:57
 #, elixir-autogen, elixir-format
 msgid "Payment recorded."
 msgstr "Maksu kirjattu."
@@ -3551,7 +3551,7 @@ msgstr "Maksettu %{amount} · %{how}"
 msgid "Refunded %{amount} · %{how}"
 msgstr "Hyvitetty %{amount} · %{how}"
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:110
+#: lib/edenflowers_web/features/admin/payment_actions.ex:106
 #, elixir-autogen, elixir-format
 msgid "Could not email the payment link."
 msgstr "Maksulinkkiä ei voitu lähettää."
@@ -3568,7 +3568,7 @@ msgstr "Lähetetäänkö maksulinkki osoitteeseen %{email}?"
 msgid "Email payment link"
 msgstr "Lähetä maksulinkki"
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:106
+#: lib/edenflowers_web/features/admin/payment_actions.ex:102
 #, elixir-autogen, elixir-format
 msgid "Payment link emailed."
 msgstr "Maksulinkki lähetetty."
@@ -5316,7 +5316,7 @@ msgstr "Maksaa myöhemmin"
 msgid "Refund %{amount} to the customer's card with Stripe?"
 msgstr "Hyvitetäänkö %{amount} asiakkaan kortille Stripellä?"
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:86
+#: lib/edenflowers_web/features/admin/payment_actions.ex:82
 #, elixir-autogen, elixir-format
 msgid "Refunded with Stripe."
 msgstr "Hyvitetty Stripellä."
@@ -5326,17 +5326,17 @@ msgstr "Hyvitetty Stripellä."
 msgid "Stripe"
 msgstr "Stripe"
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:126
+#: lib/edenflowers_web/features/admin/payment_actions.ex:122
 #, elixir-autogen, elixir-format
 msgid "Could not record it. Check the amount."
 msgstr "Kirjaus ei onnistunut. Tarkista summa."
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:73
+#: lib/edenflowers_web/features/admin/payment_actions.ex:69
 #, elixir-autogen, elixir-format
 msgid "Could not undo the payment."
 msgstr "Maksun peruminen ei onnistunut."
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:66
+#: lib/edenflowers_web/features/admin/payment_actions.ex:62
 #, elixir-autogen, elixir-format
 msgid "Payment undone."
 msgstr "Maksu peruttu."
@@ -5829,12 +5829,12 @@ msgstr "Hyvitettävä summa (€)"
 msgid "Email a receipt"
 msgstr "Lähetä kuitti sähköpostilla"
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:59
+#: lib/edenflowers_web/features/admin/payment_actions.ex:55
 #, elixir-autogen, elixir-format
 msgid "Payment recorded and receipt emailed."
 msgstr "Maksu kirjattu ja kuitti lähetetty."
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:60
+#: lib/edenflowers_web/features/admin/payment_actions.ex:56
 #, elixir-autogen, elixir-format
 msgid "Payment recorded, but the receipt could not be emailed."
 msgstr "Maksu kirjattu, mutta kuittia ei voitu lähettää."
@@ -6100,7 +6100,7 @@ msgstr "Syy (valinnainen)"
 msgid "Refund"
 msgstr "Hyvitä"
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:87
+#: lib/edenflowers_web/features/admin/payment_actions.ex:83
 #, elixir-autogen, elixir-format
 msgid "Refund recorded."
 msgstr "Hyvitys kirjattu."
