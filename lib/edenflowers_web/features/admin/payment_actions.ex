@@ -34,7 +34,9 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     }
 
     with {:error, error} <- Ash.update(payable, input, action: :cancel, actor: actor) do
-      Logger.error("#{inspect(payable.__struct__)} #{payable.id} not cancelled: #{inspect(error)}")
+      unless match?(%Ash.Error.Invalid{}, error),
+        do: Logger.error("#{inspect(payable.__struct__)} #{payable.id} not cancelled: #{inspect(error)}")
+
       {:error, payment_error(error)}
     end
   end
