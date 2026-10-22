@@ -1,18 +1,21 @@
 defmodule EdenflowersWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :edenflowers
 
-  @session_options [
-    store: :cookie,
-    key: "_edenflowers_key",
-    signing_salt: "ZUXNYtPz",
-    # Matches the auth token_lifetime in Edenflowers.Accounts.User.
-    max_age: 30 * 24 * 60 * 60,
-    same_site: "Lax"
-  ]
+  # Read at runtime because dev names the cookie per port (see runtime.exs).
+  def session_options do
+    [
+      store: :cookie,
+      key: Application.get_env(:edenflowers, :session_key, "_edenflowers_key"),
+      signing_salt: "ZUXNYtPz",
+      # Matches the auth token_lifetime in Edenflowers.Accounts.User.
+      max_age: 30 * 24 * 60 * 60,
+      same_site: "Lax"
+    ]
+  end
 
   socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [:uri, session: @session_options]],
-    longpoll: [connect_info: [:uri, session: @session_options]]
+    websocket: [connect_info: [:uri, session: {__MODULE__, :session_options, []}]],
+    longpoll: [connect_info: [:uri, session: {__MODULE__, :session_options, []}]]
 
   # Stripe's Payment Element iframe loads Open Sans cross-origin.
   plug Plug.Static,
@@ -63,6 +66,8 @@ defmodule EdenflowersWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-  plug Plug.Session, @session_options
+  plug :session
   plug EdenflowersWeb.Router
+
+  defp session(conn, _opts), do: Plug.Session.call(conn, Plug.Session.init(session_options()))
 end
