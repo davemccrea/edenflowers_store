@@ -16,7 +16,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(order.customer_email)
-      |> bcc(from_address())
+      |> bcc(record_copy_address())
       |> subject(~t"Your receipt for Eden Flowers order #{order.order_reference}")
       |> text_body(render_order_confirmation(order))
     end)
@@ -42,7 +42,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(order.customer_email)
-      |> bcc(from_address())
+      |> bcc(record_copy_address())
       |> subject(~t"Your Eden Flowers order #{order.order_reference}")
       |> text_body(
         Templates.order_details(%{
@@ -81,7 +81,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(order.customer_email)
-      |> bcc(from_address())
+      |> bcc(record_copy_address())
       |> subject(~t"Payment needed for your Eden Flowers order #{order.order_reference}")
       |> text_body(
         Templates.payment_failed(%{
@@ -107,7 +107,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(to_string(subscription.user.email))
-      |> bcc(from_address())
+      |> bcc(record_copy_address())
       |> subject(~t"Your Eden Flowers subscription is set up")
       |> text_body(
         Templates.subscription_set_up(%{
@@ -138,7 +138,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(order.customer_email)
-      |> bcc(from_address())
+      |> bcc(record_copy_address())
       |> subject(subject)
       |> text_body(Templates.order_fulfilled(%{order: order}))
     end)
@@ -149,7 +149,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(order.customer_email)
-      |> bcc(from_address())
+      |> bcc(record_copy_address())
       |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered (photo attached)")
       |> text_body(Templates.order_left_at_door(%{order: order}))
       |> attachment(
@@ -200,7 +200,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(registration.email)
-      |> bcc(from_address())
+      |> bcc(record_copy_address())
       |> subject(~t"You're booked on #{course = registration.course.name}")
       |> text_body(render_course_confirmation(registration, payment_link_url))
     end)
@@ -225,7 +225,7 @@ defmodule Edenflowers.Email do
       new()
       |> from(from_address())
       |> to(registration.email)
-      |> bcc(from_address())
+      |> bcc(record_copy_address())
       |> subject(~t"Pay for your booking on #{course = registration.course.name}")
       |> text_body(
         Templates.course_payment_link(%{
@@ -333,6 +333,14 @@ defmodule Edenflowers.Email do
   end
 
   defp from_address, do: Application.fetch_env!(:edenflowers, :mailer_from_address)
+
+  # Copies Jennie keeps for the record but needn't act on. Fastmail delivers
+  # info+copy@ to the info@ mailbox, where a rule files it out of the inbox.
+  defp record_copy_address do
+    {name, address} = from_address()
+    [local, domain] = String.split(address, "@")
+    {name, "#{local}+copy@#{domain}"}
+  end
 
   defp automated_from_address do
     {_name, address} = from_address()

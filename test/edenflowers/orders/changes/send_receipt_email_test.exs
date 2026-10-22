@@ -35,7 +35,7 @@ defmodule Edenflowers.Orders.Changes.SendReceiptEmailTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
-      assert email.bcc == [Application.fetch_env!(:edenflowers, :mailer_from_address)]
+      assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
       assert email.subject =~ "TEST-OC1"
       assert email.text_body =~ "Anna"
       assert email.html_body in [nil, ""]

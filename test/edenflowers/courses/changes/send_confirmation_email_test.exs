@@ -13,7 +13,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
-      assert email.bcc == [Application.fetch_env!(:edenflowers, :mailer_from_address)]
+      assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
       assert email.subject =~ "You're booked on Course "
       assert email.text_body =~ ~r/Your place on Course \d+ is confirmed\./
       assert email.text_body =~ "You pay at the course"
