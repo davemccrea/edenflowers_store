@@ -48,10 +48,6 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 ok "working tree clean"
 
-if [[ "${1:-production}" != "production" ]]; then
-  fail "target must be production"
-fi
-
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
 if [[ -f .env ]]; then
@@ -92,7 +88,7 @@ PATCH_NEXT="$MAJOR.$MINOR.$((PATCH + 1))"
 MINOR_NEXT="$MAJOR.$((MINOR + 1)).0"
 MAJOR_NEXT="$((MAJOR + 1)).0.0"
 
-VERSION="${2:-}"
+VERSION="${1:-}"
 
 if [[ -z "$VERSION" ]]; then
   section "Version selection"
@@ -153,12 +149,12 @@ fi
 
 # Taken last, so the backup is as close as possible to the migrations it guards against.
 section "Backing up production database"
-if ! just db-backup production; then
+if ! just backup; then
   git tag -d "$TAG" >/dev/null
   git reset --hard --quiet HEAD~1
   fail "backup failed, cleaned up local commit and tag. Nothing was pushed."
 fi
-ok "rollback: just rollback production v$CURRENT [that dump]"
+ok "rollback: just rollback v$CURRENT [that dump]"
 
 SKIP_HOOKS=1 git push --atomic origin main "refs/tags/$TAG"
 

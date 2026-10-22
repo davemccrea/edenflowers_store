@@ -25,6 +25,10 @@ This updates packages (rebooting if needed), hardens SSH, fail2ban and UFW (only
 
 ## New server
 
-`just server-bootstrap` runs once, as root, on a fresh server. It creates the user from `vars.yml` with passwordless sudo, authorizes `~/.ssh/id_rsa.pub` and `github_actions_public_key`, and disables root SSH login. Then provision it.
+`just server-bootstrap` runs once, as root, on a fresh server. It creates the user from `vars.yml` with passwordless sudo, authorizes `~/.ssh/id_rsa.pub` and `github_actions_public_key`, and disables root SSH login. Then provision it, deploy, and seed the empty database with the rows the admin can't create:
+
+```bash
+ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds/production.exs\"))'"
+```
 
 The deploy workflow SSHes in with the private half of `github_actions_public_key`, stored as `DEPLOY_SSH_KEY` next to `DEPLOY_HOST` and `DEPLOY_USER` in the `production` GitHub environment.
