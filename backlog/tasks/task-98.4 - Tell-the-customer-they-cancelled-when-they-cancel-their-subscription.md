@@ -1,9 +1,10 @@
 ---
 id: TASK-98.4
 title: Tell the customer they cancelled when they cancel their subscription
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-22 19:47'
+updated_date: '2026-10-22 20:00'
 labels: []
 dependencies: []
 parent_task_id: TASK-98
@@ -21,6 +22,6 @@ ordinal: 208000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A customer's subscription cancel emails each occurrence with the customer wording
-- [ ] #2 Jennie's subscription cancel keeps the shop wording
+- [x] #1 A customer's subscription cancel emails each occurrence with the customer wording
+- [x] #2 Jennie's subscription cancel keeps the shop wording
 <!-- AC:END -->

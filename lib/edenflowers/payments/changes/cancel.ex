@@ -19,7 +19,7 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   is refunded.
 
   `cancelled_by` (`:customer` or `:shop`) picks who the errors and the email
-  speak to.
+  speak to, from the option or else the action's `cancelled_by` argument.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -34,12 +34,14 @@ defmodule Edenflowers.Payments.Changes.Cancel do
 
   @impl true
   def change(changeset, opts, context) do
+    cancelled_by = opts[:cancelled_by] || Ash.Changeset.get_argument(changeset, :cancelled_by)
+
     changeset
     |> Ash.Changeset.filter(Ash.Expr.expr(cancellable?))
     |> Ash.Changeset.force_change_attribute(:cancelled_at, DateTime.utc_now())
     |> CancelOpenPaymentIntent.change([], context)
-    |> Ash.Changeset.before_transaction(&refund(&1, opts[:cancelled_by]))
-    |> Ash.Changeset.after_action(&queue_email(&1, &2, opts[:cancelled_by]))
+    |> Ash.Changeset.before_transaction(&refund(&1, cancelled_by))
+    |> Ash.Changeset.after_action(&queue_email(&1, &2, cancelled_by))
   end
 
   defp refund(changeset, cancelled_by) do

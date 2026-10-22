@@ -11,14 +11,16 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
   @impl true
   # After the transaction, so each order's Stripe refund runs outside the
   # subscription's transaction and a rollback can't undo the DB side alone.
-  def change(changeset, _opts, _context) do
+  def change(changeset, _opts, context) do
+    cancelled_by = if context.actor && context.actor.admin, do: :shop, else: :customer
+
     Ash.Changeset.after_transaction(changeset, fn
-      _changeset, {:ok, subscription} -> cancel_open(subscription)
+      _changeset, {:ok, subscription} -> cancel_open(subscription, cancelled_by)
       _changeset, error -> error
     end)
   end
 
-  defp cancel_open(subscription) do
+  defp cancel_open(subscription, cancelled_by) do
     query =
       Ash.Query.filter(
         Order,
@@ -29,12 +31,12 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
     with {:ok, orders} <- Ash.read(query, authorize?: false) do
       orders
       |> Enum.filter(&cancellable?/1)
-      |> Enum.reduce_while({:ok, subscription}, &cancel/2)
+      |> Enum.reduce_while({:ok, subscription}, &cancel(&1, &2, cancelled_by))
     end
   end
 
-  defp cancel(order, result) do
-    case Orders.cancel_order(order, authorize?: false) do
+  defp cancel(order, result, cancelled_by) do
+    case Orders.cancel_order(order, %{cancelled_by: cancelled_by}, authorize?: false) do
       {:ok, _order} -> {:cont, result}
       {:error, error} -> {:halt, {:error, error}}
     end
