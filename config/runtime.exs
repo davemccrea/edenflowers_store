@@ -9,6 +9,10 @@ if config_env() in [:prod, :dev] do
 
   if config_env() == :dev do
     config :edenflowers, Edenflowers.Repo, database: System.get_env("DATABASE_NAME", "edenflowers_dev")
+
+    # Browsers share localhost cookies across ports, so main and each worktree
+    # would read (and sign out of) each other's sessions under one cookie name.
+    config :edenflowers, :session_key, "_edenflowers_key_#{System.get_env("PORT", "4000")}"
   end
 
   config :edenflowers,

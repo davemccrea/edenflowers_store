@@ -17,7 +17,8 @@ install-typst:
 # Run the development server
 [group('development')]
 dev: check-typst imgproxy
-    PORT={{ port }} IMGPROXY_PREFIX=http://localhost:{{ imgproxy_port }} iex -S mix phx.server
+    # iex quits on EOF, so a backgrounded run (no terminal) needs plain mix
+    PORT={{ port }} IMGPROXY_PREFIX=http://localhost:{{ imgproxy_port }} $([ -t 0 ] && echo iex -S) mix phx.server
 
 # Run the test suite (extra args go to mix test)
 [group('development')]
