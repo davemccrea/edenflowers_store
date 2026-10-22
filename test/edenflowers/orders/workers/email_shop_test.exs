@@ -50,7 +50,7 @@ defmodule Edenflowers.Orders.Workers.EmailShopTest do
     assert :ok = perform_job(EmailShop, %{"notice" => "new", "order_id" => order.id})
 
     assert_email_sent(fn email ->
-      assert email.text_body =~ ~r/^fredag 12.6.2026 kl. 12.00–16.00\n\nÖppna beställningen:/
+      assert email.text_body =~ ~r/^fredag 12.6.2026 kl. 12.00–16.00\n\nÖppna i adminpanelen:/
     end)
   end
 end

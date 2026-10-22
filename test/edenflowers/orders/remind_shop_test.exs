@@ -19,7 +19,7 @@ defmodule Edenflowers.Orders.RemindShopTest do
 
     assert_email_sent(fn email ->
       assert email.subject =~ ~r/^Avhämtning kl\. \d{1,2}\.\d\d, beställning 1042$/
-      assert email.text_body =~ ~r/^Öppna beställningen:\n/
+      assert email.text_body =~ ~r/^Öppna i adminpanelen:\n/
     end)
   end
 

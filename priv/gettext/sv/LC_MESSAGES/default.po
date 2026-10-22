@@ -7573,17 +7573,12 @@ msgstr "Avhämtning för idag %{order_order_reference}"
 msgid "Delivery %{time}, order %{order_order_reference}"
 msgstr "Leverans %{time}, beställning %{order_order_reference}"
 
-#: lib/edenflowers/orders/shop_notice.ex:44
-#, elixir-autogen, elixir-format
-msgid "Open the order:"
-msgstr "Öppna beställningen:"
-
-#: lib/edenflowers/orders/shop_notice.ex:45
-#, elixir-autogen, elixir-format
-msgid "Open the subscription:"
-msgstr "Öppna prenumerationen:"
-
 #: lib/edenflowers/orders/shop_notice.ex:40
 #, elixir-autogen, elixir-format
 msgid "Pickup %{time}, order %{order_order_reference}"
 msgstr "Avhämtning %{time}, beställning %{order_order_reference}"
+
+#: lib/edenflowers/email.ex:323
+#, elixir-autogen, elixir-format
+msgid "Open in the admin:"
+msgstr "Öppna i adminpanelen:"
