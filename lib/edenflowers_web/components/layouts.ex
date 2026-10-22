@@ -795,7 +795,7 @@ defmodule EdenflowersWeb.Layouts do
                 <li>
                   <.link
                     navigate={~q"/#{language}/faq"}
-                    class="footer-line link-underline-hover pointer-coarse:inline-block pointer-coarse:py-2.5"
+                    class="footer-line link-underline-hover touch-target"
                   >
                     {~t"FAQ"}
                   </.link>
@@ -803,7 +803,7 @@ defmodule EdenflowersWeb.Layouts do
                 <li>
                   <.link
                     navigate={~q"/#{language}/contact"}
-                    class="footer-line link-underline-hover pointer-coarse:inline-block pointer-coarse:py-2.5"
+                    class="footer-line link-underline-hover touch-target"
                   >
                     {~t"Contact"}
                   </.link>
@@ -811,7 +811,7 @@ defmodule EdenflowersWeb.Layouts do
                 <li>
                   <.link
                     navigate={~q"/#{language}/about"}
-                    class="footer-line link-underline-hover pointer-coarse:inline-block pointer-coarse:py-2.5"
+                    class="footer-line link-underline-hover touch-target"
                   >
                     {~t"About"}
                   </.link>

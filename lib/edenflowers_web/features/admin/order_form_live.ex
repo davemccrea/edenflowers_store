@@ -685,15 +685,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp card_message_max(%{size: size}) when not is_nil(size), do: ProductVariantSize.max_message_length(size)
   defp card_message_max(_card), do: ProductVariantSize.max_message_length(:large)
 
-  defp customer_phone(customer_id, actor) do
-    last =
-      Orders.get_last_order_with_customer_phone!(customer_id,
-        actor: actor,
-        not_found_error?: false
-      )
-
-    if last, do: last.customer_phone_number || last.recipient_phone_number, else: ""
-  end
+  defp last_order_with_phone(customer_id, actor),
+    do: Orders.get_last_order_with_customer_phone!(customer_id, actor: actor, not_found_error?: false)
 
   defp prefill_customer(%{"customer_id" => id} = params, %{mode: :new} = assigns)
        when id not in [nil, ""] do
@@ -702,10 +695,15 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     else
       case Accounts.get_customer_for_admin(id, actor: assigns.current_user) do
         {:ok, customer} when not is_nil(customer) ->
+          last = last_order_with_phone(customer.id, assigns.current_user)
+
           Map.merge(params, %{
             "customer_name" => customer.name || "",
             "customer_email" => to_string(customer.email),
-            "customer_phone_number" => customer_phone(customer.id, assigns.current_user)
+            "customer_phone_number" => (last && (last.customer_phone_number || last.recipient_phone_number)) || "",
+            # Only a newsletter signup saves a customer's language, so most have
+            # just the one their last order was placed in.
+            "locale" => customer.locale || (last && last.locale) || params["locale"]
           })
 
         _ ->
