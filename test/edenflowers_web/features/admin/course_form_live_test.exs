@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     assert Decimal.eq?(course.late_cancellation_fee, "15.00")
     assert course.translations."sv-FI".name == "Höstkransar"
     assert "local:///uploads/" <> filename = course.image_slug
-    assert filename =~ ~r/^kransar-a-[0-9a-f]{6}\.jpg$/
+    assert filename =~ ~r/\A[0-9a-f]{32}\.jpg\z/
     assert File.read!(Path.join(Application.fetch_env!(:edenflowers, :uploads_dir), filename)) == "jpeg bytes"
   end
 

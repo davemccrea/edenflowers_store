@@ -49,14 +49,10 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
   @doc """
   Stores finished uploads and remembers their slugs, so a save that fails
   validation doesn't lose a photo that's already on disk.
-
-  Pass `private: true` for a photo nobody should find by guessing, like a
-  customer's doorstep: uploads are public through imgproxy, so its file gets a
-  random name.
   """
-  def store_uploads(socket, names, opts \\ []) do
+  def store_uploads(socket, names) do
     Enum.reduce(names, socket, fn name, socket ->
-      case Phoenix.LiveView.consume_uploaded_entries(socket, upload_name(name), &store_file(&1, &2, opts)) do
+      case Phoenix.LiveView.consume_uploaded_entries(socket, upload_name(name), &store_file/2) do
         [slug] -> Phoenix.Component.update(socket, :photo_slugs, &Map.put(&1, name, slug))
         [] -> socket
       end
@@ -75,13 +71,12 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
   defp upload_name(field_name), do: "photo_" <> field_name
 
   @doc "Copies an upload into `:uploads_dir`; use as a `consume_uploaded_entry` callback."
-  def store_file(%{path: path}, entry, opts \\ []) do
+  def store_file(%{path: path}, entry) do
     dir = Application.fetch_env!(:edenflowers, :uploads_dir)
-
+    # Uploads are public through imgproxy, so a random name keeps a photo like
+    # a customer's doorstep from being found by guessing.
     filename =
-      if opts[:private],
-        do: private_file_name(entry.client_name),
-        else: file_name(entry.client_name)
+      Base.encode16(:crypto.strong_rand_bytes(16), case: :lower) <> String.downcase(Path.extname(entry.client_name))
 
     dest = Path.join(dir, filename)
 
@@ -91,29 +86,6 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
     File.chmod!(dest, 0o644)
 
     {:ok, "local:///uploads/" <> filename}
-  end
-
-  # ASCII only: macOS and the server disagree on how to encode "ä", and a
-  # mismatched name 404s. The suffix keeps two "rose.jpg" uploads apart.
-  def file_name(client_name) do
-    ext = client_name |> Path.extname() |> String.downcase()
-
-    base =
-      client_name
-      |> Path.rootname()
-      |> String.normalize(:nfd)
-      |> String.replace(~r/[^A-Za-z0-9]+/u, "-")
-      |> String.trim("-")
-      |> String.downcase()
-
-    base = if base == "", do: "photo", else: base
-    suffix = Base.encode16(:crypto.strong_rand_bytes(3), case: :lower)
-
-    "#{base}-#{suffix}#{ext}"
-  end
-
-  def private_file_name(client_name) do
-    Base.encode16(:crypto.strong_rand_bytes(16), case: :lower) <> String.downcase(Path.extname(client_name))
   end
 
   defp deep_merge(left, right) do
