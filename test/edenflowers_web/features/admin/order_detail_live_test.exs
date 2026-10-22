@@ -206,6 +206,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert reloaded.fulfillment_status == :fulfilled
   end
 
+  test "links an Instagram customer to their DMs", %{conn: conn} do
+    order = placed_order(customer_email: nil, customer_instagram: "@anna.holm")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, ~s|#order-customer a[href="https://ig.me/m/anna.holm"]|, "@anna.holm")
+  end
+
   test "fulfills a pickup with no customer email", %{conn: conn} do
     order = placed_order(customer_email: nil, customer_phone_number: "044 222 3344")
 

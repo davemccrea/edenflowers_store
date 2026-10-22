@@ -341,6 +341,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <:contact :if={present?(@order.customer_phone_number)}>
                   <.phone_link phone_number={@order.customer_phone_number} />
                 </:contact>
+                <:contact :if={present?(@order.customer_instagram)}>
+                  <.instagram_link handle={@order.customer_instagram} />
+                </:contact>
                 <:contact :if={
                   !present?(@order.customer_phone_number) && customer_phone?(@order) &&
                     present?(@order.recipient_phone_number)

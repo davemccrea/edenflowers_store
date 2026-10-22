@@ -384,6 +384,26 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :handle, :string, required: true
+
+  # Opens the DM thread in Instagram, where these orders are agreed.
+  def instagram_link(assigns) do
+    assigns = assign(assigns, :handle, String.trim_leading(assigns.handle, "@"))
+
+    ~H"""
+    <a
+      href={"https://ig.me/m/#{URI.encode_www_form(@handle)}"}
+      target="_blank"
+      rel="noopener"
+      class="link link-primary touch-target inline-flex items-center gap-1.5"
+      title={~t"Message on Instagram"}
+    >
+      <.icon name="hero-chat-bubble-left" class="h-3.5 w-3.5 shrink-0" />
+      <span class="break-all">@{@handle}</span>
+    </a>
+    """
+  end
+
   attr :name, :string, default: nil
   slot :contact
 

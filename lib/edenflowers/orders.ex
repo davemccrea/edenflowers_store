@@ -51,6 +51,7 @@ defmodule Edenflowers.Orders do
       define :cancel_order_by_customer, action: :cancel_by_customer
       define :record_payment, action: :record_payment, args: [:amount, :payment_method]
       define :undo_payment, action: :undo_payment, args: [:payment_id]
+      define :add_customer_email, action: :add_customer_email, args: [:customer_email]
       define :record_link_payment, action: :record_link_payment, args: [:payment_intent_id]
       define :open_payment_link, action: :open_payment_link
       define :get_order_by_payment_link_token, action: :by_payment_link_token, args: [:token]

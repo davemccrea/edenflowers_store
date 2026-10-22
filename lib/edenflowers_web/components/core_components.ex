@@ -364,6 +364,9 @@ defmodule EdenflowersWeb.CoreComponents do
 
   slot :inner_block
 
+  slot :leading,
+    doc: "Text rendered inside the text input on the left (e.g. @). Only supported by the default (text-like) input."
+
   slot :trailing,
     doc:
       "Adornment rendered inside the text input on the right (e.g. spinner, icon). Only supported by the default (text-like) input."
@@ -532,12 +535,18 @@ defmodule EdenflowersWeb.CoreComponents do
       <label class="flex flex-col">
         <span :if={@label} class="mb-1">{@label}</span>
         <div class="relative">
+          <span
+            :if={@leading != []}
+            class="text-base-content/60 pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center"
+          >
+            {render_slot(@leading)}
+          </span>
           <input
             type={@type}
             name={@name}
             id={@id}
             value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-            class={[@class || "input input-lg w-full", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
+            class={[@class || "input input-lg w-full", @leading != [] && "pl-8", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
             aria-invalid={@errors != [] && "true"}
             aria-describedby={describedby(@id, @errors, @help)}
             phx-debounce={if not @used? and not @validate_live?, do: "blur"}

@@ -707,7 +707,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
         |> render_submit()
 
       assert html =~ "Add at least one item"
-      assert html =~ "enter a phone number or an email"
+      assert html =~ "enter a phone number, an email or an Instagram handle"
     end
   end
 

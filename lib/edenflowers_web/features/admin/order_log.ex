@@ -25,6 +25,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     :customer_name,
     :customer_email,
     :customer_phone_number,
+    :customer_instagram,
     :locale,
     :florist_note
   ]
@@ -119,6 +120,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp field_label(:customer_name), do: ~t"Customer"
   defp field_label(:customer_email), do: ~t"Email"
   defp field_label(:customer_phone_number), do: ~t"Phone"
+  defp field_label(:customer_instagram), do: ~t"Instagram"
   defp field_label(:locale), do: ~t"Language"
   defp field_label(:florist_note), do: ~t"Florist note"
 
