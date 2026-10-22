@@ -130,16 +130,15 @@ LOCAL="$(git rev-parse main)"
 REMOTE="$(git rev-parse origin/main)"
 BASE="$(git merge-base main origin/main)"
 
-if [[ "$LOCAL" != "$REMOTE" ]]; then
+# Unpushed commits are fine: the atomic push below sends them with the release tag.
+if [[ "$REMOTE" != "$BASE" ]]; then
   if [[ "$LOCAL" == "$BASE" ]]; then
     fail "local main is behind origin/main — run 'git pull --ff-only' first"
-  elif [[ "$REMOTE" == "$BASE" ]]; then
-    fail "local main has unpushed commits — push them before deploying"
   else
     fail "local main and origin/main have diverged — reconcile before deploying"
   fi
 fi
-ok "local main matches origin"
+ok "local main is up to date with or ahead of origin"
 
 CURRENT="$(grep -E 'version: "[0-9]+\.[0-9]+\.[0-9]+"' mix.exs | head -1 | sed -E 's/.*version: "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')"
 if [[ -z "$CURRENT" ]]; then
