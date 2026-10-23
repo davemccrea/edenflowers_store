@@ -29,6 +29,7 @@ defmodule Edenflowers.Email.Previews do
         order_updated(locale) ++
         payment_received(locale) ++
         payment_reminder(locale) ++
+        purchase_receipt(locale) ++
         subscription_payment_failed(locale) ++
         subscription_set_up(locale) ++
         order_delivered(locale) ++
@@ -158,6 +159,18 @@ defmodule Edenflowers.Email.Previews do
       end
 
     orders ++ bookings
+  end
+
+  defp purchase_receipt(locale) do
+    handed_over = Map.merge(paid_in_full(), %{fulfillment_status: :fulfilled, gift: false, recipient_name: nil})
+
+    [
+      {gettext_noop("Purchase receipt"), gettext_noop("handed over and paid in full"), :purchase_receipt,
+       Email.purchase_receipt(order(handed_over, locale))},
+      {gettext_noop("Purchase receipt"), gettext_noop("with a message from Jennie, no customer first name"),
+       :purchase_receipt,
+       Email.purchase_receipt(order(Map.put(handed_over, :customer_first_name, nil), locale), message(locale))}
+    ]
   end
 
   defp payment_reminder(locale) do

@@ -90,6 +90,28 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
+  The receipt for an order handed over and paid in full, as a sale is in
+  the shop, with the PDF the sender attaches. Says nothing about where it
+  was paid, which may be any time. Loads as `payment_received/3`.
+  """
+  def purchase_receipt(%Order{} = order, message \\ nil) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(record_copy_address())
+      |> subject(~t"Your receipt from Eden Flowers")
+      |> text_body(
+        Templates.purchase_receipt(%{
+          order: order,
+          message: message,
+          format_currency: &Format.currency(&1, order.locale)
+        })
+      )
+    end)
+  end
+
+  @doc """
   Jennie's reminder of what is still owed on an order or booking, with the
   payment link to pay it. Only ever sent by hand. Loads as
   `payment_received/3`.

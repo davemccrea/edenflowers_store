@@ -1,10 +1,10 @@
 ---
 id: TASK-105.6
 title: Rewrite the order receipt and split off the counter-sale receipt
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
-updated_date: '2026-10-23 20:25'
+updated_date: '2026-10-23 20:32'
 labels: []
 dependencies: []
 parent_task_id: TASK-105
@@ -25,12 +25,12 @@ Counter-sale receipt: subject "Your receipt from Eden Flowers", "Thank you for y
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Online checkout sends the order receipt with items, total and gift details in the body
-- [ ] #2 A counter sale sends the counter-sale receipt
-- [ ] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #2 A counter sale sends the counter-sale receipt
+- [x] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Order receipt rewritten for online checkout only, with a discount row when a promo code applied. Counter-sale receipt waits on a decision: nothing in the code marks a sale as made in the shop.
+Order receipt rewritten for online checkout only, with a discount row when a promo code applied. Counter-sale receipt (decided 2026-10-23): no automatic send and no mention of the shop, since a payment can be confirmed any time. It goes from the 'Email the customer a receipt' tick box, or the menu's receipt item, when the order is handed over and paid in full (Email.purchase_receipt); any other recorded payment sends Payment received.
 <!-- SECTION:NOTES:END -->
