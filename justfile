@@ -42,6 +42,12 @@ forward-stripe:
 open-issues:
     backlog browser
 
+# Start Claude Code on a subscription: save each account's `claude setup-token` output as ~/.config/claude-accounts/<account>
+[group('development')]
+[positional-arguments]
+claude account *args:
+    @token=$(cat ~/.config/claude-accounts/"$1") && shift && unset ANTHROPIC_API_KEY && CLAUDE_CODE_OAUTH_TOKEN="$token" exec claude "$@"
+
 # Drop and migrate the local dev and test databases
 [group('development')]
 reset-db:
