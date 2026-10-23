@@ -1,5 +1,6 @@
 defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
   use EdenflowersWeb.ConnCase, async: true
+  use Oban.Testing, repo: Edenflowers.Repo
 
   import Generator
   import Phoenix.LiveViewTest
@@ -62,9 +63,30 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     assert reload(subscription).state == :active
     assert has_element?(view, "#subscription-fulfillment .tabular-nums")
 
-    view |> element("button", "Cancel") |> render_click()
+    view |> element(~s|button[phx-click="open_cancel"]|) |> render_click()
+    assert has_element?(view, "#cancel-subscription-email-send[checked]")
+    view |> form("#cancel-subscription-form", cancel: %{message: "Thank you for a lovely year."}) |> render_submit()
     assert reload(subscription).state == :cancelled
-    refute has_element?(view, "button", "Cancel")
+    refute has_element?(view, ~s|button[phx-click="open_cancel"]|)
+
+    assert_enqueued(
+      worker: Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail,
+      args: %{
+        "primary_key" => %{"id" => subscription.id},
+        "action_arguments" => %{"message" => "Thank you for a lovely year."}
+      }
+    )
+  end
+
+  test "cancelling with the email unticked sends nothing", %{conn: conn, customer: customer} do
+    subscription = generate(subscription(user_id: customer.id))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    view |> element(~s|button[phx-click="open_cancel"]|) |> render_click()
+    view |> form("#cancel-subscription-form", cancel: %{email_customer: "false"}) |> render_submit()
+
+    assert reload(subscription).state == :cancelled
+    refute_enqueued(worker: Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail)
   end
 
   test "logs who changed the subscription, naming no one for automatic changes", %{conn: conn, customer: customer} do

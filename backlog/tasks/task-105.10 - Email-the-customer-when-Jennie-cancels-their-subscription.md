@@ -1,9 +1,10 @@
 ---
 id: TASK-105.10
 title: Email the customer when Jennie cancels their subscription
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 20:49'
 labels: []
 dependencies:
   - TASK-105.2
@@ -22,7 +23,13 @@ The cancel action on the admin subscription page gets the tick box (ticked) and 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Cancelling a subscription in the admin offers the email, ticked
-- [ ] #2 The email names an already-charged delivery that still comes
-- [ ] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #1 Cancelling a subscription in the admin offers the email, ticked
+- [x] #2 The email names an already-charged delivery that still comes
+- [x] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The subscription log shows 'Cancellation emailed' but not the message: subscription versions have no message field, and the spec's log rule is for orders.
+<!-- SECTION:NOTES:END -->

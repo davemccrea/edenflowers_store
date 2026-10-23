@@ -33,6 +33,7 @@ defmodule Edenflowers.Email.Previews do
         subscription_payment_failed(locale) ++
         subscription_charged(locale) ++
         subscription_set_up(locale) ++
+        subscription_cancelled(locale) ++
         order_delivered(locale) ++
         order_left_at_door(locale) ++
         order_cancelled(locale) ++
@@ -282,6 +283,19 @@ defmodule Edenflowers.Email.Previews do
         ] do
       {gettext_noop("Subscription set up"), title, :subscription_set_up,
        Email.subscription_set_up(subscription(attrs, locale))}
+    end
+  end
+
+  defp subscription_cancelled(locale) do
+    for {title, attrs, charged_on, message} <- [
+          {gettext_noop("a delivery already charged still comes"), %{}, ~D[2026-11-14], nil},
+          {gettext_noop("nothing charged yet, with a message from Jennie"), %{}, nil, message(locale)},
+          {gettext_noop("pickup already charged, no first name"),
+           %{fulfillment_option: %{fulfillment_method: :pickup}, user: %{email: "maria@example.com", first_name: nil}},
+           ~D[2026-11-14], nil}
+        ] do
+      {gettext_noop("Subscription cancelled"), title, :subscription_cancelled,
+       Email.subscription_cancelled(subscription(attrs, locale), charged_on, message)}
     end
   end
 

@@ -109,6 +109,18 @@ defmodule Edenflowers.Orders.Subscription do
         default_actor system_actor()
         where expr(is_nil(setup_emailed_at))
       end
+
+      # Queued by :cancel when Jennie cancels and ticks "email the customer".
+      trigger :send_cancelled_email do
+        action :send_cancelled_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionCancelledEmail
+        default_actor system_actor()
+      end
     end
   end
 
@@ -170,6 +182,14 @@ defmodule Edenflowers.Orders.Subscription do
       change Changes.SnapshotCard
       change run_oban_trigger(:send_setup_email)
       change Changes.NotifyShop
+    end
+
+    update :send_cancelled_email do
+      accept []
+      argument :message, :string
+      transaction? false
+      require_atomic? false
+      change Changes.SendSubscriptionCancelledEmail
     end
 
     update :send_setup_email do
@@ -236,8 +256,11 @@ defmodule Edenflowers.Orders.Subscription do
     end
 
     update :cancel do
+      argument :email_customer?, :boolean, default: true
+      argument :message, :string
       change transition_state(:cancelled)
       change Changes.CancelOpenOccurrences
+      change Changes.QueueSubscriptionCancelledEmail
       require_atomic? false
     end
   end
@@ -249,6 +272,7 @@ defmodule Edenflowers.Orders.Subscription do
                      :create_occurrence,
                      :reactivate,
                      :send_setup_email,
+                     :send_cancelled_email,
                      :replace_card
                    ])
 
