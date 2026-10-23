@@ -21,14 +21,24 @@ defmodule Edenflowers.Email.PreviewsTest do
 
   test "a cancellation says the refund went back the way the customer paid" do
     bodies =
-      for {"Order cancelled", scenario, _, email} <- Previews.all("en-GB"), into: %{}, do: {scenario, email.text_body}
+      for {"Cancellation confirmed", scenario, _, email} <- Previews.all("en-GB"),
+          into: %{},
+          do: {scenario, email.text_body}
 
-    assert bodies["refunded to a card"] =~ "to your Visa card ending in 4242."
-    assert bodies["refunded to MobilePay"] =~ "to your MobilePay."
-    assert bodies["refunded, paid more than one way"] =~ "the way you paid."
+    assert bodies["refunded to a card"] =~ "Refund: €64.00 to Visa •••• 4242"
+    assert bodies["refunded to MobilePay"] =~ "Refund: €64.00 to MobilePay"
+    assert bodies["refunded, paid more than one way"] =~ "Refund: €64.00, the way you paid"
+  end
 
-    assert bodies["by the shop, with a reason, part paid in cash"] =~
-             "I'll pay back the other €30.00 the same way you paid it."
+  test "a card refund says how long it takes; cash says it was handed back" do
+    bodies =
+      for {"Order refunded", scenario, _, email} <- Previews.all("en-GB"), into: %{}, do: {scenario, email.text_body}
+
+    assert bodies["to a card through Stripe, with a message from Jennie"] =~
+             ~r/ending in 4242\. It can take a few days to show on your statement\.\n\nI'm so sorry/
+
+    assert bodies["handed back in cash"] =~ "I've refunded €20.00 in cash."
+    refute bodies["handed back in cash"] =~ "statement"
   end
 
   test "Jennie's message comes after the line saying what happened, before the details" do

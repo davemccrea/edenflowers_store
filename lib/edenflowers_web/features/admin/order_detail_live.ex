@@ -738,7 +738,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, socket |> assign(:payment_params, params) |> settlement_result(result)}
   end
 
-  def handle_event("change_refund", %{"refund" => params}, socket) do
+  def handle_event("change_refund", %{"refund" => params} = event, socket) do
+    params = PaymentActions.refund_params(params, event["_target"])
+
     {:noreply, socket |> assign(:refund_params, params) |> assign_preview(:refunded, params)}
   end
 

@@ -36,6 +36,7 @@ defmodule Edenflowers.Email.Previews do
         order_delivered(locale) ++
         order_left_at_door(locale) ++
         order_cancelled(locale) ++
+        cancellation_confirmed(locale) ++
         order_refunded(locale) ++
         course_confirmation(locale) ++
         course_payment_link(locale) ++
@@ -310,82 +311,61 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp order_cancelled(locale) do
-    mobilepay = [
-      %{
-        amount: Decimal.new("64.00"),
-        method: :stripe,
-        payment_method_type: "mobilepay",
-        card_brand: nil,
-        card_last4: nil
-      }
-    ]
+    paid = %{amount_paid: Decimal.new("64.00"), balance: Decimal.new(0)}
+    refunded = fn amount -> %{refunded: Decimal.new(amount), to_return: Decimal.new(0)} end
 
-    card = %{
-      amount: Decimal.new("64.00"),
+    [
+      {gettext_noop("Order cancelled"), gettext_noop("refunded to a card, with a message from Jennie"), :cancelled,
+       Email.cancelled(
+         order(Map.merge(paid, %{payments: [card_payment("64.00")], cancellation_reason: reason(locale)}), locale),
+         refunded.("64.00")
+       )},
+      {gettext_noop("Order cancelled"), gettext_noop("part paid by card, part in cash"), :cancelled,
+       Email.cancelled(
+         order(Map.merge(paid, %{payments: [card_payment("34.00"), cash_payment("30.00")]}), locale),
+         %{refunded: Decimal.new("34.00"), to_return: Decimal.new("30.00")}
+       )},
+      {gettext_noop("Order cancelled"), gettext_noop("nothing to refund, no customer first name"), :cancelled,
+       Email.cancelled(order(%{customer_first_name: nil, payments: []}, locale), refunded.("0"))}
+    ]
+  end
+
+  defp cancellation_confirmed(locale) do
+    paid = %{amount_paid: Decimal.new("64.00"), balance: Decimal.new(0)}
+
+    for {title, payments} <- [
+          {gettext_noop("refunded to a card"), [card_payment("64.00")]},
+          {gettext_noop("refunded to MobilePay"), [mobilepay_payment("64.00")]},
+          {gettext_noop("refunded, paid more than one way"), [card_payment("34.00"), mobilepay_payment("30.00")]}
+        ] do
+      {gettext_noop("Cancellation confirmed"), title, :cancellation_confirmed,
+       Email.cancellation_confirmed(
+         order(Map.merge(paid, %{payments: payments}), locale),
+         %{refunded: Decimal.new("64.00"), to_return: Decimal.new(0)}
+       )}
+    end
+  end
+
+  defp card_payment(amount),
+    do: %{
+      amount: Decimal.new(amount),
       method: :stripe,
       payment_method_type: "card",
       card_brand: "visa",
       card_last4: "4242"
     }
 
-    cash = %{amount: Decimal.new("30.00"), method: :cash, payment_method_type: nil, card_brand: nil, card_last4: nil}
-    paid_attrs = %{amount_paid: Decimal.new("64.00"), balance: Decimal.new(0)}
-    refunded = fn amount -> %{refunded: Decimal.new(amount), to_return: Decimal.new(0)} end
+  defp mobilepay_payment(amount),
+    do: %{
+      amount: Decimal.new(amount),
+      method: :stripe,
+      payment_method_type: "mobilepay",
+      card_brand: nil,
+      card_last4: nil
+    }
 
-    [
-      {gettext_noop("Order cancelled"), gettext_noop("refunded to a card"), :cancelled,
-       Email.cancelled(order(Map.merge(paid_attrs, %{payments: [card]}), locale), refunded.("64.00"), :customer)},
-      {gettext_noop("Order cancelled"), gettext_noop("refunded to MobilePay"), :cancelled,
-       Email.cancelled(
-         order(Map.merge(paid_attrs, %{payments: mobilepay}), locale),
-         refunded.("64.00"),
-         :customer
-       )},
-      {gettext_noop("Order cancelled"), gettext_noop("refunded, paid more than one way"), :cancelled,
-       Email.cancelled(
-         order(
-           Map.merge(
-             paid_attrs,
-             %{payments: [%{card | amount: Decimal.new("34.00")} | [%{hd(mobilepay) | amount: Decimal.new("30.00")}]]}
-           ),
-           locale
-         ),
-         refunded.("64.00"),
-         :customer
-       )},
-      {gettext_noop("Order cancelled"), gettext_noop("pickup, refunded"), :cancelled,
-       Email.cancelled(
-         order(
-           %{
-             fulfillment_method: :pickup,
-             fulfillment_fee: nil,
-             grand_total: Decimal.new("54.00"),
-             amount_paid: Decimal.new("54.00"),
-             balance: Decimal.new(0),
-             payments: [%{card | amount: Decimal.new("54.00")}],
-             fulfillment_date: ~D[2026-11-14]
-           },
-           locale
-         ),
-         refunded.("54.00"),
-         :customer
-       )},
-      {gettext_noop("Order cancelled"), gettext_noop("by the shop, with a reason, part paid in cash"), :cancelled,
-       Email.cancelled(
-         order(
-           Map.merge(paid_attrs, %{
-             payments: [%{card | amount: Decimal.new("34.00")}, cash],
-             cancellation_reason: reason(locale)
-           }),
-           locale
-         ),
-         %{refunded: Decimal.new("34.00"), to_return: Decimal.new("30.00")},
-         :shop
-       )},
-      {gettext_noop("Order cancelled"), gettext_noop("nothing to refund, no customer first name"), :cancelled,
-       Email.cancelled(order(%{customer_first_name: nil, payments: []}, locale), refunded.("0"), :customer)}
-    ]
-  end
+  defp cash_payment(amount),
+    do: %{amount: Decimal.new(amount), method: :cash, payment_method_type: nil, card_brand: nil, card_last4: nil}
 
   defp course_confirmation(locale) do
     for {title, attrs} <- [
@@ -415,30 +395,32 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp order_refunded(locale) do
-    card = %{
-      amount: Decimal.new("64.00"),
-      method: :stripe,
-      payment_method_type: "card",
-      card_brand: "visa",
-      card_last4: "4242"
-    }
-
-    for {title, attrs, refund} <- [
-          {gettext_noop("to a card, with a reason"), %{payments: [card]},
-           %{amount: Decimal.new("20.00"), payment_method: :stripe, note: reason(locale)}},
-          {gettext_noop("handed back in cash"), %{payments: []},
-           %{amount: Decimal.new("20.00"), payment_method: :cash, note: nil}}
+    for {title, payments, method, note} <- [
+          {gettext_noop("to a card through Stripe, with a message from Jennie"), [card_payment("64.00")], :stripe,
+           reason(locale)},
+          {gettext_noop("to MobilePay through Stripe"), [mobilepay_payment("64.00")], :stripe, nil},
+          {gettext_noop("handed back in cash"), [], :cash, nil},
+          {gettext_noop("to a card on the card reader"), [], :zettle, nil},
+          {gettext_noop("by MobilePay to the customer's number"), [], :mobilepay, nil},
+          {gettext_noop("to the customer's bank account"), [], :zervant, nil}
         ] do
-      {gettext_noop("Order refunded"), title, :refunded, Email.refunded(order(attrs, locale), refund)}
+      refund = %{amount: Decimal.new("20.00"), payment_method: method, note: note}
+      {gettext_noop("Order refunded"), title, :refunded, Email.refunded(order(%{payments: payments}, locale), refund)}
     end
   end
 
   defp booking_refunded(locale) do
-    refund = %{amount: Decimal.new("45.00"), payment_method: :cash, note: nil}
-
     [
-      {gettext_noop("Booking refunded"), gettext_noop("handed back in cash"), :refunded,
-       Email.refunded(registration(%{payments: []}, locale), refund)}
+      {gettext_noop("Booking refunded"), gettext_noop("to a card through Stripe"), :refunded,
+       Email.refunded(
+         registration(%{payments: [card_payment("45.00")]}, locale),
+         %{amount: Decimal.new("45.00"), payment_method: :stripe, note: nil}
+       )},
+      {gettext_noop("Booking refunded"), gettext_noop("handed back in cash, with a message from Jennie"), :refunded,
+       Email.refunded(
+         registration(%{payments: []}, locale),
+         %{amount: Decimal.new("45.00"), payment_method: :cash, note: reason(locale)}
+       )}
     ]
   end
 
@@ -461,7 +443,7 @@ defmodule Edenflowers.Email.Previews do
           {gettext_noop("nothing paid, no first name"), %{first_name: nil, payments: []},
            %{refunded: Decimal.new(0), to_return: Decimal.new(0)}}
         ] do
-      {gettext_noop("Booking cancelled"), title, :cancelled, Email.cancelled(registration(attrs, locale), money, :shop)}
+      {gettext_noop("Booking cancelled"), title, :cancelled, Email.cancelled(registration(attrs, locale), money)}
     end
   end
 

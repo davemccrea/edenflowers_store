@@ -147,7 +147,7 @@ defmodule Edenflowers.Email.Preview do
   end
 
   defp order_email(:cancelled, order, inputs) do
-    Email.cancelled(%{order | cancellation_reason: inputs[:message]}, Cancel.money(order, refund(inputs)), :shop)
+    Email.cancelled(%{order | cancellation_reason: inputs[:message]}, Cancel.money(order, refund(inputs)))
   end
 
   defp order_email(:refunded, order, inputs), do: Email.refunded(order, refund_details(inputs))
@@ -174,7 +174,7 @@ defmodule Edenflowers.Email.Preview do
 
   defp booking_email(:cancelled, registration, inputs) do
     money = Cancel.money(registration, refund(inputs))
-    Email.cancelled(%{registration | cancellation_reason: inputs[:message]}, money, :shop)
+    Email.cancelled(%{registration | cancellation_reason: inputs[:message]}, money)
   end
 
   defp booking_email(:refunded, registration, inputs), do: Email.refunded(registration, refund_details(inputs))

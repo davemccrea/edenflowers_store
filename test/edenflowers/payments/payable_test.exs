@@ -50,6 +50,7 @@ defmodule Edenflowers.Payments.PayableTest do
           state: if(state == :uncommitted, do: :payment, else: :placed),
           fulfillment_status: if(state == :cancelled, do: :cancelled, else: :pending),
           fulfillment_option_id: generate(fulfillment_option(tax_rate_id: tax_rate.id)).id,
+          fulfillment_date: ~D[2026-11-14],
           quoted_fulfillment_fee: "0.00"
         )
       )

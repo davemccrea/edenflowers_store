@@ -87,6 +87,15 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
+  @doc """
+  The refund form as Jennie changes it. Choosing cash unticks the email,
+  since she hands that back in person; any other way ticks it again.
+  """
+  def refund_params(params, ["refund", "how"]),
+    do: Map.put(params, "email_customer", if(params["how"] == "cash", do: "false", else: "true"))
+
+  def refund_params(params, _target), do: params
+
   def open_payment_link(payable, actor) do
     case Ash.update(payable, %{}, action: :open_payment_link, actor: actor) do
       {:ok, _payable} ->

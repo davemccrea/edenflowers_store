@@ -352,27 +352,25 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Tells the customer their order or course booking is cancelled, and what was
-  refunded. Expects it read with `:for_customer_email`. `money` holds what
-  went back through Stripe (`refunded`) and what Jennie still hands back
-  herself (`to_return`). `cancelled_by` is `:shop` or `:customer`: when the
-  customer cancelled, Jennie's copy reaches her inbox, as she has a bouquet
-  not to make or money to hand back.
+  Tells the customer the shop cancelled their order or course booking, with
+  Jennie's message and what was refunded. Expects it read with
+  `:for_customer_email`. `money` holds what went back through Stripe
+  (`refunded`) and what Jennie still hands back herself (`to_return`).
   """
-  def cancelled(%Order{} = order, money, cancelled_by) do
+  def cancelled(%Order{} = order, money) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
       |> to(order.customer_email)
-      |> bcc(cancelled_copy_address(cancelled_by))
-      |> subject(~t"Your Eden Flowers order #{order.order_reference} is cancelled")
+      |> bcc(record_copy_address())
+      |> subject(~t"Your Eden Flowers order for #{date = short_date(order)} is cancelled")
       |> text_body(
         Templates.order_cancelled(%{
           order: order,
+          message: order.cancellation_reason,
           refunded: money.refunded,
           to_return: money.to_return,
           refunded_to: refunded_to(order.payments),
-          cancelled_by: cancelled_by,
           format_currency: &Format.currency(&1, order.locale),
           format_date: &Format.weekday_date(&1, order.locale)
         })
@@ -380,16 +378,17 @@ defmodule Edenflowers.Email do
     end)
   end
 
-  def cancelled(%CourseRegistration{} = registration, money, cancelled_by) do
+  def cancelled(%CourseRegistration{} = registration, money) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
       new()
       |> from(from_address())
       |> to(registration.email)
-      |> bcc(cancelled_copy_address(cancelled_by))
+      |> bcc(record_copy_address())
       |> subject(~t"Your booking on #{course = registration.course.name} is cancelled")
       |> text_body(
         Templates.booking_cancelled(%{
           registration: registration,
+          message: registration.cancellation_reason,
           refunded: money.refunded,
           to_return: money.to_return,
           refunded_to: refunded_to(registration.payments),
@@ -401,9 +400,33 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
+  Confirms an Online Order the customer cancelled in their account, and its
+  refund, which always went back through Stripe. Matter-of-fact, from the
+  shop. Loads as `cancelled/2`.
+  """
+  def cancellation_confirmed(%Order{} = order, money) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(automated_from_address())
+      |> to(order.customer_email)
+      |> bcc(record_copy_address())
+      |> subject(~t"Order #{reference = order.order_reference} cancelled")
+      |> text_body(
+        Templates.cancellation_confirmed(%{
+          order: order,
+          refunded: money.refunded,
+          refunded_to: refunded_to(order.payments),
+          format_currency: &Format.currency(&1, order.locale),
+          format_date: &Format.weekday_date(&1, order.locale)
+        })
+      )
+    end)
+  end
+
+  @doc """
   Tells the customer what Jennie refunded on their order or course booking,
-  and why. Expects it read with `:for_customer_email`. `refund` holds the
-  `amount`, the `payment_method` it went back by, and Jennie's `note`.
+  then her message. Expects it read with `:for_customer_email`. `refund`
+  holds the `amount`, the `payment_method` it went back by, and her `note`.
   """
   def refunded(%Order{} = order, refund) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
@@ -411,12 +434,12 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(record_copy_address())
-      |> subject(~t"A refund for your Eden Flowers order #{order.order_reference}")
+      |> subject(~t"A refund for your Eden Flowers order for #{date = short_date(order)}")
       |> text_body(
         Templates.order_refunded(%{
           order: order,
           refund: refund,
-          refunded_to: refunded_to(order.payments),
+          refunded_to: refunded_how(refund.payment_method, order.payments),
           format_currency: &Format.currency(&1, order.locale)
         })
       )
@@ -434,15 +457,18 @@ defmodule Edenflowers.Email do
         Templates.booking_refunded(%{
           registration: registration,
           refund: refund,
-          refunded_to: refunded_to(registration.payments),
+          refunded_to: refunded_how(refund.payment_method, registration.payments),
           format_currency: &Format.currency(&1, registration.locale)
         })
       )
     end)
   end
 
-  defp cancelled_copy_address(:customer), do: from_address()
-  defp cancelled_copy_address(:shop), do: record_copy_address()
+  # Money Jennie handed back herself went the way she says; MobilePay to her
+  # own number is a transfer, not a card refund, so it shows at once.
+  defp refunded_how(:stripe, payments), do: refunded_to(payments)
+  defp refunded_how(:mobilepay, _payments), do: :mobilepay_transfer
+  defp refunded_how(method, _payments), do: method
 
   # Only Stripe payments are refunded here, almost always just one, so the
   # refund goes back the same way.
