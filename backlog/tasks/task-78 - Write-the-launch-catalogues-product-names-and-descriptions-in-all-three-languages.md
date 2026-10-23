@@ -3,9 +3,10 @@ id: TASK-78
 title: >-
   Write the launch catalogue's product names and descriptions in all three
   languages
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-20 10:26'
+updated_date: '2026-10-23 12:15'
 labels:
   - spec
   - customers
@@ -30,6 +31,6 @@ Also check the category descriptions seeded in `priv/repo/seeds/production.exs`,
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every product visible in the production store has a real name and description in en, fi and sv
-- [ ] #2 No draft or placeholder product is visible in the store or listed in /sitemap.xml
+- [x] #1 Every product visible in the production store has a real name and description in en, fi and sv
+- [x] #2 No draft or placeholder product is visible in the store or listed in /sitemap.xml
 <!-- AC:END -->

@@ -1,9 +1,10 @@
 ---
 id: TASK-81.1
 title: Set up the Storage Box for database backups
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-21 08:32'
+updated_date: '2026-10-23 12:16'
 labels: []
 dependencies: []
 parent_task_id: TASK-81
@@ -26,7 +27,7 @@ Then record the sub-account username and hostname (uXXXXX-sub1.your-storagebox.d
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A sub-account exists with SSH on and access limited to its own directory
-- [ ] #2 Automatic daily snapshots keep about 30 days
-- [ ] #3 The sub-account username and hostname are recorded where TASK-81.2 can use them
+- [x] #1 A sub-account exists with SSH on and access limited to its own directory
+- [x] #2 Automatic daily snapshots keep about 30 days
+- [x] #3 The sub-account username and hostname are recorded where TASK-81.2 can use them
 <!-- AC:END -->

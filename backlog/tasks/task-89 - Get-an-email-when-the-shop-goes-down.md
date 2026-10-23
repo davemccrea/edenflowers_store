@@ -1,10 +1,10 @@
 ---
 id: TASK-89
 title: Get an email when the shop goes down
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-21 19:46'
-updated_date: '2026-10-22 04:41'
+updated_date: '2026-10-23 12:25'
 labels:
   - spec
   - admin
@@ -28,15 +28,13 @@ Decisions:
 - Production only. Staging goes down on every redeploy and reseed.
 - `/health` checks the database only. A Stripe or email outage isn't the shop being down, and Oban job failures already reach ErrorTracker.
 - Self-hosting Uptime Kuma on the same server is out: it dies with the thing it watches.
-
-Once TASK-81.2 lands, the nightly backup cron pings healthchecks.io; that covers jobs that stop running, not the site being down.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 An external service checks production at least every 5 minutes
+- [x] #1 An external service checks production at least every 5 minutes
 - [x] #2 The check fails when the app or database is down, not only when the server is unreachable
-- [ ] #3 A failed check sends an email to the agreed people
+- [x] #3 A failed check sends an email to the agreed people
 <!-- AC:END -->
 
 ## Implementation Notes
