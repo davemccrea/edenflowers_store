@@ -589,7 +589,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   # Jennie uses Fastmail on the web, so compose there rather than via mailto:.
-  # Phones open the Fastmail app instead (app.js).
+  # Phones open the Fastmail app instead (the script beside email_link/1).
   defp fastmail_compose(params), do: "https://app.fastmail.com/mail/compose?" <> URI.encode_query(params)
   defp fastmail_app_compose(params), do: "fastmail://mail/compose?" <> URI.encode_query(params)
 end

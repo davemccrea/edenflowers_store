@@ -969,7 +969,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :icon, :string, required: true
   attr :label, :string, required: true
   attr :arrow_key, :string, required: true
-  attr :transition, :string, required: true, doc: "Page transition in app.js, matching the arrow's direction"
+
+  attr :transition, :string,
+    required: true,
+    doc: "Page transition in admin_transitions.js, matching the arrow's direction"
 
   defp queue_link(%{to: nil} = assigns) do
     ~H"""

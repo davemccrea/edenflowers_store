@@ -354,6 +354,23 @@ defmodule EdenflowersWeb.Layouts do
         /
       </kbd>
     </form>
+    <script :type={Phoenix.LiveView.ColocatedJS}>
+      document.addEventListener("keydown", (event) => {
+        const typing = event.target.closest?.(
+          "input, textarea, select, [contenteditable]",
+        );
+        const modified = event.metaKey || event.ctrlKey || event.altKey;
+
+        if (event.key === "/" && !typing && !modified) {
+          const search = [...document.querySelectorAll("[data-admin-search]")].find(
+            (el) => el.offsetParent,
+          );
+          if (!search) return;
+          event.preventDefault();
+          search.focus();
+        }
+      });
+    </script>
     """
   end
 
