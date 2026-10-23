@@ -34,6 +34,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
          socket
          |> assign(:page_title, ~t"Pay for your order")
          |> assign(:locale, Format.locale())
+         |> assign(:email_form, email_form(order))
          |> PaymentLink.mount(order, params, fn -> load_order(token) end)}
 
       _ ->
@@ -135,6 +136,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
             billing_name={@payable.customer_name}
             billing_email={@payable.customer_email}
             billing_phone={@payable.customer_phone_number}
+            email_field={@email_form && @email_form[:customer_email]}
           />
         </div>
       </.container>
@@ -143,10 +145,14 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   end
 
   @impl true
-  def handle_event("pay", %{"customer_email" => email}, socket) do
-    case Orders.add_customer_email(socket.assigns.payable, email, actor: system_actor()) do
-      {:ok, _order} -> handle_event("pay", %{}, socket)
-      {:error, _error} -> {:noreply, put_flash(socket, :error, ~t"Enter a valid email address.")}
+  def handle_event("validate_email", %{"form" => params}, socket) do
+    {:noreply, assign(socket, :email_form, AshPhoenix.Form.validate(socket.assigns.email_form, params))}
+  end
+
+  def handle_event("pay", %{"form" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.email_form, params: params) do
+      {:ok, _order} -> handle_event("pay", %{}, assign(socket, :email_form, nil))
+      {:error, form} -> {:noreply, assign(socket, :email_form, form)}
     end
   end
 
@@ -159,6 +165,14 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:paid:" <> _}, socket),
     do: {:noreply, PaymentLink.paid(socket)}
+
+  defp email_form(%{customer_email: nil} = order) do
+    order
+    |> AshPhoenix.Form.for_update(:add_customer_email, actor: system_actor())
+    |> to_form()
+  end
+
+  defp email_form(_order), do: nil
 
   defp load_order(token), do: Orders.get_order_by_payment_link_token(token, authorize?: false)
 end
