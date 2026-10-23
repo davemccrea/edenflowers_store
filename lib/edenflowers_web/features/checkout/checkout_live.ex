@@ -313,7 +313,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     billing_phone={buyer_phone_number(@order)}
                     on_loading={lock_while_paying()}
                     on_ready={unlock_after_paying(%JS{})}
-                    busy_label={~t"Tying the ribbon…"}
                   >
                     <:before_button>
                       <.recurring_charge order={@order} fee={delivery_fee(@order, @delivery_quote)} />

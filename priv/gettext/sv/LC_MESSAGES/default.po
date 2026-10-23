@@ -2851,11 +2851,6 @@ msgstr "Skapa kod"
 msgid "Pick up your flowers from Eden Flowers"
 msgstr "Hämta dina blommor från Eden Flowers"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:312
-#, elixir-autogen, elixir-format
-msgid "Tying the ribbon…"
-msgstr "Knyter rosetten…"
-
 #: lib/edenflowers_web/features/checkout/order_live.ex:99
 #, elixir-autogen, elixir-format
 msgid "For %{shown_order_recipient_name}"

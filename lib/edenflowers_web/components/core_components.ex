@@ -186,17 +186,14 @@ defmodule EdenflowersWeb.CoreComponents do
   cell, so the button width is stable across idle/loading (no layout shift).
   Under 300ms the spinner never reveals; see the swap CSS in `forms.css`.
   With reduced motion, a static "Processing…" label replaces the spinner.
-  A `busy_label` replaces the spinner for everyone, for waits long enough
-  to deserve words.
 
   ## Examples
 
       <.form_button>{~t"Next"}</.form_button>
-      <.form_button disabled={true} id="payment-button" busy_label={~t"Tying the ribbon…"}>{~t"Pay"}</.form_button>
+      <.form_button disabled={true} id="payment-button">{~t"Pay"}</.form_button>
   """
   attr :rest, :global
   attr :disabled, :boolean, default: false
-  attr :busy_label, :string, default: nil
   slot :inner_block
 
   def form_button(assigns) do
@@ -207,14 +204,14 @@ defmodule EdenflowersWeb.CoreComponents do
       type="submit"
       variant="primary"
       size="lg"
-      class={["mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled", @busy_label && "form-button-labelled"]}
+      class="mt-2 inline-grid place-items-center phx-submit-loading:btn-disabled"
     >
       <span class="form-button-label col-start-1 row-start-1">{render_slot(@inner_block)}</span>
       <span
         class="form-button-spinner loading loading-spinner loading-md col-start-1 row-start-1"
         aria-hidden="true"
       ></span>
-      <span class="form-button-processing col-start-1 row-start-1">{@busy_label || ~t"Processing…"}</span>
+      <span class="form-button-processing col-start-1 row-start-1">{~t"Processing…"}</span>
     </.button>
     """
   end
@@ -244,7 +241,6 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :billing_phone, :string, default: nil
   attr :on_loading, JS, default: %JS{}, doc: "runs as Stripe starts working, alongside disabling the button"
   attr :on_ready, JS, default: %JS{}, doc: "runs as Stripe settles, alongside re-enabling the button"
-  attr :busy_label, :string, default: nil
   attr :rest, :global
   slot :before_button
   slot :inner_block, required: true, doc: "the button label"
@@ -273,7 +269,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
       {render_slot(@before_button)}
 
-      <.form_button disabled={true} id="payment-button" busy_label={@busy_label}>
+      <.form_button disabled={true} id="payment-button">
         {render_slot(@inner_block)}
       </.form_button>
     </form>

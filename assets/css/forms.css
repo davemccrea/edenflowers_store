@@ -50,15 +50,6 @@
   }
 }
 
-.form-button-labelled .form-button-spinner {
-  visibility: hidden;
-}
-.phx-submit-loading .form-button-labelled .form-button-processing,
-[aria-busy="true"].form-button-labelled .form-button-processing {
-  visibility: visible;
-  transition: visibility 0s 300ms;
-}
-
 /* daisyUI would use --color-error-content, which here is a dark red text
    shade and disappears into the red hover fill. */
 .btn-error.btn-outline:is(:hover, :focus-visible, :active):not(
