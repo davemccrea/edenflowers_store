@@ -63,8 +63,10 @@ defmodule EdenflowersWeb.StripeForm do
       </.form_button>
     </form>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".Stripe">
+      import { loadStripe } from "@/js/stripe";
+
       export default {
-        mounted() {
+        async mounted() {
           const returnPath = this.el.getAttribute("data-return-path");
           if (!returnPath) {
             return this.logAndPushError("data-return-path attribute is missing.");
@@ -110,6 +112,7 @@ defmodule EdenflowersWeb.StripeForm do
           }
 
           try {
+            const Stripe = await loadStripe();
             const stripe = Stripe(this.publishableKey);
             const elements = (this.elements = stripe.elements({
               ...this.intentOptions(),
@@ -205,7 +208,8 @@ defmodule EdenflowersWeb.StripeForm do
           const amount = Number(this.el.dataset.amount);
           if (this.mode === "payment" && amount !== this.amount) {
             this.amount = amount;
-            this.elements.update({ amount });
+            // Elements doesn't exist until Stripe.js loads; it then starts with this amount.
+            this.elements?.update({ amount });
           }
         },
 

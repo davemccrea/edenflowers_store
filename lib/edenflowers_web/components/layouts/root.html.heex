@@ -42,9 +42,6 @@
     <% end %>
 
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
-    <%!-- Before app.js: deferred scripts run in document order, and the Stripe hook needs it. --%>
-    <script defer src="https://js.stripe.com/v3/">
-    </script>
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
   </head>
