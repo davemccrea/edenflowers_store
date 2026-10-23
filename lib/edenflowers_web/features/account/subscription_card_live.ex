@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
             id="card-form"
             phx-submit="save_card"
             mode="setup"
-            return_url={url(~p"/account/subscriptions/#{@subscription.id}/card")}
+            return_path={~p"/account/subscriptions/#{@subscription.id}/card"}
             billing_name={@current_user.name}
             billing_email={to_string(@current_user.email)}
           >

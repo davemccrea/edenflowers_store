@@ -499,10 +499,11 @@ Hooks.CalendarHook = {
 
 Hooks.Stripe = {
   mounted() {
-    this.returnUrl = this.el.getAttribute("data-return-url");
-    if (!this.returnUrl) {
-      return this.logAndPushError("data-return-url attribute is missing.");
+    const returnPath = this.el.getAttribute("data-return-path");
+    if (!returnPath) {
+      return this.logAndPushError("data-return-path attribute is missing.");
     }
+    this.returnUrl = new URL(returnPath, window.location.origin).href;
 
     // data-mode="setup" saves a card without charging it.
     this.mode = this.el.dataset.mode;

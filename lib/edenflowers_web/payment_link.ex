@@ -101,7 +101,7 @@ defmodule EdenflowersWeb.PaymentLink do
         id="pay-form"
         phx-submit="pay"
         amount={StripeAPI.to_stripe_amount(@payable.balance)}
-        return_url={url_for(@payable)}
+        return_path={path_for(@payable)}
         billing_name={@billing_name}
         billing_email={@billing_email}
         billing_phone={@billing_phone}

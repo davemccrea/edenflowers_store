@@ -235,7 +235,7 @@ defmodule EdenflowersWeb.CoreComponents do
     doc: ~s|"off_session" when the PaymentIntent created on paying saves the card|
 
   attr :customer_session_client_secret, :string, default: nil, doc: "shows the signed-in customer's saved cards"
-  attr :return_url, :string, required: true
+  attr :return_path, :string, required: true, doc: "where Stripe sends the customer back to, on the host they paid from"
   attr :billing_name, :string, default: nil
   attr :billing_email, :string, default: nil
   attr :billing_phone, :string, default: nil
@@ -255,7 +255,7 @@ defmodule EdenflowersWeb.CoreComponents do
       data-setup-future-usage={@setup_future_usage}
       data-customer-session-client-secret={@customer_session_client_secret}
       data-publishable-key={Application.get_env(:edenflowers, :stripe_publishable_key)}
-      data-return-url={@return_url}
+      data-return-path={@return_path}
       data-billing-name={@billing_name}
       data-billing-email={@billing_email}
       data-billing-phone={@billing_phone}
