@@ -1,9 +1,10 @@
 ---
 id: TASK-91.2
 title: Remove staging from Cloudflare
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-22 09:54'
+updated_date: '2026-10-23 11:23'
 labels:
   - quick
 dependencies: []
@@ -22,5 +23,11 @@ Delete staging's DNS record and its Cloudflare Access application.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No DNS record or Access application for staging remains
+- [x] #1 No DNS record or Access application for staging remains
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Deleted the staging.edenflowers.fi and images-staging.edenflowers.fi DNS records and staging's Access application on 2026-10-23.
+<!-- SECTION:NOTES:END -->

@@ -1,9 +1,10 @@
 ---
 id: TASK-91.3
 title: Remove staging's Stripe sandbox
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-22 09:54'
+updated_date: '2026-10-23 11:26'
 labels:
   - quick
 dependencies: []
@@ -22,6 +23,14 @@ Delete staging's webhook endpoint. Before deleting the sandbox itself, check whe
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No webhook endpoint points at staging
-- [ ] #2 No API key used only by staging is still active
+- [x] #1 No webhook endpoint points at staging
+- [x] #2 No API key used only by staging is still active
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Deleted staging's webhook endpoint on 2026-10-23.
+
+Staging used the same sandbox secret key as local dev, so no key was staging-only. Not rolled: the only other copy goes when the server is destroyed (TASK-91.5).
+<!-- SECTION:NOTES:END -->
