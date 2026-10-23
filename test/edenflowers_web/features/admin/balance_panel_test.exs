@@ -180,9 +180,9 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     order = build(:order)
     {view, panel} = open(conn, :order, order)
 
-    assert has_element?(view, ~s|#order-balance-email-receipt[checked]|)
+    assert has_element?(view, ~s|#order-balance-email-send[checked]|)
     view |> form("#{panel}-form", payment: %{amount: "50,00"}) |> render_change()
-    refute has_element?(view, "#order-balance-email-receipt")
+    refute has_element?(view, "#order-balance-email-send")
 
     view |> form("#{panel}-form", payment: %{amount: "50,00", payment_method: "cash"}) |> render_submit()
 
@@ -207,7 +207,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     order = build(:order)
     {view, _panel} = open(conn, :order, order)
 
-    assert has_element?(view, ~s|#order-balance-email-receipt[checked]|)
+    assert has_element?(view, ~s|#order-balance-email-send[checked]|)
     assert record_cash_payment(view, "true") =~ "Payment recorded and receipt emailed."
 
     assert Decimal.eq?(balance(order), 0)
@@ -235,17 +235,17 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     {view, _panel} = open(conn, :booking, registration)
 
     refute has_element?(view, "#balance-#{registration.id}")
-    assert has_element?(view, ~s|#settlement-drawer button[phx-click="email_payment_link"]|)
+    assert has_element?(view, ~s|#settlement-drawer button[phx-value-kind="payment_link"]|)
     refute has_element?(view, "#mark-paid-#{registration.id}")
   end
 
   test "the order page offers its payment link only while something is to collect", %{conn: conn} do
     order = build(:order, cancelled: true, payments: [cash: "88.50"])
     {view, _panel} = open(conn, :order, order)
-    refute has_element?(view, ~s|button[phx-click="email_payment_link"]|)
+    refute has_element?(view, ~s|button[phx-value-kind="payment_link"]|)
 
     {view, panel} = open(conn, :order, build(:order))
-    assert has_element?(view, ~s|#{panel} button[phx-click="email_payment_link"]|)
+    assert has_element?(view, ~s|#{panel} button[phx-value-kind="payment_link"]|)
     assert has_element?(view, ~s|#{panel} button[phx-click="open_payment_link"]|)
   end
 end

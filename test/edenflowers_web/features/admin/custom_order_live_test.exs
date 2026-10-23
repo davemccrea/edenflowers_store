@@ -845,7 +845,8 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
       assert has_element?(view, "#order-balance", "To collect €85.00")
-      view |> element(~s|button[phx-click="email_payment_link"]|) |> render_click()
+      view |> element(~s|button[phx-value-kind="payment_link"]|) |> render_click()
+      view |> form("#email-form") |> render_submit()
 
       order = Ash.reload!(order, authorize?: false)
 
@@ -922,17 +923,20 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
     end
 
-    test "the cancel drawer refunds what Jennie enters and logs her reason", ctx do
-      {:ok, order} = ctx |> place_custom_order() |> Orders.record_payment("50.00", :cash, actor: ctx.admin)
+    test "the cancel drawer refunds what Jennie enters and logs her message", ctx do
+      {:ok, order} =
+        ctx
+        |> place_custom_order(%{customer_email: "son@example.com"})
+        |> Orders.record_payment("50.00", :cash, actor: ctx.admin)
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|[phx-click="open_cancel"]|) |> render_click()
       assert has_element?(view, ~s|#cancel-form input[name="cancel[refund]"][value="50.00"]|)
 
-      view |> form("#cancel-form", cancel: %{refund: "60", reason: "Ill that day"}) |> render_submit()
+      view |> form("#cancel-form", cancel: %{refund: "60", message: "Ill that day"}) |> render_submit()
       assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from €0 to €50.00.")
 
-      view |> form("#cancel-form", cancel: %{refund: "30,00", reason: "Ill that day"}) |> render_submit()
+      view |> form("#cancel-form", cancel: %{refund: "30,00", message: "Ill that day"}) |> render_submit()
 
       assert has_element?(view, "header", "Cancelled")
       assert has_element?(view, "#order-log", "Ill that day")

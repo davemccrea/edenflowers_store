@@ -186,7 +186,7 @@ defmodule Edenflowers.Orders.Order do
 
   oban do
     triggers do
-      # Queued by ScheduleConfirmationEmail when Stripe takes a payment. A payment
+      # Queued by QueueEmail when Stripe takes a payment. A payment
       # Jennie records gets its receipt only when she sends one.
       trigger :send_receipt_email do
         action :send_receipt_email
@@ -319,6 +319,8 @@ defmodule Edenflowers.Orders.Order do
     # Set by RecordEnteredLineItems when the lines change: what they now are,
     # since changes_only can't see into another resource.
     metadata :items, :string
+    # Jennie's message in the email an action sent, set by its Send* change.
+    metadata :email_message, :string
 
     # on_actions only filters updates; every create is versioned unless ignored.
     ignore_actions [:create_for_checkout]
@@ -521,6 +523,7 @@ defmodule Edenflowers.Orders.Order do
       argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
       argument :card_variant_id, :uuid
       argument :email_customer?, :boolean, default: true
+      argument :message, :string
       argument :customer_id, :uuid
 
       change set_attribute(:state, :placed)
@@ -565,7 +568,9 @@ defmodule Edenflowers.Orders.Order do
 
       change Changes.RecordEnteredLineItems
       change {Changes.AdjustStock, direction: :take}
-      change run_oban_trigger(:send_order_details_email), where: [argument_equals(:email_customer?, true)]
+
+      change {PaymentChanges.QueueEmail, trigger: :send_order_details_email},
+        where: [argument_equals(:email_customer?, true)]
     end
 
     # An Occurrence, made by Subscription's :create_occurrence. Delivery is
@@ -685,7 +690,7 @@ defmodule Edenflowers.Orders.Order do
       change Changes.ReportAmountMismatch
       change Changes.ReportPromotionOverused
 
-      change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_receipt_email}
+      change {PaymentChanges.QueueEmail, trigger: :send_receipt_email}
       change Changes.NotifyShop
 
       # Starts the Subscription straight away, so the confirmation page's link
@@ -834,7 +839,7 @@ defmodule Edenflowers.Orders.Order do
       change Changes.ReportUnexpectedPayment
       change Changes.ReactivateSubscription, where: [attribute_equals(:origin, :subscription)]
       # A phone customer pays a texted link and has no address to send a receipt to.
-      change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_receipt_email}, where: [present(:customer_email)]
+      change {PaymentChanges.QueueEmail, trigger: :send_receipt_email}, where: [present(:customer_email)]
       require_atomic? false
     end
 
@@ -861,6 +866,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :send_order_details_email do
       accept []
+      argument :message, :string
       transaction? false
       require_atomic? false
       change Changes.SendOrderDetailsEmail
@@ -869,6 +875,7 @@ defmodule Edenflowers.Orders.Order do
     # For a payment Jennie recorded, whose receipt is only sent when the customer asks.
     update :email_receipt do
       accept []
+      argument :message, :string
       validate attribute_equals(:payment_status, :paid), message: "is not paid yet"
       validate present(:customer_email), message: "has no email address"
       transaction? false
@@ -901,6 +908,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :send_receipt_email do
       accept []
+      argument :message, :string
       transaction? false
       require_atomic? false
       change Changes.SendReceiptEmail
@@ -908,6 +916,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :send_fulfillment_email do
       accept []
+      argument :message, :string
       transaction? false
       require_atomic? false
       change Changes.SendFulfillmentEmail
@@ -952,12 +961,14 @@ defmodule Edenflowers.Orders.Order do
       validate attribute_equals(:fulfillment_status, :fulfilled), message: "isn't fulfilled"
       validate attribute_equals(:fulfillment_method, :delivery), message: "was collected in person"
       validate present(:customer_email), message: "has no email address"
-      change run_oban_trigger(:send_fulfillment_email)
+      argument :message, :string
+      change {PaymentChanges.QueueEmail, trigger: :send_fulfillment_email}
     end
 
     update :mark_fulfilled do
       accept [:delivery_photo_slug, :email_delivery_photo]
       argument :email_customer?, :boolean, default: true
+      argument :message, :string
       validate attribute_equals(:fulfillment_status, :pending)
       change set_attribute(:fulfillment_status, :fulfilled)
       change set_attribute(:email_delivery_photo, false), where: [argument_equals(:email_customer?, false)]
@@ -970,7 +981,7 @@ defmodule Edenflowers.Orders.Order do
         ]
 
       # A collected order isn't emailed: the customer was there.
-      change run_oban_trigger(:send_fulfillment_email),
+      change {PaymentChanges.QueueEmail, trigger: :send_fulfillment_email},
         where: [
           argument_equals(:email_customer?, true),
           attribute_equals(:fulfillment_method, :delivery),

@@ -57,6 +57,7 @@ defmodule Edenflowers.Payments.Payable do
       argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :email_receipt?, :boolean, default: false
+      argument :message, :string
 
       validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
       validate Validations.Recordable

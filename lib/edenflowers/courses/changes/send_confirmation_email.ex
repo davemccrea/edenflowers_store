@@ -19,7 +19,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
     Ash.Changeset.before_action(changeset, fn changeset ->
       registration = load_for_send(changeset.data)
 
-      case deliver(registration) do
+      case deliver(registration, Ash.Changeset.get_argument(changeset, :message)) do
         {:ok, changes} ->
           Logger.info("Sent confirmation email for course registration #{registration.id}")
 
@@ -33,26 +33,26 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
     end)
   end
 
-  defp deliver(registration) do
+  defp deliver(registration, message) do
     if Decimal.positive?(registration.balance),
-      do: deliver_without_receipt(registration),
-      else: deliver_with_receipt(registration)
+      do: deliver_without_receipt(registration, message),
+      else: deliver_with_receipt(registration, message)
   end
 
   # Only a booking awaiting payment owes anything, and it always has a link.
-  defp deliver_without_receipt(%{payment_link_open?: true} = registration) do
+  defp deliver_without_receipt(%{payment_link_open?: true} = registration, message) do
     url = EdenflowersWeb.PaymentLink.url_for(registration)
 
-    with {:ok, _result} <- registration |> Email.course_payment_link(url) |> Mailer.deliver() do
+    with {:ok, _result} <- registration |> Email.course_payment_link(url, message) |> Mailer.deliver() do
       {:ok, %{payment_link_emailed_at: DateTime.utc_now()}}
     end
   end
 
-  defp deliver_with_receipt(registration) do
+  defp deliver_with_receipt(registration, message) do
     with {:ok, pdf} <- Receipt.generate(registration),
          {:ok, _result} <-
            registration
-           |> Email.course_confirmation()
+           |> Email.course_confirmation(message)
            |> Swoosh.Email.attachment(Receipt.attachment(pdf, registration.reference))
            |> Mailer.deliver() do
       {:ok, %{receipt_emailed_at: DateTime.utc_now()}}

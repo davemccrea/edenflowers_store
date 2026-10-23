@@ -30,4 +30,11 @@ defmodule Edenflowers.Email.PreviewsTest do
     assert bodies["by the shop, with a reason, part paid in cash"] =~
              "I'll pay back the other €30.00 the same way you paid it."
   end
+
+  test "Jennie's message comes after the line saying what happened, before the details" do
+    [body] =
+      for {"Order details", "with a message from Jennie", _, email} <- Previews.all("en-GB"), do: email.text_body
+
+    assert body =~ ~r/Here is what we agreed:\n\nThe peonies are lovely this week, so I've added a few\.\n\n1 × /
+  end
 end

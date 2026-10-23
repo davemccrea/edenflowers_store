@@ -52,10 +52,11 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
                 class="select w-full"
               />
             </div>
-            <.input
-              field={@form[:email_customer?]}
-              type="checkbox"
+            <.customer_email
+              id="booking-email"
+              send={@form[:email_customer?]}
               label={~t"Email the payment link to the customer"}
+              message={@form[:message]}
             />
           </div>
         </.drawer_body>
@@ -158,7 +159,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
     </dl>
     <div :if={@registration.status == :cancelled} class="space-y-2 text-sm">
       <p :if={@registration.cancellation_reason} class="whitespace-pre-line">
-        <span class="text-base-content/75">{~t"Reason"}:</span> {@registration.cancellation_reason}
+        <span class="text-base-content/75">{~t"Message"}:</span> {@registration.cancellation_reason}
       </p>
       <p class="text-base-content/75 break-all">
         {if @registration.cancellation_emailed_to,
@@ -200,9 +201,9 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
       <div class="flex flex-wrap gap-2">
         <.button
           type="button"
-          phx-click="email_payment_link"
+          phx-click="open_email"
+          phx-value-kind="payment_link"
           phx-value-id={@registration.id}
-          data-confirm={email_payment_link_confirmation(@registration, @locale)}
           variant="primary"
           size="sm"
         >
@@ -226,12 +227,4 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
 
   defp payment_link_emailed?(registration),
     do: registration.payment_link_open? and not is_nil(registration.payment_link_emailed_at)
-
-  defp email_payment_link_confirmation(registration, locale) do
-    question = ~t"Email a payment link to #{email = registration.email}?"
-
-    if payment_link_emailed?(registration),
-      do: ~t"Last sent #{time = Format.datetime(registration.payment_link_emailed_at, locale)}." <> " " <> question,
-      else: question
-  end
 end

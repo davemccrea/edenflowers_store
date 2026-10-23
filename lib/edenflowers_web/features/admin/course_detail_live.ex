@@ -33,7 +33,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          |> assign(:locale, Localize.get_locale())
          |> assign(booking_form: nil, refund_params: %{})
          |> assign(settling_id: nil, settlement_mode: :settle, settlement_error: nil)
-         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)}
+         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
+         |> assign(email_form: nil, email_kind: nil, emailing_id: nil)}
 
       :error ->
         {:ok,
@@ -163,6 +164,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         email={@cancelling && @cancelling.email}
         locale={@locale}
       />
+      <.email_drawer
+        form={@email_form}
+        {email_drawer_text(@email_kind, @emailing_id && booking(@course, @emailing_id), @locale)}
+      />
       <.settlement_drawer
         course={@course}
         registration={@settling_id && booking(@course, @settling_id)}
@@ -249,14 +254,29 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     with_registration(socket, id, &PaymentActions.open_payment_link(&1, actor))
   end
 
-  def handle_event("email_payment_link", %{"id" => id}, socket) do
-    actor = socket.assigns.current_user
-    with_registration(socket, id, &PaymentActions.email_payment_link(&1, actor))
+  def handle_event("open_email", %{"kind" => kind, "id" => id}, socket) do
+    {:noreply,
+     socket
+     |> assign(email_kind: String.to_existing_atom(kind), emailing_id: id)
+     |> assign(:email_form, to_form(%{"message" => ""}, as: :email))
+     |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-show"})}
   end
 
-  def handle_event("email_confirmation", %{"id" => id}, socket) do
-    actor = socket.assigns.current_user
-    with_registration(socket, id, &email_confirmation(&1, actor))
+  def handle_event("close_email", _params, socket) do
+    {:noreply, assign(socket, email_form: nil, email_kind: nil, emailing_id: nil)}
+  end
+
+  def handle_event("validate_email", %{"email" => params}, socket) do
+    {:noreply, assign(socket, :email_form, to_form(params, as: :email))}
+  end
+
+  def handle_event("send_email", %{"email" => %{"message" => message}}, socket) do
+    %{email_kind: kind, emailing_id: id, current_user: actor} = socket.assigns
+
+    socket
+    |> assign(email_form: nil, email_kind: nil, emailing_id: nil)
+    |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-hide"})
+    |> with_registration(id, &send_email(kind, &1, message, actor))
   end
 
   def handle_event("remove_seat", %{"id" => id}, socket) do
@@ -353,8 +373,11 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   defp booking(course, id), do: Enum.find(course.bookings, &(&1.id == id))
 
-  defp email_confirmation(registration, actor) do
-    case Courses.email_registration_confirmation(registration, actor: actor) do
+  defp send_email(:payment_link, registration, message, actor),
+    do: PaymentActions.email_payment_link(registration, message, actor)
+
+  defp send_email(:confirmation, registration, message, actor) do
+    case Courses.email_registration_confirmation(registration, %{message: message}, actor: actor) do
       {:ok, _registration} ->
         {:info, ~t"Confirmation emailed."}
 
@@ -362,6 +385,28 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         Logger.error("Confirmation for course registration #{registration.id} not emailed: #{inspect(error)}")
         {:error, ~t"Could not email the confirmation."}
     end
+  end
+
+  defp email_drawer_text(_kind, nil, _locale), do: %{}
+
+  defp email_drawer_text(:confirmation, registration, locale) do
+    %{
+      title: ~t"Email confirmation",
+      submit_label: ~t"Send confirmation",
+      to: registration.email,
+      last_sent: registration.confirmation_emailed_at && Format.datetime(registration.confirmation_emailed_at, locale)
+    }
+  end
+
+  defp email_drawer_text(:payment_link, registration, locale) do
+    last_sent_at = registration.payment_link_open? && registration.payment_link_emailed_at
+
+    %{
+      title: ~t"Email payment link",
+      submit_label: ~t"Send payment link",
+      to: registration.email,
+      last_sent: last_sent_at && Format.datetime(last_sent_at, locale)
+    }
   end
 
   defp reload_course(socket) do
@@ -424,9 +469,9 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       <.actions_menu_button
         :if={@registration.status == :confirmed}
         menu={"registration-actions-#{@registration.id}"}
-        phx-click="email_confirmation"
+        phx-click="open_email"
+        phx-value-kind="confirmation"
         phx-value-id={@registration.id}
-        data-confirm={email_confirmation_confirmation(@registration, @locale)}
       >
         {if @registration.confirmation_emailed_at,
           do: ~t"Resend confirmation",
@@ -560,14 +605,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     if Decimal.negative?(payment.amount),
       do: ~t"Undo #{amount} refund",
       else: ~t"Undo #{amount} payment"
-  end
-
-  defp email_confirmation_confirmation(registration, locale) do
-    question = ~t"Email the booking confirmation to #{email = registration.email}?"
-
-    if registration.confirmation_emailed_at,
-      do: ~t"Last sent #{time = Format.datetime(registration.confirmation_emailed_at, locale)}." <> " " <> question,
-      else: question
   end
 
   defp paid?(registration), do: Decimal.positive?(registration.amount_paid)

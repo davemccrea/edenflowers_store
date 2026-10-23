@@ -39,12 +39,15 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
   end
 
   defp deliver(changeset, order) do
-    case order |> Email.order_details(payment_link_url(order)) |> Mailer.deliver() do
+    message = Ash.Changeset.get_argument(changeset, :message)
+
+    case order |> Email.order_details(payment_link_url(order), message) |> Mailer.deliver() do
       {:ok, _result} ->
         Logger.info("Sent order details email for order #{order.id}")
 
         changeset
         |> Ash.Changeset.force_change_attribute(:order_details_emailed_at, DateTime.utc_now())
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: %{email_message: message}})
         |> clear_failure()
 
       {:error, error} ->

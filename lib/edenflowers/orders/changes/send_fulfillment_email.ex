@@ -22,10 +22,13 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmail do
 
   defp send_email(changeset) do
     order = Ash.load!(changeset.data, [:customer_first_name, :recipient_first_name], authorize?: false)
+    message = Ash.Changeset.get_argument(changeset, :message)
 
-    case email(order) do
+    case email(order, message) do
       {:ok, email} ->
-        deliver(changeset, order, email)
+        changeset
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: %{email_message: message}})
+        |> deliver(order, email)
 
       {:error, error} ->
         Ash.Changeset.add_error(changeset, field: :delivery_photo_slug, message: email_error(error))
@@ -51,15 +54,15 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmail do
 
   defp email_error(error), do: ~t"Failed to send fulfillment email: #{error = inspect(error)}"
 
-  defp email(%{email_delivery_photo: true, delivery_photo_slug: slug} = order)
+  defp email(%{email_delivery_photo: true, delivery_photo_slug: slug} = order, message)
        when is_binary(slug) and byte_size(slug) > 0 do
-    with {:ok, jpeg} <- fetch_small_photo(slug), do: {:ok, Email.order_delivered(order, jpeg)}
+    with {:ok, jpeg} <- fetch_small_photo(slug), do: {:ok, Email.order_delivered(order, jpeg, message)}
   end
 
-  defp email(%{email_delivery_photo: true}),
+  defp email(%{email_delivery_photo: true}, _message),
     do: {:error, ~t"Delivery photo is missing."}
 
-  defp email(order), do: {:ok, Email.order_delivered(order)}
+  defp email(order, message), do: {:ok, Email.order_delivered(order, nil, message)}
 
   # A phone photo can be 10 MB or more. 1600 px at quality 80 comes to a few
   # hundred KB: small enough for any inbox, sharp enough to spot a doorstep.

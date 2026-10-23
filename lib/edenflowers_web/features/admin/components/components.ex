@@ -32,8 +32,8 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :locale, :string, required: true
 
   @doc """
-  Cancels an order or a booking: how much to refund, an optional reason, and
-  whether to email the customer. Takes `PaymentActions.cancel_form/1`. Sends
+  Cancels an order or a booking: how much to refund, and whether to email
+  the customer, with an optional message. Takes `PaymentActions.cancel_form/1`. Sends
   `validate_cancel` and `submit_cancel` with `cancel` params, and
   `close_cancel` when it closes.
   """
@@ -63,18 +63,14 @@ defmodule EdenflowersWeb.Admin.Components do
               {~t"Paid #{amount = Edenflowers.Format.currency(Decimal.new(@form[:held].value), @locale)}. Card payments go back through Stripe; anything paid in person you hand back yourself. Whatever you don't refund you keep."}
             </p>
           </div>
-          <.input
-            field={@form[:reason]}
-            type="textarea"
-            rows="3"
-            label={~t"Reason (optional)"}
-            placeholder={~t"Shown in the customer's email and kept on record."}
-            class="textarea w-full"
+          <.customer_email
+            :if={@email}
+            id="cancel-email"
+            send={@form[:email_customer]}
+            label={~t"Email the customer"}
+            message={@form[:message]}
+            to={@email}
           />
-          <div :if={@email} class="space-y-2">
-            <.input field={@form[:email_customer]} type="checkbox" label={~t"Email the customer"} />
-            <p class="text-base-content/75 ml-7 break-all text-sm">{~t"To: #{email = @email}"}</p>
-          </div>
           <p :if={!@email} class="text-base-content/75 text-sm">
             {~t"There's no email address, so the customer won't be emailed."}
           </p>
@@ -86,6 +82,82 @@ defmodule EdenflowersWeb.Admin.Components do
             phx-click={JS.exec("phx-hide", to: "#cancel-drawer") |> JS.push("close_cancel")}
             variant="ghost"
           >{@keep_label}</.button>
+        </.drawer_footer>
+      </.form>
+    </.admin_drawer>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :send, Phoenix.HTML.FormField, default: nil, doc: "the tick box, or nil when sending is the form's whole job"
+  attr :label, :string, default: nil, doc: "the tick box's label"
+  attr :message, Phoenix.HTML.FormField, required: true
+  attr :to, :string, default: nil, doc: "the customer's address, when the form already knows it"
+  slot :inner_block, doc: "more choices about the email, like whether to attach the photo"
+
+  @doc """
+  The tick box and message box beside every email one of Jennie's actions
+  sends (ADR 0006). The message box shows only while the email is ticked.
+  """
+  def customer_email(assigns) do
+    assigns = assign(assigns, :sending?, is_nil(assigns.send) or assigns.send.value not in [false, "false"])
+
+    ~H"""
+    <div id={@id} class="space-y-2">
+      <.input :if={@send} field={@send} id={"#{@id}-send"} type="checkbox" label={@label} />
+      <div class={["space-y-3", @send && "ml-7"]}>
+        <p :if={@to} class="text-base-content/75 break-all text-sm">{~t"To: #{email = @to}"}</p>
+        {render_slot(@inner_block)}
+        <.input
+          :if={@sending?}
+          field={@message}
+          id={"#{@id}-message"}
+          type="textarea"
+          rows="3"
+          label={~t"Message to the customer (optional)"}
+          placeholder={~t"Goes after the first line of the email."}
+          class="textarea w-full"
+        />
+      </div>
+    </div>
+    """
+  end
+
+  attr :form, :any, default: nil
+  attr :title, :string, default: nil
+  attr :submit_label, :string, default: nil
+  attr :to, :string, default: nil
+  attr :last_sent, :string, default: nil, doc: "when this email last went, if it has"
+
+  @doc """
+  Sends one email from a menu item or button, with Jennie's message. Sends
+  `validate_email` and `send_email` with `email` params, and `close_email`
+  when it closes.
+  """
+  def email_drawer(assigns) do
+    ~H"""
+    <.admin_drawer id="email-drawer" title={@title || ""} on_close={JS.push("close_email")}>
+      <.form
+        :if={@form}
+        for={@form}
+        id="email-form"
+        phx-change="validate_email"
+        phx-submit="send_email"
+        class="flex min-h-0 flex-1 flex-col"
+      >
+        <.drawer_body>
+          <p :if={@last_sent} class="text-base-content/75 text-sm">{~t"Last sent #{time = @last_sent}."}</p>
+          <.customer_email id="email-drawer-email" message={@form[:message]} to={@to} />
+        </.drawer_body>
+        <.drawer_footer>
+          <.button type="submit" variant="primary">
+            <.icon name="hero-envelope" class="h-4 w-4" /> {@submit_label}
+          </.button>
+          <.button
+            type="button"
+            phx-click={JS.exec("phx-hide", to: "#email-drawer") |> JS.push("close_email")}
+            variant="ghost"
+          >{~t"Cancel"}</.button>
         </.drawer_footer>
       </.form>
     </.admin_drawer>
@@ -582,12 +654,12 @@ defmodule EdenflowersWeb.Admin.Components do
           class="input w-full tabular-nums"
         />
       </div>
-      <.input
+      <.customer_email
         :if={@settles? and @receipt_email?}
-        field={@form[:email_receipt]}
-        id={"#{@id}-email-receipt"}
-        type="checkbox"
+        id={"#{@id}-email"}
+        send={@form[:email_receipt]}
         label={~t"Email a receipt"}
+        message={@form[:message]}
       />
       <.button
         type="submit"
@@ -680,19 +752,14 @@ defmodule EdenflowersWeb.Admin.Components do
       <p :if={@form[:how].value != "stripe"} class="text-base-content/75 text-sm">
         {~t"Records money you have already handed back."}
       </p>
-      <.input
-        field={@form[:note]}
-        id={"#{@id}-note"}
-        type="textarea"
-        rows="2"
-        label={~t"Reason (optional)"}
-        placeholder={~t"Shown in the customer's email and kept on record."}
-        class="textarea w-full"
+      <.customer_email
+        :if={@email}
+        id={"#{@id}-email"}
+        send={@form[:email_customer]}
+        label={~t"Email the customer"}
+        message={@form[:note]}
+        to={@email}
       />
-      <div :if={@email} class="space-y-2">
-        <.input field={@form[:email_customer]} id={"#{@id}-email-customer"} type="checkbox" label={~t"Email the customer"} />
-        <p class="text-base-content/75 ml-7 break-all text-sm">{~t"To: #{email = @email}"}</p>
-      </div>
       <.button
         type="submit"
         variant="primary"

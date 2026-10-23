@@ -21,13 +21,13 @@ defmodule Edenflowers.Courses.Changes.SendPaymentLinkEmail do
       url = EdenflowersWeb.PaymentLink.url_for(%{registration | payment_link_token: token})
 
       if Decimal.positive?(registration.balance),
-        do: deliver(changeset, registration, url),
+        do: deliver(changeset, registration, url, Ash.Changeset.get_argument(changeset, :message)),
         else: Ash.Changeset.add_error(changeset, field: :balance, message: "nothing is owed")
     end)
   end
 
-  defp deliver(changeset, registration, url) do
-    case registration |> Email.course_payment_link(url) |> Mailer.deliver() do
+  defp deliver(changeset, registration, url, message) do
+    case registration |> Email.course_payment_link(url, message) |> Mailer.deliver() do
       {:ok, _result} ->
         Logger.info("Sent payment link email for course registration #{registration.id}")
         Ash.Changeset.force_change_attribute(changeset, :payment_link_emailed_at, DateTime.utc_now())

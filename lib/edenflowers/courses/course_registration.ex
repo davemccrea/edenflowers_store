@@ -127,6 +127,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     create :add_manually do
       accept [:name, :email, :seats, :course_id, :locale]
       argument :email_customer?, :boolean, default: true
+      argument :message, :string
       validate attribute_in(:locale, @locales)
       change set_attribute(:status, :awaiting_payment)
       change Changes.UpsertUser
@@ -134,7 +135,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
       change PaymentChanges.OpenPaymentLink
 
-      change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_confirmation_email},
+      change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email},
         where: [argument_equals(:email_customer?, true)]
     end
 
@@ -154,7 +155,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       # cancelling the booking would ask Stripe to cancel a paid PaymentIntent.
       change set_attribute(:payment_intent_id, nil)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
-      change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_confirmation_email}
+      change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email}
 
       require_atomic? false
     end
@@ -176,7 +177,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       # chose not to email one when she added the booking.
       change set_attribute(:confirmation_emailed_at, nil)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
-      change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_confirmation_email}
+      change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email}
       require_atomic? false
     end
 
@@ -189,6 +190,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     # Opens the link if need be, so sending it is opening one.
     update :email_payment_link do
+      argument :message, :string
       validate attribute_in(:status, [:awaiting_payment, :confirmed]), message: "is not awaiting payment"
       change PaymentChanges.OpenPaymentLink
       change Changes.SendPaymentLinkEmail
@@ -239,6 +241,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     update :send_confirmation_email do
       accept []
+      argument :message, :string
       transaction? false
       require_atomic? false
       change Changes.SendConfirmationEmail
@@ -247,6 +250,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # The confirmation again, with the receipt once paid.
     update :email_receipt do
       accept []
+      argument :message, :string
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       transaction? false
       require_atomic? false

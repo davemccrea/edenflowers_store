@@ -7,7 +7,7 @@
   true -> ~t"Your order has been delivered."
 end %>
 
-<%= ~t"Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it." %>
+<%= message(@message) %><%= ~t"Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it." %>
 
 <%= ~t"Warm wishes," %>
 
