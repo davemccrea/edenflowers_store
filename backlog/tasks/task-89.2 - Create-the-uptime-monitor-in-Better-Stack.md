@@ -1,10 +1,10 @@
 ---
 id: TASK-89.2
 title: Create the uptime monitor in Better Stack
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-21 19:51'
-updated_date: '2026-10-21 19:51'
+updated_date: '2026-10-23 12:15'
 labels: []
 dependencies:
   - TASK-89.1
@@ -28,8 +28,8 @@ Once TASK-89.1 is deployed to production, create a Better Stack monitor on the f
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A failed /health check emails David
-- [ ] #2 `infra/README.md` names the monitor and its URL
+- [x] #1 A failed /health check emails David
+- [x] #2 `infra/README.md` names the monitor and its URL
 <!-- AC:END -->
 
 ## Comments

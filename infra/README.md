@@ -32,3 +32,7 @@ ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec 
 ```
 
 The deploy workflow SSHes in with the private half of `github_actions_public_key`, stored as `DEPLOY_SSH_KEY` next to `DEPLOY_HOST` and `DEPLOY_USER` in the `production` GitHub environment.
+
+## Monitoring
+
+Better Stack's uptime monitor checks https://edenflowers.fi/health every 3 minutes and emails David when it fails. The route answers 200 only when the app can reach the database. Deploys pause the monitor while the app restarts.
