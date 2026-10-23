@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
               {~t"Reply to your confirmation email and let me know."}
             </.faq_item>
             <.faq_item question={~t"Will I get my money back?"} heading="h3">
-              {~t"Yes, if you cancel at least 7 days before the course. After that, get in touch and we'll work something out."}
+              {~t"Yes, if you cancel in time. Each course's page says how many days before it you can cancel for a full refund, and how much is kept after that."}
             </.faq_item>
           </dl>
         </section>

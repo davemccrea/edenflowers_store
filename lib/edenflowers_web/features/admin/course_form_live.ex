@@ -118,6 +118,29 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
               </div>
             </.form_section>
 
+            <.form_section title={~t"Cancellation"}>
+              <:description>
+                {~t"Shown on the course page and in the booking emails, and used to fill in a cancelled booking's refund."}
+              </:description>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <.input
+                  field={@form[:cancellation_days]}
+                  type="number"
+                  min="0"
+                  label={~t"Full refund until (days before)"}
+                  class="input w-full tabular-nums"
+                />
+                <.input
+                  field={@form[:cancellation_fee_percent]}
+                  type="number"
+                  min="0"
+                  max="100"
+                  label={~t"Kept after that (%)"}
+                  class="input w-full tabular-nums"
+                />
+              </div>
+            </.form_section>
+
             <.form_section title={~t"Taught in"}>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <.input

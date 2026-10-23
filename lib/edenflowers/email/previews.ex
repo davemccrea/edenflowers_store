@@ -396,28 +396,32 @@ defmodule Edenflowers.Email.Previews do
 
   defp course_confirmation(locale) do
     for {title, attrs} <- [
-          {gettext_noop("paid"), %{balance: Decimal.new(0), amount_paid: Decimal.new("45.00")}},
-          {gettext_noop("2 places, paid"), %{seats: 2, balance: Decimal.new(0), amount_paid: Decimal.new("90.00")}},
-          {gettext_noop("no first name"),
-           %{first_name: nil, balance: Decimal.new(0), amount_paid: Decimal.new("45.00")}},
-          {gettext_noop("paid after the course"),
-           %{balance: Decimal.new(0), amount_paid: Decimal.new("45.00"), course: %{date: ~D[2020-11-20]}}}
+          {gettext_noop("paid, full refund until 7 days before"), %{}},
+          {gettext_noop("2 places, half kept after 10 days before"),
+           %{
+             seats: 2,
+             amount_paid: Decimal.new("90.00"),
+             course: %{cancellation_days: 10, cancellation_fee_percent: 50}
+           }},
+          {gettext_noop("no first name, no refund after 7 days before"),
+           %{first_name: nil, course: %{cancellation_fee_percent: 100}}}
         ] do
-      {gettext_noop("Course confirmation"), title, :course_confirmation,
-       Email.course_confirmation(registration(attrs, locale))}
+      registration =
+        registration(Map.merge(%{balance: Decimal.new(0), amount_paid: Decimal.new("45.00")}, attrs), locale)
+
+      {gettext_noop("Booking confirmed"), title, :course_confirmation, Email.course_confirmation(registration)}
     end
   end
 
   defp course_payment_link(locale) do
-    for {title, attrs} <- [
-          {gettext_noop("awaiting payment"), %{status: :awaiting_payment}},
-          {gettext_noop("2 places, awaiting payment"),
-           %{status: :awaiting_payment, seats: 2, balance: Decimal.new("90.00")}},
-          {gettext_noop("after the course"), %{status: :awaiting_payment, course: %{date: ~D[2020-11-20]}}},
-          {gettext_noop("no first name"), %{status: :awaiting_payment, first_name: nil}}
+    for {title, attrs, message} <- [
+          {gettext_noop("awaiting payment"), %{status: :awaiting_payment}, nil},
+          {gettext_noop("2 places, with a message from Jennie"),
+           %{status: :awaiting_payment, seats: 2, balance: Decimal.new("90.00")}, message(locale)},
+          {gettext_noop("no first name"), %{status: :awaiting_payment, first_name: nil}, nil}
         ] do
       {gettext_noop("Course payment link"), title, :course_payment_link,
-       Email.course_payment_link(registration(attrs, locale), @payment_link)}
+       Email.course_payment_link(registration(attrs, locale), @payment_link, message)}
     end
   end
 
@@ -632,7 +636,9 @@ defmodule Edenflowers.Email.Previews do
           start_time: ~T[18:00:00],
           end_time: ~T[20:00:00],
           location_name: "Eden Flowers studio",
-          location_address: "Storgatan 1, 65100 Vaasa"
+          location_address: "Storgatan 1, 65100 Vaasa",
+          cancellation_days: 7,
+          cancellation_fee_percent: 0
         },
         Map.get(attrs, :course, %{})
       )

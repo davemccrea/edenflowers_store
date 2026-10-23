@@ -342,6 +342,8 @@ defmodule Generator do
         register_before: Date.add(Edenflowers.ShopTime.today(), 20),
         total_places: 8,
         price: "85.00",
+        cancellation_days: 7,
+        cancellation_fee_percent: 0,
         tax_rate_id: tax_rate_id
       },
       overrides: opts,

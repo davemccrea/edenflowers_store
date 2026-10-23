@@ -1,7 +1,8 @@
 defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
   @moduledoc """
   Sends a course booking confirmation, including a receipt when payment has
-  settled. A booking still awaiting payment gets its payment link instead.
+  settled. A booking still awaiting payment gets its payment link instead,
+  or a Payment reminder once the course is over.
   """
 
   use Ash.Resource.Change
@@ -43,7 +44,12 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
   defp deliver_without_receipt(%{payment_link_open?: true} = registration, message) do
     url = EdenflowersWeb.PaymentLink.url_for(registration)
 
-    with {:ok, _result} <- registration |> Email.course_payment_link(url, message) |> Mailer.deliver() do
+    email =
+      if Date.before?(registration.course.date, Edenflowers.ShopTime.today()),
+        do: Email.payment_reminder(registration, url, message),
+        else: Email.course_payment_link(registration, url, message)
+
+    with {:ok, _result} <- Mailer.deliver(email) do
       {:ok, %{payment_link_emailed_at: DateTime.utc_now()}}
     end
   end

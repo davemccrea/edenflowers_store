@@ -8,7 +8,12 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
     assert has_element?(view, "#courses h2", "Courses")
     assert has_element?(view, "#courses dd", "Reply to your confirmation email")
-    assert has_element?(view, "#courses dd", "at least 7 days before the course")
+
+    assert has_element?(
+             view,
+             "#courses dd",
+             "Each course's page says how many days before it you can cancel for a full refund"
+           )
   end
 
   test "the delivery answer gives the same-day deadline from the shop calendar", %{conn: conn} do

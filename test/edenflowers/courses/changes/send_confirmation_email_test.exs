@@ -43,16 +43,22 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
     end)
   end
 
-  test "sent after the course, thanks the customer instead of confirming the place" do
-    email = confirmation_email("85.00", Date.add(Edenflowers.ShopTime.today(), -1))
+  test "a booking still awaiting payment after the course gets a payment reminder, not the link" do
+    registration =
+      generate(course_registration(status: :awaiting_payment, payment_link_token: "tok", email: "anna@example.com"))
 
-    refute email.text_body =~ "confirmed"
-    refute email.text_body =~ "When:"
-    refute email.text_body =~ "cancel"
-    refute email.text_body =~ "See you there"
-    assert email.subject =~ "Your booking on Autumn Wreaths"
-    assert email.text_body =~ "Thank you for coming to Autumn Wreaths."
-    assert email.text_body =~ "Your receipt is attached."
+    Edenflowers.Courses.Course
+    |> Ash.get!(registration.course_id, authorize?: false)
+    |> Ash.Seed.update!(%{date: Date.add(Edenflowers.ShopTime.today(), -1)})
+
+    assert {:ok, _registration} =
+             perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => registration.id}})
+
+    assert_email_sent(fn email ->
+      refute email.text_body =~ "kept you a place"
+      assert email.subject =~ "A reminder about your booking on"
+      assert email.text_body =~ "/pay/courses/tok"
+    end)
   end
 
   defp confirmation_email(amount_paid, date \\ ~D[2026-11-20]) do
@@ -69,23 +75,25 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
         start_time: ~T[18:00:00],
         end_time: ~T[20:00:00],
         location_name: "Studio",
-        location_address: "Storgatan 1"
+        location_address: "Storgatan 1",
+        cancellation_days: 10,
+        cancellation_fee_percent: 50
       }
     })
   end
 
-  describe "the cancellation sentence" do
-    defp confirmation(amount_paid), do: confirmation_email(amount_paid).text_body
-
-    test "promises a paid booking a full refund 7 days before the course" do
-      assert confirmation("85.00") =~ "Let me know at least 7 days before the course for a full refund."
+  describe "the confirmation" do
+    test "names the course and its day in the subject" do
+      assert confirmation_email("85.00").subject == "You're booked on Autumn Wreaths, Friday 20.11."
     end
 
-    test "only asks an unpaid booking for notice" do
-      body = confirmation("0")
+    test "states the course's own cancellation terms" do
+      body = confirmation_email("85.00").text_body
 
-      assert body =~ "Please let me know at least 7 days before the course if you can."
-      refute body =~ "refund"
+      refute body =~ "work something out"
+
+      assert body =~
+               "To cancel, reply to this email. Cancel at least 10 days before the course for a full refund. After that, 50% of the price is kept."
     end
   end
 end

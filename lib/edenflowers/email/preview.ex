@@ -101,7 +101,7 @@ defmodule Edenflowers.Email.Preview do
       }
       |> translated()
 
-    Email.course_payment_link(entered, link_url(entered), inputs[:message])
+    booking_email(:payment_link, entered, inputs)
   end
 
   # Placing opens a link for payment-link terms; an edited order keeps the one it has.
@@ -178,8 +178,12 @@ defmodule Edenflowers.Email.Preview do
         |> Swoosh.Email.attachment(Receipt.attachment("", registration.reference))
   end
 
-  defp booking_email(:payment_link, registration, inputs),
-    do: Email.course_payment_link(registration, link_url(registration), inputs[:message])
+  # After the course, the link goes in a Payment reminder, as the senders send it.
+  defp booking_email(:payment_link, registration, inputs) do
+    if Date.before?(registration.course.date, Edenflowers.ShopTime.today()),
+      do: Email.payment_reminder(registration, link_url(registration), inputs[:message]),
+      else: Email.course_payment_link(registration, link_url(registration), inputs[:message])
+  end
 
   defp booking_email(:payment_reminder, registration, inputs),
     do: Email.payment_reminder(registration, link_url(registration), inputs[:message])
