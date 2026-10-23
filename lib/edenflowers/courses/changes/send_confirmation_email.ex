@@ -1,6 +1,7 @@
 defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
   @moduledoc """
-  Sends a course booking confirmation, including a receipt when payment has settled.
+  Sends a course booking confirmation, including a receipt when payment has
+  settled. A booking still awaiting payment gets its payment link instead.
   """
 
   use Ash.Resource.Change
@@ -42,13 +43,14 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
   defp deliver_without_receipt(%{payment_link_open?: true} = registration) do
     url = EdenflowersWeb.PaymentLink.url_for(registration)
 
-    with {:ok, _result} <- registration |> Email.course_confirmation(url) |> Mailer.deliver() do
+    with {:ok, _result} <- registration |> Email.course_payment_link(url) |> Mailer.deliver() do
       {:ok, %{payment_link_emailed_at: DateTime.utc_now()}}
     end
   end
 
+  # A booking confirmed unpaid before courses were always paid by link.
   defp deliver_without_receipt(registration) do
-    with {:ok, _result} <- registration |> Email.course_confirmation(nil) |> Mailer.deliver() do
+    with {:ok, _result} <- registration |> Email.course_confirmation() |> Mailer.deliver() do
       {:ok, %{}}
     end
   end
@@ -57,7 +59,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
     with {:ok, pdf} <- Receipt.generate(registration),
          {:ok, _result} <-
            registration
-           |> Email.course_confirmation(nil)
+           |> Email.course_confirmation()
            |> Swoosh.Email.attachment(Receipt.attachment(pdf, registration.reference))
            |> Mailer.deliver() do
       {:ok, %{receipt_emailed_at: DateTime.utc_now()}}

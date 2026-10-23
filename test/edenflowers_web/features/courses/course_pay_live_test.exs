@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     registration =
       generate(course_registration(course_id: course.id, status: :confirmed, seats: 2, amount: Decimal.new("170.00")))
 
-    {:ok, _paid} = Courses.record_registration_payment(registration, "50.00", :cash, actor: admin)
+    generate(payment(course_registration_id: registration.id, amount: Decimal.new("50.00")))
     {:ok, registration} = Courses.open_registration_payment_link(registration, actor: admin)
 
     %{admin: admin, registration: registration}
@@ -73,8 +73,8 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     refute render(view) =~ "Paid so far"
   end
 
-  test "says so once the booking is settled", %{conn: conn, admin: admin, registration: registration} do
-    {:ok, _paid} = Courses.record_registration_payment(registration, "120.00", :cash, actor: admin)
+  test "says so once the booking is settled", %{conn: conn, registration: registration} do
+    generate(payment(course_registration_id: registration.id, amount: Decimal.new("120.00")))
 
     {:ok, view, _html} = live(conn, ~p"/pay/courses/#{registration.payment_link_token}")
 

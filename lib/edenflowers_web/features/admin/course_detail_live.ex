@@ -182,7 +182,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     form =
       AshPhoenix.Form.for_create(CourseRegistration, :add_manually,
         actor: socket.assigns.current_user,
-        params: %{"payment_link?" => "true", "email_customer?" => "true"},
+        params: %{"email_customer?" => "true"},
         transform_params: fn _form, params, _action -> Map.put(params, "course_id", course_id) end
       )
       |> to_form()
@@ -228,15 +228,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
      socket
      |> assign(settling_id: id, settlement_mode: mode, settlement_error: nil)
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
-  end
-
-  def handle_event("mark_paid", %{"registration_id" => id} = params, socket) do
-    actor = socket.assigns.current_user
-
-    settle(socket, id, fn registration ->
-      params = Map.put(params, "amount", Decimal.to_string(registration.balance, :normal))
-      PaymentActions.record_payment(registration, params, actor)
-    end)
   end
 
   def handle_event("undo_payment", %{"id" => id, "payment-id" => payment_id}, socket) do
@@ -398,7 +389,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     case Courses.get_course_by_id(id, actor: socket.assigns.current_user, load: load) do
       {:ok, course} ->
         course = Translations.translate(course)
-        {registrations, cancelled} = Enum.split_with(course.bookings, &(&1.status == :confirmed))
+        {cancelled, registrations} = Enum.split_with(course.bookings, &(&1.status == :cancelled))
 
         {:ok,
          assign(socket,
@@ -431,6 +422,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         </.link>
       </li>
       <.actions_menu_button
+        :if={@registration.status == :confirmed}
         menu={"registration-actions-#{@registration.id}"}
         phx-click="email_confirmation"
         phx-value-id={@registration.id}

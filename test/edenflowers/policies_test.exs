@@ -522,20 +522,19 @@ defmodule Edenflowers.PoliciesTest do
       record |> Ash.Changeset.for_update(action, params, actor: actor) |> Ash.update()
     end
 
-    test "only the admin records a payment", %{records: records, customer: customer} do
-      for record <- records do
-        payment = %{amount: "1.00", payment_method: :cash}
+    # Only orders: courses are paid by payment link.
+    test "only the admin records a payment", %{records: [order, _registration], customer: customer} do
+      payment = %{amount: "1.00", payment_method: :cash}
 
-        assert {:error, %Ash.Error.Forbidden{}} = record(record, :record_payment, payment, customer)
-        assert {:error, %Ash.Error.Forbidden{}} = record(record, :record_payment, payment, %{system: true})
-        assert {:ok, _record} = record(record, :record_payment, payment, %{admin: true})
-      end
+      assert {:error, %Ash.Error.Forbidden{}} = record(order, :record_payment, payment, customer)
+      assert {:error, %Ash.Error.Forbidden{}} = record(order, :record_payment, payment, %{system: true})
+      assert {:ok, _record} = record(order, :record_payment, payment, %{admin: true})
     end
 
     test "only the admin undoes a payment", %{records: records, customer: customer} do
       for record <- records do
-        {:ok, record} = record(record, :record_payment, %{amount: "1.00", payment_method: :cash}, %{admin: true})
-        [payment] = Ash.load!(record, :payments, authorize?: false).payments
+        key = Edenflowers.Payments.parent_key(record)
+        payment = generate(payment([{key, record.id}, method: :cash, amount: Decimal.new("1.00")]))
         undo = %{payment_id: payment.id}
 
         assert {:error, %Ash.Error.Forbidden{}} = record(record, :undo_payment, undo, customer)

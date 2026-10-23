@@ -32,12 +32,17 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
     )
   end
 
+  defp pay_in_person(registration, amount) do
+    generate(payment(course_registration_id: registration.id, method: :cash, amount: Decimal.new(amount)))
+    registration
+  end
+
   defp link_intent(registration, id, amount_received) do
     %{id: id, metadata: %{"course_registration_id" => registration.id}, amount_received: amount_received}
   end
 
   describe "opening a payment link" do
-    test "gives a confirmed booking owing money a token, and keeps it when opened again", ctx do
+    test "gives a booking owing money a token, and keeps it when opened again", ctx do
       {:ok, opened} = Courses.open_registration_payment_link(ctx.registration, actor: ctx.admin)
       assert is_binary(opened.payment_link_token)
       assert reload(opened).payment_link_open?
@@ -52,7 +57,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
 
     test "a cancelled or settled booking has no open link", ctx do
       {:ok, opened} = Courses.open_registration_payment_link(ctx.registration, actor: ctx.admin)
-      {:ok, _paid} = Courses.record_registration_payment(opened, "85.00", :cash, actor: ctx.admin)
+      pay_in_person(opened, "85.00")
       refute reload(opened).payment_link_open?
 
       other = generate(course_registration(status: :confirmed))
@@ -63,7 +68,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
   end
 
   test "a PaymentIntent for a booking with part paid is for the balance", ctx do
-    {:ok, _paid} = Courses.record_registration_payment(ctx.registration, "30.00", :cash, actor: ctx.admin)
+    pay_in_person(ctx.registration, "30.00")
     registration_id = ctx.registration.id
 
     expect(StripeAPI.Mock, :create_payment_intent, fn 5500, %{"course_registration_id" => ^registration_id}, nil ->
@@ -74,14 +79,16 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
   end
 
   describe "paying through the link" do
-    test "records a Stripe payment on the confirmed booking, settles it and emails the receipt", ctx do
+    test "confirms the booking, records the Stripe payment and emails the receipt", ctx do
       registration =
         Ash.Seed.update!(ctx.registration, %{payment_intent_id: "pi_link", confirmation_emailed_at: DateTime.utc_now()})
 
+      assert registration.status == :awaiting_payment
       assert {:ok, :completed} = Payments.complete(link_intent(registration, "pi_link", 8500))
 
       paid = reload(registration)
       assert paid.status == :confirmed
+      assert paid.confirmed_at
       assert paid.settled?
       assert paid.payment_intent_id == nil
       assert paid.confirmation_emailed_at == nil
@@ -109,7 +116,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
         assert email.subject =~ "Maksa varauksesi kurssille"
-        assert email.text_body =~ "maksettavaa kurssista"
+        assert email.text_body =~ "vahvistuu, kun olet maksanut"
         refute email.text_body =~ "palautan koko summan"
         assert email.text_body =~ "/pay/courses/#{emailed.payment_link_token}"
         assert email.text_body =~ "85,00"
@@ -134,7 +141,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
     end
 
     test "is refused once nothing is owed", ctx do
-      {:ok, paid} = Courses.record_registration_payment(ctx.registration, "85.00", :cash, actor: ctx.admin)
+      paid = pay_in_person(ctx.registration, "85.00")
 
       assert {:error, _} = Courses.email_registration_payment_link(paid, actor: ctx.admin)
       refute_email_sent()

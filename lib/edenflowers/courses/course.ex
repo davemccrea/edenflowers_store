@@ -100,7 +100,7 @@ defmodule Edenflowers.Courses.Course do
     # abandoned, and neither is someone who is coming. Cancelled ones stay so
     # Jennie can see who dropped out.
     has_many :bookings, Edenflowers.Courses.CourseRegistration do
-      filter expr(status in [:confirmed, :cancelled])
+      filter expr(status in [:awaiting_payment, :confirmed, :cancelled])
       sort inserted_at: :asc
     end
 
@@ -136,9 +136,10 @@ defmodule Edenflowers.Courses.Course do
       authorize? false
     end
 
-    # Leaves out holds still at checkout, so the admin counts only who is coming.
+    # Leaves out holds still at checkout, so the admin counts only who is
+    # coming or whose place waits on their payment link.
     sum :seats_booked, :course_registrations, :seats_held do
-      filter expr(status == :confirmed)
+      filter expr(status in [:awaiting_payment, :confirmed])
       default 0
     end
   end

@@ -304,26 +304,26 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp course_confirmation(locale) do
-    for {title, attrs, link} <- [
-          {gettext_noop("unpaid, payment link"), %{}, @payment_link},
-          {gettext_noop("unpaid, pays at the course"), %{}, nil},
-          {gettext_noop("paid"), %{balance: Decimal.new(0)}, nil},
-          {gettext_noop("2 places, paid"), %{seats: 2, balance: Decimal.new(0)}, nil},
-          {gettext_noop("2 places, unpaid, payment link"), %{seats: 2, balance: Decimal.new("90.00")}, @payment_link},
-          {gettext_noop("partially paid, payment link"),
-           %{amount_paid: Decimal.new("25.00"), balance: Decimal.new("20.00")}, @payment_link},
-          {gettext_noop("no first name"), %{first_name: nil}, @payment_link}
+    for {title, attrs} <- [
+          {gettext_noop("paid"), %{balance: Decimal.new(0), amount_paid: Decimal.new("45.00")}},
+          {gettext_noop("2 places, paid"), %{seats: 2, balance: Decimal.new(0), amount_paid: Decimal.new("90.00")}},
+          {gettext_noop("no first name"),
+           %{first_name: nil, balance: Decimal.new(0), amount_paid: Decimal.new("45.00")}},
+          {gettext_noop("confirmed unpaid, before courses were paid by link"), %{}}
         ] do
       {gettext_noop("Course confirmation"), title, :course_confirmation,
-       Email.course_confirmation(registration(attrs, locale), link)}
+       Email.course_confirmation(registration(attrs, locale))}
     end
   end
 
   defp course_payment_link(locale) do
     for {title, attrs} <- [
-          {gettext_noop("unpaid"), %{}},
-          {gettext_noop("partially paid"), %{amount_paid: Decimal.new("25.00"), balance: Decimal.new("20.00")}},
-          {gettext_noop("no first name"), %{first_name: nil}}
+          {gettext_noop("awaiting payment"), %{status: :awaiting_payment}},
+          {gettext_noop("2 places, awaiting payment"),
+           %{status: :awaiting_payment, seats: 2, balance: Decimal.new("90.00")}},
+          {gettext_noop("confirmed, partially paid"),
+           %{status: :confirmed, amount_paid: Decimal.new("25.00"), balance: Decimal.new("20.00")}},
+          {gettext_noop("no first name"), %{status: :awaiting_payment, first_name: nil}}
         ] do
       {gettext_noop("Course payment link"), title, :course_payment_link,
        Email.course_payment_link(registration(attrs, locale), @payment_link)}
