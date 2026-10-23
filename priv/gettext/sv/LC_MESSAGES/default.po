@@ -3191,6 +3191,11 @@ msgstr "Beställningen har uppdaterats."
 msgid "Pay at collection"
 msgstr "Betalas vid avhämtning"
 
+#: lib/edenflowers_web/features/checkout/pay_live.ex:70
+#, elixir-autogen, elixir-format
+msgid "Pay for order %{reference}"
+msgstr "Betala beställning %{reference}"
+
 #: lib/edenflowers_web/features/checkout/pay_live.ex:35
 #: lib/edenflowers_web/features/checkout/pay_live.ex:69
 #, elixir-autogen, elixir-format

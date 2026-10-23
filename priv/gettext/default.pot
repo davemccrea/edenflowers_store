@@ -3191,6 +3191,11 @@ msgstr ""
 msgid "Pay at collection"
 msgstr ""
 
+#: lib/edenflowers_web/features/checkout/pay_live.ex:70
+#, elixir-autogen, elixir-format
+msgid "Pay for order %{reference}"
+msgstr ""
+
 #: lib/edenflowers_web/features/checkout/pay_live.ex:35
 #: lib/edenflowers_web/features/checkout/pay_live.ex:69
 #, elixir-autogen, elixir-format

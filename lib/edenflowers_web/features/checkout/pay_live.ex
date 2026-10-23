@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
                 {~t"Confirming your payment… You'll get a receipt by email once it's done."}
               </p>
             <% true -> %>
-              <h1 class="page-title mb-6">{~t"Pay for your order"}</h1>
+              <h1 class="page-title mb-6">{~t"Pay for order #{reference = @payable.order_reference}"}</h1>
               <p :if={@payable.subscription_id} class="leading-relaxed" data-testid="pay-subscription">
                 {~t"This delivery is part of your subscription. Paying for it restarts the subscription if it's on hold."}
                 {~t"It doesn't change the card your later deliveries are charged to."}
@@ -80,8 +80,8 @@ defmodule EdenflowersWeb.Checkout.PayLive do
               </p>
           <% end %>
 
-          <section class="mt-10" aria-labelledby="order-summary-heading">
-            <h2 id="order-summary-heading" class="section-title mb-4">
+          <section class="mt-10" aria-label={~t"Order #{reference = @payable.order_reference}"}>
+            <h2 :if={not awaiting_payment?(@payable, @returned_from_stripe?)} class="section-title mb-4">
               {~t"Order #{reference = @payable.order_reference}"}
             </h2>
 
@@ -173,6 +173,11 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   end
 
   defp email_form(_order), do: nil
+
+  # The "Pay for order …" heading already names the order, so the summary skips its own.
+  defp awaiting_payment?(payable, returned_from_stripe?) do
+    payable.fulfillment_status != :cancelled and payable.payment_link_open? and not returned_from_stripe?
+  end
 
   defp load_order(token), do: Orders.get_order_by_payment_link_token(token, authorize?: false)
 end

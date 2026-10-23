@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
   test "shows the order and a payment form for its total", %{conn: conn, order: order} do
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
-    assert has_element?(view, "h1", "Pay for your order")
+    assert has_element?(view, "h1", "Pay for order")
     assert has_element?(view, "dl", "Funeral spray")
     assert has_element?(view, "[data-testid=pay-total]", "85.00")
     refute has_element?(view, "[data-testid=pay-balance]")

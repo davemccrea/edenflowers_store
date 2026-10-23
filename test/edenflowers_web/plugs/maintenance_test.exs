@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
           actor: admin
         )
 
-      assert conn |> get(PaymentLink.path_for(order)) |> html_response(200) =~ "Pay for your order"
+      assert conn |> get(PaymentLink.path_for(order)) |> html_response(200) =~ "Pay for order"
     end
 
     test "lets a course booking's payment link through", %{conn: conn} do
