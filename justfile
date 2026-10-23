@@ -18,7 +18,8 @@ install-typst:
 [group('development')]
 dev: check-typst imgproxy
     # iex quits on EOF, so a backgrounded run (no terminal) needs plain mix
-    PORT={{ port }} IMGPROXY_PREFIX=http://localhost:{{ imgproxy_port }} $([ -t 0 ] && echo iex -S) mix phx.server
+    # Photo URLs use the Tailscale IP so they load on other devices too; localhost when Tailscale is down
+    PORT={{ port }} IMGPROXY_PREFIX=http://$(tailscale ip -4 2>/dev/null || echo localhost):{{ imgproxy_port }} $([ -t 0 ] && echo iex -S) mix phx.server
 
 # Run the test suite (extra args go to mix test)
 [group('development')]
