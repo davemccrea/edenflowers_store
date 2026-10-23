@@ -14,12 +14,10 @@
 <%= if @subscription.first_order_discounted? do %><%= gettext("Your promo code discount was for the first order only. Later orders are at the price above.") %>
 <% end %><%= if @subscription.card_message do %><%= gettext("Your card message goes with the first order only.") %>
 <% end %><% end %>
-<%= if @pickup? do %><%= gettext("The first order's receipt is in a separate email. After that, I charge your saved card %{days} days before each pickup.", days: @charge_days) %><% else %><%= gettext("The first order's receipt is in a separate email. After that, I charge your saved card %{days} days before each delivery.", days: @charge_days) %><% end %>
+<%= if @pickup? do %><%= gettext("The first order's receipt is in a separate email. After that, your saved card is charged %{days} days before each pickup.", days: @charge_days) %><% else %><%= gettext("The first order's receipt is in a separate email. After that, your saved card is charged %{days} days before each delivery.", days: @charge_days) %><% end %>
 
-<%= gettext("You can change the size or frequency, update your card, or pause or cancel your subscription from your account:") %>
+<%= if @pickup? do %><%= gettext("To pause, change or cancel, use your account at least %{days} days before a pickup:", days: @change_days) %><% else %><%= gettext("To pause, change or cancel, use your account at least %{days} days before a delivery:", days: @change_days) %><% end %>
 <%= @account_url %>
-
-<%= gettext("To pause or change an upcoming order, make the change at least %{days} days before delivery or pickup.", days: Edenflowers.Orders.Subscription.cutoff_days() + 1) %>
 
 <%= gettext("Warm wishes,") %>
 

@@ -3,9 +3,10 @@ id: TASK-105.9
 title: >-
   Split the subscription charge and card-refused emails from the receipt and
   order details
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 20:35'
 labels: []
 dependencies: []
 parent_task_id: TASK-105
@@ -27,7 +28,13 @@ Subscription set up: Jennie's voice, subject names the product, the facts block,
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each subscription charge sends Subscription delivery charged, not the order receipt
-- [ ] #2 A refused card sends Subscription payment failed, not order details
-- [ ] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #1 Each subscription charge sends Subscription delivery charged, not the order receipt
+- [x] #2 A refused card sends Subscription payment failed, not order details
+- [x] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Subscription payment failed landed with TASK-105.3, when the Order details state switch went. Subscription delivery charged is sent by SendReceiptEmail for an Occurrence. Set-up says 'your saved card is charged' rather than 'I charge', since it's automatic.
+<!-- SECTION:NOTES:END -->

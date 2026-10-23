@@ -200,6 +200,30 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
+  A matter-of-fact note that a subscription's saved card was charged for
+  its next delivery or pickup, with the receipt the sender attaches. Expects
+  `:amount_paid` and `:line_items` loaded.
+  """
+  def subscription_charged(order) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(automated_from_address())
+      |> to(order.customer_email)
+      |> bcc(record_copy_address())
+      |> subject(~t"Your flowers for #{date = short_date(order)}")
+      |> text_body(
+        Templates.subscription_charged(%{
+          order: order,
+          product: hd(order.line_items).product_name,
+          date: Format.weekday_date(order.fulfillment_date, order.locale),
+          account_url: account_url(),
+          format_currency: &Format.currency(&1, order.locale)
+        })
+      )
+    end)
+  end
+
+  @doc """
   An Occurrence whose saved card was refused: the flowers still come, and
   the payment link pays for them. Expects `:customer_first_name`, `:balance`
   and `:line_items` loaded.
@@ -257,7 +281,7 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(to_string(subscription.user.email))
       |> bcc(record_copy_address())
-      |> subject(~t"Your Eden Flowers subscription is set up")
+      |> subject(~t"Your #{product = subscription.product_variant.product.name} subscription is set up")
       |> text_body(
         Templates.subscription_set_up(%{
           subscription: subscription,
@@ -266,6 +290,7 @@ defmodule Edenflowers.Email do
           interval: EdenflowersWeb.Checkout.Fields.interval_label(subscription.interval_weeks),
           price: Format.currency(subscription_price(subscription), subscription.locale),
           charge_days: Edenflowers.Orders.Subscription.lead_days(),
+          change_days: Edenflowers.Orders.Subscription.cutoff_days() + 1,
           account_url: account_url(),
           format_date: &Format.weekday_date(&1, subscription.locale)
         })
