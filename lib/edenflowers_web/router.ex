@@ -62,7 +62,7 @@ defmodule EdenflowersWeb.Router do
 
       scope "/", Courses do
         live "/courses/bookings/:id", CourseBookingLive
-        live "/courses/pay/:token", CoursePayLive
+        live "/pay/courses/:token", CoursePayLive
       end
 
       scope "/", Checkout do
@@ -87,6 +87,7 @@ defmodule EdenflowersWeb.Router do
   scope "/", EdenflowersWeb do
     get "/sitemap.xml", Marketing.SitemapController, :index
     get "/health", HealthController, :show
+    get "/courses/pay/:token", Courses.OldCoursePayLinkController, :show
   end
 
   scope "/", EdenflowersWeb do

@@ -4,6 +4,9 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
   import Generator
 
   alias AshAuthentication.Plug.Helpers
+  alias Edenflowers.Courses
+  alias Edenflowers.Orders
+  alias EdenflowersWeb.PaymentLink
 
   test "redirects /back-soon to the homepage when maintenance mode is off", %{conn: conn} do
     conn = get(conn, "/back-soon")
@@ -24,8 +27,47 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
       assert conn |> get("/sign-in") |> html_response(200)
     end
 
-    test "lets payment links through", %{conn: conn} do
-      assert conn |> get("/pay/unknown-token") |> redirected_to() == "/en"
+    test "lets an order's payment link through", %{conn: conn} do
+      admin = generate(admin_user())
+      tax_rate = generate(tax_rate())
+      pickup = generate(fulfillment_option(tax_rate_id: tax_rate.id, base_price: "0.00"))
+
+      {:ok, order} =
+        Orders.place_custom_order(
+          %{
+            customer_name: "Anna Holm",
+            customer_email: "anna@example.com",
+            fulfillment_option_id: pickup.id,
+            fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
+            locale: "en-GB",
+            email_customer?: false,
+            line_items: [
+              %{
+                "kind" => "custom",
+                "product_name" => "Funeral spray",
+                "unit_price" => "85.00",
+                "tax_rate_id" => tax_rate.id,
+                "quantity" => "1"
+              }
+            ]
+          },
+          actor: admin
+        )
+
+      assert conn |> get(PaymentLink.path_for(order)) |> html_response(200) =~ "Pay for your order"
+    end
+
+    test "lets a course booking's payment link through", %{conn: conn} do
+      registration = course_registration_with_payment_link()
+
+      assert conn |> get(PaymentLink.path_for(registration)) |> html_response(200) =~ "Pay for your booking"
+    end
+
+    test "sends a course payment link from before the move under /pay to its new path", %{conn: conn} do
+      registration = course_registration_with_payment_link()
+
+      assert conn |> get("/courses/pay/#{registration.payment_link_token}") |> redirected_to() ==
+               PaymentLink.path_for(registration)
     end
 
     test "lets admin paths reach their own auth check", %{conn: conn} do
@@ -43,5 +85,12 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
 
       assert html_response(conn, 200)
     end
+  end
+
+  defp course_registration_with_payment_link do
+    admin = generate(admin_user())
+    registration = generate(course_registration(status: :confirmed, amount: Decimal.new("85.00")))
+    {:ok, registration} = Courses.open_registration_payment_link(registration, actor: admin)
+    registration
   end
 end
