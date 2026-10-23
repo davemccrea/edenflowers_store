@@ -157,12 +157,27 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     refute has_element?(view, "#pay-form")
   end
 
+  test "says the order was collected once it's fulfilled", %{conn: conn, order: order} do
+    Ash.Seed.update!(order, %{fulfillment_status: :fulfilled})
+
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
+
+    assert has_element?(
+             view,
+             "[data-testid=pay-fulfillment]",
+             "Your order has been collected. I hope you're happy with it."
+           )
+
+    refute has_element?(view, "[data-testid=pay-fulfillment]", "Ready to collect")
+  end
+
   test "says so once the order is cancelled", %{conn: conn, admin: admin, order: order} do
     {:ok, _order} = Orders.cancel_order(order, actor: admin)
 
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
     assert has_element?(view, "[data-testid=pay-cancelled]")
+    refute has_element?(view, "[data-testid=pay-fulfillment]")
     refute has_element?(view, "#pay-form")
   end
 

@@ -294,7 +294,8 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  A link to pay a course booking online, for what it still owes. Expects
+  A link to pay a course booking online, for what it still owes, before
+  or after the course. Expects
   `:course` translated, `:first_name` and `:balance` loaded.
   """
   def course_payment_link(registration, payment_link_url) do
@@ -308,6 +309,7 @@ defmodule Edenflowers.Email do
         Templates.course_payment_link(%{
           registration: registration,
           payment_link_url: payment_link_url,
+          course_over?: Date.before?(registration.course.date, Edenflowers.ShopTime.today()),
           format_date: &Format.weekday_date(&1, registration.locale),
           format_time: &Format.time(&1, registration.locale),
           format_currency: &Format.currency(&1, registration.locale)

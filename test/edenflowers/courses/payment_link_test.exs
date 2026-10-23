@@ -6,6 +6,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
   import Swoosh.TestAssertions
 
   alias Edenflowers.Courses
+  alias Edenflowers.Courses.Course
   alias Edenflowers.Courses.Workers.SendConfirmationEmail
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Payments
@@ -115,6 +116,21 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
       end)
 
       refute_email_sent()
+    end
+
+    test "after the course, leaves out paying at the course and cancelling", ctx do
+      Course
+      |> Ash.get!(ctx.registration.course_id, authorize?: false)
+      |> Ash.Seed.update!(%{date: Date.add(Edenflowers.ShopTime.today(), -1)})
+
+      {:ok, _emailed} = Courses.email_registration_payment_link(ctx.registration, actor: ctx.admin)
+
+      assert_email_sent(fn email ->
+        refute email.text_body =~ "Voit myös maksaa kurssilla"
+        refute email.text_body =~ "perua varauksen"
+        refute email.text_body =~ "Nähdään,"
+        assert email.text_body =~ "Lämpimin terveisin,"
+      end)
     end
 
     test "is refused once nothing is owed", ctx do

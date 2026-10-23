@@ -54,12 +54,12 @@ defmodule EdenflowersWeb.Checkout.PayLive do
             <% @payable.fulfillment_status == :cancelled -> %>
               <h1 class="page-title mb-6">{~t"Order cancelled"}</h1>
               <p class="leading-relaxed" data-testid="pay-cancelled">
-                {~t"This order has been cancelled, so there is nothing to pay. Get in touch if that's a surprise."}
+                {~t"This order has been cancelled, so there is nothing to pay. If you have any questions, just get in touch."}
               </p>
             <% not @payable.payment_link_open? -> %>
               <h1 class="page-title mb-6">{~t"Thank you"}</h1>
               <p class="leading-relaxed" data-testid="pay-paid">
-                {~t"This order is paid. Thank you!"}
+                {~t"This order is paid."}
               </p>
             <% @returned_from_stripe? -> %>
               <h1 class="page-title mb-6">{~t"Thank you"}</h1>
@@ -69,7 +69,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
             <% true -> %>
               <h1 class="page-title mb-6">{~t"Pay for order #{reference = @payable.order_reference}"}</h1>
               <p :if={@payable.subscription_id} class="leading-relaxed" data-testid="pay-subscription">
-                {~t"This delivery is part of your subscription. Paying for it restarts the subscription if it's on hold."}
+                {~t"This order is part of your subscription. Paying for it restarts the subscription if it's on hold."}
                 {~t"It doesn't change the card your later deliveries are charged to."}
                 <.link
                   navigate={~p"/account/subscriptions/#{@payable.subscription_id}/card"}
@@ -85,11 +85,20 @@ defmodule EdenflowersWeb.Checkout.PayLive do
               {~t"Order #{reference = @payable.order_reference}"}
             </h2>
 
-            <p class="mb-4 leading-relaxed" data-testid="pay-fulfillment">
-              <%= if @payable.fulfillment_method == :delivery do %>
-                {~t"Delivery on #{date = Format.weekday_date(@payable.fulfillment_date, @locale)} to #{address = @payable.delivery_address}"}
-              <% else %>
-                {~t"Ready to collect at the shop on #{date = Format.weekday_date(@payable.fulfillment_date, @locale)}"}
+            <p
+              :if={@payable.fulfillment_status != :cancelled}
+              class="mb-4 leading-relaxed"
+              data-testid="pay-fulfillment"
+            >
+              <%= cond do %>
+                <% @payable.fulfillment_status == :fulfilled and @payable.fulfillment_method == :delivery -> %>
+                  {~t"Your order has been delivered. I hope you're happy with it."}
+                <% @payable.fulfillment_status == :fulfilled -> %>
+                  {~t"Your order has been collected. I hope you're happy with it."}
+                <% @payable.fulfillment_method == :delivery -> %>
+                  {~t"Delivery on #{date = Format.weekday_date(@payable.fulfillment_date, @locale)} to #{address = @payable.delivery_address}"}
+                <% true -> %>
+                  {~t"Ready to collect at the shop on #{date = Format.weekday_date(@payable.fulfillment_date, @locale)}"}
               <% end %>
               <span :if={@payable.gift && @payable.recipient_name} class="block">
                 {~t"For #{recipient = @payable.recipient_name}"}
