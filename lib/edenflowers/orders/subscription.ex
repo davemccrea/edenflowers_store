@@ -110,6 +110,18 @@ defmodule Edenflowers.Orders.Subscription do
         where expr(is_nil(setup_emailed_at))
       end
 
+      # Queued by :cancel when the customer cancels in their account.
+      trigger :send_cancellation_confirmed_email do
+        action :send_cancellation_confirmed_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionCancellationConfirmedEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionCancellationConfirmedEmail
+        default_actor system_actor()
+      end
+
       # Queued by :cancel when Jennie cancels and ticks "email the customer".
       trigger :send_cancelled_email do
         action :send_cancelled_email
@@ -189,7 +201,14 @@ defmodule Edenflowers.Orders.Subscription do
       argument :message, :string
       transaction? false
       require_atomic? false
-      change Changes.SendSubscriptionCancelledEmail
+      change {Changes.SendSubscriptionCancelledEmail, email: :cancelled}
+    end
+
+    update :send_cancellation_confirmed_email do
+      accept []
+      transaction? false
+      require_atomic? false
+      change {Changes.SendSubscriptionCancelledEmail, email: :cancellation_confirmed}
     end
 
     update :send_setup_email do
@@ -273,6 +292,7 @@ defmodule Edenflowers.Orders.Subscription do
                      :reactivate,
                      :send_setup_email,
                      :send_cancelled_email,
+                     :send_cancellation_confirmed_email,
                      :replace_card
                    ])
 

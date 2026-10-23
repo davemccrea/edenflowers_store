@@ -1,10 +1,10 @@
 ---
 id: TASK-109
 title: 'Confirm a subscriber''s own cancellation, and tell the shop'
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
-updated_date: '2026-10-23 18:52'
+updated_date: '2026-10-23 20:52'
 labels:
   - spec
   - customers
@@ -42,9 +42,9 @@ Shop notice: a ShopNotice like a new order, in Swedish, to the shop notice addre
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A customer cancelling their subscription gets the confirmation
-- [ ] #2 It names an already-charged delivery that still comes
-- [ ] #3 The shop notice address gets a notice linking to the subscription
-- [ ] #4 Pause, resume and change send nothing
-- [ ] #5 Previews on the admin Emails page cover it, and the copy is translated in en, fi and sv
+- [x] #1 A customer cancelling their subscription gets the confirmation
+- [x] #2 It names an already-charged delivery that still comes
+- [x] #3 The shop notice address gets a notice linking to the subscription
+- [x] #4 Pause, resume and change send nothing
+- [x] #5 Previews on the admin Emails page cover it, and the copy is translated in en, fi and sv
 <!-- AC:END -->

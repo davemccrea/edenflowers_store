@@ -1,7 +1,9 @@
 defmodule Edenflowers.Orders.Changes.SendSubscriptionCancelledEmail do
   @moduledoc """
-  Emails the customer that Jennie cancelled their subscription, with her
-  message and the already-charged delivery that still comes, if there is one.
+  Emails the customer that their subscription is cancelled, naming the
+  already-charged delivery that still comes, if there is one: Subscription
+  cancelled with Jennie's message when she cancelled it (`email: :cancelled`),
+  or the matter-of-fact confirmation when they did (`:cancellation_confirmed`).
   """
 
   use Ash.Resource.Change
@@ -12,12 +14,12 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionCancelledEmail do
   alias Edenflowers.Mailer
 
   @impl true
-  def change(changeset, _opts, _context) do
+  def change(changeset, opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       subscription = load_for_send(changeset.data)
       message = Ash.Changeset.get_argument(changeset, :message)
 
-      case subscription |> Email.subscription_cancelled(charged_on(subscription), message) |> Mailer.deliver() do
+      case subscription |> email(opts[:email], message) |> Mailer.deliver() do
         {:ok, _result} ->
           Logger.info("Sent cancelled email for subscription #{subscription.id}")
           changeset
@@ -27,6 +29,12 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionCancelledEmail do
       end
     end)
   end
+
+  defp email(subscription, :cancelled, message),
+    do: Email.subscription_cancelled(subscription, charged_on(subscription), message)
+
+  defp email(subscription, :cancellation_confirmed, _message),
+    do: Email.subscription_cancellation_confirmed(subscription, charged_on(subscription))
 
   @doc "Loads what `Email.subscription_cancelled/3` needs, with the product in the customer's language."
   def load_for_send(subscription) do
