@@ -12,7 +12,11 @@ defmodule Edenflowers.Email.Templates do
   @templates [
     {:order_confirmation, [:assigns]},
     {:order_details, [:assigns]},
+    {:order_updated, [:assigns]},
     {:order_totals, [:assigns]},
+    {:order_fulfillment, [:assigns]},
+    {:order_payment, [:assigns]},
+    {:subscription_payment_failed, [:assigns]},
     {:subscription_set_up, [:assigns]},
     {:order_delivered, [:assigns]},
     {:order_cancelled, [:assigns]},

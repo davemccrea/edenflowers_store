@@ -1,10 +1,10 @@
 ---
 id: TASK-105.13
 title: 'Preview each email Jennie sends, live in its drawer'
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-23 18:44'
-updated_date: '2026-10-23 19:44'
+updated_date: '2026-10-23 20:06'
 labels: []
 dependencies:
   - TASK-105.2
@@ -23,7 +23,7 @@ Every email Jennie triggers (tick box or menu item) shows a live preview in its 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every drawer or dialog that emails the customer shows the subject and body that would be sent
+- [x] #1 Every drawer or dialog that emails the customer shows the subject and body that would be sent
 - [x] #2 The preview updates as Jennie types her message
 - [x] #3 A toggle shows the same email in Swedish
 - [x] #4 Attachments are listed by name
@@ -33,5 +33,5 @@ Every email Jennie triggers (tick box or menu item) shows a live preview in its 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Live preview in every drawer on the order and course pages (cancel, refund, record payment, fulfillment, and the email drawer for menu items), built by Edenflowers.Email.Preview. Still to do for AC1: the order form page (placing and editing) and the add-booking drawer, which have no saved record to build from yet. Planned alongside TASK-105.3.
+Every drawer and form that emails the customer shows the preview, built by Edenflowers.Email.Preview. The order form and the add-booking drawer build it from the unsaved form (build_entered, build_entered_booking), with a stand-in payment link until saving opens one.
 <!-- SECTION:NOTES:END -->

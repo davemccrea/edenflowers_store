@@ -26,6 +26,8 @@ defmodule Edenflowers.Email.Previews do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       order_confirmation(locale) ++
         order_details(locale) ++
+        order_updated(locale) ++
+        subscription_payment_failed(locale) ++
         subscription_set_up(locale) ++
         order_delivered(locale) ++
         order_cancelled(locale) ++
@@ -77,56 +79,14 @@ defmodule Edenflowers.Email.Previews do
 
   defp order_details(locale) do
     for {title, attrs, link} <- [
-          {gettext_noop("first send, delivery to a recipient, unpaid, payment link"), %{payment_terms: :payment_link},
-           @payment_link},
-          {gettext_noop("re-sent after an edit"), %{order_details_emailed_at: ~U[2026-11-10 09:00:00Z]}, @payment_link},
-          {gettext_noop("online order edited after payment, part paid"),
-           %{
-             origin: :online,
-             amount_paid: Decimal.new("54.00"),
-             balance: Decimal.new("10.00"),
-             payments: [
-               %{amount: Decimal.new("54.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}
-             ]
-           }, @payment_link},
-          {gettext_noop("pickup, no recipient, no delivery fee"),
-           %{
-             fulfillment_method: :pickup,
-             fulfillment_fee: nil,
-             grand_total: Decimal.new("54.00"),
-             balance: Decimal.new("54.00"),
-             recipient_name: nil,
-             delivery_address: nil
-           }, @payment_link},
-          {gettext_noop("part paid, payment link"),
-           %{
-             amount_paid: Decimal.new("20.00"),
-             balance: Decimal.new("44.00"),
-             payments: [
-               %{amount: Decimal.new("20.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}
-             ]
-           }, @payment_link},
+          {gettext_noop("gift with a card message, delivery, payment link"),
+           %{payment_terms: :payment_link, card_message: card_message(locale)}, @payment_link},
+          {gettext_noop("pickup, no recipient, no delivery fee"), pickup(), @payment_link},
+          {gettext_noop("part paid, payment link"), part_paid(), @payment_link},
           {gettext_noop("unpaid, invoice after delivery"), %{payment_terms: :invoice}, nil},
-          {gettext_noop("unpaid, invoice after pickup"),
-           %{
-             payment_terms: :invoice,
-             fulfillment_method: :pickup,
-             fulfillment_fee: nil,
-             grand_total: Decimal.new("54.00"),
-             balance: Decimal.new("54.00"),
-             recipient_name: nil
-           }, nil},
-          {gettext_noop("delivered, payment link"), %{fulfillment_status: :fulfilled}, @payment_link},
+          {gettext_noop("unpaid, invoice after pickup"), Map.put(pickup(), :payment_terms, :invoice), nil},
           {gettext_noop("unpaid, pays on delivery"), %{payment_terms: :on_fulfillment}, nil},
-          {gettext_noop("unpaid, pays at pickup"),
-           %{
-             payment_terms: :on_fulfillment,
-             fulfillment_method: :pickup,
-             fulfillment_fee: nil,
-             grand_total: Decimal.new("54.00"),
-             balance: Decimal.new("54.00"),
-             recipient_name: nil
-           }, nil},
+          {gettext_noop("unpaid, pays at pickup"), Map.put(pickup(), :payment_terms, :on_fulfillment), nil},
           {gettext_noop("zero delivery fee, with delivery time window"),
            %{
              fulfillment_fee: Decimal.new(0),
@@ -135,34 +95,10 @@ defmodule Edenflowers.Email.Previews do
              fulfillment_time_start: ~T[12:00:00],
              fulfillment_time_end: ~T[16:00:00]
            }, @payment_link},
-          {gettext_noop("settled, paid in full"),
-           %{
-             amount_paid: Decimal.new("64.00"),
-             balance: Decimal.new(0),
-             payments: [
-               %{amount: Decimal.new("64.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}
-             ]
-           }, nil},
-          {gettext_noop("overpaid, credit balance"),
-           %{
-             amount_paid: Decimal.new("70.00"),
-             balance: Decimal.new("-6.00"),
-             payments: [
-               %{amount: Decimal.new("70.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}
-             ]
-           }, nil},
-          {gettext_noop("no customer first name"), %{customer_first_name: nil}, @payment_link},
-          {gettext_noop("subscription card refused, delivery"), card_refused(), @payment_link},
-          {gettext_noop("subscription card refused, pickup, no customer first name"),
-           Map.merge(card_refused(), %{
-             fulfillment_method: :pickup,
-             fulfillment_fee: nil,
-             grand_total: Decimal.new("54.00"),
-             balance: Decimal.new("54.00"),
-             recipient_name: nil,
-             delivery_address: nil,
-             customer_first_name: nil
-           }), @payment_link}
+          {gettext_noop("settled, paid in full"), paid_in_full(), nil},
+          {gettext_noop("sent after it was handed over, invoice"),
+           %{fulfillment_status: :fulfilled, payment_terms: :invoice}, nil},
+          {gettext_noop("no customer first name"), %{customer_first_name: nil}, @payment_link}
         ] do
       {gettext_noop("Order details"), title, :order_details, Email.order_details(order(attrs, locale), link)}
     end ++
@@ -172,7 +108,78 @@ defmodule Edenflowers.Email.Previews do
       ]
   end
 
-  defp card_refused, do: %{origin: :subscription, gift: false, recipient_name: nil, recipient_first_name: nil}
+  defp order_updated(locale) do
+    for {title, attrs, link, message} <- [
+          {gettext_noop("unpaid, payment link"), %{}, @payment_link, nil},
+          {gettext_noop("paid, now owes more, payment link"), part_paid(), @payment_link, nil},
+          {gettext_noop("paid in full, nothing owed"), paid_in_full(), nil, nil},
+          {gettext_noop("paid, now owes less"),
+           %{
+             amount_paid: Decimal.new("70.00"),
+             balance: Decimal.new("-6.00"),
+             payments: [
+               %{amount: Decimal.new("70.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}
+             ]
+           }, nil, nil},
+          {gettext_noop("pickup, invoice after pickup"), Map.put(pickup(), :payment_terms, :invoice), nil, nil},
+          {gettext_noop("with a message from Jennie"), %{}, @payment_link, message(locale)}
+        ] do
+      {gettext_noop("Order updated"), title, :order_updated, Email.order_updated(order(attrs, locale), link, message)}
+    end
+  end
+
+  defp subscription_payment_failed(locale) do
+    for {title, attrs} <- [
+          {gettext_noop("delivery"), %{}},
+          {gettext_noop("pickup, no customer first name"), Map.put(pickup(), :customer_first_name, nil)}
+        ] do
+      attrs = Map.merge(%{origin: :subscription, gift: false, recipient_name: nil, recipient_first_name: nil}, attrs)
+
+      {gettext_noop("Subscription payment failed"), title, :subscription_payment_failed,
+       Email.subscription_payment_failed(subscription_order(attrs, locale), @payment_link)}
+    end
+  end
+
+  defp pickup do
+    %{
+      fulfillment_method: :pickup,
+      fulfillment_fee: nil,
+      grand_total: Decimal.new("54.00"),
+      balance: Decimal.new("54.00"),
+      recipient_name: nil,
+      delivery_address: nil
+    }
+  end
+
+  defp part_paid do
+    %{
+      amount_paid: Decimal.new("20.00"),
+      balance: Decimal.new("44.00"),
+      payments: [%{amount: Decimal.new("20.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}]
+    }
+  end
+
+  defp paid_in_full do
+    %{
+      amount_paid: Decimal.new("64.00"),
+      balance: Decimal.new(0),
+      payments: [%{amount: Decimal.new("64.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}]
+    }
+  end
+
+  # A subscription order has one line: the subscribed product.
+  defp subscription_order(attrs, locale) do
+    order = order(attrs, locale)
+    %{order | line_items: [hd(order.line_items)]}
+  end
+
+  defp card_message(locale) do
+    cond do
+      String.starts_with?(locale, "fi") -> "Hyvää syntymäpäivää!"
+      String.starts_with?(locale, "sv") -> "Grattis på födelsedagen!"
+      true -> "Happy birthday!"
+    end
+  end
 
   defp subscription_set_up(locale) do
     for {title, attrs} <- [
@@ -475,7 +482,7 @@ defmodule Edenflowers.Email.Previews do
         cancellable_by_customer?: true,
         cancellable_until: ~D[2026-11-09],
         cancellation_reason: nil,
-        order_details_emailed_at: nil,
+        card_message: nil,
         line_items: [
           %{quantity: 1, product_name: bouquet, subtotal: Decimal.new("49.00")},
           %{quantity: 1, product_name: vase, subtotal: Decimal.new("5.00")}

@@ -1,9 +1,10 @@
 ---
 id: TASK-105.3
 title: Split Order updated from Order details and drop the bill
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 20:06'
 labels: []
 dependencies:
   - TASK-105.2
@@ -26,8 +27,14 @@ The bill version and its `order_details_state` switch go. Sending details for a 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Placing a custom order sends Order details with the agreed wording when ticked
-- [ ] #2 Saving an edit offers Order updated, unticked by default
-- [ ] #3 No email reads "I hope you're happy with it. Here are the details"
-- [ ] #4 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #1 Placing a custom order sends Order details with the agreed wording when ticked
+- [x] #2 Saving an edit offers Order updated, unticked by default
+- [x] #3 No email reads "I hope you're happy with it. Here are the details"
+- [x] #4 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The refused-card version of Order details became Subscription payment failed here (TASK-105.9's wording), since the state switch had to go. Order updated shares the totals, fulfillment and payment partials with Order details.
+<!-- SECTION:NOTES:END -->

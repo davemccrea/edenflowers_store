@@ -107,7 +107,7 @@ defmodule EdenflowersWeb.Admin.Components do
   email is ticked.
   """
   def customer_email(assigns) do
-    assigns = assign(assigns, :sending?, is_nil(assigns.send) or assigns.send.value not in [false, "false"])
+    assigns = assign(assigns, :sending?, is_nil(assigns.send) or assigns.send.value in [true, "true"])
 
     ~H"""
     <div id={@id} class="space-y-2">

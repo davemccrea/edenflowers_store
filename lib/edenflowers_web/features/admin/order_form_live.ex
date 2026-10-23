@@ -15,6 +15,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Catalog
   alias Edenflowers.Catalog.ProductVariant
   alias Edenflowers.Catalog.ProductVariantSize
+  alias Edenflowers.Email.Preview
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
@@ -84,6 +85,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       assigns
       |> assign(:price, price)
       |> assign(:quote, charge(quote, price.free_delivery?))
+      |> assign(:preview, preview(assigns, price))
 
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -423,8 +425,21 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                 send={@form[:email_customer?]}
                 label={~t"Email the order details to the customer (needs an email)"}
                 message={@form[:message]}
+                preview={@preview}
+                in_swedish={@form[:locale].value != "sv-FI" && @form[:in_swedish]}
               />
             </div>
+          </.form_section>
+
+          <.form_section :if={@mode == :edit} title={~t"Email"} class="xl:col-start-1">
+            <.customer_email
+              id="order-updated-email"
+              send={@form[:email_customer?]}
+              label={~t"Email the updated order to the customer"}
+              message={@form[:message]}
+              preview={@preview}
+              in_swedish={@form[:locale].value != "sv-FI" && @form[:in_swedish]}
+            />
           </.form_section>
         </.form>
       </.admin_page>
@@ -821,6 +836,16 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   defp ok_quote(%{status: :ok} = quote), do: %{fee: quote.fee, in_free_delivery_zone: quote.in_free_delivery_zone}
   defp ok_quote(_quote), do: nil
+
+  # What ticking the email box would send, from the form as it stands.
+  defp preview(%{form: form} = assigns, price) do
+    if form[:email_customer?].value in [true, "true"] and form[:customer_email].value not in [nil, ""] and
+         form[:fulfillment_date].value not in [nil, ""] do
+      kind = if assigns.mode == :new, do: :order_details, else: :order_updated
+      locale = if form[:in_swedish].value == "true", do: "sv-FI"
+      Preview.build_entered(kind, form.source.source, price, assigns.order, %{message: form[:message].value}, locale)
+    end
+  end
 
   defp price_params(assigns) do
     assigns.form

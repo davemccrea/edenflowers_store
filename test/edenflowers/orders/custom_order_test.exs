@@ -255,21 +255,41 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       end)
     end
 
-    test "sent again, shows the order as it now stands rather than thanking for it anew", ctx do
+    test "an edit emails Order updated only when Jennie ticks it, with her message", ctx do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB"})
       Oban.drain_queue(queue: :default)
       assert_email_sent(fn email -> assert email.text_body =~ "Here is what we agreed" end)
 
-      {:ok, _order} = Orders.send_order_details_email(order, actor: ctx.admin)
+      {:ok, order} =
+        Orders.edit_order(order, params(ctx, %{customer_email: "son@example.com", locale: "en-GB"}), actor: ctx.admin)
+
+      Oban.drain_queue(queue: :default)
+      refute_email_sent()
+
+      {:ok, _order} =
+        Orders.edit_order(
+          order,
+          params(ctx, %{
+            customer_email: "son@example.com",
+            locale: "en-GB",
+            email_customer?: true,
+            message: "Lilies instead, as agreed."
+          }),
+          actor: ctx.admin
+        )
+
+      Oban.drain_queue(queue: :default)
 
       assert_email_sent(fn email ->
+        assert email.subject =~ "Your updated Eden Flowers order for"
+        assert email.text_body =~ ~r/I've updated your order\.\n\nLilies instead, as agreed\.\n\n/
         refute email.text_body =~ "Here is what we agreed"
-        assert email.text_body =~ "Here is your order as it now stands:"
+        assert email.text_body =~ "If anything doesn't look right, just reply."
       end)
     end
 
-    test "sent after pickup, thanks the customer and asks them to pay instead of saying when to collect", ctx do
-      {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB"})
+    test "sent after pickup, leaves out when to collect", ctx do
+      {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_terms: :invoice})
       Oban.drain_queue(queue: :default)
       assert_email_sent()
 
@@ -278,21 +298,9 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert_email_sent(fn email ->
         refute email.text_body =~ "Collect on"
-        refute email.text_body =~ "change anything"
-
-        assert email.text_body =~
-                 ~r/Thank you for your order\. I hope you're happy with it\.[\s\S]+You can pay online here[^\n]+\n[^\n]+\/pay\/[\s\S]+If anything isn't as it should be/
+        refute email.text_body =~ "I hope you're happy with it"
+        assert email.text_body =~ "Here is what we agreed"
       end)
-    end
-
-    test "after pickup without a payment link, isn't sent: the invoice is the bill", ctx do
-      {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_terms: :invoice})
-      Oban.drain_queue(queue: :default)
-      assert_email_sent()
-
-      order = Ash.Seed.update!(order, %{fulfillment_status: :fulfilled})
-      assert {:error, _error} = Orders.send_order_details_email(order, actor: ctx.admin)
-      refute_email_sent()
     end
 
     test "with an invoice, says it comes after pickup", ctx do
