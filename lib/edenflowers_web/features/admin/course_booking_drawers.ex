@@ -81,6 +81,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   attr :refund_params, :map, required: true
   attr :error, :string, default: nil
   attr :locale, :string, required: true
+  attr :preview, Swoosh.Email, default: nil
 
   def settlement_drawer(assigns) do
     ~H"""
@@ -95,6 +96,8 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           email={@registration.email}
           locale={@locale}
           params={Map.get(@refund_params, @registration.id, %{})}
+          preview={@preview}
+          swedish_toggle?={@registration.locale != "sv-FI"}
         />
         <.collect_payment
           :if={@mode == :settle and to_collect?(@registration)}

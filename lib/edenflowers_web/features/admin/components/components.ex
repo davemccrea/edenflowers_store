@@ -30,6 +30,8 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :error, :string, default: nil
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
+  attr :preview, Swoosh.Email, default: nil
+  attr :swedish_toggle?, :boolean, default: false, doc: "whether the customer reads something other than Swedish"
 
   @doc """
   Cancels an order or a booking: how much to refund, and whether to email
@@ -70,6 +72,8 @@ defmodule EdenflowersWeb.Admin.Components do
             label={~t"Email the customer"}
             message={@form[:message]}
             to={@email}
+            preview={@preview}
+            in_swedish={@swedish_toggle? && @form[:in_swedish]}
           />
           <p :if={!@email} class="text-base-content/75 text-sm">
             {~t"There's no email address, so the customer won't be emailed."}
@@ -93,11 +97,14 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :label, :string, default: nil, doc: "the tick box's label"
   attr :message, Phoenix.HTML.FormField, required: true
   attr :to, :string, default: nil, doc: "the customer's address, when the form already knows it"
+  attr :preview, Swoosh.Email, default: nil, doc: "what would be sent, from `Edenflowers.Email.Preview`"
+  attr :in_swedish, Phoenix.HTML.FormField, default: nil, doc: "the toggle to preview it in Swedish, if not already"
   slot :inner_block, doc: "more choices about the email, like whether to attach the photo"
 
   @doc """
-  The tick box and message box beside every email one of Jennie's actions
-  sends (ADR 0006). The message box shows only while the email is ticked.
+  The tick box, message box and preview beside every email one of Jennie's
+  actions sends (ADR 0006). The message box and preview show only while the
+  email is ticked.
   """
   def customer_email(assigns) do
     assigns = assign(assigns, :sending?, is_nil(assigns.send) or assigns.send.value not in [false, "false"])
@@ -118,8 +125,42 @@ defmodule EdenflowersWeb.Admin.Components do
           placeholder={~t"Goes after the first line of the email."}
           class="textarea w-full"
         />
+        <%= if @preview && @sending? do %>
+          <.input
+            :if={@in_swedish}
+            field={@in_swedish}
+            id={"#{@id}-in-swedish"}
+            type="checkbox"
+            label={~t"Preview in Swedish"}
+          />
+          <details class="sm:hidden">
+            <summary class="link link-primary text-sm">{~t"Preview the email"}</summary>
+            <.email_preview email={@preview} />
+          </details>
+          <div id={"#{@id}-preview"} class="hidden sm:block">
+            <.email_preview email={@preview} />
+          </div>
+        <% end %>
       </div>
     </div>
+    """
+  end
+
+  attr :email, Swoosh.Email, required: true
+
+  defp email_preview(assigns) do
+    ~H"""
+    <section
+      aria-label={~t"Email preview"}
+      class="border-base-content/12 bg-base-200/40 mt-3 space-y-3 rounded-lg border p-3 text-sm"
+    >
+      <h3 class="eyebrow text-base-content/75">{~t"Preview"}</h3>
+      <p class="font-semibold">{@email.subject}</p>
+      <p class="whitespace-pre-line break-words">{@email.text_body}</p>
+      <p :if={@email.attachments != []} class="text-base-content/75">
+        {~t"Attached: #{files = Enum.map_join(@email.attachments, ", ", & &1.filename)}"}
+      </p>
+    </section>
     """
   end
 
@@ -128,6 +169,8 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :submit_label, :string, default: nil
   attr :to, :string, default: nil
   attr :last_sent, :string, default: nil, doc: "when this email last went, if it has"
+  attr :preview, Swoosh.Email, default: nil
+  attr :swedish_toggle?, :boolean, default: false, doc: "whether the customer reads something other than Swedish"
 
   @doc """
   Sends one email from a menu item or button, with Jennie's message. Sends
@@ -147,7 +190,13 @@ defmodule EdenflowersWeb.Admin.Components do
       >
         <.drawer_body>
           <p :if={@last_sent} class="text-base-content/75 text-sm">{~t"Last sent #{time = @last_sent}."}</p>
-          <.customer_email id="email-drawer-email" message={@form[:message]} to={@to} />
+          <.customer_email
+            id="email-drawer-email"
+            message={@form[:message]}
+            to={@to}
+            preview={@preview}
+            in_swedish={@swedish_toggle? && @form[:in_swedish]}
+          />
         </.drawer_body>
         <.drawer_footer>
           <.button type="submit" variant="primary">
@@ -615,6 +664,8 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :locale, :string, required: true
   attr :params, :map, default: %{}, doc: "the payment form as Jennie has filled it in so far"
   attr :receipt_email?, :boolean, default: false, doc: "whether the customer can be emailed a receipt"
+  attr :preview, Swoosh.Email, default: nil
+  attr :swedish_toggle?, :boolean, default: false, doc: "whether the customer reads something other than Swedish"
 
   @doc """
   Records money Jennie took herself. Sends `record_payment` with `payment`
@@ -660,6 +711,8 @@ defmodule EdenflowersWeb.Admin.Components do
         send={@form[:email_receipt]}
         label={~t"Email a receipt"}
         message={@form[:message]}
+        preview={@preview}
+        in_swedish={@swedish_toggle? && @form[:in_swedish]}
       />
       <.button
         type="submit"
@@ -705,6 +758,8 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
   attr :params, :map, default: %{}, doc: "the form as Jennie has filled it in so far"
+  attr :preview, Swoosh.Email, default: nil
+  attr :swedish_toggle?, :boolean, default: false, doc: "whether the customer reads something other than Swedish"
 
   @doc """
   Hands money back, with or without cancelling: what's owed back, or more for
@@ -759,6 +814,8 @@ defmodule EdenflowersWeb.Admin.Components do
         label={~t"Email the customer"}
         message={@form[:note]}
         to={@email}
+        preview={@preview}
+        in_swedish={@swedish_toggle? && @form[:in_swedish]}
       />
       <.button
         type="submit"
