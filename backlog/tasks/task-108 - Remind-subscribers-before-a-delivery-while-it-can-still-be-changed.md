@@ -1,9 +1,10 @@
 ---
 id: TASK-108
-title: Remind subscribers before a delivery while it can still be changed
-status: needs-triage
+title: Remind subscribers before the change deadline
+status: ready-for-agent
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 18:52'
 labels:
   - spec
   - customers
@@ -16,9 +17,32 @@ ordinal: 230000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-A heads-up before a subscription delivery, early enough to pause or change it.
+A heads-up to subscribers on 2- and 4-week subscriptions the day before their next delivery's change deadline.
 
-**Why:** A subscriber away on a delivery day only finds out once the card is charged, 3 days before, when changes have closed.
+**Why:** A subscriber away on a delivery day only finds out once the card is charged, after changes have closed.
 
-Parked in the email grilling session on 2026-10-23. Open: whether to send it at all; for which intervals (suggested: every 2 and 4 weeks only, since a weekly heads-up lands the day after the last delivery); when (it must arrive before changes close, more than 4 days before delivery).
+Decided in the email grilling session on 2026-10-23. Goes 6 days before delivery: the day before the change deadline (5 days before), so the customer has two days to act. Not for weekly subscriptions, nor while paused. Resuming doesn't send one. No setting to switch it off. Matter-of-fact, signed Eden Flowers, from the automated address:
+
+```
+Subject: Your next flowers come on Saturday 28.11.
+
+Your next Florist's choice delivery is on Saturday 28.11.2026, to Esplanadi 1, Helsinki.   (pickup: ready to collect on …)
+
+Away, or want a change? Pause or change it in your account by Monday 23.11.:
+https://…/account
+
+Your card will be charged 59,00 € on Wednesday 25.11.
+
+Eden Flowers
+```
+
+Sent once per delivery by a queued job (ADR 0005).
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Active 2- and 4-week subscriptions get the email 6 days before each delivery
+- [ ] #2 Weekly and paused subscriptions get none
+- [ ] #3 The email names the change deadline and the charge day and amount
+- [ ] #4 Previews on the admin Emails page cover delivery and pickup, and the copy is translated in en, fi and sv
+<!-- AC:END -->
