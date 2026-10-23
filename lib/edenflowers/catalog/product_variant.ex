@@ -8,7 +8,8 @@ defmodule Edenflowers.Catalog.ProductVariant do
     domain: Edenflowers.Catalog,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshArchival.Resource]
+    extensions: [AshArchival.Resource],
+    notifiers: [Ash.Notifier.PubSub]
 
   alias Edenflowers.Orders.Validations
 
@@ -102,6 +103,14 @@ defmodule Edenflowers.Catalog.ProductVariant do
       description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
     end
+  end
+
+  # Product pages listen so a size that sells out elsewhere shows as sold out.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish :adjust_stock, ["product_variant", "changed", :product_id]
+    publish :update, ["product_variant", "changed", :product_id]
   end
 
   preparations do
