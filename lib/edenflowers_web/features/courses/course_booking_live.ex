@@ -52,7 +52,9 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
           <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />
           <%= if @registration.status == :cancelled do %>
             <h1 class="page-title mb-6">{~t"Booking cancelled"}</h1>
-            <p class="leading-relaxed">{~t"This booking has been cancelled. Get in touch if that's a surprise."}</p>
+            <p class="leading-relaxed">
+              {~t"This booking has been cancelled. If you have any questions, just get in touch."}
+            </p>
           <% else %>
             <h1 class="page-title">{~t"You're booked"}</h1>
           <% end %>

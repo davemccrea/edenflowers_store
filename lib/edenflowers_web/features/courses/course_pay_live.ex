@@ -53,12 +53,12 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
             <% @payable.status == :cancelled -> %>
               <h1 class="page-title mb-6">{~t"Booking cancelled"}</h1>
               <p class="leading-relaxed" data-testid="pay-cancelled">
-                {~t"This booking has been cancelled, so there is nothing to pay. Get in touch if that's a surprise."}
+                {~t"This booking has been cancelled, so there is nothing to pay. If you have any questions, just get in touch."}
               </p>
             <% not @payable.payment_link_open? -> %>
               <h1 class="page-title mb-6">{~t"Thank you"}</h1>
               <p class="leading-relaxed" data-testid="pay-paid">
-                {~t"This booking is paid. Thank you!"}
+                {~t"This booking is paid."}
               </p>
             <% @returned_from_stripe? -> %>
               <h1 class="page-title mb-6">{~t"Thank you"}</h1>
