@@ -109,13 +109,19 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       )
     end
 
-    test "confirms the booking without a payment" do
-      course = generate(course())
+    test "awaits payment through its link, holding its places and emailing the link" do
+      course = generate(course(total_places: 5))
 
       assert {:ok, registration} = add_manually(course, 2, generate(admin_user()))
-      assert registration.status == :confirmed
-      assert registration.confirmed_at
-      assert is_nil(registration.payment_intent_id)
+      assert registration.status == :awaiting_payment
+      refute registration.confirmed_at
+      assert registration.payment_link_token
+      assert Ash.load!(course, :seats_left, authorize?: false).seats_left == 3
+
+      assert_enqueued(
+        worker: Edenflowers.Courses.Workers.SendConfirmationEmail,
+        args: %{"primary_key" => %{"id" => registration.id}}
+      )
     end
 
     test "is allowed after register_before but not beyond the course's places" do
@@ -132,28 +138,39 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     end
   end
 
-  describe "paying at the course" do
+  # Paid in person, as bookings could be before courses were paid by link,
+  # so handing money back needs no Stripe.
+  defp pay(registration, amount) do
+    generate(payment(course_registration_id: registration.id, method: :cash, amount: Decimal.new(amount)))
+    Ash.Seed.update!(registration, %{status: :confirmed})
+  end
+
+  describe "paying" do
     setup do
       admin = generate(admin_user())
       {:ok, registration} = add_manually(generate(course(price: "85.00")), 2, admin)
       %{admin: admin, registration: registration}
     end
 
-    test "a manual booking owes its price until it is paid at the course", %{admin: admin, registration: registration} do
+    test "a manual booking owes its price until it is paid", %{registration: registration} do
       assert Decimal.equal?(balance(registration), "170.00")
+    end
 
-      assert {:ok, _paid} = Courses.record_registration_payment(registration, "170.00", :mobilepay, actor: admin)
+    test "a manual booking can't be marked paid by hand", %{admin: admin, registration: registration} do
+      assert {:error, error} =
+               Ash.update(registration, %{amount: "170.00", payment_method: :cash},
+                 action: :record_payment,
+                 actor: admin
+               )
 
-      assert [%{method: :mobilepay, amount: amount}] = Ash.load!(registration, :payments, authorize?: false).payments
-      assert Decimal.equal?(amount, "170.00")
-      assert Decimal.equal?(balance(registration), 0)
+      assert Exception.message(error) =~ "is paid by payment link"
     end
 
     test "a paid booking owes a refund after a seat is removed or it is cancelled", %{
       admin: admin,
       registration: registration
     } do
-      {:ok, registration} = Courses.record_registration_payment(registration, "170.00", :cash, actor: admin)
+      registration = pay(registration, "170.00")
 
       {:ok, registration} = Courses.remove_registration_seat(registration, actor: admin)
       assert Decimal.equal?(balance(registration), "-85.00")
@@ -178,8 +195,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       course = generate(course(date: Date.add(today, days_before), register_before: today))
 
       {:ok, registration} = add_manually(course, 1, admin)
-      {:ok, registration} = Courses.record_registration_payment(registration, "85.00", :cash, actor: admin)
-      registration
+      pay(registration, "85.00")
     end
 
     test "leaves everything paid to refund, however close the course", %{admin: admin} do

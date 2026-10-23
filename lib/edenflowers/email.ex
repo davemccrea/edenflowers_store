@@ -280,29 +280,27 @@ defmodule Edenflowers.Email do
     end
   end
 
-  def course_confirmation(registration, payment_link_url) do
+  def course_confirmation(registration) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
       new()
       |> from(from_address())
       |> to(registration.email)
       |> bcc(record_copy_address())
       |> subject(course_confirmation_subject(registration))
-      |> text_body(render_course_confirmation(registration, payment_link_url))
+      |> text_body(render_course_confirmation(registration))
     end)
   end
 
-  # Jennie often records a payment taken at the course afterwards, which sends
-  # the confirmation again with the receipt.
+  # A payment link paid after the course sends the confirmation with the receipt.
   defp course_confirmation_subject(registration) do
     if course_over?(registration),
       do: ~t"Your booking on #{course = registration.course.name}",
       else: ~t"You're booked on #{course = registration.course.name}"
   end
 
-  defp render_course_confirmation(registration, payment_link_url) do
+  defp render_course_confirmation(registration) do
     Templates.course_confirmation(%{
       registration: registration,
-      payment_link_url: payment_link_url,
       course_over?: course_over?(registration),
       format_date: &Format.weekday_date(&1, registration.locale),
       format_time: &Format.time(&1, registration.locale),
@@ -312,7 +310,7 @@ defmodule Edenflowers.Email do
 
   @doc """
   A link to pay a course booking online, for what it still owes, before
-  or after the course. Expects
+  or after the course. Paying confirms a booking awaiting payment. Expects
   `:course` translated, `:first_name` and `:balance` loaded.
   """
   def course_payment_link(registration, payment_link_url) do

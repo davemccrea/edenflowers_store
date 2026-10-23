@@ -1,16 +1,17 @@
 <%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= gettext("You have %{balance} left to pay for %{course}.", balance: @format_currency.(@registration.balance), course: @registration.course.name) %>
+<%= if @registration.status == :awaiting_payment and not @course_over? do %><%= ngettext("Thank you for booking. Your place on %{course} is confirmed once you've paid.", "Thank you for booking. Your %{count} places on %{course} are confirmed once you've paid.", @registration.seats, course: @registration.course.name) %>
 
+<%= gettext("Amount due") %>: <%= @format_currency.(@registration.balance) %>
+<% else %><%= gettext("You have %{balance} left to pay for %{course}.", balance: @format_currency.(@registration.balance), course: @registration.course.name) %>
+<% end %>
 <%= gettext("Pay online by card or MobilePay:") %>
 <%= @payment_link_url %>
 
-<%= unless @course_over? do %><%= gettext("Or pay at the course if you prefer.") %>
-
-<% end %><%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
+<%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
-<%= cond do %><% @course_over? -> %>
-<% Decimal.positive?(@registration.amount_paid) -> %><%= gettext("To cancel, reply to this email. Let me know at least 7 days before the course for a full refund. After that, we'll work something out.") %>
+
+<%= cond do %><% @course_over? -> %><% Decimal.positive?(@registration.amount_paid) -> %><%= gettext("To cancel, reply to this email. Let me know at least 7 days before the course for a full refund. After that, we'll work something out.") %>
 
 <% true -> %><%= gettext("If you need to cancel, reply to this email. Please let me know at least 7 days before the course if you can.") %>
 

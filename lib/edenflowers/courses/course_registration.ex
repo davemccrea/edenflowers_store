@@ -1,14 +1,16 @@
 defmodule Edenflowers.Courses.CourseRegistration.Status do
   @moduledoc """
-  The pending, confirmed, and cancelled states of a course booking.
+  The states of a course booking. Pending is a hold while the customer pays
+  at checkout; awaiting payment is a booking Jennie added, holding its places
+  until its payment link is paid. Paying confirms either.
   """
 
-  use Ash.Type.Enum, values: [:pending, :confirmed, :cancelled]
+  use Ash.Type.Enum, values: [:pending, :awaiting_payment, :confirmed, :cancelled]
 end
 
 defmodule Edenflowers.Courses.CourseRegistration do
   @moduledoc """
-  A course booking and its payment state. Pending bookings hold seats briefly; confirmed bookings count toward the course and may be cancelled or refunded.
+  A course booking and its payment state. Pending bookings hold seats briefly; bookings awaiting payment hold them until paid or cancelled; confirmed bookings are paid and may be cancelled or refunded.
   """
 
   use Ash.Resource,
@@ -74,7 +76,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
         default_actor system_actor()
 
         where expr(
-                status == :pending and not is_nil(payment_intent_id) and
+                status in [:pending, :awaiting_payment] and not is_nil(payment_intent_id) and
                   updated_at < ago(5, :minute) and updated_at > ago(7, :day)
               )
       end
@@ -119,19 +121,18 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     # For bookings Jennie takes herself, so they hold a seat without Stripe
-    # checkout. Allowed after online booking closes, but never beyond the
-    # course's places. With a payment link the confirmation carries it.
+    # checkout until paid through their payment link, which confirms them.
+    # Allowed after online booking closes, but never beyond the course's
+    # places. The email carries the link.
     create :add_manually do
       accept [:name, :email, :seats, :course_id, :locale]
-      argument :payment_link?, :boolean, default: false
       argument :email_customer?, :boolean, default: true
       validate attribute_in(:locale, @locales)
-      change set_attribute(:status, :confirmed)
-      change set_attribute(:confirmed_at, &DateTime.utc_now/0)
+      change set_attribute(:status, :awaiting_payment)
       change Changes.UpsertUser
       change {Changes.ReserveSeats, allow_after_cutoff?: true}
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
-      change PaymentChanges.OpenPaymentLink, where: [argument_equals(:payment_link?, true)]
+      change PaymentChanges.OpenPaymentLink
 
       change {PaymentChanges.ScheduleConfirmationEmail, trigger: :send_confirmation_email},
         where: [argument_equals(:email_customer?, true)]
@@ -158,12 +159,17 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
-    # A payment through the payment link on a booking already confirmed, so
-    # unlike confirm_payment this only records what arrived.
+    # A payment through the payment link. It confirms a booking awaiting
+    # payment; on one already confirmed it only records what arrived.
     update :record_link_payment do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
       argument :paid_with, :map, default: %{}
+      # Before the status changes, which the condition reads.
+      change set_attribute(:confirmed_at, &DateTime.utc_now/0),
+        where: [attribute_equals(:status, :awaiting_payment)]
+
+      change set_attribute(:status, :confirmed)
       change PaymentChanges.ClearPaidPaymentIntent
 
       # The confirmation goes out again, now with the receipt, even if Jennie
@@ -174,16 +180,16 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
-    # Only a confirmed booking owes money; a pending one pays at checkout.
+    # A pending booking pays at checkout instead.
     update :open_payment_link do
-      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
+      validate attribute_in(:status, [:awaiting_payment, :confirmed]), message: "is not awaiting payment"
       change PaymentChanges.OpenPaymentLink
       require_atomic? false
     end
 
     # Opens the link if need be, so sending it is opening one.
     update :email_payment_link do
-      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
+      validate attribute_in(:status, [:awaiting_payment, :confirmed]), message: "is not awaiting payment"
       change PaymentChanges.OpenPaymentLink
       change Changes.SendPaymentLinkEmail
       transaction? false
@@ -238,9 +244,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change Changes.SendConfirmationEmail
     end
 
-    # The confirmation again, now with the receipt, when Jennie records the
-    # payment that settles the booking, even if she chose not to email the
-    # customer when she added it.
+    # The confirmation again, with the receipt once paid.
     update :email_receipt do
       accept []
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
@@ -289,6 +293,11 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # Refreshes the admin's Courses and Overview pages, which have no pull to refresh.
     publish_all :create, ["admin", "bookings"]
     publish_all :update, ["admin", "bookings"]
+  end
+
+  validations do
+    # Courses are paid by payment link, never in person.
+    validate negate(action_is(:record_payment)), message: "is paid by payment link"
   end
 
   attributes do
@@ -349,14 +358,17 @@ defmodule Edenflowers.Courses.CourseRegistration do
               expr(if status == :cancelled, do: kept_amount, else: round(amount * seats_held / seats, 2) + kept_amount)
 
     # A pending booking only holds its seats while the customer pays.
-    calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled])
+    calculate :committed?, :boolean, expr(status in [:awaiting_payment, :confirmed, :cancelled])
     calculate :cancelled?, :boolean, expr(status == :cancelled)
-    calculate :cancellable?, :boolean, expr(status == :confirmed)
+    calculate :cancellable?, :boolean, expr(status in [:awaiting_payment, :confirmed])
     calculate :customer_email, :string, expr(email)
 
     calculate :holds_seats?,
               :boolean,
-              expr(status == :confirmed or (status == :pending and inserted_at > ago(@hold_minutes, :minute)))
+              expr(
+                status in [:awaiting_payment, :confirmed] or
+                  (status == :pending and inserted_at > ago(@hold_minutes, :minute))
+              )
 
     calculate :payment_overdue?,
               :boolean,
@@ -367,7 +379,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     calculate :payment_link_open?,
               :boolean,
-              expr(not is_nil(payment_link_token) and payable? and status == :confirmed)
+              expr(not is_nil(payment_link_token) and payable? and status in [:awaiting_payment, :confirmed])
   end
 
   identities do

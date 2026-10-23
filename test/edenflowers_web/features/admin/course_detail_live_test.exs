@@ -135,7 +135,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
   end
 
   describe "adding a booking" do
-    defp add_booking(view, course, payment_link?, email_customer?) do
+    defp add_booking(view, course, email_customer?) do
       view |> element(~s|button[phx-click="new_booking"]|) |> render_click()
 
       view
@@ -145,7 +145,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
           email: "birgitta@example.com",
           seats: "2",
           locale: "en-GB",
-          payment_link?: payment_link?,
           email_customer?: email_customer?
         }
       )
@@ -154,44 +153,30 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       Ash.read_one!(Edenflowers.Courses.CourseRegistration, authorize?: false)
     end
 
-    test "to pay later emails a confirmation without a payment link", %{conn: conn} do
+    test "emails the payment link, and holds the places until it's paid", %{conn: conn} do
       course = generate(course(name: "Autumn wreaths", total_places: 10))
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
       view |> element(~s|button[phx-click="new_booking"]|) |> render_click()
-      assert has_element?(view, "#booking-drawer #booking-form-#{course.id}", "Send a payment link")
-      assert has_element?(view, "#booking-form-#{course.id}", "Pays later")
+      assert has_element?(view, "#booking-drawer #booking-form-#{course.id}", "Email the payment link")
       view |> element("#booking-form-#{course.id} button", "Cancel") |> render_click()
       refute has_element?(view, "#booking-form-#{course.id}")
 
-      registration = add_booking(view, course, "false", "true")
+      registration = add_booking(view, course, "true")
 
+      assert registration.status == :awaiting_payment
       assert has_element?(view, "li", "Birgitta")
       assert has_element?(view, "li", "To collect")
       assert render(view) =~ "2 / 10 seats"
-      refute registration.payment_link_token
-
-      assert %{success: 1} = Oban.drain_queue(queue: :default)
-
-      assert_email_sent(fn email ->
-        refute email.text_body =~ "/pay/"
-        assert email.text_body =~ "You pay at the course"
-      end)
-    end
-
-    test "with a payment link puts it in the confirmation", %{conn: conn} do
-      course = generate(course(total_places: 10))
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
-
-      registration = add_booking(view, course, "true", "true")
-      assert registration.payment_link_token
+      refute has_element?(view, ~s|button[phx-click="email_confirmation"][phx-value-id="#{registration.id}"]|)
 
       assert %{success: 1} = Oban.drain_queue(queue: :default)
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "birgitta@example.com"}]
         assert email.text_body =~ "/pay/courses/#{registration.payment_link_token}"
-        assert email.text_body =~ "Or pay at the course if you prefer."
+        refute email.text_body =~ "pay at the course"
+        assert email.text_body =~ "are confirmed once you've paid"
       end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
@@ -218,7 +203,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       course = generate(course(total_places: 10))
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
-      registration = add_booking(view, course, "true", "false")
+      registration = add_booking(view, course, "false")
       assert registration.payment_link_token
       refute registration.confirmation_emailed_at
 
@@ -227,29 +212,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
     end
   end
 
-  test "marking a booking paid clears it from the still-to-pay list", %{conn: conn} do
-    registration = generate(course_registration(status: :confirmed, name: "Birgitta"))
-
-    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
-
-    refute has_element?(view, "#mark-paid-#{registration.id}")
-
-    view |> element("#settle-#{registration.id}", "To collect") |> render_click()
-
-    assert has_element?(view, "#settlement-drawer", "Birgitta")
-    assert has_element?(view, "#settlement-drawer dl", "To collect")
-
-    view |> form("#mark-paid-#{registration.id}", %{payment_method: "mobilepay"}) |> render_submit()
-
-    refute has_element?(view, "li", "To collect")
-    refute has_element?(view, "#settle-#{registration.id}")
-    refute has_element?(view, "#mark-paid-#{registration.id}")
-
-    assert [%{method: :mobilepay}] = Ash.load!(registration, :payments, authorize?: false).payments
-  end
-
   describe "payment link" do
-    test "only a booking owing money offers one, in the drawer that records payment", %{conn: conn} do
+    test "only a booking owing money offers one, and nothing to mark it paid by hand", %{conn: conn} do
       owing = generate(course_registration(status: :confirmed, name: "Birgitta"))
       paid = generate(course_registration(course_id: owing.course_id, status: :confirmed, name: "Anna"))
 
@@ -269,7 +233,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       assert has_element?(view, ~s|button[phx-click="email_payment_link"][phx-value-id="#{owing.id}"]|)
       assert has_element?(view, ~s|button[phx-click="open_payment_link"][phx-value-id="#{owing.id}"]|)
-      assert has_element?(view, "#mark-paid-#{owing.id}")
+      refute has_element?(view, "#mark-paid-#{owing.id}")
     end
 
     test "emailing opens the link, sends it, and asks before sending again", %{conn: conn} do
@@ -298,20 +262,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
                view,
                ~s|#payment-link-url-#{registration.id}[value$="/pay/courses/#{registration.payment_link_token}"]|
              )
-    end
-
-    test "paying at the course after the link was sent settles the booking and its link reads paid", %{conn: conn} do
-      registration = generate(course_registration(status: :confirmed, name: "Birgitta"))
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
-      view |> element("#settle-#{registration.id}") |> render_click()
-      view |> element(~s|button[phx-click="open_payment_link"][phx-value-id="#{registration.id}"]|) |> render_click()
-
-      view |> form("#mark-paid-#{registration.id}", %{payment_method: "cash"}) |> render_submit()
-
-      refute has_element?(view, "li", "To collect")
-      registration = Ash.reload!(registration, authorize?: false)
-      {:ok, pay_view, _html} = live(build_conn(), ~p"/pay/courses/#{registration.payment_link_token}")
-      assert has_element?(pay_view, "[data-testid=pay-paid]")
     end
   end
 

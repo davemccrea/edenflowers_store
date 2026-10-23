@@ -52,13 +52,10 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
                 class="select w-full"
               />
             </div>
-            <.input :let={option} field={@form[:payment_link?]} type="radio-card" options={payment_options()}>
-              {option.name}
-            </.input>
             <.input
               field={@form[:email_customer?]}
               type="checkbox"
-              label={~t"Email the booking confirmation to the customer"}
+              label={~t"Email the payment link to the customer"}
             />
           </div>
         </.drawer_body>
@@ -175,9 +172,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   attr :registration, :map, required: true
   attr :locale, :string, required: true
 
-  # Every way to collect a booking's balance in one place. The link comes first,
-  # as on an order: it's how most bookings Jennie adds get paid. Once it's been
-  # emailed, recording the payment is what's left to do, so that takes the lead.
+  # Courses are only paid by payment link, so collecting is sending it.
   defp collect_payment(assigns) do
     assigns = assign(assigns, :emailed?, payment_link_emailed?(assigns.registration))
 
@@ -208,7 +203,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           phx-click="email_payment_link"
           phx-value-id={@registration.id}
           data-confirm={email_payment_link_confirmation(@registration, @locale)}
-          variant={if @emailed?, do: "secondary", else: "primary"}
+          variant="primary"
           size="sm"
         >
           <.icon name="hero-envelope" class="h-4 w-4" />
@@ -226,32 +221,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
         </.button>
       </div>
     </section>
-    <section class="border-base-content/12 space-y-3 border-t pt-4">
-      <h3 class="eyebrow text-base-content/75">{~t"Paid another way"}</h3>
-      <.mark_paid_form registration={@registration} variant={if @emailed?, do: "primary", else: "secondary"} />
-    </section>
-    """
-  end
-
-  attr :registration, :map, required: true
-  attr :variant, :string, required: true
-
-  defp mark_paid_form(assigns) do
-    ~H"""
-    <form id={"mark-paid-#{@registration.id}"} phx-submit="mark_paid" class="space-y-4">
-      <input type="hidden" name="registration_id" value={@registration.id} />
-      <.input
-        id={"mark-paid-method-#{@registration.id}"}
-        name="payment_method"
-        type="select"
-        label={~t"How"}
-        value={:zettle}
-        options={payment_method_options()}
-        class="select w-full"
-      />
-      <.input name="email_receipt" type="checkbox" label={~t"Email a receipt"} value="true" />
-      <.button type="submit" variant={@variant}>{~t"Record payment"}</.button>
-    </form>
     """
   end
 
@@ -264,9 +233,5 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
     if payment_link_emailed?(registration),
       do: ~t"Last sent #{time = Format.datetime(registration.payment_link_emailed_at, locale)}." <> " " <> question,
       else: question
-  end
-
-  defp payment_options do
-    [%{name: ~t"Send a payment link", value: "true"}, %{name: ~t"Pays later", value: "false"}]
   end
 end

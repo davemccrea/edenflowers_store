@@ -18,6 +18,10 @@ _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never p
 The seats a course booking keeps for ten minutes while the customer pays at checkout. A hold the customer never pays for is released, not cancelled: nothing was paid, so nobody is told.
 _Avoid_: Reservation, pending booking
 
+**Awaiting payment**:
+A course booking Jennie adds herself. It keeps its seats until it's paid or she cancels it, and its Payment Link is emailed to the customer. Paying through the link confirms it. A course is only ever paid online, at checkout or through a Payment Link, never at the course.
+_Avoid_: Pays later, unconfirmed booking
+
 **Online Order**:
 An order a customer places themselves through checkout.
 _Avoid_: Web order, cart order
@@ -53,11 +57,11 @@ _Avoid_: Renewal, instalment, delivery (a delivery is how any order reaches its 
 ### Payment
 
 **Payment Link**:
-A private link Jennie gives a customer so they can pay what an order still owes online: a custom order not yet paid, or a balance left by an edit. It never expires, and asks for nothing once the balance is settled or the order is cancelled.
+A private link Jennie gives a customer so they can pay what an order or course booking still owes online: a custom order not yet paid, a booking Awaiting payment, or a balance left by an edit. It never expires, and asks for nothing once the balance is settled or the order is cancelled.
 _Avoid_: Invoice, payment request, Stripe link
 
 **Payment**:
-Money that moved for an order or a course booking, by any method: Stripe, the Zettle card reader, MobilePay to Jennie's own number, cash, or a Zervant invoice paid to her bank. Stripe payments are recorded from Stripe; Jennie records every other method herself, wherever it was paid. A refund is a negative Payment, made the same way the money came in. An order or booking can have several.
+Money that moved for an order or a course booking, by any method: Stripe, the Zettle card reader, MobilePay to Jennie's own number, cash, or a Zervant invoice paid to her bank. Stripe payments are recorded from Stripe; Jennie records every other method herself, wherever it was paid. Course bookings are only paid through Stripe. A refund is a negative Payment, made the same way the money came in. An order or booking can have several.
 _Avoid_: Transaction, charge, in-person payment, offline payment, manual payment
 
 **Balance**:

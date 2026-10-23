@@ -77,23 +77,6 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
   defp balance(record), do: Ash.load!(record, :balance, authorize?: false, reuse_values?: false).balance
 
-  defp receipt_checkbox(:order, _order), do: ~s|#order-balance-email-receipt[checked]|
-
-  defp receipt_checkbox(:booking, registration),
-    do: ~s|#mark-paid-#{registration.id} input[type=checkbox][name=email_receipt][checked]|
-
-  defp record_cash_payment(view, :order, _order, email_receipt),
-    do:
-      view
-      |> form("#order-balance-form", payment: %{payment_method: "cash", email_receipt: email_receipt})
-      |> render_submit()
-
-  defp record_cash_payment(view, :booking, registration, email_receipt) do
-    view
-    |> form("#mark-paid-#{registration.id}", payment_method: "cash", email_receipt: email_receipt)
-    |> render_submit()
-  end
-
   for parent <- [:order, :booking] do
     describe "#{parent}" do
       @parent parent
@@ -105,27 +88,6 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         assert has_element?(view, panel, "To refund €88.50")
         assert has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="stripe"]|)
         assert has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="cash"]|)
-      end
-
-      test "the payment that settles it emails a receipt, ticked by default", %{conn: conn} do
-        record = build(@parent)
-        {view, _panel} = open(conn, @parent, record)
-
-        assert has_element?(view, receipt_checkbox(@parent, record))
-        assert record_cash_payment(view, @parent, record, "true") =~ "Payment recorded and receipt emailed."
-
-        assert Decimal.eq?(balance(record), 0)
-        assert_email_sent(fn email -> assert [%{content_type: "application/pdf"}] = email.attachments end)
-      end
-
-      test "unticked, the payment that settles it sends nothing", %{conn: conn} do
-        record = build(@parent)
-        {view, _panel} = open(conn, @parent, record)
-
-        assert record_cash_payment(view, @parent, record, "false") =~ "Payment recorded."
-
-        assert Decimal.eq?(balance(record), 0)
-        assert_no_email_sent()
       end
 
       test "a settled one has nothing to settle", %{conn: conn} do
@@ -218,7 +180,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     order = build(:order)
     {view, panel} = open(conn, :order, order)
 
-    assert has_element?(view, receipt_checkbox(:order, order))
+    assert has_element?(view, ~s|#order-balance-email-receipt[checked]|)
     view |> form("#{panel}-form", payment: %{amount: "50,00"}) |> render_change()
     refute has_element?(view, "#order-balance-email-receipt")
 
@@ -240,16 +202,40 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     assert Decimal.equal?(balance(order), "88.50")
   end
 
-  test "a booking to collect is settled from the drawer, not a panel on its row", %{conn: conn} do
+  # Courses are only paid by payment link, so recording a payment is the order's alone.
+  test "the payment that settles an order emails a receipt, ticked by default", %{conn: conn} do
+    order = build(:order)
+    {view, _panel} = open(conn, :order, order)
+
+    assert has_element?(view, ~s|#order-balance-email-receipt[checked]|)
+    assert record_cash_payment(view, "true") =~ "Payment recorded and receipt emailed."
+
+    assert Decimal.eq?(balance(order), 0)
+    assert_email_sent(fn email -> assert [%{content_type: "application/pdf"}] = email.attachments end)
+  end
+
+  test "unticked, the payment that settles an order sends nothing", %{conn: conn} do
+    order = build(:order)
+    {view, _panel} = open(conn, :order, order)
+
+    assert record_cash_payment(view, "false") =~ "Payment recorded."
+
+    assert Decimal.eq?(balance(order), 0)
+    assert_no_email_sent()
+  end
+
+  defp record_cash_payment(view, email_receipt) do
+    view
+    |> form("#order-balance-form", payment: %{payment_method: "cash", email_receipt: email_receipt})
+    |> render_submit()
+  end
+
+  test "a booking to collect is settled from the drawer by its payment link, not by hand", %{conn: conn} do
     registration = build(:booking)
     {view, _panel} = open(conn, :booking, registration)
 
     refute has_element?(view, "#balance-#{registration.id}")
-    assert has_element?(view, "#settlement-drawer #mark-paid-#{registration.id}")
-
-    view |> form("#mark-paid-#{registration.id}", payment_method: "cash") |> render_submit()
-
-    assert Decimal.eq?(balance(registration), 0)
+    assert has_element?(view, ~s|#settlement-drawer button[phx-click="email_payment_link"]|)
     refute has_element?(view, "#mark-paid-#{registration.id}")
   end
 
