@@ -1084,7 +1084,7 @@ defmodule EdenflowersWeb.CoreComponents do
   the backdrop, focus trapping, Escape and focus return. `autofocus` on the
   dialog lands initial focus on the dialog rather than its first button, which
   iOS Safari would otherwise draw a focus ring around. Open and close it with
-  `JS.exec("phx-show" | "phx-hide", to: "#id")`; `app.js` turns those into
+  `JS.exec("phx-show" | "phx-hide", to: "#id")`; the script beside it turns those into
   `showModal()` and `close()`, and `layout.css` animates the slide.
   """
   attr :id, :string, required: true
@@ -1100,7 +1100,7 @@ defmodule EdenflowersWeb.CoreComponents do
       phx-show={JS.dispatch("drawer:open", to: "##{@id}-dialog")}
       phx-hide={JS.dispatch("drawer:close", to: "##{@id}-dialog")}
     >
-      <%!-- The browser toggles `open` and app.js sets `data-closing`; ignoring them stops a LiveView patch from undoing either. --%>
+      <%!-- The browser toggles `open` and the drawer script sets `data-closing`; ignoring them stops a LiveView patch from undoing either. --%>
       <dialog
         id={"#{@id}-dialog"}
         aria-label={@label}
@@ -1112,6 +1112,159 @@ defmodule EdenflowersWeb.CoreComponents do
           {render_slot(@inner_block)}
         </div>
       </dialog>
+      <script :type={Phoenix.LiveView.ColocatedJS}>
+        // Slides a drawer out before closing it. Closing first and animating the exit
+        // needs `overlay` transitions, which WebKit lacks: Safari pulls the dialog out
+        // of the top layer at once and it vanishes instead of sliding.
+        async function closeDrawer(dialog) {
+          if (!dialog.open) return;
+
+          dialog.dataset.closing = "";
+          await Promise.allSettled(dialog.getAnimations().map((a) => a.finished));
+
+          // A reopen during the slide-out clears the flag and keeps it open.
+          if (!("closing" in dialog.dataset)) return;
+          delete dialog.dataset.closing;
+          dialog.close();
+        }
+
+        function openDrawer(dialog) {
+          delete dialog.dataset.closing;
+          if (!dialog.open) dialog.showModal();
+        }
+
+        // The drawer component's phx-show/phx-hide dispatch these to its <dialog>.
+        window.addEventListener("drawer:open", (event) => openDrawer(event.target));
+        window.addEventListener("drawer:close", (event) => closeDrawer(event.target));
+
+        document.addEventListener(
+          "cancel",
+          (event) => {
+            if (!event.target.matches("dialog.slide-drawer")) return;
+            event.preventDefault();
+            closeDrawer(event.target);
+          },
+          true,
+        );
+
+        // A tap on a drawer's ::backdrop reports the <dialog> itself as the target,
+        // since its content fills the rest of the box. closedby="any" would replace
+        // this once Safari supports it.
+        document.addEventListener("click", (event) => {
+          if (event.target.matches?.("dialog.slide-drawer")) closeDrawer(event.target);
+        });
+
+        // Dragging a drawer back toward its edge closes it once it passes a third of
+        // its width or is flicked. Vertical drags stay scrolls (touch-action in layout.css).
+        document.addEventListener("pointerdown", (down) => {
+          if (down.pointerType === "mouse") return;
+          const dialog = down.target.closest?.("dialog.slide-drawer");
+          if (!dialog?.open) return;
+
+          const direction = dialog.classList.contains("slide-drawer--left") ? -1 : 1;
+          let offset = 0;
+          const listening = new AbortController();
+
+          const move = (event) => {
+            if (event.pointerId !== down.pointerId) return;
+            offset = Math.max(0, (event.clientX - down.clientX) * direction);
+            dialog.style.transition = "none";
+            dialog.style.translate = `${offset * direction}px 0`;
+          };
+
+          const end = (event) => {
+            if (event.pointerId !== down.pointerId) return;
+            listening.abort();
+
+            const velocity = offset / (event.timeStamp - down.timeStamp);
+            const swiped = offset > dialog.offsetWidth / 3 || velocity > 0.5;
+
+            // Clearing both in one go lets the CSS transition carry the drawer from
+            // where the finger left it, either out or back into place.
+            dialog.style.removeProperty("transition");
+            dialog.style.removeProperty("translate");
+            if (event.type === "pointerup" && swiped) closeDrawer(dialog);
+          };
+
+          const options = { signal: listening.signal };
+          window.addEventListener("pointermove", move, options);
+          window.addEventListener("pointerup", end, options);
+          window.addEventListener("pointercancel", end, options);
+        });
+
+        // On touch screens, swiping right pulls the admin navigation drawer out under the
+        // finger, and lets go the same way as the swipe-to-close. The left
+        // edge is left to the iOS swipe back, text fields to selecting text, and
+        // anything scrolled sideways to scrolling back. These are touch events rather
+        // than pointer events so the first sideways move can stop the browser from
+        // starting a scroll, which would cancel the swipe.
+        document.addEventListener("touchstart", (start) => {
+          if (start.touches.length > 1) return;
+          const touch = start.changedTouches[0];
+          if (touch.clientX < 20) return;
+          if (start.target.closest?.("input, textarea, select, [contenteditable]"))
+            return;
+          if (scrolledSideways(start.target)) return;
+          const dialog = navDrawer();
+          if (!dialog || document.querySelector("dialog[open]")) return;
+
+          let offset = 0;
+          const listening = new AbortController();
+          const sameTouch = (event) =>
+            [...event.changedTouches].find((t) => t.identifier === touch.identifier);
+
+          const move = (event) => {
+            const moved = sameTouch(event);
+            if (!moved) return;
+            const dx = moved.clientX - touch.clientX;
+            const dy = moved.clientY - touch.clientY;
+
+            if (!dialog.open) {
+              if (dx === 0 && dy === 0) return;
+              // The first move decides: only a mostly rightward one is a swipe.
+              if (dx <= Math.abs(dy)) return listening.abort();
+              dialog.style.transition = "none";
+              openDrawer(dialog);
+            }
+
+            event.preventDefault();
+            offset = Math.min(Math.max(dx, 0), dialog.offsetWidth);
+            dialog.style.translate = `${offset - dialog.offsetWidth}px 0`;
+          };
+
+          const end = (event) => {
+            if (!sameTouch(event)) return;
+            listening.abort();
+            if (!dialog.open) return;
+
+            const velocity = offset / (event.timeStamp - start.timeStamp);
+            const swiped = offset > dialog.offsetWidth / 3 || velocity > 0.5;
+
+            dialog.style.removeProperty("transition");
+            dialog.style.removeProperty("translate");
+            if (event.type !== "touchend" || !swiped) closeDrawer(dialog);
+          };
+
+          const options = { signal: listening.signal };
+          window.addEventListener("touchmove", move, { ...options, passive: false });
+          window.addEventListener("touchend", end, options);
+          window.addEventListener("touchcancel", end, options);
+        });
+
+        // Only the admin opens its drawer by swipe; from lg up it has a persistent
+        // sidebar instead.
+        function navDrawer() {
+          if (matchMedia("(min-width: 64rem)").matches) return null;
+          return document.getElementById("admin-nav-drawer-dialog");
+        }
+
+        function scrolledSideways(element) {
+          for (; element; element = element.parentElement) {
+            if (element.scrollLeft > 0) return true;
+          }
+          return false;
+        }
+      </script>
     </div>
     """
   end

@@ -210,6 +210,27 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "Icon button that copies `target` and turns into a tick once it has."
   def copy_button(assigns) do
     ~H"""
+    <script :type={Phoenix.LiveView.ColocatedJS}>
+      // detail.trigger names the button to mark data-copied for a moment, so it can
+      // show (and, inside an aria-live region, announce) that the copy worked.
+      window.addEventListener("edenflowers:copy", async (event) => {
+        const el = event.target;
+        const text = "value" in el ? el.value : el.textContent.trim();
+        // Needs a secure page (HTTPS or localhost); plain http has no Clipboard API.
+        const copied = await navigator.clipboard
+          ?.writeText(text)
+          .then(() => true)
+          .catch(() => false);
+
+        const trigger =
+          event.detail?.trigger && document.querySelector(event.detail.trigger);
+        if (!copied || !trigger) return;
+
+        trigger.dataset.copied = "";
+        clearTimeout(trigger.copiedTimer);
+        trigger.copiedTimer = setTimeout(() => delete trigger.dataset.copied, 2000);
+      });
+    </script>
     <button
       id={@id}
       type="button"
@@ -374,6 +395,18 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "A customer's email address, linked to a Fastmail search for their correspondence."
   def email_link(assigns) do
     ~H"""
+    <script :type={Phoenix.LiveView.ColocatedJS}>
+      // Fastmail's iOS app doesn't claim app.fastmail.com links, so on phones a
+      // Fastmail compose link opens the app through its fastmail:// scheme instead.
+      // The scheme ignores search paths, so search links open in Safari, where
+      // Jennie stays signed in, rather than the installed app's in-app browser.
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest?.("a[data-app-href]");
+        if (!link || !matchMedia("(pointer: coarse)").matches) return;
+        event.preventDefault();
+        location.href = link.dataset.appHref;
+      });
+    </script>
     <a
       href={"https://app.fastmail.com/mail/search:#{URI.encode_www_form(to_string(@email))}"}
       data-app-href={"x-safari-https://app.fastmail.com/mail/search:#{URI.encode_www_form(to_string(@email))}"}

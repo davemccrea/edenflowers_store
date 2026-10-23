@@ -74,7 +74,7 @@ body:has(.admin-theme) {
   background-color: var(--color-base-200);
 }
 
-/* Page transitions, started in app.js. The topbar, search bar, sidebar and
+/* Page transitions, started in admin_transitions.js. The topbar, search bar, sidebar and
    desktop header carry their own view-transition-name, so they stay put while
    the page under them moves. Switching section fades through: the old page
    fades out before the new one fades and grows in, so two layouts never show

@@ -48,7 +48,7 @@ html:has(dialog.slide-drawer:modal) {
   color: inherit;
 }
 
-/* Sideways drags belong to the swipe-to-close in app.js. touch-action is only
+/* Sideways drags belong to the drawer's swipe-to-close (core_components.ex). touch-action is only
    read up to the nearest scroll container, so the drawer's scrolling content
    needs it too, or the browser claims the drag and cancels the swipe. */
 .slide-drawer,

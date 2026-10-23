@@ -58,6 +58,14 @@ defmodule EdenflowersWeb.Admin.EmailsLive do
                 {~t"Collapse all"}
               </button>
             </div>
+            <script :type={Phoenix.LiveView.ColocatedJS}>
+              // Expand/collapse-all buttons dispatch these to each <details>.
+              window.addEventListener("details:open", (event) => (event.target.open = true));
+              window.addEventListener(
+                "details:close",
+                (event) => (event.target.open = false),
+              );
+            </script>
             <div class="join">
               <.link
                 :for={{lang, _locale, name} <- @languages}
