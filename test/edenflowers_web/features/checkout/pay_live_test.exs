@@ -115,10 +115,10 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
-    view |> form("#pay-form", %{customer_email: "anna@example.com"}) |> render_submit()
+    view |> form("#pay-form", %{form: %{customer_email: " anna@example.com "}}) |> render_submit()
 
     assert_push_event(view, "stripe:process_payment", %{})
-    refute has_element?(view, ~s|input[name="customer_email"]|)
+    refute has_element?(view, ~s|input[name="form[customer_email]"]|)
     assert has_element?(view, ~s|#pay-form[data-billing-email="anna@example.com"]|)
 
     order = Ash.get!(Orders.Order, order.id, authorize?: false)
@@ -126,10 +126,24 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     assert order.user_id
   end
 
+  test "shows an invalid email under the field, as checkout does, and doesn't pay", %{conn: conn, order: order} do
+    order = Ash.Seed.update!(order, %{customer_email: nil, user_id: nil})
+
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
+
+    view |> form("#pay-form", %{form: %{customer_email: "anna@example"}}) |> render_change()
+    assert has_element?(view, "#pay-form", "Must be a valid email address")
+
+    view |> form("#pay-form", %{form: %{customer_email: "anna@example"}}) |> render_submit()
+    assert has_element?(view, "#pay-form", "Must be a valid email address")
+    refute_push_event(view, "stripe:process_payment", %{})
+    assert is_nil(Ash.get!(Orders.Order, order.id, authorize?: false).customer_email)
+  end
+
   test "doesn't ask for an email the order already has", %{conn: conn, order: order} do
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
-    refute has_element?(view, ~s|input[name="customer_email"]|)
+    refute has_element?(view, ~s|input[name="form[customer_email]"]|)
     assert {:error, _} = Orders.add_customer_email(order, "someone@example.com", authorize?: false)
   end
 

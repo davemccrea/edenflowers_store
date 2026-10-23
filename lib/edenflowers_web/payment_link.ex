@@ -92,8 +92,12 @@ defmodule EdenflowersWeb.PaymentLink do
   attr :returned_from_stripe?, :boolean, required: true
   attr :locale, :string, required: true
   attr :billing_name, :string, required: true
-  attr :billing_email, :string, required: true, doc: "nil asks the customer for one before they pay"
+  attr :billing_email, :string, required: true
   attr :billing_phone, :string, default: nil
+
+  attr :email_field, Phoenix.HTML.FormField,
+    default: nil,
+    doc: "asks the customer for an email before they pay, validated on `validate_email`"
 
   def payment_form(assigns) do
     ~H"""
@@ -101,6 +105,7 @@ defmodule EdenflowersWeb.PaymentLink do
       <.stripe_form
         id="pay-form"
         phx-submit="pay"
+        phx-change={@email_field && "validate_email"}
         amount={StripeAPI.to_stripe_amount(@payable.balance)}
         return_path={path_for(@payable)}
         billing_name={@billing_name}
@@ -109,9 +114,8 @@ defmodule EdenflowersWeb.PaymentLink do
       >
         <:before_button>
           <.input
-            :if={is_nil(@billing_email)}
-            name="customer_email"
-            value=""
+            :if={@email_field}
+            field={@email_field}
             type="email"
             label={~t"Email for your receipt"}
             autocomplete="email"
