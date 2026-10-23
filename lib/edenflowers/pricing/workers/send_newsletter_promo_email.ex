@@ -37,7 +37,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
       {:ok, %{newsletter_promo: nil} = user} ->
         {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
 
-        with {:ok, _result} <- email |> Email.newsletter(:new, promo, locale) |> Mailer.deliver() do
+        with {:ok, _result} <- email |> Email.newsletter_welcome(promo, locale) |> Mailer.deliver() do
           {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
           :ok
         end
@@ -45,8 +45,8 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
       {:ok, %{newsletter_promo: promo}} ->
         message =
           if still_usable?(promo),
-            do: Email.newsletter(email, :again_with_code, promo, locale),
-            else: Email.newsletter(email, :again, nil, locale)
+            do: Email.already_subscribed(email, promo, locale),
+            else: Email.already_subscribed(email, nil, locale)
 
         with {:ok, _result} <- Mailer.deliver(message), do: :ok
 

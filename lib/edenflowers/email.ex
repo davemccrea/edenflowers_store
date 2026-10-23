@@ -604,28 +604,40 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Answers a newsletter signup. `signup` is `:new`, with a fresh welcome code;
-  `:again_with_code`, from someone already subscribed whose code is still
-  usable; or `:again`, whose code is used or expired, so `promo` is nil.
+  Welcomes a new newsletter subscriber with their 15% code. In the
+  caller's locale, as there's no record to take one from.
   """
-  def newsletter(email_address, signup, promo, locale) do
+  def newsletter_welcome(email_address, promo, locale) do
+    new()
+    |> from(from_address())
+    |> to(email_address)
+    |> subject(~t"Your 15% welcome code for Eden Flowers")
+    |> text_body(
+      Templates.newsletter_welcome(%{
+        promo_code: promo.code,
+        use_by: Format.weekday_date(promo.expiration_date, locale),
+        store_url: store_url()
+      })
+    )
+  end
+
+  @doc """
+  Answers someone who signs up again. Shows their welcome code only while
+  it's still usable; `promo` is nil once it's used or expired.
+  """
+  def already_subscribed(email_address, promo, locale) do
     new()
     |> from(automated_from_address())
     |> to(email_address)
-    |> subject(newsletter_subject(signup))
+    |> subject(~t"You're already subscribed to the Eden Flowers newsletter")
     |> text_body(
-      Templates.newsletter(%{
-        signup: signup,
+      Templates.already_subscribed(%{
         promo_code: promo && promo.code,
         use_by: promo && Format.weekday_date(promo.expiration_date, locale),
         store_url: store_url()
       })
     )
   end
-
-  defp newsletter_subject(:new), do: ~t"Your 15% welcome code for Eden Flowers"
-  defp newsletter_subject(:again_with_code), do: ~t"Your Eden Flowers promo code"
-  defp newsletter_subject(:again), do: ~t"Your Eden Flowers newsletter subscription"
 
   def error_alert(error) do
     new()

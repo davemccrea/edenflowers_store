@@ -16,6 +16,8 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "new@example.com"}]
+        assert {"Jennie", _address} = email.from
+        assert email.text_body =~ "\nJennie\nEden Flowers\n"
         assert email.subject == "Your 15% welcome code for Eden Flowers"
       end)
 
@@ -54,7 +56,8 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
 
       assert_email_sent(fn email ->
         refute email.text_body =~ to_string(promo.code)
-        assert email.subject == "Your Eden Flowers newsletter subscription"
+        assert {"Eden Flowers", _address} = email.from
+        assert email.subject == "You're already subscribed to the Eden Flowers newsletter"
       end)
     end
   end
@@ -70,7 +73,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
 
       assert_email_sent(fn email ->
         email.to == [{"", "returning@example.com"}] and
-          email.subject == "Your Eden Flowers newsletter subscription" and
+          email.subject == "You're already subscribed to the Eden Flowers newsletter" and
           not (email.text_body =~ to_string(promo.code))
       end)
     end

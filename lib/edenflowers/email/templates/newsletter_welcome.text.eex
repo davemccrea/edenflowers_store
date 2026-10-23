@@ -1,0 +1,16 @@
+<%= gettext("Hi,") %>
+
+<%= gettext("Thank you for subscribing to the Eden Flowers newsletter.") %>
+
+<%= gettext("As a welcome gift, here's 15% off one order:") %>
+
+<%= @promo_code %>
+
+<%= gettext("Use it at checkout by %{date}.", date: @use_by) %>
+
+<%= gettext("Shop flowers:") %>
+<%= @store_url %>
+
+<%= gettext("Warm wishes,") %>
+
+<%= signature() %>
