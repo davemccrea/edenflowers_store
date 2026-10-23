@@ -171,6 +171,17 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     refute has_element?(view, "[data-testid=pay-fulfillment]", "Ready to collect")
   end
 
+  test "says so once the order is refunded", %{conn: conn, order: order} do
+    generate(payment(order_id: order.id, amount: "85.00"))
+    generate(payment(order_id: order.id, amount: "-85.00"))
+
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
+
+    assert has_element?(view, "[data-testid=pay-refunded]")
+    refute has_element?(view, "[data-testid=pay-paid]")
+    refute has_element?(view, "#pay-form")
+  end
+
   test "says so once the order is cancelled", %{conn: conn, admin: admin, order: order} do
     {:ok, _order} = Orders.cancel_order(order, actor: admin)
 

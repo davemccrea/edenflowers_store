@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
 
   alias Edenflowers.Courses
   alias Edenflowers.Format
+  alias Edenflowers.ShopTime
   alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -84,7 +85,10 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
             <dd class="tabular-nums">{@registration.reference}</dd>
           </dl>
 
-          <p class="text-base-content/70 mt-6">
+          <p
+            :if={@registration.status != :cancelled and not Date.before?(@registration.course.date, ShopTime.today())}
+            class="text-base-content/70 mt-6"
+          >
             {~t"To cancel, reply to your confirmation email. Let me know at least 7 days before the course for a full refund. After that, we'll work something out."}
           </p>
         </div>

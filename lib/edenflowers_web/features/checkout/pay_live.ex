@@ -56,6 +56,11 @@ defmodule EdenflowersWeb.Checkout.PayLive do
               <p class="leading-relaxed" data-testid="pay-cancelled">
                 {~t"This order has been cancelled, so there is nothing to pay. If you have any questions, just get in touch."}
               </p>
+            <% @payable.refunded? -> %>
+              <h1 class="page-title mb-6">{~t"Order refunded"}</h1>
+              <p class="leading-relaxed" data-testid="pay-refunded">
+                {~t"This order has been refunded, so there is nothing to pay. If you have any questions, just get in touch."}
+              </p>
             <% not @payable.payment_link_open? -> %>
               <h1 class="page-title mb-6">{~t"Thank you"}</h1>
               <p class="leading-relaxed" data-testid="pay-paid">

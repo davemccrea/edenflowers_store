@@ -118,6 +118,8 @@ defmodule Edenflowers.Email.Previews do
              balance: Decimal.new("54.00"),
              recipient_name: nil
            }, nil},
+          {gettext_noop("delivered, invoice"), %{payment_terms: :invoice, fulfillment_status: :fulfilled}, nil},
+          {gettext_noop("delivered, payment link"), %{fulfillment_status: :fulfilled}, @payment_link},
           {gettext_noop("unpaid, pays on delivery"), %{payment_terms: :on_fulfillment}, nil},
           {gettext_noop("unpaid, pays at pickup"),
            %{

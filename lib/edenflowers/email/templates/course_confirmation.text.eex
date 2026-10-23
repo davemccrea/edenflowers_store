@@ -1,6 +1,6 @@
 <%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= ngettext("Thank you for booking. Your place on %{course} is confirmed.", "Thank you for booking. Your %{count} places on %{course} are confirmed.", @registration.seats, course: @registration.course.name) %>
+<%= if @course_over? do %><%= gettext("Thank you for coming to %{course}.", course: @registration.course.name) %><% else %><%= ngettext("Thank you for booking. Your place on %{course} is confirmed.", "Thank you for booking. Your %{count} places on %{course} are confirmed.", @registration.seats, course: @registration.course.name) %><% end %>
 
 <%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
@@ -9,10 +9,10 @@
 <%= cond do %><% @payment_link_url -> %><%= gettext("You can pay online here, by card or MobilePay:") %>
 <%= @payment_link_url %>
 
-<%= gettext("Or pay at the course if you prefer.") %> <% Decimal.positive?(@registration.balance) -> %><%= gettext("You pay at the course.") %> <% true -> %><%= gettext("Your receipt is attached.") %> <% end %>
+<%= unless @course_over? do %><%= gettext("Or pay at the course if you prefer.") %><% end %> <% Decimal.positive?(@registration.balance) and @course_over? -> %><%= gettext("Reply to this email and I'll send you a link to pay online.") %> <% Decimal.positive?(@registration.balance) -> %><%= gettext("You pay at the course.") %> <% true -> %><%= gettext("Your receipt is attached.") %> <% end %>
 
-<%= if Decimal.positive?(@registration.amount_paid) do %><%= gettext("To cancel, reply to this email. Let me know at least 7 days before the course for a full refund. After that, we'll work something out.") %><% else %><%= gettext("If you need to cancel, reply to this email. Please let me know at least 7 days before the course if you can.") %><% end %>
+<%= unless @course_over? do %><%= if Decimal.positive?(@registration.amount_paid) do %><%= gettext("To cancel, reply to this email. Let me know at least 7 days before the course for a full refund. After that, we'll work something out.") %><% else %><%= gettext("If you need to cancel, reply to this email. Please let me know at least 7 days before the course if you can.") %><% end %>
 
-<%= gettext("See you there,") %>
+<% end %><%= if @course_over?, do: gettext("Warm wishes,"), else: gettext("See you there,") %>
 
 <%= signature() %>

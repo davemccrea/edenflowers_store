@@ -106,7 +106,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       argument :token, :string, allow_nil?: false
       get? true
       filter expr(not is_nil(payment_link_token) and payment_link_token == ^arg(:token))
-      prepare build(load: [:course, :seats_held, :total_due, :amount_paid, :balance, :payment_link_open?])
+      prepare build(load: [:course, :seats_held, :total_due, :amount_paid, :balance, :payment_link_open?, :refunded?])
     end
 
     create :register do
@@ -367,7 +367,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     calculate :payment_link_open?,
               :boolean,
-              expr(not is_nil(payment_link_token) and balance > 0 and status == :confirmed)
+              expr(not is_nil(payment_link_token) and payable? and status == :confirmed)
   end
 
   identities do

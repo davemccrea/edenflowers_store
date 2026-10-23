@@ -1,6 +1,6 @@
 <%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= if @order.origin == :subscription do %><%= gettext("Your next subscription order is paid.") %><% else %><%= gettext("Thank you for your order.") %><% end %><%= cond do %><% @order.fulfillment_status == :fulfilled -> %><% @order.fulfillment_method == :delivery -> %> <%= gettext("I'll deliver it on %{date} to %{address}.", date: @fulfillment_on, address: @order.delivery_address) %><% true -> %> <%= gettext("You can collect it on %{date} from %{shop}.", date: @fulfillment_on, shop: shop_address()) %><% end %>
+<%= if @order.origin == :subscription do %><%= gettext("Your next subscription order is paid.") %><% else %><%= gettext("Thank you for your order.") %><% end %><%= cond do %><% @order.fulfillment_status != :pending -> %><% @order.fulfillment_method == :delivery -> %> <%= gettext("I'll deliver it on %{date} to %{address}.", date: @fulfillment_on, address: @order.delivery_address) %><% true -> %> <%= gettext("You can collect it on %{date} from %{shop}.", date: @fulfillment_on, shop: shop_address()) %><% end %>
 
 <%= gettext("Your receipt is attached. If you have a question about your order, reply to this email.") %>
 <%= cond do %><% @order.origin == :subscription -> %>

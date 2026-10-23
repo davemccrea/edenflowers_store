@@ -37,6 +37,15 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     refute render(view) =~ "else@example.com"
   end
 
+  test "says so once the booking is refunded", %{conn: conn, registration: registration} do
+    generate(payment(course_registration_id: registration.id, amount: "-50.00"))
+
+    {:ok, view, _html} = live(conn, ~p"/pay/courses/#{registration.payment_link_token}")
+
+    assert has_element?(view, "[data-testid=pay-refunded]")
+    refute has_element?(view, "#pay-form")
+  end
+
   test "creates a PaymentIntent for what it still owes when the customer pays", %{
     conn: conn,
     registration: registration

@@ -295,6 +295,20 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       end)
     end
 
+    test "once paid, promises no invoice", ctx do
+      {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_terms: :invoice})
+      Oban.drain_queue(queue: :default)
+      assert_email_sent()
+
+      {:ok, order} = Orders.record_payment(order, "134.00", :cash, actor: ctx.admin)
+      {:ok, _order} = Orders.send_order_details_email(order, actor: ctx.admin)
+
+      assert_email_sent(fn email ->
+        refute email.text_body =~ "invoice"
+        assert email.text_body =~ "Paid in full"
+      end)
+    end
+
     test "sends nothing when Jennie chooses not to", ctx do
       {:ok, _order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
