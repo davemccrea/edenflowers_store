@@ -1,4 +1,8 @@
 defmodule Edenflowers.Accounts.User do
+  @moduledoc """
+  Customer and admin identity. Email one-time codes authenticate users; the same record links orders, course bookings, and newsletter preferences.
+  """
+
   use Ash.Resource,
     otp_app: :edenflowers,
     domain: Edenflowers.Accounts,

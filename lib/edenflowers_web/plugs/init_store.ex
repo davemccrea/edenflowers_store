@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Plugs.InitStore do
+  @moduledoc """
+  Ensures the browser session has a checkout cart. When an old cart is placed, it keeps guest access to that order and starts a new cart.
+  """
+
   import Plug.Conn
   alias Edenflowers.Orders
 

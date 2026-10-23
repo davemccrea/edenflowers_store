@@ -1,4 +1,8 @@
 defmodule Edenflowers.WeddingEnquiry.SendEmails do
+  @moduledoc """
+  Oban job that sends a wedding enquiry to the shop and a copy to the couple.
+  """
+
   use Oban.Worker, queue: :default, max_attempts: 3
 
   alias Edenflowers.Email

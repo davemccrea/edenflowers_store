@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.AvatarController do
+  @moduledoc """
+  Serves the admin avatar image used by the back office.
+  """
+
   use EdenflowersWeb, :controller
 
   def show(conn, _params) do

@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Changes.SendSubscriptionSetupEmail do
+  @moduledoc """
+  Emails the customer after a subscription is set up.
+  """
+
   use Ash.Resource.Change
 
   require Logger

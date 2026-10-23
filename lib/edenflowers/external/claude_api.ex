@@ -1,4 +1,8 @@
 defmodule Edenflowers.External.ClaudeAPI.Behaviour do
+  @moduledoc """
+  Contract for the Claude calls used by receipt extraction and translation.
+  """
+
   @callback extract_expense(file_binary :: binary(), content_type :: String.t()) ::
               {:ok, map()} | {:error, term()}
 

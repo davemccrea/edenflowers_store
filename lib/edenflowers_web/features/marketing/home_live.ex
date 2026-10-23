@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Marketing.HomeLive do
+  @moduledoc """
+  Public home page with the shop introduction and featured products.
+  """
+
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Catalog

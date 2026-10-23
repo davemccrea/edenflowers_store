@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Checkout.CheckoutCompleteController do
+  @moduledoc """
+  Receives Stripe's browser redirect after checkout. It preserves guest access to the order and sends failed payments back to checkout.
+  """
+
   use EdenflowersWeb, :controller
 
   # Stripe redirects the customer here from `confirmPayment` once the payment

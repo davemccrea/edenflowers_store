@@ -1,4 +1,9 @@
 defmodule EdenflowersWeb.Auth.SignOutLive do
+  @moduledoc """
+  Confirmation page for signing out. The DELETE request is handled by the auth
+  controller; this LiveView also shows a signed-out state when there is no user.
+  """
+
   use EdenflowersWeb, :live_view
 
   @impl true

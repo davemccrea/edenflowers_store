@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.PromotionsLive do
+  @moduledoc """
+  Admin list of promotion codes and their use.
+  """
+
   use EdenflowersWeb, :live_view
   use Cinder.UrlSync
 

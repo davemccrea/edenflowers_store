@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.LineItem do
+  @moduledoc """
+  A cart or order line. Catalogue lines snapshot product details and price; custom-order lines may be described and priced by Jennie.
+  """
+
   use Ash.Resource,
     domain: Edenflowers.Orders,
     data_layer: AshPostgres.DataLayer,

@@ -1,4 +1,8 @@
 defmodule Edenflowers.Payments.Workers.SendRefundedEmail do
+  @moduledoc """
+  Oban job that tells the customer about a completed refund.
+  """
+
   use Oban.Worker, queue: :default, max_attempts: 3
 
   require Logger

@@ -1,4 +1,8 @@
 defmodule Edenflowers.Repo do
+  @moduledoc """
+  Ecto repository and AshPostgres adapter configuration for the shop database.
+  """
+
   use AshPostgres.Repo,
     otp_app: :edenflowers
 

@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Checkout.OrderLive do
+  @moduledoc """
+  Customer order confirmation page. It can wait for a Stripe webhook to place an order still in payment and restricts access to its owner.
+  """
+
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Format

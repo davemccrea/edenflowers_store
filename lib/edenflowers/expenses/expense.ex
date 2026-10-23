@@ -35,14 +35,29 @@ defmodule Edenflowers.Expenses.Expense.Category do
 end
 
 defmodule Edenflowers.Expenses.Expense.Confidence do
+  @moduledoc """
+  Confidence levels for fields extracted from an expense receipt.
+  """
+
   use Ash.Type.Enum, values: [:high, :medium, :low]
 end
 
 defmodule Edenflowers.Expenses.Expense.Currency do
+  @moduledoc """
+  Currencies accepted for recorded expenses.
+  """
+
   use Ash.Type.Enum, values: [:eur, :sek]
 end
 
 defmodule Edenflowers.Expenses.Expense do
+  @moduledoc """
+  A receipt or invoice imported from Papra and classified for accounting.
+
+  The extracted fields can be corrected in admin. Deleting an expense also
+  removes its Papra tags so the document can be imported again.
+  """
+
   use Ash.Resource,
     domain: Edenflowers.Expenses,
     data_layer: AshPostgres.DataLayer,

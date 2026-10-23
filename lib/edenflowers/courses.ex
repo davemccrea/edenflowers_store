@@ -1,4 +1,11 @@
 defmodule Edenflowers.Courses do
+  @moduledoc """
+  Entry point for florist courses and their bookings.
+
+  `Course` defines the event, capacity, and price. `CourseRegistration` holds
+  seats during checkout, then records confirmation, payment, or cancellation.
+  """
+
   use Ash.Domain,
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]

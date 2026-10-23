@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Courses.CourseLive do
+  @moduledoc """
+  Public course detail and seat-booking page with Stripe payment.
+  """
+
   use EdenflowersWeb, :live_view
 
   require Logger

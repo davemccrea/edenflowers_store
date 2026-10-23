@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Checkout.ReceiptController do
+  @moduledoc """
+  Downloads the receipt PDF for an order the current browser can access.
+  """
+
   use EdenflowersWeb, :controller
 
   alias Edenflowers.Orders.Receipt

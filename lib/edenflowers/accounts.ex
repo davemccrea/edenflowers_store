@@ -1,4 +1,11 @@
 defmodule Edenflowers.Accounts do
+  @moduledoc """
+  Entry point for customer identity and account operations.
+
+  `User` owns one-time-code authentication, profile details, and newsletter
+  preferences. `Token` stores the authentication tokens.
+  """
+
   use Ash.Domain,
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]

@@ -1,4 +1,8 @@
 defmodule Edenflowers.Pricing.Changes.SetNewsletterDefaults do
+  @moduledoc """
+  Creates the default one-use promotion offered to a new newsletter subscriber.
+  """
+
   use Ash.Resource.Change
 
   @impl true

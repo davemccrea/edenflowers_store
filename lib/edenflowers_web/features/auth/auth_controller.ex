@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Auth.AuthController do
+  @moduledoc """
+  Handles authentication callbacks and redirects visitors back to their intended page.
+  """
+
   use EdenflowersWeb, :controller
   use AshAuthentication.Phoenix.Controller
 

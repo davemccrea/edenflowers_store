@@ -1,4 +1,8 @@
 defmodule Edenflowers.Pricing.TaxRate do
+  @moduledoc """
+  A VAT rate assigned to products, courses, or fulfillment fees.
+  """
+
   use Ash.Resource,
     otp_app: :edenflowers,
     domain: Edenflowers.Pricing,

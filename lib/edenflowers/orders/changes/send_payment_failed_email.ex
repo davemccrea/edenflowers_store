@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Changes.SendPaymentFailedEmail do
+  @moduledoc """
+  Emails a subscription customer when an occurrence could not be charged.
+  """
+
   use Ash.Resource.Change
 
   require Logger

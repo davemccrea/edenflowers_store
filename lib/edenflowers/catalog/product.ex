@@ -1,4 +1,10 @@
 defmodule Edenflowers.Catalog.Product do
+  @moduledoc """
+  A sellable product with translated copy, photos, category, and one or more
+  priced sizes. Store reads exclude drafts and nonpublic categories; stock is
+  tracked on individual variants when applicable.
+  """
+
   use Ash.Resource,
     otp_app: :edenflowers,
     domain: Edenflowers.Catalog,

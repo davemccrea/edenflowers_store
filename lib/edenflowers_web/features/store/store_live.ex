@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Store.StoreLive do
+  @moduledoc """
+  Public catalogue page for browsing products by category.
+  """
+
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Catalog

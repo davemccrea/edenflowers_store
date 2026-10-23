@@ -1,4 +1,8 @@
 defmodule Edenflowers.Expenses.ExpenseImport do
+  @moduledoc """
+  Tracks one Papra document from webhook receipt through extraction into an expense. Its Oban trigger retries processing and records terminal failures.
+  """
+
   use Ash.Resource,
     domain: Edenflowers.Expenses,
     data_layer: AshPostgres.DataLayer,

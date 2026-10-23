@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Courses.CoursesLive do
+  @moduledoc """
+  Public list of upcoming florist courses.
+  """
+
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Courses

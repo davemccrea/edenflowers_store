@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.CustomerDetailLive do
+  @moduledoc """
+  Admin view of a customer, their orders, and their subscriptions.
+  """
+
   use EdenflowersWeb, :live_view
 
   require Ash.Query

@@ -1,4 +1,9 @@
 defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
+  @moduledoc """
+  Cancels future, still-open Occurrences when their subscription ends. Each
+  order uses the normal cancellation path, including any required refund.
+  """
+
   use Ash.Resource.Change
 
   require Ash.Query

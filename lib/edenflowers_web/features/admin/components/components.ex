@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.Components do
+  @moduledoc """
+  Shared back-office components for forms, tables, page headers, and status displays.
+  """
+
   use EdenflowersWeb, :html
 
   alias EdenflowersWeb.Admin.OrderLog

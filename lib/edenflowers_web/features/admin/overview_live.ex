@@ -1,4 +1,9 @@
 defmodule EdenflowersWeb.Admin.OverviewLive do
+  @moduledoc """
+  Back-office home page with a nine-day fulfillment calendar, items needing
+  attention, sales, and the monthly accounting report.
+  """
+
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.Components

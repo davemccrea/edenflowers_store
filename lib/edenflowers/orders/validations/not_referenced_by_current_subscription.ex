@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription do
+  @moduledoc """
+  Prevents removing a catalogue item still used by a current subscription.
+  """
+
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 

@@ -1,8 +1,6 @@
 defmodule EdenflowersWeb.ErrorHTML do
   @moduledoc """
-  This module is invoked by your endpoint in case of errors on HTML requests.
-
-  See config/config.exs.
+  Renders the HTML error pages selected by the endpoint for failed requests.
   """
   use EdenflowersWeb, :html
 

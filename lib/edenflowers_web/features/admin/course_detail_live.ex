@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.CourseDetailLive do
+  @moduledoc """
+  Admin course page for bookings, balances, refunds, and customer emails.
+  """
+
   use EdenflowersWeb, :live_view
 
   require Logger

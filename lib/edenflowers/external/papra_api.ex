@@ -1,4 +1,8 @@
 defmodule Edenflowers.External.PapraAPI.Behaviour do
+  @moduledoc """
+  Contract for fetching documents and managing their tags in Papra.
+  """
+
   @callback fetch_document(organization_id :: String.t(), document_id :: String.t()) ::
               {:ok, %{body: binary(), content_type: String.t()}}
               | {:error, term()}

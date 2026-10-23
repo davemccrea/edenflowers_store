@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.VatRow do
+  @moduledoc """
+  One VAT-rate row in a placed order's tax breakdown.
+  """
+
   use Ash.Resource, data_layer: :embedded
 
   attributes do

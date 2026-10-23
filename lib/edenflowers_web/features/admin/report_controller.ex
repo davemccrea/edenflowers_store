@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.ReportController do
+  @moduledoc """
+  Builds and downloads an authenticated monthly accounting report ZIP.
+  """
+
   use EdenflowersWeb, :controller
 
   require Logger

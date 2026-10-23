@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Marketing.MaintenanceLive do
+  @moduledoc """
+  Page shown while the storefront is in maintenance mode.
+  """
+
   use EdenflowersWeb, :live_view
 
   @impl true

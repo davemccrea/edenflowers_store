@@ -1,4 +1,8 @@
 defmodule Edenflowers.Accounts.Workers.SendOtpEmail do
+  @moduledoc """
+  Oban job that emails the one-time sign-in code in the recipient's locale.
+  """
+
   use Oban.Worker, queue: :default, max_attempts: 3
 
   alias Edenflowers.Email

@@ -1,4 +1,8 @@
 defmodule Edenflowers.Accounts.Workers.SendEmailChangeCode do
+  @moduledoc """
+  Oban job that emails the verification code for a requested account email change.
+  """
+
   use Oban.Worker, queue: :default, max_attempts: 3
 
   alias Edenflowers.Email

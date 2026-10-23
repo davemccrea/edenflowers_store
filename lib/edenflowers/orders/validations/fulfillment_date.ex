@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Validations.FulfillmentDate do
+  @moduledoc """
+  Checks a checkout date against the shop calendar, same-day rules, and ordering deadline.
+  """
+
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 

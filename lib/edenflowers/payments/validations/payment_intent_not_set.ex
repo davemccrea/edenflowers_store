@@ -1,4 +1,8 @@
 defmodule Edenflowers.Payments.Validations.PaymentIntentNotSet do
+  @moduledoc """
+  Requires a record to have no open PaymentIntent before creating another.
+  """
+
   use Ash.Resource.Validation
 
   alias Ash.Error.Changes.InvalidAttribute

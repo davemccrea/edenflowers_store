@@ -1,8 +1,16 @@
 defmodule Edenflowers.Catalog.ProductCategory.Visibility do
+  @moduledoc """
+  Whether a category is public, a draft, or hidden from storefront browsing.
+  """
+
   use Ash.Type.Enum, values: [:public, :draft, :hidden]
 end
 
 defmodule Edenflowers.Catalog.ProductCategory do
+  @moduledoc """
+  Groups products for storefront browsing. Visibility controls whether a category appears publicly, while `add_on` marks products that cannot be checked out alone.
+  """
+
   use Ash.Resource,
     otp_app: :edenflowers,
     domain: Edenflowers.Catalog,

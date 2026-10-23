@@ -1,7 +1,9 @@
 defmodule EdenflowersWeb.Layouts do
   @moduledoc """
-  This module holds layouts and related functionality
-  used by your application.
+  Layouts shared by public, account, checkout, and admin pages.
+
+  The root layout supplies the document shell; individual page layouts provide
+  their navigation and surrounding chrome.
   """
   use EdenflowersWeb, :html
 

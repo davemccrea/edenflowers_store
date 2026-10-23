@@ -1,12 +1,24 @@
 defmodule Edenflowers.Fulfillment.FulfillmentOption.RateType do
+  @moduledoc """
+  Whether a fulfillment fee is fixed or varies with delivery distance.
+  """
+
   use Ash.Type.Enum, values: [:fixed, :dynamic]
 end
 
 defmodule Edenflowers.Fulfillment.FulfillmentOption.FulfillmentMethod do
+  @moduledoc """
+  The delivery and pickup methods supported at checkout.
+  """
+
   use Ash.Type.Enum, values: [:delivery, :pickup]
 end
 
 defmodule Edenflowers.Fulfillment.FulfillmentOption do
+  @moduledoc """
+  A delivery or pickup choice with its customer-facing name, fee rules, VAT rate, and delivery range. Checkout snapshots selected terms onto the order.
+  """
+
   use Ash.Resource,
     otp_app: :edenflowers,
     domain: Edenflowers.Fulfillment,

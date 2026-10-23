@@ -1,4 +1,8 @@
 defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
+  @moduledoc """
+  Oban job that tells the customer an order or course booking was cancelled and what money remains to return.
+  """
+
   use Oban.Worker, queue: :default, max_attempts: 3
 
   require Logger

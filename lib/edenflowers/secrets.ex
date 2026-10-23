@@ -1,4 +1,8 @@
 defmodule Edenflowers.Secrets do
+  @moduledoc """
+  Supplies the signing secret used by AshAuthentication tokens.
+  """
+
   use AshAuthentication.Secret
 
   def secret_for(

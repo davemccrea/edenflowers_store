@@ -1,4 +1,13 @@
 defmodule Edenflowers.Catalog do
+  @moduledoc """
+  Entry point for the shop catalogue.
+
+  `Product` holds translated copy and photos, `ProductCategory` controls
+  storefront grouping and visibility, and `ProductVariant` carries each size's
+  price and optional stock. The generated reads distinguish admin data from
+  products visible in the store.
+  """
+
   use Ash.Domain,
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]

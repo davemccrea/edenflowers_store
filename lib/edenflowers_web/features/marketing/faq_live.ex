@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Marketing.FaqLive do
+  @moduledoc """
+  Public answers to common ordering and delivery questions.
+  """
+
   use EdenflowersWeb, :live_view
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}

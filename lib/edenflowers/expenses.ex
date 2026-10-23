@@ -1,4 +1,11 @@
 defmodule Edenflowers.Expenses do
+  @moduledoc """
+  Entry point for expenses imported from Papra.
+
+  `ExpenseImport` tracks a document through extraction and retries; `Expense`
+  stores the classified figures Jennie can review and correct in admin.
+  """
+
   use Ash.Domain,
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]

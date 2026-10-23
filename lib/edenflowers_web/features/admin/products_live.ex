@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.ProductsLive do
+  @moduledoc """
+  Admin product list for finding and managing catalogue items.
+  """
+
   use EdenflowersWeb, :live_view
   use Cinder.UrlSync
 

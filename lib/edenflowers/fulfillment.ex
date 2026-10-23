@@ -1,4 +1,12 @@
 defmodule Edenflowers.Fulfillment do
+  @moduledoc """
+  Entry point for delivery, pickup, and shop availability.
+
+  `FulfillmentOption` defines prices and delivery range. `ShopCalendar` defines
+  the days Jennie works, shared by every option. `shop_address/0` and the
+  distance-priced option helpers are used when quoting delivery.
+  """
+
   use Ash.Domain,
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]

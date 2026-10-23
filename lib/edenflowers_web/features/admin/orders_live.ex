@@ -1,4 +1,9 @@
 defmodule EdenflowersWeb.Admin.OrdersLive do
+  @moduledoc """
+  Searchable, sortable admin order list. It opens on unfulfilled orders,
+  soonest fulfillment date first.
+  """
+
   use EdenflowersWeb, :live_view
   use Cinder.UrlSync
 

@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Marketing.ContactLive do
+  @moduledoc """
+  Public contact page with the shop's address and opening details.
+  """
+
   use EdenflowersWeb, :live_view
 
   alias EdenflowersWeb.Business

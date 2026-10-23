@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Checkout.PickupCalendarController do
+  @moduledoc """
+  Downloads an all-day calendar event for a placed pickup order that the current browser can access.
+  """
+
   use EdenflowersWeb, :controller
 
   alias EdenflowersWeb.Checkout.OrderLive

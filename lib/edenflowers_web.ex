@@ -1,20 +1,16 @@
 defmodule EdenflowersWeb do
   @moduledoc """
-  The entrypoint for defining your web interface, such
-  as controllers, components, channels, and so on.
+  Shared imports and setup for the Phoenix web layer.
 
-  This can be used in your application as:
+  Web modules select their role with `use`, for example:
 
       use EdenflowersWeb, :controller
+      use EdenflowersWeb, :live_view
       use EdenflowersWeb, :html
 
-  The definitions below will be executed for every controller,
-  component, etc, so keep them short and clean, focused
-  on imports, uses and aliases.
-
-  Do NOT define functions inside the quoted expressions
-  below. Instead, define additional modules and import
-  those modules here.
+  The role macros add localized routes, Gettext sigils, layouts, and core
+  components as appropriate. Keep the quoted definitions here limited to
+  shared setup; page behavior belongs in the individual modules.
   """
 
   def static_paths,

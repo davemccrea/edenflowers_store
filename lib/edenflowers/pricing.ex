@@ -1,4 +1,11 @@
 defmodule Edenflowers.Pricing do
+  @moduledoc """
+  Entry point for VAT rates and promotion codes.
+
+  `TaxRate` supplies the rate applied to products, courses, and fulfillment;
+  `Promotion` holds discount terms and tracks code use.
+  """
+
   use Ash.Domain,
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]

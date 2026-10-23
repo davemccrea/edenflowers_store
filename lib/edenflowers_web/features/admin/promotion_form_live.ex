@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.PromotionFormLive do
+  @moduledoc """
+  Admin form for creating, editing, and deleting promotion codes.
+  """
+
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.Components
