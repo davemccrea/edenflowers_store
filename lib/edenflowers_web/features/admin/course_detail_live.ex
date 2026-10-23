@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
+  alias Edenflowers.Email.Preview
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Translations
@@ -34,7 +35,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          |> assign(booking_form: nil, refund_params: %{})
          |> assign(settling_id: nil, settlement_mode: :settle, settlement_error: nil)
          |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
-         |> assign(email_form: nil, email_kind: nil, emailing_id: nil)}
+         |> assign(email_form: nil, email_kind: nil, emailing_id: nil, preview: nil)}
 
       :error ->
         {:ok,
@@ -163,9 +164,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         error={@cancel_error}
         email={@cancelling && @cancelling.email}
         locale={@locale}
+        preview={@preview}
+        swedish_toggle?={@cancelling && @cancelling.locale != "sv-FI"}
       />
       <.email_drawer
         form={@email_form}
+        preview={@preview}
+        swedish_toggle?={@emailing_id && booking(@course, @emailing_id).locale != "sv-FI"}
         {email_drawer_text(@email_kind, @emailing_id && booking(@course, @emailing_id), @locale)}
       />
       <.settlement_drawer
@@ -175,6 +180,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         refund_params={@refund_params}
         error={@settlement_error}
         locale={@locale}
+        preview={@preview}
       />
     </Layouts.admin>
     """
@@ -232,6 +238,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply,
      socket
      |> assign(settling_id: id, settlement_mode: mode, settlement_error: nil)
+     |> assign(:preview, if(mode == :refund, do: preview(:refunded, registration, %{})))
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
   end
 
@@ -241,7 +248,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("change_refund", %{"record_id" => id, "refund" => params}, socket) do
-    {:noreply, update(socket, :refund_params, &Map.put(&1, id, params))}
+    preview = preview(:refunded, booking(socket.assigns.course, id), params)
+    {:noreply, socket |> update(:refund_params, &Map.put(&1, id, params)) |> assign(:preview, preview)}
   end
 
   def handle_event("refund", %{"record_id" => id, "refund" => params}, socket) do
@@ -258,6 +266,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply,
      socket
      |> assign(email_kind: String.to_existing_atom(kind), emailing_id: id)
+     |> assign(:preview, preview(String.to_existing_atom(kind), booking(socket.assigns.course, id), %{}))
      |> assign(:email_form, to_form(%{"message" => ""}, as: :email))
      |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-show"})}
   end
@@ -267,7 +276,12 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("validate_email", %{"email" => params}, socket) do
-    {:noreply, assign(socket, :email_form, to_form(params, as: :email))}
+    %{course: course, email_kind: kind, emailing_id: id} = socket.assigns
+
+    {:noreply,
+     socket
+     |> assign(:email_form, to_form(params, as: :email))
+     |> assign(:preview, preview(kind, booking(course, id), params))}
   end
 
   def handle_event("send_email", %{"email" => %{"message" => message}}, socket) do
@@ -299,6 +313,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply,
      socket
      |> assign(cancelling: registration, cancel_form: PaymentActions.cancel_form(registration), cancel_error: nil)
+     |> assign(:preview, preview(:cancelled, registration, PaymentActions.cancel_form(registration).params))
      |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
 
@@ -307,7 +322,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("validate_cancel", %{"cancel" => params}, socket) do
-    {:noreply, assign(socket, :cancel_form, to_form(params, as: :cancel))}
+    {:noreply,
+     socket
+     |> assign(:cancel_form, to_form(params, as: :cancel))
+     |> assign(:preview, preview(:cancelled, socket.assigns.cancelling, params))}
   end
 
   def handle_event("submit_cancel", %{"cancel" => params}, socket) do
@@ -385,6 +403,20 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         Logger.error("Confirmation for course registration #{registration.id} not emailed: #{inspect(error)}")
         {:error, ~t"Could not email the confirmation."}
     end
+  end
+
+  # The refund form fills itself in from what's owed back, so an empty amount
+  # reads as that until Jennie changes it.
+  defp preview(kind, registration, params) do
+    owed_back = registration.balance |> Decimal.negate() |> Decimal.max(0) |> Decimal.to_string(:normal)
+
+    inputs = %{
+      message: params["message"] || params["note"],
+      refund: params["refund"] || params["amount"] || owed_back,
+      payment_method: String.to_existing_atom(params["how"] || "stripe")
+    }
+
+    Preview.build(kind, registration, inputs, if(params["in_swedish"] == "true", do: "sv-FI"))
   end
 
   defp email_drawer_text(_kind, nil, _locale), do: %{}

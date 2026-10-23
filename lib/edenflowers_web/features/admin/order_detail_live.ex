@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.PhotoUpload, only: [photo_input: 1]
 
+  alias Edenflowers.Email.Preview
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Orders
@@ -40,7 +41,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:fulfillment_form, nil)
          |> assign(:fulfillment_error, nil)
          |> assign(cancel_form: nil, cancel_error: nil)
-         |> assign(email_form: nil, email_kind: nil)
+         |> assign(email_form: nil, email_kind: nil, preview: nil)
          |> assign(settlement_mode: :settle, settlement_error: nil)
          |> PhotoUpload.allow([@photo_field])
          |> assign(:queue, queue_position(order, socket.assigns.current_user))}
@@ -129,6 +130,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           error={@fulfillment_error}
           order={@order}
           uploads={@uploads}
+          preview={@preview}
         />
         <.cancel_drawer
           :if={@order.fulfillment_status == :pending}
@@ -139,8 +141,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           error={@cancel_error}
           email={@order.customer_email}
           locale={@locale}
+          preview={@preview}
+          swedish_toggle?={swedish_toggle?(@order)}
         />
-        <.email_drawer form={@email_form} {email_drawer_text(@email_kind, @order, @locale)} />
+        <.email_drawer
+          form={@email_form}
+          preview={@preview}
+          swedish_toggle?={swedish_toggle?(@order)}
+          {email_drawer_text(@email_kind, @order, @locale)}
+        />
         <.settlement_drawer
           order={@order}
           mode={@settlement_mode}
@@ -148,6 +157,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           payment_params={@payment_params}
           refund_params={@refund_params}
           locale={@locale}
+          preview={@preview}
         />
 
         <%!-- The job on the left, read at the bench; the money, people and history on the right, read at the desk. --%>
@@ -438,6 +448,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :payment_params, :map, required: true
   attr :refund_params, :map, required: true
   attr :locale, :string, required: true
+  attr :preview, Swoosh.Email, default: nil
 
   defp settlement_drawer(assigns) do
     assigns = assign(assigns, :collect?, Decimal.positive?(assigns.order.balance))
@@ -471,6 +482,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           email={@order.customer_email}
           locale={@locale}
           params={@refund_params}
+          preview={@preview}
+          swedish_toggle?={swedish_toggle?(@order)}
         />
         <.record_payment_form
           :if={@mode == :settle and @collect?}
@@ -479,6 +492,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           locale={@locale}
           params={@payment_params}
           receipt_email?={!!@order.customer_email}
+          preview={@preview}
+          swedish_toggle?={swedish_toggle?(@order)}
         />
         <p :if={nothing_to_settle?(@order, @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this order."}
@@ -498,6 +513,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :error, :string, default: nil
   attr :order, Order, required: true
   attr :uploads, :map, required: true
+  attr :preview, Swoosh.Email, default: nil
 
   defp confirm_fulfillment(assigns) do
     ~H"""
@@ -532,6 +548,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             label={~t"Email delivery confirmation"}
             message={@form[:message]}
             to={@order.customer_email}
+            preview={@preview}
+            in_swedish={swedish_toggle?(@order) && @form[:in_swedish]}
           >
             <.input
               :if={@form[:customer_home].value == "false" && @form[:email_customer].value != "false"}
@@ -600,6 +618,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
      |> PhotoUpload.forget([@photo_field])
      |> assign(:fulfillment_form, form)
      |> assign(:fulfillment_error, nil)
+     |> assign_fulfillment_preview(form.params)
      |> push_event("js-exec", %{to: "#confirm-fulfillment", attr: "phx-show"})}
   end
 
@@ -618,7 +637,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
     params = Map.put_new(params, "email_photo", socket.assigns.fulfillment_form[:email_photo].value || "true")
 
-    {:noreply, assign(socket, :fulfillment_form, to_form(params, as: :fulfillment))}
+    {:noreply,
+     socket
+     |> assign(:fulfillment_form, to_form(params, as: :fulfillment))
+     |> assign_fulfillment_preview(params)}
   end
 
   def handle_event("mark_fulfilled", %{"fulfillment" => %{"customer_home" => "false"} = params}, socket) do
@@ -655,9 +677,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("open_cancel", _params, socket) do
+    form = PaymentActions.cancel_form(socket.assigns.order)
+
     {:noreply,
      socket
-     |> assign(cancel_form: PaymentActions.cancel_form(socket.assigns.order), cancel_error: nil)
+     |> assign(cancel_form: form, cancel_error: nil)
+     |> assign_preview(:cancelled, form.params)
      |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
 
@@ -666,7 +691,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("validate_cancel", %{"cancel" => params}, socket) do
-    {:noreply, assign(socket, :cancel_form, to_form(params, as: :cancel))}
+    {:noreply, socket |> assign(:cancel_form, to_form(params, as: :cancel)) |> assign_preview(:cancelled, params)}
   end
 
   def handle_event("submit_cancel", %{"cancel" => params}, socket) do
@@ -702,7 +727,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("change_payment", %{"payment" => params}, socket) do
-    {:noreply, assign(socket, :payment_params, params)}
+    {:noreply, socket |> assign(:payment_params, params) |> assign_preview(:receipt, params)}
   end
 
   # Money owed back, or the menu's Refund, opens the refund form.
@@ -715,6 +740,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply,
      socket
      |> assign(settlement_mode: mode, settlement_error: nil)
+     |> assign_preview(if(mode == :refund, do: :refunded, else: :receipt), %{})
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
   end
 
@@ -724,7 +750,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("change_refund", %{"refund" => params}, socket) do
-    {:noreply, assign(socket, :refund_params, params)}
+    {:noreply, socket |> assign(:refund_params, params) |> assign_preview(:refunded, params)}
   end
 
   def handle_event("refund", %{"refund" => params}, socket) do
@@ -746,6 +772,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply,
      socket
      |> assign(email_kind: String.to_existing_atom(kind), email_form: to_form(%{"message" => ""}, as: :email))
+     |> assign_preview(String.to_existing_atom(kind), %{})
      |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-show"})}
   end
 
@@ -754,7 +781,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("validate_email", %{"email" => params}, socket) do
-    {:noreply, assign(socket, :email_form, to_form(params, as: :email))}
+    {:noreply,
+     socket
+     |> assign(:email_form, to_form(params, as: :email))
+     |> assign_preview(socket.assigns.email_kind, params)}
   end
 
   def handle_event("send_email", %{"email" => %{"message" => message}}, socket) do
@@ -1404,6 +1434,34 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp send_email(:payment_link, order, message, actor), do: PaymentActions.email_payment_link(order, message, actor)
+
+  # The refund forms fill themselves in from what's owed back, so an empty
+  # amount reads as that until Jennie changes it.
+  defp assign_preview(socket, kind, params) do
+    order = socket.assigns.order
+    owed_back = order.balance |> Decimal.negate() |> Decimal.max(0) |> Decimal.to_string(:normal)
+
+    inputs = %{
+      message: params["message"] || params["note"],
+      refund: params["refund"] || params["amount"] || owed_back,
+      payment_method: String.to_existing_atom(params["how"] || default_refund_method(order))
+    }
+
+    locale = if params["in_swedish"] == "true", do: "sv-FI"
+    assign(socket, :preview, Preview.build(kind, order, inputs, locale))
+  end
+
+  defp assign_fulfillment_preview(socket, params) do
+    order = socket.assigns.order
+    photo? = params["customer_home"] == "false" and params["email_photo"] != "false"
+    locale = if params["in_swedish"] == "true", do: "sv-FI"
+    preview = Preview.build(:fulfillment, order, %{message: params["message"], photo?: photo?}, locale)
+    assign(socket, :preview, preview)
+  end
+
+  defp default_refund_method(order), do: if(Decimal.positive?(order.paid_through_stripe), do: "stripe", else: "zettle")
+
+  defp swedish_toggle?(order), do: order.locale != "sv-FI"
 
   defp email_drawer_text(nil, _order, _locale), do: %{}
 

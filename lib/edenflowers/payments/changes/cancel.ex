@@ -55,17 +55,26 @@ defmodule Edenflowers.Payments.Changes.Cancel do
 
     with true <- record.cancellable? || {:error, changed_message(cancelled_by)},
          {:ok, kept} <- kept(changeset, held, cancelled_by) do
-      to_refund = Decimal.sub(held, kept)
-      refunded = Decimal.min(to_refund, Decimal.max(record.paid_through_stripe, 0))
+      money = money(record, Decimal.sub(held, kept))
 
       changeset
       |> Ash.Changeset.force_change_attribute(:kept_amount, kept)
-      |> Ash.Changeset.set_context(%{refunded: refunded, to_return: Decimal.sub(to_refund, refunded)})
+      |> Ash.Changeset.set_context(money)
       |> set_email(record.customer_email)
-      |> refund_through_stripe(record, kept, refunded, cancelled_by)
+      |> refund_through_stripe(record, kept, money.refunded, cancelled_by)
     else
       {:error, error} -> Ash.Changeset.add_error(changeset, error)
     end
+  end
+
+  @doc """
+  How refunding `to_refund` on cancelling splits: what goes back through
+  Stripe (`refunded`) and what Jennie hands back herself (`to_return`).
+  Expects `paid_through_stripe` loaded.
+  """
+  def money(record, to_refund) do
+    refunded = Decimal.min(to_refund, Decimal.max(record.paid_through_stripe, 0))
+    %{refunded: refunded, to_return: Decimal.sub(to_refund, refunded)}
   end
 
   defp kept(changeset, held_now, cancelled_by) do
