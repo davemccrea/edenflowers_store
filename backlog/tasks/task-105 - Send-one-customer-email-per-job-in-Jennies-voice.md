@@ -1,9 +1,10 @@
 ---
 id: TASK-105
 title: 'Send one customer email per job, in Jennie''s voice'
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 21:02'
 labels:
   - spec
   - customers
