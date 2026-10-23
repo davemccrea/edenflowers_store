@@ -88,6 +88,8 @@ defmodule Generator do
         tax_rate_id: tax_rate_id,
         name: StreamData.repeatedly(fn -> "Product #{System.unique_integer([:positive])}" end),
         description: "Product description",
+        # Left to StreamData, a random translation would replace the name in an order's language.
+        translations: %{},
         photo_slugs: ["image.png"],
         free_delivery: false,
         subscribable: false
