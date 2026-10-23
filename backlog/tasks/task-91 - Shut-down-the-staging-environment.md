@@ -1,9 +1,10 @@
 ---
 id: TASK-91
 title: Shut down the staging environment
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-22 09:54'
+updated_date: '2026-10-23 11:30'
 labels:
   - spec
   - admin
@@ -25,6 +26,12 @@ The repo side was removed in d17631f4: deploys, backups, rollbacks, image syncs 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Nothing outside the repo refers to staging
-- [ ] #2 The staging server is destroyed
+- [x] #1 Nothing outside the repo refers to staging
+- [x] #2 The staging server is destroyed
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+All subtasks done on 2026-10-23: nothing outside the repo refers to staging and the server is destroyed.
+<!-- SECTION:NOTES:END -->
