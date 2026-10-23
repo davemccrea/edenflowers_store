@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.PaymentLink do
 
   def url_for(payable), do: EdenflowersWeb.Endpoint.url() <> path_for(payable)
 
-  def path_for(%CourseRegistration{payment_link_token: token}) when is_binary(token), do: ~p"/courses/pay/#{token}"
+  def path_for(%CourseRegistration{payment_link_token: token}) when is_binary(token), do: ~p"/pay/courses/#{token}"
   def path_for(%{payment_link_token: token}) when is_binary(token), do: ~p"/pay/#{token}"
 
   @doc """
