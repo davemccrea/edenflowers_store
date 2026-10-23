@@ -1,7 +1,9 @@
 defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
   @moduledoc """
   Emails Payment received with the receipt PDF, for the payment of the
-  `amount` argument, or else the latest payment. A successful send stamps
+  `amount` argument, or else the latest payment. An order handed over and
+  now paid in full gets the purchase receipt instead: a completed sale has
+  no balance to account for. A successful send stamps
   `receipt_emailed_at`, and on an order clears `receipt_email_failed_at` and
   logs Jennie's message.
   """
@@ -27,7 +29,7 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
       with {:ok, pdf} <- Receipt.generate(record),
            {:ok, _result} <-
              record
-             |> Email.payment_received(amount, message)
+             |> email(amount, message)
              |> Swoosh.Email.attachment(Receipt.attachment(pdf, reference(record)))
              |> Mailer.deliver() do
         Logger.info("Sent payment received email for #{inspect(record.__struct__)} #{record.id}")
@@ -41,6 +43,15 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
       end
     end)
   end
+
+  @doc "The email for `record`'s payment of `amount`, loaded as this change loads it."
+  def email(%Order{fulfillment_status: :fulfilled} = order, amount, message) do
+    if Decimal.eq?(order.balance, 0),
+      do: Email.purchase_receipt(order, message),
+      else: Email.payment_received(order, amount, message)
+  end
+
+  def email(record, amount, message), do: Email.payment_received(record, amount, message)
 
   defp load_for_send(%Order{} = order) do
     Ash.load!(

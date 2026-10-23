@@ -15,6 +15,7 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Receipt
   alias Edenflowers.Payments.Changes.Cancel
+  alias Edenflowers.Payments.Changes.SendPaymentReceivedEmail
   alias Edenflowers.Translations
 
   @doc """
@@ -135,7 +136,7 @@ defmodule Edenflowers.Email.Preview do
       end
 
     order
-    |> Email.payment_received(amount, inputs[:message])
+    |> SendPaymentReceivedEmail.email(amount, inputs[:message])
     |> Swoosh.Email.attachment(Receipt.attachment("", order.order_reference))
   end
 
