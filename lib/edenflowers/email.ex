@@ -325,6 +325,31 @@ defmodule Edenflowers.Email do
     end)
   end
 
+  @doc """
+  Confirms a subscription the customer cancelled in their account, and the
+  already-charged delivery on `charged_on` that still comes, if any.
+  Matter-of-fact, from the shop. Loads as `subscription_cancelled/3`.
+  """
+  def subscription_cancellation_confirmed(subscription, charged_on) do
+    product = subscription.product_variant.product.name
+
+    EdenflowersWeb.Gettext.with_app_locale(subscription.locale, fn ->
+      new()
+      |> from(automated_from_address())
+      |> to(to_string(subscription.user.email))
+      |> bcc(record_copy_address())
+      |> subject(~t"Your #{product} subscription is cancelled")
+      |> text_body(
+        Templates.subscription_cancellation_confirmed(%{
+          product: product,
+          charged_on: charged_on,
+          pickup?: subscription.fulfillment_option.fulfillment_method == :pickup,
+          format_date: &Format.weekday_date(&1, subscription.locale)
+        })
+      )
+    end)
+  end
+
   defp subscription_price(subscription) do
     Decimal.add(subscription.product_variant.price, subscription.first_order_fulfillment_fee || 0)
   end
