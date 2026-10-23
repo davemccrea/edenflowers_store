@@ -11,7 +11,7 @@ An order the shop has committed to make. An Online Order is placed when its paym
 _Avoid_: Confirmed, submitted
 
 **Cancelled**:
-A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to refund and keeps the rest: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. She can give a reason, and the customer is emailed unless she unticks it. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
+A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to refund and keeps the rest: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. The customer is emailed unless she unticks it, with a message from her if she writes one. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Hold**:
@@ -54,11 +54,27 @@ _Avoid_: Plan, membership, recurring order
 One order a Subscription creates: an ordinary placed Online Order, charged to the saved card, that Jennie makes like any other.
 _Avoid_: Renewal, instalment, delivery (a delivery is how any order reaches its Recipient)
 
+**Charge day**:
+3 days before an Occurrence's delivery or pickup: the day its order is created and the saved card charged.
+_Avoid_: Billing day, renewal date
+
+**Change deadline**:
+5 days before an Occurrence's delivery or pickup: the last day the customer can pause, change or cancel it from their account. An Online Order shares it as the last day its customer can cancel it themselves.
+_Avoid_: Cutoff, lock date
+
 ### Payment
 
 **Payment Link**:
 A private link Jennie gives a customer so they can pay what an order or course booking still owes online: a custom order not yet paid, a booking Awaiting payment, or a balance left by an edit. It never expires, and asks for nothing once the balance is settled or the order is cancelled.
 _Avoid_: Invoice, payment request, Stripe link
+
+**Payment received**:
+The email telling a customer their payment for an order or booking arrived outside checkout: through a Payment Link, or recorded by Jennie. It carries the receipt and never asks for more money, even if some is still owed.
+_Avoid_: Receipt email (the order receipt is what online checkout sends), payment confirmation
+
+**Payment reminder**:
+The email Jennie sends by hand to ask for a Balance still owed on an order or booking, with its Payment Link. Never sent automatically, and never for an order on invoice terms.
+_Avoid_: Bill, dunning, payment request
 
 **Payment**:
 Money that moved for an order or a course booking, by any method: Stripe, the Zettle card reader, MobilePay to Jennie's own number, cash, or a Zervant invoice paid to her bank. Stripe payments are recorded from Stripe; Jennie records every other method herself, wherever it was paid. Course bookings are only paid through Stripe. A refund is a negative Payment, made the same way the money came in. An order or booking can have several.
@@ -76,7 +92,7 @@ _Avoid_: Amount due, outstanding
 Nothing is owed either way, or everything taken was handed back.
 
 **Refund**:
-Money Jennie hands back on a placed order or confirmed course booking, cancelled or not, once nothing is left to collect, up to what's still held: by card through Stripe, or by recording money she handed back herself. She can give a reason, and the customer is emailed unless she unticks it. What was owed back is an ordinary refund; any more is a Goodwill refund.
+Money Jennie hands back on a placed order or confirmed course booking, cancelled or not, once nothing is left to collect, up to what's still held: by card through Stripe, or by recording money she handed back herself. The customer is emailed unless she unticks it, with a message from her if she writes one. What was owed back is an ordinary refund; any more is a Goodwill refund.
 _Avoid_: Credit, reimbursement
 
 **Goodwill refund**:
