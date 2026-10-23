@@ -1,6 +1,6 @@
 <%= if @subscription.user.first_name do %><%= gettext("Hi %{name},", name: @subscription.user.first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= gettext("Thank you for starting a flower subscription.") %>
+<%= gettext("Thank you for starting a %{product} subscription.", product: @subscription.product_variant.product.name) %>
 
 <%= gettext("Size") %>: <%= @size %>
 <%= gettext("How often") %>: <%= @interval %>

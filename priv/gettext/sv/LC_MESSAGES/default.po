@@ -6515,8 +6515,8 @@ msgstr "Se blommorna i butiken:"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:3
 #, elixir-autogen, elixir-format
-msgid "Thank you for starting a flower subscription."
-msgstr "Tack för att du startade en blomsterprenumeration."
+msgid "Thank you for starting a %{product} subscription."
+msgstr "Tack för att du startade en prenumeration på %{product}."
 
 #: lib/edenflowers/email/templates/wedding_enquiry.text.eex:3
 #, elixir-autogen, elixir-format

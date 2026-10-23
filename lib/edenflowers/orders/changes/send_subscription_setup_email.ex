@@ -5,6 +5,7 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionSetupEmail do
 
   alias Edenflowers.Email
   alias Edenflowers.Mailer
+  alias Edenflowers.Translations
 
   @impl true
   def change(changeset, _opts, context) do
@@ -13,15 +14,16 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionSetupEmail do
         Ash.load!(
           changeset.data,
           [
-            :product_variant,
             :first_order_discounted?,
             :first_delivery_date,
             :first_order_fulfillment_fee,
             :fulfillment_option,
+            product_variant: :product,
             user: [:first_name]
           ],
           Ash.Context.to_opts(context)
         )
+        |> translate_product()
 
       case subscription |> Email.subscription_set_up() |> Mailer.deliver() do
         {:ok, _result} ->
@@ -32,5 +34,10 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionSetupEmail do
           Ash.Changeset.add_error(changeset, "Failed to send subscription set-up email: #{inspect(error)}")
       end
     end)
+  end
+
+  defp translate_product(subscription) do
+    locale = String.to_existing_atom(subscription.locale)
+    update_in(subscription.product_variant.product, &Translations.translate(&1, locale))
   end
 end
