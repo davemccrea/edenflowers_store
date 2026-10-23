@@ -4,7 +4,7 @@ title: Load Stripe.js once the page is idle
 status: ready-for-human
 assignee: []
 created_date: '2026-10-22 21:05'
-updated_date: '2026-10-23 09:39'
+updated_date: '2026-10-23 09:57'
 labels:
   - customers
   - spec
@@ -40,6 +40,8 @@ ordinal: 210000
 
 <!-- SECTION:NOTES:BEGIN -->
 Checked in headless Chrome on dev: /en HTML has no Stripe.js tag, exactly one is added once idle; a payment link opened directly mounts the Payment Element with one tag; a course opened by live navigation from /en/courses mounts it after booking; with js.stripe.com blocked the pay button re-enables and the existing "payment temporarily unavailable" message shows. A failed load resets the loader so a payment form can retry. Checkout and the subscription card share the same stripe_form but were not clicked through to their payment step.
+
+stripe_form renders <link rel="preload" as="script"> for Stripe.js: without it, a payment page opened directly (payment links from emails) only started the download once LiveView mounted the hook, later than when the layout tag loaded it with the HTML. Checked on dev: a payment link requests Stripe.js once, at 161 ms, before LiveView connects at 240 ms; /en has no preload and loads it after connecting.
 <!-- SECTION:NOTES:END -->
 
 ## Comments

@@ -53,6 +53,9 @@ defmodule EdenflowersWeb.StripeForm do
       class="flex flex-col gap-4"
       {@rest}
     >
+      <%!-- Stripe.js otherwise waits for LiveView to mount the hook. When this form
+           is in the page as it loads, the download starts with the HTML instead. --%>
+      <link rel="preload" as="script" href="https://js.stripe.com/v3/" />
       <div phx-update="ignore" id="payment-element"></div>
       <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
 
