@@ -176,18 +176,20 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     assert Decimal.equal?(balance(order), "-88.50")
   end
 
-  test "an order part payment doesn't offer a receipt", %{conn: conn} do
+  test "a part payment can email Payment received for what was paid", %{conn: conn} do
     order = build(:order)
     {view, panel} = open(conn, :order, order)
 
-    assert has_element?(view, ~s|#order-balance-email-send[checked]|)
-    view |> form("#{panel}-form", payment: %{amount: "50,00"}) |> render_change()
-    refute has_element?(view, "#order-balance-email-send")
-
-    view |> form("#{panel}-form", payment: %{amount: "50,00", payment_method: "cash"}) |> render_submit()
+    view
+    |> form("#{panel}-form", payment: %{amount: "50,00", payment_method: "cash", email_receipt: "true"})
+    |> render_submit()
 
     assert Decimal.equal?(balance(order), "38.50")
-    assert_no_email_sent()
+
+    assert_email_sent(fn email ->
+      refute email.text_body =~ "/pay/"
+      assert email.text_body =~ "50.00. Your receipt is attached."
+    end)
   end
 
   test "an order payment above the balance says why and records nothing", %{conn: conn} do
@@ -203,11 +205,12 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
   end
 
   # Courses are only paid by payment link, so recording a payment is the order's alone.
-  test "the payment that settles an order emails a receipt, ticked by default", %{conn: conn} do
+  test "recording a payment offers Payment received, unticked", %{conn: conn} do
     order = build(:order)
     {view, _panel} = open(conn, :order, order)
 
-    assert has_element?(view, ~s|#order-balance-email-send[checked]|)
+    assert has_element?(view, "#order-balance-email-send")
+    refute has_element?(view, ~s|#order-balance-email-send[checked]|)
     assert record_cash_payment(view, "true") =~ "Payment recorded and receipt emailed."
 
     assert Decimal.eq?(balance(order), 0)

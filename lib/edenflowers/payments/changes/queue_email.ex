@@ -2,7 +2,7 @@ defmodule Edenflowers.Payments.Changes.QueueEmail do
   @moduledoc """
   Enqueues the email trigger named by `:trigger` in the action's transaction,
   so the record always has its email queued, with Jennie's `message` when the
-  action takes one.
+  action takes one, and any other `arguments` the email needs.
 
   Unlike the built-in `run_oban_trigger`, a failed enqueue becomes an action
   error rather than an exception. `Edenflowers.Payments.complete/1` relies on
@@ -12,11 +12,12 @@ defmodule Edenflowers.Payments.Changes.QueueEmail do
 
   @impl true
   def change(changeset, opts, _context) do
+    # `arguments` names what the email's action takes from this one's, as `[amount: :amount_paid]`.
     action_arguments =
-      case Ash.Changeset.get_argument(changeset, :message) do
-        nil -> %{}
-        message -> %{message: message}
-      end
+      [message: :message]
+      |> Keyword.merge(opts[:arguments] || [])
+      |> Map.new(fn {name, from} -> {name, Ash.Changeset.get_argument(changeset, from)} end)
+      |> Map.reject(fn {_name, value} -> is_nil(value) end)
 
     Ash.Changeset.after_action(changeset, fn _changeset, record ->
       try do

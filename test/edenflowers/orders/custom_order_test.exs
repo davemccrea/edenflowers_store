@@ -10,7 +10,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Workers.SendOrderDetailsEmail
-  alias Edenflowers.Orders.Workers.SendReceiptEmail
   alias Edenflowers.Payments
   alias EdenflowersWeb.Admin.OrderLog
 
@@ -977,7 +976,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.payment_link_open?
 
       Oban.drain_queue(queue: :default)
-      refute_enqueued(worker: SendReceiptEmail)
+      refute_enqueued(worker: Edenflowers.Orders.Workers.SendPaymentReceivedEmail)
       assert_no_email_sent()
     end
 
@@ -1000,7 +999,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       refute order.payable?
     end
 
-    test "through the payment link records the payment and emails the receipt", ctx do
+    test "through the payment link records the payment and emails Payment received", ctx do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
       order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
 
@@ -1018,7 +1017,11 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert paid.payment_intent_id == nil
       assert paid.state == :placed
       assert paid.order_reference == order.order_reference
-      assert_enqueued(worker: SendReceiptEmail, args: %{"primary_key" => %{"id" => order.id}})
+
+      assert_enqueued(
+        worker: Edenflowers.Orders.Workers.SendPaymentReceivedEmail,
+        args: %{"primary_key" => %{"id" => order.id}, "action_arguments" => %{"amount" => "134.00"}}
+      )
     end
 
     test "through the payment link after paying in person is still recorded, and reported to refund", ctx do
@@ -1084,7 +1087,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
 
     @tag :typst
-    test "after collection, doesn't promise to have the order ready", ctx do
+    test "sends Payment received for the latest payment, never thanking for the order anew", ctx do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false, locale: "en-GB"})
       {:ok, order} = Orders.record_payment(order, "134.00", :cash, actor: ctx.admin)
       {:ok, order} = Orders.mark_order_fulfilled(order, actor: ctx.admin)
@@ -1092,8 +1095,9 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, _order} = Orders.email_receipt(order, actor: ctx.admin)
 
       assert_email_sent(fn email ->
-        refute email.text_body =~ "ready on"
-        assert email.text_body =~ "Thank you for your order."
+        refute email.text_body =~ "Thank you for your order"
+        assert email.subject =~ "Payment received for your order for"
+        assert email.text_body =~ "I've received your payment of €134.00. Your receipt is attached."
       end)
     end
 

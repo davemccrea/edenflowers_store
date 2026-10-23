@@ -36,6 +36,55 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
+  Tells the customer their payment of `amount` arrived outside checkout,
+  through a payment link or recorded by Jennie, with the receipt the
+  sender attaches. Never asks for more, even if some is still owed. For an
+  order, expects `:customer_first_name`, `:grand_total`, `:amount_paid`,
+  `:balance` and `line_items: [:subtotal]` loaded; for a booking,
+  `:course` (translated), `:first_name`, `:amount_paid` and `:balance`.
+  """
+  def payment_received(record, amount, message \\ nil)
+
+  def payment_received(%Order{} = order, amount, message) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(record_copy_address())
+      |> subject(~t"Payment received for your order for #{date = short_date(order)}")
+      |> text_body(
+        Templates.payment_received(%{
+          order: order,
+          amount: amount,
+          message: message,
+          format_currency: &Format.currency(&1, order.locale)
+        })
+      )
+    end)
+  end
+
+  def payment_received(%CourseRegistration{} = registration, amount, message) do
+    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(registration.email)
+      |> bcc(record_copy_address())
+      |> subject(
+        ~t"Payment received for #{course = registration.course.name}, #{date = Format.day_month(registration.course.date, registration.locale)}"
+      )
+      |> text_body(
+        Templates.booking_payment_received(%{
+          registration: registration,
+          amount: amount,
+          message: message,
+          format_date: &Format.weekday_date(&1, registration.locale),
+          format_currency: &Format.currency(&1, registration.locale)
+        })
+      )
+    end)
+  end
+
+  @doc """
   What Jennie and the customer agreed for a custom order she placed, and how
   to pay. Once the order is handed over it leaves out the delivery or pickup
   line. Expects `:customer_first_name`, `:grand_total`, `:amount_paid`,

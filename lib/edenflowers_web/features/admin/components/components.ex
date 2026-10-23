@@ -677,12 +677,12 @@ defmodule EdenflowersWeb.Admin.Components do
       %{
         "payment_method" => "zettle",
         "amount" => Decimal.to_string(assigns.record.balance, :normal),
-        "email_receipt" => "true"
+        "email_receipt" => "false"
       }
       |> Map.merge(assigns.params)
       |> to_form(as: :payment)
 
-    assigns = assign(assigns, form: form, settles?: settles?(assigns.record, form[:amount].value))
+    assigns = assign(assigns, form: form)
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="space-y-4">
@@ -706,10 +706,10 @@ defmodule EdenflowersWeb.Admin.Components do
         />
       </div>
       <.customer_email
-        :if={@settles? and @receipt_email?}
+        :if={@receipt_email?}
         id={"#{@id}-email"}
         send={@form[:email_receipt]}
-        label={~t"Email a receipt"}
+        label={~t"Email the customer a receipt"}
         message={@form[:message]}
         preview={@preview}
         in_swedish={@swedish_toggle? && @form[:in_swedish]}
@@ -723,13 +723,6 @@ defmodule EdenflowersWeb.Admin.Components do
       </.button>
     </.form>
     """
-  end
-
-  defp settles?(record, amount) do
-    case Decimal.parse(String.replace(amount, ",", ".")) do
-      {amount, ""} -> Decimal.eq?(amount, record.balance)
-      _ -> false
-    end
   end
 
   @doc "Every way Jennie records money herself; Stripe records its own."

@@ -95,14 +95,21 @@ defmodule Edenflowers.Email.Preview do
   defp entered_link?(entered, nil), do: entered.payment_terms == :payment_link
   defp entered_link?(_entered, order), do: order.payment_link_open?
 
-  defp order_load(:receipt), do: [:customer_first_name, :vat, :cancellable_by_customer?, :cancellable_until]
   defp order_load(:fulfillment), do: [:customer_first_name, :recipient_first_name]
 
   defp order_load(kind) when kind in [:cancelled, :refunded],
     do: [:customer_first_name, :payments, :paid_through_stripe]
 
-  defp order_load(_details),
-    do: [:customer_first_name, :grand_total, :amount_paid, :balance, :payment_link_open?, line_items: [:subtotal]]
+  defp order_load(_kind),
+    do: [
+      :customer_first_name,
+      :grand_total,
+      :amount_paid,
+      :balance,
+      :payment_link_open?,
+      :payments,
+      line_items: [:subtotal]
+    ]
 
   defp order_email(:order_details, order, inputs),
     do: Email.order_details(order, payment_link_url(order), inputs[:message])
@@ -111,9 +118,21 @@ defmodule Edenflowers.Email.Preview do
   defp order_email(:payment_link, order, inputs),
     do: Email.order_details(order, link_url(order), inputs[:message])
 
+  # A payment being recorded reads as it will once it's in; from the menu,
+  # it's the latest payment again.
   defp order_email(:receipt, order, inputs) do
+    {order, amount} =
+      case decimal(inputs[:amount]) do
+        nil ->
+          {order, latest_payment(order)}
+
+        amount ->
+          {%{order | amount_paid: Decimal.add(order.amount_paid, amount), balance: Decimal.sub(order.balance, amount)},
+           amount}
+      end
+
     order
-    |> Email.order_confirmation(inputs[:message])
+    |> Email.payment_received(amount, inputs[:message])
     |> Swoosh.Email.attachment(Receipt.attachment("", order.order_reference))
   end
 
@@ -160,12 +179,23 @@ defmodule Edenflowers.Email.Preview do
   defp refund_details(inputs),
     do: %{amount: refund(inputs), payment_method: inputs[:payment_method] || :stripe, note: inputs[:message]}
 
+  defp refund(inputs), do: decimal(inputs[:refund]) || Decimal.new(0)
+
   # What Jennie has typed so far, which may not be a number yet.
-  defp refund(inputs) do
-    case Decimal.parse(String.replace(inputs[:refund] || "", ",", ".")) do
+  defp decimal(nil), do: nil
+
+  defp decimal(text) do
+    case Decimal.parse(String.replace(text, ",", ".")) do
       {amount, ""} -> Decimal.max(amount, 0)
-      _ -> Decimal.new(0)
+      _ -> nil
     end
+  end
+
+  defp latest_payment(order) do
+    order.payments
+    |> Enum.filter(&Decimal.positive?(&1.amount))
+    |> Enum.max_by(& &1.paid_at, DateTime, fn -> %{amount: order.amount_paid} end)
+    |> Map.fetch!(:amount)
   end
 
   defp in_locale(record, nil), do: translated(record)

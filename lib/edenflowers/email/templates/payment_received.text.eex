@@ -1,0 +1,8 @@
+<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("I've received your payment of %{amount}. Your receipt is attached.", amount: @format_currency.(@amount)) %>
+
+<%= message(@message) %><%= order_totals(assigns) %>
+<%= gettext("Warm wishes,") %>
+
+<%= signature() %>

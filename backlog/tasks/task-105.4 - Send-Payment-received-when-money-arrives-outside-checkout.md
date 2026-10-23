@@ -1,9 +1,10 @@
 ---
 id: TASK-105.4
 title: Send Payment received when money arrives outside checkout
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 20:15'
 labels: []
 dependencies:
   - TASK-105.2
@@ -22,8 +23,14 @@ Payment received replaces the order receipt for a paid payment link, a top-up af
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Paying an order's or booking's payment link sends Payment received, not the order receipt or booking confirmation
-- [ ] #2 Recording a payment offers the email, unticked
-- [ ] #3 The order menu's receipt item sends Payment received
-- [ ] #4 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #1 Paying an order's or booking's payment link sends Payment received, not the order receipt or booking confirmation
+- [x] #2 Recording a payment offers the email, unticked
+- [x] #3 The order menu's receipt item sends Payment received
+- [x] #4 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Recording a payment offers the email for any amount, not only one that settles the order. The menu item sends it for the latest payment.
+<!-- SECTION:NOTES:END -->

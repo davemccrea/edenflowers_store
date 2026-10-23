@@ -11,6 +11,8 @@ defmodule Edenflowers.Email.Templates do
 
   @templates [
     {:order_confirmation, [:assigns]},
+    {:payment_received, [:assigns]},
+    {:booking_payment_received, [:assigns]},
     {:order_details, [:assigns]},
     {:order_updated, [:assigns]},
     {:order_totals, [:assigns]},

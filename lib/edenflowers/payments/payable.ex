@@ -5,7 +5,8 @@ defmodule Edenflowers.Payments.Payable do
 
   The including resource supplies:
 
-    * an `:email_receipt` update action that emails the customer their receipt
+    * a `:send_payment_received_email` update action, taking `amount` and
+      `message`, that emails the customer Payment received
 
     * `has_many :payments`
     * `calculate :total_due`: what it's still to be paid for. Once cancelled,
