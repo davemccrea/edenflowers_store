@@ -46,22 +46,13 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert_enqueued(worker: SendFulfillmentEmail, args: %{"primary_key" => %{"id" => order.id}})
     end
 
-    test "emails collection confirmation for an unpaid custom pickup" do
+    test "sends nothing for a collected order, as the customer was there" do
       order = fulfillable_order(fulfillment_method: :pickup, origin: :custom)
 
       {:ok, _order} = Orders.mark_order_fulfilled(order, actor: admin())
-      assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
 
-      assert_email_sent(fn email ->
-        assert email.to == [{"", "ada@example.com"}]
-        assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
-        assert email.subject == "Your Eden Flowers order 1400 has been collected"
-        assert email.text_body =~ "Your order has been collected."
-        refute email.text_body =~ "delivered"
-        assert email.attachments == []
-      end)
-
-      assert Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_emailed_at
+      refute_enqueued(worker: SendFulfillmentEmail)
+      assert_no_email_sent()
     end
 
     test "sends nothing to a phone-only customer" do
@@ -197,7 +188,7 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert {:ok, _} = perform_job(SendFulfillmentEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
-        assert email.subject == "Your Eden Flowers order 1400 has been delivered (photo attached)"
+        assert email.subject == "Your Eden Flowers order 1400 has been delivered"
         assert email.text_body =~ "Nobody was home"
 
         assert email.text_body =~
@@ -244,15 +235,15 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       end)
     end
 
-    test "collection confirmation uses the customer's locale, not the worker's" do
+    test "delivery confirmation uses the customer's locale, not the worker's" do
       for {locale, reference, subject, greeting, body} <- [
-            {"sv-FI", "1400", "Din Eden Flowers-beställning 1400 har hämtats", "Hej Ada,",
-             "Din beställning har hämtats."},
-            {"fi", "1401", "Eden Flowers -tilauksesi 1401 on noudettu", "Hei Ada,", "Tilauksesi on noudettu."}
+            {"sv-FI", "1400", "Din Eden Flowers-beställning 1400 har levererats", "Hej Ada,",
+             "Din beställning har levererats."},
+            {"fi", "1401", "Eden Flowers -tilauksesi 1401 on toimitettu", "Hei Ada,", "Tilauksesi on toimitettu."}
           ] do
         order =
           fulfillable_order(
-            fulfillment_method: :pickup,
+            gift: false,
             fulfillment_status: :fulfilled,
             locale: locale,
             order_reference: reference
@@ -328,9 +319,14 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert_email_sent()
     end
 
-    test "needs a fulfilled order with an email, and an admin" do
+    test "needs a fulfilled delivery with an email, and an admin" do
       assert {:error, _} =
                Orders.email_fulfillment_confirmation(fulfillable_order(order_reference: "1401"), actor: admin())
+
+      collected =
+        fulfillable_order(fulfillment_method: :pickup, fulfillment_status: :fulfilled, order_reference: "1403")
+
+      assert {:error, _} = Orders.email_fulfillment_confirmation(collected, actor: admin())
 
       no_email =
         fulfillable_order(

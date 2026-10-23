@@ -1,7 +1,8 @@
 <%= if @order.customer_first_name, do: ~t"Hi #{name = @order.customer_first_name},", else: ~t"Hi," %>
 
 <%= cond do
-  @order.fulfillment_method == :pickup -> ~t"Your order has been collected."
+  @photo? && @order.gift && @order.recipient_first_name -> ~t"Nobody was home when I delivered your order for #{recipient = @order.recipient_first_name}. The attached photo shows where I left it."
+  @photo? -> ~t"Nobody was home when I delivered your order. The attached photo shows where I left it."
   @order.gift && @order.recipient_first_name -> ~t"Your order for #{recipient = @order.recipient_first_name} has been delivered."
   true -> ~t"Your order has been delivered."
 end %>

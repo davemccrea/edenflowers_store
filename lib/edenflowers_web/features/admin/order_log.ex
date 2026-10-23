@@ -74,6 +74,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :mark_fulfilled}), do: ~t"Fulfilled"
   defp title(%{version_action_name: :open_payment_link}), do: ~t"Payment link created"
   defp title(%{version_action_name: :send_order_details_email}), do: ~t"Order details emailed"
+  # Refused-card orders sent this before they sent their order details.
   defp title(%{version_action_name: :send_payment_failed_email}), do: ~t"Payment link emailed"
   defp title(%{version_action_name: :send_receipt_email}), do: ~t"Receipt emailed"
   defp title(%{version_action_name: :email_receipt}), do: ~t"Receipt emailed"
