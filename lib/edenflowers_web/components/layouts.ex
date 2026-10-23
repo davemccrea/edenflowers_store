@@ -383,7 +383,8 @@ defmodule EdenflowersWeb.Layouts do
     assigns = assign(assigns, :version, "v#{Application.spec(:edenflowers, :vsn)}")
 
     ~H"""
-    <div class="flex h-full flex-col py-5">
+    <%!-- Below lg the whole drawer scrolls, so a pinned footer can't squeeze the links into an unnoticed scroll box --%>
+    <div class="flex h-full flex-col overflow-y-auto overscroll-contain py-5 lg:overflow-visible">
       <div class="mb-6 flex items-center justify-between px-5">
         <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-lg">
           Eden Flowers
@@ -398,7 +399,7 @@ defmodule EdenflowersWeb.Layouts do
         </.icon_button>
       </div>
 
-      <nav class="min-h-0 flex-1 space-y-4 overflow-y-auto px-3">
+      <nav class="space-y-4 px-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <div :for={{heading, items} <- @nav_sections} class="space-y-0.5">
           <p :if={heading} class="text-base-content/75 mb-1 px-3 text-xs">{heading}</p>
           <.admin_nav_item
