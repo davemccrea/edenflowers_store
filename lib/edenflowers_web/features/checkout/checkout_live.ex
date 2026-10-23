@@ -792,7 +792,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           )
 
         ~H"""
-        <p class="text-base-content/80 text-sm leading-relaxed" data-testid="recurring-charge">
+        <p class="text-base-content/80 -mt-4 text-sm leading-relaxed" data-testid="recurring-charge">
           {~t"Then #{amount = @amount} #{interval = @interval} from #{date = @from}, charged #{days = Edenflowers.Orders.Subscription.lead_days()} days before each delivery. Pause or cancel anytime."}
         </p>
         """
