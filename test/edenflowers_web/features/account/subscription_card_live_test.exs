@@ -17,7 +17,10 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
     %{conn: conn, user: user, subscription: generate(subscription(user_id: user.id))}
   end
 
-  test "shows the card form for a SetupIntent on the subscription's customer", %{conn: conn, subscription: subscription} do
+  test "creates a SetupIntent on the subscription's customer when the card is saved", %{
+    conn: conn,
+    subscription: subscription
+  } do
     subscription_id = subscription.id
 
     expect(StripeAPI.Mock, :create_setup_intent, fn "cus_ada", %{"subscription_id" => ^subscription_id} ->
@@ -25,18 +28,28 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
     end)
 
     {:ok, view, _html} = live(conn, ~p"/account/subscriptions/#{subscription.id}/card")
+    assert has_element?(view, ~s|#card-form[data-mode="setup"]|)
 
-    assert has_element?(view, ~s|#card-form[data-intent="setup"][data-client-secret="seti_1_secret"]|)
+    view |> element("#card-form") |> render_submit()
+
+    assert_push_event(view, "stripe:process_payment", %{client_secret: "seti_1_secret"})
+  end
+
+  @tag capture_log: true
+  test "says so when Stripe can't take a card", %{conn: conn, subscription: subscription} do
+    expect(StripeAPI.Mock, :create_setup_intent, fn _customer, _metadata -> {:error, :stripe_down} end)
+
+    {:ok, view, _html} = live(conn, ~p"/account/subscriptions/#{subscription.id}/card")
+    view |> element("#card-form") |> render_submit()
+
+    assert has_element?(view, "[data-testid=stripe-unavailable]")
+    assert_push_event(view, "stripe:ready", %{})
   end
 
   # A new card restarts a held subscription but leaves the delivery owed.
   for state <- [:payment_failed, :active] do
     test "says a new card doesn't pay the delivery still owed, when #{state}", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id, state: unquote(state)))
-
-      stub(StripeAPI.Mock, :create_setup_intent, fn _customer, _metadata ->
-        {:ok, %{id: "seti_1", client_secret: "s"}}
-      end)
 
       generate(
         order(
@@ -83,15 +96,11 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
       {:ok, %{id: "seti_1", status: "requires_payment_method", metadata: %{"subscription_id" => subscription.id}}}
     end)
 
-    expect(StripeAPI.Mock, :create_setup_intent, fn "cus_ada", _metadata ->
-      {:ok, %{id: "seti_2", client_secret: "seti_2_secret"}}
-    end)
-
     {:ok, view, _html} =
       live(conn, ~p"/account/subscriptions/#{subscription.id}/card?setup_intent=seti_1&redirect_status=succeeded")
 
     assert render(view) =~ "Your card couldn&#39;t be saved."
-    assert has_element?(view, ~s|#card-form[data-client-secret="seti_2_secret"]|)
+    assert has_element?(view, "#card-form")
   end
 
   test "won't open someone else's subscription", %{conn: conn} do

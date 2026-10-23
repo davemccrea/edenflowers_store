@@ -188,15 +188,16 @@ defmodule Edenflowers.Payments do
 
   @doc """
   Returns the client secret of a CustomerSession that lets the Payment Element
-  show, save and remove the signed-in customer's cards. Call after `setup/2`,
-  which gives the user their Customer.
+  show, save and remove the signed-in customer's cards, giving the user a
+  Stripe Customer if they have none.
 
   Returns nil for a guest or a subscription, and when Stripe can't make one:
   saved cards are a convenience, and the customer can still type a card.
   """
   def customer_session(%Order{} = order, %User{} = user) do
     with {:ok, %{subscription?: false}} <- Ash.load(order, :subscription?, actor: system_actor()),
-         {:ok, %{stripe_customer_id: customer_id}} when is_binary(customer_id) <- Ash.reload(user, actor: user) do
+         {:ok, %{stripe_customer_id: customer_id}} when is_binary(customer_id) <-
+           Accounts.ensure_stripe_customer(user, actor: user) do
       create_customer_session(order, user, customer_id)
     else
       {:ok, _subscription_or_no_customer} ->
@@ -224,13 +225,18 @@ defmodule Edenflowers.Payments do
 
   @doc """
   Brings the PaymentIntent of an order or booking, with `balance` loaded, in
-  line with what it still owes.
+  line with what it still owes. One not made yet is made at the right amount.
   """
+  def update_amount(%{payment_intent_id: nil}), do: :ok
+
   def update_amount(payable) do
-    StripeAPI.impl().update_payment_intent(
-      payable.payment_intent_id,
-      StripeAPI.to_stripe_amount(expected_amount(payable))
-    )
+    case StripeAPI.impl().update_payment_intent(
+           payable.payment_intent_id,
+           StripeAPI.to_stripe_amount(expected_amount(payable))
+         ) do
+      {:ok, _payment_intent} -> :ok
+      error -> error
+    end
   end
 
   @doc """

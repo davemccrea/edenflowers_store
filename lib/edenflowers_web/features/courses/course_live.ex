@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Payments
   alias Edenflowers.ShopTime
@@ -33,7 +34,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
            course: course
          )
          |> assign(booked_seats: booked_seats(socket.assigns.current_user, course))
-         |> assign(registration: nil, client_secret: nil, focus_booking?: false)
+         |> assign(registration: nil, focus_booking?: false)
          |> assign_form()}
 
       # A malformed id is an invalid-filter error rather than NotFound; both should 404.
@@ -182,10 +183,9 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               </button>
 
               <.stripe_form
-                :if={@client_secret}
                 id="course-payment-form"
                 phx-submit="pay"
-                client_secret={@client_secret}
+                amount={StripeAPI.to_stripe_amount(@registration.amount)}
                 return_url={url(~p"/courses/bookings/#{@registration.id}")}
                 billing_name={@registration.name}
                 billing_email={@registration.email}
@@ -206,23 +206,27 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   end
 
   def handle_event("book", %{"form" => params}, socket) do
-    with {:ok, registration} <- AshPhoenix.Form.submit(socket.assigns.form, params: params),
-         {:ok, registration, client_secret} <- Payments.setup(registration, nil) do
-      {:noreply, assign(socket, registration: registration, client_secret: client_secret)}
-    else
-      {:error, %Phoenix.HTML.Form{} = form} ->
-        {:noreply, socket |> assign(form: form) |> reload_course()}
-
-      {:error, _stripe_reason} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
-         |> release_hold()}
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, registration} -> {:noreply, assign(socket, registration: registration)}
+      {:error, form} -> {:noreply, socket |> assign(form: form) |> reload_course()}
     end
   end
 
+  # A retry after a declined card reuses the PaymentIntent made here.
   def handle_event("pay", _params, socket) do
-    {:noreply, push_event(socket, "stripe:process_payment", %{})}
+    case Payments.setup(socket.assigns.registration, nil) do
+      {:ok, registration, client_secret} ->
+        {:noreply,
+         socket
+         |> assign(registration: registration)
+         |> push_event("stripe:process_payment", %{client_secret: client_secret})}
+
+      {:error, _logged_by_setup} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
+         |> push_event("stripe:ready", %{})}
+    end
   end
 
   # A fresh booking replaces this one, so its hold must not keep the seats.
@@ -300,7 +304,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   # A hold paid for meanwhile is a booking now, so it stays.
   defp release_hold(socket) do
     Courses.release_registration_hold(socket.assigns.registration, actor: system_actor())
-    assign(socket, registration: nil, client_secret: nil)
+    assign(socket, registration: nil)
   end
 
   defp assign_form(socket) do

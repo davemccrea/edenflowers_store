@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.PaymentLink do
   import Phoenix.LiveView
 
   alias Edenflowers.Courses.CourseRegistration
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Payments
 
@@ -26,13 +27,12 @@ defmodule EdenflowersWeb.PaymentLink do
   def path_for(%{payment_link_token: token}) when is_binary(token), do: ~p"/pay/#{token}"
 
   @doc """
-  Assigns `payable` and sets up its payment. `reload` reads it again by its
-  token, as the page's mount did.
+  Assigns `payable`. `reload` reads it again by its token, as the page's
+  mount did.
   """
   def mount(socket, payable, params, reload) do
     socket
     |> assign(payable: payable, reload: reload, returned_from_stripe?: params["redirect_status"] == "succeeded")
-    |> assign_payment()
     |> maybe_flash_failed_payment(params)
   end
 
@@ -44,21 +44,35 @@ defmodule EdenflowersWeb.PaymentLink do
 
   @doc """
   The `pay` event. Pays only if the record still owes what the form shows,
-  else reloads the page with `changed_message`.
+  else reloads the page with `changed_message`. The PaymentIntent is made or
+  brought up to date here, so a crawler or a link preview never creates one.
   """
   def pay(%{assigns: %{payable: shown, reload: reload}} = socket, changed_message) do
     with {:ok, payable} <- reload.(),
          true <- payable.payment_link_open?,
-         true <- payable.payment_intent_id == shown.payment_intent_id,
-         :ok <- sync_amount(payable) do
-      socket
-      |> assign(:payable, payable)
-      |> push_event("stripe:process_payment", %{})
+         true <- Decimal.equal?(payable.balance, shown.balance) do
+      start_payment(socket, payable)
     else
       _ ->
         socket
         |> put_flash(:error, changed_message)
         |> push_navigate(to: path_for(shown))
+    end
+  end
+
+  defp start_payment(socket, payable) do
+    with :ok <- Payments.update_amount(payable),
+         {:ok, _payable, client_secret} <- Payments.setup(payable, system_actor()) do
+      socket
+      |> assign(:payable, payable)
+      |> push_event("stripe:process_payment", %{client_secret: client_secret})
+    else
+      {:error, reason} ->
+        Logger.error("Could not set up payment for #{describe(payable)}: #{inspect(reason)}")
+
+        socket
+        |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
+        |> push_event("stripe:ready", %{})
     end
   end
 
@@ -70,12 +84,10 @@ defmodule EdenflowersWeb.PaymentLink do
   @doc "For the record's paid broadcast."
   def paid(%{assigns: %{reload: reload}} = socket) do
     {:ok, payable} = reload.()
-    assign(socket, payable: payable, client_secret: nil)
+    assign(socket, payable: payable)
   end
 
   attr :payable, :map, required: true
-  attr :client_secret, :string, required: true
-  attr :payment_unavailable?, :boolean, required: true
   attr :returned_from_stripe?, :boolean, required: true
   attr :locale, :string, required: true
   attr :billing_name, :string, required: true
@@ -86,10 +98,9 @@ defmodule EdenflowersWeb.PaymentLink do
     ~H"""
     <section :if={@payable.payment_link_open? and not @returned_from_stripe?} class="mt-10" aria-label={~t"Payment"}>
       <.stripe_form
-        :if={@client_secret}
         id="pay-form"
         phx-submit="pay"
-        client_secret={@client_secret}
+        amount={StripeAPI.to_stripe_amount(@payable.balance)}
         return_url={url_for(@payable)}
         billing_name={@billing_name}
         billing_email={@billing_email}
@@ -108,48 +119,8 @@ defmodule EdenflowersWeb.PaymentLink do
         </:before_button>
         {~t"Pay"} {Format.currency(@payable.balance, @locale)}
       </.stripe_form>
-
-      <p :if={@payment_unavailable?} class="text-error" data-testid="stripe-unavailable">
-        {~t"Payment is temporarily unavailable. Please try again in a moment."}
-      </p>
     </section>
     """
-  end
-
-  # Stripe is only touched once the page is live, so a crawler or a link
-  # preview never creates a PaymentIntent. Back from Stripe, the payment is
-  # in flight and its PaymentIntent must not change.
-  defp assign_payment(%{assigns: %{payable: payable}} = socket) do
-    if connected?(socket) and payable.payment_link_open? and not socket.assigns.returned_from_stripe? do
-      case client_secret(payable) do
-        {:ok, client_secret} ->
-          assign(socket, client_secret: client_secret, payment_unavailable?: false)
-
-        {:error, reason} ->
-          Logger.error("Could not set up payment for #{describe(payable)}: #{inspect(reason)}")
-          assign(socket, client_secret: nil, payment_unavailable?: true)
-      end
-    else
-      assign(socket, client_secret: nil, payment_unavailable?: false)
-    end
-  end
-
-  # Jennie may have changed what's owed since the PaymentIntent was made, and
-  # the link always charges the balance.
-  defp client_secret(payable) do
-    with :ok <- sync_amount(payable),
-         {:ok, _payable, client_secret} <- Payments.setup(payable, system_actor()) do
-      {:ok, client_secret}
-    end
-  end
-
-  defp sync_amount(%{payment_intent_id: nil}), do: :ok
-
-  defp sync_amount(payable) do
-    case Payments.update_amount(payable) do
-      {:ok, _payment_intent} -> :ok
-      error -> error
-    end
   end
 
   # A redirect-based method (MobilePay) comes back with `redirect_status=failed`

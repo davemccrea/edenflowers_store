@@ -223,16 +223,25 @@ defmodule EdenflowersWeb.CoreComponents do
   Renders the form the `Stripe` hook mounts its payment element into.
 
   The hook finds the element, error message and button by id, so a page
-  holds at most one. `intent="setup"` saves a card without charging it.
+  holds at most one. `mode="setup"` saves a card without charging it.
+
+  The Payment Element starts before the PaymentIntent or SetupIntent exists.
+  The page creates it in its submit event and sends the client secret with
+  `stripe:process_payment`, so Apple Pay opens inside the customer's tap.
   """
   attr :id, :string, required: true
-  attr :client_secret, :string, required: true
+  attr :mode, :string, default: "payment", values: ["payment", "setup"]
+  attr :amount, :integer, default: nil, doc: "in cents, shown on wallet sheets; required in payment mode"
+
+  attr :setup_future_usage, :string,
+    default: nil,
+    doc: ~s|"off_session" when the PaymentIntent created on paying saves the card|
+
   attr :customer_session_client_secret, :string, default: nil, doc: "shows the signed-in customer's saved cards"
   attr :return_url, :string, required: true
   attr :billing_name, :string, default: nil
   attr :billing_email, :string, default: nil
   attr :billing_phone, :string, default: nil
-  attr :intent, :string, default: nil, values: [nil, "setup"]
   attr :on_loading, JS, default: %JS{}, doc: "runs as Stripe starts working, alongside disabling the button"
   attr :on_ready, JS, default: %JS{}, doc: "runs as Stripe settles, alongside re-enabling the button"
   attr :busy_label, :string, default: nil
@@ -245,8 +254,9 @@ defmodule EdenflowersWeb.CoreComponents do
     <form
       id={@id}
       phx-hook="Stripe"
-      data-intent={@intent}
-      data-client-secret={@client_secret}
+      data-mode={@mode}
+      data-amount={@amount}
+      data-setup-future-usage={@setup_future_usage}
       data-customer-session-client-secret={@customer_session_client_secret}
       data-publishable-key={Application.get_env(:edenflowers, :stripe_publishable_key)}
       data-return-url={@return_url}

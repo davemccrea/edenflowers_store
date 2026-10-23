@@ -19,6 +19,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Fulfillment
 
   alias Edenflowers.Catalog
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders.Calculations.Vat
@@ -67,9 +68,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        |> assign(:order, order)
        |> assign(:delivery_quote, quote_from_order(order))
        |> assign(:form, build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user])))
-       |> assign(:client_secret, nil)
        |> assign(:customer_session_client_secret, nil)
-       |> maybe_setup_payment(order, actor(socket))
+       |> ensure_customer_session(order, actor(socket))
        |> maybe_scroll_to_current_step()}
     else
       {:error, :empty_cart} ->
@@ -302,10 +302,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                 <.checkout_step order={@order} id={@id} state={:payment}>
                   <.stripe_form
-                    :if={@client_secret}
                     id={"#{@id}-form-4"}
                     phx-submit={lock_while_paying() |> JS.push("pay")}
-                    client_secret={@client_secret}
+                    amount={StripeAPI.to_stripe_amount(@order.grand_total)}
+                    setup_future_usage={if @order.subscription?, do: "off_session"}
                     customer_session_client_secret={@customer_session_client_secret}
                     return_url={url(~p"/checkout/complete/#{@order.id}")}
                     billing_name={@order.customer_name}
@@ -320,10 +320,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     </:before_button>
                     {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
                   </.stripe_form>
-
-                  <p :if={!@client_secret} class="text-error" data-testid="stripe-unavailable">
-                    {~t"Payment is temporarily unavailable. Please try again in a moment."}
-                  </p>
                 </.checkout_step>
               </.steps>
             </div>
@@ -465,10 +461,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, back_to_store(socket)}
   end
 
-  def handle_event("pay", _, %{assigns: %{client_secret: nil}} = socket) do
-    {:noreply, put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please try again in a moment.")}
-  end
-
   # Others may have bought the last of a size since it went in the cart.
   def handle_event("pay", _, socket) do
     order = Ash.load!(socket.assigns.order, [line_items: [:over_stock?, :product_variant]], actor: actor(socket))
@@ -563,20 +555,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   defp apply_cart_change(socket, order) do
-    payment_mode_changed? = socket.assigns.order.subscription? != order.subscription?
-
     # A card removed from the cart takes its message with it; drop the typed
     # value too, or it would reappear if a card is picked again.
-    socket =
-      if has_card?(socket.assigns.order) and not has_card?(order) do
-        assign_forms(socket, order, drop: ["card_message"])
-      else
-        assign(socket, order: order)
-      end
-
-    socket = if payment_mode_changed?, do: maybe_setup_payment(socket, order, actor(socket)), else: socket
-
-    {:noreply, socket}
+    if has_card?(socket.assigns.order) and not has_card?(order) do
+      {:noreply, assign_forms(socket, order, drop: ["card_message"])}
+    else
+      {:noreply, assign(socket, order: order)}
+    end
   end
 
   defp back_to_store(socket) do
@@ -765,13 +750,18 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     |> Edenflowers.Format.currency(locale)
   end
 
-  defp pay(socket) do
-    case Payments.update_amount(socket.assigns.order) do
-      {:ok, _payment_intent} ->
-        {:noreply, push_event(socket, "stripe:process_payment", %{})}
-
+  # The PaymentIntent is made on paying, so Elements never holds a stale
+  # amount. A retry after a declined card reuses it, at the current total.
+  defp pay(%{assigns: %{order: order}} = socket) do
+    with :ok <- Payments.update_amount(order),
+         {:ok, %{payment_intent_id: payment_intent_id}, client_secret} <- Payments.setup(order, actor(socket)) do
+      {:noreply,
+       socket
+       |> assign(order: %{order | payment_intent_id: payment_intent_id})
+       |> push_event("stripe:process_payment", %{client_secret: client_secret})}
+    else
       {:error, error} ->
-        Logger.error("Failed to update PaymentIntent for order #{socket.assigns.order.id}: #{inspect(error)}")
+        Logger.error("Failed to set up PaymentIntent for order #{order.id}: #{inspect(error)}")
 
         {:noreply,
          socket
@@ -1005,7 +995,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     socket
     |> maybe_quote_on_entering_delivery(order)
     |> assign_forms(order, opts)
-    |> ensure_payment_for_state(order, actor(socket))
+    |> ensure_customer_session(order, actor(socket))
   end
 
   # The address field mounts fresh on the delivery step with the order's
@@ -1075,40 +1065,18 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  defp maybe_setup_payment(socket, %{state: :payment} = order, actor) do
-    case Payments.setup(order, actor) do
-      {:ok, order, client_secret} ->
-        socket
-        |> assign(order: order)
-        |> assign(client_secret: client_secret)
-        |> assign(customer_session_client_secret: customer_session(socket, order, actor))
-
-      {:error, _reason} ->
-        payment_unavailable(socket)
-    end
-  end
-
-  defp maybe_setup_payment(socket, _order, _actor), do: socket
-
   # The Payment Element only starts once connected, so a CustomerSession made
-  # for the static render would go unused.
-  defp customer_session(socket, order, actor) do
-    if connected?(socket), do: Payments.customer_session(order, actor)
+  # for the static render would go unused. Switching between one-off and
+  # subscription reloads the page, which makes the right one.
+  defp ensure_customer_session(
+         %{assigns: %{customer_session_client_secret: nil}} = socket,
+         %{state: :payment} = order,
+         actor
+       ) do
+    if connected?(socket),
+      do: assign(socket, customer_session_client_secret: Payments.customer_session(order, actor)),
+      else: socket
   end
 
-  defp ensure_payment_for_state(socket, %{state: :payment} = order, actor) do
-    if socket.assigns[:client_secret] do
-      socket
-    else
-      maybe_setup_payment(socket, order, actor)
-    end
-  end
-
-  defp ensure_payment_for_state(socket, _order, _actor), do: socket
-
-  defp payment_unavailable(socket) do
-    socket
-    |> assign(client_secret: nil, customer_session_client_secret: nil)
-    |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
-  end
+  defp ensure_customer_session(socket, _order, _actor), do: socket
 end

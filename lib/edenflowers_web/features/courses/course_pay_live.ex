@@ -102,8 +102,6 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
 
           <PaymentLink.payment_form
             payable={@payable}
-            client_secret={@client_secret}
-            payment_unavailable?={@payment_unavailable?}
             returned_from_stripe?={@returned_from_stripe?}
             locale={@locale}
             billing_name={@payable.name}

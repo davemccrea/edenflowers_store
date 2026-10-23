@@ -504,10 +504,13 @@ Hooks.Stripe = {
       return this.logAndPushError("data-return-url attribute is missing.");
     }
 
-    this.clientSecret = this.el.getAttribute("data-client-secret");
-    if (!this.clientSecret) {
-      return this.logAndPushError("data-client-secret attribute is missing.");
+    // data-mode="setup" saves a card without charging it.
+    this.mode = this.el.dataset.mode;
+    this.amount = Number(this.el.dataset.amount);
+    if (this.mode === "payment" && !this.amount) {
+      return this.logAndPushError("data-amount attribute is missing.");
     }
+    this.setupFutureUsage = this.el.dataset.setupFutureUsage;
 
     this.publishableKey = this.el.getAttribute("data-publishable-key");
     if (!this.publishableKey) {
@@ -542,8 +545,8 @@ Hooks.Stripe = {
     try {
       // @ts-ignore
       const stripe = Stripe(this.publishableKey);
-      const elements = stripe.elements({
-        clientSecret: this.clientSecret,
+      const elements = (this.elements = stripe.elements({
+        ...this.intentOptions(),
         customerSessionClientSecret:
           this.el.dataset.customerSessionClientSecret || undefined,
         appearance: this.buildAppearance(),
@@ -559,7 +562,7 @@ Hooks.Stripe = {
             weight: "300 800",
           },
         ],
-      });
+      }));
 
       const paymentElement = elements.create("payment", {
         paymentMethodOrder: ["mobilepay", "card"],
@@ -579,35 +582,39 @@ Hooks.Stripe = {
         this.logAndPushError("payment element failed to load", event.error);
       });
 
-      // The server couldn't update the PaymentIntent, so Stripe never started.
+      // The server couldn't create the PaymentIntent, so Stripe never started.
       this.handleEvent("stripe:ready", () => this.stripeReady());
 
-      this.handleEvent("stripe:process_payment", async () => {
+      // Safari only opens the Apple Pay sheet inside the tap, so wallets are
+      // collected here, before "pay" makes its round trip to the server.
+      this.el.addEventListener("submit", () => {
+        this.submitted = elements.submit();
+      });
+
+      this.handleEvent("stripe:process_payment", async ({ client_secret }) => {
         this.stripeLoading();
         this.stripeErrorMessage.textContent = ""; // Clear previous errors
 
-        // data-intent="setup" saves a card without charging it.
+        const { error: submitError } = await this.submitted;
+        if (submitError) {
+          return this.handleStripeError(
+            submitError,
+            "error collecting payment details",
+          );
+        }
+
         const confirm =
-          this.el.dataset.intent === "setup"
-            ? stripe.confirmSetup
-            : stripe.confirmPayment;
+          this.mode === "setup" ? stripe.confirmSetup : stripe.confirmPayment;
         const { error } = await confirm.call(stripe, {
           elements,
+          clientSecret: client_secret,
           confirmParams: {
             return_url: this.returnUrl,
           },
         });
 
         if (error) {
-          // The Payment Element shows validation errors itself, but not a
-          // declined card; Stripe's card_error message is written for the customer.
-          if (error.type === "card_error") {
-            this.stripeErrorMessage.textContent = error.message;
-          } else if (error.type !== "validation_error") {
-            this.logAndPushError("error confirming payment", error);
-          }
-
-          this.stripeReady(); // Re-enable button after payment error
+          this.handleStripeError(error, "error confirming payment");
         }
 
         // On success Stripe redirects to return_url.
@@ -620,17 +627,48 @@ Hooks.Stripe = {
     }
   },
 
-  // The server replaced the PaymentIntent (the cart switched between one-off
-  // and subscription), so the one Elements holds is cancelled. The
-  // CustomerSession is replaced alongside it.
+  // Switching between one-off and subscription changes card saving and the
+  // CustomerSession, and Elements can't swap a CustomerSession in place.
   // ponytail: reloads the page rather than rebuilding Elements in place.
   updated() {
-    if (
-      this.clientSecret &&
-      this.el.dataset.clientSecret !== this.clientSecret
-    ) {
-      window.location.reload();
+    if (this.el.dataset.setupFutureUsage !== this.setupFutureUsage) {
+      return window.location.reload();
     }
+
+    // Apple Pay and Google Pay show this amount on their sheets.
+    const amount = Number(this.el.dataset.amount);
+    if (this.mode === "payment" && amount !== this.amount) {
+      this.amount = amount;
+      this.elements.update({ amount });
+    }
+  },
+
+  // Elements starts before the PaymentIntent or SetupIntent exists, and must
+  // match what the server creates when the customer pays. One that saves a
+  // card for later charges takes only cards.
+  intentOptions() {
+    if (this.mode === "setup") {
+      return { mode: "setup", currency: "eur", paymentMethodTypes: ["card"] };
+    }
+
+    const options = { mode: "payment", amount: this.amount, currency: "eur" };
+    if (this.setupFutureUsage) {
+      options.setupFutureUsage = this.setupFutureUsage;
+      options.paymentMethodTypes = ["card"];
+    }
+    return options;
+  },
+
+  // The Payment Element shows validation errors itself, but not a declined
+  // card; Stripe's card_error message is written for the customer.
+  handleStripeError(error, message) {
+    if (error.type === "card_error") {
+      this.stripeErrorMessage.textContent = error.message;
+    } else if (error.type !== "validation_error") {
+      this.logAndPushError(message, error);
+    }
+
+    this.stripeReady(); // Re-enable button after payment error
   },
 
   /**
