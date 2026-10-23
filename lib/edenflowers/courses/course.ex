@@ -116,6 +116,20 @@ defmodule Edenflowers.Courses.Course do
     end
   end
 
+  @doc """
+  What to refund a booking that cost `price` and still holds `held` when it's
+  cancelled `today`: everything before the cancellation deadline, and after
+  it all but the course's fee. Jennie can still change it.
+  """
+  def refund_on_cancelling(course, price, held, today) do
+    if Date.diff(course.date, today) >= course.cancellation_days do
+      held
+    else
+      kept = price |> Decimal.mult(course.cancellation_fee_percent) |> Decimal.div(100) |> Decimal.round(2)
+      held |> Decimal.sub(kept) |> Decimal.max(0)
+    end
+  end
+
   relationships do
     has_many :course_registrations, Edenflowers.Courses.CourseRegistration
 

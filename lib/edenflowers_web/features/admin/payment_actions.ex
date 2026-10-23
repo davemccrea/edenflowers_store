@@ -9,20 +9,36 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   require Logger
 
   alias Edenflowers.Courses
+  alias Edenflowers.Courses.Course
   alias Edenflowers.Courses.CourseRegistration
 
   @doc """
   The cancel drawer's form for an order or a booking. `held` is what it held
   as the drawer opens, and goes back with the form, so the cancel works out
-  what's kept from what Jennie saw.
+  what's kept from what Jennie saw. The refund starts at all of it, or for a
+  booking, at what its course's cancellation terms give back.
   """
   def cancel_form(payable) do
-    held = payable.amount_held |> Decimal.max(0) |> Decimal.to_string(:normal)
+    held = Decimal.max(payable.amount_held, 0)
 
-    Phoenix.Component.to_form(%{"refund" => held, "held" => held, "message" => "", "email_customer" => "true"},
+    Phoenix.Component.to_form(
+      %{
+        "refund" => payable |> refund_on_cancelling(held) |> Decimal.to_string(:normal),
+        "held" => Decimal.to_string(held, :normal),
+        "message" => "",
+        "email_customer" => "true"
+      },
       as: :cancel
     )
   end
+
+  # A booking starts at what its course's cancellation terms give back.
+  defp refund_on_cancelling(%CourseRegistration{} = registration, held) do
+    registration = Ash.load!(registration, :course, authorize?: false)
+    Course.refund_on_cancelling(registration.course, registration.amount, held, Edenflowers.ShopTime.today())
+  end
+
+  defp refund_on_cancelling(_order, held), do: held
 
   def cancel(payable, params, actor) do
     input = %{

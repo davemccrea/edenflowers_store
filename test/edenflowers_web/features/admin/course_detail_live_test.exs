@@ -98,6 +98,31 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       view |> element(~s|button[phx-click="open_cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
     end
 
+    test "after the course's deadline, prefills the refund less the course's fee", %{
+      conn: conn,
+      registration: registration
+    } do
+      Edenflowers.Courses.Course
+      |> Ash.get!(registration.course_id, authorize?: false)
+      |> Ash.Seed.update!(%{cancellation_fee_percent: 50})
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
+      open_cancel(view, registration)
+
+      assert has_element?(view, ~s|#cancel-form input[name="cancel[refund]"][value="42.50"]|)
+    end
+
+    test "before the course's deadline, prefills a full refund", %{conn: conn, registration: registration} do
+      Edenflowers.Courses.Course
+      |> Ash.get!(registration.course_id, authorize?: false)
+      |> Ash.Seed.update!(%{cancellation_fee_percent: 50, cancellation_days: 2})
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
+      open_cancel(view, registration)
+
+      assert has_element?(view, ~s|#cancel-form input[name="cancel[refund]"][value="85.00"]|)
+    end
+
     test "keeps what Jennie doesn't refund and leaves the rest to hand back", %{conn: conn, registration: registration} do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
       open_cancel(view, registration)
