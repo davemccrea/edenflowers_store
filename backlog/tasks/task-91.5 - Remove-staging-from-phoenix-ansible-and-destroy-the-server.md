@@ -1,10 +1,10 @@
 ---
 id: TASK-91.5
 title: Destroy the staging server
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-22 09:54'
-updated_date: '2026-10-22 10:06'
+updated_date: '2026-10-23 11:30'
 labels:
   - quick
 dependencies:
@@ -28,5 +28,11 @@ Ansible no longer knows about staging (removed before the move into `infra/`). D
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Ansible has no staging host
-- [ ] #2 The staging server is destroyed
+- [x] #2 The staging server is destroyed
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Server destroyed at Hetzner on 2026-10-23.
+<!-- SECTION:NOTES:END -->
