@@ -10,6 +10,8 @@ defmodule Edenflowers.External.PapraAPI.Behaviour do
   @callback add_document_tag(document_id :: String.t(), tag_name :: String.t()) :: :ok | {:error, term()}
 
   @callback remove_document_tag(document_id :: String.t(), tag_name :: String.t()) :: :ok | {:error, term()}
+
+  @callback rename_document(document_id :: String.t(), name :: String.t()) :: :ok | {:error, term()}
 end
 
 defmodule Edenflowers.External.PapraAPI do
@@ -64,6 +66,17 @@ defmodule Edenflowers.External.PapraAPI do
       {:ok, nil} -> :ok
       {:ok, tag_id} -> delete_document_tag(document_id, tag_id)
       {:error, error} -> {:error, error}
+    end
+  end
+
+  @impl true
+  def rename_document(document_id, name) do
+    url = "#{organization_api_url()}/documents/#{document_id}"
+
+    case Req.patch([url: url, json: %{name: name}, auth: {:bearer, api_key()}] ++ req_options()) do
+      {:ok, %Req.Response{status: status}} when status in 200..299 -> :ok
+      {:ok, %Req.Response{status: status}} -> {:error, {:papra_http_error, status}}
+      {:error, reason} -> {:error, {:papra_request_failed, reason}}
     end
   end
 

@@ -129,6 +129,7 @@ defmodule Edenflowers.Expenses.Expense do
       ]
 
       change set_attribute(:processed_at, &DateTime.utc_now/0)
+      change Changes.RenamePapraDocument
     end
 
     update :mark_reviewed do
@@ -150,6 +151,9 @@ defmodule Edenflowers.Expenses.Expense do
         :category,
         :description
       ]
+
+      require_atomic? false
+      change Changes.RenamePapraDocument
     end
   end
 
