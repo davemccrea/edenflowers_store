@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Email.Preview
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
@@ -33,6 +34,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
          |> assign(:page_title, subscription.user.name || to_string(subscription.user.email))
          |> assign(:locale, Localize.get_locale())
          |> assign_subscription(subscription)
+         |> assign(cancel_form: nil, preview: nil)
          |> assign(:orders_query, Ash.Query.filter(Order, subscription_id == ^subscription.id))}
 
       _ ->
@@ -88,8 +90,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
             <.actions_menu :if={@subscription.state != :cancelled} id="subscription-actions">
               <.actions_menu_button
                 menu="subscription-actions"
-                phx-click="cancel"
-                data-confirm={~t"Cancel this subscription? This can't be undone."}
+                phx-click="open_cancel"
                 class="text-error"
               >
                 {~t"Cancel subscription"}
@@ -228,6 +229,38 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
           </aside>
         </div>
       </.admin_page>
+
+      <.admin_drawer id="cancel-subscription" title={~t"Cancel subscription"} on_close={JS.push("close_cancel")}>
+        <.form
+          :if={@cancel_form}
+          for={@cancel_form}
+          id="cancel-subscription-form"
+          phx-change="validate_cancel"
+          phx-submit="cancel"
+          class="flex min-h-0 flex-1 flex-col"
+        >
+          <.drawer_body>
+            <p class="text-base-content/75 text-sm">{~t"No more orders are made or charged. This can't be undone."}</p>
+            <.customer_email
+              id="cancel-subscription-email"
+              send={@cancel_form[:email_customer]}
+              label={~t"Email the customer"}
+              message={@cancel_form[:message]}
+              to={to_string(@subscription.user.email)}
+              preview={@preview}
+              in_swedish={@subscription.locale != "sv-FI" && @cancel_form[:in_swedish]}
+            />
+          </.drawer_body>
+          <.drawer_footer>
+            <.button type="submit" variant="destructive">{~t"Cancel subscription"}</.button>
+            <.button
+              type="button"
+              phx-click={JS.exec("phx-hide", to: "#cancel-subscription") |> JS.push("close_cancel")}
+              variant="ghost"
+            >{~t"Keep subscription"}</.button>
+          </.drawer_footer>
+        </.form>
+      </.admin_drawer>
     </Layouts.admin>
     """
   end
@@ -241,8 +274,33 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
     {:noreply, change_subscription(socket, &Orders.resume_subscription/2, ~t"Subscription resumed.")}
   end
 
-  def handle_event("cancel", _params, socket) do
-    {:noreply, change_subscription(socket, &Orders.cancel_subscription/2, ~t"Subscription cancelled.")}
+  def handle_event("open_cancel", _params, socket) do
+    params = %{"email_customer" => "true", "message" => ""}
+
+    {:noreply,
+     socket
+     |> assign(:cancel_form, to_form(params, as: :cancel))
+     |> assign_preview(params)
+     |> push_event("js-exec", %{to: "#cancel-subscription", attr: "phx-show"})}
+  end
+
+  def handle_event("close_cancel", _params, socket) do
+    {:noreply, assign(socket, cancel_form: nil, preview: nil)}
+  end
+
+  def handle_event("validate_cancel", %{"cancel" => params}, socket) do
+    {:noreply, socket |> assign(:cancel_form, to_form(params, as: :cancel)) |> assign_preview(params)}
+  end
+
+  def handle_event("cancel", %{"cancel" => params}, socket) do
+    input = %{email_customer?: params["email_customer"] != "false", message: params["message"]}
+    cancel = &Orders.cancel_subscription(&1, input, &2)
+
+    {:noreply,
+     socket
+     |> change_subscription(cancel, ~t"Subscription cancelled.")
+     |> assign(cancel_form: nil, preview: nil)
+     |> push_event("js-exec", %{to: "#cancel-subscription", attr: "phx-hide"})}
   end
 
   @impl true
@@ -269,6 +327,12 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
     else
       _ -> put_flash(socket, :error, ~t"Could not change the subscription.")
     end
+  end
+
+  defp assign_preview(socket, params) do
+    locale = if params["in_swedish"] == "true", do: "sv-FI"
+    preview = Preview.build(:subscription_cancelled, socket.assigns.subscription, %{message: params["message"]}, locale)
+    assign(socket, :preview, preview)
   end
 
   defp get_subscription(id, actor) do

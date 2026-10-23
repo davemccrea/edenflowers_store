@@ -46,6 +46,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
 
   defp event(%{version_action_name: :activate}), do: ~t"Started"
   defp event(%{version_action_name: :send_setup_email}), do: ~t"Confirmation emailed"
+  defp event(%{version_action_name: :send_cancelled_email}), do: ~t"Cancellation emailed"
   defp event(%{version_action_name: :create_occurrence}), do: ~t"Card refused, held until the payment link is paid"
   defp event(%{version_action_name: :reactivate}), do: ~t"Payment received, deliveries restarted"
   defp event(%{version_action_name: :pause}), do: ~t"Paused"

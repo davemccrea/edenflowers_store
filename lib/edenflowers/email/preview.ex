@@ -12,8 +12,10 @@ defmodule Edenflowers.Email.Preview do
 
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email
+  alias Edenflowers.Orders.Changes.SendSubscriptionCancelledEmail
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Receipt
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.Payments.Changes.Cancel
   alias Edenflowers.Payments.Changes.SendPaymentReceivedEmail
   alias Edenflowers.Translations
@@ -29,6 +31,16 @@ defmodule Edenflowers.Email.Preview do
   def build(kind, %Order{} = order, inputs, locale) do
     order = order |> Ash.load!(order_load(kind), authorize?: false, reuse_values?: false) |> in_locale(locale)
     order_email(kind, order, inputs)
+  end
+
+  def build(:subscription_cancelled, %Subscription{} = subscription, inputs, locale) do
+    subscription = SendSubscriptionCancelledEmail.load_for_send(%{subscription | locale: locale || subscription.locale})
+
+    Email.subscription_cancelled(
+      subscription,
+      SendSubscriptionCancelledEmail.charged_on(subscription),
+      inputs[:message]
+    )
   end
 
   def build(kind, %CourseRegistration{} = registration, inputs, locale) do
