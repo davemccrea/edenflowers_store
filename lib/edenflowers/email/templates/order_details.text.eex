@@ -2,7 +2,7 @@
 
 <%= case @state do %><% :bill -> %><%= gettext("Thank you for your order. I hope you're happy with it. Here are the details:") %><% :card_refused -> %><%= if @order.fulfillment_method == :delivery do %><%= gettext("The payment for your next subscription order didn't go through on your saved card, but your flowers are still coming.") %><% else %><%= gettext("The payment for your next subscription order didn't go through on your saved card, but your flowers will still be ready to collect.") %><% end %><% :details -> %><%= if @order.order_details_emailed_at || @order.origin != :custom do %><%= gettext("Here is your order as it now stands:") %><% else %><%= gettext("Thank you for your order. Here is what we agreed:") %><% end %><% end %>
 
-<%= order_totals(assigns) %>
+<%= message(@message) %><%= order_totals(assigns) %>
 <%= if @state != :bill do %><%= if @order.fulfillment_method == :delivery do %><%= gettext("Delivery on %{date} to %{address}", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= gettext("Collect on %{date} from %{shop}", date: @fulfillment_on, shop: shop_address()) %><% end %>
 <%= if @order.recipient_name do %><%= gettext("For %{recipient}", recipient: @order.recipient_name) %>
 <% end %>

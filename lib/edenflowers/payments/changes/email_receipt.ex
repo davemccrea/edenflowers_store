@@ -11,22 +11,22 @@ defmodule Edenflowers.Payments.Changes.EmailReceipt do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.after_transaction(changeset, fn
-      changeset, {:ok, record} -> {:ok, email_if_settled(record, Ash.Changeset.get_argument(changeset, :amount))}
+      changeset, {:ok, record} -> {:ok, email_if_settled(record, changeset.arguments)}
       _changeset, error -> error
     end)
   end
 
   # A refund that brings the balance to 0 settles it too, but has no receipt.
-  defp email_if_settled(record, amount) do
+  defp email_if_settled(record, %{amount: amount} = arguments) do
     if Decimal.positive?(amount) and Decimal.eq?(record.balance, 0) do
-      Ash.Resource.put_metadata(record, :receipt_emailed?, email(record))
+      Ash.Resource.put_metadata(record, :receipt_emailed?, email(record, arguments[:message]))
     else
       record
     end
   end
 
-  defp email(record) do
-    case Ash.update(record, %{}, action: :email_receipt, authorize?: false) do
+  defp email(record, message) do
+    case Ash.update(record, %{message: message}, action: :email_receipt, authorize?: false) do
       {:ok, _emailed} ->
         true
 

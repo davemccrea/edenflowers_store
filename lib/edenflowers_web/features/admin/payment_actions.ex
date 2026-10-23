@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   def cancel_form(payable) do
     held = payable.amount_held |> Decimal.max(0) |> Decimal.to_string(:normal)
 
-    Phoenix.Component.to_form(%{"refund" => held, "held" => held, "reason" => "", "email_customer" => "true"},
+    Phoenix.Component.to_form(%{"refund" => held, "held" => held, "message" => "", "email_customer" => "true"},
       as: :cancel
     )
   end
@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     input = %{
       refund: params["refund"] && String.replace(params["refund"], ",", "."),
       held: params["held"],
-      cancellation_reason: params["reason"],
+      cancellation_reason: params["message"],
       email_customer?: params["email_customer"] != "false"
     }
 
@@ -45,7 +45,8 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     input = %{
       amount: String.replace(amount, ",", "."),
       payment_method: payment_method,
-      email_receipt?: params["email_receipt"] == "true"
+      email_receipt?: params["email_receipt"] == "true",
+      message: params["message"]
     }
 
     case Ash.update(payable, input, action: :record_payment, actor: actor) do
@@ -98,8 +99,8 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
-  def email_payment_link(payable, actor) do
-    case send_payment_link(payable, actor) do
+  def email_payment_link(payable, message, actor) do
+    case send_payment_link(payable, message, actor) do
       {:ok, _payable} ->
         {:info, ~t"Payment link emailed."}
 
@@ -109,13 +110,13 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
-  defp send_payment_link(%CourseRegistration{} = registration, actor),
-    do: Courses.email_registration_payment_link(registration, actor: actor)
+  defp send_payment_link(%CourseRegistration{} = registration, message, actor),
+    do: Courses.email_registration_payment_link(registration, %{message: message}, actor: actor)
 
   # The order details email carries the link, so sending it is opening one.
-  defp send_payment_link(order, actor) do
+  defp send_payment_link(order, message, actor) do
     with {:ok, order} <- Orders.open_payment_link(order, actor: actor) do
-      Orders.send_order_details_email(order, actor: actor)
+      Orders.send_order_details_email(order, %{message: message}, actor: actor)
     end
   end
 

@@ -418,10 +418,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               <.input :let={option} field={@form[:payment_terms]} type="radio-card" options={payment_options()}>
                 {option.name}
               </.input>
-              <.input
-                field={@form[:email_customer?]}
-                type="checkbox"
+              <.customer_email
+                id="order-details-email"
+                send={@form[:email_customer?]}
                 label={~t"Email the order details to the customer (needs an email)"}
+                message={@form[:message]}
               />
             </div>
           </.form_section>

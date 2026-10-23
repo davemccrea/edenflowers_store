@@ -14,20 +14,21 @@ defmodule Edenflowers.Email do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.ShopNotice
 
-  def order_confirmation(order) do
+  def order_confirmation(order, message \\ nil) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(record_copy_address())
       |> subject(~t"Your receipt for Eden Flowers order #{order.order_reference}")
-      |> text_body(render_order_confirmation(order))
+      |> text_body(render_order_confirmation(order, message))
     end)
   end
 
-  defp render_order_confirmation(order) do
+  defp render_order_confirmation(order, message) do
     Templates.order_confirmation(%{
       order: order,
+      message: message,
       format_date: &Format.weekday_date(&1, order.locale),
       fulfillment_on: fulfillment_on(order),
       account_url: account_url()
@@ -49,7 +50,7 @@ defmodule Edenflowers.Email do
   Expects `:customer_first_name`, `:grand_total`, `:amount_paid`, `:balance`
   and `line_items: [:subtotal]` loaded.
   """
-  def order_details(order, payment_link_url) do
+  def order_details(order, payment_link_url, message \\ nil) do
     state = order_details_state(order)
 
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
@@ -62,6 +63,7 @@ defmodule Edenflowers.Email do
         Templates.order_details(%{
           order: order,
           state: state,
+          message: message,
           payment_link_url: payment_link_url,
           account_url: account_url(),
           fulfillment_on: fulfillment_on(order),
@@ -140,14 +142,14 @@ defmodule Edenflowers.Email do
   was left when nobody was home. A collected order gets none: the customer
   was there.
   """
-  def order_delivered(order, photo_jpeg \\ nil) do
+  def order_delivered(order, photo_jpeg \\ nil, message \\ nil) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(record_copy_address())
       |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered")
-      |> text_body(Templates.order_delivered(%{order: order, photo?: photo_jpeg != nil}))
+      |> text_body(Templates.order_delivered(%{order: order, photo?: photo_jpeg != nil, message: message}))
       |> attach_delivery_photo(photo_jpeg)
     end)
   end
@@ -269,14 +271,14 @@ defmodule Edenflowers.Email do
     end
   end
 
-  def course_confirmation(registration) do
+  def course_confirmation(registration, message \\ nil) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
       new()
       |> from(from_address())
       |> to(registration.email)
       |> bcc(record_copy_address())
       |> subject(course_confirmation_subject(registration))
-      |> text_body(render_course_confirmation(registration))
+      |> text_body(render_course_confirmation(registration, message))
     end)
   end
 
@@ -287,9 +289,10 @@ defmodule Edenflowers.Email do
       else: ~t"You're booked on #{course = registration.course.name}"
   end
 
-  defp render_course_confirmation(registration) do
+  defp render_course_confirmation(registration, message) do
     Templates.course_confirmation(%{
       registration: registration,
+      message: message,
       course_over?: course_over?(registration),
       format_date: &Format.weekday_date(&1, registration.locale),
       format_time: &Format.time(&1, registration.locale),
@@ -302,7 +305,7 @@ defmodule Edenflowers.Email do
   course. Paying confirms it. Expects `:course` translated, `:first_name`
   and `:balance` loaded.
   """
-  def course_payment_link(registration, payment_link_url) do
+  def course_payment_link(registration, payment_link_url, message \\ nil) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
       new()
       |> from(from_address())
@@ -312,6 +315,7 @@ defmodule Edenflowers.Email do
       |> text_body(
         Templates.course_payment_link(%{
           registration: registration,
+          message: message,
           payment_link_url: payment_link_url,
           course_over?: course_over?(registration),
           format_date: &Format.weekday_date(&1, registration.locale),

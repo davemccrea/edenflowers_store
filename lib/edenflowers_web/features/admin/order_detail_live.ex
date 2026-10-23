@@ -40,6 +40,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:fulfillment_form, nil)
          |> assign(:fulfillment_error, nil)
          |> assign(cancel_form: nil, cancel_error: nil)
+         |> assign(email_form: nil, email_kind: nil)
          |> assign(settlement_mode: :settle, settlement_error: nil)
          |> PhotoUpload.allow([@photo_field])
          |> assign(:queue, queue_position(order, socket.assigns.current_user))}
@@ -139,6 +140,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           email={@order.customer_email}
           locale={@locale}
         />
+        <.email_drawer form={@email_form} {email_drawer_text(@email_kind, @order, @locale)} />
         <.settlement_drawer
           order={@order}
           mode={@settlement_mode}
@@ -523,18 +525,21 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           <div :if={@form[:customer_home].value == "false"} class="space-y-4">
             <.photo_input field={@form[:photo]} uploads={@uploads} label={~t"Photo of where you left the order"} />
           </div>
-          <div :if={@order.fulfillment_method == :delivery and @order.customer_email} class="space-y-2">
-            <.input field={@form[:email_customer]} type="checkbox" label={~t"Email delivery confirmation"} />
-            <div class="ml-7 space-y-3">
-              <p class="text-base-content/75 break-all text-sm">{~t"To: #{email = @order.customer_email}"}</p>
-              <.input
-                :if={@form[:customer_home].value == "false" && @form[:email_customer].value != "false"}
-                field={@form[:email_photo]}
-                type="checkbox"
-                label={~t"Include the delivery photo"}
-              />
-            </div>
-          </div>
+          <.customer_email
+            :if={@order.fulfillment_method == :delivery and @order.customer_email}
+            id="fulfillment-email"
+            send={@form[:email_customer]}
+            label={~t"Email delivery confirmation"}
+            message={@form[:message]}
+            to={@order.customer_email}
+          >
+            <.input
+              :if={@form[:customer_home].value == "false" && @form[:email_customer].value != "false"}
+              field={@form[:email_photo]}
+              type="checkbox"
+              label={~t"Include the delivery photo"}
+            />
+          </.customer_email>
           <p :if={@order.fulfillment_method == :pickup} class="text-base-content/75 text-sm">
             {~t"The customer collects it in person, so no confirmation is emailed."}
           </p>
@@ -602,17 +607,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, socket |> PhotoUpload.forget([@photo_field]) |> assign(:fulfillment_form, nil)}
   end
 
-  def handle_event("email_fulfillment_confirmation", _params, socket) do
-    case Orders.email_fulfillment_confirmation(socket.assigns.order, actor: socket.assigns.current_user) do
-      {:ok, _order} ->
-        {:noreply, put_flash(socket, :info, ~t"Confirmation queued.")}
-
-      {:error, error} ->
-        Logger.error("Fulfillment confirmation for order #{socket.assigns.order.id} not queued: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"Could not queue the confirmation.")}
-    end
-  end
-
   # Answering "Was the customer home?" picks the email default again; ticking
   # the box by hand otherwise sticks. The photo checkbox only posts while it's
   # shown, so while it's hidden it keeps its last value.
@@ -639,13 +633,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         mark_fulfilled(socket, %{
           delivery_photo_slug: slug,
           email_delivery_photo: params["email_photo"] == "true",
-          email_customer?: params["email_customer"] != "false"
+          email_customer?: params["email_customer"] != "false",
+          message: params["message"]
         })
     end
   end
 
   def handle_event("mark_fulfilled", %{"fulfillment" => params}, socket) do
-    mark_fulfilled(socket, %{email_customer?: params["email_customer"] != "false"})
+    mark_fulfilled(socket, %{email_customer?: params["email_customer"] != "false", message: params["message"]})
   end
 
   def handle_event("save_florist_note", %{"note" => %{"florist_note" => note}}, socket) do
@@ -747,31 +742,32 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, flash_payment_result(socket, result)}
   end
 
-  def handle_event("email_payment_link", _params, socket) do
-    result = PaymentActions.email_payment_link(socket.assigns.order, socket.assigns.current_user)
-    {:noreply, flash_payment_result(socket, result)}
+  def handle_event("open_email", %{"kind" => kind}, socket) do
+    {:noreply,
+     socket
+     |> assign(email_kind: String.to_existing_atom(kind), email_form: to_form(%{"message" => ""}, as: :email))
+     |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-show"})}
   end
 
-  def handle_event("send_order_details", _params, socket) do
-    case Orders.send_order_details_email(socket.assigns.order, actor: socket.assigns.current_user) do
-      {:ok, order} ->
-        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Order details sent.")}
-
-      {:error, error} ->
-        Logger.error("Order details for order #{socket.assigns.order.id} not sent: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"Could not send the email. Try again in a moment.")}
-    end
+  def handle_event("close_email", _params, socket) do
+    {:noreply, assign(socket, email_form: nil, email_kind: nil)}
   end
 
-  def handle_event("email_receipt", _params, socket) do
-    case Orders.email_receipt(socket.assigns.order, actor: socket.assigns.current_user) do
-      {:ok, order} ->
-        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Receipt sent.")}
+  def handle_event("validate_email", %{"email" => params}, socket) do
+    {:noreply, assign(socket, :email_form, to_form(params, as: :email))}
+  end
 
-      {:error, error} ->
-        Logger.error("Receipt for order #{socket.assigns.order.id} not sent: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"Could not send the receipt. Try again in a moment.")}
-    end
+  def handle_event("send_email", %{"email" => %{"message" => message}}, socket) do
+    %{order: order, email_kind: kind, current_user: actor} = socket.assigns
+
+    {flash, text} = send_email(kind, order, message, actor)
+
+    {:noreply,
+     socket
+     |> assign_order(reload(order, socket))
+     |> assign(email_form: nil, email_kind: nil)
+     |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-hide"})
+     |> put_flash(flash, text)}
   end
 
   def handle_event("fetch_stripe_refunds", _params, socket) do
@@ -1182,14 +1178,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     <.button
       :if={@order.customer_email}
       type="button"
-      phx-click="email_payment_link"
-      data-confirm={
-        confirm_send(
-          ~t"Email a payment link to #{email = @order.customer_email}?",
-          @order.payment_link_open? && @order.order_details_emailed_at,
-          @locale
-        )
-      }
+      phx-click="open_email"
+      phx-value-kind="payment_link"
       variant="primary"
       size="sm"
     >
@@ -1260,14 +1250,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <.actions_menu_button
           :if={!@no_email}
           menu="order-actions"
-          phx-click="email_receipt"
-          data-confirm={
-            confirm_send(
-              ~t"Email the receipt to #{email = @order.customer_email}?",
-              @order.receipt_emailed_at,
-              @locale
-            )
-          }
+          phx-click="open_email"
+          phx-value-kind="receipt"
         >
           {if @order.receipt_emailed_at, do: ~t"Resend receipt", else: ~t"Email receipt"}
         </.actions_menu_button>
@@ -1278,14 +1262,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <.actions_menu_button
           :if={!@email_details_unavailable}
           menu="order-actions"
-          phx-click="send_order_details"
-          data-confirm={
-            confirm_send(
-              ~t"Email the order details to #{email = @order.customer_email}?",
-              @order.order_details_emailed_at,
-              @locale
-            )
-          }
+          phx-click="open_email"
+          phx-value-kind="order_details"
         >
           {if @order.order_details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
         </.actions_menu_button>
@@ -1299,14 +1277,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <.actions_menu_button
           :if={!@confirmation_unavailable}
           menu="order-actions"
-          phx-click="email_fulfillment_confirmation"
-          data-confirm={
-            confirm_send(
-              ~t"Email the fulfillment confirmation to #{email = @order.customer_email}?",
-              @order.fulfillment_emailed_at,
-              @locale
-            )
-          }
+          phx-click="open_email"
+          phx-value-kind="fulfillment"
         >
           {if @order.fulfillment_emailed_at, do: ~t"Resend confirmation", else: ~t"Email confirmation"}
         </.actions_menu_button>
@@ -1398,11 +1370,61 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp receipt_unavailable(_order), do: ~t"Not paid"
 
   # Says when it last went out, so a resend nobody needed is caught before it's sent.
-  defp confirm_send(question, last_sent_at, _locale) when last_sent_at in [nil, false], do: question
+  defp send_email(:order_details, order, message, actor) do
+    case Orders.send_order_details_email(order, %{message: message}, actor: actor) do
+      {:ok, _order} ->
+        {:info, ~t"Order details sent."}
 
-  defp confirm_send(question, last_sent_at, locale) do
-    ~t"Last sent #{time = Format.datetime(last_sent_at, locale)}." <> " " <> question
+      {:error, error} ->
+        Logger.error("Order details for order #{order.id} not sent: #{inspect(error)}")
+        {:error, ~t"Could not send the email. Try again in a moment."}
+    end
   end
+
+  defp send_email(:receipt, order, message, actor) do
+    case Orders.email_receipt(order, %{message: message}, actor: actor) do
+      {:ok, _order} ->
+        {:info, ~t"Receipt sent."}
+
+      {:error, error} ->
+        Logger.error("Receipt for order #{order.id} not sent: #{inspect(error)}")
+        {:error, ~t"Could not send the receipt. Try again in a moment."}
+    end
+  end
+
+  defp send_email(:fulfillment, order, message, actor) do
+    case Orders.email_fulfillment_confirmation(order, %{message: message}, actor: actor) do
+      {:ok, _order} ->
+        {:info, ~t"Confirmation queued."}
+
+      {:error, error} ->
+        Logger.error("Fulfillment confirmation for order #{order.id} not queued: #{inspect(error)}")
+        {:error, ~t"Could not queue the confirmation."}
+    end
+  end
+
+  defp send_email(:payment_link, order, message, actor), do: PaymentActions.email_payment_link(order, message, actor)
+
+  defp email_drawer_text(nil, _order, _locale), do: %{}
+
+  defp email_drawer_text(kind, order, locale) do
+    {title, submit_label, last_sent_at} =
+      case kind do
+        :order_details -> {~t"Email order details", ~t"Send order details", order.order_details_emailed_at}
+        :receipt -> {~t"Email receipt", ~t"Send receipt", order.receipt_emailed_at}
+        :fulfillment -> {~t"Email confirmation", ~t"Send confirmation", order.fulfillment_emailed_at}
+        :payment_link -> {~t"Email payment link", ~t"Send payment link", payment_link_emailed_at(order)}
+      end
+
+    %{
+      title: title,
+      submit_label: submit_label,
+      to: order.customer_email,
+      last_sent: last_sent_at && Format.datetime(last_sent_at, locale)
+    }
+  end
+
+  defp payment_link_emailed_at(order), do: order.payment_link_open? && order.order_details_emailed_at
 
   defp no_email(%{customer_email: nil}), do: ~t"No email address"
   defp no_email(_order), do: nil

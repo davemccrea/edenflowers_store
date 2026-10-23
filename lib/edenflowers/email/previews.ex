@@ -165,7 +165,11 @@ defmodule Edenflowers.Email.Previews do
            }), @payment_link}
         ] do
       {gettext_noop("Order details"), title, :order_details, Email.order_details(order(attrs, locale), link)}
-    end
+    end ++
+      [
+        {gettext_noop("Order details"), gettext_noop("with a message from Jennie"), :order_details,
+         Email.order_details(order(%{}, locale), @payment_link, message(locale))}
+      ]
   end
 
   defp card_refused, do: %{origin: :subscription, gift: false, recipient_name: nil, recipient_first_name: nil}
@@ -210,7 +214,11 @@ defmodule Edenflowers.Email.Previews do
           {gettext_noop("left at the door, not a gift"), %{gift: false}, "fictional-jpeg-bytes"}
         ] do
       {gettext_noop("Order delivered"), title, :order_delivered, Email.order_delivered(order(attrs, locale), photo)}
-    end
+    end ++
+      [
+        {gettext_noop("Order delivered"), gettext_noop("with a message from Jennie"), :order_delivered,
+         Email.order_delivered(order(%{}, locale), nil, message(locale))}
+      ]
   end
 
   defp order_cancelled(locale) do
@@ -428,6 +436,14 @@ defmodule Edenflowers.Email.Previews do
       String.starts_with?(locale, "fi") -> "Olen pahoillani, mutta olen sairaana sinä päivänä."
       String.starts_with?(locale, "sv") -> "Jag är ledsen, men jag är sjuk den dagen."
       true -> "I'm so sorry, but I'm ill that day."
+    end
+  end
+
+  defp message(locale) do
+    cond do
+      String.starts_with?(locale, "fi") -> "Pionit ovat ihania tällä viikolla, joten lisäsin muutaman."
+      String.starts_with?(locale, "sv") -> "Pionerna är så fina den här veckan, så jag lade till några."
+      true -> "The peonies are lovely this week, so I've added a few."
     end
   end
 

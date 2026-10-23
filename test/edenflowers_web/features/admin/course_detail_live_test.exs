@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       open_cancel(view, registration)
       assert has_element?(view, ~s|#cancel-form input[name="cancel[refund]"][value="85.00"]|)
 
-      view |> form("#cancel-form", cancel: %{refund: "50,00", reason: "Ill that day"}) |> render_submit()
+      view |> form("#cancel-form", cancel: %{refund: "50,00", message: "Ill that day"}) |> render_submit()
 
       assert has_element?(view, "#registration-#{registration.id}", "To refund €50.00")
 
@@ -168,7 +168,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert has_element?(view, "li", "Birgitta")
       assert has_element?(view, "li", "To collect")
       assert render(view) =~ "2 / 10 seats"
-      refute has_element?(view, ~s|button[phx-click="email_confirmation"][phx-value-id="#{registration.id}"]|)
+      refute has_element?(view, ~s|button[phx-value-kind="confirmation"][phx-value-id="#{registration.id}"]|)
 
       assert %{success: 1} = Oban.drain_queue(queue: :default)
 
@@ -195,15 +195,17 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
 
-      button = element(view, ~s|button[phx-click="email_confirmation"][phx-value-id="#{registration.id}"]|)
+      button = element(view, ~s|button[phx-value-kind="confirmation"][phx-value-id="#{registration.id}"]|)
       assert render(button) =~ "Email confirmation"
-      assert render_click(button) =~ "Confirmation emailed."
+      render_click(button)
+      assert view |> form("#email-form") |> render_submit() =~ "Confirmation emailed."
 
       assert_email_sent(fn email -> assert email.to == [{"", "birgitta@example.com"}] end)
 
-      button = element(view, ~s|button[phx-click="email_confirmation"][phx-value-id="#{registration.id}"]|)
+      button = element(view, ~s|button[phx-value-kind="confirmation"][phx-value-id="#{registration.id}"]|)
       assert render(button) =~ "Resend confirmation"
-      assert render(button) =~ "Last sent"
+      render_click(button)
+      assert has_element?(view, "#email-drawer", "Last sent")
     end
 
     test "without emailing queues nothing", %{conn: conn} do
@@ -234,11 +236,11 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{owing.course_id}")
 
       refute has_element?(view, "#settle-#{paid.id}")
-      refute has_element?(view, ~s|button[phx-click="email_payment_link"]|)
+      refute has_element?(view, ~s|button[phx-value-kind="payment_link"]|)
 
       view |> element("#settle-#{owing.id}") |> render_click()
 
-      assert has_element?(view, ~s|button[phx-click="email_payment_link"][phx-value-id="#{owing.id}"]|)
+      assert has_element?(view, ~s|button[phx-value-kind="payment_link"][phx-value-id="#{owing.id}"]|)
       assert has_element?(view, ~s|button[phx-click="open_payment_link"][phx-value-id="#{owing.id}"]|)
       refute has_element?(view, "#mark-paid-#{owing.id}")
     end
@@ -249,9 +251,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
       view |> element("#settle-#{registration.id}") |> render_click()
 
-      assert view
-             |> element(~s|button[phx-click="email_payment_link"][phx-value-id="#{registration.id}"]|)
-             |> render_click() =~ "Payment link emailed."
+      view |> element(~s|button[phx-value-kind="payment_link"][phx-value-id="#{registration.id}"]|) |> render_click()
+      assert view |> form("#email-form") |> render_submit() =~ "Payment link emailed."
 
       registration = Ash.reload!(registration, authorize?: false)
 
@@ -260,9 +261,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
         assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(registration)
       end)
 
-      button = element(view, ~s|button[phx-click="email_payment_link"][phx-value-id="#{registration.id}"]|)
+      button = element(view, ~s|button[phx-value-kind="payment_link"][phx-value-id="#{registration.id}"]|)
       assert render(button) =~ "Resend payment link"
-      assert render(button) =~ "Last sent"
+      render_click(button)
+      assert has_element?(view, "#email-drawer", "Last sent")
       assert has_element?(view, "#copy-payment-link-#{registration.id}")
 
       assert has_element?(

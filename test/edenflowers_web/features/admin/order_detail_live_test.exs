@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   import Generator
   import Phoenix.LiveViewTest
+  import Swoosh.TestAssertions
 
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.External.StripeAPI
@@ -107,7 +108,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, ~s|button[phx-click="send_order_details"]|)
+    assert has_element?(view, ~s|button[phx-value-kind="order_details"]|)
     refute has_element?(view, "li", "Email receipt")
 
     order = Ash.load!(order, :grand_total, authorize?: false)
@@ -115,28 +116,28 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, ~s|button[phx-click="email_receipt"]|, "Email receipt")
+    assert has_element?(view, ~s|button[phx-value-kind="receipt"]|, "Email receipt")
     refute has_element?(view, "li", "Email order details")
 
     Ash.Seed.update!(order, %{receipt_emailed_at: DateTime.utc_now()})
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, ~s|button[phx-click="email_receipt"]|, "Resend receipt")
-    assert has_element?(view, ~s|button[phx-click="email_receipt"][data-confirm^="Last sent "]|)
+    assert has_element?(view, ~s|button[phx-value-kind="receipt"]|, "Resend receipt")
+    view |> element(~s|button[phx-value-kind="receipt"]|) |> render_click()
+    assert has_element?(view, "#email-drawer", "Last sent ")
   end
 
   test "the payment link button says Resend once the link has been emailed", %{conn: conn} do
     order = placed_order()
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    assert has_element?(view, ~s|button[phx-click="email_payment_link"]|, "Email payment link")
-    assert has_element?(view, ~s|button[phx-click="email_payment_link"][data-confirm^="Email a payment link"]|)
+    assert has_element?(view, ~s|button[phx-value-kind="payment_link"]|, "Email payment link")
 
     Ash.Seed.update!(order, %{payment_link_token: "tok_resend_label", order_details_emailed_at: DateTime.utc_now()})
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    assert has_element?(view, ~s|button[phx-click="email_payment_link"]|, "Resend payment link")
+    assert has_element?(view, ~s|button[phx-value-kind="payment_link"]|, "Resend payment link")
   end
 
   test "the actions menu says why each action is unavailable", %{conn: conn} do
@@ -232,12 +233,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     order = placed_order(fulfillment_method: :delivery, fulfillment_status: :fulfilled)
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    view |> element(~s|button[phx-click="email_fulfillment_confirmation"]|, "Email confirmation") |> render_click()
-    assert render(view) =~ "Confirmation queued."
-    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+    view |> element(~s|button[phx-value-kind="fulfillment"]|, "Email confirmation") |> render_click()
 
+    assert view |> form("#email-form", email: %{message: "Thank you for choosing us."}) |> render_submit() =~
+             "Confirmation queued."
+
+    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
+    assert_email_sent(fn email -> assert email.text_body =~ "Thank you for choosing us." end)
+
+    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*Thank you for choosing us\./s)
     assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
-    assert has_element?(view, ~s|button[phx-click="email_fulfillment_confirmation"]|, "Resend confirmation")
+    assert has_element?(view, ~s|button[phx-value-kind="fulfillment"]|, "Resend confirmation")
   end
 
   @tag capture_log: true
@@ -291,7 +297,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   test "the log keeps the address a confirmation went to after the customer's email changes", %{conn: conn} do
     order = placed_order(fulfillment_method: :delivery, fulfillment_status: :fulfilled)
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    view |> element(~s|button[phx-click="email_fulfillment_confirmation"]|) |> render_click()
+    view |> element(~s|button[phx-value-kind="fulfillment"]|) |> render_click()
+    view |> form("#email-form") |> render_submit()
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
 
     order |> Ash.reload!(authorize?: false) |> Ash.Seed.update!(%{customer_email: "new@example.com"})
@@ -406,7 +413,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       order = placed_order()
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-      refute has_element?(view, ~s|button[phx-click="email_fulfillment_confirmation"]|)
+      refute has_element?(view, ~s|button[phx-value-kind="fulfillment"]|)
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       refute has_element?(view, ~s|#confirm-fulfillment-form input[type="checkbox"]|)
       view |> form("#confirm-fulfillment-form") |> render_submit()

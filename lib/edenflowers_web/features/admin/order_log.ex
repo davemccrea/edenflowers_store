@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     %{
       at: version.version_inserted_at,
       title: title(version),
-      details: field_details(version, locale) ++ items_details(version)
+      details: field_details(version, locale) ++ items_details(version) ++ message_details(version)
     }
   end
 
@@ -96,7 +96,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     reason = version.changes["cancellation_reason"]
     emailed_to = version.changes["cancellation_emailed_to"]
 
-    if(reason, do: [{~t"Reason", reason}], else: []) ++
+    if(reason, do: [{~t"Message", reason}], else: []) ++
       [if(emailed_to, do: {~t"Sent to", emailed_to}, else: {nil, ~t"The customer wasn't emailed."})]
   end
 
@@ -124,6 +124,9 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp field_label(:customer_instagram), do: ~t"Instagram"
   defp field_label(:locale), do: ~t"Language"
   defp field_label(:florist_note), do: ~t"Florist note"
+
+  defp message_details(%{email_message: nil}), do: []
+  defp message_details(version), do: [{~t"Message", version.email_message}]
 
   defp items_details(%{items: nil}), do: []
   # The items are stored as one "2 × Rose, 1 × Card" string; product names can

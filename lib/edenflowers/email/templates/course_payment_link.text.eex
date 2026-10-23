@@ -2,7 +2,7 @@
 
 <%= if @course_over? do %><%= gettext("Thank you for coming to %{course}.", course: @registration.course.name) %><% else %><%= ngettext("Thank you for booking. I've kept you a place on %{course}, and paying confirms it.", "Thank you for booking. I've kept you %{count} places on %{course}, and paying confirms them.", @registration.seats, course: @registration.course.name) %><% end %>
 
-<%= gettext("Amount due") %>: <%= @format_currency.(@registration.balance) %>
+<%= message(@message) %><%= gettext("Amount due") %>: <%= @format_currency.(@registration.balance) %>
 
 <%= gettext("Pay online by card or MobilePay:") %>
 <%= @payment_link_url %>
