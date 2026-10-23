@@ -6,6 +6,7 @@ title: >-
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 18:52'
 labels: []
 dependencies:
   - TASK-105.2
@@ -33,4 +34,11 @@ Order refunded: the refund line first, then Jennie's message. Ticked for card an
 - [ ] #3 Card refund lines say how long the money takes; cash reads "I've refunded <amount> in cash"
 - [ ] #4 The refund tick box is unticked for cash
 - [ ] #5 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [ ] #6 A customer's own order cancellation sends Jennie a shop notice instead of an inbox copy; the customer email is copied to info+copy@ like every other
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Rule from the grilling session: Jennie's inbox gets only shop notices; customer emails are only ever copied to info+copy@. Today cancelled_copy_address(:customer) sends the copy to info@.
+<!-- SECTION:NOTES:END -->
