@@ -31,6 +31,7 @@ defmodule Edenflowers.Email.Previews do
         payment_reminder(locale) ++
         purchase_receipt(locale) ++
         subscription_payment_failed(locale) ++
+        subscription_charged(locale) ++
         subscription_set_up(locale) ++
         order_delivered(locale) ++
         order_cancelled(locale) ++
@@ -185,6 +186,18 @@ defmodule Edenflowers.Email.Previews do
          @payment_link
        )}
     ]
+  end
+
+  defp subscription_charged(locale) do
+    for {title, attrs} <- [{gettext_noop("delivery"), %{}}, {gettext_noop("pickup"), pickup()}] do
+      attrs =
+        %{origin: :subscription, gift: false, recipient_name: nil, recipient_first_name: nil}
+        |> Map.merge(attrs)
+        |> Map.merge(%{amount_paid: Decimal.new("59.00"), balance: Decimal.new(0)})
+
+      {gettext_noop("Subscription delivery charged"), title, :subscription_charged,
+       Email.subscription_charged(subscription_order(attrs, locale))}
+    end
   end
 
   defp subscription_payment_failed(locale) do

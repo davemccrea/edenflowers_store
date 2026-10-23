@@ -1,6 +1,7 @@
 defmodule Edenflowers.Orders.Changes.SendReceiptEmail do
   @moduledoc """
-  Emails a placed order's confirmation with its receipt PDF. A successful send
+  Emails the receipt PDF for an order paid at checkout: with the order
+  receipt, or for an Occurrence, Subscription delivery charged. A successful send
   stamps `receipt_emailed_at` and clears `receipt_email_failed_at`. A failed
   send fails the action, so the AshOban trigger retries it and, once attempts
   run out, `record_receipt_email_failure` stamps `receipt_email_failed_at` for
@@ -23,7 +24,7 @@ defmodule Edenflowers.Orders.Changes.SendReceiptEmail do
       with {:ok, pdf} <- Receipt.generate(order),
            {:ok, _result} <-
              order
-             |> Email.order_confirmation()
+             |> email()
              |> Swoosh.Email.attachment(Receipt.attachment(pdf, order.order_reference))
              |> Mailer.deliver() do
         Logger.info("Sent confirmation email for order #{order.id}")
@@ -36,6 +37,10 @@ defmodule Edenflowers.Orders.Changes.SendReceiptEmail do
       end
     end)
   end
+
+  # An Occurrence's charge is routine; the receipt with thanks is for an order the customer placed.
+  defp email(%{origin: :subscription} = order), do: Email.subscription_charged(order)
+  defp email(order), do: Email.order_confirmation(order)
 
   defp load_for_send(order) do
     Ash.load!(

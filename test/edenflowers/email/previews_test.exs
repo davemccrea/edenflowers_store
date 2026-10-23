@@ -37,4 +37,14 @@ defmodule Edenflowers.Email.PreviewsTest do
 
     assert body =~ ~r/Here is what we agreed:\n\nThe peonies are lovely this week, so I've added a few\.\n\n1 × /
   end
+
+  test "the routine subscription charge is matter-of-fact, from the shop rather than Jennie" do
+    [email | _] =
+      for {"Subscription delivery charged", _, _, email} <- Previews.all("en-GB"), do: email
+
+    assert email.from == {"Eden Flowers", elem(Application.fetch_env!(:edenflowers, :mailer_from_address), 1)}
+    assert email.subject == "Your flowers for Saturday 14.11."
+    assert email.text_body =~ ~r/^Your card was charged €59\.00 for your .+ delivery on Saturday 14\.11\.2026\./
+    assert String.ends_with?(email.text_body, "\nEden Flowers\n")
+  end
 end
