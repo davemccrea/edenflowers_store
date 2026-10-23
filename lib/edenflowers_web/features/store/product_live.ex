@@ -19,12 +19,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
   @impl true
   def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
-    product =
-      case Catalog.get_product_by_id(id) do
-        {:ok, product} -> product
-        # A malformed id is an invalid-filter error rather than NotFound; both should 404.
-        {:error, _} -> raise Ash.Error.Query.NotFound, resource: Edenflowers.Catalog.Product
-      end
+    product = get_product!(id)
 
     if connected?(socket),
       do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "product_variant:changed:#{product.id}")
@@ -391,6 +386,14 @@ defmodule EdenflowersWeb.Store.ProductLive do
         default_variant(selectable_variants(variants))
 
     {:noreply, assign(socket, product_variants: variants, selected_variant: selected_variant)}
+  end
+
+  defp get_product!(id) do
+    case Catalog.get_product_by_id(id) do
+      {:ok, product} -> product
+      # A malformed id is an invalid-filter error rather than NotFound; both should 404.
+      {:error, _} -> raise Ash.Error.Query.NotFound, resource: Edenflowers.Catalog.Product
+    end
   end
 
   defp sold_out?(variant), do: variant.stock_quantity == 0
