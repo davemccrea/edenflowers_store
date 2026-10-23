@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Courses.CourseBookingLive do
+  @moduledoc """
+  Course booking confirmation page shown after payment, including pending and cancelled outcomes.
+  """
+
   use EdenflowersWeb, :live_view
 
   import Edenflowers.Actors

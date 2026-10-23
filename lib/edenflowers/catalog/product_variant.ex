@@ -1,4 +1,8 @@
 defmodule Edenflowers.Catalog.ProductVariant do
+  @moduledoc """
+  A product size with its own price, optional photo, and optional tracked stock. Removed sizes are archived so past order lines keep their reference.
+  """
+
   use Ash.Resource,
     otp_app: :edenflowers,
     domain: Edenflowers.Catalog,

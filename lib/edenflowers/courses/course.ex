@@ -1,4 +1,8 @@
 defmodule Edenflowers.Courses.Course do
+  @moduledoc """
+  A scheduled florist course with translated details, capacity, price, and booking deadline.
+  """
+
   use Ash.Resource,
     domain: Edenflowers.Courses,
     data_layer: AshPostgres.DataLayer,

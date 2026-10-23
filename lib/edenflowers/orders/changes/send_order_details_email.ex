@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
+  @moduledoc """
+  Emails the details of an order Jennie entered or edited, including a payment link when one is open.
+  """
+
   use Ash.Resource.Change
 
   require Logger

@@ -1,4 +1,8 @@
 defmodule Edenflowers.Courses.Changes.SendPaymentLinkEmail do
+  @moduledoc """
+  Emails a course customer the private link for paying a remaining balance.
+  """
+
   use Ash.Resource.Change
 
   require Logger

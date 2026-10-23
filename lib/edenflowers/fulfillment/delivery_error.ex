@@ -1,4 +1,8 @@
 defmodule Edenflowers.Fulfillment.DeliveryError do
+  @moduledoc """
+  Maps delivery-pricing failures to messages suitable for the checkout form.
+  """
+
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
   @doc """

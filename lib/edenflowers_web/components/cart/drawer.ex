@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Cart.Drawer do
+  @moduledoc """
+  The cart drawer shown across the storefront, with the current order lines and checkout entry point.
+  """
+
   use EdenflowersWeb, :live_component
 
   @impl true

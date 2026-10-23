@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Marketing.SitemapController do
+  @moduledoc """
+  Generates the public sitemap for search engines.
+  """
+
   use EdenflowersWeb, :controller
 
   alias Edenflowers.Catalog

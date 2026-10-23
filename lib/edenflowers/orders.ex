@@ -1,4 +1,11 @@
 defmodule Edenflowers.Orders do
+  @moduledoc """
+  Entry point for carts, placed orders, and subscriptions.
+
+  `Order` holds checkout and fulfillment state; `LineItem` holds what was
+  bought; `Subscription` schedules future occurrence orders.
+  """
+
   use Ash.Domain,
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]

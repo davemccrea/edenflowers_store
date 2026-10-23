@@ -1,4 +1,12 @@
 defmodule Edenflowers.Orders.Changes.SendFulfillmentEmail do
+  @moduledoc """
+  Emails a customer when an order is fulfilled, optionally including its
+  delivery photo. A successful send stamps `fulfillment_emailed_at` and clears
+  `fulfillment_email_failed_at`. A failed send fails the action, so the AshOban
+  trigger retries it and, once attempts run out, `record_fulfillment_email_failure`
+  stamps `fulfillment_email_failed_at` for the admin to see.
+  """
+
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
 

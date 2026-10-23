@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.SubscriptionsLive do
+  @moduledoc """
+  Admin list of subscriptions and their current states.
+  """
+
   use EdenflowersWeb, :live_view
   use Cinder.UrlSync
 

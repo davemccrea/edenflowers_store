@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.CoursesLive do
+  @moduledoc """
+  Admin list of courses, including capacity and booking status.
+  """
+
   use EdenflowersWeb, :live_view
   use Cinder.UrlSync
 

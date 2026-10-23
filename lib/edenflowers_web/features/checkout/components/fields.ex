@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Checkout.Fields do
+  @moduledoc """
+  Shared checkout inputs and labels for fulfillment, contact details, and subscription choices.
+  """
+
   use EdenflowersWeb, :html
 
   alias Edenflowers.Format

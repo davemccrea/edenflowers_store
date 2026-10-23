@@ -1,10 +1,18 @@
 defmodule Edenflowers.External.HereAPI.Behaviour do
+  @moduledoc """
+  Contract for geocoding and route-distance clients, allowing deterministic replacements in tests.
+  """
+
   @callback geocode(query :: String.t()) ::
               {:ok, {String.t(), String.t(), String.t()}} | {:error, atom()}
   @callback route_distance(position :: String.t()) :: {:ok, integer()} | {:error, atom()}
 end
 
 defmodule Edenflowers.External.HereAPI do
+  @moduledoc """
+  Geocodes delivery addresses and obtains driving distance through HERE Maps for delivery pricing.
+  """
+
   @behaviour Edenflowers.External.HereAPI.Behaviour
 
   use GettextSigils, backend: EdenflowersWeb.Gettext

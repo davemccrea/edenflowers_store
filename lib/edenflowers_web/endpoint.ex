@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Endpoint do
+  @moduledoc """
+  Phoenix HTTP endpoint, session stack, static assets, and webhook entry points.
+  """
+
   use Phoenix.Endpoint, otp_app: :edenflowers
 
   def session_options do

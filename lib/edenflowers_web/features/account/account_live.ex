@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Account.AccountLive do
+  @moduledoc """
+  Customer account page for personal details, email changes, newsletter preference, orders, and subscriptions.
+  """
+
   use EdenflowersWeb, :live_view
 
   require Ash.Query

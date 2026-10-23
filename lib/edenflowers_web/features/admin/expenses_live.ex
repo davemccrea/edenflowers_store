@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.ExpensesLive do
+  @moduledoc """
+  Admin list of expenses imported from Papra.
+  """
+
   use EdenflowersWeb, :live_view
   use Cinder.UrlSync
 

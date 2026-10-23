@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Telemetry do
+  @moduledoc """
+  Phoenix telemetry metrics and reporters for application monitoring.
+  """
+
   use Supervisor
   import Telemetry.Metrics
 

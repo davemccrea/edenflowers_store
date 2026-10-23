@@ -1,4 +1,8 @@
 defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
+  @moduledoc """
+  Sends a course booking confirmation, including a receipt when payment has settled.
+  """
+
   use Ash.Resource.Change
 
   require Logger

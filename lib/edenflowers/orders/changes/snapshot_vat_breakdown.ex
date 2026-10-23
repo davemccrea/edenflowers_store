@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Changes.SnapshotVatBreakdown do
+  @moduledoc """
+  Stores the current VAT breakdown on an order when it is placed.
+  """
+
   use Ash.Resource.Change
 
   alias Edenflowers.Orders.Calculations.Vat

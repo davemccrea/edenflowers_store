@@ -1,4 +1,8 @@
 defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
+  @moduledoc """
+  Sends a subscriber their promotion code after signup, if the code remains usable.
+  """
+
   use Oban.Worker,
     queue: :default,
     max_attempts: 3,

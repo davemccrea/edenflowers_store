@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.CourseFormLive do
+  @moduledoc """
+  Admin form to create or edit a course and its translations.
+  """
+
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.Components

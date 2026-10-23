@@ -1,4 +1,8 @@
 defmodule Edenflowers.Accounts.Token do
+  @moduledoc """
+  Stored authentication and revocation tokens used by AshAuthentication. Access is restricted to the authentication integration.
+  """
+
   use Ash.Resource,
     otp_app: :edenflowers,
     domain: Edenflowers.Accounts,

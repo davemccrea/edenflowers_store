@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Calculations.DistanceKm do
+  @moduledoc """
+  Formats an order's stored delivery distance in kilometres for display.
+  """
+
   use Ash.Resource.Calculation
 
   @impl true

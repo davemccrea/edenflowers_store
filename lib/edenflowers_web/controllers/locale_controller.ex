@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.LocaleController do
+  @moduledoc """
+  Stores a visitor's language choice and returns them to the requested page.
+  """
+
   use EdenflowersWeb, :controller
 
   def index(conn, %{"locale" => locale} = params) do

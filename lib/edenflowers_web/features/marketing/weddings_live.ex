@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Marketing.WeddingsLive do
+  @moduledoc """
+  Wedding flowers page and enquiry form, which queues an email to the shop.
+  """
+
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.WeddingEnquiry

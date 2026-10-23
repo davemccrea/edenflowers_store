@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Calculations.Vat do
+  @moduledoc """
+  Calculates VAT from order lines and fulfillment. Placed orders use their saved breakdown so later price or tax changes do not rewrite history.
+  """
+
   use Ash.Resource.Calculation
 
   @impl true

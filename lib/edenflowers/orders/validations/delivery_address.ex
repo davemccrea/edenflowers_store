@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Validations.DeliveryAddress do
+  @moduledoc """
+  Requires the delivery address fields needed to price and fulfill a delivery order.
+  """
+
   use Ash.Resource.Validation
 
   alias Edenflowers.Fulfillment.DeliveryError

@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Marketing.CondolencesLive do
+  @moduledoc """
+  Public condolence flowers page.
+  """
+
   use EdenflowersWeb, :live_view
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}

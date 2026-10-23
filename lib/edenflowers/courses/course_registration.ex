@@ -1,8 +1,16 @@
 defmodule Edenflowers.Courses.CourseRegistration.Status do
+  @moduledoc """
+  The pending, confirmed, and cancelled states of a course booking.
+  """
+
   use Ash.Type.Enum, values: [:pending, :confirmed, :cancelled]
 end
 
 defmodule Edenflowers.Courses.CourseRegistration do
+  @moduledoc """
+  A course booking and its payment state. Pending bookings hold seats briefly; confirmed bookings count toward the course and may be cancelled or refunded.
+  """
+
   use Ash.Resource,
     domain: Edenflowers.Courses,
     data_layer: AshPostgres.DataLayer,

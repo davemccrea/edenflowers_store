@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Webhooks.StripeHandler do
+  @moduledoc """
+  Handles Stripe payment, refund, cancellation, and saved-card events. It delegates payment state changes to `Edenflowers.Payments`.
+  """
+
   @behaviour Stripe.WebhookHandler
 
   require Logger

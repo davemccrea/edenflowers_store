@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.AccountLive do
+  @moduledoc """
+  Admin account settings for avatar and browser push notifications.
+  """
+
   use EdenflowersWeb, :live_view
 
   require Logger

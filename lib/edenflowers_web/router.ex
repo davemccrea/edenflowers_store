@@ -1,4 +1,10 @@
 defmodule EdenflowersWeb.Router do
+  @moduledoc """
+  Routes public, checkout, account, and admin requests through their
+  authentication and locale pipelines. Stripe and Papra webhooks are plugs in
+  `EdenflowersWeb.Endpoint`, not routes here.
+  """
+
   use EdenflowersWeb, :router
   use AshAuthentication.Phoenix.Router
   use ErrorTracker.Web, :router

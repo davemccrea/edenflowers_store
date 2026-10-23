@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.ObanResolver do
+  @moduledoc """
+  Grants Oban Web access to signed-in admins and redirects everyone else to sign-in.
+  """
+
   @behaviour Oban.Web.Resolver
 
   @impl Oban.Web.Resolver

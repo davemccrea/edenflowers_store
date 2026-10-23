@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.ProductFormLive do
+  @moduledoc """
+  Admin editor for a product's copy, photos, sizes, stock, and translations.
+  """
+
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.Components

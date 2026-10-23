@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Marketing.AboutLive do
+  @moduledoc """
+  Public about page for the florist and shop.
+  """
+
   use EdenflowersWeb, :live_view
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}

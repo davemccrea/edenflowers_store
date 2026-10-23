@@ -1,8 +1,14 @@
 defmodule Edenflowers.Orders.Order.PaymentStatus do
+  @moduledoc """
+  The pending, paid, and refunded payment states of an order.
+  """
+
   use Ash.Type.Enum, values: [:pending, :paid, :refunded]
 end
 
 defmodule Edenflowers.Orders.Order.FulfillmentStatus do
+  @moduledoc "The pending, fulfilled, and cancelled fulfillment states of an order."
+
   use Ash.Type.Enum, values: [:pending, :fulfilled, :cancelled]
 end
 
@@ -24,6 +30,15 @@ defmodule Edenflowers.Orders.Order.PaymentTerms do
 end
 
 defmodule Edenflowers.Orders.Order do
+  @moduledoc """
+  A cart in progress or a placed order, including the details needed to fulfill
+  it and the commercial snapshots needed to keep its history accurate.
+
+  Online orders begin in checkout; Jennie enters Custom Orders in the admin;
+  subscriptions create ordinary placed orders as Occurrences. Payment records
+  and line items live in their own resources.
+  """
+
   use Ash.Resource,
     domain: Edenflowers.Orders,
     data_layer: AshPostgres.DataLayer,

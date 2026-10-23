@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Cart.LineItems do
+  @moduledoc """
+  Interactive cart lines for changing quantities and removing items or the selected card.
+  """
+
   use EdenflowersWeb, :live_component
 
   alias Edenflowers.Orders

@@ -1,4 +1,10 @@
 defmodule Edenflowers.Orders.Actions.SalesSummary do
+  @moduledoc """
+  Counts placed orders that hold money and totals payment rows received or
+  refunded in the interval. Both use Helsinki day boundaries; revenue includes
+  payments for course bookings as well as orders.
+  """
+
   use Ash.Resource.Actions.Implementation
 
   require Ash.Query

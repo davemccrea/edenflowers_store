@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
+  @moduledoc """
+  Admin page for reviewing, correcting, or deleting an imported expense.
+  """
+
   use EdenflowersWeb, :live_view
 
   require Logger

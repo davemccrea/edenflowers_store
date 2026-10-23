@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Auth.OtpSignInLive do
+  @moduledoc """
+  Requests and verifies emailed one-time codes for customer and admin sign-in.
+  """
+
   use EdenflowersWeb, :live_view
 
   alias AshAuthentication.Info

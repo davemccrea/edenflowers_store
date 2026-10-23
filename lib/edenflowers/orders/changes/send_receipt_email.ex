@@ -1,4 +1,12 @@
 defmodule Edenflowers.Orders.Changes.SendReceiptEmail do
+  @moduledoc """
+  Emails a placed order's confirmation with its receipt PDF. A successful send
+  stamps `receipt_emailed_at` and clears `receipt_email_failed_at`. A failed
+  send fails the action, so the AshOban trigger retries it and, once attempts
+  run out, `record_receipt_email_failure` stamps `receipt_email_failed_at` for
+  the admin to see.
+  """
+
   use Ash.Resource.Change
 
   require Logger

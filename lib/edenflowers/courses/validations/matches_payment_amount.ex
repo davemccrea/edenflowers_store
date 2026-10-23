@@ -1,4 +1,8 @@
 defmodule Edenflowers.Courses.Validations.MatchesPaymentAmount do
+  @moduledoc """
+  Checks that the payment amount matches the course booking amount being confirmed.
+  """
+
   use Ash.Resource.Validation
 
   alias Edenflowers.Payments.Errors.AmountMismatch

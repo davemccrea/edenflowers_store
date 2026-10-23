@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.SearchLive do
+  @moduledoc """
+  Back-office search across orders and customers.
+  """
+
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.Components

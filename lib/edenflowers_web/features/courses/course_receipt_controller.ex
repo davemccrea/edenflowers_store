@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Courses.CourseReceiptController do
+  @moduledoc """
+  Downloads the receipt PDF for a course booking.
+  """
+
   use EdenflowersWeb, :controller
 
   alias Edenflowers.Courses

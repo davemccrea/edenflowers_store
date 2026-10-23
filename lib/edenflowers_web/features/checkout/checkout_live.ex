@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Checkout.CheckoutLive do
+  @moduledoc """
+  Multi-step checkout for fulfillment, customer and recipient details, card choice, and Stripe payment.
+  """
+
   use EdenflowersWeb, :live_view
 
   require Logger

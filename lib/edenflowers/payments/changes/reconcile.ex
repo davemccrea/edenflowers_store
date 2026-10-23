@@ -1,4 +1,8 @@
 defmodule Edenflowers.Payments.Changes.Reconcile do
+  @moduledoc """
+  Rechecks an outstanding Stripe PaymentIntent so a missed webhook cannot leave a paid order or booking pending.
+  """
+
   use Ash.Resource.Change
 
   require Logger

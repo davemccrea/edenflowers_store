@@ -1,4 +1,8 @@
 defmodule Edenflowers.Orders.Changes.PopulateFromVariant do
+  @moduledoc """
+  Copies a catalogue variant's product, price, and tax details onto a new line item.
+  """
+
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
 

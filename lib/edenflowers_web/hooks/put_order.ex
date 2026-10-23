@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Hooks.PutOrder do
+  @moduledoc """
+  LiveView mount hook that loads the session cart into `assigns.order` and updates its locale. A stale cart triggers a fresh HTTP request.
+  """
+
   use Phoenix.Component
 
   alias Edenflowers.Orders

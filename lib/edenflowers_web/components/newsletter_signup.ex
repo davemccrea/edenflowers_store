@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.NewsletterSignup do
+  @moduledoc """
+  Newsletter signup form that records the address and starts the welcome promotion flow.
+  """
+
   use EdenflowersWeb, :live_component
   require Logger
 

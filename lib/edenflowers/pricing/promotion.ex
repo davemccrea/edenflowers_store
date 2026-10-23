@@ -1,4 +1,8 @@
 defmodule Edenflowers.Pricing.Promotion do
+  @moduledoc """
+  A discount code with validity dates, optional usage limit, and minimum cart total. Newsletter signup creates a one-use promotion.
+  """
+
   use Ash.Resource,
     domain: Edenflowers.Pricing,
     data_layer: AshPostgres.DataLayer,

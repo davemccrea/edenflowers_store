@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Admin.CustomersLive do
+  @moduledoc """
+  Searchable admin list of customer accounts.
+  """
+
   use EdenflowersWeb, :live_view
   use Cinder.UrlSync
 

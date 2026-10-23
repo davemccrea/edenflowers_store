@@ -1,5 +1,8 @@
 defmodule Edenflowers.Application do
-  @moduledoc false
+  @moduledoc """
+  Starts the shop's database, jobs, PubSub, rate limiter, web endpoint, and
+  authentication supervisor. It also attaches error reporting at startup.
+  """
 
   use Application
 

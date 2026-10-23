@@ -1,4 +1,8 @@
 defmodule EdenflowersWeb.Store.ProductLive do
+  @moduledoc """
+  Public product page for choosing a size and adding it to the cart or starting a subscription.
+  """
+
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Orders
