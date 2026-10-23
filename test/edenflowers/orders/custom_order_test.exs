@@ -264,12 +264,12 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert_email_sent(fn email ->
         refute email.text_body =~ "Here is what we agreed"
-        assert email.text_body =~ "Here are your order details:"
+        assert email.text_body =~ "Here is your order as it now stands:"
       end)
     end
 
-    test "sent after pickup, thanks the customer instead of saying when to collect", ctx do
-      {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_terms: :invoice})
+    test "sent after pickup, thanks the customer and asks them to pay instead of saying when to collect", ctx do
+      {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB"})
       Oban.drain_queue(queue: :default)
       assert_email_sent()
 
@@ -281,8 +281,18 @@ defmodule Edenflowers.Orders.CustomOrderTest do
         refute email.text_body =~ "change anything"
 
         assert email.text_body =~
-                 ~r/Thank you for your order\. I hope you're happy with it\.[\s\S]+Left to pay[^\n]+\n\nI'll send you an invoice\.\n\nIf anything isn't as it should be/
+                 ~r/Thank you for your order\. I hope you're happy with it\.[\s\S]+You can pay online here[^\n]+\n[^\n]+\/pay\/[\s\S]+If anything isn't as it should be/
       end)
+    end
+
+    test "after pickup without a payment link, isn't sent: the invoice is the bill", ctx do
+      {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_terms: :invoice})
+      Oban.drain_queue(queue: :default)
+      assert_email_sent()
+
+      order = Ash.Seed.update!(order, %{fulfillment_status: :fulfilled})
+      assert {:error, _error} = Orders.send_order_details_email(order, actor: ctx.admin)
+      refute_email_sent()
     end
 
     test "with an invoice, says it comes after pickup", ctx do

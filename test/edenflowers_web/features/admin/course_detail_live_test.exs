@@ -176,7 +176,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
         assert email.to == [{"", "birgitta@example.com"}]
         assert email.text_body =~ "/pay/courses/#{registration.payment_link_token}"
         refute email.text_body =~ "pay at the course"
-        assert email.text_body =~ "are confirmed once you've paid"
+        assert email.text_body =~ "and paying confirms them"
       end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
@@ -184,8 +184,15 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert render(view) =~ "Resend payment link"
     end
 
+    @tag :typst
     test "the confirmation can be sent again from the booking's menu", %{conn: conn} do
-      registration = generate(course_registration(status: :confirmed, email: "birgitta@example.com"))
+      registration =
+        generate(course_registration(status: :confirmed, payment_intent_id: nil, email: "birgitta@example.com"))
+
+      generate(
+        payment(course_registration_id: registration.id, amount: registration.amount, payment_intent_id: "pi_paid")
+      )
+
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
 
       button = element(view, ~s|button[phx-click="email_confirmation"][phx-value-id="#{registration.id}"]|)
