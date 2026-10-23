@@ -38,7 +38,9 @@ defmodule Edenflowers.Email do
   What a custom order's customer is sent when Jennie places it: the order as
   agreed and how to pay. No receipt, because nothing has been paid yet.
   Sent again after an edit, it shows the order as it now stands rather than
-  what changed, since the customer pays against the whole. Expects `line_items: [:subtotal]` and `:grand_total` loaded.
+  what changed, since the customer pays against the whole. Once the order is
+  handed over it reads as the bill instead, as customers here expect one after
+  delivery. Expects `line_items: [:subtotal]` and `:grand_total` loaded.
   """
   def order_details(order, payment_link_url) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
@@ -47,15 +49,21 @@ defmodule Edenflowers.Email do
       |> to(order.customer_email)
       |> bcc(record_copy_address())
       |> subject(~t"Your Eden Flowers order #{order.order_reference}")
-      |> text_body(
-        Templates.order_details(%{
-          order: order,
-          payment_link_url: payment_link_url,
-          fulfillment_on: fulfillment_on(order),
-          format_currency: &Format.currency(&1, order.locale)
-        })
-      )
+      |> text_body(render_order_details(order, payment_link_url))
     end)
+  end
+
+  defp render_order_details(order, payment_link_url) do
+    assigns = %{
+      order: order,
+      payment_link_url: payment_link_url,
+      fulfillment_on: fulfillment_on(order),
+      format_currency: &Format.currency(&1, order.locale)
+    }
+
+    if order.fulfillment_status == :fulfilled,
+      do: Templates.order_bill(assigns),
+      else: Templates.order_details(assigns)
   end
 
   # A window reads as the course emails write theirs: "Saturday 14.11.2026, 12:00–16:00".
@@ -278,15 +286,24 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(registration.email)
       |> bcc(record_copy_address())
-      |> subject(~t"You're booked on #{course = registration.course.name}")
+      |> subject(course_confirmation_subject(registration))
       |> text_body(render_course_confirmation(registration, payment_link_url))
     end)
+  end
+
+  # Jennie often records a payment taken at the course afterwards, which sends
+  # the confirmation again with the receipt.
+  defp course_confirmation_subject(registration) do
+    if course_over?(registration),
+      do: ~t"Your booking on #{course = registration.course.name}",
+      else: ~t"You're booked on #{course = registration.course.name}"
   end
 
   defp render_course_confirmation(registration, payment_link_url) do
     Templates.course_confirmation(%{
       registration: registration,
       payment_link_url: payment_link_url,
+      course_over?: course_over?(registration),
       format_date: &Format.weekday_date(&1, registration.locale),
       format_time: &Format.time(&1, registration.locale),
       format_currency: &Format.currency(&1, registration.locale)
@@ -309,7 +326,7 @@ defmodule Edenflowers.Email do
         Templates.course_payment_link(%{
           registration: registration,
           payment_link_url: payment_link_url,
-          course_over?: Date.before?(registration.course.date, Edenflowers.ShopTime.today()),
+          course_over?: course_over?(registration),
           format_date: &Format.weekday_date(&1, registration.locale),
           format_time: &Format.time(&1, registration.locale),
           format_currency: &Format.currency(&1, registration.locale)
@@ -317,6 +334,8 @@ defmodule Edenflowers.Email do
       )
     end)
   end
+
+  defp course_over?(registration), do: Date.before?(registration.course.date, Edenflowers.ShopTime.today())
 
   @doc """
   A copy of a couple's wedding enquiry, bcc Jennie so she can reply to them

@@ -138,11 +138,36 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "tells a customer paying in person when to pay", %{conn: conn, user: user} do
-      placed_order(user_id: user.id, origin: :custom)
+      placed_order(user_id: user.id, origin: :custom, payment_terms: :on_fulfillment)
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=order-unpaid]", "Pay at collection")
+    end
+
+    test "tells a customer paying by invoice so", %{conn: conn, user: user} do
+      placed_order(user_id: user.id, origin: :custom, payment_terms: :invoice, fulfillment_status: :fulfilled)
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "[data-testid=order-unpaid]", "Pay by invoice")
+    end
+
+    test "doesn't guess how to pay when Jennie didn't say", %{conn: conn, user: user} do
+      placed_order(user_id: user.id, origin: :custom)
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      refute has_element?(view, "[data-testid=order-unpaid]")
+    end
+
+    test "stops saying when to pay once the order is collected", %{conn: conn, user: user} do
+      placed_order(user_id: user.id, origin: :custom, payment_terms: :on_fulfillment, fulfillment_status: :fulfilled)
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "[data-testid=past]", "Collected")
+      refute has_element?(view, "[data-testid=order-unpaid]")
     end
 
     test "shows a cancelled order as cancelled", %{conn: conn, user: user} do

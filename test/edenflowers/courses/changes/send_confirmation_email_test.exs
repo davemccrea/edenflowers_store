@@ -42,6 +42,24 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
     end)
   end
 
+  test "sent after the course, thanks the customer instead of confirming the place" do
+    course = generate(course(date: Date.add(Edenflowers.ShopTime.today(), -1)))
+    registration = generate(course_registration(course_id: course.id, status: :confirmed))
+
+    assert {:ok, _registration} =
+             perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => registration.id}})
+
+    assert_email_sent(fn email ->
+      refute email.text_body =~ "confirmed"
+      refute email.text_body =~ "pay at the course"
+      refute email.text_body =~ "cancel"
+      refute email.text_body =~ "See you there"
+      assert email.subject =~ "Your booking on Course "
+      assert email.text_body =~ ~r/Thank you for coming to Course \d+\./
+      assert email.text_body =~ "Reply to this email and I'll send you a link to pay online."
+    end)
+  end
+
   describe "the cancellation sentence" do
     defp confirmation(amount_paid) do
       registration = %{

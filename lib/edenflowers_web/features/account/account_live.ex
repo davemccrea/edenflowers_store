@@ -609,23 +609,32 @@ defmodule EdenflowersWeb.Account.AccountLive do
   attr :order, :map, required: true
 
   defp unpaid_note(assigns) do
+    assigns = assign(assigns, :note, payment_note(assigns.order))
+
     ~H"""
-    <span class="text-base-content/70 block text-sm" data-testid="order-unpaid">
-      <%= cond do %>
-        <% @order.payment_link_open? -> %>
-          <span class="text-error">{~t"Unpaid"}</span>
-          ·
-          <.link navigate={~p"/pay/#{@order.payment_link_token}"} class="link-underline-hover text-primary">
-            {~t"Pay now"}
-          </.link>
-        <% @order.fulfillment_method == :delivery -> %>
-          {~t"Pay on delivery"}
-        <% true -> %>
-          {~t"Pay at collection"}
+    <span :if={@note} class="text-base-content/70 block text-sm" data-testid="order-unpaid">
+      <%= if @note == :pay_now do %>
+        <span class="text-error">{~t"Unpaid"}</span>
+        ·
+        <.link navigate={~p"/pay/#{@order.payment_link_token}"} class="link-underline-hover text-primary">
+          {~t"Pay now"}
+        </.link>
+      <% else %>
+        {@note}
       <% end %>
     </span>
     """
   end
+
+  # Only how Jennie said they'd pay: once handed over, "in person" no longer holds.
+  defp payment_note(%{payment_link_open?: true}), do: :pay_now
+  defp payment_note(%{payment_terms: :invoice}), do: ~t"Pay by invoice"
+
+  defp payment_note(%{payment_terms: :on_fulfillment, fulfillment_status: :pending, fulfillment_method: :delivery}),
+    do: ~t"Pay on delivery"
+
+  defp payment_note(%{payment_terms: :on_fulfillment, fulfillment_status: :pending}), do: ~t"Pay at collection"
+  defp payment_note(_order), do: nil
 
   @doc """
   Plain-language order status for the customer. The date sits beside it.

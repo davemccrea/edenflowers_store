@@ -28,6 +28,16 @@ defmodule EdenflowersWeb.Courses.CourseBookingLiveTest do
       {:ok, view, _html} = live(conn, ~p"/courses/bookings/#{registration.id}")
 
       assert has_element?(view, "h1", "Booking cancelled")
+      refute render(view) =~ "To cancel"
+    end
+
+    test "says nothing about cancelling once the course is over", %{conn: conn} do
+      course = generate(course(date: Date.add(Edenflowers.ShopTime.today(), -1)))
+      registration = generate(course_registration(course_id: course.id, status: :confirmed))
+
+      {:ok, view, _html} = live(conn, ~p"/courses/bookings/#{registration.id}")
+
+      refute render(view) =~ "To cancel"
     end
 
     test "a failed redirect payment releases the hold and returns to the course", %{conn: conn} do
