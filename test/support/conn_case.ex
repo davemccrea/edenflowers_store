@@ -32,6 +32,7 @@ defmodule EdenflowersWeb.ConnCase do
   setup tags do
     Edenflowers.DataCase.setup_sandbox(tags)
     Edenflowers.DataCase.stub_card_lookup()
+    Edenflowers.DataCase.stub_papra_rename()
     # Visitors with no language preference get Swedish; tests read as an English browser.
     {:ok, conn: Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("accept-language", "en")}
   end

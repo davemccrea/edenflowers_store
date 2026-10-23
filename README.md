@@ -61,7 +61,7 @@ Order finalization and the confirmation email depend on `payment_intent.succeede
 
 ### Papra expense capture
 
-Tag a document `receipt` in [Papra](https://papra.app). Its webhook hits `/webhook/papra`, the app sends the document to Claude to extract the expense, then tags it `processed`. Deleting the expense in admin removes both tags. The `processed` tag must already exist, and the API key needs `documents:read`, `documents:update` and `tags:read`.
+Tag a document `receipt` in [Papra](https://papra.app). Its webhook hits `/webhook/papra`, the app sends the document to Claude to extract the expense, then tags it `processed` and renames it after the receipt date and vendor (`2026-10-23 Kukkatukku Oy.pdf`). Correcting the date or vendor in admin renames it again. Deleting the expense in admin removes both tags. The `processed` tag must already exist, and the API key needs `documents:read`, `documents:update` and `tags:read`.
 
 ### Worktrees
 
