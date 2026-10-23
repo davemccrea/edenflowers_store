@@ -29,7 +29,7 @@ Decisions:
 - `/health` checks the database only. A Stripe or email outage isn't the shop being down, and Oban job failures already reach ErrorTracker.
 - Self-hosting Uptime Kuma on the same server is out: it dies with the thing it watches.
 
-The nightly backup cron already pings healthchecks.io (TASK-81.2); that covers jobs that stop running, not the site being down.
+Once TASK-81.2 lands, the nightly backup cron pings healthchecks.io; that covers jobs that stop running, not the site being down.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

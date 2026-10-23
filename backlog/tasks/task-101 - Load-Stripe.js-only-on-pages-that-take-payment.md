@@ -4,8 +4,10 @@ title: Load Stripe.js only on pages that take payment
 status: needs-triage
 assignee: []
 created_date: '2026-10-22 21:05'
+updated_date: '2026-10-22 21:16'
 labels:
   - customers
+  - spec
 dependencies: []
 priority: low
 type: task
