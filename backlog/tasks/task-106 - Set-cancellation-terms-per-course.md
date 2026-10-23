@@ -1,9 +1,10 @@
 ---
 id: TASK-106
 title: Set cancellation terms per course
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 20:59'
 labels:
   - spec
   - customers
