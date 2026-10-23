@@ -19,19 +19,17 @@ defmodule Edenflowers.Orders.Changes.SendReceiptEmail do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       order = load_for_send(changeset.data)
-      message = Ash.Changeset.get_argument(changeset, :message)
 
       with {:ok, pdf} <- Receipt.generate(order),
            {:ok, _result} <-
              order
-             |> Email.order_confirmation(message)
+             |> Email.order_confirmation()
              |> Swoosh.Email.attachment(Receipt.attachment(pdf, order.order_reference))
              |> Mailer.deliver() do
         Logger.info("Sent confirmation email for order #{order.id}")
 
         changeset
         |> Ash.Changeset.force_change_attribute(:receipt_emailed_at, DateTime.utc_now())
-        |> Ash.Changeset.set_context(%{paper_trail_metadata: %{email_message: message}})
         |> clear_failure()
       else
         {:error, error} -> Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")
@@ -40,7 +38,19 @@ defmodule Edenflowers.Orders.Changes.SendReceiptEmail do
   end
 
   defp load_for_send(order) do
-    Ash.load!(order, [:customer_first_name, :vat, :cancellable_by_customer?, :cancellable_until | Receipt.order_load()],
+    Ash.load!(
+      order,
+      [
+        :customer_first_name,
+        :vat,
+        :grand_total,
+        :discount,
+        :amount_paid,
+        :balance,
+        :cancellable_by_customer?,
+        :cancellable_until,
+        line_items: [:subtotal]
+      ] ++ Receipt.order_load(),
       authorize?: false
     )
   end

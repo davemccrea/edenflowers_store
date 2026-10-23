@@ -15,17 +15,17 @@ defmodule EdenflowersWeb.Admin.EmailsLiveTest do
 
     {:ok, view, html} = live(conn, ~p"/admin/emails")
     assert html =~ "lördag 14.11.2026"
-    assert has_element?(view, "details > summary", "Order confirmation")
+    assert has_element?(view, "details > summary", "Order receipt")
     assert has_element?(view, "details summary", "not yet fulfilled, cancellable")
 
     html = view |> element("a", "English") |> render_click()
     assert_patch(view, ~p"/admin/emails?lang=en")
-    assert html =~ "Your receipt for Eden Flowers order EF-1042"
+    assert html =~ "Your Eden Flowers order for Saturday 14.11."
 
     html = view |> element("a", "Suomi") |> render_click()
     assert_patch(view, ~p"/admin/emails?lang=fi")
     assert html =~ "lauantaina 14.11.2026"
-    refute html =~ "Your receipt for Eden Flowers order EF-1042"
+    refute html =~ "Your Eden Flowers order for Saturday 14.11."
   end
 
   test "non-admins cannot open it", %{conn: conn} do

@@ -47,8 +47,13 @@ defmodule Edenflowers.Email.Previews do
     for {title, attrs} <- [
           {gettext_noop("not yet fulfilled, cancellable"), %{}},
           {gettext_noop("not yet fulfilled, past the cancellation deadline"), %{cancellable_by_customer?: false}},
-          {gettext_noop("fulfilled at checkout (counter sale)"),
-           %{fulfillment_status: :fulfilled, cancellable_by_customer?: false}},
+          {gettext_noop("gift with a card message, promo code"),
+           %{
+             card_message: card_message(locale),
+             discount: Decimal.new("4.90"),
+             grand_total: Decimal.new("59.10"),
+             amount_paid: Decimal.new("59.10")
+           }},
           {gettext_noop("with a delivery time"), %{fulfillment_time_start: ~T[14:00:00]}},
           {gettext_noop("with a delivery time window"),
            %{fulfillment_time_start: ~T[12:00:00], fulfillment_time_end: ~T[16:00:00]}},
@@ -65,7 +70,6 @@ defmodule Edenflowers.Email.Previews do
              recipient_name: nil,
              delivery_address: nil
            }},
-          {gettext_noop("subscription order"), %{origin: :subscription, cancellable_by_customer?: false}},
           {gettext_noop("no customer first name"), %{customer_first_name: nil}}
         ] do
       paid_attrs = %{
@@ -74,7 +78,7 @@ defmodule Edenflowers.Email.Previews do
         payments: [%{amount: Decimal.new("64.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}]
       }
 
-      {gettext_noop("Order confirmation"), title, :order_confirmation,
+      {gettext_noop("Order receipt"), title, :order_confirmation,
        Email.order_confirmation(order(Map.merge(paid_attrs, attrs), locale))}
     end
   end

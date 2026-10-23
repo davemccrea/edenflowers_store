@@ -993,7 +993,6 @@ defmodule Edenflowers.Orders.Order do
 
     update :send_receipt_email do
       accept []
-      argument :message, :string
       transaction? false
       require_atomic? false
       change Changes.SendReceiptEmail
