@@ -906,7 +906,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     ~H"""
     <nav
       id="order-queue-nav"
-      phx-hook="ArrowKeyNav"
+      phx-hook=".ArrowKeyNav"
       aria-label={~t"Orders to fulfil"}
       class="border-base-content/12 bg-base-100 divide-base-content/12 flex h-9 items-stretch divide-x border text-sm pointer-coarse:h-11"
     >
@@ -932,6 +932,36 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         transition="push"
       />
     </nav>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".ArrowKeyNav">
+      /**
+       * Follows the link inside the hook element whose `data-arrow-key` matches the
+       * pressed arrow key. Clicking the link keeps LiveView's own navigation.
+       */
+      export default {
+        mounted() {
+          this.onKeydown = (e) => {
+            if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+            if (
+              e.target instanceof HTMLElement &&
+              e.target.closest("input, textarea, select, [contenteditable]")
+            )
+              return;
+
+            const link = this.el.querySelector(`a[data-arrow-key="${e.key}"]`);
+            if (!(link instanceof HTMLElement)) return;
+
+            e.preventDefault();
+            link.click();
+          };
+
+          window.addEventListener("keydown", this.onKeydown);
+        },
+
+        destroyed() {
+          window.removeEventListener("keydown", this.onKeydown);
+        },
+      };
+    </script>
     """
   end
 

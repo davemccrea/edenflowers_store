@@ -221,7 +221,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           >
             <div
               id="featured-blooms-viewport"
-              phx-hook="FeaturedCarousel"
+              phx-hook=".FeaturedCarousel"
               phx-update="ignore"
               class="embla__viewport"
               data-dot-label-template={~t"Go to slide __N__"}
@@ -242,6 +242,164 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 </div>
               </div>
             </div>
+            <script :type={Phoenix.LiveView.ColocatedHook} name=".FeaturedCarousel">
+              import EmblaCarousel from "@/vendor/embla-carousel.esm";
+
+              /**
+               * Carousel for the Featured Blooms section.
+               *
+               * Markup contract (set in HomeLive):
+               *   <div class="embla">
+               *     <div class="embla__viewport" phx-hook=".FeaturedCarousel" id="...">
+               *       <div class="embla__container">
+               *         <div class="embla__slide" role="group">...</div>
+               *       </div>
+               *     </div>
+               *     <button class="embla__prev">…</button>
+               *     <button class="embla__next">…</button>
+               *     <div class="embla__dots"></div>
+               *   </div>
+               */
+              export default {
+                mounted() {
+                  // Buttons live in the section heading (sibling of .embla), so we scope
+                  // the lookup to the enclosing <section> rather than .embla itself.
+                  const scope = this.el.closest("section") || document;
+                  this.prevBtn = scope.querySelector(".embla__prev");
+                  this.nextBtn = scope.querySelector(".embla__next");
+                  this.dotsNode = scope.querySelector(".embla__dots");
+                  this.dotNodes = [];
+
+                  // Reduced-motion users skip the per-frame focal-point work entirely.
+                  // The breakpoint above which the effect is disabled is handled in CSS.
+                  this.reducedMotion = window.matchMedia(
+                    "(prefers-reduced-motion: reduce)",
+                  ).matches;
+
+                  // slidesToScroll: 1 on mobile, 'auto' on >=md so an arrow click jumps a
+                  // full page of cards on desktop.
+                  this.embla = EmblaCarousel(this.el, {
+                    align: "center",
+                    containScroll: "trimSnaps",
+                    slidesToScroll: 1,
+                    breakpoints: {
+                      "(min-width: 768px)": { slidesToScroll: "auto" },
+                    },
+                  });
+
+                  this.boundOnSelect = this.onSelect.bind(this);
+                  this.boundOnReInit = this.onReInit.bind(this);
+                  this.boundOnTween = this.onTween.bind(this);
+
+                  if (this.prevBtn) {
+                    this.prevBtn.addEventListener("click", () => this.embla.scrollPrev());
+                  }
+                  if (this.nextBtn) {
+                    this.nextBtn.addEventListener("click", () => this.embla.scrollNext());
+                  }
+
+                  this.buildDots();
+                  this.setTweenFactor();
+                  this.embla.on("select", this.boundOnSelect);
+                  this.embla.on("reInit", this.boundOnReInit);
+                  this.embla.on("scroll", this.boundOnTween);
+                  this.embla.on("slideFocus", this.boundOnTween);
+                  this.onSelect();
+                  this.onTween();
+                },
+
+                updated() {
+                  if (this.embla) this.embla.reInit();
+                },
+
+                destroyed() {
+                  if (this.embla) this.embla.destroy();
+                },
+
+                /**
+                 * Compute the focal-point falloff multiplier. Scaling by snapList length
+                 * keeps the effect feeling consistent whether there are 3 or 30 snaps —
+                 * matches Embla's predefined Tween Scale / Tween Opacity examples.
+                 */
+                setTweenFactor() {
+                  const TWEEN_FACTOR_BASE = 0.6;
+                  this.tweenFactor = TWEEN_FACTOR_BASE * this.embla.scrollSnapList().length;
+                },
+
+                /**
+                 * Per-frame focal-point effect: write each slide's distance-from-center
+                 * (clamped 0..1) to a CSS custom property so CSS can scale/fade neighbours.
+                 * Iterates by snap index and resolves slides via slideRegistry — correct
+                 * under slidesToScroll:'auto' grouping at md+. CSS gates which breakpoint
+                 * the effect actually applies at.
+                 */
+                onTween(eventName) {
+                  if (this.reducedMotion) return;
+                  const engine = this.embla.internalEngine();
+                  const scrollProgress = this.embla.scrollProgress();
+                  const slidesInView = this.embla.slidesInView();
+                  const slideNodes = this.embla.slideNodes();
+                  const isScrollEvent = eventName === "scroll";
+
+                  this.embla.scrollSnapList().forEach((scrollSnap, snapIndex) => {
+                    const diffToTarget = scrollSnap - scrollProgress;
+
+                    engine.slideRegistry[snapIndex].forEach((slideIndex) => {
+                      // Per-frame: skip off-screen slides. On reInit / slideFocus / mount
+                      // we update everyone so freshly-revealed slides paint correctly.
+                      if (isScrollEvent && !slidesInView.includes(slideIndex)) return;
+                      const progress = Math.min(Math.abs(diffToTarget * this.tweenFactor), 1);
+                      slideNodes[slideIndex].style.setProperty(
+                        "--embla-progress",
+                        progress.toFixed(3),
+                      );
+                    });
+                  });
+                },
+
+                buildDots() {
+                  if (!this.dotsNode) return;
+                  // Localized template comes from a data attr on the viewport. Falls back
+                  // to English if missing so the carousel still works.
+                  // Sentinel "__N__" is replaced client-side. Using %{n} would trigger
+                  // Gettext binding-validation warnings server-side at every render.
+                  const tpl = this.el.dataset.dotLabelTemplate || "Go to slide __N__";
+                  const snapList = this.embla.scrollSnapList();
+                  this.dotsNode.innerHTML = snapList
+                    .map(
+                      (_, i) =>
+                        `<button type="button" class="embla__dot" aria-label="${tpl.replace("__N__", i + 1)}" aria-current="false"></button>`,
+                    )
+                    .join("");
+                  this.dotNodes = Array.from(this.dotsNode.querySelectorAll(".embla__dot"));
+                  this.dotNodes.forEach((node, i) => {
+                    node.addEventListener("click", () => this.embla.scrollTo(i));
+                  });
+                },
+
+                onSelect() {
+                  const selected = this.embla.selectedScrollSnap();
+                  this.dotNodes.forEach((node, i) => {
+                    const isSelected = i === selected;
+                    node.classList.toggle("embla__dot--selected", isSelected);
+                    node.setAttribute("aria-current", isSelected ? "true" : "false");
+                  });
+                  const canScroll = this.embla.canScrollPrev() || this.embla.canScrollNext();
+                  this.el
+                    .closest("section")
+                    ?.classList.toggle("embla--no-scroll", !canScroll);
+                  if (this.prevBtn) this.prevBtn.disabled = !this.embla.canScrollPrev();
+                  if (this.nextBtn) this.nextBtn.disabled = !this.embla.canScrollNext();
+                },
+
+                onReInit() {
+                  this.buildDots();
+                  this.setTweenFactor();
+                  this.onSelect();
+                  this.onTween();
+                },
+              };
+            </script>
 
             <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex" />
           </div>

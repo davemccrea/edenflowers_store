@@ -99,12 +99,13 @@ defmodule EdenflowersWeb.CoreComponents do
   def flash(assigns) do
     assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
 
+    # The hook goes by its full name: HEEx only expands ".AutoDismissFlash" in a literal phx-hook.
     ~H"""
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      phx-hook={@kind == :info && "AutoDismissFlash"}
+      phx-hook={@kind == :info && "EdenflowersWeb.CoreComponents.AutoDismissFlash"}
       role="alert"
       {@rest}
     >
@@ -124,6 +125,46 @@ defmodule EdenflowersWeb.CoreComponents do
         </button>
       </div>
     </div>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoDismissFlash">
+      /**
+       * Dismisses an info flash after a few seconds by running its own phx-click
+       * (clear-flash + hide), so a timed dismissal and a click look identical.
+       * The countdown pauses while the toast is hovered or holds keyboard focus,
+       * and restarts in full afterwards. Errors never get this hook: they stay
+       * until the user dismisses them.
+       */
+      const FLASH_DISMISS_MS = 5000;
+
+      export default {
+        mounted() {
+          this.pause = () => clearTimeout(this.timer);
+          this.resume = () => this.start();
+
+          this.el.addEventListener("mouseenter", this.pause);
+          this.el.addEventListener("focusin", this.pause);
+          this.el.addEventListener("mouseleave", this.resume);
+          this.el.addEventListener("focusout", this.resume);
+
+          this.start();
+        },
+
+        // A new message patched into the same toast gets a full countdown.
+        updated() {
+          this.start();
+        },
+
+        start() {
+          clearTimeout(this.timer);
+          this.timer = setTimeout(() => {
+            this.liveSocket.execJS(this.el, this.el.getAttribute("phx-click"));
+          }, FLASH_DISMISS_MS);
+        },
+
+        destroyed() {
+          clearTimeout(this.timer);
+        },
+      };
+    </script>
     """
   end
 
@@ -217,62 +258,31 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
-  Renders the form the `Stripe` hook mounts its payment element into.
-
-  The hook finds the element, error message and button by id, so a page
-  holds at most one. `mode="setup"` saves a card without charging it.
-
-  The Payment Element starts before the PaymentIntent or SetupIntent exists.
-  The page creates it in its submit event and sends the client secret with
-  `stripe:process_payment`, so Apple Pay opens inside the customer's tap.
+  Renders the number of characters typed so far into a textarea.
   """
   attr :id, :string, required: true
-  attr :mode, :string, default: "payment", values: ["payment", "setup"]
-  attr :amount, :integer, default: nil, doc: "in cents, shown on wallet sheets; required in payment mode"
+  attr :textarea, :string, required: true, doc: "the textarea's id"
 
-  attr :setup_future_usage, :string,
-    default: nil,
-    doc: ~s|"off_session" when the PaymentIntent created on paying saves the card|
-
-  attr :customer_session_client_secret, :string, default: nil, doc: "shows the signed-in customer's saved cards"
-  attr :return_path, :string, required: true, doc: "where Stripe sends the customer back to, on the host they paid from"
-  attr :billing_name, :string, default: nil
-  attr :billing_email, :string, default: nil
-  attr :billing_phone, :string, default: nil
-  attr :on_loading, JS, default: %JS{}, doc: "runs as Stripe starts working, alongside disabling the button"
-  attr :on_ready, JS, default: %JS{}, doc: "runs as Stripe settles, alongside re-enabling the button"
-  attr :rest, :global
-  slot :before_button
-  slot :inner_block, required: true, doc: "the button label"
-
-  def stripe_form(assigns) do
+  def character_count(assigns) do
     ~H"""
-    <form
-      id={@id}
-      phx-hook="Stripe"
-      data-mode={@mode}
-      data-amount={@amount}
-      data-setup-future-usage={@setup_future_usage}
-      data-customer-session-client-secret={@customer_session_client_secret}
-      data-publishable-key={Application.get_env(:edenflowers, :stripe_publishable_key)}
-      data-return-path={@return_path}
-      data-billing-name={@billing_name}
-      data-billing-email={@billing_email}
-      data-billing-phone={@billing_phone}
-      data-stripe-loading={JS.set_attribute(@on_loading, {"disabled", "true"}, to: "#payment-button")}
-      data-stripe-ready={JS.remove_attribute(@on_ready, "disabled", to: "#payment-button")}
-      class="flex flex-col gap-4"
-      {@rest}
-    >
-      <div phx-update="ignore" id="payment-element"></div>
-      <p phx-update="ignore" id="stripe-error-message" role="alert" class="text-error"></p>
+    <%!-- The script comes first: after the count, the whitespace it leaves would show as a space before "/max". --%>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".CharacterCount">
+      export default {
+        mounted() {
+          const textarea = document.getElementById(this.el.dataset.textarea);
+          const charCountDisplay = this.el;
 
-      {render_slot(@before_button)}
+          updateCharCount();
 
-      <.form_button disabled={true} id="payment-button">
-        {render_slot(@inner_block)}
-      </.form_button>
-    </form>
+          textarea.addEventListener("input", updateCharCount);
+
+          function updateCharCount() {
+            charCountDisplay.textContent = textarea.value.length;
+          }
+        },
+      };
+    </script>
+    <span id={@id} phx-hook=".CharacterCount" phx-update="ignore" data-textarea={@textarea}>0</span>
     """
   end
 
@@ -823,7 +833,80 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
-  Renders a thumbnail in a `PhotoGallery` hook's masonry columns, linked to
+  Renders a click-to-zoom gallery (PhotoSwipe) of `gallery_photo/1`
+  thumbnails in masonry columns.
+  """
+  attr :id, :string, required: true
+  slot :inner_block, required: true
+
+  def gallery(assigns) do
+    ~H"""
+    <div id={@id} phx-hook=".PhotoGallery" class="columns-2 gap-3 md:columns-3 xl:columns-4">
+      {render_slot(@inner_block)}
+    </div>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".PhotoGallery">
+      import PhotoSwipeLightbox from "@/vendor/photoswipe-lightbox.esm";
+      import PhotoSwipe from "@/vendor/photoswipe.esm";
+
+      /**
+       * Click-to-zoom photo gallery (PhotoSwipe 5).
+       *
+       * Markup contract: the hook element wraps one <a> per photo, each linking to
+       * the full-size image and carrying data-pswp-width/height. Those dimensions
+       * must match the served image exactly or PhotoSwipe's zoom maths goes wrong —
+       * the page builds both URL and attributes from the same numbers.
+       */
+      export default {
+        mounted() {
+          // Passing pswpModule as a value rather than a dynamic import keeps
+          // everything in the single esbuild bundle — no runtime chunk fetch.
+          this.lightbox = new PhotoSwipeLightbox({
+            gallery: this.el,
+            children: "a[data-pswp-width]",
+            pswpModule: PhotoSwipe,
+          });
+
+          // A mouse click leaves the thumbnail focused, so Escape rings it on close.
+          // Keyboard activation has detail 0 and keeps PhotoSwipe's focus round trip.
+          this.el.addEventListener(
+            "click",
+            (e) => e.detail && document.activeElement?.blur(),
+          );
+
+          // Credit line. PhotoSwipe has no caption of its own, and the plugin that
+          // adds one isn't worth a second vendored file for this. It clones the
+          // thumbnail's figcaption, photographer link included, so there's one
+          // source of truth.
+          this.lightbox.on("uiRegister", () => {
+            this.lightbox.pswp.ui.registerElement({
+              name: "credit",
+              appendTo: "root",
+              onInit: (el, pswp) => {
+                const render = () => {
+                  const caption = pswp.currSlide?.data?.element
+                    ?.closest("figure")
+                    ?.querySelector("figcaption");
+                  el.replaceChildren(...(caption?.cloneNode(true).childNodes ?? []));
+                };
+                pswp.on("change", render);
+                render();
+              },
+            });
+          });
+
+          this.lightbox.init();
+        },
+
+        destroyed() {
+          this.lightbox.destroy();
+        },
+      };
+    </script>
+    """
+  end
+
+  @doc """
+  Renders a thumbnail in a `gallery/1`'s masonry columns, linked to
   the full-size photo it opens. `sizes` assumes the 2/3/4-column layout both
   galleries use.
   """

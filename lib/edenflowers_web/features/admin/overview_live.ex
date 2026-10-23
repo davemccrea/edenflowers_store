@@ -259,7 +259,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     ~H"""
     <section
       id="notifications-offer"
-      phx-hook="PushNudge"
+      phx-hook=".PushNudge"
       phx-update="ignore"
       hidden
       data-vapid-public-key={@vapid_public_key}
@@ -280,6 +280,66 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <.button type="button" variant="primary" size="sm" data-push-nudge="enable">{~t"Turn on"}</.button>
       </div>
     </section>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".PushNudge">
+      import { pushSupported, resyncSubscription, subscribeDevice } from "@/js/push";
+
+      /**
+       * The Overview card offering order notifications, shown once in the installed
+       * app before it has asked for permission. Either button hides it for good on
+       * this device; the account page's switch is there after that.
+       */
+      const PUSH_NUDGE_DISMISSED_KEY = "eden:push-nudge-dismissed";
+
+      export default {
+        mounted() {
+          // The Overview is where the installed app opens, so every launch re-saves
+          // this device's subscription.
+          if (pushSupported()) resyncSubscription(this);
+
+          const installed =
+            window.matchMedia("(display-mode: standalone)").matches ||
+            /** @type {any} */ (navigator).standalone === true;
+
+          if (
+            !installed ||
+            !pushSupported() ||
+            Notification.permission !== "default" ||
+            this.dismissed()
+          )
+            return;
+
+          this.js().removeAttribute(this.el, "hidden");
+
+          this.el
+            .querySelector("[data-push-nudge=dismiss]")
+            ?.addEventListener("click", () => this.dismiss());
+
+          this.el
+            .querySelector("[data-push-nudge=enable]")
+            ?.addEventListener("click", () => {
+              subscribeDevice(this, this.el.dataset.vapidPublicKey);
+              this.dismiss();
+            });
+        },
+
+        dismissed() {
+          try {
+            return localStorage.getItem(PUSH_NUDGE_DISMISSED_KEY) !== null;
+          } catch {
+            return false;
+          }
+        },
+
+        dismiss() {
+          try {
+            localStorage.setItem(PUSH_NUDGE_DISMISSED_KEY, "1");
+          } catch {
+            // Without storage the card simply comes back next time.
+          }
+          this.js().setAttribute(this.el, "hidden", "");
+        },
+      };
+    </script>
     """
   end
 
@@ -584,7 +644,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       <%!-- Scrolls sideways on a phone, bleeding to the card's edges. --%>
       <ol
         id="days"
-        phx-hook="ScrollToCurrent"
+        phx-hook=".ScrollToCurrent"
         aria-label={~t"Days"}
         class="admin-scroll-fade [scrollbar-width:none] relative -mx-4 flex snap-x scroll-px-4 gap-1 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-9 sm:overflow-visible sm:px-0"
       >
@@ -616,6 +676,23 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         </.link>
       </div>
     </div>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".ScrollToCurrent">
+      /**
+       * Scrolls a sideways list so its `aria-current` item is in view, such as the
+       * Overview's day strip opened on a day further out. Only on mount: a tapped
+       * item is already in view.
+       */
+      export default {
+        mounted() {
+          const current = this.el.querySelector("[aria-current]")?.closest("li");
+          if (!(current instanceof HTMLElement)) return;
+
+          // scrollLeft rather than scrollIntoView, which can also scroll the page.
+          this.el.scrollLeft =
+            current.offsetLeft - (this.el.clientWidth - current.offsetWidth) / 2;
+        },
+      };
+    </script>
     """
   end
 

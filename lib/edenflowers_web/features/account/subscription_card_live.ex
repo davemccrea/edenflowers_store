@@ -9,6 +9,8 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
   require Logger
 
+  import EdenflowersWeb.StripeForm, only: [stripe_form: 1]
+
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Payments

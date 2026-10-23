@@ -183,7 +183,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     ~H"""
     <section
       id="device-notifications"
-      phx-hook="PushToggle"
+      phx-hook=".PushToggle"
       phx-update="ignore"
       data-state="checking"
       data-vapid-public-key={@vapid_public_key}
@@ -220,6 +220,57 @@ defmodule EdenflowersWeb.Admin.AccountLive do
         />
       </div>
     </section>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".PushToggle">
+      import {
+        currentSubscription,
+        pushSupported,
+        resyncSubscription,
+        subscribeDevice,
+        unsubscribeDevice,
+      } from "@/js/push";
+
+      /**
+       * The account page's "New order notifications" switch for this device. Its
+       * state lives in the browser, so the hook reads it and sets `data-state`
+       * (checking, on, off, denied, unsupported, error), which picks the help text.
+       * The element is phx-update="ignore", so patches leave the switch alone.
+       */
+      export default {
+        async mounted() {
+          this.input = /** @type {HTMLInputElement} */ (
+            this.el.querySelector("input[role=switch]")
+          );
+          this.input.addEventListener("change", () => this.onChange());
+
+          if (!pushSupported()) return this.setState("unsupported");
+          if (Notification.permission === "denied") return this.setState("denied");
+
+          const subscription = await resyncSubscription(this);
+          this.setState(subscription ? "on" : "off");
+        },
+
+        async onChange() {
+          this.input.disabled = true;
+
+          if (this.input.checked) {
+            this.setState(
+              await subscribeDevice(this, this.el.dataset.vapidPublicKey),
+            );
+          } else {
+            await unsubscribeDevice(this).catch(() => {});
+            const subscription = await currentSubscription().catch(() => null);
+            this.setState(subscription ? "on" : "off");
+          }
+        },
+
+        /** @param {string} state */
+        setState(state) {
+          this.js().setAttribute(this.el, "data-state", state);
+          this.input.checked = state === "on";
+          this.input.disabled = !["on", "off", "error"].includes(state);
+        },
+      };
+    </script>
     """
   end
 

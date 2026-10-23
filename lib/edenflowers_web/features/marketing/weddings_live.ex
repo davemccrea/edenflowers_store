@@ -86,16 +86,12 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       <section id="my-work" class="bg-cream scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
         <div class="container py-24">
           <h2 id="work-heading" class="section-title mb-10">{~t"My work"}</h2>
-          <div
-            id="wedding-gallery"
-            phx-hook="PhotoGallery"
-            class="columns-2 gap-3 md:columns-3 xl:columns-4"
-          >
+          <.gallery id="wedding-gallery">
             <figure :for={photo <- @gallery} class="mb-6 break-inside-avoid">
               <.gallery_photo photo={photo} />
               <figcaption class="text-cream-content/80 mt-1.5 text-xs"><.credit_line name={photo.credit} /></figcaption>
             </figure>
-          </div>
+          </.gallery>
         </div>
       </section>
 

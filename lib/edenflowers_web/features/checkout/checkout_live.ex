@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   import EdenflowersWeb.Checkout.Fields, only: [steps: 1]
   import EdenflowersWeb.CardDrawer, only: [card_drawer: 1]
   import EdenflowersWeb.StoreCalendar, only: [store_calendar: 1]
+  import EdenflowersWeb.StripeForm, only: [stripe_form: 1]
 
   alias Edenflowers.Catalog.ProductVariantSize
 
@@ -131,7 +132,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         </div>
         <div class="flex flex-col gap-12">
           <div class="max-w-[58rem] mx-auto flex w-full flex-col gap-12 md:flex-row md:gap-12 lg:gap-16">
-            <div id={@id} class="md:max-w-lg md:flex-1" phx-hook="FocusElement">
+            <div id={@id} class="md:max-w-lg md:flex-1" phx-hook=".FocusElement">
               <%!-- Outer step chrome (titles, summaries, edit links) lives in Checkout.Fields.
                    The <section>s below are the inner content for the active step. --%>
               <.steps state={@order.state} order={@order}>
@@ -322,6 +323,68 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 </.checkout_step>
               </.steps>
             </div>
+            <script :type={Phoenix.LiveView.ColocatedHook} name=".FocusElement">
+              export default {
+                // No autofocus on page load: on a phone it opens the keyboard over the page
+                // before the customer has seen it.
+                mounted() {
+                  this.handleEvent("focus-element", ({ id, focus = true }) => {
+                    requestAnimationFrame(() => {
+                      const element = document.getElementById(id);
+                      if (!element) return;
+
+                      // Scroll the section heading to the top of the viewport. The section's
+                      // scroll-margin-top accounts for the fixed page header so the heading
+                      // doesn't land underneath it.
+                      const reducedMotion = window.matchMedia(
+                        "(prefers-reduced-motion: reduce)",
+                      ).matches;
+                      element.scrollIntoView({
+                        block: "start",
+                        behavior: reducedMotion ? "auto" : "smooth",
+                      });
+
+                      if (!focus) return;
+
+                      // preventScroll keeps keyboard focus working without overriding the
+                      // scroll position we just set above.
+                      const firstInput = element.querySelector(
+                        'input:not([type="hidden"]), textarea, select, button[type="submit"]',
+                      );
+                      if (firstInput) {
+                        /** @type {HTMLElement} */ (firstInput).focus({
+                          preventScroll: true,
+                        });
+                      }
+                    });
+                  });
+
+                  this.handleEvent("focus-first-error", () => {
+                    requestAnimationFrame(() => {
+                      const invalid = this.el.querySelector('[aria-invalid="true"]');
+                      if (!invalid) return;
+
+                      // The delivery date's invalid input is hidden behind the calendar, so
+                      // scroll to the nearest visible ancestor (its fieldset) instead and
+                      // focus the calendar's roving tabindex day.
+                      let target = invalid;
+                      while (target && !target.checkVisibility())
+                        target = target.parentElement;
+                      const focusTarget = target?.querySelector('[tabindex="0"]') ?? invalid;
+
+                      const reducedMotion = window.matchMedia(
+                        "(prefers-reduced-motion: reduce)",
+                      ).matches;
+                      target?.scrollIntoView({
+                        block: "center",
+                        behavior: reducedMotion ? "auto" : "smooth",
+                      });
+                      /** @type {HTMLElement} */ (focusTarget).focus({ preventScroll: true });
+                    });
+                  });
+                },
+              };
+            </script>
 
             <div class="md:w-[20rem] md:sticky md:top-8 md:h-fit lg:w-[22rem]">
               <section class="flex flex-col gap-6 pt-8 md:pt-10" data-testid="cart-section" data-locked-while-paying>
@@ -630,7 +693,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       <div :if={@card_line_item} data-testid="card-preview">
         <fieldset
           id={"#{@id}-field-card-message"}
-          phx-hook="CharacterCount"
           data-testid="card-message-field"
           class="flex flex-col"
         >
@@ -679,7 +741,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
               <span class="sr-only">{gettext("Change card")}</span>
             </button>
             <div id={"#{@id}-card-message-count"} class="text-cream-content/60 flex justify-end text-xs">
-              <span id="char-count" phx-update="ignore">0</span>/{@card_message_max}
+              <.character_count id="char-count" textarea={"#{@id}-card-message"} />/{@card_message_max}
             </div>
           </div>
           <.field_errors field={@form[:card_message]} />

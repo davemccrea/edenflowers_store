@@ -226,7 +226,7 @@ defmodule EdenflowersWeb.Layouts do
 
     <div
       id="admin-app"
-      phx-hook="AdminApp"
+      phx-hook=".AdminApp"
       class={["admin-theme", if(@fill_viewport, do: "h-dvh flex flex-col lg:flex-row", else: "min-h-screen lg:flex")]}
     >
       <%!-- Mobile: slide-in drawer --%>
@@ -304,6 +304,27 @@ defmodule EdenflowersWeb.Layouts do
         </main>
       </div>
     </div>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".AdminApp">
+      import { clearOrderAlerts } from "@/js/push";
+
+      /**
+       * On the admin layout. Clears new-order notifications and the app icon badge
+       * whenever the admin comes into view.
+       */
+      export default {
+        mounted() {
+          this.onVisible = () => {
+            if (document.visibilityState === "visible") clearOrderAlerts();
+          };
+          document.addEventListener("visibilitychange", this.onVisible);
+          this.onVisible();
+        },
+
+        destroyed() {
+          document.removeEventListener("visibilitychange", this.onVisible);
+        },
+      };
+    </script>
     """
   end
 
@@ -622,7 +643,7 @@ defmodule EdenflowersWeb.Layouts do
 
     <div
       id="hotfx-shy-header"
-      phx-hook="HotFxShyHeader"
+      phx-hook=".HotFxShyHeader"
       data-hide={JS.add_class("shy-header--hidden")}
       data-show={JS.remove_class("shy-header--hidden")}
     >
@@ -749,6 +770,38 @@ defmodule EdenflowersWeb.Layouts do
         </section>
       </header>
     </div>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".HotFxShyHeader">
+      export default {
+        mounted() {
+          this.hideJS = this.el.getAttribute("data-hide");
+          this.showJS = this.el.getAttribute("data-show");
+
+          this.lastScroll = 0;
+          this.lastMaxScroll = 0;
+
+          this.boundHandleScroll = this.handleScroll.bind(this);
+
+          document.addEventListener("scroll", this.boundHandleScroll);
+        },
+
+        destroyed() {
+          document.removeEventListener("scroll", this.boundHandleScroll);
+        },
+
+        handleScroll() {
+          if (window.scrollY > Math.max(150, this.lastScroll)) {
+            this.liveSocket.execJS(this.el, this.hideJS);
+          } else if (window.scrollY < this.lastMaxScroll - 150) {
+            this.liveSocket.execJS(this.el, this.showJS);
+            this.lastMaxScroll = window.scrollY;
+          }
+          this.lastScroll = window.scrollY;
+          if (window.scrollY > this.lastMaxScroll) {
+            this.lastMaxScroll = window.scrollY;
+          }
+        },
+      };
+    </script>
 
     <.flash_group flash={@flash} />
 

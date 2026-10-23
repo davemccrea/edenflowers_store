@@ -18,6 +18,7 @@
   ],
   subdirectories: ["priv/*/migrations"],
   plugins: [Spark.Formatter, Phoenix.LiveView.HTMLFormatter, TailwindFormatter],
+  tag_formatters: %{script: EdenflowersWeb.PrettierFormatter},
   inputs: ["*.{heex,ex,exs}", "{config,lib,test}/**/*.{heex,eex,ex,exs}", "priv/*/seeds.exs"],
   line_length: 120
 ]
