@@ -489,6 +489,13 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp subscription(attrs, locale) do
+    product_name =
+      cond do
+        String.starts_with?(locale, "fi") -> "Floristin valinta"
+        String.starts_with?(locale, "sv") -> "Floristens val"
+        true -> "Florist's choice bouquet"
+      end
+
     Map.merge(
       %{
         locale: locale,
@@ -505,6 +512,7 @@ defmodule Edenflowers.Email.Previews do
       },
       attrs
     )
+    |> put_in([:product_variant, :product], %{name: product_name})
   end
 
   defp registration(attrs, locale) do
