@@ -31,12 +31,11 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
           |> assign(:page_title, ~t"Update your card")
           |> assign(:subscription, subscription)
           |> assign(:unpaid, unpaid)
+          |> assign(:payment_unavailable?, false)
 
-        # Stripe is only touched once the page is live, so a link preview or
-        # the static first render never calls it.
         if connected?(socket),
-          do: {:ok, set_up_card(socket, params)},
-          else: {:ok, assign(socket, client_secret: nil, payment_unavailable?: false)}
+          do: {:ok, back_from_stripe(socket, params)},
+          else: {:ok, socket}
 
       _not_found_or_cancelled ->
         {:ok,
@@ -65,11 +64,9 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
         <section class="mt-10" aria-label={~t"Card"}>
           <.stripe_form
-            :if={@client_secret}
             id="card-form"
             phx-submit="save_card"
-            intent="setup"
-            client_secret={@client_secret}
+            mode="setup"
             return_url={url(~p"/account/subscriptions/#{@subscription.id}/card")}
             billing_name={@current_user.name}
             billing_email={to_string(@current_user.email)}
@@ -94,7 +91,17 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
   @impl true
   def handle_event("save_card", _params, socket) do
-    {:noreply, push_event(socket, "stripe:process_payment", %{})}
+    case Payments.setup_card_replacement(socket.assigns.subscription) do
+      {:ok, client_secret} ->
+        {:noreply,
+         socket
+         |> assign(:payment_unavailable?, false)
+         |> push_event("stripe:process_payment", %{client_secret: client_secret})}
+
+      {:error, reason} ->
+        Logger.error("Could not set up a card for subscription #{socket.assigns.subscription.id}: #{inspect(reason)}")
+        {:noreply, socket |> assign(:payment_unavailable?, true) |> push_event("stripe:ready", %{})}
+    end
   end
 
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
@@ -106,28 +113,15 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
      put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
   end
 
-  defp set_up_card(socket, %{"setup_intent" => setup_intent_id, "redirect_status" => "succeeded"}) do
+  defp back_from_stripe(socket, %{"setup_intent" => setup_intent_id, "redirect_status" => "succeeded"}) do
     save_card(socket, setup_intent_id)
   end
 
-  defp set_up_card(socket, %{"redirect_status" => "failed"}) do
-    socket
-    |> put_flash(:error, ~t"Your card couldn't be saved. Please try again or use another card.")
-    |> assign_setup_intent()
+  defp back_from_stripe(socket, %{"redirect_status" => "failed"}) do
+    put_flash(socket, :error, ~t"Your card couldn't be saved. Please try again or use another card.")
   end
 
-  defp set_up_card(socket, _params), do: assign_setup_intent(socket)
-
-  defp assign_setup_intent(socket) do
-    case Payments.setup_card_replacement(socket.assigns.subscription) do
-      {:ok, client_secret} ->
-        assign(socket, client_secret: client_secret, payment_unavailable?: false)
-
-      {:error, reason} ->
-        Logger.error("Could not set up a card for subscription #{socket.assigns.subscription.id}: #{inspect(reason)}")
-        assign(socket, client_secret: nil, payment_unavailable?: true)
-    end
-  end
+  defp back_from_stripe(socket, _params), do: socket
 
   defp save_card(socket, setup_intent_id) do
     %{subscription: subscription, current_user: user} = socket.assigns
@@ -143,7 +137,6 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
 
         socket
         |> put_flash(:error, ~t"Your card couldn't be saved. Please try again or use another card.")
-        |> assign_setup_intent()
     end
   end
 end

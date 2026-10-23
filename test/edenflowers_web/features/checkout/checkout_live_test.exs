@@ -27,6 +27,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
   import Mox
 
   alias AshAuthentication.Plug.Helpers
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
 
   setup :verify_on_exit!
@@ -62,56 +63,82 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     %{order: order, product: product, variant: variant}
   end
 
-  describe "payment mode changes" do
-    test "replaces the PaymentIntent when switching to a subscription and back", %{conn: conn} do
+  describe "paying" do
+    setup %{variant: variant} do
+      order = generate(order(state: :payment, customer_name: "Jane Doe", customer_email: "jane@example.com"))
+      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      %{order: Orders.get_order_for_checkout!(order.id, actor: nil)}
+    end
+
+    test "shows the Payment Element the total before any PaymentIntent exists", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+
+      amount = StripeAPI.to_stripe_amount(order.grand_total)
+      assert has_element?(view, ~s|#checkout-form-4[data-amount="#{amount}"]|)
+      assert is_nil(Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id)
+    end
+
+    test "creates the PaymentIntent at the total, and reuses it when paying again", %{conn: conn, order: order} do
+      amount = StripeAPI.to_stripe_amount(order.grand_total)
+
+      expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn ^amount, _metadata, _customer ->
+        {:ok, %{id: "pi_jane", client_secret: "pi_jane_secret", amount: amount}}
+      end)
+
+      expect(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn "pi_jane", ^amount -> {:ok, %{}} end)
+
+      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn _order ->
+        {:ok, %{id: "pi_jane", client_secret: "pi_jane_secret"}}
+      end)
+
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+
+      view |> element("#checkout-form-4") |> render_submit()
+      assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_jane_secret"})
+
+      view |> element("#checkout-form-4") |> render_submit()
+      assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_jane_secret"})
+    end
+
+    test "a subscription saves its card and replaces a one-off PaymentIntent", %{conn: conn} do
       product = generate(product(subscribable: true, free_delivery: true))
-      variant = generate(product_variant(product_id: product.id))
+      subscribable = generate(product_variant(product_id: product.id))
 
       order =
         generate(
           order(
             state: :payment,
             customer_name: "Jane Doe",
-            customer_email: "jane@example.com"
+            customer_email: "jane@example.com",
+            payment_intent_id: "pi_one_off"
           )
         )
 
-      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
-      {:ok, creations} = Agent.start_link(fn -> 0 end)
+      Orders.add_line_item!(order.id, subscribable.id, 1, authorize?: false)
 
-      stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, _customer ->
-        number = Agent.get_and_update(creations, &{&1, &1 + 1})
-        {:ok, %{id: "pi_one_off_#{number}", client_secret: "one_off_secret_#{number}", amount: 0}}
+      stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn _order ->
+        {:ok, %{id: "pi_one_off", client_secret: "pi_one_off_secret"}}
       end)
 
-      stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn order ->
-        setup_future_usage = if order.payment_intent_id == "pi_subscription", do: "off_session"
+      expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
+      expect(Edenflowers.External.StripeAPI.Mock, :create_customer, fn _params -> {:ok, %{id: "cus_jane"}} end)
 
-        {:ok,
-         %{
-           id: order.payment_intent_id,
-           client_secret: "#{order.payment_intent_id}_secret",
-           setup_future_usage: setup_future_usage
-         }}
-      end)
-
-      stub(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
-      stub(Edenflowers.External.StripeAPI.Mock, :create_customer, fn _params -> {:ok, %{id: "cus_jane"}} end)
-
-      stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent_saving_card, fn _amount, _metadata, "cus_jane" ->
+      expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent_saving_card, fn _amount,
+                                                                                         _metadata,
+                                                                                         "cus_jane" ->
         {:ok, %{id: "pi_subscription", client_secret: "subscription_secret", amount: 0}}
       end)
 
       {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
-      assert Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id == "pi_one_off_0"
+      refute has_element?(view, "#checkout-form-4[data-setup-future-usage]")
 
-      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
-      render(view)
+      Orders.add_line_item!(order.id, subscribable.id, 1, %{interval_weeks: 2}, authorize?: false)
+      assert has_element?(view, ~s|#checkout-form-4[data-setup-future-usage="off_session"]|)
+
+      view |> element("#checkout-form-4") |> render_submit()
+
+      assert_push_event(view, "stripe:process_payment", %{client_secret: "subscription_secret"})
       assert Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id == "pi_subscription"
-
-      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
-      render(view)
-      assert Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id == "pi_one_off_1"
     end
   end
 
@@ -126,14 +153,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       user = with_token(generate(admin_user(admin: false, email: "ada@example.com")))
 
       expect(Edenflowers.External.StripeAPI.Mock, :create_customer, fn _params -> {:ok, %{id: "cus_ada"}} end)
-
-      expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, "cus_ada" ->
-        {:ok, %{id: "pi_ada", client_secret: "pi_ada_secret", amount: 0, customer: "cus_ada"}}
-      end)
-
-      stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn _order ->
-        {:ok, %{id: "pi_ada", client_secret: "pi_ada_secret", customer: "cus_ada"}}
-      end)
 
       expect(Edenflowers.External.StripeAPI.Mock, :create_customer_session, fn "cus_ada" ->
         {:ok, %{client_secret: "cuss_ada"}}
@@ -151,7 +170,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     test "gives a guest no CustomerSession", %{conn: conn, order: order} do
       {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
 
-      assert render(view) =~ "data-client-secret"
+      assert render(view) =~ "data-amount"
       refute render(view) =~ "data-customer-session-client-secret"
     end
   end

@@ -48,6 +48,20 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     test "books places and shows the payment form", %{conn: conn} do
       course = generate(course(name: "Autumn Wreaths", price: "85.00", total_places: 8))
 
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+
+      view
+      |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "3"})
+      |> render_submit()
+
+      assert has_element?(view, ~s|#course-payment-form[data-amount="25500"]|)
+      assert has_element?(view, "#payment-button", "255")
+      assert has_element?(view, "#pay-heading[phx-mounted][tabindex='-1']")
+    end
+
+    test "creates the PaymentIntent when the customer pays", %{conn: conn} do
+      course = generate(course(price: "85.00", total_places: 8))
+
       expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn 25_500,
                                                                              %{"course_registration_id" => _},
                                                                              _customer ->
@@ -60,9 +74,9 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "3"})
       |> render_submit()
 
-      assert has_element?(view, "#course-payment-form[data-client-secret=pi_course_secret]")
-      assert has_element?(view, "#payment-button", "255")
-      assert has_element?(view, "#pay-heading[phx-mounted][tabindex='-1']")
+      view |> element("#course-payment-form") |> render_submit()
+
+      assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_course_secret"})
     end
 
     test "shows the seat error when others booked the places first", %{conn: conn} do

@@ -551,8 +551,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     order: order,
     fulfillment_option: fulfillment_option
   } do
-    # Override the stub from setup: update_payment_intent now fails.
-    stub(Edenflowers.External.StripeAPI.Mock, :update_payment_intent, fn _payment_intent_id, _amount_cents ->
+    # Override the stub from setup: create_payment_intent now fails.
+    stub(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, _customer ->
       {:error, :stripe_down}
     end)
 

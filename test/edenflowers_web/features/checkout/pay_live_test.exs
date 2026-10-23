@@ -42,12 +42,6 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
   end
 
   test "shows the order and a payment form for its total", %{conn: conn, order: order} do
-    order_id = order.id
-
-    expect(StripeAPI.Mock, :create_payment_intent, fn 8500, %{"order_id" => ^order_id}, _customer ->
-      {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 8500}}
-    end)
-
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
     assert has_element?(view, "h1", "Pay for your order")
@@ -55,41 +49,59 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     assert has_element?(view, "[data-testid=pay-total]", "85.00")
     refute has_element?(view, "[data-testid=pay-balance]")
     refute render(view) =~ "Paid so far"
-    assert has_element?(view, ~s|#pay-form[data-client-secret="pi_link_secret"]|)
+    assert has_element?(view, ~s|#pay-form[data-amount="8500"]|)
     refute render(view) =~ "lilies"
   end
 
-  test "charges the current total when the order changed since the payment form was made", %{
+  test "creates the PaymentIntent when the customer pays", %{conn: conn, order: order} do
+    order_id = order.id
+
+    expect(StripeAPI.Mock, :create_payment_intent, fn 8500, %{"order_id" => ^order_id}, _customer ->
+      {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 8500}}
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
+    view |> element("#pay-form") |> render_submit()
+
+    assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_link_secret"})
+  end
+
+  test "brings an earlier PaymentIntent up to the total when the customer pays again", %{
     conn: conn,
     order: order
   } do
     order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
 
     expect(StripeAPI.Mock, :update_payment_intent, fn "pi_link", 8500 -> {:ok, %{id: "pi_link"}} end)
-
     expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
 
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
+    view |> element("#pay-form") |> render_submit()
 
-    assert has_element?(view, "#pay-form")
+    assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_link_secret"})
   end
 
-  test "resynchronizes the amount when the customer clicks pay", %{conn: conn, order: order} do
-    order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
-
-    expect(StripeAPI.Mock, :update_payment_intent, 2, fn
-      "pi_link", 8500 -> {:ok, %{id: "pi_link"}}
-      "pi_link", 9500 -> {:ok, %{id: "pi_link"}}
-    end)
-
-    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
-
+  test "reloads instead of paying when the order changed since the page was shown", %{conn: conn, order: order} do
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
     Ash.Seed.update!(order, %{quoted_fulfillment_fee: Decimal.new("10.00")})
 
-    view |> element("#pay-form") |> render_submit()
+    {:ok, _view, html} =
+      view
+      |> element("#pay-form")
+      |> render_submit()
+      |> follow_redirect(conn, ~p"/pay/#{order.payment_link_token}")
 
-    assert_push_event(view, "stripe:process_payment", %{})
+    assert html =~ "The order changed. Please try again."
+  end
+
+  @tag capture_log: true
+  test "keeps the form when Stripe is down", %{conn: conn, order: order} do
+    expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, _customer -> {:error, :stripe_down} end)
+
+    {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
+
+    assert view |> element("#pay-form") |> render_submit() =~ "Payment is temporarily unavailable"
+    assert_push_event(view, "stripe:ready", %{})
   end
 
   test "asks for an email when the order has none, and links the order to that customer", %{
@@ -98,7 +110,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
   } do
     order = Ash.Seed.update!(order, %{customer_email: nil, user_id: nil, payment_intent_id: "pi_link"})
 
-    expect(StripeAPI.Mock, :update_payment_intent, 2, fn "pi_link", 8500 -> {:ok, %{id: "pi_link"}} end)
+    expect(StripeAPI.Mock, :update_payment_intent, fn "pi_link", 8500 -> {:ok, %{id: "pi_link"}} end)
     expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
 
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
@@ -115,11 +127,6 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
   end
 
   test "doesn't ask for an email the order already has", %{conn: conn, order: order} do
-    order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
-
-    expect(StripeAPI.Mock, :update_payment_intent, fn "pi_link", 8500 -> {:ok, %{id: "pi_link"}} end)
-    expect(StripeAPI.Mock, :retrieve_payment_intent, fn _order -> {:ok, %{client_secret: "pi_link_secret"}} end)
-
     {:ok, view, _html} = live(conn, ~p"/pay/#{order.payment_link_token}")
 
     refute has_element?(view, ~s|input[name="customer_email"]|)

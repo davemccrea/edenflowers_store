@@ -24,12 +24,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
   end
 
   test "shows the booking and a payment form for what it still owes", %{conn: conn, registration: registration} do
-    registration_id = registration.id
     generate(course_registration(status: :confirmed, name: "Somebody Else", email: "else@example.com"))
-
-    expect(StripeAPI.Mock, :create_payment_intent, fn 12_000, %{"course_registration_id" => ^registration_id}, nil ->
-      {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 12_000}}
-    end)
 
     {:ok, view, _html} = live(conn, ~p"/courses/pay/#{registration.payment_link_token}")
 
@@ -37,18 +32,30 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     assert has_element?(view, "dl", "Autumn wreaths")
     assert has_element?(view, "[data-testid=pay-total]", "170.00")
     assert has_element?(view, "[data-testid=pay-balance]", "120.00")
-    assert has_element?(view, ~s|#pay-form[data-client-secret="pi_link_secret"]|)
+    assert has_element?(view, ~s|#pay-form[data-amount="12000"]|)
     refute render(view) =~ "Somebody Else"
     refute render(view) =~ "else@example.com"
+  end
+
+  test "creates a PaymentIntent for what it still owes when the customer pays", %{
+    conn: conn,
+    registration: registration
+  } do
+    registration_id = registration.id
+
+    expect(StripeAPI.Mock, :create_payment_intent, fn 12_000, %{"course_registration_id" => ^registration_id}, nil ->
+      {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 12_000}}
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/courses/pay/#{registration.payment_link_token}")
+    view |> element("#pay-form") |> render_submit()
+
+    assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_link_secret"})
   end
 
   test "shows only the amount due while nothing is paid", %{conn: conn, admin: admin} do
     registration = generate(course_registration(status: :confirmed, amount: Decimal.new("85.00")))
     {:ok, registration} = Courses.open_registration_payment_link(registration, actor: admin)
-
-    expect(StripeAPI.Mock, :create_payment_intent, fn 8500, _metadata, nil ->
-      {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 8500}}
-    end)
 
     {:ok, view, _html} = live(conn, ~p"/courses/pay/#{registration.payment_link_token}")
 
