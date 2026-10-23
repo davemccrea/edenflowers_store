@@ -67,6 +67,22 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert has_element?(view, "[data-testid=add-to-cart-button][disabled]", "Sold out")
   end
 
+  test "a size bought out by someone else shows as sold out without a reload", %{conn: conn} do
+    product = generate(product(draft: false, tax_rate_id: generate(tax_rate()).id))
+    variant = generate(product_variant(product_id: product.id, size: nil, stock_quantity: 1))
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+    refute has_element?(view, "[data-testid=add-to-cart-button][disabled]")
+
+    other_order = generate(order(state: :payment, payment_intent_id: "pi_test"))
+    generate(line_item(order_id: other_order.id, product_variant_id: variant.id, quantity: 1))
+    other_order = Ash.load!(other_order, :grand_total, authorize?: false)
+
+    Orders.finalize_checkout!(other_order.id, "pi_test", %{amount_paid: other_order.grand_total}, authorize?: false)
+
+    assert has_element?(view, "[data-testid=add-to-cart-button][disabled]", "Sold out")
+  end
+
   test "the cart says when there are no more to add", %{conn: conn, order: order} do
     product = generate(product(draft: false))
     variant = generate(product_variant(product_id: product.id, size: nil, stock_quantity: 1))

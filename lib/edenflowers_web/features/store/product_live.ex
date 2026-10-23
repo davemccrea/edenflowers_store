@@ -26,6 +26,9 @@ defmodule EdenflowersWeb.Store.ProductLive do
         {:error, _} -> raise Ash.Error.Query.NotFound, resource: Edenflowers.Catalog.Product
       end
 
+    if connected?(socket),
+      do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "product_variant:changed:#{product.id}")
+
     product_variants = product.product_variants
     product_category = Translations.translate(product.product_category)
     product = Translations.translate(product)
@@ -376,6 +379,18 @@ defmodule EdenflowersWeb.Store.ProductLive do
       {:error, error} ->
         {:noreply, put_flash(socket, :error, add_error_message(error))}
     end
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "product_variant:changed:" <> _}, socket) do
+    {:ok, product} = Catalog.get_product_by_id(socket.assigns.product.id)
+    variants = product.product_variants
+
+    selected_variant =
+      Enum.find(variants, &(&1.id == socket.assigns.selected_variant.id)) ||
+        default_variant(selectable_variants(variants))
+
+    {:noreply, assign(socket, product_variants: variants, selected_variant: selected_variant)}
   end
 
   defp sold_out?(variant), do: variant.stock_quantity == 0
