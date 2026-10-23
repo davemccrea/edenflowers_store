@@ -77,7 +77,10 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :send_order_updated_email}), do: ~t"Updated order emailed"
   defp title(%{version_action_name: :send_payment_failed_email}), do: ~t"Payment needed emailed"
   defp title(%{version_action_name: :send_receipt_email}), do: ~t"Receipt emailed"
-  defp title(%{version_action_name: :email_receipt}), do: ~t"Receipt emailed"
+
+  defp title(%{version_action_name: action}) when action in [:email_receipt, :send_payment_received_email],
+    do: ~t"Payment received emailed"
+
   defp title(%{version_action_name: :send_fulfillment_email}), do: ~t"Fulfillment confirmation emailed"
   defp title(%{version_action_name: :record_fulfillment_email_failure}), do: ~t"Fulfillment confirmation failed"
   defp title(%{version_action_name: :record_receipt_email_failure}), do: ~t"Receipt failed"

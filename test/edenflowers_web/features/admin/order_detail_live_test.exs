@@ -133,14 +133,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     view |> element(~s|button[phx-value-kind="receipt"]|) |> render_click()
-    assert has_element?(view, "#email-drawer-email-preview", "Your receipt for Eden Flowers order")
+    assert has_element?(view, "#email-drawer-email-preview", "Payment received for your order for")
     assert has_element?(view, "#email-drawer-email-preview", "Attached: eden-flowers-#{order.order_reference}.pdf")
 
     view |> form("#email-form", email: %{message: "Thank you for coming in."}) |> render_change()
     assert has_element?(view, "#email-drawer-email-preview", "Thank you for coming in.")
 
     view |> form("#email-form", email: %{message: "Tack!", in_swedish: "true"}) |> render_change()
-    assert has_element?(view, "#email-drawer-email-preview", "Kvitto för din Eden Flowers-beställning")
+    assert has_element?(view, "#email-drawer-email-preview", "Betalning mottagen")
 
     assert_no_email_sent()
     refute_enqueued(worker: Edenflowers.Orders.Workers.SendReceiptEmail)

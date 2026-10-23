@@ -727,7 +727,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("change_payment", %{"payment" => params}, socket) do
-    {:noreply, socket |> assign(:payment_params, params) |> assign_preview(:receipt, params)}
+    {:noreply, socket |> assign(:payment_params, params) |> assign_preview(:payment, params)}
   end
 
   # Money owed back, or the menu's Refund, opens the refund form.
@@ -740,7 +740,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply,
      socket
      |> assign(settlement_mode: mode, settlement_error: nil)
-     |> assign_preview(if(mode == :refund, do: :refunded, else: :receipt), %{})
+     |> assign_preview(if(mode == :refund, do: :refunded, else: :payment), %{})
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
   end
 
@@ -1441,10 +1441,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     inputs = %{
       message: params["message"] || params["note"],
       refund: params["refund"] || params["amount"] || owed_back,
+      amount: if(kind == :payment, do: params["amount"] || Decimal.to_string(order.balance, :normal)),
       payment_method: String.to_existing_atom(params["how"] || default_refund_method(order))
     }
 
     locale = if params["in_swedish"] == "true", do: "sv-FI"
+    # Recording a payment emails the same receipt as the menu, for the amount entered.
+    kind = if kind == :payment, do: :receipt, else: kind
     assign(socket, :preview, Preview.build(kind, order, inputs, locale))
   end
 

@@ -65,6 +65,17 @@ defmodule Edenflowers.Courses.CourseRegistration do
         default_actor system_actor()
       end
 
+      trigger :send_payment_received_email do
+        action :send_payment_received_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Courses.Workers.SendPaymentReceivedEmail
+        scheduler_module_name Edenflowers.Courses.Schedulers.SendPaymentReceivedEmail
+        default_actor system_actor()
+      end
+
       trigger :reconcile_payment do
         action :reconcile_payment
         queue :default
@@ -172,12 +183,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
       change set_attribute(:status, :confirmed)
       change PaymentChanges.ClearPaidPaymentIntent
-
-      # The confirmation goes out again, now with the receipt, even if Jennie
-      # chose not to email one when she added the booking.
-      change set_attribute(:confirmation_emailed_at, nil)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
-      change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email}
+      change {PaymentChanges.QueueEmail, trigger: :send_payment_received_email, arguments: [amount: :amount_paid]}
       require_atomic? false
     end
 
@@ -239,6 +246,15 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
+    update :send_payment_received_email do
+      accept []
+      argument :amount, :decimal
+      argument :message, :string
+      transaction? false
+      require_atomic? false
+      change PaymentChanges.SendPaymentReceivedEmail
+    end
+
     update :send_confirmation_email do
       accept []
       argument :message, :string
@@ -267,6 +283,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :record_link_payment,
                      :record_stripe_refund,
                      :send_confirmation_email,
+                     :send_payment_received_email,
                      :reconcile_payment,
                      :release_hold
                    ])

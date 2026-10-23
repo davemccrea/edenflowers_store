@@ -239,6 +239,20 @@ defmodule Edenflowers.Orders.Order do
         on_error :record_order_details_email_failure
       end
 
+      # Queued when a payment link is paid, and by EmailReceipt when Jennie
+      # records a payment and ticks it.
+      trigger :send_payment_received_email do
+        action :send_payment_received_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendPaymentReceivedEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentReceivedEmail
+        default_actor system_actor()
+        on_error :record_receipt_email_failure
+      end
+
       # Started after the paid order is placed, never inside finalize_checkout,
       # so a Subscription that can't start never stops the order being placed
       # (ADR 0002). Placing runs this trigger straight away; the schedule only
@@ -363,6 +377,7 @@ defmodule Edenflowers.Orders.Order do
       :send_order_details_email,
       :send_order_updated_email,
       :send_payment_failed_email,
+      :send_payment_received_email,
       :send_receipt_email,
       :send_fulfillment_email,
       :record_fulfillment_email_failure,
@@ -866,13 +881,13 @@ defmodule Edenflowers.Orders.Order do
       # No check that this is the order's current PaymentIntent: see ClearPaidPaymentIntent.
       change PaymentChanges.ClearPaidPaymentIntent
 
-      # The receipt goes out again, showing the order as it now stands.
-      change set_attribute(:receipt_emailed_at, nil)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportUnexpectedPayment
       change Changes.ReactivateSubscription, where: [attribute_equals(:origin, :subscription)]
       # A phone customer pays a texted link and has no address to send a receipt to.
-      change {PaymentChanges.QueueEmail, trigger: :send_receipt_email}, where: [present(:customer_email)]
+      change {PaymentChanges.QueueEmail, trigger: :send_payment_received_email, arguments: [amount: :amount_paid]},
+        where: [present(:customer_email)]
+
       require_atomic? false
     end
 
@@ -920,7 +935,7 @@ defmodule Edenflowers.Orders.Order do
       change {Changes.SendOrderDetailsEmail, email: :subscription_payment_failed}
     end
 
-    # For a payment Jennie recorded, whose receipt is only sent when the customer asks.
+    # Payment received again, from the order's menu.
     update :email_receipt do
       accept []
       argument :message, :string
@@ -928,7 +943,16 @@ defmodule Edenflowers.Orders.Order do
       validate present(:customer_email), message: "has no email address"
       transaction? false
       require_atomic? false
-      change Changes.SendReceiptEmail
+      change PaymentChanges.SendPaymentReceivedEmail
+    end
+
+    update :send_payment_received_email do
+      accept []
+      argument :amount, :decimal
+      argument :message, :string
+      transaction? false
+      require_atomic? false
+      change PaymentChanges.SendPaymentReceivedEmail
     end
 
     update :refresh_vat_breakdown do
@@ -1094,6 +1118,7 @@ defmodule Edenflowers.Orders.Order do
                      :send_order_details_email,
                      :send_order_updated_email,
                      :send_payment_failed_email,
+                     :send_payment_received_email,
                      :record_link_payment,
                      :record_stripe_refund,
                      :reconcile_payment,

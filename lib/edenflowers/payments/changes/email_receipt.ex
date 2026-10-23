@@ -1,8 +1,8 @@
 defmodule Edenflowers.Payments.Changes.EmailReceipt do
   @moduledoc """
-  Emails the receipt when the payment Jennie records settles the order or
-  booking. Sent once the payment is committed, so a failed email never loses
-  it; the result's `:receipt_emailed?` metadata says whether it went.
+  Emails Payment received for a payment Jennie records, when she ticks it.
+  Sent once the payment is committed, so a failed email never loses it; the
+  result's `:receipt_emailed?` metadata says whether it went.
   """
   use Ash.Resource.Change
 
@@ -11,22 +11,15 @@ defmodule Edenflowers.Payments.Changes.EmailReceipt do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.after_transaction(changeset, fn
-      changeset, {:ok, record} -> {:ok, email_if_settled(record, changeset.arguments)}
+      changeset, {:ok, record} -> {:ok, Ash.Resource.put_metadata(record, :receipt_emailed?, email(record, changeset))}
       _changeset, error -> error
     end)
   end
 
-  # A refund that brings the balance to 0 settles it too, but has no receipt.
-  defp email_if_settled(record, %{amount: amount} = arguments) do
-    if Decimal.positive?(amount) and Decimal.eq?(record.balance, 0) do
-      Ash.Resource.put_metadata(record, :receipt_emailed?, email(record, arguments[:message]))
-    else
-      record
-    end
-  end
+  defp email(record, changeset) do
+    arguments = %{amount: changeset.arguments.amount, message: changeset.arguments[:message]}
 
-  defp email(record, message) do
-    case Ash.update(record, %{message: message}, action: :email_receipt, authorize?: false) do
+    case Ash.update(record, arguments, action: :send_payment_received_email, authorize?: false) do
       {:ok, _emailed} ->
         true
 

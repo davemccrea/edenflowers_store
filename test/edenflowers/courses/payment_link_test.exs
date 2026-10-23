@@ -7,7 +7,6 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.Course
-  alias Edenflowers.Courses.Workers.SendConfirmationEmail
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Payments
 
@@ -79,7 +78,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
   end
 
   describe "paying through the link" do
-    test "confirms the booking, records the Stripe payment and emails the receipt", ctx do
+    test "confirms the booking, records the Stripe payment and emails Payment received", ctx do
       registration =
         Ash.Seed.update!(ctx.registration, %{payment_intent_id: "pi_link", confirmation_emailed_at: DateTime.utc_now()})
 
@@ -91,9 +90,12 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
       assert paid.confirmed_at
       assert paid.settled?
       assert paid.payment_intent_id == nil
-      assert paid.confirmation_emailed_at == nil
       assert [%{method: :stripe, payment_intent_id: "pi_link"}] = paid.payments
-      assert_enqueued(worker: SendConfirmationEmail, args: %{"primary_key" => %{"id" => registration.id}})
+
+      assert_enqueued(
+        worker: Edenflowers.Courses.Workers.SendPaymentReceivedEmail,
+        args: %{"primary_key" => %{"id" => registration.id}}
+      )
     end
 
     test "records the payment once, however often it is delivered", ctx do

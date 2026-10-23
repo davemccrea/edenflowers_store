@@ -27,6 +27,7 @@ defmodule Edenflowers.Email.Previews do
       order_confirmation(locale) ++
         order_details(locale) ++
         order_updated(locale) ++
+        payment_received(locale) ++
         subscription_payment_failed(locale) ++
         subscription_set_up(locale) ++
         order_delivered(locale) ++
@@ -126,6 +127,32 @@ defmodule Edenflowers.Email.Previews do
         ] do
       {gettext_noop("Order updated"), title, :order_updated, Email.order_updated(order(attrs, locale), link, message)}
     end
+  end
+
+  defp payment_received(locale) do
+    orders =
+      for {title, attrs, amount, message} <- [
+            {gettext_noop("order paid in full through the payment link"), paid_in_full(), "64.00", nil},
+            {gettext_noop("order part paid, some still owed"), part_paid(), "20.00", nil},
+            {gettext_noop("order, with a message from Jennie"), paid_in_full(), "64.00", message(locale)}
+          ] do
+        {gettext_noop("Payment received"), title, :payment_received,
+         Email.payment_received(order(attrs, locale), Decimal.new(amount), message)}
+      end
+
+    bookings =
+      for {title, attrs} <- [
+            {gettext_noop("booking paid before the course"), %{}},
+            {gettext_noop("booking for 2 paid after the course"), %{seats: 2, course: %{date: ~D[2020-11-20]}}}
+          ] do
+        registration = registration(attrs, locale)
+        amount = Decimal.mult(Decimal.new("45.00"), registration.seats)
+        registration = %{registration | amount_paid: amount, balance: Decimal.new(0)}
+
+        {gettext_noop("Payment received"), title, :payment_received, Email.payment_received(registration, amount)}
+      end
+
+    orders ++ bookings
   end
 
   defp subscription_payment_failed(locale) do
