@@ -1,14 +1,15 @@
 <%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= if @order.origin == :subscription do %><%= gettext("Your next subscription order is paid.") %><% else %><%= gettext("Thank you for your order.") %><% end %><%= cond do %><% @order.fulfillment_status != :pending -> %><% @order.fulfillment_method == :delivery -> %> <%= gettext("I'll deliver it on %{date} to %{address}.", date: @fulfillment_on, address: @order.delivery_address) %><% true -> %> <%= gettext("You can collect it on %{date} from %{shop}.", date: @fulfillment_on, shop: shop_address()) %><% end %>
+<%= if @order.fulfillment_method == :delivery do %><%= gettext("Thank you for your order. I'll deliver it on %{date} to %{address}.", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= gettext("Thank you for your order. You can collect it on %{date} from %{shop}.", date: @fulfillment_on, shop: shop_address()) %><% end %>
 
-<%= message(@message) %><%= gettext("Your receipt is attached. If you have a question about your order, reply to this email.") %>
-<%= cond do %><% @order.origin == :subscription -> %>
-<%= gettext("You can manage your upcoming subscription orders from your account:") %>
-<%= @account_url %>
-<% @order.cancellable_by_customer? -> %>
+<%= order_totals(assigns) %>
+<%= if @order.gift && @order.recipient_name do %><%= gettext("For %{recipient}", recipient: @order.recipient_name) %>
+<%= if @order.card_message do %><%= gettext("Card message: %{message}", message: @order.card_message) %>
+<% end %>
+<% end %><%= gettext("Your receipt is attached. If you have a question about your order, reply to this email.") %>
+<%= if @order.cancellable_by_customer? do %>
 <%= gettext("Plans changed? You can cancel from your account until %{date} for a full refund: %{url}", date: @format_date.(@order.cancellable_until), url: @account_url) %>
-<% true -> %><% end %>
+<% end %>
 <%= gettext("Warm wishes,") %>
 
 <%= signature() %>

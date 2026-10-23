@@ -15,7 +15,7 @@ defmodule Edenflowers.Email.PreviewsTest do
   end
 
   test "renders in the requested language" do
-    assert [{"Order confirmation", _scenario, :order_confirmation, email} | _] = Previews.all("fi")
+    assert [{"Order receipt", _scenario, :order_confirmation, email} | _] = Previews.all("fi")
     assert email.text_body =~ "lauantaina 14.11.2026"
   end
 

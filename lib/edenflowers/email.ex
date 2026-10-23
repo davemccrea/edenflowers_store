@@ -14,25 +14,30 @@ defmodule Edenflowers.Email do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.ShopNotice
 
-  def order_confirmation(order, message \\ nil) do
+  @doc """
+  The receipt for an Online Order paid at checkout: when and where, what was
+  bought, and until when the customer can cancel it themselves. Expects
+  `:customer_first_name`, `:grand_total`, `:discount`, `:amount_paid`,
+  `:balance`, `:cancellable_by_customer?`, `:cancellable_until` and
+  `line_items: [:subtotal]` loaded.
+  """
+  def order_confirmation(order) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(record_copy_address())
-      |> subject(~t"Your receipt for Eden Flowers order #{order.order_reference}")
-      |> text_body(render_order_confirmation(order, message))
+      |> subject(~t"Your Eden Flowers order for #{date = short_date(order)}")
+      |> text_body(
+        Templates.order_confirmation(%{
+          order: order,
+          format_date: &Format.weekday_date(&1, order.locale),
+          format_currency: &Format.currency(&1, order.locale),
+          fulfillment_on: fulfillment_on(order),
+          account_url: account_url()
+        })
+      )
     end)
-  end
-
-  defp render_order_confirmation(order, message) do
-    Templates.order_confirmation(%{
-      order: order,
-      message: message,
-      format_date: &Format.weekday_date(&1, order.locale),
-      fulfillment_on: fulfillment_on(order),
-      account_url: account_url()
-    })
   end
 
   @doc """

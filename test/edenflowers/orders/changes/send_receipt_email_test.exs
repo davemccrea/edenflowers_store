@@ -36,7 +36,7 @@ defmodule Edenflowers.Orders.Changes.SendReceiptEmailTest do
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
       assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
-      assert email.subject =~ "TEST-OC1"
+      assert email.subject =~ "Your Eden Flowers order for"
       assert email.text_body =~ "Anna"
       assert email.html_body in [nil, ""]
       assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
@@ -72,7 +72,7 @@ defmodule Edenflowers.Orders.Changes.SendReceiptEmailTest do
     assert {:ok, _order} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
-      assert email.subject =~ "Kuitti Eden Flowers -tilauksestasi"
+      assert email.subject =~ "Eden Flowers -tilauksesi:"
       assert not (email.subject =~ "Your receipt")
     end)
   end
@@ -103,7 +103,7 @@ defmodule Edenflowers.Orders.Changes.SendReceiptEmailTest do
     assert {:ok, _order} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
 
     assert_email_sent(fn email ->
-      assert email.subject =~ "Kvitto för din Eden Flowers-beställning"
+      assert email.subject =~ "Din Eden Flowers-beställning för"
       assert not (email.subject =~ "Your receipt")
     end)
   end
