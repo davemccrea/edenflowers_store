@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
 
   alias Edenflowers.Courses.Course
   alias Edenflowers.Pricing
+  alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
@@ -42,7 +43,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={form_back(@form)} sticky>
+        <.admin_page_header title={@page_title} back={form_back(@form, @page_title)} sticky>
           <:actions>
             <.button
               :if={@form.source.type == :update}
@@ -186,14 +187,14 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   defp saved_path(%{source: %{type: :create}}, course), do: ~p"/admin/courses/#{course.id}"
   defp saved_path(_form, course), do: ~p"/admin/courses/#{course.id}/edit"
 
-  defp form_back(%{source: %{type: :create}}), do: {~t"Courses", ~p"/admin/courses"}
-  defp form_back(%{source: %{data: course}}), do: {course.name, ~p"/admin/courses/#{course.id}"}
+  defp form_back(%{source: %{type: :create}}, _title), do: {~t"Courses", ~p"/admin/courses"}
+  defp form_back(%{source: %{data: course}}, title), do: {title, ~p"/admin/courses/#{course.id}"}
 
   defp load_form(%{"id" => id}, actor) do
     case Ash.get(Course, id, actor: actor) do
       {:ok, course} ->
         form = AshPhoenix.Form.for_update(course, :update, actor: actor) |> TranslationFields.add_forms()
-        {:ok, course.name, to_form(form)}
+        {:ok, Translations.translate(course).name, to_form(form)}
 
       {:error, _} ->
         :error

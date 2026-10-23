@@ -93,9 +93,9 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
   attr :translating, :string, default: nil, doc: "the locale being translated from, while Claude works"
 
   @doc """
-  One tab per language, English open first. A dot marks a language missing its
-  name or description. Every tab's inputs stay in the form, hidden, so
-  switching tabs never drops a language's params.
+  One tab per language, the admin's own language open first. A dot marks a
+  language missing its name or description. Every tab's inputs stay in the
+  form, hidden, so switching tabs never drops a language's params.
   """
   def language_fields(assigns) do
     fields = current_fields(assigns.form)
@@ -111,19 +111,22 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
         }
       end
 
-    assigns = assign(assigns, languages: languages, translations: @translations)
+    open = to_string(Edenflowers.Format.locale())
+    open = if Enum.any?(languages, &(&1.locale == open)), do: open, else: "en-GB"
+
+    assigns = assign(assigns, languages: languages, translations: @translations, open: open)
 
     ~H"""
     <div id="language-tabs">
       <div role="tablist" class="tabs tabs-border mb-4">
         <button
-          :for={{language, index} <- Enum.with_index(@languages)}
+          :for={language <- @languages}
           type="button"
           role="tab"
           id={"language-tab-#{language.locale}"}
           aria-controls={"language-panel-#{language.locale}"}
-          aria-selected={to_string(index == 0)}
-          class={["tab gap-1.5", index == 0 && "tab-active"]}
+          aria-selected={to_string(language.locale == @open)}
+          class={["tab gap-1.5", language.locale == @open && "tab-active"]}
           phx-click={show_language(language.locale)}
         >
           {language.label}
@@ -131,7 +134,7 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
           <span :if={language.missing?} class="sr-only">{~t"(missing text)"}</span>
         </button>
       </div>
-      <.language locale="en-GB" translating={@translating} hidden={false}>
+      <.language locale="en-GB" translating={@translating} hidden={@open != "en-GB"}>
         <.input field={@form[:name]} type="text" label={~t"Name"} lang="en" class="input w-full" />
         <.input
           field={@form[:description]}
@@ -147,7 +150,7 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
           :for={{locale, _label, lang} <- @translations}
           locale={to_string(locale)}
           translating={@translating}
-          hidden={true}
+          hidden={@open != to_string(locale)}
         >
           <.inputs_for :let={t} field={translations[locale]}>
             <.input field={t[:name]} type="text" label={~t"Name"} lang={lang} class="input w-full" />

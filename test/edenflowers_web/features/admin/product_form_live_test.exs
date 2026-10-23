@@ -284,6 +284,19 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert has_element?(view, "#language-tab-fi .status")
   end
 
+  test "shows the product in the admin's language", %{conn: conn} do
+    product =
+      generate(product(name: "Colour Burst", translations: %{"sv-FI": %{name: "Färgexplosion", description: "Färg."}}))
+
+    conn = Plug.Conn.put_session(conn, Localize.Plug.PutLocale.session_key(), "sv-FI")
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+
+    assert view |> element("h1") |> render() =~ "Färgexplosion"
+    assert has_element?(view, "#language-tab-sv-FI.tab-active")
+    refute has_element?(view, "#language-panel-sv-FI.hidden")
+    assert has_element?(view, "#language-panel-en-GB.hidden")
+  end
+
   defp upload_photos(view, names) do
     # Each file's content is its name, so a test can tell stored photos apart.
     files = for name <- names, do: %{name: name, content: name, type: "image/jpeg"}
