@@ -542,7 +542,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     case Ash.get(Product, id, actor: actor, load: [:product_variants, :sold_out?]) do
       {:ok, product} ->
         form = AshPhoenix.Form.for_update(product, :update, actor: actor) |> TranslationFields.add_forms()
-        {:ok, product.name, to_form(form)}
+        {:ok, Translations.translate(product).name, to_form(form)}
 
       {:error, _} ->
         :error
