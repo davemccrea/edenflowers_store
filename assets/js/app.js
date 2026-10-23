@@ -2,7 +2,6 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
-import Hooks from "./hooks";
 import { hooks as colocatedHooks } from "phoenix-colocated/edenflowers";
 import liveSelect from "live_select";
 
@@ -290,7 +289,6 @@ const liveSocket = new LiveSocket("/live", Socket, {
   disconnectedTimeout: 3000,
   params: { _csrf_token: csrfToken },
   hooks: {
-    ...Hooks,
     ...colocatedHooks,
     ...liveSelect,
     LiveSelect: customerLiveSelect,

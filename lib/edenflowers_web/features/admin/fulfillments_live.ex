@@ -393,7 +393,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     ~H"""
     <div
       id="fee-explorer"
-      phx-hook="FeeExplorer"
+      phx-hook=".FeeExplorer"
       data-points={Jason.encode!(@points)}
       data-plot={Jason.encode!(@plot)}
       data-steps-per-km={@steps_per_km}
@@ -500,6 +500,98 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         {~t"Costs count the drive there and back, but not your time."}
       </p>
     </div>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".FeeExplorer">
+      /**
+       * Fee graph on an admin delivery option. The server sends the fee and costs
+       * every tenth of a km in data-points; this only moves the cursor and fills in
+       * the readout for the whole km nearest the pointer or on the slider.
+       */
+      export default {
+        mounted() {
+          this.km = 5;
+          this.svg = this.el.querySelector("svg");
+          this.slider = this.el.querySelector("input[type=range]");
+
+          this.slider.addEventListener("input", () =>
+            this.show(Number(this.slider.value)),
+          );
+          this.svg.addEventListener("pointermove", (event) =>
+            this.show(this.kmAt(event)),
+          );
+          this.svg.addEventListener("pointerdown", (event) =>
+            this.show(this.kmAt(event)),
+          );
+
+          this.load();
+        },
+
+        // A re-render resets the cursor, so put it back where it was.
+        updated() {
+          this.load();
+        },
+
+        load() {
+          this.points = JSON.parse(this.el.dataset.points);
+          this.plot = JSON.parse(this.el.dataset.plot);
+          this.stepsPerKm = Number(this.el.dataset.stepsPerKm);
+          const lang = document.documentElement.lang || undefined;
+          this.money = new Intl.NumberFormat(lang, {
+            style: "currency",
+            currency: "EUR",
+          });
+          this.distance = new Intl.NumberFormat(lang);
+          this.show(Math.min(this.km, this.plot.maxKm));
+        },
+
+        kmAt(event) {
+          const { left, right, maxKm } = this.plot;
+          const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(
+            this.svg.getScreenCTM().inverse(),
+          );
+          const km = ((point.x - left) / (right - left)) * maxKm;
+          return Math.min(Math.max(km, 0), maxKm);
+        },
+
+        show(km) {
+          this.km = Math.round(km);
+          const point = this.points[this.km * this.stepsPerKm];
+          this.slider.value = this.km;
+
+          const { left, right, top, bottom, maxKm, topValue } = this.plot;
+          const x = left + (this.km / maxKm) * (right - left);
+          const y = (value) => bottom - (value / topValue) * (bottom - top);
+
+          const cursor = this.el.querySelector("[data-cursor]");
+          cursor.setAttribute("x1", x);
+          cursor.setAttribute("x2", x);
+
+          for (const dot of this.el.querySelectorAll("[data-dot]")) {
+            const value = point[dot.dataset.dot];
+            dot.toggleAttribute("hidden", value == null);
+            if (value != null) {
+              dot.setAttribute("cx", x);
+              dot.setAttribute("cy", y(value));
+            }
+          }
+
+          this.fill("km", `${this.distance.format(this.km)} km`);
+          this.fill(
+            "fee",
+            point.fee == null
+              ? this.el.dataset.notDelivered
+              : this.money.format(point.fee),
+          );
+          for (const key of ["now", "car", "fuel"]) {
+            this.fill(key, point[key] == null ? "–" : this.money.format(point[key]));
+          }
+        },
+
+        fill(key, text) {
+          const el = this.el.querySelector(`[data-value=${key}]`);
+          if (el) el.textContent = text;
+        },
+      };
+    </script>
     """
   end
 

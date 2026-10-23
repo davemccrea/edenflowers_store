@@ -378,7 +378,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     {~t"Or none, if you write a card or ribbon of your own."}
                   </p>
                 </div>
-                <div :if={@gift?} id="card-message-field" class="sm:col-span-2" phx-hook="CharacterCount">
+                <div :if={@gift?} id="card-message-field" class="sm:col-span-2">
                   <.input
                     field={@form[:card_message]}
                     type="textarea"
@@ -388,7 +388,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     class="textarea w-full"
                   />
                   <p class="text-base-content/75 mt-1 text-right text-sm tabular-nums">
-                    <span id="char-count">0</span>/{card_message_max(@card)}
+                    <.character_count id="char-count" textarea={@form[:card_message].id} />/{card_message_max(@card)}
                   </p>
                 </div>
               </div>

@@ -13,7 +13,8 @@ defmodule EdenflowersWeb.PaymentLink do
   require Logger
 
   import Edenflowers.Actors
-  import EdenflowersWeb.CoreComponents, only: [input: 1, stripe_form: 1]
+  import EdenflowersWeb.CoreComponents, only: [input: 1]
+  import EdenflowersWeb.StripeForm, only: [stripe_form: 1]
   import Phoenix.LiveView
 
   alias Edenflowers.Courses.CourseRegistration

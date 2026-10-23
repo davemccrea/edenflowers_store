@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   require Logger
   import Edenflowers.Actors
+  import EdenflowersWeb.StripeForm, only: [stripe_form: 1]
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration

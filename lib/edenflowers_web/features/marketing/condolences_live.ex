@@ -64,13 +64,9 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
       <section id="my-work" class="bg-cream scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
         <div class="container py-24">
           <h2 id="work-heading" class="section-title mb-10">{~t"My work"}</h2>
-          <div
-            id="condolence-gallery"
-            phx-hook="PhotoGallery"
-            class="columns-2 gap-3 md:columns-3 xl:columns-4"
-          >
+          <.gallery id="condolence-gallery">
             <.gallery_photo :for={photo <- @gallery} photo={photo} class="mb-3 break-inside-avoid" />
-          </div>
+          </.gallery>
         </div>
       </section>
 
