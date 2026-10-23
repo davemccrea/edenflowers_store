@@ -1,10 +1,10 @@
 ---
 id: TASK-105.1
 title: Record the email rules in an ADR and CONTEXT.md
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
-updated_date: '2026-10-23 18:52'
+updated_date: '2026-10-23 19:28'
 labels: []
 dependencies: []
 parent_task_id: TASK-105
@@ -22,7 +22,7 @@ Write an ADR for rules 1 to 3 of the parent (one email per job, who acted decide
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 An ADR records the three rules and the options considered (versioned emails, strict per-actor voice)
-- [ ] #2 CONTEXT.md defines Payment received and Payment reminder
-- [ ] #3 CONTEXT.md defines Charge day (3 days before delivery, the Occurrence is created and charged) and Change deadline (5 days before, the last day a customer can pause, change or cancel; Online Orders share it for a customer's own cancellation)
+- [x] #1 An ADR records the three rules and the options considered (versioned emails, strict per-actor voice)
+- [x] #2 CONTEXT.md defines Payment received and Payment reminder
+- [x] #3 CONTEXT.md defines Charge day (3 days before delivery, the Occurrence is created and charged) and Change deadline (5 days before, the last day a customer can pause, change or cancel; Online Orders share it for a customer's own cancellation)
 <!-- AC:END -->
