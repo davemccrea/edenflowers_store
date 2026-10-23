@@ -39,19 +39,12 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
       else: deliver_with_receipt(registration)
   end
 
-  # Nothing has been paid yet, so there is no receipt to send.
+  # Only a booking awaiting payment owes anything, and it always has a link.
   defp deliver_without_receipt(%{payment_link_open?: true} = registration) do
     url = EdenflowersWeb.PaymentLink.url_for(registration)
 
     with {:ok, _result} <- registration |> Email.course_payment_link(url) |> Mailer.deliver() do
       {:ok, %{payment_link_emailed_at: DateTime.utc_now()}}
-    end
-  end
-
-  # A booking confirmed unpaid before courses were always paid by link.
-  defp deliver_without_receipt(registration) do
-    with {:ok, _result} <- registration |> Email.course_confirmation() |> Mailer.deliver() do
-      {:ok, %{}}
     end
   end
 

@@ -43,7 +43,8 @@ defmodule Edenflowers.Email do
   - `:card_refused`, an Occurrence the subscriber's saved card was refused
     for. The delivery still happens and the payment link pays for it.
   - `:bill`, once the order is handed over, as customers here expect one
-    after delivery.
+    after delivery. Always with a payment link: an invoice order without one
+    gets Jennie's invoice instead.
 
   Expects `:customer_first_name`, `:grand_total`, `:amount_paid`, `:balance`
   and `line_items: [:subtotal]` loaded.
@@ -183,7 +184,7 @@ defmodule Edenflowers.Email do
           refunded_to: refunded_to(order.payments),
           cancelled_by: cancelled_by,
           format_currency: &Format.currency(&1, order.locale),
-          format_date: &Format.date(&1, order.locale)
+          format_date: &Format.weekday_date(&1, order.locale)
         })
       )
     end)
@@ -226,8 +227,7 @@ defmodule Edenflowers.Email do
           order: order,
           refund: refund,
           refunded_to: refunded_to(order.payments),
-          format_currency: &Format.currency(&1, order.locale),
-          format_date: &Format.date(&1, order.locale)
+          format_currency: &Format.currency(&1, order.locale)
         })
       )
     end)
@@ -245,8 +245,7 @@ defmodule Edenflowers.Email do
           registration: registration,
           refund: refund,
           refunded_to: refunded_to(registration.payments),
-          format_currency: &Format.currency(&1, registration.locale),
-          format_date: &Format.weekday_date(&1, registration.locale)
+          format_currency: &Format.currency(&1, registration.locale)
         })
       )
     end)
@@ -299,9 +298,9 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  A link to pay a course booking online, for what it still owes, before
-  or after the course. Paying confirms a booking awaiting payment. Expects
-  `:course` translated, `:first_name` and `:balance` loaded.
+  A link to pay a course booking awaiting payment, before or after the
+  course. Paying confirms it. Expects `:course` translated, `:first_name`
+  and `:balance` loaded.
   """
   def course_payment_link(registration, payment_link_url) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->

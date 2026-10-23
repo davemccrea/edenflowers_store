@@ -21,8 +21,6 @@
 
 <%= gettext("To pause or change an upcoming order, make the change at least %{days} days before delivery or pickup.", days: Edenflowers.Orders.Subscription.cutoff_days() + 1) %>
 
-<%= gettext("If anything needs changing, just reply and I'll take care of it.") %>
-
 <%= gettext("Warm wishes,") %>
 
 <%= signature() %>

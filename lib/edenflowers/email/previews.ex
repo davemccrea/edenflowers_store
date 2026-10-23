@@ -116,7 +116,6 @@ defmodule Edenflowers.Email.Previews do
              balance: Decimal.new("54.00"),
              recipient_name: nil
            }, nil},
-          {gettext_noop("delivered, invoice"), %{payment_terms: :invoice, fulfillment_status: :fulfilled}, nil},
           {gettext_noop("delivered, payment link"), %{fulfillment_status: :fulfilled}, @payment_link},
           {gettext_noop("unpaid, pays on delivery"), %{payment_terms: :on_fulfillment}, nil},
           {gettext_noop("unpaid, pays at pickup"),
@@ -298,7 +297,8 @@ defmodule Edenflowers.Email.Previews do
           {gettext_noop("2 places, paid"), %{seats: 2, balance: Decimal.new(0), amount_paid: Decimal.new("90.00")}},
           {gettext_noop("no first name"),
            %{first_name: nil, balance: Decimal.new(0), amount_paid: Decimal.new("45.00")}},
-          {gettext_noop("confirmed unpaid, before courses were paid by link"), %{}}
+          {gettext_noop("paid after the course"),
+           %{balance: Decimal.new(0), amount_paid: Decimal.new("45.00"), course: %{date: ~D[2020-11-20]}}}
         ] do
       {gettext_noop("Course confirmation"), title, :course_confirmation,
        Email.course_confirmation(registration(attrs, locale))}
@@ -310,8 +310,7 @@ defmodule Edenflowers.Email.Previews do
           {gettext_noop("awaiting payment"), %{status: :awaiting_payment}},
           {gettext_noop("2 places, awaiting payment"),
            %{status: :awaiting_payment, seats: 2, balance: Decimal.new("90.00")}},
-          {gettext_noop("confirmed, partially paid"),
-           %{status: :confirmed, amount_paid: Decimal.new("25.00"), balance: Decimal.new("20.00")}},
+          {gettext_noop("after the course"), %{status: :awaiting_payment, course: %{date: ~D[2020-11-20]}}},
           {gettext_noop("no first name"), %{status: :awaiting_payment, first_name: nil}}
         ] do
       {gettext_noop("Course payment link"), title, :course_payment_link,

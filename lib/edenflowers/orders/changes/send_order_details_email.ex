@@ -1,6 +1,8 @@
 defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
   @moduledoc """
   Emails the details of an order Jennie entered or edited, including a payment link when one is open.
+  Once handed over, the details are a bill, and only worth sending with a link to pay it: an invoice
+  order without one gets Jennie's invoice instead.
   """
 
   use Ash.Resource.Change
@@ -30,18 +32,24 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
           authorize?: false
         )
 
-      case order |> Email.order_details(payment_link_url(order)) |> Mailer.deliver() do
-        {:ok, _result} ->
-          Logger.info("Sent order details email for order #{order.id}")
-
-          changeset
-          |> Ash.Changeset.force_change_attribute(:order_details_emailed_at, DateTime.utc_now())
-          |> clear_failure()
-
-        {:error, error} ->
-          Ash.Changeset.add_error(changeset, "Failed to send order details email: #{inspect(error)}")
-      end
+      if order.fulfillment_status == :fulfilled and not order.payment_link_open?,
+        do: Ash.Changeset.add_error(changeset, "was handed over and has no payment link"),
+        else: deliver(changeset, order)
     end)
+  end
+
+  defp deliver(changeset, order) do
+    case order |> Email.order_details(payment_link_url(order)) |> Mailer.deliver() do
+      {:ok, _result} ->
+        Logger.info("Sent order details email for order #{order.id}")
+
+        changeset
+        |> Ash.Changeset.force_change_attribute(:order_details_emailed_at, DateTime.utc_now())
+        |> clear_failure()
+
+      {:error, error} ->
+        Ash.Changeset.add_error(changeset, "Failed to send order details email: #{inspect(error)}")
+    end
   end
 
   defp payment_link_url(%{payment_link_open?: true} = order), do: EdenflowersWeb.PaymentLink.url_for(order)
