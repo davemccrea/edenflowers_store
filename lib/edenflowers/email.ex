@@ -303,23 +303,46 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Tells the customer their order was delivered, with the photo of where it
-  was left when nobody was home. A collected order gets none: the customer
-  was there.
+  Tells the customer their order was delivered. A collected order gets
+  none: the customer was there. Expects `:customer_first_name` and
+  `:recipient_first_name` loaded.
   """
-  def order_delivered(order, photo_jpeg \\ nil, message \\ nil) do
+  def order_delivered(order, message \\ nil) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(record_copy_address())
-      |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered")
-      |> text_body(Templates.order_delivered(%{order: order, photo?: photo_jpeg != nil, message: message}))
+      |> subject(delivered_subject(order))
+      |> text_body(Templates.order_delivered(%{order: order, message: message}))
+    end)
+  end
+
+  defp delivered_subject(%{gift: true, recipient_first_name: name}) when is_binary(name),
+    do: ~t"Your order for #{recipient = name} has been delivered"
+
+  defp delivered_subject(_order), do: ~t"Your Eden Flowers order has been delivered"
+
+  @doc """
+  Tells the customer nobody was home, with the photo of where the order was
+  left, so they can go and look. Loads as `order_delivered/2`.
+  """
+  def order_left_at_door(order, photo_jpeg, message \\ nil) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(record_copy_address())
+      |> subject(left_at_door_subject(order))
+      |> text_body(Templates.order_left_at_door(%{order: order, message: message}))
       |> attach_delivery_photo(photo_jpeg)
     end)
   end
 
-  defp attach_delivery_photo(email, nil), do: email
+  defp left_at_door_subject(%{gift: true, recipient_first_name: name}) when is_binary(name),
+    do: ~t"Your order for #{recipient = name} was left at the door"
+
+  defp left_at_door_subject(_order), do: ~t"Your Eden Flowers order was left at the door"
 
   defp attach_delivery_photo(email, photo_jpeg) do
     attachment(

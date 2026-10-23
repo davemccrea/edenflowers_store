@@ -1,9 +1,10 @@
 ---
 id: TASK-105.7
 title: Split Left at the door from Delivered
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 20:38'
 labels: []
 dependencies:
   - TASK-105.2
@@ -22,7 +23,13 @@ Delivered: subject "Your order for <recipient> has been delivered" for gifts, "Y
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Marking a delivery with nobody home sends Left at the door with the photo
-- [ ] #2 Other deliveries send Delivered
-- [ ] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #1 Marking a delivery with nobody home sends Left at the door with the photo
+- [x] #2 Other deliveries send Delivered
+- [x] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The 'Include the delivery photo' box is gone: nobody home always sends the photo with Left at the door when the email is ticked.
+<!-- SECTION:NOTES:END -->

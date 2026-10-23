@@ -25,6 +25,7 @@ defmodule Edenflowers.Email.Templates do
     {:subscription_set_up, [:assigns]},
     {:subscription_charged, [:assigns]},
     {:order_delivered, [:assigns]},
+    {:order_left_at_door, [:assigns]},
     {:order_cancelled, [:assigns]},
     {:order_refunded, [:assigns]},
     {:course_confirmation, [:assigns]},
