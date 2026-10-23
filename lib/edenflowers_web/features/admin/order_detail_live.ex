@@ -550,14 +550,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             to={@order.customer_email}
             preview={@preview}
             in_swedish={swedish_toggle?(@order) && @form[:in_swedish]}
-          >
-            <.input
-              :if={@form[:customer_home].value == "false" && @form[:email_customer].value != "false"}
-              field={@form[:email_photo]}
-              type="checkbox"
-              label={~t"Include the delivery photo"}
-            />
-          </.customer_email>
+          />
           <p :if={@order.fulfillment_method == :pickup} class="text-base-content/75 text-sm">
             {~t"The customer collects it in person, so no confirmation is emailed."}
           </p>
@@ -607,8 +600,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       to_form(
         %{
           "customer_home" => "",
-          "email_customer" => email_by_default(socket.assigns.order, nil),
-          "email_photo" => "true"
+          "email_customer" => email_by_default(socket.assigns.order, nil)
         },
         as: :fulfillment
       )
@@ -627,15 +619,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   # Answering "Was the customer home?" picks the email default again; ticking
-  # the box by hand otherwise sticks. The photo checkbox only posts while it's
-  # shown, so while it's hidden it keeps its last value.
+  # the box by hand otherwise sticks.
   def handle_event("validate_fulfillment", %{"fulfillment" => params}, socket) do
     params =
       if params["customer_home"] == socket.assigns.fulfillment_form[:customer_home].value,
         do: params,
         else: Map.put(params, "email_customer", email_by_default(socket.assigns.order, params["customer_home"]))
-
-    params = Map.put_new(params, "email_photo", socket.assigns.fulfillment_form[:email_photo].value || "true")
 
     {:noreply,
      socket
@@ -654,7 +643,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       slug ->
         mark_fulfilled(socket, %{
           delivery_photo_slug: slug,
-          email_delivery_photo: params["email_photo"] == "true",
+          email_delivery_photo: true,
           email_customer?: params["email_customer"] != "false",
           message: params["message"]
         })
@@ -1475,7 +1464,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp assign_fulfillment_preview(socket, params) do
     order = socket.assigns.order
-    photo? = params["customer_home"] == "false" and params["email_photo"] != "false"
+    photo? = params["customer_home"] == "false"
     locale = if params["in_swedish"] == "true", do: "sv-FI"
     preview = Preview.build(:fulfillment, order, %{message: params["message"], photo?: photo?}, locale)
     assign(socket, :preview, preview)

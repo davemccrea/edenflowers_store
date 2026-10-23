@@ -379,7 +379,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       ])
       |> render_upload("IMG_0001.JPG")
 
-      view |> form("#confirm-fulfillment-form", fulfillment: %{email_photo: "false"}) |> render_submit()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "false"}) |> render_submit()
 
       assert has_element?(view, "#order-status", "Fulfilled")
       assert has_element?(view, "#order-delivery-photo a", "View photo")
@@ -404,15 +404,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   describe "choosing whether to email the customer" do
-    test "the photo email choice follows the confirmation choice", %{conn: conn} do
-      order = placed_order(fulfillment_method: :delivery)
+    test "nobody home sends Left at the door with the photo, unless Jennie unticks it", %{conn: conn} do
+      order = placed_order(fulfillment_method: :delivery, locale: "en-GB")
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
-      assert has_element?(view, ~s|input[name="fulfillment[email_photo]"][type="checkbox"][checked]|)
+      assert has_element?(view, "#fulfillment-email-preview", "was left at the door")
+      assert has_element?(view, "#fulfillment-email-preview", "Attached: eden-flowers-delivery.jpg")
 
       view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "false"}) |> render_change()
-      refute has_element?(view, ~s|input[name="fulfillment[email_photo]"]|)
+      refute has_element?(view, "#fulfillment-email-preview")
 
       view
       |> file_input("#confirm-fulfillment-form", "photo_fulfillment[photo]", [

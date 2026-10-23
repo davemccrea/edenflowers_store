@@ -122,7 +122,7 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
         assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
-        assert email.subject == "Your Eden Flowers order 1400 has been delivered"
+        assert email.subject == "Your order for Grace has been delivered"
         assert email.text_body =~ "Hi Ada,"
         assert email.text_body =~ "Your order for Grace has been delivered."
       end)
@@ -155,7 +155,7 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert {:ok, _} = perform_job(SendFulfillmentEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
-        assert email.subject == "Din Eden Flowers-beställning 1400 har levererats"
+        assert email.subject == "Din Eden Flowers-beställning har levererats"
         assert email.text_body =~ "Hej Ada,"
         assert email.text_body =~ "Din beställning har levererats."
       end)
@@ -188,11 +188,11 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert {:ok, _} = perform_job(SendFulfillmentEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
-        assert email.subject == "Your Eden Flowers order 1400 has been delivered"
+        assert email.subject == "Your Eden Flowers order was left at the door"
         assert email.text_body =~ "Nobody was home"
 
         assert email.text_body =~
-                 "Nobody was home when I delivered your order. The attached photo shows where I left it."
+                 "Nobody was home when I delivered your order, so I left it in a safe place. The attached photo shows where."
 
         assert email.text_body =~ "If anything isn't as it should be, just reply and I'll take care of it."
         refute email.text_body =~ "can't find them"
@@ -215,7 +215,9 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
       assert {:ok, _} = perform_job(SendFulfillmentEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
+        assert email.subject == "Your order for Grace was left at the door"
         assert email.text_body =~ "delivered your order for Grace"
+        assert email.text_body =~ "You might like to let Grace know it's waiting."
       end)
     end
 
@@ -237,9 +239,9 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmailTest do
 
     test "delivery confirmation uses the customer's locale, not the worker's" do
       for {locale, reference, subject, greeting, body} <- [
-            {"sv-FI", "1400", "Din Eden Flowers-beställning 1400 har levererats", "Hej Ada,",
+            {"sv-FI", "1400", "Din Eden Flowers-beställning har levererats", "Hej Ada,",
              "Din beställning har levererats."},
-            {"fi", "1401", "Eden Flowers -tilauksesi 1401 on toimitettu", "Hei Ada,", "Tilauksesi on toimitettu."}
+            {"fi", "1401", "Eden Flowers -tilauksesi on toimitettu", "Hei Ada,", "Tilauksesi on toimitettu."}
           ] do
         order =
           fulfillable_order(

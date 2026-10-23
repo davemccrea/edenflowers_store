@@ -140,8 +140,11 @@ defmodule Edenflowers.Email.Preview do
     |> Swoosh.Email.attachment(Receipt.attachment("", order.order_reference))
   end
 
-  defp order_email(:fulfillment, order, inputs),
-    do: Email.order_delivered(order, if(Map.get(inputs, :photo?, order.email_delivery_photo), do: ""), inputs[:message])
+  defp order_email(:fulfillment, order, inputs) do
+    if Map.get(inputs, :photo?, order.email_delivery_photo),
+      do: Email.order_left_at_door(order, "", inputs[:message]),
+      else: Email.order_delivered(order, inputs[:message])
+  end
 
   defp order_email(:cancelled, order, inputs) do
     Email.cancelled(%{order | cancellation_reason: inputs[:message]}, Cancel.money(order, refund(inputs)), :shop)

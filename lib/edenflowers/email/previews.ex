@@ -34,6 +34,7 @@ defmodule Edenflowers.Email.Previews do
         subscription_charged(locale) ++
         subscription_set_up(locale) ++
         order_delivered(locale) ++
+        order_left_at_door(locale) ++
         order_cancelled(locale) ++
         order_refunded(locale) ++
         course_confirmation(locale) ++
@@ -284,20 +285,28 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp order_delivered(locale) do
-    for {title, attrs, photo} <- [
-          {gettext_noop("gift to a named recipient"), %{}, nil},
-          {gettext_noop("gift without a recipient name"), %{recipient_first_name: nil}, nil},
-          {gettext_noop("not a gift, recipient name filled in"), %{gift: false}, nil},
-          {gettext_noop("no customer first name"), %{customer_first_name: nil}, nil},
-          {gettext_noop("left at the door, gift to a named recipient"), %{}, "fictional-jpeg-bytes"},
-          {gettext_noop("left at the door, not a gift"), %{gift: false}, "fictional-jpeg-bytes"}
+    for {title, attrs} <- [
+          {gettext_noop("gift to a named recipient"), %{}},
+          {gettext_noop("gift without a recipient name"), %{recipient_first_name: nil}},
+          {gettext_noop("not a gift, recipient name filled in"), %{gift: false}},
+          {gettext_noop("no customer first name"), %{customer_first_name: nil}}
         ] do
-      {gettext_noop("Order delivered"), title, :order_delivered, Email.order_delivered(order(attrs, locale), photo)}
+      {gettext_noop("Delivered"), title, :order_delivered, Email.order_delivered(order(attrs, locale))}
     end ++
       [
-        {gettext_noop("Order delivered"), gettext_noop("with a message from Jennie"), :order_delivered,
-         Email.order_delivered(order(%{}, locale), nil, message(locale))}
+        {gettext_noop("Delivered"), gettext_noop("with a message from Jennie"), :order_delivered,
+         Email.order_delivered(order(%{}, locale), message(locale))}
       ]
+  end
+
+  defp order_left_at_door(locale) do
+    for {title, attrs} <- [
+          {gettext_noop("gift to a named recipient"), %{}},
+          {gettext_noop("not a gift"), %{gift: false}}
+        ] do
+      {gettext_noop("Left at the door"), title, :order_left_at_door,
+       Email.order_left_at_door(order(attrs, locale), "fictional-jpeg-bytes")}
+    end
   end
 
   defp order_cancelled(locale) do

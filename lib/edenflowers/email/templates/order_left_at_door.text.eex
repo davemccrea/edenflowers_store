@@ -1,0 +1,11 @@
+<%= if @order.customer_first_name, do: ~t"Hi #{name = @order.customer_first_name},", else: ~t"Hi," %>
+
+<%= if @order.gift && @order.recipient_first_name do %><%= ~t"Nobody was home when I delivered your order for #{recipient = @order.recipient_first_name}, so I left it in a safe place. The attached photo shows where." %>
+
+<%= ~t"You might like to let #{recipient = @order.recipient_first_name} know it's waiting." %><% else %><%= ~t"Nobody was home when I delivered your order, so I left it in a safe place. The attached photo shows where." %><% end %>
+
+<%= message(@message) %><%= ~t"Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it." %>
+
+<%= ~t"Warm wishes," %>
+
+<%= signature() %>
