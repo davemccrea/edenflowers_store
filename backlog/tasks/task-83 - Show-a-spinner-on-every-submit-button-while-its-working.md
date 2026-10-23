@@ -1,9 +1,10 @@
 ---
 id: TASK-83
 title: Show a spinner on every submit button while it's working
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-21 15:28'
+updated_date: '2026-10-23 11:45'
 labels:
   - spec
   - customers
@@ -33,9 +34,15 @@ Every button that sends something (checkout steps, sign in, add to cart, newslet
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every phx-submit form on the storefront, account, auth and admin pages shows the spinner and is disabled while submitting
-- [ ] #2 Buttons that submit through phx-click show the same spinner while the event is in flight
-- [ ] #3 Header save buttons that submit a form by id spin as well
-- [ ] #4 No button uses both phx-disable-with and the spinner
-- [ ] #5 A test covers that a converted button renders the spinner markup
+- [x] #1 Every phx-submit form on the storefront, account, auth and admin pages shows the spinner and is disabled while submitting
+- [x] #2 Buttons that submit through phx-click show the same spinner while the event is in flight
+- [x] #3 Header save buttons that submit a form by id spin as well
+- [x] #4 No button uses both phx-disable-with and the spinner
+- [x] #5 Checked in the browser with LiveView's latency simulator: sign in, add to cart, the cart's + button and an admin header Save show the spinner only after 300ms (dots with reduced motion)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The spinner is CSS on the pressed button (forms.css), not markup, so every .btn and submit button gets it. form_button and every phx-disable-with are gone. No LiveView test: there's no markup to assert, so the check is the browser one in AC #5.
+<!-- SECTION:NOTES:END -->

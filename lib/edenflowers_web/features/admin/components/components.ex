@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Admin.Components do
           </p>
         </.drawer_body>
         <.drawer_footer>
-          <.button type="submit" variant="destructive" phx-disable-with={~t"Cancelling…"}>{@submit_label}</.button>
+          <.button type="submit" variant="destructive">{@submit_label}</.button>
           <.button
             type="button"
             phx-click={JS.exec("phx-hide", to: "#cancel-drawer") |> JS.push("close_cancel")}
@@ -592,7 +592,6 @@ defmodule EdenflowersWeb.Admin.Components do
       <.button
         type="submit"
         variant="primary"
-        phx-disable-with={~t"Recording…"}
         data-confirm={~t"Record this payment? A mistake can be undone afterwards."}
       >
         {~t"Record payment"}
@@ -697,7 +696,6 @@ defmodule EdenflowersWeb.Admin.Components do
       <.button
         type="submit"
         variant="primary"
-        phx-disable-with={~t"Refunding…"}
         data-confirm={refund_confirmation(@form[:amount].value, @form[:how].value, @locale)}
       >
         {~t"Refund"}

@@ -84,7 +84,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                 <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
                 <span class="max-md:sr-only">{~t"View in store"}</span>
               </.button>
-              <.button type="submit" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+              <.button type="submit" variant="primary" size="sm">
                 {~t"Save"}
               </.button>
             </:actions>

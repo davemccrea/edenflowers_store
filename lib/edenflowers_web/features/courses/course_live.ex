@@ -154,9 +154,9 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 <%!-- Errors about the booking as a whole have no field of their own to sit under. --%>
                 <.error :for={msg <- Enum.map(@form[:course_id].errors, &translate_error/1)}>{msg}</.error>
 
-                <.form_button data-testid="book-button">
+                <.button type="submit" variant="primary" size="lg" class="mt-2" data-testid="book-button">
                   {~t"Continue to payment"} · {Format.currency(total(@course, @form), @locale)}
-                </.form_button>
+                </.button>
               </.form>
 
               <p class="text-base-content/70 mt-4">

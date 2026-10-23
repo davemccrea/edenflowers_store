@@ -519,7 +519,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       <%!-- Honeypot: hidden from people, so only bots fill it in. --%>
       <.input field={@form[:website]} hidden tabindex="-1" autocomplete="off" aria-hidden="true" />
 
-      <.button type="submit" variant="primary" phx-disable-with={~t"Sending…"}>{~t"Send enquiry"}</.button>
+      <.button type="submit" variant="primary">{~t"Send enquiry"}</.button>
       <p class="text-base-content/70 text-sm">
         {~t"Or email me directly at"}
         <a href="mailto:info@edenflowers.fi" class="link-underline-static-body">info@edenflowers.fi</a>

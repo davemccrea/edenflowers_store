@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
       <.admin_page>
         <.admin_page_header title={@page_title} back={{~t"Promotions", PromotionsLive.default_path()}} sticky>
           <:actions>
-            <.button type="submit" form="promotion-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+            <.button type="submit" form="promotion-form" variant="primary" size="sm">
               {~t"Save"}
             </.button>
           </:actions>

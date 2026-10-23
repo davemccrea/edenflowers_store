@@ -61,9 +61,9 @@ defmodule EdenflowersWeb.StripeForm do
 
       {render_slot(@before_button)}
 
-      <.form_button disabled={true} id="payment-button">
+      <.button type="submit" variant="primary" size="lg" class="mt-2" disabled id="payment-button">
         {render_slot(@inner_block)}
-      </.form_button>
+      </.button>
     </form>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".Stripe">
       import { loadStripe } from "@/js/stripe";

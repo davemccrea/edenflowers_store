@@ -178,7 +178,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       data-testid="newsletter-opt-in-checkbox"
                     />
 
-                    <.form_button data-testid="step-1-next-button">{~t"Next"}</.form_button>
+                    <.button type="submit" variant="primary" size="lg" class="mt-2" data-testid="step-1-next-button">{~t"Next"}</.button>
                   </.form>
                 </.checkout_step>
 
@@ -214,7 +214,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                     <.gift_card_slot order={@order} form={@form} id={@id} card_variants={@card_variants} />
 
-                    <.form_button>{gettext("Next")}</.form_button>
+                    <.button type="submit" variant="primary" size="lg" class="mt-2">{gettext("Next")}</.button>
                   </.form>
                 </.checkout_step>
 
@@ -296,7 +296,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                         <.input field={@form[:fulfillment_date]} hidden />
                       </fieldset>
 
-                      <.form_button>{~t"Next"}</.form_button>
+                      <.button type="submit" variant="primary" size="lg" class="mt-2">{~t"Next"}</.button>
                     </.form>
                   <% end %>
                 </.checkout_step>

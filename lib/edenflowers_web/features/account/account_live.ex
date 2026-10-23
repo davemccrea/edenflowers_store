@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
             <.input field={@details_form[:name]} type="text" label={~t"Name"} autocomplete="name" />
             <.input field={@details_form[:email]} type="email" label={~t"Email"} autocomplete="email" required />
             <div class="flex items-center gap-4">
-              <.button type="submit" variant="primary" phx-disable-with={~t"Saving…"}>{~t"Save"}</.button>
+              <.button type="submit" variant="primary">{~t"Save"}</.button>
               <p role="status" class="text-base-content/70 text-sm">
                 <span :if={@details_saved?}>{~t"Saved"}</span>
               </p>
@@ -166,7 +166,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
               required
             />
             <div class="flex items-center gap-4">
-              <.button type="submit" variant="primary" phx-disable-with={~t"Confirming…"}>{~t"Confirm"}</.button>
+              <.button type="submit" variant="primary">{~t"Confirm"}</.button>
               <.button type="button" variant="text" phx-click="cancel_email_change">{~t"Cancel"}</.button>
             </div>
           </.form>

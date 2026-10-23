@@ -2191,11 +2191,6 @@ msgstr "Tekstiviesti: noudettavissa"
 msgid "WhatsApp ready for pickup"
 msgstr "WhatsApp: noudettavissa"
 
-#: lib/edenflowers_web/components/core_components.ex:217
-#, elixir-autogen, elixir-format
-msgid "Processing…"
-msgstr "Käsitellään…"
-
 #: lib/edenflowers_web/features/admin/orders_live.ex:80
 #: lib/edenflowers_web/features/admin/orders_live.ex:83
 #, elixir-autogen, elixir-format
@@ -3287,18 +3282,6 @@ msgstr "Tallenna muutokset"
 msgid "Save note"
 msgstr "Tallenna muistiinpano"
 
-#: lib/edenflowers_web/features/account/account_live.ex:141
-#: lib/edenflowers_web/features/account/subscription_manager.ex:566
-#: lib/edenflowers_web/features/admin/course_form_live.ex:58
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:118
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:129
-#: lib/edenflowers_web/features/admin/order_form_live.ex:100
-#: lib/edenflowers_web/features/admin/product_form_live.ex:83
-#: lib/edenflowers_web/features/admin/promotion_form_live.ex:47
-#, elixir-autogen, elixir-format
-msgid "Saving…"
-msgstr "Tallennetaan…"
-
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:270
 #, elixir-autogen, elixir-format
 msgid "Send a payment link"
@@ -3597,11 +3580,6 @@ msgstr "Stripessä ei ole uusia hyvityksiä."
 msgid "Refunds from Stripe recorded."
 msgstr "Hyvitykset Stripestä kirjattu."
 
-#: lib/edenflowers_web/features/admin/components/components.ex:663
-#, elixir-autogen, elixir-format
-msgid "Refunding…"
-msgstr "Hyvitetään…"
-
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1435
 #, elixir-autogen, elixir-format
 msgid "Hi %{order_customer_first_name}, you can pay %{amount} for your Eden Flowers order %{order_order_reference} here: %{url}"
@@ -3722,11 +3700,6 @@ msgstr "Lasku (Zervant)"
 #, elixir-autogen, elixir-format
 msgid "Confirm"
 msgstr "Vahvista"
-
-#: lib/edenflowers_web/features/account/account_live.ex:165
-#, elixir-autogen, elixir-format
-msgid "Confirming…"
-msgstr "Vahvistetaan…"
 
 #: lib/edenflowers_web/features/account/account_live.ex:539
 #: lib/edenflowers_web/features/checkout/pay_live.ex:151
@@ -4956,11 +4929,6 @@ msgstr "Tai lähettäkää sähköpostia suoraan osoitteeseen"
 #, elixir-autogen, elixir-format
 msgid "Send enquiry"
 msgstr "Lähetä tiedustelu"
-
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:522
-#, elixir-autogen, elixir-format
-msgid "Sending…"
-msgstr "Lähetetään…"
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:238
 #, elixir-autogen, elixir-format
@@ -7185,16 +7153,6 @@ msgstr "ei toimitusmaksua, toimitusaikaikkunalla"
 msgid "Nothing left to settle on this booking."
 msgstr "Tällä varauksella ei ole enää mitään selvitettävää."
 
-#: lib/edenflowers_web/features/admin/components/components.ex:558
-#: lib/edenflowers_web/features/admin/course_booking_drawers.ex:253
-#, elixir-autogen, elixir-format
-msgid "Recording…"
-msgstr "Kirjataan…"
-
-#: lib/edenflowers_web/features/admin/course_booking_drawers.ex:66
-#, elixir-autogen, elixir-format
-msgid "Adding…"
-msgstr "Lisätään…"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:478
 #, elixir-autogen, elixir-format
@@ -7432,11 +7390,6 @@ msgstr "maksettu"
 #, elixir-autogen, elixir-format
 msgid "Cancelled by the customer"
 msgstr "Asiakas perui"
-
-#: lib/edenflowers_web/features/admin/components/components.ex:79
-#, elixir-autogen, elixir-format
-msgid "Cancelling…"
-msgstr "Perutaan…"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:71
 #: lib/edenflowers_web/features/admin/components/components.ex:657

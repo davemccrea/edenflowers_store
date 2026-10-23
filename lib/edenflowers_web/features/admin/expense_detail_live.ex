@@ -119,7 +119,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               <.button
                 type="submit"
                 variant={if is_nil(@expense.reviewed_at), do: "secondary", else: "primary"}
-                phx-disable-with={~t"Saving…"}
                 class="w-full sm:w-auto"
               >
                 {~t"Save corrections"}
@@ -130,7 +129,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 name="review"
                 value="true"
                 variant="primary"
-                phx-disable-with={~t"Saving…"}
                 class="w-full sm:w-auto"
               >
                 {~t"Save and mark reviewed"}

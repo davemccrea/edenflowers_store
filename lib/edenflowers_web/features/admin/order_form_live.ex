@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             {~t"This order is paid. If the total changes, the order page shows the balance to collect or refund."}
           </:subtitle>
           <:actions>
-            <.button type="submit" form="order-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+            <.button type="submit" form="order-form" variant="primary" size="sm">
               {if @mode == :new, do: ~t"Place order", else: ~t"Save"}
             </.button>
           </:actions>

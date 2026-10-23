@@ -563,7 +563,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 variant="primary"
                 class="self-start"
                 disabled={not @edited?}
-                phx-disable-with={~t"Saving…"}
               >
                 {~t"Save changes"}
               </.button>
