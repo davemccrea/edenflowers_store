@@ -36,56 +36,75 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  The order as it now stands and how to pay, worded for its state:
-  - `:details`, what a custom order's customer is sent when Jennie places or
-    edits it. No receipt, because nothing has been paid yet. After an edit it
-    shows the whole order rather than what changed, since the customer pays
-    against the whole.
-  - `:card_refused`, an Occurrence the subscriber's saved card was refused
-    for. The delivery still happens and the payment link pays for it.
-  - `:bill`, once the order is handed over, as customers here expect one
-    after delivery. Always with a payment link: an invoice order without one
-    gets Jennie's invoice instead.
-
-  Expects `:customer_first_name`, `:grand_total`, `:amount_paid`, `:balance`
-  and `line_items: [:subtotal]` loaded.
+  What Jennie and the customer agreed for a custom order she placed, and how
+  to pay. Once the order is handed over it leaves out the delivery or pickup
+  line. Expects `:customer_first_name`, `:grand_total`, `:amount_paid`,
+  `:balance` and `line_items: [:subtotal]` loaded.
   """
   def order_details(order, payment_link_url, message \\ nil) do
-    state = order_details_state(order)
-
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(record_copy_address())
-      |> subject(order_details_subject(order, state))
+      |> subject(~t"Your Eden Flowers order for #{date = short_date(order)}")
+      |> text_body(Templates.order_details(order_assigns(order, payment_link_url, message)))
+    end)
+  end
+
+  @doc """
+  The whole order as it now stands after Jennie edited it, since the
+  customer pays against the whole. How to pay only while something is owed.
+  Loads as `order_details/3`.
+  """
+  def order_updated(order, payment_link_url, message \\ nil) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(record_copy_address())
+      |> subject(~t"Your updated Eden Flowers order for #{date = short_date(order)}")
+      |> text_body(Templates.order_updated(order_assigns(order, payment_link_url, message)))
+    end)
+  end
+
+  defp order_assigns(order, payment_link_url, message) do
+    %{
+      order: order,
+      message: message,
+      payment_link_url: payment_link_url,
+      fulfillment_on: fulfillment_on(order),
+      format_currency: &Format.currency(&1, order.locale)
+    }
+  end
+
+  @doc """
+  An Occurrence whose saved card was refused: the flowers still come, and
+  the payment link pays for them. Expects `:customer_first_name`, `:balance`
+  and `:line_items` loaded.
+  """
+  def subscription_payment_failed(order, payment_link_url) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(record_copy_address())
+      |> subject(~t"Payment needed for your flowers on #{date = short_date(order)}")
       |> text_body(
-        Templates.order_details(%{
+        Templates.subscription_payment_failed(%{
           order: order,
-          state: state,
-          message: message,
+          product: hd(order.line_items).product_name,
+          date: Format.weekday_date(order.fulfillment_date, order.locale),
           payment_link_url: payment_link_url,
           account_url: account_url(),
-          fulfillment_on: fulfillment_on(order),
           format_currency: &Format.currency(&1, order.locale)
         })
       )
     end)
   end
 
-  # A subscription order owes money only when its saved card was refused.
-  defp order_details_state(order) do
-    cond do
-      order.fulfillment_status == :fulfilled -> :bill
-      order.origin == :subscription and Decimal.positive?(order.balance) -> :card_refused
-      true -> :details
-    end
-  end
-
-  defp order_details_subject(order, :card_refused),
-    do: ~t"Payment needed for your Eden Flowers order #{order.order_reference}"
-
-  defp order_details_subject(order, _state), do: ~t"Your Eden Flowers order #{order.order_reference}"
+  # Subjects name the day, "Saturday 14.11.", so the customer can tell orders apart.
+  defp short_date(order), do: Format.weekday_day_month(order.fulfillment_date, order.locale)
 
   # A window reads as the course emails write theirs: "Saturday 14.11.2026, 12:00–16:00".
   defp fulfillment_on(order) do

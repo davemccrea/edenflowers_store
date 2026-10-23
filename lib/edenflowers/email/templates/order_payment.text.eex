@@ -1,0 +1,12 @@
+<%= cond do %><% @payment_link_url -> %><%= gettext("You can pay online here:") %>
+<%= @payment_link_url %>
+
+<% not Decimal.positive?(@order.balance) -> %><% @order.payment_terms == :invoice and @order.fulfillment_method == :delivery -> %><%= gettext("I'll send you an invoice after delivery.") %>
+
+<% @order.payment_terms == :invoice -> %><%= gettext("I'll send you an invoice after you've collected your order.") %>
+
+<% @order.payment_terms == :on_fulfillment and @order.fulfillment_method == :delivery -> %><%= gettext("You pay on delivery.") %>
+
+<% @order.payment_terms == :on_fulfillment -> %><%= gettext("You pay when you collect your order.") %>
+
+<% true -> %><% end %>

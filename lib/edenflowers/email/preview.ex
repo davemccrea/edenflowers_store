@@ -37,6 +37,64 @@ defmodule Edenflowers.Email.Preview do
     |> then(&booking_email(kind, &1, inputs))
   end
 
+  @doc """
+  The Order details or Order updated email for an order Jennie is entering
+  or editing, from the form's `changeset` and its `price` from
+  `Edenflowers.Orders.EnteredPrice`, before anything is saved. `order` is the
+  order being edited, or nil.
+  """
+  def build_entered(kind, changeset, price, order, inputs, locale \\ nil) do
+    {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
+    paid = if order, do: order.amount_paid, else: Decimal.new(0)
+    balance = Decimal.sub(price.total, paid)
+
+    entered = %{
+      entered
+      | locale: locale || entered.locale,
+        customer_first_name: Edenflowers.Accounts.Calculations.FirstName.extract(entered.customer_name),
+        line_items: Enum.map(price.lines, &%{quantity: &1.quantity, product_name: &1.name, subtotal: &1.total}),
+        fulfillment_fee: price.fulfillment_fee,
+        grand_total: price.total,
+        amount_paid: paid,
+        balance: balance
+    }
+
+    url = if entered_link?(entered, order), do: link_url(entered)
+
+    case kind do
+      :order_details -> Email.order_details(entered, url, inputs[:message])
+      :order_updated -> Email.order_updated(entered, url, inputs[:message])
+    end
+  end
+
+  @doc """
+  The payment link email for a booking Jennie is adding on `course`, from
+  the form's `changeset`, before anything is saved.
+  """
+  def build_entered_booking(changeset, course, inputs, locale \\ nil) do
+    {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
+    seats = entered.seats || 1
+
+    entered =
+      %{
+        entered
+        | locale: locale || entered.locale,
+          course: course,
+          first_name: Edenflowers.Accounts.Calculations.FirstName.extract(entered.name),
+          seats: seats,
+          balance: Decimal.mult(course.price, seats),
+          # Saving opens the link with a token of its own.
+          payment_link_token: nil
+      }
+      |> translated()
+
+    Email.course_payment_link(entered, link_url(entered), inputs[:message])
+  end
+
+  # Placing opens a link for payment-link terms; an edited order keeps the one it has.
+  defp entered_link?(entered, nil), do: entered.payment_terms == :payment_link
+  defp entered_link?(_entered, order), do: order.payment_link_open?
+
   defp order_load(:receipt), do: [:customer_first_name, :vat, :cancellable_by_customer?, :cancellable_until]
   defp order_load(:fulfillment), do: [:customer_first_name, :recipient_first_name]
 

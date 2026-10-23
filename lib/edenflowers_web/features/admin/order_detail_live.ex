@@ -1384,9 +1384,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       no_email(order) ->
         no_email(order)
 
-      order.fulfillment_status == :fulfilled and !order.payment_link_open? ->
-        ~t"Handed over: email a payment link or send an invoice"
-
       true ->
         nil
     end

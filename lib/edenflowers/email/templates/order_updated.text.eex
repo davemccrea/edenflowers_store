@@ -1,0 +1,10 @@
+<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("I've updated your order.") %>
+
+<%= message(@message) %><%= order_totals(assigns) %>
+<%= order_fulfillment(assigns) %><%= if Decimal.positive?(@order.balance) do %><%= order_payment(assigns) %><% end %><%= gettext("If anything doesn't look right, just reply.") %>
+
+<%= gettext("Warm wishes,") %>
+
+<%= signature() %>

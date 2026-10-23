@@ -16,6 +16,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   attr :form, :any, required: true
   attr :course, :map, required: true
   attr :locale, :string, required: true
+  attr :preview, Swoosh.Email, default: nil
 
   def booking_drawer(assigns) do
     ~H"""
@@ -57,6 +58,8 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
               send={@form[:email_customer?]}
               label={~t"Email the payment link to the customer"}
               message={@form[:message]}
+              preview={@preview}
+              in_swedish={@form[:locale].value != "sv-FI" && @form[:in_swedish]}
             />
           </div>
         </.drawer_body>

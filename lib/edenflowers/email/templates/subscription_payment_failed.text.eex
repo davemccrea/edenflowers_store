@@ -1,0 +1,17 @@
+<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= if @order.fulfillment_method == :delivery do %><%= gettext("The payment for your %{product} delivery on %{date} didn't go through, but your flowers are still coming.", product: @product, date: @date) %><% else %><%= gettext("The payment for your %{product} pickup on %{date} didn't go through, but your flowers will still be ready to collect.", product: @product, date: @date) %><% end %>
+
+<%= gettext("Amount due") %>: <%= @format_currency.(@order.balance) %>
+
+<%= gettext("You can pay online here:") %>
+<%= @payment_link_url %>
+
+<%= gettext("Later deliveries are on hold until this one is paid. To keep them coming, please also update your card in your account:") %>
+<%= @account_url %>
+
+<%= gettext("If you need help with the payment, just reply to this email.") %>
+
+<%= gettext("Warm wishes,") %>
+
+<%= signature() %>

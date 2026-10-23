@@ -724,6 +724,21 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "#order-price", "€35.00")
     end
 
+    test "offers Order updated unticked, and previews it once ticked", ctx do
+      order = place_custom_order(ctx, %{customer_email: "son@example.com", locale: "en-GB"})
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
+
+      refute has_element?(view, "#order-updated-email-send[checked]")
+      refute has_element?(view, "#order-updated-email-preview")
+
+      view |> form("#order-form", form: %{email_customer?: "true"}) |> render_change()
+      view |> form("#order-form", form: %{message: "Lilies, as agreed."}) |> render_change()
+
+      assert has_element?(view, "#order-updated-email-preview", "Your updated Eden Flowers order for")
+      assert has_element?(view, "#order-updated-email-preview", "Lilies, as agreed.")
+    end
+
     test "an unpaid custom order opens in the full form", ctx do
       order = place_custom_order(ctx)
 

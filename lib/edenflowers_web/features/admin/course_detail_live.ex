@@ -155,7 +155,12 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           </details>
         </section>
       </.admin_page>
-      <.booking_drawer form={@booking_form} course={@course} locale={@locale} />
+      <.booking_drawer
+        form={@booking_form}
+        course={@course}
+        locale={@locale}
+        preview={@booking_form && booking_preview(@booking_form, @course)}
+      />
       <.cancel_drawer
         title={~t"Cancel booking"}
         submit_label={~t"Cancel booking"}
@@ -417,6 +422,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     }
 
     Preview.build(kind, registration, inputs, if(params["in_swedish"] == "true", do: "sv-FI"))
+  end
+
+  defp booking_preview(form, course) do
+    if form[:email_customer?].value in [true, "true"] and form[:email].value not in [nil, ""] do
+      locale = if form[:in_swedish].value == "true", do: "sv-FI"
+      Preview.build_entered_booking(form.source.source, course, %{message: form[:message].value}, locale)
+    end
   end
 
   defp email_drawer_text(_kind, nil, _locale), do: %{}

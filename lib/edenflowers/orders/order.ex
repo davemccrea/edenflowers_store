@@ -200,8 +200,7 @@ defmodule Edenflowers.Orders.Order do
         on_error :record_receipt_email_failure
       end
 
-      # Queued when Jennie places a custom order and ticks "email the customer",
-      # and when an Occurrence's card is refused, by :place_unpaid_occurrence.
+      # Queued when Jennie places a custom order and ticks "email the customer".
       trigger :send_order_details_email do
         action :send_order_details_email
         queue :default
@@ -210,6 +209,32 @@ defmodule Edenflowers.Orders.Order do
         scheduler_cron false
         worker_module_name Edenflowers.Orders.Workers.SendOrderDetailsEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendOrderDetailsEmail
+        default_actor system_actor()
+        on_error :record_order_details_email_failure
+      end
+
+      # Queued when Jennie saves an edit and ticks "email the customer".
+      trigger :send_order_updated_email do
+        action :send_order_updated_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendOrderUpdatedEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendOrderUpdatedEmail
+        default_actor system_actor()
+        on_error :record_order_details_email_failure
+      end
+
+      # Queued by :place_unpaid_occurrence when an Occurrence's card is refused.
+      trigger :send_payment_failed_email do
+        action :send_payment_failed_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendPaymentFailedEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentFailedEmail
         default_actor system_actor()
         on_error :record_order_details_email_failure
       end
@@ -336,6 +361,8 @@ defmodule Edenflowers.Orders.Order do
       :mark_fulfilled,
       :open_payment_link,
       :send_order_details_email,
+      :send_order_updated_email,
+      :send_payment_failed_email,
       :send_receipt_email,
       :send_fulfillment_email,
       :record_fulfillment_email_failure,
@@ -734,7 +761,7 @@ defmodule Edenflowers.Orders.Order do
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
       change PaymentChanges.OpenPaymentLink
-      change run_oban_trigger(:send_order_details_email)
+      change {PaymentChanges.QueueEmail, trigger: :send_payment_failed_email}
       # A paid Occurrence notifies the shop through :finalize_checkout.
       change Changes.NotifyShop
       require_atomic? false
@@ -750,6 +777,8 @@ defmodule Edenflowers.Orders.Order do
       validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
       argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
       argument :card_variant_id, :uuid
+      argument :email_customer?, :boolean, default: false
+      argument :message, :string
 
       validate attribute_equals(:state, :placed), message: "hasn't been placed"
       validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
@@ -792,6 +821,10 @@ defmodule Edenflowers.Orders.Order do
 
       change Changes.RecordEnteredLineItems
       change {Changes.AdjustStock, direction: :take}
+
+      change {PaymentChanges.QueueEmail, trigger: :send_order_updated_email},
+        where: [argument_equals(:email_customer?, true), present(:customer_email)]
+
       require_atomic? false
     end
 
@@ -869,7 +902,22 @@ defmodule Edenflowers.Orders.Order do
       argument :message, :string
       transaction? false
       require_atomic? false
-      change Changes.SendOrderDetailsEmail
+      change {Changes.SendOrderDetailsEmail, email: :order_details}
+    end
+
+    update :send_order_updated_email do
+      accept []
+      argument :message, :string
+      transaction? false
+      require_atomic? false
+      change {Changes.SendOrderDetailsEmail, email: :order_updated}
+    end
+
+    update :send_payment_failed_email do
+      accept []
+      transaction? false
+      require_atomic? false
+      change {Changes.SendOrderDetailsEmail, email: :subscription_payment_failed}
     end
 
     # For a payment Jennie recorded, whose receipt is only sent when the customer asks.
@@ -1044,6 +1092,8 @@ defmodule Edenflowers.Orders.Order do
                      :record_receipt_email_failure,
                      :record_order_details_email_failure,
                      :send_order_details_email,
+                     :send_order_updated_email,
+                     :send_payment_failed_email,
                      :record_link_payment,
                      :record_stripe_refund,
                      :reconcile_payment,

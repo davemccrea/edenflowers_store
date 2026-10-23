@@ -17,7 +17,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Workers.CreateOccurrence
   alias Edenflowers.Orders.Workers.EmailShop
-  alias Edenflowers.Orders.Workers.SendOrderDetailsEmail
+  alias Edenflowers.Orders.Workers.SendPaymentFailedEmail
   alias Edenflowers.Orders.Workers.SendReceiptEmail
   alias Edenflowers.Payments.Payment
   alias Edenflowers.ShopTime
@@ -339,14 +339,14 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
         assert subscription.state == :payment_failed
         assert subscription.next_fulfillment_date == Date.add(ctx.date, 14)
 
-        assert_enqueued(worker: SendOrderDetailsEmail, args: %{"primary_key" => %{"id" => order.id}})
+        assert_enqueued(worker: SendPaymentFailedEmail, args: %{"primary_key" => %{"id" => order.id}})
         assert_enqueued(worker: EmailShop, args: %{"order_id" => order.id})
         assert %{success: 2, failure: 0} = Oban.drain_queue(queue: :default)
 
         assert_email_sent(fn email ->
           assert email.to == [{"", "ada@example.com"}]
-          assert email.subject =~ order.order_reference
-          # Where to update the saved card, which only the refused-card wording gives.
+          assert email.subject =~ "Kukkiesi maksu puuttuu"
+          # Where to update the saved card.
           assert email.text_body =~ "/account"
           assert email.text_body =~ "/pay/#{order.payment_link_token}"
         end)
@@ -398,7 +398,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
 
       assert [_one_order] = occurrences(ctx.subscription)
       assert reload(ctx.subscription).state == :payment_failed
-      refute_enqueued(worker: SendOrderDetailsEmail)
+      refute_enqueued(worker: SendPaymentFailedEmail)
       assert_no_email_sent()
     end
 
