@@ -75,6 +75,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :open_payment_link}), do: ~t"Payment link created"
   defp title(%{version_action_name: :send_order_details_email}), do: ~t"Order details emailed"
   defp title(%{version_action_name: :send_order_updated_email}), do: ~t"Updated order emailed"
+  defp title(%{version_action_name: :send_payment_reminder}), do: ~t"Payment reminder emailed"
   defp title(%{version_action_name: :send_payment_failed_email}), do: ~t"Payment needed emailed"
   defp title(%{version_action_name: :send_receipt_email}), do: ~t"Receipt emailed"
 

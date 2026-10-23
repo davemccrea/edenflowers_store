@@ -10,7 +10,6 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
-  alias Edenflowers.Orders
 
   @doc """
   The cancel drawer's form for an order or a booking. `held` is what it held
@@ -110,15 +109,9 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
+  # Orders send theirs in a Payment reminder.
   defp send_payment_link(%CourseRegistration{} = registration, message, actor),
     do: Courses.email_registration_payment_link(registration, %{message: message}, actor: actor)
-
-  # The order details email carries the link, so sending it is opening one.
-  defp send_payment_link(order, message, actor) do
-    with {:ok, order} <- Orders.open_payment_link(order, actor: actor) do
-      Orders.send_order_details_email(order, %{message: message}, actor: actor)
-    end
-  end
 
   @doc "Why recording money was refused, in the action's own words."
   def payment_error(%{errors: [%{message: message} | _]}) when is_binary(message), do: message

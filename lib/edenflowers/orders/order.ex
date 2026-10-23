@@ -378,6 +378,7 @@ defmodule Edenflowers.Orders.Order do
       :send_order_updated_email,
       :send_payment_failed_email,
       :send_payment_received_email,
+      :send_payment_reminder,
       :send_receipt_email,
       :send_fulfillment_email,
       :record_fulfillment_email_failure,
@@ -946,6 +947,18 @@ defmodule Edenflowers.Orders.Order do
       change PaymentChanges.SendPaymentReceivedEmail
     end
 
+    # Sent by hand only. Opens a payment link if none is open.
+    update :send_payment_reminder do
+      argument :message, :string
+      validate attribute_does_not_equal(:fulfillment_status, :cancelled), message: "is cancelled"
+      validate attribute_does_not_equal(:payment_terms, :invoice), message: "is paid by invoice"
+      validate present(:customer_email), message: "has no email address"
+      transaction? false
+      require_atomic? false
+      change PaymentChanges.OpenPaymentLink
+      change {Changes.SendOrderDetailsEmail, email: :payment_reminder}
+    end
+
     update :send_payment_received_email do
       accept []
       argument :amount, :decimal
@@ -1147,6 +1160,7 @@ defmodule Edenflowers.Orders.Order do
                      :refund,
                      :open_payment_link,
                      :send_order_details_email,
+                     :send_payment_reminder,
                      :email_receipt
                    ])
 

@@ -854,19 +854,21 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|#order-payment-link a[href="https://wa.me/358401234567?text=#{body}"]|)
     end
 
-    test "emails the payment link to the customer", ctx do
-      order = place_custom_order(ctx, %{customer_email: "son@example.com", payment_terms: :invoice})
+    test "sends a payment reminder, opening a payment link for it", ctx do
+      order = place_custom_order(ctx, %{customer_email: "son@example.com", payment_terms: :on_fulfillment})
+      refute order.payment_link_token
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
       assert has_element?(view, "#order-balance", "To collect €85.00")
-      view |> element(~s|button[phx-value-kind="payment_link"]|) |> render_click()
-      view |> form("#email-form") |> render_submit()
+      view |> element(~s|#order-balance button[phx-value-kind="payment_reminder"]|) |> render_click()
+      assert view |> form("#email-form") |> render_submit() =~ "Payment reminder sent."
 
       order = Ash.reload!(order, authorize?: false)
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "son@example.com"}]
+        assert email.subject =~ "A reminder about your order for"
         assert email.text_body =~ "/pay/#{order.payment_link_token}"
       end)
 

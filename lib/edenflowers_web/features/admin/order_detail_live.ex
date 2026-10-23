@@ -1202,21 +1202,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :order, :map, required: true
   attr :locale, :string, required: true
 
-  # Sending the link comes first: it's how most custom orders get paid.
+  # Reminding comes first: it's how most custom orders get paid.
   defp payment_link_buttons(assigns) do
     ~H"""
     <.button
-      :if={@order.customer_email}
+      :if={reminder?(@order)}
       type="button"
       phx-click="open_email"
-      phx-value-kind="payment_link"
+      phx-value-kind="payment_reminder"
       variant="primary"
       size="sm"
     >
       <.icon name="hero-envelope" class="h-4 w-4" />
-      {if @order.payment_link_open? && @order.order_details_emailed_at,
-        do: ~t"Resend payment link",
-        else: ~t"Email payment link"}
+      {~t"Send payment reminder"}
     </.button>
     <.button :if={!@order.payment_link_open?} type="button" phx-click="open_payment_link" variant="secondary" size="sm">
       {~t"Get payment link"}
@@ -1301,6 +1299,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           {~t"Email order details"}
         </.unavailable_menu_item>
       <% end %>
+
+      <.actions_menu_button
+        :if={reminder?(@order)}
+        menu="order-actions"
+        phx-click="open_email"
+        phx-value-kind="payment_reminder"
+      >
+        {~t"Send payment reminder"}
+      </.actions_menu_button>
 
       <%!-- A cancelled order is never fulfilled and a collected one was handed over, so neither has anything to confirm. --%>
       <%= if @order.fulfillment_status != :cancelled and @order.fulfillment_method == :delivery do %>
@@ -1430,7 +1437,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  defp send_email(:payment_link, order, message, actor), do: PaymentActions.email_payment_link(order, message, actor)
+  defp send_email(:payment_reminder, order, message, actor) do
+    case Orders.send_payment_reminder(order, %{message: message}, actor: actor) do
+      {:ok, _order} ->
+        {:info, ~t"Payment reminder sent."}
+
+      {:error, error} ->
+        Logger.error("Payment reminder for order #{order.id} not sent: #{inspect(error)}")
+        {:error, ~t"Could not send the email. Try again in a moment."}
+    end
+  end
+
+  # Not for an order paid by invoice: Jennie's invoice is its reminder.
+  defp reminder?(order) do
+    order.customer_email != nil and order.fulfillment_status != :cancelled and order.payment_terms != :invoice and
+      Decimal.positive?(order.balance)
+  end
 
   # The refund forms fill themselves in from what's owed back, so an empty
   # amount reads as that until Jennie changes it.
@@ -1471,7 +1493,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         :order_details -> {~t"Email order details", ~t"Send order details", order.order_details_emailed_at}
         :receipt -> {~t"Email receipt", ~t"Send receipt", order.receipt_emailed_at}
         :fulfillment -> {~t"Email confirmation", ~t"Send confirmation", order.fulfillment_emailed_at}
-        :payment_link -> {~t"Email payment link", ~t"Send payment link", payment_link_emailed_at(order)}
+        :payment_reminder -> {~t"Send payment reminder", ~t"Send reminder", nil}
       end
 
     %{
@@ -1481,8 +1503,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       last_sent: last_sent_at && Format.datetime(last_sent_at, locale)
     }
   end
-
-  defp payment_link_emailed_at(order), do: order.payment_link_open? && order.order_details_emailed_at
 
   defp no_email(%{customer_email: nil}), do: ~t"No email address"
   defp no_email(_order), do: nil

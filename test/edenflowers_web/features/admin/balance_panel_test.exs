@@ -242,13 +242,13 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     refute has_element?(view, "#mark-paid-#{registration.id}")
   end
 
-  test "the order page offers its payment link only while something is to collect", %{conn: conn} do
+  test "the order page offers a payment reminder only while something is to collect", %{conn: conn} do
     order = build(:order, cancelled: true, payments: [cash: "88.50"])
     {view, _panel} = open(conn, :order, order)
-    refute has_element?(view, ~s|button[phx-value-kind="payment_link"]|)
+    refute has_element?(view, ~s|button[phx-value-kind="payment_reminder"]|)
 
     {view, panel} = open(conn, :order, build(:order))
-    assert has_element?(view, ~s|#{panel} button[phx-value-kind="payment_link"]|)
+    assert has_element?(view, ~s|#{panel} button[phx-value-kind="payment_reminder"]|)
     assert has_element?(view, ~s|#{panel} button[phx-click="open_payment_link"]|)
   end
 end

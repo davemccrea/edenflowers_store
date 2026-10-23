@@ -85,6 +85,51 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
+  Jennie's reminder of what is still owed on an order or booking, with the
+  payment link to pay it. Only ever sent by hand. Loads as
+  `payment_received/3`.
+  """
+  def payment_reminder(record, payment_link_url, message \\ nil)
+
+  def payment_reminder(%Order{} = order, payment_link_url, message) do
+    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(order.customer_email)
+      |> bcc(record_copy_address())
+      |> subject(~t"A reminder about your order for #{date = short_date(order)}")
+      |> text_body(
+        Templates.payment_reminder(%{
+          order: order,
+          date: Format.weekday_date(order.fulfillment_date, order.locale),
+          message: message,
+          payment_link_url: payment_link_url,
+          format_currency: &Format.currency(&1, order.locale)
+        })
+      )
+    end)
+  end
+
+  def payment_reminder(%CourseRegistration{} = registration, payment_link_url, message) do
+    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(registration.email)
+      |> bcc(record_copy_address())
+      |> subject(~t"A reminder about your booking on #{course = registration.course.name}")
+      |> text_body(
+        Templates.booking_payment_reminder(%{
+          registration: registration,
+          message: message,
+          payment_link_url: payment_link_url,
+          format_date: &Format.weekday_date(&1, registration.locale),
+          format_currency: &Format.currency(&1, registration.locale)
+        })
+      )
+    end)
+  end
+
+  @doc """
   What Jennie and the customer agreed for a custom order she placed, and how
   to pay. Once the order is handed over it leaves out the delivery or pickup
   line. Expects `:customer_first_name`, `:grand_total`, `:amount_paid`,

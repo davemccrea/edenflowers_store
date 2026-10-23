@@ -1,0 +1,13 @@
+<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("A friendly reminder that %{amount} is still to pay for your order for %{date}.", amount: @format_currency.(@order.balance), date: @date) %>
+
+<%= message(@message) %><%= order_totals(assigns) %>
+<%= gettext("You can pay online here:") %>
+<%= @payment_link_url %>
+
+<%= gettext("If you've already paid, thank you, and please ignore this email.") %>
+
+<%= gettext("Warm wishes,") %>
+
+<%= signature() %>

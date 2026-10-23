@@ -146,16 +146,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute_enqueued(worker: Edenflowers.Orders.Workers.SendReceiptEmail)
   end
 
-  test "the payment link button says Resend once the link has been emailed", %{conn: conn} do
+  test "a payment reminder isn't offered for an order paid by invoice", %{conn: conn} do
     order = placed_order()
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    assert has_element?(view, ~s|button[phx-value-kind="payment_link"]|, "Email payment link")
+    assert has_element?(view, ~s|button[phx-value-kind="payment_reminder"]|, "Send payment reminder")
 
-    Ash.Seed.update!(order, %{payment_link_token: "tok_resend_label", order_details_emailed_at: DateTime.utc_now()})
+    Ash.Seed.update!(order, %{payment_terms: :invoice})
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    assert has_element?(view, ~s|button[phx-value-kind="payment_link"]|, "Resend payment link")
+    refute has_element?(view, ~s|button[phx-value-kind="payment_reminder"]|)
   end
 
   test "the actions menu says why each action is unavailable", %{conn: conn} do

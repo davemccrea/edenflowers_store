@@ -1,0 +1,15 @@
+<%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("A friendly reminder that %{amount} is still to pay for your booking on %{course}.", amount: @format_currency.(@registration.balance), course: @registration.course.name) %>
+
+<%= message(@message) %><%= ngettext("1 place on %{course}, %{date}", "%{count} places on %{course}, %{date}", @registration.seats, course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
+<%= gettext("Left to pay") %>  <%= @format_currency.(@registration.balance) %>
+
+<%= gettext("You can pay online here:") %>
+<%= @payment_link_url %>
+
+<%= gettext("If you've already paid, thank you, and please ignore this email.") %>
+
+<%= gettext("Warm wishes,") %>
+
+<%= signature() %>

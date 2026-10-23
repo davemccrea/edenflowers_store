@@ -246,6 +246,16 @@ defmodule Edenflowers.Courses.CourseRegistration do
       require_atomic? false
     end
 
+    # Sent by hand only, like the order's. Opens the link if need be.
+    update :send_payment_reminder do
+      argument :message, :string
+      validate attribute_in(:status, [:awaiting_payment, :confirmed]), message: "is not awaiting payment"
+      change PaymentChanges.OpenPaymentLink
+      change {Changes.SendPaymentLinkEmail, email: :payment_reminder}
+      transaction? false
+      require_atomic? false
+    end
+
     update :send_payment_received_email do
       accept []
       argument :amount, :decimal

@@ -13,6 +13,8 @@ defmodule Edenflowers.Email.Templates do
     {:order_confirmation, [:assigns]},
     {:payment_received, [:assigns]},
     {:booking_payment_received, [:assigns]},
+    {:payment_reminder, [:assigns]},
+    {:booking_payment_reminder, [:assigns]},
     {:order_details, [:assigns]},
     {:order_updated, [:assigns]},
     {:order_totals, [:assigns]},
