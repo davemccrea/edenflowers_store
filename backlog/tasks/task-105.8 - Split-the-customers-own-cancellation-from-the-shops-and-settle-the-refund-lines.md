@@ -3,10 +3,10 @@ id: TASK-105.8
 title: >-
   Split the customer's own cancellation from the shop's, and settle the refund
   lines
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
-updated_date: '2026-10-23 18:52'
+updated_date: '2026-10-23 20:44'
 labels: []
 dependencies:
   - TASK-105.2
@@ -29,16 +29,16 @@ Order refunded: the refund line first, then Jennie's message. Ticked for card an
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A customer cancelling in their account gets the matter-of-fact confirmation
-- [ ] #2 A shop cancellation and every refund email put the fact first and Jennie's message after it
-- [ ] #3 Card refund lines say how long the money takes; cash reads "I've refunded <amount> in cash"
-- [ ] #4 The refund tick box is unticked for cash
-- [ ] #5 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
-- [ ] #6 A customer's own order cancellation sends Jennie a shop notice instead of an inbox copy; the customer email is copied to info+copy@ like every other
+- [x] #1 A customer cancelling in their account gets the matter-of-fact confirmation
+- [x] #2 A shop cancellation and every refund email put the fact first and Jennie's message after it
+- [x] #3 Card refund lines say how long the money takes; cash reads "I've refunded <amount> in cash"
+- [x] #4 The refund tick box is unticked for cash
+- [x] #5 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #6 A customer's own order cancellation sends Jennie a shop notice instead of an inbox copy; the customer email is copied to info+copy@ like every other
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Rule from the grilling session: Jennie's inbox gets only shop notices; customer emails are only ever copied to info+copy@. Today cancelled_copy_address(:customer) sends the copy to info@.
+Refund lines by method: Stripe card/MobilePay and the card reader add the few-days line; cash reads 'in cash'; MobilePay to the customer's number and Zervant name where the money went, without the delay line, since those arrive at once. Choosing cash in the refund form unticks the email; choosing another way ticks it again. The shop notice for a customer's own cancellation is a new ShopNotice kind, :cancelled.
 <!-- SECTION:NOTES:END -->

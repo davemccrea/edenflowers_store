@@ -1,8 +1,9 @@
 defmodule Edenflowers.Orders.ShopNotice do
   @moduledoc """
   What Jennie is told, by email and push: one line saying what happened, and
-  where it is in the admin. A notice is `{:new, order}`, `{:new, subscription}`
-  or `{:reminder, order}`, for an order with a time that starts within the hour.
+  where it is in the admin. A notice is `{:new, order}`, `{:new, subscription}`,
+  `{:reminder, order}`, for an order with a time that starts within the hour,
+  or `{:cancelled, order}`, for one its customer cancelled.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
@@ -32,6 +33,9 @@ defmodule Edenflowers.Orders.ShopNotice do
   end
 
   def title({:new, %Subscription{}}, _locale), do: ~t"New subscription"
+
+  def title({:cancelled, %Order{} = order}, _locale),
+    do: ~t"Order #{reference = order.order_reference} cancelled by the customer"
 
   def title({:reminder, %Order{} = order}, locale) do
     time = Format.fulfillment_time(order, locale)

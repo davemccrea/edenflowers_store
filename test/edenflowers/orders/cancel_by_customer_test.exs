@@ -39,7 +39,7 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
     end)
   end
 
-  test "cancels, refunds in full and emails the customer with the shop in BCC", %{customer: customer} do
+  test "cancels, refunds in full, confirms it to the customer and sends Jennie a shop notice", %{customer: customer} do
     order = paid_order(customer)
     expect_refund(order)
 
@@ -54,11 +54,18 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
     assert :ok = perform_job(SendCancelledEmail, job.args)
 
     assert_email_sent(fn email ->
-      assert email.subject =~ "is cancelled"
-      # Jennie's own inbox, not the record copy: she has a bouquet not to make.
-      assert email.bcc == [Application.fetch_env!(:edenflowers, :mailer_from_address)]
-      assert email.text_body =~ "€88.50"
+      assert email.subject == "Order #{order.order_reference} cancelled"
+      assert {"Eden Flowers", _address} = email.from
+      # Only a record copy: Jennie hears about it from the shop notice.
+      assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
+      assert email.text_body =~ "Refund: €88.50"
+      assert email.text_body =~ "Refunds usually take 3–5 working days to appear on your statement."
     end)
+
+    assert_enqueued(
+      worker: Edenflowers.Orders.Workers.EmailShop,
+      args: %{"notice" => "cancelled", "order_id" => order.id}
+    )
   end
 
   test "is closed 4 days or fewer before the fulfillment date", %{customer: customer} do

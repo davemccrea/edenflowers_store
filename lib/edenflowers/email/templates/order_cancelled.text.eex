@@ -2,13 +2,11 @@
 
 <%= gettext("Your order for %{date} is cancelled.", date: @format_date.(@order.fulfillment_date)) %>
 
-<%= if @order.cancellation_reason do %><%= @order.cancellation_reason %>
-
-<% end %><%= if Decimal.positive?(@refunded) do %><%= case @refunded_to do %><% {:card, brand, last4} -> %><%= gettext("I've refunded %{amount} to your %{brand} card ending in %{last4}.", amount: @format_currency.(@refunded), brand: brand, last4: last4) %><% :mobilepay -> %><%= gettext("I've refunded %{amount} to your MobilePay.", amount: @format_currency.(@refunded)) %><% :unknown -> %><%= gettext("I've refunded %{amount} the way you paid.", amount: @format_currency.(@refunded)) %><% end %>
+<%= message(@message) %><%= if Decimal.positive?(@refunded) do %><%= refund_line(%{amount: @refunded, how: @refunded_to, format_currency: @format_currency}) %>
 
 <% end %><%= if Decimal.positive?(@to_return) do %><%= if Decimal.positive?(@refunded) do %><%= gettext("I'll pay back the other %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% else %><%= gettext("I'll pay back %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% end %>
 
-<% end %><%= if @cancelled_by == :customer do %><%= gettext("If you didn't mean to cancel, reply and I'll help you arrange a new order.") %><% else %><%= gettext("If you have any questions, just reply to this email.") %><% end %>
+<% end %><%= gettext("If you have any questions, just reply to this email.") %>
 
 <%= gettext("Warm wishes,") %>
 

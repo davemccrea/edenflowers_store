@@ -90,6 +90,31 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         assert has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="cash"]|)
       end
 
+      test "choosing cash unticks the refund email, and another way ticks it again", %{conn: conn} do
+        record = build(@parent, cancelled: true, payments: [stripe: "58.50", cash: "30.00"])
+
+        record =
+          if @parent == :order, do: Ash.Seed.update!(record, %{customer_email: "maria@example.com"}), else: record
+
+        {view, _panel} = open(conn, @parent, record)
+        form = refund_form(@parent, record)
+        send_box = String.replace_suffix(form, "-form", "-email-send")
+
+        assert has_element?(view, "#{send_box}[checked]")
+
+        change = fn how ->
+          view
+          |> element(form)
+          |> render_change(%{"_target" => ["refund", "how"], "record_id" => record.id, "refund" => %{"how" => how}})
+        end
+
+        change.("cash")
+        refute has_element?(view, "#{send_box}[checked]")
+
+        change.("stripe")
+        assert has_element?(view, "#{send_box}[checked]")
+      end
+
       test "a settled one has nothing to settle", %{conn: conn} do
         record = build(@parent, payments: [cash: "88.50"])
         {view, panel} = open(conn, @parent, record)

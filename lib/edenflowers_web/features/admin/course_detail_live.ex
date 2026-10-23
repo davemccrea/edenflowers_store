@@ -252,7 +252,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     with_registration(socket, id, &PaymentActions.undo_payment(&1, payment_id, actor))
   end
 
-  def handle_event("change_refund", %{"record_id" => id, "refund" => params}, socket) do
+  def handle_event("change_refund", %{"record_id" => id, "refund" => params} = event, socket) do
+    params = PaymentActions.refund_params(params, event["_target"])
     preview = preview(:refunded, booking(socket.assigns.course, id), params)
     {:noreply, socket |> update(:refund_params, &Map.put(&1, id, params)) |> assign(:preview, preview)}
   end

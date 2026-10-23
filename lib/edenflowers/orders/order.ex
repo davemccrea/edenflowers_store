@@ -869,6 +869,7 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:fulfillment_status, :cancelled)
       change {PaymentChanges.Cancel, cancelled_by: :customer}
       change {Changes.AdjustStock, direction: :return}
+      change {Changes.NotifyShop, notice: :cancelled}
       require_atomic? false
     end
 

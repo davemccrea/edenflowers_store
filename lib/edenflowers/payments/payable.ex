@@ -16,7 +16,7 @@ defmodule Edenflowers.Payments.Payable do
     * `calculate :cancelled?`
     * `calculate :cancellable?`: whether it can be cancelled now
     * `customer_email`: who's told about cancels and refunds, or nil
-    * a `:for_customer_email` read action that loads what `Email.cancelled/3`
+    * a `:for_customer_email` read action that loads what `Email.cancelled/2`
       and `Email.refunded/2` need
     * `cancelled_at` and `cancellation_emailed_to` attributes, and a `:cancel`
       update action with `Changes.Cancel` and its `refund`, `held` and
