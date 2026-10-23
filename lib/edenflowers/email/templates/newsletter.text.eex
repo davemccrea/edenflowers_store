@@ -1,0 +1,16 @@
+<%= gettext("Hi,") %>
+
+<%= case @signup do %><% :new -> %><%= gettext("Thank you for subscribing to the Eden Flowers newsletter.") %>
+
+<%= gettext("As a welcome gift, here's 15% off one order:") %><% :again_with_code -> %><%= gettext("You're already subscribed to the Eden Flowers newsletter. Here's your 15% welcome code again:") %><% :again -> %><%= gettext("You're subscribed to the Eden Flowers newsletter.") %><% end %>
+<%= if @promo_code do %>
+<%= @promo_code %>
+
+<%= gettext("Use it at checkout by %{date}.", date: @use_by) %>
+<% end %>
+<%= gettext("Shop flowers:") %>
+<%= @store_url %>
+
+<%= gettext("Warm wishes,") %>
+
+Eden Flowers

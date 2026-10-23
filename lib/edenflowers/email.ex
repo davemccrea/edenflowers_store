@@ -35,36 +35,54 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  What a custom order's customer is sent when Jennie places it: the order as
-  agreed and how to pay. No receipt, because nothing has been paid yet.
-  Sent again after an edit, it shows the order as it now stands rather than
-  what changed, since the customer pays against the whole. Once the order is
-  handed over it reads as the bill instead, as customers here expect one after
-  delivery. Expects `line_items: [:subtotal]` and `:grand_total` loaded.
+  The order as it now stands and how to pay, worded for its state:
+  - `:details`, what a custom order's customer is sent when Jennie places or
+    edits it. No receipt, because nothing has been paid yet. After an edit it
+    shows the whole order rather than what changed, since the customer pays
+    against the whole.
+  - `:card_refused`, an Occurrence the subscriber's saved card was refused
+    for. The delivery still happens and the payment link pays for it.
+  - `:bill`, once the order is handed over, as customers here expect one
+    after delivery.
+
+  Expects `:customer_first_name`, `:grand_total`, `:amount_paid`, `:balance`
+  and `line_items: [:subtotal]` loaded.
   """
   def order_details(order, payment_link_url) do
+    state = order_details_state(order)
+
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
       new()
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(record_copy_address())
-      |> subject(~t"Your Eden Flowers order #{order.order_reference}")
-      |> text_body(render_order_details(order, payment_link_url))
+      |> subject(order_details_subject(order, state))
+      |> text_body(
+        Templates.order_details(%{
+          order: order,
+          state: state,
+          payment_link_url: payment_link_url,
+          account_url: account_url(),
+          fulfillment_on: fulfillment_on(order),
+          format_currency: &Format.currency(&1, order.locale)
+        })
+      )
     end)
   end
 
-  defp render_order_details(order, payment_link_url) do
-    assigns = %{
-      order: order,
-      payment_link_url: payment_link_url,
-      fulfillment_on: fulfillment_on(order),
-      format_currency: &Format.currency(&1, order.locale)
-    }
-
-    if order.fulfillment_status == :fulfilled,
-      do: Templates.order_bill(assigns),
-      else: Templates.order_details(assigns)
+  # A subscription order owes money only when its saved card was refused.
+  defp order_details_state(order) do
+    cond do
+      order.fulfillment_status == :fulfilled -> :bill
+      order.origin == :subscription and Decimal.positive?(order.balance) -> :card_refused
+      true -> :details
+    end
   end
+
+  defp order_details_subject(order, :card_refused),
+    do: ~t"Payment needed for your Eden Flowers order #{order.order_reference}"
+
+  defp order_details_subject(order, _state), do: ~t"Your Eden Flowers order #{order.order_reference}"
 
   # A window reads as the course emails write theirs: "Saturday 14.11.2026, 12:00–16:00".
   defp fulfillment_on(order) do
@@ -80,30 +98,6 @@ defmodule Edenflowers.Email do
       %{fulfillment_time_start: start, fulfillment_time_end: finish} ->
         "#{date}, #{Format.time(start, order.locale)}–#{Format.time(finish, order.locale)}"
     end
-  end
-
-  @doc """
-  What a subscriber is sent when the card saved for their subscription is
-  refused for an Occurrence: the delivery still happens, and the payment link
-  pays for it. Expects `:customer_first_name` and `:grand_total` loaded.
-  """
-  def payment_failed(order, payment_link_url) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
-      |> subject(~t"Payment needed for your Eden Flowers order #{order.order_reference}")
-      |> text_body(
-        Templates.payment_failed(%{
-          order: order,
-          payment_link_url: payment_link_url,
-          account_url: account_url(),
-          format_date: &Format.weekday_date(&1, order.locale),
-          format_currency: &Format.currency(&1, order.locale)
-        })
-      )
-    end)
   end
 
   @doc """
@@ -140,34 +134,30 @@ defmodule Edenflowers.Email do
     Decimal.add(subscription.product_variant.price, subscription.first_order_fulfillment_fee || 0)
   end
 
-  def order_fulfilled(order) do
+  @doc """
+  Tells the customer their order was delivered, with the photo of where it
+  was left when nobody was home. A collected order gets none: the customer
+  was there.
+  """
+  def order_delivered(order, photo_jpeg \\ nil) do
     EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      subject =
-        if order.fulfillment_method == :pickup,
-          do: ~t"Your Eden Flowers order #{order.order_reference} has been collected",
-          else: ~t"Your Eden Flowers order #{order.order_reference} has been delivered"
-
       new()
       |> from(from_address())
       |> to(order.customer_email)
       |> bcc(record_copy_address())
-      |> subject(subject)
-      |> text_body(Templates.order_fulfilled(%{order: order}))
+      |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered")
+      |> text_body(Templates.order_delivered(%{order: order, photo?: photo_jpeg != nil}))
+      |> attach_delivery_photo(photo_jpeg)
     end)
   end
 
-  def order_left_at_door(order, photo_jpeg) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
-      |> subject(~t"Your Eden Flowers order #{order.order_reference} has been delivered (photo attached)")
-      |> text_body(Templates.order_left_at_door(%{order: order}))
-      |> attachment(
-        Swoosh.Attachment.new({:data, photo_jpeg}, filename: "eden-flowers-delivery.jpg", content_type: "image/jpeg")
-      )
-    end)
+  defp attach_delivery_photo(email, nil), do: email
+
+  defp attach_delivery_photo(email, photo_jpeg) do
+    attachment(
+      email,
+      Swoosh.Attachment.new({:data, photo_jpeg}, filename: "eden-flowers-delivery.jpg", content_type: "image/jpeg")
+    )
   end
 
   @doc """
@@ -354,39 +344,29 @@ defmodule Edenflowers.Email do
     )
   end
 
-  def newsletter_promo(email_address, promo, locale) do
+  @doc """
+  Answers a newsletter signup. `signup` is `:new`, with a fresh welcome code;
+  `:again_with_code`, from someone already subscribed whose code is still
+  usable; or `:again`, whose code is used or expired, so `promo` is nil.
+  """
+  def newsletter(email_address, signup, promo, locale) do
     new()
     |> from(automated_from_address())
     |> to(email_address)
-    |> subject(~t"Your 15% welcome code for Eden Flowers")
+    |> subject(newsletter_subject(signup))
     |> text_body(
-      Templates.newsletter_promo(%{promo_code: promo.code, use_by: use_by(promo, locale), store_url: store_url()})
-    )
-  end
-
-  def newsletter_already_subscribed(email_address, promo, locale) do
-    new()
-    |> from(automated_from_address())
-    |> to(email_address)
-    |> subject(~t"Your Eden Flowers promo code")
-    |> text_body(
-      Templates.newsletter_already_subscribed(%{
-        promo_code: promo.code,
-        use_by: use_by(promo, locale),
+      Templates.newsletter(%{
+        signup: signup,
+        promo_code: promo && promo.code,
+        use_by: promo && Format.weekday_date(promo.expiration_date, locale),
         store_url: store_url()
       })
     )
   end
 
-  defp use_by(promo, locale), do: Format.weekday_date(promo.expiration_date, locale)
-
-  def newsletter_resubscribed(email_address) do
-    new()
-    |> from(automated_from_address())
-    |> to(email_address)
-    |> subject(~t"Your Eden Flowers newsletter subscription")
-    |> text_body(Templates.newsletter_resubscribed(%{shop_url: store_url()}))
-  end
+  defp newsletter_subject(:new), do: ~t"Your 15% welcome code for Eden Flowers"
+  defp newsletter_subject(:again_with_code), do: ~t"Your Eden Flowers promo code"
+  defp newsletter_subject(:again), do: ~t"Your Eden Flowers newsletter subscription"
 
   def error_alert(error) do
     new()

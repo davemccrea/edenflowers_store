@@ -1,6 +1,6 @@
 defmodule Edenflowers.Orders.Changes.SendFulfillmentEmail do
   @moduledoc """
-  Emails a customer when an order is fulfilled, optionally including its
+  Emails a customer when their order is delivered, optionally including its
   delivery photo. A successful send stamps `fulfillment_emailed_at` and clears
   `fulfillment_email_failed_at`. A failed send fails the action, so the AshOban
   trigger retries it and, once attempts run out, `record_fulfillment_email_failure`
@@ -51,15 +51,15 @@ defmodule Edenflowers.Orders.Changes.SendFulfillmentEmail do
 
   defp email_error(error), do: ~t"Failed to send fulfillment email: #{error = inspect(error)}"
 
-  defp email(%{fulfillment_method: :delivery, email_delivery_photo: true, delivery_photo_slug: slug} = order)
+  defp email(%{email_delivery_photo: true, delivery_photo_slug: slug} = order)
        when is_binary(slug) and byte_size(slug) > 0 do
-    with {:ok, jpeg} <- fetch_small_photo(slug), do: {:ok, Email.order_left_at_door(order, jpeg)}
+    with {:ok, jpeg} <- fetch_small_photo(slug), do: {:ok, Email.order_delivered(order, jpeg)}
   end
 
-  defp email(%{fulfillment_method: :delivery, email_delivery_photo: true}),
+  defp email(%{email_delivery_photo: true}),
     do: {:error, ~t"Delivery photo is missing."}
 
-  defp email(order), do: {:ok, Email.order_fulfilled(order)}
+  defp email(order), do: {:ok, Email.order_delivered(order)}
 
   # A phone photo can be 10 MB or more. 1600 px at quality 80 comes to a few
   # hundred KB: small enough for any inbox, sharp enough to spot a doorstep.

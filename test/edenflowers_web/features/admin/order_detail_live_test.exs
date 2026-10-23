@@ -220,7 +220,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
     view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
     refute has_element?(view, ~s|#confirm-fulfillment-form input[type="checkbox"]|)
-    assert has_element?(view, "#confirm-fulfillment-form", "no confirmation will be emailed")
+    refute has_element?(view, "#confirm-fulfillment-form", "no confirmation will be emailed")
     view |> form("#confirm-fulfillment-form") |> render_submit()
 
     assert has_element?(view, "#order-status", "Fulfilled")
@@ -229,7 +229,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "emails the confirmation from the menu and logs it when sent", %{conn: conn} do
-    order = placed_order(fulfillment_status: :fulfilled)
+    order = placed_order(fulfillment_method: :delivery, fulfillment_status: :fulfilled)
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     view |> element(~s|button[phx-click="email_fulfillment_confirmation"]|, "Email confirmation") |> render_click()
@@ -289,7 +289,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "the log keeps the address a confirmation went to after the customer's email changes", %{conn: conn} do
-    order = placed_order(fulfillment_status: :fulfilled)
+    order = placed_order(fulfillment_method: :delivery, fulfillment_status: :fulfilled)
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
     view |> element(~s|button[phx-click="email_fulfillment_confirmation"]|) |> render_click()
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
@@ -402,14 +402,27 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
 
-    test "a pickup starts unticked each time the form opens", %{conn: conn} do
+    test "a pickup offers no confirmation and sends none", %{conn: conn} do
       order = placed_order()
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      refute has_element?(view, ~s|button[phx-click="email_fulfillment_confirmation"]|)
+      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+      refute has_element?(view, ~s|#confirm-fulfillment-form input[type="checkbox"]|)
+      view |> form("#confirm-fulfillment-form") |> render_submit()
+
+      refute has_element?(view, "#flash-info", "Confirmation queued.")
+      refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
+    end
+
+    test "a delivery starts unticked each time the form opens", %{conn: conn} do
+      order = placed_order(fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       assert_push_event(view, "js-exec", %{to: "#confirm-fulfillment", attr: "phx-show"})
       assert has_element?(view, "dialog.slide-drawer--right #confirm-fulfillment-form")
-      assert has_element?(view, "#confirm-fulfillment-form label", "Email collection confirmation")
+      assert has_element?(view, "#confirm-fulfillment-form label", "Email delivery confirmation")
       refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
 
       view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "true"}) |> render_change()

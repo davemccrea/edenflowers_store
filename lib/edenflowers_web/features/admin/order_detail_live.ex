@@ -523,16 +523,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           <div :if={@form[:customer_home].value == "false"} class="space-y-4">
             <.photo_input field={@form[:photo]} uploads={@uploads} label={~t"Photo of where you left the order"} />
           </div>
-          <div :if={@order.customer_email} class="space-y-2">
-            <.input
-              field={@form[:email_customer]}
-              type="checkbox"
-              label={
-                if @order.fulfillment_method == :delivery,
-                  do: ~t"Email delivery confirmation",
-                  else: ~t"Email collection confirmation"
-              }
-            />
+          <div :if={@order.fulfillment_method == :delivery and @order.customer_email} class="space-y-2">
+            <.input field={@form[:email_customer]} type="checkbox" label={~t"Email delivery confirmation"} />
             <div class="ml-7 space-y-3">
               <p class="text-base-content/75 break-all text-sm">{~t"To: #{email = @order.customer_email}"}</p>
               <.input
@@ -543,13 +535,24 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               />
             </div>
           </div>
-          <div :if={!@order.customer_email} class="text-base-content/75 space-y-2 text-sm">
+          <p :if={@order.fulfillment_method == :pickup} class="text-base-content/75 text-sm">
+            {~t"The customer collects it in person, so no confirmation is emailed."}
+          </p>
+          <div
+            :if={@order.fulfillment_method == :delivery and !@order.customer_email}
+            class="text-base-content/75 space-y-2 text-sm"
+          >
             <p>{~t"This order has no email address, so no confirmation will be emailed."}</p>
             <.link navigate={~p"/admin/orders/#{@order.id}/edit"} class="link link-primary">
               {~t"Edit customer details"}
             </.link>
           </div>
-          <input :if={!@order.customer_email} type="hidden" name="fulfillment[email_customer]" value="false" />
+          <input
+            :if={@order.fulfillment_method == :pickup or !@order.customer_email}
+            type="hidden"
+            name="fulfillment[email_customer]"
+            value="false"
+          />
           <p :if={@order.unpaid?} class="text-warning-content text-sm font-semibold">
             {~t"This order is still unpaid."}
           </p>
@@ -575,8 +578,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   @impl true
   def handle_event("confirm_fulfillment", _params, socket) do
+    # "customer_home" starts as the unanswered radio posts it, so ticking
+    # the email box first isn't taken for an answer.
     form =
-      to_form(%{"email_customer" => email_by_default(socket.assigns.order, nil), "email_photo" => "true"},
+      to_form(
+        %{
+          "customer_home" => "",
+          "email_customer" => email_by_default(socket.assigns.order, nil),
+          "email_photo" => "true"
+        },
         as: :fulfillment
       )
 
@@ -824,7 +834,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   # Worth an email only when the customer didn't see it arrive: a gift, or an
   # order left while nobody was home.
-  defp email_by_default(%{fulfillment_method: :pickup}, _customer_home), do: "false"
   defp email_by_default(%{gift: true}, _customer_home), do: "true"
   defp email_by_default(_order, "false"), do: "true"
   defp email_by_default(_order, _customer_home), do: "false"
@@ -1285,8 +1294,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         </.unavailable_menu_item>
       <% end %>
 
-      <%!-- A cancelled order is never fulfilled, so it has nothing to confirm. --%>
-      <%= if @order.fulfillment_status != :cancelled do %>
+      <%!-- A cancelled order is never fulfilled and a collected one was handed over, so neither has anything to confirm. --%>
+      <%= if @order.fulfillment_status != :cancelled and @order.fulfillment_method == :delivery do %>
         <.actions_menu_button
           :if={!@confirmation_unavailable}
           menu="order-actions"

@@ -26,10 +26,8 @@ defmodule Edenflowers.Email.Previews do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       order_confirmation(locale) ++
         order_details(locale) ++
-        payment_failed(locale) ++
         subscription_set_up(locale) ++
-        order_fulfilled(locale) ++
-        order_left_at_door(locale) ++
+        order_delivered(locale) ++
         order_cancelled(locale) ++
         order_refunded(locale) ++
         course_confirmation(locale) ++
@@ -154,22 +152,24 @@ defmodule Edenflowers.Email.Previews do
                %{amount: Decimal.new("70.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}
              ]
            }, nil},
-          {gettext_noop("no customer first name"), %{customer_first_name: nil}, @payment_link}
+          {gettext_noop("no customer first name"), %{customer_first_name: nil}, @payment_link},
+          {gettext_noop("subscription card refused, delivery"), card_refused(), @payment_link},
+          {gettext_noop("subscription card refused, pickup, no customer first name"),
+           Map.merge(card_refused(), %{
+             fulfillment_method: :pickup,
+             fulfillment_fee: nil,
+             grand_total: Decimal.new("54.00"),
+             balance: Decimal.new("54.00"),
+             recipient_name: nil,
+             delivery_address: nil,
+             customer_first_name: nil
+           }), @payment_link}
         ] do
-      {gettext_noop("Order details (custom order)"), title, :order_details,
-       Email.order_details(order(attrs, locale), link)}
+      {gettext_noop("Order details"), title, :order_details, Email.order_details(order(attrs, locale), link)}
     end
   end
 
-  defp payment_failed(locale) do
-    for {title, attrs} <- [
-          {gettext_noop("delivery"), %{}},
-          {gettext_noop("pickup, no customer first name"), %{fulfillment_method: :pickup, customer_first_name: nil}}
-        ] do
-      {gettext_noop("Subscription payment failed"), title, :payment_failed,
-       Email.payment_failed(order(attrs, locale), @payment_link)}
-    end
-  end
+  defp card_refused, do: %{origin: :subscription, gift: false, recipient_name: nil, recipient_first_name: nil}
 
   defp subscription_set_up(locale) do
     for {title, attrs} <- [
@@ -201,28 +201,17 @@ defmodule Edenflowers.Email.Previews do
     end
   end
 
-  defp order_fulfilled(locale) do
-    for {title, attrs} <-
-          fulfillment_variants() ++
-            [{gettext_noop("pickup"), %{fulfillment_method: :pickup, gift: false, recipient_first_name: nil}}] do
-      {gettext_noop("Order fulfilled"), title, :order_fulfilled, Email.order_fulfilled(order(attrs, locale))}
+  defp order_delivered(locale) do
+    for {title, attrs, photo} <- [
+          {gettext_noop("gift to a named recipient"), %{}, nil},
+          {gettext_noop("gift without a recipient name"), %{recipient_first_name: nil}, nil},
+          {gettext_noop("not a gift, recipient name filled in"), %{gift: false}, nil},
+          {gettext_noop("no customer first name"), %{customer_first_name: nil}, nil},
+          {gettext_noop("left at the door, gift to a named recipient"), %{}, "fictional-jpeg-bytes"},
+          {gettext_noop("left at the door, not a gift"), %{gift: false}, "fictional-jpeg-bytes"}
+        ] do
+      {gettext_noop("Order delivered"), title, :order_delivered, Email.order_delivered(order(attrs, locale), photo)}
     end
-  end
-
-  defp order_left_at_door(locale) do
-    for {title, attrs} <- fulfillment_variants() do
-      {gettext_noop("Order left at door (photo)"), title, :order_left_at_door,
-       Email.order_left_at_door(order(attrs, locale), "fictional-jpeg-bytes")}
-    end
-  end
-
-  defp fulfillment_variants do
-    [
-      {gettext_noop("gift to a named recipient"), %{}},
-      {gettext_noop("gift without a recipient name"), %{recipient_first_name: nil}},
-      {gettext_noop("not a gift, recipient name filled in"), %{gift: false}},
-      {gettext_noop("no customer first name"), %{customer_first_name: nil}}
-    ]
   end
 
   defp order_cancelled(locale) do
@@ -421,14 +410,12 @@ defmodule Edenflowers.Email.Previews do
     promo = %{code: "WELCOME-7K2P", expiration_date: ~D[2026-11-18]}
 
     [
-      {gettext_noop("Newsletter"), gettext_noop("welcome with promo code"), :newsletter_promo,
-       Email.newsletter_promo("maria@example.com", promo, locale)},
-      {gettext_noop("Newsletter"), gettext_noop("already subscribed"), :newsletter_already_subscribed,
-       Email.newsletter_already_subscribed("maria@example.com", promo, locale)},
-      {gettext_noop("Newsletter"), gettext_noop("resubscribed, code already used"), :newsletter_resubscribed,
-       Email.newsletter_resubscribed("maria@example.com")},
-      {gettext_noop("Newsletter"), gettext_noop("resubscribed, code expired"), :newsletter_resubscribed,
-       Email.newsletter_resubscribed("maria@example.com")},
+      {gettext_noop("Newsletter"), gettext_noop("welcome with promo code"), :newsletter,
+       Email.newsletter("maria@example.com", :new, promo, locale)},
+      {gettext_noop("Newsletter"), gettext_noop("already subscribed"), :newsletter,
+       Email.newsletter("maria@example.com", :again_with_code, promo, locale)},
+      {gettext_noop("Newsletter"), gettext_noop("resubscribed, code used or expired"), :newsletter,
+       Email.newsletter("maria@example.com", :again, nil, locale)},
       {gettext_noop("Account"), gettext_noop("sign-in code"), :otp_sign_in,
        Email.otp_sign_in("maria@example.com", "482913")},
       {gettext_noop("Account"), gettext_noop("email change code"), :email_change_code,
