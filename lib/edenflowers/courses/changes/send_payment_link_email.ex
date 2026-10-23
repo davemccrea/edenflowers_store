@@ -2,7 +2,8 @@ defmodule Edenflowers.Courses.Changes.SendPaymentLinkEmail do
   @moduledoc """
   Emails a course customer the private link for paying a remaining balance:
   as the course payment link before the course (`email: :payment_link`), or
-  as the Payment reminder Jennie sends by hand (`:payment_reminder`).
+  as the Payment reminder Jennie sends by hand (`:payment_reminder`). After
+  the course, the payment link is a reminder too.
   """
 
   use Ash.Resource.Change
@@ -41,7 +42,12 @@ defmodule Edenflowers.Courses.Changes.SendPaymentLinkEmail do
     end
   end
 
-  defp email(registration, :payment_link, url, message), do: Email.course_payment_link(registration, url, message)
+  defp email(registration, :payment_link, url, message) do
+    if Date.before?(registration.course.date, Edenflowers.ShopTime.today()),
+      do: Email.payment_reminder(registration, url, message),
+      else: Email.course_payment_link(registration, url, message)
+  end
+
   defp email(registration, :payment_reminder, url, message), do: Email.payment_reminder(registration, url, message)
 
   # Read fresh: the courses page's copy can predate a payment, and the email says what's owed.

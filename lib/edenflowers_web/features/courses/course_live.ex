@@ -160,7 +160,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               </.form>
 
               <p class="text-base-content/70 mt-4">
-                {~t"Cancel at least 7 days before the course for a full refund. After that, get in touch and we'll work something out."}
+                {Edenflowers.Courses.Course.cancellation_terms(@course)}
               </p>
             </section>
 

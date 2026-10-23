@@ -89,7 +89,9 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
             :if={@registration.status != :cancelled and not Date.before?(@registration.course.date, ShopTime.today())}
             class="text-base-content/70 mt-6"
           >
-            {~t"To cancel, reply to your confirmation email. Let me know at least 7 days before the course for a full refund. After that, we'll work something out."}
+            {~t"To cancel, reply to your confirmation email."} {Edenflowers.Courses.Course.cancellation_terms(
+              @registration.course
+            )}
           </p>
         </div>
       </.container>

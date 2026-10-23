@@ -537,39 +537,25 @@ defmodule Edenflowers.Email do
     end
   end
 
+  @doc """
+  Confirms a course booking paid at checkout, with the receipt the sender
+  attaches. Expects `:course` translated and `:first_name` loaded.
+  """
   def course_confirmation(registration, message \\ nil) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
       new()
       |> from(from_address())
       |> to(registration.email)
       |> bcc(record_copy_address())
-      |> subject(course_confirmation_subject(registration))
-      |> text_body(render_course_confirmation(registration, message))
+      |> subject(~t"You're booked on #{course = registration.course.name}, #{date = course_day(registration)}")
+      |> text_body(Templates.course_confirmation(course_assigns(registration, message)))
     end)
   end
 
-  # A payment link paid after the course sends the confirmation with the receipt.
-  defp course_confirmation_subject(registration) do
-    if course_over?(registration),
-      do: ~t"Your booking on #{course = registration.course.name}",
-      else: ~t"You're booked on #{course = registration.course.name}"
-  end
-
-  defp render_course_confirmation(registration, message) do
-    Templates.course_confirmation(%{
-      registration: registration,
-      message: message,
-      course_over?: course_over?(registration),
-      format_date: &Format.weekday_date(&1, registration.locale),
-      format_time: &Format.time(&1, registration.locale),
-      format_currency: &Format.currency(&1, registration.locale)
-    })
-  end
-
   @doc """
-  A link to pay a course booking awaiting payment, before or after the
-  course. Paying confirms it. Expects `:course` translated, `:first_name`
-  and `:balance` loaded.
+  The link to pay for a booking awaiting payment, before the course; after
+  it, the booking gets a Payment reminder instead. Paying confirms it.
+  Expects `:course` translated, `:first_name` and `:balance` loaded.
   """
   def course_payment_link(registration, payment_link_url, message \\ nil) do
     EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
@@ -577,22 +563,26 @@ defmodule Edenflowers.Email do
       |> from(from_address())
       |> to(registration.email)
       |> bcc(record_copy_address())
-      |> subject(~t"Pay for your booking on #{course = registration.course.name}")
+      |> subject(~t"Pay for your booking on #{course = registration.course.name}, #{date = course_day(registration)}")
       |> text_body(
-        Templates.course_payment_link(%{
-          registration: registration,
-          message: message,
-          payment_link_url: payment_link_url,
-          course_over?: course_over?(registration),
-          format_date: &Format.weekday_date(&1, registration.locale),
-          format_time: &Format.time(&1, registration.locale),
-          format_currency: &Format.currency(&1, registration.locale)
-        })
+        Templates.course_payment_link(
+          Map.put(course_assigns(registration, message), :payment_link_url, payment_link_url)
+        )
       )
     end)
   end
 
-  defp course_over?(registration), do: Date.before?(registration.course.date, Edenflowers.ShopTime.today())
+  defp course_assigns(registration, message) do
+    %{
+      registration: registration,
+      message: message,
+      format_date: &Format.weekday_date(&1, registration.locale),
+      format_time: &Format.time(&1, registration.locale),
+      format_currency: &Format.currency(&1, registration.locale)
+    }
+  end
+
+  defp course_day(registration), do: Format.weekday_day_month(registration.course.date, registration.locale)
 
   @doc """
   A copy of a couple's wedding enquiry, bcc Jennie so she can reply to them

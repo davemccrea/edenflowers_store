@@ -1,9 +1,10 @@
 ---
 id: TASK-105.11
 title: Rewrite the course booking emails
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 20:58'
 labels: []
 dependencies:
   - TASK-105.2
@@ -24,7 +25,13 @@ Booking confirmed: subject "You're booked on <course>, <date>", place or places 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Booking subjects include the course date
-- [ ] #2 No course email has an after-the-course version
-- [ ] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #1 Booking subjects include the course date
+- [x] #2 No course email has an after-the-course version
+- [x] #3 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+After the course, a booking awaiting payment is sent a Payment reminder wherever the course payment link would have gone (adding a booking, the settle drawer, the confirmation job).
+<!-- SECTION:NOTES:END -->

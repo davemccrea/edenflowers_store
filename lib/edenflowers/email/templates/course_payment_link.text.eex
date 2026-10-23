@@ -1,17 +1,17 @@
 <%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= if @course_over? do %><%= gettext("Thank you for coming to %{course}.", course: @registration.course.name) %><% else %><%= ngettext("Thank you for booking. I've kept you a place on %{course}, and paying confirms it.", "Thank you for booking. I've kept you %{count} places on %{course}, and paying confirms them.", @registration.seats, course: @registration.course.name) %><% end %>
+<%= ngettext("Thank you for booking. I've kept you a place on %{course}, and paying confirms it.", "Thank you for booking. I've kept you %{count} places on %{course}, and paying confirms them.", @registration.seats, course: @registration.course.name) %>
 
 <%= message(@message) %><%= gettext("Amount due") %>: <%= @format_currency.(@registration.balance) %>
 
-<%= gettext("Pay online by card or MobilePay:") %>
+<%= gettext("You can pay online here:") %>
 <%= @payment_link_url %>
 
-<%= unless @course_over? do %><%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
+<%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
 
-<%= gettext("If you need to cancel, reply to this email. Please let me know at least 7 days before the course if you can.") %>
+<%= gettext("To cancel, reply to this email.") %> <%= Edenflowers.Courses.Course.cancellation_terms(@registration.course) %>
 
-<% end %><%= if @course_over?, do: gettext("Warm wishes,"), else: gettext("See you there,") %>
+<%= gettext("See you there,") %>
 
 <%= signature() %>

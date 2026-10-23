@@ -62,12 +62,30 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
 
     assert {:error, {:live_redirect, %{to: ^edit_path}}} =
              view
-             |> form("#course-form", form: %{total_places: "12", language: "en"})
+             |> form("#course-form",
+               form: %{total_places: "12", language: "en", cancellation_days: "10", cancellation_fee_percent: "50"}
+             )
              |> render_submit()
 
     saved = Ash.get!(Course, course.id, authorize?: false)
     assert saved.total_places == 12
     assert saved.language == :en
+    assert saved.cancellation_days == 10
+    assert saved.cancellation_fee_percent == 50
+  end
+
+  test "words the cancellation terms from the days and the fee" do
+    terms = fn days, fee ->
+      Course.cancellation_terms(%Course{cancellation_days: days, cancellation_fee_percent: fee})
+    end
+
+    assert terms.(7, 0) == "Cancel at least 7 days before the course for a full refund."
+
+    assert terms.(10, 50) ==
+             "Cancel at least 10 days before the course for a full refund. After that, 50% of the price is kept."
+
+    assert terms.(7, 100) ==
+             "Cancel at least 7 days before the course for a full refund. After that, the booking can't be refunded."
   end
 
   describe "translating" do

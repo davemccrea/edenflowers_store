@@ -9,6 +9,8 @@ defmodule Edenflowers.Courses.Course do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTranslation.Resource]
 
+  use GettextSigils, backend: EdenflowersWeb.Gettext
+
   postgres do
     repo Edenflowers.Repo
     table "courses"
@@ -41,6 +43,8 @@ defmodule Edenflowers.Courses.Course do
       :register_before,
       :total_places,
       :price,
+      :cancellation_days,
+      :cancellation_fee_percent,
       :tax_rate_id,
       :language,
       :translations
@@ -87,10 +91,29 @@ defmodule Edenflowers.Courses.Course do
     attribute :total_places, :integer, allow_nil?: false
     attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
+    # A booking cancelled at least this many days before the course is refunded in full.
+    attribute :cancellation_days, :integer, allow_nil?: false, default: 7, constraints: [min: 0]
+    # What's kept of the price after that; 100 means no refund.
+    attribute :cancellation_fee_percent, :integer, allow_nil?: false, default: 0, constraints: [min: 0, max: 100]
+
     # The language the course is taught in, not the language of its page.
     attribute :language, :atom, allow_nil?: false, default: :sv, constraints: [one_of: [:sv, :fi, :en]]
 
     timestamps()
+  end
+
+  @doc """
+  The course's cancellation terms, as the course page, the FAQ and the
+  booking emails all state them, in the current Gettext locale.
+  """
+  def cancellation_terms(course) do
+    full_refund = ~t"Cancel at least #{days = course.cancellation_days} days before the course for a full refund."
+
+    case course.cancellation_fee_percent do
+      0 -> full_refund
+      100 -> full_refund <> " " <> ~t"After that, the booking can't be refunded."
+      fee -> full_refund <> " " <> ~t"After that, #{fee = fee}% of the price is kept."
+    end
   end
 
   relationships do
