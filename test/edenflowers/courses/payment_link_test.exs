@@ -108,6 +108,20 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
     end
   end
 
+  describe "a payment reminder" do
+    test "opens the link if need be and asks for what's still owed", ctx do
+      {:ok, reminded} =
+        Courses.send_registration_payment_reminder(ctx.registration, %{message: "See you soon."}, actor: ctx.admin)
+
+      assert reload(reminded).payment_link_open?
+
+      assert_email_sent(fn email ->
+        assert email.text_body =~ "See you soon."
+        assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(reload(reminded))
+      end)
+    end
+  end
+
   describe "emailing the link" do
     test "opens the link and sends one email in the booking's language", ctx do
       {:ok, emailed} = Courses.email_registration_payment_link(ctx.registration, actor: ctx.admin)

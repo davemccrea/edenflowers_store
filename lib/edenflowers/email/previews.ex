@@ -28,6 +28,7 @@ defmodule Edenflowers.Email.Previews do
         order_details(locale) ++
         order_updated(locale) ++
         payment_received(locale) ++
+        payment_reminder(locale) ++
         subscription_payment_failed(locale) ++
         subscription_set_up(locale) ++
         order_delivered(locale) ++
@@ -153,6 +154,20 @@ defmodule Edenflowers.Email.Previews do
       end
 
     orders ++ bookings
+  end
+
+  defp payment_reminder(locale) do
+    [
+      {gettext_noop("Payment reminder"), gettext_noop("order, unpaid"), :payment_reminder,
+       Email.payment_reminder(order(%{}, locale), @payment_link)},
+      {gettext_noop("Payment reminder"), gettext_noop("order part paid, with a message from Jennie"), :payment_reminder,
+       Email.payment_reminder(order(part_paid(), locale), @payment_link, message(locale))},
+      {gettext_noop("Payment reminder"), gettext_noop("booking for 2 after the course"), :payment_reminder,
+       Email.payment_reminder(
+         registration(%{seats: 2, balance: Decimal.new("90.00"), course: %{date: ~D[2020-11-20]}}, locale),
+         @payment_link
+       )}
+    ]
   end
 
   defp subscription_payment_failed(locale) do

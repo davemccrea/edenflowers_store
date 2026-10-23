@@ -120,6 +120,9 @@ defmodule Edenflowers.Email.Preview do
 
   # A payment being recorded reads as it will once it's in; from the menu,
   # it's the latest payment again.
+  defp order_email(:payment_reminder, order, inputs),
+    do: Email.payment_reminder(order, link_url(order), inputs[:message])
+
   defp order_email(:receipt, order, inputs) do
     {order, amount} =
       case decimal(inputs[:amount]) do
@@ -161,6 +164,9 @@ defmodule Edenflowers.Email.Preview do
 
   defp booking_email(:payment_link, registration, inputs),
     do: Email.course_payment_link(registration, link_url(registration), inputs[:message])
+
+  defp booking_email(:payment_reminder, registration, inputs),
+    do: Email.payment_reminder(registration, link_url(registration), inputs[:message])
 
   defp booking_email(:cancelled, registration, inputs) do
     money = Cancel.money(registration, refund(inputs))

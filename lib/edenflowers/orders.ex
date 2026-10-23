@@ -64,6 +64,7 @@ defmodule Edenflowers.Orders do
       define :get_order_by_payment_link_token, action: :by_payment_link_token, args: [:token]
       define :send_order_details_email, action: :send_order_details_email
       define :email_receipt, action: :email_receipt
+      define :send_payment_reminder, action: :send_payment_reminder
       define :refresh_vat_breakdown, action: :refresh_vat_breakdown
 
       # The charged fee for a quote not yet on an order, by the order's own rule.

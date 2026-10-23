@@ -396,6 +396,17 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   defp booking(course, id), do: Enum.find(course.bookings, &(&1.id == id))
 
+  defp send_email(:payment_reminder, registration, message, actor) do
+    case Courses.send_registration_payment_reminder(registration, %{message: message}, actor: actor) do
+      {:ok, _registration} ->
+        {:info, ~t"Payment reminder sent."}
+
+      {:error, error} ->
+        Logger.error("Payment reminder for course registration #{registration.id} not sent: #{inspect(error)}")
+        {:error, ~t"Could not send the email. Try again in a moment."}
+    end
+  end
+
   defp send_email(:payment_link, registration, message, actor),
     do: PaymentActions.email_payment_link(registration, message, actor)
 
@@ -440,6 +451,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       to: registration.email,
       last_sent: registration.confirmation_emailed_at && Format.datetime(registration.confirmation_emailed_at, locale)
     }
+  end
+
+  defp email_drawer_text(:payment_reminder, registration, _locale) do
+    %{title: ~t"Send payment reminder", submit_label: ~t"Send reminder", to: registration.email}
   end
 
   defp email_drawer_text(:payment_link, registration, locale) do
@@ -520,6 +535,15 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         {if @registration.confirmation_emailed_at,
           do: ~t"Resend confirmation",
           else: ~t"Email confirmation"}
+      </.actions_menu_button>
+      <.actions_menu_button
+        :if={to_collect?(@registration)}
+        menu={"registration-actions-#{@registration.id}"}
+        phx-click="open_email"
+        phx-value-kind="payment_reminder"
+        phx-value-id={@registration.id}
+      >
+        {~t"Send payment reminder"}
       </.actions_menu_button>
       <.actions_menu_button
         :if={@registration.refundable?}

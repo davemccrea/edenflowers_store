@@ -104,6 +104,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
         />
         <.collect_payment
           :if={@mode == :settle and to_collect?(@registration)}
+          course={@course}
           registration={@registration}
           locale={@locale}
         />
@@ -176,12 +177,17 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
     """
   end
 
+  attr :course, :map, required: true
   attr :registration, :map, required: true
   attr :locale, :string, required: true
 
-  # Courses are only paid by payment link, so collecting is sending it.
+  # Courses are only paid by payment link, so collecting is sending it: as the
+  # course payment link before the course, and as a reminder after it.
   defp collect_payment(assigns) do
-    assigns = assign(assigns, :emailed?, payment_link_emailed?(assigns.registration))
+    assigns =
+      assigns
+      |> assign(:emailed?, payment_link_emailed?(assigns.registration))
+      |> assign(:course_over?, Date.before?(assigns.course.date, Edenflowers.ShopTime.today()))
 
     ~H"""
     <section class="space-y-3">
@@ -208,13 +214,17 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
         <.button
           type="button"
           phx-click="open_email"
-          phx-value-kind="payment_link"
+          phx-value-kind={if @course_over?, do: "payment_reminder", else: "payment_link"}
           phx-value-id={@registration.id}
           variant="primary"
           size="sm"
         >
           <.icon name="hero-envelope" class="h-4 w-4" />
-          {if @emailed?, do: ~t"Resend payment link", else: ~t"Email payment link"}
+          {cond do
+            @course_over? -> ~t"Send payment reminder"
+            @emailed? -> ~t"Resend payment link"
+            true -> ~t"Email payment link"
+          end}
         </.button>
         <.button
           :if={not @registration.payment_link_open?}

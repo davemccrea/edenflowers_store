@@ -1,9 +1,10 @@
 ---
 id: TASK-105.5
 title: Let Jennie send a payment reminder for an order or booking
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-23 20:21'
 labels: []
 dependencies:
   - TASK-105.2
@@ -22,8 +23,14 @@ A menu item on the order and on the booking, shown while a balance is owed and n
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The menu item shows only while a balance is owed and the order isn't on invoice terms
-- [ ] #2 Sending opens a payment link when none is open
-- [ ] #3 Works for orders and course bookings
-- [ ] #4 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #1 The menu item shows only while a balance is owed and the order isn't on invoice terms
+- [x] #2 Sending opens a payment link when none is open
+- [x] #3 Works for orders and course bookings
+- [x] #4 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The order page's 'Email payment link' button now sends the Payment reminder; invoice orders get only 'Get payment link'. On a booking, the settle drawer's button sends the course payment link before the course and the reminder after it.
+<!-- SECTION:NOTES:END -->
