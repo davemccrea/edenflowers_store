@@ -186,7 +186,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 id="course-payment-form"
                 phx-submit="pay"
                 amount={StripeAPI.to_stripe_amount(@registration.amount)}
-                return_url={url(~p"/courses/bookings/#{@registration.id}")}
+                return_path={~p"/courses/bookings/#{@registration.id}"}
                 billing_name={@registration.name}
                 billing_email={@registration.email}
               >

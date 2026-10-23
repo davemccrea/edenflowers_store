@@ -307,7 +307,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     amount={StripeAPI.to_stripe_amount(@order.grand_total)}
                     setup_future_usage={if @order.subscription?, do: "off_session"}
                     customer_session_client_secret={@customer_session_client_secret}
-                    return_url={url(~p"/checkout/complete/#{@order.id}")}
+                    return_path={~p"/checkout/complete/#{@order.id}"}
                     billing_name={@order.customer_name}
                     billing_email={@order.customer_email}
                     billing_phone={buyer_phone_number(@order)}
