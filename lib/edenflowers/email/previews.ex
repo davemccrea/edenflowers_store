@@ -518,12 +518,12 @@ defmodule Edenflowers.Email.Previews do
     promo = %{code: "WELCOME-7K2P", expiration_date: ~D[2026-11-18]}
 
     [
-      {gettext_noop("Newsletter"), gettext_noop("welcome with promo code"), :newsletter,
-       Email.newsletter("maria@example.com", :new, promo, locale)},
-      {gettext_noop("Newsletter"), gettext_noop("already subscribed"), :newsletter,
-       Email.newsletter("maria@example.com", :again_with_code, promo, locale)},
-      {gettext_noop("Newsletter"), gettext_noop("resubscribed, code used or expired"), :newsletter,
-       Email.newsletter("maria@example.com", :again, nil, locale)},
+      {gettext_noop("Newsletter welcome"), gettext_noop("with promo code"), :newsletter_welcome,
+       Email.newsletter_welcome("maria@example.com", promo, locale)},
+      {gettext_noop("Already subscribed"), gettext_noop("code still usable"), :already_subscribed,
+       Email.already_subscribed("maria@example.com", promo, locale)},
+      {gettext_noop("Already subscribed"), gettext_noop("code used or expired"), :already_subscribed,
+       Email.already_subscribed("maria@example.com", nil, locale)},
       {gettext_noop("Account"), gettext_noop("sign-in code"), :otp_sign_in,
        Email.otp_sign_in("maria@example.com", "482913")},
       {gettext_noop("Account"), gettext_noop("email change code"), :email_change_code,

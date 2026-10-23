@@ -1,0 +1,12 @@
+<%= gettext("You're already subscribed to the Eden Flowers newsletter.") %>
+<%= if @promo_code do %>
+<%= gettext("Your 15% welcome code is still usable:") %>
+
+<%= @promo_code %>
+
+<%= gettext("Use it at checkout by %{date}.", date: @use_by) %>
+<% end %>
+<%= gettext("Shop flowers:") %>
+<%= @store_url %>
+
+Eden Flowers

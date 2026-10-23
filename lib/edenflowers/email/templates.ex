@@ -36,7 +36,8 @@ defmodule Edenflowers.Email.Templates do
     {:course_payment_link, [:assigns]},
     {:booking_cancelled, [:assigns]},
     {:booking_refunded, [:assigns]},
-    {:newsletter, [:assigns]},
+    {:newsletter_welcome, [:assigns]},
+    {:already_subscribed, [:assigns]},
     {:otp_sign_in, [:assigns]},
     {:email_change_code, [:assigns]},
     {:wedding_enquiry, [:assigns]}
