@@ -17,36 +17,95 @@
   cursor: progress;
 }
 
-/* The spinner replaces the label only after 300ms, so fast submits never
-   flash it. .form-button-processing uses visibility so its text stays out of
-   the accessible name until shown. */
-.form-button-spinner {
-  opacity: 0;
-}
-.form-button-processing {
-  visibility: hidden;
-}
-.phx-submit-loading .form-button-label,
-[aria-busy="true"] .form-button-label {
-  opacity: 0;
-  transition: opacity 0s 300ms;
-}
-.phx-submit-loading .form-button-spinner,
-[aria-busy="true"] .form-button-spinner {
-  opacity: 1;
-  transition: opacity 0s 300ms;
+/* LiveView marks the pressed button itself with phx-submit-loading or
+   phx-click-loading until the server answers; Stripe's Pay button sets
+   aria-busy because its submit goes to Stripe first. The label is hidden
+   and a spinner is drawn over it, so the button keeps its size. Both wait
+   300ms, so fast answers never flash it. The text is hidden with
+   text-fill-color rather than color so the spinner can still use
+   currentColor. */
+button:is(.btn, [type="submit"]):is(
+    .phx-submit-loading,
+    .phx-click-loading,
+    [aria-busy="true"]
+  ) {
+  animation: button-label-hide 0s 300ms forwards;
 }
 
-/* Reduced motion shows a static "Processing…" label instead of the spinner. */
-@media (prefers-reduced-motion: reduce) {
-  .form-button-spinner {
-    visibility: hidden;
+button:is(.btn, [type="submit"]):is(
+    .phx-submit-loading,
+    .phx-click-loading,
+    [aria-busy="true"]
+  )
+  > * {
+  animation: button-content-hide 0s 300ms forwards;
+}
+
+/* In a layer so Tailwind's absolute on a positioned button still wins. */
+@layer components {
+  button:is(.btn, [type="submit"]):is(
+      .phx-submit-loading,
+      .phx-click-loading,
+      [aria-busy="true"]
+    ) {
+    position: relative;
   }
+}
 
-  .phx-submit-loading .form-button-processing,
-  [aria-busy="true"] .form-button-processing {
-    visibility: visible;
-    transition: visibility 0s 300ms;
+button:is(.btn, [type="submit"]):is(
+    .phx-submit-loading,
+    .phx-click-loading,
+    [aria-busy="true"]
+  )::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background-color: currentColor;
+  @apply loading-spinner;
+  mask-position: center;
+  mask-size: 1.25em;
+  mask-repeat: no-repeat;
+  opacity: 0;
+  animation: button-spinner-show 0s 300ms forwards;
+}
+
+/* A clicked button isn't disabled by LiveView, so a second click would send
+   the event again. */
+button.phx-click-loading {
+  pointer-events: none;
+}
+
+@keyframes button-label-hide {
+  to {
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+  }
+}
+
+@keyframes button-content-hide {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes button-spinner-show {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion shows a static ellipsis instead of the spinner. */
+@media (prefers-reduced-motion: reduce) {
+  button:is(.btn, [type="submit"]):is(
+      .phx-submit-loading,
+      .phx-click-loading,
+      [aria-busy="true"]
+    )::after {
+    content: "…";
+    mask: none;
+    background-color: transparent;
   }
 }
 

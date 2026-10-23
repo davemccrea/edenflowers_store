@@ -63,7 +63,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           </div>
         </.drawer_body>
         <.drawer_footer>
-          <.button type="submit" variant="primary" phx-disable-with={~t"Adding…"}>{~t"Add booking"}</.button>
+          <.button type="submit" variant="primary">{~t"Add booking"}</.button>
           <.button
             type="button"
             phx-click={JS.exec("phx-hide", to: "#booking-drawer") |> JS.push("close_booking")}
@@ -250,7 +250,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
         class="select w-full"
       />
       <.input name="email_receipt" type="checkbox" label={~t"Email a receipt"} value="true" />
-      <.button type="submit" variant={@variant} phx-disable-with={~t"Recording…"}>{~t"Record payment"}</.button>
+      <.button type="submit" variant={@variant}>{~t"Record payment"}</.button>
     </form>
     """
   end

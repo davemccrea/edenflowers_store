@@ -59,7 +59,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
               <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
               <span class="max-md:sr-only">{~t"View in store"}</span>
             </.button>
-            <.button type="submit" form="course-form" variant="primary" size="sm" phx-disable-with={~t"Saving…"}>
+            <.button type="submit" form="course-form" variant="primary" size="sm">
               {~t"Save"}
             </.button>
           </:actions>
