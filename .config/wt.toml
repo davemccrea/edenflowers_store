@@ -33,6 +33,6 @@ db = "bash -c 'source .env && (mix ecto.drop --quiet 2>/dev/null; true) && mix a
 [[pre-remove]]
 db = "bash -c 'source .env && mix ecto.drop --quiet; MIX_ENV=test mix ecto.drop --quiet'"
 
-# Stop this worktree's local imgproxy (see `just imgproxy`)
+# Stop this worktree's local imgproxy (see `just start-imgproxy`)
 [[pre-remove]]
 imgproxy = "bash -c 'source .env && docker rm -f edenflowers-imgproxy-$((PORT + 1)) >/dev/null 2>&1; true'"

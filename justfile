@@ -16,7 +16,7 @@ install-typst:
 
 # Run the development server
 [group('development')]
-dev: check-typst imgproxy
+dev: check-typst start-imgproxy
     # iex quits on EOF, so a backgrounded run (no terminal) needs plain mix
     # Photo URLs use the Tailscale IP so they load on other devices too; localhost when Tailscale is down
     PORT={{ port }} IMGPROXY_PREFIX=http://$(tailscale ip -4 2>/dev/null || echo localhost):{{ imgproxy_port }} $([ -t 0 ] && echo iex -S) mix phx.server
@@ -28,7 +28,7 @@ test *args: check-typst
 
 # Write tmp/emails.md: Claude's map of when each email is sent, then every email in every language
 [group('development')]
-email-map:
+map-emails:
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p tmp
@@ -84,7 +84,7 @@ seed-db *flags:
 
 # Start a local imgproxy on PORT+1 (left running), serving images/ read-only and dev uploads from tmp/uploads
 [private]
-imgproxy:
+start-imgproxy:
     #!/usr/bin/env bash
     set -euo pipefail
     docker info >/dev/null 2>&1 || { echo "Docker isn't running: start OrbStack, dev serves photos through a local imgproxy." >&2; exit 1; }

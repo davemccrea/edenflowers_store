@@ -79,7 +79,7 @@ config :edenflowers,
   ]
 
 # Admin photo uploads. Dev keeps them out of images/, the photos synced to the
-# servers; `just imgproxy` serves them. Production sets UPLOADS_DIR to a folder
+# servers; `just start-imgproxy` serves them. Production sets UPLOADS_DIR to a folder
 # inside imgproxy's images dir.
 config :edenflowers, :uploads_dir, "tmp/uploads"
 
