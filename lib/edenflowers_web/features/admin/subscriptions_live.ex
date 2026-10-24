@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           action={:admin_list}
           actor={@current_user}
           search={[
-            label: ~t"Subscription",
+            label: ~t"Search",
             placeholder: ~t"Search name or email…",
             fn: &search_subscriptions/3
           ]}

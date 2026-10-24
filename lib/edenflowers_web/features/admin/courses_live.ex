@@ -87,9 +87,9 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             field="period"
             filter={[
               type: :select,
-              label: ~t"When",
-              prompt: ~t"All",
-              options: [{~t"Current", :current}, {pgettext("course", "Past"), :past}]
+              label: ~t"Show",
+              prompt: ~t"All courses",
+              options: [{~t"Still to do", :current}, {pgettext("course", "Done"), :past}]
             ]}
             label={~t"Status"}
           >

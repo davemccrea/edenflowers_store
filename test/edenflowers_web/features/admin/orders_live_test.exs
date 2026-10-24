@@ -32,16 +32,18 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     refute has_element?(view, "[data-item-id]", "Ada Lovelace")
   end
 
-  test "opens on the orders still to make, paid or not", %{conn: conn} do
+  test "opens on the orders still to make or still to be paid for", %{conn: conn} do
     placed_order(customer_name: "To Make", paid: true, fulfillment_status: :pending)
     placed_order(customer_name: "Already Done", paid: true, fulfillment_status: :fulfilled)
     placed_order(customer_name: "Pays Later", fulfillment_status: :pending)
+    placed_order(customer_name: "Delivered Unpaid", fulfillment_status: :fulfilled)
     placed_order(customer_name: "Called Off", fulfillment_status: :cancelled)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders")
 
     assert has_element?(view, "[data-item-id]", "To Make")
     assert has_element?(view, "[data-item-id]", "Pays Later")
+    assert has_element?(view, "[data-item-id]", "Delivered Unpaid")
     refute has_element?(view, "[data-item-id]", "Already Done")
     refute has_element?(view, "[data-item-id]", "Called Off")
     assert has_element?(view, ~s(nav a[aria-current="page"]), "Orders")
