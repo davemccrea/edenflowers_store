@@ -8,6 +8,7 @@ defmodule Edenflowers.Email do
 
   import Swoosh.Email
 
+  alias Edenflowers.Accounts.Calculations.FirstName
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email.Templates
   alias Edenflowers.Format
@@ -580,7 +581,7 @@ defmodule Edenflowers.Email do
     |> text_body(
       Templates.wedding_enquiry(%{
         enquiry: enquiry,
-        first_name: Edenflowers.Accounts.Calculations.FirstName.extract(name),
+        first_name: FirstName.extract(name),
         wedding_date: Format.weekday_date(enquiry["wedding_date"], enquiry["locale"])
       })
     )
@@ -599,7 +600,7 @@ defmodule Edenflowers.Email do
     |> text_body(
       Templates.contact_message(%{
         message: message,
-        first_name: Edenflowers.Accounts.Calculations.FirstName.extract(name)
+        first_name: FirstName.extract(name)
       })
     )
   end
