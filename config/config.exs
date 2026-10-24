@@ -13,7 +13,9 @@ config :edenflowers, Oban,
     # A job killed mid-run stays `executing`, and AshOban's uniqueness then
     # blocks that record's trigger for good. Rescued after an hour.
     Oban.Plugins.Lifeline,
-    {Oban.Plugins.Cron, crontab: [{"0 3 * * *", Edenflowers.Accounts.Workers.SyncNewsletterList}]}
+    # AshOban adds each trigger's `scheduler_cron` here, so they run on shop time too.
+    {Oban.Plugins.Cron,
+     timezone: "Europe/Helsinki", crontab: [{"0 3 * * *", Edenflowers.Accounts.Workers.SyncNewsletterList}]}
   ]
 
 config :localize,
