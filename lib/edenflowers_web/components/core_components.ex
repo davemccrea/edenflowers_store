@@ -410,7 +410,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <select
           id={@id}
           name={@name}
-          class={[@class || "select select-lg w-full", @errors != [] && (@error_class || "select-error")]}
+          class={[@class || "select select-lg w-full text-base", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
           aria-invalid={@errors != [] && "true"}
           aria-describedby={describedby(@id, @errors, @help)}
@@ -436,7 +436,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <textarea
           id={@id}
           name={@name}
-          class={[@class || "textarea textarea-lg w-full", @errors != [] && (@error_class || "textarea-error")]}
+          class={[@class || "textarea textarea-lg w-full text-base", @errors != [] && (@error_class || "textarea-error")]}
           aria-invalid={@errors != [] && "true"}
           aria-describedby={describedby(@id, @errors, @help)}
           {@rest}
@@ -502,12 +502,9 @@ defmodule EdenflowersWeb.CoreComponents do
       <button
         type="submit"
         aria-label={@button_text}
-        class="text-base-content/70 touch-target group flex flex-none p-2 transition-colors hover:text-base-content"
+        class="text-base-content/70 touch-target flex flex-none p-2 transition-colors hover:text-base-content"
       >
-        <.icon
-          name="hero-arrow-right"
-          class="h-5 w-5 transition-transform duration-300 ease-out group-hover:translate-x-1"
-        />
+        <.icon name="hero-arrow-right" class="h-5 w-5" />
       </button>
     </label>
     <div :if={@errors != []} id={"#{@id}-error"}>
@@ -533,7 +530,7 @@ defmodule EdenflowersWeb.CoreComponents do
             name={@name}
             id={@id}
             value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-            class={[@class || "input input-lg w-full", @leading != [] && "pl-8", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
+            class={[@class || "input input-lg w-full text-base", @leading != [] && "pl-8", (@loading or @confirmed or @trailing != []) && "pr-10", @errors != [] && (@error_class || "input-error")]}
             aria-invalid={@errors != [] && "true"}
             aria-describedby={describedby(@id, @errors, @help)}
             phx-debounce={if not @used? and not @validate_live?, do: "blur"}

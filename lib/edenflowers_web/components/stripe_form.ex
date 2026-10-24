@@ -284,7 +284,7 @@ defmodule EdenflowersWeb.StripeForm do
          *                           daisyUI draws that outline in base-content, base.css
          *                           overrides every focus ring to the brand green
          *   - invalid: border-color and focus outline flip to --color-error
-         *   - input-lg: 48px tall, 18px font, 12px horizontal padding
+         *   - input-lg text-base: 48px tall, 16px font, 12px horizontal padding
          *
          * The payment-method tabs mirror the `radio-card` input instead: base-300
          * frame, primary frame over a 5% primary wash once selected.
@@ -336,11 +336,11 @@ defmodule EdenflowersWeb.StripeForm do
                 backgroundColor: base100,
                 border: `1px solid ${subtleBorder}`,
                 boxShadow: "none",
-                fontSize: "18px",
+                fontSize: "16px",
                 fontWeight: "400",
-                lineHeight: "27px",
-                // Stripe's inputs are border-box: 2 × 9.5px + 27px line-height + 2px border = 48px (input-lg).
-                padding: "9.5px 12px",
+                lineHeight: "24px",
+                // Stripe's inputs are border-box: 2 × 11px + 24px line-height + 2px border = 48px (input-lg).
+                padding: "11px 12px",
               },
               ".Input::placeholder": {
                 color: `color-mix(in oklab, ${baseContent} 50%, transparent)`,

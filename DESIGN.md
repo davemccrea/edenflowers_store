@@ -272,7 +272,7 @@ Size follows place: `sm` in page headers, cards and table rows; `md` for a form'
 The submit button swaps its label for a spinner, both sharing one grid cell so the width never shifts. The reveal is delayed 300ms, so a fast submit never flashes a spinner, and the swap back is instantaneous. The loading state is driven by LiveView's `.phx-submit-loading` class, never by a prop.
 
 ### Inputs / Fields
-- **Style:** daisyUI `input input-lg`, full width, square, on `base-100`. Label above at `mb-1`, inside a flex-column `<label>` so the whole thing is one click target.
+- **Style:** daisyUI `input input-lg text-base` (48px tall with 16px text, since `-lg` alone sets 18px), full width, square, on `base-100`. Label above at `mb-1`, inside a flex-column `<label>` so the whole thing is one click target.
 - **Trailing state:** a right-inset slot at `right-3` carries a spinner while validating, a green `check-circle` when confirmed, or arbitrary trailing content. Reserved space via `pr-10` so the value never slides.
 - **Validation cadence:** `phx-debounce="blur"` until the field has been used, then live.
 - **Error:** `input-error` border, `aria-invalid`, and an `aria-describedby` error node below.
