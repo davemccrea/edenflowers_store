@@ -515,8 +515,9 @@ defmodule Edenflowers.Payments do
 
   # A booking's course is in the booking's own language.
   def get_for_customer_email!(%{"course_registration_id" => id}) do
-    registration = Ash.get!(CourseRegistration, id, action: :for_customer_email, actor: system_actor())
-    Map.update!(registration, :course, &Translations.translate(&1, String.to_existing_atom(registration.locale)))
+    CourseRegistration
+    |> Ash.get!(id, action: :for_customer_email, actor: system_actor())
+    |> Translations.in_own_locale()
   end
 
   defp find_payment(payment_intent_id) do

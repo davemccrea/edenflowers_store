@@ -79,10 +79,7 @@ defmodule Edenflowers.Orders.Changes.SendOrderDetailsEmail do
     })
   end
 
-  defp payment_link_url(_changeset, %{payment_link_open?: true} = order, _kind),
-    do: EdenflowersWeb.PaymentLink.url_for(order)
-
-  defp payment_link_url(_changeset, _order, _kind), do: nil
+  defp payment_link_url(_changeset, order, _kind), do: EdenflowersWeb.PaymentLink.url_if_open(order)
 
   # Atomic, so a caller holding a copy from before the failure still clears it.
   defp clear_failure(changeset), do: Ash.Changeset.atomic_update(changeset, :order_details_email_failed_at, nil)

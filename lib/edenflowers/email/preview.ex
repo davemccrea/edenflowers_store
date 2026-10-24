@@ -10,6 +10,7 @@ defmodule Edenflowers.Email.Preview do
 
   import Edenflowers.Actors
 
+  alias Edenflowers.Accounts.Calculations.FirstName
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email
   alias Edenflowers.Orders.Changes.SendSubscriptionCancelledEmail
@@ -64,7 +65,7 @@ defmodule Edenflowers.Email.Preview do
     entered = %{
       entered
       | locale: locale || entered.locale,
-        customer_first_name: Edenflowers.Accounts.Calculations.FirstName.extract(entered.customer_name),
+        customer_first_name: FirstName.extract(entered.customer_name),
         line_items: Enum.map(price.lines, &%{quantity: &1.quantity, product_name: &1.name, subtotal: &1.total}),
         fulfillment_fee: price.fulfillment_fee,
         grand_total: price.total,
@@ -93,7 +94,7 @@ defmodule Edenflowers.Email.Preview do
         entered
         | locale: locale || entered.locale,
           course: course,
-          first_name: Edenflowers.Accounts.Calculations.FirstName.extract(entered.name),
+          first_name: FirstName.extract(entered.name),
           seats: seats,
           balance: Decimal.mult(course.price, seats),
           # Saving opens the link with a token of its own.
@@ -125,7 +126,7 @@ defmodule Edenflowers.Email.Preview do
     ]
 
   defp order_email(:order_details, order, inputs),
-    do: Email.order_details(order, payment_link_url(order), inputs[:message])
+    do: Email.order_details(order, EdenflowersWeb.PaymentLink.url_if_open(order), inputs[:message])
 
   # Sending it opens the link, so it reads as it will once open.
   defp order_email(:payment_link, order, inputs),
@@ -140,7 +141,7 @@ defmodule Edenflowers.Email.Preview do
     {order, amount} =
       case decimal(inputs[:amount]) do
         nil ->
-          {order, latest_payment(order)}
+          {order, SendPaymentReceivedEmail.latest_payment(order)}
 
         amount ->
           {%{order | amount_paid: Decimal.add(order.amount_paid, amount), balance: Decimal.sub(order.balance, amount)},
@@ -199,9 +200,6 @@ defmodule Edenflowers.Email.Preview do
   defp link_url(%{payment_link_token: nil}), do: EdenflowersWeb.Endpoint.url() <> "/pay/…"
   defp link_url(payable), do: EdenflowersWeb.PaymentLink.url_for(payable)
 
-  defp payment_link_url(%{payment_link_open?: true} = order), do: EdenflowersWeb.PaymentLink.url_for(order)
-  defp payment_link_url(_order), do: nil
-
   defp refund_details(inputs),
     do: %{amount: refund(inputs), payment_method: inputs[:payment_method] || :stripe, note: inputs[:message]}
 
@@ -217,19 +215,10 @@ defmodule Edenflowers.Email.Preview do
     end
   end
 
-  defp latest_payment(order) do
-    order.payments
-    |> Enum.filter(&Decimal.positive?(&1.amount))
-    |> Enum.max_by(& &1.paid_at, DateTime, fn -> %{amount: order.amount_paid} end)
-    |> Map.fetch!(:amount)
-  end
-
   defp in_locale(record, nil), do: translated(record)
   defp in_locale(record, locale), do: translated(%{record | locale: locale})
 
-  # Course names are stored per locale, like the senders read them.
-  defp translated(%CourseRegistration{} = registration),
-    do: Map.update!(registration, :course, &Translations.translate(&1, String.to_existing_atom(registration.locale)))
+  defp translated(%CourseRegistration{} = registration), do: Translations.in_own_locale(registration)
 
   defp translated(order), do: order
 end

@@ -32,6 +32,18 @@ defmodule Edenflowers.Translations do
   end
 
   @doc """
+  Translate a booking's loaded course, or a subscription's loaded product,
+  into the customer's own locale, as their emails read it.
+  """
+  def in_own_locale(%Edenflowers.Courses.CourseRegistration{} = registration),
+    do: Map.update!(registration, :course, &translate(&1, own_locale(registration)))
+
+  def in_own_locale(%Edenflowers.Orders.Subscription{} = subscription),
+    do: update_in(subscription.product_variant.product, &translate(&1, own_locale(subscription)))
+
+  defp own_locale(record), do: String.to_existing_atom(record.locale)
+
+  @doc """
   Translate a loaded belongs_to on each record, e.g. `translate_assoc(variants, :product)`.
 
   Loads translations for the whole batch in one query rather than per record.

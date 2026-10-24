@@ -27,7 +27,7 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionSetupEmail do
           ],
           Ash.Context.to_opts(context)
         )
-        |> translate_product()
+        |> Translations.in_own_locale()
 
       case subscription |> Email.subscription_set_up() |> Mailer.deliver() do
         {:ok, _result} ->
@@ -38,10 +38,5 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionSetupEmail do
           Ash.Changeset.add_error(changeset, "Failed to send subscription set-up email: #{inspect(error)}")
       end
     end)
-  end
-
-  defp translate_product(subscription) do
-    locale = String.to_existing_atom(subscription.locale)
-    update_in(subscription.product_variant.product, &Translations.translate(&1, locale))
   end
 end

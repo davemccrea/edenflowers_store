@@ -62,7 +62,7 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
   end
 
   defp confirmation_email(amount_paid, date \\ ~D[2026-11-20]) do
-    Edenflowers.Email.course_confirmation(%{
+    Edenflowers.Email.course_confirmation(%Edenflowers.Courses.CourseRegistration{
       first_name: "Anna",
       email: "anna@example.com",
       locale: "en",
