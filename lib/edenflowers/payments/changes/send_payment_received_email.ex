@@ -66,10 +66,11 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
   defp load_for_send(%CourseRegistration{} = registration) do
     registration
     |> Ash.load!([:course, :payments, :first_name, :amount_paid, :balance], actor: system_actor())
-    |> Map.update!(:course, &Translations.translate(&1, String.to_existing_atom(registration.locale)))
+    |> Translations.in_own_locale()
   end
 
-  defp latest_payment(record) do
+  @doc "The latest positive payment's amount, or what's been paid when none is loaded."
+  def latest_payment(record) do
     record.payments
     |> Enum.filter(&Decimal.positive?(&1.amount))
     |> Enum.max_by(& &1.paid_at, DateTime, fn -> %{amount: record.amount_paid} end)

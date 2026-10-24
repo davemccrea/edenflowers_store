@@ -40,12 +40,7 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionCancelledEmail do
   def load_for_send(subscription) do
     subscription
     |> Ash.load!([:fulfillment_option, product_variant: :product, user: [:first_name]], authorize?: false)
-    |> then(fn subscription ->
-      update_in(
-        subscription.product_variant.product,
-        &Edenflowers.Translations.translate(&1, String.to_existing_atom(subscription.locale))
-      )
-    end)
+    |> Edenflowers.Translations.in_own_locale()
   end
 
   @doc """
@@ -55,17 +50,16 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionCancelledEmail do
   def charged_on(subscription) do
     require Ash.Query
 
-    Edenflowers.Orders.Order
-    |> Ash.Query.filter(
-      subscription_id == ^subscription.id and state == :placed and fulfillment_status == :pending and
-        fulfillment_date >= ^Edenflowers.ShopTime.today()
-    )
-    |> Ash.Query.sort(fulfillment_date: :asc)
-    |> Ash.Query.limit(1)
-    |> Ash.read_one!(authorize?: false)
-    |> case do
-      nil -> nil
-      order -> order.fulfillment_date
-    end
+    order =
+      Edenflowers.Orders.Order
+      |> Ash.Query.filter(
+        subscription_id == ^subscription.id and state == :placed and fulfillment_status == :pending and
+          fulfillment_date >= ^Edenflowers.ShopTime.today()
+      )
+      |> Ash.Query.sort(fulfillment_date: :asc)
+      |> Ash.Query.limit(1)
+      |> Ash.read_one!(authorize?: false)
+
+    order && order.fulfillment_date
   end
 end

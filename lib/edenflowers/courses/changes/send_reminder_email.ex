@@ -12,13 +12,14 @@ defmodule Edenflowers.Courses.Changes.SendReminderEmail do
   alias Edenflowers.Email
   alias Edenflowers.Mailer
   alias Edenflowers.Translations
+  alias EdenflowersWeb.PaymentLink
 
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       registration = load_for_send(changeset.data)
 
-      case registration |> Email.course_reminder(payment_link_url(registration)) |> Mailer.deliver() do
+      case registration |> Email.course_reminder(PaymentLink.url_if_open(registration)) |> Mailer.deliver() do
         {:ok, _result} ->
           Logger.info("Sent reminder email for course registration #{registration.id}")
           Ash.Changeset.force_change_attribute(changeset, :reminder_emailed_at, DateTime.utc_now())
@@ -29,14 +30,9 @@ defmodule Edenflowers.Courses.Changes.SendReminderEmail do
     end)
   end
 
-  defp payment_link_url(%{payment_link_open?: true} = registration),
-    do: EdenflowersWeb.PaymentLink.url_for(registration)
-
-  defp payment_link_url(_registration), do: nil
-
   defp load_for_send(registration) do
     registration
     |> Ash.load!([:course, :first_name, :balance, :payment_link_open?], actor: system_actor())
-    |> Map.update!(:course, &Translations.translate(&1, String.to_existing_atom(registration.locale)))
+    |> Translations.in_own_locale()
   end
 end

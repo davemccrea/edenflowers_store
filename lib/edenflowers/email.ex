@@ -13,6 +13,7 @@ defmodule Edenflowers.Email do
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.ShopNotice
+  alias Edenflowers.Orders.Subscription
 
   @doc """
   The receipt for an Online Order paid at checkout: when and where, what was
@@ -22,11 +23,8 @@ defmodule Edenflowers.Email do
   `line_items: [:subtotal]` loaded.
   """
   def order_confirmation(order) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(~t"Your Eden Flowers order for #{date = short_date(order)}")
       |> text_body(
         Templates.order_confirmation(%{
@@ -51,11 +49,8 @@ defmodule Edenflowers.Email do
   def payment_received(record, amount, message \\ nil)
 
   def payment_received(%Order{} = order, amount, message) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(~t"Payment received for your order for #{date = short_date(order)}")
       |> text_body(
         Templates.payment_received(%{
@@ -69,11 +64,8 @@ defmodule Edenflowers.Email do
   end
 
   def payment_received(%CourseRegistration{} = registration, amount, message) do
-    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(registration.email)
-      |> bcc(record_copy_address())
+    customer_email(registration, from_address(), fn email ->
+      email
       |> subject(
         ~t"Payment received for #{course = registration.course.name}, #{date = Format.day_month(registration.course.date, registration.locale)}"
       )
@@ -95,11 +87,8 @@ defmodule Edenflowers.Email do
   was paid, which may be any time. Loads as `payment_received/3`.
   """
   def purchase_receipt(%Order{} = order, message \\ nil) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(~t"Your receipt from Eden Flowers")
       |> text_body(
         Templates.purchase_receipt(%{
@@ -119,11 +108,8 @@ defmodule Edenflowers.Email do
   def payment_reminder(record, payment_link_url, message \\ nil)
 
   def payment_reminder(%Order{} = order, payment_link_url, message) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(~t"A reminder about your order for #{date = short_date(order)}")
       |> text_body(
         Templates.payment_reminder(%{
@@ -138,11 +124,8 @@ defmodule Edenflowers.Email do
   end
 
   def payment_reminder(%CourseRegistration{} = registration, payment_link_url, message) do
-    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(registration.email)
-      |> bcc(record_copy_address())
+    customer_email(registration, from_address(), fn email ->
+      email
       |> subject(~t"A reminder about your booking on #{course = registration.course.name}")
       |> text_body(
         Templates.booking_payment_reminder(%{
@@ -163,11 +146,8 @@ defmodule Edenflowers.Email do
   `:balance` and `line_items: [:subtotal]` loaded.
   """
   def order_details(order, payment_link_url, message \\ nil) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(~t"Your Eden Flowers order for #{date = short_date(order)}")
       |> text_body(Templates.order_details(order_assigns(order, payment_link_url, message)))
     end)
@@ -179,11 +159,8 @@ defmodule Edenflowers.Email do
   Loads as `order_details/3`.
   """
   def order_updated(order, payment_link_url, message \\ nil) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(~t"Your updated Eden Flowers order for #{date = short_date(order)}")
       |> text_body(Templates.order_updated(order_assigns(order, payment_link_url, message)))
     end)
@@ -205,11 +182,8 @@ defmodule Edenflowers.Email do
   `:amount_paid` and `:line_items` loaded.
   """
   def subscription_charged(order) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(automated_from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, automated_from_address(), fn email ->
+      email
       |> subject(~t"Your flowers for #{date = short_date(order)}")
       |> text_body(
         Templates.subscription_charged(%{
@@ -229,11 +203,8 @@ defmodule Edenflowers.Email do
   and `:line_items` loaded.
   """
   def subscription_payment_failed(order, payment_link_url) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(~t"Payment needed for your flowers on #{date = short_date(order)}")
       |> text_body(
         Templates.subscription_payment_failed(%{
@@ -276,11 +247,8 @@ defmodule Edenflowers.Email do
   and `user: [:first_name]` loaded.
   """
   def subscription_set_up(subscription) do
-    EdenflowersWeb.Gettext.with_app_locale(subscription.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(to_string(subscription.user.email))
-      |> bcc(record_copy_address())
+    customer_email(subscription, from_address(), fn email ->
+      email
       |> subject(~t"Your #{product = subscription.product_variant.product.name} subscription is set up")
       |> text_body(
         Templates.subscription_set_up(%{
@@ -289,8 +257,8 @@ defmodule Edenflowers.Email do
           size: EdenflowersWeb.Admin.Components.variant_size_label(subscription.product_variant.size),
           interval: EdenflowersWeb.Checkout.Fields.interval_label(subscription.interval_weeks),
           price: Format.currency(subscription_price(subscription), subscription.locale),
-          charge_days: Edenflowers.Orders.Subscription.lead_days(),
-          change_days: Edenflowers.Orders.Subscription.cutoff_days() + 1,
+          charge_days: Subscription.lead_days(),
+          change_days: Subscription.cutoff_days() + 1,
           account_url: account_url(),
           format_date: &Format.weekday_date(&1, subscription.locale)
         })
@@ -306,11 +274,8 @@ defmodule Edenflowers.Email do
   def subscription_cancelled(subscription, charged_on, message \\ nil) do
     product = subscription.product_variant.product.name
 
-    EdenflowersWeb.Gettext.with_app_locale(subscription.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(to_string(subscription.user.email))
-      |> bcc(record_copy_address())
+    customer_email(subscription, from_address(), fn email ->
+      email
       |> subject(~t"Your #{product} subscription is cancelled")
       |> text_body(
         Templates.subscription_cancelled(%{
@@ -333,11 +298,8 @@ defmodule Edenflowers.Email do
   def subscription_cancellation_confirmed(subscription, charged_on) do
     product = subscription.product_variant.product.name
 
-    EdenflowersWeb.Gettext.with_app_locale(subscription.locale, fn ->
-      new()
-      |> from(automated_from_address())
-      |> to(to_string(subscription.user.email))
-      |> bcc(record_copy_address())
+    customer_email(subscription, automated_from_address(), fn email ->
+      email
       |> subject(~t"Your #{product} subscription is cancelled")
       |> text_body(
         Templates.subscription_cancellation_confirmed(%{
@@ -361,11 +323,8 @@ defmodule Edenflowers.Email do
     pickup? = subscription.fulfillment_option.fulfillment_method == :pickup
     day = Format.weekday_day_month(delivery_on, subscription.locale)
 
-    EdenflowersWeb.Gettext.with_app_locale(subscription.locale, fn ->
-      new()
-      |> from(automated_from_address())
-      |> to(to_string(subscription.user.email))
-      |> bcc(record_copy_address())
+    customer_email(subscription, automated_from_address(), fn email ->
+      email
       |> subject(
         if pickup?,
           do: ~t"Your next flowers are ready on #{date = day}",
@@ -377,8 +336,8 @@ defmodule Edenflowers.Email do
           product: subscription.product_variant.product.name,
           pickup?: pickup?,
           price: Format.currency(subscription_price(subscription), subscription.locale),
-          change_by: Date.add(delivery_on, -(Edenflowers.Orders.Subscription.cutoff_days() + 1)),
-          charged_on: Edenflowers.Orders.Subscription.charged_on(delivery_on),
+          change_by: Date.add(delivery_on, -(Subscription.cutoff_days() + 1)),
+          charged_on: Subscription.charged_on(delivery_on),
           account_url: account_url(),
           format_date: &Format.weekday_date(&1, subscription.locale)
         })
@@ -396,11 +355,8 @@ defmodule Edenflowers.Email do
   `:recipient_first_name` loaded.
   """
   def order_delivered(order, message \\ nil) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(delivered_subject(order))
       |> text_body(Templates.order_delivered(%{order: order, message: message}))
     end)
@@ -416,11 +372,8 @@ defmodule Edenflowers.Email do
   left, so they can go and look. Loads as `order_delivered/2`.
   """
   def order_left_at_door(order, photo_jpeg, message \\ nil) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(left_at_door_subject(order))
       |> text_body(Templates.order_left_at_door(%{order: order, message: message}))
       |> attach_delivery_photo(photo_jpeg)
@@ -446,11 +399,8 @@ defmodule Edenflowers.Email do
   (`refunded`) and what Jennie still hands back herself (`to_return`).
   """
   def cancelled(%Order{} = order, money) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(~t"Your Eden Flowers order for #{date = short_date(order)} is cancelled")
       |> text_body(
         Templates.order_cancelled(%{
@@ -467,11 +417,8 @@ defmodule Edenflowers.Email do
   end
 
   def cancelled(%CourseRegistration{} = registration, money) do
-    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(registration.email)
-      |> bcc(record_copy_address())
+    customer_email(registration, from_address(), fn email ->
+      email
       |> subject(~t"Your booking on #{course = registration.course.name} is cancelled")
       |> text_body(
         Templates.booking_cancelled(%{
@@ -493,11 +440,8 @@ defmodule Edenflowers.Email do
   shop. Loads as `cancelled/2`.
   """
   def cancellation_confirmed(%Order{} = order, money) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(automated_from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, automated_from_address(), fn email ->
+      email
       |> subject(~t"Order #{reference = order.order_reference} cancelled")
       |> text_body(
         Templates.cancellation_confirmed(%{
@@ -517,11 +461,8 @@ defmodule Edenflowers.Email do
   holds the `amount`, the `payment_method` it went back by, and her `note`.
   """
   def refunded(%Order{} = order, refund) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(order.customer_email)
-      |> bcc(record_copy_address())
+    customer_email(order, from_address(), fn email ->
+      email
       |> subject(~t"A refund for your Eden Flowers order for #{date = short_date(order)}")
       |> text_body(
         Templates.order_refunded(%{
@@ -535,11 +476,8 @@ defmodule Edenflowers.Email do
   end
 
   def refunded(%CourseRegistration{} = registration, refund) do
-    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(registration.email)
-      |> bcc(record_copy_address())
+    customer_email(registration, from_address(), fn email ->
+      email
       |> subject(~t"A refund for your booking on #{course = registration.course.name}")
       |> text_body(
         Templates.booking_refunded(%{
@@ -578,11 +516,8 @@ defmodule Edenflowers.Email do
   attaches. Expects `:course` translated and `:first_name` loaded.
   """
   def course_confirmation(registration, message \\ nil) do
-    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(registration.email)
-      |> bcc(record_copy_address())
+    customer_email(registration, from_address(), fn email ->
+      email
       |> subject(~t"You're booked on #{course = registration.course.name}, #{date = course_day(registration)}")
       |> text_body(Templates.course_confirmation(course_assigns(registration, message)))
     end)
@@ -594,11 +529,8 @@ defmodule Edenflowers.Email do
   Expects `:course` translated, `:first_name` and `:balance` loaded.
   """
   def course_payment_link(registration, payment_link_url, message \\ nil) do
-    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(registration.email)
-      |> bcc(record_copy_address())
+    customer_email(registration, from_address(), fn email ->
+      email
       |> subject(~t"Pay for your booking on #{course = registration.course.name}, #{date = course_day(registration)}")
       |> text_body(
         Templates.course_payment_link(
@@ -614,11 +546,8 @@ defmodule Edenflowers.Email do
   `:course` translated, `:first_name` and `:balance` loaded.
   """
   def course_reminder(registration, payment_link_url) do
-    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(registration.email)
-      |> bcc(record_copy_address())
+    customer_email(registration, from_address(), fn email ->
+      email
       |> subject(~t"See you tomorrow at #{course = registration.course.name}")
       |> text_body(
         Templates.course_reminder(Map.put(course_assigns(registration, nil), :payment_link_url, payment_link_url))
@@ -749,6 +678,22 @@ defmodule Edenflowers.Email do
     |> subject(~t"#{code} is your email change code for Eden Flowers")
     |> text_body(Templates.email_change_code(%{code: code}))
   end
+
+  # Every email to an order's, booking's or subscription's customer: in their
+  # language, with a copy for Jennie's records.
+  defp customer_email(record, from, build) do
+    EdenflowersWeb.Gettext.with_app_locale(record.locale, fn ->
+      new()
+      |> from(from)
+      |> to(recipient(record))
+      |> bcc(record_copy_address())
+      |> build.()
+    end)
+  end
+
+  defp recipient(%CourseRegistration{email: email}), do: email
+  defp recipient(%Order{customer_email: email}), do: email
+  defp recipient(subscription), do: to_string(subscription.user.email)
 
   defp account_url, do: EdenflowersWeb.Endpoint.url() <> "/account"
 

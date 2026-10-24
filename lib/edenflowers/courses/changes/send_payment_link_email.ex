@@ -54,6 +54,6 @@ defmodule Edenflowers.Courses.Changes.SendPaymentLinkEmail do
   defp load_for_send(registration) do
     CourseRegistration
     |> Ash.get!(registration.id, load: [:course, :first_name, :amount_paid, :balance], actor: system_actor())
-    |> Map.update!(:course, &Translations.translate(&1, String.to_existing_atom(registration.locale)))
+    |> Translations.in_own_locale()
   end
 end
