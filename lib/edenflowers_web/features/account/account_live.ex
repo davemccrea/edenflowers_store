@@ -311,6 +311,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   def handle_info({:clear_newsletter_saved, _superseded}, socket), do: {:noreply, socket}
 
+  def handle_info({:put_flash, kind, message}, socket), do: {:noreply, put_flash(socket, kind, message)}
+
   def handle_info(:subscriptions_changed, socket) do
     user = socket.assigns.current_user
     {:noreply, socket |> assign(subscriptions: subscriptions(user), orders: orders(user)) |> assign_timeline()}

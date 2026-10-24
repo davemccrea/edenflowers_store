@@ -621,7 +621,7 @@ msgid "Shopping cart"
 msgstr "Varukorg"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:5
-#: lib/edenflowers_web/features/account/subscription_manager.ex:541
+#: lib/edenflowers_web/features/account/subscription_manager.ex:536
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:93
 #: lib/edenflowers_web/features/admin/product_form_live.ex:360
 #: lib/edenflowers_web/features/admin/product_form_live.ex:444
@@ -1221,7 +1221,7 @@ msgstr "Konsulttjänster"
 msgid "Recipient"
 msgstr "Mottagare"
 
-#: lib/edenflowers_web/features/account/account_live.ex:648
+#: lib/edenflowers_web/features/account/account_live.ex:650
 #: lib/edenflowers_web/features/admin/components/components.ex:1115
 #: lib/edenflowers_web/features/admin/orders_live.ex:191
 #, elixir-autogen, elixir-format
@@ -1619,29 +1619,29 @@ msgstr "Jag skickar ett sms när den är klar."
 msgid "Phone number *"
 msgstr "Telefonnummer *"
 
-#: lib/edenflowers_web/features/account/account_live.ex:661
+#: lib/edenflowers_web/features/account/account_live.ex:663
 #, elixir-autogen, elixir-format
 msgid "Arriving today"
 msgstr "Kommer i dag"
 
-#: lib/edenflowers_web/features/account/account_live.ex:652
+#: lib/edenflowers_web/features/account/account_live.ex:654
 #, elixir-autogen, elixir-format
 msgid "Confirmed"
 msgstr "Bekräftad"
 
-#: lib/edenflowers_web/features/account/account_live.ex:469
+#: lib/edenflowers_web/features/account/account_live.ex:471
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:64
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:78
 #, elixir-autogen, elixir-format
 msgid "Course"
 msgstr "Kurs"
 
-#: lib/edenflowers_web/features/account/account_live.ex:660
+#: lib/edenflowers_web/features/account/account_live.ex:662
 #, elixir-autogen, elixir-format
 msgid "Ready to collect today"
 msgstr "Kan hämtas i dag"
 
-#: lib/edenflowers_web/features/account/account_live.ex:344
+#: lib/edenflowers_web/features/account/account_live.ex:346
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "Receipt"
@@ -1669,7 +1669,7 @@ msgid "Send me occasional emails about what's in the shop."
 msgstr "Skicka mig enstaka utskick om vad som finns i butiken."
 
 #: lib/edenflowers_web/features/account/subscription_manager.ex:43
-#: lib/edenflowers_web/features/account/subscription_manager.ex:446
+#: lib/edenflowers_web/features/account/subscription_manager.ex:450
 #: lib/edenflowers_web/features/admin/courses_live.ex:94
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:107
 #: lib/edenflowers_web/features/admin/products_live.ex:106
@@ -1700,7 +1700,7 @@ msgstr "När"
 msgid "Your newsletter preference couldn't be saved."
 msgstr "Din inställning för nyhetsbrevet kunde inte sparas."
 
-#: lib/edenflowers_web/features/account/account_live.ex:341
+#: lib/edenflowers_web/features/account/account_live.ex:343
 #, elixir-autogen, elixir-format
 msgid "Receipt (opens in a new tab)"
 msgstr "Kvitto (öppnas i en ny flik)"
@@ -1947,8 +1947,8 @@ msgstr "Inte granskad"
 msgid "Review"
 msgstr "Granskning"
 
-#: lib/edenflowers_web/features/account/account_live.ex:390
-#: lib/edenflowers_web/features/account/account_live.ex:498
+#: lib/edenflowers_web/features/account/account_live.ex:392
+#: lib/edenflowers_web/features/account/account_live.ex:500
 #: lib/edenflowers_web/features/admin/orders_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "Order"
@@ -2382,7 +2382,7 @@ msgid "Add booking"
 msgstr "Lägg till bokning"
 
 #: lib/edenflowers_web/components/card_drawer.ex:34
-#: lib/edenflowers_web/features/account/subscription_manager.ex:426
+#: lib/edenflowers_web/features/account/subscription_manager.ex:430
 #: lib/edenflowers_web/features/admin/components/components.ex:875
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:223
 #, elixir-autogen, elixir-format
@@ -2957,8 +2957,8 @@ msgstr "%{reason}. Ange en egen leveransavgift för att leverera ändå."
 msgid "Amount (€)"
 msgstr "Belopp (€)"
 
-#: lib/edenflowers_web/features/account/account_live.ex:416
-#: lib/edenflowers_web/features/account/account_live.ex:436
+#: lib/edenflowers_web/features/account/account_live.ex:418
+#: lib/edenflowers_web/features/account/account_live.ex:438
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:137
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:138
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1343
@@ -2967,7 +2967,7 @@ msgstr "Belopp (€)"
 msgid "Cancel order"
 msgstr "Avbeställ"
 
-#: lib/edenflowers_web/features/account/account_live.ex:650
+#: lib/edenflowers_web/features/account/account_live.ex:652
 #: lib/edenflowers_web/features/admin/components/components.ex:1125
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:138
 #: lib/edenflowers_web/features/admin/order_log.ex:72
@@ -3161,7 +3161,7 @@ msgstr "Beställningen har lagts."
 msgid "Order updated."
 msgstr "Beställningen har uppdaterats."
 
-#: lib/edenflowers_web/features/account/account_live.ex:636
+#: lib/edenflowers_web/features/account/account_live.ex:638
 #, elixir-autogen, elixir-format
 msgid "Pay at collection"
 msgstr "Betalas vid avhämtning"
@@ -3176,14 +3176,14 @@ msgstr "Betala beställning %{reference}"
 msgid "Pay for your order"
 msgstr "Betala din beställning"
 
-#: lib/edenflowers_web/features/account/account_live.ex:620
+#: lib/edenflowers_web/features/account/account_live.ex:622
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:63
-#: lib/edenflowers_web/features/account/subscription_manager.ex:388
+#: lib/edenflowers_web/features/account/subscription_manager.ex:392
 #, elixir-autogen, elixir-format
 msgid "Pay now"
 msgstr "Betala nu"
 
-#: lib/edenflowers_web/features/account/account_live.ex:634
+#: lib/edenflowers_web/features/account/account_live.ex:636
 #, elixir-autogen, elixir-format
 msgid "Pay on delivery"
 msgstr "Betalas vid leverans"
@@ -3251,7 +3251,7 @@ msgstr "Mottagarens telefon"
 msgid "Recipient phone (for the delivery)"
 msgstr "Mottagarens telefon (för leveransen)"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:567
+#: lib/edenflowers_web/features/account/subscription_manager.ex:562
 #, elixir-autogen, elixir-format
 msgid "Save changes"
 msgstr "Spara ändringarna"
@@ -3300,8 +3300,8 @@ msgstr "Dagens sista beställningstid har passerat. Bokas ändå."
 msgid "Unknown"
 msgstr "Okänt"
 
-#: lib/edenflowers_web/features/account/account_live.ex:617
-#: lib/edenflowers_web/features/account/subscription_manager.ex:385
+#: lib/edenflowers_web/features/account/account_live.ex:619
+#: lib/edenflowers_web/features/account/subscription_manager.ex:389
 #: lib/edenflowers_web/features/admin/components/components.ex:1116
 #: lib/edenflowers_web/features/admin/orders_live.ex:181
 #: lib/edenflowers_web/features/admin/overview_live.ex:806
@@ -3634,7 +3634,7 @@ msgstr "Faktura (Zervant)"
 msgid "Confirm"
 msgstr "Bekräfta"
 
-#: lib/edenflowers_web/features/account/account_live.ex:543
+#: lib/edenflowers_web/features/account/account_live.ex:545
 #, elixir-autogen, elixir-format
 msgid "Enter a valid email address."
 msgstr "Ange en giltig e-postadress."
@@ -3676,7 +3676,7 @@ msgstr "Koden stämmer inte."
 msgid "That email can't be used. It may already belong to another account."
 msgstr "Den e-postadressen kan inte användas. Den kanske redan hör till ett annat konto."
 
-#: lib/edenflowers_web/features/account/account_live.ex:549
+#: lib/edenflowers_web/features/account/account_live.ex:551
 #, elixir-autogen, elixir-format
 msgid "Too many attempts. Please try again later."
 msgstr "För många försök. Försök igen senare."
@@ -3744,7 +3744,7 @@ msgstr "Intervall"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:12
 #: lib/edenflowers_web/features/account/subscription_manager.ex:43
-#: lib/edenflowers_web/features/account/subscription_manager.ex:446
+#: lib/edenflowers_web/features/account/subscription_manager.ex:450
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:101
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:106
 #: lib/edenflowers_web/features/admin/subscription_log.ex:79
@@ -3754,15 +3754,15 @@ msgstr "Intervall"
 msgid "Next delivery"
 msgstr "Nästa leverans"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:346
-#: lib/edenflowers_web/features/account/subscription_manager.ex:640
+#: lib/edenflowers_web/features/account/subscription_manager.ex:357
+#: lib/edenflowers_web/features/account/subscription_manager.ex:635
 #: lib/edenflowers_web/features/admin/components/components.ex:497
 #: lib/edenflowers_web/features/admin/subscription_log.ex:52
 #, elixir-autogen, elixir-format
 msgid "Paused"
 msgstr "Pausad"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:319
+#: lib/edenflowers_web/features/account/subscription_manager.ex:330
 #: lib/edenflowers_web/features/admin/components/components.ex:498
 #, elixir-autogen, elixir-format
 msgid "Payment failed"
@@ -3780,7 +3780,7 @@ msgid "Subscriptions"
 msgstr "Prenumerationer"
 
 #: lib/edenflowers_web/components/core_components.ex:960
-#: lib/edenflowers_web/features/account/account_live.ex:491
+#: lib/edenflowers_web/features/account/account_live.ex:493
 #: lib/edenflowers_web/features/admin/components/components.ex:510
 #: lib/edenflowers_web/features/admin/products_live.ex:122
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:50
@@ -3795,7 +3795,7 @@ msgstr "Prenumeration"
 msgid "Placed, but the saved card was refused"
 msgstr "Lagd, men det sparade kortet nekades"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:484
+#: lib/edenflowers_web/features/account/subscription_manager.ex:488
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:96
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:233
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:255
@@ -3809,13 +3809,13 @@ msgstr "Avsluta prenumerationen"
 msgid "It's too late to change your next delivery."
 msgstr "Det är för sent att ändra nästa leverans."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:474
+#: lib/edenflowers_web/features/account/subscription_manager.ex:478
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:77
 #, elixir-autogen, elixir-format
 msgid "Pause"
 msgstr "Pausa"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:474
+#: lib/edenflowers_web/features/account/subscription_manager.ex:478
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:86
 #, elixir-autogen, elixir-format
 msgid "Resume"
@@ -3837,8 +3837,8 @@ msgid "Subscription resumed"
 msgstr "Prenumerationen återupptagen"
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:44
-#: lib/edenflowers_web/features/account/subscription_manager.ex:130
-#: lib/edenflowers_web/features/account/subscription_manager.ex:136
+#: lib/edenflowers_web/features/account/subscription_manager.ex:141
+#: lib/edenflowers_web/features/account/subscription_manager.ex:147
 #, elixir-autogen, elixir-format
 msgid "Your subscription couldn't be changed."
 msgstr "Din prenumeration kunde inte ändras."
@@ -3849,7 +3849,7 @@ msgid "Back to your account"
 msgstr "Tillbaka till ditt konto"
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:67
-#: lib/edenflowers_web/features/account/subscription_manager.ex:584
+#: lib/edenflowers_web/features/account/subscription_manager.ex:579
 #: lib/edenflowers_web/features/admin/order_form_live.ex:342
 #: lib/edenflowers_web/features/admin/subscription_log.ex:71
 #, elixir-autogen, elixir-format
@@ -3867,7 +3867,7 @@ msgid "Delivered to"
 msgstr "Levereras till"
 
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:6
-#: lib/edenflowers_web/features/account/subscription_manager.ex:549
+#: lib/edenflowers_web/features/account/subscription_manager.ex:544
 #: lib/edenflowers_web/features/store/product_live.ex:231
 #, elixir-autogen, elixir-format
 msgid "How often"
@@ -3878,9 +3878,9 @@ msgstr "Hur ofta"
 msgid "Save card"
 msgstr "Spara kortet"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:257
-#: lib/edenflowers_web/features/account/subscription_manager.ex:335
-#: lib/edenflowers_web/features/account/subscription_manager.ex:594
+#: lib/edenflowers_web/features/account/subscription_manager.ex:268
+#: lib/edenflowers_web/features/account/subscription_manager.ex:346
+#: lib/edenflowers_web/features/account/subscription_manager.ex:589
 #, elixir-autogen, elixir-format
 msgid "Update card"
 msgstr "Byt kort"
@@ -3954,7 +3954,7 @@ msgstr "Från och med nu dras alla leveranser från kortet du sparar här."
 msgid "Your delivery on %{date} is still unpaid, and a new card doesn't pay it."
 msgstr "Din leverans den %{date} är fortfarande obetald, och ett nytt kort betalar den inte."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:452
+#: lib/edenflowers_web/features/account/subscription_manager.ex:456
 #, elixir-autogen, elixir-format
 msgid "Your next delivery is already being prepared. You can make changes again from %{date}."
 msgstr "Din nästa leverans förbereds redan. Du kan göra ändringar igen från och med %{date}."
@@ -3966,7 +3966,7 @@ msgstr "Din nästa leverans förbereds redan. Du kan göra ändringar igen från
 msgid "per delivery"
 msgstr "per leverans"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:247
+#: lib/edenflowers_web/features/account/subscription_manager.ex:258
 #, elixir-autogen, elixir-format
 msgid "A new card doesn't pay for this delivery, so pay for it separately."
 msgstr "Ett nytt kort betalar inte den här leveransen, så betala den separat."
@@ -3976,28 +3976,28 @@ msgstr "Ett nytt kort betalar inte den här leveransen, så betala den separat."
 msgid "It doesn't change the card your later deliveries are charged to."
 msgstr "Det ändrar inte kortet som dina kommande leveranser dras från."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:265
-#: lib/edenflowers_web/features/account/subscription_manager.ex:327
+#: lib/edenflowers_web/features/account/subscription_manager.ex:276
+#: lib/edenflowers_web/features/account/subscription_manager.ex:338
 #, elixir-autogen, elixir-format
 msgid "Pay %{amount} now"
 msgstr "Betala %{amount} nu"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:246
+#: lib/edenflowers_web/features/account/subscription_manager.ex:257
 #, elixir-autogen, elixir-format
 msgid "Update your card to restart your subscription."
 msgstr "Byt ditt kort så startar din prenumeration igen."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:238
+#: lib/edenflowers_web/features/account/subscription_manager.ex:249
 #, elixir-autogen, elixir-format
 msgid "We couldn't charge your card for %{date} (%{amount})."
 msgstr "Vi kunde inte debitera ditt kort för leveransen %{date} (%{amount})."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:242
+#: lib/edenflowers_web/features/account/subscription_manager.ex:253
 #, elixir-autogen, elixir-format
 msgid "Your delivery on %{date} (%{amount}) is still unpaid."
 msgstr "Din leverans %{date} (%{amount}) är fortfarande obetald."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:240
+#: lib/edenflowers_web/features/account/subscription_manager.ex:251
 #, elixir-autogen, elixir-format
 msgid "Your subscription is on hold because a payment didn't go through."
 msgstr "Din prenumeration är vilande eftersom en betalning inte gick igenom."
@@ -4007,66 +4007,61 @@ msgstr "Din prenumeration är vilande eftersom en betalning inte gick igenom."
 msgid "%{brand} •••• %{last4}, expires %{expiry}"
 msgstr "%{brand} •••• %{last4}, giltigt till %{expiry}"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:511
+#: lib/edenflowers_web/features/account/subscription_manager.ex:506
 #, elixir-autogen, elixir-format
 msgid "%{price} per delivery"
 msgstr "%{price} per leverans"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:666
-#, elixir-autogen, elixir-format
-msgid "Cancelled on %{date}."
-msgstr "Avslutad %{date}."
-
-#: lib/edenflowers_web/features/account/subscription_manager.ex:526
+#: lib/edenflowers_web/features/account/subscription_manager.ex:521
 #: lib/edenflowers_web/features/admin/order_form_live.ex:363
 #, elixir-autogen, elixir-format
 msgid "Change"
 msgstr "Ändra"
 
-#: lib/edenflowers_web/features/account/account_live.ex:491
-#: lib/edenflowers_web/features/account/subscription_manager.ex:392
+#: lib/edenflowers_web/features/account/account_live.ex:493
+#: lib/edenflowers_web/features/account/subscription_manager.ex:396
 #, elixir-autogen, elixir-format
 msgid "Charged %{date}"
 msgstr "Debiteras %{date}"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:632
+#: lib/edenflowers_web/features/account/subscription_manager.ex:627
 #, elixir-autogen, elixir-format
 msgid "Charged to your card on %{date}."
 msgstr "Ditt kort debiteras %{date}."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:579
+#: lib/edenflowers_web/features/account/subscription_manager.ex:574
 #, elixir-autogen, elixir-format
 msgid "Contact us to change the address."
 msgstr "Kontakta oss för att byta adress."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:462
+#: lib/edenflowers_web/features/account/subscription_manager.ex:466
 #: lib/edenflowers_web/features/admin/overview_live.ex:838
 #, elixir-autogen, elixir-format
 msgid "Deliveries"
 msgstr "Leveranser"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:572
+#: lib/edenflowers_web/features/account/subscription_manager.ex:567
 #, elixir-autogen, elixir-format
 msgid "Delivers to"
 msgstr "Levereras till"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:162
+#: lib/edenflowers_web/features/account/subscription_manager.ex:173
 #, elixir-autogen, elixir-format
 msgid "From %{date}: %{size}, %{interval}, %{price} per delivery."
 msgstr "Från %{date}: %{size}, %{interval}, %{price} per leverans."
 
-#: lib/edenflowers_web/features/account/account_live.ex:428
-#: lib/edenflowers_web/features/account/subscription_manager.ex:200
+#: lib/edenflowers_web/features/account/account_live.ex:430
+#: lib/edenflowers_web/features/account/subscription_manager.ex:211
 #, elixir-autogen, elixir-format
 msgid "Keep it"
 msgstr "Behåll den"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:305
+#: lib/edenflowers_web/features/account/subscription_manager.ex:316
 #, elixir-autogen, elixir-format
 msgid "Manage"
 msgstr "Hantera"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:302
+#: lib/edenflowers_web/features/account/subscription_manager.ex:313
 #, elixir-autogen, elixir-format
 msgid "Manage %{name}"
 msgstr "Hantera %{name}"
@@ -4081,27 +4076,27 @@ msgstr "Hantera den från ditt konto."
 msgid "Manage subscription"
 msgstr "Hantera prenumerationen"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:454
+#: lib/edenflowers_web/features/account/subscription_manager.ex:458
 #, elixir-autogen, elixir-format
 msgid "Need to change this one? Contact us."
 msgstr "Behöver du ändra den här? Kontakta oss."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:350
+#: lib/edenflowers_web/features/account/subscription_manager.ex:361
 #, elixir-autogen, elixir-format
 msgid "No deliveries or charges"
 msgstr "Inga leveranser eller debiteringar"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:652
+#: lib/edenflowers_web/features/account/subscription_manager.ex:647
 #, elixir-autogen, elixir-format
 msgid "On hold"
 msgstr "Vilande"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:195
+#: lib/edenflowers_web/features/account/subscription_manager.ex:206
 #, elixir-autogen, elixir-format
 msgid "Pause it"
 msgstr "Pausa den"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:506
+#: lib/edenflowers_web/features/account/subscription_manager.ex:501
 #, elixir-autogen, elixir-format
 msgid "Plan"
 msgstr "Upplägg"
@@ -4111,7 +4106,7 @@ msgstr "Upplägg"
 msgid "Replaces the %{count} bouquets (%{amount}) in your cart."
 msgstr "Ersätter de %{count} buketterna (%{amount}) i din varukorg."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:588
+#: lib/edenflowers_web/features/account/subscription_manager.ex:583
 #, elixir-autogen, elixir-format
 msgid "Saved card"
 msgstr "Sparat kort"
@@ -4121,27 +4116,22 @@ msgstr "Sparat kort"
 msgid "Sign in with %{email}"
 msgstr "Logga in med %{email}"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:502
-#, elixir-autogen, elixir-format
-msgid "Start a new subscription"
-msgstr "Starta en ny prenumeration"
-
-#: lib/edenflowers_web/features/account/subscription_manager.ex:203
+#: lib/edenflowers_web/features/account/subscription_manager.ex:214
 #, elixir-autogen, elixir-format
 msgid "Stop subscription"
 msgstr "Avsluta prenumerationen"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:182
+#: lib/edenflowers_web/features/account/subscription_manager.ex:193
 #, elixir-autogen, elixir-format
 msgid "Stop your subscription?"
 msgstr "Avsluta prenumerationen?"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:627
+#: lib/edenflowers_web/features/account/subscription_manager.ex:622
 #, elixir-autogen, elixir-format
 msgid "The one after: %{date}, charged on %{charge_date}."
 msgstr "Nästa efter det: %{date}, debiteras %{charge_date}."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:187
+#: lib/edenflowers_web/features/account/subscription_manager.ex:198
 #, elixir-autogen, elixir-format
 msgid "There will be no more deliveries or charges."
 msgstr "Det blir inga fler leveranser eller debiteringar."
@@ -4151,7 +4141,7 @@ msgstr "Det blir inga fler leveranser eller debiteringar."
 msgid "View cart"
 msgstr "Visa varukorgen"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:189
+#: lib/edenflowers_web/features/account/subscription_manager.ex:200
 #, elixir-autogen, elixir-format
 msgid "Want a break instead?"
 msgstr "Vill du hellre ta en paus?"
@@ -4176,7 +4166,7 @@ msgstr "Just nu dras dina leveranser från %{card}."
 msgid "contact us"
 msgstr "kontakta oss"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:557
+#: lib/edenflowers_web/features/account/subscription_manager.ex:552
 #, elixir-autogen, elixir-format
 msgid "Delivery day"
 msgstr "Leveransdag"
@@ -4276,23 +4266,23 @@ msgstr "Vi skapar ett konto med den här e-postadressen så att du kan pausa ell
 msgid "to pause or cancel."
 msgstr "för att pausa eller avsluta."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:360
-#: lib/edenflowers_web/features/account/subscription_manager.ex:660
+#: lib/edenflowers_web/features/account/subscription_manager.ex:370
+#: lib/edenflowers_web/features/account/subscription_manager.ex:654
 #, elixir-autogen, elixir-format
 msgid "One final delivery remains"
 msgstr "En sista leverans återstår"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:185
+#: lib/edenflowers_web/features/account/subscription_manager.ex:196
 #, elixir-autogen, elixir-format
 msgid "Your delivery on %{date} is already being prepared and will be your final delivery. There will be no deliveries or charges after that."
 msgstr "Din leverans %{date} förbereds redan och blir din sista leverans. Efter den blir det inga fler leveranser eller debiteringar."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:662
+#: lib/edenflowers_web/features/account/subscription_manager.ex:656
 #, elixir-autogen, elixir-format
 msgid "Your delivery on %{date} was already being prepared when you cancelled. There will be no deliveries or charges after that."
 msgstr "Din leverans %{date} förbereddes redan när du avslutade. Efter den blir det inga fler leveranser eller debiteringar."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:348
+#: lib/edenflowers_web/features/account/subscription_manager.ex:359
 #, elixir-autogen, elixir-format
 msgid "After %{date}"
 msgstr "Efter %{date}"
@@ -4302,7 +4292,7 @@ msgstr "Efter %{date}"
 msgid "Choose one of the days on offer."
 msgstr "Välj en av dagarna som erbjuds."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:653
+#: lib/edenflowers_web/features/account/subscription_manager.ex:648
 #, elixir-autogen, elixir-format
 msgid "No deliveries until the unpaid one is paid or your card is updated."
 msgstr "Inga leveranser förrän den obetalda är betald eller du har bytt kort."
@@ -4446,24 +4436,24 @@ msgstr "Startad"
 msgid "Confirmation emailed"
 msgstr "Bekräftelse mejlad"
 
-#: lib/edenflowers_web/features/account/account_live.ex:469
+#: lib/edenflowers_web/features/account/account_live.ex:471
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s)"
 msgid_plural "%{count} place(s)"
 msgstr[0] "%{count} plats"
 msgstr[1] "%{count} platser"
 
-#: lib/edenflowers_web/features/account/account_live.ex:663
+#: lib/edenflowers_web/features/account/account_live.ex:665
 #, elixir-autogen, elixir-format
 msgid "Arriving"
 msgstr "Levereras"
 
-#: lib/edenflowers_web/features/account/account_live.ex:654
+#: lib/edenflowers_web/features/account/account_live.ex:656
 #, elixir-autogen, elixir-format
 msgid "Collected"
 msgstr "Hämtad"
 
-#: lib/edenflowers_web/features/account/account_live.ex:656
+#: lib/edenflowers_web/features/account/account_live.ex:658
 #, elixir-autogen, elixir-format
 msgid "Delivered"
 msgstr "Levererad"
@@ -4478,12 +4468,12 @@ msgstr "Inget på väg just nu."
 msgid "Past"
 msgstr "Tidigare"
 
-#: lib/edenflowers_web/features/account/account_live.ex:665
+#: lib/edenflowers_web/features/account/account_live.ex:667
 #, elixir-autogen, elixir-format
 msgid "Scheduled delivery"
 msgstr "Planerad leverans"
 
-#: lib/edenflowers_web/features/account/account_live.ex:664
+#: lib/edenflowers_web/features/account/account_live.ex:666
 #, elixir-autogen, elixir-format
 msgid "Scheduled pickup"
 msgstr "Planerad avhämtning"
@@ -4493,7 +4483,7 @@ msgstr "Planerad avhämtning"
 msgid "Show %{count} more"
 msgstr "Visa %{count} till"
 
-#: lib/edenflowers_web/features/account/account_live.ex:662
+#: lib/edenflowers_web/features/account/account_live.ex:664
 #, elixir-autogen, elixir-format
 msgid "For pickup"
 msgstr "Hämtas"
@@ -4925,17 +4915,17 @@ msgstr "Varje bröllop är unikt, så ni får en exakt offert när vi har pratat
 msgid "Tell me about your wedding and I'll send you a quote."
 msgstr "Berätta om ert bröllop så skickar jag en offert."
 
-#: lib/edenflowers_web/features/account/account_live.ex:479
+#: lib/edenflowers_web/features/account/account_live.ex:481
 #, elixir-autogen, elixir-format
 msgid "Starts %{time}"
 msgstr "Börjar kl. %{time}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:389
+#: lib/edenflowers_web/features/account/account_live.ex:391
 #, elixir-autogen, elixir-format
 msgid "Subscription order"
 msgstr "Prenumerationsbeställning"
 
-#: lib/edenflowers_web/features/account/account_live.ex:481
+#: lib/edenflowers_web/features/account/account_live.ex:483
 #, elixir-autogen, elixir-format
 msgid "Took place"
 msgstr "Genomförd"
@@ -4958,7 +4948,7 @@ msgstr "Sparat."
 msgid "Can I cancel my order?"
 msgstr "Kan jag ångra min beställning?"
 
-#: lib/edenflowers_web/features/account/account_live.ex:421
+#: lib/edenflowers_web/features/account/account_live.ex:423
 #, elixir-autogen, elixir-format
 msgid "Cancel this order?"
 msgstr "Vill du avbeställa?"
@@ -4974,7 +4964,7 @@ msgstr "Har planerna ändrats? Du kan avbeställa via ditt konto till och med %{
 msgid "This order can no longer be cancelled online. Please contact us."
 msgstr "Beställningen kan inte längre avbeställas online. Kontakta oss."
 
-#: lib/edenflowers_web/features/account/account_live.ex:529
+#: lib/edenflowers_web/features/account/account_live.ex:531
 #, elixir-autogen, elixir-format
 msgid "This order couldn't be cancelled. Please contact us."
 msgstr "Beställningen kunde inte avbeställas. Kontakta oss."
@@ -4984,7 +4974,7 @@ msgstr "Beställningen kunde inte avbeställas. Kontakta oss."
 msgid "We couldn't refund your order. Please contact us to cancel it."
 msgstr "Vi kunde inte återbetala beställningen. Kontakta oss för att avbeställa den."
 
-#: lib/edenflowers_web/features/account/account_live.ex:424
+#: lib/edenflowers_web/features/account/account_live.ex:426
 #, elixir-autogen, elixir-format
 msgid "We'll refund %{amount} to your card. It can take 5–10 days to arrive."
 msgstr "Vi återbetalar %{amount} till ditt kort. Det kan ta 5–10 dagar."
@@ -4994,7 +4984,7 @@ msgstr "Vi återbetalar %{amount} till ditt kort. Det kan ta 5–10 dagar."
 msgid "Yes, from your account, up to %{days} days before your delivery or pickup, and you'll be refunded in full. After that I've already bought your flowers, so get in touch and we'll work something out."
 msgstr "Ja, från ditt konto senast %{days} dagar före leverans eller avhämtning, och du får hela beloppet tillbaka. Efter det har jag redan köpt dina blommor, så hör av dig så hittar vi en lösning."
 
-#: lib/edenflowers_web/features/account/account_live.ex:409
+#: lib/edenflowers_web/features/account/account_live.ex:411
 #, elixir-autogen, elixir-format
 msgid "You can cancel until %{date}"
 msgstr "Du kan avbeställa till och med %{date}"
@@ -5100,7 +5090,6 @@ msgctxt "course booking"
 msgid "Cancel"
 msgstr "Avboka"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:362
 #: lib/edenflowers_web/features/admin/components/components.ex:499
 #: lib/edenflowers_web/features/admin/subscription_log.ex:56
 #, elixir-autogen, elixir-format
@@ -6682,7 +6671,7 @@ msgstr "Öppna i adminpanelen:"
 msgid "View photo"
 msgstr "Visa bilden"
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:645
+#: lib/edenflowers_web/features/account/subscription_manager.ex:640
 #, elixir-autogen, elixir-format
 msgid "Resume now for a delivery on %{date}."
 msgstr "Återuppta nu för en leverans %{date}."
@@ -6692,7 +6681,7 @@ msgstr "Återuppta nu för en leverans %{date}."
 msgid "Then %{amount} %{interval} from %{date}, charged %{days} days before each delivery. Pause or cancel anytime."
 msgstr "Sedan %{amount} %{interval} från %{date}, debiteras %{days} dagar före varje leverans. Pausa eller avsluta när som helst."
 
-#: lib/edenflowers_web/features/account/subscription_manager.ex:643
+#: lib/edenflowers_web/features/account/subscription_manager.ex:638
 #, elixir-autogen, elixir-format
 msgid "Your delivery on %{date} will still arrive."
 msgstr "Din leverans %{date} kommer ändå."
@@ -6943,7 +6932,7 @@ msgstr "Beställningen är betald."
 msgid "This order is part of your subscription. Paying for it restarts the subscription if it's on hold."
 msgstr "Den här beställningen hör till din prenumeration. Betalningen startar prenumerationen igen om den är vilande."
 
-#: lib/edenflowers_web/features/account/account_live.ex:631
+#: lib/edenflowers_web/features/account/account_live.ex:633
 #, elixir-autogen, elixir-format
 msgid "Pay by invoice"
 msgstr "Betalas mot faktura"

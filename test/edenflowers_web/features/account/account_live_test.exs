@@ -434,21 +434,31 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
              )
     end
 
-    test "lists cancelled subscriptions last, and drops them after a month", %{conn: conn, user: user} do
-      cancelled = generate(subscription(user_id: user.id, state: :cancelled))
+    test "lists a cancelled subscription last while its final delivery is on its way", %{conn: conn, user: user} do
+      finishing = generate(subscription(user_id: user.id, state: :cancelled))
       active = generate(subscription(user_id: user.id))
+      finished = generate(subscription(user_id: user.id, state: :cancelled))
 
-      long_gone =
-        generate(
-          subscription(user_id: user.id, state: :cancelled, updated_at: DateTime.add(DateTime.utc_now(), -31, :day))
-        )
+      placed_order(
+        user_id: user.id,
+        origin: :subscription,
+        subscription_id: finishing.id,
+        fulfillment_date: days_from_today(2),
+        paid: true
+      )
+
+      placed_order(
+        user_id: user.id,
+        origin: :subscription,
+        subscription_id: finished.id,
+        fulfillment_date: days_from_today(-2),
+        paid: true
+      )
 
       {:ok, _view, html} = live(conn, ~p"/account")
 
       ids = Regex.scan(~r/<li[^>]* id="subscription-([0-9a-f-]{36})"/, html, capture: :all_but_first) |> List.flatten()
-      assert ids == [active.id, cancelled.id]
-      assert html =~ "Cancelled on #{weekday_date(ShopTime.today())}."
-      refute html =~ long_gone.id
+      assert ids == [active.id, finishing.id]
     end
 
     test "points to the subscription product without a subscription", %{conn: conn} do
@@ -464,25 +474,16 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/en/product/#{product.id}"]|)
     end
 
-    test "shows who a subscription delivers to, and offers a fresh start once cancelled", %{conn: conn, user: user} do
+    test "shows who a subscription delivers to", %{conn: conn, user: user} do
       gift =
         generate(
           subscription(user_id: user.id, recipient_name: "Ingrid Nyman", delivery_address: "Gerbyntie 16, Vaasa")
         )
 
-      cancelled = generate(subscription(user_id: user.id, state: :cancelled))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "#{drawer(gift)} [data-testid=subscription-recipient]", "Ingrid Nyman")
       assert has_element?(view, "#{drawer(gift)} [data-testid=subscription-recipient]", "Gerbyntie 16, Vaasa")
-
-      variant = Ash.get!(Edenflowers.Catalog.ProductVariant, cancelled.product_variant_id)
-
-      assert has_element?(
-               view,
-               ~s|#{drawer(cancelled)} a[href="/en/product/#{variant.product_id}"]|,
-               "Start a new subscription"
-             )
     end
 
     test "marks subscription deliveries in the orders", %{conn: conn, user: user} do
@@ -519,9 +520,9 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       view |> element("#cancel-subscription-#{subscription.id} button", "Stop subscription") |> render_click()
 
       assert reload(subscription).state == :cancelled
-      assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "Cancelled")
-      refute has_element?(view, "#cancel-subscription-#{subscription.id}")
-      refute has_element?(view, "#change-subscription-#{subscription.id}")
+      assert render(view) =~ "Subscription cancelled"
+      refute has_element?(view, row(subscription))
+      assert has_element?(view, "[data-testid=no-subscriptions]")
     end
 
     test "shows the final booked delivery when cancelling after its deadline", %{conn: conn, user: user} do
