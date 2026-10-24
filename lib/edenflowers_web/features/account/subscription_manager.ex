@@ -70,7 +70,18 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   end
 
   def handle_event("cancel_subscription", _params, socket) do
-    {:noreply, change_subscription(socket, &Orders.cancel_subscription/2, fn _ -> ~t"Subscription cancelled" end)}
+    socket = change_subscription(socket, &Orders.cancel_subscription/2, fn _ -> ~t"Subscription cancelled" end)
+
+    # The card leaves the page once nothing is left to deliver, so the page says it instead.
+    # A component's own flash only reaches the page on a redirect.
+    case socket.assigns.notice do
+      {:info, message} ->
+        send(self(), {:put_flash, :info, message})
+        {:noreply, assign(socket, notice: nil)}
+
+      _other ->
+        {:noreply, socket}
+    end
   end
 
   def handle_event("edit_subscription", params, socket) do
@@ -355,15 +366,8 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     assigns = assign(assigns, booked: booked_delivery(assigns.orders, assigns.subscription))
 
     ~H"""
-    <%= if @booked do %>
-      <span class="font-medium tabular-nums">{Format.weekday_day_month(@booked.fulfillment_date, @locale)}</span>
-      <span class="text-base-content/70 block text-sm">{~t"One final delivery remains"}</span>
-    <% else %>
-      {pgettext("subscription", "Cancelled")}
-      <span class="text-base-content/70 block text-sm tabular-nums">
-        {Format.day_month(helsinki_date(@subscription.updated_at), @locale)}
-      </span>
-    <% end %>
+    <span class="font-medium tabular-nums">{Format.weekday_day_month(@booked.fulfillment_date, @locale)}</span>
+    <span class="text-base-content/70 block text-sm">{~t"One final delivery remains"}</span>
     """
   end
 
@@ -492,15 +496,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
               locale={@locale}
               target={@target}
             />
-
-            <.button
-              :if={@subscription.state == :cancelled}
-              navigate={~q"/#{language}/product/#{@subscription.product_variant.product_id}"}
-              variant="secondary"
-              class="mt-3"
-            >
-              {~t"Start a new subscription"}
-            </.button>
           </.detail_row>
 
           <.detail_row :if={@subscription.state != :cancelled} label={~t"Plan"}>
@@ -656,18 +651,10 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   defp drawer_status(%{subscription: %{state: :cancelled}} = assigns) do
     ~H"""
-    <%= if @booked do %>
-      <p class="font-serif text-lg">{~t"One final delivery remains"}</p>
-      <p class="text-base-content/70 text-sm">
-        {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} was already being prepared when you cancelled. There will be no deliveries or charges after that."}
-      </p>
-    <% else %>
-      <p class="font-serif text-lg">
-        {~t"Cancelled on #{date = Format.weekday_date(helsinki_date(@subscription.updated_at), @locale)}."}
-      </p>
-    <% end %>
+    <p class="font-serif text-lg">{~t"One final delivery remains"}</p>
+    <p class="text-base-content/70 text-sm">
+      {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} was already being prepared when you cancelled. There will be no deliveries or charges after that."}
+    </p>
     """
   end
-
-  defp helsinki_date(datetime), do: datetime |> DateTime.shift_zone!(ShopTime.timezone()) |> DateTime.to_date()
 end

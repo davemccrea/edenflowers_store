@@ -185,7 +185,12 @@ defmodule Edenflowers.Orders.Subscription do
 
     # A cancelled subscription drops off the account page a month after.
     read :mine do
-      filter expr(user_id == ^actor(:id) and (state != :cancelled or updated_at > ago(30, :day)))
+      # A cancelled one stays only while its final delivery is still on its way.
+      filter expr(
+               user_id == ^actor(:id) and
+                 (state != :cancelled or
+                    exists(orders, fulfillment_status != :cancelled and fulfillment_date >= helsinki_today()))
+             )
 
       prepare build(
                 sort: [inserted_at: :asc],
