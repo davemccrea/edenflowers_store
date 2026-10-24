@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Eden.FetchMap do
+defmodule Mix.Tasks.FetchMap do
   @moduledoc """
   Fetches the Vaasa location map from Mapbox Static Images API and writes it to
   `images/home-vaasa-map.png`, the Imgproxy local-storage source.
@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Eden.FetchMap do
 
   ## Usage
 
-      MAPBOX_TOKEN=pk.… mix eden.fetch_map
+      MAPBOX_TOKEN=pk.… mix fetch_map
 
   Re-run whenever you want to refresh the asset (e.g. after Mapbox updates the
   style or you change the spec below).
