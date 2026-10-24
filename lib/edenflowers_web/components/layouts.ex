@@ -210,7 +210,6 @@ defmodule EdenflowersWeb.Layouts do
     ]
 
     system_nav = [
-      {~p"/admin/emails", ~t"Email previews", true, "hero-envelope"},
       {"/admin/errors", ~t"Errors", false, "hero-exclamation-triangle"},
       {"/admin/oban", "Oban", false, "hero-cpu-chip"},
       {"/admin/ash", "AshAdmin", false, "hero-circle-stack"}
