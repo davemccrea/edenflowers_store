@@ -61,6 +61,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
         value={@typed}
         label={@label}
         type="text"
+        placeholder="Myrvägen 1, 65230 Vasa"
         autocomplete={@autocomplete}
         aria-required="true"
         errors={errors(@error, @touched)}
