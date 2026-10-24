@@ -26,6 +26,20 @@ dev: check-typst imgproxy
 test *args: check-typst
     mix test {{ args }}
 
+# Write tmp/emails.md: Claude's map of when each email is sent, then every email in every language
+[group('development')]
+email-map:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p tmp
+    mix compile --no-all-warnings > /dev/null
+    previews=$(mix print_emails)
+    # Claude runs on the subscription, not the app's API key.
+    unset ANTHROPIC_API_KEY
+    map=$(claude -p --allowedTools "Read,Grep,Glob" < docs/agents/email-map.md)
+    printf '%s\n\n%s\n' "$map" "$previews" > tmp/emails.md
+    echo "Wrote tmp/emails.md"
+
 # Format all Elixir, JS and CSS files (the pre-commit hook only checks)
 [group('development')]
 format:
