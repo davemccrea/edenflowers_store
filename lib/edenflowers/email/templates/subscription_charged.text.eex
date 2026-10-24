@@ -1,4 +1,4 @@
-<%= if @order.fulfillment_method == :delivery do %><%= gettext("Your card was charged %{amount} for your %{product} delivery on %{date}. Your receipt is attached.", amount: @format_currency.(@order.amount_paid), product: @product, date: @date) %><% else %><%= gettext("Your card was charged %{amount} for your %{product} pickup on %{date}. Your receipt is attached.", amount: @format_currency.(@order.amount_paid), product: @product, date: @date) %><% end %>
+<%= if @order.fulfillment_method == :delivery do %><%= gettext("Your card was charged %{amount} for your delivery scheduled for %{date} (%{product}). Your receipt is attached.", amount: @format_currency.(@order.amount_paid), product: @product, date: @date) %><% else %><%= gettext("Your card was charged %{amount} for your order for collection on %{date} (%{product}). Your receipt is attached.", amount: @format_currency.(@order.amount_paid), product: @product, date: @date) %><% end %>
 
 <%= gettext("To pause, change or cancel your subscription, use your account:") %>
 <%= @account_url %>

@@ -1,6 +1,6 @@
 <%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= if @order.fulfillment_method == :delivery do %><%= gettext("The payment for your %{product} delivery on %{date} didn't go through, but your flowers are still coming.", product: @product, date: @date) %><% else %><%= gettext("The payment for your %{product} pickup on %{date} didn't go through, but your flowers will still be ready to collect.", product: @product, date: @date) %><% end %>
+<%= if @order.fulfillment_method == :delivery do %><%= gettext("The payment for your delivery scheduled for %{date} (%{product}) didn't go through, but your flowers are still coming.", product: @product, date: @date) %><% else %><%= gettext("The payment for your order for collection on %{date} (%{product}) didn't go through, but your flowers will still be ready to collect.", product: @product, date: @date) %><% end %>
 
 <%= gettext("Amount due") %>: <%= @format_currency.(@order.balance) %>
 

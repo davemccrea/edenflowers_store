@@ -321,7 +321,7 @@ defmodule Edenflowers.Email do
   def subscription_heads_up(subscription) do
     delivery_on = subscription.next_fulfillment_date
     pickup? = subscription.fulfillment_option.fulfillment_method == :pickup
-    day = Format.weekday_day_month(delivery_on, subscription.locale)
+    day = Localize.Date.to_string!(delivery_on, locale: subscription.locale, format: "EEEE d.M.")
 
     customer_email(subscription, automated_from_address(), fn email ->
       email

@@ -1,4 +1,4 @@
-<%= if @pickup? do %><%= gettext("Your next %{product} pickup is ready to collect on %{date}, at %{address}.", product: @product, date: @format_date.(@subscription.next_fulfillment_date), address: shop_address()) %><% else %><%= gettext("Your next %{product} delivery is on %{date}, to %{address}.", product: @product, date: @format_date.(@subscription.next_fulfillment_date), address: @subscription.delivery_address) %><% end %>
+<%= if @pickup? do %><%= gettext("Your next flowers (%{product}) will be ready to collect on %{date}, at %{address}.", product: @product, date: @format_date.(@subscription.next_fulfillment_date), address: shop_address()) %><% else %><%= gettext("Your next %{product} delivery is on %{date}, to %{address}.", product: @product, date: @format_date.(@subscription.next_fulfillment_date), address: @subscription.delivery_address) %><% end %>
 
 <%= gettext("Away, or want a change? Pause or change it in your account by %{date}:", date: @format_date.(@change_by)) %>
 <%= @account_url %>
