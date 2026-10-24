@@ -35,6 +35,7 @@ defmodule Edenflowers.Email.Previews do
         subscription_set_up(locale) ++
         subscription_cancelled(locale) ++
         subscription_cancellation_confirmed(locale) ++
+        subscription_heads_up(locale) ++
         order_delivered(locale) ++
         order_left_at_door(locale) ++
         order_cancelled(locale) ++
@@ -310,6 +311,22 @@ defmodule Edenflowers.Email.Previews do
         ] do
       {gettext_noop("Subscription cancellation confirmed"), title, :subscription_cancellation_confirmed,
        Email.subscription_cancellation_confirmed(subscription(attrs, locale), charged_on)}
+    end
+  end
+
+  defp subscription_heads_up(locale) do
+    for {title, attrs} <- [
+          {gettext_noop("delivery"), %{}},
+          {gettext_noop("pickup, every 4 weeks"),
+           %{
+             fulfillment_option: %{fulfillment_method: :pickup},
+             delivery_address: nil,
+             interval_weeks: 4,
+             first_order_fulfillment_fee: Decimal.new(0)
+           }}
+        ] do
+      {gettext_noop("Subscription heads-up"), title, :subscription_heads_up,
+       Email.subscription_heads_up(subscription(attrs, locale))}
     end
   end
 
