@@ -24,6 +24,9 @@ defmodule Edenflowers.Orders.Subscription do
   # A customer's changes close a day before the occurrence job charges the card.
   @cutoff_days @lead_days + 1
 
+  # The day before changes close, so the customer has two days to act.
+  @heads_up_days @cutoff_days + 2
+
   def intervals, do: @intervals
 
   @doc """
@@ -94,6 +97,26 @@ defmodule Edenflowers.Orders.Subscription do
         scheduler_module_name Edenflowers.Orders.Schedulers.CreateOccurrence
         default_actor system_actor()
         where expr(state == :active and next_fulfillment_date <= date_add(helsinki_today(), ^@lead_days, :day))
+      end
+
+      # Weekly subscribers get flowers too often to need telling. Daily, from
+      # 6 days before a delivery until its changes close, once per delivery.
+      trigger :send_heads_up_email do
+        action :send_heads_up_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron "0 7 * * *"
+        worker_module_name Edenflowers.Orders.Workers.SendSubscriptionHeadsUpEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendSubscriptionHeadsUpEmail
+        default_actor system_actor()
+
+        where expr(
+                state == :active and interval_weeks in [2, 4] and
+                  next_fulfillment_date > date_add(helsinki_today(), ^@cutoff_days, :day) and
+                  next_fulfillment_date <= date_add(helsinki_today(), ^@heads_up_days, :day) and
+                  (is_nil(heads_up_emailed_for) or heads_up_emailed_for != next_fulfillment_date)
+              )
       end
 
       # Queued only by :activate, so subscriptions started before this email
@@ -218,6 +241,13 @@ defmodule Edenflowers.Orders.Subscription do
       change Changes.SendSubscriptionSetupEmail
     end
 
+    update :send_heads_up_email do
+      accept []
+      transaction? false
+      require_atomic? false
+      change Changes.SendSubscriptionHeadsUpEmail
+    end
+
     update :create_occurrence do
       accept []
       transaction? false
@@ -243,6 +273,17 @@ defmodule Edenflowers.Orders.Subscription do
     update :resume do
       change transition_state(:active)
       change {Changes.StepToScheduledDate, days_from_today: @cutoff_days}
+
+      # The customer has just chosen it, so a delivery already due its
+      # heads-up goes without.
+      change fn changeset, _context ->
+        date = Ash.Changeset.get_attribute(changeset, :next_fulfillment_date)
+
+        if Date.diff(date, Edenflowers.ShopTime.today()) <= @heads_up_days,
+          do: Ash.Changeset.force_change_attribute(changeset, :heads_up_emailed_for, date),
+          else: changeset
+      end
+
       require_atomic? false
     end
 
@@ -291,6 +332,7 @@ defmodule Edenflowers.Orders.Subscription do
                      :create_occurrence,
                      :reactivate,
                      :send_setup_email,
+                     :send_heads_up_email,
                      :send_cancelled_email,
                      :send_cancellation_confirmed_email,
                      :replace_card
@@ -342,6 +384,8 @@ defmodule Edenflowers.Orders.Subscription do
     attribute :card_exp_year, :integer
 
     attribute :setup_emailed_at, :utc_datetime
+    # The delivery the last heads-up was about.
+    attribute :heads_up_emailed_for, :date
 
     timestamps()
   end

@@ -1,10 +1,10 @@
 ---
 id: TASK-108
 title: Remind subscribers before the change deadline
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
-updated_date: '2026-10-23 18:52'
+updated_date: '2026-10-24 05:46'
 labels:
   - spec
   - customers
@@ -41,8 +41,8 @@ Sent once per delivery by a queued job (ADR 0005).
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Active 2- and 4-week subscriptions get the email 6 days before each delivery
-- [ ] #2 Weekly and paused subscriptions get none
-- [ ] #3 The email names the change deadline and the charge day and amount
-- [ ] #4 Previews on the admin Emails page cover delivery and pickup, and the copy is translated in en, fi and sv
+- [x] #1 Active 2- and 4-week subscriptions get the email 6 days before each delivery
+- [x] #2 Weekly and paused subscriptions get none
+- [x] #3 The email names the change deadline and the charge day and amount
+- [x] #4 Previews on the admin Emails page cover delivery and pickup, and the copy is translated in en, fi and sv
 <!-- AC:END -->

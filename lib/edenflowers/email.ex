@@ -350,6 +350,42 @@ defmodule Edenflowers.Email do
     end)
   end
 
+  @doc """
+  The heads-up before a 2- or 4-week subscription's next delivery or pickup:
+  when, the last day to change it, and when the card is charged and how much.
+  Matter-of-fact, from the shop. Loads as `subscription_set_up/1`, without
+  the user or first delivery.
+  """
+  def subscription_heads_up(subscription) do
+    delivery_on = subscription.next_fulfillment_date
+    pickup? = subscription.fulfillment_option.fulfillment_method == :pickup
+    day = Format.weekday_day_month(delivery_on, subscription.locale)
+
+    EdenflowersWeb.Gettext.with_app_locale(subscription.locale, fn ->
+      new()
+      |> from(automated_from_address())
+      |> to(to_string(subscription.user.email))
+      |> bcc(record_copy_address())
+      |> subject(
+        if pickup?,
+          do: ~t"Your next flowers are ready on #{date = day}",
+          else: ~t"Your next flowers come on #{date = day}"
+      )
+      |> text_body(
+        Templates.subscription_heads_up(%{
+          subscription: subscription,
+          product: subscription.product_variant.product.name,
+          pickup?: pickup?,
+          price: Format.currency(subscription_price(subscription), subscription.locale),
+          change_by: Date.add(delivery_on, -(Edenflowers.Orders.Subscription.cutoff_days() + 1)),
+          charged_on: Edenflowers.Orders.Subscription.charged_on(delivery_on),
+          account_url: account_url(),
+          format_date: &Format.weekday_date(&1, subscription.locale)
+        })
+      )
+    end)
+  end
+
   defp subscription_price(subscription) do
     Decimal.add(subscription.product_variant.price, subscription.first_order_fulfillment_fee || 0)
   end
