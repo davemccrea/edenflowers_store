@@ -103,11 +103,11 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
 
           <div class="flex flex-col items-start gap-6 px-6 py-12 sm:px-10 md:justify-center md:px-12 md:py-16 lg:px-16 lg:py-20">
             <.flower name="flower-30" class="text-cream-content/60 h-12 w-12" />
-            <h2 id="groups-heading" class="section-title text-balance">{~t"A course for your group"}</h2>
+            <h2 id="groups-heading" class="section-title text-balance">{~t"Courses for private groups"}</h2>
             <p class="max-w-prose text-lg leading-relaxed">
-              {~t"I also run private courses, for example at a Christmas party, a staff wellbeing day or a hen party. We can meet in the shop in Minimossen or at your place, and in summer we're happy to make flower crowns in a park. Bouquet courses take up to 15 people, because I help each of you with your hands. Wreath courses take up to 30."}
+              {~t"I also run courses for private groups, for example at a workplace Christmas party, your staff wellbeing day or a hen party. We can meet in the café space at Minimossen or at your own premises. In summer, making flower crowns outdoors in a park works well."}
             </p>
-            <p class="max-w-prose">{~t"Email or call me, and we'll find a day."}</p>
+            <p class="max-w-prose">{~t"Get in touch and we'll find a course and a day that suit your group."}</p>
             <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
               <.button href={"mailto:#{Business.email()}"} variant="primary">{Business.email()}</.button>
               <a href={"tel:#{Business.phone()}"} class="link-underline-static-body whitespace-nowrap">
