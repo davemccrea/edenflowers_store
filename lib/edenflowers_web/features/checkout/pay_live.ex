@@ -115,7 +115,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
                 :for={line_item <- @payable.line_items}
                 class="border-base-content/12 flex justify-between gap-4 border-b py-3"
               >
-                <dt><span class="tabular-nums">{line_item.quantity} ×</span> {line_item.product_name}</dt>
+                <dt><span class="tabular-nums">{line_item.quantity} ×</span> {Format.line_item_name(line_item)}</dt>
                 <dd class="tabular-nums">{Format.currency(line_item.subtotal, @locale)}</dd>
               </div>
               <div

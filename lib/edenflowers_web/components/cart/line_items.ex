@@ -11,9 +11,11 @@ defmodule EdenflowersWeb.Cart.LineItems do
 
   attr :id, :string, required: true
   attr :order, :any, required: true
+  # Only the checkout has the card picker for the card line to open.
+  attr :card_picker?, :boolean, default: false
 
   @impl true
-  def mount(socket), do: {:ok, assign(socket, :refused, %{})}
+  def mount(socket), do: {:ok, assign(socket, refused: %{}, card_picker?: false)}
 
   @impl true
   def render(assigns) do
@@ -37,14 +39,18 @@ defmodule EdenflowersWeb.Cart.LineItems do
                 />
               </.link>
             <% else %>
-              <.image
-                src={line_item.product_image_slug}
-                alt={"Image of #{line_item.product_name}"}
-                width={80}
-                height={80}
-                sizes="80px"
-                class="h-16 w-16 object-cover sm:h-20 sm:w-20"
-              />
+              <%!-- The name below is the button screen readers reach. --%>
+              <button
+                :if={@card_picker?}
+                type="button"
+                tabindex="-1"
+                aria-hidden="true"
+                phx-click={JS.exec("phx-show", to: "#card-drawer")}
+                class="shrink-0 cursor-pointer transition-opacity hover:opacity-70"
+              >
+                <.card_image line_item={line_item} />
+              </button>
+              <.card_image :if={not @card_picker?} line_item={line_item} />
             <% end %>
 
             <div class="flex min-w-0 flex-1 flex-col gap-2">
@@ -58,7 +64,18 @@ defmodule EdenflowersWeb.Cart.LineItems do
                       {line_item.product_name}
                     </.link>
                   <% else %>
-                    <span>{line_item.product_name}</span>
+                    <button
+                      :if={@card_picker?}
+                      type="button"
+                      phx-click={JS.exec("phx-show", to: "#card-drawer")}
+                      aria-haspopup="dialog"
+                      class="link-underline-hover cursor-pointer text-left"
+                      data-testid="cart-change-card-button"
+                    >
+                      {Edenflowers.Format.line_item_name(line_item)}
+                      <span class="sr-only">{gettext("Change card")}</span>
+                    </button>
+                    <span :if={not @card_picker?}>{Edenflowers.Format.line_item_name(line_item)}</span>
                   <% end %>
                   <span
                     :if={line_item.variant_size}
@@ -161,6 +178,22 @@ defmodule EdenflowersWeb.Cart.LineItems do
         </div>
       <% end %>
     </div>
+    """
+  end
+
+  attr :line_item, :map, required: true
+
+  defp card_image(assigns) do
+    ~H"""
+    <.image
+      src={@line_item.product_image_slug}
+      alt={"Image of #{@line_item.product_name}"}
+      width={80}
+      height={80}
+      sizes="80px"
+      crop_type="fit"
+      class="h-16 w-16 object-contain sm:h-20 sm:w-20"
+    />
     """
   end
 

@@ -9,6 +9,11 @@ defmodule Edenflowers.Format do
   @spec locale() :: Localize.Locale.locale_id()
   def locale, do: Localize.get_locale().cldr_locale_id
 
+  # Card products are named for their design alone, like "Aruba". In the
+  # current Gettext locale.
+  def line_item_name(%{is_card: true, product_name: name}), do: ~t"#{name} card"
+  def line_item_name(line_item), do: line_item.product_name
+
   @spec currency(number | nil, Localize.Locale.locale_id()) :: String.t()
   def currency(nil, locale), do: currency(0, locale)
   def currency(amount, locale), do: Localize.Number.to_string!(amount, locale: locale, currency: :EUR)

@@ -347,7 +347,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                       width={64}
                       height={64}
                       sizes="64px"
-                      class="h-16 w-16 shrink-0 object-cover"
+                      crop_type="fit"
+                      class="h-16 w-16 shrink-0 object-contain"
                     />
                     <div class="min-w-0 flex-1">
                       <p class="font-medium">{@card.name}</p>

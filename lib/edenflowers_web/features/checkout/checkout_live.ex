@@ -392,7 +392,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   {~t"Cart"} ({@order.total_items_in_cart})
                 </p>
 
-                <.live_component id="checkout-line-items" module={EdenflowersWeb.Cart.LineItems} order={@order} />
+                <.live_component
+                  id="checkout-line-items"
+                  module={EdenflowersWeb.Cart.LineItems}
+                  order={@order}
+                  card_picker?={true}
+                />
 
                 <div class="border-base-content/12 border-t"></div>
 
@@ -736,7 +741,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 width={80}
                 height={80}
                 sizes="80px"
-                class="h-20 w-20 object-cover"
+                crop_type="fit"
+                class="h-20 w-20 object-contain"
               />
               <span class="sr-only">{gettext("Change card")}</span>
             </button>

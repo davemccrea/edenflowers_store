@@ -112,18 +112,5 @@ defmodule Edenflowers.Catalog.ProductVariantTest do
       assert found.product.id == card_product.id
       assert found.product.tax_rate != nil
     end
-
-    test "results are sorted by size ascending", %{card_product: card_product} do
-      generate(product_variant(product_id: card_product.id, size: :large, draft: false))
-      generate(product_variant(product_id: card_product.id, size: :small, draft: false))
-      generate(product_variant(product_id: card_product.id, size: :medium, draft: false))
-
-      variants =
-        Catalog.list_card_drawer_variants!(authorize?: false)
-        |> Enum.filter(fn v -> v.product_id == card_product.id end)
-        |> Enum.map(& &1.size)
-
-      assert variants == Enum.sort(variants)
-    end
   end
 end

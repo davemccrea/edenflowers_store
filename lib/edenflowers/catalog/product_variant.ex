@@ -86,7 +86,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
                  product.product_category.visibility != :draft
              )
 
-      prepare build(sort: [size: :asc], load: [:photo_slug, product: [:tax_rate]])
+      prepare build(load: [:photo_slug, product: [:tax_rate]])
     end
   end
 
