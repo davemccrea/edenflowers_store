@@ -277,7 +277,7 @@ The submit button swaps its label for a spinner, both sharing one grid cell so t
 - **Validation cadence:** `phx-debounce="blur"` until the field has been used, then live.
 - **Error:** `input-error` border, `aria-invalid`, and an `aria-describedby` error node below.
 - **Radio card:** a bordered row (`0.25rem`, `base-300`) that shifts to a primary border and a 5% primary tint via `has-[input:checked]`, with a tiny primary radio as the marker. Flex-column on mobile, row at `md`.
-- **Button-addon:** a joined input + primary submit for single-field forms (newsletter, promo code).
+- **Button-addon:** a bare arrow submit (the newsletter's, labelled for screen readers) inset at the end of the field, for single-field forms (promo code). The whole field is one `.input` wrapper, so the focus ring circles input and arrow together. 16px text so iOS doesn't zoom on focus.
 
 ### Cards / Containers
 There are no cards. The product card is a link, a figure and two lines of text with nothing around them:
