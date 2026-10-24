@@ -2,7 +2,7 @@
 
 Write a map of every email the app sends: what makes it go out, under which
 conditions, its subject and who it appears to come from. The reader is Jennie,
-the florist who runs the shop, not a developer. `just email-map` runs this
+the florist who runs the shop, not a developer. `just map-emails` runs this
 prompt and puts every rendered email after your map, so keep to the map.
 
 ## How to find it
