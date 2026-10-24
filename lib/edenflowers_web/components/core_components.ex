@@ -656,7 +656,8 @@ defmodule EdenflowersWeb.CoreComponents do
   SVGs and external URLs (anything without a `local:///` prefix, such as the
   seed placeholders) skip the `<picture>` machinery and render a plain `<img>`.
 
-  Pass `sources` to swap crops per breakpoint — see `product_card/1`.
+  Pass `sources` to swap crops per breakpoint — see `product_card/1`. A source
+  may set its own `crop`; otherwise it uses the image's.
 
   Pass `crop` to cut a region out of the original before resizing, using
   Imgproxy's `width:height:gravity` format. A focus-point gravity keeps a
@@ -688,7 +689,14 @@ defmodule EdenflowersWeb.CoreComponents do
         Enum.map(assigns.sources, fn source ->
           %{
             media: Map.fetch!(source, :media),
-            srcset: image_srcset(assigns.src, source.width, source.height, assigns.crop_type, assigns.crop)
+            srcset:
+              image_srcset(
+                assigns.src,
+                source.width,
+                source.height,
+                assigns.crop_type,
+                Map.get(source, :crop, assigns.crop)
+              )
           }
         end)
       else
