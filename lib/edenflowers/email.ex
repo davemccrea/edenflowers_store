@@ -572,6 +572,24 @@ defmodule Edenflowers.Email do
     end)
   end
 
+  @doc """
+  The day-before reminder of when and where a course is. A booking still
+  owing gets the amount and `payment_link_url`, nil otherwise. Expects
+  `:course` translated, `:first_name` and `:balance` loaded.
+  """
+  def course_reminder(registration, payment_link_url) do
+    EdenflowersWeb.Gettext.with_app_locale(registration.locale, fn ->
+      new()
+      |> from(from_address())
+      |> to(registration.email)
+      |> bcc(record_copy_address())
+      |> subject(~t"See you tomorrow at #{course = registration.course.name}")
+      |> text_body(
+        Templates.course_reminder(Map.put(course_assigns(registration, nil), :payment_link_url, payment_link_url))
+      )
+    end)
+  end
+
   defp course_assigns(registration, message) do
     %{
       registration: registration,

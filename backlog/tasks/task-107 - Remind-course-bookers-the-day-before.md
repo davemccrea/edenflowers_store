@@ -1,9 +1,10 @@
 ---
 id: TASK-107
 title: Remind course bookers the day before
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 18:42'
+updated_date: '2026-10-24 05:42'
 labels:
   - spec
   - customers
@@ -25,8 +26,8 @@ Decided in the email grilling session on 2026-10-23. Automatic, Jennie's voice, 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Confirmed and awaiting-payment bookings get the reminder the day before the course
-- [ ] #2 An awaiting-payment booking's reminder includes the amount and payment link
-- [ ] #3 Cancelled bookings and released holds get nothing
-- [ ] #4 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
+- [x] #1 Confirmed and awaiting-payment bookings get the reminder the day before the course
+- [x] #2 An awaiting-payment booking's reminder includes the amount and payment link
+- [x] #3 Cancelled bookings and released holds get nothing
+- [x] #4 Previews on the admin Emails page cover every version, and the new copy is translated in en, fi and sv
 <!-- AC:END -->
