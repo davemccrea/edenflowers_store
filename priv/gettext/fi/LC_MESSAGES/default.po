@@ -6770,21 +6770,6 @@ msgstr "Korkeus (cm)"
 msgid "Stems"
 msgstr "Varret"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:106
-#, elixir-autogen, elixir-format
-msgid "A course for your group"
-msgstr "Kurssi ryhmällenne"
-
-#: lib/edenflowers_web/features/courses/courses_live.ex:110
-#, elixir-autogen, elixir-format
-msgid "Email or call me, and we'll find a day."
-msgstr "Lähetä sähköpostia tai soita, niin sovitaan päivä."
-
-#: lib/edenflowers_web/features/courses/courses_live.ex:108
-#, elixir-autogen, elixir-format
-msgid "I also run private courses, for example at a Christmas party, a staff wellbeing day or a hen party. We can meet in the shop in Minimossen or at your place, and in summer we're happy to make flower crowns in a park. Bouquet courses take up to 15 people, because I help each of you with your hands. Wreath courses take up to 30."
-msgstr "Pidän myös yksityisiä kursseja, esimerkiksi pikkujouluissa, tyky-päivänä tai polttareissa. Voimme tavata liikkeessä Minimossenissa tai teillä, ja kesällä sidomme mielellämme hiusseppeleitä puistossa. Kimppukursseille mahtuu enintään 15 henkeä, koska ohjaan jokaista henkilökohtaisesti. Seppelekursseille mahtuu enintään 30."
-
 #: lib/edenflowers/payments/changes/cancel.ex:137
 #, elixir-autogen, elixir-format
 msgid "This changed while you had it open, so it wasn't cancelled."
@@ -7597,3 +7582,18 @@ msgstr "Ruukku (cm)"
 #, elixir-autogen, elixir-format
 msgid "Weight (g)"
 msgstr "Paino (g)"
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:106
+#, elixir-autogen, elixir-format
+msgid "Courses for private groups"
+msgstr "Kurssi yksityisille ryhmille"
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:110
+#, elixir-autogen, elixir-format
+msgid "Get in touch and we'll find a course and a day that suit your group."
+msgstr "Ota yhteyttä, niin löydetään juuri teidän ryhmällenne sopiva kurssi ja päivä."
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:108
+#, elixir-autogen, elixir-format
+msgid "I also run courses for private groups, for example at a workplace Christmas party, your staff wellbeing day or a hen party. We can meet in the café space at Minimossen or at your own premises. In summer, making flower crowns outdoors in a park works well."
+msgstr "Pidän myös kursseja yksityisille ryhmille, esimerkiksi työpaikan pikkujouluissa, tyky-päivänänne tai polttareissa. Voimme kokoontua Minimossenin kahvilatilassa tai omissa tiloissanne. Kesällä hiusseppeleiden sitominen ulkona puistossa toimii hyvin."
