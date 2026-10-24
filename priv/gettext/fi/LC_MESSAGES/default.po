@@ -1495,6 +1495,7 @@ msgstr "Hääpari suutelee valuvan valkoisen kimpun vieressä"
 msgid "Deep red and blush bouquet against a white dress"
 msgstr "Tummanpunainen ja vaaleanpunainen kimppu valkoista pukua vasten"
 
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:82
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:208
 #, elixir-autogen, elixir-format
 msgid "Or call me on"
@@ -2421,16 +2422,6 @@ msgstr "Lisää koko"
 msgid "Arrangement:"
 msgstr "Sidonta:"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:78
-#, elixir-autogen, elixir-format
-msgid "Call or email me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."
-msgstr "Soita tai lähetä minulle sähköpostia, niin valitaan kukat yhdessä. Jos haluat kukat toimitettuina, kerro hautajaisten päivä, kellonaika ja osoite, vainajan nimi sekä mitä haluat kortiin kirjoitettavan."
-
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:80
-#, elixir-autogen, elixir-format
-msgid "Call me on 040 220 9494"
-msgstr "Soita numeroon 040 220 9494"
-
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "Card message:"
@@ -2547,11 +2538,6 @@ msgstr "Avoin sydän punaisista ruusuista"
 #, elixir-autogen, elixir-format
 msgid "Open heart of white roses and lilac carnations"
 msgstr "Avoin sydän valkoisista ruusuista ja liloista neilikoista"
-
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:82
-#, elixir-autogen, elixir-format
-msgid "Or"
-msgstr "Tai"
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:43
 #, elixir-autogen, elixir-format
@@ -2696,11 +2682,6 @@ msgstr "Seppele keltaisista ruusuista, vuokoista ja persikanvärisistä neilikoi
 #, elixir-autogen, elixir-format
 msgid "Write a name first, then translate it."
 msgstr "Kirjoita ensin nimi ja käännä se sitten."
-
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:83
-#, elixir-autogen, elixir-format
-msgid "email me"
-msgstr "lähetä sähköpostia"
 
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:201
 #, elixir-autogen, elixir-format
@@ -7612,3 +7593,13 @@ msgstr "Tällä sivulla"
 #, elixir-autogen, elixir-format
 msgid "Orders and delivery"
 msgstr "Tilaukset ja toimitus"
+
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:80
+#, elixir-autogen, elixir-format
+msgid "Email me"
+msgstr "Lähetä minulle sähköpostia"
+
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:78
+#, elixir-autogen, elixir-format
+msgid "Email or call me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."
+msgstr "Lähetä minulle sähköpostia tai soita, niin valitaan kukat yhdessä. Jos haluat kukat toimitettuina, kerro hautajaisten päivä, kellonaika ja osoite, vainajan nimi sekä mitä haluat kortiin kirjoitettavan."

@@ -1495,6 +1495,7 @@ msgstr ""
 msgid "Deep red and blush bouquet against a white dress"
 msgstr ""
 
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:82
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:208
 #, elixir-autogen, elixir-format
 msgid "Or call me on"
@@ -2421,16 +2422,6 @@ msgstr ""
 msgid "Arrangement:"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:78
-#, elixir-autogen, elixir-format
-msgid "Call or email me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:80
-#, elixir-autogen, elixir-format
-msgid "Call me on 040 220 9494"
-msgstr ""
-
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "Card message:"
@@ -2546,11 +2537,6 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:109
 #, elixir-autogen, elixir-format
 msgid "Open heart of white roses and lilac carnations"
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:82
-#, elixir-autogen, elixir-format
-msgid "Or"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:43
@@ -2695,11 +2681,6 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:41
 #, elixir-autogen, elixir-format
 msgid "Write a name first, then translate it."
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:83
-#, elixir-autogen, elixir-format
-msgid "email me"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:201
@@ -7611,4 +7592,14 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/faq_live.ex:48
 #, elixir-autogen, elixir-format
 msgid "Orders and delivery"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:80
+#, elixir-autogen, elixir-format
+msgid "Email me"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:78
+#, elixir-autogen, elixir-format
+msgid "Email or call me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."
 msgstr ""
