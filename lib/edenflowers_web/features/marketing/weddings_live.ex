@@ -138,26 +138,14 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             </div>
           </div>
 
-          <%!-- One 3:2 photo spanning two columns is as tall as the 3:4 photos beside it. --%>
-          <div class="mt-20 grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-6">
-            <figure class="col-span-2">
-              <.image
-                src="local:///wedding/eden_flowers_2.jpg"
-                alt={~t"Wrist corsages of peach roses"}
-                width={800}
-                height={533}
-                sizes="(min-width: 48rem) 33vw, 100vw"
-                class="aspect-[3/2] w-full object-cover"
-              />
-              <figcaption class="text-base-content/70 mt-2 text-sm"><.credit_line name="Eden Flowers" /></figcaption>
-            </figure>
+          <div class="mt-20 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
             <figure :for={photo <- @decoration_photos}>
               <.image
                 src={photo.src}
                 alt={photo.alt}
                 width={600}
                 height={800}
-                sizes="(min-width: 48rem) 17vw, 50vw"
+                sizes="(min-width: 48rem) 25vw, 50vw"
                 class="aspect-[3/4] w-full object-cover"
               />
               <figcaption class="mt-2">{photo.caption}</figcaption>
@@ -385,6 +373,13 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         height: 1461,
         credit: "Daniela Streng",
         alt: ~t"Bouquet of roses and greenery on a wooden jetty"
+      },
+      %{
+        src: "local:///wedding/eden_flowers_2.jpg",
+        width: 2000,
+        height: 1333,
+        credit: "Eden Flowers",
+        alt: ~t"Wrist corsages of peach roses"
       },
       %{
         src: "local:///wedding/anna_riska_1.jpg",
