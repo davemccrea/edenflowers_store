@@ -58,6 +58,16 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     refute has_element?(view, "[data-testid=variant-dimensions]")
   end
 
+  test "shows only the details its category's product type has", %{conn: conn} do
+    category = generate(product_category(product_type: :plant))
+    product = generate(product(draft: false, product_category_id: category.id))
+    generate(product_variant(product_id: product.id, size: nil, height_cm: "40", stem_count: "12", pot_cm: "14"))
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+
+    assert render(element(view, "[data-testid=variant-dimensions]")) =~ ~r/>\s*40 cm · Pot 14 cm\s*</
+  end
+
   test "a product with every size sold out can't be added", %{conn: conn} do
     product = generate(product(draft: false))
     generate(product_variant(product_id: product.id, size: nil, stock_quantity: 0))

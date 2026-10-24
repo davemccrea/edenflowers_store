@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.CardDrawer do
   """
   use EdenflowersWeb, :html
 
+  alias Edenflowers.Catalog.ProductType
   alias Edenflowers.Catalog.ProductVariantSize
 
   attr :variants, :list, required: true
@@ -18,7 +19,7 @@ defmodule EdenflowersWeb.CardDrawer do
           variants = Enum.filter(assigns.variants, &(&1.size == size)),
           variants != [] do
         variants = Enum.sort_by(variants, &{is_nil(&1.product.position), &1.product.position, &1.product.name})
-        {size, shared_price(variants), variants}
+        {size, shared_price(variants), shared_details(variants), variants}
       end
 
     assigns = assign(assigns, :size_groups, size_groups)
@@ -38,13 +39,14 @@ defmodule EdenflowersWeb.CardDrawer do
       </header>
 
       <div class="flex flex-col gap-6 p-4 sm:p-8" data-testid="card-drawer">
-        <div :for={{size, shared_price, variants} <- @size_groups} class="flex flex-col gap-3">
+        <div :for={{size, shared_price, shared_details, variants} <- @size_groups} class="flex flex-col gap-3">
           <div class="flex items-end justify-between gap-3">
             <div class="flex flex-col gap-1">
               <h3 class="eyebrow text-base-content/70">{size_label(size)}</h3>
               <span :if={message_room_label(size)} class="text-base-content/70 text-sm">
                 {message_room_label(size)}
               </span>
+              <span :if={shared_details} class="text-base-content/70 text-sm">{shared_details}</span>
             </div>
             <span :if={shared_price} class="font-serif text-lg">{Edenflowers.Format.currency(shared_price, @locale)}</span>
           </div>
@@ -81,6 +83,9 @@ defmodule EdenflowersWeb.CardDrawer do
               <span class="font-serif text-balance hyphens-auto wrap-break-word w-full text-center text-lg leading-snug">
                 {variant.product.name}
               </span>
+              <span :if={is_nil(shared_details) && details(variant)} class="text-base-content/70 text-sm">
+                {details(variant)}
+              </span>
               <span :if={is_nil(shared_price)} class="font-serif text-lg">
                 {Edenflowers.Format.currency(variant.price, @locale)}
               </span>
@@ -97,6 +102,16 @@ defmodule EdenflowersWeb.CardDrawer do
   defp shared_price([first | rest]) do
     if Enum.all?(rest, &Decimal.equal?(&1.price, first.price)), do: first.price
   end
+
+  # Like the price: in the heading only when every card of the size shares it.
+  defp shared_details(variants) do
+    case variants |> Enum.map(&details/1) |> Enum.uniq() do
+      [details] -> details
+      _ -> nil
+    end
+  end
+
+  defp details(variant), do: ProductType.describe(:card, variant)
 
   defp size_label(:small), do: gettext("Small")
   defp size_label(:medium), do: gettext("Medium")

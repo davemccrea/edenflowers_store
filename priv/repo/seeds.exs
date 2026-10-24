@@ -158,6 +158,7 @@ chocolate_category =
     slug: "chocolate",
     visibility: :public,
     add_on: true,
+    product_type: :chocolate,
     description: "Handmade chocolates to go with your flowers.",
     translations: %{
       "sv-FI": %{name: "Choklad", description: "Handgjord choklad till dina blommor."},

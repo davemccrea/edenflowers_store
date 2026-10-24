@@ -75,6 +75,24 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert Ash.get!(Edenflowers.Catalog.ProductVariant, variant.id, authorize?: false).stock_quantity == nil
   end
 
+  test "a size's details follow the category's product type", %{conn: conn} do
+    cards = generate(product_category(product_type: :card))
+    product = generate(product())
+    variant = generate(product_variant(product_id: product.id, height_cm: "40", stem_count: "12"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+    assert has_element?(view, "#form_product_variants_0_stem_count[value=\"12\"]")
+
+    view |> form("#product-form", form: %{product_category_id: cards.id}) |> render_change()
+    refute has_element?(view, "#form_product_variants_0_stem_count")
+
+    view
+    |> form("#product-form", form: %{product_variants: %{"0" => %{dimensions_cm: "10 × 15"}}})
+    |> render_submit()
+
+    assert Ash.get!(Edenflowers.Catalog.ProductVariant, variant.id, authorize?: false).dimensions_cm == "10 × 15"
+  end
+
   test "marks every size sold out in one go, keeping other unsaved edits", %{conn: conn} do
     product = generate(product())
     small = generate(product_variant(product_id: product.id, size: :small, stock_quantity: 4))

@@ -45,8 +45,33 @@ defmodule Edenflowers.Catalog.ProductVariant do
   actions do
     defaults [
       :read,
-      create: [:price, :size, :height_cm, :stem_count, :own_photo_slug, :stock_quantity, :product_id, :draft],
-      update: [:price, :size, :height_cm, :stem_count, :own_photo_slug, :stock_quantity, :draft]
+      create: [
+        :price,
+        :size,
+        :height_cm,
+        :stem_count,
+        :dimensions_cm,
+        :pot_cm,
+        :weight_g,
+        :pieces,
+        :own_photo_slug,
+        :stock_quantity,
+        :product_id,
+        :draft
+      ],
+      update: [
+        :price,
+        :size,
+        :height_cm,
+        :stem_count,
+        :dimensions_cm,
+        :pot_cm,
+        :weight_g,
+        :pieces,
+        :own_photo_slug,
+        :stock_quantity,
+        :draft
+      ]
     ]
 
     # Stock never goes below 0; see Orders.Changes.AdjustStock.
@@ -121,9 +146,14 @@ defmodule Edenflowers.Catalog.ProductVariant do
     uuid_primary_key :id
     attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
     attribute :size, Edenflowers.Catalog.ProductVariantSize
-    # Display text such as "30–40", so a range or a single value both fit.
+    # Display text such as "30–40", so a range or a single value both fit. The category's
+    # product type says which of these its sizes have; see ProductType.
     attribute :height_cm, :string
     attribute :stem_count, :string
+    attribute :dimensions_cm, :string
+    attribute :pot_cm, :string
+    attribute :weight_g, :string
+    attribute :pieces, :string
     # One of the product's photos, or nil to show its main photo; see `photo_slug`.
     attribute :own_photo_slug, :string
     # Nil for a size made to order, which never runs out.
