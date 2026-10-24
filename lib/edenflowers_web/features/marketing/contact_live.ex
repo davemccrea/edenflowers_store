@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
   use EdenflowersWeb, :live_view
 
   alias EdenflowersWeb.Business
+  alias EdenflowersWeb.Marketing.ContactDrawer
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -50,14 +51,17 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
           <div>
             <h1 class="page-title mb-6">{~t"Contact"}</h1>
             <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-              {~t"Send me an email or give me a call and I'll gladly help."}
+              {~t"Send me a message or give me a call and I'll gladly help."}
             </p>
-            <p class="text-base-content/80 mt-4 mb-12 text-lg leading-relaxed">
+            <p class="text-base-content/80 mt-4 text-lg leading-relaxed">
               {~t"Have a question?"}
               <.link navigate={~q"/#{language}/faq"} class="link-underline-static-body whitespace-nowrap">
                 {~t"See the FAQ"}
               </.link>
             </p>
+            <.button phx-click={ContactDrawer.open()} variant="primary" class="mt-8 mb-12">
+              {~t"Send me a message"}
+            </.button>
 
             <dl class="grid gap-10 sm:grid-cols-2 sm:gap-x-12 md:grid-cols-1 lg:grid-cols-2">
               <.contact_item label={~t"Email"}>
@@ -91,6 +95,8 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
           </div>
         </div>
       </.container>
+
+      <.live_component module={ContactDrawer} id="contact-drawer" />
     </Layouts.app>
     """
   end

@@ -5,6 +5,8 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
 
   use EdenflowersWeb, :live_view
 
+  alias EdenflowersWeb.Marketing.ContactDrawer
+
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
@@ -18,7 +20,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
          ~t"Funeral flowers in Vaasa and Korsholm: sprays, hearts, wreaths and casket sprays by Jennie at Eden Flowers, delivered to churches and chapels.",
        og_image: image_url("local:///condolence/condolence_5.jpg", 1200, 630)
      )
-     |> assign(gallery: gallery(), order_mailto: order_mailto())}
+     |> assign(gallery: gallery())}
   end
 
   @impl true
@@ -75,15 +77,19 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
           <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
           <h2 id="order-heading" class="section-title text-forest-content">{~t"Order for a funeral"}</h2>
           <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
-            {~t"Email or call me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."}
+            {~t"Send me a message or call me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."}
           </p>
-          <.button href={@order_mailto} variant="inverse">{~t"Email me"}</.button>
+          <.button phx-click={ContactDrawer.open()} variant="inverse">
+            {~t"Send me a message"}
+          </.button>
           <p class="text-forest-content/85">
             {~t"Or call me on"}
             <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">040 220 9494</a>
           </p>
         </div>
       </section>
+
+      <.live_component module={ContactDrawer} id="contact-drawer" />
     </Layouts.app>
     """
   end
@@ -125,22 +131,5 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
   # Most photos are 3:4 phone shots.
   defp portrait(number, alt) do
     %{src: "local:///condolence/condolence_#{number}.jpg", width: 1500, height: 2000, alt: alt}
-  end
-
-  defp order_mailto do
-    subject = URI.encode(~t"Funeral flowers", &URI.char_unreserved?/1)
-
-    body =
-      [
-        ~t"Date and time of the funeral:",
-        ~t"Address of the funeral:",
-        ~t"Name of the deceased:",
-        ~t"Arrangement:",
-        ~t"Card message:"
-      ]
-      |> Enum.map_join("\n", &(&1 <> " "))
-      |> URI.encode(&URI.char_unreserved?/1)
-
-    "mailto:info@edenflowers.fi?subject=#{subject}&body=#{body}"
   end
 end

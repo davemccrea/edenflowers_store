@@ -207,7 +207,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         class="bg-base-100 w-[92vw] h-full overflow-y-auto overscroll-contain sm:w-[34rem]"
       >
         <header class="flex flex-row items-center justify-between gap-4 pt-6 pr-4 pl-4 sm:pt-8 sm:pl-8">
-          <h2 class="section-title">{~t"Request a quote"}</h2>
+          <h2 class="section-title">{if @enquiry_sent?, do: ~t"Thank you!", else: ~t"Request a quote"}</h2>
           <.icon_button aria_label={~t"Close"} phx-click={JS.exec("phx-hide", to: "#enquiry-drawer")}>
             <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
           </.icon_button>
@@ -222,8 +222,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             selection={selection_lines(@personal_flowers ++ @decorations, @quantities)}
             estimate={estimate_label(estimate(@personal_flowers ++ @decorations, @quantities))}
           />
-          <div :if={@enquiry_sent?} id="enquiry-sent" class="flex flex-col gap-3">
-            <p class="font-serif text-3xl">{~t"Thank you!"}</p>
+          <div :if={@enquiry_sent?} id="enquiry-sent">
             <p class="text-base-content/80">
               {~t"Your enquiry is on its way, and a copy is in your inbox. I'll get back to you with a quote as soon as I can. Nothing is booked until you confirm it."}
             </p>
