@@ -575,12 +575,12 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       <section class="bg-forest not-last:border-b">
         <div class="grid md:grid-cols-2">
           <.image
-            src="local:///jennie_2.jpg"
+            src="local:///jennie_6.jpg"
             alt="Jennie"
             width={1500}
-            height={1000}
+            height={1500}
             sizes="(min-width: 768px) 50vw, 100vw"
-            class="aspect-[4/5] max-h-[640px] object-[60%_center] h-full w-full object-cover md:aspect-auto md:h-[640px]"
+            class="aspect-[4/5] max-h-[640px] h-full w-full object-cover md:aspect-auto md:h-[640px]"
           />
 
           <div class="flex flex-col items-start gap-10 px-4 py-20 sm:px-8 md:justify-center md:px-12 lg:px-20">
