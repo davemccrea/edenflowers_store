@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
   alias Edenflowers.Format
   alias Edenflowers.Translations
   alias EdenflowersWeb.Business
+  alias EdenflowersWeb.Marketing.ContactDrawer
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -109,7 +110,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
             </p>
             <p class="max-w-prose">{~t"Get in touch and we'll find a course and a day that suit your group."}</p>
             <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-              <.button href={"mailto:#{Business.email()}"} variant="primary">{Business.email()}</.button>
+              <.button phx-click={ContactDrawer.open()} variant="primary">{~t"Send me a message"}</.button>
               <a href={"tel:#{Business.phone()}"} class="link-underline-static-body whitespace-nowrap">
                 {Business.phone_display()}
               </a>
@@ -117,6 +118,8 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
           </div>
         </section>
       </.container>
+
+      <.live_component module={ContactDrawer} id="contact-drawer" />
     </Layouts.app>
     """
   end
