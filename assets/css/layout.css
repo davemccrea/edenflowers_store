@@ -164,7 +164,7 @@ html:has(dialog.slide-drawer:modal) {
   @apply mx-auto px-4 sm:px-8;
 }
 
-/* Used with the FocusElement hook so the heading lands below the fixed header. */
+/* Used with the FocusElement hook so step headings and dividers clear the fixed header. */
 .scroll-anchor-below-header {
   scroll-margin-top: calc(
     var(--header-height) + var(--spacing) * 4 + env(safe-area-inset-top)

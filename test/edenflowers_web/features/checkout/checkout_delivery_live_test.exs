@@ -245,6 +245,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       assert reloaded.fulfillment_option_id == delivery_option.id
       assert reloaded.fulfillment_method == :delivery
       assert reloaded.state == :payment
+      assert_push_event(view, "focus-element", %{id: "checkout-section-payment", stepTop: true})
     end
 
     test "gives Stripe the buyer's phone number, but never a gift recipient's", %{

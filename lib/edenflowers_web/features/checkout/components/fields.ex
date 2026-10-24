@@ -57,7 +57,7 @@ defmodule EdenflowersWeb.Checkout.Fields do
       |> assign(:a11y_status, a11y_status(past?, current?))
 
     ~H"""
-    <li class={["border-base-content/12 py-8 md:py-10", not first_step?(@state) && "border-t"]}>
+    <li class={["border-base-content/12 scroll-anchor-below-header py-8 md:py-10", not first_step?(@state) && "border-t"]}>
       <div class="flex items-baseline justify-between gap-4">
         <div class="flex items-baseline gap-3">
           <span aria-hidden="true" class={position_classes(@current?)}>
