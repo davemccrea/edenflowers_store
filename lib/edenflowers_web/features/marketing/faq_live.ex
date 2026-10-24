@@ -33,44 +33,60 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           {~t"Frequently Asked Questions"}
         </h1>
 
-        <dl class="max-w-3xl">
-          <.faq_item question={~t"How long will my flowers stay fresh?"}>
-            {~t"Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."}
-          </.faq_item>
-          <.faq_item question={~t"What is your delivery policy?"}>
-            {delivery_answer()}
-          </.faq_item>
-          <.faq_item question={~t"Can I include a personal message with my order?"}>
-            {~t"Yes. Add a personal message during checkout and it'll be included on a card with the delivery. Messages can be up to 200 characters."}
-          </.faq_item>
-          <.faq_item question={~t"What happens if I'm not home for delivery?"}>
-            {~t"If you're not in, the flowers will be left in a safe, shaded spot. If no suitable spot is available, a note with redelivery instructions will be left. You can also specify delivery instructions during checkout."}
-          </.faq_item>
-          <.faq_item question={~t"Can I cancel my order?"}>
-            {~t"Yes, from your account, up to #{days = Edenflowers.Orders.Subscription.cutoff_days() + 1} days before your delivery or pickup, and you'll be refunded in full. After that I've already bought your flowers, so get in touch and we'll work something out."}
-          </.faq_item>
-        </dl>
+        <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
+          <nav aria-labelledby="faq-nav-heading" class="mb-16 md:sticky md:top-8 md:mb-0 md:self-start">
+            <h2 id="faq-nav-heading" class="text-base-content/75 mb-3 text-sm">{~t"On this page"}</h2>
+            <ul class="flex flex-wrap gap-x-6 gap-y-2 md:flex-col md:gap-3">
+              <li><a href="#orders" class="link-underline-hover">{~t"Orders"}</a></li>
+              <li><a href="#subscriptions" class="link-underline-hover">{~t"Subscriptions"}</a></li>
+              <li><a href="#courses" class="link-underline-hover">{~t"Courses"}</a></li>
+            </ul>
+          </nav>
 
-        <section aria-labelledby="subscription-faq-heading" class="mt-20 md:mt-28" id="subscriptions">
-          <h2 id="subscription-faq-heading" class="section-title mb-8">{~t"How subscriptions work"}</h2>
-          <dl class="max-w-3xl">
-            <.faq_item :for={{question, answer} <- subscription_questions()} question={question} heading="h3">
-              {answer}
-            </.faq_item>
-          </dl>
-        </section>
+          <div>
+            <section aria-labelledby="orders-faq-heading" class="scroll-mt-8" id="orders">
+              <h2 id="orders-faq-heading" class="section-title mb-8">{~t"Orders and delivery"}</h2>
+              <dl class="max-w-3xl">
+                <.faq_item question={~t"How long will my flowers stay fresh?"}>
+                  {~t"Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."}
+                </.faq_item>
+                <.faq_item question={~t"What is your delivery policy?"}>
+                  {delivery_answer()}
+                </.faq_item>
+                <.faq_item question={~t"Can I include a personal message with my order?"}>
+                  {~t"Yes. Add a personal message during checkout and it'll be included on a card with the delivery. Messages can be up to 200 characters."}
+                </.faq_item>
+                <.faq_item question={~t"What happens if I'm not home for delivery?"}>
+                  {~t"If you're not in, the flowers will be left in a safe, shaded spot. If no suitable spot is available, a note with redelivery instructions will be left. You can also specify delivery instructions during checkout."}
+                </.faq_item>
+                <.faq_item question={~t"Can I cancel my order?"}>
+                  {~t"Yes, from your account, up to #{days = Edenflowers.Orders.Subscription.cutoff_days() + 1} days before your delivery or pickup, and you'll be refunded in full. After that I've already bought your flowers, so get in touch and we'll work something out."}
+                </.faq_item>
+              </dl>
+            </section>
 
-        <section aria-labelledby="course-faq-heading" class="mt-20 md:mt-28" id="courses">
-          <h2 id="course-faq-heading" class="section-title mb-8">{~t"Courses"}</h2>
-          <dl class="max-w-3xl">
-            <.faq_item question={~t"How do I cancel a course booking?"} heading="h3">
-              {~t"Reply to your confirmation email and let me know."}
-            </.faq_item>
-            <.faq_item question={~t"Will I get my money back?"} heading="h3">
-              {~t"Yes, if you cancel in time. Each course's page says how many days before it you can cancel for a full refund, and how much is kept after that."}
-            </.faq_item>
-          </dl>
-        </section>
+            <section aria-labelledby="subscription-faq-heading" class="mt-20 scroll-mt-8 md:mt-28" id="subscriptions">
+              <h2 id="subscription-faq-heading" class="section-title mb-8">{~t"How subscriptions work"}</h2>
+              <dl class="max-w-3xl">
+                <.faq_item :for={{question, answer} <- subscription_questions()} question={question}>
+                  {answer}
+                </.faq_item>
+              </dl>
+            </section>
+
+            <section aria-labelledby="course-faq-heading" class="mt-20 scroll-mt-8 md:mt-28" id="courses">
+              <h2 id="course-faq-heading" class="section-title mb-8">{~t"Courses"}</h2>
+              <dl class="max-w-3xl">
+                <.faq_item question={~t"How do I cancel a course booking?"}>
+                  {~t"Reply to your confirmation email and let me know."}
+                </.faq_item>
+                <.faq_item question={~t"Will I get my money back?"}>
+                  {~t"Yes, if you cancel in time. Each course's page says how many days before it you can cancel for a full refund, and how much is kept after that."}
+                </.faq_item>
+              </dl>
+            </section>
+          </div>
+        </div>
       </.container>
     </Layouts.app>
     """
@@ -118,16 +134,15 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
   end
 
   attr :question, :string, required: true
-  attr :heading, :string, default: "h2", values: ["h2", "h3"]
   slot :inner_block, required: true
 
   defp faq_item(assigns) do
     ~H"""
     <div class="border-base-content/12 border-t py-8 last:border-b">
       <dt>
-        <.dynamic_tag tag_name={@heading} class="font-serif text-balance mb-3.5 text-xl leading-snug md:text-2xl">
+        <h3 class="font-serif text-balance mb-3.5 text-xl leading-snug md:text-2xl">
           {@question}
-        </.dynamic_tag>
+        </h3>
       </dt>
       <dd class="font-sans text-[1.0625rem] leading-[1.6] text-base-content max-w-[60ch]">
         {render_slot(@inner_block)}

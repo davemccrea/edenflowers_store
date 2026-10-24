@@ -60,7 +60,8 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/courses_live.ex:43
 #: lib/edenflowers_web/features/courses/course_live.ex:77
 #: lib/edenflowers_web/features/courses/courses_live.ex:46
-#: lib/edenflowers_web/features/marketing/faq_live.ex:64
+#: lib/edenflowers_web/features/marketing/faq_live.ex:42
+#: lib/edenflowers_web/features/marketing/faq_live.ex:78
 #: lib/edenflowers_web/features/marketing/home_live.ex:185
 #, elixir-autogen, elixir-format
 msgid "Courses"
@@ -168,7 +169,7 @@ msgstr "Account"
 msgid "Built with "
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:43
+#: lib/edenflowers_web/features/marketing/faq_live.ex:56
 #, elixir-autogen, elixir-format
 msgid "Can I include a personal message with my order?"
 msgstr ""
@@ -196,7 +197,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_log.ex:126
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:68
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:121
-#: lib/edenflowers_web/features/marketing/contact_live.ex:53
+#: lib/edenflowers_web/features/marketing/contact_live.ex:59
 #, elixir-autogen, elixir-format
 msgid "Email"
 msgstr "Email"
@@ -214,7 +215,7 @@ msgstr ""
 msgid "Frequently Asked Questions"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:37
+#: lib/edenflowers_web/features/marketing/faq_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "How long will my flowers stay fresh?"
 msgstr ""
@@ -287,12 +288,12 @@ msgstr ""
 msgid "There was an error subscribing to the newsletter."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:46
+#: lib/edenflowers_web/features/marketing/faq_live.ex:59
 #, elixir-autogen, elixir-format
 msgid "What happens if I'm not home for delivery?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:40
+#: lib/edenflowers_web/features/marketing/faq_live.ex:53
 #, elixir-autogen, elixir-format
 msgid "What is your delivery policy?"
 msgstr ""
@@ -438,7 +439,7 @@ msgid "This field is required"
 msgstr "This field is required"
 
 #: lib/edenflowers_web/components/layouts.ex:857
-#: lib/edenflowers_web/features/marketing/contact_live.ex:76
+#: lib/edenflowers_web/features/marketing/contact_live.ex:82
 #, elixir-autogen, elixir-format
 msgid "Opening hours"
 msgstr ""
@@ -529,7 +530,7 @@ msgstr ""
 msgid "Add to cart"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:38
+#: lib/edenflowers_web/features/marketing/faq_live.ex:51
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers' arrangements last 5–7 days with proper care. Change the water every 2–3 days, trim the stems, and keep them away from direct sunlight and drafts."
 msgstr ""
@@ -573,6 +574,7 @@ msgstr ""
 msgid "Gift options"
 msgstr ""
 
+#: lib/edenflowers_web/features/marketing/contact_live.ex:51
 #: lib/edenflowers_web/features/store/product_live.ex:316
 #, elixir-autogen, elixir-format
 msgid "Have a question?"
@@ -583,7 +585,7 @@ msgstr ""
 msgid "Help"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:47
+#: lib/edenflowers_web/features/marketing/faq_live.ex:60
 #, elixir-autogen, elixir-format
 msgid "If you're not in, the flowers will be left in a safe, shaded spot. If no suitable spot is available, a note with redelivery instructions will be left. You can also specify delivery instructions during checkout."
 msgstr ""
@@ -607,6 +609,7 @@ msgstr ""
 msgid "Promo code"
 msgstr ""
 
+#: lib/edenflowers_web/features/marketing/contact_live.ex:53
 #: lib/edenflowers_web/features/store/product_live.ex:318
 #, elixir-autogen, elixir-format
 msgid "See the FAQ"
@@ -645,7 +648,7 @@ msgstr ""
 msgid "Thanks! Your 15% off code is on its way to your inbox."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:44
+#: lib/edenflowers_web/features/marketing/faq_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "Yes. Add a personal message during checkout and it'll be included on a card with the delivery. Messages can be up to 200 characters."
 msgstr ""
@@ -846,7 +849,7 @@ msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:842
 #: lib/edenflowers_web/features/admin/course_form_live.ex:159
-#: lib/edenflowers_web/features/marketing/contact_live.ex:61
+#: lib/edenflowers_web/features/marketing/contact_live.ex:67
 #, elixir-autogen, elixir-format
 msgid "Address"
 msgstr ""
@@ -859,7 +862,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:169
 #: lib/edenflowers_web/features/admin/order_log.ex:127
-#: lib/edenflowers_web/features/marketing/contact_live.ex:57
+#: lib/edenflowers_web/features/marketing/contact_live.ex:63
 #, elixir-autogen, elixir-format
 msgid "Phone"
 msgstr ""
@@ -1149,6 +1152,7 @@ msgstr "Order not found."
 #: lib/edenflowers_web/features/admin/orders_live.ex:43
 #: lib/edenflowers_web/features/admin/search_live.ex:59
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:140
+#: lib/edenflowers_web/features/marketing/faq_live.ex:40
 #, elixir-autogen, elixir-format
 msgid "Orders"
 msgstr "Orders"
@@ -3732,6 +3736,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:55
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:28
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:42
+#: lib/edenflowers_web/features/marketing/faq_live.ex:41
 #, elixir-autogen, elixir-format
 msgid "Subscriptions"
 msgstr ""
@@ -4253,47 +4258,47 @@ msgstr ""
 msgid "No deliveries until the unpaid one is paid or your card is updated."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:84
+#: lib/edenflowers_web/features/marketing/faq_live.ex:100
 #, elixir-autogen, elixir-format
 msgid "Can I pick it up instead?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:87
+#: lib/edenflowers_web/features/marketing/faq_live.ex:103
 #, elixir-autogen, elixir-format
 msgid "Can I take a break or stop?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:89
+#: lib/edenflowers_web/features/marketing/faq_live.ex:105
 #, elixir-autogen, elixir-format, fuzzy
 msgid "What if my card doesn't go through?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:85
+#: lib/edenflowers_web/features/marketing/faq_live.ex:101
 #, elixir-autogen, elixir-format
 msgid "When do I pay?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:88
+#: lib/edenflowers_web/features/marketing/faq_live.ex:104
 #, elixir-autogen, elixir-format
 msgid "Yes, from your account, where you can also change the size, how often or the day. Make any change at least %{close} days before a bouquet; after that, it's already on its way."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:86
+#: lib/edenflowers_web/features/marketing/faq_live.ex:102
 #, elixir-autogen, elixir-format
 msgid "You pay for the first bouquet at checkout. After that, your card is charged %{days} days before each one, so I know to order your flowers."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:90
+#: lib/edenflowers_web/features/marketing/faq_live.ex:106
 #, elixir-autogen, elixir-format
 msgid "Your bouquet still comes, and I'll email you a payment link. No more bouquets are sent or charged until you've paid it or added a new card in your account."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:116
+#: lib/edenflowers_web/features/marketing/faq_live.ex:132
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Of course. Choose delivery or pickup at checkout."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:55
+#: lib/edenflowers_web/features/marketing/faq_live.ex:69
 #: lib/edenflowers_web/features/store/product_live.ex:330
 #, elixir-autogen, elixir-format
 msgid "How subscriptions work"
@@ -4905,7 +4910,7 @@ msgstr ""
 msgid "Saved."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:49
+#: lib/edenflowers_web/features/marketing/faq_live.ex:62
 #, elixir-autogen, elixir-format
 msgid "Can I cancel my order?"
 msgstr ""
@@ -4941,7 +4946,7 @@ msgstr ""
 msgid "We'll refund %{amount} to your card. It can take 5–10 days to arrive."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:50
+#: lib/edenflowers_web/features/marketing/faq_live.ex:63
 #, elixir-autogen, elixir-format
 msgid "Yes, from your account, up to %{days} days before your delivery or pickup, and you'll be refunded in full. After that I've already bought your flowers, so get in touch and we'll work something out."
 msgstr ""
@@ -5603,17 +5608,17 @@ msgstr "Download"
 msgid "Month"
 msgstr "Month"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:66
+#: lib/edenflowers_web/features/marketing/faq_live.ex:80
 #, elixir-autogen, elixir-format
 msgid "How do I cancel a course booking?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:67
+#: lib/edenflowers_web/features/marketing/faq_live.ex:81
 #, elixir-autogen, elixir-format
 msgid "Reply to your confirmation email and let me know."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:69
+#: lib/edenflowers_web/features/marketing/faq_live.ex:83
 #, elixir-autogen, elixir-format
 msgid "Will I get my money back?"
 msgstr ""
@@ -6232,12 +6237,12 @@ msgstr ""
 msgid "Flowers for every stage of life"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:102
+#: lib/edenflowers_web/features/marketing/faq_live.ex:118
 #, elixir-autogen, elixir-format
 msgid "Choose your delivery day at checkout. The earliest is the next day the shop is open."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:100
+#: lib/edenflowers_web/features/marketing/faq_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Order by %{time} and I'll deliver the same day, on any day the shop is open. You can also choose a later day at checkout."
 msgstr ""
@@ -6341,7 +6346,7 @@ msgstr ""
 msgid "Bouquets marked Free delivery are delivered free within this distance."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:113
+#: lib/edenflowers_web/features/marketing/faq_live.ex:129
 #, elixir-autogen, elixir-format
 msgid "Of course. Choose delivery or pickup at checkout. Delivery is free within %{km} km. Further out, it's %{base} plus %{per_km} for each km from the shop."
 msgstr ""
@@ -7414,7 +7419,7 @@ msgstr ""
 msgid "To cancel, reply to your confirmation email."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:70
+#: lib/edenflowers_web/features/marketing/faq_live.ex:84
 #, elixir-autogen, elixir-format
 msgid "Yes, if you cancel in time. Each course's page says how many days before it you can cancel for a full refund, and how much is kept after that."
 msgstr ""
@@ -7597,3 +7602,13 @@ msgstr "Get in touch and we'll find a course and a day that suit your group."
 #, elixir-autogen, elixir-format
 msgid "I also run courses for private groups, for example at a workplace Christmas party, your staff wellbeing day or a hen party. We can meet in the café space at Minimossen or at your own premises. In summer, making flower crowns outdoors in a park works well."
 msgstr "I also run courses for private groups, for example at a workplace Christmas party, your staff wellbeing day or a hen party. We can meet in the café space at Minimossen or at your own premises. In summer, making flower crowns outdoors in a park works well."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:38
+#, elixir-autogen, elixir-format
+msgid "On this page"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:48
+#, elixir-autogen, elixir-format
+msgid "Orders and delivery"
+msgstr ""

@@ -47,6 +47,12 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
             <p class="text-base-content/80 text-lg leading-relaxed">
               {~t"Send me an email or give me a call and I'll gladly help."}
             </p>
+            <p class="text-base-content/80 mt-4 text-lg leading-relaxed">
+              {~t"Have a question?"}
+              <.link navigate={~q"/#{language}/faq"} class="link-underline-static-body whitespace-nowrap">
+                {~t"See the FAQ"}
+              </.link>
+            </p>
           </div>
 
           <dl class="grid gap-10">
