@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsGalleryTest do
         html
       )
 
-    assert length(links) == 15
+    assert length(links) == 16
 
     for [_, href, declared_width, declared_height] <- links do
       # Pull the dimensions back out of the Imgproxy URL rather than trusting
@@ -37,14 +37,14 @@ defmodule EdenflowersWeb.Marketing.WeddingsGalleryTest do
       |> LazyHTML.query("#wedding-gallery figure figcaption")
       |> Enum.map(&(&1 |> LazyHTML.text() |> String.split() |> Enum.join(" ")))
 
-    assert length(captions) == 15
+    assert length(captions) == 16
     assert ["Photo: Anna Riska" | _] = captions
   end
 
   test "thumbnails support the widest column at 2x without loading lightbox sizes", %{html: html} do
     images = html |> LazyHTML.from_fragment() |> LazyHTML.query("#wedding-gallery img")
 
-    assert Enum.count(images) == 15
+    assert Enum.count(images) == 16
 
     for image <- images do
       assert LazyHTML.attribute(image, "width") == ["480"]

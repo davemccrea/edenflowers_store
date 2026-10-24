@@ -77,7 +77,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
 
   test "a size's details follow the category's product type", %{conn: conn} do
     cards = generate(product_category(product_type: :card))
-    product = generate(product())
+    flowers = generate(product_category(product_type: :flowers))
+    product = generate(product(product_category_id: flowers.id))
     variant = generate(product_variant(product_id: product.id, height_cm: "40", stem_count: "12"))
 
     {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")

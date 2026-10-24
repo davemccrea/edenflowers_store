@@ -41,7 +41,8 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
   end
 
   test "shows the chosen size's height and stems, leaving out what's not filled in", %{conn: conn} do
-    product = generate(product(draft: false))
+    flowers = generate(product_category(product_type: :flowers))
+    product = generate(product(draft: false, product_category_id: flowers.id))
     small = generate(product_variant(product_id: product.id, size: :small, height_cm: "30–40", stem_count: "10–12"))
     large = generate(product_variant(product_id: product.id, size: :large, height_cm: "50–60", stem_count: nil))
     plain = generate(product_variant(product_id: product.id, size: :medium, height_cm: nil, stem_count: nil))
