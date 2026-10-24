@@ -1,0 +1,16 @@
+<%= if @first_name do %><%= gettext("Hi %{name},", name: @first_name) %><% else %><%= gettext("Hi,") %><% end %>
+
+<%= gettext("Thank you for your message. I'll get back to you as soon as I can.") %>
+
+<%= gettext("Here's a copy of what you sent:") %>
+
+<%= gettext("Name: %{name}", name: @message["name"]) %>
+<%= gettext("Email: %{email}", email: @message["email"]) %>
+<%= if @message["phone"] do %><%= gettext("Phone: %{phone}", phone: @message["phone"]) %>
+<% end %>
+<%= gettext("Your message:") %>
+<%= @message["message"] %>
+
+<%= gettext("Warm wishes,") %>
+
+<%= signature() %>

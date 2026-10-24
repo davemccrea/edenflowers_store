@@ -587,6 +587,24 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
+  A copy of a contact form message, bcc Jennie so she can reply directly.
+  `message` is the job args of `Edenflowers.ContactMessage.SendEmails`.
+  """
+  def contact_message(%{"name" => name, "email" => email} = message) do
+    new()
+    |> from(from_address())
+    |> to({name, email})
+    |> bcc(from_address())
+    |> subject(~t"Your message to Eden Flowers")
+    |> text_body(
+      Templates.contact_message(%{
+        message: message,
+        first_name: Edenflowers.Accounts.Calculations.FirstName.extract(name)
+      })
+    )
+  end
+
+  @doc """
   Welcomes a new newsletter subscriber with their 15% code. In the
   caller's locale, as there's no record to take one from.
   """

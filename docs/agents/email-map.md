@@ -27,7 +27,7 @@ built back to what sets it off:
 5. For an action Jennie runs by hand, find the button in
    `lib/edenflowers_web/features/admin/` so you can say where she clicks.
 6. Don't miss the emails outside orders, bookings and subscriptions: the
-   newsletter, the wedding enquiry, sign-in and email change codes, the shop
+   newsletter, the wedding enquiry, the contact form message, sign-in and email change codes, the shop
    notices to Jennie and the error alert.
 
 ## What to write

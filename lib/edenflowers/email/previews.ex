@@ -46,6 +46,7 @@ defmodule Edenflowers.Email.Previews do
         booking_cancelled(locale) ++
         booking_refunded(locale) ++
         wedding_enquiry(locale) ++
+        contact_message(locale) ++
         account_and_newsletter(locale)
     end)
   end
@@ -545,6 +546,34 @@ defmodule Edenflowers.Email.Previews do
     [
       {"Wedding enquiry copy", "everything filled in", :wedding_enquiry, Email.wedding_enquiry(full)},
       {"Wedding enquiry copy", "only the required fields", :wedding_enquiry, Email.wedding_enquiry(minimal)}
+    ]
+  end
+
+  defp contact_message(locale) do
+    message =
+      cond do
+        String.starts_with?(locale, "fi") ->
+          "Siunaus on Vaasan kirkossa perjantaina 6.11. klo 13. Toivoisin valkoisen sydämen, korttiin: Kiitos kaikesta, rakas mummi."
+
+        String.starts_with?(locale, "sv") ->
+          "Jordfästningen är i Vasa kyrka fredag 6.11 kl. 13. Jag önskar ett vitt hjärta, på kortet: Tack för allt, kära mormor."
+
+        true ->
+          "The service is at Vaasa church on Friday 6 November at 1 pm. I'd like a white heart, and on the card: Thank you for everything, dear Grandma."
+      end
+
+    full = %{
+      "name" => "Karin Holm",
+      "email" => "karin@example.com",
+      "phone" => "040 123 4567",
+      "locale" => locale,
+      "message" => message
+    }
+
+    [
+      {"Contact message copy", "with a phone number", :contact_message, Email.contact_message(full)},
+      {"Contact message copy", "without a phone number", :contact_message,
+       Email.contact_message(Map.put(full, "phone", nil))}
     ]
   end
 

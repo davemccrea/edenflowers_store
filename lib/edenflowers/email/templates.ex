@@ -42,7 +42,8 @@ defmodule Edenflowers.Email.Templates do
     {:already_subscribed, [:assigns]},
     {:otp_sign_in, [:assigns]},
     {:email_change_code, [:assigns]},
-    {:wedding_enquiry, [:assigns]}
+    {:wedding_enquiry, [:assigns]},
+    {:contact_message, [:assigns]}
   ]
 
   for {name, args} <- @templates do
