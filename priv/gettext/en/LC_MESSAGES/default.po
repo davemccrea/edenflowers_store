@@ -47,7 +47,7 @@ msgstr ""
 #: lib/edenflowers_web/components/layouts.ex:595
 #: lib/edenflowers_web/components/layouts.ex:880
 #: lib/edenflowers_web/features/marketing/contact_live.ex:16
-#: lib/edenflowers_web/features/marketing/contact_live.ex:46
+#: lib/edenflowers_web/features/marketing/contact_live.ex:51
 #, elixir-autogen, elixir-format
 msgid "Contact"
 msgstr ""
@@ -147,7 +147,7 @@ msgstr ""
 #: lib/edenflowers_web/features/checkout/components/fields.ex:132
 #: lib/edenflowers_web/features/checkout/order_live.ex:83
 #: lib/edenflowers_web/features/courses/course_live.ex:175
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:453
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:448
 #: lib/edenflowers_web/payment_link.ex:108
 #, elixir-autogen, elixir-format
 msgid "Payment"
@@ -197,14 +197,14 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_log.ex:126
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:68
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:121
-#: lib/edenflowers_web/features/marketing/contact_live.ex:59
+#: lib/edenflowers_web/features/marketing/contact_live.ex:63
 #, elixir-autogen, elixir-format
 msgid "Email"
 msgstr "Email"
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:157
 #: lib/edenflowers_web/features/courses/course_live.ex:145
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:513
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:508
 #, elixir-autogen, elixir-format
 msgid "Email *"
 msgstr ""
@@ -300,7 +300,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:149
 #: lib/edenflowers_web/features/courses/course_live.ex:144
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:512
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:507
 #, elixir-autogen, elixir-format
 msgid "Your name *"
 msgstr ""
@@ -439,7 +439,7 @@ msgid "This field is required"
 msgstr "This field is required"
 
 #: lib/edenflowers_web/components/layouts.ex:857
-#: lib/edenflowers_web/features/marketing/contact_live.ex:82
+#: lib/edenflowers_web/features/marketing/contact_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "Opening hours"
 msgstr ""
@@ -464,7 +464,7 @@ msgstr ""
 msgid "Browse bouquets"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1048
+#: lib/edenflowers_web/components/core_components.ex:1056
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr ""
@@ -557,7 +557,7 @@ msgstr ""
 msgid "For somebody else"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:952
+#: lib/edenflowers_web/components/core_components.ex:960
 #: lib/edenflowers_web/features/admin/order_form_live.ex:266
 #: lib/edenflowers_web/features/admin/products_live.ex:86
 #, elixir-autogen, elixir-format
@@ -574,7 +574,7 @@ msgstr ""
 msgid "Gift options"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:51
+#: lib/edenflowers_web/features/marketing/contact_live.ex:56
 #: lib/edenflowers_web/features/store/product_live.ex:316
 #, elixir-autogen, elixir-format
 msgid "Have a question?"
@@ -609,7 +609,7 @@ msgstr ""
 msgid "Promo code"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:53
+#: lib/edenflowers_web/features/marketing/contact_live.ex:58
 #: lib/edenflowers_web/features/store/product_live.ex:318
 #, elixir-autogen, elixir-format
 msgid "See the FAQ"
@@ -849,7 +849,7 @@ msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:842
 #: lib/edenflowers_web/features/admin/course_form_live.ex:159
-#: lib/edenflowers_web/features/marketing/contact_live.ex:67
+#: lib/edenflowers_web/features/marketing/contact_live.ex:71
 #, elixir-autogen, elixir-format
 msgid "Address"
 msgstr ""
@@ -862,7 +862,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:169
 #: lib/edenflowers_web/features/admin/order_log.ex:127
-#: lib/edenflowers_web/features/marketing/contact_live.ex:63
+#: lib/edenflowers_web/features/marketing/contact_live.ex:67
 #, elixir-autogen, elixir-format
 msgid "Phone"
 msgstr ""
@@ -1315,7 +1315,7 @@ msgstr ""
 msgid "get in touch"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:48
+#: lib/edenflowers_web/features/marketing/contact_live.ex:53
 #, elixir-autogen, elixir-format
 msgid "Send me an email or give me a call and I'll gladly help."
 msgstr ""
@@ -1357,35 +1357,35 @@ msgid "At a final farewell, let the flowers be a place for your eyes to rest. I 
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:136
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:194
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:206
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:218
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:222
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:210
 #, elixir-autogen, elixir-format
 msgid "Request a quote"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:451
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:446
 #, elixir-autogen, elixir-format
 msgid "Consultation"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:448
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:443
 #: lib/edenflowers_web/features/store/store_live.ex:130
 #, elixir-autogen, elixir-format
 msgid "Get in touch"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:171
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:159
 #, elixir-autogen, elixir-format
 msgid "How it works"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:594
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:589
 #, elixir-autogen, elixir-format
 msgid "On request"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:202
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:190
 #, elixir-autogen, elixir-format
 msgid "Planning a wedding?"
 msgstr ""
@@ -1397,12 +1397,12 @@ msgstr ""
 msgid "Prices"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:455
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:450
 #, elixir-autogen, elixir-format
 msgid "The wedding day"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:600
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:595
 #, elixir-autogen, elixir-format
 msgid "from %{amount}"
 msgstr ""
@@ -1424,7 +1424,7 @@ msgstr ""
 msgid "See my work"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:146
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:382
 #, elixir-autogen, elixir-format
 msgid "Wrist corsages of peach roses"
 msgstr ""
@@ -1435,89 +1435,89 @@ msgstr ""
 msgid "Funeral flowers"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:394
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:389
 #, elixir-autogen, elixir-format
 msgid "Blue hydrangea in a glass vase beside bridal shoes"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:380
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:368
 #, elixir-autogen, elixir-format
 msgid "Bouquet held up against a blue summer sky"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:303
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:291
 #, elixir-autogen, elixir-format
 msgid "Bouquet of burgundy protea, pink roses and dahlias"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:317
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:305
 #, elixir-autogen, elixir-format
 msgid "Bride and two bridesmaids holding white bouquets"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:331
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:319
 #, elixir-autogen, elixir-format
 msgid "Bride holding a white and green bouquet"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:345
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:333
 #, elixir-autogen, elixir-format
 msgid "Bride in a forest clearing with a pastel bouquet"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:324
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:312
 #, elixir-autogen, elixir-format
 msgid "Bride outdoors with a bright blue and red bouquet"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:310
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:298
 #, elixir-autogen, elixir-format
 msgid "Bride seen from behind, holding a meadow bouquet"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:352
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:340
 #, elixir-autogen, elixir-format
 msgid "Close-up of a bouquet with white cosmos"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:296
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:284
 #, elixir-autogen, elixir-format
 msgid "Couple embracing, the bride holding a white bouquet"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:359
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:347
 #, elixir-autogen, elixir-format
 msgid "Couple kissing beside a trailing white bouquet"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:338
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:326
 #, elixir-autogen, elixir-format
 msgid "Deep red and blush bouquet against a white dress"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:82
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:208
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:196
 #, elixir-autogen, elixir-format
 msgid "Or call me on"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:366
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:354
 #, elixir-autogen, elixir-format
 msgid "Peach, orange and white bouquet against a lace dress"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:373
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:361
 #, elixir-autogen, elixir-format
 msgid "White and rust bouquet held low at the bride's side"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:387
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:375
 #, elixir-autogen, elixir-format
 msgid "Bouquet of roses and greenery on a wooden jetty"
 msgstr ""
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:151
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:614
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:609
 #, elixir-autogen, elixir-format
 msgid "Photo:"
 msgstr ""
@@ -1869,6 +1869,7 @@ msgid "Change booking"
 msgstr ""
 
 #: lib/edenflowers_web/features/courses/course_live.ex:366
+#: lib/edenflowers_web/features/marketing/contact_live.ex:82
 #, elixir-autogen, elixir-format
 msgid "(opens a map in a new tab)"
 msgstr ""
@@ -2130,12 +2131,12 @@ msgstr ""
 msgid "Business ID:"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:978
+#: lib/edenflowers_web/components/core_components.ex:986
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Facebook"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:987
+#: lib/edenflowers_web/components/core_components.ex:995
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Instagram"
 msgstr ""
@@ -2182,33 +2183,33 @@ msgstr ""
 msgid "Need flowers before then? Get in touch and I'll gladly help."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:450
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:445
 #, elixir-autogen, elixir-format
 msgid "Quote"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:449
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:444
 #, elixir-autogen, elixir-format
 msgid "Get in touch and tell me your date and a little about what you're looking for. It's best to reach out well in advance."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:450
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:445
 #, elixir-autogen, elixir-format
 msgid "I'll send you my quote, and you can come back to me with any questions and confirm your booking."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:452
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:447
 #, elixir-autogen, elixir-format
 msgid "If you'd like, we meet 1–2 months before the wedding to go through what you need. I want you to feel completely confident that the flowers will turn out exactly as you imagined."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:456
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:451
 #, elixir-autogen, elixir-format
 msgid "Your flowers are collected or delivered, whichever you prefer. If you've chosen decoration, I come to your venue and decorate it with the flowers we've agreed on."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:415
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:440
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:410
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:435
 #, elixir-autogen, elixir-format
 msgid "Arrangement in an urn or on a pedestal"
 msgstr ""
@@ -2218,12 +2219,12 @@ msgstr ""
 msgid "Bouquets and accessories"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:403
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:398
 #, elixir-autogen, elixir-format
 msgid "Bridesmaid's bouquet"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:407
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:402
 #, elixir-autogen, elixir-format
 msgid "Cake flowers"
 msgstr ""
@@ -2233,78 +2234,78 @@ msgstr ""
 msgid "Decoration"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:425
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:420
 #, elixir-autogen, elixir-format
 msgid "Flower arch"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:414
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:409
 #, elixir-autogen, elixir-format
 msgid "Flower arch or flower gate"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:404
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:399
 #, elixir-autogen, elixir-format
 msgid "Flower girl or toss bouquet"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:413
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:435
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:408
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:430
 #, elixir-autogen, elixir-format
 msgid "Silk flower garland, to rent"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:416
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:411
 #, elixir-autogen, elixir-format
 msgid "Welcome sign arrangement"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:402
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:397
 #, elixir-autogen, elixir-format
 msgid "Bridal bouquet"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:405
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:400
 #, elixir-autogen, elixir-format
 msgid "Corsage or pocket square"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:406
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:401
 #, elixir-autogen, elixir-format
 msgid "Hair and wrist flowers (crown, clip, tiara, bracelet)"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:454
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:449
 #, elixir-autogen, elixir-format
 msgid "Half is invoiced as a booking fee about 4 weeks before the wedding, and the rest afterwards. The booking fee isn't refunded if you cancel later than four weeks before the wedding."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:430
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:425
 #, elixir-autogen, elixir-format
 msgid "Flower gate"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:426
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:421
 #, elixir-autogen, elixir-format
 msgid "Round gold flower arch with white and peach roses"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:436
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:431
 #, elixir-autogen, elixir-format
 msgid "Silk flower garland cascading down a cake table"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:441
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:436
 #, elixir-autogen, elixir-format
 msgid "Two urn arrangements of coral roses and delphiniums"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:431
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:426
 #, elixir-autogen, elixir-format
 msgid "Wooden flower gate with white drapes and summer flowers"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:908
+#: lib/edenflowers_web/components/core_components.ex:916
 #, elixir-autogen, elixir-format
 msgid "(opens a larger view)"
 msgstr ""
@@ -2364,7 +2365,7 @@ msgstr ""
 #: lib/edenflowers_web/components/card_drawer.ex:36
 #: lib/edenflowers_web/features/account/subscription_manager.ex:430
 #: lib/edenflowers_web/features/admin/components/components.ex:875
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:223
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:211
 #, elixir-autogen, elixir-format
 msgid "Close"
 msgstr ""
@@ -2668,7 +2669,7 @@ msgid "VAT"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:158
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:517
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:512
 #, elixir-autogen, elixir-format
 msgid "Venue"
 msgstr ""
@@ -3638,7 +3639,7 @@ msgstr ""
 msgid "Your details couldn't be saved."
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:962
+#: lib/edenflowers_web/components/core_components.ex:970
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:496
 #, elixir-autogen, elixir-format
 msgid "Free delivery"
@@ -3722,7 +3723,7 @@ msgstr ""
 msgid "Subscriptions"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:964
+#: lib/edenflowers_web/components/core_components.ex:972
 #: lib/edenflowers_web/features/account/account_live.ex:493
 #: lib/edenflowers_web/features/admin/components/components.ex:510
 #: lib/edenflowers_web/features/admin/products_live.ex:122
@@ -4558,7 +4559,7 @@ msgid "%{variant_size_label}: sold out"
 msgstr ""
 
 #: lib/edenflowers/orders/validations/within_stock.ex:30
-#: lib/edenflowers_web/components/core_components.ex:960
+#: lib/edenflowers_web/components/core_components.ex:968
 #: lib/edenflowers_web/features/admin/overview_live.ex:156
 #: lib/edenflowers_web/features/admin/product_form_live.ex:68
 #: lib/edenflowers_web/features/admin/product_form_live.ex:137
@@ -4733,7 +4734,7 @@ msgstr "You have unsaved changes. Leave without saving?"
 msgid "+ cake flowers on request"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:561
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:556
 #, elixir-autogen, elixir-format
 msgid "Add to the estimate: %{item_label}"
 msgstr ""
@@ -4743,17 +4744,17 @@ msgstr ""
 msgid "Final prices depend on the flowers and techniques you choose. Delivery outside Vaasa is quoted separately."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:576
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:571
 #, elixir-autogen, elixir-format
 msgid "Remove one: %{item_label}"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:586
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:581
 #, elixir-autogen, elixir-format
 msgid "Add one: %{item_label}"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:580
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:575
 #, elixir-autogen, elixir-format
 msgid "Quantity"
 msgstr ""
@@ -4763,7 +4764,7 @@ msgstr ""
 msgid "Email: %{email}"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:204
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:192
 #, elixir-autogen, elixir-format
 msgid "I'm Jennie, and I design every wedding myself, from our first conversation to the flowers on the day. Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."
 msgstr ""
@@ -4773,17 +4774,17 @@ msgstr ""
 msgid "Number of guests: %{guests}"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:524
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:519
 #, elixir-autogen, elixir-format
 msgid "Or email me directly at"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:522
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:517
 #, elixir-autogen, elixir-format
 msgid "Send enquiry"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:238
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:226
 #, elixir-autogen, elixir-format
 msgid "Thank you!"
 msgstr ""
@@ -4798,7 +4799,7 @@ msgstr ""
 msgid "Wedding date: %{date}"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:269
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:257
 #, elixir-autogen, elixir-format
 msgid "Your enquiry couldn't be sent. Please try again, or email me directly."
 msgstr ""
@@ -4808,7 +4809,7 @@ msgstr ""
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:504
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:499
 #, elixir-autogen, elixir-format
 msgid "Flowers you're interested in"
 msgstr ""
@@ -4818,22 +4819,22 @@ msgstr ""
 msgid "Flowers you're interested in:"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:240
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:228
 #, elixir-autogen, elixir-format
 msgid "Your enquiry is on its way, and a copy is in your inbox. I'll get back to you with a quote as soon as I can. Nothing is booked until you confirm it."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:518
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:513
 #, elixir-autogen, elixir-format
 msgid "Colours, flowers and anything else"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:515
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:510
 #, elixir-autogen, elixir-format
 msgid "Number of guests"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:514
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:509
 #, elixir-autogen, elixir-format
 msgid "Wedding date *"
 msgstr ""
@@ -4858,7 +4859,7 @@ msgstr ""
 msgid "Every wedding is different, so you'll get an exact quote once we've talked through your plans."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:229
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:217
 #, elixir-autogen, elixir-format
 msgid "Tell me about your wedding and I'll send you a quote."
 msgstr ""
@@ -7602,4 +7603,9 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:78
 #, elixir-autogen, elixir-format
 msgid "Email or call me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/contact_live.ex:39
+#, elixir-autogen, elixir-format
+msgid "Jennie, owner of Eden Flowers"
 msgstr ""

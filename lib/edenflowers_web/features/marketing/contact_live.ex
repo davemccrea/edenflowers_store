@@ -32,57 +32,63 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
       alternates={@alternates}
     >
       <.container>
-        <div class="grid gap-12 md:grid-cols-2 md:gap-x-24">
-          <div>
+        <div class="grid items-center gap-8 md:grid-cols-2 md:gap-16 lg:gap-24">
+          <figure class="md:order-last md:justify-self-end">
             <.image
-              src="local:///jennie_1.jpg"
-              alt="Jennie"
-              width={112}
-              height={112}
-              sizes="7rem"
-              crop="1800:1800:fp:0.35:0.3"
-              class="size-28 mb-8 rounded-full object-cover"
+              src="local:///profile.jpg"
+              alt={~t"Jennie, owner of Eden Flowers"}
+              width={800}
+              height={1000}
+              sizes="(min-width: 768px) 28rem, 8rem"
+              crop="2400:3000:fp:0.49:0.62"
+              sources={[%{media: "(max-width: 767px)", width: 256, height: 256, crop: "1600:1600:fp:0.49:0.57"}]}
+              priority
+              class="size-32 rounded-full object-cover md:aspect-[4/5] md:size-auto md:w-full md:max-w-md md:rounded-none"
             />
+          </figure>
+
+          <div>
             <h1 class="page-title mb-6">{~t"Contact"}</h1>
-            <p class="text-base-content/80 text-lg leading-relaxed">
+            <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
               {~t"Send me an email or give me a call and I'll gladly help."}
             </p>
-            <p class="text-base-content/80 mt-4 text-lg leading-relaxed">
+            <p class="text-base-content/80 mt-4 mb-12 text-lg leading-relaxed">
               {~t"Have a question?"}
               <.link navigate={~q"/#{language}/faq"} class="link-underline-static-body whitespace-nowrap">
                 {~t"See the FAQ"}
               </.link>
             </p>
+
+            <dl class="grid gap-10 sm:grid-cols-2 sm:gap-x-12 md:grid-cols-1 lg:grid-cols-2">
+              <.contact_item label={~t"Email"}>
+                <a class="link-underline-static-body touch-target" href={"mailto:#{Business.email()}"}>{Business.email()}</a>
+              </.contact_item>
+
+              <.contact_item label={~t"Phone"}>
+                <a class="link-underline-static-body touch-target" href={"tel:#{Business.phone()}"}>{Business.phone_display()}</a>
+              </.contact_item>
+
+              <.contact_item label={~t"Address"}>
+                <address class="not-italic">
+                  <a
+                    class="link-underline-static-body"
+                    href={Business.maps_url()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Minimossen<br />
+                    {Business.street_address()}<br />
+                    {Business.postal_town()}
+                    <span class="sr-only">{~t"(opens a map in a new tab)"}</span>
+                  </a>
+                </address>
+              </.contact_item>
+
+              <.contact_item label={~t"Opening hours"}>
+                <p :for={line <- Business.opening_hours_lines()}>{line}</p>
+              </.contact_item>
+            </dl>
           </div>
-
-          <dl class="grid gap-10">
-            <.contact_item label={~t"Email"}>
-              <a class="link-underline-static-body" href={"mailto:#{Business.email()}"}>{Business.email()}</a>
-            </.contact_item>
-
-            <.contact_item label={~t"Phone"}>
-              <a class="link-underline-static-body" href={"tel:#{Business.phone()}"}>{Business.phone_display()}</a>
-            </.contact_item>
-
-            <.contact_item label={~t"Address"}>
-              <address class="not-italic">
-                <a
-                  class="link-underline-static-body"
-                  href={Business.maps_url()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Minimossen<br />
-                  {Business.street_address()}<br />
-                  {Business.postal_town()}
-                </a>
-              </address>
-            </.contact_item>
-
-            <.contact_item label={~t"Opening hours"}>
-              <p :for={line <- Business.opening_hours_lines()}>{line}</p>
-            </.contact_item>
-          </dl>
         </div>
       </.container>
     </Layouts.app>
@@ -95,8 +101,8 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
   defp contact_item(assigns) do
     ~H"""
     <div class="space-y-2">
-      <dt class="eyebrow text-base-content/65">{@label}</dt>
-      <dd class="text-lg leading-relaxed">{render_slot(@inner_block)}</dd>
+      <dt class="eyebrow text-base-content/70">{@label}</dt>
+      <dd class="font-serif text-xl leading-snug">{render_slot(@inner_block)}</dd>
     </div>
     """
   end
