@@ -29,6 +29,7 @@ services:
       PAPRA_API_KEY: "{{ papra_api_key }}"
       PAPRA_WEBHOOK_SECRET: "{{ papra_webhook_secret }}"
       PAPRA_ORGANIZATION_ID: "{{ papra_organization_id }}"
+      # Releases before v1.12.0 read this name; keep it so `just rollback` to them still boots.
       ANTHROPIC_API_KEY: "{{ anthropic_api_key }}"
       EDENFLOWERS_ANTHROPIC_API_KEY: "{{ anthropic_api_key }}"
       BREVO_API_KEY: "{{ brevo_api_key }}"
