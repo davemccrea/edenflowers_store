@@ -328,36 +328,39 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 // No autofocus on page load: on a phone it opens the keyboard over the page
                 // before the customer has seen it.
                 mounted() {
-                  this.handleEvent("focus-element", ({ id, focus = true }) => {
-                    requestAnimationFrame(() => {
-                      const element = document.getElementById(id);
-                      if (!element) return;
+                  this.handleEvent(
+                    "focus-element",
+                    ({ id, focus = true, stepTop = false }) => {
+                      requestAnimationFrame(() => {
+                        const element = document.getElementById(id);
+                        if (!element) return;
 
-                      // Scroll the section heading to the top of the viewport. The section's
-                      // scroll-margin-top accounts for the fixed page header so the heading
-                      // doesn't land underneath it.
-                      const reducedMotion = window.matchMedia(
-                        "(prefers-reduced-motion: reduce)",
-                      ).matches;
-                      element.scrollIntoView({
-                        block: "start",
-                        behavior: reducedMotion ? "auto" : "smooth",
-                      });
-
-                      if (!focus) return;
-
-                      // preventScroll keeps keyboard focus working without overriding the
-                      // scroll position we just set above.
-                      const firstInput = element.querySelector(
-                        'input:not([type="hidden"]), textarea, select, button[type="submit"]',
-                      );
-                      if (firstInput) {
-                        /** @type {HTMLElement} */ (firstInput).focus({
-                          preventScroll: true,
+                        // On entering Payment, align the divider above its heading. Other
+                        // steps keep their existing section scroll target.
+                        const scrollTarget = (stepTop && element.closest("li")) || element;
+                        const reducedMotion = window.matchMedia(
+                          "(prefers-reduced-motion: reduce)",
+                        ).matches;
+                        scrollTarget.scrollIntoView({
+                          block: "start",
+                          behavior: reducedMotion ? "auto" : "smooth",
                         });
-                      }
-                    });
-                  });
+
+                        if (!focus) return;
+
+                        // preventScroll keeps keyboard focus working without overriding the
+                        // scroll position we just set above.
+                        const firstInput = element.querySelector(
+                          'input:not([type="hidden"]), textarea, select, button[type="submit"]',
+                        );
+                        if (firstInput) {
+                          /** @type {HTMLElement} */ (firstInput).focus({
+                            preventScroll: true,
+                          });
+                        }
+                      });
+                    },
+                  );
 
                   this.handleEvent("focus-first-error", () => {
                     requestAnimationFrame(() => {
@@ -508,7 +511,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
          socket
          |> reload_order()
          |> push_patch(to: step_path(order.state))
-         |> push_event("focus-element", %{id: next_section_id})}
+         |> push_event("focus-element", %{id: next_section_id, stepTop: true})}
 
       {:error, form} ->
         forward_delivery_address_error(form)
