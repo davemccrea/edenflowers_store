@@ -15,8 +15,17 @@ defmodule Edenflowers.Email.PreviewsTest do
   end
 
   test "renders in the requested language" do
-    assert [{"Order receipt", _scenario, :order_confirmation, email} | _] = Previews.all("fi")
+    previews = Previews.all("fi")
+    assert [{"Order receipt", _scenario, :order_confirmation, email} | _] = previews
     assert email.text_body =~ "lauantaina 14.11.2026"
+    assert email.subject == "Eden Flowers -tilauksesi: lauantai 14.11."
+
+    subjects = for {"Subscription heads-up", _, _, email} <- previews, do: email.subject
+
+    assert subjects == [
+             "Seuraavat kukkasi tulevat lauantaina 28.11.",
+             "Seuraavat kukkasi ovat valmiina lauantaina 28.11."
+           ]
   end
 
   test "a cancellation says the refund went back the way the customer paid" do
@@ -54,7 +63,10 @@ defmodule Edenflowers.Email.PreviewsTest do
 
     assert email.from == {"Eden Flowers", elem(Application.fetch_env!(:edenflowers, :mailer_from_address), 1)}
     assert email.subject == "Your flowers for Saturday 14.11."
-    assert email.text_body =~ ~r/^Your card was charged €59\.00 for your .+ delivery on Saturday 14\.11\.2026\./
+
+    assert email.text_body =~
+             ~r/^Your card was charged €59\.00 for your delivery scheduled for Saturday 14\.11\.2026 \(.+\)\./
+
     assert String.ends_with?(email.text_body, "\nEden Flowers\n")
   end
 end

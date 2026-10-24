@@ -463,7 +463,7 @@ msgstr ""
 msgid "Browse bouquets"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1044
+#: lib/edenflowers_web/components/core_components.ex:1048
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr ""
@@ -556,7 +556,7 @@ msgstr ""
 msgid "For somebody else"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:948
+#: lib/edenflowers_web/components/core_components.ex:952
 #: lib/edenflowers_web/features/admin/order_form_live.ex:266
 #: lib/edenflowers_web/features/admin/products_live.ex:86
 #, elixir-autogen, elixir-format
@@ -2125,12 +2125,12 @@ msgstr ""
 msgid "Business ID:"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:974
+#: lib/edenflowers_web/components/core_components.ex:978
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Facebook"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:983
+#: lib/edenflowers_web/components/core_components.ex:987
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Instagram"
 msgstr ""
@@ -2299,7 +2299,7 @@ msgstr ""
 msgid "Wooden flower gate with white drapes and summer flowers"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:904
+#: lib/edenflowers_web/components/core_components.ex:908
 #, elixir-autogen, elixir-format
 msgid "(opens a larger view)"
 msgstr ""
@@ -3653,7 +3653,7 @@ msgstr ""
 msgid "Your details couldn't be saved."
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:958
+#: lib/edenflowers_web/components/core_components.ex:962
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:496
 #, elixir-autogen, elixir-format
 msgid "Free delivery"
@@ -3736,7 +3736,7 @@ msgstr ""
 msgid "Subscriptions"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:960
+#: lib/edenflowers_web/components/core_components.ex:964
 #: lib/edenflowers_web/features/account/account_live.ex:493
 #: lib/edenflowers_web/features/admin/components/components.ex:510
 #: lib/edenflowers_web/features/admin/products_live.ex:122
@@ -4572,7 +4572,7 @@ msgid "%{variant_size_label}: sold out"
 msgstr ""
 
 #: lib/edenflowers/orders/validations/within_stock.ex:30
-#: lib/edenflowers_web/components/core_components.ex:956
+#: lib/edenflowers_web/components/core_components.ex:960
 #: lib/edenflowers_web/features/admin/overview_live.ex:156
 #: lib/edenflowers_web/features/admin/product_form_live.ex:68
 #: lib/edenflowers_web/features/admin/product_form_live.ex:137
@@ -7031,12 +7031,12 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:3
 #, elixir-autogen, elixir-format
-msgid "The payment for your %{product} delivery on %{date} didn't go through, but your flowers are still coming."
+msgid "The payment for your delivery scheduled for %{date} (%{product}) didn't go through, but your flowers are still coming."
 msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:3
 #, elixir-autogen, elixir-format
-msgid "The payment for your %{product} pickup on %{date} didn't go through, but your flowers will still be ready to collect."
+msgid "The payment for your order for collection on %{date} (%{product}) didn't go through, but your flowers will still be ready to collect."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_log.ex:77
@@ -7204,12 +7204,12 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_charged.text.eex:1
 #, elixir-autogen, elixir-format
-msgid "Your card was charged %{amount} for your %{product} delivery on %{date}. Your receipt is attached."
+msgid "Your card was charged %{amount} for your delivery scheduled for %{date} (%{product}). Your receipt is attached."
 msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_charged.text.eex:1
 #, elixir-autogen, elixir-format
-msgid "Your card was charged %{amount} for your %{product} pickup on %{date}. Your receipt is attached."
+msgid "Your card was charged %{amount} for your order for collection on %{date} (%{product}). Your receipt is attached."
 msgstr ""
 
 #: lib/edenflowers/email.ex:187
@@ -7340,7 +7340,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:5
 #, elixir-autogen, elixir-format
-msgid "Any pickup already charged will still be ready on %{date}."
+msgid "Any order already charged will still be ready to collect on %{date}."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/subscription_log.ex:49
@@ -7386,7 +7386,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_cancellation_confirmed.text.eex:3
 #, elixir-autogen, elixir-format
-msgid "Your pickup on %{date} has already been charged and will still be ready."
+msgid "Your order has already been charged and will still be ready to collect on %{date}."
 msgstr ""
 
 #: lib/edenflowers/courses/course.ex:115
@@ -7492,7 +7492,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/subscription_heads_up.text.eex:1
 #, elixir-autogen, elixir-format
-msgid "Your next %{product} pickup is ready to collect on %{date}, at %{address}."
+msgid "Your next flowers (%{product}) will be ready to collect on %{date}, at %{address}."
 msgstr ""
 
 #: lib/edenflowers/email.ex:330

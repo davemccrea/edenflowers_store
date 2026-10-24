@@ -2,7 +2,7 @@
 
 <%= gettext("I've cancelled your %{product} subscription. You won't be charged again.", product: @product) %>
 
-<%= message(@message) %><%= if @charged_on do %><%= if @pickup? do %><%= gettext("Any pickup already charged will still be ready on %{date}.", date: @format_date.(@charged_on)) %><% else %><%= gettext("Any delivery already charged will still come on %{date}.", date: @format_date.(@charged_on)) %><% end %>
+<%= message(@message) %><%= if @charged_on do %><%= if @pickup? do %><%= gettext("Any order already charged will still be ready to collect on %{date}.", date: @format_date.(@charged_on)) %><% else %><%= gettext("Any delivery already charged will still come on %{date}.", date: @format_date.(@charged_on)) %><% end %>
 
 <% end %><%= gettext("If you have any questions, just reply to this email.") %>
 

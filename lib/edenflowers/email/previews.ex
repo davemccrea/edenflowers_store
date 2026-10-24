@@ -536,7 +536,7 @@ defmodule Edenflowers.Email.Previews do
       "venue" => "Villa Sjöhem",
       "guests" => 80,
       "selection" => selection,
-      "estimate" => "€1,240.00",
+      "estimate" => Edenflowers.Format.currency(1240, locale),
       "message" => message
     }
 
