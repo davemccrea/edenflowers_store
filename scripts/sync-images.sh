@@ -22,9 +22,8 @@ ok "filenames are ASCII"
 section "Syncing to edenflowers-production"
 # imgproxy returns 500 for files it can't read, so force world-readable modes.
 # uploads/ is the app's own folder on the server, so it's never pushed to, and
-# --delete leaves excluded paths alone. --max-delete stops a half-empty
-# images/ from wiping the server: rsync fails instead, and so does the deploy.
-rsync -avz --chmod=D755,F644 --delete --max-delete=20 --exclude=/images/uploads/ --exclude=.DS_Store \
+# --delete leaves excluded paths alone.
+rsync -avz --chmod=D755,F644 --delete --exclude=/images/uploads/ --exclude=.DS_Store \
   images edenflowers-production:/opt/edenflowers_store/
 ok "synced"
 
