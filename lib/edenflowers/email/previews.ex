@@ -42,6 +42,7 @@ defmodule Edenflowers.Email.Previews do
         order_refunded(locale) ++
         course_confirmation(locale) ++
         course_payment_link(locale) ++
+        course_reminder(locale) ++
         booking_cancelled(locale) ++
         booking_refunded(locale) ++
         wedding_enquiry(locale) ++
@@ -422,6 +423,18 @@ defmodule Edenflowers.Email.Previews do
         ] do
       {gettext_noop("Course payment link"), title, :course_payment_link,
        Email.course_payment_link(registration(attrs, locale), @payment_link, message)}
+    end
+  end
+
+  defp course_reminder(locale) do
+    for {title, attrs, payment_link} <- [
+          {gettext_noop("paid"), %{status: :confirmed, balance: Decimal.new(0)}, nil},
+          {gettext_noop("2 places awaiting payment"),
+           %{status: :awaiting_payment, seats: 2, balance: Decimal.new("90.00")}, @payment_link},
+          {gettext_noop("no first name"), %{status: :confirmed, balance: Decimal.new(0), first_name: nil}, nil}
+        ] do
+      {gettext_noop("Course reminder"), title, :course_reminder,
+       Email.course_reminder(registration(attrs, locale), payment_link)}
     end
   end
 

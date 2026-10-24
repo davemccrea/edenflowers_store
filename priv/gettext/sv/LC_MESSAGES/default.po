@@ -151,8 +151,8 @@ msgstr "Kassa"
 msgid "Payment"
 msgstr "Betalning"
 
-#: lib/edenflowers/email/previews.ex:527
-#: lib/edenflowers/email/previews.ex:529
+#: lib/edenflowers/email/previews.ex:540
+#: lib/edenflowers/email/previews.ex:542
 #: lib/edenflowers_web/components/layouts.ex:529
 #: lib/edenflowers_web/components/layouts.ex:646
 #: lib/edenflowers_web/components/layouts.ex:738
@@ -688,6 +688,7 @@ msgstr "Har du en kampanjkod?"
 #: lib/edenflowers/email/templates/booking_refunded.text.eex:1
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:1
 #: lib/edenflowers/email/templates/course_payment_link.text.eex:1
+#: lib/edenflowers/email/templates/course_reminder.text.eex:1
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:1
 #: lib/edenflowers/email/templates/order_confirmation.text.eex:1
 #: lib/edenflowers/email/templates/order_delivered.text.eex:1
@@ -712,6 +713,7 @@ msgstr "Hej %{name},"
 #: lib/edenflowers/email/templates/booking_refunded.text.eex:1
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:1
 #: lib/edenflowers/email/templates/course_payment_link.text.eex:1
+#: lib/edenflowers/email/templates/course_reminder.text.eex:1
 #: lib/edenflowers/email/templates/email_change_code.text.eex:1
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:1
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:1
@@ -835,7 +837,7 @@ msgstr "Avhämtning i butik"
 msgid "close"
 msgstr "stäng"
 
-#: lib/edenflowers/email/templates.ex:56
+#: lib/edenflowers/email/templates.ex:57
 #: lib/edenflowers_web/business.ex:15
 #, elixir-autogen, elixir-format
 msgid "65230 Vasa"
@@ -848,7 +850,7 @@ msgstr "65230 Vasa"
 msgid "Address"
 msgstr "Adress"
 
-#: lib/edenflowers/email/templates.ex:56
+#: lib/edenflowers/email/templates.ex:57
 #: lib/edenflowers_web/business.ex:14
 #, elixir-autogen, elixir-format
 msgid "Myrvägen 1"
@@ -1768,7 +1770,7 @@ msgid_plural "%{count} place(s) left"
 msgstr[0] "%{count} plats kvar"
 msgstr[1] "%{count} platser kvar"
 
-#: lib/edenflowers/email/previews.ex:477
+#: lib/edenflowers/email/previews.ex:490
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:55
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:54
 #, elixir-autogen, elixir-format
@@ -1826,6 +1828,7 @@ msgstr "Platser"
 
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:12
 #: lib/edenflowers/email/templates/course_payment_link.text.eex:15
+#: lib/edenflowers/email/templates/course_reminder.text.eex:13
 #, elixir-autogen, elixir-format
 msgid "See you there,"
 msgstr "Vi ses,"
@@ -1848,6 +1851,7 @@ msgstr "Den här kursen tar inte längre emot bokningar. Nya datum meddelar jag 
 
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:5
 #: lib/edenflowers/email/templates/course_payment_link.text.eex:10
+#: lib/edenflowers/email/templates/course_reminder.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "When: %{date}, %{start}–%{end}"
 msgstr "När: %{date}, %{start}–%{end}"
@@ -1861,6 +1865,7 @@ msgstr "Var"
 
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:6
 #: lib/edenflowers/email/templates/course_payment_link.text.eex:11
+#: lib/edenflowers/email/templates/course_reminder.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "Where: %{venue}, %{address}"
 msgstr "Var: %{venue}, %{address}"
@@ -3134,9 +3139,9 @@ msgstr "Anteckningen har sparats."
 msgid "Order %{reference}"
 msgstr "Beställning %{reference}"
 
-#: lib/edenflowers/email/previews.ex:345
-#: lib/edenflowers/email/previews.ex:350
-#: lib/edenflowers/email/previews.ex:355
+#: lib/edenflowers/email/previews.ex:346
+#: lib/edenflowers/email/previews.ex:351
+#: lib/edenflowers/email/previews.ex:356
 #: lib/edenflowers_web/features/checkout/pay_live.ex:55
 #, elixir-autogen, elixir-format
 msgid "Order cancelled"
@@ -3822,7 +3827,7 @@ msgstr "Pausa"
 msgid "Resume"
 msgstr "Återuppta"
 
-#: lib/edenflowers/email/previews.ex:298
+#: lib/edenflowers/email/previews.ex:299
 #: lib/edenflowers_web/features/account/subscription_manager.ex:73
 #, elixir-autogen, elixir-format
 msgid "Subscription cancelled"
@@ -4391,6 +4396,7 @@ msgid "Search name…"
 msgstr "Sök namn…"
 
 #: lib/edenflowers/email/templates/course_payment_link.text.eex:5
+#: lib/edenflowers/email/templates/course_reminder.text.eex:8
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Amount due"
@@ -4464,8 +4470,8 @@ msgstr "Levereras"
 msgid "Collected"
 msgstr "Hämtad"
 
-#: lib/edenflowers/email/previews.ex:322
-#: lib/edenflowers/email/previews.ex:325
+#: lib/edenflowers/email/previews.ex:323
+#: lib/edenflowers/email/previews.ex:326
 #: lib/edenflowers_web/features/account/account_live.ex:656
 #, elixir-autogen, elixir-format
 msgid "Delivered"
@@ -4566,7 +4572,7 @@ msgstr "gratis inom %{km} km"
 msgid "up to %{km} km"
 msgstr "upp till %{km} km"
 
-#: lib/edenflowers/email.ex:687
+#: lib/edenflowers/email.ex:705
 #, elixir-autogen, elixir-format
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr "%{otp_code} är din inloggningskod till Eden Flowers"
@@ -4868,7 +4874,7 @@ msgstr "Bröllopsdatum: %{date}"
 msgid "Your enquiry couldn't be sent. Please try again, or email me directly."
 msgstr "Förfrågan kunde inte skickas. Försök igen eller mejla mig direkt."
 
-#: lib/edenflowers/email.ex:596
+#: lib/edenflowers/email.ex:614
 #, elixir-autogen, elixir-format
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr "Er bröllopsförfrågan till Eden Flowers"
@@ -6109,7 +6115,7 @@ msgstr "Försenade beställningar"
 msgid "Payment overdue"
 msgstr "Förfallen betalning"
 
-#: lib/edenflowers/email/previews.ex:214
+#: lib/edenflowers/email/previews.ex:215
 #: lib/edenflowers_web/features/admin/overview_live.ex:152
 #, elixir-autogen, elixir-format
 msgid "Subscription payment failed"
@@ -6165,7 +6171,7 @@ msgstr "Lär känna Jennie"
 msgid "Nothing listed here just now"
 msgstr "Här finns inget just nu"
 
-#: lib/edenflowers/email.ex:695
+#: lib/edenflowers/email.ex:713
 #, elixir-autogen, elixir-format
 msgid "%{code} is your email change code for Eden Flowers"
 msgstr "%{code} är din kod för att byta e-postadress hos Eden Flowers"
@@ -6211,7 +6217,7 @@ msgstr "Tack för att du startade en prenumeration på %{product}."
 msgid "Thank you for your enquiry. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it."
 msgstr "Tack för din förfrågan. Jag återkommer med en offert så snart jag kan. Inget är bokat förrän du har sett och godkänt offerten."
 
-#: lib/edenflowers/email.ex:614
+#: lib/edenflowers/email.ex:632
 #, elixir-autogen, elixir-format
 msgid "Your 15% welcome code for Eden Flowers"
 msgstr "Din välkomstrabatt på 15 % från Eden Flowers"
@@ -6452,18 +6458,18 @@ msgstr "Öppna beställningar"
 msgid "Stop orders"
 msgstr "Stoppa beställningar"
 
-#: lib/edenflowers/email/previews.ex:423
+#: lib/edenflowers/email/previews.ex:424
 #, elixir-autogen, elixir-format
 msgid "Course payment link"
 msgstr "Betalningslänk för kurs"
 
-#: lib/edenflowers/email/previews.ex:285
+#: lib/edenflowers/email/previews.ex:286
 #, elixir-autogen, elixir-format
 msgid "Subscription set up"
 msgstr "Prenumeration startad"
 
-#: lib/edenflowers/email/previews.ex:510
-#: lib/edenflowers/email/previews.ex:512
+#: lib/edenflowers/email/previews.ex:523
+#: lib/edenflowers/email/previews.ex:525
 #, elixir-autogen, elixir-format
 msgid "Wedding enquiry copy"
 msgstr "Kopia av bröllopsförfrågan"
@@ -6533,162 +6539,163 @@ msgstr "Mån–Fre: %{weekdays}"
 msgid "Sat: %{saturday}"
 msgstr "Lör: %{saturday}"
 
-#: lib/edenflowers/email/previews.ex:282
+#: lib/edenflowers/email/previews.ex:283
 #, elixir-autogen, elixir-format
 msgid "delivery, card message only"
 msgstr "leverans, bara kortmeddelande"
 
-#: lib/edenflowers/email/previews.ex:281
+#: lib/edenflowers/email/previews.ex:282
 #, elixir-autogen, elixir-format
 msgid "delivery, discount only"
 msgstr "leverans, bara rabatt"
 
-#: lib/edenflowers/email/previews.ex:262
+#: lib/edenflowers/email/previews.ex:263
 #, elixir-autogen, elixir-format
 msgid "delivery, every 2 weeks, discounted first order, card message"
 msgstr "leverans, varannan vecka, rabatterad första beställning, kortmeddelande"
 
-#: lib/edenflowers/email/previews.ex:275
+#: lib/edenflowers/email/previews.ex:276
 #, elixir-autogen, elixir-format
 msgid "delivery, every 4 weeks, large"
 msgstr "leverans, var fjärde vecka, stor"
 
-#: lib/edenflowers/email/previews.ex:529
+#: lib/edenflowers/email/previews.ex:542
 #, elixir-autogen, elixir-format
 msgid "email change code"
 msgstr "kod för byte av e-post"
 
-#: lib/edenflowers/email/previews.ex:510
+#: lib/edenflowers/email/previews.ex:523
 #, elixir-autogen, elixir-format
 msgid "everything filled in"
 msgstr "allt ifyllt"
 
-#: lib/edenflowers/email/previews.ex:317
-#: lib/edenflowers/email/previews.ex:332
+#: lib/edenflowers/email/previews.ex:318
+#: lib/edenflowers/email/previews.ex:333
 #, elixir-autogen, elixir-format
 msgid "gift to a named recipient"
 msgstr "gåva till namngiven mottagare"
 
-#: lib/edenflowers/email/previews.ex:318
+#: lib/edenflowers/email/previews.ex:319
 #, elixir-autogen, elixir-format
 msgid "gift without a recipient name"
 msgstr "gåva utan mottagarens namn"
 
-#: lib/edenflowers/email/previews.ex:79
-#: lib/edenflowers/email/previews.ex:113
-#: lib/edenflowers/email/previews.ex:320
+#: lib/edenflowers/email/previews.ex:80
+#: lib/edenflowers/email/previews.ex:114
+#: lib/edenflowers/email/previews.ex:321
 #, elixir-autogen, elixir-format
 msgid "no customer first name"
 msgstr "inget förnamn för kunden"
 
-#: lib/edenflowers/email/previews.ex:421
+#: lib/edenflowers/email/previews.ex:422
+#: lib/edenflowers/email/previews.ex:434
 #, elixir-autogen, elixir-format
 msgid "no first name"
 msgstr "inget förnamn"
 
-#: lib/edenflowers/email/previews.ex:319
+#: lib/edenflowers/email/previews.ex:320
 #, elixir-autogen, elixir-format
 msgid "not a gift, recipient name filled in"
 msgstr "inte en gåva, mottagarens namn ifyllt"
 
-#: lib/edenflowers/email/previews.ex:54
+#: lib/edenflowers/email/previews.ex:55
 #, elixir-autogen, elixir-format
 msgid "not yet fulfilled, cancellable"
 msgstr "inte utlämnad ännu, kan avbokas"
 
-#: lib/edenflowers/email/previews.ex:55
+#: lib/edenflowers/email/previews.ex:56
 #, elixir-autogen, elixir-format
 msgid "not yet fulfilled, past the cancellation deadline"
 msgstr "inte utlämnad ännu, avbokningstiden har gått ut"
 
-#: lib/edenflowers/email/previews.ex:355
+#: lib/edenflowers/email/previews.ex:356
 #, elixir-autogen, elixir-format
 msgid "nothing to refund, no customer first name"
 msgstr "inget att återbetala, inget förnamn för kunden"
 
-#: lib/edenflowers/email/previews.ex:512
+#: lib/edenflowers/email/previews.ex:525
 #, elixir-autogen, elixir-format
 msgid "only the required fields"
 msgstr "bara de obligatoriska fälten"
 
-#: lib/edenflowers/email/previews.ex:97
+#: lib/edenflowers/email/previews.ex:98
 #, elixir-autogen, elixir-format
 msgid "part paid, payment link"
 msgstr "delvis betald, betalningslänk"
 
-#: lib/edenflowers/email/previews.ex:66
-#: lib/edenflowers/email/previews.ex:196
+#: lib/edenflowers/email/previews.ex:67
+#: lib/edenflowers/email/previews.ex:197
 #, elixir-autogen, elixir-format
 msgid "pickup"
 msgstr "avhämtning"
 
-#: lib/edenflowers/email/previews.ex:263
+#: lib/edenflowers/email/previews.ex:264
 #, elixir-autogen, elixir-format
 msgid "pickup, every week, no discount, no card message, no first name"
 msgstr "avhämtning, varje vecka, ingen rabatt, inget kortmeddelande, inget förnamn"
 
-#: lib/edenflowers/email/previews.ex:96
+#: lib/edenflowers/email/previews.ex:97
 #, elixir-autogen, elixir-format
 msgid "pickup, no recipient, no delivery fee"
 msgstr "avhämtning, ingen mottagare, ingen leveransavgift"
 
-#: lib/edenflowers/email/previews.ex:365
+#: lib/edenflowers/email/previews.ex:366
 #, elixir-autogen, elixir-format
 msgid "refunded to MobilePay"
 msgstr "återbetald till MobilePay"
 
-#: lib/edenflowers/email/previews.ex:364
-#: lib/edenflowers/email/previews.ex:470
+#: lib/edenflowers/email/previews.ex:365
+#: lib/edenflowers/email/previews.ex:483
 #, elixir-autogen, elixir-format
 msgid "refunded to a card"
 msgstr "återbetald till kort"
 
-#: lib/edenflowers/email/previews.ex:366
+#: lib/edenflowers/email/previews.ex:367
 #, elixir-autogen, elixir-format
 msgid "refunded, paid more than one way"
 msgstr "återbetald, betald på flera sätt"
 
-#: lib/edenflowers/email/previews.ex:110
+#: lib/edenflowers/email/previews.ex:111
 #, elixir-autogen, elixir-format
 msgid "settled, paid in full"
 msgstr "helt betald"
 
-#: lib/edenflowers/email/previews.ex:527
+#: lib/edenflowers/email/previews.ex:540
 #, elixir-autogen, elixir-format
 msgid "sign-in code"
 msgstr "inloggningskod"
 
-#: lib/edenflowers/email/previews.ex:98
+#: lib/edenflowers/email/previews.ex:99
 #, elixir-autogen, elixir-format
 msgid "unpaid, invoice after delivery"
 msgstr "obetald, faktura efter leverans"
 
-#: lib/edenflowers/email/previews.ex:99
+#: lib/edenflowers/email/previews.ex:100
 #, elixir-autogen, elixir-format
 msgid "unpaid, invoice after pickup"
 msgstr "obetald, faktura efter avhämtning"
 
-#: lib/edenflowers/email/previews.ex:101
+#: lib/edenflowers/email/previews.ex:102
 #, elixir-autogen, elixir-format
 msgid "unpaid, pays at pickup"
 msgstr "obetald, betalas vid avhämtning"
 
-#: lib/edenflowers/email/previews.ex:100
+#: lib/edenflowers/email/previews.ex:101
 #, elixir-autogen, elixir-format
 msgid "unpaid, pays on delivery"
 msgstr "obetald, betalas vid leverans"
 
-#: lib/edenflowers/email/previews.ex:63
+#: lib/edenflowers/email/previews.ex:64
 #, elixir-autogen, elixir-format
 msgid "with a delivery time"
 msgstr "med leveranstid"
 
-#: lib/edenflowers/email/previews.ex:64
+#: lib/edenflowers/email/previews.ex:65
 #, elixir-autogen, elixir-format
 msgid "with a delivery time window"
 msgstr "med leveransfönster"
 
-#: lib/edenflowers/email/previews.ex:102
+#: lib/edenflowers/email/previews.ex:103
 #, elixir-autogen, elixir-format
 msgid "zero delivery fee, with delivery time window"
 msgstr "ingen leveransavgift, med leveransfönster"
@@ -6874,7 +6881,7 @@ msgstr "Leverans %{time}, beställning %{order_order_reference}"
 msgid "Pickup %{time}, order %{order_order_reference}"
 msgstr "Avhämtning %{time}, beställning %{order_order_reference}"
 
-#: lib/edenflowers/email.ex:669
+#: lib/edenflowers/email.ex:687
 #, elixir-autogen, elixir-format
 msgid "Open in the admin:"
 msgstr "Öppna i adminpanelen:"
@@ -6982,12 +6989,12 @@ msgstr "Din bokning till %{course} är avbokad"
 msgid "Your booking on %{course} on %{date} is cancelled."
 msgstr "Din bokning till %{course} %{date} är avbokad."
 
-#: lib/edenflowers/email/previews.ex:474
+#: lib/edenflowers/email/previews.ex:487
 #, elixir-autogen, elixir-format
 msgid "nothing paid, no first name"
 msgstr "inget betalt, inget förnamn"
 
-#: lib/edenflowers/email/previews.ex:472
+#: lib/edenflowers/email/previews.ex:485
 #, elixir-autogen, elixir-format
 msgid "with a reason, paid in cash"
 msgstr "med orsak, betald kontant"
@@ -6997,14 +7004,14 @@ msgstr "med orsak, betald kontant"
 msgid "A refund for your booking on %{course}"
 msgstr "En återbetalning för din bokning till %{course}"
 
-#: lib/edenflowers/email/previews.ex:445
-#: lib/edenflowers/email/previews.ex:450
+#: lib/edenflowers/email/previews.ex:458
+#: lib/edenflowers/email/previews.ex:463
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:59
 #, elixir-autogen, elixir-format
 msgid "Booking refunded"
 msgstr "Bokning återbetald"
 
-#: lib/edenflowers/email/previews.ex:439
+#: lib/edenflowers/email/previews.ex:452
 #: lib/edenflowers_web/features/checkout/pay_live.ex:60
 #, elixir-autogen, elixir-format
 msgid "Order refunded"
@@ -7020,7 +7027,7 @@ msgstr "Registrera %{amount} som återbetalt till kunden?"
 msgid "Records money you have already handed back."
 msgstr "Registrerar pengar du redan har betalat tillbaka."
 
-#: lib/edenflowers/email/previews.ex:433
+#: lib/edenflowers/email/previews.ex:446
 #, elixir-autogen, elixir-format
 msgid "handed back in cash"
 msgstr "återbetald kontant"
@@ -7183,13 +7190,13 @@ msgstr "Beställningen har återbetalats, så det finns inget att betala. Hör a
 msgid "Email the payment link to the customer"
 msgstr "Mejla betalningslänken till kunden"
 
-#: lib/edenflowers/email/previews.ex:418
+#: lib/edenflowers/email/previews.ex:419
 #, elixir-autogen, elixir-format
 msgid "awaiting payment"
 msgstr "väntar på betalning"
 
-#: lib/edenflowers/email/previews.ex:115
-#: lib/edenflowers/email/previews.ex:118
+#: lib/edenflowers/email/previews.ex:116
+#: lib/edenflowers/email/previews.ex:119
 #, elixir-autogen, elixir-format
 msgid "Order details"
 msgstr "Beställningsuppgifter"
@@ -7249,9 +7256,9 @@ msgstr "Skicka betalningslänken"
 msgid "Send receipt"
 msgstr "Skicka kvittot"
 
-#: lib/edenflowers/email/previews.ex:118
-#: lib/edenflowers/email/previews.ex:137
-#: lib/edenflowers/email/previews.ex:325
+#: lib/edenflowers/email/previews.ex:119
+#: lib/edenflowers/email/previews.ex:138
+#: lib/edenflowers/email/previews.ex:326
 #, elixir-autogen, elixir-format
 msgid "with a message from Jennie"
 msgstr "med ett meddelande från Jennie"
@@ -7312,7 +7319,7 @@ msgstr "Om du behöver hjälp med betalningen, svara bara på det här mejlet."
 msgid "Later deliveries are on hold until this one is paid. To keep them coming, please also update your card in your account:"
 msgstr "Senare leveranser väntar tills den här är betald. För att de ska fortsätta, uppdatera också ditt kort på ditt konto:"
 
-#: lib/edenflowers/email/previews.ex:139
+#: lib/edenflowers/email/previews.ex:140
 #, elixir-autogen, elixir-format
 msgid "Order updated"
 msgstr "Beställning uppdaterad"
@@ -7344,6 +7351,7 @@ msgstr "Uppdaterad beställning mejlad"
 
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:8
 #: lib/edenflowers/email/templates/course_payment_link.text.eex:7
+#: lib/edenflowers/email/templates/course_reminder.text.eex:10
 #: lib/edenflowers/email/templates/order_payment.text.eex:1
 #: lib/edenflowers/email/templates/payment_reminder.text.eex:6
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:7
@@ -7362,48 +7370,48 @@ msgstr "Din Eden Flowers-beställning för %{date}"
 msgid "Your updated Eden Flowers order for %{date}"
 msgstr "Din uppdaterade Eden Flowers-beställning för %{date}"
 
-#: lib/edenflowers/email/previews.ex:196
-#: lib/edenflowers/email/previews.ex:209
+#: lib/edenflowers/email/previews.ex:197
+#: lib/edenflowers/email/previews.ex:210
 #, elixir-autogen, elixir-format
 msgid "delivery"
 msgstr "leverans"
 
-#: lib/edenflowers/email/previews.ex:94
+#: lib/edenflowers/email/previews.ex:95
 #, elixir-autogen, elixir-format
 msgid "gift with a card message, delivery, payment link"
 msgstr "present med kortmeddelande, leverans, betalningslänk"
 
-#: lib/edenflowers/email/previews.ex:127
+#: lib/edenflowers/email/previews.ex:128
 #, elixir-autogen, elixir-format
 msgid "paid in full, nothing owed"
 msgstr "betald i sin helhet, inget att betala"
 
-#: lib/edenflowers/email/previews.ex:128
+#: lib/edenflowers/email/previews.ex:129
 #, elixir-autogen, elixir-format
 msgid "paid, now owes less"
 msgstr "betald, nu mindre att betala"
 
-#: lib/edenflowers/email/previews.ex:126
+#: lib/edenflowers/email/previews.ex:127
 #, elixir-autogen, elixir-format
 msgid "paid, now owes more, payment link"
 msgstr "betald, nu mer att betala, betalningslänk"
 
-#: lib/edenflowers/email/previews.ex:136
+#: lib/edenflowers/email/previews.ex:137
 #, elixir-autogen, elixir-format
 msgid "pickup, invoice after pickup"
 msgstr "avhämtning, faktura efter avhämtning"
 
-#: lib/edenflowers/email/previews.ex:210
+#: lib/edenflowers/email/previews.ex:211
 #, elixir-autogen, elixir-format
 msgid "pickup, no customer first name"
 msgstr "avhämtning, inget förnamn"
 
-#: lib/edenflowers/email/previews.ex:111
+#: lib/edenflowers/email/previews.ex:112
 #, elixir-autogen, elixir-format
 msgid "sent after it was handed over, invoice"
 msgstr "skickad efter överlämning, faktura"
 
-#: lib/edenflowers/email/previews.ex:125
+#: lib/edenflowers/email/previews.ex:126
 #, elixir-autogen, elixir-format
 msgid "unpaid, payment link"
 msgstr "obetald, betalningslänk"
@@ -7427,8 +7435,8 @@ msgstr "Mejla kunden ett kvitto"
 msgid "I've received your payment of %{amount}. Your receipt is attached."
 msgstr "Jag har tagit emot din betalning på %{amount}. Kvittot finns bifogat."
 
-#: lib/edenflowers/email/previews.ex:150
-#: lib/edenflowers/email/previews.ex:163
+#: lib/edenflowers/email/previews.ex:151
+#: lib/edenflowers/email/previews.ex:164
 #, elixir-autogen, elixir-format
 msgid "Payment received"
 msgstr "Betalning mottagen"
@@ -7448,27 +7456,27 @@ msgstr "Betalning mottagen för %{course}, %{date}"
 msgid "Payment received for your order for %{date}"
 msgstr "Betalning mottagen för din beställning för %{date}"
 
-#: lib/edenflowers/email/previews.ex:157
+#: lib/edenflowers/email/previews.ex:158
 #, elixir-autogen, elixir-format
 msgid "booking for 2 paid after the course"
 msgstr "bokning för 2 betald efter kursen"
 
-#: lib/edenflowers/email/previews.ex:156
+#: lib/edenflowers/email/previews.ex:157
 #, elixir-autogen, elixir-format
 msgid "booking paid before the course"
 msgstr "bokning betald före kursen"
 
-#: lib/edenflowers/email/previews.ex:146
+#: lib/edenflowers/email/previews.ex:147
 #, elixir-autogen, elixir-format
 msgid "order paid in full through the payment link"
 msgstr "beställning betald i sin helhet via betalningslänken"
 
-#: lib/edenflowers/email/previews.ex:147
+#: lib/edenflowers/email/previews.ex:148
 #, elixir-autogen, elixir-format
 msgid "order part paid, some still owed"
 msgstr "beställning delvis betald, en del kvar att betala"
 
-#: lib/edenflowers/email/previews.ex:148
+#: lib/edenflowers/email/previews.ex:149
 #, elixir-autogen, elixir-format
 msgid "order, with a message from Jennie"
 msgstr "beställning, med ett meddelande från Jennie"
@@ -7499,9 +7507,9 @@ msgstr "En påminnelse om din beställning för %{date}"
 msgid "If you've already paid, thank you, and please ignore this email."
 msgstr "Om du redan har betalat, tack, och bortse från det här mejlet."
 
-#: lib/edenflowers/email/previews.ex:183
-#: lib/edenflowers/email/previews.ex:185
-#: lib/edenflowers/email/previews.ex:187
+#: lib/edenflowers/email/previews.ex:184
+#: lib/edenflowers/email/previews.ex:186
+#: lib/edenflowers/email/previews.ex:188
 #, elixir-autogen, elixir-format
 msgid "Payment reminder"
 msgstr "Betalningspåminnelse"
@@ -7533,22 +7541,22 @@ msgstr "Skicka betalningspåminnelse"
 msgid "Send reminder"
 msgstr "Skicka påminnelse"
 
-#: lib/edenflowers/email/previews.ex:187
+#: lib/edenflowers/email/previews.ex:188
 #, elixir-autogen, elixir-format
 msgid "booking for 2 after the course"
 msgstr "bokning för 2 efter kursen"
 
-#: lib/edenflowers/email/previews.ex:185
+#: lib/edenflowers/email/previews.ex:186
 #, elixir-autogen, elixir-format
 msgid "order part paid, with a message from Jennie"
 msgstr "beställning delvis betald, med ett meddelande från Jennie"
 
-#: lib/edenflowers/email/previews.ex:183
+#: lib/edenflowers/email/previews.ex:184
 #, elixir-autogen, elixir-format
 msgid "order, unpaid"
 msgstr "beställning, obetald"
 
-#: lib/edenflowers/email/previews.ex:87
+#: lib/edenflowers/email/previews.ex:88
 #, elixir-autogen, elixir-format
 msgid "Order receipt"
 msgstr "Kvitto för beställning"
@@ -7563,13 +7571,13 @@ msgstr "Tack för din beställning. Jag levererar den %{date} till %{address}."
 msgid "Thank you for your order. You can collect it on %{date} from %{shop}."
 msgstr "Tack för din beställning. Du kan hämta den %{date} på %{shop}."
 
-#: lib/edenflowers/email/previews.ex:56
+#: lib/edenflowers/email/previews.ex:57
 #, elixir-autogen, elixir-format
 msgid "gift with a card message, promo code"
 msgstr "present med kortmeddelande, rabattkod"
 
-#: lib/edenflowers/email/previews.ex:173
-#: lib/edenflowers/email/previews.ex:175
+#: lib/edenflowers/email/previews.ex:174
+#: lib/edenflowers/email/previews.ex:176
 #, elixir-autogen, elixir-format
 msgid "Purchase receipt"
 msgstr "Kvitto för köp"
@@ -7584,17 +7592,17 @@ msgstr "Tack för ditt köp. Kvittot finns bifogat."
 msgid "Your receipt from Eden Flowers"
 msgstr "Ditt kvitto från Eden Flowers"
 
-#: lib/edenflowers/email/previews.ex:173
+#: lib/edenflowers/email/previews.ex:174
 #, elixir-autogen, elixir-format
 msgid "handed over and paid in full"
 msgstr "överlämnad och betald i sin helhet"
 
-#: lib/edenflowers/email/previews.ex:175
+#: lib/edenflowers/email/previews.ex:176
 #, elixir-autogen, elixir-format
 msgid "with a message from Jennie, no customer first name"
 msgstr "med ett meddelande från Jennie, inget förnamn"
 
-#: lib/edenflowers/email/previews.ex:202
+#: lib/edenflowers/email/previews.ex:203
 #, elixir-autogen, elixir-format
 msgid "Subscription delivery charged"
 msgstr "Prenumerationsleverans debiterad"
@@ -7644,7 +7652,7 @@ msgstr "Ditt kort har debiterats %{amount} för din avhämtning av %{product} %{
 msgid "Your flowers for %{date}"
 msgstr "Dina blommor för %{date}"
 
-#: lib/edenflowers/email/previews.ex:335
+#: lib/edenflowers/email/previews.ex:336
 #, elixir-autogen, elixir-format
 msgid "Left at the door"
 msgstr "Lämnad vid dörren"
@@ -7684,7 +7692,7 @@ msgstr "Din beställning till %{recipient} har levererats"
 msgid "Your order for %{recipient} was left at the door"
 msgstr "Din beställning till %{recipient} lämnades vid dörren"
 
-#: lib/edenflowers/email/previews.ex:333
+#: lib/edenflowers/email/previews.ex:334
 #, elixir-autogen, elixir-format
 msgid "not a gift"
 msgstr "inte en present"
@@ -7694,7 +7702,7 @@ msgstr "inte en present"
 msgid "A refund for your Eden Flowers order for %{date}"
 msgstr "En återbetalning för din Eden Flowers-beställning för %{date}"
 
-#: lib/edenflowers/email/previews.ex:368
+#: lib/edenflowers/email/previews.ex:369
 #, elixir-autogen, elixir-format
 msgid "Cancellation confirmed"
 msgstr "Avbokning bekräftad"
@@ -7775,47 +7783,47 @@ msgstr "Din Eden Flowers-beställning för %{date} är avbokad"
 msgid "Your order %{reference} for %{date} is cancelled."
 msgstr "Din beställning %{reference} för %{date} är avbokad."
 
-#: lib/edenflowers/email/previews.ex:435
+#: lib/edenflowers/email/previews.ex:448
 #, elixir-autogen, elixir-format
 msgid "by MobilePay to the customer's number"
 msgstr "med MobilePay till kundens nummer"
 
-#: lib/edenflowers/email/previews.ex:450
+#: lib/edenflowers/email/previews.ex:463
 #, elixir-autogen, elixir-format
 msgid "handed back in cash, with a message from Jennie"
 msgstr "återbetald kontant, med ett meddelande från Jennie"
 
-#: lib/edenflowers/email/previews.ex:350
+#: lib/edenflowers/email/previews.ex:351
 #, elixir-autogen, elixir-format
 msgid "part paid by card, part in cash"
 msgstr "delvis betald med kort, delvis kontant"
 
-#: lib/edenflowers/email/previews.ex:345
+#: lib/edenflowers/email/previews.ex:346
 #, elixir-autogen, elixir-format
 msgid "refunded to a card, with a message from Jennie"
 msgstr "återbetald till ett kort, med ett meddelande från Jennie"
 
-#: lib/edenflowers/email/previews.ex:432
+#: lib/edenflowers/email/previews.ex:445
 #, elixir-autogen, elixir-format
 msgid "to MobilePay through Stripe"
 msgstr "till MobilePay via Stripe"
 
-#: lib/edenflowers/email/previews.ex:434
+#: lib/edenflowers/email/previews.ex:447
 #, elixir-autogen, elixir-format
 msgid "to a card on the card reader"
 msgstr "till ett kort via kortläsaren"
 
-#: lib/edenflowers/email/previews.ex:445
+#: lib/edenflowers/email/previews.ex:458
 #, elixir-autogen, elixir-format
 msgid "to a card through Stripe"
 msgstr "till ett kort via Stripe"
 
-#: lib/edenflowers/email/previews.ex:430
+#: lib/edenflowers/email/previews.ex:443
 #, elixir-autogen, elixir-format
 msgid "to a card through Stripe, with a message from Jennie"
 msgstr "till ett kort via Stripe, med ett meddelande från Jennie"
 
-#: lib/edenflowers/email/previews.ex:436
+#: lib/edenflowers/email/previews.ex:449
 #, elixir-autogen, elixir-format
 msgid "to the customer's bank account"
 msgstr "till kundens bankkonto"
@@ -7856,23 +7864,23 @@ msgstr "Inga fler beställningar görs eller debiteras. Det här kan inte ångra
 msgid "Your %{product} subscription is cancelled"
 msgstr "Din prenumeration på %{product} är avslutad"
 
-#: lib/edenflowers/email/previews.ex:292
-#: lib/edenflowers/email/previews.ex:305
+#: lib/edenflowers/email/previews.ex:293
+#: lib/edenflowers/email/previews.ex:306
 #, elixir-autogen, elixir-format
 msgid "a delivery already charged still comes"
 msgstr "en redan debiterad leverans kommer ändå"
 
-#: lib/edenflowers/email/previews.ex:293
+#: lib/edenflowers/email/previews.ex:294
 #, elixir-autogen, elixir-format
 msgid "nothing charged yet, with a message from Jennie"
 msgstr "inget debiterat än, med ett meddelande från Jennie"
 
-#: lib/edenflowers/email/previews.ex:294
+#: lib/edenflowers/email/previews.ex:295
 #, elixir-autogen, elixir-format
 msgid "pickup already charged, no first name"
 msgstr "avhämtning redan debiterad, inget förnamn"
 
-#: lib/edenflowers/email/previews.ex:310
+#: lib/edenflowers/email/previews.ex:311
 #, elixir-autogen, elixir-format
 msgid "Subscription cancellation confirmed"
 msgstr "Avslut av prenumeration bekräftat"
@@ -7897,12 +7905,12 @@ msgstr "Din leverans %{date} har redan debiterats och kommer ändå."
 msgid "Your pickup on %{date} has already been charged and will still be ready."
 msgstr "Din avhämtning %{date} har redan debiterats och är ändå klar."
 
-#: lib/edenflowers/email/previews.ex:306
+#: lib/edenflowers/email/previews.ex:307
 #, elixir-autogen, elixir-format
 msgid "nothing charged yet"
 msgstr "inget debiterat än"
 
-#: lib/edenflowers/email/previews.ex:307
+#: lib/edenflowers/email/previews.ex:308
 #, elixir-autogen, elixir-format
 msgid "pickup already charged"
 msgstr "avhämtning redan debiterad"
@@ -7952,17 +7960,17 @@ msgstr "För att avboka, svara på ditt bekräftelsemejl."
 msgid "Yes, if you cancel in time. Each course's page says how many days before it you can cancel for a full refund, and how much is kept after that."
 msgstr "Ja, om du avbokar i tid. På varje kurs sida står hur många dagar före kursen du kan avboka för full återbetalning, och hur mycket som behålls efter det."
 
-#: lib/edenflowers/email/previews.ex:400
+#: lib/edenflowers/email/previews.ex:401
 #, elixir-autogen, elixir-format
 msgid "2 places, half kept after 10 days before"
 msgstr "2 platser, hälften behålls efter 10 dagar före"
 
-#: lib/edenflowers/email/previews.ex:419
+#: lib/edenflowers/email/previews.ex:420
 #, elixir-autogen, elixir-format
 msgid "2 places, with a message from Jennie"
 msgstr "2 platser, med ett meddelande från Jennie"
 
-#: lib/edenflowers/email/previews.ex:412
+#: lib/edenflowers/email/previews.ex:413
 #, elixir-autogen, elixir-format
 msgid "Booking confirmed"
 msgstr "Bokning bekräftad"
@@ -7983,28 +7991,28 @@ msgstr "För att avboka, svara på det här mejlet."
 msgid "You're booked on %{course}, %{date}"
 msgstr "Du är bokad på kursen %{course}, %{date}"
 
-#: lib/edenflowers/email/previews.ex:406
+#: lib/edenflowers/email/previews.ex:407
 #, elixir-autogen, elixir-format
 msgid "no first name, no refund after 7 days before"
 msgstr "inget förnamn, ingen återbetalning efter 7 dagar före"
 
-#: lib/edenflowers/email/previews.ex:399
+#: lib/edenflowers/email/previews.ex:400
 #, elixir-autogen, elixir-format
 msgid "paid, full refund until 7 days before"
 msgstr "betald, full återbetalning fram till 7 dagar före"
 
-#: lib/edenflowers/email/previews.ex:523
-#: lib/edenflowers/email/previews.ex:525
+#: lib/edenflowers/email/previews.ex:536
+#: lib/edenflowers/email/previews.ex:538
 #, elixir-autogen, elixir-format
 msgid "Already subscribed"
 msgstr "Redan prenumerant"
 
-#: lib/edenflowers/email/previews.ex:521
+#: lib/edenflowers/email/previews.ex:534
 #, elixir-autogen, elixir-format
 msgid "Newsletter welcome"
 msgstr "Välkomstmejl för nyhetsbrevet"
 
-#: lib/edenflowers/email.ex:632
+#: lib/edenflowers/email.ex:650
 #, elixir-autogen, elixir-format
 msgid "You're already subscribed to the Eden Flowers newsletter"
 msgstr "Du prenumererar redan på Eden Flowers nyhetsbrev"
@@ -8019,17 +8027,42 @@ msgstr "Du prenumererar redan på Eden Flowers nyhetsbrev."
 msgid "Your 15% welcome code is still usable:"
 msgstr "Din välkomstkod på 15 % gäller fortfarande:"
 
-#: lib/edenflowers/email/previews.ex:523
+#: lib/edenflowers/email/previews.ex:536
 #, elixir-autogen, elixir-format
 msgid "code still usable"
 msgstr "koden gäller fortfarande"
 
-#: lib/edenflowers/email/previews.ex:525
+#: lib/edenflowers/email/previews.ex:538
 #, elixir-autogen, elixir-format
 msgid "code used or expired"
 msgstr "koden använd eller utgången"
 
-#: lib/edenflowers/email/previews.ex:521
+#: lib/edenflowers/email/previews.ex:534
 #, elixir-autogen, elixir-format
 msgid "with promo code"
 msgstr "med rabattkod"
+
+#: lib/edenflowers/email/previews.ex:432
+#, elixir-autogen, elixir-format
+msgid "2 places awaiting payment"
+msgstr "2 platser, väntar på betalning"
+
+#: lib/edenflowers/email/templates/course_reminder.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "A reminder that %{course} is tomorrow."
+msgstr "En påminnelse om att %{course} är i morgon."
+
+#: lib/edenflowers/email/previews.ex:436
+#, elixir-autogen, elixir-format
+msgid "Course reminder"
+msgstr "Kurspåminnelse"
+
+#: lib/edenflowers/email.ex:586
+#, elixir-autogen, elixir-format
+msgid "See you tomorrow at %{course}"
+msgstr "Vi ses i morgon på %{course}"
+
+#: lib/edenflowers/email/previews.ex:431
+#, elixir-autogen, elixir-format
+msgid "paid"
+msgstr "betald"

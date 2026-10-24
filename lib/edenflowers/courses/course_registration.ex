@@ -76,6 +76,23 @@ defmodule Edenflowers.Courses.CourseRegistration do
         default_actor system_actor()
       end
 
+      # Once a day, the day before the course. The stamp makes it one each.
+      trigger :send_reminder_email do
+        action :send_reminder_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron "0 7 * * *"
+        worker_module_name Edenflowers.Courses.Workers.SendReminderEmail
+        scheduler_module_name Edenflowers.Courses.Schedulers.SendReminderEmail
+        default_actor system_actor()
+
+        where expr(
+                status in [:confirmed, :awaiting_payment] and is_nil(reminder_emailed_at) and
+                  course.date == date_add(helsinki_today(), 1, :day)
+              )
+      end
+
       trigger :reconcile_payment do
         action :reconcile_payment
         queue :default
@@ -273,6 +290,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
       change Changes.SendConfirmationEmail
     end
 
+    update :send_reminder_email do
+      accept []
+      transaction? false
+      require_atomic? false
+      change Changes.SendReminderEmail
+    end
+
     # The confirmation again, with the receipt once paid.
     update :email_receipt do
       accept []
@@ -294,6 +318,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :record_stripe_refund,
                      :send_confirmation_email,
                      :send_payment_received_email,
+                     :send_reminder_email,
                      :reconcile_payment,
                      :release_hold
                    ])
@@ -361,6 +386,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # The customer's email can change later; this names who was told.
     attribute :cancellation_emailed_to, :string
     attribute :receipt_emailed_at, :utc_datetime
+    attribute :reminder_emailed_at, :utc_datetime
 
     timestamps()
   end
