@@ -76,7 +76,7 @@ wt remove
 
 `just deploy` checks the tree is clean and `main` isn't behind origin, runs `mix precommit`, syncs images, bumps `mix.exs` and tags `vX.Y.Z`. After you confirm, it backs up the production database, pushes, watches the GitHub Actions deploy and publishes release notes. Plain pushes deploy nothing.
 
-`images/` is gitignored, so photos reach production only through `just sync-images`. It deletes server files removed locally, at most 20 per run (more fails the sync and the deploy), and never touches admin uploads in `images/uploads/`, which it pulls back here instead. Filenames must be ASCII.
+`images/` is gitignored, so photos reach production only through `just sync-images`. It deletes server files removed locally, and never touches admin uploads in `images/uploads/`, which it pulls back here instead. Filenames must be ASCII.
 
 The server itself is provisioned by Ansible in `infra/`, see [infra/README.md](infra/README.md).
 
