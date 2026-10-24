@@ -75,12 +75,12 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
           <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
           <h2 id="order-heading" class="section-title text-forest-content">{~t"Order for a funeral"}</h2>
           <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
-            {~t"Call or email me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."}
+            {~t"Email or call me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."}
           </p>
-          <.button href="tel:+358402209494" variant="inverse">{~t"Call me on 040 220 9494"}</.button>
+          <.button href={@order_mailto} variant="inverse">{~t"Email me"}</.button>
           <p class="text-forest-content/85">
-            {~t"Or"}
-            <a href={@order_mailto} class="link-underline-static-body">{~t"email me"}</a>
+            {~t"Or call me on"}
+            <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">040 220 9494</a>
           </p>
         </div>
       </section>
