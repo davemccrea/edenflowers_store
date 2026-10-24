@@ -488,21 +488,28 @@ defmodule EdenflowersWeb.CoreComponents do
 
   def input(%{style: "button-addon"} = assigns) do
     ~H"""
-    <fieldset class={["join w-full", @hidden && "hidden"]}>
-      <label class="input join-item w-full">
-        <input
-          type={@type}
-          name={@name}
-          id={@id}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={[@errors != [] && "input-error"]}
-          aria-invalid={@errors != [] && "true"}
-          aria-describedby={@errors != [] && "#{@id}-error"}
-          {@rest}
+    <label class={["input w-full pr-1 text-base", @errors != [] && "input-error", @hidden && "hidden"]}>
+      <input
+        type={@type}
+        name={@name}
+        id={@id}
+        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        class="grow"
+        aria-invalid={@errors != [] && "true"}
+        aria-describedby={@errors != [] && "#{@id}-error"}
+        {@rest}
+      />
+      <button
+        type="submit"
+        aria-label={@button_text}
+        class="text-base-content/70 touch-target group flex flex-none p-2 transition-colors hover:text-base-content"
+      >
+        <.icon
+          name="hero-arrow-right"
+          class="h-5 w-5 transition-transform duration-300 ease-out group-hover:translate-x-1"
         />
-      </label>
-      <.button type="submit" variant="primary" class="join-item z-50">{@button_text}</.button>
-    </fieldset>
+      </button>
+    </label>
     <div :if={@errors != []} id={"#{@id}-error"}>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
