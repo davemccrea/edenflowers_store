@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
   alias Edenflowers.Catalog.Product
   alias Edenflowers.Catalog.ProductCategory
+  alias Edenflowers.Catalog.ProductType
   alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Pricing
   alias Edenflowers.Translations
@@ -116,6 +117,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                   <.inputs_for :let={variant} field={@form[:product_variants]}>
                     <.size_row
                       variant={variant}
+                      attribute_keys={attribute_keys(@form, @categories)}
                       photo_slugs={photo_slugs(@form)}
                       show_errors={@form.source.submitted_once?}
                     />
@@ -302,12 +304,13 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   end
 
   attr :variant, Phoenix.HTML.Form, required: true
+  attr :attribute_keys, :list, required: true
   attr :photo_slugs, :list, required: true
   attr :show_errors, :boolean, required: true
 
   # One line per size once the list is wide enough; the side panel keeps it narrow
   # on most laptops. Narrower, the photo spans two lines: size, then price, stock
-  # and draft over height, stems and remove.
+  # and draft over the product type's details (such as height and stems) and remove.
   defp size_row(assigns) do
     variant = assigns.variant
     [main | others] = assigns.photo_slugs ++ [nil]
@@ -362,11 +365,19 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           options={Enum.map(ProductVariantSize.values(), &{variant_size_label(&1), &1})}
           class="select w-full"
         />
-        <%!-- Narrower, one grid so height and stems line up under price and stock; they're first
-             in source for the one-line order, so they're placed on the second line. --%>
-        <div class="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] col-start-2 row-start-2 mt-3 grid items-end gap-3 @3xl:contents @max-3xl:[&>:nth-child(-n+2)]:row-start-2">
-          <.input field={@variant[:height_cm]} type="text" label={~t"Height (cm)"} class="input w-full" />
-          <.input field={@variant[:stem_count]} type="text" label={~t"Stems"} class="input w-full" />
+        <%!-- Narrower, one grid so the details line up under price and stock; they're first
+             in source for the one-line order, so they're placed on the second line. One line or
+             two, they share the width of two columns, however many the product type has. --%>
+        <div class="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] col-start-2 row-start-2 mt-3 grid items-end gap-3 @3xl:contents">
+          <div class="col-span-2 grid auto-cols-fr grid-flow-col items-end gap-3 @max-3xl:row-start-2">
+            <.input
+              :for={key <- @attribute_keys}
+              field={@variant[key]}
+              type="text"
+              label={ProductType.label(key)}
+              class="input w-full"
+            />
+          </div>
           <.input
             field={@variant[:price]}
             type="text"
@@ -438,6 +449,14 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       </.admin_drawer>
     </li>
     """
+  end
+
+  # Follows the category select, so choosing Cards swaps height and stems for size at once.
+  defp attribute_keys(form, categories) do
+    case Enum.find(categories, &(&1.id == form[:product_category_id].value)) do
+      nil -> ProductType.attribute_keys(:flowers)
+      category -> ProductType.attribute_keys(category.product_type)
+    end
   end
 
   defp field_errors(variant) do

@@ -5,11 +5,12 @@ defmodule EdenflowersWeb.CardDrawerTest do
 
   alias EdenflowersWeb.CardDrawer
 
-  defp card(name, size, price, position \\ nil) do
+  defp card(name, size, price, position \\ nil, dimensions_cm \\ nil) do
     %{
       id: name,
       size: size,
       price: Decimal.new(price),
+      dimensions_cm: dimensions_cm,
       photo_slug: "local:///cards/#{name}.png",
       product: %{name: name, position: position}
     }
@@ -45,5 +46,22 @@ defmodule EdenflowersWeb.CardDrawerTest do
 
     assert length(String.split(html, "€4.90")) == 2
     assert length(String.split(html, "€6.00")) == 2
+  end
+
+  test "a size whose cards share dimensions shows them once, in the heading" do
+    html = render_drawer([card("Aruba", :large, "4.90", nil, "10 × 15"), card("Kira", :large, "4.90", nil, "10 × 15")])
+
+    assert length(String.split(html, "10 × 15 cm")) == 2
+  end
+
+  test "a size with mixed dimensions shows each card's own" do
+    html =
+      render_drawer([
+        card("Aruba", :large, "4.90", nil, "10 × 15"),
+        card("Kira", :large, "4.90", nil, "12 × 17")
+      ])
+
+    assert length(String.split(html, "10 × 15 cm")) == 2
+    assert length(String.split(html, "12 × 17 cm")) == 2
   end
 end

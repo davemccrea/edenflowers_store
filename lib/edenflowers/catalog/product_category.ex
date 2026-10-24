@@ -30,7 +30,7 @@ defmodule Edenflowers.Catalog.ProductCategory do
 
   actions do
     defaults [:read, :destroy, :create, :update]
-    default_accept [:slug, :visibility, :add_on, :name, :description, :translations]
+    default_accept [:slug, :visibility, :add_on, :product_type, :name, :description, :translations]
 
     read :public do
       filter expr(visibility == :public)
@@ -73,6 +73,8 @@ defmodule Edenflowers.Catalog.ProductCategory do
     # Add-ons, like cards and chocolate, go with flowers: a cart of only
     # add-ons can't be checked out, as delivering one alone isn't worth it.
     attribute :add_on, :boolean, allow_nil?: false, default: false
+
+    attribute :product_type, Edenflowers.Catalog.ProductType, allow_nil?: false, default: :flowers
   end
 
   relationships do

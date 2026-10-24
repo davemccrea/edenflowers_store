@@ -96,6 +96,7 @@ Repo.transaction(fn ->
       name: "Plants",
       slug: "plants",
       visibility: :public,
+      product_type: :plant,
       description: "Potted greenery and houseplants for the home, chosen for their character.",
       translations: %{
         "sv-FI": %{
@@ -116,6 +117,7 @@ Repo.transaction(fn ->
       slug: "cards",
       visibility: :hidden,
       add_on: true,
+      product_type: :card,
       description: "Thoughtfully designed greeting cards for every occasion and sentiment.",
       translations: %{
         "sv-FI": %{
@@ -132,6 +134,7 @@ Repo.transaction(fn ->
       name: "Pre-Loved",
       slug: "pre-loved",
       visibility: :public,
+      product_type: :other,
       description: "Curated vintage and gently used items finding new homes and stories.",
       translations: %{
         "sv-FI": %{
