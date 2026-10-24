@@ -42,8 +42,8 @@ defmodule EdenflowersWeb.CardDrawer do
           <div class="flex items-end justify-between gap-3">
             <div class="flex flex-col gap-1">
               <h3 class="eyebrow text-base-content/70">{size_label(size)}</h3>
-              <span :if={character_limit_label(size)} class="text-base-content/70 text-sm">
-                {character_limit_label(size)}
+              <span :if={message_room_label(size)} class="text-base-content/70 text-sm">
+                {message_room_label(size)}
               </span>
             </div>
             <span :if={shared_price} class="font-serif text-lg">{Edenflowers.Format.currency(shared_price, @locale)}</span>
@@ -103,10 +103,10 @@ defmodule EdenflowersWeb.CardDrawer do
   defp size_label(:large), do: gettext("Large")
   defp size_label(nil), do: ""
 
-  defp character_limit_label(nil), do: nil
-
-  defp character_limit_label(size) do
-    max_length = ProductVariantSize.max_message_length(size)
-    ~t"Up to #{max_length} characters"
-  end
+  # Words, not a character count: the counter under the message shows the
+  # exact limit, and a word count would differ from language to language.
+  defp message_room_label(:small), do: ~t"Room for a short note"
+  defp message_room_label(:medium), do: ~t"Room for a few lines"
+  defp message_room_label(:large), do: ~t"Room for a longer message"
+  defp message_room_label(nil), do: nil
 end
