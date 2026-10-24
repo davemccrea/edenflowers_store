@@ -152,6 +152,7 @@ defmodule Edenflowers.MixProject do
         "phx.digest"
       ],
       precommit: [
+        &check_critical_advisories/1,
         "compile --warnings-as-errors",
         "ash.codegen --check",
         "deps.unlock --check-unused",
@@ -160,5 +161,16 @@ defmodule Edenflowers.MixProject do
         "test"
       ]
     ]
+  end
+
+  # hex.audit fails on any advisory; only critical ones should block a push or deploy.
+  defp check_critical_advisories(_args) do
+    {output, status} = System.cmd("mix", ["hex.audit"], stderr_to_stdout: true)
+    [unignored | _] = String.split(output, "Ignored advisories:")
+
+    if status != 0 and unignored =~ "(CRITICAL)" do
+      Mix.shell().info(output)
+      Mix.raise("Dependencies have critical security advisories")
+    end
   end
 end
