@@ -17,11 +17,14 @@ defmodule Mix.Tasks.PrintEmails do
 
   @impl Mix.Task
   def run(args) do
+    # Rendering needs the endpoint for its URLs, but never a running queue.
+    Mix.Task.run("app.config")
+    Application.put_env(:edenflowers, Oban, Keyword.put(Application.fetch_env!(:edenflowers, Oban), :testing, :manual))
     Mix.Task.run("app.start")
 
     for lang <- if(args == [], do: ["sv", "fi", "en"], else: args) do
       locale = Map.get(@locales, lang) || Mix.raise("Unknown language #{lang}, expected sv, fi or en")
-      Mix.shell().info("# #{locale}\n")
+      Mix.shell().info("# Every email in #{locale}\n")
 
       for {email_type, scenario, _builder, email} <- Edenflowers.Email.Previews.all(locale) do
         Mix.shell().info("## #{email_type}: #{scenario}\n\nSubject: #{email.subject}\n\n#{email.text_body}\n")
