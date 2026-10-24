@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           action={:admin_list}
           actor={@current_user}
           search={[
-            label: ~t"Expense",
+            label: ~t"Search",
             placeholder: ~t"Search vendor or description…",
             fn: &search_expenses/3
           ]}
@@ -89,7 +89,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             :let={expense}
             field="confidence"
             sort
-            filter={[type: :select, label: ~t"Confidence", prompt: ~t"All", options: confidence_options()]}
+            filter={[type: :select, label: ~t"Scan confidence", prompt: ~t"All", options: confidence_options()]}
             label={~t"Confidence"}
             class="max-sm:hidden"
           >

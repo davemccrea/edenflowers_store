@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
           actor={@current_user}
           query_opts={[load: [:cheapest_price, :product_category, :product_variants]]}
           search={[
-            label: ~t"Product",
+            label: ~t"Search",
             placeholder: ~t"Search name…",
             fn: &search_products/3
           ]}

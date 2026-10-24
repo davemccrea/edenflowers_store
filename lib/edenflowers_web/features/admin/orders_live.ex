@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Admin.OrdersLive do
   @moduledoc """
-  Searchable, sortable admin order list. It opens on unfulfilled orders,
-  soonest fulfillment date first.
+  Searchable, sortable admin order list. It opens on open orders, soonest
+  fulfillment date first.
   """
 
   use EdenflowersWeb, :live_view
@@ -14,8 +14,8 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   alias EdenflowersWeb.Admin.DefaultTableView
   alias EdenflowersWeb.Layouts
 
-  # Unfulfilled orders, soonest first, so overdue ones lead.
-  @default_view %{"fulfillment_status" => "pending", "sort" => "fulfillment_date"}
+  # Open orders, soonest first, so overdue ones lead.
+  @default_view %{"open" => "true", "sort" => "fulfillment_date"}
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           action={:admin_list}
           actor={@current_user}
           search={[
-            label: ~t"Order",
+            label: ~t"Search",
             placeholder: ~t"Search orders…",
             fn: &search_orders/3
           ]}
@@ -64,6 +64,14 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           theme={EdenflowersWeb.Admin.CinderTheme}
           click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
         >
+          <:filter
+            field="open"
+            type={:select}
+            label={~t"Show"}
+            prompt={~t"All orders"}
+            options={[{~t"Still to do", "true"}]}
+            fn={&open_orders/2}
+          />
           <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
             <.link
               navigate={~p"/admin/orders/#{order.id}"}
@@ -92,12 +100,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             :let={order}
             field="fulfillment_status"
             sort
-            filter={[
-              type: :select,
-              label: ~t"Fulfillment status",
-              prompt: ~t"All",
-              options: fulfillment_status_options()
-            ]}
             label={~t"Fulfillment"}
           >
             <.fulfillment_status_badge status={order.fulfillment_status} />
@@ -108,7 +110,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             sort
             filter={[
               type: :select,
-              label: ~t"Payment status",
+              label: ~t"Payment",
               prompt: ~t"All",
               options: payment_status_options()
             ]}
@@ -126,7 +128,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             sort
             filter={[
               type: :select,
-              label: ~t"Fulfillment method",
+              label: ~t"Delivery or pickup",
               prompt: ~t"All",
               options: fulfillment_method_options()
             ]}
@@ -149,6 +151,18 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     do: Date.before?(date, today)
 
   defp overdue?(_order, _today), do: false
+
+  # Open means still to make or still to be paid for: not cancelled, and not
+  # fulfilled unless the payment is still pending.
+  defp open_orders(query, _filter) do
+    require Ash.Query
+
+    Ash.Query.filter(
+      query,
+      fulfillment_status == :pending or
+        (fulfillment_status == :fulfilled and payment_status == :pending)
+    )
+  end
 
   defp search_orders(query, _searchable_columns, search_term) do
     require Ash.Query
@@ -183,14 +197,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     end)
   end
 
-  defp fulfillment_status_options, do: select_options(Order.FulfillmentStatus)
-
-  defp select_options(enum), do: Enum.map(enum.values(), &{status_label(&1), &1})
-
   defp status_label(:paid), do: ~t"Paid"
   defp status_label(:refunded), do: ~t"Refunded"
-  defp status_label(:pending), do: ~t"Pending"
-  defp status_label(:cancelled), do: ~t"Cancelled"
-  defp status_label(:fulfilled), do: ~t"Fulfilled"
-  defp status_label(value), do: to_string(value)
 end

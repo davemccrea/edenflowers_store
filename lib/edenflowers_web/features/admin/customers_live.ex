@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
           action={:admin_list}
           actor={@current_user}
           search={[
-            label: ~t"Customer",
+            label: ~t"Search",
             placeholder: ~t"Search name or email…",
             fn: &search_customers/3
           ]}
