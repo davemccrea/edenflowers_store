@@ -34,9 +34,7 @@ map-emails:
     mkdir -p tmp
     mix compile --no-all-warnings > /dev/null
     previews=$(mix print_emails)
-    # Claude runs on the subscription, not the app's API key.
-    unset ANTHROPIC_API_KEY
-    map=$(claude -p --allowedTools "Read,Grep,Glob" < docs/agents/email-map.md)
+    map=$(claude -p --allowedTools "Read,Grep,Glob" < docs/agents/email-map.md) || { echo "$map" >&2; exit 1; }
     printf '%s\n\n%s\n' "$map" "$previews" > tmp/emails.md
     echo "Wrote tmp/emails.md"
 
@@ -56,11 +54,17 @@ forward-stripe:
 open-issues:
     backlog browser
 
-# Start Claude Code on a subscription: save each account's `claude setup-token` output as ~/.config/claude-accounts/<account>
+# Make plain `claude` in this repo use a subscription: save each account's `claude setup-token` output as ~/.config/claude-accounts/<account>
 [group('development')]
-[positional-arguments]
-claude account *args:
-    @token=$(cat ~/.config/claude-accounts/"$1") && shift && unset ANTHROPIC_API_KEY && CLAUDE_CODE_OAUTH_TOKEN="$token" exec claude "$@"
+claude account:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    token=$(cat ~/.config/claude-accounts/{{ account }})
+    settings=.claude/settings.local.json
+    # New worktrees copy this gitignored file from main, so they inherit the account.
+    { cat "$settings" 2>/dev/null || echo '{}'; } | jq --arg token "$token" '.env.CLAUDE_CODE_OAUTH_TOKEN = $token' > "$settings.new"
+    mv "$settings.new" "$settings"
+    echo "claude in this repo now uses {{ account }}"
 
 # Drop and migrate the local dev and test databases
 [group('development')]

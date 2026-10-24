@@ -69,7 +69,8 @@ if config_env() in [:prod, :dev] do
 
   config :edenflowers,
          :anthropic_api_key,
-         System.get_env("ANTHROPIC_API_KEY") || raise("environment variable ANTHROPIC_API_KEY is missing.")
+         System.get_env("EDENFLOWERS_ANTHROPIC_API_KEY") ||
+           raise("environment variable EDENFLOWERS_ANTHROPIC_API_KEY is missing.")
 
   config :edenflowers,
          :mailer_from_address,
