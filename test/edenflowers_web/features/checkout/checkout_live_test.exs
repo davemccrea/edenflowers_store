@@ -489,6 +489,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       # on the totals breakdown and remove it if they change their mind.
       |> assert_has("#checkout-line-items", text: card_product.name)
       |> assert_has("#checkout-line-items-remove-#{card.id}")
+      # The checkout has the card picker, so the card line opens it.
+      |> assert_has("[data-testid='cart-change-card-button']", text: card_product.name)
       # Cards are always quantity 1, so the +/- controls do not apply.
       |> refute_has("#checkout-line-items-increment-#{card.id}")
       |> refute_has("#checkout-line-items-decrement-#{card.id}")

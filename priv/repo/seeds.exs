@@ -71,6 +71,7 @@ seed_refund = fn payment, fake_id ->
 end
 
 Code.eval_file("seeds/production.exs", __DIR__)
+Code.eval_file("seeds/cards.exs", __DIR__)
 
 # Ash.Seed skips the actions, so draw from the same sequence they use.
 next_reference = fn ->
@@ -139,10 +140,6 @@ ProductVariant
 
 create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 3"}, bouquet_prices)
 create_product.(%{product_category_id: category.("plants").id, name: "Plant"}, small: "18", medium: "32", large: "55")
-
-# The Cards category keeps them out of the store ribbon, but they can still be
-# added during checkout.
-create_product.(%{product_category_id: category.("cards").id, name: "Card"}, small: "5", medium: "7", large: "10")
 
 # One of a kind, and the small one has sold, so the Overview flags it as sold out.
 pre_loved =
@@ -466,7 +463,7 @@ line_item = fn product_name, size, quantity ->
 end
 
 # Checkout enforces one card per order (SwapCardLineItem).
-card_line_item = fn -> %{line_item.("Card", :medium, 1) | is_card: true} end
+card_line_item = fn -> %{line_item.("Dahlias", :medium, 1) | is_card: true} end
 
 # Inside the free delivery radius.
 nearby_address = %{
@@ -937,7 +934,10 @@ place_custom.(%{
   recipient_name: "Funeral of Gunnar Holm",
   card_message: "Tack för allt, vila i frid.",
   florist_note: "White roses and lilies only. The funeral home collects at 10:00, service at 11:00.",
-  line_items: [custom_line.("Funeral spray, white roses and lilies", "120.00"), catalogue_line.("Card", :large, 1)]
+  line_items: [
+    custom_line.("Funeral spray, white roses and lilies", "120.00"),
+    catalogue_line.("Condolence", :medium, 1)
+  ]
 })
 
 # Delivered to a phone-only customer who promised to pay next week.

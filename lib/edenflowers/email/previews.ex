@@ -86,7 +86,25 @@ defmodule Edenflowers.Email.Previews do
 
       {"Order receipt", title, :order_confirmation,
        Email.order_confirmation(order(Map.merge(paid_attrs, attrs), locale))}
-    end
+    end ++
+      [
+        {"Order receipt", "gift with a card", :order_confirmation,
+         Email.order_confirmation(
+           with_card(order(Map.merge(paid_in_full(), %{card_message: card_message(locale)}), locale))
+         )}
+      ]
+  end
+
+  # Checkout adds the card as its own line, named for its design alone.
+  defp with_card(order) do
+    card = %{quantity: 1, product_name: "Aruba", subtotal: Decimal.new("4.90"), is_card: true}
+
+    %{
+      order
+      | line_items: order.line_items ++ [card],
+        grand_total: Decimal.add(order.grand_total, card.subtotal),
+        amount_paid: Decimal.add(order.amount_paid, card.subtotal)
+    }
   end
 
   defp order_details(locale) do

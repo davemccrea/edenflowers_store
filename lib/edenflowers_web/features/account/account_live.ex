@@ -500,8 +500,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp order_title(%{line_items: []}), do: ~t"Order"
   defp order_title(order), do: Enum.map_join(order.line_items, ", ", &line_item_label/1)
 
-  defp line_item_label(%{quantity: 1} = item), do: item.product_name
-  defp line_item_label(item), do: "#{item.quantity} × #{item.product_name}"
+  defp line_item_label(%{quantity: 1} = item), do: Format.line_item_name(item)
+  defp line_item_label(item), do: "#{item.quantity} × #{Format.line_item_name(item)}"
 
   # Only the empty state links to it, so it's looked up only then. The store has
   # no subscribable filter, so several products send the customer to the store.

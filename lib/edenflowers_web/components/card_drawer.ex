@@ -12,13 +12,14 @@ defmodule EdenflowersWeb.CardDrawer do
   attr :selected_variant_id, :string, default: nil
 
   def card_drawer(assigns) do
-    # The query sorts by size, so chunking keeps Small, Medium, Large in order.
+    # Sizes are stored as text, so the database would sort Large before Small.
     size_groups =
-      assigns.variants
-      |> Enum.chunk_by(& &1.size)
-      |> Enum.map(fn [first | _] = variants ->
-        {first.size, Enum.min_by(variants, & &1.price, Decimal).price, variants}
-      end)
+      for size <- ProductVariantSize.values() ++ [nil],
+          variants = Enum.filter(assigns.variants, &(&1.size == size)),
+          variants != [] do
+        variants = Enum.sort_by(variants, &{is_nil(&1.product.position), &1.product.position, &1.product.name})
+        {size, shared_price(variants), variants}
+      end
 
     assigns = assign(assigns, :size_groups, size_groups)
 
@@ -37,7 +38,7 @@ defmodule EdenflowersWeb.CardDrawer do
       </header>
 
       <div class="flex flex-col gap-6 p-4 sm:p-8" data-testid="card-drawer">
-        <div :for={{size, min_price, variants} <- @size_groups} class="flex flex-col gap-3">
+        <div :for={{size, shared_price, variants} <- @size_groups} class="flex flex-col gap-3">
           <div class="flex items-end justify-between gap-3">
             <div class="flex flex-col gap-1">
               <h3 class="eyebrow text-base-content/70">{size_label(size)}</h3>
@@ -45,7 +46,7 @@ defmodule EdenflowersWeb.CardDrawer do
                 {character_limit_label(size)}
               </span>
             </div>
-            <span class="font-serif text-lg">{Edenflowers.Format.currency(min_price, @locale)}</span>
+            <span :if={shared_price} class="font-serif text-lg">{Edenflowers.Format.currency(shared_price, @locale)}</span>
           </div>
           <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <button
@@ -73,14 +74,14 @@ defmodule EdenflowersWeb.CardDrawer do
                 width={240}
                 height={240}
                 sizes="(min-width: 1024px) 10rem, 40vw"
-                class="aspect-square w-full object-cover"
+                crop_type="fit"
+                class="aspect-square w-full object-contain p-2"
               />
               <%!-- Card names run to 16 characters, wider than a two-column tile on a phone. --%>
               <span class="font-serif text-balance hyphens-auto wrap-break-word w-full text-center text-lg leading-snug">
                 {variant.product.name}
               </span>
-              <%!-- Cards of one size usually share a price, already shown in the heading. --%>
-              <span :if={not Decimal.equal?(variant.price, min_price)} class="font-serif text-lg">
+              <span :if={is_nil(shared_price)} class="font-serif text-lg">
                 {Edenflowers.Format.currency(variant.price, @locale)}
               </span>
             </button>
@@ -89,6 +90,12 @@ defmodule EdenflowersWeb.CardDrawer do
       </div>
     </.drawer>
     """
+  end
+
+  # The heading shows the price only when every card of the size costs it,
+  # so one dearer card can't make the whole size look cheaper.
+  defp shared_price([first | rest]) do
+    if Enum.all?(rest, &Decimal.equal?(&1.price, first.price)), do: first.price
   end
 
   defp size_label(:small), do: gettext("Small")
