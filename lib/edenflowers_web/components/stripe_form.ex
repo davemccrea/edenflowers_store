@@ -374,6 +374,12 @@ defmodule EdenflowersWeb.StripeForm do
                 lineHeight: "24px",
                 marginBottom: "4px",
               },
+              // The note under a redirect method like MobilePay.
+              ".Block": {
+                backgroundColor: base100,
+                border: `1px solid ${base300}`,
+                boxShadow: "none",
+              },
               ".Tab": {
                 backgroundColor: base100,
                 border: `1px solid ${base300}`,
