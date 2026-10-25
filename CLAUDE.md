@@ -2,7 +2,7 @@
 
 ## Project
 
-- Call `source .env` before running mix.
+- Mix loads `.env` itself (`config/config.exs`), so don't `source .env` before mix commands.
 - After the initial prompt, ask "Shall I create a worktree for this session?". A worktree is optional. If yes, use `wt switch --create <branch> --no-cd` (Worktrunk) to create it, then move the session into it with `EnterWorktree({path: <worktree path>})`. Don't work in it by `cd` or absolute paths from main: the session stays rooted in main and the status bar shows main's dev server link instead of the worktree's. `.config/wt.toml` gives each worktree its own `.env`, port and seeded database. When the session's work is done, land it with `wt merge` from inside the worktree: it squashes, rebases onto `main`, fast-forwards (no merge commit) and removes the worktree, which also drops its databases and stops its imgproxy. Use `--no-squash` to keep a bigger branch's separate commits. Never `--no-ff` or a plain `git merge`. If the rebase conflicts on Ash migrations or snapshots, regenerate them rather than hand-resolving. To abandon a worktree without merging, use `wt remove`.
 - Start the dev server with `just dev`, never `mix phx.server`: only `just dev` starts the local imgproxy and points `IMGPROXY_PREFIX` at it, so uploaded photos show.
 - When giving a worktree's dev server URL, use its `PHX_HOST` and `PORT` from the worktree's `.env`, e.g. `http://faq-sidebar-52s.localhost:16381/en/faq`, never `http://localhost:16381/en/faq`. The plain localhost URL shares cookies with main and other worktrees.
