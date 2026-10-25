@@ -173,6 +173,27 @@ defmodule Edenflowers.Orders.QuoteEnteredTest do
     assert_priced_as_saved(price, edited)
   end
 
+  test "an edit that drops Jennie's own fee prices the stored distance, as saving does", ctx do
+    stub_distance(5000)
+
+    params =
+      params(ctx, %{
+        "fulfillment_option_id" => ctx.delivery.id,
+        "delivery_address" => "Kyrkvägen 5",
+        "fulfillment_fee_override" => "12.50"
+      })
+
+    {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
+    order = Orders.get_order_for_admin!(order.id, actor: ctx.admin)
+    edit = Map.put(params, "fulfillment_fee_override", "")
+
+    price = Orders.quote_entered_order!(order, edit, nil, actor: ctx.admin)
+    {:ok, edited} = Orders.edit_order(order, edit, actor: ctx.admin)
+
+    assert Decimal.equal?(price.fulfillment_fee, "10.00")
+    assert_priced_as_saved(price, edited)
+  end
+
   test "leaves out lines not filled in, and the fee until it can be priced", ctx do
     params =
       params(ctx, %{
