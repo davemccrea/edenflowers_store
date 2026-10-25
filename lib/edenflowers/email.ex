@@ -255,7 +255,7 @@ defmodule Edenflowers.Email do
         Templates.subscription_set_up(%{
           subscription: subscription,
           pickup?: subscription.fulfillment_option.fulfillment_method == :pickup,
-          size: EdenflowersWeb.Admin.Components.variant_size_label(subscription.product_variant.size),
+          size: EdenflowersWeb.CoreComponents.variant_size_label(subscription.product_variant.size),
           interval: EdenflowersWeb.Checkout.Fields.interval_label(subscription.interval_weeks),
           price: Format.currency(subscription_price(subscription), subscription.locale),
           charge_days: Subscription.lead_days(),

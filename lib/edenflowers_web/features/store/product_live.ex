@@ -8,7 +8,6 @@ defmodule EdenflowersWeb.Store.ProductLive do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.LineItem.Changes.KeepSubscriptionAlone
   alias Edenflowers.Orders.Subscription
-  alias EdenflowersWeb.Admin.Components, as: AdminComponents
   alias EdenflowersWeb.Checkout.Fields
 
   alias Edenflowers.Catalog
@@ -104,7 +103,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
               <.image
                 data-testid="product-image"
                 src={@photo_slug}
-                alt={"#{@product.name} #{AdminComponents.variant_size_label(@selected_variant.size)}"}
+                alt={"#{@product.name} #{variant_size_label(@selected_variant.size)}"}
                 width={1000}
                 height={1250}
                 sizes="(min-width: 768px) 480px, 100vw"
@@ -175,7 +174,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       data-testid={"variant-option-#{variant.size}"}
                     />
                     <span class="size-option__label font-serif text-xl">
-                      {AdminComponents.variant_size_label(variant.size)}
+                      {variant_size_label(variant.size)}
                     </span>
                     <span class="size-option__price text-base-content font-serif ml-2 text-lg">
                       <%= if sold_out?(variant) do %>

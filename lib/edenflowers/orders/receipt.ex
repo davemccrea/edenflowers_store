@@ -158,7 +158,7 @@ defmodule Edenflowers.Orders.Receipt do
   defp line_item_payload(item, locale) do
     %{
       product_name: item.product_name,
-      variant_size: variant_size_label(item.variant_size),
+      variant_size: item.variant_size && size_label(item.variant_size, locale),
       quantity: item.quantity,
       unit_price_ex_tax: Format.currency(item.unit_price_ex_tax, locale),
       tax_rate: Format.percentage(item.tax_rate, locale),
@@ -204,8 +204,13 @@ defmodule Edenflowers.Orders.Receipt do
     end
   end
 
-  defp variant_size_label(nil), do: nil
-  defp variant_size_label(size), do: size |> to_string() |> String.capitalize()
+  # The label is translated in the order's locale, not whatever locale the
+  # process rendering the PDF happens to be in.
+  defp size_label(size, locale) do
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+      EdenflowersWeb.CoreComponents.variant_size_label(size)
+    end)
+  end
 
   # `translations.toml` keys are two-letter subtags, but `order.locale` is e.g.
   # "sv-FI". `parse!/1` (not `validate_locale/1`, which is gated by

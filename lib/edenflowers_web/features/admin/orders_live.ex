@@ -162,14 +162,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     |> Enum.map(fn value -> {fulfillment_method_label(value), value} end)
   end
 
-  # A placed order whose payment is still pending is unpaid, so the filter says so.
   defp payment_status_options do
-    Enum.map(Order.Types.PaymentStatus.values(), fn
-      :pending -> {~t"Unpaid", :pending}
-      value -> {status_label(value), value}
-    end)
+    Enum.map(Order.Types.PaymentStatus.values(), &{payment_status_label(&1), &1})
   end
-
-  defp status_label(:paid), do: ~t"Paid"
-  defp status_label(:refunded), do: ~t"Refunded"
 end

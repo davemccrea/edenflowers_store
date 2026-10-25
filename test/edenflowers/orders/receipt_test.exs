@@ -66,6 +66,14 @@ defmodule Edenflowers.Orders.ReceiptTest do
                "Saturday 16.5.2026"
     end
 
+    test "translates the size label into the order's locale" do
+      [sized, unsized] = Receipt.build_payload(build_delivery_order(locale: "fi")).line_items
+
+      assert sized.variant_size == "Keskikokoinen"
+      # The template drops the bracket when the line has no size.
+      assert unsized.variant_size == nil
+    end
+
     test "renders discount as null when no promotion is applied" do
       order = build_delivery_order(locale: "en-GB", with_promotion: false)
       payload = Receipt.build_payload(order)
