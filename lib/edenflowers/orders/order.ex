@@ -359,14 +359,32 @@ defmodule Edenflowers.Orders.Order do
   end
 
   relationships do
-    belongs_to :user, Edenflowers.Accounts.User
-    belongs_to :fulfillment_option, Edenflowers.Fulfillment.FulfillmentOption
-    belongs_to :promotion, Edenflowers.Pricing.Promotion
-    # The Subscription this order started or was created by.
-    belongs_to :subscription, Edenflowers.Orders.Subscription
-    has_many :line_items, Edenflowers.Orders.LineItem
+    belongs_to :user, Edenflowers.Accounts.User do
+      description "The Customer's account: found or created from customer_email, or attached with `customer_id` " <>
+                    "when Jennie places a Custom Order. Signed in or not. Nil for a cart before its first step, " <>
+                    "or a Custom Order with no email and no Customer picked."
+    end
+
+    belongs_to :fulfillment_option, Edenflowers.Fulfillment.FulfillmentOption do
+      description "The delivery or pickup option chosen. Its method, tax rate and name are snapshotted onto the " <>
+                    "order, so read those rather than the live option for a placed order."
+    end
+
+    belongs_to :promotion, Edenflowers.Pricing.Promotion do
+      description "The promotion whose code the customer entered. Its rate, name and minimum are snapshotted onto " <>
+                    "the order; see promotion_applied? for whether it discounts the cart."
+    end
+
+    belongs_to :subscription, Edenflowers.Orders.Subscription do
+      description "The Subscription this order started, or created it as an Occurrence. Nil for a one-off order."
+    end
+
+    has_many :line_items, Edenflowers.Orders.LineItem do
+      description "What the order is for: catalogue items, Jennie's own priced items on a Custom Order, and any card."
+    end
 
     has_many :payments, Edenflowers.Payments.Payment do
+      description "Every Payment and refund on the order, by any method, oldest first. Refunds are negative."
       sort paid_at: :asc
     end
   end
@@ -377,11 +395,15 @@ defmodule Edenflowers.Orders.Order do
               expr(
                 fulfillment_status == :fulfilled and balance > 0 and
                   fulfillment_date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
-              )
+              ) do
+      description "Handed over more than 14 days ago (Payment.overdue_after_days) and still owing a Balance. " <>
+                    "Lists the order under Payment overdue on the admin Overview."
+    end
 
-    calculate :customer_first_name, :string, {AccountCalculations.FirstName, source: :customer_name}
+    calculate :customer_first_name, :string, {AccountCalculations.FirstName, source: :customer_name} do
+      description "A best guess at the first name in customer_name, for greeting the Customer in emails."
+    end
 
-    # When the order's time or window starts, in shop time. Nil when any time that day will do.
     calculate :fulfillment_starts_at,
               :utc_datetime,
               expr(
@@ -391,32 +413,44 @@ defmodule Edenflowers.Orders.Order do
                   fulfillment_time_start,
                   ^Edenflowers.ShopTime.timezone()
                 )
-              )
+              ) do
+      description "When the order's time or window starts, read as Helsinki shop time. Nil when any time that " <>
+                    "day will do. The remind_shop job uses it."
+    end
 
-    calculate :recipient_first_name, :string, {AccountCalculations.FirstName, source: :recipient_name}
+    calculate :recipient_first_name, :string, {AccountCalculations.FirstName, source: :recipient_name} do
+      description "A best guess at the first name in recipient_name, for checkout and emails that name the Recipient."
+    end
 
-    # `distance` is snapshotted in metres; expose it as a kilometre string for
-    # display, and only for deliveries.
-    calculate :distance_km, :string, Calculations.DistanceKm
+    calculate :distance_km, :string, Calculations.DistanceKm do
+      description "The snapshotted delivery distance, stored in metres, as a kilometre string rounded to a tenth " <>
+                    "and with no trailing zero: 12345 is \"12.3\", 5000 is \"5\". Nil for a pickup or when no " <>
+                    "distance was measured."
+    end
 
-    # A Custom Order may be saved before Jennie has a number to call at the
-    # door: the recipient's for a gift, otherwise the customer's own.
     calculate :missing_delivery_phone?,
               :boolean,
               expr(
                 fulfillment_method == :delivery and is_nil(recipient_phone_number) and
                   (gift or is_nil(customer_phone_number))
-              )
+              ) do
+      description "A delivery with no number to call at the door: the Recipient's for a gift, otherwise " <>
+                    "the Customer's own. A Custom Order may be saved before Jennie has one."
+    end
 
-    calculate :promotion_applied?, :boolean, Calculations.PromotionApplied
+    calculate :promotion_applied?, :boolean, Calculations.PromotionApplied do
+      description "Whether the promotion actually discounts the cart. A code stays on the order when the cart " <>
+                    "drops below its minimum, but only discounts while the cart meets it."
+    end
 
     # Derived from the cart rather than stored, so adding or removing a
-    # free-delivery product changes it with nothing to reprice. Jennie's own
-    # fee is charged as she set it.
-    calculate :fulfillment_fee, :decimal, expr(fee_for_cart(free_delivery?: free_delivery?))
+    # free-delivery product changes it with nothing to reprice.
+    calculate :fulfillment_fee, :decimal, expr(fee_for_cart(free_delivery?: free_delivery?)) do
+      description "The delivery or pickup fee charged, in euros: the quoted fee, or 0 when a free-delivery " <>
+                    "product is in the cart and the address is in the free delivery zone. Jennie's override is " <>
+                    "charged as she set it. Loaded on every read."
+    end
 
-    # The rule itself, with the cart passed in, so a quote that isn't on an
-    # order yet can be charged the same way.
     calculate :fee_for_cart,
               :decimal,
               expr(
@@ -426,35 +460,70 @@ defmodule Edenflowers.Orders.Order do
                   else: quoted_fulfillment_fee
                 )
               ) do
+      description "The fulfillment_fee rule with the cart's free_delivery? passed in, so a Custom Order quote " <>
+                    "that isn't saved yet is charged the same way."
+
       argument :free_delivery?, :boolean, allow_nil?: false, allow_expr?: true
     end
 
-    calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0))
-    calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: kept_amount, else: grand_total)
-    calculate :committed?, :boolean, expr(state == :placed)
-    calculate :cancelled?, :boolean, expr(fulfillment_status == :cancelled)
-    calculate :cancellable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
-    calculate :refund_on_cancelling, :decimal, expr(if amount_held > 0, do: amount_held, else: 0)
-    calculate :editable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
-    calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
+    calculate :grand_total, :decimal, expr(items_total + (fulfillment_fee || 0)) do
+      description "The order's total in euros, VAT included: discounted lines plus the fulfillment fee. Stays as " <>
+                    "ordered after a cancellation, for the receipt."
+    end
 
-    # Only a Custom Order no money has moved for. Any other is cancelled
-    # instead, so the accounts stay whole.
-    calculate :deletable?, :boolean, expr(origin == :custom and not exists(payments, true))
+    calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: kept_amount, else: grand_total) do
+      description "The Total due in euros, which the Balance is worked out from: the grand total, or once " <>
+                    "cancelled only what Jennie kept."
+    end
 
-    # Still to make, or made but still to be paid for.
+    calculate :committed?, :boolean, expr(state == :placed) do
+      description "Placed, so money can be owed on it. A cart in checkout owes nothing."
+    end
+
+    calculate :cancelled?, :boolean, expr(fulfillment_status == :cancelled) do
+      description "Cancelled by Jennie or by the Customer."
+    end
+
+    calculate :cancellable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
+      description "Whether Jennie can cancel it now: placed and not yet fulfilled or cancelled."
+    end
+
+    calculate :refund_on_cancelling, :decimal, expr(if amount_held > 0, do: amount_held, else: 0) do
+      description "What cancelling now would refund in euros unless Jennie keeps some: all the money still held."
+    end
+
+    calculate :editable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
+      description "Whether Jennie can still edit it in the admin: placed and still to make."
+    end
+
+    calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
+      description "Whether Jennie can mark it fulfilled: placed and still to make."
+    end
+
+    calculate :deletable?, :boolean, expr(origin == :custom and not exists(payments, true)) do
+      description "Only a Custom Order no money has moved for can be deleted. Any other is cancelled instead, " <>
+                    "so the accounts stay whole."
+    end
+
     calculate :open?,
               :boolean,
-              expr(fulfillment_status == :pending or (fulfillment_status == :fulfilled and payment_status == :pending))
+              expr(fulfillment_status == :pending or (fulfillment_status == :fulfilled and payment_status == :pending)) do
+      description "Still to make, or made but still to be paid for. The admin orders table's Open filter."
+    end
 
-    calculate :overdue?, :boolean, expr(fulfillment_status == :pending and fulfillment_date < helsinki_today())
+    calculate :overdue?, :boolean, expr(fulfillment_status == :pending and fulfillment_date < helsinki_today()) do
+      description "Still to make, though its fulfillment date has passed in Helsinki time. Flagged in the admin."
+    end
 
     calculate :upcoming?,
               :boolean,
               expr(
                 fulfillment_status == :pending and customer_status != :refunded and
                   (is_nil(fulfillment_date) or fulfillment_date >= helsinki_today())
-              )
+              ) do
+      description "Whether the Customer's account lists it under upcoming rather than past: still to make, " <>
+                    "dated today or later in Helsinki time, or undated."
+    end
 
     calculate :customer_status,
               __MODULE__.Types.CustomerStatus,
@@ -472,9 +541,11 @@ defmodule Edenflowers.Orders.Order do
                   fulfillment_method == :pickup -> :pickup_scheduled
                   true -> :delivery_scheduled
                 end
-              )
+              ) do
+      description "Where the order stands as its Customer reads it in their account, e.g. arriving today or " <>
+                    "collected. A past date Jennie hasn't marked fulfilled stays scheduled."
+    end
 
-    # What Jennie may search an order by: who it's for, its reference, or where it goes.
     calculate :matches?,
               :boolean,
               expr(
@@ -483,16 +554,21 @@ defmodule Edenflowers.Orders.Order do
                   contains(customer_instagram, ^arg(:term)) or
                   contains(recipient_name, ^arg(:term)) or contains(delivery_address, ^arg(:term))
               ) do
+      description "The admin orders search, case-insensitive: whether the term appears in the Customer's name, " <>
+                    "email, phone or Instagram, the reference, the Recipient's name or the delivery address."
+
       argument :term, :ci_string, allow_nil?: false
     end
 
-    # Not for an order paid by invoice: Jennie's invoice is its reminder.
     calculate :payment_reminder_sendable?,
               :boolean,
               expr(
                 fulfillment_status != :cancelled and (is_nil(payment_terms) or payment_terms != :invoice) and
                   not is_nil(customer_email) and to_collect?
-              )
+              ) do
+      description "Whether Jennie can send a Payment reminder: a Balance to collect, an email to send it to, " <>
+                    "and not on invoice terms, as her invoice is its own reminder."
+    end
 
     calculate :payment_status,
               __MODULE__.Types.PaymentStatus,
@@ -505,44 +581,60 @@ defmodule Edenflowers.Orders.Order do
                   balance <= 0 -> :paid
                   true -> :pending
                 end
-              )
+              ) do
+      description "Paid, pending or refunded, from the Balance and Payments. Nil for a cancelled order that " <>
+                    "never took any money."
+    end
 
-    calculate :paid?, :boolean, expr(committed? and payment_status == :paid and not cancelled?)
+    calculate :paid?, :boolean, expr(committed? and payment_status == :paid and not cancelled?) do
+      description "A placed, uncancelled order with nothing left to pay. The payment link page shows it as paid."
+    end
 
-    calculate :details_emailable?, :boolean, expr(committed? and not cancelled? and not is_nil(customer_email))
+    calculate :details_emailable?, :boolean, expr(committed? and not cancelled? and not is_nil(customer_email)) do
+      description "Whether Jennie can email the order details: placed, not cancelled, and with an email address."
+    end
 
     calculate :fulfillment_confirmation_applicable?,
               :boolean,
-              expr(committed? and not cancelled? and fulfillment_method == :delivery)
+              expr(committed? and not cancelled? and fulfillment_method == :delivery) do
+      description "Whether a Delivered or Left at the door email makes sense for this order at all: a placed, " <>
+                    "uncancelled delivery. Pickups get none."
+    end
 
     calculate :fulfillment_confirmation_sendable?,
               :boolean,
               expr(
                 fulfillment_confirmation_applicable? and fulfillment_status == :fulfilled and not is_nil(customer_email)
-              )
+              ) do
+      description "Whether Jennie can send the fulfillment email again now: a delivery already marked fulfilled " <>
+                    "with an email address."
+    end
 
-    # A custom order is placed before it is paid, and has no receipt until it is.
-    calculate :receipt_available?, :boolean, expr(state == :placed and payment_status == :paid)
+    calculate :receipt_available?, :boolean, expr(state == :placed and payment_status == :paid) do
+      description "Placed and paid. A Custom Order is placed before it is paid, and has no receipt until it is."
+    end
 
-    # Money still owed on a placed order. A fulfilled order can still be unpaid
-    # when the customer pays afterwards.
-    calculate :unpaid?, :boolean, expr(state == :placed and payable?)
+    calculate :unpaid?, :boolean, expr(state == :placed and payable?) do
+      description "Money still owed on a placed order. A fulfilled order can still be unpaid when the customer " <>
+                    "pays afterwards, and an Occurrence whose card was refused is placed unpaid."
+    end
 
-    # Some of the customer's money is still with us: paid, and not all refunded.
-    calculate :holds_money?, :boolean, expr(amount_held > 0)
+    calculate :holds_money?, :boolean, expr(amount_held > 0) do
+      description "Some of the customer's money is still with the shop: paid, and not all refunded."
+    end
 
-    # Jennie has had time to buy flowers for anything closer, so the customer
-    # gets the same notice as for a subscription change. Money paid outside
-    # Stripe can't be refunded through Stripe, so those orders go through her.
     calculate :cancellable_by_customer?,
               :boolean,
               expr(
                 state == :placed and fulfillment_status == :pending and origin == :online and
                   fulfillment_date > date_add(helsinki_today(), ^Subscription.cutoff_days(), :day) and
                   not exists(payments, method != :stripe)
-              )
+              ) do
+      description "Whether the Customer can cancel this Online Order from their account: still to make, on or " <>
+                    "before its Change deadline, and paid only through Stripe so the refund can go back by card. " <>
+                    "Jennie has bought flowers for anything closer."
+    end
 
-    # An Occurrence still to come that its customer can change or call off.
     # The deadline counts from the date the subscription made it for, which is
     # earlier than its fulfillment date when that day was closed.
     calculate :changes_open?,
@@ -551,40 +643,93 @@ defmodule Edenflowers.Orders.Order do
                 fulfillment_date > helsinki_today() and
                   (subscription_date || fulfillment_date) >
                     date_add(helsinki_today(), ^Subscription.cutoff_days(), :day)
-              )
+              ) do
+      description "An Occurrence still to come that its customer can change or call off from their account, " <>
+                    "as its Change deadline hasn't passed."
+    end
 
     calculate :cancellable_until,
               :date,
-              expr(date_add(fulfillment_date, ^(-Subscription.change_deadline_days()), :day))
+              expr(date_add(fulfillment_date, ^(-Subscription.change_deadline_days()), :day)) do
+      description "The Change deadline: the last day the Customer can cancel the order themselves, 3 days before " <>
+                    "its fulfillment date. Shown in the order confirmation and their account."
+    end
 
-    calculate :payment_link_open?, :boolean, expr(not is_nil(payment_link_token) and payable?)
+    calculate :payment_link_open?, :boolean, expr(not is_nil(payment_link_token) and payable?) do
+      description "The order has a Payment Link and something left to pay through it."
+    end
 
-    calculate :vat, :decimal, Vat
+    calculate :vat, :decimal, Vat do
+      description "The VAT included in the grand total, in euros. A placed order reads its snapshotted " <>
+                    "vat_breakdown, so later price or tax rate changes don't rewrite it."
+    end
 
-    # False until step 1 assigns the customer. An aggregate `default` doesn't
-    # cover a nil `user_id`, hence the `if`.
-    calculate :newsletter_offer_hidden?, :boolean, expr(if(customer_newsletter_offer_hidden?, true, false))
+    # An aggregate `default` doesn't cover a nil `user_id`, hence the `if`.
+    calculate :newsletter_offer_hidden?, :boolean, expr(if(customer_newsletter_offer_hidden?, true, false)) do
+      description "Whether checkout stops offering the newsletter discount, as the Customer already subscribed " <>
+                    "or used it. False until checkout's first step assigns the customer."
+    end
 
-    # The cart hides a lone card, so checkout treats it as empty too.
-    calculate :cart_effectively_empty?, :boolean, expr(non_card_line_item_count == 0)
+    calculate :cart_effectively_empty?, :boolean, expr(non_card_line_item_count == 0) do
+      description "The cart has nothing but a card, or nothing at all. The cart hides a lone card, so checkout " <>
+                    "treats it as empty too."
+    end
 
-    # A lone card already reads as an empty cart, so this is for the other add-ons.
-    calculate :add_ons_only?, :boolean, expr(non_card_line_item_count > 0 and non_add_on_line_item_count == 0)
+    calculate :add_ons_only?, :boolean, expr(non_card_line_item_count > 0 and non_add_on_line_item_count == 0) do
+      description "The cart holds only Add-ons, which can't be checked out on their own. A lone card already " <>
+                    "reads as an empty cart, so this is for the other add-ons."
+    end
   end
 
   aggregates do
-    sum :total_items_in_cart, :line_items, :quantity, default: 0
-    sum :items_subtotal, :line_items, :subtotal, default: Decimal.new("0")
-    sum :items_total, :line_items, :total, default: Decimal.new("0")
-    sum :discount, :line_items, :discount, default: Decimal.new("0")
-    count :non_card_line_item_count, :line_items, filter: expr(is_card == false)
-    count :non_add_on_line_item_count, :line_items, filter: expr(product.product_category.add_on == false)
-    exists :free_delivery?, :line_items, filter: expr(free_delivery == true)
-    exists :subscription?, :line_items, filter: expr(not is_nil(interval_weeks))
+    sum :total_items_in_cart, :line_items, :quantity do
+      description "How many items the cart holds, counting quantities, as shown beside the cart."
+      default 0
+    end
+
+    sum :items_subtotal, :line_items, :subtotal do
+      description "The lines' prices times quantities in euros, VAT included, before any promotion discount."
+      default Decimal.new("0")
+    end
+
+    sum :items_total, :line_items, :total do
+      description "The lines' totals in euros, VAT included, after any promotion discount. Excludes the " <>
+                    "fulfillment fee."
+
+      default Decimal.new("0")
+    end
+
+    sum :discount, :line_items, :discount do
+      description "What the promotion takes off the lines, in euros."
+      default Decimal.new("0")
+    end
+
+    count :non_card_line_item_count, :line_items do
+      description "How many lines are something other than the greeting card."
+      filter expr(is_card == false)
+    end
+
+    count :non_add_on_line_item_count, :line_items do
+      description "How many lines are not Add-ons."
+      filter expr(product.product_category.add_on == false)
+    end
+
+    exists :free_delivery?, :line_items do
+      description "Whether any line's product waives the fulfillment fee inside the free delivery zone."
+      filter expr(free_delivery == true)
+    end
+
+    exists :subscription?, :line_items do
+      description "Whether the cart has a subscription line, so paying for it starts a Subscription."
+      filter expr(not is_nil(interval_weeks))
+    end
 
     # Unauthorized because the checkout actor, often a guest, can't read the
     # order's user under the User read policy.
     first :customer_newsletter_offer_hidden?, :user, :newsletter_offer_hidden? do
+      description "The user's own newsletter_offer_hidden?. Nil without a user; read newsletter_offer_hidden? " <>
+                    "instead."
+
       authorize? false
     end
   end

@@ -55,13 +55,16 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
   end
 
   actions do
-    # What its cancelled and refunded emails need.
     read :for_customer_email do
+      description "Loads what the booking's cancelled and refunded emails need."
       prepare build(load: [:course, :first_name, :payments])
     end
 
     # Sent by hand only, like the order's. Opens the link if need be.
     update :send_payment_reminder do
+      description "Jennie emails the customer of a confirmed booking a Payment reminder for its Balance, " <>
+                    "opening its Payment Link if need be."
+
       argument :message, :string
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       change PaymentChanges.OpenPaymentLink
@@ -71,6 +74,9 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
     end
 
     update :send_payment_received_email do
+      description "Emails the customer Payment received with the receipt, for `amount` or else the latest payment " <>
+                    "that isn't a refund (what's been paid when none is). Queued by record_link_payment."
+
       accept []
       argument :amount, :decimal
       argument :message, :string
@@ -80,6 +86,9 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
     end
 
     update :send_confirmation_email do
+      description "Emails a paid booking its confirmation with the receipt attached, stamping both sent times. " <>
+                    "Queued by confirm_payment."
+
       accept []
       argument :message, :string
       transaction? false
@@ -88,6 +97,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
     end
 
     update :send_reminder_email do
+      description "Reminds a confirmed booking of its course the day before, once. Run daily by Oban."
       accept []
       transaction? false
       require_atomic? false
@@ -96,8 +106,9 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
 
     # The confirmation again, with its receipt.
     update :email_receipt do
+      description "Jennie sends a confirmed booking's confirmation email, with its receipt, again."
       accept []
-      argument :message, :string
+      argument :message, :string, description: "Jennie's note in the email."
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       transaction? false
       require_atomic? false

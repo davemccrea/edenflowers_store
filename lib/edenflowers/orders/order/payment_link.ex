@@ -36,6 +36,7 @@ defmodule Edenflowers.Orders.Order.PaymentLink do
 
   actions do
     read :by_payment_link_token do
+      description "Gets the placed order a payment link's token opens, with what the payment link page shows."
       argument :token, :string, allow_nil?: false
       get? true
       filter expr(state == :placed and not is_nil(payment_link_token) and payment_link_token == ^arg(:token))
@@ -62,6 +63,10 @@ defmodule Edenflowers.Orders.Order.PaymentLink do
     # a balance left by editing any order. The order is already placed, so
     # unlike finalize_checkout this only records the payment.
     update :record_link_payment do
+      description "Run by the system when Stripe reports a payment link paid: records the payment on the already " <>
+                    "placed order, reactivates an Occurrence's subscription, and queues Payment received when " <>
+                    "there is an email."
+
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
       argument :paid_with, :map, default: %{}
@@ -82,6 +87,9 @@ defmodule Edenflowers.Orders.Order.PaymentLink do
     # without one, so the customer gets a receipt. An email already on the
     # order is never replaced from the link.
     update :add_customer_email do
+      description "Adds the email a customer gives on the payment link page to an order Jennie took without one, " <>
+                    "so they get a receipt. Never replaces an email already on the order."
+
       accept [:customer_email]
       validate present(:customer_email)
       change filter expr(is_nil(customer_email))

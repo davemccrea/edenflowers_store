@@ -76,8 +76,10 @@ defmodule Edenflowers.Catalog.ProductVariant do
       ]
     ]
 
-    # Stock never goes below 0; see Orders.Order.Changes.AdjustStock.
     update :adjust_stock do
+      description "Adds `by` to the Stock, negative to take it. Placing an order takes Stock and cancelling puts it " <>
+                    "back; it never goes below 0. See Orders.Order.Changes.AdjustStock."
+
       argument :by, :integer, allow_nil?: false
 
       change atomic_update(
@@ -87,14 +89,16 @@ defmodule Edenflowers.Catalog.ProductVariant do
     end
 
     destroy :destroy do
+      description "Archives a removed size, so past orders keep it. Refused while a current Subscription is for it."
       primary? true
       require_atomic? false
 
       validate {Validations.NotReferencedByCurrentSubscription, reference: :product_variant, field: :id}
     end
 
-    # Sizes on sale that have run out, for the Overview. Cards count, as checkout offers them.
     read :sold_out do
+      description "Sizes on sale that have run out, for the admin Overview. Cards count, as checkout offers them."
+
       filter expr(
                stock_quantity == 0 and draft == false and product.draft == false and
                  product.product_category.visibility != :draft
@@ -104,7 +108,9 @@ defmodule Edenflowers.Catalog.ProductVariant do
     end
 
     read :for_card_drawer do
-      # Cards are hidden from the storefront and offered only at checkout.
+      description "Card sizes offered in checkout's card drawer, as cards are hidden from the storefront. Only " <>
+                    "published sizes in stock."
+
       filter expr(
                draft == false and
                  (is_nil(stock_quantity) or stock_quantity > 0) and
@@ -116,9 +122,11 @@ defmodule Edenflowers.Catalog.ProductVariant do
       prepare build(load: [:photo_slug, product: [:tax_rate]])
     end
 
-    # Cards are added through the card drawer. Draft and sold-out sizes stay, as
-    # a custom order can be priced for anything the shop can make.
     read :for_custom_order do
+      description "Sizes Jennie can add to a Custom Order, grouped by product. Draft and sold-out sizes stay, as a " <>
+                    "custom order can be priced for anything the shop can make; cards are added through the card " <>
+                    "drawer instead."
+
       filter expr(product.product_category.slug != "cards")
       prepare build(load: [:product])
 
@@ -128,10 +136,14 @@ defmodule Edenflowers.Catalog.ProductVariant do
       end
     end
 
-    # The sizes a subscription can switch to. Its current size stays on offer
-    # even once it's a draft, so the customer can keep it.
     read :subscription_sizes do
-      argument :current_variant_id, :uuid, allow_nil?: false
+      description "The sizes a Subscription can switch to. Its current size stays on offer even once it's a draft, " <>
+                    "so the customer can keep it."
+
+      argument :current_variant_id, :uuid do
+        allow_nil? false
+        description "The Subscription's current size. The other sizes listed are its product's."
+      end
 
       filter expr(
                exists(product.product_variants, id == ^arg(:current_variant_id)) and
@@ -169,7 +181,13 @@ defmodule Edenflowers.Catalog.ProductVariant do
 
   attributes do
     uuid_primary_key :id
-    attribute :price, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+
+    attribute :price, :decimal do
+      description "In euros, VAT included."
+      allow_nil? false
+      constraints min: 0, scale: 2
+    end
+
     attribute :size, Edenflowers.Catalog.ProductVariantSize
     # Display text such as "30–40", so a range or a single value both fit. The category's
     # product type says which of these its sizes have; see ProductType.
@@ -179,18 +197,29 @@ defmodule Edenflowers.Catalog.ProductVariant do
     attribute :pot_cm, :string
     attribute :weight_g, :string
     attribute :pieces, :string
-    # One of the product's photos, or nil to show its main photo; see `photo_slug`.
-    attribute :own_photo_slug, :string
-    # Nil for a size made to order, which never runs out.
-    attribute :stock_quantity, :integer, constraints: [min: 0]
+
+    attribute :own_photo_slug, :string do
+      description "One of the product's photos, or nil to show its main photo; see `photo_slug`."
+    end
+
+    attribute :stock_quantity, :integer do
+      description "The size's Stock. Nil for a size made to order, which never runs out."
+      constraints min: 0
+    end
+
     attribute :draft, :boolean, allow_nil?: false, default: true
   end
 
   relationships do
-    belongs_to :product, Edenflowers.Catalog.Product, allow_nil?: false
+    belongs_to :product, Edenflowers.Catalog.Product do
+      description "The product this is a size of."
+      allow_nil? false
+    end
   end
 
   calculations do
-    calculate :photo_slug, :string, expr(own_photo_slug || product.main_photo_slug)
+    calculate :photo_slug, :string, expr(own_photo_slug || product.main_photo_slug) do
+      description "The photo to show for this size: its own, else the product's main photo."
+    end
   end
 end

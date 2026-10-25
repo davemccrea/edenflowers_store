@@ -20,17 +20,21 @@ defmodule Edenflowers.Pricing.TaxRate do
     # Destroy is refused by the foreign keys while anything still uses the rate.
     defaults [:read, :destroy, create: [:name, :percentage], update: [:name, :percentage]]
 
-    # Highest first, so the standard rate is what a select in an admin form
-    # starts on. `percentages` adds the retired rates an order already charges,
-    # so editing it keeps them.
     read :selectable do
-      argument :percentages, {:array, :decimal}, default: []
+      description "Rates an admin form can pick, highest first so the standard rate is what the select starts on. " <>
+                    "Retired rates are left out unless `percentages` names one."
+
+      argument :percentages, {:array, :decimal} do
+        default []
+        description "Retired rates the record being edited already charges, kept selectable so editing it keeps them."
+      end
+
       filter expr(is_nil(retired_at) or percentage in ^arg(:percentages))
       prepare build(sort: [retired_at: :asc_nils_first, percentage: :desc])
     end
 
-    # Hides a rate from the admin forms while what already uses it keeps it.
     update :retire do
+      description "Hides a rate from the admin forms while what already uses it keeps it."
       change set_attribute(:retired_at, &DateTime.utc_now/0)
     end
   end
@@ -53,12 +57,20 @@ defmodule Edenflowers.Pricing.TaxRate do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
-    attribute :percentage, :decimal, allow_nil?: false, constraints: [min: 0, max: 1]
+
+    attribute :percentage, :decimal do
+      description "The VAT rate as a fraction, so 0.14 is 14%."
+      allow_nil? false
+      constraints min: 0, max: 1
+    end
+
     attribute :retired_at, :utc_datetime_usec
   end
 
   relationships do
-    has_many :products, Edenflowers.Catalog.Product
+    has_many :products, Edenflowers.Catalog.Product do
+      description "Products whose prices include this rate. Courses and fulfillment options use rates too."
+    end
   end
 
   identities do

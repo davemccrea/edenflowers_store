@@ -22,14 +22,17 @@ defmodule Edenflowers.Accounts.PushSubscription do
   actions do
     defaults [:read, :destroy]
 
-    # A device stops getting order notifications once its user is no longer an admin.
     read :admin_devices do
+      description "The devices order notifications go to. A device stops getting them once its user is no longer an " <>
+                    "admin."
+
       filter expr(user.admin == true)
     end
 
-    # A browser re-subscribing hands back the same endpoint, possibly with new
-    # keys, so it replaces the row rather than adding one.
     create :subscribe do
+      description "Turns order notifications on for the signed-in admin's device. A browser re-subscribing hands " <>
+                    "back the same endpoint, possibly with new keys, so it replaces that device's row."
+
       accept [:endpoint, :p256dh, :auth, :locale]
       upsert? true
       upsert_identity :unique_endpoint
@@ -61,17 +64,39 @@ defmodule Edenflowers.Accounts.PushSubscription do
   attributes do
     uuid_primary_key :id
 
-    attribute :endpoint, :string, allow_nil?: false, public?: true
-    attribute :p256dh, :string, allow_nil?: false, public?: true
-    attribute :auth, :string, allow_nil?: false, public?: true, sensitive?: true
-    # The admin's language when they subscribed, which the notifications use.
-    attribute :locale, :string, allow_nil?: false, public?: true
+    attribute :endpoint, :string do
+      description "The push service URL for this device. Unique, so it identifies the device."
+      allow_nil? false
+      public? true
+    end
+
+    attribute :p256dh, :string do
+      description "The browser's public encryption key, base64url, that notifications are encrypted to."
+      allow_nil? false
+      public? true
+    end
+
+    attribute :auth, :string do
+      description "The browser's auth secret, base64url, used with `p256dh` to encrypt notifications."
+      allow_nil? false
+      public? true
+      sensitive? true
+    end
+
+    attribute :locale, :string do
+      description "The admin's language when they subscribed, which the notifications use."
+      allow_nil? false
+      public? true
+    end
 
     timestamps()
   end
 
   relationships do
-    belongs_to :user, Edenflowers.Accounts.User, allow_nil?: false
+    belongs_to :user, Edenflowers.Accounts.User do
+      description "The admin who turned notifications on. Deleting them deletes their devices."
+      allow_nil? false
+    end
   end
 
   identities do

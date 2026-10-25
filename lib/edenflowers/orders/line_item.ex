@@ -69,6 +69,10 @@ defmodule Edenflowers.Orders.LineItem do
     defaults [:read]
 
     create :add_to_cart do
+      description "Puts a size in the customer's cart, merging into its line if there is one, within Stock. " <>
+                    "A subscription goes alone: adding one, or beside one, replaces a cart of only that product " <>
+                    "and is refused otherwise."
+
       accept [:order_id, :product_variant_id, :quantity, :is_card, :interval_weeks]
 
       # KeepSubscriptionAlone replaces or refuses before the upsert can merge a
@@ -85,9 +89,10 @@ defmodule Edenflowers.Orders.LineItem do
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
 
-    # A line Jennie enters when she places or edits an order: a size from the
-    # catalogue, priced from it, or one she describes and prices herself.
     create :enter do
+      description "A line Jennie enters when she places or edits a Custom Order: a size from the catalogue, " <>
+                    "priced from it, or an item she describes and prices herself with a VAT rate."
+
       accept [:product_variant_id, :product_name, :unit_price, :quantity, :is_card]
       # A catalogue line takes them from its variant; a custom one is checked below.
       allow_nil_input [:product_name, :unit_price]
@@ -105,21 +110,25 @@ defmodule Edenflowers.Orders.LineItem do
 
     # The destroy notification publishes to the removed item's order_id topic.
     destroy :remove_item do
+      description "Removes a line from an order not yet placed, or one Jennie drops when editing an order."
       require_atomic? false
     end
 
     # A subscription is for one bouquet each time.
     update :increment_quantity do
+      description "Adds one to a cart line, within Stock. A subscription line stays at one."
       require_atomic? false
       validate Validations.WithinStock
       change atomic_update(:quantity, expr(if(is_nil(interval_weeks), quantity + 1, quantity)))
     end
 
     update :decrement_quantity do
+      description "Takes one off a cart line, never below one: removing the line is remove_item."
       change atomic_update(:quantity, expr(if(quantity > 1, quantity - 1, quantity)))
     end
 
     update :set_quantity do
+      description "Sets the quantity of a line Jennie keeps when editing an order, unchecked against Stock."
       accept [:quantity]
     end
   end
@@ -181,25 +190,38 @@ defmodule Edenflowers.Orders.LineItem do
   end
 
   relationships do
-    belongs_to :order, Edenflowers.Orders.Order, allow_nil?: false
-    # Both nil for a custom item.
-    belongs_to :product, Edenflowers.Catalog.Product
-    belongs_to :product_variant, Edenflowers.Catalog.ProductVariant
+    belongs_to :order, Edenflowers.Orders.Order do
+      description "The cart or order the line belongs to; it goes when the order is deleted."
+      allow_nil? false
+    end
+
+    belongs_to :product, Edenflowers.Catalog.Product do
+      description "The catalogue product the line was taken from. Nil for a custom item, as is its variant."
+    end
+
+    belongs_to :product_variant, Edenflowers.Catalog.ProductVariant do
+      description "The size sold, whose Stock the line takes once placed. Nil for a custom item."
+    end
   end
 
   calculations do
-    calculate :promotion_applied?, :boolean, expr(order.promotion_applied?)
+    calculate :promotion_applied?, :boolean, expr(order.promotion_applied?) do
+      description "Whether its order's promotion code currently applies, so the line is discounted."
+    end
 
-    calculate :subtotal, :decimal, expr(unit_price * quantity)
+    calculate :subtotal, :decimal, expr(unit_price * quantity) do
+      description "Unit price times quantity in euros, VAT included, before any promotion."
+    end
 
-    # More than is in stock, as others bought it since it went in the cart.
-    # A subscription's bouquets are made fresh.
     calculate :over_stock?,
               :boolean,
               expr(
                 is_nil(interval_weeks) and not is_nil(product_variant.stock_quantity) and
                   quantity > product_variant.stock_quantity
-              )
+              ) do
+      description "Whether the cart asks for more than is in Stock, as others bought it since it went in the " <>
+                    "cart. Never for a subscription line, whose bouquets are made fresh."
+    end
 
     calculate :total,
               :decimal,
@@ -209,12 +231,18 @@ defmodule Edenflowers.Orders.LineItem do
                   do: subtotal - discount,
                   else: subtotal
                 )
-              )
+              ) do
+      description "What the line costs in euros, VAT included, after any promotion."
+    end
 
-    calculate :discount, :decimal, Edenflowers.Orders.Calculations.LineDiscount
+    calculate :discount, :decimal, Edenflowers.Orders.Calculations.LineDiscount do
+      description "What the order's promotion takes off the line in euros, rounded to cents line by line; " <>
+                    "0 without a promotion."
+    end
 
-    # `unit_price` is stored tax-inclusive.
-    calculate :unit_price_ex_tax, :decimal, expr(round(unit_price / (1 + tax_rate), 2))
+    calculate :unit_price_ex_tax, :decimal, expr(round(unit_price / (1 + tax_rate), 2)) do
+      description "The unit price without VAT in euros, rounded to cents. unit_price is stored VAT-inclusive."
+    end
   end
 
   identities do

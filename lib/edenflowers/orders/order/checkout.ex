@@ -60,16 +60,29 @@ defmodule Edenflowers.Orders.Order.Checkout do
   end
 
   actions do
-    destroy :purge_abandoned_cart
+    destroy :purge_abandoned_cart do
+      description "Run nightly: deletes a cart that was never placed, has no lines or PaymentIntent and hasn't " <>
+                    "changed for a day."
+    end
 
     read :for_checkout do
+      description "Reads a cart with everything the cart and checkout pages show: its lines, totals, VAT, " <>
+                    "promotion and fulfillment option."
+
       prepare build(load: @checkout_load)
     end
 
-    create :create_for_checkout
+    create :create_for_checkout do
+      description "Opens an empty cart at contact details for a new browser session, guest or signed in. " <>
+                    "Carts left empty for a day are purged nightly."
+    end
 
     # Forward checkout transitions
     update :submit_contact_details do
+      description "Checkout step 1: assigns the cart to the account for the customer's email, creating one if " <>
+                    "needed, and moves to gift options. `newsletter_opt_in` also signs that account up to the " <>
+                    "newsletter."
+
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]
 
@@ -84,6 +97,10 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     update :submit_gift_options do
+      description "Checkout step 2: requires a recipient for a gift, and otherwise drops the recipient, card " <>
+                    "message and card. Moves to delivery, prefilled from the signed-in customer's last order for " <>
+                    "themselves."
+
       accept [:gift, :recipient_name, :card_message]
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       validate Validations.CardMessageLength
@@ -96,6 +113,9 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     update :submit_delivery do
+      description "Checkout step 3: checks the date and address, prices the fee server side from the chosen " <>
+                    "fulfillment option, and moves to payment."
+
       accept [
         :fulfillment_option_id,
         :recipient_name,
@@ -118,20 +138,32 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
     # Backward "edit" transitions
     update :return_to_contact_details do
+      description "Steps a cart back to contact details from any later step, keeping what was entered."
       change transition_state(:contact_details)
     end
 
     update :return_to_gift_options do
+      description "Steps a cart back to gift options from delivery or payment, keeping what was entered."
       change transition_state(:gift_options)
     end
 
     update :return_to_delivery do
+      description "Steps a cart back to delivery from payment, keeping what was entered."
       change transition_state(:delivery)
     end
 
     update :finalize_checkout do
+      description "Run by the system once Stripe reports a cart's PaymentIntent paid: places it from whichever " <>
+                    "checkout step it is on, records the payment, takes stock, queues the receipt, notifies the " <>
+                    "shop and starts any subscription it set up. Also places a paid Occurrence."
+
       argument :payment_intent_id, :string, allow_nil?: false
-      argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
+
+      argument :amount_paid, :decimal,
+        allow_nil?: false,
+        constraints: [min: 0, scale: 2],
+        description: "What Stripe charged, kept even when it differs from what is owed."
+
       argument :paid_with, :map, default: %{}
       accept [:stripe_customer_id, :stripe_payment_method_id]
       validate PaymentValidations.MatchesPaymentIntent
@@ -170,6 +202,9 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     update :update_fulfillment_option do
+      description "Switches a cart's fulfillment option, clearing the old address and fee and prefilling from the " <>
+                    "customer's last order."
+
       accept [:fulfillment_option_id]
       change Changes.SnapshotFulfillmentMethod
       change Changes.ClearDeliveryFields
@@ -178,48 +213,69 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     update :set_gift do
+      description "Saves the gift toggle as the customer flips it, so the page shows the matching fields. " <>
+                    "Unlike submit_gift_options, it checks and clears nothing."
+
       accept [:gift]
     end
 
     update :update_locale do
+      description "Keeps a cart's locale in step with the language the customer is browsing in, so its emails go " <>
+                    "out in it."
+
       accept [:locale]
       validate attribute_in(:locale, @locales)
     end
 
     action :prepare_checkout_payment, :map do
+      description "Readies the cart's Stripe PaymentIntent for what it owes now and returns its client secret, " <>
+                    "refusing a placed cart, one of only cards or add-ons, or one over stock. Run as the customer, " <>
+                    "or nil for a guest: the actor decides which saved cards are offered."
+
       argument :order_id, :uuid, allow_nil?: false
       run Actions.PrepareCheckoutPayment
     end
 
     update :add_promotion_with_code do
+      description "Applies the promotion with this code, copying its terms onto the cart. Fails on an unknown code " <>
+                    "or a cart under the promotion's minimum total."
+
       argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
       change Changes.ApplyPromotion
       require_atomic? false
     end
 
     update :clear_promotion do
+      description "Takes the promotion and the terms copied from it off the cart."
       change Changes.ClearPromotionFields
     end
 
     update :restart_checkout do
+      description "Empties the cart and blanks every checkout field, back at contact details, on the same order so " <>
+                    "the session keeps its cart. A cart with a PaymentIntent keeps who is paying, in case that " <>
+                    "payment still lands."
+
       change Changes.ResetCheckout
       change transition_state(:contact_details)
       require_atomic? false
     end
 
     update :add_card do
+      description "Puts a card of the given variant on the cart, replacing any card already there."
       argument :product_variant_id, :uuid, allow_nil?: false
       change Changes.SwapCardLineItem
       require_atomic? false
     end
 
     update :remove_card do
+      description "Takes the card and its message off the cart."
       change set_attribute(:card_message, nil)
       change Changes.RemoveCardLineItem
       require_atomic? false
     end
 
     update :remove_line_item do
+      description "Removes one line from the cart, and restarts checkout when only a card, or nothing, is left."
       argument :line_item_id, :uuid, allow_nil?: false
       change Changes.RemoveLineItem
       require_atomic? false

@@ -80,6 +80,7 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     ]
 
     read :list_for_checkout do
+      description "Every option, in the order checkout shows them."
       prepare build(sort: [sort_key: :asc, name: :asc])
     end
 
@@ -99,6 +100,9 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     end
 
     action :calculate_delivery, :map do
+      description "Geocodes a delivery address with HERE and prices it with the option's fee rules. An " <>
+                    "undeliverable address is returned as `%{error: reason}` rather than failing."
+
       argument :delivery_address, :string, allow_nil?: false
       argument :fulfillment_option_id, :uuid, allow_nil?: false
       run Actions.CalculateDelivery
@@ -136,18 +140,62 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
 
   attributes do
     uuid_primary_key :id
-    attribute :name, :string, allow_nil?: false, public?: true
-    attribute :sort_key, :integer, default: 0, allow_nil?: false, public?: true
 
-    attribute :fulfillment_method, __MODULE__.FulfillmentMethod,
-      allow_nil?: false,
-      public?: true
+    attribute :name, :string do
+      description "What checkout calls the option, translated."
+      allow_nil? false
+      public? true
+    end
 
-    attribute :rate_type, __MODULE__.RateType, allow_nil?: false, public?: true
-    attribute :base_price, :decimal, allow_nil?: false, public?: true, constraints: [min: 0, scale: 2]
-    attribute :price_per_km, :decimal, public?: true, constraints: [min: 0, scale: 2]
-    attribute :free_dist_km, :integer, public?: true, constraints: [min: 0]
-    attribute :max_dist_km, :integer, public?: true, constraints: [min: 1]
+    attribute :sort_key, :integer do
+      description "Checkout lists options by this, lowest first, then by name."
+      default 0
+      allow_nil? false
+      public? true
+    end
+
+    attribute :fulfillment_method, __MODULE__.FulfillmentMethod do
+      description "Delivery to the Recipient's address, or pickup from the shop. Pickup has no distance to price."
+      allow_nil? false
+      public? true
+    end
+
+    attribute :rate_type, __MODULE__.RateType do
+      description ":fixed charges `base_price` wherever it goes. :dynamic adds `price_per_km` for the driving " <>
+                    "distance from the shop, up to `max_dist_km`."
+
+      allow_nil? false
+      public? true
+    end
+
+    attribute :base_price, :decimal do
+      description "The fee in euros, VAT included. For a :dynamic option, the starting fee before distance is added."
+      allow_nil? false
+      public? true
+      constraints min: 0, scale: 2
+    end
+
+    attribute :price_per_km, :decimal do
+      description "Euros per km of driving distance from the shop, VAT included. Required for a :dynamic option."
+      public? true
+      constraints min: 0, scale: 2
+    end
+
+    attribute :free_dist_km, :integer do
+      description "Within this many km the fee is waived for an order holding a free-delivery product. Only " <>
+                    "a :dynamic option uses it, and it is required there."
+
+      public? true
+      constraints min: 0
+    end
+
+    attribute :max_dist_km, :integer do
+      description "The furthest it delivers, in km of driving distance; addresses this far or further are out of " <>
+                    "range. Only a :dynamic option uses it, and it is required there."
+
+      public? true
+      constraints min: 1
+    end
 
     # What a delivery costs Jennie, shown in admin beside the fee and never charged.
     attribute :mileage_rate, :decimal, public?: true, constraints: [min: 0], description: "Kilometrikorvaus, € per km"
@@ -156,7 +204,11 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
   end
 
   relationships do
-    belongs_to :tax_rate, Edenflowers.Pricing.TaxRate, allow_nil?: false, public?: true
+    belongs_to :tax_rate, Edenflowers.Pricing.TaxRate do
+      description "The VAT rate the fee includes. Orders snapshot the percentage at checkout."
+      allow_nil? false
+      public? true
+    end
   end
 
   identities do

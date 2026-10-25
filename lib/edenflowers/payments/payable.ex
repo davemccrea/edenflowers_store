@@ -36,23 +36,38 @@ defmodule Edenflowers.Payments.Payable do
   alias Edenflowers.Payments.Validations
 
   attributes do
-    # Money not handed back when it was cancelled: what Jennie chose to keep.
-    attribute :kept_amount, :decimal, allow_nil?: false, default: 0, constraints: [min: 0, scale: 2]
+    attribute :kept_amount, :decimal do
+      description "Money in euros not handed back when it was cancelled: what Jennie chose to keep. " <>
+                    "0 until cancelled."
+
+      allow_nil? false
+      default 0
+      constraints min: 0, scale: 2
+    end
   end
 
   actions do
     action :prepare_link_payment, :map do
+      description "Readies the PaymentIntent behind a Payment Link for what is owed now and returns its client " <>
+                    "secret. The token is the only access; refuses a link that has closed."
+
       argument :token, :string, allow_nil?: false, sensitive?: true
       run Edenflowers.Payments.Actions.PrepareLinkPayment
     end
 
     update :add_payment_intent_id do
+      description "Stores the PaymentIntent just created for paying what is owed. Refuses one already set, or " <>
+                    "nothing payable. Set by the system actor that creates the PaymentIntent."
+
       accept [:payment_intent_id]
       validate Validations.PaymentIntentNotSet
       validate Validations.Payable
     end
 
     update :mark_payment_cancelled do
+      description "Forgets a PaymentIntent cancelled in Stripe, so the next payment creates a fresh one. " <>
+                    "Refuses one the record no longer holds."
+
       argument :payment_intent_id, :string, allow_nil?: false
       validate Validations.MatchesPaymentIntent
       change set_attribute(:payment_intent_id, nil)
@@ -60,14 +75,18 @@ defmodule Edenflowers.Payments.Payable do
 
     # Each resource triggers it with its own `where`.
     update :reconcile_payment do
+      description "Rechecks an open PaymentIntent with Stripe and completes a payment whose webhook never " <>
+                    "arrived, so a paid record isn't left pending. Run by Oban every 10 minutes."
+
       accept []
       transaction? false
       require_atomic? false
       change Changes.Reconcile
     end
 
-    # Money Jennie took by any method except Stripe.
     update :record_payment do
+      description "Records money Jennie took by any method except Stripe, optionally emailing the customer a receipt."
+
       argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :email_receipt?, :boolean, default: false
@@ -83,10 +102,11 @@ defmodule Edenflowers.Payments.Payable do
       require_atomic? false
     end
 
-    # Money Jennie hands back, by any method, with or without cancelling.
-    # What was owed back is an ordinary refund and the rest is goodwill, so
-    # the record stays settled either way.
     update :refund do
+      description "Money Jennie hands back, by any method, with or without cancelling: through Stripe at once, or " <>
+                    "recorded as handed back. What was owed back is an ordinary refund and the rest a Goodwill " <>
+                    "refund, so the record stays settled either way."
+
       argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :note, :string
@@ -104,9 +124,10 @@ defmodule Edenflowers.Payments.Payable do
       require_atomic? false
     end
 
-    # Takes back a payment Jennie recorded by mistake, once, by recording the
-    # opposite amount against it.
     update :undo_payment do
+      description "Takes back a payment or refund Jennie recorded by mistake by recording the opposite amount. " <>
+                    "Once per payment, never a Stripe one."
+
       argument :payment_id, :uuid, allow_nil?: false
       argument :amount, :decimal, public?: false
       argument :payment_method, Edenflowers.Payments.PaymentMethod, public?: false
@@ -121,12 +142,13 @@ defmodule Edenflowers.Payments.Payable do
       require_atomic? false
     end
 
-    # From Stripe's refund webhook, so a refund Jennie makes in the Stripe
-    # dashboard shows up without her entering it again. Recorded whatever it
-    # is, because the money moved. `goodwill` says what a refund made here
-    # was; for one made in the dashboard, the part beyond what was owed back
-    # is goodwill, recorded as its own payment.
+    # `goodwill` says what a refund made here was; for one made in the
+    # dashboard, the part beyond what was owed back is goodwill, recorded as
+    # its own payment.
     update :record_stripe_refund do
+      description "Records a Stripe refund from its webhook, so one Jennie makes in the Stripe dashboard shows up " <>
+                    "without her entering it again. Recorded whatever it is, because the money moved."
+
       argument :stripe_refund_id, :string, allow_nil?: false
       argument :amount, :decimal, allow_nil?: false, constraints: [max: 0, scale: 2]
       argument :goodwill, :boolean
@@ -147,9 +169,6 @@ defmodule Edenflowers.Payments.Payable do
   end
 
   calculations do
-    # Positive is still to collect, negative is to refund. A goodwill refund
-    # leaves it alone while the price stands, but once the price drops below
-    # what was paid, only money still held above it is owed back.
     calculate :balance,
               :decimal,
               expr(
@@ -158,39 +177,79 @@ defmodule Edenflowers.Payments.Payable do
                   total_due >= amount_held -> 0
                   true -> total_due - amount_held
                 end
-              )
+              ) do
+      description "The Balance in euros: positive is still to collect, negative is to refund. A Goodwill refund " <>
+                    "leaves it alone while the price stands, but once it drops below what was paid, only money " <>
+                    "still held above it is owed back."
+    end
 
-    # An undone payment and its undo don't count as taking and handing back money.
     calculate :refunded?,
               :boolean,
               expr(
                 exists(payments, amount > 0 and is_nil(reverses_payment_id) and not exists(reversal, true)) and
                   amount_held <= 0
-              )
+              ) do
+      description "Whether money was taken and all of it handed back. An undone payment and its undo don't " <>
+                    "count as taking and handing back money."
+    end
 
-    # What a PaymentIntent can charge.
-    calculate :payable?, :boolean, expr(balance > 0 and not refunded?)
+    calculate :payable?, :boolean, expr(balance > 0 and not refunded?) do
+      description "Whether there is something a PaymentIntent can charge: a Balance to collect, and not refunded."
+    end
 
-    # A record refunded in Stripe without being cancelled reads as owed again
-    # by its balance, but is settled.
-    calculate :settled?, :boolean, expr(balance == 0 or refunded?)
+    calculate :settled?, :boolean, expr(balance == 0 or refunded?) do
+      description "Whether it is Settled. One refunded in Stripe without being cancelled reads as owed again by " <>
+                    "its Balance, but is settled."
+    end
 
-    calculate :to_collect?, :boolean, expr(not settled? and balance > 0)
-    calculate :to_refund?, :boolean, expr(not settled? and balance < 0)
+    calculate :to_collect?, :boolean, expr(not settled? and balance > 0) do
+      description "Whether money is still owed by the customer."
+    end
 
-    # Whether Jennie can hand money back (Validations.Refundable).
-    calculate :refundable?, :boolean, expr(committed? and balance <= 0 and amount_held > 0)
+    calculate :to_refund?, :boolean, expr(not settled? and balance < 0) do
+      description "Whether money is owed back to the customer."
+    end
 
-    calculate :refund_methods, {:array, Edenflowers.Payments.PaymentMethod}, Calculations.RefundMethods
-    calculate :default_refund_method, Edenflowers.Payments.PaymentMethod, Calculations.DefaultRefundMethod
+    calculate :refundable?, :boolean, expr(committed? and balance <= 0 and amount_held > 0) do
+      description "Whether Jennie can hand money back now: committed, nothing left to collect and money still " <>
+                    "held. Validations.Refundable applies the same rules."
+    end
+
+    calculate :refund_methods, {:array, Edenflowers.Payments.PaymentMethod}, Calculations.RefundMethods do
+      description "The methods Jennie can hand money back by: Stripe while money paid through it is held, and " <>
+                    "any other method while money paid outside it is. Empty when nothing is held."
+    end
+
+    calculate :default_refund_method, Edenflowers.Payments.PaymentMethod, Calculations.DefaultRefundMethod do
+      description "The refund method the admin form starts at: Stripe when possible, else the method holding " <>
+                    "the most money paid outside Stripe. Nil when nothing can be refunded."
+    end
   end
 
   aggregates do
-    # What the customer paid for what was sold, so not goodwill refunds.
-    sum :amount_paid, :payments, :amount, filter: expr(not goodwill), default: Decimal.new("0")
-    # The money still with us.
-    sum :amount_held, :payments, :amount, default: Decimal.new("0")
-    sum :paid_outside_stripe, :payments, :amount, filter: expr(method != :stripe), default: Decimal.new("0")
-    sum :paid_through_stripe, :payments, :amount, filter: expr(method == :stripe), default: Decimal.new("0")
+    sum :amount_paid, :payments, :amount do
+      description "What the customer paid in euros for what was sold: net of ordinary refunds, leaving out " <>
+                    "Goodwill refunds."
+
+      filter expr(not goodwill)
+      default Decimal.new("0")
+    end
+
+    sum :amount_held, :payments, :amount do
+      description "The money in euros still with the shop: every payment and refund, Goodwill refunds included."
+      default Decimal.new("0")
+    end
+
+    sum :paid_outside_stripe, :payments, :amount do
+      description "Money in euros held from methods other than Stripe, after refunds made the same way."
+      filter expr(method != :stripe)
+      default Decimal.new("0")
+    end
+
+    sum :paid_through_stripe, :payments, :amount do
+      description "Money in euros held from Stripe payments, after Stripe refunds."
+      filter expr(method == :stripe)
+      default Decimal.new("0")
+    end
   end
 end

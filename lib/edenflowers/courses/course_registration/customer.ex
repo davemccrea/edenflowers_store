@@ -12,6 +12,8 @@ defmodule Edenflowers.Courses.CourseRegistration.Customer do
     # grants admins an unrestricted read, so an action named for the customer's
     # own bookings has to narrow itself or it hands Jennie everyone's.
     read :mine do
+      description "The actor's own confirmed bookings, for their account page."
+
       filter expr(user_id == ^actor(:id) and status == :confirmed)
     end
   end

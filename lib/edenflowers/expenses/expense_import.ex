@@ -42,6 +42,9 @@ defmodule Edenflowers.Expenses.ExpenseImport do
     defaults [:read]
 
     create :record do
+      description "Records a Papra document from its webhook and queues it for extraction into an expense. The same " <>
+                    "document twice is recorded once."
+
       accept [:document_id, :organization_id]
       upsert? true
       upsert_identity :unique_document_id
@@ -50,14 +53,17 @@ defmodule Edenflowers.Expenses.ExpenseImport do
     end
 
     update :process do
+      description "Fetches the document from Papra, has Claude extract an expense from it, and links the expense. " <>
+                    "Run by the Oban trigger, which retries until it succeeds or calls `mark_failed`."
+
       accept []
       transaction? false
       require_atomic? false
       change Changes.Process
     end
 
-    # Stops the scheduler retrying a document that failed every attempt.
     update :mark_failed do
+      description "Stops the scheduler retrying a document that failed every attempt."
       accept []
       change set_attribute(:failed_at, &DateTime.utc_now/0)
     end
@@ -87,7 +93,9 @@ defmodule Edenflowers.Expenses.ExpenseImport do
   end
 
   relationships do
-    belongs_to :expense, Edenflowers.Expenses.Expense
+    belongs_to :expense, Edenflowers.Expenses.Expense do
+      description "The expense extracted from the document. Nil until processed."
+    end
   end
 
   identities do

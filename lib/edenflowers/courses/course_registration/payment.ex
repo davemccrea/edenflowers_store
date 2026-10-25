@@ -36,6 +36,8 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
 
   actions do
     read :by_payment_link_token do
+      description "The registration behind a Payment Link, loaded with what its page shows. The token is the only access."
+
       argument :token, :string, allow_nil?: false
       get? true
       filter expr(not is_nil(payment_link_token) and payment_link_token == ^arg(:token))
@@ -63,6 +65,9 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
     # does a payment for other places than the booking now has, revised while
     # it was in flight: the difference is left as a balance for Jennie.
     update :confirm_payment do
+      description "Confirms a pending checkout or Invite when Stripe reports its payment, records the Payment and " <>
+                    "queues the confirmation email. Books the places even over capacity; refuses a repeat."
+
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false
       argument :paid_with, :map, default: %{}
@@ -80,8 +85,10 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
       require_atomic? false
     end
 
-    # A balance paid through the payment link of a booking already confirmed.
     update :record_link_payment do
+      description "Records a Balance paid through the Payment Link of a booking already confirmed, once Stripe " <>
+                    "reports it, and queues the Payment received email."
+
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
       argument :paid_with, :map, default: %{}
