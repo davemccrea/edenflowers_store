@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
-  def mount(%{"id" => id}, _session, socket) do
+  def mount(%{"id" => id} = params, _session, socket) do
     case load_course(id) do
       {:ok, course} ->
         {:ok,
@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
            course: course
          )
          |> assign(booked_seats: booked_seats(socket.assigns.current_user, course))
-         |> assign(registration: nil, focus_booking?: false)
+         |> assign(registration: checkout(params["registration"], course), editing?: false, focus_booking?: false)
          |> assign_form()}
 
       # A malformed id is an invalid-filter error rather than NotFound; both should 404.
@@ -123,7 +123,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               <.button href="#newsletter" variant="text" class="mt-4">{~t"Sign up for the newsletter"}</.button>
             </section>
 
-            <section :if={@course.booking_open? && is_nil(@registration)} aria-labelledby="book-heading">
+            <section :if={@course.booking_open? && (is_nil(@registration) || @editing?)} aria-labelledby="book-heading">
               <%!-- Focused only when returning from "Change booking", whose button has just gone. --%>
               <h2
                 id="book-heading"
@@ -164,7 +164,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               </p>
             </section>
 
-            <section :if={@registration} aria-labelledby="pay-heading" data-testid="payment-section">
+            <section :if={@registration && !@editing?} aria-labelledby="pay-heading" data-testid="payment-section">
               <%!-- The booking form, and the button that submitted it, are gone: focus lands here instead of on <body>. --%>
               <h2
                 id="pay-heading"
@@ -208,21 +208,26 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   def handle_event("book", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, registration} -> {:noreply, assign(socket, registration: registration)}
-      {:error, form} -> {:noreply, socket |> assign(form: form) |> reload_course()}
+      {:ok, registration} -> {:noreply, assign(socket, registration: registration, editing?: false)}
+      {:error, form} -> {:noreply, socket |> assign(form: form) |> reload_course() |> leave_if_paid()}
     end
   end
 
-  # A retry after a declined card reuses the PaymentIntent made here.
+  # A retry after a declined card, or after changing the booking, reuses the
+  # PaymentIntent made here at the current price.
   def handle_event("pay", _params, socket) do
-    case Payments.setup(socket.assigns.registration, nil) do
-      {:ok, registration, client_secret} ->
-        {:noreply,
-         socket
-         |> assign(registration: registration)
-         |> push_event("stripe:process_payment", %{client_secret: client_secret})}
+    with :ok <- Payments.update_amount(socket.assigns.registration),
+         {:ok, registration, client_secret} <- Payments.setup(socket.assigns.registration, nil) do
+      {:noreply,
+       socket
+       |> assign(registration: registration)
+       |> push_event("stripe:process_payment", %{client_secret: client_secret})}
+    else
+      {:error, error} ->
+        Logger.error(
+          "Could not set up payment for course registration #{socket.assigns.registration.id}: #{inspect(error)}"
+        )
 
-      {:error, _logged_by_setup} ->
         {:noreply,
          socket
          |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
@@ -230,9 +235,8 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     end
   end
 
-  # A fresh registration replaces this unpaid one.
   def handle_event("change", _params, socket) do
-    {:noreply, discard_registration(socket)}
+    {:noreply, socket |> assign(editing?: true, focus_booking?: true) |> reload_course() |> assign_form()}
   end
 
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
@@ -300,29 +304,32 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     end
   end
 
-  defp discard_registration(%{assigns: %{registration: nil}} = socket), do: socket
+  defp checkout(nil, _course), do: nil
 
-  defp discard_registration(socket) do
-    case Courses.discard_registration(socket.assigns.registration.id, actor: system_actor()) do
-      {:ok, nil} ->
-        socket
-        |> assign(registration: nil)
-        |> reload_course()
-        |> assign_form()
-        |> assign(focus_booking?: true)
-
-      {:ok, %{committed?: true} = registration} ->
-        push_navigate(socket, to: ~p"/courses/bookings/#{registration.id}")
-
-      {:ok, registration} ->
-        socket
-        |> assign(registration: registration)
-        |> put_flash(:error, ~t"Your payment is still being confirmed. Please wait before changing your booking.")
-
-      {:error, error} ->
-        Logger.error("Could not discard course registration #{socket.assigns.registration.id}: #{inspect(error)}")
-        put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")
+  defp checkout(id, course) do
+    case Courses.get_checkout_registration(id, course.id, actor: system_actor(), not_found_error?: false) do
+      {:ok, registration} -> registration
+      {:error, _invalid_id} -> nil
     end
+  end
+
+  # A revision refused because the payment confirmed the booking meanwhile.
+  defp leave_if_paid(%{assigns: %{editing?: true, registration: registration}} = socket) do
+    case Courses.get_registration_by_id(registration.id, actor: system_actor(), load: [:committed?]) do
+      {:ok, %{committed?: true}} -> push_navigate(socket, to: ~p"/courses/bookings/#{registration.id}")
+      _pending -> socket
+    end
+  end
+
+  defp leave_if_paid(socket), do: socket
+
+  defp assign_form(%{assigns: %{editing?: true, registration: registration}} = socket) do
+    form =
+      registration
+      |> AshPhoenix.Form.for_update(:revise, as: "form", actor: socket.assigns.current_user)
+      |> to_form()
+
+    assign(socket, form: form)
   end
 
   defp assign_form(socket) do

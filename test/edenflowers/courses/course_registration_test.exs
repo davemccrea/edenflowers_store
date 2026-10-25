@@ -229,27 +229,57 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     end
   end
 
+  describe "revising a checkout" do
+    defp revise(registration, params), do: Courses.revise_registration(registration, params, actor: nil)
+
+    defp complete(registration, amount_received) do
+      Edenflowers.Payments.complete(%{
+        id: registration.payment_intent_id,
+        metadata: %{"course_registration_id" => registration.id},
+        amount_received: amount_received
+      })
+    end
+
+    test "keeps the registration and reprices it" do
+      {:ok, registration} = register(generate(course(price: "85.00")), 1)
+
+      assert {:ok, revised} = revise(registration, %{name: "Grace Hopper", email: "grace@example.com", seats: 2})
+
+      assert revised.id == registration.id
+      assert revised.reference == registration.reference
+      assert Decimal.eq?(revised.amount, "170.00")
+      assert revised.user_id != registration.user_id
+    end
+
+    test "a payment landing after the revision books the revised places" do
+      {:ok, registration} = register(generate(course(price: "85.00")), 1)
+      registration = Courses.add_registration_payment_intent_id!(registration, "pi_revised", authorize?: false)
+      {:ok, _revised} = revise(registration, %{seats: 2})
+
+      ExUnit.CaptureLog.capture_log(fn -> assert {:ok, :completed} = complete(registration, 8_500) end)
+
+      assert %{status: :confirmed, seats: 2} = Courses.get_registration_by_id!(registration.id, authorize?: false)
+    end
+
+    test "a revision landing after the payment changes nothing" do
+      {:ok, registration} = register(generate(course(price: "85.00")), 1)
+      registration = Courses.add_registration_payment_intent_id!(registration, "pi_paid", authorize?: false)
+      assert {:ok, :completed} = complete(registration, 8_500)
+
+      assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.StaleRecord{}]}} =
+               revise(registration, %{seats: 2})
+
+      assert %{status: :confirmed, seats: 1} = Courses.get_registration_by_id!(registration.id, authorize?: false)
+    end
+
+    test "can't touch an invite, which Jennie changes" do
+      {:ok, invite} = add_manually(generate(course()), 1, generate(admin_user()))
+
+      assert {:error, _stale} = revise(invite, %{seats: 2})
+    end
+  end
+
   describe "discarding an unpaid registration" do
-    test "deletes it and emails nobody" do
-      {:ok, unpaid} = register(generate(course()), 1)
-
-      assert {:ok, nil} = Courses.discard_registration(unpaid.id, actor: Edenflowers.Actors.system_actor())
-
-      assert {:error, _not_found} = Courses.get_registration_by_id(unpaid.id, actor: Edenflowers.Actors.system_actor())
-      refute_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
-    end
-
-    test "leaves a booking paid for in the meantime" do
-      admin = generate(admin_user())
-      {:ok, registration} = add_manually(generate(course()), 1, admin)
-      paid = pay(registration, "85.00")
-
-      assert {:ok, %{committed?: true}} =
-               Courses.discard_registration(paid.id, actor: Edenflowers.Actors.system_actor())
-
-      assert {:ok, _still_there} = Courses.get_registration_by_id(paid.id, actor: admin)
-    end
-
     test "every night, purges checkouts left unpaid for a day but keeps invites" do
       course = generate(course())
       yesterday = DateTime.add(DateTime.utc_now(), -25, :hour)

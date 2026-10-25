@@ -18,13 +18,6 @@ defmodule Edenflowers.Payments.Errors.PaymentInProgress do
     do: ~t"A payment for this order is under way. Wait for it to arrive, then cancel the order instead."
 end
 
-defmodule Edenflowers.Payments.Errors.AmountMismatch do
-  @moduledoc "Returned when a course payment does not cover the booking's stored amount."
-  use Splode.Error, fields: [:field, :expected, :actual], class: :invalid
-
-  def message(error), do: "Payment amount #{error.actual} does not match #{error.expected}"
-end
-
 defmodule Edenflowers.Payments.Errors.PaymentIntentMismatch do
   @moduledoc "Returned when a PaymentIntent is not the one stored on the record it claims to pay for."
   use Splode.Error, fields: [:field, :expected, :actual], class: :invalid

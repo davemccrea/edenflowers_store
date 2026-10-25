@@ -15,7 +15,7 @@ A placed order, or a confirmed course booking, that will not go ahead. When Jenn
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Course booking**:
-A paid place, or group of places, on a course. An unpaid checkout or Invite holds no places; payment confirms the booking, even if the course has filled in the meantime.
+A paid place, or group of places, on a course. An unpaid checkout or Invite holds no places; payment confirms the booking, even if the course has filled in the meantime. Until it is paid, the customer can go back and change their checkout's name, email and places. A payment that lands while they do confirms whatever the checkout said at that moment, even if it paid for other places, and leaves the difference as a Balance for Jennie. Once confirmed, customers change or cancel a booking only by asking Jennie.
 _Avoid_: Hold, reservation, pending booking
 
 **Invite**:

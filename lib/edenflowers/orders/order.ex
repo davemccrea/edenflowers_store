@@ -769,7 +769,7 @@ defmodule Edenflowers.Orders.Order do
       change Changes.SnapshotVatBreakdown
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
       change {Changes.AdjustStock, direction: :take, report_oversell?: true}
-      change Changes.ReportAmountMismatch
+      change PaymentChanges.ReportAmountMismatch
       change Changes.ReportPromotionOverused
 
       change {PaymentChanges.QueueEmail, trigger: :send_receipt_email}

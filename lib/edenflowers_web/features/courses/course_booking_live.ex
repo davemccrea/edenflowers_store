@@ -5,8 +5,6 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
 
   use EdenflowersWeb, :live_view
 
-  require Logger
-
   import Edenflowers.Actors
 
   alias Edenflowers.Courses
@@ -28,30 +26,13 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
 
     case load_registration(id) do
       # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
-      # when the customer cancels or is declined in the app. Discard the unpaid
-      # registration, as "Change booking" does, and send them back to book again.
+      # when the customer cancels or is declined in the app. The checkout is
+      # kept, so they can pay again or change it.
       {:ok, %{committed?: false} = registration} when payment_failed? ->
-        case Courses.discard_registration(registration.id, actor: system_actor()) do
-          {:ok, nil} ->
-            {:ok,
-             socket
-             |> put_flash(
-               :error,
-               ~t"Your payment didn't go through. Please try again or choose another payment method."
-             )
-             |> push_navigate(to: ~q"/#{language}/courses/#{registration.course_id}")}
-
-          {:ok, retained} ->
-            {:ok, push_navigate(socket, to: ~p"/courses/bookings/#{retained.id}")}
-
-          {:error, error} ->
-            Logger.error("Could not discard course registration #{registration.id}: #{inspect(error)}")
-
-            {:ok,
-             socket
-             |> put_flash(:error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")
-             |> push_navigate(to: ~p"/courses/bookings/#{registration.id}")}
-        end
+        {:ok,
+         socket
+         |> put_flash(:error, ~t"Your payment didn't go through. Please try again or choose another payment method.")
+         |> push_navigate(to: ~q"/#{language}/courses/#{registration.course_id}?registration=#{registration.id}")}
 
       {:ok, registration} ->
         {:ok, assign(socket, page_title: ~t"Your booking", locale: Format.locale(), registration: registration)}
