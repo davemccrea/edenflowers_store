@@ -41,6 +41,7 @@ defmodule EdenflowersWeb.Router do
 
     ash_authentication_live_session :public,
       on_mount: [
+        EdenflowersWeb.Hooks.Maintenance,
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath,
         EdenflowersWeb.Hooks.PutOrder,
@@ -62,19 +63,30 @@ defmodule EdenflowersWeb.Router do
 
       scope "/", Courses do
         live "/courses/bookings/:id", CourseBookingLive
-        live "/pay/courses/:token", CoursePayLive
       end
 
       scope "/", Checkout do
         live "/checkout", CheckoutLive
         live "/order/:id", OrderLive
-        live "/pay/:token", PayLive
       end
 
       scope "/", Account do
         live "/account", AccountLive
         live "/account/subscriptions/:id/card", SubscriptionCardLive
       end
+    end
+
+    # Payment links stay open during maintenance, so they sit outside :public and
+    # its maintenance hook. Leaving one is a full page load through Plugs.Maintenance.
+    ash_authentication_live_session :payment_link,
+      on_mount: [
+        EdenflowersWeb.Hooks.PutLocale,
+        EdenflowersWeb.Hooks.PutCurrentPath,
+        EdenflowersWeb.Hooks.PutOrder,
+        EdenflowersWeb.Hooks.HandleLineItemChanged
+      ] do
+      live "/pay/courses/:token", Courses.CoursePayLive
+      live "/pay/:token", Checkout.PayLive
     end
 
     get "/checkout/complete/:id", Checkout.CheckoutCompleteController, :index
