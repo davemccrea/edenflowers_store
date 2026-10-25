@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
       live "/pay/courses/:token", Courses.CoursePayLive
-      live "/pay/:token", Checkout.PayLive
+      live "/pay/orders/:token", Checkout.PayLive
     end
 
     get "/checkout/complete/:id", Checkout.CheckoutCompleteController, :index
@@ -100,7 +100,8 @@ defmodule EdenflowersWeb.Router do
   scope "/", EdenflowersWeb do
     get "/sitemap.xml", Marketing.SitemapController, :index
     get "/health", HealthController, :show
-    get "/courses/pay/:token", Courses.OldCoursePayLinkController, :show
+    get "/pay/:token", PaymentLinkRedirectController, :order
+    get "/courses/pay/:token", PaymentLinkRedirectController, :course
   end
 
   scope "/", EdenflowersWeb do

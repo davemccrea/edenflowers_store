@@ -269,7 +269,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
         </.button>
         <.button
           :if={@unpaid}
-          navigate={~p"/pay/#{@unpaid.payment_link_token}"}
+          navigate={~p"/pay/orders/#{@unpaid.payment_link_token}"}
           variant={if @held?, do: "secondary", else: "primary"}
           data-testid="subscription-pay-now"
         >
@@ -331,7 +331,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     <span class="block text-sm">
       <.link
         :if={@unpaid}
-        navigate={~p"/pay/#{@unpaid.payment_link_token}"}
+        navigate={~p"/pay/orders/#{@unpaid.payment_link_token}"}
         class="link-underline-hover text-primary"
         data-testid="subscription-pay-now"
       >
@@ -388,7 +388,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     <span :if={@unpaid} class="text-base-content/70 block text-sm">
       <span class="text-error">{~t"Unpaid"}</span>
       ·
-      <.link navigate={~p"/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
+      <.link navigate={~p"/pay/orders/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
         {~t"Pay now"}
       </.link>
     </span>

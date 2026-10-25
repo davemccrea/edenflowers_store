@@ -544,9 +544,13 @@ defmodule Edenflowers.Orders.Order do
       prepare build(
                 load: [
                   :payment_link_open?,
+                  :paid?,
+                  :payment_status,
+                  :customer_first_name,
                   :refunded?,
                   :grand_total,
                   :amount_paid,
+                  :amount_held,
                   :balance,
                   :items_total,
                   :vat,
@@ -1413,6 +1417,8 @@ defmodule Edenflowers.Orders.Order do
                   true -> :pending
                 end
               )
+
+    calculate :paid?, :boolean, expr(committed? and payment_status == :paid and not cancelled?)
 
     # Money still owed on a placed order. A fulfilled order can still be unpaid
     # when the customer pays afterwards.

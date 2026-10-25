@@ -32,9 +32,9 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
 
         {:ok,
          socket
-         |> assign(:page_title, ~t"Pay for your booking")
          |> assign(:locale, Format.locale())
-         |> PaymentLink.mount(registration, params, fn -> load_registration(token) end)}
+         |> PaymentLink.mount(registration, params, fn -> load_registration(token) end)
+         |> assign_page_title()}
 
       _ ->
         {:ok, PaymentLink.broken_link(socket)}
@@ -43,11 +43,16 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :paid?, assigns.payable.paid?)
+
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
         <div class="max-w-xl">
-          <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />
+          <.flower
+            name="flower-30"
+            class={["text-primary/70 mb-6 h-12 w-12", if(@paid?, do: "flower-bloom"), if(@returned_from_stripe? and @payable.payment_link_open?, do: "flower-waiting")]}
+          />
 
           <%= cond do %>
             <% @payable.status == :cancelled -> %>
@@ -60,21 +65,29 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
               <p class="leading-relaxed" data-testid="pay-refunded">
                 {~t"This booking has been refunded, so there is nothing to pay. If you have any questions, just get in touch."}
               </p>
-            <% not @payable.payment_link_open? -> %>
-              <h1 class="page-title mb-6">{~t"Thank you"}</h1>
-              <p class="leading-relaxed" data-testid="pay-paid">
-                {~t"This booking is paid."}
+            <% @paid? -> %>
+              <h1 class="page-title mb-6" data-testid="pay-paid">
+                {if @payable.first_name, do: ~t"Thank you, #{first_name = @payable.first_name}.", else: ~t"Thank you"}
+              </h1>
+              <p
+                :if={@payable.upcoming?}
+                class="leading-relaxed"
+                data-testid="pay-booked"
+              >
+                {~t"You're booked."}
               </p>
-            <% @returned_from_stripe? -> %>
+            <% @returned_from_stripe? and @payable.payment_link_open? -> %>
               <h1 class="page-title mb-6">{~t"Thank you"}</h1>
               <p role="status" class="leading-relaxed" data-testid="pay-confirming">
                 {~t"Confirming your payment… You'll get a receipt by email once it's done."}
               </p>
-            <% true -> %>
+            <% @payable.payment_link_open? -> %>
               <h1 class="page-title mb-6">{~t"Pay for your booking"}</h1>
+            <% true -> %>
+              <h1 class="page-title mb-6">{~t"Your booking"}</h1>
           <% end %>
 
-          <dl class="border-base-content/12 grid-cols-[auto_1fr] mt-10 grid items-baseline gap-x-6 gap-y-3 border-y py-6">
+          <dl class="border-base-content/12 grid-cols-[auto_1fr] mt-8 grid items-baseline gap-x-6 gap-y-3 border-y py-4">
             <dt class="eyebrow text-base-content/70">{~t"Course"}</dt>
             <dd>{@payable.course.name}</dd>
 
@@ -86,15 +99,26 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
               )}–{Format.time(@payable.course.end_time, @locale)}
             </dd>
 
+            <dt class="eyebrow text-base-content/70">{~t"Where"}</dt>
+            <dd>
+              {@payable.course.location_name}<br />
+              <EdenflowersWeb.Courses.CourseLive.maps_link address={@payable.course.location_address} />
+            </dd>
+
+            <dt class="eyebrow text-base-content/70">{~t"Reference"}</dt>
+            <dd class="tabular-nums">{@payable.reference}</dd>
+
             <dt class="eyebrow text-base-content/70">{~t"Places"}</dt>
             <dd class="tabular-nums">{@payable.seats_held}</dd>
 
-            <dt class="eyebrow text-base-content/70">{~t"Total"}</dt>
-            <dd class="tabular-nums" data-testid="pay-total">{Format.currency(@payable.total_due, @locale)}</dd>
+            <dt class="eyebrow text-base-content/70">{if @paid?, do: ~t"Total paid", else: ~t"Total"}</dt>
+            <dd class="tabular-nums" data-testid="pay-total">
+              {Format.currency(if(@paid?, do: @payable.amount_held, else: @payable.total_due), @locale)}
+            </dd>
 
-            <%= if Decimal.positive?(@payable.amount_paid) do %>
+            <%= if Decimal.positive?(@payable.amount_held) and not @paid? do %>
               <dt class="eyebrow text-base-content/70">{~t"Paid so far"}</dt>
-              <dd class="tabular-nums">{Format.currency(@payable.amount_paid, @locale)}</dd>
+              <dd class="tabular-nums">{Format.currency(@payable.amount_held, @locale)}</dd>
 
               <%= if @payable.payment_link_open? do %>
                 <dt class="eyebrow text-base-content/70">{~t"Left to pay"}</dt>
@@ -102,6 +126,13 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
                   {Format.currency(@payable.balance, @locale)}
                 </dd>
               <% end %>
+            <% end %>
+
+            <%= if Decimal.negative?(@payable.balance) do %>
+              <dt class="eyebrow text-base-content/70">{~t"To be refunded"}</dt>
+              <dd class="tabular-nums" data-testid="pay-refund-due">
+                {Format.currency(Decimal.abs(@payable.balance), @locale)}
+              </dd>
             <% end %>
           </dl>
 
@@ -112,6 +143,8 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
             billing_name={@payable.name}
             billing_email={@payable.email}
           />
+
+          <.button navigate={~q"/#{language}/courses"} variant="text" class="mt-10">{~t"Back to courses"}</.button>
         </div>
       </.container>
     </Layouts.app>
@@ -127,7 +160,28 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> _}, socket),
-    do: {:noreply, PaymentLink.paid(socket)}
+    do: {:noreply, socket |> PaymentLink.paid() |> assign_page_title()}
+
+  defp assign_page_title(socket) do
+    registration = socket.assigns.payable
+
+    title =
+      cond do
+        registration.status == :cancelled ->
+          ~t"Booking cancelled"
+
+        registration.refunded? ->
+          ~t"Booking refunded"
+
+        registration.paid? or socket.assigns.returned_from_stripe? or not registration.payment_link_open? ->
+          ~t"Your booking"
+
+        true ->
+          ~t"Pay for your booking"
+      end
+
+    assign(socket, :page_title, title)
+  end
 
   defp load_registration(token) do
     with {:ok, registration} <- Courses.get_registration_by_payment_link_token(token, actor: system_actor()) do
