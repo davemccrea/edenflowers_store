@@ -1,10 +1,10 @@
 ---
 id: TASK-9.3
 title: Email Jennie about every new order and subscription
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-22 06:35'
-updated_date: '2026-10-22 07:02'
+updated_date: '2026-10-25 14:17'
 labels: []
 dependencies: []
 parent_task_id: TASK-9

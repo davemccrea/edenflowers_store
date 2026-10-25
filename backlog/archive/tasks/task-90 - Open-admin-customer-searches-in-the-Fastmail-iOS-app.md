@@ -1,13 +1,14 @@
 ---
 id: TASK-90
 title: Open admin customer searches in the Fastmail iOS app
-status: needs-info
+status: done
 assignee: []
 created_date: '2026-10-22 07:08'
-updated_date: '2026-10-22 07:11'
+updated_date: '2026-10-25 14:18'
 labels:
   - spec
   - admin
+  - wontfix
 dependencies: []
 priority: low
 type: research
@@ -43,6 +44,15 @@ created: 2026-10-22 07:11
 ---
 
 David sent the question to support@fastmail.com on 2026-10-22.
+
+---
+
+author: @claude
+created: 2026-10-25 14:18
+
+---
+
+Fastmail support replied that no URL opens a search in the iOS app. Search links keep opening Fastmail web in Safari via x-safari-https://.
 
 ---
 <!-- COMMENTS:END -->
