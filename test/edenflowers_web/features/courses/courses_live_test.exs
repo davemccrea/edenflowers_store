@@ -160,15 +160,16 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
   end
 
   describe "/courses/bookings/:id" do
-    test "shows the booking straight away, before payment confirms", %{conn: conn} do
+    test "waits for payment to confirm the booking", %{conn: conn} do
       registration = generate(course_registration(payment_intent_id: "pi_x"))
 
-      {:ok, _view, html} = live(conn, ~p"/courses/bookings/#{registration.id}")
-      assert html =~ "You&#39;re booked"
+      {:ok, view, _html} = live(conn, ~p"/courses/bookings/#{registration.id}")
+      assert has_element?(view, "[data-testid=booking-confirming]")
+      refute has_element?(view, "h1", "You're booked")
     end
 
-    test "says how to cancel", %{conn: conn} do
-      registration = generate(course_registration(payment_intent_id: "pi_x"))
+    test "says how to cancel a confirmed booking", %{conn: conn} do
+      registration = generate(course_registration(status: :confirmed))
 
       {:ok, _view, html} = live(conn, ~p"/courses/bookings/#{registration.id}")
       assert html =~ "To cancel, reply to your confirmation email."

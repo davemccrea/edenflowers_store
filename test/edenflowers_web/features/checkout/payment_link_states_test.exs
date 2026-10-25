@@ -78,10 +78,10 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
   @booking_money [
     %{name: :unpaid, payments: [], state: :unpaid, held: 0, refund_due: 0},
     %{name: :partial, payments: [{5000, false}], state: :unpaid, held: 5000, refund_due: 0},
-    %{name: :paid, payments: [{17000, false}], state: :paid, held: 17000, refund_due: 0},
-    %{name: :overpaid, payments: [{19000, false}], state: :paid, held: 19000, refund_due: 2000},
-    %{name: :refunded, payments: [{17000, false}, {-17000, true}], state: :refunded, held: 0, refund_due: 0},
-    %{name: :goodwill_refund, payments: [{17000, false}, {-3000, true}], state: :paid, held: 14000, refund_due: 0}
+    %{name: :paid, payments: [{17_000, false}], state: :paid, held: 17_000, refund_due: 0},
+    %{name: :overpaid, payments: [{19_000, false}], state: :paid, held: 19_000, refund_due: 2000},
+    %{name: :refunded, payments: [{17_000, false}, {-17_000, true}], state: :refunded, held: 0, refund_due: 0},
+    %{name: :goodwill_refund, payments: [{17_000, false}, {-3000, true}], state: :paid, held: 14_000, refund_due: 0}
   ]
 
   for period <- [:future, :past], status <- [:confirmed, :cancelled], money <- @booking_money do
@@ -165,7 +165,7 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
       record = unpaid_record(ctx.kind)
 
       if ctx.paid? do
-        {key, amount} = if ctx.kind == :order, do: {:order_id, 8850}, else: {:course_registration_id, 17000}
+        {key, amount} = if ctx.kind == :order, do: {:order_id, 8850}, else: {:course_registration_id, 17_000}
         add_payments(key, record.id, [{amount, false}])
       end
 
@@ -269,7 +269,7 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
     @tag kind: kind, outcome: outcome
     test "#{kind}: a stale successful return cannot override #{outcome}", ctx do
       record = unpaid_record(ctx.kind)
-      {key, total} = if ctx.kind == :order, do: {:order_id, 8850}, else: {:course_registration_id, 17000}
+      {key, total} = if ctx.kind == :order, do: {:order_id, 8850}, else: {:course_registration_id, 17_000}
       add_payments(key, record.id, [{total, false}])
       if ctx.outcome == :refunded, do: add_payments(key, record.id, [{-total, true}])
 

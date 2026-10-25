@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
         <div class="max-w-xl">
           <.flower
             name="flower-30"
-            class={["text-primary/70 mb-6 h-12 w-12", if(@paid?, do: "flower-bloom", else: "flower-waiting")]}
+            class={["text-primary/70 mb-6 h-12 w-12", if(@placed?, do: "flower-bloom", else: "flower-waiting")]}
           />
           <div id="order-status">
             <h1 :if={@first_name} class="page-title">{~t"Thank you, #{@first_name}."}</h1>
@@ -106,9 +106,9 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
           </figure>
 
           <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
-            <div :if={@paid? || (@next_delivery && @current_user)} class="flex flex-wrap gap-3">
+            <div :if={@shown_order.receipt_available? || (@next_delivery && @current_user)} class="flex flex-wrap gap-3">
               <.button
-                :if={@paid?}
+                :if={@shown_order.receipt_available?}
                 href={~p"/order/#{@shown_order.id}/receipt"}
                 target="_blank"
                 rel="noopener"
@@ -127,7 +127,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
               </.button>
             </div>
             <.button
-              :if={@paid? && @shown_order.fulfillment_method == :pickup}
+              :if={@placed? && @shown_order.fulfillment_method == :pickup}
               href={~p"/order/#{@shown_order.id}/pickup.ics"}
               variant="text"
               data-testid="add-to-calendar"
@@ -153,9 +153,10 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   # A guest is granted the order their session's cart became (see `InitStore` and
   # `CheckoutCompleteController`); everyone else goes through the order's read policy.
   def get_order(id, guest_order_id, _user) when id == guest_order_id,
-    do: Orders.get_order_by_id(id, authorize?: false, load: [:receipt_available?])
+    do: Orders.get_order_by_id(id, authorize?: false, load: [:receipt_available?, :committed?])
 
-  def get_order(id, _guest_order_id, user), do: Orders.get_order_by_id(id, actor: user, load: [:receipt_available?])
+  def get_order(id, _guest_order_id, user),
+    do: Orders.get_order_by_id(id, actor: user, load: [:receipt_available?, :committed?])
 
   defp assign_order(socket, order) do
     {:ok, order} = Ash.load(order, [:customer_first_name, :line_items, :fulfillment_fee], authorize?: false)
@@ -164,7 +165,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     socket
     |> assign(:page_title, ~t"Thank you for your order")
     |> assign(:shown_order, order)
-    |> assign(:paid?, order.state == :placed)
+    |> assign(:placed?, order.committed?)
     |> assign(:first_name, order.customer_first_name)
     |> assign(:date, Format.weekday_date(order.fulfillment_date, Format.locale()))
     |> assign(:interval_weeks, subscription_line && subscription_line.interval_weeks)

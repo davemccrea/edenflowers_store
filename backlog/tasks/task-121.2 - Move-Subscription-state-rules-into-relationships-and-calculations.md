@@ -4,7 +4,7 @@ title: Move Subscription state rules into relationships and calculations
 status: done
 assignee: []
 created_date: '2026-10-25 10:08'
-updated_date: '2026-10-25 10:23'
+updated_date: '2026-10-25 13:11'
 labels: []
 dependencies: []
 parent_task_id: TASK-121
@@ -30,4 +30,6 @@ Add has_one :unpaid_occurrence and has_one :next_occurrence, calculations charge
 
 <!-- SECTION:NOTES:BEGIN -->
 Relationship named booked_occurrence (the web's word for it). Also added next_delivery_date (nil unless active) and changeable?, used by the admin lists and the account drawer. Kept charged_on/1: checkout quotes it before the subscription exists. Kept reactivate_if_held/1: it is already domain code shared by two actions, not used by the web.
+
+Review follow-up: admin Pause, Resume and Cancel read pausable?, resumable? and cancellable?, and the actions validate those same calculations. Customer cutoff validation remains separate so Jennie retains her override.
 <!-- SECTION:NOTES:END -->

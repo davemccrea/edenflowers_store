@@ -5,13 +5,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
   use EdenflowersWeb, :live_view
 
+  import EdenflowersWeb.Marketing.TrustedBy
+
   alias Edenflowers.Catalog
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Translations
-
-  import EdenflowersWeb.Marketing.TrustedBy
 
   # From feedback.md, in the customer's own language, with emoji dropped and long messages trimmed.
   # `en` is shown beneath the original on /en only. `occasion` is set only where the message names it.

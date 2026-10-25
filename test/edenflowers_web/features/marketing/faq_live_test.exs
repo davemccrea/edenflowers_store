@@ -4,6 +4,8 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
+  alias Edenflowers.Orders.Subscription
+
   test "lists every section in the side nav, in every language", %{conn: conn} do
     for path <- ["/en/faq", "/sv/vanliga-fragor", "/fi/ukk"] do
       {:ok, view, _html} = live(conn, path)
@@ -52,7 +54,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
   end
 
   test "the cancel answer gives the change deadline and links the terms", %{conn: conn} do
-    days = Edenflowers.Orders.Subscription.change_deadline_days()
+    days = Subscription.change_deadline_days()
 
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
@@ -79,7 +81,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
   end
 
   test "emits FAQPage structured data with the page's questions as plain text", %{conn: conn} do
-    days = Edenflowers.Orders.Subscription.change_deadline_days()
+    days = Subscription.change_deadline_days()
 
     html = conn |> get(~p"/en/faq") |> html_response(200)
 

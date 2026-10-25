@@ -259,6 +259,7 @@ defmodule Edenflowers.Orders.Subscription do
     end
 
     update :pause do
+      validate {Validations.Holds, calculation: :pausable?, message: "can't be paused"}
       validate Validations.SubscriptionChangesOpen
       change transition_state(:paused)
     end
@@ -266,6 +267,7 @@ defmodule Edenflowers.Orders.Subscription do
     # Picks up at the first date on the schedule still open to changes, so
     # resuming never creates an Occurrence at short notice.
     update :resume do
+      validate {Validations.Holds, calculation: :resumable?, message: "can't be resumed"}
       change transition_state(:active)
       change {Changes.StepToScheduledDate, days_from_today: @change_deadline_days}
 
@@ -311,6 +313,7 @@ defmodule Edenflowers.Orders.Subscription do
     end
 
     update :cancel do
+      validate {Validations.Holds, calculation: :cancellable?, message: "can't be cancelled"}
       argument :email_customer?, :boolean, default: true
       argument :message, :string
       change transition_state(:cancelled)
@@ -424,6 +427,11 @@ defmodule Edenflowers.Orders.Subscription do
     calculate :resume_date,
               :date,
               {Edenflowers.Orders.Calculations.ScheduledDate, days_from_today: @change_deadline_days}
+
+    # State permissions also apply to Jennie, who may act inside the customer's deadline.
+    calculate :pausable?, :boolean, expr(state == :active)
+    calculate :resumable?, :boolean, expr(state == :paused)
+    calculate :cancellable?, :boolean, expr(state in [:active, :paused, :payment_failed])
 
     # Whether the customer can pause, resume or change it now.
     calculate :changeable?, :boolean, expr(state in [:active, :paused] and not changes_closed?)

@@ -9,8 +9,24 @@ defmodule Edenflowers.Release do
     load_app()
 
     for repo <- repos() do
-      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(repo, fn repo ->
+          Ecto.Migrator.run(repo, :up, all: true)
+          check_course_registration_states!(repo)
+        end)
     end
+  end
+
+  def check_course_registration_states!(repo) do
+    %{rows: [[count]]} =
+      Ecto.Adapters.SQL.query!(repo, "SELECT count(*) FROM course_registrations WHERE status = 'awaiting_payment'")
+
+    if count > 0 do
+      raise "Deployment blocked: #{count} course registrations still have status awaiting_payment. " <>
+              "Back up production, resolve their payments and cancel them using the previous release before deploying."
+    end
+
+    :ok
   end
 
   def rollback(repo, version) do
