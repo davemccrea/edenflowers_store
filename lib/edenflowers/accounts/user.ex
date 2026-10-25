@@ -58,6 +58,14 @@ defmodule Edenflowers.Accounts.User do
       limit: 5,
       per: :timer.minutes(10),
       key: fn input -> "otp:sign_in:#{input.arguments[:email]}" end
+
+    # Each code goes to an address the customer only claims to own.
+    action :request_email_change, limit: 5, per: :timer.minutes(15)
+
+    # Wrong codes are counted here rather than on the user: a failed confirm
+    # rolls back anything it writes. Counted before the transaction so a wrong
+    # code still counts.
+    action :confirm_email_change, limit: 5, per: :timer.minutes(10), on: :before_transaction
   end
 
   admin do
@@ -93,10 +101,20 @@ defmodule Edenflowers.Accounts.User do
       accept [:name, :newsletter_opt_in, :locale]
     end
 
-    # Only for an address the customer has proved they own; AccountLive emails
-    # a code to the new address first.
-    update :change_email do
-      accept [:email]
+    # Emails a code to the new address. The email only changes once that code
+    # comes back through :confirm_email_change.
+    update :request_email_change do
+      require_atomic? false
+      argument :email, Edenflowers.Types.Email, allow_nil?: false
+      change Changes.RequestEmailChange
+    end
+
+    update :confirm_email_change do
+      require_atomic? false
+      argument :code, :string, allow_nil?: false, sensitive?: true
+      # The pending change is read from the database, never from the caller's record.
+      change get_and_lock_for_update()
+      change Changes.ConfirmEmailChange
     end
 
     create :subscribe_to_newsletter do
@@ -212,6 +230,11 @@ defmodule Edenflowers.Accounts.User do
     attribute :avatar_content_type, :string, allow_nil?: true
 
     attribute :stripe_customer_id, :string, allow_nil?: true
+
+    # An email change waiting for its code. See :request_email_change.
+    attribute :pending_email, :ci_string, allow_nil?: true
+    attribute :pending_email_code_hash, :string, allow_nil?: true, sensitive?: true
+    attribute :pending_email_expires_at, :utc_datetime_usec, allow_nil?: true
   end
 
   relationships do

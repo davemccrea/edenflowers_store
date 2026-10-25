@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       |> form("#details-form", %{"details" => %{"name" => "Ada Lovelace", "email" => "new@example.com"}})
       |> render_submit()
 
-      for _ <- 1..5 do
+      for _ <- 1..6 do
         view |> form("#email-code-form", %{"confirm" => %{"code" => "wrong"}}) |> render_submit()
       end
 

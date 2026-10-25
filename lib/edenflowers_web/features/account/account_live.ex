@@ -9,23 +9,17 @@ defmodule EdenflowersWeb.Account.AccountLive do
   require Logger
 
   alias Edenflowers.Accounts
-  alias Edenflowers.Accounts.Workers.SendEmailChangeCode
   alias Edenflowers.Catalog
   alias Edenflowers.Courses
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Orders
-  alias Edenflowers.RateLimiter
   alias Edenflowers.ShopTime
   alias Edenflowers.Translations
   alias EdenflowersWeb.Account.SubscriptionManager
 
   @saved_visible_ms 2500
   @newsletter_form_id "newsletter-preference"
-  @email_code_ttl_ms :timer.minutes(10)
-  @email_code_attempts 5
-  @email_codes_per_window 5
-  @email_code_window_ms :timer.minutes(15)
   @past_visible 5
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_required}
@@ -154,7 +148,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
             phx-submit="confirm_email"
             class="mt-6 flex max-w-md flex-col gap-4"
           >
-            <p>{~t"We've sent a code to #{@pending_email.email}. Enter it to confirm your new email."}</p>
+            <p>{~t"We've sent a code to #{email = @pending_email}. Enter it to confirm your new email."}</p>
             <.input
               field={@code_form[:code]}
               type="text"
@@ -218,41 +212,18 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   def handle_event("confirm_email", %{"confirm" => %{"code" => code}}, socket) do
-    pending = socket.assigns.pending_email
     user = socket.assigns.current_user
 
-    cond do
-      pending == nil ->
-        {:noreply, socket}
+    case Accounts.confirm_email_change(user, code, actor: user, load: [:first_name]) do
+      {:ok, user} ->
+        {:noreply, socket |> assign(current_user: user) |> reset_details(user) |> assign(details_saved?: true)}
 
-      System.monotonic_time(:millisecond) > pending.expires_at ->
-        {:noreply, abandon_email_change(socket, ~t"That code has expired. Please try again.")}
+      {:error, %Ash.Error.Invalid{errors: [%{field: :code, message: message} | _]}} ->
+        {:noreply, assign(socket, code_form: to_form(%{"code" => ""}, as: :confirm, errors: [code: {message, []}]))}
 
-      not Plug.Crypto.secure_compare(String.trim(code), pending.code) ->
-        attempts = pending.attempts + 1
-
-        if attempts >= @email_code_attempts do
-          {:noreply, abandon_email_change(socket, ~t"Too many wrong codes. Please try again.")}
-        else
-          {:noreply,
-           socket
-           |> assign(pending_email: %{pending | attempts: attempts})
-           |> assign(
-             code_form: to_form(%{"code" => ""}, as: :confirm, errors: [code: {~t"That code isn't right.", []}])
-           )}
-        end
-
-      true ->
-        case Accounts.change_email(user, pending.email, actor: user, load: [:first_name]) do
-          {:ok, user} ->
-            {:noreply, socket |> assign(current_user: user) |> reset_details(user) |> assign(details_saved?: true)}
-
-          {:error, error} ->
-            Logger.info("Email change failed: #{inspect(error)}")
-
-            {:noreply,
-             abandon_email_change(socket, ~t"That email can't be used. It may already belong to another account.")}
-        end
+      {:error, error} ->
+        Logger.info("Email change failed: #{inspect(error)}")
+        {:noreply, abandon_email_change(socket, email_change_error_message(error))}
     end
   end
 
@@ -540,47 +511,35 @@ defmodule EdenflowersWeb.Account.AccountLive do
       String.downcase(email) == String.downcase(to_string(user.email)) ->
         {:ok, socket |> reset_details(user) |> assign(details_saved?: true)}
 
-      not match?({:ok, address} when is_binary(address), Ash.Type.cast_input(Edenflowers.Types.Email, email)) ->
-        {:error, assign(socket, details_form: details_form(user, email, email: ~t"Enter a valid email address."))}
-
-      # Each code goes to an address the customer only claims to own, so cap how
-      # many they can fire off.
-      match?({:deny, _}, RateLimiter.hit("email_change:#{user.id}", @email_code_window_ms, @email_codes_per_window)) ->
-        {:error,
-         assign(socket, details_form: details_form(user, email, email: ~t"Too many attempts. Please try again later."))}
-
       true ->
-        code = generate_code()
+        case Accounts.request_email_change(user, email, actor: user) do
+          {:ok, user} ->
+            {:ok, assign(socket, pending_email: user.pending_email, code_form: to_form(%{"code" => ""}, as: :confirm))}
 
-        {:ok, _job} =
-          SendEmailChangeCode.enqueue(%{
-            "email" => email,
-            "code" => code,
-            "locale" => Gettext.get_locale(EdenflowersWeb.Gettext)
-          })
+          {:error, %Ash.Error.Forbidden{errors: [%AshRateLimiter.LimitExceeded{} | _]}} ->
+            {:error,
+             assign(socket,
+               details_form: details_form(user, email, email: ~t"Too many attempts. Please try again later.")
+             )}
 
-        pending = %{
-          email: email,
-          code: code,
-          attempts: 0,
-          expires_at: System.monotonic_time(:millisecond) + @email_code_ttl_ms
-        }
-
-        {:ok, assign(socket, pending_email: pending, code_form: to_form(%{"code" => ""}, as: :confirm))}
+          {:error, error} ->
+            Logger.info("Email change request failed: #{inspect(error)}")
+            {:error, assign(socket, details_form: details_form(user, email, email: ~t"Enter a valid email address."))}
+        end
     end
   end
 
-  defp generate_code do
-    :crypto.strong_rand_bytes(4)
-    |> :binary.decode_unsigned()
-    |> rem(1_000_000)
-    |> Integer.to_string()
-    |> String.pad_leading(6, "0")
-  end
+  defp email_change_error_message(%Ash.Error.Forbidden{errors: [%AshRateLimiter.LimitExceeded{} | _]}),
+    do: ~t"Too many wrong codes. Please try again."
+
+  defp email_change_error_message(%Ash.Error.Invalid{errors: [%{field: :pending_email, message: message} | _]}),
+    do: message
+
+  defp email_change_error_message(_error), do: ~t"That email can't be used. It may already belong to another account."
 
   defp abandon_email_change(socket, message) do
     user = socket.assigns.current_user
-    email = socket.assigns.pending_email.email
+    email = socket.assigns.pending_email
 
     socket
     |> reset_details(user)

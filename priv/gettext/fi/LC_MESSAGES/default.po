@@ -155,8 +155,8 @@ msgstr "Maksu"
 #: lib/edenflowers_web/components/layouts.ex:529
 #: lib/edenflowers_web/components/layouts.ex:646
 #: lib/edenflowers_web/components/layouts.ex:738
-#: lib/edenflowers_web/features/account/account_live.ex:39
-#: lib/edenflowers_web/features/account/account_live.ex:65
+#: lib/edenflowers_web/features/account/account_live.ex:33
+#: lib/edenflowers_web/features/account/account_live.ex:59
 #: lib/edenflowers_web/features/admin/account_live.ex:21
 #: lib/edenflowers_web/features/admin/account_live.ex:36
 #, elixir-autogen, elixir-format
@@ -183,7 +183,7 @@ msgstr "Toimituspäivä *"
 msgid "Delivery method *"
 msgstr "Toimitustapa *"
 
-#: lib/edenflowers_web/features/account/account_live.ex:141
+#: lib/edenflowers_web/features/account/account_live.ex:135
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:34
 #: lib/edenflowers_web/features/admin/customers_live.ex:63
 #: lib/edenflowers_web/features/admin/order_form_live.ex:176
@@ -479,14 +479,14 @@ msgstr "Seuraava kuva"
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:112
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:606
-#: lib/edenflowers_web/features/courses/course_live.ex:247
+#: lib/edenflowers_web/features/courses/course_live.ex:248
 #: lib/edenflowers_web/payment_link.ex:86
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please refresh the page and try again."
 msgstr "Maksaminen ei ole juuri nyt käytettävissä. Päivitä sivu ja yritä uudelleen."
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:77
-#: lib/edenflowers_web/features/courses/course_live.ex:232
+#: lib/edenflowers_web/features/courses/course_live.ex:233
 #: lib/edenflowers_web/payment_link.ex:79
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please try again in a moment."
@@ -569,7 +569,7 @@ msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr "Vaasan kartta, johon Minimossen on merkitty"
 
 #: lib/edenflowers_web/components/newsletter_signup.ex:18
-#: lib/edenflowers_web/features/account/account_live.ex:173
+#: lib/edenflowers_web/features/account/account_live.ex:167
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:75
 #: lib/edenflowers_web/features/admin/promotions_live.ex:69
 #, elixir-autogen, elixir-format
@@ -621,7 +621,7 @@ msgstr "Tilaa"
 msgid "Thanks! Your 15% off code is on its way to your inbox."
 msgstr "Kiitos! 15 %:n alennuskoodisi on matkalla sähköpostiisi."
 
-#: lib/edenflowers_web/features/account/account_live.ex:132
+#: lib/edenflowers_web/features/account/account_live.ex:126
 #: lib/edenflowers_web/features/checkout/components/fields.ex:129
 #, elixir-autogen, elixir-format
 msgid "Your details"
@@ -1090,7 +1090,7 @@ msgid "Office supplies"
 msgstr "Toimistotarvikkeet"
 
 #: lib/edenflowers_web/components/newsletter_signup.ex:61
-#: lib/edenflowers_web/features/account/account_live.ex:187
+#: lib/edenflowers_web/features/account/account_live.ex:181
 #, elixir-autogen, elixir-format
 msgid "Only occasional emails. Unsubscribe at any time."
 msgstr "Vain satunnaisia viestejä. Voit peruuttaa tilauksen milloin tahansa."
@@ -1172,7 +1172,7 @@ msgstr "Asiantuntijapalvelut"
 msgid "Recipient"
 msgstr "Vastaanottaja"
 
-#: lib/edenflowers_web/features/account/account_live.ex:641
+#: lib/edenflowers_web/features/account/account_live.ex:600
 #: lib/edenflowers_web/features/admin/components/components.ex:1115
 #: lib/edenflowers_web/features/admin/orders_live.ex:174
 #, elixir-autogen, elixir-format
@@ -1204,7 +1204,7 @@ msgid "Search vendor or description…"
 msgstr "Hae toimittajaa tai kuvausta…"
 
 #: lib/edenflowers_web/components/layouts.ex:541
-#: lib/edenflowers_web/features/account/account_live.ex:68
+#: lib/edenflowers_web/features/account/account_live.ex:62
 #: lib/edenflowers_web/features/admin/account_live.ex:121
 #: lib/edenflowers_web/features/auth/sign_out_live.ex:21
 #: lib/edenflowers_web/features/auth/sign_out_live.ex:29
@@ -1572,29 +1572,29 @@ msgstr "Ilmoitan tekstiviestillä, kun tilaus on valmis."
 msgid "Phone number *"
 msgstr "Puhelinnumero *"
 
-#: lib/edenflowers_web/features/account/account_live.ex:647
+#: lib/edenflowers_web/features/account/account_live.ex:606
 #, elixir-autogen, elixir-format
 msgid "Arriving today"
 msgstr "Saapuu tänään"
 
-#: lib/edenflowers_web/features/account/account_live.ex:643
+#: lib/edenflowers_web/features/account/account_live.ex:602
 #, elixir-autogen, elixir-format
 msgid "Confirmed"
 msgstr "Vahvistettu"
 
-#: lib/edenflowers_web/features/account/account_live.ex:470
+#: lib/edenflowers_web/features/account/account_live.ex:441
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:71
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "Course"
 msgstr "Kurssi"
 
-#: lib/edenflowers_web/features/account/account_live.ex:646
+#: lib/edenflowers_web/features/account/account_live.ex:605
 #, elixir-autogen, elixir-format
 msgid "Ready to collect today"
 msgstr "Noudettavissa tänään"
 
-#: lib/edenflowers_web/features/account/account_live.ex:344
+#: lib/edenflowers_web/features/account/account_live.ex:315
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "Receipt"
@@ -1605,18 +1605,18 @@ msgstr "Kuitti"
 msgid "Removing this empties your cart and clears the checkout details you've entered. Continue?"
 msgstr "Tämän poistaminen tyhjentää ostoskorisi ja poistaa syöttämäsi kassatiedot. Jatketaanko?"
 
-#: lib/edenflowers_web/features/account/account_live.ex:145
-#: lib/edenflowers_web/features/account/account_live.ex:195
+#: lib/edenflowers_web/features/account/account_live.ex:139
+#: lib/edenflowers_web/features/account/account_live.ex:189
 #, elixir-autogen, elixir-format
 msgid "Saved"
 msgstr "Tallennettu"
 
-#: lib/edenflowers_web/features/account/account_live.ex:97
+#: lib/edenflowers_web/features/account/account_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "See what's coming up"
 msgstr "Katso tulevat kurssit"
 
-#: lib/edenflowers_web/features/account/account_live.ex:185
+#: lib/edenflowers_web/features/account/account_live.ex:179
 #, elixir-autogen, elixir-format
 msgid "Send me occasional emails about what's in the shop."
 msgstr "Lähetä minulle silloin tällöin sähköpostia siitä, mitä myymälässä on."
@@ -1634,7 +1634,7 @@ msgstr "Lähetä minulle silloin tällöin sähköpostia siitä, mitä myymälä
 msgid "Status"
 msgstr "Tila"
 
-#: lib/edenflowers_web/features/account/account_live.ex:96
+#: lib/edenflowers_web/features/account/account_live.ex:90
 #, elixir-autogen, elixir-format
 msgid "Visit the shop"
 msgstr "Siirry kauppaan"
@@ -1647,12 +1647,12 @@ msgstr "Siirry kauppaan"
 msgid "When"
 msgstr "Milloin"
 
-#: lib/edenflowers_web/features/account/account_live.ex:298
+#: lib/edenflowers_web/features/account/account_live.ex:269
 #, elixir-autogen, elixir-format
 msgid "Your newsletter preference couldn't be saved."
 msgstr "Uutiskirjeasetustasi ei voitu tallentaa."
 
-#: lib/edenflowers_web/features/account/account_live.ex:341
+#: lib/edenflowers_web/features/account/account_live.ex:312
 #, elixir-autogen, elixir-format
 msgid "Receipt (opens in a new tab)"
 msgstr "Kuitti (avautuu uuteen välilehteen)"
@@ -1714,7 +1714,7 @@ msgid_plural "%{count} place(s) for %{name}"
 msgstr[0] "%{count} paikka, varaaja %{name}"
 msgstr[1] "%{count} paikkaa, varaaja %{name}"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:377
+#: lib/edenflowers_web/features/courses/course_live.ex:378
 #: lib/edenflowers_web/features/courses/courses_live.ex:168
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) left"
@@ -1734,14 +1734,14 @@ msgstr "Varaus peruttu"
 msgid "Booking closed"
 msgstr "Varaukset suljettu"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:419
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:444
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:421
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:446
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:43
 #, elixir-autogen, elixir-format
 msgid "Booking not found."
 msgstr "Varausta ei löytynyt."
 
-#: lib/edenflowers_web/features/account/account_live.ex:92
+#: lib/edenflowers_web/features/account/account_live.ex:86
 #: lib/edenflowers_web/features/courses/courses_live.ex:74
 #, elixir-autogen, elixir-format
 msgid "Coming up"
@@ -1754,12 +1754,12 @@ msgstr "Jatka maksamaan"
 
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:43
 #: lib/edenflowers_web/features/admin/course_form_live.ex:39
-#: lib/edenflowers_web/features/courses/course_live.ex:301
+#: lib/edenflowers_web/features/courses/course_live.ex:302
 #, elixir-autogen, elixir-format
 msgid "Course not found."
 msgstr "Kurssia ei löytynyt."
 
-#: lib/edenflowers_web/features/courses/course_live.ex:376
+#: lib/edenflowers_web/features/courses/course_live.ex:377
 #: lib/edenflowers_web/features/courses/courses_live.ex:166
 #, elixir-autogen, elixir-format
 msgid "Fully booked"
@@ -1846,7 +1846,7 @@ msgstr "Varaa paikka"
 msgid "Change booking"
 msgstr "Muuta varausta"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:389
+#: lib/edenflowers_web/features/courses/course_live.ex:390
 #: lib/edenflowers_web/features/marketing/contact_live.ex:86
 #, elixir-autogen, elixir-format
 msgid "(opens a map in a new tab)"
@@ -1907,8 +1907,8 @@ msgstr "Tarkistamatta"
 msgid "Review"
 msgstr "Tarkistus"
 
-#: lib/edenflowers_web/features/account/account_live.ex:390
-#: lib/edenflowers_web/features/account/account_live.ex:499
+#: lib/edenflowers_web/features/account/account_live.ex:361
+#: lib/edenflowers_web/features/account/account_live.ex:470
 #, elixir-autogen, elixir-format
 msgid "Order"
 msgstr "Tilaus"
@@ -2315,7 +2315,7 @@ msgstr "Katso tulevat kurssit"
 msgid "%{seats} / %{total} seats"
 msgstr "%{seats} / %{total} paikkaa"
 
-#: lib/edenflowers_web/features/account/account_live.ex:168
+#: lib/edenflowers_web/features/account/account_live.ex:162
 #: lib/edenflowers_web/features/admin/components/components.ex:209
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:69
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:587
@@ -2360,7 +2360,7 @@ msgstr "Sulje"
 msgid "Language"
 msgstr "Kieli"
 
-#: lib/edenflowers_web/features/account/account_live.ex:140
+#: lib/edenflowers_web/features/account/account_live.ex:134
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:135
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:153
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:33
@@ -2382,12 +2382,12 @@ msgstr "Nimi"
 msgid "Seats"
 msgstr "Paikat"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:631
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:633
 #, elixir-autogen, elixir-format
 msgid "Remove a seat"
 msgstr "Poista paikka"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:739
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:741
 #, elixir-autogen, elixir-format
 msgid "Remove one seat from this booking?"
 msgstr "Poistetaanko varauksesta yksi paikka?"
@@ -2648,7 +2648,7 @@ msgstr "Käännä"
 msgid "Spend at least %{edenflowers_format_currency} to use this code."
 msgstr "Koodin käyttö edellyttää vähintään %{edenflowers_format_currency} ostoksia."
 
-#: lib/edenflowers_web/features/account/account_live.ex:161
+#: lib/edenflowers_web/features/account/account_live.ex:155
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:110
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:313
 #: lib/edenflowers_web/features/admin/promotions_live.ex:79
@@ -2855,8 +2855,8 @@ msgstr "%{reason}. Anna oma toimitusmaksu, jos toimitat silti."
 msgid "Amount (€)"
 msgstr "Summa (€)"
 
-#: lib/edenflowers_web/features/account/account_live.ex:417
-#: lib/edenflowers_web/features/account/account_live.ex:437
+#: lib/edenflowers_web/features/account/account_live.ex:388
+#: lib/edenflowers_web/features/account/account_live.ex:408
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:138
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:139
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1344
@@ -2865,7 +2865,7 @@ msgstr "Summa (€)"
 msgid "Cancel order"
 msgstr "Peru tilaus"
 
-#: lib/edenflowers_web/features/account/account_live.ex:642
+#: lib/edenflowers_web/features/account/account_live.ex:601
 #: lib/edenflowers_web/features/admin/components/components.ex:1125
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:134
 #: lib/edenflowers_web/features/admin/order_log.ex:72
@@ -2911,7 +2911,7 @@ msgstr "Maksulinkkiä ei voitu luoda."
 msgid "Could not save the note."
 msgstr "Muistiinpanoa ei voitu tallentaa."
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:459
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:461
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1398
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1431
 #, elixir-autogen, elixir-format
@@ -3061,7 +3061,7 @@ msgstr "Tilaus tehty."
 msgid "Order updated."
 msgstr "Tilaus päivitetty."
 
-#: lib/edenflowers_web/features/account/account_live.ex:637
+#: lib/edenflowers_web/features/account/account_live.ex:596
 #, elixir-autogen, elixir-format
 msgid "Pay at collection"
 msgstr "Maksetaan noudettaessa"
@@ -3072,14 +3072,14 @@ msgstr "Maksetaan noudettaessa"
 msgid "Pay for your order"
 msgstr "Maksa tilauksesi"
 
-#: lib/edenflowers_web/features/account/account_live.ex:621
+#: lib/edenflowers_web/features/account/account_live.ex:580
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:60
 #: lib/edenflowers_web/features/account/subscription_manager.ex:375
 #, elixir-autogen, elixir-format
 msgid "Pay now"
 msgstr "Maksa nyt"
 
-#: lib/edenflowers_web/features/account/account_live.ex:635
+#: lib/edenflowers_web/features/account/account_live.ex:594
 #, elixir-autogen, elixir-format
 msgid "Pay on delivery"
 msgstr "Maksetaan toimituksen yhteydessä"
@@ -3196,7 +3196,7 @@ msgstr "Tämän päivän tilausaika on umpeutunut. Varataan silti."
 msgid "Unknown"
 msgstr "Tuntematon"
 
-#: lib/edenflowers_web/features/account/account_live.ex:618
+#: lib/edenflowers_web/features/account/account_live.ex:577
 #: lib/edenflowers_web/features/account/subscription_manager.ex:372
 #: lib/edenflowers_web/features/admin/components/components.ex:1116
 #: lib/edenflowers_web/features/admin/orders_live.ex:168
@@ -3286,7 +3286,7 @@ msgid "To collect"
 msgstr "Perittävää"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:609
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:693
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:695
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:97
 #: lib/edenflowers_web/features/admin/overview_live.ex:804
 #, elixir-autogen, elixir-format
@@ -3302,7 +3302,7 @@ msgid "To refund"
 msgstr "Hyvitettävää"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:611
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:694
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:696
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:98
 #, elixir-autogen, elixir-format
 msgid "To refund %{amount}"
@@ -3380,7 +3380,7 @@ msgstr "Lisää toimintoja"
 msgid "Paid %{amount} · %{how}"
 msgstr "Maksettu %{amount} · %{how}"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:717
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:719
 #: lib/edenflowers_web/features/admin/order_log.ex:52
 #, elixir-autogen, elixir-format
 msgid "Refunded %{amount} · %{how}"
@@ -3393,7 +3393,7 @@ msgstr "Maksulinkkiä ei voitu lähettää."
 
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:222
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:181
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:517
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:519
 #, elixir-autogen, elixir-format
 msgid "Email payment link"
 msgstr "Lähetä maksulinkki"
@@ -3526,12 +3526,12 @@ msgstr "Avaa Papra"
 msgid "Invoice (Zervant)"
 msgstr "Lasku (Zervant)"
 
-#: lib/edenflowers_web/features/account/account_live.ex:167
+#: lib/edenflowers_web/features/account/account_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "Confirm"
 msgstr "Vahvista"
 
-#: lib/edenflowers_web/features/account/account_live.ex:544
+#: lib/edenflowers_web/features/account/account_live.ex:527
 #, elixir-autogen, elixir-format
 msgid "Enter a valid email address."
 msgstr "Anna kelvollinen sähköpostiosoite."
@@ -3542,12 +3542,12 @@ msgstr "Anna kelvollinen sähköpostiosoite."
 msgid "Free delivery within %{km} km"
 msgstr "Ilmainen toimitus %{km} km:n säteellä"
 
-#: lib/edenflowers_web/features/account/account_live.ex:65
+#: lib/edenflowers_web/features/account/account_live.ex:59
 #, elixir-autogen, elixir-format
 msgid "Hi, %{current_user_first_name}"
 msgstr "Hei, %{current_user_first_name}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:143
+#: lib/edenflowers_web/features/account/account_live.ex:137
 #: lib/edenflowers_web/features/admin/course_form_live.ex:63
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:269
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:347
@@ -3558,37 +3558,37 @@ msgstr "Hei, %{current_user_first_name}"
 msgid "Save"
 msgstr "Tallenna"
 
-#: lib/edenflowers_web/features/account/account_live.ex:229
+#: lib/edenflowers/accounts/changes/confirm_email_change.ex:26
 #, elixir-autogen, elixir-format
 msgid "That code has expired. Please try again."
 msgstr "Koodi on vanhentunut. Yritä uudelleen."
 
-#: lib/edenflowers_web/features/account/account_live.ex:241
+#: lib/edenflowers/accounts/changes/confirm_email_change.ex:30
 #, elixir-autogen, elixir-format
 msgid "That code isn't right."
 msgstr "Koodi ei ole oikein."
 
-#: lib/edenflowers_web/features/account/account_live.ex:254
+#: lib/edenflowers_web/features/account/account_live.ex:538
 #, elixir-autogen, elixir-format
 msgid "That email can't be used. It may already belong to another account."
 msgstr "Tätä sähköpostiosoitetta ei voi käyttää. Se voi jo kuulua toiselle tilille."
 
-#: lib/edenflowers_web/features/account/account_live.ex:550
+#: lib/edenflowers_web/features/account/account_live.ex:522
 #, elixir-autogen, elixir-format
 msgid "Too many attempts. Please try again later."
 msgstr "Liian monta yritystä. Yritä myöhemmin uudelleen."
 
-#: lib/edenflowers_web/features/account/account_live.ex:235
+#: lib/edenflowers_web/features/account/account_live.ex:533
 #, elixir-autogen, elixir-format
 msgid "Too many wrong codes. Please try again."
 msgstr "Liian monta väärää koodia. Yritä uudelleen."
 
-#: lib/edenflowers_web/features/account/account_live.ex:157
+#: lib/edenflowers_web/features/account/account_live.ex:151
 #, elixir-autogen, elixir-format
-msgid "We've sent a code to %{pending_email_email}. Enter it to confirm your new email."
-msgstr "Lähetimme koodin osoitteeseen %{pending_email_email}. Vahvista uusi sähköpostiosoitteesi syöttämällä se."
+msgid "We've sent a code to %{email}. Enter it to confirm your new email."
+msgstr "Lähetimme koodin osoitteeseen %{email}. Vahvista uusi sähköpostiosoitteesi syöttämällä se."
 
-#: lib/edenflowers_web/features/account/account_live.ex:216
+#: lib/edenflowers_web/features/account/account_live.ex:210
 #, elixir-autogen, elixir-format
 msgid "Your details couldn't be saved."
 msgstr "Tietojasi ei voitu tallentaa."
@@ -3666,8 +3666,8 @@ msgid "Payment failed"
 msgstr "Maksu epäonnistui"
 
 #: lib/edenflowers_web/components/layouts.ex:198
-#: lib/edenflowers_web/features/account/account_live.ex:76
-#: lib/edenflowers_web/features/account/account_live.ex:120
+#: lib/edenflowers_web/features/account/account_live.ex:70
+#: lib/edenflowers_web/features/account/account_live.ex:114
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:80
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:55
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:28
@@ -3678,7 +3678,7 @@ msgid "Subscriptions"
 msgstr "Kestotilaukset"
 
 #: lib/edenflowers_web/components/core_components.ex:972
-#: lib/edenflowers_web/features/account/account_live.ex:492
+#: lib/edenflowers_web/features/account/account_live.ex:463
 #: lib/edenflowers_web/features/admin/components/components.ex:510
 #: lib/edenflowers_web/features/admin/products_live.ex:122
 #: lib/edenflowers_web/features/checkout/order_live.ex:77
@@ -3915,7 +3915,7 @@ msgstr "%{price} per toimitus"
 msgid "Change"
 msgstr "Muuta"
 
-#: lib/edenflowers_web/features/account/account_live.ex:492
+#: lib/edenflowers_web/features/account/account_live.ex:463
 #: lib/edenflowers_web/features/account/subscription_manager.ex:379
 #, elixir-autogen, elixir-format
 msgid "Charged %{date}"
@@ -3947,7 +3947,7 @@ msgstr "Toimitusosoite"
 msgid "From %{date}: %{size}, %{interval}, %{price} per delivery."
 msgstr "Muutokset voimaan %{date}: %{size}, %{interval}, %{price} per toimitus."
 
-#: lib/edenflowers_web/features/account/account_live.ex:429
+#: lib/edenflowers_web/features/account/account_live.ex:400
 #: lib/edenflowers_web/features/account/subscription_manager.ex:209
 #, elixir-autogen, elixir-format
 msgid "Keep it"
@@ -4068,7 +4068,7 @@ msgstr "ota yhteyttä"
 msgid "Delivery day"
 msgstr "Toimituspäivä"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:398
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:400
 #, elixir-autogen, elixir-format
 msgid "Booking cancelled."
 msgstr "Varaus peruttu."
@@ -4306,54 +4306,54 @@ msgstr "Aloitettu"
 msgid "Confirmation emailed"
 msgstr "Vahvistus lähetetty"
 
-#: lib/edenflowers_web/features/account/account_live.ex:470
+#: lib/edenflowers_web/features/account/account_live.ex:441
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s)"
 msgid_plural "%{count} place(s)"
 msgstr[0] "%{count} paikka"
 msgstr[1] "%{count} paikkaa"
 
-#: lib/edenflowers_web/features/account/account_live.ex:649
+#: lib/edenflowers_web/features/account/account_live.ex:608
 #, elixir-autogen, elixir-format
 msgid "Arriving"
 msgstr "Toimitetaan"
 
-#: lib/edenflowers_web/features/account/account_live.ex:644
+#: lib/edenflowers_web/features/account/account_live.ex:603
 #, elixir-autogen, elixir-format
 msgid "Collected"
 msgstr "Noudettu"
 
-#: lib/edenflowers_web/features/account/account_live.ex:645
+#: lib/edenflowers_web/features/account/account_live.ex:604
 #, elixir-autogen, elixir-format
 msgid "Delivered"
 msgstr "Toimitettu"
 
-#: lib/edenflowers_web/features/account/account_live.ex:94
+#: lib/edenflowers_web/features/account/account_live.ex:88
 #, elixir-autogen, elixir-format
 msgid "Nothing on its way."
 msgstr "Mitään ei ole tulossa."
 
-#: lib/edenflowers_web/features/account/account_live.ex:106
+#: lib/edenflowers_web/features/account/account_live.ex:100
 #, elixir-autogen, elixir-format
 msgid "Past"
 msgstr "Aiemmat"
 
-#: lib/edenflowers_web/features/account/account_live.ex:651
+#: lib/edenflowers_web/features/account/account_live.ex:610
 #, elixir-autogen, elixir-format
 msgid "Scheduled delivery"
 msgstr "Sovittu toimitus"
 
-#: lib/edenflowers_web/features/account/account_live.ex:650
+#: lib/edenflowers_web/features/account/account_live.ex:609
 #, elixir-autogen, elixir-format
 msgid "Scheduled pickup"
 msgstr "Sovittu nouto"
 
-#: lib/edenflowers_web/features/account/account_live.ex:112
+#: lib/edenflowers_web/features/account/account_live.ex:106
 #, elixir-autogen, elixir-format
 msgid "Show %{count} more"
 msgstr "Näytä %{count} lisää"
 
-#: lib/edenflowers_web/features/account/account_live.ex:648
+#: lib/edenflowers_web/features/account/account_live.ex:607
 #, elixir-autogen, elixir-format
 msgid "For pickup"
 msgstr "Noudettavana"
@@ -4794,17 +4794,17 @@ msgstr "Jokaiset häät ovat erilaiset, joten saatte tarkan tarjouksen, kun olem
 msgid "Tell me about your wedding and I'll send you a quote."
 msgstr "Kertokaa häistänne, niin lähetän teille tarjouksen."
 
-#: lib/edenflowers_web/features/account/account_live.ex:480
+#: lib/edenflowers_web/features/account/account_live.ex:451
 #, elixir-autogen, elixir-format
 msgid "Starts %{time}"
 msgstr "Alkaa klo %{time}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:389
+#: lib/edenflowers_web/features/account/account_live.ex:360
 #, elixir-autogen, elixir-format
 msgid "Subscription order"
 msgstr "Kestotilauksen toimitus"
 
-#: lib/edenflowers_web/features/account/account_live.ex:482
+#: lib/edenflowers_web/features/account/account_live.ex:453
 #, elixir-autogen, elixir-format
 msgid "Took place"
 msgstr "Pidetty"
@@ -4822,7 +4822,7 @@ msgstr "Suljettu"
 msgid "Saved."
 msgstr "Tallennettu."
 
-#: lib/edenflowers_web/features/account/account_live.ex:422
+#: lib/edenflowers_web/features/account/account_live.ex:393
 #, elixir-autogen, elixir-format
 msgid "Cancel this order?"
 msgstr "Perutaanko tämä tilaus?"
@@ -4838,7 +4838,7 @@ msgstr "Muuttuivatko suunnitelmat? Voit perua tilauksen tililtäsi viimeistään
 msgid "This order can no longer be cancelled online. Please contact us."
 msgstr "Tätä tilausta ei voi enää perua verkossa. Ota meihin yhteyttä."
 
-#: lib/edenflowers_web/features/account/account_live.ex:530
+#: lib/edenflowers_web/features/account/account_live.ex:501
 #, elixir-autogen, elixir-format
 msgid "This order couldn't be cancelled. Please contact us."
 msgstr "Tilausta ei voitu perua. Ota meihin yhteyttä."
@@ -4848,12 +4848,12 @@ msgstr "Tilausta ei voitu perua. Ota meihin yhteyttä."
 msgid "We couldn't refund your order. Please contact us to cancel it."
 msgstr "Emme pystyneet palauttamaan maksua. Ota meihin yhteyttä tilauksen perumiseksi."
 
-#: lib/edenflowers_web/features/account/account_live.ex:425
+#: lib/edenflowers_web/features/account/account_live.ex:396
 #, elixir-autogen, elixir-format
 msgid "We'll refund %{amount} to your card. It can take 5–10 days to arrive."
 msgstr "Palautamme %{amount} kortillesi. Palautus voi kestää 5–10 päivää."
 
-#: lib/edenflowers_web/features/account/account_live.ex:410
+#: lib/edenflowers_web/features/account/account_live.ex:381
 #, elixir-autogen, elixir-format
 msgid "You can cancel until %{date}"
 msgstr "Voit perua %{date} asti"
@@ -4863,7 +4863,7 @@ msgstr "Voit perua %{date} asti"
 msgid "Your order for %{date} is cancelled."
 msgstr "Tilauksesi (%{date}) on peruttu."
 
-#: lib/edenflowers_web/features/account/account_live.ex:269
+#: lib/edenflowers_web/features/account/account_live.ex:240
 #, elixir-autogen, elixir-format
 msgid "Your order is cancelled. A confirmation is on its way to your email."
 msgstr "Tilauksesi on peruttu. Vahvistus on matkalla sähköpostiisi."
@@ -4938,12 +4938,12 @@ msgstr "Hei %{first_name}"
 msgid "View store"
 msgstr "Siirry kauppaan"
 
-#: lib/edenflowers_web/features/account/account_live.ex:124
+#: lib/edenflowers_web/features/account/account_live.ex:118
 #, elixir-autogen, elixir-format
 msgid "Flowers every 1, 2 or 4 weeks. Pause or cancel anytime."
 msgstr "Kukkia 1, 2 tai 4 viikon välein. Keskeytä tai peru milloin tahansa."
 
-#: lib/edenflowers_web/features/account/account_live.ex:127
+#: lib/edenflowers_web/features/account/account_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "See subscriptions"
 msgstr "Katso kestotilaukset"
@@ -4953,7 +4953,7 @@ msgstr "Katso kestotilaukset"
 msgid "Resend code in %{seconds}s"
 msgstr "Voit lähettää koodin uudelleen %{seconds} sekunnin kuluttua"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:639
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:641
 #, elixir-autogen, elixir-format
 msgctxt "course booking"
 msgid "Cancel"
@@ -5021,7 +5021,7 @@ msgstr "Vuokrat"
 msgid "Vehicle"
 msgstr "Ajoneuvokulut"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:737
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:739
 #, elixir-autogen, elixir-format
 msgid "This does not refund. Refund the seat here afterwards. Remove one seat from this booking?"
 msgstr "Tämä ei palauta rahoja. Palauta paikan hinta täällä jälkeenpäin. Poistetaanko varauksesta yksi paikka?"
@@ -5081,12 +5081,12 @@ msgstr "Peruttu %{amount} · %{how}"
 msgid "Undo"
 msgstr "Peru"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:730
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:732
 #, elixir-autogen, elixir-format
 msgid "Undo %{amount} payment"
 msgstr "Peru maksu %{amount}"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:729
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:731
 #, elixir-autogen, elixir-format
 msgid "Undo %{amount} refund"
 msgstr "Peru hyvitys %{amount}"
@@ -5175,7 +5175,7 @@ msgstr "Samana päivänä ei normaalisti onnistu. Varataan silti."
 msgid "This weekday is normally closed. Booking it anyway."
 msgstr "Tämä viikonpäivä on normaalisti suljettu. Varataan silti."
 
-#: lib/edenflowers_web/features/account/account_live.ex:122
+#: lib/edenflowers_web/features/account/account_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "No subscriptions yet."
 msgstr "Ei vielä kestotilauksia."
@@ -5186,7 +5186,7 @@ msgid "Estimate your price"
 msgstr "Arvioi hintasi"
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:150
-#: lib/edenflowers_web/features/courses/course_live.ex:374
+#: lib/edenflowers_web/features/courses/course_live.ex:375
 #, elixir-autogen, elixir-format
 msgid "English"
 msgstr "Englanti"
@@ -5202,7 +5202,7 @@ msgid "In Swedish"
 msgstr "Ruotsiksi"
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:150
-#: lib/edenflowers_web/features/courses/course_live.ex:372
+#: lib/edenflowers_web/features/courses/course_live.ex:373
 #, elixir-autogen, elixir-format
 msgid "Swedish"
 msgstr "Ruotsi"
@@ -5647,8 +5647,8 @@ msgstr "Vahvistusta ei voitu lisätä lähetysjonoon."
 msgid "Couldn't email the confirmation."
 msgstr "Vahvistusta ei voitu lähettää sähköpostilla."
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:502
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:592
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:504
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:594
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1312
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1315
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1473
@@ -5666,7 +5666,7 @@ msgstr "Toimitus- tai noutovahvistuksen lähetys epäonnistui"
 msgid "Not fulfilled yet"
 msgstr "Ei vielä toimitettu"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:591
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:593
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1312
 #, elixir-autogen, elixir-format
 msgid "Resend confirmation"
@@ -5700,7 +5700,7 @@ msgid "A payment for this order is under way. Wait for it to arrive, then cancel
 msgstr "Tilauksen maksu on kesken. Odota, että se saapuu, ja peru sitten tilaus."
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:150
-#: lib/edenflowers_web/features/courses/course_live.ex:373
+#: lib/edenflowers_web/features/courses/course_live.ex:374
 #, elixir-autogen, elixir-format
 msgid "Finnish"
 msgstr "Suomi"
@@ -5723,7 +5723,7 @@ msgstr "Peri maksamatta oleva summa ennen hyvitystä."
 #: lib/edenflowers_web/features/admin/components/components.ex:654
 #: lib/edenflowers_web/features/admin/components/components.ex:818
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:115
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:610
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:612
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:505
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1335
 #, elixir-autogen, elixir-format
@@ -5745,12 +5745,12 @@ msgstr "Summa on suurempi kuin Stripen kautta maksettiin."
 msgid "That's more than was received."
 msgstr "Summa on suurempi kuin on vastaanotettu."
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:469
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:471
 #, elixir-autogen, elixir-format
 msgid "Confirmation emailed."
 msgstr "Vahvistus lähetetty."
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:473
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:475
 #, elixir-autogen, elixir-format
 msgid "Could not email the confirmation."
 msgstr "Vahvistusta ei voitu lähettää."
@@ -6717,7 +6717,7 @@ msgstr "Tilaus on peruttu, joten maksettavaa ei ole. Jos sinulla on kysyttävä�
 msgid "This order is part of your subscription. Paying for it restarts the subscription if it's on hold."
 msgstr "Tämä tilaus kuuluu kestotilaukseesi. Maksu jatkaa kestotilausta, jos se on pysäytetty."
 
-#: lib/edenflowers_web/features/account/account_live.ex:632
+#: lib/edenflowers_web/features/account/account_live.ex:591
 #, elixir-autogen, elixir-format
 msgid "Pay by invoice"
 msgstr "Maksetaan laskulla"
@@ -6766,7 +6766,7 @@ msgstr "Viesti"
 msgid "Message to the customer (optional)"
 msgstr "Viesti asiakkaalle (valinnainen)"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:503
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:505
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1473
 #, elixir-autogen, elixir-format
 msgid "Send confirmation"
@@ -6777,7 +6777,7 @@ msgstr "Lähetä vahvistus"
 msgid "Send order details"
 msgstr "Lähetä tilauksen tiedot"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:518
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:520
 #, elixir-autogen, elixir-format
 msgid "Send payment link"
 msgstr "Lähetä maksulinkki"
@@ -6953,15 +6953,15 @@ msgstr "Jos olet jo maksanut, kiitos, ja voit jättää tämän viestin huomiott
 msgid "Payment reminder emailed"
 msgstr "Maksumuistutus lähetetty"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:455
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:457
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1427
 #, elixir-autogen, elixir-format
 msgid "Payment reminder sent."
 msgstr "Maksumuistutus lähetetty."
 
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:220
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:510
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:601
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:512
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:603
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1210
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1301
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1474
@@ -6969,7 +6969,7 @@ msgstr "Maksumuistutus lähetetty."
 msgid "Send payment reminder"
 msgstr "Lähetä maksumuistutus"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:510
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:512
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:1474
 #, elixir-autogen, elixir-format
 msgid "Send reminder"
@@ -8062,7 +8062,7 @@ msgstr "Paikkasi on varattu."
 msgid "Book your place on %{course}, %{date}"
 msgstr "Varaa paikkasi kurssille %{course}, %{date}"
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:362
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:364
 #, elixir-autogen, elixir-format
 msgid "Could not withdraw the invite."
 msgstr "Kutsua ei voitu perua."
@@ -8079,7 +8079,7 @@ msgstr[1] "Tässä on linkki, jolla maksat %{count} paikkaa kurssilla %{course}.
 msgid "Invite added. Their places are booked once they pay."
 msgstr "Kutsu lisätty. Paikat varataan, kun maksu on tehty."
 
-#: lib/edenflowers_web/features/admin/course_detail_live.ex:361
+#: lib/edenflowers_web/features/admin/course_detail_live.ex:362
 #, elixir-autogen, elixir-format
 msgid "Invite withdrawn."
 msgstr "Kutsu peruttu."
@@ -8098,3 +8098,8 @@ msgstr "Peru kutsu"
 #, elixir-autogen, elixir-format
 msgid "Withdraw this invite? Its payment link stops working."
 msgstr "Perutaanko kutsu? Maksulinkki lakkaa toimimasta."
+
+#: lib/edenflowers/accounts/changes/request_email_change.ex:20
+#, elixir-autogen, elixir-format
+msgid "That's already your email."
+msgstr "Tämä on jo sähköpostiosoitteesi."
