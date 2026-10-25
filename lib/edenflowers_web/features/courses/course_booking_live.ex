@@ -9,7 +9,6 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
 
   alias Edenflowers.Courses
   alias Edenflowers.Format
-  alias Edenflowers.ShopTime
   alias Edenflowers.Translations
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -21,11 +20,15 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   def mount(%{"id" => id} = params, _session, socket) do
     payment_failed? = params["redirect_status"] == "failed"
 
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "course_registration:paid:#{id}")
+    end
+
     case load_registration(id) do
       # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
       # when the customer cancels or is declined in the app. Discard the unpaid
       # registration, as "Change booking" does, and send them back to book again.
-      {:ok, %{status: :pending} = registration} when payment_failed? ->
+      {:ok, %{committed?: false} = registration} when payment_failed? ->
         Courses.discard_registration!(registration, actor: system_actor())
 
         {:ok,
@@ -51,13 +54,19 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
       <.container>
         <div class="max-w-xl">
           <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />
-          <%= if @registration.status == :cancelled do %>
-            <h1 class="page-title mb-6">{~t"Booking cancelled"}</h1>
-            <p class="leading-relaxed">
-              {~t"This booking has been cancelled. If you have any questions, just get in touch."}
-            </p>
-          <% else %>
-            <h1 class="page-title">{~t"You're booked"}</h1>
+          <%= cond do %>
+            <% @registration.cancelled? -> %>
+              <h1 class="page-title mb-6">{~t"Booking cancelled"}</h1>
+              <p class="leading-relaxed">
+                {~t"This booking has been cancelled. If you have any questions, just get in touch."}
+              </p>
+            <% not @registration.committed? -> %>
+              <h1 class="page-title">{~t"Your booking"}</h1>
+              <p role="status" class="mt-6 leading-relaxed" data-testid="booking-confirming">
+                {~t"Confirming your payment… You'll get a receipt by email once it's done."}
+              </p>
+            <% true -> %>
+              <h1 class="page-title">{~t"You're booked"}</h1>
           <% end %>
 
           <dl class="border-base-content/12 grid-cols-[auto_1fr] mt-10 grid items-baseline gap-x-6 gap-y-3 border-y py-6">
@@ -86,7 +95,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
           </dl>
 
           <p
-            :if={@registration.status != :cancelled and not Date.before?(@registration.course.date, ShopTime.today())}
+            :if={@registration.upcoming?}
             class="text-base-content/70 mt-6"
           >
             {~t"To cancel, reply to your confirmation email."} {Edenflowers.Courses.Course.cancellation_terms(
@@ -99,8 +108,20 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
     """
   end
 
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> id}, socket) do
+    case load_registration(id) do
+      {:ok, registration} -> {:noreply, assign(socket, registration: registration)}
+      {:error, _error} -> {:noreply, socket}
+    end
+  end
+
   defp load_registration(id) do
-    with {:ok, registration} <- Courses.get_registration_by_id(id, actor: system_actor(), load: [:course]) do
+    with {:ok, registration} <-
+           Courses.get_registration_by_id(id,
+             actor: system_actor(),
+             load: [:course, :committed?, :cancelled?, :upcoming?]
+           ) do
       {:ok, Map.update!(registration, :course, &Translations.translate/1)}
     end
   end

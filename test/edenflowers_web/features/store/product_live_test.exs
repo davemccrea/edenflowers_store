@@ -233,7 +233,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     test "choosing a size shows its photo, or the main photo without one", %{conn: conn} do
       product = generate(product(draft: false, photo_slugs: ["a.jpg", "b.jpg"]))
       small = generate(product_variant(product_id: product.id, size: :small, price: "40.00", own_photo_slug: "b.jpg"))
-      large = generate(product_variant(product_id: product.id, size: :large, price: "60.00"))
+      large = generate(product_variant(product_id: product.id, size: :large, price: "60.00", own_photo_slug: nil))
 
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 

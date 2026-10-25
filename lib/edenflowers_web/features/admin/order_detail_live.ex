@@ -1298,7 +1298,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       </.actions_menu_button>
 
       <%!-- A cancelled order is never fulfilled and a collected one was handed over, so neither has anything to confirm. --%>
-      <%= if @order.fulfillment_status != :cancelled and @order.fulfillment_method == :delivery do %>
+      <%= if @order.fulfillment_confirmation_applicable? do %>
         <.actions_menu_button
           :if={!@confirmation_unavailable}
           menu="order-actions"
@@ -1371,20 +1371,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     """
   end
 
-  defp email_details_unavailable(order) do
-    cond do
-      order.fulfillment_status == :cancelled ->
-        ~t"The order is cancelled"
+  defp email_details_unavailable(%{details_emailable?: true}), do: nil
+  defp email_details_unavailable(%{cancelled?: true}), do: ~t"The order is cancelled"
+  defp email_details_unavailable(order), do: no_email(order)
 
-      no_email(order) ->
-        no_email(order)
-
-      true ->
-        nil
-    end
-  end
-
-  defp confirmation_unavailable(%{fulfillment_status: :fulfilled} = order), do: no_email(order)
+  defp confirmation_unavailable(%{fulfillment_confirmation_sendable?: true}), do: nil
+  defp confirmation_unavailable(%{customer_email: nil} = order), do: no_email(order)
   defp confirmation_unavailable(_order), do: ~t"Not fulfilled yet"
 
   defp receipt_unavailable(%{receipt_available?: true}), do: nil

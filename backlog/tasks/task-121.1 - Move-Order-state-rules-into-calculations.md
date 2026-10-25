@@ -4,7 +4,7 @@ title: Move Order state rules into calculations
 status: done
 assignee: []
 created_date: '2026-10-25 10:08'
-updated_date: '2026-10-25 10:18'
+updated_date: '2026-10-25 13:11'
 labels: []
 dependencies: []
 parent_task_id: TASK-121
@@ -31,4 +31,6 @@ Add to Order: customer_status (enum), upcoming?, overdue?, open?, deletable?, ed
 
 <!-- SECTION:NOTES:BEGIN -->
 Also added fulfillable?, receipt_available? and matches?(term). A shared Validations.Holds guards :edit, :mark_fulfilled and :send_payment_reminder with the calculation the admin uses to offer them. Status labels (cancel/receipt reasons) stay in the web as presentation.
+
+Review follow-up: confirmation-page receipt links now read receipt_available?; fully refunded orders cannot be sent payment reminders; order-details and fulfillment-confirmation eligibility are calculations used by both the admin and actions. Holds supports atomic validation. Added regression tests.
 <!-- SECTION:NOTES:END -->

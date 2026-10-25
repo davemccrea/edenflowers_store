@@ -4,7 +4,7 @@ title: Move course booking rules into calculations
 status: done
 assignee: []
 created_date: '2026-10-25 10:08'
-updated_date: '2026-10-25 11:13'
+updated_date: '2026-10-25 13:11'
 labels: []
 dependencies:
   - TASK-120
@@ -26,6 +26,12 @@ Add refund_on_cancelling to Payable (an order refunds all it holds; a booking ap
 - [x] #1 The cancel drawer prefills from refund_on_cancelling and :cancel without a refund argument refunds that amount
 - [x] #2 The account timeline sorts course bookings by CourseRegistration.upcoming?
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Review follow-up: the booking confirmation page shows payment pending until the paid broadcast arrives, and cancellation instructions read upcoming?. Updated the old pending-confirmation tests and the glossary's obsolete seat-hold model.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 

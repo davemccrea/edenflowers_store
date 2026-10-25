@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
           </:subtitle>
           <:actions>
             <.button
-              :if={@subscription.state == :active}
+              :if={@subscription.pausable?}
               type="button"
               phx-click="pause"
               variant="secondary"
@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               {~t"Pause"}
             </.button>
             <.button
-              :if={@subscription.state == :paused}
+              :if={@subscription.resumable?}
               type="button"
               phx-click="resume"
               variant="secondary"
@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
             </.button>
           </:actions>
           <:menu>
-            <.actions_menu :if={@subscription.state != :cancelled} id="subscription-actions">
+            <.actions_menu :if={@subscription.cancellable?} id="subscription-actions">
               <.actions_menu_button
                 menu="subscription-actions"
                 phx-click="open_cancel"
@@ -342,6 +342,9 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
         :user,
         :fulfillment_option,
         :next_delivery_date,
+        :pausable?,
+        :resumable?,
+        :cancellable?,
         paper_trail_versions: [:user],
         product_variant: [product: :product_variants]
       ]

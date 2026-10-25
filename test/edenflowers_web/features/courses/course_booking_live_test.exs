@@ -22,6 +22,33 @@ defmodule EdenflowersWeb.Courses.CourseBookingLiveTest do
       refute html =~ registration.email
     end
 
+    test "waits for payment before calling a registration booked", %{conn: conn} do
+      registration = generate(course_registration(payment_intent_id: "pi_booking"))
+
+      {:ok, view, _html} = live(conn, ~p"/courses/bookings/#{registration.id}")
+
+      assert has_element?(view, "[data-testid=booking-confirming]", "Confirming your payment")
+      refute has_element?(view, "h1", "You're booked")
+      refute render(view) =~ "To cancel"
+
+      Courses.confirm_registration_payment!(registration, "pi_booking", %{amount_paid: registration.amount},
+        actor: Edenflowers.Actors.system_actor()
+      )
+
+      assert has_element?(view, "h1", "You're booked")
+      refute has_element?(view, "[data-testid=booking-confirming]")
+      assert render(view) =~ "To cancel"
+    end
+
+    test "says nothing about cancelling after today's course has ended", %{conn: conn} do
+      course = generate(course(date: Edenflowers.ShopTime.today(), start_time: ~T[00:00:00], end_time: ~T[00:00:01]))
+      registration = generate(course_registration(course_id: course.id, status: :confirmed))
+
+      {:ok, view, _html} = live(conn, ~p"/courses/bookings/#{registration.id}")
+
+      refute render(view) =~ "To cancel"
+    end
+
     test "says when the booking has been cancelled", %{conn: conn} do
       registration = generate(course_registration(status: :cancelled))
 

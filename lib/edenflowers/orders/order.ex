@@ -151,11 +151,15 @@ defmodule Edenflowers.Orders.Order do
     :distance_km,
     :missing_delivery_phone?,
     :cancellable?,
+    :cancelled?,
     :editable?,
     :fulfillable?,
     :deletable?,
     :payment_reminder_sendable?,
     :receipt_available?,
+    :details_emailable?,
+    :fulfillment_confirmation_applicable?,
+    :fulfillment_confirmation_sendable?,
     :promotion,
     :fulfillment_option,
     line_items: [:subtotal, :total]
@@ -948,6 +952,7 @@ defmodule Edenflowers.Orders.Order do
 
     update :send_order_details_email do
       accept []
+      validate {Validations.Holds, calculation: :details_emailable?, message: "can't be emailed order details"}
       argument :message, :string
       transaction? false
       require_atomic? false
@@ -973,7 +978,7 @@ defmodule Edenflowers.Orders.Order do
     update :email_receipt do
       accept []
       argument :message, :string
-      validate attribute_equals(:payment_status, :paid), message: "is not paid yet"
+      validate {Validations.Holds, calculation: :receipt_available?, message: "is not paid yet"}
       validate present(:customer_email), message: "has no email address"
       transaction? false
       require_atomic? false
@@ -1075,10 +1080,10 @@ defmodule Edenflowers.Orders.Order do
     # Sends with the photo choice stored by :mark_fulfilled.
     update :email_fulfillment_confirmation do
       accept []
-      validate attribute_equals(:state, :placed), message: "hasn't been placed"
-      validate attribute_equals(:fulfillment_status, :fulfilled), message: "isn't fulfilled"
-      validate attribute_equals(:fulfillment_method, :delivery), message: "was collected in person"
-      validate present(:customer_email), message: "has no email address"
+
+      validate {Validations.Holds,
+                calculation: :fulfillment_confirmation_sendable?, message: "can't be emailed a fulfillment confirmation"}
+
       argument :message, :string
       change {PaymentChanges.QueueEmail, trigger: :send_fulfillment_email}
     end
@@ -1490,7 +1495,7 @@ defmodule Edenflowers.Orders.Order do
               :boolean,
               expr(
                 fulfillment_status != :cancelled and (is_nil(payment_terms) or payment_terms != :invoice) and
-                  not is_nil(customer_email) and balance > 0
+                  not is_nil(customer_email) and to_collect?
               )
 
     calculate :payment_status,
@@ -1507,6 +1512,18 @@ defmodule Edenflowers.Orders.Order do
               )
 
     calculate :paid?, :boolean, expr(committed? and payment_status == :paid and not cancelled?)
+
+    calculate :details_emailable?, :boolean, expr(committed? and not cancelled? and not is_nil(customer_email))
+
+    calculate :fulfillment_confirmation_applicable?,
+              :boolean,
+              expr(committed? and not cancelled? and fulfillment_method == :delivery)
+
+    calculate :fulfillment_confirmation_sendable?,
+              :boolean,
+              expr(
+                fulfillment_confirmation_applicable? and fulfillment_status == :fulfilled and not is_nil(customer_email)
+              )
 
     # A custom order is placed before it is paid, and has no receipt until it is.
     calculate :receipt_available?, :boolean, expr(state == :placed and payment_status == :paid)
