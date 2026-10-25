@@ -38,6 +38,12 @@ map-emails:
     printf '%s\n\n%s\n' "$map" "$previews" > tmp/emails.md
     echo "Wrote tmp/emails.md"
 
+# Write tmp/domain-map/: diagrams of every Ash resource and how they relate, and open it
+[group('development')]
+map-domains:
+    mix domain_map
+    open tmp/domain-map/index.html
+
 # Format all Elixir, JS and CSS files (the pre-commit hook only checks)
 [group('development')]
 format:
