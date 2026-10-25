@@ -27,7 +27,7 @@ Install the CLI with `npm i -g backlog.md`. `backlog browser` serves a local boa
 - Implementation plans go in `--plan`. Notes made while working go in `--notes`. Check off acceptance criteria with `--check-ac <n>`
 - `backlog board` or `backlog task list --plain` lists open work by status
 - Refer to tasks by ID (`TASK-18.5`), not by file path
-- When every subtask is `done` (or archived as `wontfix`), set the parent to `done`. Never archive `done` tasks; they stay in the Done column
+- When every subtask is `done` (or archived as `wontfix`), set the parent to `done`. Leave `done` tasks in the Done column until David asks to archive them. Archiving moves a task to `backlog/archive/tasks/`; nothing is deleted
 - When something is still undecided (whether to do it, or how), set it to `needs-triage` and say what's open in the description. When it's decided but only the human can do it (a check on a real device or in a dashboard), set it to `ready-for-human` and add a comment saying what's left
 
 ## When a skill says "publish to the issue tracker"
