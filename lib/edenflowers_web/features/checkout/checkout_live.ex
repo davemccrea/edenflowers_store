@@ -16,6 +16,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   alias Edenflowers.Orders
   alias Edenflowers.Payments
+  alias Edenflowers.Payments.Errors.NotPayable
 
   alias Edenflowers.Fulfillment
 
@@ -529,26 +530,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     submit_form(socket, params)
   end
 
-  # Mount and the cart-change broadcast already send these carts away; this
-  # catches a click that lands before the broadcast does.
-  def handle_event("pay", _, %{assigns: %{order: %{add_ons_only?: true}}} = socket) do
-    {:noreply, back_to_store(socket)}
-  end
-
-  # Others may have bought the last of a size since it went in the cart.
   def handle_event("pay", _, socket) do
-    order = Ash.load!(socket.assigns.order, [line_items: [:over_stock?, :product_variant]], actor: actor(socket))
-
-    case Enum.filter(order.line_items, & &1.over_stock?) do
-      [] ->
-        pay(socket)
-
-      lines ->
-        {:noreply,
-         socket
-         |> put_flash(:error, over_stock_message(lines))
-         |> push_event("stripe:ready", %{})}
-    end
+    pay(socket)
   end
 
   def handle_event("edit_step", %{"state" => state}, socket) do
@@ -827,15 +810,32 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # The PaymentIntent is made on paying, so Elements never holds a stale
   # amount. A retry after a declined card reuses it, at the current total.
   defp pay(%{assigns: %{order: order}} = socket) do
-    with :ok <- Payments.update_amount(order),
-         {:ok, %{payment_intent_id: payment_intent_id}, client_secret} <- Payments.setup(order, actor(socket)) do
-      {:noreply,
-       socket
-       |> assign(order: %{order | payment_intent_id: payment_intent_id})
-       |> push_event("stripe:process_payment", %{client_secret: client_secret})}
-    else
+    case Orders.prepare_checkout_payment(order.id, actor: actor(socket)) do
+      {:ok, %{payable: %{payment_intent_id: payment_intent_id}, client_secret: client_secret}} ->
+        {:noreply,
+         socket
+         |> assign(order: %{order | payment_intent_id: payment_intent_id})
+         |> push_event("stripe:process_payment", %{client_secret: client_secret})}
+
       {:error, error} ->
-        Logger.error("Failed to set up PaymentIntent for order #{order.id}: #{inspect(error)}")
+        pay_refused(socket, error)
+    end
+  end
+
+  defp pay_refused(socket, error) do
+    case NotPayable.find(error) do
+      # Others may have bought the last of a size since it went in the cart.
+      %{reason: :over_stock, line_items: line_items} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, over_stock_message(line_items))
+         |> push_event("stripe:ready", %{})}
+
+      %{reason: :add_ons_only} ->
+        {:noreply, back_to_store(socket)}
+
+      _other ->
+        Logger.error("Failed to set up PaymentIntent for order #{socket.assigns.order.id}: #{inspect(error)}")
 
         {:noreply,
          socket

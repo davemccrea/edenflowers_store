@@ -223,12 +223,19 @@ defmodule Edenflowers.Payments do
   end
 
   @doc """
-  Brings the PaymentIntent of an order or booking, with `balance` loaded, in
-  line with what it still owes. One not made yet is made at the right amount.
+  Brings the PaymentIntent of an order or booking up to what it owes now, or
+  makes one, and returns its client secret as `setup/2` does. Only the
+  preparing actions call it, once they've reloaded the record and checked it
+  may pay.
   """
-  def update_amount(%{payment_intent_id: nil}), do: :ok
+  def prepare(payable, actor) do
+    with :ok <- update_amount(payable), do: setup(payable, actor)
+  end
 
-  def update_amount(payable) do
+  # One not made yet is made at the right amount.
+  defp update_amount(%{payment_intent_id: nil}), do: :ok
+
+  defp update_amount(payable) do
     case StripeAPI.impl().update_payment_intent(
            payable.payment_intent_id,
            StripeAPI.to_stripe_amount(expected_amount(payable))

@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
-  alias Edenflowers.Payments
+  alias Edenflowers.Payments.Errors.NotPayable
   alias Edenflowers.ShopTime
   alias Edenflowers.Translations
 
@@ -216,22 +216,17 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   # A retry after a declined card, or after changing the booking, reuses the
   # PaymentIntent made here at the current price.
   def handle_event("pay", _params, socket) do
-    with :ok <- Payments.update_amount(socket.assigns.registration),
-         {:ok, registration, client_secret} <- Payments.setup(socket.assigns.registration, nil) do
-      {:noreply,
-       socket
-       |> assign(registration: registration)
-       |> push_event("stripe:process_payment", %{client_secret: client_secret})}
-    else
-      {:error, error} ->
-        Logger.error(
-          "Could not set up payment for course registration #{socket.assigns.registration.id}: #{inspect(error)}"
-        )
+    %{id: id, course_id: course_id} = socket.assigns.registration
 
+    case Courses.prepare_registration_checkout_payment(id, course_id) do
+      {:ok, %{payable: registration, client_secret: client_secret}} ->
         {:noreply,
          socket
-         |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
-         |> push_event("stripe:ready", %{})}
+         |> assign(registration: registration)
+         |> push_event("stripe:process_payment", %{client_secret: client_secret})}
+
+      {:error, error} ->
+        pay_refused(socket, error)
     end
   end
 
@@ -246,6 +241,25 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
     {:noreply,
      put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
+  end
+
+  # The course closed or filled up since the booking was made: back to the
+  # form, which shows what can still be booked, or that booking has closed.
+  defp pay_refused(socket, error) do
+    case NotPayable.find(error) do
+      %{reason: reason} when reason in [:booking_closed, :not_enough_places] ->
+        {:noreply, socket |> assign(editing?: true, focus_booking?: true) |> reload_course() |> assign_form()}
+
+      _other ->
+        Logger.error(
+          "Could not set up payment for course registration #{socket.assigns.registration.id}: #{inspect(error)}"
+        )
+
+        {:noreply,
+         socket
+         |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
+         |> push_event("stripe:ready", %{})}
+    end
   end
 
   defp booked_seats(nil, _course), do: 0

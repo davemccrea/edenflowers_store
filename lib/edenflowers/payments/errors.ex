@@ -24,3 +24,17 @@ defmodule Edenflowers.Payments.Errors.PaymentIntentMismatch do
 
   def message(error), do: "PaymentIntent #{error.actual} does not match #{error.expected}"
 end
+
+defmodule Edenflowers.Payments.Errors.NotPayable do
+  @moduledoc """
+  Returned when preparing a payment for something that can't be paid now:
+  `reason` says why, and `line_items` are the ones over stock.
+  """
+  use Splode.Error, fields: [:reason, line_items: []], class: :invalid
+
+  def message(error), do: "not payable: #{error.reason}"
+
+  @doc "The NotPayable among an action's errors, or nil."
+  def find(%{errors: errors}), do: Enum.find(errors, &is_struct(&1, __MODULE__))
+  def find(_error), do: nil
+end

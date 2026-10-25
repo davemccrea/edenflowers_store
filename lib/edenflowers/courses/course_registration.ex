@@ -197,6 +197,12 @@ defmodule Edenflowers.Courses.CourseRegistration do
       filter expr(status == :pending and is_nil(payment_link_token))
     end
 
+    action :prepare_checkout_payment, :map do
+      argument :registration_id, :uuid, allow_nil?: false
+      argument :course_id, :uuid, allow_nil?: false
+      run Edenflowers.Courses.Actions.PrepareCheckoutPayment
+    end
+
     create :register do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
@@ -397,6 +403,12 @@ defmodule Edenflowers.Courses.CourseRegistration do
     # A checkout is reached by its unguessable id, as the bookings page is,
     # and :revise only touches one still unpaid.
     policy action([:register, :revise]) do
+      authorize_if always()
+    end
+
+    # Each reads the registration with the access it needs itself: a checkout
+    # by its id, a link by its token.
+    policy action([:prepare_checkout_payment, :prepare_link_payment]) do
       authorize_if always()
     end
 

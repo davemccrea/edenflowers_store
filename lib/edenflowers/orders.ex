@@ -41,6 +41,8 @@ defmodule Edenflowers.Orders do
       define :mark_order_fulfilled, action: :mark_fulfilled
       define :email_fulfillment_confirmation, action: :email_fulfillment_confirmation
       define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
+      define :prepare_checkout_payment, action: :prepare_checkout_payment, args: [:order_id]
+      define :prepare_order_link_payment, action: :prepare_link_payment, args: [:token]
       define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
       define :clear_promotion, action: :clear_promotion
       define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]

@@ -12,15 +12,15 @@ defmodule EdenflowersWeb.PaymentLink do
 
   require Logger
 
-  import Edenflowers.Actors
   import EdenflowersWeb.CoreComponents, only: [input: 1]
   import EdenflowersWeb.StripeForm, only: [stripe_form: 1]
   import Phoenix.LiveView
 
+  alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
-  alias Edenflowers.Payments
+  alias Edenflowers.Orders
 
   def url_for(payable), do: EdenflowersWeb.Endpoint.url() <> path_for(payable)
 
@@ -66,12 +66,12 @@ defmodule EdenflowersWeb.PaymentLink do
   end
 
   defp start_payment(socket, payable) do
-    with :ok <- Payments.update_amount(payable),
-         {:ok, _payable, client_secret} <- Payments.setup(payable, system_actor()) do
-      socket
-      |> assign(:payable, payable)
-      |> push_event("stripe:process_payment", %{client_secret: client_secret})
-    else
+    case prepare_link_payment(payable) do
+      {:ok, %{client_secret: client_secret}} ->
+        socket
+        |> assign(:payable, payable)
+        |> push_event("stripe:process_payment", %{client_secret: client_secret})
+
       {:error, reason} ->
         Logger.error("Could not set up payment for #{describe(payable)}: #{inspect(reason)}")
 
@@ -80,6 +80,11 @@ defmodule EdenflowersWeb.PaymentLink do
         |> push_event("stripe:ready", %{})
     end
   end
+
+  defp prepare_link_payment(%CourseRegistration{payment_link_token: token}),
+    do: Courses.prepare_registration_link_payment(token)
+
+  defp prepare_link_payment(%{payment_link_token: token}), do: Orders.prepare_order_link_payment(token)
 
   def stripe_error(socket, %{"message" => message, "details" => details}) do
     Logger.error("Stripe client error for #{describe(socket.assigns.payable)}: #{message}: #{inspect(details)}")
