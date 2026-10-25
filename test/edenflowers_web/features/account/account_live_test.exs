@@ -623,6 +623,19 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
                "From #{weekday_date(reload(subscription).next_fulfillment_date)}: Large, every 4 weeks, #{price} per delivery."
     end
 
+    test "offers the sizes on sale, keeping the current one once it's a draft", %{conn: conn, user: user} do
+      current = generate(product_variant(product_id: generate(product()).id, size: :medium, draft: true))
+      subscription = generate(subscription(user_id: user.id, product_variant_id: current.id))
+      large = generate(product_variant(product_id: current.product_id, size: :large, draft: false))
+      small = generate(product_variant(product_id: current.product_id, size: :small, draft: true))
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      size = "#change-subscription-#{subscription.id} select[name=product_variant_id]"
+      assert has_element?(view, ~s|#{size} option[value="#{current.id}"][selected]|)
+      assert has_element?(view, ~s|#{size} option[value="#{large.id}"]|)
+      refute has_element?(view, ~s|#{size} option[value="#{small.id}"]|)
+    end
+
     test "moves deliveries to another day", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id))
       next = subscription.next_fulfillment_date

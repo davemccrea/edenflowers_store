@@ -29,6 +29,8 @@ defmodule Edenflowers.Catalog do
     resource Edenflowers.Catalog.ProductVariant do
       define :list_card_drawer_variants, action: :for_card_drawer
       define :list_sold_out_variants, action: :sold_out
+      define :list_custom_order_variants, action: :for_custom_order
+      define :list_subscription_sizes, action: :subscription_sizes, args: [:current_variant_id]
       define :get_variant_by_id, action: :read, get_by: [:id]
     end
 

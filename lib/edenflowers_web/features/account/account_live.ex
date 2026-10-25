@@ -5,7 +5,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   use EdenflowersWeb, :live_view
 
-  require Ash.Query
   require Logger
 
   alias Edenflowers.Accounts
@@ -476,10 +475,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
   # Only the empty state links to it, so it's looked up only then. The store has
   # no subscribable filter, so several products send the customer to the store.
   defp assign_subscription_path(%{assigns: %{subscriptions: []}} = socket) do
-    query = Ash.Query.filter(Edenflowers.Catalog.Product, subscribable == true)
-
     path =
-      case Catalog.list_store_products!(query: query) do
+      case Catalog.list_subscribable_products!() do
         [] -> nil
         [product] -> ~q"/#{language}/product/#{product.id}"
         _several -> ~q"/#{language}/store"

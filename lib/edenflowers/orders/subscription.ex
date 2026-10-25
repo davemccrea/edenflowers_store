@@ -186,7 +186,7 @@ defmodule Edenflowers.Orders.Subscription do
                   :next_delivery_date,
                   booked_occurrence: [:changes_open?],
                   unpaid_occurrence: [:grand_total],
-                  product_variant: [product: :product_variants]
+                  product_variant: :product
                 ]
               )
     end

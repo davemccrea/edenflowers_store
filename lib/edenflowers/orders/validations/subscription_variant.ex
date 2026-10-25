@@ -15,12 +15,12 @@ defmodule Edenflowers.Orders.Validations.SubscriptionVariant do
     if new_id == changeset.data.product_variant_id do
       :ok
     else
-      %{product_id: product_id} =
-        Catalog.get_variant_by_id!(changeset.data.product_variant_id, Ash.Context.to_opts(context))
+      sizes = Catalog.list_subscription_sizes!(changeset.data.product_variant_id, Ash.Context.to_opts(context))
 
-      case Catalog.get_variant_by_id(new_id, Ash.Context.to_opts(context)) do
-        {:ok, %{product_id: ^product_id, draft: false}} -> :ok
-        _other -> {:error, field: :product_variant_id, message: ~t"Choose one of the sizes on offer."}
+      if Enum.any?(sizes, &(&1.id == new_id)) do
+        :ok
+      else
+        {:error, field: :product_variant_id, message: ~t"Choose one of the sizes on offer."}
       end
     end
   end

@@ -3,12 +3,14 @@ id: TASK-130
 title: >-
   Centralise the remaining catalogue-selection rules used by checkout and
   account pages
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-25 14:15'
+updated_date: '2026-10-25 18:47'
 labels:
   - spec
   - developers
+  - quick
 dependencies: []
 references:
   - lib/edenflowers/catalog/product.ex
@@ -38,8 +40,27 @@ Related: TASK-121 and completed TASK-19.5. Triage the precise remaining filter s
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The account empty-state subscription link uses Product.:subscribable via its domain interface rather than rebuilding that business filter.
-- [ ] #2 Custom-order selectable catalogue variants and subscription selectable sizes come from named domain reads/relationships, preserving card exclusion, draft handling and the selected-size exception.
-- [ ] #3 Web code retains presentation formatting/grouping only; no new generic query abstraction or duplicated eligibility predicate is introduced.
-- [ ] #4 Targeted domain/UI tests verify the offered products/variants and preserve existing empty-state navigation and current-selection behaviour.
+- [x] #1 The account empty-state subscription link uses Product.:subscribable via its domain interface rather than rebuilding that business filter.
+- [x] #2 Custom-order selectable catalogue variants and subscription selectable sizes come from named domain reads/relationships, preserving card exclusion, draft handling and the selected-size exception.
+- [x] #3 Web code retains presentation formatting/grouping only; no new generic query abstraction or duplicated eligibility predicate is introduced.
+- [x] #4 Targeted domain/UI tests verify the offered products/variants and preserve existing empty-state navigation and current-selection behaviour.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Product.:subscribable now drives the account empty-state link. New ProductVariant reads: :for_custom_order (non-card, product name then price, prepended ahead of the resource-wide price sort) and :subscription_sizes (same product, not draft or the current size). SubscriptionVariant validates against :subscription_sizes, so the draft rule lives once. Subscription.:mine no longer loads product.product_variants.
+<!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-25 18:41
+
+---
+
+Grilled: custom-order read keeps drafts and sold-out sizes (admin can price anything), only excluding cards. Subscription sizes come from a ProductVariant read (same product, not draft or the current size) that SubscriptionVariant also uses, so the rule lives once.
+
+---
+<!-- COMMENTS:END -->
