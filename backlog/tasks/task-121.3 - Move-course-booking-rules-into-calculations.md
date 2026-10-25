@@ -4,6 +4,7 @@ title: Move course booking rules into calculations
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-25 10:08'
+updated_date: '2026-10-25 10:43'
 labels: []
 dependencies:
   - TASK-120
@@ -25,3 +26,16 @@ Add refund_on_cancelling to Payable (an order refunds all it holds; a booking ap
 - [ ] #1 The cancel drawer prefills from refund_on_cancelling and :cancel without a refund argument refunds that amount
 - [ ] #2 The account timeline sorts course bookings by CourseRegistration.upcoming?
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-25 10:43
+
+---
+
+Ready to pick up in a fresh session: TASK-120 (its dependency) is done. Also consider while there: CourseBookingDrawers.to_collect?/to_refund? derive settlement state in the web and could be Payable calculations.
+
+---
+<!-- COMMENTS:END -->
