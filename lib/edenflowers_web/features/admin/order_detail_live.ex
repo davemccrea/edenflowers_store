@@ -18,6 +18,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Payments.Errors.PaymentInProgress
   alias Edenflowers.PhoneNumber
   alias Edenflowers.ShopTime
+  alias EdenflowersWeb.Admin.DrawerPreview
+  alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Admin.PhotoUpload
@@ -149,7 +151,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           form={@email_form}
           preview={@preview}
           swedish_toggle?={swedish_toggle?(@order)}
-          {email_drawer_text(@email_kind, @order, @locale)}
+          {EmailDrawer.text(@email_kind, @order, @locale)}
         />
         <.settlement_drawer
           order={@order}
@@ -762,22 +764,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("open_email", %{"kind" => kind}, socket) do
-    {:noreply,
-     socket
-     |> assign(email_kind: String.to_existing_atom(kind), email_form: to_form(%{"message" => ""}, as: :email))
-     |> assign_preview(String.to_existing_atom(kind), %{})
-     |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-show"})}
+    {:noreply, EmailDrawer.open(socket, kind, socket.assigns.order)}
   end
 
   def handle_event("close_email", _params, socket) do
-    {:noreply, assign(socket, email_form: nil, email_kind: nil)}
+    {:noreply, EmailDrawer.close(socket)}
   end
 
   def handle_event("validate_email", %{"email" => params}, socket) do
-    {:noreply,
-     socket
-     |> assign(:email_form, to_form(params, as: :email))
-     |> assign_preview(socket.assigns.email_kind, params)}
+    {:noreply, EmailDrawer.validate(socket, params, socket.assigns.order)}
   end
 
   def handle_event("send_email", %{"email" => %{"message" => message}}, socket) do
@@ -787,9 +782,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
     {:noreply,
      socket
+     |> EmailDrawer.close()
      |> assign_order(reload(order, socket))
-     |> assign(email_form: nil, email_kind: nil)
-     |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-hide"})
      |> put_flash(flash, text)}
   end
 
@@ -1432,23 +1426,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  # The refund forms fill themselves in from what's owed back, so an empty
-  # amount reads as that until Jennie changes it.
   defp assign_preview(socket, kind, params) do
-    order = socket.assigns.order
-    owed_back = order.balance |> Decimal.negate() |> Decimal.max(0) |> Decimal.to_string(:normal)
-
-    inputs = %{
-      message: params["message"] || params["note"],
-      refund: params["refund"] || params["amount"] || owed_back,
-      amount: if(kind == :payment, do: params["amount"] || Decimal.to_string(order.balance, :normal)),
-      payment_method: if(params["how"], do: String.to_existing_atom(params["how"]), else: order.default_refund_method)
-    }
-
-    locale = if params["in_swedish"] == "true", do: "sv-FI"
-    # Recording a payment emails the same receipt as the menu, for the amount entered.
-    kind = if kind == :payment, do: :receipt, else: kind
-    assign(socket, :preview, Preview.build(kind, order, inputs, locale))
+    assign(socket, :preview, DrawerPreview.build(kind, socket.assigns.order, params))
   end
 
   defp assign_fulfillment_preview(socket, params) do
@@ -1460,25 +1439,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp swedish_toggle?(order), do: order.locale != "sv-FI"
-
-  defp email_drawer_text(nil, _order, _locale), do: %{}
-
-  defp email_drawer_text(kind, order, locale) do
-    {title, submit_label, last_sent_at} =
-      case kind do
-        :order_details -> {~t"Email order details", ~t"Send order details", order.order_details_emailed_at}
-        :receipt -> {~t"Email receipt", ~t"Send receipt", order.receipt_emailed_at}
-        :fulfillment -> {~t"Email confirmation", ~t"Send confirmation", order.fulfillment_emailed_at}
-        :payment_reminder -> {~t"Send payment reminder", ~t"Send reminder", nil}
-      end
-
-    %{
-      title: title,
-      submit_label: submit_label,
-      to: order.customer_email,
-      last_sent: last_sent_at && Format.datetime(last_sent_at, locale)
-    }
-  end
 
   defp no_email(%{customer_email: nil}), do: ~t"No email address"
   defp no_email(_order), do: nil
