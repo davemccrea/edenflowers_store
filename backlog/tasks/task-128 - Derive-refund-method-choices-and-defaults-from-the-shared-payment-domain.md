@@ -1,9 +1,10 @@
 ---
 id: TASK-128
 title: Derive refund-method choices and defaults from the shared payment domain
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-25 14:15'
+updated_date: '2026-10-25 16:44'
 labels:
   - spec
   - admin
@@ -35,8 +36,14 @@ This complements TASK-121's capability centralisation but can ship independently
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Orders and course registrations expose shared refund-method eligibility and default-method facts from Payments.Payable; form and preview no longer duplicate those decisions.
-- [ ] #2 The refund action validates method eligibility and remaining per-method amounts against the same domain rules, including mixed Stripe/non-Stripe money.
-- [ ] #3 Translated labels and form rendering remain in the web layer; cancellation/refund accounting and existing customer-email behaviour are unchanged.
-- [ ] #4 Tests cover Stripe-only, non-Stripe-only, mixed and exhausted funds, and verify that displayed defaults/choices agree with domain eligibility.
+- [x] #1 Orders and course registrations expose shared refund-method eligibility and default-method facts from Payments.Payable; form and preview no longer duplicate those decisions.
+- [x] #2 The refund action validates method eligibility and remaining per-method amounts against the same domain rules, including mixed Stripe/non-Stripe money.
+- [x] #3 Translated labels and form rendering remain in the web layer; cancellation/refund accounting and existing customer-email behaviour are unchanged.
+- [x] #4 Tests cover Stripe-only, non-Stripe-only, mixed and exhausted funds, and verify that displayed defaults/choices agree with domain eligibility.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Triage (2026-10-25): Stripe money held -> default Stripe (mixed too). No Stripe held -> default the non-Stripe method holding the most, Zettle on none. Nothing held -> no methods, no default; action rejects. Non-Stripe stays one pot: every non-Stripe method offered once outside-Stripe money is held.
+<!-- SECTION:NOTES:END -->

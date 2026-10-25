@@ -21,7 +21,9 @@ defmodule Edenflowers.Payments.Validations.Refundable do
 
   defp check(record, amount, method) do
     record =
-      Ash.load!(record, [:committed?, :balance, :amount_held, :paid_outside_stripe, :paid_through_stripe],
+      Ash.load!(
+        record,
+        [:committed?, :balance, :amount_held, :paid_outside_stripe, :paid_through_stripe, :refund_methods],
         authorize?: false,
         reuse_values?: false
       )
@@ -36,14 +38,17 @@ defmodule Edenflowers.Payments.Validations.Refundable do
       Decimal.gt?(amount, record.amount_held) ->
         {:error, ~t"That's more than was received."}
 
-      method == :stripe and Decimal.gt?(amount, record.paid_through_stripe) ->
-        {:error, ~t"That's more than was paid through Stripe."}
-
-      method != :stripe and Decimal.gt?(amount, record.paid_outside_stripe) ->
-        {:error, ~t"That's more than was paid outside Stripe. Refund the rest with Stripe."}
+      method not in record.refund_methods or Decimal.gt?(amount, held_by(record, method)) ->
+        {:error, over_held_by(method)}
 
       true ->
         :ok
     end
   end
+
+  defp held_by(record, :stripe), do: record.paid_through_stripe
+  defp held_by(record, _method), do: record.paid_outside_stripe
+
+  defp over_held_by(:stripe), do: ~t"That's more than was paid through Stripe."
+  defp over_held_by(_method), do: ~t"That's more than was paid outside Stripe. Refund the rest with Stripe."
 end

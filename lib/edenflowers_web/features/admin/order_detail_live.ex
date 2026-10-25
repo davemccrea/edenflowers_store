@@ -1442,7 +1442,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       message: params["message"] || params["note"],
       refund: params["refund"] || params["amount"] || owed_back,
       amount: if(kind == :payment, do: params["amount"] || Decimal.to_string(order.balance, :normal)),
-      payment_method: String.to_existing_atom(params["how"] || default_refund_method(order))
+      payment_method: if(params["how"], do: String.to_existing_atom(params["how"]), else: order.default_refund_method)
     }
 
     locale = if params["in_swedish"] == "true", do: "sv-FI"
@@ -1458,8 +1458,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     preview = Preview.build(:fulfillment, order, %{message: params["message"], photo?: photo?}, locale)
     assign(socket, :preview, preview)
   end
-
-  defp default_refund_method(order), do: if(Decimal.positive?(order.paid_through_stripe), do: "stripe", else: "zettle")
 
   defp swedish_toggle?(order), do: order.locale != "sv-FI"
 

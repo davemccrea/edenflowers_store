@@ -746,7 +746,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :record, :map,
     required: true,
-    doc: "an order or booking, with `balance`, `paid_through_stripe` and `paid_outside_stripe` loaded"
+    doc: "an order or booking, with `balance`, `refund_methods` and `default_refund_method` loaded"
 
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
@@ -766,7 +766,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
     form =
       %{
-        "how" => default_refund_method(assigns.record),
+        "how" => to_string(assigns.record.default_refund_method),
         "amount" => if(Decimal.positive?(owed_back), do: Decimal.to_string(owed_back, :normal), else: ""),
         "note" => "",
         "email_customer" => "true"
@@ -774,7 +774,8 @@ defmodule EdenflowersWeb.Admin.Components do
       |> Map.merge(assigns.params)
       |> to_form(as: :refund)
 
-    assigns = assign(assigns, form: form, how_options: refund_method_options(assigns.record))
+    how_options = Enum.map(assigns.record.refund_methods, &{OrderLog.payment_method_label(&1), &1})
+    assigns = assign(assigns, form: form, how_options: how_options)
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_refund" phx-submit="refund" class="space-y-4">
@@ -819,20 +820,6 @@ defmodule EdenflowersWeb.Admin.Components do
       </.button>
     </.form>
     """
-  end
-
-  defp default_refund_method(record),
-    do: if(Decimal.positive?(record.paid_through_stripe), do: "stripe", else: "zettle")
-
-  # Stripe money goes back through Stripe; money Jennie took herself she hands back herself.
-  defp refund_method_options(record) do
-    stripe = [{OrderLog.payment_method_label(:stripe), :stripe}]
-
-    case {Decimal.positive?(record.paid_through_stripe), Decimal.positive?(record.paid_outside_stripe)} do
-      {true, true} -> stripe ++ payment_method_options()
-      {true, false} -> stripe
-      {false, _} -> payment_method_options()
-    end
   end
 
   defp refund_confirmation(amount, how, locale) do
