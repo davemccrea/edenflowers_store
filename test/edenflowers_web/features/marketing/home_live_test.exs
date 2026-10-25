@@ -89,17 +89,25 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
       )
     end
 
-    test "a failed signup promises no code", %{conn: conn} do
+    test "a malformed address is turned away without saving or promising a code", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/en")
 
-      ExUnit.CaptureLog.capture_log(fn ->
-        view |> form("#newsletter-form", %{"email_address" => ""}) |> render_submit()
-      end)
+      view |> form("#newsletter-form", %{"email_address" => "not an email"}) |> render_submit()
 
       refute has_element?(view, "#newsletter-signup-form", "Your 15% off code is on its way")
-      assert has_element?(view, "#newsletter-form")
-      assert has_element?(view, "#newsletter-form [role=alert]", "There was an error subscribing to the newsletter.")
+      assert has_element?(view, "#newsletter-form [role=alert]", "Enter a valid email address.")
+      assert {:error, _} = Edenflowers.Accounts.get_user_by_email("not an email", authorize?: false)
       refute_enqueued(worker: Edenflowers.Pricing.Workers.SendNewsletterPromoEmail)
+    end
+
+    test "a returning subscriber is matched whatever the case of their address", %{conn: conn} do
+      {:ok, user} = Edenflowers.Accounts.subscribe_to_newsletter("Footer@Example.com", "en-GB", authorize?: false)
+      {:ok, view, _html} = live(conn, ~p"/en")
+
+      view |> form("#newsletter-form", %{"email_address" => "footer@example.com"}) |> render_submit()
+
+      {:ok, matched} = Edenflowers.Accounts.get_user_by_email("FOOTER@example.com", authorize?: false)
+      assert matched.id == user.id
     end
   end
 end

@@ -1,9 +1,10 @@
 ---
 id: TASK-132
 title: Reject malformed addresses at newsletter signup
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-25 16:49'
+updated_date: '2026-10-25 19:13'
 labels:
   - spec
   - customers
@@ -27,7 +28,13 @@ Open for triage:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Submitting a malformed address in the footer shows the inline error, records no user and queues no email
-- [ ] #2 Valid addresses still match existing users case-insensitively
-- [ ] #3 Any malformed rows already in production are accounted for
+- [x] #1 Submitting a malformed address in the footer shows the inline error, records no user and queues no email
+- [x] #2 Valid addresses still match existing users case-insensitively
+- [x] #3 Any malformed rows already in production are accounted for
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Validated with a match on User.email (Types.Email's pattern), so :ci_string matching is kept and every write is covered. Production check on 2026-10-25: 0 malformed of 4 users, nothing to clean up. The sign-in page's :request_otp is a separate path, not covered here.
+<!-- SECTION:NOTES:END -->

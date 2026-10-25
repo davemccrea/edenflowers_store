@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, form: to_form(%{"email_address" => ""}), submitted: false, failed: false)}
+    {:ok, assign(socket, form: to_form(%{"email_address" => ""}), submitted: false, error: nil)}
   end
 
   @impl true
@@ -59,7 +59,10 @@ defmodule EdenflowersWeb.NewsletterSignup do
           </div>
           <%!-- Inline rather than a flash: a component's flash only reaches the
                 page on navigation, so it would never show here. --%>
-          <p :if={@failed} role="alert" class="text-error text-sm">
+          <p :if={@error == :invalid_email} role="alert" class="text-error text-sm">
+            {~t"Enter a valid email address."}
+          </p>
+          <p :if={@error == :failed} role="alert" class="text-error text-sm">
             {~t"There was an error subscribing to the newsletter."}
           </p>
           <p class="text-base-content/70 text-xs leading-relaxed">
@@ -81,9 +84,20 @@ defmodule EdenflowersWeb.NewsletterSignup do
       {:ok, _} ->
         {:noreply, assign(socket, submitted: true)}
 
+      {:error, %Ash.Error.Invalid{errors: errors} = error} ->
+        if Enum.any?(errors, &(Map.get(&1, :field) == :email)) do
+          {:noreply, assign(socket, error: :invalid_email)}
+        else
+          failed(socket, error)
+        end
+
       {:error, error} ->
-        Logger.error(inspect(error))
-        {:noreply, assign(socket, failed: true)}
+        failed(socket, error)
     end
+  end
+
+  defp failed(socket, error) do
+    Logger.error(inspect(error))
+    {:noreply, assign(socket, error: :failed)}
   end
 end

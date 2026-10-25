@@ -7,6 +7,8 @@ defmodule Edenflowers.Types.Email do
 
   @format ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+  def format, do: @format
+
   @impl Ash.Type
   def apply_constraints(nil, _constraints), do: {:ok, nil}
 
