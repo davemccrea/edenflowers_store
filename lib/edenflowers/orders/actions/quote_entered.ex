@@ -124,12 +124,16 @@ defmodule Edenflowers.Orders.Actions.QuoteEntered do
 
   defp quoted_fee(changeset, delivery_quote) do
     if PriceFulfillment.reprices?(changeset) do
-      case PriceFulfillment.price(changeset, fn _address, _option -> located(delivery_quote) end) do
-        {:ok, attributes} -> attributes
-        {:error, _field, _message} -> nil
-      end
+      repriced_fee(changeset, delivery_quote)
     else
       Map.take(changeset.data, [:quoted_fulfillment_fee, :in_free_delivery_zone])
+    end
+  end
+
+  defp repriced_fee(changeset, delivery_quote) do
+    case PriceFulfillment.price(changeset, fn _address, _option -> located(delivery_quote) end) do
+      {:ok, attributes} -> attributes
+      {:error, _field, _message} -> nil
     end
   end
 

@@ -13,6 +13,7 @@ defmodule Edenflowers.Accounts.User do
   alias Edenflowers.Accounts.Calculations
   alias Edenflowers.Accounts.Changes
   alias Edenflowers.Pricing.Workers.SendNewsletterPromoEmail
+  alias Edenflowers.Types.Email
 
   authentication do
     add_ons do
@@ -106,7 +107,7 @@ defmodule Edenflowers.Accounts.User do
     # comes back through :confirm_email_change.
     update :request_email_change do
       require_atomic? false
-      argument :email, Edenflowers.Types.Email, allow_nil?: false
+      argument :email, Email, allow_nil?: false
       change Changes.RequestEmailChange
     end
 
@@ -222,13 +223,13 @@ defmodule Edenflowers.Accounts.User do
   validations do
     # email stays a :ci_string for case-insensitive matching, so the format
     # check from Edenflowers.Types.Email is applied here instead.
-    validate match(:email, Edenflowers.Types.Email.format()),
+    validate match(:email, Email.format()),
       message: "Must be a valid email address",
       where: changing(:email)
 
     # A code can only reach a real address, so the sign-in page asks again
     # instead of waiting on one that never comes.
-    validate match(:email, Edenflowers.Types.Email.format()),
+    validate match(:email, Email.format()),
       message: "Must be a valid email address",
       on: [:action],
       where: action_is(:request_otp)
