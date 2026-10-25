@@ -233,7 +233,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     test "deletes it and emails nobody" do
       {:ok, unpaid} = register(generate(course()), 1)
 
-      assert :ok = Courses.discard_registration(unpaid, actor: Edenflowers.Actors.system_actor())
+      assert {:ok, nil} = Courses.discard_registration(unpaid.id, actor: Edenflowers.Actors.system_actor())
 
       assert {:error, _not_found} = Courses.get_registration_by_id(unpaid.id, actor: Edenflowers.Actors.system_actor())
       refute_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
@@ -244,7 +244,9 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       {:ok, registration} = add_manually(generate(course()), 1, admin)
       paid = pay(registration, "85.00")
 
-      assert {:error, _not_pending} = Courses.discard_registration(paid, actor: Edenflowers.Actors.system_actor())
+      assert {:ok, %{committed?: true}} =
+               Courses.discard_registration(paid.id, actor: Edenflowers.Actors.system_actor())
+
       assert {:ok, _still_there} = Courses.get_registration_by_id(paid.id, actor: admin)
     end
 

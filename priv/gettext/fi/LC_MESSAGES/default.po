@@ -2304,6 +2304,11 @@ msgstr "Häissä kukat ovat tärkeä osa kokonaisuutta. Autan teitä löytämä�
 msgid "Your payment didn't go through. Please try again or choose another payment method."
 msgstr "Maksu ei mennyt läpi. Yritä uudelleen tai valitse toinen maksutapa."
 
+#: lib/edenflowers_web/features/courses/course_live.ex:320
+#, elixir-autogen, elixir-format
+msgid "Your payment is still being confirmed. Please wait before changing your booking."
+msgstr "Maksuasi vahvistetaan vielä. Odota ennen kuin muutat varaustasi."
+
 #: lib/edenflowers_web/features/courses/courses_live.ex:52
 #, elixir-autogen, elixir-format
 msgid "See upcoming courses"

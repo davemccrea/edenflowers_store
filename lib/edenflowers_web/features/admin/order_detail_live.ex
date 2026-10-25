@@ -15,6 +15,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Payments.Errors.PaymentInProgress
   alias Edenflowers.PhoneNumber
   alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.OrderLog
@@ -702,6 +703,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     case Orders.delete_custom_order(socket.assigns.order, actor: socket.assigns.current_user) do
       :ok ->
         {:noreply, socket |> put_flash(:info, ~t"Order deleted.") |> push_navigate(to: ~p"/admin/orders")}
+
+      {:error, %{errors: [%PaymentInProgress{} = error | _]}} ->
+        {:noreply, put_flash(socket, :error, Exception.message(error))}
 
       # Says why, e.g. a payment still under way.
       {:error, %{errors: [%{message: message} | _]}} when is_binary(message) ->

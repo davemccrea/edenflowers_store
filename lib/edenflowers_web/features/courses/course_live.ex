@@ -232,7 +232,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   # A fresh registration replaces this unpaid one.
   def handle_event("change", _params, socket) do
-    {:noreply, socket |> discard_registration() |> reload_course() |> assign_form() |> assign(focus_booking?: true)}
+    {:noreply, discard_registration(socket)}
   end
 
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
@@ -302,10 +302,27 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   defp discard_registration(%{assigns: %{registration: nil}} = socket), do: socket
 
-  # One paid for meanwhile is a booking now, so it stays.
   defp discard_registration(socket) do
-    Courses.discard_registration(socket.assigns.registration, actor: system_actor())
-    assign(socket, registration: nil)
+    case Courses.discard_registration(socket.assigns.registration.id, actor: system_actor()) do
+      {:ok, nil} ->
+        socket
+        |> assign(registration: nil)
+        |> reload_course()
+        |> assign_form()
+        |> assign(focus_booking?: true)
+
+      {:ok, %{committed?: true} = registration} ->
+        push_navigate(socket, to: ~p"/courses/bookings/#{registration.id}")
+
+      {:ok, registration} ->
+        socket
+        |> assign(registration: registration)
+        |> put_flash(:error, ~t"Your payment is still being confirmed. Please wait before changing your booking.")
+
+      {:error, error} ->
+        Logger.error("Could not discard course registration #{socket.assigns.registration.id}: #{inspect(error)}")
+        put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")
+    end
   end
 
   defp assign_form(socket) do

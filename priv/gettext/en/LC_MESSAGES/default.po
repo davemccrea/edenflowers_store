@@ -2304,6 +2304,11 @@ msgstr ""
 msgid "Your payment didn't go through. Please try again or choose another payment method."
 msgstr ""
 
+#: lib/edenflowers_web/features/courses/course_live.ex:320
+#, elixir-autogen, elixir-format
+msgid "Your payment is still being confirmed. Please wait before changing your booking."
+msgstr ""
+
 #: lib/edenflowers_web/features/courses/courses_live.ex:52
 #, elixir-autogen, elixir-format
 msgid "See upcoming courses"

@@ -4,7 +4,7 @@ title: 'Derive every order, subscription and booking state from the Ash domain'
 status: in-progress
 assignee: []
 created_date: '2026-10-25 10:08'
-updated_date: '2026-10-25 13:28'
+updated_date: '2026-10-25 13:49'
 labels:
   - spec
   - developers
@@ -41,4 +41,6 @@ The five review findings are addressed with regression tests: receipt availabili
 After the other agent reverted their work, verified these edits remain intact. Their payment/discard safety fixes and tests are excluded from this commit; the stale-registration deletion risk remains unresolved. Final verification of this isolated tree: mix precommit passes (1640 tests, 0 failures), including formatting, strict Credo, schema codegen and compilation checks. No production access or deployment was performed.
 
 Parent remains in-progress: the five targeted findings are resolved, but this follow-up does not certify a fresh exhaustive pass of the broad no-web-state-comparisons criterion.
+
+The separate payment/discard safety risk excluded from commit 4e74e9dd is now addressed by TASK-122, with a fresh passing precommit run (1660 tests). The broader web-state-comparison audit remains open.
 <!-- SECTION:NOTES:END -->

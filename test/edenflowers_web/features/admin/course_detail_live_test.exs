@@ -203,6 +203,28 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       end)
     end
 
+    test "withdrawing an invite paid in the meantime retains its booking", %{conn: conn} do
+      course = generate(course())
+
+      invite =
+        generate(course_registration(course_id: course.id, payment_link_token: "tok", payment_intent_id: "pi_paid"))
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+
+      assert {:ok, :completed} =
+               Edenflowers.Payments.complete(%{
+                 id: "pi_paid",
+                 metadata: %{"course_registration_id" => invite.id},
+                 amount_received: invite.amount |> Decimal.mult(100) |> Decimal.to_integer()
+               })
+
+      render_click(view, "withdraw_invite", %{"id" => invite.id})
+
+      assert has_element?(view, "#registration-#{invite.id}")
+      assert render(view) =~ "Could not withdraw the invite."
+      assert Ash.get!(Edenflowers.Courses.CourseRegistration, invite.id, authorize?: false).status == :confirmed
+    end
+
     test "withdrawing an invite deletes it", %{conn: conn} do
       course = generate(course())
       invite = generate(course_registration(course_id: course.id, name: "Birgitta", payment_link_token: "tok"))
