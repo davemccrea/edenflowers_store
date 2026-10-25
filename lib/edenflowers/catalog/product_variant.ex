@@ -11,9 +11,9 @@ defmodule Edenflowers.Catalog.ProductVariant do
     extensions: [AshArchival.Resource],
     notifiers: [Ash.Notifier.PubSub]
 
-  alias Edenflowers.Orders.Validations
-
   require Ash.Sort
+
+  alias Edenflowers.Orders.Validations
 
   postgres do
     table "product_variants"

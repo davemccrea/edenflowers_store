@@ -504,25 +504,23 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp maybe_start_email_change(socket, email) do
     user = socket.assigns.current_user
 
-    cond do
-      String.downcase(email) == String.downcase(to_string(user.email)) ->
-        {:ok, socket |> reset_details(user) |> assign(details_saved?: true)}
+    if String.downcase(email) == String.downcase(to_string(user.email)) do
+      {:ok, socket |> reset_details(user) |> assign(details_saved?: true)}
+    else
+      case Accounts.request_email_change(user, email, actor: user) do
+        {:ok, user} ->
+          {:ok, assign(socket, pending_email: user.pending_email, code_form: to_form(%{"code" => ""}, as: :confirm))}
 
-      true ->
-        case Accounts.request_email_change(user, email, actor: user) do
-          {:ok, user} ->
-            {:ok, assign(socket, pending_email: user.pending_email, code_form: to_form(%{"code" => ""}, as: :confirm))}
+        {:error, %Ash.Error.Forbidden{errors: [%AshRateLimiter.LimitExceeded{} | _]}} ->
+          {:error,
+           assign(socket,
+             details_form: details_form(user, email, email: ~t"Too many attempts. Please try again later.")
+           )}
 
-          {:error, %Ash.Error.Forbidden{errors: [%AshRateLimiter.LimitExceeded{} | _]}} ->
-            {:error,
-             assign(socket,
-               details_form: details_form(user, email, email: ~t"Too many attempts. Please try again later.")
-             )}
-
-          {:error, error} ->
-            Logger.info("Email change request failed: #{inspect(error)}")
-            {:error, assign(socket, details_form: details_form(user, email, email: ~t"Enter a valid email address."))}
-        end
+        {:error, error} ->
+          Logger.info("Email change request failed: #{inspect(error)}")
+          {:error, assign(socket, details_form: details_form(user, email, email: ~t"Enter a valid email address."))}
+      end
     end
   end
 
