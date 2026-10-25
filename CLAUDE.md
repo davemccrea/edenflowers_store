@@ -29,6 +29,7 @@ The domain is modelled in Ash. Put domain logic in the resources, the way the As
 ## Agent skills
 
 - Issue tracker: Backlog.md tasks under `backlog/`, managed with the `backlog` CLI. See `docs/agents/issue-tracker.md`. Ungrilled tasks stay `needs-triage`; never implement one until you've grilled the user on it (`grilling` skill).
+- Grilling: whenever you grill the user (`grilling` skill), ask each question through the `AskUserQuestion` tool's interactive prompts, not as plain text.
 - Triage: status strings and the `wontfix` label. See `docs/agents/triage-labels.md`.
 - Domain docs: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 - Email copy: after changing an email template or its translations, run `mix print_emails` (or `mix print_emails sv fi en`) and review the rendered text in every language. A new email or wording variant needs a scenario in `Edenflowers.Email.Previews`. For when each email is sent, follow `docs/agents/email-map.md`; `just map-emails` runs it and writes the map and every email to `tmp/emails.md`.
