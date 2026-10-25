@@ -47,12 +47,13 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     assert registration.user_id == user.id
   end
 
-  test "a pending booking holds its seats" do
+  test "only paid places count: a registration still at checkout holds none" do
     course = generate(course(total_places: 8))
 
     {:ok, _} = register(course, 3)
+    generate(course_registration(course_id: course.id, seats: 2, status: :confirmed))
 
-    assert seats_left(course) == 5
+    assert seats_left(course) == 6
   end
 
   test "refuses more seats than are left" do
@@ -61,15 +62,6 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
 
     assert {:error, error} = register(course, 2)
     assert Exception.message(error) =~ "only 1 places left"
-  end
-
-  test "a pending booking older than the hold frees its seats" do
-    course = generate(course(total_places: 4))
-    stale = DateTime.add(DateTime.utc_now(), -31, :minute)
-    generate(course_registration(course_id: course.id, seats: 4, status: :pending, inserted_at: stale))
-
-    assert seats_left(course) == 4
-    assert {:ok, _} = register(course, 4)
   end
 
   test "cancelled bookings free their seats" do
@@ -109,26 +101,27 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       )
     end
 
-    test "awaits payment through its link, holding its places and emailing the link" do
+    test "invites them with a payment link, holding no places until they pay" do
       course = generate(course(total_places: 5))
 
       assert {:ok, registration} = add_manually(course, 2, generate(admin_user()))
-      assert registration.status == :awaiting_payment
+      assert registration.status == :pending
       refute registration.confirmed_at
       assert registration.payment_link_token
-      assert Ash.load!(course, :seats_left, authorize?: false).seats_left == 3
+      assert seats_left(course) == 5
 
       assert_enqueued(
-        worker: Edenflowers.Courses.Workers.SendConfirmationEmail,
+        worker: Edenflowers.Courses.Workers.SendPaymentLinkEmail,
         args: %{"primary_key" => %{"id" => registration.id}}
       )
     end
 
-    test "is allowed after register_before but not beyond the course's places" do
+    test "is allowed after register_before but not beyond the course's free places" do
       course = generate(course(register_before: Date.add(ShopTime.today(), -2), total_places: 3))
+      generate(course_registration(course_id: course.id, seats: 2, status: :confirmed))
       admin = generate(admin_user())
 
-      assert {:ok, _} = add_manually(course, 2, admin)
+      assert {:ok, _} = add_manually(course, 1, admin)
       assert {:error, error} = add_manually(course, 2, admin)
       assert Exception.message(error) =~ "only 1 places left"
     end
@@ -220,19 +213,45 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert quiet.cancellation_emailed_to == nil
       assert [_only_the_first] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
     end
+  end
 
-    test "releasing a hold the customer never paid for emails nobody" do
-      {:ok, hold} = register(generate(course()), 1)
+  describe "discarding an unpaid registration" do
+    test "deletes it and emails nobody" do
+      {:ok, unpaid} = register(generate(course()), 1)
 
-      {:ok, released} = Courses.release_registration_hold(hold, actor: Edenflowers.Actors.system_actor())
+      assert :ok = Courses.discard_registration(unpaid, actor: Edenflowers.Actors.system_actor())
 
-      assert released.status == :cancelled
+      assert {:error, _not_found} = Courses.get_registration_by_id(unpaid.id, actor: Edenflowers.Actors.system_actor())
       refute_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
     end
 
-    test "a hold paid for in the meantime isn't released", %{admin: admin} do
-      assert {:error, _not_a_hold} =
-               Courses.release_registration_hold(paid_booking(1, admin), actor: Edenflowers.Actors.system_actor())
+    test "leaves a booking paid for in the meantime" do
+      admin = generate(admin_user())
+      {:ok, registration} = add_manually(generate(course()), 1, admin)
+      paid = pay(registration, "85.00")
+
+      assert {:error, _not_pending} = Courses.discard_registration(paid, actor: Edenflowers.Actors.system_actor())
+      assert {:ok, _still_there} = Courses.get_registration_by_id(paid.id, actor: admin)
+    end
+
+    test "every night, purges checkouts left unpaid for a day but keeps invites" do
+      course = generate(course())
+      yesterday = DateTime.add(DateTime.utc_now(), -25, :hour)
+      abandoned = generate(course_registration(course_id: course.id, updated_at: yesterday))
+      fresh = generate(course_registration(course_id: course.id))
+
+      invite =
+        generate(course_registration(course_id: course.id, payment_link_token: "invite-token", updated_at: yesterday))
+
+      assert :ok = perform_job(Edenflowers.Courses.Schedulers.DiscardAbandoned, %{})
+
+      for %{args: args} <- all_enqueued(worker: Edenflowers.Courses.Workers.DiscardAbandoned),
+          do: perform_job(Edenflowers.Courses.Workers.DiscardAbandoned, args)
+
+      system = Edenflowers.Actors.system_actor()
+      assert {:error, _purged} = Courses.get_registration_by_id(abandoned.id, actor: system)
+      assert {:ok, _} = Courses.get_registration_by_id(fresh.id, actor: system)
+      assert {:ok, _} = Courses.get_registration_by_id(invite.id, actor: system)
     end
   end
 

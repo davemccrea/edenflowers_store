@@ -82,7 +82,7 @@ defmodule Edenflowers.Email.Preview do
   end
 
   @doc """
-  The payment link email for a booking Jennie is adding on `course`, from
+  The payment link email for someone Jennie is inviting to `course`, from
   the form's `changeset`, before anything is saved.
   """
   def build_entered_booking(changeset, course, inputs, locale \\ nil) do
@@ -170,13 +170,10 @@ defmodule Edenflowers.Email.Preview do
 
   defp booking_load(_kind), do: [:course, :first_name, :amount_paid, :balance, :payment_link_open?]
 
-  defp booking_email(:confirmation, %{balance: balance} = registration, inputs) do
-    if Decimal.positive?(balance),
-      do: booking_email(:payment_link, registration, inputs),
-      else:
-        registration
-        |> Email.course_confirmation(inputs[:message])
-        |> Swoosh.Email.attachment(Receipt.attachment("", registration.reference))
+  defp booking_email(:confirmation, registration, inputs) do
+    registration
+    |> Email.course_confirmation(inputs[:message])
+    |> Swoosh.Email.attachment(Receipt.attachment("", registration.reference))
   end
 
   # After the course, the link goes in a Payment reminder, as the senders send it.

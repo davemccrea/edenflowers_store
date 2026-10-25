@@ -174,7 +174,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert html =~ "To cancel, reply to your confirmation email."
     end
 
-    test "releases the hold and goes back to the course when a redirect payment fails", %{conn: conn} do
+    test "discards the unpaid registration and goes back to the course when a redirect payment fails", %{conn: conn} do
       registration = generate(course_registration(payment_intent_id: "pi_x"))
       expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_x"} -> {:ok, %{id: "pi_x"}} end)
 
@@ -184,11 +184,8 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert to == ~p"/en/courses/#{registration.course_id}"
       assert flash["error"] =~ "didn't go through"
 
-      {:ok, registration} =
-        Edenflowers.Courses.get_registration_by_id(registration.id, actor: Edenflowers.Actors.system_actor())
-
-      assert registration.status == :cancelled
-      assert registration.payment_intent_id == nil
+      assert {:error, _discarded} =
+               Edenflowers.Courses.get_registration_by_id(registration.id, actor: Edenflowers.Actors.system_actor())
     end
   end
 

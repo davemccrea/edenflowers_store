@@ -12,44 +12,29 @@ defmodule Edenflowers.Courses.Changes.SendReminderEmailTest do
     %{tomorrow: generate(course(date: Date.add(today, 1), register_before: today)).id}
   end
 
-  test "confirmed and awaiting-payment bookings on tomorrow's course are reminded once", %{tomorrow: course_id} do
-    confirmed = generate(course_registration(course_id: course_id, status: :confirmed, amount: Decimal.new(0)))
+  test "bookings on tomorrow's course are reminded once", %{tomorrow: course_id} do
+    confirmed = generate(course_registration(course_id: course_id, status: :confirmed, email: "anna@example.com"))
 
-    awaiting =
-      generate(
-        course_registration(
-          course_id: course_id,
-          status: :awaiting_payment,
-          payment_link_token: "tok",
-          email: "anna@example.com"
-        )
-      )
+    assert scheduled_reminders() == [confirmed.id]
 
-    assert Enum.sort(scheduled_reminders()) == Enum.sort([confirmed.id, awaiting.id])
-
-    assert {:ok, _registration} = perform_job(SendReminderEmail, %{"primary_key" => %{"id" => awaiting.id}})
+    assert {:ok, _registration} = perform_job(SendReminderEmail, %{"primary_key" => %{"id" => confirmed.id}})
 
     assert_email_sent(fn email ->
+      refute email.text_body =~ "Amount due"
       assert email.to == [{"", "anna@example.com"}]
       assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
       assert email.subject =~ ~r/^See you tomorrow at Course \d+$/
       assert email.text_body =~ ~r/A reminder that Course \d+ is tomorrow\./
-      assert email.text_body =~ "Amount due: €85.00"
-      assert email.text_body =~ "/pay/courses/tok"
     end)
 
-    assert {:ok, _registration} = perform_job(SendReminderEmail, %{"primary_key" => %{"id" => confirmed.id}})
-
-    assert_email_sent(fn email -> not (email.text_body =~ "Amount due" or email.text_body =~ "pay online") end)
-
-    assert Ash.get!(CourseRegistration, awaiting.id, authorize?: false).reminder_emailed_at
+    assert Ash.get!(CourseRegistration, confirmed.id, authorize?: false).reminder_emailed_at
     Edenflowers.Repo.delete_all(Oban.Job)
     assert scheduled_reminders() == []
   end
 
-  test "cancelled bookings, released holds and other days' courses get nothing", %{tomorrow: course_id} do
+  test "cancelled bookings, unpaid invites and other days' courses get nothing", %{tomorrow: course_id} do
     generate(course_registration(course_id: course_id, status: :cancelled))
-    generate(course_registration(course_id: course_id, status: :pending))
+    generate(course_registration(course_id: course_id, status: :pending, payment_link_token: "tok"))
     generate(course_registration(status: :confirmed))
 
     assert scheduled_reminders() == []

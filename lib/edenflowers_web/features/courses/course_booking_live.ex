@@ -23,10 +23,10 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
 
     case load_registration(id) do
       # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
-      # when the customer cancels or is declined in the app. Release the seat hold,
-      # as "Change booking" does, and send them back to book again.
+      # when the customer cancels or is declined in the app. Discard the unpaid
+      # registration, as "Change booking" does, and send them back to book again.
       {:ok, %{status: :pending} = registration} when payment_failed? ->
-        Courses.release_registration_hold!(registration, actor: system_actor())
+        Courses.discard_registration!(registration, actor: system_actor())
 
         {:ok,
          socket

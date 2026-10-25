@@ -1,8 +1,6 @@
 defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
   @moduledoc """
-  Sends a course booking confirmation, including a receipt when payment has
-  settled. A booking still awaiting payment gets its payment link instead,
-  or a Payment reminder once the course is over.
+  Sends a paid course booking its confirmation, with the receipt attached.
   """
 
   use Ash.Resource.Change
@@ -21,12 +19,10 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
       registration = load_for_send(changeset.data)
 
       case deliver(registration, Ash.Changeset.get_argument(changeset, :message)) do
-        {:ok, changes} ->
+        :ok ->
           Logger.info("Sent confirmation email for course registration #{registration.id}")
-
-          changes
-          |> Map.put(:confirmation_emailed_at, DateTime.utc_now())
-          |> then(&Ash.Changeset.force_change_attributes(changeset, &1))
+          now = DateTime.utc_now()
+          Ash.Changeset.force_change_attributes(changeset, confirmation_emailed_at: now, receipt_emailed_at: now)
 
         {:error, error} ->
           Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")
@@ -35,39 +31,19 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
   end
 
   defp deliver(registration, message) do
-    if Decimal.positive?(registration.balance),
-      do: deliver_without_receipt(registration, message),
-      else: deliver_with_receipt(registration, message)
-  end
-
-  # Only a booking awaiting payment owes anything, and it always has a link.
-  defp deliver_without_receipt(%{payment_link_open?: true} = registration, message) do
-    url = EdenflowersWeb.PaymentLink.url_for(registration)
-
-    email =
-      if Date.before?(registration.course.date, Edenflowers.ShopTime.today()),
-        do: Email.payment_reminder(registration, url, message),
-        else: Email.course_payment_link(registration, url, message)
-
-    with {:ok, _result} <- Mailer.deliver(email) do
-      {:ok, %{payment_link_emailed_at: DateTime.utc_now()}}
-    end
-  end
-
-  defp deliver_with_receipt(registration, message) do
     with {:ok, pdf} <- Receipt.generate(registration),
          {:ok, _result} <-
            registration
            |> Email.course_confirmation(message)
            |> Swoosh.Email.attachment(Receipt.attachment(pdf, registration.reference))
            |> Mailer.deliver() do
-      {:ok, %{receipt_emailed_at: DateTime.utc_now()}}
+      :ok
     end
   end
 
   defp load_for_send(registration) do
     registration
-    |> Ash.load!([:course, :payments, :first_name, :amount_paid, :balance, :payment_link_open?], actor: system_actor())
+    |> Ash.load!([:course, :payments, :first_name, :amount_paid, :balance], actor: system_actor())
     |> translate_course()
   end
 

@@ -2,8 +2,8 @@ defmodule Edenflowers.Courses do
   @moduledoc """
   Entry point for florist courses and their bookings.
 
-  `Course` defines the event, capacity, and price. `CourseRegistration` holds
-  seats during checkout, then records confirmation, payment, or cancellation.
+  `Course` defines the event, capacity, and price. A `CourseRegistration` books
+  places once paid, then records payments, refunds or cancellation.
   """
 
   use Ash.Domain,
@@ -37,7 +37,7 @@ defmodule Edenflowers.Courses do
       define :undo_registration_payment, action: :undo_payment, args: [:payment_id]
       define :remove_registration_seat, action: :remove_seat
       define :cancel_registration, action: :cancel
-      define :release_registration_hold, action: :release_hold
+      define :discard_registration, action: :discard
     end
   end
 end

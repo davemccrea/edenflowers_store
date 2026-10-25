@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLiveTest do
       refute render(view) =~ "To cancel"
     end
 
-    test "a failed redirect payment releases the hold and returns to the course", %{conn: conn} do
+    test "a failed redirect payment discards the unpaid registration and returns to the course", %{conn: conn} do
       registration = generate(course_registration(status: :pending))
 
       assert {:error, {:live_redirect, %{to: to, flash: %{"error" => error}}}} =
@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLiveTest do
       assert to == "/en/courses/#{registration.course_id}"
       assert error =~ "Your payment didn't go through"
 
-      assert Courses.get_registration_by_id!(registration.id, authorize?: false).status == :cancelled
+      assert {:error, _discarded} = Courses.get_registration_by_id(registration.id, authorize?: false)
     end
 
     test "an unknown booking goes back to the courses", %{conn: conn} do

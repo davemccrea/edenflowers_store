@@ -606,10 +606,10 @@ defmodule Edenflowers.Payments do
   defp get_payable({"order_id", id}), do: Orders.get_order_by_id(id, actor: system_actor())
   defp get_payable({"course_registration_id", id}), do: Courses.get_registration_by_id(id, actor: system_actor())
 
-  # A payment link only opens on an order already placed, or a booking Jennie
-  # added or one already confirmed.
+  # A payment link on a placed order or a confirmed booking pays what it still
+  # owes; an invite's link books its places, as checkout does.
   defp link_payment?(%Order{state: state}), do: state == :placed
-  defp link_payment?(%CourseRegistration{status: status}), do: status in [:awaiting_payment, :confirmed]
+  defp link_payment?(%CourseRegistration{status: status}), do: status == :confirmed
 
   defp complete_checkout(%Order{} = order, payment_intent, amount_paid, paid_with) do
     Orders.finalize_checkout(

@@ -1,15 +1,13 @@
-defmodule Edenflowers.Courses.Changes.ReserveSeats do
+defmodule Edenflowers.Courses.Changes.PriceBooking do
   @moduledoc """
-  Checks the course still takes bookings and has room for the requested seats,
+  Refuses a course that has closed or hasn't room for the requested seats,
   then snapshots what the booking costs.
 
-  The course row is locked for the rest of the transaction, so two people
-  booking the last seats at once are counted one after the other.
+  Nothing is held: places are counted from paid bookings, so two people
+  paying for the last place at once are both booked and Jennie makes room.
   """
 
   use Ash.Resource.Change
-
-  require Ash.Query
 
   alias Ash.Error.Changes.InvalidAttribute
   alias Edenflowers.Courses.Course
@@ -20,26 +18,14 @@ defmodule Edenflowers.Courses.Changes.ReserveSeats do
       course_id = Ash.Changeset.get_attribute(changeset, :course_id)
       seats = Ash.Changeset.get_attribute(changeset, :seats)
 
-      case lock_course(course_id) do
-        nil -> Ash.Changeset.add_error(changeset, field: :course_id, message: "course not found")
-        course -> reserve(changeset, course, seats, opts[:allow_after_cutoff?] || false)
+      case Ash.get(Course, course_id, load: [:seats_left, :tax_rate], authorize?: false) do
+        {:ok, course} -> price(changeset, course, seats, opts[:allow_after_cutoff?] || false)
+        {:error, _not_found} -> Ash.Changeset.add_error(changeset, field: :course_id, message: "course not found")
       end
     end)
   end
 
-  # Locked without loads: Postgres refuses FOR UPDATE on a query whose
-  # aggregates arrive through outer joins, so seats are counted separately.
-  defp lock_course(course_id) do
-    course =
-      Course
-      |> Ash.Query.filter(id == ^course_id)
-      |> Ash.Query.lock(:for_update)
-      |> Ash.read_one!(authorize?: false)
-
-    if course, do: Ash.load!(course, [:seats_left, :tax_rate], authorize?: false)
-  end
-
-  defp reserve(changeset, course, seats, allow_after_cutoff?) do
+  defp price(changeset, course, seats, allow_after_cutoff?) do
     cond do
       not allow_after_cutoff? and Date.before?(course.register_before, Edenflowers.ShopTime.today()) ->
         Ash.Changeset.add_error(changeset, field: :course_id, message: "booking has closed")

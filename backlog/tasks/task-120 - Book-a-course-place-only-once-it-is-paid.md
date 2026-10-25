@@ -1,9 +1,10 @@
 ---
 id: TASK-120
 title: Book a course place only once it is paid
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-25 10:08'
+updated_date: '2026-10-25 10:43'
 labels:
   - spec
   - customers
@@ -33,10 +34,29 @@ Decisions (grilled 2026-10-25):
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 CourseRegistration status is an AshStateMachine with pending, confirmed and cancelled
-- [ ] #2 Seat counts (seats_taken, seats_booked, booking_open?) count confirmed bookings only
-- [ ] #3 Add booking creates a pending invite that holds no places; paying it confirms it
-- [ ] #4 Abandoned pending checkouts are purged after a day; withdrawing an invite deletes it
-- [ ] #5 The admin course page lists invites separately from bookings
-- [ ] #6 Course emails no longer branch on an unpaid booking; mix print_emails reviewed in sv, fi and en
+- [x] #1 CourseRegistration status is an AshStateMachine with pending, confirmed and cancelled
+- [x] #2 Seat counts (seats_taken, seats_booked, booking_open?) count confirmed bookings only
+- [x] #3 Add booking creates a pending invite that holds no places; paying it confirms it
+- [x] #4 Abandoned pending checkouts are purged after a day; withdrawing an invite deletes it
+- [x] #5 The admin course page lists invites separately from bookings
+- [x] #6 Course emails no longer branch on an unpaid booking; mix print_emails reviewed in sv, fi and en
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implemented 2026-10-25. Seat count is one aggregate, seats_booked (confirmed only). Invite payment goes through :confirm_payment (confirmation + receipt); :record_link_payment is now only a balance on a confirmed booking. Pending rows are deleted by :discard (course page 'Change booking', failed MobilePay, admin 'Withdraw invite', nightly discard_abandoned for checkouts without a link). ReserveSeats became PriceBooking (no row lock). New sv/fi msgstrs for the invite email and admin invite section need Jennie's review. BEFORE DEPLOY: check production for course_registrations with status awaiting_payment and cancel them, or reading them will fail.
+<!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-25 10:43
+
+---
+
+Before deploying: run just backup, then check prod for awaiting_payment registrations (none expected) and cancel any. sv/fi copy for the new invite strings is drafted, not yet reviewed by Jennie.
+
+---
+<!-- COMMENTS:END -->

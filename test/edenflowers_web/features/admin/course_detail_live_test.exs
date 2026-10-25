@@ -178,7 +178,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       Ash.read_one!(Edenflowers.Courses.CourseRegistration, authorize?: false)
     end
 
-    test "emails the payment link, and holds the places until it's paid", %{conn: conn} do
+    test "invites them with the payment link, holding no places until they pay", %{conn: conn} do
       course = generate(course(name: "Autumn wreaths", total_places: 10))
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
@@ -189,24 +189,29 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       registration = add_booking(view, course, "true")
 
-      assert registration.status == :awaiting_payment
-      assert has_element?(view, "li", "Birgitta")
-      assert has_element?(view, "li", "To collect")
-      assert render(view) =~ "2 / 10 seats"
-      refute has_element?(view, ~s|button[phx-value-kind="confirmation"][phx-value-id="#{registration.id}"]|)
+      assert registration.status == :pending
+      assert has_element?(view, "#invites li", "Birgitta")
+      refute has_element?(view, "#bookings li", "Birgitta")
+      assert render(view) =~ "0 / 10 seats"
 
       assert %{success: 1} = Oban.drain_queue(queue: :default)
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "birgitta@example.com"}]
         assert email.text_body =~ "/pay/courses/#{registration.payment_link_token}"
-        refute email.text_body =~ "pay at the course"
-        assert email.text_body =~ "and paying confirms them"
+        assert email.text_body =~ "They're booked as soon as you've paid."
       end)
+    end
 
+    test "withdrawing an invite deletes it", %{conn: conn} do
+      course = generate(course())
+      invite = generate(course_registration(course_id: course.id, name: "Birgitta", payment_link_token: "tok"))
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
-      view |> element("#settle-#{registration.id}") |> render_click()
-      assert render(view) =~ "Resend payment link"
+
+      view |> element(~s|#invite-#{invite.id} button[phx-click="withdraw_invite"]|) |> render_click()
+
+      refute has_element?(view, "#invites")
+      assert {:error, _deleted} = Ash.get(Edenflowers.Courses.CourseRegistration, invite.id, authorize?: false)
     end
 
     @tag :typst
