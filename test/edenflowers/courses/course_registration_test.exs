@@ -183,9 +183,13 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       %{admin: generate(admin_user())}
     end
 
-    defp paid_booking(days_before, admin) do
+    defp paid_booking(days_before, admin, fee_percent \\ 0) do
       today = ShopTime.today()
-      course = generate(course(date: Date.add(today, days_before), register_before: today))
+
+      course =
+        generate(
+          course(date: Date.add(today, days_before), register_before: today, cancellation_fee_percent: fee_percent)
+        )
 
       {:ok, registration} = add_manually(course, 1, admin)
       pay(registration, "85.00")
@@ -194,6 +198,16 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     test "leaves everything paid to refund, however close the course", %{admin: admin} do
       {:ok, registration} = Courses.cancel_registration(paid_booking(1, admin), actor: admin)
       assert Decimal.equal?(balance(registration), "-85.00")
+    end
+
+    test "keeps the course's fee once its cancellation deadline has passed", %{admin: admin} do
+      {:ok, late} = Courses.cancel_registration(paid_booking(1, admin, 50), actor: admin)
+      assert Decimal.equal?(late.kept_amount, "42.50")
+      assert Decimal.equal?(balance(late), "-42.50")
+
+      {:ok, early} = Courses.cancel_registration(paid_booking(7, admin, 50), actor: admin)
+      assert Decimal.equal?(early.kept_amount, 0)
+      assert Decimal.equal?(balance(early), "-85.00")
     end
 
     test "emails the customer the reason, unless Jennie unticks it", %{admin: admin} do

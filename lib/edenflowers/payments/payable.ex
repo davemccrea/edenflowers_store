@@ -15,6 +15,9 @@ defmodule Edenflowers.Payments.Payable do
       unplaced cart or a booking still holding its seats while the customer pays.
     * `calculate :cancelled?`
     * `calculate :cancellable?`: whether it can be cancelled now
+    * `calculate :refund_on_cancelling`: what cancelling it now refunds unless
+      Jennie says otherwise. An order refunds all it holds; a booking applies
+      its course's cancellation terms.
     * `customer_email`: who's told about cancels and refunds, or nil
     * a `:for_customer_email` read action that loads what `Email.cancelled/2`
       and `Email.refunded/2` need
@@ -161,6 +164,9 @@ defmodule Edenflowers.Payments.Payable do
     # A record refunded in Stripe without being cancelled reads as owed again
     # by its balance, but is settled.
     calculate :settled?, :boolean, expr(balance == 0 or refunded?)
+
+    calculate :to_collect?, :boolean, expr(not settled? and balance > 0)
+    calculate :to_refund?, :boolean, expr(not settled? and balance < 0)
 
     # Whether Jennie can hand money back (Validations.Refundable).
     calculate :refundable?, :boolean, expr(committed? and balance <= 0 and amount_held > 0)

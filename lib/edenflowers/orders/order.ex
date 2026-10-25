@@ -142,6 +142,8 @@ defmodule Edenflowers.Orders.Order do
     :customer_first_name,
     :grand_total,
     :settled?,
+    :to_collect?,
+    :to_refund?,
     :items_subtotal,
     :items_total,
     :vat,
@@ -528,6 +530,7 @@ defmodule Edenflowers.Orders.Order do
                   :fulfillment_method,
                   :grand_total,
                   :settled?,
+                  :to_collect?,
                   :amount_paid,
                   :balance,
                   :payment_status,
@@ -542,7 +545,7 @@ defmodule Edenflowers.Orders.Order do
 
       filter expr(state == :placed and matches?(term: ^arg(:term)))
 
-      prepare build(sort: [ordered_at: :desc], load: [:settled?, :amount_paid, :balance, :payment_status])
+      prepare build(sort: [ordered_at: :desc], load: [:settled?, :to_collect?, :amount_paid, :balance, :payment_status])
     end
 
     # What the Overview lists as still to collect or refund.
@@ -1430,6 +1433,7 @@ defmodule Edenflowers.Orders.Order do
     calculate :committed?, :boolean, expr(state == :placed)
     calculate :cancelled?, :boolean, expr(fulfillment_status == :cancelled)
     calculate :cancellable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
+    calculate :refund_on_cancelling, :decimal, expr(if amount_held > 0, do: amount_held, else: 0)
     calculate :editable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
     calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
 

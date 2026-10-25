@@ -15,8 +15,8 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   and `held`, what was held when she opened the drawer. Kept is `held` minus
   `refund`, so a retry after Stripe refunded but the cancel failed keeps the
   same amount and refunds nothing twice. Money that arrived after she opened
-  it refuses the cancel rather than being kept. Without them, everything held
-  is refunded.
+  it refuses the cancel rather than being kept. Without them, it refunds
+  `refund_on_cancelling`.
 
   `cancelled_by` (`:customer` or `:shop`) picks who the errors and the email
   speak to, from the option or else the action's `cancelled_by` argument.
@@ -46,7 +46,9 @@ defmodule Edenflowers.Payments.Changes.Cancel do
 
   defp refund(changeset, cancelled_by) do
     record =
-      Ash.load!(changeset.data, [:cancellable?, :amount_held, :paid_through_stripe, :customer_email],
+      Ash.load!(
+        changeset.data,
+        [:cancellable?, :amount_held, :refund_on_cancelling, :paid_through_stripe, :customer_email],
         authorize?: false,
         reuse_values?: false
       )
@@ -54,7 +56,7 @@ defmodule Edenflowers.Payments.Changes.Cancel do
     held = Decimal.max(record.amount_held, 0)
 
     with true <- record.cancellable? || {:error, changed_message(cancelled_by)},
-         {:ok, kept} <- kept(changeset, held, cancelled_by) do
+         {:ok, kept} <- kept(changeset, record, held, cancelled_by) do
       money = money(record, Decimal.sub(held, kept))
 
       changeset
@@ -77,10 +79,10 @@ defmodule Edenflowers.Payments.Changes.Cancel do
     %{refunded: refunded, to_return: Decimal.sub(to_refund, refunded)}
   end
 
-  defp kept(changeset, held_now, cancelled_by) do
+  defp kept(changeset, record, held_now, cancelled_by) do
     case {Ash.Changeset.get_argument(changeset, :refund), Ash.Changeset.get_argument(changeset, :held)} do
       {nil, _held} ->
-        {:ok, Decimal.new(0)}
+        {:ok, Decimal.sub(held_now, record.refund_on_cancelling)}
 
       {_refund, nil} ->
         {:error, field: :held, message: "is required with a refund"}

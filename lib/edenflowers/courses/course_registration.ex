@@ -463,6 +463,27 @@ defmodule Edenflowers.Courses.CourseRegistration do
     calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled])
     calculate :cancelled?, :boolean, expr(status == :cancelled)
     calculate :cancellable?, :boolean, expr(status == :confirmed)
+
+    # Everything held before the course's cancellation deadline, and after it
+    # all but the course's fee.
+    calculate :refund_on_cancelling,
+              :decimal,
+              expr(
+                cond do
+                  amount_held <= 0 ->
+                    0
+
+                  course.date >= date_add(helsinki_today(), course.cancellation_days, :day) ->
+                    amount_held
+
+                  amount_held > round(amount * course.cancellation_fee_percent / 100, 2) ->
+                    amount_held - round(amount * course.cancellation_fee_percent / 100, 2)
+
+                  true ->
+                    0
+                end
+              )
+
     calculate :customer_email, :string, expr(email)
     calculate :paid?, :boolean, expr(status == :confirmed and not refunded? and balance <= 0)
     calculate :upcoming?, :boolean, expr(status == :confirmed and seats_held > 0 and not course.ended?)

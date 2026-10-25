@@ -276,7 +276,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     registration = booking(socket.assigns.course, id)
 
     mode =
-      if params["mode"] == "refund" or Decimal.negative?(registration.balance),
+      if params["mode"] == "refund" or registration.to_refund?,
         do: :refund,
         else: :settle
 
@@ -535,7 +535,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :amount_paid,
         :amount_held,
         :balance,
-        :settled?,
+        :to_collect?,
+        :to_refund?,
         :paid_outside_stripe,
         :paid_through_stripe,
         :refundable?,
@@ -555,8 +556,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          assign(socket,
            course: course,
            registrations: registrations,
-           cancelled_to_refund: Enum.filter(cancelled, &to_refund?/1),
-           cancelled_settled: Enum.reject(cancelled, &to_refund?/1),
+           cancelled_to_refund: Enum.filter(cancelled, & &1.to_refund?),
+           cancelled_settled: Enum.reject(cancelled, & &1.to_refund?),
            past?: Date.before?(course.date, Edenflowers.ShopTime.today()),
            bcc: registrations |> Enum.map(& &1.email) |> Enum.uniq() |> Enum.join(",")
          )}
@@ -593,7 +594,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           else: ~t"Email confirmation"}
       </.actions_menu_button>
       <.actions_menu_button
-        :if={to_collect?(@registration)}
+        :if={@registration.to_collect?}
         menu={"registration-actions-#{@registration.id}"}
         phx-click="open_email"
         phx-value-kind="payment_reminder"
@@ -680,17 +681,17 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   defp settlement_badge(assigns) do
     ~H"""
     <.badge
-      :if={to_collect?(@registration) or to_refund?(@registration)}
+      :if={@registration.to_collect? or @registration.to_refund?}
       id={"settle-#{@registration.id}"}
       type="button"
-      tone={if to_collect?(@registration), do: :warning, else: :error}
+      tone={if @registration.to_collect?, do: :warning, else: :error}
       class="tabular-nums"
       aria-haspopup="dialog"
       aria-controls="settlement-drawer"
       phx-click="open_settlement"
       phx-value-id={@registration.id}
     >
-      {if to_collect?(@registration),
+      {if @registration.to_collect?,
         do: ~t"To collect #{amount = Format.currency(@registration.balance, @locale)}",
         else: ~t"To refund #{amount = Format.currency(Decimal.abs(@registration.balance), @locale)}"}
       <.icon name="hero-chevron-right" class="-mr-0.5 h-3.5 w-3.5 shrink-0" />
