@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.Order.PaymentTerms do
+defmodule Edenflowers.Orders.Order.Types.PaymentTerms do
   @moduledoc """
   How a custom order's customer will pay, as Jennie chose when placing it:
   through a payment link, by an invoice sent after fulfilment, or in person

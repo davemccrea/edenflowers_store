@@ -164,7 +164,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
 
   # A placed order whose payment is still pending is unpaid, so the filter says so.
   defp payment_status_options do
-    Enum.map(Order.PaymentStatus.values(), fn
+    Enum.map(Order.Types.PaymentStatus.values(), fn
       :pending -> {~t"Unpaid", :pending}
       value -> {status_label(value), value}
     end)

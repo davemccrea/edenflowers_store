@@ -263,16 +263,16 @@ defmodule Edenflowers.Orders.Order do
 
     attribute :ordered_at, :utc_datetime
 
-    attribute :fulfillment_status, __MODULE__.FulfillmentStatus, allow_nil?: false, default: :pending
+    attribute :fulfillment_status, __MODULE__.Types.FulfillmentStatus, allow_nil?: false, default: :pending
     attribute :cancelled_at, :utc_datetime
     # Why Jennie cancelled, for the customer's email and the log.
     attribute :cancellation_reason, :string
     # The customer's email can change later; the log names who was told.
     attribute :cancellation_emailed_to, :string
 
-    attribute :origin, __MODULE__.Origin, allow_nil?: false, default: :online
+    attribute :origin, __MODULE__.Types.Origin, allow_nil?: false, default: :online
     # Custom orders only.
-    attribute :payment_terms, __MODULE__.PaymentTerms
+    attribute :payment_terms, __MODULE__.Types.PaymentTerms
 
     # Step 1 - Your Details
     attribute :customer_name, :string
@@ -456,7 +456,7 @@ defmodule Edenflowers.Orders.Order do
               )
 
     calculate :customer_status,
-              __MODULE__.CustomerStatus,
+              __MODULE__.Types.CustomerStatus,
               expr(
                 cond do
                   payment_status == :refunded -> :refunded
@@ -494,7 +494,7 @@ defmodule Edenflowers.Orders.Order do
               )
 
     calculate :payment_status,
-              __MODULE__.PaymentStatus,
+              __MODULE__.Types.PaymentStatus,
               expr(
                 # A €0 order that never took money owes nothing, so it reads as paid.
                 # A cancelled order that took nothing is called off, not unpaid.

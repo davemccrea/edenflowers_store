@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.SalesSummaryTest do
+defmodule Edenflowers.Orders.Actions.SalesSummaryTest do
   use Edenflowers.DataCase, async: true
 
   import Generator
