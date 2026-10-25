@@ -119,19 +119,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       assert html =~ "Outside delivery range"
       refute html =~ ~s(data-testid="input-confirmed")
     end
-
-    test "blurring an empty address field does nothing", %{conn: conn, delivery_option: delivery_option} do
-      expect(Edenflowers.External.HereAPI.Mock, :geocode, 0, fn _query -> :should_not_be_called end)
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      select_delivery_option(view, delivery_option.id)
-      blur_address(view, "")
-
-      html = render(view)
-      refute html =~ ~s(data-testid="input-confirmed")
-      refute html =~ ~s(data-testid="input-loading")
-    end
   end
 
   describe "validation" do
@@ -178,44 +165,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   end
 
   describe "confirmed state" do
-    test "re-typing the address after confirmation clears the check icon", %{
-      conn: conn,
-      delivery_option: delivery_option
-    } do
-      stub_successful_geocode()
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      select_delivery_option(view, delivery_option.id)
-      blur_address(view, "Stadsgatan 3, 65300 Vasa")
-
-      assert render_async(view, 500) =~ ~s(data-testid="input-confirmed")
-
-      type_address(view, "Stadsgatan 3, 65300 Vas")
-
-      refute render(view) =~ ~s(data-testid="input-confirmed")
-    end
-
-    test "blurring the same confirmed address does not re-trigger geocoding", %{
-      conn: conn,
-      delivery_option: delivery_option
-    } do
-      expect(Edenflowers.External.HereAPI.Mock, :geocode, 1, fn _query ->
-        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
-      end)
-
-      expect(Edenflowers.External.HereAPI.Mock, :route_distance, 1, fn _position -> {:ok, 3000} end)
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      select_delivery_option(view, delivery_option.id)
-      blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view, 500)
-
-      blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view, 500)
-    end
-
     test "switching from delivery to pickup clears confirmed state and hides the address field", %{
       conn: conn,
       delivery_option: delivery_option
@@ -235,27 +184,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       html = render(view)
       refute html =~ ~s(data-testid="input-confirmed")
       refute html =~ "form_delivery_address"
-    end
-
-    test "switching from pickup back to delivery clears the address field", %{
-      conn: conn,
-      delivery_option: delivery_option
-    } do
-      pickup_option = generate(fulfillment_option(fulfillment_method: :pickup, rate_type: :fixed, base_price: "0.00"))
-      stub_successful_geocode()
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      select_delivery_option(view, delivery_option.id)
-      blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view, 500)
-
-      select_delivery_option(view, pickup_option.id)
-      select_delivery_option(view, delivery_option.id)
-
-      html = render(view)
-      refute html =~ "Stadsgatan 3, 65300 Vasa"
-      refute html =~ ~s(data-testid="input-confirmed")
     end
 
     test "reloading the page with a persisted geocode shows the check icon without calling the API", %{

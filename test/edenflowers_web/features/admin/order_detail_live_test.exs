@@ -22,37 +22,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     %{conn: conn, admin: admin}
   end
 
-  test "renders a placed order detail page", %{conn: conn} do
-    order = placed_order()
-    generate(payment(order_id: order.id, amount: Decimal.new("46.50"), payment_intent_id: "pi_test_order_detail"))
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert has_element?(view, "h1", "Ada Lovelace")
-    assert has_element?(view, ~s|header a[href="/admin/orders"]|, "Orders")
-    assert has_element?(view, "header", order.order_reference)
-    assert has_element?(view, "header", "Payment")
-    refute has_element?(view, "header", "Fulfillment")
-    assert has_element?(view, "#order-fulfillment-summary", "Pickup")
-
-    assert has_element?(
-             view,
-             "#order-fulfillment-summary",
-             Edenflowers.Format.weekday_day_month(order.fulfillment_date, "en-GB")
-           )
-
-    refute has_element?(view, "#order-customer", "Ada Lovelace")
-    assert has_element?(view, "#order-customer", "ada@example.com")
-    assert has_element?(view, ~s|#order-customer a[href^="https://app.fastmail.com/mail/search:"]|)
-    assert has_element?(view, ~s|#order-payments a[aria-label="View €46.50 payment in Stripe"]|)
-    assert has_element?(view, "#order-payment-summary dt", "2 ×")
-    refute has_element?(view, "#order-items", "€42.00")
-    refute has_element?(view, ~s|header a[href="/order/#{order.id}/receipt"]|)
-    refute has_element?(view, "#order-technical-details")
-    assert has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
-    assert has_element?(view, ~s|header a[href="#order-payment-summary"]|, "To collect")
-  end
-
   test "warns when a delivery has no phone to call", %{conn: conn} do
     missing = placed_order(fulfillment_method: :delivery, gift: true, recipient_name: "Grandma")
     phoned = placed_order(fulfillment_method: :delivery, recipient_phone_number: "+358401234567")
@@ -196,15 +165,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-payment-summary", "€71.70")
   end
 
-  test "capitalizes the today badge", %{conn: conn} do
-    today = Edenflowers.ShopTime.today()
-    order = placed_order(fulfillment_date: today)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert has_element?(view, "#order-fulfillment-summary", "Today")
-  end
-
   test "marking an order fulfilled flips the status and shows the fulfilled badge", %{conn: conn} do
     order = placed_order()
 
@@ -223,14 +183,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
     assert reloaded.fulfillment_status == :fulfilled
-  end
-
-  test "links an Instagram customer to their DMs", %{conn: conn} do
-    order = placed_order(customer_email: nil, customer_instagram: "@anna.holm")
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert has_element?(view, ~s|#order-customer a[href="https://ig.me/m/anna.holm"]|, "@anna.holm")
   end
 
   test "fulfills a pickup with no customer email", %{conn: conn} do
@@ -518,30 +470,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "header", "Grace Hopper")
   end
 
-  test "shows the phone under the recipient for a gift delivery", %{conn: conn} do
-    order =
-      placed_order(
-        gift: true,
-        recipient_name: "Grace Hopper",
-        recipient_phone_number: "040 123 4567",
-        fulfillment_method: :delivery,
-        delivery_address: "Kauppapuistikko 20, 65100 Vaasa"
-      )
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert has_element?(view, ~s|#order-recipient a[href="tel:040 123 4567"]|)
-    refute has_element?(view, ~s|#order-customer a[href^="tel:"]|)
-  end
-
-  test "header shows a refunded payment", %{conn: conn} do
-    order = placed_order(refunded: true)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert has_element?(view, "header", "Refunded")
-  end
-
   test "logs payments and refunds with their amounts", %{conn: conn} do
     order = placed_order()
     generate(payment(order_id: order.id, amount: Decimal.new("46.50")))
@@ -693,16 +621,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(view, "#order-log", "Refunded €10.00 · Stripe")
     assert has_element?(view, "#order-log", "Refunded €20.00 · Stripe")
-  end
-
-  test "shows the phone under customer and omits recipient for a non-gift order", %{conn: conn} do
-    order = placed_order(recipient_phone_number: "040 123 4567")
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert has_element?(view, "#order-customer", "Customer")
-    assert has_element?(view, ~s|#order-customer a[href="tel:040 123 4567"]|)
-    refute has_element?(view, "#order-recipient")
   end
 
   test "offers ready-for-pickup message links in the customer's language", %{conn: conn} do

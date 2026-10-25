@@ -216,8 +216,8 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
     test "a thumbnail swaps the photo without changing the size", %{conn: conn} do
       product = generate(product(draft: false, photo_slugs: ["a.jpg", "b.jpg"]))
-      generate(product_variant(product_id: product.id, size: :small, price: "40.00"))
-      generate(product_variant(product_id: product.id, size: :large, price: "60.00"))
+      generate(product_variant(product_id: product.id, size: :small, price: "40.00", own_photo_slug: nil))
+      generate(product_variant(product_id: product.id, size: :large, price: "60.00", own_photo_slug: nil))
 
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
       assert has_element?(view, ~s|[data-testid=product-photos] button[aria-pressed=true]|, "Photo 1")

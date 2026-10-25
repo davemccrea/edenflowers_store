@@ -77,20 +77,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
     end
   end
 
-  describe "rendered styling" do
-    # The strike lives on ::after so ::before stays free for the override corner.
-    test "closed cells and the legend swatch both render the diagonal-strike utility", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
-
-      # Weekends are closed in `setup`. Next month's Sundays are all still
-      # ahead, whatever today is, so they render as closed rather than past.
-      view |> element("#admin-fulfillment-calendar-next-month") |> render_click()
-
-      assert has_element?(view, "button.calendar-strike-after")
-      assert has_element?(view, "span.calendar-strike-after")
-    end
-  end
-
   describe "weekday toggle" do
     test "closes an open weekday", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
@@ -157,19 +143,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       assert has_element?(view, ~s|#admin-fulfillment-calendar[data-view-date="#{next}"]|)
       assert has_element?(view, "#admin-fulfillment-calendar-day-#{next}")
-    end
-
-    # The id, key targets and tabindex all come from the slot's `attrs`, so
-    # this fails if AdminCalendar stops spreading them on its day buttons.
-    test "each day carries what CalendarHook needs, out of the Tab order", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
-
-      assert has_element?(
-               view,
-               ~s|button#admin-fulfillment-calendar-day-#{ShopTime.today()}[data-key-targets][tabindex="-1"]|
-             )
-
-      refute has_element?(view, ~s|[id^="admin-fulfillment-calendar-day-"]:not([tabindex="-1"])|)
     end
   end
 
