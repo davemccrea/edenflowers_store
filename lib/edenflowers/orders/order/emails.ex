@@ -9,8 +9,8 @@ defmodule Edenflowers.Orders.Order.Emails do
 
   import Edenflowers.Actors
 
-  alias Edenflowers.Orders.Changes
-  alias Edenflowers.Orders.Validations
+  alias Edenflowers.Orders.Order.Changes
+  alias Edenflowers.Orders.Validations.Holds
   alias Edenflowers.Payments.Changes, as: PaymentChanges
 
   oban do
@@ -114,7 +114,7 @@ defmodule Edenflowers.Orders.Order.Emails do
 
     update :send_order_details_email do
       accept []
-      validate {Validations.Holds, calculation: :details_emailable?, message: "can't be emailed order details"}
+      validate {Holds, calculation: :details_emailable?, message: "can't be emailed order details"}
       argument :message, :string
       transaction? false
       require_atomic? false
@@ -157,7 +157,7 @@ defmodule Edenflowers.Orders.Order.Emails do
     update :email_receipt do
       accept []
       argument :message, :string
-      validate {Validations.Holds, calculation: :receipt_available?, message: "is not paid yet"}
+      validate {Holds, calculation: :receipt_available?, message: "is not paid yet"}
       validate present(:customer_email), message: "has no email address"
       transaction? false
       require_atomic? false
@@ -168,8 +168,7 @@ defmodule Edenflowers.Orders.Order.Emails do
     update :send_payment_reminder do
       argument :message, :string
 
-      validate {Validations.Holds,
-                calculation: :payment_reminder_sendable?, message: "can't be sent a payment reminder"}
+      validate {Holds, calculation: :payment_reminder_sendable?, message: "can't be sent a payment reminder"}
 
       transaction? false
       require_atomic? false
@@ -181,7 +180,7 @@ defmodule Edenflowers.Orders.Order.Emails do
     update :email_fulfillment_confirmation do
       accept []
 
-      validate {Validations.Holds,
+      validate {Holds,
                 calculation: :fulfillment_confirmation_sendable?, message: "can't be emailed a fulfillment confirmation"}
 
       argument :message, :string

@@ -9,7 +9,8 @@ defmodule Edenflowers.Orders.Order.Occurrences do
   import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
 
-  alias Edenflowers.Orders.Changes
+  alias Edenflowers.Orders.Changes.NotifyShop
+  alias Edenflowers.Orders.Order.Changes
   alias Edenflowers.Payments.Changes, as: PaymentChanges
 
   oban do
@@ -87,7 +88,7 @@ defmodule Edenflowers.Orders.Order.Occurrences do
       change PaymentChanges.OpenPaymentLink
       change {PaymentChanges.QueueEmail, trigger: :send_payment_failed_email}
       # A paid Occurrence notifies the shop through :finalize_checkout.
-      change Changes.NotifyShop
+      change NotifyShop
       require_atomic? false
     end
   end

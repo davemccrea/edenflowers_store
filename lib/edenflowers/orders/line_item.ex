@@ -41,8 +41,9 @@ defmodule Edenflowers.Orders.LineItem do
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
-  alias Edenflowers.Orders.Changes
-  alias Edenflowers.Orders.Validations
+  alias Edenflowers.Orders.Changes.PopulateFromVariant
+  alias Edenflowers.Orders.LineItem.Changes
+  alias Edenflowers.Orders.LineItem.Validations
 
   postgres do
     repo Edenflowers.Repo
@@ -79,7 +80,7 @@ defmodule Edenflowers.Orders.LineItem do
       validate attribute_in(:interval_weeks, Edenflowers.Orders.Subscription.intervals())
       validate Validations.Subscribable
       validate Validations.WithinStock
-      change Changes.PopulateFromVariant
+      change PopulateFromVariant
       change Changes.KeepSubscriptionAlone
       change atomic_update(:quantity, expr(quantity + ^atomic_ref(:quantity)))
     end
@@ -98,7 +99,7 @@ defmodule Edenflowers.Orders.LineItem do
       validate present(:unit_price), message: "enter a price", where: [argument_equals(:kind, :custom)]
       validate present(:tax_rate_id), message: "choose a VAT rate", where: [argument_equals(:kind, :custom)]
 
-      change Changes.PopulateFromVariant, where: [argument_equals(:kind, :catalogue)]
+      change PopulateFromVariant, where: [argument_equals(:kind, :catalogue)]
       change Changes.SetTaxRate, where: [argument_equals(:kind, :custom)]
     end
 

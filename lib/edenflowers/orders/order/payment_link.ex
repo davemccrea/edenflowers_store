@@ -9,7 +9,7 @@ defmodule Edenflowers.Orders.Order.PaymentLink do
   import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
 
-  alias Edenflowers.Orders.Changes
+  alias Edenflowers.Orders.Order.Changes
   alias Edenflowers.Payments.Changes, as: PaymentChanges
 
   oban do

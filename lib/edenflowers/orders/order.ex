@@ -35,7 +35,8 @@ defmodule Edenflowers.Orders.Order do
 
   alias Edenflowers.Accounts.Calculations, as: AccountCalculations
   alias Edenflowers.Fulfillment.FulfillmentOption
-  alias Edenflowers.Orders.Calculations
+  alias Edenflowers.Orders.Calculations.Vat
+  alias Edenflowers.Orders.Order.Calculations
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Payments.Payment
 
@@ -558,7 +559,7 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :payment_link_open?, :boolean, expr(not is_nil(payment_link_token) and payable?)
 
-    calculate :vat, :decimal, Calculations.Vat
+    calculate :vat, :decimal, Vat
 
     # False until step 1 assigns the customer. An aggregate `default` doesn't
     # cover a nil `user_id`, hence the `if`.
