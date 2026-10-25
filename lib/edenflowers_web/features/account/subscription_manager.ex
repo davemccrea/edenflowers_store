@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   require Logger
 
+  alias Edenflowers.Catalog
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
@@ -19,6 +20,14 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   @impl true
   def mount(socket) do
     {:ok, assign(socket, edited?: false, notice: nil)}
+  end
+
+  @impl true
+  def update(assigns, socket) do
+    socket = assign(socket, assigns)
+    sizes = Catalog.list_subscription_sizes!(socket.assigns.subscription.product_variant_id)
+
+    {:ok, assign(socket, sizes: sizes)}
   end
 
   @impl true
@@ -50,6 +59,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
         subscription={@subscription}
         locale={@locale}
         open_days={@open_days}
+        sizes={@sizes}
         edited?={@edited?}
         notice={@notice}
         target={@myself}
@@ -144,9 +154,8 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   defp subscription_error_message(_error), do: ~t"Your subscription couldn't be changed."
 
-  defp size_options(subscription, locale) do
-    for variant <- subscription.product_variant.product.product_variants,
-        not variant.draft or variant.id == subscription.product_variant_id do
+  defp size_options(sizes, locale) do
+    for variant <- sizes do
       {"#{AdminComponents.variant_size_label(variant.size)} · #{Format.storefront_price(variant.price, locale)}",
        variant.id}
     end
@@ -384,6 +393,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   attr :subscription, :map, required: true
   attr :locale, :string, required: true
   attr :open_days, :list, required: true
+  attr :sizes, :list, required: true
   attr :edited?, :boolean, required: true
   attr :notice, :any, default: nil
   attr :target, :any, required: true
@@ -515,7 +525,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 id={"subscription-#{@id}-size"}
                 name="product_variant_id"
                 label={~t"Size"}
-                options={size_options(@subscription, @locale)}
+                options={size_options(@sizes, @locale)}
                 value={@subscription.product_variant_id}
               />
               <.input

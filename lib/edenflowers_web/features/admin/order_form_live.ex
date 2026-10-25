@@ -5,7 +5,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   """
   use EdenflowersWeb, :live_view
 
-  require Ash.Query
   require Logger
 
   import EdenflowersWeb.Admin.Components
@@ -13,7 +12,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   alias Edenflowers.Accounts
   alias Edenflowers.Catalog
-  alias Edenflowers.Catalog.ProductVariant
   alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Email.Preview
   alias Edenflowers.Format
@@ -667,11 +665,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   # Cards are chosen as the order's card, not added as items.
   defp variant_options(actor) do
-    ProductVariant
-    |> Ash.Query.filter(product.product_category.slug != "cards")
-    |> Ash.Query.load(:product)
-    |> Ash.read!(actor: actor)
-    |> Enum.sort_by(&{&1.product.name, &1.price})
+    Catalog.list_custom_order_variants!(actor: actor)
     |> Enum.map(fn variant ->
       {"#{variant.product.name} · #{variant_size_label(variant.size)} · #{Format.currency(variant.price, Format.locale())}",
        variant.id}

@@ -13,6 +13,8 @@ defmodule Edenflowers.Catalog.ProductVariant do
 
   alias Edenflowers.Orders.Validations
 
+  require Ash.Sort
+
   postgres do
     table "product_variants"
     repo Edenflowers.Repo
@@ -112,6 +114,29 @@ defmodule Edenflowers.Catalog.ProductVariant do
              )
 
       prepare build(load: [:photo_slug, product: [:tax_rate]])
+    end
+
+    # Cards are added through the card drawer. Draft and sold-out sizes stay, as
+    # a custom order can be priced for anything the shop can make.
+    read :for_custom_order do
+      filter expr(product.product_category.slug != "cards")
+      prepare build(load: [:product])
+
+      # Ahead of the resource's own price sort, so each product's sizes stay together.
+      prepare fn query, _context ->
+        Ash.Query.sort(query, [{Ash.Sort.expr_sort(product.name, :string), :asc}], prepend?: true)
+      end
+    end
+
+    # The sizes a subscription can switch to. Its current size stays on offer
+    # even once it's a draft, so the customer can keep it.
+    read :subscription_sizes do
+      argument :current_variant_id, :uuid, allow_nil?: false
+
+      filter expr(
+               exists(product.product_variants, id == ^arg(:current_variant_id)) and
+                 (draft == false or id == ^arg(:current_variant_id))
+             )
     end
   end
 
