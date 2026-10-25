@@ -30,6 +30,12 @@ defmodule Edenflowers.Courses do
       define :get_registration_by_id, action: :read, get_by: [:id]
       define :add_registration_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
 
+      define :prepare_registration_checkout_payment,
+        action: :prepare_checkout_payment,
+        args: [:registration_id, :course_id]
+
+      define :prepare_registration_link_payment, action: :prepare_link_payment, args: [:token]
+
       define :confirm_registration_payment, action: :confirm_payment, args: [:payment_intent_id]
       define :open_registration_payment_link, action: :open_payment_link
       define :email_registration_payment_link, action: :email_payment_link

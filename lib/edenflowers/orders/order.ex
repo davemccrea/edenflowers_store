@@ -1061,6 +1061,11 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:order_details_email_failed_at, &DateTime.utc_now/0)
     end
 
+    action :prepare_checkout_payment, :map do
+      argument :order_id, :uuid, allow_nil?: false
+      run Actions.PrepareCheckoutPayment
+    end
+
     action :sales_summary, :map do
       description "Counts paid orders placed between two dates, inclusive, in Helsinki time, and sums the money " <>
                     "received in that range, refunds taken off, in total and for each day."
@@ -1207,6 +1212,12 @@ defmodule Edenflowers.Orders.Order do
 
     # Guest checkout: creating an order does not require authentication.
     policy action(:create_for_checkout) do
+      authorize_if always()
+    end
+
+    # Each reads the order with the access it needs itself: the cart by the
+    # actor's read policy, the link by its token.
+    policy action([:prepare_checkout_payment, :prepare_link_payment]) do
       authorize_if always()
     end
 

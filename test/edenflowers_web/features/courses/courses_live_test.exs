@@ -62,6 +62,22 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_course_secret"})
     end
 
+    test "paying for places taken meanwhile reopens the form instead of charging", %{conn: conn} do
+      course = generate(course(total_places: 2))
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+
+      view
+      |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "2"})
+      |> render_submit()
+
+      generate(course_registration(course_id: course.id, seats: 1, status: :confirmed))
+      view |> element("#course-payment-form") |> render_submit()
+
+      refute_push_event(view, "stripe:process_payment", %{})
+      refute has_element?(view, "#course-payment-form")
+      assert has_element?(view, "#booking-form")
+    end
+
     test "Change booking reopens the form and revises the same registration", %{conn: conn} do
       course = generate(course(price: "85.00"))
       {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")

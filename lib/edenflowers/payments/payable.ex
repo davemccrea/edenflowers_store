@@ -5,6 +5,10 @@ defmodule Edenflowers.Payments.Payable do
 
   The including resource supplies:
 
+    * a `:by_payment_link_token` read action loading `payment_link_open?`
+      and `balance`, and a policy letting anyone run `:prepare_link_payment`:
+      the token is the access
+
     * a `:send_payment_received_email` update action, taking `amount` and
       `message`, that emails the customer Payment received
 
@@ -36,6 +40,11 @@ defmodule Edenflowers.Payments.Payable do
   end
 
   actions do
+    action :prepare_link_payment, :map do
+      argument :token, :string, allow_nil?: false, sensitive?: true
+      run Edenflowers.Payments.Actions.PrepareLinkPayment
+    end
+
     update :add_payment_intent_id do
       accept [:payment_intent_id]
       validate Validations.PaymentIntentNotSet
