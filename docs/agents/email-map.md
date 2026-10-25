@@ -17,7 +17,8 @@ built back to what sets it off:
    and the Oban workers in `lib/edenflowers/*/workers/`. Note where a sender
    picks one email over another (a balance, a date, a photo, who cancelled).
 3. Find the resource actions that use those changes, in
-   `lib/edenflowers/orders/order.ex`, `subscription.ex`,
+   `lib/edenflowers/orders/order/` (Order's actions and triggers live in its
+   fragments there, mostly `emails.ex`), `orders/subscription.ex`,
    `lib/edenflowers/courses/course_registration.ex` and
    `lib/edenflowers/payments/payable.ex`. Read each `where:` condition and each
    argument's default, such as whether "email the customer" starts ticked.
