@@ -19,12 +19,16 @@ defmodule Edenflowers.Orders.Subscription do
   @intervals [1, 2, 4]
 
   # Notice Jennie gets to buy the flowers before an Occurrence is delivered.
-  @lead_days 3
+  @lead_days 2
 
-  # A customer's changes close a day before the occurrence job charges the card.
-  @cutoff_days @lead_days + 1
+  # The last day a customer can change or cancel is this many days before a
+  # delivery. Changes close the day after, which must be no later than the
+  # day the occurrence job charges the card.
+  @change_deadline_days 3
 
-  # The day before changes close, so the customer has two days to act.
+  @cutoff_days @change_deadline_days - 1
+
+  # The day before the change deadline, so the customer has two days to act.
   @heads_up_days @cutoff_days + 2
 
   def intervals, do: @intervals
@@ -45,12 +49,17 @@ defmodule Edenflowers.Orders.Subscription do
 
   @doc "The next delivery date a paused subscription would get if it resumed today."
   def resume_date(%{next_fulfillment_date: date, interval_weeks: weeks}) do
-    Changes.StepToScheduledDate.scheduled_date(date, weeks, @cutoff_days)
+    Changes.StepToScheduledDate.scheduled_date(date, weeks, @change_deadline_days)
   end
 
   def lead_days, do: @lead_days
 
   def cutoff_days, do: @cutoff_days
+
+  def change_deadline_days, do: @change_deadline_days
+
+  @doc "The last day a customer can change or cancel a delivery on `date`."
+  def change_deadline(date), do: Date.add(date, -@change_deadline_days)
 
   @doc "The subscription's Occurrence still waiting on its payment link, among `orders`."
   def unpaid_occurrence(orders, %{id: id}) do
@@ -100,7 +109,7 @@ defmodule Edenflowers.Orders.Subscription do
       end
 
       # Weekly subscribers get flowers too often to need telling. Daily, from
-      # 6 days before a delivery until its changes close, once per delivery.
+      # `@heads_up_days` before a delivery until its changes close, once per delivery.
       trigger :send_heads_up_email do
         action :send_heads_up_email
         queue :default
@@ -273,11 +282,11 @@ defmodule Edenflowers.Orders.Subscription do
       change transition_state(:paused)
     end
 
-    # Picks up at the first date on the schedule the occurrence job hasn't
-    # already passed, so resuming never creates an Occurrence at short notice.
+    # Picks up at the first date on the schedule still open to changes, so
+    # resuming never creates an Occurrence at short notice.
     update :resume do
       change transition_state(:active)
-      change {Changes.StepToScheduledDate, days_from_today: @cutoff_days}
+      change {Changes.StepToScheduledDate, days_from_today: @change_deadline_days}
 
       # The customer has just chosen it, so a delivery already due its
       # heads-up goes without.
@@ -403,8 +412,7 @@ defmodule Edenflowers.Orders.Subscription do
   end
 
   calculations do
-    # True from 24 hours before the occurrence job would create and charge the
-    # next Occurrence (`@lead_days` before delivery), counted in Helsinki days.
+    # True from the day after the change deadline, counted in Helsinki days.
     # Only an active subscription has an Occurrence coming.
     calculate :changes_closed?,
               :boolean,

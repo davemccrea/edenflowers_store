@@ -11,7 +11,7 @@ An order the shop has committed to make. An Online Order is placed when its paym
 _Avoid_: Confirmed, submitted
 
 **Cancelled**:
-A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to refund and keeps the rest: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. The customer is emailed unless she unticks it, with a message from her if she writes one. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 5 days before its fulfillment date, which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
+A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to refund and keeps the rest: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. The customer is emailed unless she unticks it, with a message from her if she writes one. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 3 days before its fulfillment date (the Change deadline), which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Hold**:
@@ -55,11 +55,11 @@ One order a Subscription creates: an ordinary placed Online Order, charged to th
 _Avoid_: Renewal, instalment, delivery (a delivery is how any order reaches its Recipient)
 
 **Charge day**:
-3 days before an Occurrence's delivery or pickup: the day its order is created and the saved card charged.
+2 days before an Occurrence's delivery or pickup: the day its order is created and the saved card charged. It falls after the Change deadline, so a customer can't cancel an Occurrence from their account.
 _Avoid_: Billing day, renewal date
 
 **Change deadline**:
-5 days before an Occurrence's delivery or pickup: the last day the customer can pause, change or cancel it from their account. An Online Order shares it as the last day its customer can cancel it themselves.
+3 days before an Occurrence's delivery or pickup (Tuesday for a Friday): the last day the customer can pause, change or cancel it from their account. An Online Order shares it as the last day its customer can cancel it themselves.
 _Avoid_: Cutoff, lock date
 
 ### Payment

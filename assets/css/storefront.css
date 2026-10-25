@@ -100,6 +100,7 @@
 .category-index:not(:has(.phx-click-loading))
   [aria-current="page"]
   .category-index__name,
+.category-index [aria-current="location"] .category-index__name,
 .category-index__link.phx-click-loading .category-index__name,
 .category-index__link:not([aria-current]):hover .category-index__name,
 .category-index__link:not([aria-current]):focus-visible .category-index__name {

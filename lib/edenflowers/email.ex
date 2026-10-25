@@ -259,7 +259,7 @@ defmodule Edenflowers.Email do
           interval: EdenflowersWeb.Checkout.Fields.interval_label(subscription.interval_weeks),
           price: Format.currency(subscription_price(subscription), subscription.locale),
           charge_days: Subscription.lead_days(),
-          change_days: Subscription.cutoff_days() + 1,
+          change_days: Subscription.change_deadline_days(),
           account_url: account_url(),
           format_date: &Format.weekday_date(&1, subscription.locale)
         })
@@ -337,7 +337,7 @@ defmodule Edenflowers.Email do
           product: subscription.product_variant.product.name,
           pickup?: pickup?,
           price: Format.currency(subscription_price(subscription), subscription.locale),
-          change_by: Date.add(delivery_on, -(Subscription.cutoff_days() + 1)),
+          change_by: Subscription.change_deadline(delivery_on),
           charged_on: Subscription.charged_on(delivery_on),
           account_url: account_url(),
           format_date: &Format.weekday_date(&1, subscription.locale)

@@ -799,17 +799,27 @@ defmodule EdenflowersWeb.Layouts do
           this.boundHandleScroll = this.handleScroll.bind(this);
 
           document.addEventListener("scroll", this.boundHandleScroll);
+          this.setOffset(true);
         },
 
         destroyed() {
           document.removeEventListener("scroll", this.boundHandleScroll);
+          document.documentElement.style.removeProperty("--shy-header-offset");
+        },
+
+        // Lets sticky elements, like the FAQ's section links, sit below the header while it shows.
+        setOffset(shown) {
+          const offset = shown ? `${this.el.offsetHeight}px` : "0px";
+          document.documentElement.style.setProperty("--shy-header-offset", offset);
         },
 
         handleScroll() {
           if (window.scrollY > Math.max(150, this.lastScroll)) {
             this.liveSocket.execJS(this.el, this.hideJS);
+            this.setOffset(false);
           } else if (window.scrollY < this.lastMaxScroll - 150) {
             this.liveSocket.execJS(this.el, this.showJS);
+            this.setOffset(true);
             this.lastMaxScroll = window.scrollY;
           }
           this.lastScroll = window.scrollY;
@@ -874,6 +884,14 @@ defmodule EdenflowersWeb.Layouts do
                 </li>
                 <li>
                   <.link
+                    navigate={~q"/#{language}/terms"}
+                    class="footer-line link-underline-hover touch-target"
+                  >
+                    {~t"Terms of sale"}
+                  </.link>
+                </li>
+                <li>
+                  <.link
                     navigate={~q"/#{language}/contact"}
                     class="footer-line link-underline-hover touch-target"
                   >
@@ -907,11 +925,11 @@ defmodule EdenflowersWeb.Layouts do
             © Eden Flowers {Edenflowers.ShopTime.now() |> Map.get(:year)} • {~t"Business ID:"}
             <a
               class="text-base-content link-underline-hover whitespace-nowrap"
-              href="https://tietopalvelu.ytj.fi/yritys/2944459-6"
+              href={"https://tietopalvelu.ytj.fi/yritys/#{Business.business_id()}"}
               target="_blank"
               rel="noopener"
             >
-              2944459-6
+              {Business.business_id()}
             </a>
             •
             <a

@@ -1,18 +1,115 @@
 defmodule EdenflowersWeb.Marketing.FaqLiveTest do
   use EdenflowersWeb.ConnCase, async: false
 
+  import Generator
   import Phoenix.LiveViewTest
+
+  test "lists every section in the side nav, in every language", %{conn: conn} do
+    for path <- ["/en/faq", "/sv/vanliga-fragor", "/fi/ukk"] do
+      {:ok, view, _html} = live(conn, path)
+
+      for id <- ~w(ordering delivery care payment subscriptions weddings courses) do
+        assert has_element?(view, ~s|nav a[href="##{id}"]|)
+        assert has_element?(view, "section##{id} summary")
+      end
+    end
+  end
+
+  test "the card answer gives each card size's message limit and price from the catalogue", %{conn: conn} do
+    cards = generate(product_category(slug: "cards", visibility: :public))
+    card = generate(product(product_category_id: cards.id, draft: false))
+    generate(product_variant(product_id: card.id, draft: false, size: :small, price: "3.90"))
+    generate(product_variant(product_id: card.id, draft: false, size: :large, price: "6.50"))
+
+    {:ok, view, _html} = live(conn, ~p"/en/faq")
+
+    assert has_element?(view, "#ordering li", "Small: up to 80 characters, from €3.90")
+    assert has_element?(view, "#ordering li", "Large: up to 200 characters, from €6.50")
+    refute has_element?(view, "#ordering li", "Medium")
+  end
+
+  test "the delivery answer reads the distance and fee from the delivery option", %{conn: conn} do
+    generate(
+      fulfillment_option(
+        fulfillment_method: :delivery,
+        rate_type: :dynamic,
+        max_dist_km: 17,
+        free_dist_km: 4,
+        base_price: "5.00",
+        price_per_km: "1.20"
+      )
+    )
+
+    {:ok, view, _html} = live(conn, ~p"/en/faq")
+
+    assert has_element?(
+             view,
+             "#delivery details",
+             "Within 17 km of the shop, for €5.00 plus €1.20 per km"
+           )
+
+    assert has_element?(view, "#delivery details", "delivered free within 4 km")
+  end
+
+  test "the cancel answer gives the change deadline and links the terms", %{conn: conn} do
+    days = Edenflowers.Orders.Subscription.change_deadline_days()
+
+    {:ok, view, _html} = live(conn, ~p"/en/faq")
+
+    assert has_element?(view, "#ordering details", "until #{days} days before delivery or pickup")
+    assert has_element?(view, ~s|#ordering a[href="/en/terms#cancellation"]|)
+  end
+
+  test "the pickup answer gives the address and opening hours", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/faq")
+
+    assert has_element?(view, "#delivery details", "At Minimossen, #{EdenflowersWeb.Business.street_address()}")
+
+    for line <- EdenflowersWeb.Business.opening_hours_lines() do
+      assert has_element?(view, "#delivery li", line)
+    end
+  end
+
+  test "links the terms in the page's language", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/sv/vanliga-fragor")
+
+    for section <- ~w(cancellation delivery substitution quality) do
+      assert has_element?(view, ~s|a[href="/sv/kopvillkor##{section}"]|)
+    end
+  end
+
+  test "emits FAQPage structured data with the page's questions as plain text", %{conn: conn} do
+    days = Edenflowers.Orders.Subscription.change_deadline_days()
+
+    html = conn |> get(~p"/en/faq") |> html_response(200)
+
+    [json] =
+      html
+      |> LazyHTML.from_document()
+      |> LazyHTML.query(~s|script[type="application/ld+json"]|)
+      |> Enum.map(&LazyHTML.text/1)
+
+    data = Jason.decode!(json)
+    assert %{"@context" => "https://schema.org", "@type" => "FAQPage", "mainEntity" => questions} = data
+
+    cancel = Enum.find(questions, &(&1["name"] == "Can I cancel an order I made online?"))
+    assert %{"@type" => "Question", "acceptedAnswer" => %{"@type" => "Answer", "text" => text}} = cancel
+    assert text =~ "until #{days} days before"
+    refute text =~ "<"
+
+    assert Enum.any?(questions, &(&1["name"] == "When do I pay?"))
+  end
 
   test "the Courses section explains cancelling and refunds", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
     assert has_element?(view, "#courses h2", "Courses")
-    assert has_element?(view, "#courses dd", "Reply to your confirmation email")
+    assert has_element?(view, "#courses details", "Reply to your confirmation email")
 
     assert has_element?(
              view,
-             "#courses dd",
-             "Each course's page says how many days before it you can cancel for a full refund"
+             "#courses details",
+             "Each course's page says how long you can cancel for a full refund"
            )
   end
 
@@ -21,7 +118,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
-    assert has_element?(view, "dd", "Order by 11:30")
+    assert has_element?(view, "details", "Order by 11:30")
   end
 
   test "the delivery answer leaves out same day when the shop has it off", %{conn: conn} do
@@ -29,7 +126,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
-    assert has_element?(view, "dd", "The earliest is the next day the shop is open.")
-    refute has_element?(view, "dd", "same day")
+    assert has_element?(view, "details", "The earliest delivery is the next day the shop is open.")
+    refute has_element?(view, "details", "same day")
   end
 end

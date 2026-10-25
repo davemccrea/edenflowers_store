@@ -403,13 +403,13 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       assert has_element?(
                view,
                "#{row(mine)} [data-testid=subscription-status]",
-               "Charged #{Edenflowers.Format.day_month(Date.add(next, -3), @locale)}"
+               "Charged #{Edenflowers.Format.day_month(Date.add(next, -2), @locale)}"
              )
 
       assert has_element?(
                view,
                "#{drawer(mine)} [data-testid=subscription-drawer-status]",
-               "Charged to your card on #{weekday_date(Date.add(next, -3))}."
+               "Charged to your card on #{weekday_date(Date.add(next, -2))}."
              )
 
       refute has_element?(view, row(theirs))
@@ -533,8 +533,8 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
           user_id: user.id,
           origin: :subscription,
           subscription_id: subscription.id,
-          subscription_date: days_from_today(4),
-          fulfillment_date: days_from_today(4),
+          subscription_date: days_from_today(2),
+          fulfillment_date: days_from_today(2),
           paid: true
         )
 
@@ -564,13 +564,13 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "offers only cancellation inside the cutoff", %{conn: conn, user: user} do
-      subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(4)))
+      subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(2)))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(
                view,
                "#{drawer(subscription)} [data-testid=changes-closed]",
-               "You can make changes again from #{weekday_date(days_from_today(1))}."
+               "You can make changes again from #{weekday_date(days_from_today(0))}."
              )
 
       assert has_element?(view, ~s|#{drawer(subscription)} [data-testid=changes-closed] a[href="/en/contact"]|)
@@ -707,7 +707,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     end
 
     test "links to updating the card, even inside the cutoff", %{conn: conn, user: user} do
-      subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(4)))
+      subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(2)))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       refute has_element?(view, "#change-subscription-#{subscription.id}")
@@ -728,7 +728,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       subscription = generate(subscription(user_id: user.id))
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      Ash.Seed.update!(subscription, %{next_fulfillment_date: days_from_today(4)})
+      Ash.Seed.update!(subscription, %{next_fulfillment_date: days_from_today(2)})
       view |> element("#subscription-#{subscription.id}-pause", "Pause") |> render_click()
 
       assert reload(subscription).state == :active

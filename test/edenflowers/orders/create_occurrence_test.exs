@@ -46,7 +46,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
       )
 
     {:ok, user} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
-    date = Date.add(ShopTime.today(), 3)
+    date = Date.add(ShopTime.today(), 2)
 
     %{variant: variant, delivery: delivery, user: user, date: date}
   end

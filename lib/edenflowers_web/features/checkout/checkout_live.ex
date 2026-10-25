@@ -317,6 +317,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   >
                     <:before_button>
                       <.recurring_charge order={@order} fee={delivery_fee(@order, @delivery_quote)} />
+                      <p class="text-base-content/80 text-sm" data-testid="terms-acceptance">
+                        {~t"By placing your order you accept the"}
+                        <a href={~q"/#{language}/terms"} target="_blank" class="link-underline-static-body">{~t"terms of sale"}</a>.
+                      </p>
                     </:before_button>
                     {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
                   </.stripe_form>

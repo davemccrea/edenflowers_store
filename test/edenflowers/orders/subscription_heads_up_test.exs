@@ -8,7 +8,7 @@ defmodule Edenflowers.Orders.SubscriptionHeadsUpTest do
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Workers.SendSubscriptionHeadsUpEmail
 
-  test "a 2-week subscription gets one heads-up 6 days before a delivery" do
+  test "a 2-week subscription gets one heads-up 4 days before a delivery" do
     user = generate(admin_user(admin: false, email: "maria@example.com"))
 
     variant =
@@ -19,7 +19,7 @@ defmodule Edenflowers.Orders.SubscriptionHeadsUpTest do
         subscription(
           user_id: user.id,
           product_variant_id: variant.id,
-          next_fulfillment_date: days_from_today(6),
+          next_fulfillment_date: days_from_today(4),
           delivery_address: "Esplanadi 1, Helsinki"
         )
       )
@@ -35,26 +35,26 @@ defmodule Edenflowers.Orders.SubscriptionHeadsUpTest do
       assert email.subject =~ ~r/^Your next flowers come on \w+ \d+\.\d+\.$/
       assert email.text_body =~ ~r/Your next Florist's choice delivery is on .+, to Esplanadi 1, Helsinki\./
       assert email.text_body =~ "in your account by #{weekday_date(days_from_today(1))}:"
-      assert email.text_body =~ "Your card will be charged €59.00 on #{weekday_date(days_from_today(3))}."
+      assert email.text_body =~ "Your card will be charged €59.00 on #{weekday_date(days_from_today(2))}."
     end)
 
-    assert Ash.get!(Subscription, subscription.id, authorize?: false).heads_up_emailed_for == days_from_today(6)
+    assert Ash.get!(Subscription, subscription.id, authorize?: false).heads_up_emailed_for == days_from_today(4)
     Edenflowers.Repo.delete_all(Oban.Job)
     assert scheduled_heads_ups() == []
   end
 
   test "weekly, paused, and deliveries outside the window or after changes close get none" do
-    generate(subscription(interval_weeks: 1, next_fulfillment_date: days_from_today(6)))
-    generate(subscription(state: :paused, next_fulfillment_date: days_from_today(6)))
-    generate(subscription(state: :payment_failed, next_fulfillment_date: days_from_today(6)))
-    generate(subscription(next_fulfillment_date: days_from_today(7)))
-    generate(subscription(interval_weeks: 4, next_fulfillment_date: days_from_today(4)))
+    generate(subscription(interval_weeks: 1, next_fulfillment_date: days_from_today(4)))
+    generate(subscription(state: :paused, next_fulfillment_date: days_from_today(4)))
+    generate(subscription(state: :payment_failed, next_fulfillment_date: days_from_today(4)))
+    generate(subscription(next_fulfillment_date: days_from_today(5)))
+    generate(subscription(interval_weeks: 4, next_fulfillment_date: days_from_today(2)))
 
     assert scheduled_heads_ups() == []
   end
 
   test "resuming into the window doesn't send one" do
-    subscription = generate(subscription(state: :paused, next_fulfillment_date: days_from_today(5)))
+    subscription = generate(subscription(state: :paused, next_fulfillment_date: days_from_today(3)))
 
     Orders.resume_subscription!(subscription, authorize?: false)
 

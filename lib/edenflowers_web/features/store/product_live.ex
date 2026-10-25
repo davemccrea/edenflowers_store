@@ -330,9 +330,11 @@ defmodule EdenflowersWeb.Store.ProductLive do
           <h2 id="subscription-faq-heading" class="section-title mb-6">{~t"How subscriptions work"}</h2>
           <details
             :for={{question, answer} <- EdenflowersWeb.Marketing.FaqLive.subscription_questions()}
-            class="collapse-arrow border-base-content/12 collapse rounded-none border-b first-of-type:border-t"
+            class="collapse-arrow border-base-content/12 collapse rounded-none border-b has-[summary:focus-visible]:outline-primary has-[summary:focus-visible]:outline-2 has-[summary:focus-visible]:outline-offset-2 first-of-type:border-t"
           >
-            <summary class="collapse-title font-serif text-balance px-0 text-xl leading-snug">{question}</summary>
+            <summary class="collapse-title font-serif text-balance pr-10 pl-0 text-xl leading-snug">
+              {question}
+            </summary>
             <div class="collapse-content text-base-content/80 text-[1.0625rem] px-0 leading-relaxed">
               <p class="max-w-[60ch]">{answer}</p>
             </div>
