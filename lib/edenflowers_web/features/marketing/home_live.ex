@@ -479,7 +479,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         <div class="container py-20 md:py-28">
           <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
           <p class="text-base-content/80 mb-12 max-w-prose text-lg leading-relaxed">
-            {~t"Fresh flowers every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.lead_days() + 1} days before a bouquet."}
+            {~t"Fresh flowers every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
           </p>
           <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
             <.product_card

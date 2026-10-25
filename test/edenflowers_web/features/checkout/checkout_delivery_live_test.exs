@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       assert has_element?(
                view,
                "[data-testid='recurring-charge']",
-               "Then #{amount} every 2 weeks from #{second_delivery}, charged 3 days before each delivery."
+               "Then #{amount} every 2 weeks from #{second_delivery}, charged 2 days before each delivery."
              )
     end
 

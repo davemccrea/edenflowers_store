@@ -113,10 +113,11 @@ defmodule EdenflowersWeb.CardDrawer do
 
   defp details(variant), do: ProductType.describe(:card, variant)
 
-  defp size_label(:small), do: gettext("Small")
-  defp size_label(:medium), do: gettext("Medium")
-  defp size_label(:large), do: gettext("Large")
-  defp size_label(nil), do: ""
+  @doc "A card size's name, as the drawer and the FAQ show it."
+  def size_label(:small), do: gettext("Small")
+  def size_label(:medium), do: gettext("Medium")
+  def size_label(:large), do: gettext("Large")
+  def size_label(nil), do: ""
 
   # Words, not a character count: the counter under the message shows the
   # exact limit, and a word count would differ from language to language.

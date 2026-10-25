@@ -7,6 +7,7 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.Payments.Workers.SendCancelledEmail
   alias Edenflowers.ShopTime
 
@@ -20,7 +21,7 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
     order =
       placed_order(
         Keyword.merge(
-          [user_id: customer.id, payment_intent_id: nil, fulfillment_date: days_ahead(5)],
+          [user_id: customer.id, payment_intent_id: nil, fulfillment_date: days_ahead(3)],
           opts
         )
       )
@@ -68,11 +69,19 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
     )
   end
 
-  test "is closed 4 days or fewer before the fulfillment date", %{customer: customer} do
-    order = paid_order(customer, fulfillment_date: days_ahead(4))
+  test "is closed 2 days or fewer before the fulfillment date", %{customer: customer} do
+    order = paid_order(customer, fulfillment_date: days_ahead(2))
 
     assert {:error, %Ash.Error.Invalid{}} = Orders.cancel_order_by_customer(order, actor: customer)
     assert Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_status == :pending
+  end
+
+  test "refuses an Occurrence, which is created past the change deadline", %{customer: customer} do
+    occurrence = paid_order(customer, origin: :subscription, fulfillment_date: days_ahead(Subscription.lead_days()))
+
+    refute Ash.load!(occurrence, :cancellable_by_customer?, authorize?: false).cancellable_by_customer?
+    assert {:error, _} = Orders.cancel_order_by_customer(occurrence, actor: customer)
+    assert Orders.get_order_by_id!(occurrence.id, authorize?: false).fulfillment_status == :pending
   end
 
   test "refuses Custom Orders and orders paid in person", %{customer: customer} do

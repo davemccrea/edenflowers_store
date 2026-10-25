@@ -8,6 +8,10 @@ defmodule EdenflowersWeb.Business do
   @weekday_hours {~T[10:00:00], ~T[18:00:00]}
   @saturday_hours {~T[10:00:00], ~T[15:00:00]}
 
+  def business_id, do: "2944459-6"
+
+  @doc "The address registered with the Business ID, which isn't the shop's."
+  def registered_address, do: ~t"Stadsgatan 3, 65300 Vasa"
   def email, do: "info@edenflowers.fi"
   def phone, do: "+358402209494"
   def phone_display, do: "040 220 9494"

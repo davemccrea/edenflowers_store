@@ -59,7 +59,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     assert has_element?(view, "[data-testid=order-subscription]", "Every 2 weeks")
 
     next = Edenflowers.Format.weekday_date(~D[2026-06-24], "en-GB")
-    charged = Edenflowers.Format.weekday_date(~D[2026-06-21], "en-GB")
+    charged = Edenflowers.Format.weekday_date(~D[2026-06-22], "en-GB")
     assert has_element?(view, "[data-testid=order-next-delivery]", next)
     assert has_element?(view, "[data-testid=order-next-charge]", "on #{charged}")
     assert has_element?(view, "[data-testid=manage-subscription]", "Manage subscription")

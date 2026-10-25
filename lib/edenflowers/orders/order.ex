@@ -1434,7 +1434,7 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :cancellable_until,
               :date,
-              expr(date_add(fulfillment_date, ^(-Subscription.cutoff_days() - 1), :day))
+              expr(date_add(fulfillment_date, ^(-Subscription.change_deadline_days()), :day))
 
     calculate :payment_link_open?, :boolean, expr(not is_nil(payment_link_token) and payable?)
 

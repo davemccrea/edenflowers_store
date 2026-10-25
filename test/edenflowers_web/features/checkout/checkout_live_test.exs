@@ -78,6 +78,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       assert is_nil(Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id)
     end
 
+    test "links to the terms of sale above the pay button", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+
+      assert has_element?(view, ~s|#checkout-form-4 [data-testid="terms-acceptance"] a[href="/en/terms"]|)
+    end
+
     test "creates the PaymentIntent at the total, and reuses it when paying again", %{conn: conn, order: order} do
       amount = StripeAPI.to_stripe_amount(order.grand_total)
 

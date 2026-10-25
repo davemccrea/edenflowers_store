@@ -69,19 +69,19 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
   end
 
   test "resume picks the next date on the schedule outside the lead window", context do
-    subscription = subscription_for(context, state: :paused, next_fulfillment_date: days_from_today(-11))
+    subscription = subscription_for(context, state: :paused, next_fulfillment_date: days_from_today(-12))
 
     resumed = Orders.resume_subscription!(subscription, actor: context.customer)
 
     assert resumed.state == :active
-    assert resumed.next_fulfillment_date == days_from_today(17)
+    assert resumed.next_fulfillment_date == days_from_today(16)
   end
 
   test "resume keeps a next date that is still far enough away", context do
-    subscription = subscription_for(context, state: :paused, next_fulfillment_date: days_from_today(4))
+    subscription = subscription_for(context, state: :paused, next_fulfillment_date: days_from_today(3))
 
     assert Orders.resume_subscription!(subscription, actor: context.customer).next_fulfillment_date ==
-             days_from_today(4)
+             days_from_today(3)
   end
 
   test "cancel is final", context do
@@ -94,7 +94,7 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
 
   test "cancel also cancels a future occurrence while customer changes are open", context do
     subscription = subscription_for(context)
-    occurrence = occurrence(subscription, 5)
+    occurrence = occurrence(subscription, 3)
     payment = generate(payment(order_id: occurrence.id))
 
     assert Orders.cancel_subscription!(subscription, actor: context.customer).state == :cancelled
@@ -122,7 +122,7 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
 
   test "cancel leaves a booked occurrence in place after its customer-change deadline", context do
     subscription = subscription_for(context)
-    occurrence = occurrence(subscription, 4)
+    occurrence = occurrence(subscription, 2)
 
     assert Orders.cancel_subscription!(subscription, actor: context.customer).state == :cancelled
     assert Ash.reload!(occurrence, authorize?: false).fulfillment_status == :pending
@@ -151,17 +151,17 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
     assert Orders.cancel_subscription!(subscription, actor: context.customer).state == :cancelled
   end
 
-  describe "the 24-hour cutoff" do
-    test "closes changes the day before the occurrence is created", context do
+  describe "the change deadline" do
+    test "closes changes the day the occurrence is created", context do
       assert %{changes_closed?: false} =
-               Ash.load!(subscription_for(context, next_fulfillment_date: days_from_today(5)), :changes_closed?)
+               Ash.load!(subscription_for(context, next_fulfillment_date: days_from_today(3)), :changes_closed?)
 
       assert %{changes_closed?: true} =
-               Ash.load!(subscription_for(context, next_fulfillment_date: days_from_today(4)), :changes_closed?)
+               Ash.load!(subscription_for(context, next_fulfillment_date: days_from_today(2)), :changes_closed?)
     end
 
     test "refuses a customer's pause but still lets them end subsequent deliveries", context do
-      subscription = subscription_for(context, next_fulfillment_date: days_from_today(4))
+      subscription = subscription_for(context, next_fulfillment_date: days_from_today(2))
 
       assert {:error, %Ash.Error.Invalid{errors: [%{message: "It's too late to change your next delivery."}]}} =
                Orders.pause_subscription(subscription, actor: context.customer)
@@ -170,7 +170,7 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
     end
 
     test "doesn't apply to Jennie", context do
-      subscription = subscription_for(context, next_fulfillment_date: days_from_today(4))
+      subscription = subscription_for(context, next_fulfillment_date: days_from_today(2))
 
       assert Orders.pause_subscription!(subscription, actor: context.admin).state == :paused
     end

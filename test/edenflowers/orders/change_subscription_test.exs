@@ -140,7 +140,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "respects the cutoff, except for Jennie", context do
-      subscription = subscription_for(context, next_fulfillment_date: days_from_today(4))
+      subscription = subscription_for(context, next_fulfillment_date: days_from_today(2))
 
       assert {:error, %Ash.Error.Invalid{errors: [%{message: "It's too late to change your next delivery."}]}} =
                Orders.change_subscription(subscription, %{interval_weeks: 4}, actor: context.customer)
