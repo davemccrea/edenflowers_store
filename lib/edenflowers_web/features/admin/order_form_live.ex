@@ -471,30 +471,28 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   def handle_event("quote_delivery", %{"value" => address}, socket) do
-    {:noreply, socket |> quote_delivery(address, current_option_id(socket.assigns)) |> assign_price()}
+    {:noreply, quote_delivery(socket, address, current_option_id(socket.assigns))}
   end
 
   def handle_event("add_line", %{"kind" => "catalogue"}, socket) do
-    {:noreply, socket |> add_line(%{"kind" => "catalogue", "quantity" => "1"}) |> assign_price()}
+    {:noreply, add_line(socket, %{"kind" => "catalogue", "quantity" => "1"})}
   end
 
   def handle_event("add_line", %{"kind" => "custom"}, socket) do
     {:noreply,
-     socket
-     |> add_line(%{"kind" => "custom", "quantity" => "1", "tax_rate_id" => socket.assigns.default_tax_rate_id})
-     |> assign_price()}
+     add_line(socket, %{"kind" => "custom", "quantity" => "1", "tax_rate_id" => socket.assigns.default_tax_rate_id})}
   end
 
   def handle_event("remove_line", %{"path" => path}, socket) do
-    {:noreply, socket |> update(:form, &AshPhoenix.Form.remove_form(&1, path)) |> assign_price()}
+    {:noreply, put_form(socket, AshPhoenix.Form.remove_form(socket.assigns.form, path))}
   end
 
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
-    {:noreply, socket |> assign(:card_variant_id, variant_id) |> assign_price()}
+    {:noreply, put_card(socket, variant_id)}
   end
 
   def handle_event("remove_card", _params, socket) do
-    {:noreply, socket |> assign(:card_variant_id, nil) |> assign_price()}
+    {:noreply, put_card(socket, nil)}
   end
 
   def handle_event("save", %{"form" => params}, socket) do
@@ -517,7 +515,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         else
           {:noreply,
            socket
-           |> assign(:form, form)
+           |> put_form(form)
            |> put_flash(:error, ~t"The order wasn't saved. Check the fields marked below.")}
         end
     end
@@ -541,12 +539,12 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       distance: result.distance
     }
 
-    {:noreply, socket |> assign(:delivery_quote, quote) |> assign_price()}
+    {:noreply, put_delivery_quote(socket, quote)}
   end
 
   def handle_async(:delivery_quote, {:ok, {address, option_id, {:ok, %{error: reason}}}}, socket) do
     quote = %{status: :error, address: address, option_id: option_id, message: DeliveryError.message(reason)}
-    {:noreply, socket |> assign(:delivery_quote, quote) |> assign_price()}
+    {:noreply, put_delivery_quote(socket, quote)}
   end
 
   def handle_async(:delivery_quote, {:exit, {:shutdown, :cancel}}, socket), do: {:noreply, socket}
@@ -555,7 +553,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     Logger.error("Delivery quote failed: #{inspect(result)}")
     {address, option_id} = {socket.assigns.delivery_quote.address, socket.assigns.delivery_quote.option_id}
     quote = %{status: :error, address: address, option_id: option_id, message: DeliveryError.message(:unknown)}
-    {:noreply, socket |> assign(:delivery_quote, quote) |> assign_price()}
+    {:noreply, put_delivery_quote(socket, quote)}
   end
 
   defp load(%{"id" => id}, actor) do
@@ -644,7 +642,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp decimal_comma(value), do: value
 
   defp add_line(socket, params) do
-    update(socket, :form, &AshPhoenix.Form.add_form(&1, :line_items, params: params))
+    put_form(socket, AshPhoenix.Form.add_form(socket.assigns.form, :line_items, params: params))
   end
 
   defp existing_line_name(%{variant_size: nil} = line_item), do: line_item.product_name
@@ -743,13 +741,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
     socket =
       socket
-      |> assign(:form, AshPhoenix.Form.validate(socket.assigns.form, params))
+      |> put_form(AshPhoenix.Form.validate(socket.assigns.form, params))
       |> assign_date_warning()
 
     if current_option_id(socket.assigns) == option_before do
-      {:noreply, assign_price(socket)}
+      {:noreply, socket}
     else
-      {:noreply, socket |> requote_for_new_option() |> assign_price()}
+      {:noreply, requote_for_new_option(socket)}
     end
   end
 
@@ -760,7 +758,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
     cond do
       address == "" or is_nil(option_id) ->
-        assign(socket, :delivery_quote, nil)
+        put_delivery_quote(socket, nil)
 
       quoted?(socket.assigns.delivery_quote, address, option_id) ->
         socket
@@ -768,7 +766,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       true ->
         # A newer lookup with the same name cancels one still in flight.
         socket
-        |> assign(:delivery_quote, %{status: :loading, address: address, option_id: option_id})
+        |> put_delivery_quote(%{status: :loading, address: address, option_id: option_id})
         |> start_async(:delivery_quote, fn ->
           {address, option_id, Fulfillment.calculate_delivery(address, option_id, authorize?: false)}
         end)
@@ -779,7 +777,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     if selected_method(socket.assigns.form, socket.assigns.fulfillment_options, socket.assigns.order) == :delivery do
       quote_delivery(socket, socket.assigns.form[:delivery_address].value, current_option_id(socket.assigns))
     else
-      assign(socket, :delivery_quote, nil)
+      put_delivery_quote(socket, nil)
     end
   end
 
@@ -827,8 +825,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp ok_quote(%{status: :ok} = quote), do: %{fee: quote.fee, in_free_delivery_zone: quote.in_free_delivery_zone}
   defp ok_quote(_quote), do: nil
 
-  # Priced when the form, the card or the delivery quote changes, rather than
-  # on every render, as pricing looks up variants, options and tax rates.
+  # The price follows the form, the card and the delivery quote, so after mount
+  # they're only set through these, which reprice. Not on every render, as
+  # pricing looks up variants, options and tax rates.
+  defp put_form(socket, form), do: socket |> assign(:form, form) |> assign_price()
+  defp put_card(socket, variant_id), do: socket |> assign(:card_variant_id, variant_id) |> assign_price()
+  defp put_delivery_quote(socket, quote), do: socket |> assign(:delivery_quote, quote) |> assign_price()
+
   defp assign_price(socket) do
     assigns = socket.assigns
     card = chosen_card(assigns.card_variants, assigns.order, assigns.card_variant_id)
