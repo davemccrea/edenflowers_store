@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Admin.Components
+  import EdenflowersWeb.Admin.Drawers
   import EdenflowersWeb.Admin.TranslationFields
 
   alias Edenflowers.Catalog.Product

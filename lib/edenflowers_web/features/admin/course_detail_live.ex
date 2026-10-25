@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   require Logger
 
   import EdenflowersWeb.Admin.Components
+  import EdenflowersWeb.Admin.Drawers
   import EdenflowersWeb.Admin.CourseBookingDrawers
 
   alias Edenflowers.Courses

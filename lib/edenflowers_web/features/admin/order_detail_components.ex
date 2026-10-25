@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   use EdenflowersWeb, :html
 
   import EdenflowersWeb.Admin.Components
+  import EdenflowersWeb.Admin.Drawers
   import EdenflowersWeb.Admin.PhotoUpload, only: [photo_input: 1]
 
   alias Edenflowers.External.StripeAPI

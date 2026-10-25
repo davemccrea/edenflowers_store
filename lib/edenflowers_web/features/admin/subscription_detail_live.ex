@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   require Ash.Query
 
   import EdenflowersWeb.Admin.Components
+  import EdenflowersWeb.Admin.Drawers
 
   alias Edenflowers.Email.Preview
   alias Edenflowers.Format

@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   require Logger
 
   import EdenflowersWeb.Admin.Components
+  import EdenflowersWeb.Admin.Drawers
   import EdenflowersWeb.CardDrawer, only: [card_drawer: 1]
 
   alias Edenflowers.Accounts
