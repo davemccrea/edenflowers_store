@@ -9,8 +9,7 @@ defmodule EdenflowersWeb.Checkout.ReceiptController do
   alias EdenflowersWeb.Checkout.OrderLive
 
   def show(conn, %{"id" => id}) do
-    # A custom order is placed before it is paid, and has no receipt until it is.
-    with {:ok, %{state: :placed, payment_status: :paid} = order} <-
+    with {:ok, %{receipt_available?: true} = order} <-
            OrderLive.get_order(id, get_session(conn, :guest_order_id), conn.assigns[:current_user]),
          {:ok, order} <- Receipt.load_for_receipt(order),
          {:ok, pdf} <- Receipt.generate(order) do

@@ -389,13 +389,14 @@ defmodule EdenflowersWeb.Account.AccountLive do
       <h3 class="card-heading text-balance">{order_title(@order)}</h3>
       <p class="text-base-content/70 mt-1 text-sm">
         <span :if={@order.subscription_id} data-testid="order-subscription">{~t"Subscription order"}</span>
-        <span :if={!@order.subscription_id}>{~t"Order"}</span> · {status_label(@order)} · #{@order.order_reference}
+        <span :if={!@order.subscription_id}>{~t"Order"}</span>
+        · {status_label(@order.customer_status)} · #{@order.order_reference}
       </p>
       <.unpaid_note :if={@order.unpaid?} order={@order} />
       <.order_cancel :if={@order.cancellable_by_customer?} order={@order} locale={@locale} />
     </div>
     <.entry_price price={@order.grand_total} locale={@locale}>
-      <.receipt_link :if={@order.payment_status == :paid} href={~p"/order/#{@order.id}/receipt"} />
+      <.receipt_link :if={@order.receipt_available?} href={~p"/order/#{@order.id}/receipt"} />
     </.entry_price>
     """
   end
@@ -638,35 +639,18 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp payment_note(%{payment_terms: :on_fulfillment, fulfillment_status: :pending}), do: ~t"Pay at collection"
   defp payment_note(_order), do: nil
 
-  @doc """
-  Plain-language order status for the customer. The date sits beside it.
-
-  Never claims an outcome the data doesn't support: an order whose fulfillment
-  date has passed but which Jennie hasn't marked fulfilled reads as scheduled,
-  not "Delivered".
-  """
-  def status_label(order)
-
-  def status_label(%{payment_status: :refunded}), do: ~t"Refunded"
-
-  def status_label(%{fulfillment_status: :cancelled}), do: ~t"Cancelled"
-
-  def status_label(%{fulfillment_date: nil}), do: ~t"Confirmed"
-
-  def status_label(%{fulfillment_status: :fulfilled, fulfillment_method: :pickup}), do: ~t"Collected"
-
-  def status_label(%{fulfillment_status: :fulfilled}), do: ~t"Delivered"
-
-  def status_label(order) do
-    case {Date.compare(order.fulfillment_date, ShopTime.today()), order.fulfillment_method} do
-      {:eq, :pickup} -> ~t"Ready to collect today"
-      {:eq, _} -> ~t"Arriving today"
-      {:gt, :pickup} -> ~t"For pickup"
-      {:gt, _} -> ~t"Arriving"
-      {:lt, :pickup} -> ~t"Scheduled pickup"
-      {:lt, _} -> ~t"Scheduled delivery"
-    end
-  end
+  # The customer's words for an order's `customer_status`. The date sits beside it.
+  defp status_label(:refunded), do: ~t"Refunded"
+  defp status_label(:cancelled), do: ~t"Cancelled"
+  defp status_label(:confirmed), do: ~t"Confirmed"
+  defp status_label(:collected), do: ~t"Collected"
+  defp status_label(:delivered), do: ~t"Delivered"
+  defp status_label(:ready_today), do: ~t"Ready to collect today"
+  defp status_label(:arriving_today), do: ~t"Arriving today"
+  defp status_label(:for_pickup), do: ~t"For pickup"
+  defp status_label(:arriving), do: ~t"Arriving"
+  defp status_label(:pickup_scheduled), do: ~t"Scheduled pickup"
+  defp status_label(:delivery_scheduled), do: ~t"Scheduled delivery"
 
   defp orders(user), do: Orders.list_my_orders!(actor: user, load: [:line_items])
 
@@ -675,7 +659,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     today = ShopTime.today()
 
     order_entries =
-      Enum.map(orders, &%{type: :order, item: &1, date: order_date(&1), upcoming?: upcoming_order?(&1, today)})
+      Enum.map(orders, &%{type: :order, item: &1, date: order_date(&1), upcoming?: &1.upcoming?})
 
     course_entries =
       Enum.map(registrations, fn registration ->
@@ -698,11 +682,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
   end
 
   defp order_date(order), do: order.fulfillment_date || ordered_on(order)
-
-  defp upcoming_order?(%{payment_status: :refunded}, _today), do: false
-  defp upcoming_order?(%{fulfillment_status: status}, _today) when status in [:cancelled, :fulfilled], do: false
-  defp upcoming_order?(%{fulfillment_date: nil}, _today), do: true
-  defp upcoming_order?(order, today), do: not Date.before?(order.fulfillment_date, today)
 
   defp registrations(user) do
     Courses.list_my_registrations!(actor: user, load: [:course, :seats_held])

@@ -9,7 +9,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Accounts.Workers.SendEmailChangeCode
   alias Edenflowers.ShopTime
-  alias EdenflowersWeb.Account.AccountLive
 
   @locale "en-GB"
 
@@ -269,46 +268,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     defp references_in(html, list) do
       for entry <- entries_in(html, list), do: Regex.run(~r/#(\S+)/, entry, capture: :all_but_first) |> List.first()
-    end
-  end
-
-  describe "status_label/1" do
-    test "names the outcome once an order is fulfilled" do
-      assert AccountLive.status_label(order_for(fulfillment_status: :fulfilled)) == "Delivered"
-
-      assert AccountLive.status_label(order_for(fulfillment_status: :fulfilled, fulfillment_method: :pickup)) ==
-               "Collected"
-    end
-
-    test "looks forward to a fulfillment date still to come" do
-      order = order_for(fulfillment_date: Date.add(ShopTime.today(), 3))
-
-      assert AccountLive.status_label(order) == "Arriving"
-      assert AccountLive.status_label(%{order | fulfillment_method: :pickup}) == "For pickup"
-    end
-
-    test "says today when the order lands today" do
-      order = order_for(fulfillment_date: ShopTime.today())
-
-      assert AccountLive.status_label(order) == "Arriving today"
-      assert AccountLive.status_label(%{order | fulfillment_method: :pickup}) == "Ready to collect today"
-    end
-
-    test "never claims delivery for a past date Jennie hasn't marked fulfilled" do
-      order = order_for(fulfillment_date: Date.add(ShopTime.today(), -3))
-
-      assert AccountLive.status_label(order) == "Scheduled delivery"
-      assert AccountLive.status_label(%{order | fulfillment_method: :pickup}) == "Scheduled pickup"
-    end
-
-    test "reports a refund ahead of anything else" do
-      order = order_for(payment_status: :refunded, fulfillment_status: :fulfilled)
-
-      assert AccountLive.status_label(order) == "Refunded"
-    end
-
-    test "falls back to Confirmed when there is no fulfillment date" do
-      assert AccountLive.status_label(order_for(fulfillment_date: nil)) == "Confirmed"
     end
   end
 
@@ -795,16 +754,5 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     assert {:error, {:redirect, %{to: to}}} = live(conn, ~p"/account")
     assert to =~ "/sign-in"
-  end
-
-  defp order_for(overrides) do
-    defaults = %{
-      payment_status: :paid,
-      fulfillment_status: :pending,
-      fulfillment_method: :delivery,
-      fulfillment_date: ~D[2026-06-10]
-    }
-
-    Map.merge(defaults, Map.new(overrides))
   end
 end
