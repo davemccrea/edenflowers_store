@@ -16,6 +16,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Admin.DrawerPreview
+  alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Layouts
@@ -216,7 +218,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         form={@email_form}
         preview={@preview}
         swedish_toggle?={@emailing_id && booking(@course, @emailing_id).locale != "sv-FI"}
-        {email_drawer_text(@email_kind, @emailing_id && booking(@course, @emailing_id), @locale)}
+        {EmailDrawer.text(@email_kind, @emailing_id && booking(@course, @emailing_id), @locale)}
       />
       <.settlement_drawer
         course={@course}
@@ -283,7 +285,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply,
      socket
      |> assign(settling_id: id, settlement_mode: mode, settlement_error: nil)
-     |> assign(:preview, if(mode == :refund, do: preview(:refunded, registration, %{})))
+     |> assign(:preview, if(mode == :refund, do: DrawerPreview.build(:refunded, registration, %{})))
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
   end
 
@@ -294,7 +296,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   def handle_event("change_refund", %{"record_id" => id, "refund" => params} = event, socket) do
     params = PaymentActions.refund_params(params, event["_target"])
-    preview = preview(:refunded, booking(socket.assigns.course, id), params)
+    preview = DrawerPreview.build(:refunded, booking(socket.assigns.course, id), params)
     {:noreply, socket |> update(:refund_params, &Map.put(&1, id, params)) |> assign(:preview, preview)}
   end
 
@@ -309,33 +311,24 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("open_email", %{"kind" => kind, "id" => id}, socket) do
-    {:noreply,
-     socket
-     |> assign(email_kind: String.to_existing_atom(kind), emailing_id: id)
-     |> assign(:preview, preview(String.to_existing_atom(kind), booking(socket.assigns.course, id), %{}))
-     |> assign(:email_form, to_form(%{"message" => ""}, as: :email))
-     |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-show"})}
+    registration = booking(socket.assigns.course, id)
+    {:noreply, EmailDrawer.open(socket, kind, registration, emailing_id: id)}
   end
 
   def handle_event("close_email", _params, socket) do
-    {:noreply, assign(socket, email_form: nil, email_kind: nil, emailing_id: nil)}
+    {:noreply, EmailDrawer.close(socket, emailing_id: nil)}
   end
 
   def handle_event("validate_email", %{"email" => params}, socket) do
-    %{course: course, email_kind: kind, emailing_id: id} = socket.assigns
-
-    {:noreply,
-     socket
-     |> assign(:email_form, to_form(params, as: :email))
-     |> assign(:preview, preview(kind, booking(course, id), params))}
+    %{course: course, emailing_id: id} = socket.assigns
+    {:noreply, EmailDrawer.validate(socket, params, booking(course, id))}
   end
 
   def handle_event("send_email", %{"email" => %{"message" => message}}, socket) do
     %{email_kind: kind, emailing_id: id, current_user: actor} = socket.assigns
 
     socket
-    |> assign(email_form: nil, email_kind: nil, emailing_id: nil)
-    |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-hide"})
+    |> EmailDrawer.close(emailing_id: nil)
     |> with_registration(id, &send_email(kind, &1, message, actor))
   end
 
@@ -373,7 +366,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply,
      socket
      |> assign(cancelling: registration, cancel_form: PaymentActions.cancel_form(registration), cancel_error: nil)
-     |> assign(:preview, preview(:cancelled, registration, PaymentActions.cancel_form(registration).params))
+     |> assign(:preview, DrawerPreview.build(:cancelled, registration, PaymentActions.cancel_form(registration).params))
      |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
 
@@ -385,7 +378,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply,
      socket
      |> assign(:cancel_form, to_form(params, as: :cancel))
-     |> assign(:preview, preview(:cancelled, socket.assigns.cancelling, params))}
+     |> assign(:preview, DrawerPreview.build(:cancelled, socket.assigns.cancelling, params))}
   end
 
   def handle_event("submit_cancel", %{"cancel" => params}, socket) do
@@ -476,51 +469,11 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     end
   end
 
-  # The refund form fills itself in from what's owed back, so an empty amount
-  # reads as that until Jennie changes it.
-  defp preview(kind, registration, params) do
-    owed_back = registration.balance |> Decimal.negate() |> Decimal.max(0) |> Decimal.to_string(:normal)
-
-    inputs = %{
-      message: params["message"] || params["note"],
-      refund: params["refund"] || params["amount"] || owed_back,
-      payment_method: String.to_existing_atom(params["how"] || "stripe")
-    }
-
-    Preview.build(kind, registration, inputs, if(params["in_swedish"] == "true", do: "sv-FI"))
-  end
-
   defp booking_preview(form, course) do
     if form[:email_customer?].value in [true, "true"] and form[:email].value not in [nil, ""] do
       locale = if form[:in_swedish].value == "true", do: "sv-FI"
       Preview.build_entered_booking(form.source.source, course, %{message: form[:message].value}, locale)
     end
-  end
-
-  defp email_drawer_text(_kind, nil, _locale), do: %{}
-
-  defp email_drawer_text(:confirmation, registration, locale) do
-    %{
-      title: ~t"Email confirmation",
-      submit_label: ~t"Send confirmation",
-      to: registration.email,
-      last_sent: registration.confirmation_emailed_at && Format.datetime(registration.confirmation_emailed_at, locale)
-    }
-  end
-
-  defp email_drawer_text(:payment_reminder, registration, _locale) do
-    %{title: ~t"Send payment reminder", submit_label: ~t"Send reminder", to: registration.email}
-  end
-
-  defp email_drawer_text(:payment_link, registration, locale) do
-    last_sent_at = registration.payment_link_open? && registration.payment_link_emailed_at
-
-    %{
-      title: ~t"Email payment link",
-      submit_label: ~t"Send payment link",
-      to: registration.email,
-      last_sent: last_sent_at && Format.datetime(last_sent_at, locale)
-    }
   end
 
   defp reload_course(socket) do
