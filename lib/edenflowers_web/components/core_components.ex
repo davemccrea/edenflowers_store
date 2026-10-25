@@ -1104,7 +1104,11 @@ defmodule EdenflowersWeb.CoreComponents do
           dialog.close();
         }
 
+        // One drawer at a time: opening one slides out any other that is open.
         function openDrawer(dialog) {
+          document.querySelectorAll("dialog.slide-drawer[open]").forEach((other) => {
+            if (other !== dialog) closeDrawer(other);
+          });
           delete dialog.dataset.closing;
           if (!dialog.open) dialog.showModal();
         }
