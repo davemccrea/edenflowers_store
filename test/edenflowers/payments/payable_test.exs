@@ -502,6 +502,30 @@ defmodule Edenflowers.Payments.PayableTest do
         assert Exception.message(error) =~ "That's more than was paid outside Stripe"
       end
 
+      for {payments, methods, default} <- [
+            {[stripe: "80.00"], [:stripe], :stripe},
+            {[cash: "50.00", mobilepay: "30.00"], [:zettle, :mobilepay, :cash, :zervant], :cash},
+            {[stripe: "50.00", cash: "30.00"], [:stripe, :zettle, :mobilepay, :cash, :zervant], :stripe},
+            {[stripe: "80.00", stripe: "-80.00"], [], nil},
+            {[stripe: "50.00", cash: "30.00", stripe: "-50.00"], [:zettle, :mobilepay, :cash, :zervant], :cash}
+          ] do
+        test "paid #{inspect(payments)} refunds by #{inspect(methods)}, starting at #{inspect(default)}" do
+          record =
+            build(@parent, payments: unquote(payments))
+            |> Ash.load!([:refund_methods, :default_refund_method], authorize?: false)
+
+          assert record.refund_methods == unquote(methods)
+          assert record.default_refund_method == unquote(default)
+        end
+      end
+
+      test "a refund by a method holding nothing is refused" do
+        record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
+
+        assert {:error, error} = refund(record, "10.00", :stripe)
+        assert Exception.message(error) =~ "That's more than was paid through Stripe"
+      end
+
       test "a refund while something is to collect is refused" do
         record = build(@parent, payments: [cash: "30.00"])
         refute record.refundable?

@@ -783,5 +783,25 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       refute render(view) =~ "To collect"
       refute_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
     end
+
+    test "the form offers the order's refund methods and starts at its default", %{conn: conn} do
+      order = placed_order()
+      generate(payment(order_id: order.id, method: :mobilepay, amount: Decimal.new("88.50")))
+      order = Ash.load!(order, [:refund_methods, :default_refund_method], authorize?: false)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element("#order-actions button", "Refund") |> render_click()
+
+      offered =
+        view
+        |> render()
+        |> LazyHTML.from_document()
+        |> LazyHTML.query("#order-refund-how option")
+        |> LazyHTML.attribute("value")
+
+      assert offered == Enum.map(order.refund_methods, &to_string/1)
+      assert order.default_refund_method == :mobilepay
+      assert has_element?(view, ~s|#order-refund-how option[value="mobilepay"][selected]|)
+    end
   end
 end

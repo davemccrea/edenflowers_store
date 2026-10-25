@@ -31,6 +31,7 @@ defmodule Edenflowers.Payments.Payable do
   """
   use Spark.Dsl.Fragment, of: Ash.Resource
 
+  alias Edenflowers.Payments.Calculations
   alias Edenflowers.Payments.Changes
   alias Edenflowers.Payments.Validations
 
@@ -179,6 +180,9 @@ defmodule Edenflowers.Payments.Payable do
 
     # Whether Jennie can hand money back (Validations.Refundable).
     calculate :refundable?, :boolean, expr(committed? and balance <= 0 and amount_held > 0)
+
+    calculate :refund_methods, {:array, Edenflowers.Payments.PaymentMethod}, Calculations.RefundMethods
+    calculate :default_refund_method, Edenflowers.Payments.PaymentMethod, Calculations.DefaultRefundMethod
   end
 
   aggregates do
