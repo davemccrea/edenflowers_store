@@ -8,6 +8,36 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
   alias Edenflowers.Accounts
   alias Edenflowers.Pricing.Workers.SendNewsletterPromoEmail
 
+  describe "signing up queues the welcome email" do
+    test "the signup action records the opt-in and enqueues the worker" do
+      {:ok, user} = Accounts.subscribe_to_newsletter("direct@example.com", "fi", authorize?: false)
+
+      assert user.newsletter_opt_in
+      assert_enqueued(worker: SendNewsletterPromoEmail, args: %{"email" => "direct@example.com", "locale" => "fi"})
+    end
+
+    test "signing up twice queues one job" do
+      {:ok, _} = Accounts.subscribe_to_newsletter("twice@example.com", "fi", authorize?: false)
+      {:ok, _} = Accounts.subscribe_to_newsletter("twice@example.com", "fi", authorize?: false)
+
+      assert [_job] = all_enqueued(worker: SendNewsletterPromoEmail)
+    end
+
+    test "a failed signup records no opt-in and queues nothing" do
+      assert {:error, _} = Accounts.subscribe_to_newsletter("failed@example.com", "xx", authorize?: false)
+
+      assert {:error, _} = Accounts.get_user_by_email("failed@example.com", authorize?: false)
+      refute_enqueued(worker: SendNewsletterPromoEmail)
+    end
+
+    test "opting in through the preference toggle queues nothing" do
+      {:ok, user} = Accounts.upsert_user("toggle@example.com", "Toggle", authorize?: false)
+      {:ok, _} = Accounts.update_newsletter_preference(user, true, "fi", actor: user)
+
+      refute_enqueued(worker: SendNewsletterPromoEmail)
+    end
+  end
+
   describe "first subscription" do
     test "creates a promo, sends welcome email, and sets newsletter_promo_id on user" do
       {:ok, user} = Accounts.subscribe_to_newsletter("new@example.com", "en-GB", authorize?: false)

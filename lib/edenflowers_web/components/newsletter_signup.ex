@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, form: to_form(%{"email_address" => ""}), submitted: false)}
+    {:ok, assign(socket, form: to_form(%{"email_address" => ""}), submitted: false, failed: false)}
   end
 
   @impl true
@@ -57,6 +57,11 @@ defmodule EdenflowersWeb.NewsletterSignup do
               />
             </button>
           </div>
+          <%!-- Inline rather than a flash: a component's flash only reaches the
+                page on navigation, so it would never show here. --%>
+          <p :if={@failed} role="alert" class="text-error text-sm">
+            {~t"There was an error subscribing to the newsletter."}
+          </p>
           <p class="text-base-content/70 text-xs leading-relaxed">
             {~t"Only occasional emails. Unsubscribe at any time."}
           </p>
@@ -74,12 +79,11 @@ defmodule EdenflowersWeb.NewsletterSignup do
 
     case Edenflowers.Accounts.subscribe_to_newsletter(email_address, locale) do
       {:ok, _} ->
-        Edenflowers.Pricing.Workers.SendNewsletterPromoEmail.enqueue(%{"email" => email_address, "locale" => locale})
         {:noreply, assign(socket, submitted: true)}
 
       {:error, error} ->
         Logger.error(inspect(error))
-        {:noreply, put_flash(socket, :error, ~t"There was an error subscribing to the newsletter.")}
+        {:noreply, assign(socket, failed: true)}
     end
   end
 end
