@@ -36,5 +36,5 @@ Open for triage:
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Validated with a match on User.email (Types.Email's pattern), so :ci_string matching is kept and every write is covered. Production check on 2026-10-25: 0 malformed of 4 users, nothing to clean up. The sign-in page's :request_otp is a separate path, not covered here.
+Validated with a match on User.email (Types.Email's pattern), so :ci_string matching is kept and every write is covered. Production check on 2026-10-25: 0 malformed of 4 users, nothing to clean up. The sign-in page's :request_otp checks the same pattern, so a malformed address gets a field error instead of waiting on a code that never arrives.
 <!-- SECTION:NOTES:END -->

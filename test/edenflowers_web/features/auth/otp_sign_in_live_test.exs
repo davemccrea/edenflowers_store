@@ -28,4 +28,14 @@ defmodule EdenflowersWeb.Auth.OtpSignInLiveTest do
 
     refute conn |> recycle() |> get(~p"/en") |> html_response(200) =~ "You must sign in"
   end
+
+  test "a malformed email asks again instead of waiting on a code", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/sign-in")
+
+    html = view |> form("#otp-request", %{"user" => %{"email" => "not an email"}}) |> render_submit()
+
+    assert html =~ "Must be a valid email address"
+    refute html =~ "Check your email"
+    refute html =~ "We couldn&#39;t send your sign-in code"
+  end
 end
