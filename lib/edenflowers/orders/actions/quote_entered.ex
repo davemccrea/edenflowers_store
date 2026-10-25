@@ -106,9 +106,11 @@ defmodule Edenflowers.Orders.Actions.QuoteEntered do
     end)
   end
 
-  # The calculation's expression, evaluated on a record that isn't saved.
+  # The calculation's expression, evaluated on a record that isn't saved. It
+  # raises on a field the record doesn't have, rather than reading it as nil.
   defp eval(calculation, record, resource) do
-    calculation.expression([], %{}) |> Ash.Expr.eval!(record: record, resource: resource)
+    calculation.expression([], %{})
+    |> Ash.Expr.eval!(record: record, resource: resource, unknown_on_unknown_refs?: true)
   end
 
   defp fulfillment_fee(changeset, delivery_quote, free_delivery?) do
