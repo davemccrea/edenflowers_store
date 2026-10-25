@@ -33,7 +33,8 @@ defmodule Edenflowers.Accounts do
       define :list_brevo_contacts, action: :brevo_contacts
       define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email, :locale]
       define :update_name, action: :update, args: [:name]
-      define :change_email, action: :change_email, args: [:email]
+      define :request_email_change, action: :request_email_change, args: [:email]
+      define :confirm_email_change, action: :confirm_email_change, args: [:code]
       define :update_newsletter_preference, action: :update, args: [:newsletter_opt_in, :locale]
       define :ensure_stripe_customer, action: :ensure_stripe_customer
       define :forget_stripe_customer, action: :forget_stripe_customer
