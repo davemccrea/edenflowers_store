@@ -79,6 +79,79 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_course_secret"})
     end
 
+    test "changing an unpaid registration returns to the booking form", %{conn: conn} do
+      course = generate(course())
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+
+      view
+      |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "1"})
+      |> render_submit()
+
+      view |> element("button[phx-click=change]") |> render_click()
+
+      assert has_element?(view, "#booking-form")
+      refute has_element?(view, "#course-payment-form")
+    end
+
+    test "keeps checkout when its payment is still processing", %{conn: conn} do
+      course = generate(course())
+
+      expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn 8500, _, _ ->
+        {:ok, %{id: "pi_processing", client_secret: "pi_processing_secret", amount: 8500}}
+      end)
+
+      expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_processing"} ->
+        {:error, :processing}
+      end)
+
+      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_processing"} ->
+        {:ok, %{status: "processing"}}
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+
+      view
+      |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "1"})
+      |> render_submit()
+
+      view |> element("#course-payment-form") |> render_submit()
+      view |> element("button[phx-click=change]") |> render_click()
+
+      assert has_element?(view, "#course-payment-form")
+      refute has_element?(view, "#booking-form")
+      assert render(view) =~ "Your payment is still being confirmed."
+    end
+
+    test "goes to the confirmed booking when payment completes before Change booking", %{conn: conn} do
+      course = generate(course())
+      test_pid = self()
+
+      expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn 8500, metadata, _ ->
+        send(test_pid, {:registration_id, metadata["course_registration_id"]})
+        {:ok, %{id: "pi_completed", client_secret: "pi_completed_secret", amount: 8500}}
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+
+      view
+      |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "1"})
+      |> render_submit()
+
+      view |> element("#course-payment-form") |> render_submit()
+      assert_receive {:registration_id, id}
+
+      assert {:ok, :completed} =
+               Edenflowers.Payments.complete(%{
+                 id: "pi_completed",
+                 metadata: %{"course_registration_id" => id},
+                 amount_received: 8500
+               })
+
+      view |> element("button[phx-click=change]") |> render_click()
+      assert_redirect(view, ~p"/courses/bookings/#{id}")
+      assert Edenflowers.Courses.get_registration_by_id!(id, authorize?: false).status == :confirmed
+    end
+
     test "shows the seat error when others booked the places first", %{conn: conn} do
       course = generate(course(total_places: 4))
 
@@ -173,6 +246,59 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
       {:ok, _view, html} = live(conn, ~p"/courses/bookings/#{registration.id}")
       assert html =~ "To cancel, reply to your confirmation email."
+    end
+
+    test "a failed return keeps a processing payment instead of crashing or retrying discard", %{conn: conn} do
+      registration = generate(course_registration(payment_intent_id: "pi_processing"))
+
+      expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_processing"} ->
+        {:error, :processing}
+      end)
+
+      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_processing"} ->
+        {:ok, %{status: "processing"}}
+      end)
+
+      assert {:error, {:live_redirect, %{to: to}}} =
+               live(conn, ~p"/courses/bookings/#{registration.id}?redirect_status=failed")
+
+      assert to == ~p"/courses/bookings/#{registration.id}"
+      {:ok, view, _html} = live(conn, to)
+      assert has_element?(view, "[data-testid=booking-confirming]")
+    end
+
+    @tag capture_log: true
+    test "a failed return reports an unexpected Stripe failure without deleting or crashing", %{conn: conn} do
+      registration = generate(course_registration(payment_intent_id: "pi_offline"))
+      expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn _ -> {:error, :offline} end)
+      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn _ -> {:error, :offline} end)
+
+      assert {:error, {:live_redirect, %{to: to, flash: flash}}} =
+               live(conn, ~p"/courses/bookings/#{registration.id}?redirect_status=failed")
+
+      assert to == ~p"/courses/bookings/#{registration.id}"
+      assert flash["error"] =~ "Payment is temporarily unavailable"
+      assert {:ok, _} = Edenflowers.Courses.get_registration_by_id(registration.id, authorize?: false)
+    end
+
+    test "a failed return still deletes checkout when its cancellation webhook clears the intent", %{conn: conn} do
+      registration = generate(course_registration(payment_intent_id: "pi_cancelled"))
+
+      expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_cancelled"} ->
+        assert {:ok, _} =
+                 Edenflowers.Payments.cancel(%{
+                   id: "pi_cancelled",
+                   metadata: %{"course_registration_id" => registration.id}
+                 })
+
+        {:ok, %{status: "canceled"}}
+      end)
+
+      assert {:error, {:live_redirect, %{to: to}}} =
+               live(conn, ~p"/courses/bookings/#{registration.id}?redirect_status=failed")
+
+      assert to == ~p"/en/courses/#{registration.course_id}"
+      assert {:error, _} = Edenflowers.Courses.get_registration_by_id(registration.id, authorize?: false)
     end
 
     test "discards the unpaid registration and goes back to the course when a redirect payment fails", %{conn: conn} do

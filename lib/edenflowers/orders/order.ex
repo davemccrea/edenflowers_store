@@ -430,6 +430,8 @@ defmodule Edenflowers.Orders.Order do
     # For test orders and ones added by mistake.
     destroy :delete_custom do
       validate Validations.Deletable
+      # Money may arrive while Stripe cancels the checked intent.
+      change filter expr(deletable?)
       change {PaymentChanges.CancelOpenPaymentIntent, before_commit?: true}
 
       change {Changes.AdjustStock, direction: :return},

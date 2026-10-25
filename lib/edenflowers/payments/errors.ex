@@ -9,6 +9,15 @@ defmodule Edenflowers.Payments.Errors.AlreadyPaid do
   def message(_error), do: "already paid"
 end
 
+defmodule Edenflowers.Payments.Errors.PaymentInProgress do
+  @moduledoc "Returned when an attached payment is processing or succeeded and prevents deletion."
+  use Splode.Error, fields: [:field], class: :invalid
+  use GettextSigils, backend: EdenflowersWeb.Gettext
+
+  def message(_error),
+    do: ~t"A payment for this order is under way. Wait for it to arrive, then cancel the order instead."
+end
+
 defmodule Edenflowers.Payments.Errors.AmountMismatch do
   @moduledoc "Returned when a course payment does not cover the booking's stored amount."
   use Splode.Error, fields: [:field, :expected, :actual], class: :invalid

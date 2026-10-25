@@ -8,54 +8,76 @@ defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
   """
 
   use Ash.Resource.Change
-  use GettextSigils, backend: EdenflowersWeb.Gettext
 
   require Logger
 
   alias Edenflowers.External.StripeAPI
+  alias Edenflowers.Payments.Errors.PaymentInProgress
 
   @impl true
-  def change(%{data: %{payment_intent_id: nil}} = changeset, _opts, _context), do: changeset
-
-  def change(%{data: %{payment_intent_id: payment_intent_id}} = changeset, opts, _context) do
-    changeset = Ash.Changeset.force_change_attribute(changeset, :payment_intent_id, nil)
-
+  def change(changeset, opts, _context) do
     if opts[:before_commit?],
-      do: cancel_before_commit(changeset, payment_intent_id),
-      else: cancel_after_commit(changeset, payment_intent_id)
+      do: Ash.Changeset.before_transaction(changeset, &cancel_before_commit/1),
+      else: cancel_after_commit(changeset, changeset.data.payment_intent_id)
   end
 
-  defp cancel_before_commit(changeset, payment_intent_id) do
-    Ash.Changeset.before_transaction(changeset, fn changeset ->
-      if cancelled?(payment_intent_id) do
-        changeset
-      else
-        Ash.Changeset.add_error(
-          changeset,
-          ~t"A payment for this order is under way. Wait for it to arrive, then cancel the order instead."
-        )
-      end
-    end)
+  defp cancel_before_commit(changeset) do
+    case Ash.reload(changeset.data, authorize?: false) do
+      {:ok, %{payment_intent_id: checked_id}} ->
+        # Its cancellation webhook may clear this intent; a different one must stop deletion.
+        filter =
+          if is_nil(checked_id),
+            do: expr(is_nil(payment_intent_id)),
+            else: expr(is_nil(payment_intent_id) or payment_intent_id == ^checked_id)
+
+        changeset =
+          changeset
+          |> Ash.Changeset.filter(filter)
+          |> Ash.Changeset.force_change_attribute(:payment_intent_id, nil)
+
+        case cancel(checked_id) do
+          :ok -> changeset
+          {:error, error} -> Ash.Changeset.add_error(changeset, error)
+        end
+
+      {:error, error} ->
+        Ash.Changeset.add_error(changeset, error)
+    end
   end
+
+  defp cancel(nil), do: :ok
 
   # Stripe refuses to cancel twice, so an earlier cancel is checked for.
-  defp cancelled?(payment_intent_id) do
+  defp cancel(payment_intent_id) do
     case StripeAPI.impl().cancel_payment_intent(%{id: payment_intent_id}) do
       {:ok, _payment_intent} ->
-        true
+        :ok
 
       {:error, reason} ->
         Logger.warning("Could not cancel PaymentIntent #{payment_intent_id}: #{inspect(reason)}")
 
-        match?(
-          {:ok, %{status: "canceled"}},
-          StripeAPI.impl().retrieve_payment_intent(%{payment_intent_id: payment_intent_id})
-        )
+        case StripeAPI.impl().retrieve_payment_intent(%{payment_intent_id: payment_intent_id}) do
+          {:ok, %{status: "canceled"}} ->
+            :ok
+
+          {:ok, %{status: status}} when status in ["processing", "succeeded"] ->
+            {:error, PaymentInProgress.exception(field: :payment_intent_id)}
+
+          {:ok, _payment_intent} ->
+            {:error, "Could not cancel PaymentIntent: #{inspect(reason)}"}
+
+          {:error, error} ->
+            {:error, "Could not verify PaymentIntent cancellation: #{inspect(error)}"}
+        end
     end
   end
 
+  defp cancel_after_commit(changeset, nil), do: changeset
+
   defp cancel_after_commit(changeset, payment_intent_id) do
-    Ash.Changeset.after_transaction(changeset, fn
+    changeset
+    |> Ash.Changeset.force_change_attribute(:payment_intent_id, nil)
+    |> Ash.Changeset.after_transaction(fn
       _changeset, {:ok, record} ->
         case StripeAPI.impl().cancel_payment_intent(%{id: payment_intent_id}) do
           {:ok, _payment_intent} ->
