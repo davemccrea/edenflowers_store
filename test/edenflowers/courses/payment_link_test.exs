@@ -7,6 +7,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.Course
+  alias Edenflowers.Email.Preview
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Payments
 
@@ -153,7 +154,27 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
   end
 
   describe "emailing the link" do
+    test "a future confirmed booking gets a Payment reminder matching its preview", ctx do
+      confirmed =
+        ctx.registration
+        |> Ash.Seed.update!(%{status: :confirmed})
+        |> pay_in_person("30.00")
+
+      preview = Preview.build(:payment_link, confirmed, %{message: "See you soon."})
+
+      {:ok, _emailed} =
+        Courses.email_registration_payment_link(confirmed, %{message: "See you soon."}, actor: ctx.admin)
+
+      assert_email_sent(fn email ->
+        assert email.subject == preview.subject
+        assert email.text_body == preview.text_body
+        refute email.text_body =~ "Paikkasi varataan heti, kun olet maksanut."
+        assert email.text_body =~ "55,00"
+      end)
+    end
+
     test "opens the link and sends one email in the booking's language", ctx do
+      preview = Preview.build(:payment_link, ctx.registration, %{})
       {:ok, emailed} = Courses.email_registration_payment_link(ctx.registration, actor: ctx.admin)
 
       assert emailed.payment_link_emailed_at
@@ -162,6 +183,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
         assert email.subject =~ "Varaa paikkasi kurssille"
+        assert email.text_body == preview.text_body
         assert email.text_body =~ "Paikkasi varataan heti, kun olet maksanut."
         refute email.text_body =~ "palautan koko summan"
         assert email.text_body =~ "/pay/courses/#{emailed.payment_link_token}"

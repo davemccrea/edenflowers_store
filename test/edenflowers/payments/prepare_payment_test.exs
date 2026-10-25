@@ -112,7 +112,7 @@ defmodule Edenflowers.Payments.PreparePaymentTest do
     end
 
     test "needs the link's token" do
-      assert {:error, _not_found} = Courses.prepare_registration_link_payment("not-the-token")
+      assert {:error, _not_found} = Courses.prepare_registration_link_payment("not-the-token", "85.00")
     end
 
     test "charges the balance without anyone's saved cards, even with a customer signed in", ctx do
@@ -123,14 +123,34 @@ defmodule Edenflowers.Payments.PreparePaymentTest do
         {:ok, %{id: "pi_link", client_secret: "pi_link_secret", amount: 5500}}
       end)
 
-      assert {:ok, %{client_secret: "pi_link_secret"}} =
-               Courses.prepare_registration_link_payment(ctx.registration.payment_link_token, actor: signed_in)
+      assert {:ok, %{client_secret: "pi_link_secret", payable: payable}} =
+               Courses.prepare_registration_link_payment(ctx.registration.payment_link_token, "55.00", actor: signed_in)
+
+      assert Decimal.equal?(payable.balance, "55.00")
+      assert payable.payment_intent_id == "pi_link"
+    end
+
+    test "refuses a stale displayed balance without preparing a payment", ctx do
+      generate(payment(course_registration_id: ctx.registration.id, method: :cash, amount: Decimal.new("30.00")))
+
+      assert refusal(Courses.prepare_registration_link_payment(ctx.registration.payment_link_token, "85.00")) ==
+               :balance_changed
+
+      assert is_nil(Ash.reload!(ctx.registration, authorize?: false).payment_intent_id)
+    end
+
+    test "requires the displayed balance", ctx do
+      assert {:error, _missing_balance} =
+               ctx.registration.__struct__
+               |> Ash.ActionInput.for_action(:prepare_link_payment, %{token: ctx.registration.payment_link_token})
+               |> Ash.run_action()
     end
 
     test "refuses a link that closed once nothing was owed", ctx do
       generate(payment(course_registration_id: ctx.registration.id, method: :cash, amount: Decimal.new("85.00")))
 
-      assert refusal(Courses.prepare_registration_link_payment(ctx.registration.payment_link_token)) == :link_closed
+      assert refusal(Courses.prepare_registration_link_payment(ctx.registration.payment_link_token, "85.00")) ==
+               :link_closed
     end
   end
 end

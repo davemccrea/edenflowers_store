@@ -176,9 +176,8 @@ defmodule Edenflowers.Email.Preview do
     |> Swoosh.Email.attachment(Receipt.attachment("", registration.reference))
   end
 
-  # After the course, the link goes in a Payment reminder, as the senders send it.
   defp booking_email(:payment_link, registration, inputs) do
-    if Date.before?(registration.course.date, Edenflowers.ShopTime.today()),
+    if Ash.calculate!(registration, :payment_reminder?),
       do: Email.payment_reminder(registration, link_url(registration), inputs[:message]),
       else: Email.course_payment_link(registration, link_url(registration), inputs[:message])
   end

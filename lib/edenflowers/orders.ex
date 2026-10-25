@@ -70,7 +70,7 @@ defmodule Edenflowers.Orders do
       # Payments and links
       define :add_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]
       define :mark_payment_cancelled, action: :mark_payment_cancelled, args: [:payment_intent_id]
-      define :prepare_order_link_payment, action: :prepare_link_payment, args: [:token]
+      define :prepare_order_link_payment, action: :prepare_link_payment, args: [:token, :shown_balance]
       define :record_payment, action: :record_payment, args: [:amount, :payment_method]
       define :undo_payment, action: :undo_payment, args: [:payment_id]
       define :add_customer_email, action: :add_customer_email, args: [:customer_email]

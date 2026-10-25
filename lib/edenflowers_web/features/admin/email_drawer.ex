@@ -77,7 +77,13 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
         }
 
       :payment_reminder ->
-        %{title: ~t"Send payment reminder", submit_label: ~t"Send reminder", to: registration.email}
+        %{
+          title: ~t"Send payment reminder",
+          submit_label: ~t"Send reminder",
+          to: registration.email,
+          last_sent:
+            registration.payment_link_emailed_at && Format.datetime(registration.payment_link_emailed_at, locale)
+        }
 
       :payment_link ->
         last_sent_at = registration.payment_link_open? && registration.payment_link_emailed_at

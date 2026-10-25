@@ -21,6 +21,8 @@ defmodule EdenflowersWeb.PaymentLink do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Orders
+  alias Edenflowers.Payments.Errors.NotPayable
+  alias Edenflowers.Translations
 
   def url_for(payable), do: EdenflowersWeb.Endpoint.url() <> path_for(payable)
 
@@ -52,39 +54,36 @@ defmodule EdenflowersWeb.PaymentLink do
   else reloads the page with `changed_message`. The PaymentIntent is made or
   brought up to date here, so a crawler or a link preview never creates one.
   """
-  def pay(%{assigns: %{payable: shown, reload: reload}} = socket, changed_message) do
-    with {:ok, payable} <- reload.(),
-         true <- payable.payment_link_open?,
-         true <- Decimal.equal?(payable.balance, shown.balance) do
-      start_payment(socket, payable)
-    else
-      _ ->
-        socket
-        |> put_flash(:error, changed_message)
-        |> push_navigate(to: path_for(shown))
-    end
-  end
-
-  defp start_payment(socket, payable) do
-    case prepare_link_payment(payable) do
-      {:ok, %{client_secret: client_secret}} ->
+  def pay(%{assigns: %{payable: shown}} = socket, changed_message) do
+    case prepare_link_payment(shown) do
+      {:ok, %{payable: payable, client_secret: client_secret}} ->
         socket
         |> assign(:payable, payable)
         |> push_event("stripe:process_payment", %{client_secret: client_secret})
 
       {:error, reason} ->
-        Logger.error("Could not set up payment for #{describe(payable)}: #{inspect(reason)}")
+        if NotPayable.find(reason) do
+          socket
+          |> put_flash(:error, changed_message)
+          |> push_navigate(to: path_for(shown))
+        else
+          Logger.error("Could not set up payment for #{describe(shown)}: #{inspect(reason)}")
 
-        socket
-        |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
-        |> push_event("stripe:ready", %{})
+          socket
+          |> put_flash(:error, ~t"Payment is temporarily unavailable. Please try again in a moment.")
+          |> push_event("stripe:ready", %{})
+        end
     end
   end
 
-  defp prepare_link_payment(%CourseRegistration{payment_link_token: token}),
-    do: Courses.prepare_registration_link_payment(token)
+  defp prepare_link_payment(%CourseRegistration{payment_link_token: token, balance: balance}) do
+    with {:ok, result} <- Courses.prepare_registration_link_payment(token, balance) do
+      {:ok, %{result | payable: Translations.in_own_locale(result.payable)}}
+    end
+  end
 
-  defp prepare_link_payment(%{payment_link_token: token}), do: Orders.prepare_order_link_payment(token)
+  defp prepare_link_payment(%{payment_link_token: token, balance: balance}),
+    do: Orders.prepare_order_link_payment(token, balance)
 
   def stripe_error(socket, %{"message" => message, "details" => details}) do
     Logger.error("Stripe client error for #{describe(socket.assigns.payable)}: #{message}: #{inspect(details)}")

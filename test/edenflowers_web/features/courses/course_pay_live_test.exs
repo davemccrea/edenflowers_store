@@ -88,6 +88,36 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     refute render(view) =~ "Paid so far"
   end
 
+  test "reloads instead of charging a balance changed since the page was shown", %{
+    conn: conn,
+    registration: registration
+  } do
+    {:ok, view, _html} = live(conn, ~p"/pay/courses/#{registration.payment_link_token}")
+    generate(payment(course_registration_id: registration.id, amount: "20.00"))
+
+    assert {:error, {:live_redirect, %{to: path}}} = view |> element("#pay-form") |> render_submit()
+    assert path == ~p"/pay/courses/#{registration.payment_link_token}"
+    refute_push_event(view, "stripe:process_payment", %{})
+    assert is_nil(Ash.reload!(registration, authorize?: false).payment_intent_id)
+  end
+
+  test "keeps the course translated when displaying the prepared booking", %{conn: conn, registration: registration} do
+    course = Ash.get!(Edenflowers.Courses.Course, registration.course_id, authorize?: false)
+    Ash.Seed.update!(course, %{translations: %{"fi" => %{"name" => "Syksyiset kranssit"}}})
+    registration = Ash.Seed.update!(registration, %{locale: "fi"})
+
+    expect(StripeAPI.Mock, :create_payment_intent, fn 12_000, _metadata, nil ->
+      {:ok, %{id: "pi_translated", client_secret: "secret", amount: 12_000}}
+    end)
+
+    conn = put_req_header(conn, "accept-language", "fi")
+    {:ok, view, _html} = live(conn, ~p"/pay/courses/#{registration.payment_link_token}")
+    assert has_element?(view, "dl", "Syksyiset kranssit")
+    view |> element("#pay-form") |> render_submit()
+    assert has_element?(view, "dl", "Syksyiset kranssit")
+    assert_push_event(view, "stripe:process_payment", %{client_secret: "secret"})
+  end
+
   test "says so once the booking is settled", %{conn: conn, registration: registration} do
     generate(payment(course_registration_id: registration.id, amount: Decimal.new("120.00")))
 

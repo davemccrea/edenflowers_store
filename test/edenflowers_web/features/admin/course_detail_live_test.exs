@@ -281,7 +281,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       view |> element("#settle-#{owing.id}") |> render_click()
 
-      assert has_element?(view, ~s|button[phx-value-kind="payment_link"][phx-value-id="#{owing.id}"]|)
+      assert has_element?(view, ~s|button[phx-value-kind="payment_reminder"][phx-value-id="#{owing.id}"]|)
       assert has_element?(view, ~s|button[phx-click="open_payment_link"][phx-value-id="#{owing.id}"]|)
       refute has_element?(view, "#mark-paid-#{owing.id}")
     end
@@ -292,18 +292,29 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
       view |> element("#settle-#{registration.id}") |> render_click()
 
-      view |> element(~s|button[phx-value-kind="payment_link"][phx-value-id="#{registration.id}"]|) |> render_click()
-      assert view |> form("#email-form") |> render_submit() =~ "Payment link emailed."
+      view
+      |> element(~s|#settlement-drawer button[phx-value-kind="payment_reminder"][phx-value-id="#{registration.id}"]|)
+      |> render_click()
+
+      assert has_element?(view, "#email-drawer-email-preview", "still to pay")
+      refute has_element?(view, "#email-drawer-email-preview", "booked once")
+      assert view |> form("#email-form") |> render_submit() =~ "Payment reminder sent."
 
       registration = Ash.reload!(registration, authorize?: false)
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "birgitta@example.com"}]
+        refute email.text_body =~ "booked once"
         assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(registration)
       end)
 
-      button = element(view, ~s|button[phx-value-kind="payment_link"][phx-value-id="#{registration.id}"]|)
-      assert render(button) =~ "Resend payment link"
+      button =
+        element(
+          view,
+          ~s|#settlement-drawer button[phx-value-kind="payment_reminder"][phx-value-id="#{registration.id}"]|
+        )
+
+      assert render(button) =~ "Send payment reminder"
       render_click(button)
       assert has_element?(view, "#email-drawer", "Last sent")
       assert has_element?(view, "#copy-payment-link-#{registration.id}")

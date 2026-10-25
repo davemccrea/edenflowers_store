@@ -261,6 +261,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
                     "Finnish invoice term, counted in Helsinki days."
     end
 
+    calculate :payment_reminder?,
+              :boolean,
+              expr(status == :confirmed or course.date < helsinki_today()) do
+      description "Whether emailing its Payment Link collects an existing booking's Balance rather than inviting " <>
+                    "someone to book: confirmed bookings, and any link sent after the course."
+    end
+
     calculate :payment_link_open?,
               :boolean,
               expr(not is_nil(payment_link_token) and payable? and status in [:pending, :confirmed]) do

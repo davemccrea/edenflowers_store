@@ -4,7 +4,7 @@ title: Derive refund-method choices and defaults from the shared payment domain
 status: done
 assignee: []
 created_date: '2026-10-25 14:15'
-updated_date: '2026-10-25 16:44'
+updated_date: '2026-10-25 21:45'
 labels:
   - spec
   - admin
@@ -47,3 +47,16 @@ This complements TASK-121's capability centralisation but can ship independently
 <!-- SECTION:NOTES:BEGIN -->
 Triage (2026-10-25): Stripe money held -> default Stripe (mixed too). No Stripe held -> default the non-Stripe method holding the most, Zettle on none. Nothing held -> no methods, no default; action rejects. Non-Stripe stays one pot: every non-Stripe method offered once outside-Stripe money is held.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-25 21:45
+
+---
+
+Architecture-review follow-up, grilled and approved: the shared Refund drawer now provides the effective default-plus-entered values to both form and preview, including legacy cash-paid Course bookings. Reopening retains the entered values and matching preview. Refund eligibility/default calculations and financial validation remain in Payable.
+
+---
+<!-- COMMENTS:END -->

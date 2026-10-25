@@ -49,9 +49,11 @@ defmodule Edenflowers.Payments.Payable do
   actions do
     action :prepare_link_payment, :map do
       description "Readies the PaymentIntent behind a Payment Link for what is owed now and returns its client " <>
-                    "secret. The token is the only access; refuses a link that has closed."
+                    "secret. The token is the only access; refuses a closed link or a Balance that changed " <>
+                    "from what the customer saw."
 
       argument :token, :string, allow_nil?: false, sensitive?: true
+      argument :shown_balance, :decimal, allow_nil?: false, constraints: [greater_than: 0]
       run Edenflowers.Payments.Actions.PrepareLinkPayment
     end
 

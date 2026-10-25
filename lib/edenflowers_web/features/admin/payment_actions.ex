@@ -1,8 +1,8 @@
 defmodule EdenflowersWeb.Admin.PaymentActions do
   @moduledoc """
   Jennie's payment controls on an order or a course booking, shared by the
-  order page and the courses page. Each returns the flash to show, and the
-  page reloads what it shows.
+  order page and the courses page. Returns the flash to show, keeping a
+  committed payment distinct from a receipt failure. The page reloads what it shows.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
@@ -56,7 +56,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     }
 
     case Ash.update(payable, input, action: :record_payment, actor: actor) do
-      {:ok, payable} -> recorded_message(payable.__metadata__[:receipt_emailed?])
+      {:ok, payable} -> {:ok, recorded_message(payable.__metadata__[:receipt_emailed?])}
       {:error, error} -> {:error, payment_error(error)}
     end
   end

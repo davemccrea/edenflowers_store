@@ -286,7 +286,12 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply,
      socket
      |> assign(settling_id: id, settlement_mode: mode, settlement_error: nil)
-     |> assign(:preview, if(mode == :refund, do: DrawerPreview.build(:refunded, registration, %{})))
+     |> assign(
+       :preview,
+       if(mode == :refund,
+         do: DrawerPreview.build(:refunded, registration, Map.get(socket.assigns.refund_params, id, %{}))
+       )
+     )
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
   end
 
@@ -496,6 +501,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :refundable?,
         :seats_held,
         :payment_link_open?,
+        :payment_reminder?,
         payments: [:undoable?, :reversal]
       ],
       invites: [:balance, :payment_link_open?]
