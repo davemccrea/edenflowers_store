@@ -82,6 +82,53 @@
   }
 }
 
+/* Review pages share one grid cell so the section is sized for the tallest and never jumps.
+   On a turn the leaving quotes drift away from the arrow pressed and the next ones drift in
+   behind them, column by column. --direction is 1 for next, -1 for previous. */
+.review-pages {
+  display: grid;
+}
+.review-pages > * {
+  grid-area: 1 / 1;
+}
+.review-pages > :not([data-active]) {
+  opacity: 0;
+}
+@keyframes review-leave {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--direction) * -16px));
+  }
+}
+@keyframes review-arrive {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--direction) * 24px));
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .review-pages[data-turned] > [data-leaving] {
+    opacity: 1;
+  }
+  .review-pages[data-turned] > [data-leaving] > li {
+    animation: review-leave 260ms cubic-bezier(0.4, 0, 1, 1) both;
+    animation-delay: calc(var(--n) * 40ms);
+  }
+  .review-pages[data-turned] > [data-active] > li {
+    animation: review-arrive 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(220ms + var(--n) * 70ms);
+  }
+  /* The first time the section scrolls into view, set 1 arrives as if turned to with next. */
+  .review-pages[data-entering]:not([data-turned]) > [data-active] > li {
+    --direction: 1;
+    animation: review-arrive 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(150ms + var(--n) * 90ms);
+  }
+}
+
 /* Transform-only, so LCP is unaffected. The parent needs overflow-hidden. */
 @keyframes hero-zoom-settle {
   from {

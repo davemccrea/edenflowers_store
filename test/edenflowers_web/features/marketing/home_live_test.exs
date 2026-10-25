@@ -43,6 +43,34 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     assert has_element?(view, ~s(nav a[href="#subscription"]))
   end
 
+  test "customer quotes turn three at a time either way, and wrap round", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en")
+    next = element(view, ~s(button[aria-controls="review-pages"][aria-label="Next slide"]))
+    previous = element(view, ~s(button[aria-controls="review-pages"][aria-label="Previous slide"]))
+
+    assert has_element?(view, "#review-pages ul[data-active]", "Fanny")
+
+    render_click(next)
+    assert has_element?(view, "#review-pages ul[data-active]", "Julia")
+    assert has_element?(view, "#review-pages ul[inert]", "Fanny")
+
+    render_click(previous)
+    render_click(previous)
+    assert has_element?(view, "#review-pages ul[data-active]", "Lena")
+
+    render_click(next)
+    assert has_element?(view, "#review-pages ul[data-active]", "Fanny")
+  end
+
+  test "English visitors get a translation beneath each quote; others see the original alone", %{conn: conn} do
+    {:ok, en, _html} = live(conn, ~p"/en")
+    assert has_element?(en, "#review-pages", "So glad you're here")
+
+    {:ok, sv, _html} = live(conn, ~p"/sv")
+    refute has_element?(sv, "#review-pages", "So glad you're here")
+    assert has_element?(sv, "#review-pages", "räddare i nöden")
+  end
+
   test "states the shop's details to search engines, matching the footer", %{conn: conn} do
     html = conn |> get(~p"/en") |> html_response(200)
 
