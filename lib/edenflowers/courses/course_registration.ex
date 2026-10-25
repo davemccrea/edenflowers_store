@@ -196,7 +196,11 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     calculate :total_due,
               :decimal,
-              expr(if status == :cancelled, do: kept_amount, else: round(amount * seats_held / seats, 2) + kept_amount) do
+              expr(
+                if status == :cancelled,
+                  do: kept_amount,
+                  else: round(amount * seats_held / seats, 2) + kept_amount
+              ) do
       description "The Total due in euros. amount is the price times seats bought, so the seats still held cost " <>
                     "exactly their share of it. Once cancelled, only what Jennie kept."
     end
