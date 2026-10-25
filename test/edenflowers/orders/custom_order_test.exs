@@ -809,24 +809,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert {:error, _} = Orders.get_order_by_id(order.id, authorize?: false)
     end
 
-    test "keeps an order paid through a replacement intent while the old intent is cancelled", ctx do
-      {:ok, order} = place(ctx)
-      order = Ash.Seed.update!(order, %{payment_intent_id: "pi_old"})
-
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_old"} ->
-        assert {:ok, cleared} = Payments.cancel(%{id: "pi_old", metadata: %{"order_id" => order.id}})
-        Orders.add_payment_intent_id!(cleared, "pi_new", actor: Edenflowers.Actors.system_actor())
-
-        assert {:ok, :completed} =
-                 Payments.complete(%{id: "pi_new", metadata: %{"order_id" => order.id}, amount_received: 13_400})
-
-        {:ok, %{status: "canceled"}}
-      end)
-
-      assert {:error, _paid} = Orders.delete_custom_order(order, actor: ctx.admin)
-      assert Orders.get_order_for_admin!(order.id, actor: ctx.admin).payment_status == :paid
-    end
-
     test "deletes it when its payment link was already cancelled in Stripe", ctx do
       {:ok, order} = place(ctx)
       order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})

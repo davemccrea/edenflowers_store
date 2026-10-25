@@ -305,13 +305,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
              )
     end
 
-    action :discard_or_retain, :struct do
-      constraints instance_of: __MODULE__
-      allow_nil? true
-      argument :id, :uuid, allow_nil?: false
-      run Edenflowers.Courses.Actions.DiscardRegistration
-    end
-
     # A registration nobody paid for: a checkout changed or given up, or an
     # invite Jennie withdraws. Its PaymentIntent is cancelled first, so a
     # payment already under way still has a registration to confirm.
@@ -391,7 +384,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :send_reminder_email,
                      :reconcile_payment,
                      :discard,
-                     :discard_or_retain,
                      :checkout
                    ])
 
