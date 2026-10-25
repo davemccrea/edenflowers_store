@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Plug.Helpers
   alias EdenflowersWeb.Auth.AuthController
 
   describe "success/4" do
@@ -70,10 +69,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
     test "redirects an already-signed-in admin to /", %{conn: conn} do
       admin = generate(admin_user()) |> with_token()
 
-      conn =
-        conn
-        |> Plug.Test.init_test_session(%{})
-        |> Helpers.store_in_session(admin)
+      conn = log_in(conn, admin)
 
       assert {:error, {:redirect, %{to: "/en"}}} = live(conn, ~p"/sign-in")
     end
@@ -81,10 +77,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
     test "redirects an already-signed-in non-admin user to /", %{conn: conn} do
       user = generate(admin_user(admin: false)) |> with_token()
 
-      conn =
-        conn
-        |> Plug.Test.init_test_session(%{})
-        |> Helpers.store_in_session(user)
+      conn = log_in(conn, user)
 
       assert {:error, {:redirect, %{to: "/en"}}} = live(conn, ~p"/sign-in")
     end

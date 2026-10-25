@@ -10,15 +10,11 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
   import Phoenix.LiveViewTest
   import Swoosh.TestAssertions
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.External.StripeAPI
 
   setup :verify_on_exit!
 
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-    %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
-  end
+  setup :log_in_admin
 
   # An order or booking for 88.50, paid with `payments` like `[stripe: "58.50", cash: "30.00"]`.
   defp build(parent, opts \\ []) do

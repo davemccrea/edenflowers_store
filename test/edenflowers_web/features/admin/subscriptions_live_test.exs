@@ -4,11 +4,9 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Plug.Helpers
-
   test "lists subscriptions with their customer, size, interval and next date", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
     variant = generate(product_variant(product_id: generate(product()).id, size: :large))
@@ -25,10 +23,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
   test "names the size in Jennie's language", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
 
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{Localize.Plug.PutLocale.session_key() => "sv-FI"})
-      |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin, %{Localize.Plug.PutLocale.session_key() => "sv-FI"})
 
     {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
 
@@ -42,7 +37,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
 
   test "flags a subscription whose card was refused", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
 
@@ -55,7 +50,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
 
   test "a row opens the subscription's page", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
 
@@ -71,7 +66,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
 
   test "searches subscriptions by customer name or email", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     {:ok, ada} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
     {:ok, grace} = Edenflowers.Accounts.upsert_user("admiral@example.com", "Grace Hopper", authorize?: false)
@@ -89,7 +84,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
 
   test "filters subscriptions by state", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     {:ok, ada} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
     {:ok, grace} = Edenflowers.Accounts.upsert_user("grace@example.com", "Grace Hopper", authorize?: false)

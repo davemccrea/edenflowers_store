@@ -5,7 +5,6 @@ defmodule EdenflowersWeb.Admin.OrderNotificationsTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Accounts
 
   @subscription %{
@@ -21,7 +20,7 @@ defmodule EdenflowersWeb.Admin.OrderNotificationsTest do
     on_exit(fn -> Application.delete_env(:web_push_ex, :vapid) end)
 
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
     %{conn: conn, admin: admin}
   end
 

@@ -196,10 +196,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     setup %{conn: conn} do
       user = generate(admin_user(admin: false)) |> with_token()
 
-      conn =
-        conn
-        |> Plug.Test.init_test_session(%{})
-        |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      conn = log_in(conn, user)
 
       %{conn: conn, user: user}
     end

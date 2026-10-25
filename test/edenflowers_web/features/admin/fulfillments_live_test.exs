@@ -4,26 +4,20 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.ShopTime
 
-  setup %{conn: conn} do
+  setup :log_in_admin
+
+  setup do
     tax_rate = generate(tax_rate())
 
     delivery = generate(fulfillment_option(tax_rate_id: tax_rate.id, fulfillment_method: :delivery, name: "Delivery"))
     pickup = generate(fulfillment_option(tax_rate_id: tax_rate.id, fulfillment_method: :pickup, name: "Pickup"))
     shop_calendar(available_days: [:monday, :tuesday, :wednesday, :thursday, :friday])
 
-    admin = generate(admin_user()) |> with_token()
-
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
-
-    %{conn: conn, admin: admin, delivery: delivery, pickup: pickup}
+    %{delivery: delivery, pickup: pickup}
   end
 
   describe "options list" do
@@ -389,10 +383,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
         |> Generator.generate()
         |> with_token()
 
-      conn =
-        Phoenix.ConnTest.build_conn()
-        |> Plug.Test.init_test_session(%{})
-        |> Helpers.store_in_session(regular_user)
+      conn = Phoenix.ConnTest.build_conn() |> log_in(regular_user)
 
       assert {:error, {:redirect, %{to: to, flash: %{"error" => _}}}} =
                live(conn, ~p"/admin/fulfillments")

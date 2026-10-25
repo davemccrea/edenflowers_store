@@ -36,4 +36,23 @@ defmodule EdenflowersWeb.ConnCase do
     # Visitors with no language preference get Swedish; tests read as an English browser.
     {:ok, conn: Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("accept-language", "en")}
   end
+
+  @doc """
+  Signs `user` into the connection. `session` is for whatever else the page
+  reads from it, like a checkout's order.
+  """
+  def log_in(conn, user, session \\ %{}) do
+    conn
+    |> Plug.Test.init_test_session(session)
+    |> AshAuthentication.Plug.Helpers.store_in_session(user)
+  end
+
+  @doc """
+  A setup callback for an admin's pages: signs a generated admin in, and puts
+  her in the context for the test to run actions as.
+  """
+  def log_in_admin(%{conn: conn}) do
+    admin = Generator.generate(Generator.admin_user()) |> Generator.with_token()
+    %{conn: log_in(conn, admin), admin: admin}
+  end
 end

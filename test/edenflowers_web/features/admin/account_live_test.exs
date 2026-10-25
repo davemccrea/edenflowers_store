@@ -4,11 +4,9 @@ defmodule EdenflowersWeb.Admin.AccountLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Plug.Helpers
-
   test "admin uploads, views and removes a profile picture", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     {:ok, view, _html} = live(conn, ~p"/admin/account")
 
@@ -36,7 +34,7 @@ defmodule EdenflowersWeb.Admin.AccountLiveTest do
 
   test "admin picks the admin language in account settings", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     {:ok, view, _html} = live(conn, ~p"/admin/account")
 
@@ -53,7 +51,7 @@ defmodule EdenflowersWeb.Admin.AccountLiveTest do
 
   test "non-admins cannot fetch an avatar", %{conn: conn} do
     user = generate(admin_user(admin: false)) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(user)
+    conn = log_in(conn, user)
 
     assert get(conn, ~p"/admin/account/avatar").status == 404
   end

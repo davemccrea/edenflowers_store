@@ -5,14 +5,12 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Plug.Helpers
+  setup :log_in_admin
 
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+  setup do
     {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
 
-    %{conn: conn, customer: customer}
+    %{customer: customer}
   end
 
   test "shows what Jennie needs to service the subscription", %{conn: conn, customer: customer} do

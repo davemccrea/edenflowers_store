@@ -7,20 +7,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   import Phoenix.LiveViewTest
   import Swoosh.TestAssertions
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
 
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
-
-    %{conn: conn, admin: admin}
-  end
+  setup :log_in_admin
 
   test "warns when a delivery has no phone to call", %{conn: conn} do
     missing = placed_order(fulfillment_method: :delivery, gift: true, recipient_name: "Grandma")

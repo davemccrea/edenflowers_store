@@ -6,7 +6,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Accounts.Workers.SendEmailChangeCode
   alias Edenflowers.ShopTime
 
@@ -15,10 +14,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   setup %{conn: conn} do
     user = generate(admin_user(admin: false, name: "Ada Lovelace")) |> with_token()
 
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(user)
+    conn = log_in(conn, user)
 
     %{conn: conn, user: user}
   end
@@ -195,7 +191,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       other = generate(admin_user(admin: false))
       order = placed_order(user_id: other.id, paid: true)
 
-      conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+      conn = log_in(conn, admin)
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -316,7 +312,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       course = generate(course(name: "Midsummer Garlands"))
       generate(course_registration(course_id: course.id, user_id: other.id, status: :confirmed))
 
-      conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+      conn = log_in(conn, admin)
 
       {:ok, view, _html} = live(conn, ~p"/account")
 

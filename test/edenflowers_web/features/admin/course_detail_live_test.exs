@@ -7,18 +7,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
   import Generator
   import Swoosh.TestAssertions
 
-  alias AshAuthentication.Plug.Helpers
-
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
-
-    %{conn: conn}
-  end
+  setup :log_in_admin
 
   test "lists confirmed bookings with seat counts, hides unpaid ones and shows cancelled ones apart", %{conn: conn} do
     course = generate(course(name: "Autumn wreaths", total_places: 10))

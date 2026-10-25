@@ -5,13 +5,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
   import Generator
   import Mox
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Catalog.Product
 
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-    %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
-  end
+  setup :log_in_admin
 
   test "creates a product with two sizes", %{conn: conn} do
     category = generate(product_category())

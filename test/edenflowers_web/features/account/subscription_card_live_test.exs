@@ -5,14 +5,13 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
   import Mox
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.External.StripeAPI
 
   setup :verify_on_exit!
 
   setup %{conn: conn} do
     user = generate(admin_user(admin: false, name: "Ada Lovelace")) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(user)
+    conn = log_in(conn, user)
 
     %{conn: conn, user: user, subscription: generate(subscription(user_id: user.id))}
   end

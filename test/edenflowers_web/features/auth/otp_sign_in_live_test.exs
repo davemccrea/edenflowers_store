@@ -20,8 +20,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLiveTest do
 
     conn =
       conn
-      |> Plug.Test.init_test_session(%{"phoenix_flash" => %{"error" => "You must sign in to access this page."}})
-      |> AshAuthentication.Plug.Helpers.store_in_session(user)
+      |> log_in(user, %{"phoenix_flash" => %{"error" => "You must sign in to access this page."}})
       |> get(~p"/sign-in?return_to=/account")
 
     assert redirected_to(conn) == ~p"/en"

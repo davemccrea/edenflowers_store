@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Courses.CourseBookingLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Courses
 
   describe "/courses/bookings/:id" do
@@ -101,7 +100,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLiveTest do
   describe "/courses/bookings/:id/receipt" do
     setup %{conn: conn} do
       user = generate(admin_user(admin: false)) |> with_token()
-      conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(user)
+      conn = log_in(conn, user)
 
       %{conn: conn, user: user}
     end

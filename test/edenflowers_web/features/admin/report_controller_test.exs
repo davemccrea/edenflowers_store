@@ -2,25 +2,14 @@ defmodule EdenflowersWeb.Admin.ReportControllerTest do
   use EdenflowersWeb.ConnCase, async: true
 
   import ExUnit.CaptureLog
-  import Generator
   import Mox
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Expenses
 
   setup :verify_on_exit!
 
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
-
-    %{conn: conn}
-  end
+  setup :log_in_admin
 
   test "the Overview report form defaults to the previous month", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin")

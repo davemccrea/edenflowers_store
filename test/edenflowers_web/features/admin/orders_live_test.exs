@@ -4,18 +4,7 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Plug.Helpers
-
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
-
-    %{conn: conn}
-  end
+  setup :log_in_admin
 
   test "searches orders by order reference as well as customer name", %{conn: conn} do
     placed_order(order_reference: "ABC123", customer_name: "Ada Lovelace")
