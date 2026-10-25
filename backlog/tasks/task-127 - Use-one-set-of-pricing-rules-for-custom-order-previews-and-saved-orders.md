@@ -1,9 +1,10 @@
 ---
 id: TASK-127
 title: Use one set of pricing rules for custom-order previews and saved orders
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-25 14:15'
+updated_date: '2026-10-25 16:53'
 labels:
   - spec
   - admin
@@ -39,8 +40,20 @@ Triage the smallest shared pricing seam before implementation; this is not permi
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Catalogue/custom/card line pricing, promotion eligibility and cent rounding, fulfillment overrides/free delivery and historical-price/fee preservation have one authoritative implementation shared by quote and save.
-- [ ] #2 The quote is exposed as a domain operation without persisting orders, changing stock, sending emails or otherwise performing save-time side effects.
-- [ ] #3 Live totals and real email previews still work with incomplete forms; unrelated renders do not rerun pricing database lookups.
-- [ ] #4 Parity tests compare preview and saved totals/VAT/fees for new and edited orders, including promotion thresholds/rounding and unchanged historical pricing.
+- [x] #1 Catalogue/custom/card line pricing, promotion eligibility and cent rounding, fulfillment overrides/free delivery and historical-price/fee preservation have one authoritative implementation shared by quote and save.
+- [x] #2 The quote is exposed as a domain operation without persisting orders, changing stock, sending emails or otherwise performing save-time side effects.
+- [x] #3 Live totals and real email previews still work with incomplete forms; unrelated renders do not rerun pricing database lookups.
+- [x] #4 Parity tests compare preview and saved totals/VAT/fees for new and edited orders, including promotion thresholds/rounding and unchanged historical pricing.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Grilled 2026-10-25: Order generic action quote_entered replaces EnteredPrice. It builds the real place_custom or edit changeset without submitting, shares PriceFulfillment's reprice decision and PopulateFromVariant's price snapshot, and evaluates the resources' own calc expressions in memory. OrderFormLive keeps price and preview in assigns. Out of scope: the change block shared by place_custom and edit.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Calculations.PromotionApplied and LineDiscount hold the promotion rules as expressions the resources and the quote both use. Form edits still reprice; other renders and events do not.
+<!-- SECTION:NOTES:END -->

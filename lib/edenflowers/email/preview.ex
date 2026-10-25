@@ -54,7 +54,7 @@ defmodule Edenflowers.Email.Preview do
   @doc """
   The Order details or Order updated email for an order Jennie is entering
   or editing, from the form's `changeset` and its `price` from
-  `Edenflowers.Orders.EnteredPrice`, before anything is saved. `order` is the
+  `Edenflowers.Orders.quote_entered_order/3`, before anything is saved. `order` is the
   order being edited, or nil.
   """
   def build_entered(kind, changeset, price, order, inputs, locale \\ nil) do

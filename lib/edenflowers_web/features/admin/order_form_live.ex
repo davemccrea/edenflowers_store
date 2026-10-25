@@ -22,7 +22,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Fulfillment.DeliveryError
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.EnteredPrice
   alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders.Order
   alias Edenflowers.Pricing
@@ -58,7 +57,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> assign(:form, build_form(mode, order, actor, tax_rates))
          |> assign(:customer_search_empty?, false)
          |> assign(:delivery_quote, stored_quote(mode, order))
-         |> assign_date_warning()}
+         |> assign_date_warning()
+         |> assign_price()}
 
       {:error, message} ->
         {:ok,
@@ -75,17 +75,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       |> assign(:method, selected_method(assigns.form, assigns.fulfillment_options, assigns.order))
       |> assign(:gift?, assigns.form[:gift].value in [true, "true"])
       |> assign(:time_choice, to_string(assigns.form[:fulfillment_time].value || "any"))
-      |> assign(:card, chosen_card(assigns.card_variants, assigns.order, assigns.card_variant_id))
-
-    quote = current_quote(assigns.delivery_quote, assigns.form, current_option_id(assigns))
-    # Priced on render, so it follows every change to the form, the card and the quote.
-    price = EnteredPrice.calculate(assigns.order, price_params(assigns), ok_quote(quote))
-
-    assigns =
-      assigns
-      |> assign(:price, price)
-      |> assign(:quote, charge(quote, price.free_delivery?))
-      |> assign(:preview, preview(assigns, price))
 
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -482,28 +471,30 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   def handle_event("quote_delivery", %{"value" => address}, socket) do
-    {:noreply, quote_delivery(socket, address, current_option_id(socket.assigns))}
+    {:noreply, socket |> quote_delivery(address, current_option_id(socket.assigns)) |> assign_price()}
   end
 
   def handle_event("add_line", %{"kind" => "catalogue"}, socket) do
-    {:noreply, add_line(socket, %{"kind" => "catalogue", "quantity" => "1"})}
+    {:noreply, socket |> add_line(%{"kind" => "catalogue", "quantity" => "1"}) |> assign_price()}
   end
 
   def handle_event("add_line", %{"kind" => "custom"}, socket) do
     {:noreply,
-     add_line(socket, %{"kind" => "custom", "quantity" => "1", "tax_rate_id" => socket.assigns.default_tax_rate_id})}
+     socket
+     |> add_line(%{"kind" => "custom", "quantity" => "1", "tax_rate_id" => socket.assigns.default_tax_rate_id})
+     |> assign_price()}
   end
 
   def handle_event("remove_line", %{"path" => path}, socket) do
-    {:noreply, update(socket, :form, &AshPhoenix.Form.remove_form(&1, path))}
+    {:noreply, socket |> update(:form, &AshPhoenix.Form.remove_form(&1, path)) |> assign_price()}
   end
 
   def handle_event("select_card", %{"variant-id" => variant_id}, socket) do
-    {:noreply, assign(socket, :card_variant_id, variant_id)}
+    {:noreply, socket |> assign(:card_variant_id, variant_id) |> assign_price()}
   end
 
   def handle_event("remove_card", _params, socket) do
-    {:noreply, assign(socket, :card_variant_id, nil)}
+    {:noreply, socket |> assign(:card_variant_id, nil) |> assign_price()}
   end
 
   def handle_event("save", %{"form" => params}, socket) do
@@ -550,12 +541,12 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       distance: result.distance
     }
 
-    {:noreply, assign(socket, :delivery_quote, quote)}
+    {:noreply, socket |> assign(:delivery_quote, quote) |> assign_price()}
   end
 
   def handle_async(:delivery_quote, {:ok, {address, option_id, {:ok, %{error: reason}}}}, socket) do
     quote = %{status: :error, address: address, option_id: option_id, message: DeliveryError.message(reason)}
-    {:noreply, assign(socket, :delivery_quote, quote)}
+    {:noreply, socket |> assign(:delivery_quote, quote) |> assign_price()}
   end
 
   def handle_async(:delivery_quote, {:exit, {:shutdown, :cancel}}, socket), do: {:noreply, socket}
@@ -564,7 +555,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     Logger.error("Delivery quote failed: #{inspect(result)}")
     {address, option_id} = {socket.assigns.delivery_quote.address, socket.assigns.delivery_quote.option_id}
     quote = %{status: :error, address: address, option_id: option_id, message: DeliveryError.message(:unknown)}
-    {:noreply, assign(socket, :delivery_quote, quote)}
+    {:noreply, socket |> assign(:delivery_quote, quote) |> assign_price()}
   end
 
   defp load(%{"id" => id}, actor) do
@@ -756,9 +747,9 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       |> assign_date_warning()
 
     if current_option_id(socket.assigns) == option_before do
-      {:noreply, socket}
+      {:noreply, assign_price(socket)}
     else
-      {:noreply, requote_for_new_option(socket)}
+      {:noreply, socket |> requote_for_new_option() |> assign_price()}
     end
   end
 
@@ -836,6 +827,25 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp ok_quote(%{status: :ok} = quote), do: %{fee: quote.fee, in_free_delivery_zone: quote.in_free_delivery_zone}
   defp ok_quote(_quote), do: nil
 
+  # Priced when the form, the card or the delivery quote changes, rather than
+  # on every render, as pricing looks up variants, options and tax rates.
+  defp assign_price(socket) do
+    assigns = socket.assigns
+    card = chosen_card(assigns.card_variants, assigns.order, assigns.card_variant_id)
+    quote = current_quote(assigns.delivery_quote, assigns.form, current_option_id(assigns))
+
+    price =
+      Orders.quote_entered_order!(assigns.order, price_params(assigns.form, card), ok_quote(quote),
+        actor: assigns.current_user
+      )
+
+    socket
+    |> assign(:card, card)
+    |> assign(:price, price)
+    |> assign(:quote, charge(quote, price.free_delivery?))
+    |> assign(:preview, preview(assigns, price))
+  end
+
   # What ticking the email box would send, from the form as it stands.
   defp preview(%{form: form} = assigns, price) do
     if form[:email_customer?].value in [true, "true"] and form[:customer_email].value not in [nil, ""] and
@@ -846,11 +856,18 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     end
   end
 
-  defp price_params(assigns) do
-    assigns.form
+  # The form indexes its lines by position; the action takes a list.
+  defp price_params(form, card) do
+    form
     |> AshPhoenix.Form.params()
-    |> Map.put("card_variant_id", assigns.card && assigns.card.variant_id)
+    |> Map.update("line_items", [], &lines_in_order/1)
+    |> Map.put("card_variant_id", card && card.variant_id)
   end
+
+  defp lines_in_order(lines) when is_map(lines),
+    do: lines |> Enum.sort_by(fn {index, _} -> String.to_integer(index) end) |> Enum.map(&elem(&1, 1))
+
+  defp lines_in_order(lines), do: lines
 
   # A quote for an address or option no longer in the form says nothing.
   defp current_quote(quote, form, option_id) do

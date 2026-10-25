@@ -54,6 +54,7 @@ defmodule Edenflowers.Orders do
       define :remove_line_item, action: :remove_line_item, args: [:line_item_id]
       define :place_custom_order, action: :place_custom
       define :edit_order, action: :edit
+      define :quote_entered_order, action: :quote_entered, args: [:order, :params, :delivery_quote]
       define :update_florist_note, action: :update_florist_note
       define :cancel_order, action: :cancel
       define :delete_custom_order, action: :delete_custom
@@ -72,7 +73,7 @@ defmodule Edenflowers.Orders do
       # The charged fee for a quote not yet on an order, by the order's own rule.
       define_calculation :charged_fulfillment_fee,
         calculation: :fee_for_cart,
-        args: [:quoted_fulfillment_fee, :in_free_delivery_zone, :free_delivery?]
+        args: [:quoted_fulfillment_fee, :in_free_delivery_zone, :free_delivery?, {:optional, :fulfillment_fee_override}]
     end
 
     resource Edenflowers.Orders.Order.Version

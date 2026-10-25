@@ -1061,6 +1061,17 @@ defmodule Edenflowers.Orders.Order do
       change set_attribute(:order_details_email_failed_at, &DateTime.utc_now/0)
     end
 
+    # What an order Jennie is entering or editing will cost once saved, from
+    # the params :place_custom and :edit take. Saves nothing.
+    action :quote_entered, :map do
+      # The order being edited, or nil for a new one.
+      argument :order, :struct, constraints: [instance_of: Edenflowers.Orders.Order]
+      argument :params, :map, allow_nil?: false
+      # The form's lookup for a delivery address, so nothing is geocoded here.
+      argument :delivery_quote, :map
+      run Actions.QuoteEntered
+    end
+
     action :prepare_checkout_payment, :map do
       argument :order_id, :uuid, allow_nil?: false
       run Actions.PrepareCheckoutPayment
@@ -1195,6 +1206,7 @@ defmodule Edenflowers.Orders.Order do
                      :sales_summary,
                      :place_custom,
                      :edit,
+                     :quote_entered,
                      :update_florist_note,
                      :cancel,
                      :delete_custom,
@@ -1416,14 +1428,7 @@ defmodule Edenflowers.Orders.Order do
                   (gift or is_nil(customer_phone_number))
               )
 
-    # A code stays on the order when the cart drops below its minimum, but
-    # only discounts while the cart meets it.
-    calculate :promotion_applied?,
-              :boolean,
-              expr(
-                not is_nil(promotion_id) and
-                  (is_nil(promotion_minimum_cart_total) or items_subtotal >= promotion_minimum_cart_total)
-              )
+    calculate :promotion_applied?, :boolean, Calculations.PromotionApplied
 
     # Derived from the cart rather than stored, so adding or removing a
     # free-delivery product changes it with nothing to reprice. Jennie's own
