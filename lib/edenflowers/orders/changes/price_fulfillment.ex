@@ -35,35 +35,46 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
   end
 
   @doc """
-  The fee an order is saved with, from a `Fee` result for its option and
-  address. Jennie's own fee wins. An address that couldn't be priced is a
-  result with a nil fee, which only her own fee can price.
+  What saving `changeset` sets to price its fulfillment, as `{:ok, attributes}`,
+  or `{:error, field, message}` when it can't be priced. `locate` prices an
+  address for a delivery option the way `Fulfillment.calculate_delivery/3`
+  does, as `{:ok, result}` or `{:error, reason}`, so the quote can price with
+  the lookup the form already made.
   """
-  def fee_attributes(%{fulfillment_fee: calculated, in_free_delivery_zone: in_zone}, override) do
-    %{quoted_fulfillment_fee: override || calculated, in_free_delivery_zone: in_zone}
-  end
-
-  defp apply_fee(changeset) do
+  def price(changeset, locate) do
     option_id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
 
-    case Fulfillment.get_option_by_id(option_id, authorize?: false) do
-      {:ok, option} -> apply_fee(changeset, option)
-      {:error, _} -> add_error(changeset, :fulfillment_option_id, DeliveryError.message(:unknown))
+    case option_id && Fulfillment.get_option_by_id(option_id, authorize?: false) do
+      {:ok, option} -> price(changeset, option, locate)
+      _ -> {:error, :fulfillment_option_id, DeliveryError.message(:unknown)}
     end
   end
 
-  defp apply_fee(changeset, %{fulfillment_method: :pickup} = option) do
-    changeset
-    |> Ash.Changeset.force_change_attributes(Map.from_keys(ClearDeliveryFields.fields(), nil))
-    |> set_fee(Fee.calculate(option, 0))
+  defp price(changeset, %{fulfillment_method: :pickup} = option, _locate) do
+    {:ok, Map.merge(Map.from_keys(ClearDeliveryFields.fields(), nil), fee(changeset, Fee.calculate(option, 0)))}
   end
 
-  # Only a new override reuses the stored distance; a new address or option is geocoded.
-  defp apply_fee(changeset, option) do
+  # Only a new override reuses the stored distance; a new address or option is located.
+  defp price(changeset, option, locate) do
     if needs_geocoding?(changeset) do
-      geocode(changeset, option)
+      located(changeset, locate.(Ash.Changeset.get_attribute(changeset, :delivery_address), option))
     else
       price_stored_distance(changeset, option)
+    end
+  end
+
+  defp apply_fee(changeset) do
+    case price(changeset, &geocode/2) do
+      {:ok, attributes} -> Ash.Changeset.force_change_attributes(changeset, attributes)
+      {:error, field, message} -> add_error(changeset, field, message)
+    end
+  end
+
+  defp geocode(address, option) do
+    case Fulfillment.calculate_delivery(address, option.id, authorize?: false) do
+      {:ok, %{error: nil} = result} -> {:ok, result}
+      {:ok, %{error: reason}} -> {:error, reason}
+      {:error, _} -> {:error, :unknown}
     end
   end
 
@@ -74,46 +85,35 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
       is_nil(Ash.Changeset.get_attribute(changeset, :distance))
   end
 
-  defp geocode(changeset, option) do
-    address = Ash.Changeset.get_attribute(changeset, :delivery_address)
+  defp located(changeset, {:ok, result}),
+    do: {:ok, Map.merge(Map.take(result, @geocoded_fields), fee(changeset, result))}
 
-    case Fulfillment.calculate_delivery(address, option.id, authorize?: false) do
-      {:ok, %{error: nil} = result} ->
-        changeset
-        |> Ash.Changeset.force_change_attributes(Map.take(result, @geocoded_fields))
-        |> set_fee(result)
-
-      {:ok, %{error: reason}} ->
-        unpriced(changeset, reason)
-
-      {:error, _} ->
-        unpriced(changeset, :unknown)
-    end
-  end
+  defp located(changeset, {:error, reason}), do: unpriced(changeset, reason)
 
   defp price_stored_distance(changeset, option) do
     case Fee.calculate(option, Ash.Changeset.get_attribute(changeset, :distance)) do
-      %{error: nil} = calculated -> set_fee(changeset, calculated)
+      %{error: nil} = calculated -> {:ok, fee(changeset, calculated)}
       %{error: reason} -> unpriced(changeset, reason)
     end
   end
 
+  # With her own fee Jennie can deliver to an address that can't be priced.
   defp unpriced(changeset, reason) do
     if override(changeset) do
-      changeset
-      |> Ash.Changeset.force_change_attributes(Map.from_keys(@geocoded_fields, nil))
-      |> set_fee(%{fulfillment_fee: nil, in_free_delivery_zone: false})
+      {:ok,
+       Map.merge(
+         Map.from_keys(@geocoded_fields, nil),
+         fee(changeset, %{fulfillment_fee: nil, in_free_delivery_zone: false})
+       )}
     else
-      add_error(
-        changeset,
-        :delivery_address,
-        ~t"#{reason = DeliveryError.message(reason)}. Enter your own delivery fee to deliver anyway."
-      )
+      {:error, :delivery_address,
+       ~t"#{reason = DeliveryError.message(reason)}. Enter your own delivery fee to deliver anyway."}
     end
   end
 
-  defp set_fee(changeset, calculated) do
-    Ash.Changeset.force_change_attributes(changeset, fee_attributes(calculated, override(changeset)))
+  # Jennie's own fee wins over the calculated one.
+  defp fee(changeset, %{fulfillment_fee: calculated, in_free_delivery_zone: in_zone}) do
+    %{quoted_fulfillment_fee: override(changeset) || calculated, in_free_delivery_zone: in_zone}
   end
 
   defp override(changeset), do: Ash.Changeset.get_attribute(changeset, :fulfillment_fee_override)

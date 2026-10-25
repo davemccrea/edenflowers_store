@@ -17,8 +17,6 @@ defmodule Edenflowers.Orders.Actions.QuoteEntered do
   """
   use Ash.Resource.Actions.Implementation
 
-  alias Edenflowers.Fulfillment
-  alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Calculations.LineDiscount
   alias Edenflowers.Orders.Calculations.PromotionApplied
@@ -114,10 +112,9 @@ defmodule Edenflowers.Orders.Actions.QuoteEntered do
   end
 
   defp fulfillment_fee(changeset, delivery_quote, free_delivery?) do
-    override = Ash.Changeset.get_attribute(changeset, :fulfillment_fee_override)
-
-    case quoted_fee(changeset, override, delivery_quote) do
+    case quoted_fee(changeset, delivery_quote) do
       %{quoted_fulfillment_fee: quoted, in_free_delivery_zone: in_zone} when not is_nil(quoted) ->
+        override = Ash.Changeset.get_attribute(changeset, :fulfillment_fee_override)
         Orders.charged_fulfillment_fee!(quoted, in_zone, free_delivery?, override)
 
       _ ->
@@ -125,35 +122,22 @@ defmodule Edenflowers.Orders.Actions.QuoteEntered do
     end
   end
 
-  defp quoted_fee(changeset, override, delivery_quote) do
+  defp quoted_fee(changeset, delivery_quote) do
     if PriceFulfillment.reprices?(changeset) do
-      case calculated_fee(changeset, override, delivery_quote) do
-        nil -> nil
-        calculated -> PriceFulfillment.fee_attributes(calculated, override)
+      case PriceFulfillment.price(changeset, fn _address, _option -> located(delivery_quote) end) do
+        {:ok, attributes} -> attributes
+        {:error, _field, _message} -> nil
       end
     else
       Map.take(changeset.data, [:quoted_fulfillment_fee, :in_free_delivery_zone])
     end
   end
 
-  defp calculated_fee(changeset, override, delivery_quote) do
-    option_id = Ash.Changeset.get_attribute(changeset, :fulfillment_option_id)
+  # An address the form hasn't priced yet is priced as one that can't be.
+  defp located(nil), do: {:error, :unknown}
 
-    case option_id && Fulfillment.get_option_by_id(option_id, authorize?: false) do
-      {:ok, %{fulfillment_method: :pickup} = option} ->
-        Fee.calculate(option, 0)
-
-      {:ok, _delivery} when not is_nil(delivery_quote) ->
-        %{fulfillment_fee: delivery_quote.fee, in_free_delivery_zone: delivery_quote.in_free_delivery_zone}
-
-      # An address that can't be priced, which Jennie's own fee prices.
-      {:ok, _delivery} when not is_nil(override) ->
-        %{fulfillment_fee: nil, in_free_delivery_zone: false}
-
-      _ ->
-        nil
-    end
-  end
+  defp located(delivery_quote),
+    do: {:ok, %{fulfillment_fee: delivery_quote.fee, in_free_delivery_zone: delivery_quote.in_free_delivery_zone}}
 
   defp sum(rows, key), do: Enum.reduce(rows, Decimal.new(0), &Decimal.add(Map.fetch!(&1, key), &2))
 end
