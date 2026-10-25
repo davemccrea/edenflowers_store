@@ -7,8 +7,9 @@ defmodule Edenflowers.Orders.Order.Customer do
 
   import Ash.Expr, only: [expr: 1]
 
-  alias Edenflowers.Orders.Changes
-  alias Edenflowers.Orders.Validations
+  alias Edenflowers.Orders.Changes.NotifyShop
+  alias Edenflowers.Orders.Order.Changes
+  alias Edenflowers.Orders.Order.Validations
   alias Edenflowers.Payments.Changes, as: PaymentChanges
 
   actions do
@@ -40,7 +41,7 @@ defmodule Edenflowers.Orders.Order.Customer do
       change set_attribute(:fulfillment_status, :cancelled)
       change {PaymentChanges.Cancel, cancelled_by: :customer}
       change {Changes.AdjustStock, direction: :return}
-      change {Changes.NotifyShop, notice: :cancelled}
+      change {NotifyShop, notice: :cancelled}
       require_atomic? false
     end
   end

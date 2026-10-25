@@ -70,5 +70,5 @@ config :edenflowers, :brevo_req_options, plug: {Req.Test, Edenflowers.Accounts.W
 config :edenflowers, :web_push_req_options, plug: {Req.Test, Edenflowers.WebPush}
 
 config :edenflowers, :delivery_photo_req_options,
-  plug: {Req.Test, Edenflowers.Orders.Changes.SendFulfillmentEmail},
+  plug: {Req.Test, Edenflowers.Orders.Order.Changes.SendFulfillmentEmail},
   retry: false

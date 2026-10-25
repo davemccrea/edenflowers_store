@@ -1,0 +1,110 @@
+defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmailTest do
+  use Edenflowers.DataCase, async: true
+  import Generator
+  import Swoosh.TestAssertions
+
+  alias Edenflowers.Orders
+  alias Edenflowers.Orders.Workers.SendReceiptEmail
+
+  @moduletag :typst
+
+  test "delivers the confirmation email with the PDF receipt attached and marks the order" do
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id))
+    variant = generate(product_variant(product_id: product.id, price: "39.90"))
+
+    order =
+      generate(
+        order(
+          state: :placed,
+          locale: "en-GB",
+          customer_name: "Anna Lindqvist",
+          customer_email: "anna@example.com",
+          order_reference: "TEST-OC1",
+          ordered_at: ~U[2026-05-15 12:00:00Z],
+          fulfillment_method: :pickup,
+          fulfillment_date: ~D[2026-05-20],
+          quoted_fulfillment_fee: "0"
+        )
+      )
+
+    _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+    _payment = generate(payment(order_id: order.id, amount: Decimal.new("39.90")))
+
+    assert {:ok, _order} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
+
+    assert_email_sent(fn email ->
+      assert email.to == [{"", "anna@example.com"}]
+      assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
+      assert email.subject =~ "Your Eden Flowers order for"
+      assert email.text_body =~ "Anna"
+      assert email.html_body in [nil, ""]
+      assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
+    end)
+
+    reloaded = Orders.get_order_by_id!(order.id, authorize?: false)
+    assert reloaded.receipt_emailed_at != nil
+  end
+
+  test "renders the email in the order's locale" do
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id))
+    variant = generate(product_variant(product_id: product.id, price: "39.90"))
+
+    order =
+      generate(
+        order(
+          state: :placed,
+          locale: "fi",
+          customer_name: "Anna Lindqvist",
+          customer_email: "anna@example.com",
+          order_reference: "TEST-OC2",
+          ordered_at: ~U[2026-05-15 12:00:00Z],
+          fulfillment_method: :pickup,
+          fulfillment_date: ~D[2026-05-20],
+          quoted_fulfillment_fee: "0"
+        )
+      )
+
+    _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+    _payment = generate(payment(order_id: order.id, amount: Decimal.new("39.90")))
+
+    assert {:ok, _order} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
+
+    assert_email_sent(fn email ->
+      assert email.subject =~ "Eden Flowers -tilauksesi:"
+      assert not (email.subject =~ "Your receipt")
+    end)
+  end
+
+  test "renders the email in a region-qualified locale that has no exact Gettext catalog" do
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id))
+    variant = generate(product_variant(product_id: product.id, price: "39.90"))
+
+    order =
+      generate(
+        order(
+          state: :placed,
+          locale: "sv-FI",
+          customer_name: "Anna Lindqvist",
+          customer_email: "anna@example.com",
+          order_reference: "TEST-OC3",
+          ordered_at: ~U[2026-05-15 12:00:00Z],
+          fulfillment_method: :pickup,
+          fulfillment_date: ~D[2026-05-20],
+          quoted_fulfillment_fee: "0"
+        )
+      )
+
+    _line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+    _payment = generate(payment(order_id: order.id, amount: Decimal.new("39.90")))
+
+    assert {:ok, _order} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
+
+    assert_email_sent(fn email ->
+      assert email.subject =~ "Din Eden Flowers-beställning för"
+      assert not (email.subject =~ "Your receipt")
+    end)
+  end
+end

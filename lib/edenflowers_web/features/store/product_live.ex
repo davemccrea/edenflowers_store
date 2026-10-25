@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   use EdenflowersWeb, :live_view
 
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Changes.KeepSubscriptionAlone
+  alias Edenflowers.Orders.LineItem.Changes.KeepSubscriptionAlone
   alias Edenflowers.Orders.Subscription
   alias EdenflowersWeb.Admin.Components, as: AdminComponents
   alias EdenflowersWeb.Checkout.Fields

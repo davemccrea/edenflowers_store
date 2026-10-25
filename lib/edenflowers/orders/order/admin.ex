@@ -9,9 +9,11 @@ defmodule Edenflowers.Orders.Order.Admin do
   import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
 
-  alias Edenflowers.Orders.Actions
-  alias Edenflowers.Orders.Changes
-  alias Edenflowers.Orders.Validations
+  alias Edenflowers.Orders.Changes.NotifyShop
+  alias Edenflowers.Orders.Order.Actions
+  alias Edenflowers.Orders.Order.Changes
+  alias Edenflowers.Orders.Order.Validations
+  alias Edenflowers.Orders.Validations.Holds
   alias Edenflowers.Payments.Changes, as: PaymentChanges
 
   @locales Edenflowers.Locales.all()
@@ -283,7 +285,7 @@ defmodule Edenflowers.Orders.Order.Admin do
       argument :email_customer?, :boolean, default: false
       argument :message, :string
 
-      validate {Validations.Holds, calculation: :editable?, message: "is no longer open"}
+      validate {Holds, calculation: :editable?, message: "is no longer open"}
       # On the UPDATE too, so an order cancelled or fulfilled since the check
       # matches no row and stock moves only once.
       change filter expr(editable?)
@@ -356,7 +358,7 @@ defmodule Edenflowers.Orders.Order.Admin do
       accept [:delivery_photo_slug, :email_delivery_photo]
       argument :email_customer?, :boolean, default: true
       argument :message, :string
-      validate {Validations.Holds, calculation: :fulfillable?, message: "is no longer open"}
+      validate {Holds, calculation: :fulfillable?, message: "is no longer open"}
       change set_attribute(:fulfillment_status, :fulfilled)
       change set_attribute(:email_delivery_photo, false), where: [argument_equals(:email_customer?, false)]
 
@@ -382,7 +384,7 @@ defmodule Edenflowers.Orders.Order.Admin do
     update :remind_shop do
       accept []
       change set_attribute(:shop_reminded_at, &DateTime.utc_now/0)
-      change {Changes.NotifyShop, notice: :reminder}
+      change {NotifyShop, notice: :reminder}
       require_atomic? false
     end
 

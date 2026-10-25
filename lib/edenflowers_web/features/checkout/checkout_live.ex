@@ -25,8 +25,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders.Calculations.Vat
+  alias Edenflowers.Orders.LineItem.Validations.WithinStock
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Validations.WithinStock
   alias Edenflowers.PhoneNumber
   alias Edenflowers.Translations
 

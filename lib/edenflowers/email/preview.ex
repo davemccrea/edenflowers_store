@@ -13,10 +13,10 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Accounts.Calculations.FirstName
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email
-  alias Edenflowers.Orders.Changes.SendSubscriptionCancelledEmail
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Receipt
   alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   alias Edenflowers.Payments.Changes.Cancel
   alias Edenflowers.Payments.Changes.SendPaymentReceivedEmail
   alias Edenflowers.Translations

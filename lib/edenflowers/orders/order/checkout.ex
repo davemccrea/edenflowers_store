@@ -9,9 +9,10 @@ defmodule Edenflowers.Orders.Order.Checkout do
   import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
 
-  alias Edenflowers.Orders.Actions
-  alias Edenflowers.Orders.Changes
-  alias Edenflowers.Orders.Validations
+  alias Edenflowers.Orders.Changes.NotifyShop
+  alias Edenflowers.Orders.Order.Actions
+  alias Edenflowers.Orders.Order.Changes
+  alias Edenflowers.Orders.Order.Validations
   alias Edenflowers.Payments.Changes, as: PaymentChanges
   alias Edenflowers.Payments.Validations, as: PaymentValidations
 
@@ -147,7 +148,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
       change Changes.ReportPromotionOverused
 
       change {PaymentChanges.QueueEmail, trigger: :send_receipt_email}
-      change Changes.NotifyShop
+      change NotifyShop
 
       # Starts the Subscription straight away, so the confirmation page's link
       # to it has something to show. Outside the transaction, so a failed

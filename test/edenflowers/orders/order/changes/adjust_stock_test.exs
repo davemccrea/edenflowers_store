@@ -1,0 +1,68 @@
+defmodule Edenflowers.Orders.Order.Changes.AdjustStockTest do
+  use Edenflowers.DataCase, async: true
+
+  import ExUnit.CaptureLog
+  import Generator
+
+  alias Edenflowers.Catalog.ProductVariant
+  alias Edenflowers.Orders
+
+  setup do
+    tax_rate = generate(tax_rate())
+    %{product: generate(product(tax_rate_id: tax_rate.id))}
+  end
+
+  defp fill_cart(lines, line_attrs \\ []) do
+    order = generate(order(state: :payment, payment_intent_id: "pi_test"))
+
+    for {variant, quantity} <- lines do
+      generate(line_item([order_id: order.id, product_variant_id: variant.id, quantity: quantity] ++ line_attrs))
+    end
+
+    order
+  end
+
+  defp pay(order) do
+    order = Ash.load!(order, :grand_total, authorize?: false)
+
+    {:ok, order} =
+      Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: order.grand_total}, authorize?: false)
+
+    order
+  end
+
+  defp stock(variant), do: Ash.get!(ProductVariant, variant.id, authorize?: false).stock_quantity
+
+  test "placing an Online Order takes its tracked sizes off the shelf", %{product: product} do
+    tracked = generate(product_variant(product_id: product.id, size: :small, stock_quantity: 3))
+    unlimited = generate(product_variant(product_id: product.id, size: :large))
+
+    fill_cart([{tracked, 2}, {unlimited, 4}]) |> pay()
+
+    assert stock(tracked) == 1
+    assert stock(unlimited) == nil
+  end
+
+  test "an oversold Online Order is placed, stock stops at 0 and the oversell is logged", %{product: product} do
+    tracked = generate(product_variant(product_id: product.id, stock_quantity: 2))
+    order = fill_cart([{tracked, 2}])
+
+    # Someone else buys one while this customer is paying.
+    tracked |> Ash.Changeset.for_update(:update, %{stock_quantity: 1}) |> Ash.update!(authorize?: false)
+
+    log = capture_log(fn -> assert %{state: :placed} = pay(order) end)
+
+    assert stock(tracked) == 0
+    assert log =~ "took 2 of variant #{tracked.id} with only 1 in stock"
+  end
+
+  test "the first order of a subscription takes no stock" do
+    tax_rate = generate(tax_rate())
+    product = generate(product(tax_rate_id: tax_rate.id, subscribable: true, free_delivery: true))
+    tracked = generate(product_variant(product_id: product.id, stock_quantity: 3))
+
+    fill_cart([{tracked, 1}], interval_weeks: 2) |> pay()
+
+    assert stock(tracked) == 3
+  end
+end

@@ -218,7 +218,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   @tag capture_log: true
   test "an open page shows a confirmation that failed in the background", %{conn: conn} do
-    Req.Test.stub(Edenflowers.Orders.Changes.SendFulfillmentEmail, fn conn ->
+    Req.Test.stub(Edenflowers.Orders.Order.Changes.SendFulfillmentEmail, fn conn ->
       Plug.Conn.send_resp(conn, 503, "unavailable")
     end)
 
