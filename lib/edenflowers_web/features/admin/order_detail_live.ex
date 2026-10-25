@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   require Logger
 
   import EdenflowersWeb.Admin.Components
+  import EdenflowersWeb.Admin.Drawers
   import EdenflowersWeb.Admin.OrderDetailComponents
 
   alias Edenflowers.Email.Preview

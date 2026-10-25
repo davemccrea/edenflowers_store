@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   use EdenflowersWeb, :html
 
   import EdenflowersWeb.Admin.Components
+  import EdenflowersWeb.Admin.Drawers
 
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
