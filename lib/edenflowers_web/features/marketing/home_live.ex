@@ -11,6 +11,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Translations
 
+  import EdenflowersWeb.Marketing.TrustedBy
+
   # Placeholder quotes to preview the layout; only rendered in dev until real reviews arrive.
   @sample_reviews_visible? Application.compile_env(:edenflowers, :dev_routes, false)
   @sample_reviews [
@@ -412,89 +414,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <section class="not-last:border-b">
-        <div class="container py-12 md:py-16">
-          <p class="eyebrow text-base-content/70 mb-8 text-center">{~t"Trusted by"}</p>
-          <ul class="flex flex-wrap items-center justify-center gap-x-16 gap-y-10 md:gap-x-24">
-            <li>
-              <a
-                href="https://www.dermosil.com/"
-                class="touch-target block"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Dermosil"
-              >
-                <img
-                  src="/images/logo-dermosil.svg"
-                  alt="Dermosil"
-                  width="230"
-                  height="33"
-                  loading="lazy"
-                  decoding="async"
-                  class="h-7 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
-                />
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://sfp.fi/"
-                class="touch-target block"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="SFP RKP"
-              >
-                <img
-                  src="/images/logo-sfp.svg"
-                  alt="SFP RKP"
-                  width="182"
-                  height="40"
-                  loading="lazy"
-                  decoding="async"
-                  class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
-                />
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://evl.fi/en/"
-                class="touch-target block"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={~t"Evangelical Lutheran Church of Finland"}
-              >
-                <img
-                  src="/images/logo-evl.svg"
-                  alt={~t"Evangelical Lutheran Church of Finland"}
-                  width="363"
-                  height="81"
-                  loading="lazy"
-                  decoding="async"
-                  class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
-                />
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://bnf.fi/"
-                class="touch-target block"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Bonnier News Finland"
-              >
-                <img
-                  src="/images/logo-bonnier-news.png"
-                  alt="Bonnier News Finland"
-                  width="104"
-                  height="32"
-                  loading="lazy"
-                  decoding="async"
-                  class="h-8 w-auto opacity-50 grayscale transition-opacity hover:opacity-70"
-                />
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <.trusted_by />
 
       <section :if={@reviews != []} class="not-last:border-b" aria-labelledby="reviews-heading">
         <div class="container py-20 md:py-28">
