@@ -72,7 +72,7 @@ defmodule Edenflowers.MixProject do
       {:ash, "~> 3.0"},
       {:ash_admin, "~> 1.0"},
       {:ash_archival, "~> 2.0.3"},
-      {:ash_paper_trail, "~> 0.7.0"},
+      {:ash_paper_trail, "~> 0.8.1"},
       {:ash_authentication, "~> 5.0.0-rc.8"},
       {:ash_authentication_phoenix, "~> 3.0.0-rc.4"},
       {:ash_phoenix, "~> 2.0"},
@@ -109,7 +109,7 @@ defmodule Edenflowers.MixProject do
       {:gettext, "~> 1.0"},
       {:gettext_sigils, "~> 0.5"},
       {:localize, "~> 1.2"},
-      {:localize_web, "~> 1.1"},
+      {:localize_web, "~> 1.1.0"},
       # Telemetry
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
