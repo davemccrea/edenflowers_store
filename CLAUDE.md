@@ -11,6 +11,15 @@
 - Before touching the production database directly (psql, rpc writes, data fixes) or deploying production, run `just backup` and confirm the dump landed in `tmp/`. `just deploy` does this itself. To undo, `just rollback <previous tag> <dump>` restores that dump and runs that tag's image (leave out the dump to keep the data).
 - When a commit finishes or changes a Backlog task, update the task's status (and `quick` label) in the same commit.
 
+## Ash
+
+The domain is modelled in Ash. Put domain logic in the resources, the way the Ash docs (`ash-framework` skill) prescribe, not in LiveViews, controllers or helper modules. For example:
+
+- A page needs to know what a record is or what it allows (its status, whether it can be edited). Add a calculation and have the page read it, rather than comparing fields in the template.
+- An action should only run in some states. Validate against that same calculation, so the UI and the action can't disagree.
+- Something must happen whenever an action runs. Put it in a change or hook on the action, not in the code that calls it.
+- A list should only show some records. Filter in a read action, not in the LiveView.
+
 ## Coding Standards
 
 - Only comment when the intent is non-obvious or complex. Never restate what the code does.
