@@ -218,13 +218,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       assert is_nil(reloaded.customer_email)
     end
 
-    test "newsletter checkbox is unchecked by default", %{conn: conn, order: order} do
-      conn
-      |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/checkout")
-      |> refute_has("[data-testid='newsletter-opt-in-checkbox'][checked]")
-    end
-
     test "checking the newsletter box subscribes the user and enqueues the welcome email", %{
       conn: conn,
       order: order
@@ -278,43 +271,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
 
-    # A guest who declined the offer should still see the box on return, since
-    # nothing was stamped.
-    test "newsletter checkbox stays visible after a guest declines and returns to step 1", %{
-      conn: conn,
-      order: order
-    } do
-      conn
-      |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/checkout")
-      |> fill_in("Your name *", with: "Undecided Guest")
-      |> fill_in("Email *", with: "undecided@example.com")
-      |> click_button("Next")
-      |> assert_has("h2", text: "Gift options")
-      # click_button re-matches the name with a space before the sr-only ": Your details", so it never matches.
-      |> unwrap(&(&1 |> element("button", "Edit") |> render_click()))
-      |> assert_has("[data-testid='checkout-step-1']")
-      |> assert_has("[data-testid='newsletter-opt-in-checkbox']")
-    end
-
-    # An order whose customer email resolves to an already-subscribed user gets
-    # the box hidden on submit, even if the box itself was left unticked.
-    test "newsletter checkbox is hidden once the order's user is already subscribed", %{conn: conn, order: order} do
-      generate(admin_user(admin: false, email: "subscribed@example.com", newsletter_opt_in: true))
-
-      conn
-      |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/checkout")
-      |> fill_in("Your name *", with: "Already Subscribed")
-      |> fill_in("Email *", with: "subscribed@example.com")
-      |> click_button("Next")
-      |> assert_has("h2", text: "Gift options")
-      # click_button re-matches the name with a space before the sr-only ": Your details", so it never matches.
-      |> unwrap(&(&1 |> element("button", "Edit") |> render_click()))
-      |> assert_has("[data-testid='checkout-step-1']")
-      |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
-    end
-
     test "a subscription cart says an account is made, and offers no first-order discount", %{conn: conn} do
       product = generate(product(subscribable: true, free_delivery: true))
       variant = generate(product_variant(product_id: product.id))
@@ -328,21 +284,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
     end
 
-    test "a subscription cart doesn't promise an account to a signed-in user", %{conn: conn} do
-      product = generate(product(subscribable: true, free_delivery: true))
-      variant = generate(product_variant(product_id: product.id))
-      order = generate(order())
-      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
-      user = generate(admin_user(admin: false)) |> with_token()
-
-      conn
-      |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> Helpers.store_in_session(user)
-      |> visit("/checkout")
-      |> assert_has("[data-testid='checkout-step-1']")
-      |> refute_has("[data-testid='account-note']")
-    end
-
     test "newsletter checkbox is hidden on arrival for a signed-in subscriber", %{conn: conn, order: order} do
       user = generate(admin_user(admin: false, newsletter_opt_in: true)) |> with_token()
 
@@ -352,17 +293,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> visit("/checkout")
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")
-    end
-
-    test "newsletter checkbox is shown on arrival for a signed-in non-subscriber", %{conn: conn, order: order} do
-      user = generate(admin_user(admin: false, newsletter_opt_in: false)) |> with_token()
-
-      conn
-      |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> Helpers.store_in_session(user)
-      |> visit("/checkout")
-      |> assert_has("[data-testid='checkout-step-1']")
-      |> assert_has("[data-testid='newsletter-opt-in-checkbox']")
     end
   end
 

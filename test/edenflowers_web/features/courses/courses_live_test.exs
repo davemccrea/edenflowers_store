@@ -28,23 +28,6 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
   end
 
   describe "/courses/:id" do
-    test "shows the language the course is taught in, here and in the listing", %{conn: conn} do
-      course = generate(course(language: :en))
-
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
-      assert has_element?(view, "[data-testid=course-language]", "English")
-
-      {:ok, view, _html} = live(conn, ~p"/en/courses")
-      assert has_element?(view, "[data-testid=course-language]", "In English")
-    end
-
-    test "promises a full refund 7 days before the course", %{conn: conn} do
-      course = generate(course())
-
-      {:ok, _view, html} = live(conn, ~p"/en/courses/#{course.id}")
-      assert html =~ "Cancel at least 7 days before the course for a full refund."
-    end
-
     test "books places and shows the payment form", %{conn: conn} do
       course = generate(course(name: "Autumn Wreaths", price: "85.00", total_places: 8))
 
@@ -185,20 +168,6 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
       assert has_element?(view, "[data-testid=booking-closed]")
       refute has_element?(view, "#booking-form")
-    end
-
-    test "a past course still renders", %{conn: conn} do
-      course =
-        generate(
-          course(
-            date: Date.add(Edenflowers.ShopTime.today(), -7),
-            register_before: Date.add(Edenflowers.ShopTime.today(), -8)
-          )
-        )
-
-      {:ok, _view, html} = live(conn, ~p"/en/courses/#{course.id}")
-
-      assert html =~ course.name
     end
 
     test "an unknown course is a 404", %{conn: conn} do

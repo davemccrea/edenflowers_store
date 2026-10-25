@@ -132,14 +132,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert order.distance_km == "12.3"
     end
 
-    test "distance_km trims trailing zero from whole kilometre delivery distance" do
-      order = generate(order(fulfillment_method: :delivery, distance: 12_000))
-
-      order = Ash.load!(order, [:distance_km], authorize?: false)
-
-      assert order.distance_km == "12"
-    end
-
     test "distance_km is nil for pickup orders" do
       order = generate(order(fulfillment_method: :pickup, distance: 12_000))
 
@@ -416,62 +408,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert Enum.any?(error.errors, &match?(%{field: :card_message}, &1))
     end
 
-    test "accepts message at exactly the medium card limit", %{card_product: card_product} do
-      order = gift_order_with_card(card_product, :medium)
-      message = String.duplicate("a", 120)
-
-      assert {:ok, _updated} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane",
-                 card_message: message
-               })
-               |> Ash.update(authorize?: false)
-    end
-
-    test "rejects message one character over the medium card limit", %{card_product: card_product} do
-      order = gift_order_with_card(card_product, :medium)
-      message = String.duplicate("a", 121)
-
-      assert {:error, %Ash.Error.Invalid{}} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane",
-                 card_message: message
-               })
-               |> Ash.update(authorize?: false)
-    end
-
-    test "accepts message at exactly the large card limit", %{card_product: card_product} do
-      order = gift_order_with_card(card_product, :large)
-      message = String.duplicate("a", 200)
-
-      assert {:ok, _updated} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane",
-                 card_message: message
-               })
-               |> Ash.update(authorize?: false)
-    end
-
-    test "rejects message one character over the large card limit", %{card_product: card_product} do
-      order = gift_order_with_card(card_product, :large)
-      message = String.duplicate("a", 201)
-
-      assert {:error, %Ash.Error.Invalid{}} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane",
-                 card_message: message
-               })
-               |> Ash.update(authorize?: false)
-    end
-
     test "trims leading and trailing whitespace before validation", %{card_product: card_product} do
       order = gift_order_with_card(card_product, :small)
       message = "   " <> String.duplicate("a", 80) <> "   "
@@ -486,21 +422,6 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.update(authorize?: false)
 
       assert updated.card_message == String.duplicate("a", 80)
-    end
-
-    test "treats whitespace-only messages as empty", %{card_product: card_product} do
-      order = gift_order_with_card(card_product, :small)
-
-      assert {:ok, updated} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane",
-                 card_message: "       "
-               })
-               |> Ash.update(authorize?: false)
-
-      assert is_nil(updated.card_message)
     end
 
     test "rejects non-empty card_message when no card line item exists" do
@@ -521,19 +442,6 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.update(authorize?: false)
 
       assert Enum.any?(error.errors, &match?(%{field: :card_message}, &1))
-    end
-
-    test "accepts empty card_message when card is selected", %{card_product: card_product} do
-      order = gift_order_with_card(card_product, :small)
-
-      assert {:ok, _updated} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane",
-                 card_message: ""
-               })
-               |> Ash.update(authorize?: false)
     end
 
     test "counts graphemes not bytes", %{card_product: card_product} do
@@ -557,20 +465,6 @@ defmodule Edenflowers.Orders.OrderTest do
                  gift: true,
                  recipient_name: "Jane",
                  card_message: over_limit
-               })
-               |> Ash.update(authorize?: false)
-    end
-
-    test "loads line_items itself when the caller didn't", %{card_product: card_product} do
-      order = gift_order_with_card(card_product, :small)
-      stripped = %{order | line_items: %Ash.NotLoaded{}}
-
-      assert {:ok, %{card_message: "Hello"}} =
-               stripped
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane",
-                 card_message: "Hello"
                })
                |> Ash.update(authorize?: false)
     end

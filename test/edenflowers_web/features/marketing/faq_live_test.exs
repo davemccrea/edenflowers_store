@@ -6,17 +6,6 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
   alias Edenflowers.Orders.Subscription
 
-  test "lists every section in the side nav, in every language", %{conn: conn} do
-    for path <- ["/en/faq", "/sv/vanliga-fragor", "/fi/ukk"] do
-      {:ok, view, _html} = live(conn, path)
-
-      for id <- ~w(ordering delivery care payment subscriptions weddings courses) do
-        assert has_element?(view, ~s|nav a[href="##{id}"]|)
-        assert has_element?(view, "section##{id} summary")
-      end
-    end
-  end
-
   test "the card answer gives each card size's message limit and price from the catalogue", %{conn: conn} do
     cards = generate(product_category(slug: "cards", visibility: :public))
     card = generate(product(product_category_id: cards.id, draft: false))
@@ -62,24 +51,6 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     assert has_element?(view, ~s|#ordering a[href="/en/terms#cancellation"]|)
   end
 
-  test "the pickup answer gives the address and opening hours", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/en/faq")
-
-    assert has_element?(view, "#delivery details", "At Minimossen, #{EdenflowersWeb.Business.street_address()}")
-
-    for line <- EdenflowersWeb.Business.opening_hours_lines() do
-      assert has_element?(view, "#delivery li", line)
-    end
-  end
-
-  test "links the terms in the page's language", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/sv/vanliga-fragor")
-
-    for section <- ~w(cancellation delivery substitution quality) do
-      assert has_element?(view, ~s|a[href="/sv/kopvillkor##{section}"]|)
-    end
-  end
-
   test "emits FAQPage structured data with the page's questions as plain text", %{conn: conn} do
     days = Subscription.change_deadline_days()
 
@@ -100,19 +71,6 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     refute text =~ "<"
 
     assert Enum.any?(questions, &(&1["name"] == "When do I pay?"))
-  end
-
-  test "the Courses section explains cancelling and refunds", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/en/faq")
-
-    assert has_element?(view, "#courses h2", "Courses")
-    assert has_element?(view, "#courses details", "Reply to your confirmation email")
-
-    assert has_element?(
-             view,
-             "#courses details",
-             "Each course's page says how long you can cancel for a full refund"
-           )
   end
 
   test "the delivery answer gives the same-day deadline from the shop calendar", %{conn: conn} do

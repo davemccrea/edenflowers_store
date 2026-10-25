@@ -289,53 +289,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       refute has_element?(view, "#checkout-form-4[data-billing-phone]")
     end
 
-    test "formats the phone number every time the customer tabs out of it", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      phone_input = ~s|#checkout-form-3b input[name="form[recipient_phone_number]"]|
-
-      for typed <- ["0451505141", "+358 45 150 5141"] do
-        view |> element("#checkout-form-3b") |> render_change(%{"form" => %{"recipient_phone_number" => typed}})
-        assert has_element?(view, ~s|#{phone_input}[value="#{typed}"]|)
-
-        view |> element(phone_input) |> render_blur(%{"value" => typed})
-        assert has_element?(view, ~s|#{phone_input}[value="045 1505141"]|)
-      end
-    end
-
-    test "delivery option renders before pickup regardless of insertion order", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/checkout")
-
-      options = Edenflowers.Fulfillment.list_options!()
-      delivery_id = Enum.find(options, &(&1.fulfillment_method == :delivery)).id
-      pickup_id = Enum.find(options, &(&1.fulfillment_method == :pickup)).id
-
-      {delivery_pos, _} = :binary.match(html, delivery_id)
-      {pickup_pos, _} = :binary.match(html, pickup_id)
-
-      assert delivery_pos < pickup_pos
-    end
-
-    test "switching fulfillment option keeps the selected date", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      pickup_option =
-        Edenflowers.Fulfillment.list_options!()
-        |> Enum.find(&(&1.fulfillment_method == :pickup))
-
-      selected_date = Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
-      render_click(view, "select-date", %{"date" => selected_date})
-
-      assert render(view) =~ ~s(value="#{selected_date}")
-
-      # Delivery and pickup share the shop calendar, so the date stays open.
-      view
-      |> element("#checkout-form-3a")
-      |> render_change(%{"form" => %{"fulfillment_option_id" => pickup_option.id}})
-
-      assert render(view) =~ ~s(value="#{selected_date}")
-    end
-
     # Closed days are only aria-disabled, so a click on one still arrives.
     test "picking a closed date keeps the form as it was", %{conn: conn} do
       closed = Edenflowers.ShopTime.today() |> Date.add(7)

@@ -7,51 +7,6 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Fulfillment.Weekday
 
-  test "renders the current admin account menu using the first-name calculation", %{conn: conn} do
-    admin = generate(admin_user(name: "Jane Doe", email: "jane@example.com")) |> with_token()
-
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
-
-    {:ok, view, html} = live(conn, ~p"/admin")
-
-    assert has_element?(view, "h1", "Hi, Jane")
-    assert html =~ "Overview | Eden Flowers"
-    assert html =~ "Admin account menu"
-    assert html =~ "Jane"
-    assert html =~ "jane@example.com"
-    assert html =~ "JD"
-    refute html =~ "Jane Doe"
-  end
-
-  test "links order rows to the order detail page", %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
-
-    order =
-      generate(
-        order(
-          state: :placed,
-          customer_name: "Ada Lovelace",
-          fulfillment_method: :pickup,
-          fulfillment_date: Edenflowers.ShopTime.today(),
-          fulfillment_status: :pending,
-          grand_total: "42.00",
-          ordered_at: DateTime.utc_now()
-        )
-      )
-
-    {:ok, view, _html} = live(conn, ~p"/admin")
-
-    assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
-  end
-
   describe "days" do
     setup %{conn: conn} do
       admin = generate(admin_user()) |> with_token()

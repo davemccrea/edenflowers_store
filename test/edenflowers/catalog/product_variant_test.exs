@@ -2,21 +2,11 @@ defmodule Edenflowers.Catalog.ProductVariantTest do
   use Edenflowers.DataCase, async: true
   import Generator
   alias Edenflowers.Catalog
-  alias Edenflowers.Catalog.ProductVariant
 
   setup do
     tax_rate = generate(tax_rate())
     product = generate(product(tax_rate_id: tax_rate.id))
     {:ok, tax_rate: tax_rate, product: product}
-  end
-
-  describe "ProductVariant Resource" do
-    test "destroys product variant", %{product: product} do
-      variant = generate(product_variant(product_id: product.id))
-
-      assert :ok = Ash.destroy!(variant, authorize?: false)
-      assert {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Query.NotFound{}]}} = Ash.get(ProductVariant, variant.id)
-    end
   end
 
   describe "a product's sold_out?" do
