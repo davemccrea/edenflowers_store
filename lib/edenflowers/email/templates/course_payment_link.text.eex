@@ -10,8 +10,6 @@
 <%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
 
-<%= gettext("To cancel, reply to this email.") %> <%= Edenflowers.Courses.Course.cancellation_terms(@registration.course) %>
-
 <%= gettext("See you there,") %>
 
 <%= signature() %>
