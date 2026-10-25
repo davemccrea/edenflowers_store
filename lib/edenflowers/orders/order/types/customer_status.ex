@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.Order.CustomerStatus do
+defmodule Edenflowers.Orders.Order.Types.CustomerStatus do
   @moduledoc """
   Where an order stands, as its customer reads it beside its date. A past date
   Jennie hasn't marked fulfilled stays scheduled: it never claims a delivery

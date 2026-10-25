@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.QuoteEnteredTest do
+defmodule Edenflowers.Orders.Actions.QuoteEnteredTest do
   use Edenflowers.DataCase, async: true
 
   import Generator

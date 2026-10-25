@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.Order.PaymentStatus do
+defmodule Edenflowers.Orders.Order.Types.PaymentStatus do
   @moduledoc """
   The pending, paid, and refunded payment states of an order.
   """

@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.SubscriptionHeadsUpTest do
+defmodule Edenflowers.Orders.Changes.SendSubscriptionHeadsUpEmailTest do
   use Edenflowers.DataCase, async: true
   import Generator
   import Swoosh.TestAssertions

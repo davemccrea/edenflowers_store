@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.AdjustStockTest do
+defmodule Edenflowers.Orders.Changes.AdjustStockTest do
   use Edenflowers.DataCase, async: true
 
   import ExUnit.CaptureLog

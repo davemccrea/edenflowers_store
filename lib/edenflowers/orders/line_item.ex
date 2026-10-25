@@ -1,3 +1,35 @@
+defmodule Edenflowers.Orders.LineItem.OrderNotPlaced do
+  @moduledoc """
+  Authorizes a LineItem create only when the target Order is still in checkout.
+  Filter-expression checks (`forbid_if expr(order.state == :placed)`) cannot be
+  used on creates because there is no row to filter; this check resolves the
+  related order at policy-evaluation time instead.
+  """
+  use Ash.Policy.SimpleCheck
+
+  alias Edenflowers.Orders
+
+  @impl true
+  def describe(_opts), do: "order is not in :placed state"
+
+  @impl true
+  def match?(_actor, %{changeset: %Ash.Changeset{} = changeset}, _opts) do
+    case Ash.Changeset.get_attribute(changeset, :order_id) do
+      nil ->
+        false
+
+      order_id ->
+        case Orders.get_order_by_id(order_id, authorize?: false) do
+          {:ok, %{state: :placed}} -> false
+          {:ok, _} -> true
+          {:error, _} -> false
+        end
+    end
+  end
+
+  def match?(_, _, _), do: false
+end
+
 defmodule Edenflowers.Orders.LineItem do
   @moduledoc """
   A cart or order line. Catalogue lines snapshot product details and price; custom-order lines may be described and priced by Jennie.
@@ -108,7 +140,7 @@ defmodule Edenflowers.Orders.LineItem do
     # Filter expressions can't authorize creates (no row to filter yet), so a
     # custom check resolves the parent order's state at evaluation time.
     policy action_type(:create) do
-      authorize_if Edenflowers.Orders.Checks.OrderNotPlaced
+      authorize_if __MODULE__.OrderNotPlaced
     end
 
     policy action_type([:update, :destroy]) do

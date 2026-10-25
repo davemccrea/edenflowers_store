@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.CreateOccurrenceTest do
+defmodule Edenflowers.Orders.Changes.CreateOccurrenceTest do
   use Edenflowers.DataCase, async: false
 
   require Ash.Query
