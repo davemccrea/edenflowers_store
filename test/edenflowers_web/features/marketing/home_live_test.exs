@@ -70,4 +70,36 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
       nil -> nil
     end
   end
+
+  describe "footer newsletter signup" do
+    use Oban.Testing, repo: Edenflowers.Repo
+
+    test "subscribes the address and queues its welcome code", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/en")
+
+      view |> form("#newsletter-form", %{"email_address" => "footer@example.com"}) |> render_submit()
+
+      assert render(view) =~ "Your 15% off code is on its way"
+      {:ok, user} = Edenflowers.Accounts.get_user_by_email("footer@example.com", authorize?: false)
+      assert user.newsletter_opt_in
+
+      assert_enqueued(
+        worker: Edenflowers.Pricing.Workers.SendNewsletterPromoEmail,
+        args: %{"email" => "footer@example.com"}
+      )
+    end
+
+    test "a failed signup promises no code", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/en")
+
+      ExUnit.CaptureLog.capture_log(fn ->
+        view |> form("#newsletter-form", %{"email_address" => ""}) |> render_submit()
+      end)
+
+      refute has_element?(view, "#newsletter-signup-form", "Your 15% off code is on its way")
+      assert has_element?(view, "#newsletter-form")
+      assert has_element?(view, "#newsletter-form [role=alert]", "There was an error subscribing to the newsletter.")
+      refute_enqueued(worker: Edenflowers.Pricing.Workers.SendNewsletterPromoEmail)
+    end
+  end
 end

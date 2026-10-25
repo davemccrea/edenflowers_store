@@ -677,6 +677,30 @@ defmodule Edenflowers.Orders.OrderTest do
       refute_enqueued(worker: SendNewsletterPromoEmail)
     end
 
+    test "a failed signup is logged and leaves the order submitted" do
+      order = Orders.create_for_checkout!(authorize?: false)
+      order = Ash.Seed.update!(order, %{locale: "xx"})
+
+      log =
+        ExUnit.CaptureLog.capture_log(fn ->
+          assert {:ok, updated_order} =
+                   order
+                   |> Ash.Changeset.for_update(:submit_contact_details, %{
+                     customer_name: "Unlucky",
+                     customer_email: "unlucky@example.com",
+                     newsletter_opt_in: true
+                   })
+                   |> Ash.update(authorize?: false)
+
+          assert updated_order.state == :gift_options
+        end)
+
+      assert log =~ "Newsletter opt-in for order #{order.id} failed"
+      {:ok, user} = Accounts.get_user_by_email("unlucky@example.com", authorize?: false)
+      refute user.newsletter_opt_in
+      refute_enqueued(worker: SendNewsletterPromoEmail)
+    end
+
     test "an already-subscribed user hides the offer even when the box is left unticked" do
       Ash.Seed.seed!(User, %{name: "Existing", email: "existing@example.com", newsletter_opt_in: true})
       order = Orders.create_for_checkout!(authorize?: false)

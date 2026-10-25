@@ -12,6 +12,7 @@ defmodule Edenflowers.Accounts.User do
 
   alias Edenflowers.Accounts.Calculations
   alias Edenflowers.Accounts.Changes
+  alias Edenflowers.Pricing.Workers.SendNewsletterPromoEmail
 
   authentication do
     add_ons do
@@ -122,6 +123,15 @@ defmodule Edenflowers.Accounts.User do
       upsert? true
       upsert_identity :unique_email
       change set_attribute(:newsletter_opt_in, true)
+
+      # The welcome/promotion job is inserted in the same transaction, so an
+      # opt-in never commits without its email queued. Returning subscribers
+      # get it too; the worker sends them the "already subscribed" wording.
+      change after_action(fn _changeset, user, _context ->
+               with {:ok, _job} <-
+                      SendNewsletterPromoEmail.enqueue(%{"email" => to_string(user.email), "locale" => user.locale}),
+                    do: {:ok, user}
+             end)
     end
 
     update :update_avatar do
