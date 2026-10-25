@@ -24,6 +24,8 @@ defmodule Edenflowers.Courses do
       define :list_my_registrations, action: :mine
       define :list_unsettled_registrations, action: :unsettled
       define :register_for_course, action: :register
+      define :get_checkout_registration, action: :checkout, get_by: [:id, :course_id]
+      define :revise_registration, action: :revise
       define :add_registration_manually, action: :add_manually
       define :get_registration_by_id, action: :read, get_by: [:id]
       define :add_registration_payment_intent_id, action: :add_payment_intent_id, args: [:payment_intent_id]

@@ -67,16 +67,29 @@ defmodule EdenflowersWeb.Courses.CourseBookingLiveTest do
       refute render(view) =~ "To cancel"
     end
 
-    test "a failed redirect payment discards the unpaid registration and returns to the course", %{conn: conn} do
-      registration = generate(course_registration(status: :pending))
+    test "a failed redirect payment returns to the course with the same checkout to pay again", %{conn: conn} do
+      registration = generate(course_registration(status: :pending, payment_intent_id: "pi_failed"))
 
       assert {:error, {:live_redirect, %{to: to, flash: %{"error" => error}}}} =
                live(conn, ~p"/courses/bookings/#{registration.id}?redirect_status=failed")
 
-      assert to == "/en/courses/#{registration.course_id}"
+      assert to == "/en/courses/#{registration.course_id}?registration=#{registration.id}"
       assert error =~ "Your payment didn't go through"
 
-      assert {:error, _discarded} = Courses.get_registration_by_id(registration.id, authorize?: false)
+      {:ok, view, _html} = live(conn, to)
+      assert has_element?(view, ~s|#course-payment-form[data-return-path="/courses/bookings/#{registration.id}"]|)
+    end
+
+    test "a link to someone else's course or a paid booking resumes no checkout", %{conn: conn} do
+      registration = generate(course_registration(status: :pending))
+      paid = generate(course_registration(status: :confirmed, course_id: registration.course_id))
+      other_course = generate(course())
+
+      for {course_id, id} <- [{other_course.id, registration.id}, {paid.course_id, paid.id}, {other_course.id, "x"}] do
+        {:ok, view, _html} = live(conn, ~p"/en/courses/#{course_id}?registration=#{id}")
+        assert has_element?(view, "#booking-form")
+        refute has_element?(view, "#course-payment-form")
+      end
     end
 
     test "an unknown booking goes back to the courses", %{conn: conn} do

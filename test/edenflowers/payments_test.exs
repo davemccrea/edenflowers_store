@@ -442,18 +442,24 @@ defmodule Edenflowers.PaymentsTest do
       )
     end
 
-    test "rejects course underpayments and overpayments without confirming or enqueueing", %{registration: registration} do
-      for amount <- [8_500, 17_001] do
-        assert {:error, {:amount_mismatch, id, _expected, _actual}} =
-                 Payments.complete(course_intent(registration, amount))
+    # The customer paid for one place, then changed the booking to two before
+    # the payment landed: two places are booked and Jennie collects the rest.
+    test "confirms an underpaid booking and leaves the rest to collect", %{registration: registration} do
+      log = capture_log(fn -> assert {:ok, :completed} = Payments.complete(course_intent(registration, 8_500)) end)
 
-        assert id == registration.id
-      end
+      assert log =~ "Amount mismatch"
+      assert [unsettled] = Courses.list_unsettled_registrations!(authorize?: false)
+      assert %{id: id, status: :confirmed, seats: 2} = unsettled
+      assert id == registration.id
+      assert Decimal.eq?(unsettled.balance, "85.00")
+      assert_enqueued(worker: SendCourseConfirmationEmail, args: %{"primary_key" => %{"id" => registration.id}})
+    end
 
-      assert %{status: :pending, confirmed_at: nil} =
-               Courses.get_registration_by_id!(registration.id, authorize?: false)
+    test "confirms an overpaid booking and leaves the excess to refund", %{registration: registration} do
+      capture_log(fn -> assert {:ok, :completed} = Payments.complete(course_intent(registration, 25_500)) end)
 
-      refute_enqueued(worker: SendCourseConfirmationEmail)
+      assert [%{status: :confirmed} = unsettled] = Courses.list_unsettled_registrations!(authorize?: false)
+      assert Decimal.eq?(unsettled.balance, "-85.00")
     end
 
     test "a stale order cannot complete twice or replace its reference", %{order: order} do

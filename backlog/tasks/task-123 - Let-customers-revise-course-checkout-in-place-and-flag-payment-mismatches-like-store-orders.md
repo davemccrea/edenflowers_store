@@ -3,9 +3,10 @@ id: TASK-123
 title: >-
   Let customers revise course checkout in place and flag payment mismatches like
   store orders
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-25 14:12'
+updated_date: '2026-10-25 14:37'
 labels:
   - spec
   - customers
@@ -51,11 +52,19 @@ The product decision above was explicitly agreed in conversation. This ticket re
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Going back during unpaid checkout preserves and prefills name, email and places; continuing revises the same registration ID without deleting/recreating it or cancelling its PaymentIntent just to edit details.
-- [ ] #2 Revision validation, pricing, customer association and pending-only mutation rules live in Ash actions/changes. A stale revision cannot modify a registration that has been confirmed meanwhile.
-- [ ] #3 A subsequent payment attempt updates/reuses the PaymentIntent through existing shared payment behaviour; a failed attempt remains retryable without creating a second registration or falsely claiming payment is being confirmed.
-- [ ] #4 A succeeded payment confirms the pending registration even when underpaid or overpaid, records the actual amount once, reports the mismatch using the existing store pattern, and queues confirmation once. Duplicate webhook/reconciliation delivery cannot duplicate money or booking confirmation.
-- [ ] #5 The accepted EUR 85 one-place payment versus revised EUR 170 two-place booking confirms two places and exposes EUR 85 to collect through existing admin settlement/attention views; the reverse exposes the excess to refund without automatically refunding it.
-- [ ] #6 Regression tests cover ordinary back/edit/retry, failed-payment returns, both revision-versus-confirmation orderings, underpayment, overpayment and duplicate completion. Deletion safeguards for cleanup, invite withdrawal and Custom Orders remain covered; precommit passes.
-- [ ] #7 Domain documentation records the mismatch trade-off and confirms that customer editing/cancellation of confirmed bookings remains unavailable.
+- [x] #1 Going back during unpaid checkout preserves and prefills name, email and places; continuing revises the same registration ID without deleting/recreating it or cancelling its PaymentIntent just to edit details.
+- [x] #2 Revision validation, pricing, customer association and pending-only mutation rules live in Ash actions/changes. A stale revision cannot modify a registration that has been confirmed meanwhile.
+- [x] #3 A subsequent payment attempt updates/reuses the PaymentIntent through existing shared payment behaviour; a failed attempt remains retryable without creating a second registration or falsely claiming payment is being confirmed.
+- [x] #4 A succeeded payment confirms the pending registration even when underpaid or overpaid, records the actual amount once, reports the mismatch using the existing store pattern, and queues confirmation once. Duplicate webhook/reconciliation delivery cannot duplicate money or booking confirmation.
+- [x] #5 The accepted EUR 85 one-place payment versus revised EUR 170 two-place booking confirms two places and exposes EUR 85 to collect through existing admin settlement/attention views; the reverse exposes the excess to refund without automatically refunding it.
+- [x] #6 Regression tests cover ordinary back/edit/retry, failed-payment returns, both revision-versus-confirmation orderings, underpayment, overpayment and duplicate completion. Deletion safeguards for cleanup, invite withdrawal and Custom Orders remain covered; precommit passes.
+- [x] #7 Domain documentation records the mismatch trade-off and confirms that customer editing/cancellation of confirmed bookings remains unavailable.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Added CourseRegistration :revise (filtered to unpaid checkouts at the database, so a revision after confirmation is a StaleRecord) and a :checkout read for resuming one. Change booking reopens a prefilled for_update form; Pay runs Payments.update_amount before setup, as store checkout does. A failed redirect return keeps the checkout and resumes it at /courses/:id?registration=<id>. confirm_payment no longer rejects mismatches: MatchesPaymentAmount, the AmountMismatch error and its handlers are gone, and Orders' ReportAmountMismatch moved to Payments.Changes (total_due vs amount_paid) for both resources. DiscardRegistration stays for invite withdrawal and the nightly purge.
+
+Tests: removed the discard-based Change booking and failed-return tests (5 web, 1 booking page), the mismatch rejection tests in payments and the webhook handler, and two discard tests duplicated by discard_registration_test. Added revise domain tests (reprices same id, revision then payment books revised places, payment then revision is refused, invites untouchable), underpay/overpay via Payments.complete with the unsettled list, web back/edit/retry with PaymentIntent amount update, stale edit redirect, failed-return resume and resume scoping. mix precommit passes: 1659 tests, 0 failures. Checked Change booking in the browser. Live Stripe amount updates not exercised.
+<!-- SECTION:NOTES:END -->

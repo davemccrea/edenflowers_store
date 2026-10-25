@@ -190,12 +190,31 @@ defmodule Edenflowers.Courses.CourseRegistration do
               )
     end
 
+    # The checkout a customer is paying for on the course page, so a failed
+    # payment's return can pick it up again.
+    read :checkout do
+      get? true
+      filter expr(status == :pending and is_nil(payment_link_token))
+    end
+
     create :register do
       accept [:name, :email, :seats, :course_id, :locale]
       validate attribute_in(:locale, @locales)
       change Changes.UpsertUser
       change Changes.PriceBooking
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
+    end
+
+    # Going back at checkout keeps the registration, and the PaymentIntent it
+    # may already have, which is brought up to the new price before paying.
+    # The filter refuses a booking confirmed meanwhile at the database: a
+    # payment that wins books what was registered when it landed.
+    update :revise do
+      accept [:name, :email, :seats]
+      change filter expr(status == :pending and is_nil(payment_link_token))
+      change Changes.UpsertUser
+      change Changes.PriceBooking
+      require_atomic? false
     end
 
     # Someone Jennie invites to book, with a payment link, even after online
@@ -216,20 +235,22 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     # Paying at checkout or through an invite's link. Webhook deliveries are
     # at-least-once, so a repeat must not confirm twice. A course that filled
-    # up meanwhile still books them: they've paid, and Jennie makes room.
+    # up meanwhile still books them: they've paid, and Jennie makes room. So
+    # does a payment for other places than the booking now has, revised while
+    # it was in flight: the difference is left as a balance for Jennie.
     update :confirm_payment do
       argument :payment_intent_id, :string, allow_nil?: false
       argument :amount_paid, :decimal, allow_nil?: false
       argument :paid_with, :map, default: %{}
       validate Validations.NotAlreadyConfirmed
       validate PaymentValidations.MatchesPaymentIntent
-      validate Validations.MatchesPaymentAmount
       change transition_state(:confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       # The PaymentIntent is spent and kept on its Payment. Left here,
       # cancelling the booking would ask Stripe to cancel a paid PaymentIntent.
       change set_attribute(:payment_intent_id, nil)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
+      change PaymentChanges.ReportAmountMismatch
       change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email}
 
       require_atomic? false
@@ -370,7 +391,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :send_reminder_email,
                      :reconcile_payment,
                      :discard,
-                     :discard_or_retain
+                     :discard_or_retain,
+                     :checkout
                    ])
 
       authorize_if action_type(:read)
@@ -380,13 +402,15 @@ defmodule Edenflowers.Courses.CourseRegistration do
       authorize_if always()
     end
 
-    policy action(:register) do
+    # A checkout is reached by its unguessable id, as the bookings page is,
+    # and :revise only touches one still unpaid.
+    policy action([:register, :revise]) do
       authorize_if always()
     end
 
     # Every registration is linked to the user with its email, so a customer
-    # sees their bookings, guest or not, once that email signs in.
-    # Customers never update a registration: payment confirms it.
+    # sees their bookings, guest or not, once that email signs in. Past
+    # checkout, payment confirms it and only Jennie changes it.
     policy action_type(:read) do
       authorize_if expr(user_id == ^actor(:id))
     end

@@ -403,15 +403,6 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       end)
     end
 
-    test "logs and acknowledges a mismatched amount without confirming the booking", %{registration: registration} do
-      log = capture_log(fn -> assert :ok = course_succeeded(registration, 8_500) end)
-
-      assert log =~ "amount mismatch"
-      assert Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false).status == :pending
-
-      refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
-    end
-
     test "records a partial refund from the Stripe dashboard once", %{registration: registration} do
       assert :ok = course_succeeded(registration, 17_000)
 

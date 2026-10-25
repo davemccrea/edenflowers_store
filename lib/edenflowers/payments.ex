@@ -35,7 +35,6 @@ defmodule Edenflowers.Payments do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments.Errors.AlreadyPaid
-  alias Edenflowers.Payments.Errors.AmountMismatch
   alias Edenflowers.Payments.Errors.PaymentIntentMismatch
   alias Edenflowers.Payments.Payment
   alias Edenflowers.Translations
@@ -240,9 +239,9 @@ defmodule Edenflowers.Payments do
   end
 
   @doc """
-  Completes whatever a succeeded PaymentIntent paid for. Orders keep the
-  amount paid and flag mismatches for follow-up. Course bookings require
-  the received amount to match the amount reserved.
+  Completes whatever a succeeded PaymentIntent paid for. The amount paid is
+  kept even when it differs from what is owed, and the difference is left as
+  a balance for Jennie to collect or refund.
 
   Returns `{:ok, :completed}` when this call completed it, or
   `{:ok, :already_completed}`.
@@ -282,9 +281,6 @@ defmodule Edenflowers.Payments do
 
       mismatch = find_error(error, PaymentIntentMismatch) ->
         {:error, {:payment_intent_mismatch, id, mismatch.expected, mismatch.actual}}
-
-      mismatch = find_error(error, AmountMismatch) ->
-        {:error, {:amount_mismatch, id, mismatch.expected, mismatch.actual}}
 
       true ->
         {:error, {:payment_update_failed, id, error}}

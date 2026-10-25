@@ -91,14 +91,6 @@ defmodule EdenflowersWeb.Webhooks.StripeHandler do
     :ok
   end
 
-  defp handle_error({:error, {:amount_mismatch, id, expected, actual}}, event) do
-    Logger.error(
-      "Stripe #{event.type} event #{event.id}: amount mismatch for #{id} (expected: #{expected} EUR, got: #{actual} EUR)"
-    )
-
-    :ok
-  end
-
   # Returning :error makes Stripe retry, and the action rolled back, so nothing is half-done.
   defp handle_error({:error, {:payment_update_failed, id, reason}}, event) do
     Logger.error("Failed to update payment for #{id} on Stripe #{event.type} event #{event.id}: #{inspect(reason)}")
