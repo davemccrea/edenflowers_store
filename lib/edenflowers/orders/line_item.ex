@@ -178,15 +178,7 @@ defmodule Edenflowers.Orders.LineItem do
                 )
               )
 
-    calculate :discount,
-              :decimal,
-              expr(
-                if(
-                  promotion_applied?,
-                  do: round(subtotal * order.discount_rate, 2),
-                  else: 0
-                )
-              )
+    calculate :discount, :decimal, Edenflowers.Orders.Calculations.LineDiscount
 
     # `unit_price` is stored tax-inclusive.
     calculate :unit_price_ex_tax, :decimal, expr(round(unit_price / (1 + tax_rate), 2))

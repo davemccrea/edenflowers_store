@@ -22,11 +22,25 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
 
   @impl true
   def change(changeset, _opts, _context) do
-    if changeset.action_type == :create or Enum.any?(@priced_by, &Ash.Changeset.changing_attribute?(changeset, &1)) do
+    if reprices?(changeset) do
       Ash.Changeset.before_action(changeset, &apply_fee/1)
     else
       changeset
     end
+  end
+
+  @doc "Whether saving `changeset` prices fulfillment afresh, rather than keeping the order's fee."
+  def reprices?(changeset) do
+    changeset.action_type == :create or Enum.any?(@priced_by, &Ash.Changeset.changing_attribute?(changeset, &1))
+  end
+
+  @doc """
+  The fee an order is saved with, from a `Fee` result for its option and
+  address. Jennie's own fee wins. An address that couldn't be priced is a
+  result with a nil fee, which only her own fee can price.
+  """
+  def fee_attributes(%{fulfillment_fee: calculated, in_free_delivery_zone: in_zone}, override) do
+    %{quoted_fulfillment_fee: override || calculated, in_free_delivery_zone: in_zone}
   end
 
   defp apply_fee(changeset) do
@@ -98,11 +112,8 @@ defmodule Edenflowers.Orders.Changes.PriceFulfillment do
     end
   end
 
-  defp set_fee(changeset, %{fulfillment_fee: calculated, in_free_delivery_zone: in_zone}) do
-    Ash.Changeset.force_change_attributes(changeset,
-      quoted_fulfillment_fee: override(changeset) || calculated,
-      in_free_delivery_zone: in_zone
-    )
+  defp set_fee(changeset, calculated) do
+    Ash.Changeset.force_change_attributes(changeset, fee_attributes(calculated, override(changeset)))
   end
 
   defp override(changeset), do: Ash.Changeset.get_attribute(changeset, :fulfillment_fee_override)

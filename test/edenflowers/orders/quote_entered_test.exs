@@ -1,4 +1,4 @@
-defmodule Edenflowers.Orders.EnteredPriceTest do
+defmodule Edenflowers.Orders.QuoteEnteredTest do
   use Edenflowers.DataCase, async: true
 
   import Generator
@@ -7,7 +7,6 @@ defmodule Edenflowers.Orders.EnteredPriceTest do
   alias Edenflowers.External.HereAPI
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.EnteredPrice
 
   setup :verify_on_exit!
 
@@ -92,7 +91,7 @@ defmodule Edenflowers.Orders.EnteredPriceTest do
   test "prices catalogue, custom and card lines and pickup as saving does", ctx do
     params = params(ctx, %{"gift" => "true", "recipient_name" => "Ada", "card_variant_id" => ctx.card.id})
 
-    price = EnteredPrice.calculate(nil, params, nil)
+    price = Orders.quote_entered_order!(nil, params, nil, actor: ctx.admin)
     {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
 
     assert [
@@ -112,7 +111,7 @@ defmodule Edenflowers.Orders.EnteredPriceTest do
     stub_distance(5000)
     params = params(ctx, %{"fulfillment_option_id" => ctx.delivery.id, "delivery_address" => "Kyrkvägen 5"})
 
-    price = EnteredPrice.calculate(nil, params, delivery_quote(ctx.delivery, 5000))
+    price = Orders.quote_entered_order!(nil, params, delivery_quote(ctx.delivery, 5000), actor: ctx.admin)
     {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
 
     assert Decimal.equal?(price.fulfillment_fee, "10.00")
@@ -131,7 +130,7 @@ defmodule Edenflowers.Orders.EnteredPriceTest do
         "line_items" => [%{"kind" => "catalogue", "product_variant_id" => free_variant.id, "quantity" => "1"}]
       })
 
-    price = EnteredPrice.calculate(nil, params, delivery_quote(ctx.delivery, 1000))
+    price = Orders.quote_entered_order!(nil, params, delivery_quote(ctx.delivery, 1000), actor: ctx.admin)
     {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
 
     assert price.free_delivery?
@@ -142,7 +141,7 @@ defmodule Edenflowers.Orders.EnteredPriceTest do
   test "charges Jennie's own fee as she set it", ctx do
     params = params(ctx, %{"fulfillment_fee_override" => "12.50"})
 
-    price = EnteredPrice.calculate(nil, params, nil)
+    price = Orders.quote_entered_order!(nil, params, nil, actor: ctx.admin)
     {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
 
     assert Decimal.equal?(price.fulfillment_fee, "12.50")
@@ -166,7 +165,7 @@ defmodule Edenflowers.Orders.EnteredPriceTest do
         "fulfillment_option_id" => ctx.delivery.id
       })
 
-    price = EnteredPrice.calculate(order, edit, nil)
+    price = Orders.quote_entered_order!(order, edit, nil, actor: ctx.admin)
     {:ok, edited} = Orders.edit_order(order, edit, actor: ctx.admin)
 
     assert [%{name: "Spring Bouquet", quantity: 3, total: total}] = price.lines
@@ -186,10 +185,86 @@ defmodule Edenflowers.Orders.EnteredPriceTest do
         ]
       })
 
-    price = EnteredPrice.calculate(nil, params, nil)
+    price = Orders.quote_entered_order!(nil, params, nil, actor: ctx.admin)
 
     assert [%{name: "Spring Bouquet"}] = price.lines
     assert price.fulfillment_fee == nil
     assert Decimal.equal?(price.total, "49.00")
+  end
+
+  test "saves, stocks and emails nothing", ctx do
+    stocked = generate(product_variant(product_id: ctx.variant.product_id, size: :large, stock_quantity: 5))
+
+    params =
+      params(ctx, %{
+        "customer_email" => "holm@example.com",
+        "line_items" => [%{"kind" => "catalogue", "product_variant_id" => stocked.id, "quantity" => "2"}]
+      })
+
+    Orders.quote_entered_order!(nil, params, nil, actor: ctx.admin)
+
+    assert Ash.read!(Orders.Order, authorize?: false) == []
+    assert Ash.get!(Edenflowers.Catalog.ProductVariant, stocked.id, authorize?: false).stock_quantity == 5
+
+    refute Enum.any?(
+             Ash.read!(Edenflowers.Accounts.User, authorize?: false),
+             &(to_string(&1.email) == "holm@example.com")
+           )
+
+    assert all_enqueued() == []
+  end
+
+  describe "an order with a promotion" do
+    # 15 % off from 20.00. Each line's discount is rounded to cents on its
+    # own: 1.50 off each 10.03, where the whole 20.06 would take 3.01 off.
+    setup ctx do
+      product = generate(product(tax_rate_id: ctx.flowers.id, name: "Posy", free_delivery: false))
+      posy = generate(product_variant(product_id: product.id, price: "10.03"))
+
+      custom = %{
+        "kind" => "custom",
+        "product_name" => "Buttonhole",
+        "unit_price" => "10,03",
+        "tax_rate_id" => ctx.reduced.id,
+        "quantity" => "1"
+      }
+
+      posy_params = %{"kind" => "catalogue", "product_variant_id" => posy.id, "quantity" => "1"}
+      params = params(ctx, %{"line_items" => [posy_params, custom]})
+      {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
+
+      promotion = generate(promotion(discount_rate: "0.15", minimum_cart_total: "20.00"))
+
+      Ash.Seed.update!(order, %{
+        promotion_id: promotion.id,
+        discount_rate: Decimal.new("0.15"),
+        promotion_minimum_cart_total: Decimal.new("20.00")
+      })
+
+      order = Orders.get_order_for_admin!(order.id, actor: ctx.admin)
+      posy_line = Enum.find(order.line_items, & &1.product_variant_id)
+
+      %{order: order, params: params, kept_posy: %{"id" => posy_line.id, "quantity" => "1"}, custom: custom}
+    end
+
+    test "discounts an edit that meets the minimum, line by line", ctx do
+      edit = Map.put(ctx.params, "line_items", [ctx.kept_posy, ctx.custom])
+
+      price = Orders.quote_entered_order!(ctx.order, edit, nil, actor: ctx.admin)
+      {:ok, edited} = Orders.edit_order(ctx.order, edit, actor: ctx.admin)
+
+      assert Decimal.equal?(price.total, "17.06")
+      assert_priced_as_saved(price, edited)
+    end
+
+    test "leaves an edit below the minimum undiscounted", ctx do
+      edit = Map.put(ctx.params, "line_items", [ctx.kept_posy])
+
+      price = Orders.quote_entered_order!(ctx.order, edit, nil, actor: ctx.admin)
+      {:ok, edited} = Orders.edit_order(ctx.order, edit, actor: ctx.admin)
+
+      assert Decimal.equal?(price.total, "10.03")
+      assert_priced_as_saved(price, edited)
+    end
   end
 end
