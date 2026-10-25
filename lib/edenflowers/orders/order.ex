@@ -424,7 +424,7 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :distance_km, :string, Calculations.DistanceKm do
       description "The snapshotted delivery distance, stored in metres, as a kilometre string rounded to a tenth " <>
-                    "and with no trailing zero: 12345 is \"12.3\", 5000 is \"5\". Nil for a pickup or when no " <>
+                    ~s(and with no trailing zero: 12345 is "12.3", 5000 is "5". Nil for a pickup or when no ) <>
                     "distance was measured."
     end
 
@@ -507,7 +507,10 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :open?,
               :boolean,
-              expr(fulfillment_status == :pending or (fulfillment_status == :fulfilled and payment_status == :pending)) do
+              expr(
+                fulfillment_status == :pending or
+                  (fulfillment_status == :fulfilled and payment_status == :pending)
+              ) do
       description "Still to make, or made but still to be paid for. The admin orders table's Open filter."
     end
 
