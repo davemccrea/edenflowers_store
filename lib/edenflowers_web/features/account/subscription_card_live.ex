@@ -12,7 +12,6 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
   import EdenflowersWeb.StripeForm, only: [stripe_form: 1]
 
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Subscription
   alias Edenflowers.Payments
   alias EdenflowersWeb.Checkout.Fields
 
@@ -22,17 +21,15 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
   def mount(%{"id" => id} = params, _session, socket) do
     user = socket.assigns.current_user
 
-    case Orders.get_subscription(id, actor: user) do
+    case Orders.get_subscription(id, actor: user, load: [:unpaid_occurrence]) do
       {:ok, %{state: state} = subscription} when state != :cancelled ->
         # `replace_card` settles nothing already owed, so the unpaid Occurrence
         # still needs its payment link, even once the new card restarts it.
-        unpaid = Subscription.unpaid_occurrence(Orders.list_my_orders!(actor: user), subscription)
-
         socket =
           socket
           |> assign(:page_title, ~t"Update your card")
           |> assign(:subscription, subscription)
-          |> assign(:unpaid, unpaid)
+          |> assign(:unpaid, subscription.unpaid_occurrence)
           |> assign(:payment_unavailable?, false)
 
         if connected?(socket),

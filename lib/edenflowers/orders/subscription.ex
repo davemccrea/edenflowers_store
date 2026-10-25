@@ -34,37 +34,16 @@ defmodule Edenflowers.Orders.Subscription do
   def intervals, do: @intervals
 
   @doc """
-  The day a closed subscription opens to changes again: the occurrence job
-  creates the next Occurrence then and moves on to the following date.
+  The day the occurrence job charges the card for a delivery on `date`. Checkout
+  quotes it before the subscription exists; a subscription has `charged_on`.
   """
-  def changes_reopen_on(%{next_fulfillment_date: date}), do: charged_on(date)
-
-  @doc "The day the occurrence job charges the card for a delivery on `date`."
   def charged_on(date), do: Date.add(date, -@lead_days)
-
-  @doc "Whether a customer can still change an occurrence scheduled for `date`."
-  def changes_open_for?(date) do
-    Date.after?(date, Date.add(Edenflowers.ShopTime.today(), @cutoff_days))
-  end
-
-  @doc "The next delivery date a paused subscription would get if it resumed today."
-  def resume_date(%{next_fulfillment_date: date, interval_weeks: weeks}) do
-    Changes.StepToScheduledDate.scheduled_date(date, weeks, @change_deadline_days)
-  end
 
   def lead_days, do: @lead_days
 
   def cutoff_days, do: @cutoff_days
 
   def change_deadline_days, do: @change_deadline_days
-
-  @doc "The last day a customer can change or cancel a delivery on `date`."
-  def change_deadline(date), do: Date.add(date, -@change_deadline_days)
-
-  @doc "The subscription's Occurrence still waiting on its payment link, among `orders`."
-  def unpaid_occurrence(orders, %{id: id}) do
-    Enum.find(orders, &(&1.subscription_id == id and &1.payment_link_open?))
-  end
 
   @doc "Starts a subscription held at `:payment_failed` making Occurrences again."
   def reactivate_if_held(%{state: :payment_failed} = subscription) do
@@ -183,7 +162,7 @@ defmodule Edenflowers.Orders.Subscription do
 
     read :admin_list do
       pagination offset?: true, keyset?: true, countable: true, required?: false
-      prepare build(sort: [next_fulfillment_date: :asc], load: [:user, :product_variant])
+      prepare build(sort: [next_fulfillment_date: :asc], load: [:next_delivery_date, :user, :product_variant])
     end
 
     # Held until Jennie sorts out the card: no Occurrence is made meanwhile.
@@ -192,19 +171,21 @@ defmodule Edenflowers.Orders.Subscription do
       prepare build(sort: [next_fulfillment_date: :asc], load: [:user, product_variant: :product])
     end
 
-    # A cancelled subscription drops off the account page a month after.
     read :mine do
       # A cancelled one stays only while its final delivery is still on its way.
-      filter expr(
-               user_id == ^actor(:id) and
-                 (state != :cancelled or
-                    exists(orders, fulfillment_status != :cancelled and fulfillment_date >= helsinki_today()))
-             )
+      filter expr(user_id == ^actor(:id) and (state != :cancelled or exists(booked_occurrence, true)))
 
       prepare build(
                 sort: [inserted_at: :asc],
                 load: [
                   :changes_closed?,
+                  :changeable?,
+                  :charged_on,
+                  :changes_reopen_on,
+                  :resume_date,
+                  :next_delivery_date,
+                  booked_occurrence: [:changes_open?],
+                  unpaid_occurrence: [:grand_total],
                   product_variant: [product: :product_variants]
                 ]
               )
@@ -409,9 +390,44 @@ defmodule Edenflowers.Orders.Subscription do
     belongs_to :product_variant, Edenflowers.Catalog.ProductVariant, allow_nil?: false
     belongs_to :fulfillment_option, Edenflowers.Fulfillment.FulfillmentOption, allow_nil?: false
     has_many :orders, Edenflowers.Orders.Order
+
+    # The Occurrence whose card was refused, still waiting on its payment link.
+    has_one :unpaid_occurrence, Edenflowers.Orders.Order do
+      from_many? true
+      filter expr(payment_link_open?)
+      sort fulfillment_date: :asc
+    end
+
+    # The occurrence job books each delivery ahead of its date, after which
+    # `next_fulfillment_date` has already moved on to the one after.
+    has_one :booked_occurrence, Edenflowers.Orders.Order do
+      from_many? true
+      filter expr(fulfillment_status != :cancelled and fulfillment_date >= helsinki_today())
+      sort fulfillment_date: :asc
+    end
   end
 
   calculations do
+    # Only an active subscription has an Occurrence coming.
+    calculate :next_delivery_date, :date, expr(if(state == :active, do: next_fulfillment_date, else: nil))
+
+    calculate :charged_on, :date, expr(date_add(next_fulfillment_date, ^(-@lead_days), :day))
+
+    # The last day a customer can change or cancel the next delivery.
+    calculate :change_deadline, :date, expr(date_add(next_fulfillment_date, ^(-@change_deadline_days), :day))
+
+    # A closed subscription opens to changes again on the day the occurrence job
+    # creates the next Occurrence and moves on to the following date.
+    calculate :changes_reopen_on, :date, expr(charged_on)
+
+    # The next delivery date a paused subscription would get if it resumed today.
+    calculate :resume_date,
+              :date,
+              {Edenflowers.Orders.Calculations.ScheduledDate, days_from_today: @change_deadline_days}
+
+    # Whether the customer can pause, resume or change it now.
+    calculate :changeable?, :boolean, expr(state in [:active, :paused] and not changes_closed?)
+
     # True from the day after the change deadline, counted in Helsinki days.
     # Only an active subscription has an Occurrence coming.
     calculate :changes_closed?,

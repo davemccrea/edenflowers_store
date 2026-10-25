@@ -1525,6 +1525,17 @@ defmodule Edenflowers.Orders.Order do
                   not exists(payments, method != :stripe)
               )
 
+    # An Occurrence still to come that its customer can change or call off.
+    # The deadline counts from the date the subscription made it for, which is
+    # earlier than its fulfillment date when that day was closed.
+    calculate :changes_open?,
+              :boolean,
+              expr(
+                fulfillment_date > helsinki_today() and
+                  (subscription_date || fulfillment_date) >
+                    date_add(helsinki_today(), ^Subscription.cutoff_days(), :day)
+              )
+
     calculate :cancellable_until,
               :date,
               expr(date_add(fulfillment_date, ^(-Subscription.change_deadline_days()), :day))

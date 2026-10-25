@@ -15,7 +15,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Subscription
   alias Edenflowers.RateLimiter
   alias Edenflowers.ShopTime
   alias Edenflowers.Translations
@@ -83,7 +82,6 @@ defmodule EdenflowersWeb.Account.AccountLive do
               module={SubscriptionManager}
               id={"subscription-#{subscription.id}"}
               subscription={subscription}
-              orders={@orders}
               locale={@locale}
               open_days={@open_days}
               current_user={@current_user}
@@ -491,7 +489,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     <div class="min-w-0">
       <h3 class="card-heading text-balance">{SubscriptionManager.subscription_name(@subscription)}</h3>
       <p class="text-base-content/70 mt-1 text-sm">
-        {~t"Subscription"} · {~t"Charged #{date = Format.day_month(Subscription.charged_on(@subscription.next_fulfillment_date), @locale)}"}
+        {~t"Subscription"} · {~t"Charged #{date = Format.day_month(@subscription.charged_on, @locale)}"}
       </p>
     </div>
     <.entry_price price={@subscription.product_variant.price} locale={@locale} />
@@ -669,8 +667,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
     # A delivery already booked is an order above; this is the one after it.
     subscription_entries =
-      for subscription <- subscriptions, subscription.state == :active do
-        %{type: :subscription, item: subscription, date: subscription.next_fulfillment_date, upcoming?: true}
+      for subscription <- subscriptions, subscription.next_delivery_date do
+        %{type: :subscription, item: subscription, date: subscription.next_delivery_date, upcoming?: true}
       end
 
     {upcoming, past} = Enum.split_with(order_entries ++ course_entries ++ subscription_entries, & &1.upcoming?)

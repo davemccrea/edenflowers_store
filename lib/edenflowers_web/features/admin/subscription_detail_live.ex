@@ -105,10 +105,10 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
                 <.summary_fact label={~t"Next delivery"}>
                   <%!-- Only an active subscription makes orders; resuming works out a fresh date. --%>
-                  <span :if={@subscription.state == :active} class="tabular-nums">
-                    {Format.weekday_day_month(@subscription.next_fulfillment_date, @locale)}
+                  <span :if={@subscription.next_delivery_date} class="tabular-nums">
+                    {Format.weekday_day_month(@subscription.next_delivery_date, @locale)}
                   </span>
-                  <.blank :if={@subscription.state != :active} />
+                  <.blank :if={!@subscription.next_delivery_date} />
                 </.summary_fact>
                 <.summary_fact label={~t"Method"}>
                   <.fulfillment_method
@@ -341,6 +341,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
       load: [
         :user,
         :fulfillment_option,
+        :next_delivery_date,
         paper_trail_versions: [:user],
         product_variant: [product: :product_variants]
       ]
