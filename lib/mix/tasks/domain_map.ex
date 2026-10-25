@@ -15,6 +15,8 @@ defmodule Mix.Tasks.DomainMap do
 
   @dir "tmp/domain-map"
 
+  @timestamps [:inserted_at, :created_at, :updated_at]
+
   @domain_colours %{
     "Accounts" => {"#dbeafe", "#1d4ed8"},
     "Catalog" => {"#dcfce7", "#15803d"},
@@ -42,11 +44,13 @@ defmodule Mix.Tasks.DomainMap do
     resources = Enum.reject(all_resources, &(&1 in version_resources))
 
     app_sections = [
-      {"overview", "Relationships",
-       "Every resource and how they link. <code>||</code> exactly one, <code>|o</code> zero or one, <code>o{</code> zero or more. Labels are the relationship name.",
-       er_diagram(resources, fields?: false), legend(domains)},
+      {"overview", "Relationships", "Every resource and how they link, with how many records sit on each side.",
+       er_diagram(resources, fields?: false), domain_key(domains) <> er_key()},
       {"fields", "Fields", "The same map with every attribute, private ones included.",
-       er_diagram(resources, fields?: true), legend(domains)}
+       er_diagram(resources, fields?: true),
+       domain_key(domains) <>
+         er_key() <>
+         "<p>Fields run primary key (<b>PK</b>), foreign keys (<b>FK</b>, with the table each points to), the rest, then timestamps.</p>"}
     ]
 
     domain_sections =
@@ -65,7 +69,7 @@ defmodule Mix.Tasks.DomainMap do
           |> Ash.Domain.Info.Diagram.mermaid_class_diagram()
           |> without_classes(Enum.filter(Ash.Domain.Info.resources(domain), &(&1 in version_resources)))
 
-        {String.downcase(name), name, resource_names, diagram, ""}
+        {String.downcase(name), name, resource_names, diagram, class_key()}
       end)
       |> Enum.sort_by(&elem(&1, 1))
 
@@ -73,8 +77,8 @@ defmodule Mix.Tasks.DomainMap do
     File.mkdir_p!(@dir)
     File.write!(Path.join(@dir, "index.html"), index_page(app_sections, domain_sections, resources))
 
-    for {id, title, _intro, diagram, legend} <- app_sections ++ domain_sections do
-      File.write!(Path.join(@dir, "#{id}.html"), diagram_page(title, diagram, legend))
+    for {id, title, _intro, diagram, key} <- app_sections ++ domain_sections do
+      File.write!(Path.join(@dir, "#{id}.html"), diagram_page(title, diagram, key))
     end
 
     Mix.shell().info("Wrote #{@dir}/index.html")
@@ -129,14 +133,47 @@ defmodule Mix.Tasks.DomainMap do
     lines |> Enum.reverse() |> Enum.join("\n")
   end
 
-  defp legend(domains) do
-    domains
-    |> Enum.map(&(&1 |> Module.split() |> List.last()))
-    |> Enum.sort()
-    |> Enum.map_join(fn domain ->
-      {fill, stroke} = Map.fetch!(@domain_colours, domain)
-      ~s(<span style="background:#{fill};border:1px solid #{stroke}">#{domain}</span>)
-    end)
+  defp domain_key(domains) do
+    chips =
+      domains
+      |> Enum.map(&(&1 |> Module.split() |> List.last()))
+      |> Enum.sort()
+      |> Enum.map_join(fn domain ->
+        {fill, stroke} = Map.fetch!(@domain_colours, domain)
+        ~s(<span class="chip" style="background:#{fill};border-color:#{stroke}">#{domain}</span>)
+      end)
+
+    ~s(<div class="chips">#{chips}</div>)
+  end
+
+  # The crow's-foot ends Mermaid draws, so the key matches the diagram
+  defp er_key do
+    one = ~s(<line x1="34" y1="2" x2="34" y2="14"/><line x1="39" y1="2" x2="39" y2="14"/>)
+    zero_or_one = ~s(<circle cx="30" cy="8" r="3.5" fill="#fff"/><line x1="39" y1="2" x2="39" y2="14"/>)
+
+    zero_or_many =
+      ~s(<circle cx="30" cy="8" r="3.5" fill="#fff"/><line x1="36" y1="8" x2="44" y2="2"/><line x1="36" y1="8" x2="44" y2="14"/>)
+
+    row = fn marker, text ->
+      ~s(<tr><td><svg width="44" height="16" stroke="#333" fill="none"><line x1="0" y1="8" x2="44" y2="8"/>#{marker}</svg></td><td>#{text}</td></tr>)
+    end
+
+    """
+    <table>
+      #{row.(one, "exactly one")}
+      #{row.(zero_or_one, "zero or one")}
+      #{row.(zero_or_many, "zero or more")}
+    </table>
+    <p>Read the end next to a table as how many of that table each record at the other end has. A line from Order to LineItem with exactly one at Order and zero or more at LineItem: each line item belongs to one order, and an order has any number of line items.</p>
+    <p>The text on a line is the relationship's name on the parent, e.g. <code>line_items</code>.</p>
+    """
+  end
+
+  defp class_key do
+    """
+    <p>A line means the two resources are related. Ash draws it without direction or cardinality.</p>
+    <p>Each box lists its public relationships: <code>Type[] name</code> is many, <code>Type name</code> is one. The Relationships page on the index has the full picture.</p>
+    """
   end
 
   # Drawn from the parent's side, so the label and the child's cardinality come
@@ -183,19 +220,32 @@ defmodule Mix.Tasks.DomainMap do
 
   defp entity(resource, false), do: entity_node(resource)
 
+  # Mermaid can't put headings inside a box, so the fields are grouped by
+  # order: primary key, foreign keys (noting the table each points to), the
+  # rest, then timestamps.
   defp entity(resource, true) do
     foreign_keys =
       for rel <- Ash.Resource.Info.relationships(resource),
           rel.type == :belongs_to,
-          into: MapSet.new(),
-          do: rel.source_attribute
+          into: %{},
+          do: {rel.source_attribute, rel.destination}
 
     attributes =
-      Enum.map(Ash.Resource.Info.attributes(resource), fn attribute ->
+      resource
+      |> Ash.Resource.Info.attributes()
+      |> Enum.sort_by(fn attribute ->
+        cond do
+          attribute.primary_key? -> 0
+          Map.has_key?(foreign_keys, attribute.name) -> 1
+          attribute.name in @timestamps -> 3
+          true -> 2
+        end
+      end)
+      |> Enum.map(fn attribute ->
         key =
           cond do
             attribute.primary_key? -> " PK"
-            attribute.name in foreign_keys -> " FK"
+            destination = foreign_keys[attribute.name] -> ~s( FK "#{destination |> Module.split() |> List.last()}")
             true -> ""
           end
 
@@ -243,12 +293,12 @@ defmodule Mix.Tasks.DomainMap do
   end
 
   defp links(sections) do
-    Enum.map_join(sections, fn {id, title, intro, _diagram, _legend} ->
+    Enum.map_join(sections, fn {id, title, intro, _diagram, _key} ->
       ~s(<li><a href="#{id}.html">#{title}</a>: #{intro}</li>)
     end)
   end
 
-  defp diagram_page(title, diagram, legend) do
+  defp diagram_page(title, diagram, key) do
     """
     <!doctype html>
     <html lang="en">
@@ -256,13 +306,18 @@ defmodule Mix.Tasks.DomainMap do
     <meta charset="utf-8">
     <title>#{title}: Eden Flowers</title>
     <style>
-      html, body, pre { margin: 0; height: 100%; }
-      .legend { position: fixed; top: 8px; left: 8px; display: flex; gap: 4px; font: 12px system-ui, sans-serif; }
-      .legend span { padding: 2px 6px; border-radius: 3px; }
+      html, body { margin: 0; height: 100%; }
+      body { display: flex; }
+      pre { margin: 0; flex: 1; min-width: 0; }
+      .key { flex: 0 0 260px; overflow: auto; border-right: 1px solid #ccc; padding: 8px 12px; font: 12px/1.4 system-ui, sans-serif; }
+      .key summary { font-weight: 600; cursor: pointer; }
+      .key p { margin: 6px 0; }
+      .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+      .chip { padding: 1px 6px; border: 1px solid; border-radius: 3px; }
     </style>
     </head>
     <body>
-    <div class="legend">#{legend}</div>
+    <details class="key" open><summary>Key</summary>#{key}</details>
     <pre class="mermaid">#{Phoenix.HTML.html_escape(diagram) |> Phoenix.HTML.safe_to_string()}</pre>
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     <script type="module">
@@ -272,7 +327,7 @@ defmodule Mix.Tasks.DomainMap do
       mermaid.initialize({ startOnLoad: false, layout: "elk" });
       await mermaid.run();
 
-      const svg = document.querySelector("svg");
+      const svg = document.querySelector("pre.mermaid svg");
       svg.style.maxWidth = "none";
       svg.setAttribute("width", "100%");
       svg.setAttribute("height", "100%");
