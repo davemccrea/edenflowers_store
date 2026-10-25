@@ -59,6 +59,8 @@ Order finalization and the confirmation email depend on `payment_intent.succeede
 - `mix ash_postgres.generate_migrations NAME`: generate migrations from the Ash resources
 - `mix gettext.extract` then `mix gettext.merge priv/gettext`: update the .pot and .po files
 
+Adding a language means adding it in three places, whose defaults differ on purpose (`sv-FI` is the shop's locale, `en` is the source text's): `Edenflowers.Locales`, `config :localize`'s `supported_locales`, and `EdenflowersWeb.Gettext`'s `locales`. Then add `priv/gettext/<language>/LC_MESSAGES/{default,routes}.po`. `Edenflowers.PinsTest` fails if the lists disagree.
+
 ### Papra expense capture
 
 Tag a document `receipt` in [Papra](https://papra.app). Its webhook hits `/webhook/papra`, the app sends the document to Claude to extract the expense, then tags it `processed` and renames it after the receipt date and vendor (`2026-10-23 Kukkatukku Oy.pdf`). Correcting the date or vendor in admin renames it again. Deleting the expense in admin removes both tags. The `processed` tag must already exist, and the API key needs `documents:read`, `documents:update` and `tags:read`.
