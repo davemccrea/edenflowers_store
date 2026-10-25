@@ -102,7 +102,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           </:subtitle>
           <:actions>
             <.button
-              :if={@order.fulfillment_status == :pending}
+              :if={@order.fulfillable?}
               type="button"
               phx-click="confirm_fulfillment"
               variant="primary"
@@ -111,7 +111,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               {if @order.fulfillment_method == :delivery, do: ~t"Mark as delivered", else: ~t"Mark as collected"}
             </.button>
             <.button
-              :if={@order.fulfillment_status == :pending}
+              :if={@order.editable?}
               navigate={~p"/admin/orders/#{@order.id}/edit"}
               variant="secondary"
               size="sm"
@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         </.admin_page_header>
 
         <.confirm_fulfillment
-          :if={@order.fulfillment_status == :pending}
+          :if={@order.fulfillable?}
           form={@fulfillment_form}
           error={@fulfillment_error}
           order={@order}
@@ -133,7 +133,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           preview={@preview}
         />
         <.cancel_drawer
-          :if={@order.fulfillment_status == :pending}
+          :if={@order.cancellable?}
           title={~t"Cancel order"}
           submit_label={~t"Cancel order"}
           keep_label={~t"Keep order"}
@@ -1197,7 +1197,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp payment_link_buttons(assigns) do
     ~H"""
     <.button
-      :if={reminder?(@order)}
+      :if={@order.payment_reminder_sendable?}
       type="button"
       phx-click="open_email"
       phx-value-kind="payment_reminder"
@@ -1253,14 +1253,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp order_menu(assigns) do
     assigns =
       assigns
-      |> assign(:paid?, assigns.order.payment_status == :paid)
+      |> assign(:paid?, assigns.order.receipt_available?)
       |> assign(:email_details_unavailable, email_details_unavailable(assigns.order))
       |> assign(:no_email, no_email(assigns.order))
       |> assign(:receipt_unavailable, receipt_unavailable(assigns.order))
       |> assign(:confirmation_unavailable, confirmation_unavailable(assigns.order))
       |> assign(:paid_through_stripe?, paid_through_stripe?(assigns.payments))
       |> assign(:cancel_unavailable, cancel_unavailable(assigns.order))
-      |> assign(:deletable?, assigns.order.origin == :custom and assigns.payments == [])
 
     ~H"""
     <.actions_menu id="order-actions" class="w-56">
@@ -1292,7 +1291,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       <% end %>
 
       <.actions_menu_button
-        :if={reminder?(@order)}
+        :if={@order.payment_reminder_sendable?}
         menu="order-actions"
         phx-click="open_email"
         phx-value-kind="payment_reminder"
@@ -1347,7 +1346,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       </.unavailable_menu_item>
 
       <.actions_menu_button
-        :if={@deletable?}
+        :if={@order.deletable?}
         menu="order-actions"
         phx-click="delete_order"
         data-confirm={~t"Delete this order for good? Nothing about it is kept."}
@@ -1390,7 +1389,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp confirmation_unavailable(%{fulfillment_status: :fulfilled} = order), do: no_email(order)
   defp confirmation_unavailable(_order), do: ~t"Not fulfilled yet"
 
-  defp receipt_unavailable(%{payment_status: :paid}), do: nil
+  defp receipt_unavailable(%{receipt_available?: true}), do: nil
   defp receipt_unavailable(%{payment_status: :refunded}), do: ~t"The order was refunded"
   defp receipt_unavailable(_order), do: ~t"Not paid"
 
@@ -1437,12 +1436,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         Logger.error("Payment reminder for order #{order.id} not sent: #{inspect(error)}")
         {:error, ~t"Could not send the email. Try again in a moment."}
     end
-  end
-
-  # Not for an order paid by invoice: Jennie's invoice is its reminder.
-  defp reminder?(order) do
-    order.customer_email != nil and order.fulfillment_status != :cancelled and order.payment_terms != :invoice and
-      Decimal.positive?(order.balance)
   end
 
   # The refund forms fill themselves in from what's owed back, so an empty
@@ -1498,7 +1491,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp no_email(%{customer_email: nil}), do: ~t"No email address"
   defp no_email(_order), do: nil
 
-  defp cancel_unavailable(%{fulfillment_status: :pending}), do: nil
+  defp cancel_unavailable(%{cancellable?: true}), do: nil
   defp cancel_unavailable(%{fulfillment_status: :fulfilled}), do: ~t"Already fulfilled"
   defp cancel_unavailable(%{fulfillment_status: :cancelled}), do: ~t"Already cancelled"
 

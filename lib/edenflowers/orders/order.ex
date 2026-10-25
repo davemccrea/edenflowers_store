@@ -12,6 +12,28 @@ defmodule Edenflowers.Orders.Order.FulfillmentStatus do
   use Ash.Type.Enum, values: [:pending, :fulfilled, :cancelled]
 end
 
+defmodule Edenflowers.Orders.Order.CustomerStatus do
+  @moduledoc """
+  Where an order stands, as its customer reads it beside its date. A past date
+  Jennie hasn't marked fulfilled stays scheduled: it never claims a delivery
+  the data doesn't support.
+  """
+  use Ash.Type.Enum,
+    values: [
+      :refunded,
+      :cancelled,
+      :confirmed,
+      :collected,
+      :delivered,
+      :ready_today,
+      :arriving_today,
+      :for_pickup,
+      :arriving,
+      :pickup_scheduled,
+      :delivery_scheduled
+    ]
+end
+
 defmodule Edenflowers.Orders.Order.Origin do
   @moduledoc """
   An online order comes through checkout; a custom order is entered by Jennie
@@ -126,6 +148,12 @@ defmodule Edenflowers.Orders.Order do
     :discount,
     :distance_km,
     :missing_delivery_phone?,
+    :cancellable?,
+    :editable?,
+    :fulfillable?,
+    :deletable?,
+    :payment_reminder_sendable?,
+    :receipt_available?,
     :promotion,
     :fulfillment_option,
     line_items: [:subtotal, :total]
@@ -429,7 +457,10 @@ defmodule Edenflowers.Orders.Order do
                   :payment_link_open?,
                   :amount_paid,
                   :cancellable_by_customer?,
-                  :cancellable_until
+                  :cancellable_until,
+                  :customer_status,
+                  :upcoming?,
+                  :receipt_available?
                 ]
               )
     end
@@ -500,7 +531,8 @@ defmodule Edenflowers.Orders.Order do
                   :amount_paid,
                   :balance,
                   :payment_status,
-                  :fulfillment_status
+                  :fulfillment_status,
+                  :overdue?
                 ]
               )
     end
@@ -508,13 +540,7 @@ defmodule Edenflowers.Orders.Order do
     read :search do
       argument :term, :ci_string, allow_nil?: false
 
-      filter expr(
-               state == :placed and
-                 (contains(customer_name, ^arg(:term)) or contains(order_reference, ^arg(:term)) or
-                    contains(customer_phone_number, ^arg(:term)) or contains(customer_email, ^arg(:term)) or
-                    contains(customer_instagram, ^arg(:term)) or
-                    contains(recipient_name, ^arg(:term)) or contains(delivery_address, ^arg(:term)))
-             )
+      filter expr(state == :placed and matches?(term: ^arg(:term)))
 
       prepare build(sort: [ordered_at: :desc], load: [:settled?, :amount_paid, :balance, :payment_status])
     end
@@ -800,11 +826,10 @@ defmodule Edenflowers.Orders.Order do
       argument :email_customer?, :boolean, default: false
       argument :message, :string
 
-      validate attribute_equals(:state, :placed), message: "hasn't been placed"
-      validate attribute_equals(:fulfillment_status, :pending), message: "is no longer open"
-      # The checks above read the copy Jennie loaded. This one is on the UPDATE, so an order
-      # cancelled or fulfilled since then matches no row and stock moves only once.
-      change filter expr(state == :placed and fulfillment_status == :pending)
+      validate {Validations.Holds, calculation: :editable?, message: "is no longer open"}
+      # On the UPDATE too, so an order cancelled or fulfilled since the check
+      # matches no row and stock moves only once.
+      change filter expr(editable?)
 
       # From here to PriceFulfillment, the same rules as :place_custom. Change both.
       validate attribute_in(:locale, @locales)
@@ -955,9 +980,10 @@ defmodule Edenflowers.Orders.Order do
     # Sent by hand only. Opens a payment link if none is open.
     update :send_payment_reminder do
       argument :message, :string
-      validate attribute_does_not_equal(:fulfillment_status, :cancelled), message: "is cancelled"
-      validate attribute_does_not_equal(:payment_terms, :invoice), message: "is paid by invoice"
-      validate present(:customer_email), message: "has no email address"
+
+      validate {Validations.Holds,
+                calculation: :payment_reminder_sendable?, message: "can't be sent a payment reminder"}
+
       transaction? false
       require_atomic? false
       change PaymentChanges.OpenPaymentLink
@@ -1058,7 +1084,7 @@ defmodule Edenflowers.Orders.Order do
       accept [:delivery_photo_slug, :email_delivery_photo]
       argument :email_customer?, :boolean, default: true
       argument :message, :string
-      validate attribute_equals(:fulfillment_status, :pending)
+      validate {Validations.Holds, calculation: :fulfillable?, message: "is no longer open"}
       change set_attribute(:fulfillment_status, :fulfilled)
       change set_attribute(:email_delivery_photo, false), where: [argument_equals(:email_customer?, false)]
 
@@ -1404,6 +1430,64 @@ defmodule Edenflowers.Orders.Order do
     calculate :committed?, :boolean, expr(state == :placed)
     calculate :cancelled?, :boolean, expr(fulfillment_status == :cancelled)
     calculate :cancellable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
+    calculate :editable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
+    calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status == :pending)
+
+    # Only a Custom Order no money has moved for. Any other is cancelled
+    # instead, so the accounts stay whole.
+    calculate :deletable?, :boolean, expr(origin == :custom and not exists(payments, true))
+
+    # Still to make, or made but still to be paid for.
+    calculate :open?,
+              :boolean,
+              expr(fulfillment_status == :pending or (fulfillment_status == :fulfilled and payment_status == :pending))
+
+    calculate :overdue?, :boolean, expr(fulfillment_status == :pending and fulfillment_date < helsinki_today())
+
+    calculate :upcoming?,
+              :boolean,
+              expr(
+                fulfillment_status == :pending and customer_status != :refunded and
+                  (is_nil(fulfillment_date) or fulfillment_date >= helsinki_today())
+              )
+
+    calculate :customer_status,
+              __MODULE__.CustomerStatus,
+              expr(
+                cond do
+                  payment_status == :refunded -> :refunded
+                  fulfillment_status == :cancelled -> :cancelled
+                  is_nil(fulfillment_date) -> :confirmed
+                  fulfillment_status == :fulfilled and fulfillment_method == :pickup -> :collected
+                  fulfillment_status == :fulfilled -> :delivered
+                  fulfillment_date == helsinki_today() and fulfillment_method == :pickup -> :ready_today
+                  fulfillment_date == helsinki_today() -> :arriving_today
+                  fulfillment_date > helsinki_today() and fulfillment_method == :pickup -> :for_pickup
+                  fulfillment_date > helsinki_today() -> :arriving
+                  fulfillment_method == :pickup -> :pickup_scheduled
+                  true -> :delivery_scheduled
+                end
+              )
+
+    # What Jennie may search an order by: who it's for, its reference, or where it goes.
+    calculate :matches?,
+              :boolean,
+              expr(
+                contains(customer_name, ^arg(:term)) or contains(order_reference, ^arg(:term)) or
+                  contains(customer_phone_number, ^arg(:term)) or contains(customer_email, ^arg(:term)) or
+                  contains(customer_instagram, ^arg(:term)) or
+                  contains(recipient_name, ^arg(:term)) or contains(delivery_address, ^arg(:term))
+              ) do
+      argument :term, :ci_string, allow_nil?: false
+    end
+
+    # Not for an order paid by invoice: Jennie's invoice is its reminder.
+    calculate :payment_reminder_sendable?,
+              :boolean,
+              expr(
+                fulfillment_status != :cancelled and (is_nil(payment_terms) or payment_terms != :invoice) and
+                  not is_nil(customer_email) and balance > 0
+              )
 
     calculate :payment_status,
               __MODULE__.PaymentStatus,
@@ -1419,6 +1503,9 @@ defmodule Edenflowers.Orders.Order do
               )
 
     calculate :paid?, :boolean, expr(committed? and payment_status == :paid and not cancelled?)
+
+    # A custom order is placed before it is paid, and has no receipt until it is.
+    calculate :receipt_available?, :boolean, expr(state == :placed and payment_status == :paid)
 
     # Money still owed on a placed order. A fulfilled order can still be unpaid
     # when the customer pays afterwards.

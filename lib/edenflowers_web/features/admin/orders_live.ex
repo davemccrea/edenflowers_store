@@ -26,8 +26,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
     {:ok,
      socket
      |> assign(:page_title, ~t"Orders")
-     |> assign(:locale, Localize.get_locale())
-     |> assign(:today, Edenflowers.ShopTime.today())}
+     |> assign(:locale, Localize.get_locale())}
   end
 
   @impl true
@@ -87,12 +86,12 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             sort={[cycle: [:asc, :desc]]}
             label={~t"Fulfillment date"}
           >
-            <span class={["tabular-nums", overdue?(order, @today) && "max-sm:text-error max-sm:font-semibold"]}>
+            <span class={["tabular-nums", order.overdue? && "max-sm:text-error max-sm:font-semibold"]}>
               <span class="max-sm:hidden">{Format.date(order.fulfillment_date, @locale)}</span>
               <span class="sm:hidden">{Format.day_month(order.fulfillment_date, @locale)}</span>
-              <span :if={overdue?(order, @today)} class="sr-only sm:hidden">{~t"Overdue"}</span>
+              <span :if={order.overdue?} class="sr-only sm:hidden">{~t"Overdue"}</span>
             </span>
-            <.badge :if={overdue?(order, @today)} tone={:error} class="ml-1.5 align-middle max-sm:hidden">
+            <.badge :if={order.overdue?} tone={:error} class="ml-1.5 align-middle max-sm:hidden">
               {~t"Overdue"}
             </.badge>
           </:col>
@@ -147,41 +146,15 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
     do: {:noreply, Cinder.refresh_table(socket, "orders-table")}
 
-  defp overdue?(%{fulfillment_status: :pending, fulfillment_date: %Date{} = date}, today),
-    do: Date.before?(date, today)
-
-  defp overdue?(_order, _today), do: false
-
-  # Open means still to make or still to be paid for: not cancelled, and not
-  # fulfilled unless the payment is still pending.
   defp open_orders(query, _filter) do
     require Ash.Query
-
-    Ash.Query.filter(
-      query,
-      fulfillment_status == :pending or
-        (fulfillment_status == :fulfilled and payment_status == :pending)
-    )
+    Ash.Query.filter(query, open?)
   end
 
   defp search_orders(query, _searchable_columns, search_term) do
     require Ash.Query
-    import Ash.Expr
-
-    case_insensitive_term = Ash.CiString.new(search_term)
-
-    Ash.Query.filter(
-      query,
-      expr(
-        contains(customer_name, ^case_insensitive_term) or
-          contains(order_reference, ^case_insensitive_term) or
-          contains(customer_phone_number, ^case_insensitive_term) or
-          contains(customer_email, ^case_insensitive_term) or
-          contains(customer_instagram, ^case_insensitive_term) or
-          contains(recipient_name, ^case_insensitive_term) or
-          contains(delivery_address, ^case_insensitive_term)
-      )
-    )
+    term = Ash.CiString.new(search_term)
+    Ash.Query.filter(query, matches?(term: ^term))
   end
 
   defp fulfillment_method_options do

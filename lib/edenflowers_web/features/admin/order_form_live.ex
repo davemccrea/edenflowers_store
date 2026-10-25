@@ -533,7 +533,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   defp closed_meanwhile?(%{assigns: %{mode: :edit, order: order, current_user: actor}}) do
-    Orders.get_order_for_admin!(order.id, actor: actor).fulfillment_status != :pending
+    not Orders.get_order_for_admin!(order.id, actor: actor).editable?
   end
 
   defp closed_meanwhile?(_socket), do: false
@@ -576,10 +576,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   defp load(_params, _actor), do: {:ok, :new, nil}
 
-  defp edit_mode(%{fulfillment_status: status}) when status != :pending,
-    do: {:error, ~t"This order is no longer open, so it can't be changed."}
-
-  defp edit_mode(order), do: {:ok, :edit, order}
+  defp edit_mode(%{editable?: true} = order), do: {:ok, :edit, order}
+  defp edit_mode(_order), do: {:error, ~t"This order is no longer open, so it can't be changed."}
 
   defp page_title(:new, _order), do: ~t"New custom order"
   defp page_title(_mode, order), do: ~t"Edit order #{reference = order.order_reference}"
