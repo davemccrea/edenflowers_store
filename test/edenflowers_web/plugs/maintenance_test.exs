@@ -2,6 +2,7 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
   use EdenflowersWeb.ConnCase, async: false
 
   import Generator
+  import Phoenix.LiveViewTest
 
   alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Courses
@@ -11,6 +12,28 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
   test "redirects /back-soon to the homepage when maintenance mode is off", %{conn: conn} do
     conn = get(conn, "/back-soon")
     assert redirected_to(conn) == "/"
+  end
+
+  describe "when maintenance mode turns on or off under an open tab" do
+    setup do
+      on_exit(fn -> Application.delete_env(:edenflowers, :maintenance_mode) end)
+    end
+
+    test "sends the next storefront page to /back-soon", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/en/store")
+      Application.put_env(:edenflowers, :maintenance_mode, true)
+
+      assert {:error, {:redirect, %{to: "/back-soon"}}} = live_redirect(view, to: "/en/about")
+    end
+
+    test "lets a signed-in admin keep browsing", %{conn: conn} do
+      admin = generate(admin_user()) |> with_token()
+      conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+      {:ok, view, _html} = live(conn, "/en/store")
+      Application.put_env(:edenflowers, :maintenance_mode, true)
+
+      assert {:ok, _view, _html} = live_redirect(view, to: "/en/about")
+    end
   end
 
   describe "when maintenance mode is on" do

@@ -19,10 +19,10 @@ defmodule EdenflowersWeb.Plugs.Maintenance do
     on_maintenance_page? = conn.request_path == @maintenance_path
 
     cond do
-      maintenance_mode?() and not on_maintenance_page? and not bypass?(conn) and not admin?(conn) ->
+      blocks?(conn.assigns[:current_user]) and not on_maintenance_page? and not bypass?(conn) ->
         redirect(conn, @maintenance_path)
 
-      not maintenance_mode?() and on_maintenance_page? ->
+      not enabled?() and on_maintenance_page? ->
         redirect(conn, "/")
 
       true ->
@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Plugs.Maintenance do
     Enum.any?(@bypass_prefixes, &(conn.request_path == &1 or String.starts_with?(conn.request_path, &1 <> "/")))
   end
 
-  defp admin?(conn), do: match?(%{admin: true}, conn.assigns[:current_user])
+  def blocks?(user), do: enabled?() and not match?(%{admin: true}, user)
 
-  defp maintenance_mode?, do: Application.get_env(:edenflowers, :maintenance_mode, false)
+  def enabled?, do: Application.get_env(:edenflowers, :maintenance_mode, false)
 end
