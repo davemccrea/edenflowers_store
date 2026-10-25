@@ -181,7 +181,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
       generate(subscription(user_id: user.id, product_variant_id: variant.id))
 
-      conn = AshAuthentication.Plug.Helpers.store_in_session(conn, user)
+      conn = log_in(conn, user)
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
       view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 

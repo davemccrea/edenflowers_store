@@ -6,7 +6,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
   import Phoenix.LiveViewTest
   import Swoosh.TestAssertions
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
 
@@ -15,10 +14,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
   setup %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
 
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     tax_rate = generate(tax_rate(name: "Flowers"))
     product = generate(product(tax_rate_id: tax_rate.id, name: "Spring Bouquet"))

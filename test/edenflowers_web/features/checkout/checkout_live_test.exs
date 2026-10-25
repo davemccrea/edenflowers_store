@@ -26,7 +26,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
   import Generator
   import Mox
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
 
@@ -166,8 +165,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       {:ok, view, _html} =
         conn
-        |> Plug.Test.init_test_session(%{order_id: order.id})
-        |> Helpers.store_in_session(user)
+        |> log_in(user, %{order_id: order.id})
         |> live(~p"/checkout")
 
       assert render(view) =~ ~s|data-customer-session-client-secret="cuss_ada"|
@@ -187,8 +185,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       user = with_token(user)
 
       conn
-      |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> Helpers.store_in_session(user)
+      |> log_in(user, %{order_id: order.id})
       |> visit("/checkout")
       |> assert_has("[data-testid=customer-name-input]", value: "Ada Lovelace")
       |> assert_has("[data-testid=customer-email-input]", value: "ada@example.com")
@@ -288,8 +285,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       user = generate(admin_user(admin: false, newsletter_opt_in: true)) |> with_token()
 
       conn
-      |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> Helpers.store_in_session(user)
+      |> log_in(user, %{order_id: order.id})
       |> visit("/checkout")
       |> assert_has("[data-testid='checkout-step-1']")
       |> refute_has("[data-testid='newsletter-opt-in-checkbox']")

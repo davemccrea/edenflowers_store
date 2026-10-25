@@ -4,14 +4,10 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Pricing.Promotion
   alias EdenflowersWeb.Admin.PromotionsLive
 
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-    %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
-  end
+  setup :log_in_admin
 
   test "lists promotions", %{conn: conn} do
     generate(promotion(name: "Spring sale", code: "SPRING"))

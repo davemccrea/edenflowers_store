@@ -4,18 +4,7 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Plug.Helpers
-
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
-
-    %{conn: conn}
-  end
+  setup :log_in_admin
 
   test "lists a course with its booked seats and links to its page", %{conn: conn} do
     course = generate(course(name: "Autumn wreaths", total_places: 10))

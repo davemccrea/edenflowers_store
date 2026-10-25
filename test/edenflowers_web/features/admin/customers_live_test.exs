@@ -4,18 +4,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Plug.Helpers
-
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
-
-    %{conn: conn}
-  end
+  setup :log_in_admin
 
   describe "customer list" do
     test "lists only users with a placed order", %{conn: conn} do

@@ -4,14 +4,10 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Fulfillment.Weekday
 
   describe "days" do
-    setup %{conn: conn} do
-      admin = generate(admin_user()) |> with_token()
-      %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
-    end
+    setup :log_in_admin
 
     defp open_order(name, method, days_from_today) do
       generate(
@@ -124,7 +120,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
   test "flags a delivery with no phone to call", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     attrs = [
       state: :placed,
@@ -145,7 +141,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
   test "shows an order placed elsewhere without a refresh", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
-    conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     {:ok, view, _html} = live(conn, ~p"/admin")
     refute render(view) =~ "Grace Hopper"
@@ -168,10 +164,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
   end
 
   describe "needs attention" do
-    setup %{conn: conn} do
-      admin = generate(admin_user()) |> with_token()
-      %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
-    end
+    setup :log_in_admin
 
     test "is hidden when nothing needs Jennie", %{conn: conn} do
       placed_order(paid: true, fulfillment_status: :fulfilled)
@@ -296,10 +289,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
   test "shows paid sales and revenue for the current month only", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
 
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     now = DateTime.utc_now()
     placed_order(ordered_at: now, paid: "45.00")
@@ -316,10 +306,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
   test "compares with last month up to the same day", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
 
-    conn =
-      conn
-      |> Plug.Test.init_test_session(%{})
-      |> Helpers.store_in_session(admin)
+    conn = log_in(conn, admin)
 
     same_day = Date.shift(Edenflowers.ShopTime.today(), month: -1)
     noon = fn date -> DateTime.new!(date, ~T[12:00:00], Edenflowers.ShopTime.timezone()) end

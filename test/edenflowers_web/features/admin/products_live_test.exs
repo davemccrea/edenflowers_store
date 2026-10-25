@@ -4,12 +4,7 @@ defmodule EdenflowersWeb.Admin.ProductsLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
-  alias AshAuthentication.Plug.Helpers
-
-  setup %{conn: conn} do
-    admin = generate(admin_user()) |> with_token()
-    %{conn: conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)}
-  end
+  setup :log_in_admin
 
   test "searches products by name", %{conn: conn} do
     generate(product(name: "Rose bouquet"))

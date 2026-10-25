@@ -4,7 +4,6 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  alias AshAuthentication.Plug.Helpers
   alias Edenflowers.Courses
   alias Edenflowers.Orders
   alias EdenflowersWeb.PaymentLink
@@ -28,7 +27,7 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
 
     test "lets a signed-in admin keep browsing", %{conn: conn} do
       admin = generate(admin_user()) |> with_token()
-      conn = conn |> Plug.Test.init_test_session(%{}) |> Helpers.store_in_session(admin)
+      conn = log_in(conn, admin)
       {:ok, view, _html} = live(conn, "/en/store")
       Application.put_env(:edenflowers, :maintenance_mode, true)
 
@@ -95,8 +94,7 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
 
       conn =
         conn
-        |> Plug.Test.init_test_session(%{})
-        |> Helpers.store_in_session(admin)
+        |> log_in(admin)
         |> get(~p"/en/about")
 
       assert html_response(conn, 200)
