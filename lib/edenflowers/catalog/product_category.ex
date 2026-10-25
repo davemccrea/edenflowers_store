@@ -33,10 +33,14 @@ defmodule Edenflowers.Catalog.ProductCategory do
     default_accept [:slug, :visibility, :add_on, :product_type, :name, :description, :translations]
 
     read :public do
+      description "Categories browsable in the store and listed in the sitemap. Draft and hidden categories are " <>
+                    "left out."
+
       filter expr(visibility == :public)
     end
 
     read :public_by_slug do
+      description "A public category by its URL slug. Draft and hidden categories are not found."
       get? true
       argument :slug, :string, allow_nil?: false
       filter expr(visibility == :public and slug == ^arg(:slug))
@@ -64,21 +68,30 @@ defmodule Edenflowers.Catalog.ProductCategory do
     attribute :description, :string, allow_nil?: true
     attribute :slug, :string, allow_nil?: false
 
-    # :public — browsable in the store ribbon and at /store/:slug
-    # :draft  — work-in-progress, not yet ready to publish
-    # :hidden — intentionally kept out of the storefront, products are still
-    #           reachable through other surfaces (e.g. card-drawer at checkout)
-    attribute :visibility, __MODULE__.Visibility, allow_nil?: false, default: :draft
+    attribute :visibility, __MODULE__.Visibility do
+      description ":public is browsable in the store ribbon and at /store/:slug. :draft is work in progress, " <>
+                    "not yet ready to publish. :hidden is kept out of the storefront, but its products are still " <>
+                    "reachable elsewhere, like the card drawer at checkout."
 
-    # Add-ons, like cards and chocolate, go with flowers: a cart of only
-    # add-ons can't be checked out, as delivering one alone isn't worth it.
-    attribute :add_on, :boolean, allow_nil?: false, default: false
+      allow_nil? false
+      default :draft
+    end
+
+    attribute :add_on, :boolean do
+      description "Its products are Add-ons, like cards and chocolate, that go with flowers: a cart of only " <>
+                    "Add-ons can't be checked out, as delivering one alone isn't worth it."
+
+      allow_nil? false
+      default false
+    end
 
     attribute :product_type, Edenflowers.Catalog.ProductType, allow_nil?: false, default: :flowers
   end
 
   relationships do
-    has_many :products, Edenflowers.Catalog.Product
+    has_many :products, Edenflowers.Catalog.Product do
+      description "Every product in it, drafts included."
+    end
   end
 
   identities do

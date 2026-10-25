@@ -168,35 +168,52 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
   relationships do
     belongs_to :user, Edenflowers.Accounts.User do
+      description "The account with the registration's email, guest or not, so the customer sees their bookings " <>
+                    "once that email signs in."
+
       allow_nil? true
     end
 
-    belongs_to :course, Edenflowers.Courses.Course, allow_nil?: false
+    belongs_to :course, Edenflowers.Courses.Course do
+      description "The course the places are on."
+      allow_nil? false
+    end
 
     has_many :payments, Edenflowers.Payments.Payment do
+      description "Every Payment and refund on the registration, oldest first."
       sort paid_at: :asc
     end
   end
 
   calculations do
-    calculate :first_name, :string, {AccountCalculations.FirstName, source: :name}
+    calculate :first_name, :string, {AccountCalculations.FirstName, source: :name} do
+      description "A best guess at the first name from the name typed at checkout, for greeting in emails."
+    end
 
-    calculate :seats_held, :integer, expr(seats - removed_seats)
+    calculate :seats_held, :integer, expr(seats - removed_seats) do
+      description "Places the booking still holds: seats bought less those Jennie removed when someone dropped out."
+    end
 
-    # amount is the price times seats bought, so the seats still held cost
-    # exactly their share of it.
     calculate :total_due,
               :decimal,
-              expr(if status == :cancelled, do: kept_amount, else: round(amount * seats_held / seats, 2) + kept_amount)
+              expr(if status == :cancelled, do: kept_amount, else: round(amount * seats_held / seats, 2) + kept_amount) do
+      description "The Total due in euros. amount is the price times seats bought, so the seats still held cost " <>
+                    "exactly their share of it. Once cancelled, only what Jennie kept."
+    end
 
-    # Nothing is owed on a registration until it is paid for, so only a
-    # confirmed or cancelled booking is committed.
-    calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled])
-    calculate :cancelled?, :boolean, expr(status == :cancelled)
-    calculate :cancellable?, :boolean, expr(status == :confirmed)
+    calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled]) do
+      description "Whether money is owed on it at all. Nothing is owed until it is paid for, so only a confirmed " <>
+                    "or cancelled booking is committed."
+    end
 
-    # Everything held before the course's cancellation deadline, and after it
-    # all but the course's fee.
+    calculate :cancelled?, :boolean, expr(status == :cancelled) do
+      description "Whether Jennie cancelled the confirmed booking. Customers cancel only by asking her."
+    end
+
+    calculate :cancellable?, :boolean, expr(status == :confirmed) do
+      description "Whether Jennie can cancel it now: only a confirmed booking. An unpaid one is discarded instead."
+    end
+
     calculate :refund_on_cancelling,
               :decimal,
               expr(
@@ -213,22 +230,39 @@ defmodule Edenflowers.Courses.CourseRegistration do
                   true ->
                     0
                 end
-              )
+              ) do
+      description "What cancelling now refunds in euros unless Jennie says otherwise: everything held up to the " <>
+                    "course's cancellation_days before it, and after that all but its cancellation fee."
+    end
 
-    calculate :customer_email, :string, expr(email)
-    calculate :paid?, :boolean, expr(status == :confirmed and not refunded? and balance <= 0)
-    calculate :upcoming?, :boolean, expr(status == :confirmed and seats_held > 0 and not course.ended?)
+    calculate :customer_email, :string, expr(email) do
+      description "Who is told about cancels and refunds: the email given at checkout or on the Invite."
+    end
+
+    calculate :paid?, :boolean, expr(status == :confirmed and not refunded? and balance <= 0) do
+      description "Whether a confirmed booking has nothing left to pay and wasn't refunded, for its Payment Link page."
+    end
+
+    calculate :upcoming?, :boolean, expr(status == :confirmed and seats_held > 0 and not course.ended?) do
+      description "Whether a confirmed booking still holds places on a course that hasn't ended."
+    end
 
     calculate :payment_overdue?,
               :boolean,
               expr(
                 balance > 0 and
                   course.date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
-              )
+              ) do
+      description "Whether a Balance is still to collect more than 14 days after the course, the usual " <>
+                    "Finnish invoice term, counted in Helsinki days."
+    end
 
     calculate :payment_link_open?,
               :boolean,
-              expr(not is_nil(payment_link_token) and payable? and status in [:pending, :confirmed])
+              expr(not is_nil(payment_link_token) and payable? and status in [:pending, :confirmed]) do
+      description "Whether its Payment Link would take a payment now: it has one, something is payable, and it " <>
+                    "isn't cancelled."
+    end
   end
 
   identities do

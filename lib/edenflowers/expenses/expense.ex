@@ -93,6 +93,7 @@ defmodule Edenflowers.Expenses.Expense do
     end
 
     read :admin_list do
+      description "The admin Expenses table: unreviewed first, then newest receipt date, undated ones at the top."
       pagination offset?: true, keyset?: true, countable: true, required?: false
       prepare build(sort: [reviewed: :asc, date: :desc_nils_first, processed_at: :desc])
     end
@@ -198,10 +199,21 @@ defmodule Edenflowers.Expenses.Expense do
     attribute :vendor_name, :string
     attribute :vendor_vat_number, :string
     attribute :date, :date
-    # Set by an admin only; ingest leaves it alone so re-processing keeps it.
-    attribute :paid_on, :date
-    attribute :total_amount, :decimal, constraints: [scale: 2]
-    attribute :vat_amount, :decimal, constraints: [scale: 2]
+
+    attribute :paid_on, :date do
+      description "Set by an admin only; ingest leaves it alone so re-processing keeps it."
+    end
+
+    attribute :total_amount, :decimal do
+      description "The document's total, VAT included, in its `currency`."
+      constraints scale: 2
+    end
+
+    attribute :vat_amount, :decimal do
+      description "The VAT part of `total_amount`, in the same currency."
+      constraints scale: 2
+    end
+
     attribute :currency, __MODULE__.Currency
     attribute :category, __MODULE__.Category
     attribute :description, :string
@@ -213,7 +225,9 @@ defmodule Edenflowers.Expenses.Expense do
   end
 
   calculations do
-    calculate :reviewed, :boolean, expr(not is_nil(reviewed_at))
+    calculate :reviewed, :boolean, expr(not is_nil(reviewed_at)) do
+      description "Jennie has checked Claude's extraction, via `mark_reviewed`."
+    end
   end
 
   identities do

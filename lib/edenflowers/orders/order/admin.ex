@@ -99,8 +99,10 @@ defmodule Edenflowers.Orders.Order.Admin do
   end
 
   actions do
-    # What the Overview lists: everything still to make up to 8 days ahead, overdue included.
     read :due_soon do
+      description "The admin Overview's list: placed orders still to make up to 8 days ahead, overdue included, " <>
+                    "by date, time and distance."
+
       filter expr(
                state == :placed and fulfillment_status == :pending and
                  fulfillment_date <= date_add(helsinki_today(), 8, :day)
@@ -131,9 +133,12 @@ defmodule Edenflowers.Orders.Order.Admin do
               )
     end
 
-    # Table feed for /admin/orders, kept apart from :due_soon so the table's
-    # loads and sorting stay out of the Overview's read.
+    # Kept apart from :due_soon so the table's loads and sorting stay out of
+    # the Overview's read.
     read :admin_list do
+      description "The admin orders table: every placed order, newest first, paginated, with its fulfillment " <>
+                    "and payment status."
+
       pagination offset?: true, keyset?: true, countable: true, required?: false
 
       filter expr(state == :placed)
@@ -157,7 +162,12 @@ defmodule Edenflowers.Orders.Order.Admin do
     end
 
     read :search do
-      argument :term, :ci_string, allow_nil?: false
+      description "Jennie's search of placed orders by customer, reference, phone, email, Instagram, recipient or " <>
+                    "address, newest first."
+
+      argument :term, :ci_string,
+        allow_nil?: false,
+        description: "Matched as part of any searched field, ignoring case."
 
       filter expr(state == :placed and matches?(term: ^arg(:term)))
 
@@ -166,22 +176,30 @@ defmodule Edenflowers.Orders.Order.Admin do
 
     # What the Overview lists as still to collect or refund.
     read :unsettled do
+      description "Placed orders that are not Settled, with their balance to collect or refund, for the admin Overview."
       filter expr(committed? and not settled?)
       prepare build(load: [:balance, :payment_overdue?, :customer_name, :order_reference])
     end
 
     read :to_fulfil do
+      description "Placed orders still to make, paid or not, soonest first."
       # Unpaid custom orders still have to be made (ADR 0001).
       filter expr(state == :placed and fulfillment_status == :pending)
       prepare build(sort: [fulfillment_date: :asc, ordered_at: :asc, id: :asc], load: [:payment_status])
     end
 
     read :admin_show do
+      description "A placed order with everything the admin order page shows, including what Jennie may still do " <>
+                    "with it."
+
       filter expr(state == :placed)
       prepare build(load: @admin_show_load)
     end
 
     read :last_with_customer_phone do
+      description "The customer's latest placed order that holds their own phone number, to prefill a Custom Order " <>
+                    "Jennie enters for them."
+
       argument :customer_id, :uuid, allow_nil?: false
       get? true
 
@@ -214,6 +232,10 @@ defmodule Edenflowers.Orders.Order.Admin do
     end
 
     create :place_custom do
+      description "Jennie enters a Custom Order, placed at once and possibly unpaid: opens a payment link if " <>
+                    "its terms are a payment link, takes stock, and queues the Order details email unless " <>
+                    "`email_customer?` is false."
+
       accept [:payment_terms | @custom_order_fields]
 
       argument :line_items, {:array, :map}, default: []
@@ -272,10 +294,10 @@ defmodule Edenflowers.Orders.Order.Admin do
         where: [argument_equals(:email_customer?, true)]
     end
 
-    # Jennie can change anything on an open order, online or custom, paid or
-    # not. A paid order whose total changes is left with a balance to collect
-    # or refund; an unpaid one's payment link charges the new total.
     update :edit do
+      description "Jennie changes any open order, online or custom, paid or not: stock moves with the lines, a " <>
+                    "changed total leaves a Balance, and `email_customer?` queues the Order updated email."
+
       accept @custom_order_fields
 
       argument :line_items, {:array, :map}, default: []
@@ -335,26 +357,40 @@ defmodule Edenflowers.Orders.Order.Admin do
     # What an order Jennie is entering or editing will cost once saved, from
     # the params :place_custom and :edit take. Saves nothing.
     action :quote_entered, :map do
-      # The order being edited, or nil for a new one.
-      argument :order, :struct, constraints: [instance_of: Edenflowers.Orders.Order]
-      argument :params, :map, allow_nil?: false
-      # The form's lookup for a delivery address, so nothing is geocoded here.
-      argument :delivery_quote, :map
+      description "Prices an order Jennie is entering or editing, from the params place_custom and edit take, " <>
+                    "without saving it, so she can quote a customer on the phone."
+
+      argument :order, :struct,
+        constraints: [instance_of: Edenflowers.Orders.Order],
+        description: "The order being edited, or nil for a new one."
+
+      argument :params, :map, allow_nil?: false, description: "What place_custom or edit would take."
+
+      argument :delivery_quote, :map,
+        description: "The form's lookup for a delivery address, so nothing is geocoded here."
+
       run Actions.QuoteEntered
     end
 
     update :refresh_vat_breakdown do
+      description "Recomputes the stored VAT breakdown once the lines Jennie entered are saved. Run by " <>
+                    "place_custom and edit."
+
       accept []
       change Changes.SnapshotVatBreakdown
       require_atomic? false
     end
 
     update :update_florist_note do
+      description "Saves Jennie's private Florist Note on any order, logged only when it changed."
       accept [:florist_note]
       change set_context(%{skip_version_when_unchanged?: true})
     end
 
     update :mark_fulfilled do
+      description "Jennie marks an open order delivered or collected. A delivery with an email queues the " <>
+                    "fulfillment email, with the delivery photo when chosen, unless `email_customer?` is false."
+
       accept [:delivery_photo_slug, :email_delivery_photo]
       argument :email_customer?, :boolean, default: true
       argument :message, :string
@@ -382,6 +418,9 @@ defmodule Edenflowers.Orders.Order.Admin do
     end
 
     update :remind_shop do
+      description "Run by its job an hour before a placed order's time or window starts, while it is still to " <>
+                    "make: notifies Jennie by email and push, once."
+
       accept []
       change set_attribute(:shop_reminded_at, &DateTime.utc_now/0)
       change {NotifyShop, notice: :reminder}
@@ -390,9 +429,17 @@ defmodule Edenflowers.Orders.Order.Admin do
 
     # Puts the stock back. Payments.Changes.Cancel says what happens to the money.
     update :cancel do
+      description "Jennie cancels a placed order, choosing what to refund and keep: card payments go back through " <>
+                    "Stripe, stock returns, and the customer is emailed unless unticked. Unlike " <>
+                    "cancel_by_customer, it takes any order still to make, whatever its date or payment method."
+
       accept [:cancellation_reason]
-      argument :refund, :decimal, constraints: [scale: 2]
-      argument :held, :decimal, constraints: [scale: 2]
+      argument :refund, :decimal, constraints: [scale: 2], description: "What Jennie chose to refund."
+
+      argument :held, :decimal,
+        constraints: [scale: 2],
+        description: "What the order held when she opened the cancel form, so a retry never refunds twice."
+
       argument :email_customer?, :boolean, default: true
       # A subscription cancelled by its customer cancels its occurrences as them.
       argument :cancelled_by, :atom, default: :shop, constraints: [one_of: [:shop, :customer]]
@@ -405,6 +452,10 @@ defmodule Edenflowers.Orders.Order.Admin do
 
     # For test orders and ones added by mistake.
     destroy :delete_custom do
+      description "Deletes a Custom Order no money has moved for, such as a test or a mistake, with its log, " <>
+                    "cancelling any open PaymentIntent and putting stock back. Any other order is cancelled " <>
+                    "instead."
+
       validate Validations.Deletable
       change {PaymentChanges.CancelOpenPaymentIntent, before_commit?: true}
 
@@ -415,9 +466,10 @@ defmodule Edenflowers.Orders.Order.Admin do
       require_atomic? false
     end
 
-    # Any order owing money can have a link: a custom order paid later, or an
-    # order edited after it was paid.
     update :open_payment_link do
+      description "Gives an order that isn't cancelled a payment link, keeping the one it already has. For a " <>
+                    "custom order paid later, or an order edited after it was paid."
+
       validate attribute_does_not_equal(:fulfillment_status, :cancelled), message: "is cancelled"
       change set_context(%{skip_version_when_unchanged?: true})
       change PaymentChanges.OpenPaymentLink

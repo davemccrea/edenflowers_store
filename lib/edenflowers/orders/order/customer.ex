@@ -17,6 +17,9 @@ defmodule Edenflowers.Orders.Order.Customer do
     # admins an unrestricted read, so an action named for the customer's own
     # order history has to narrow itself or it hands Jennie everyone's orders.
     read :mine do
+      description "The actor's own placed orders, newest first, with what their order history shows. " <>
+                    "Filtered to the actor even for an admin."
+
       filter expr(state == :placed and user_id == ^actor(:id))
 
       prepare build(
@@ -37,6 +40,9 @@ defmodule Edenflowers.Orders.Order.Customer do
     end
 
     update :cancel_by_customer do
+      description "A customer cancelling their own Online Order from their account, before the Change deadline and " <>
+                    "only when paid by card: refunds it all through Stripe, puts stock back and notifies the shop."
+
       validate Validations.CancellableByCustomer
       change set_attribute(:fulfillment_status, :cancelled)
       change {PaymentChanges.Cancel, cancelled_by: :customer}

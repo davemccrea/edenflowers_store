@@ -47,6 +47,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
   actions do
     # What the Overview lists as still to collect or refund.
     read :unsettled do
+      description "Confirmed or cancelled bookings with a Balance still to collect or refund, for the admin Overview."
       filter expr(committed? and not settled?)
       prepare build(load: [:balance, :payment_overdue?, :course])
     end
@@ -54,9 +55,12 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
     # Someone Jennie invites to book, with a payment link, even after online
     # booking closes. It holds no places: paying the link books them.
     create :add_manually do
+      description "Jennie sends an Invite: a pending registration with a Payment Link, allowed after online " <>
+                    "booking closes. Holds no places until paid, and emails the link unless told not to."
+
       accept [:name, :email, :seats, :course_id, :locale]
       argument :email_customer?, :boolean, default: true
-      argument :message, :string
+      argument :message, :string, description: "Jennie's note in the payment link email."
       validate attribute_in(:locale, @locales)
       change Changes.UpsertUser
       change {Changes.PriceBooking, allow_after_cutoff?: true}
@@ -70,6 +74,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
     # An invite's link, or a balance left on a confirmed booking. A checkout
     # pays on the course page instead.
     update :open_payment_link do
+      description "Gives an Invite, or a confirmed booking with a Balance, a Payment Link, keeping any it has."
       validate attribute_in(:status, [:pending, :confirmed]), message: "is cancelled"
       change PaymentChanges.OpenPaymentLink
       require_atomic? false
@@ -77,7 +82,10 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
 
     # Opens the link if need be, so sending it is opening one.
     update :email_payment_link do
-      argument :message, :string
+      description "Emails the customer the Payment Link of an Invite or confirmed booking, opening it if need be. " <>
+                    "Jennie sends it, or add_manually queues it."
+
+      argument :message, :string, description: "Jennie's note in the email."
       validate attribute_in(:status, [:pending, :confirmed]), message: "is cancelled"
       change PaymentChanges.OpenPaymentLink
       change Changes.SendPaymentLinkEmail
@@ -90,6 +98,9 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
     # from them. Nothing is refunded: the seat's price is left as a negative
     # balance for Jennie to refund.
     update :remove_seat do
+      description "Frees one place of a group booking when someone drops out. Refunds nothing: the seat's price " <>
+                    "is left as a Balance for Jennie to refund. The last seat needs cancel instead."
+
       change atomic_update(
                :removed_seats,
                expr(
@@ -109,6 +120,9 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
     # invite Jennie withdraws. Its PaymentIntent is cancelled first, so a
     # payment already under way still has a registration to confirm.
     destroy :discard do
+      description "Deletes an unpaid pending registration, an abandoned checkout or a withdrawn Invite, after " <>
+                    "cancelling its PaymentIntent. Runs nightly for checkouts left a day."
+
       change filter expr(status == :pending)
       change {PaymentChanges.CancelOpenPaymentIntent, before_commit?: true}
       require_atomic? false
@@ -116,9 +130,19 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
 
     # Frees the places. Payments.Changes.Cancel says what happens to the money.
     update :cancel do
+      description "Jennie cancels a confirmed booking, freeing its places and refunding all but what she keeps: " <>
+                    "card payments through Stripe, the rest left as a Balance. Emails the customer unless told not to."
+
       accept [:cancellation_reason]
-      argument :refund, :decimal, constraints: [scale: 2]
-      argument :held, :decimal, constraints: [scale: 2]
+
+      argument :refund, :decimal,
+        constraints: [scale: 2],
+        description: "What Jennie chose to refund. Without it, the course's cancellation terms decide."
+
+      argument :held, :decimal,
+        constraints: [scale: 2],
+        description: "What was held when Jennie opened the cancel form, so a retry never refunds twice."
+
       argument :email_customer?, :boolean, default: true
       change transition_state(:cancelled)
       change {PaymentChanges.Cancel, cancelled_by: :shop}

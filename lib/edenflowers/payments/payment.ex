@@ -53,9 +53,10 @@ defmodule Edenflowers.Payments.Payment do
   actions do
     defaults [:read]
 
-    # Created by the order and registration actions that take or return
-    # money, never on its own.
     create :record do
+      description "Records money that moved, positive taken or negative handed back. Created by the order and " <>
+                    "registration actions that take or return money, never on its own."
+
       accept [
         :order_id,
         :course_registration_id,
@@ -104,18 +105,31 @@ defmodule Edenflowers.Payments.Payment do
   end
 
   relationships do
-    belongs_to :order, Edenflowers.Orders.Order
-    belongs_to :course_registration, Edenflowers.Courses.CourseRegistration
+    belongs_to :order, Edenflowers.Orders.Order do
+      description "The order it was for. Nil when it is for a course registration: it belongs to exactly one."
+    end
 
-    # An undo is the opposite amount, pointing at the payment it takes back.
-    belongs_to :reverses_payment, __MODULE__
-    has_one :reversal, __MODULE__, destination_attribute: :reverses_payment_id
+    belongs_to :course_registration, Edenflowers.Courses.CourseRegistration do
+      description "The course registration it was for. Nil when it is for an order: it belongs to exactly one."
+    end
+
+    belongs_to :reverses_payment, __MODULE__ do
+      description "On an Undo, the payment it takes back: the Undo is the opposite amount. Nil otherwise."
+    end
+
+    has_one :reversal, __MODULE__ do
+      description "The Undo that took this payment back, or nil."
+      destination_attribute :reverses_payment_id
+    end
   end
 
   calculations do
     calculate :undoable?,
               :boolean,
-              expr(method != :stripe and is_nil(reverses_payment_id) and not exists(reversal, true))
+              expr(method != :stripe and is_nil(reverses_payment_id) and not exists(reversal, true)) do
+      description "Whether Jennie can Undo it: one she recorded, not a Stripe one, that is neither an Undo " <>
+                    "itself nor already undone."
+    end
   end
 
   identities do

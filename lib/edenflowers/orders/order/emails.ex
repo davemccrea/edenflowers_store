@@ -100,12 +100,17 @@ defmodule Edenflowers.Orders.Order.Emails do
   end
 
   actions do
-    # What its cancelled and refunded emails need.
     read :for_customer_email do
+      description "Reads an order with what its Cancelled and Refund emails need: the customer's first name and " <>
+                    "its Payments."
+
       prepare build(load: [:customer_first_name, :payments])
     end
 
     update :send_receipt_email do
+      description "Run by its job once Stripe takes a checkout payment: emails the receipt PDF, as the order " <>
+                    "confirmation or, for an Occurrence, Subscription delivery charged. Fails so the job retries."
+
       accept []
       transaction? false
       require_atomic? false
@@ -113,6 +118,9 @@ defmodule Edenflowers.Orders.Order.Emails do
     end
 
     update :send_order_details_email do
+      description "Emails a placed order's details, with its payment link when open: queued by place_custom, or " <>
+                    "sent again by Jennie from the order's menu."
+
       accept []
       validate {Holds, calculation: :details_emailable?, message: "can't be emailed order details"}
       argument :message, :string
@@ -122,6 +130,9 @@ defmodule Edenflowers.Orders.Order.Emails do
     end
 
     update :send_order_updated_email do
+      description "Run by its job after Jennie edits a placed order and ticks to email the customer: the order " <>
+                    "as it now stands, with its payment link when one is open, and her optional message."
+
       accept []
       argument :message, :string
       transaction? false
@@ -130,6 +141,9 @@ defmodule Edenflowers.Orders.Order.Emails do
     end
 
     update :send_payment_failed_email do
+      description "Run by its job when an Occurrence's card is refused: tells the customer it is placed all the " <>
+                    "same and gives its payment link."
+
       accept []
       transaction? false
       require_atomic? false
@@ -137,6 +151,10 @@ defmodule Edenflowers.Orders.Order.Emails do
     end
 
     update :send_payment_received_email do
+      description "Run by its job: emails Payment received with the receipt PDF for amount, or else the latest " <>
+                    "payment that isn't a refund, after a payment link is paid or Jennie records a payment and " <>
+                    "ticks to email it. A fulfilled order settled in full gets the purchase receipt instead."
+
       accept []
       argument :amount, :decimal
       argument :message, :string
@@ -146,6 +164,9 @@ defmodule Edenflowers.Orders.Order.Emails do
     end
 
     update :send_fulfillment_email do
+      description "Run by its job: emails the customer Delivered, or Left at the door with the delivery photo when " <>
+                    "Jennie chose to send it, with her optional message."
+
       accept []
       argument :message, :string
       transaction? false
@@ -155,6 +176,9 @@ defmodule Edenflowers.Orders.Order.Emails do
 
     # Payment received again, from the order's menu.
     update :email_receipt do
+      description "Jennie re-sends a paid order's receipt from the order's menu: Payment received, or the " <>
+                    "purchase receipt once the order is fulfilled and settled."
+
       accept []
       argument :message, :string
       validate {Holds, calculation: :receipt_available?, message: "is not paid yet"}
@@ -166,6 +190,9 @@ defmodule Edenflowers.Orders.Order.Emails do
 
     # Sent by hand only. Opens a payment link if none is open.
     update :send_payment_reminder do
+      description "Jennie emails a Payment reminder with the order's payment link, opening one if needed. Never " <>
+                    "for a cancelled order, one on invoice terms, or one with nothing to collect."
+
       argument :message, :string
 
       validate {Holds, calculation: :payment_reminder_sendable?, message: "can't be sent a payment reminder"}
@@ -178,6 +205,9 @@ defmodule Edenflowers.Orders.Order.Emails do
 
     # Sends with the photo choice stored by :mark_fulfilled.
     update :email_fulfillment_confirmation do
+      description "Jennie queues the fulfillment email again for a fulfilled delivery, with the photo choice " <>
+                    "mark_fulfilled stored."
+
       accept []
 
       validate {Holds,
@@ -189,16 +219,21 @@ defmodule Edenflowers.Orders.Order.Emails do
 
     # AshOban passes the error to these, which the errors page already shows.
     update :record_fulfillment_email_failure do
+      description "Marks that the fulfillment email ran out of attempts, for Jennie to see and send again."
       accept []
       change set_attribute(:fulfillment_email_failed_at, &DateTime.utc_now/0)
     end
 
     update :record_receipt_email_failure do
+      description "Marks that the receipt or Payment received email ran out of attempts, for Jennie to see."
       accept []
       change set_attribute(:receipt_email_failed_at, &DateTime.utc_now/0)
     end
 
     update :record_order_details_email_failure do
+      description "Marks that the order details, order updated or payment failed email ran out of attempts, for " <>
+                    "Jennie to see."
+
       accept []
       change set_attribute(:order_details_email_failed_at, &DateTime.utc_now/0)
     end

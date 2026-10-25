@@ -34,10 +34,11 @@ defmodule Edenflowers.Orders.Order.Occurrences do
   end
 
   actions do
-    # An Occurrence, made by Subscription's :create_occurrence. Delivery is
-    # priced afresh, and the line item comes from the variant at its current
-    # price, as when it is added to a cart.
     create :create_occurrence do
+      description "Run by a Subscription's job on its Charge day: creates the Occurrence for one subscription " <>
+                    "date, waiting at payment for its charge, with one line at the variant's current price and the " <>
+                    "fee priced afresh."
+
       accept [
         :subscription_id,
         :subscription_date,
@@ -72,6 +73,9 @@ defmodule Edenflowers.Orders.Order.Occurrences do
     end
 
     update :start_subscription do
+      description "Run by its job after a paid subscription cart is placed: starts its Subscription from the " <>
+                    "order's delivery details and saved card, and links the order to it as the first delivery."
+
       accept []
       change Changes.ActivateSubscription
       require_atomic? false
@@ -81,6 +85,9 @@ defmodule Edenflowers.Orders.Order.Occurrences do
     # is placed all the same (ADR 0001), and the customer is emailed a payment
     # link for it.
     update :place_unpaid_occurrence do
+      description "Places an Occurrence whose card was refused, unpaid: opens a payment link, queues the payment " <>
+                    "failed email and notifies the shop."
+
       change transition_state(:placed)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
