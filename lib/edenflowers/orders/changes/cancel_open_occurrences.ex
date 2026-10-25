@@ -10,8 +10,6 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
 
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Subscription
-  alias Edenflowers.ShopTime
 
   @impl true
   # After the transaction, so each order's Stripe refund runs outside the
@@ -29,14 +27,11 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
     query =
       Ash.Query.filter(
         Order,
-        subscription_id == ^subscription.id and origin == :subscription and state == :placed and
-          fulfillment_status == :pending
+        subscription_id == ^subscription.id and origin == :subscription and cancellable? and changes_open?
       )
 
     with {:ok, orders} <- Ash.read(query, authorize?: false) do
-      orders
-      |> Enum.filter(&cancellable?/1)
-      |> Enum.reduce_while({:ok, subscription}, &cancel(&1, &2, cancelled_by))
+      Enum.reduce_while(orders, {:ok, subscription}, &cancel(&1, &2, cancelled_by))
     end
   end
 
@@ -45,12 +40,5 @@ defmodule Edenflowers.Orders.Changes.CancelOpenOccurrences do
       {:ok, _order} -> {:cont, result}
       {:error, error} -> {:halt, {:error, error}}
     end
-  end
-
-  defp cancellable?(order) do
-    deadline_date = order.subscription_date || order.fulfillment_date
-
-    Date.after?(order.fulfillment_date, ShopTime.today()) and
-      Subscription.changes_open_for?(deadline_date)
   end
 end

@@ -99,10 +99,10 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
             {Fields.interval_label(subscription.interval_weeks)}
           </:col>
           <:col :let={subscription} field="next_fulfillment_date" sort={[cycle: [:asc, :desc]]} label={~t"Next delivery"}>
-            <span :if={subscription.state == :active} class="whitespace-nowrap tabular-nums">
-              {Format.date(subscription.next_fulfillment_date, @locale)}
+            <span :if={subscription.next_delivery_date} class="whitespace-nowrap tabular-nums">
+              {Format.date(subscription.next_delivery_date, @locale)}
             </span>
-            <.blank :if={subscription.state != :active} />
+            <.blank :if={!subscription.next_delivery_date} />
           </:col>
           <:col :let={subscription} field="state" sort label={~t"Status"}>
             <.subscription_state_badge state={subscription.state} />

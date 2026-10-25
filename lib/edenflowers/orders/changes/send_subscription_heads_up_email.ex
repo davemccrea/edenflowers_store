@@ -18,7 +18,14 @@ defmodule Edenflowers.Orders.Changes.SendSubscriptionHeadsUpEmail do
       subscription =
         changeset.data
         |> Ash.load!(
-          [:first_order_fulfillment_fee, :fulfillment_option, :user, product_variant: :product],
+          [
+            :first_order_fulfillment_fee,
+            :change_deadline,
+            :charged_on,
+            :fulfillment_option,
+            :user,
+            product_variant: :product
+          ],
           Ash.Context.to_opts(context)
         )
         |> Translations.in_own_locale()

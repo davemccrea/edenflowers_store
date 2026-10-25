@@ -12,7 +12,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
-  alias Edenflowers.ShopTime
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.Components, as: AdminComponents
   alias EdenflowersWeb.Checkout.Fields
@@ -42,14 +41,13 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
           <p class="eyebrow text-base-content/70 mb-2">
             {if @subscription.state == :active, do: ~t"Next delivery", else: ~t"Status"}
           </p>
-          <.next_delivery subscription={@subscription} orders={@orders} locale={@locale} />
+          <.next_delivery subscription={@subscription} locale={@locale} />
         </div>
         <.manage_button subscription={@subscription} />
       </div>
 
       <.manage_drawer
         subscription={@subscription}
-        orders={@orders}
         locale={@locale}
         open_days={@open_days}
         edited?={@edited?}
@@ -284,22 +282,8 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     "#{AdminComponents.variant_size_label(variant.size)} · #{Fields.interval_label(weeks)}"
   end
 
-  # The occurrence job books each delivery ahead of its date, after which
-  # `next_fulfillment_date` has already moved on to the one after.
-  defp booked_delivery(orders, subscription) do
-    orders
-    |> Enum.filter(fn order ->
-      order.subscription_id == subscription.id and order.fulfillment_status != :cancelled and
-        not Date.before?(order.fulfillment_date, ShopTime.today())
-    end)
-    |> Enum.min_by(& &1.fulfillment_date, Date, fn -> nil end)
-  end
-
   defp final_delivery?(nil), do: false
-
-  defp final_delivery?(order) do
-    not Subscription.changes_open_for?(order.subscription_date || order.fulfillment_date)
-  end
+  defp final_delivery?(order), do: not order.changes_open?
 
   attr :subscription, :map, required: true
 
@@ -319,12 +303,11 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   end
 
   attr :subscription, :map, required: true
-  attr :orders, :list, required: true
   attr :locale, :string, required: true
 
   # The list's short form: the date, then one line on what's happening.
   defp next_delivery(%{subscription: %{state: :payment_failed}} = assigns) do
-    assigns = assign(assigns, unpaid: Subscription.unpaid_occurrence(assigns.orders, assigns.subscription))
+    assigns = assign(assigns, unpaid: assigns.subscription.unpaid_occurrence)
 
     ~H"""
     <span class="text-error font-medium">{~t"Payment failed"}</span>
@@ -351,7 +334,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   # Pausing leaves a delivery already being prepared in place.
   defp next_delivery(%{subscription: %{state: :paused}} = assigns) do
-    assigns = assign(assigns, booked: booked_delivery(assigns.orders, assigns.subscription))
+    assigns = assign(assigns, booked: assigns.subscription.booked_occurrence)
 
     ~H"""
     {~t"Paused"}
@@ -363,7 +346,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   end
 
   defp next_delivery(%{subscription: %{state: :cancelled}} = assigns) do
-    assigns = assign(assigns, booked: booked_delivery(assigns.orders, assigns.subscription))
+    assigns = assign(assigns, booked: assigns.subscription.booked_occurrence)
 
     ~H"""
     <span class="font-medium tabular-nums">{Format.weekday_day_month(@booked.fulfillment_date, @locale)}</span>
@@ -372,12 +355,12 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   end
 
   defp next_delivery(assigns) do
-    %{subscription: subscription, orders: orders} = assigns
+    %{subscription: subscription} = assigns
 
     assigns =
       assign(assigns,
-        booked: booked_delivery(orders, subscription),
-        unpaid: Subscription.unpaid_occurrence(orders, subscription),
+        booked: subscription.booked_occurrence,
+        unpaid: subscription.unpaid_occurrence,
         next: subscription.next_fulfillment_date
       )
 
@@ -393,13 +376,12 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       </.link>
     </span>
     <span :if={!@unpaid and !@booked} class="text-base-content/70 block text-sm">
-      {~t"Charged #{date = Format.day_month(Subscription.charged_on(@next), @locale)}"}
+      {~t"Charged #{date = Format.day_month(@subscription.charged_on, @locale)}"}
     </span>
     """
   end
 
   attr :subscription, :map, required: true
-  attr :orders, :list, required: true
   attr :locale, :string, required: true
   attr :open_days, :list, required: true
   attr :edited?, :boolean, required: true
@@ -407,14 +389,13 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   attr :target, :any, required: true
 
   defp manage_drawer(assigns) do
-    %{subscription: subscription, orders: orders} = assigns
+    %{subscription: subscription} = assigns
 
     assigns =
       assign(assigns,
         id: subscription.id,
-        unpaid: Subscription.unpaid_occurrence(orders, subscription),
-        booked: booked_delivery(orders, subscription),
-        open?: subscription.state != :cancelled and not subscription.changes_closed?
+        unpaid: subscription.unpaid_occurrence,
+        booked: subscription.booked_occurrence
       )
 
     ~H"""
@@ -453,7 +434,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
             </div>
 
             <p :if={@subscription.changes_closed?} class="text-base-content/70 mt-2 text-sm" data-testid="changes-closed">
-              {~t"Your next delivery is already being prepared. You can make changes again from #{date = Format.weekday_date(Subscription.changes_reopen_on(@subscription), @locale)}."}
+              {~t"Your next delivery is already being prepared. You can make changes again from #{date = Format.weekday_date(@subscription.changes_reopen_on, @locale)}."}
               <.link navigate={~q"/#{language}/contact"} class="link-underline-hover text-base-content">
                 {~t"Need to change this one? Contact us."}
               </.link>
@@ -468,7 +449,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
             >
               <%!-- One id for both, so the button is patched in place and keeps focus. --%>
               <.button
-                :if={@open? and @subscription.state in [:active, :paused]}
+                :if={@subscription.changeable?}
                 id={"subscription-#{@id}-pause"}
                 type="button"
                 variant={if @subscription.state == :paused, do: "primary", else: "secondary"}
@@ -507,7 +488,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 </p>
               </div>
               <.button
-                :if={@open? and @subscription.state in [:active, :paused]}
+                :if={@subscription.changeable?}
                 type="button"
                 variant="text"
                 class="min-h-11 shrink-0"
@@ -522,7 +503,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
               </.button>
             </div>
             <form
-              :if={@open? and @subscription.state in [:active, :paused]}
+              :if={@subscription.changeable?}
               id={"change-subscription-#{@id}"}
               phx-change="edit_subscription"
               phx-submit="change_subscription"
@@ -619,12 +600,12 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     <%= if @booked do %>
       <p class="font-serif text-lg">{Format.weekday_date(@booked.fulfillment_date, @locale)}</p>
       <p class="text-base-content/70 text-sm">
-        {~t"The one after: #{date = Format.weekday_date(@next, @locale)}, charged on #{charge_date = Format.weekday_date(Subscription.charged_on(@next), @locale)}."}
+        {~t"The one after: #{date = Format.weekday_date(@next, @locale)}, charged on #{charge_date = Format.weekday_date(@subscription.charged_on, @locale)}."}
       </p>
     <% else %>
       <p class="font-serif text-lg">{Format.weekday_date(@next, @locale)}</p>
       <p class="text-base-content/70 text-sm">
-        {~t"Charged to your card on #{date = Format.weekday_date(Subscription.charged_on(@next), @locale)}."}
+        {~t"Charged to your card on #{date = Format.weekday_date(@subscription.charged_on, @locale)}."}
       </p>
     <% end %>
     """
@@ -637,7 +618,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       <span :if={@booked}>
         {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} will still arrive."}
       </span>
-      {~t"Resume now for a delivery on #{date = Format.weekday_date(Subscription.resume_date(@subscription), @locale)}."}
+      {~t"Resume now for a delivery on #{date = Format.weekday_date(@subscription.resume_date, @locale)}."}
     </p>
     """
   end

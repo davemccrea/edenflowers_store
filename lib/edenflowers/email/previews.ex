@@ -673,6 +673,8 @@ defmodule Edenflowers.Email.Previews do
         delivery_address: "Strandgatan 12, 65100 Vaasa",
         first_delivery_date: ~D[2026-11-14],
         next_fulfillment_date: ~D[2026-11-28],
+        charged_on: ~D[2026-11-26],
+        change_deadline: ~D[2026-11-25],
         first_order_discounted?: true,
         card_message: "Happy birthday!"
       },

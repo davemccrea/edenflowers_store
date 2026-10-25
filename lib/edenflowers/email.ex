@@ -317,7 +317,7 @@ defmodule Edenflowers.Email do
   The heads-up before a 2- or 4-week subscription's next delivery or pickup:
   when, the last day to change it, and when the card is charged and how much.
   Matter-of-fact, from the shop. Loads as `subscription_set_up/1`, without
-  the user or first delivery.
+  the user or first delivery, and with `:change_deadline` and `:charged_on`.
   """
   def subscription_heads_up(subscription) do
     delivery_on = subscription.next_fulfillment_date
@@ -337,8 +337,8 @@ defmodule Edenflowers.Email do
           product: subscription.product_variant.product.name,
           pickup?: pickup?,
           price: Format.currency(subscription_price(subscription), subscription.locale),
-          change_by: Subscription.change_deadline(delivery_on),
-          charged_on: Subscription.charged_on(delivery_on),
+          change_by: subscription.change_deadline,
+          charged_on: subscription.charged_on,
           account_url: account_url(),
           format_date: &Format.weekday_date(&1, subscription.locale)
         })
