@@ -104,7 +104,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
         default_actor system_actor()
 
         where expr(
-                status in [:pending, :awaiting_payment] and not is_nil(payment_intent_id) and
+                status in [:pending, :awaiting_payment, :confirmed] and not is_nil(payment_intent_id) and
                   updated_at < ago(5, :minute) and updated_at > ago(7, :day)
               )
       end
