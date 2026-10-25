@@ -13,24 +13,84 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
   import EdenflowersWeb.Marketing.TrustedBy
 
-  # Placeholder quotes to preview the layout; only rendered in dev until real reviews arrive.
-  @sample_reviews_visible? Application.compile_env(:edenflowers, :dev_routes, false)
-  @sample_reviews [
-    %{
-      quote: "The bouquet for my mum's 70th was even lovelier than the photo. She's still talking about it.",
-      name: "Anna",
-      source: "Google"
-    },
-    %{
-      quote: "Jennie did the flowers for our wedding and understood exactly what we wanted from one conversation.",
-      name: "Mikael and Sara",
-      source: "Google"
-    },
-    %{
-      quote: "Ordered at lunch, delivered the same afternoon. Fresh, generous and beautifully wrapped.",
-      name: "Liisa",
-      source: "Instagram"
-    }
+  # From feedback.md, in the customer's own language, with emoji dropped and long messages trimmed.
+  # `en` is shown beneath the original on /en only. `occasion` is set only where the message names it.
+  @review_pages [
+    [
+      %{
+        quote:
+          "Fick otroligt många komplimanger för brudbuketten under kvällens gång. Buketten lyfte liksom bilderna, och det blev bättre än vad vi hade hoppats på!",
+        en:
+          "So many compliments on the bridal bouquet all evening. It really lifted the photos, and it turned out better than we'd hoped!",
+        name: "Fanny",
+        occasion: :wedding,
+        lang: "sv"
+      },
+      %{
+        quote: "Kiitos paljon ihanista hääkukista. Ne olivat täydellisemmät kuin osasin edes toivoa.",
+        en: "Thank you so much for the lovely wedding flowers. They were more perfect than I could have hoped for.",
+        name: "Aino",
+        occasion: :wedding,
+        lang: "fi"
+      },
+      %{
+        quote:
+          "Ville bara berätta hur prisvärda och fina dina buketter är jämfört med konkurrenterna. Dina är ju superfina och unika och enligt mamma och pappa så håller dom jättebra!",
+        en:
+          "Just wanted to say how good value and lovely your bouquets are compared to the competition. Yours are so beautiful and unique, and mum and dad say they last really well!",
+        name: "Minéa",
+        lang: "sv"
+      }
+    ],
+    [
+      %{
+        quote:
+          "Var så smidigt att du kunde ta dej dit under dagen och fixa i lugn och ro, och jag kände aldrig någon stress över att blommorna inte skulle vara perfekta.",
+        en:
+          "It was so easy that you could come over during the day and set up in peace, and I never once worried the flowers wouldn't be perfect.",
+        name: "Julia",
+        lang: "sv"
+      },
+      %{
+        quote:
+          "Teit meille kukat häihimme pari vuotta sitten, joten oli ihana saada kukat sinulta myös tyttäremme ensimmäiseen suureen juhlaan.",
+        en:
+          "You did the flowers for our wedding a couple of years ago, so it was lovely to have your flowers for our daughter's first big celebration too.",
+        name: "Aino",
+        occasion: :christening,
+        lang: "fi"
+      },
+      %{
+        quote: "Så fint att du finns, du är en riktig räddare i nöden!",
+        en: "So glad you're here, you're a real lifesaver!",
+        name: "Elinor",
+        lang: "sv"
+      }
+    ],
+    [
+      %{
+        quote: "Vi fick så mycket beröm för dekoren på bröllopet. Det blev både elegant, vackert och romantiskt!",
+        en: "We got so much praise for the decor at the wedding. It was elegant, beautiful and romantic!",
+        name: "Lena",
+        occasion: :wedding,
+        lang: "sv"
+      },
+      %{
+        quote:
+          "Brudbuketten var ännu vackrare än vad jag hade förväntat mig. Absolut perfekt och passade superbra till helheten.",
+        en:
+          "The bridal bouquet was even more beautiful than I'd expected. Absolutely perfect, and it suited the whole look.",
+        name: "Katariina",
+        occasion: :wedding,
+        lang: "sv"
+      },
+      %{
+        quote: "Tack för underbara buketter! Vi var verkligen så nöjda! Och gästerna frågade också varifrån de var!",
+        en: "Thank you for the wonderful bouquets! We were so happy! And the guests kept asking where they were from!",
+        name: "Anna",
+        lang: "sv"
+      }
+    ]
   ]
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -48,13 +108,33 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
          ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within 5 km of Minimossen on selected bouquets.",
        json_ld: EdenflowersWeb.Business.florist(),
        products: products,
-       reviews: if(@sample_reviews_visible?, do: @sample_reviews, else: []),
+       review_pages: @review_pages,
+       review_page: 0,
+       review_leaving: nil,
+       review_direction: nil,
+       show_review_translations?: Gettext.get_locale(EdenflowersWeb.Gettext) == "en",
        subscribable_products: Catalog.list_subscribable_products!() |> Translations.translate(),
        price_from: price_from(Catalog.list_bouquets!(), locale),
        next_fulfillment: next_fulfillment(locale),
        delivery_fee: delivery_fee(locale)
      )}
   end
+
+  @impl true
+  def handle_event("turn_reviews", %{"by" => by}, socket) when by in ["-1", "1"] do
+    step = if by == "1", do: 1, else: -1
+    leaving = socket.assigns.review_page
+
+    {:noreply,
+     assign(socket,
+       review_page: Integer.mod(leaving + step, length(@review_pages)),
+       review_leaving: leaving,
+       review_direction: step
+     )}
+  end
+
+  defp occasion_label(:wedding), do: ~t"Wedding"
+  defp occasion_label(:christening), do: ~t"Christening"
 
   defp price_from(products, locale) do
     case products |> Enum.map(& &1.cheapest_price) |> Enum.reject(&is_nil/1) do
@@ -416,22 +496,93 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <.trusted_by />
 
-      <section :if={@reviews != []} class="not-last:border-b" aria-labelledby="reviews-heading">
+      <section class="not-last:border-b" aria-labelledby="reviews-heading">
         <div class="container py-20 md:py-28">
-          <h2 id="reviews-heading" class="section-title mb-12">{~t"What customers say"}</h2>
-          <ul class="grid gap-12 md:grid-cols-3 md:gap-8">
-            <li :for={review <- @reviews}>
-              <figure class="flex h-full flex-col gap-6">
-                <.flower name="flower-30" class="text-base-content/30 h-8 w-8" />
-                <blockquote class="font-serif text-balance text-xl leading-snug md:text-2xl">
-                  {review.quote}
-                </blockquote>
-                <figcaption class="eyebrow text-base-content/70 mt-auto">
-                  {review.name} · {review.source}
-                </figcaption>
-              </figure>
-            </li>
-          </ul>
+          <div class="mb-12 flex items-end justify-between gap-4">
+            <h2 id="reviews-heading" class="section-title">{~t"What customers say"}</h2>
+
+            <div class="flex items-center gap-2">
+              <.icon_button
+                type="button"
+                phx-click="turn_reviews"
+                phx-value-by="-1"
+                aria_label={~t"Previous slide"}
+                aria-controls="review-pages"
+              >
+                <.icon name="hero-chevron-left" class="h-5 w-5" />
+              </.icon_button>
+              <p class="text-base-content/70 text-sm tabular-nums" aria-hidden="true">
+                {@review_page + 1} / {length(@review_pages)}
+              </p>
+              <.icon_button
+                type="button"
+                phx-click="turn_reviews"
+                phx-value-by="1"
+                aria_label={~t"Next slide"}
+                aria-controls="review-pages"
+              >
+                <.icon name="hero-chevron-right" class="h-5 w-5" />
+              </.icon_button>
+            </div>
+          </div>
+          <div
+            id="review-pages"
+            phx-hook=".ReviewsEntrance"
+            class="review-pages"
+            aria-live="polite"
+            data-turned={@review_direction != nil}
+            style={@review_direction && "--direction: #{@review_direction};"}
+          >
+            <ul
+              :for={{page, i} <- Enum.with_index(@review_pages)}
+              class="grid gap-12 md:grid-cols-3 md:gap-8"
+              data-active={i == @review_page}
+              data-leaving={i == @review_leaving}
+              inert={i != @review_page}
+            >
+              <li :for={{review, n} <- Enum.with_index(page)} style={"--n: #{n};"}>
+                <figure class="flex flex-col gap-6">
+                  <.flower name="flower-30" class="text-base-content/30 h-8 w-8" />
+                  <div class="flex flex-col gap-3">
+                    <blockquote lang={review.lang} class="font-serif text-balance text-xl leading-snug md:text-2xl">
+                      {review.quote}
+                    </blockquote>
+                    <p
+                      :if={@show_review_translations?}
+                      class="text-base-content/70 font-serif text-pretty text-lg italic leading-snug"
+                    >
+                      {review.en}
+                    </p>
+                  </div>
+                  <figcaption class="eyebrow text-base-content/70">
+                    {review.name}<span :if={review[:occasion]}> · {occasion_label(review.occasion)}</span>
+                  </figcaption>
+                </figure>
+              </li>
+            </ul>
+          </div>
+          <script :type={Phoenix.LiveView.ColocatedHook} name=".ReviewsEntrance">
+            // The first quotes arrive like a turn the first time the section scrolls into view.
+            // Skipped when it's already on screen at mount, so nothing visible blinks out and back.
+            export default {
+              mounted() {
+                // The observer always reports once on observe, with where the section is right now.
+                let firstReport = true;
+                this.observer = new IntersectionObserver(([entry]) => {
+                  if (entry.isIntersecting) {
+                    if (!firstReport) this.js().setAttribute(this.el, "data-entering", "");
+                    this.observer.disconnect();
+                  }
+                  firstReport = false;
+                });
+                this.observer.observe(this.el);
+              },
+
+              destroyed() {
+                this.observer.disconnect();
+              },
+            };
+          </script>
         </div>
       </section>
 
