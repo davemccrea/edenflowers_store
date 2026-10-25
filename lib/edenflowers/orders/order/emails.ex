@@ -1,0 +1,207 @@
+defmodule Edenflowers.Orders.Order.Emails do
+  @moduledoc """
+  The emails an order sends its customer. Each is queued by the action that
+  calls for it and sent once by its trigger's job (ADR 0005), except the few
+  Jennie sends by hand from the order's menu.
+  """
+
+  use Spark.Dsl.Fragment, of: Ash.Resource, extensions: [AshOban]
+
+  import Edenflowers.Actors
+
+  alias Edenflowers.Orders.Changes
+  alias Edenflowers.Orders.Validations
+  alias Edenflowers.Payments.Changes, as: PaymentChanges
+
+  oban do
+    triggers do
+      # Queued by QueueEmail when Stripe takes a payment. A payment
+      # Jennie records gets its receipt only when she sends one.
+      trigger :send_receipt_email do
+        action :send_receipt_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendReceiptEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendReceiptEmail
+        default_actor system_actor()
+        on_error :record_receipt_email_failure
+      end
+
+      # Queued when Jennie places a custom order and ticks "email the customer".
+      trigger :send_order_details_email do
+        action :send_order_details_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendOrderDetailsEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendOrderDetailsEmail
+        default_actor system_actor()
+        on_error :record_order_details_email_failure
+      end
+
+      # Queued when Jennie saves an edit and ticks "email the customer".
+      trigger :send_order_updated_email do
+        action :send_order_updated_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendOrderUpdatedEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendOrderUpdatedEmail
+        default_actor system_actor()
+        on_error :record_order_details_email_failure
+      end
+
+      # Queued by :place_unpaid_occurrence when an Occurrence's card is refused.
+      trigger :send_payment_failed_email do
+        action :send_payment_failed_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendPaymentFailedEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentFailedEmail
+        default_actor system_actor()
+        on_error :record_order_details_email_failure
+      end
+
+      # Queued when a payment link is paid, and by EmailReceipt when Jennie
+      # records a payment and ticks it.
+      trigger :send_payment_received_email do
+        action :send_payment_received_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendPaymentReceivedEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentReceivedEmail
+        default_actor system_actor()
+        on_error :record_receipt_email_failure
+      end
+
+      # Queued only when Jennie asks for it, on :mark_fulfilled or
+      # :email_fulfillment_confirmation. A job that runs out of attempts records
+      # the failure for her to see and send again.
+      trigger :send_fulfillment_email do
+        action :send_fulfillment_email
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendFulfillmentEmail
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendFulfillmentEmail
+        default_actor system_actor()
+        on_error :record_fulfillment_email_failure
+      end
+    end
+  end
+
+  actions do
+    # What its cancelled and refunded emails need.
+    read :for_customer_email do
+      prepare build(load: [:customer_first_name, :payments])
+    end
+
+    update :send_receipt_email do
+      accept []
+      transaction? false
+      require_atomic? false
+      change Changes.SendReceiptEmail
+    end
+
+    update :send_order_details_email do
+      accept []
+      validate {Validations.Holds, calculation: :details_emailable?, message: "can't be emailed order details"}
+      argument :message, :string
+      transaction? false
+      require_atomic? false
+      change {Changes.SendOrderDetailsEmail, email: :order_details}
+    end
+
+    update :send_order_updated_email do
+      accept []
+      argument :message, :string
+      transaction? false
+      require_atomic? false
+      change {Changes.SendOrderDetailsEmail, email: :order_updated}
+    end
+
+    update :send_payment_failed_email do
+      accept []
+      transaction? false
+      require_atomic? false
+      change {Changes.SendOrderDetailsEmail, email: :subscription_payment_failed}
+    end
+
+    update :send_payment_received_email do
+      accept []
+      argument :amount, :decimal
+      argument :message, :string
+      transaction? false
+      require_atomic? false
+      change PaymentChanges.SendPaymentReceivedEmail
+    end
+
+    update :send_fulfillment_email do
+      accept []
+      argument :message, :string
+      transaction? false
+      require_atomic? false
+      change Changes.SendFulfillmentEmail
+    end
+
+    # Payment received again, from the order's menu.
+    update :email_receipt do
+      accept []
+      argument :message, :string
+      validate {Validations.Holds, calculation: :receipt_available?, message: "is not paid yet"}
+      validate present(:customer_email), message: "has no email address"
+      transaction? false
+      require_atomic? false
+      change PaymentChanges.SendPaymentReceivedEmail
+    end
+
+    # Sent by hand only. Opens a payment link if none is open.
+    update :send_payment_reminder do
+      argument :message, :string
+
+      validate {Validations.Holds,
+                calculation: :payment_reminder_sendable?, message: "can't be sent a payment reminder"}
+
+      transaction? false
+      require_atomic? false
+      change PaymentChanges.OpenPaymentLink
+      change {Changes.SendOrderDetailsEmail, email: :payment_reminder}
+    end
+
+    # Sends with the photo choice stored by :mark_fulfilled.
+    update :email_fulfillment_confirmation do
+      accept []
+
+      validate {Validations.Holds,
+                calculation: :fulfillment_confirmation_sendable?, message: "can't be emailed a fulfillment confirmation"}
+
+      argument :message, :string
+      change {PaymentChanges.QueueEmail, trigger: :send_fulfillment_email}
+    end
+
+    # AshOban passes the error to these, which the errors page already shows.
+    update :record_fulfillment_email_failure do
+      accept []
+      change set_attribute(:fulfillment_email_failed_at, &DateTime.utc_now/0)
+    end
+
+    update :record_receipt_email_failure do
+      accept []
+      change set_attribute(:receipt_email_failed_at, &DateTime.utc_now/0)
+    end
+
+    update :record_order_details_email_failure do
+      accept []
+      change set_attribute(:order_details_email_failed_at, &DateTime.utc_now/0)
+    end
+  end
+end
