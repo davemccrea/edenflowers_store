@@ -9,7 +9,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
   import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
 
-  alias Edenflowers.Courses.Changes
+  alias Edenflowers.Courses.CourseRegistration.Changes
   alias Edenflowers.Payments.Changes, as: PaymentChanges
 
   @locales Edenflowers.Locales.all()

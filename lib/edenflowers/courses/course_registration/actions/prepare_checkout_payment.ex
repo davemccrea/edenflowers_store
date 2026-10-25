@@ -1,4 +1,4 @@
-defmodule Edenflowers.Courses.Actions.PrepareCheckoutPayment do
+defmodule Edenflowers.Courses.CourseRegistration.Actions.PrepareCheckoutPayment do
   @moduledoc """
   Readies the PaymentIntent of a booking being paid on the course page, at
   its current price. Refuses, with `Payments.Errors.NotPayable`, a course

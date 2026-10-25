@@ -1,4 +1,4 @@
-defmodule Edenflowers.Courses.Changes.SendConfirmationEmail do
+defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail do
   @moduledoc """
   Sends a paid course booking its confirmation, with the receipt attached.
   """

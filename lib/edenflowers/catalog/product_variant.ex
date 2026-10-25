@@ -76,7 +76,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
       ]
     ]
 
-    # Stock never goes below 0; see Orders.Changes.AdjustStock.
+    # Stock never goes below 0; see Orders.Order.Changes.AdjustStock.
     update :adjust_stock do
       argument :by, :integer, allow_nil?: false
 

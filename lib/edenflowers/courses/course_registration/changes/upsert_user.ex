@@ -1,4 +1,4 @@
-defmodule Edenflowers.Courses.Changes.UpsertUser do
+defmodule Edenflowers.Courses.CourseRegistration.Changes.UpsertUser do
   @moduledoc """
   Links the registration to the user with its email, creating one if needed,
   as orders do. A guest booking then shows on the account page once that

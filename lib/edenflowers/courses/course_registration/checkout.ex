@@ -8,8 +8,8 @@ defmodule Edenflowers.Courses.CourseRegistration.Checkout do
 
   import Ash.Expr, only: [expr: 1]
 
-  alias Edenflowers.Courses.Actions
-  alias Edenflowers.Courses.Changes
+  alias Edenflowers.Courses.CourseRegistration.Actions
+  alias Edenflowers.Courses.CourseRegistration.Changes
 
   @locales Edenflowers.Locales.all()
 
