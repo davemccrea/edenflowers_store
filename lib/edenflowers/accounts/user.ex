@@ -220,6 +220,12 @@ defmodule Edenflowers.Accounts.User do
   end
 
   validations do
+    # email stays a :ci_string for case-insensitive matching, so the format
+    # check from Edenflowers.Types.Email is applied here instead.
+    validate match(:email, Edenflowers.Types.Email.format()),
+      message: "Must be a valid email address",
+      where: changing(:email)
+
     validate attribute_in(:locale, Edenflowers.Locales.all()), where: present(:locale)
   end
 
