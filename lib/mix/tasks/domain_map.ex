@@ -311,6 +311,7 @@ defmodule Mix.Tasks.DomainMap do
       pre { margin: 0; flex: 1; min-width: 0; }
       .key { flex: 0 0 260px; overflow: auto; border-right: 1px solid #ccc; padding: 8px 12px; font: 12px/1.4 system-ui, sans-serif; }
       .key summary { font-weight: 600; cursor: pointer; }
+      .key:not([open]) { flex-basis: auto; }
       .key p { margin: 6px 0; }
       .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
       .chip { padding: 1px 6px; border: 1px solid; border-radius: 3px; }
@@ -331,7 +332,14 @@ defmodule Mix.Tasks.DomainMap do
       svg.style.maxWidth = "none";
       svg.setAttribute("width", "100%");
       svg.setAttribute("height", "100%");
-      svgPanZoom(svg, { controlIcons: true, zoomScaleSensitivity: 0.3, maxZoom: 20 });
+      const panZoom = svgPanZoom(svg, { controlIcons: true, zoomScaleSensitivity: 0.3, maxZoom: 20 });
+
+      // Opening or closing the key changes the diagram's width
+      document.querySelector(".key").addEventListener("toggle", () => {
+        panZoom.resize();
+        panZoom.fit();
+        panZoom.center();
+      });
     </script>
     </body>
     </html>
