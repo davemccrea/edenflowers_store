@@ -24,7 +24,16 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
   alias Edenflowers.Payments.Payment
 
   # Whatever the caller loaded about the money is stale now.
-  @payable_fields [:amount_paid, :amount_held, :paid_outside_stripe, :balance, :refunded?, :settled?]
+  @payable_fields [
+    :amount_paid,
+    :amount_held,
+    :paid_outside_stripe,
+    :balance,
+    :refunded?,
+    :settled?,
+    :to_collect?,
+    :to_refund?
+  ]
 
   @impl true
   def change(changeset, opts, _context) do

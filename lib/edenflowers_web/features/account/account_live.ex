@@ -654,16 +654,12 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp assign_timeline(socket) do
     %{orders: orders, registrations: registrations, subscriptions: subscriptions} = socket.assigns
-    today = ShopTime.today()
 
     order_entries =
       Enum.map(orders, &%{type: :order, item: &1, date: order_date(&1), upcoming?: &1.upcoming?})
 
     course_entries =
-      Enum.map(registrations, fn registration ->
-        date = registration.course.date
-        %{type: :course, item: registration, date: date, upcoming?: not Date.before?(date, today)}
-      end)
+      Enum.map(registrations, &%{type: :course, item: &1, date: &1.course.date, upcoming?: &1.upcoming?})
 
     # A delivery already booked is an order above; this is the one after it.
     subscription_entries =
@@ -682,7 +678,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp order_date(order), do: order.fulfillment_date || ordered_on(order)
 
   defp registrations(user) do
-    Courses.list_my_registrations!(actor: user, load: [:course, :seats_held])
+    Courses.list_my_registrations!(actor: user, load: [:course, :seats_held, :upcoming?])
     |> Translations.translate_assoc(:course)
   end
 

@@ -9,10 +9,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
 
-  def to_collect?(registration), do: not registration.settled? and Decimal.positive?(registration.balance)
-
-  def to_refund?(registration), do: not registration.settled? and Decimal.negative?(registration.balance)
-
   attr :form, :any, required: true
   attr :course, :map, required: true
   attr :locale, :string, required: true
@@ -103,7 +99,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           swedish_toggle?={@registration.locale != "sv-FI"}
         />
         <.collect_payment
-          :if={@mode == :settle and to_collect?(@registration)}
+          :if={@mode == :settle and @registration.to_collect?}
           course={@course}
           registration={@registration}
           locale={@locale}
@@ -120,7 +116,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   defp settlement_title(:settle), do: ~t"Collect payment"
 
   defp nothing_to_settle?(registration, :refund), do: not registration.refundable?
-  defp nothing_to_settle?(registration, :settle), do: not to_collect?(registration)
+  defp nothing_to_settle?(registration, :settle), do: not registration.to_collect?
 
   attr :course, :map, required: true
   attr :registration, :map, required: true
@@ -148,7 +144,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
         <dt class="text-base-content/75">{~t"Paid"}</dt>
         <dd>{Format.currency(@registration.amount_paid, @locale)}</dd>
       </div>
-      <div :if={to_collect?(@registration)} class="flex justify-between gap-4 py-2">
+      <div :if={@registration.to_collect?} class="flex justify-between gap-4 py-2">
         <dt class="text-base-content/75">{~t"To collect"}</dt>
         <dd class="font-semibold">{Format.currency(@registration.balance, @locale)}</dd>
       </div>
@@ -159,7 +155,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
         <dt class="text-base-content/75">{~t"Kept"}</dt>
         <dd>{Format.currency(@registration.kept_amount, @locale)}</dd>
       </div>
-      <div :if={to_refund?(@registration)} class="flex justify-between gap-4 py-2">
+      <div :if={@registration.to_refund?} class="flex justify-between gap-4 py-2">
         <dt class="text-base-content/75">{~t"To refund"}</dt>
         <dd class="font-semibold">{Format.currency(Decimal.abs(@registration.balance), @locale)}</dd>
       </div>

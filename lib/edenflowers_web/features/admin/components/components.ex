@@ -590,7 +590,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :order, :map,
     required: true,
-    doc: "needs `payment_status`, `settled?`, `amount_paid` and `balance`"
+    doc: "needs `payment_status`, `settled?`, `to_collect?`, `amount_paid` and `balance`"
 
   attr :locale, :string, required: true
 
@@ -602,10 +602,10 @@ defmodule EdenflowersWeb.Admin.Components do
     ~H"""
     <.badge
       :if={@owes_money?}
-      tone={if Decimal.positive?(@order.balance), do: :warning, else: :error}
+      tone={if @order.to_collect?, do: :warning, else: :error}
       class="tabular-nums"
     >
-      <%= if Decimal.positive?(@order.balance) do %>
+      <%= if @order.to_collect? do %>
         {~t"To collect #{amount = Edenflowers.Format.currency(@order.balance, @locale)}"}
       <% else %>
         {~t"To refund #{amount = Edenflowers.Format.currency(Decimal.abs(@order.balance), @locale)}"}
@@ -616,7 +616,7 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   attr :id, :string, required: true
-  attr :record, :map, required: true, doc: "an order, with `balance` and `settled?` loaded"
+  attr :record, :map, required: true, doc: "an order, with `balance`, `settled?` and `to_collect?` loaded"
   attr :locale, :string, required: true
   attr :class, :any, default: nil
   slot :inner_block, doc: "more ways to settle it, like the order page's payment link"
@@ -631,7 +631,7 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   def balance_panel(assigns) do
-    assigns = assign(assigns, :collect?, Decimal.positive?(assigns.record.balance))
+    assigns = assign(assigns, :collect?, assigns.record.to_collect?)
 
     ~H"""
     <div id={@id} class={["border-base-content/12 border-t pt-4", @class]}>

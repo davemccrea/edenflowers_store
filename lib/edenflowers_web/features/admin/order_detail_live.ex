@@ -451,8 +451,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   attr :preview, Swoosh.Email, default: nil
 
   defp settlement_drawer(assigns) do
-    assigns = assign(assigns, :collect?, Decimal.positive?(assigns.order.balance))
-
     ~H"""
     <.admin_drawer id="settlement-drawer" title={settlement_title(@order, @mode)}>
       <.drawer_body>
@@ -470,7 +468,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             <dd>{Format.currency(@order.amount_paid, @locale)}</dd>
           </div>
           <div :if={not @order.settled?} class="flex justify-between gap-4 py-2">
-            <dt class="text-base-content/75">{if @collect?, do: ~t"To collect", else: ~t"To refund"}</dt>
+            <dt class="text-base-content/75">{if @order.to_collect?, do: ~t"To collect", else: ~t"To refund"}</dt>
             <dd class="font-semibold">{Format.currency(Decimal.abs(@order.balance), @locale)}</dd>
           </div>
         </dl>
@@ -486,7 +484,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           swedish_toggle?={swedish_toggle?(@order)}
         />
         <.record_payment_form
-          :if={@mode == :settle and @collect?}
+          :if={@mode == :settle and @order.to_collect?}
           id="order-balance"
           record={@order}
           locale={@locale}
@@ -507,7 +505,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp settlement_title(_order, :settle), do: ~t"Record payment"
 
   defp nothing_to_settle?(order, :refund), do: not order.refundable?
-  defp nothing_to_settle?(order, :settle), do: not Decimal.positive?(order.balance)
+  defp nothing_to_settle?(order, :settle), do: not order.to_collect?
 
   attr :form, :any, default: nil
   attr :error, :string, default: nil
@@ -722,7 +720,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   # Money owed back, or the menu's Refund, opens the refund form.
   def handle_event("open_settlement", params, socket) do
     mode =
-      if params["mode"] == "refund" or Decimal.negative?(socket.assigns.order.balance),
+      if params["mode"] == "refund" or socket.assigns.order.to_refund?,
         do: :refund,
         else: :settle
 

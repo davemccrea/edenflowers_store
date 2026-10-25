@@ -1,10 +1,10 @@
 ---
 id: TASK-121.3
 title: Move course booking rules into calculations
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-25 10:08'
-updated_date: '2026-10-25 10:43'
+updated_date: '2026-10-25 11:13'
 labels: []
 dependencies:
   - TASK-120
@@ -23,8 +23,8 @@ Add refund_on_cancelling to Payable (an order refunds all it holds; a booking ap
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The cancel drawer prefills from refund_on_cancelling and :cancel without a refund argument refunds that amount
-- [ ] #2 The account timeline sorts course bookings by CourseRegistration.upcoming?
+- [x] #1 The cancel drawer prefills from refund_on_cancelling and :cancel without a refund argument refunds that amount
+- [x] #2 The account timeline sorts course bookings by CourseRegistration.upcoming?
 <!-- AC:END -->
 
 ## Comments

@@ -21,6 +21,8 @@ defmodule Edenflowers.Payments.PayableTest do
     :balance,
     :refunded?,
     :settled?,
+    :to_collect?,
+    :to_refund?,
     :amount_held,
     :refundable?
   ]
@@ -178,6 +180,8 @@ defmodule Edenflowers.Payments.PayableTest do
 
         assert_money(record.balance, "50.00")
         refute record.settled?
+        assert record.to_collect?
+        refute record.to_refund?
       end
 
       test "cancelled and never paid owes nothing" do
@@ -193,6 +197,8 @@ defmodule Edenflowers.Payments.PayableTest do
 
         assert_money(record.balance, "-80.00")
         refute record.settled?
+        assert record.to_refund?
+        refute record.to_collect?
         assert record.refundable?
       end
 
@@ -210,6 +216,8 @@ defmodule Edenflowers.Payments.PayableTest do
         assert record.refunded?
         assert record.settled?
         assert_money(record.balance, "80.00")
+        refute record.to_collect?
+        refute record.to_refund?
       end
 
       test "lowered after paying by card and cash owes the difference back" do
