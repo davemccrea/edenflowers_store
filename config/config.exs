@@ -1,5 +1,15 @@
 import Config
 
+# Load .env so mix works without `source .env`, which Claude Code's worktree isolation refuses.
+# Without it a worktree silently falls back to main's database. Variables already set win.
+if config_env() != :prod and File.exists?(".env") do
+  for "export " <> pair <- File.read!(".env") |> String.split("\n", trim: true),
+      [key, value] = String.split(pair, "=", parts: 2),
+      System.get_env(key) == nil do
+    System.put_env(key, value)
+  end
+end
+
 config :ash_oban, pro?: false
 config :cinder, default_theme: "daisy_ui", gettext_backend: EdenflowersWeb.Gettext, show_filters: :toggle_open
 
