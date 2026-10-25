@@ -357,8 +357,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     actor = socket.assigns.current_user
 
     socket =
-      case Courses.discard_registration(id, actor: actor) do
-        {:ok, nil} -> put_flash(socket, :info, ~t"Invite withdrawn.")
+      with {:ok, invite} <- Courses.get_registration_by_id(id, actor: actor),
+           :ok <- Courses.discard_registration(invite, actor: actor) do
+        put_flash(socket, :info, ~t"Invite withdrawn.")
+      else
         _ -> put_flash(socket, :error, ~t"Could not withdraw the invite.")
       end
 

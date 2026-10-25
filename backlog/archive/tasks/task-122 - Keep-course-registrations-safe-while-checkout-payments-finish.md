@@ -1,13 +1,14 @@
 ---
 id: TASK-122
 title: Keep course registrations safe while checkout payments finish
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-25 13:34'
-updated_date: '2026-10-25 13:50'
+updated_date: '2026-10-25 14:44'
 labels:
   - customers
   - admin
+  - wontfix
 dependencies: []
 priority: high
 type: bug
@@ -43,3 +44,16 @@ Verification: initial domain regressions reproduced stale-copy and replacement-i
 
 Saved as WIP at the user's request. Local checks pass, but this is a checkpoint rather than a final sign-off; live Stripe timing remains unverified.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-25 14:44
+
+---
+
+Superseded by TASK-123: checkout now revises the registration in place, so customers no longer delete records Stripe may be paying. Reverted the discard_or_retain action and the extra CancelOpenPaymentIntent/delete_custom guards; kept the typed PaymentInProgress error.
+
+---
+<!-- COMMENTS:END -->
