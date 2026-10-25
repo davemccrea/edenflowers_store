@@ -69,6 +69,32 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       %{order: Orders.get_order_for_checkout!(order.id, actor: nil)}
     end
 
+    test "removing the last item from payment redirects without rendering a missing form", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+      [line_item] = order.line_items
+
+      view |> element("#checkout-line-items-remove-#{line_item.id}") |> render_click()
+
+      assert_redirect(view, "/en", 1_000)
+    end
+
+    test "a cart notification arriving after a checkout reset redirects from payment", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+      [line_item] = order.line_items
+
+      :ok = :sys.suspend(view.pid)
+
+      try do
+        # An older cart notification can be ahead of the reset's redirect in the mailbox.
+        send(view.pid, %Phoenix.Socket.Broadcast{topic: "line_item:changed:#{order.id}"})
+        Orders.remove_line_item!(order, line_item.id, authorize?: false)
+      after
+        :sys.resume(view.pid)
+      end
+
+      assert_redirect(view, "/en", 1_000)
+    end
+
     test "shows the Payment Element the total before any PaymentIntent exists", %{conn: conn, order: order} do
       {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
 
@@ -704,9 +730,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn = Plug.Test.init_test_session(conn, %{order_id: stale.id})
 
-      capture_log(fn ->
-        assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, "/checkout")
-      end)
+      log =
+        capture_log(fn ->
+          assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, "/checkout")
+        end)
+
+      refute log =~ "[error]"
 
       reloaded = Orders.get_order_for_checkout!(stale.id, actor: nil)
       assert reloaded.line_items == []

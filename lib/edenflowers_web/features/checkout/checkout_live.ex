@@ -77,14 +77,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       {:error, :empty_cart} ->
         # Reset so a stale step or details don't survive into the next checkout.
         Orders.restart_checkout!(order, actor: socket.assigns[:current_user])
-        handle_mount_error(socket, "Cart is empty", ~t"Cart is empty")
+        handle_mount_error(socket, ~t"Cart is empty")
 
       {:error, :add_ons_only} ->
         {:ok, back_to_store(socket)}
 
       error ->
         Logger.error("Error loading checkout: #{inspect(error)}")
-        handle_mount_error(socket, "Error loading checkout", ~t"Error loading checkout")
+        handle_mount_error(socket, ~t"Error loading checkout")
     end
   end
 
@@ -596,7 +596,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
     order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
 
-    if order.add_ons_only?, do: {:noreply, back_to_store(socket)}, else: apply_cart_change(socket, order)
+    cond do
+      order.cart_effectively_empty? -> {:noreply, push_navigate(socket, to: ~q"/#{language}")}
+      order.add_ons_only? -> {:noreply, back_to_store(socket)}
+      true -> apply_cart_change(socket, order)
+    end
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
@@ -911,9 +915,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp vat(order, quote), do: Vat.total(%{order | fulfillment_fee: delivery_fee(order, quote)})
 
-  defp handle_mount_error(socket, log_message, flash_message) do
-    Logger.error(log_message)
-
+  defp handle_mount_error(socket, flash_message) do
     {:ok,
      socket
      |> put_flash(:error, flash_message)
