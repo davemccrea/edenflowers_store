@@ -255,7 +255,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           variants != [] do
         price = variants |> Enum.min_by(& &1.price, Decimal) |> Map.fetch!(:price)
 
-        ~t"#{name = EdenflowersWeb.CardDrawer.size_label(size)}: up to #{chars = ProductVariantSize.max_message_length(size)} characters, from #{price = Format.currency(price, locale)}"
+        ~t"#{name = variant_size_label(size)}: up to #{chars = ProductVariantSize.max_message_length(size)} characters, from #{price = Format.currency(price, locale)}"
       end
 
     intro = ~t"Yes, on gifts. Choose a card at checkout and write your message."

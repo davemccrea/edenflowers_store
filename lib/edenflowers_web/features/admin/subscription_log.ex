@@ -10,7 +10,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  import EdenflowersWeb.Admin.Components, only: [variant_size_label: 1]
+  import EdenflowersWeb.CoreComponents, only: [variant_size_label: 1]
 
   alias Edenflowers.Format
   alias EdenflowersWeb.Checkout.Fields

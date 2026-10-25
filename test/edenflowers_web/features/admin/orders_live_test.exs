@@ -102,4 +102,11 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     assert has_element?(view, ~s([data-item-id="#{occurrence.id}"]), "Subscription")
     refute has_element?(view, ~s([data-item-id="#{online.id}"]), "Subscription")
   end
+
+  # The filter offers whatever the enum holds, so a new status must get a label.
+  test "labels every payment status" do
+    for status <- Edenflowers.Orders.Order.Types.PaymentStatus.values() do
+      assert EdenflowersWeb.Admin.Components.payment_status_label(status) != to_string(status)
+    end
+  end
 end

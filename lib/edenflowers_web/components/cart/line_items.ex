@@ -6,7 +6,6 @@ defmodule EdenflowersWeb.Cart.LineItems do
   use EdenflowersWeb, :live_component
 
   alias Edenflowers.Orders
-  alias EdenflowersWeb.Admin.Components, as: AdminComponents
   alias EdenflowersWeb.Checkout.Fields
 
   attr :id, :string, required: true
@@ -82,7 +81,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                     class="font-serif text-base-content/65 text-sm italic"
                     data-testid="line-item-meta"
                   >
-                    {AdminComponents.variant_size_label(line_item.variant_size)}
+                    {variant_size_label(line_item.variant_size)}
                   </span>
                 </div>
                 <span class="shrink-0 text-right tabular-nums">

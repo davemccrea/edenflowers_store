@@ -96,4 +96,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLiveTest do
     assert has_element?(view, "[data-item-id]", "Grace Hopper")
     refute has_element?(view, "[data-item-id]", "Ada Lovelace")
   end
+
+  # The filter offers whatever the state machine holds, so a new state must get a label.
+  test "labels every subscription state" do
+    for state <- AshStateMachine.Info.state_machine_all_states(Edenflowers.Orders.Subscription) do
+      assert is_binary(EdenflowersWeb.Admin.Components.subscription_state_label(state))
+    end
+  end
 end

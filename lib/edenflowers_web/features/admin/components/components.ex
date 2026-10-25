@@ -409,11 +409,6 @@ defmodule EdenflowersWeb.Admin.Components do
   def fulfillment_method_label(:pickup), do: ~t"Pickup"
   def fulfillment_method_label(_), do: ~t"Unknown method"
 
-  def variant_size_label(:small), do: ~t"Small"
-  def variant_size_label(:medium), do: ~t"Medium"
-  def variant_size_label(:large), do: ~t"Large"
-  def variant_size_label(value), do: to_string(value)
-
   def fulfillment_method_icon(:delivery), do: "hero-truck"
   def fulfillment_method_icon(:pickup), do: "hero-building-storefront"
   def fulfillment_method_icon(_), do: "hero-question-mark-circle"
@@ -1098,10 +1093,10 @@ defmodule EdenflowersWeb.Admin.Components do
   defp payment_status_tone(:pending), do: :warning
   defp payment_status_tone(_), do: :neutral
 
-  defp payment_status_label(:paid), do: ~t"Paid"
-  defp payment_status_label(:refunded), do: ~t"Refunded"
-  defp payment_status_label(:pending), do: ~t"Unpaid"
-  defp payment_status_label(value), do: to_string(value)
+  def payment_status_label(:paid), do: ~t"Paid"
+  def payment_status_label(:refunded), do: ~t"Refunded"
+  def payment_status_label(:pending), do: ~t"Unpaid"
+  def payment_status_label(value), do: to_string(value)
 
   defp fulfillment_status_tone(:fulfilled), do: :success
   defp fulfillment_status_tone(:cancelled), do: :error

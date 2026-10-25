@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
     do: {:noreply, Cinder.refresh_table(socket, "subscriptions-table")}
 
   defp state_options do
-    Enum.map([:active, :paused, :payment_failed, :cancelled], &{subscription_state_label(&1), &1})
+    Enum.map(AshStateMachine.Info.state_machine_all_states(Subscription), &{subscription_state_label(&1), &1})
   end
 
   defp search_subscriptions(query, _searchable_columns, search_term) do

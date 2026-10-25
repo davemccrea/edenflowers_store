@@ -14,7 +14,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Translations
-  alias EdenflowersWeb.Admin.Components, as: AdminComponents
   alias EdenflowersWeb.Checkout.Fields
 
   @impl true
@@ -156,8 +155,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   defp size_options(sizes, locale) do
     for variant <- sizes do
-      {"#{AdminComponents.variant_size_label(variant.size)} · #{Format.storefront_price(variant.price, locale)}",
-       variant.id}
+      {"#{variant_size_label(variant.size)} · #{Format.storefront_price(variant.price, locale)}", variant.id}
     end
   end
 
@@ -174,7 +172,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   defp change_confirmation(subscription, locale) do
     %{product_variant: variant, interval_weeks: weeks} = subscription
     from = Format.weekday_date(subscription.next_fulfillment_date, locale)
-    size = AdminComponents.variant_size_label(variant.size)
+    size = variant_size_label(variant.size)
     price = Format.storefront_price(variant.price, locale)
 
     ~t"From #{date = from}: #{size = size}, #{interval = String.downcase(Fields.interval_label(weeks))}, #{price = price} per delivery."
@@ -288,7 +286,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   end
 
   defp plan_label(%{product_variant: variant, interval_weeks: weeks}) do
-    "#{AdminComponents.variant_size_label(variant.size)} · #{Fields.interval_label(weeks)}"
+    "#{variant_size_label(variant.size)} · #{Fields.interval_label(weeks)}"
   end
 
   defp final_delivery?(nil), do: false

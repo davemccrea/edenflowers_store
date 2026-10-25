@@ -1249,6 +1249,12 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
+  @doc "A variant's size label, or the size itself when it has none."
+  def variant_size_label(:small), do: ~t"Small"
+  def variant_size_label(:medium), do: ~t"Medium"
+  def variant_size_label(:large), do: ~t"Large"
+  def variant_size_label(value), do: to_string(value)
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

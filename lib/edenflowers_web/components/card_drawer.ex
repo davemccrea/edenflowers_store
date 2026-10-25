@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.CardDrawer do
         <div :for={{size, shared_price, shared_details, variants} <- @size_groups} class="flex flex-col gap-3">
           <div class="flex items-end justify-between gap-3">
             <div class="flex flex-col gap-1">
-              <h3 class="eyebrow text-base-content/70">{size_label(size)}</h3>
+              <h3 class="eyebrow text-base-content/70">{variant_size_label(size)}</h3>
               <span :if={message_room_label(size)} class="text-base-content/70 text-sm">
                 {message_room_label(size)}
               </span>
@@ -112,12 +112,6 @@ defmodule EdenflowersWeb.CardDrawer do
   end
 
   defp details(variant), do: ProductType.describe(:card, variant)
-
-  @doc "A card size's name, as the drawer and the FAQ show it."
-  def size_label(:small), do: gettext("Small")
-  def size_label(:medium), do: gettext("Medium")
-  def size_label(:large), do: gettext("Large")
-  def size_label(nil), do: ""
 
   # Words, not a character count: the counter under the message shows the
   # exact limit, and a word count would differ from language to language.
