@@ -51,13 +51,13 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
         <div class="max-w-xl">
           <.flower
             name="flower-30"
-            class={["text-primary/70 mb-8 h-16 w-16", if(@paid?, do: "flower-bloom", else: "flower-waiting")]}
+            class={["text-primary/70 mb-6 h-12 w-12", if(@paid?, do: "flower-bloom", else: "flower-waiting")]}
           />
           <div id="order-status">
             <h1 :if={@first_name} class="page-title">{~t"Thank you, #{@first_name}."}</h1>
             <h1 :if={!@first_name} class="page-title">{~t"Thank you for your order"}</h1>
 
-            <p class="font-serif text-balance mt-6 text-2xl leading-snug" data-testid="order-fulfillment">
+            <p class="mt-6 leading-relaxed" data-testid="order-fulfillment">
               <%= if @shown_order.fulfillment_method == :delivery do %>
                 {~t"I'll deliver your order on #{@date}."}
               <% else %>
@@ -66,14 +66,14 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             </p>
             <p
               :if={@shown_order.fulfillment_method == :pickup && @shown_order.recipient_phone_number}
-              class="font-serif text-base-content/80 mt-1 text-xl leading-snug"
+              class="text-base-content/80 leading-relaxed"
             >
               {~t"I'll send a text message when it's ready."}
             </p>
           </div>
 
-          <div :if={@next_delivery} class="mt-10" data-testid="order-subscription">
-            <dl class="border-base-content/12 grid-cols-[auto_1fr] grid items-baseline gap-x-6 gap-y-3 border-y py-6">
+          <div :if={@next_delivery} class="mt-8" data-testid="order-subscription">
+            <dl class="border-base-content/12 grid-cols-[auto_1fr] grid items-baseline gap-x-6 gap-y-3 border-y py-4">
               <dt class="eyebrow text-base-content/70">{~t"Subscription"}</dt>
               <dd>{EdenflowersWeb.Checkout.Fields.interval_label(@interval_weeks)}</dd>
 
@@ -96,7 +96,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
           <figure
             :if={@shown_order.card_message}
-            class="bg-cream text-cream-content mt-10 max-w-sm px-7 py-6"
+            class="bg-cream text-cream-content mt-8 max-w-sm px-7 py-6"
             data-testid="order-card"
           >
             <figcaption :if={@shown_order.gift && @shown_order.recipient_name} class="mb-3 text-sm">
@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             <blockquote class="font-serif whitespace-pre-wrap text-xl italic leading-snug" phx-no-format>{@shown_order.card_message}</blockquote>
           </figure>
 
-          <div class="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
+          <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
             <div :if={@paid? || (@next_delivery && @current_user)} class="flex flex-wrap gap-3">
               <.button
                 :if={@paid?}

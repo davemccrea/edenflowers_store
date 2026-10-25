@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, ~s|[data-testid=order-unpaid] a[href="/pay/tok123"]|, "Pay now")
+      assert has_element?(view, ~s|[data-testid=order-unpaid] a[href="/pay/orders/tok123"]|, "Pay now")
       refute has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
     end
 
@@ -594,7 +594,11 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       date = weekday_date(unpaid.fulfillment_date)
 
       assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "Payment failed")
-      assert has_element?(view, ~s|#{row(subscription)} [data-testid=subscription-pay-now][href="/pay/tok_held"]|)
+
+      assert has_element?(
+               view,
+               ~s|#{row(subscription)} [data-testid=subscription-pay-now][href="/pay/orders/tok_held"]|
+             )
 
       assert has_element?(
                view,
@@ -626,7 +630,12 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       assert has_element?(view, "#{row(subscription)} [data-testid=subscription-status]", "Unpaid")
       assert has_element?(view, "#{drawer(subscription)} [data-testid=subscription-payment]", "is still unpaid")
-      assert has_element?(view, ~s|#{drawer(subscription)} [data-testid=subscription-pay-now][href="/pay/tok_held"]|)
+
+      assert has_element?(
+               view,
+               ~s|#{drawer(subscription)} [data-testid=subscription-pay-now][href="/pay/orders/tok_held"]|
+             )
+
       refute has_element?(view, "#{drawer(subscription)} [data-testid=subscription-update-card]")
     end
 

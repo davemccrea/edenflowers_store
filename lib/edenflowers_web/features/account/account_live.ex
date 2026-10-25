@@ -618,7 +618,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
       <%= if @note == :pay_now do %>
         <span class="text-error">{~t"Unpaid"}</span>
         ·
-        <.link navigate={~p"/pay/#{@order.payment_link_token}"} class="link-underline-hover text-primary">
+        <.link navigate={~p"/pay/orders/#{@order.payment_link_token}"} class="link-underline-hover text-primary">
           {~t"Pay now"}
         </.link>
       <% else %>

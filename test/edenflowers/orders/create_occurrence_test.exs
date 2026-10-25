@@ -348,7 +348,7 @@ defmodule Edenflowers.Orders.CreateOccurrenceTest do
           assert email.subject =~ "Kukkiesi maksu puuttuu"
           # Where to update the saved card.
           assert email.text_body =~ "/account"
-          assert email.text_body =~ "/pay/#{order.payment_link_token}"
+          assert email.text_body =~ "/pay/orders/#{order.payment_link_token}"
         end)
       end
     end

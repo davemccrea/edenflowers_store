@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account/subscriptions/#{subscription.id}/card")
 
-      assert has_element?(view, ~s|[data-testid=unpaid-occurrence] a[href="/pay/tok_held"]|, "Pay now")
+      assert has_element?(view, ~s|[data-testid=unpaid-occurrence] a[href="/pay/orders/tok_held"]|, "Pay now")
     end
   end
 

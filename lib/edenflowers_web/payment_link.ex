@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.PaymentLink do
   def url_if_open(_payable), do: nil
 
   def path_for(%CourseRegistration{payment_link_token: token}) when is_binary(token), do: ~p"/pay/courses/#{token}"
-  def path_for(%{payment_link_token: token}) when is_binary(token), do: ~p"/pay/#{token}"
+  def path_for(%{payment_link_token: token}) when is_binary(token), do: ~p"/pay/orders/#{token}"
 
   @doc """
   Assigns `payable`. `reload` reads it again by its token, as the page's
@@ -89,7 +89,7 @@ defmodule EdenflowersWeb.PaymentLink do
   @doc "For the record's paid broadcast."
   def paid(%{assigns: %{reload: reload}} = socket) do
     {:ok, payable} = reload.()
-    assign(socket, payable: payable)
+    assign(socket, payable: payable, returned_from_stripe?: false)
   end
 
   attr :payable, :map, required: true
@@ -134,7 +134,10 @@ defmodule EdenflowersWeb.PaymentLink do
 
   # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
   # when the customer cancels or is declined in the app.
-  defp maybe_flash_failed_payment(socket, %{"redirect_status" => "failed"}) do
+  defp maybe_flash_failed_payment(
+         %{assigns: %{payable: %{payment_link_open?: true}}} = socket,
+         %{"redirect_status" => "failed"}
+       ) do
     put_flash(socket, :error, ~t"Your payment didn't go through. Please try again or choose another payment method.")
   end
 

@@ -145,6 +145,12 @@ defmodule Edenflowers.Courses.Course do
   end
 
   calculations do
+    calculate :ended?,
+              :boolean,
+              expr(fragment("(? + ?) AT TIME ZONE 'Europe/Helsinki'", date, end_time) <= ^arg(:now)) do
+      argument :now, :utc_datetime_usec, allow_nil?: false, default: &DateTime.utc_now/0
+    end
+
     calculate :seats_left, :integer, expr(total_places - seats_taken)
     # Helsinki's date, not the database's UTC `today()`, so the page and the
     # cutoff in ReserveSeats agree around midnight.

@@ -59,7 +59,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
         </p>
         <p :if={@unpaid} class="mt-4 leading-relaxed" data-testid="unpaid-occurrence">
           {~t"Your delivery on #{date = Edenflowers.Format.date(@unpaid.fulfillment_date, Edenflowers.Format.locale())} is still unpaid, and a new card doesn't pay it."}
-          <.link navigate={~p"/pay/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
+          <.link navigate={~p"/pay/orders/#{@unpaid.payment_link_token}"} class="link-underline-hover text-primary">
             {~t"Pay now"}
           </.link>
         </p>

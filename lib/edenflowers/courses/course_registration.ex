@@ -136,7 +136,22 @@ defmodule Edenflowers.Courses.CourseRegistration do
       argument :token, :string, allow_nil?: false
       get? true
       filter expr(not is_nil(payment_link_token) and payment_link_token == ^arg(:token))
-      prepare build(load: [:course, :seats_held, :total_due, :amount_paid, :balance, :payment_link_open?, :refunded?])
+
+      prepare build(
+                load: [
+                  :course,
+                  :first_name,
+                  :paid?,
+                  :upcoming?,
+                  :seats_held,
+                  :total_due,
+                  :amount_paid,
+                  :amount_held,
+                  :balance,
+                  :payment_link_open?,
+                  :refunded?
+                ]
+              )
     end
 
     create :register do
@@ -419,6 +434,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     calculate :cancelled?, :boolean, expr(status == :cancelled)
     calculate :cancellable?, :boolean, expr(status in [:awaiting_payment, :confirmed])
     calculate :customer_email, :string, expr(email)
+    calculate :paid?, :boolean, expr(status == :confirmed and not refunded? and balance <= 0)
+    calculate :upcoming?, :boolean, expr(status == :confirmed and seats_held > 0 and not course.ended?)
 
     calculate :holds_seats?,
               :boolean,

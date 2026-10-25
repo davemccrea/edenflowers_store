@@ -77,20 +77,13 @@ defmodule EdenflowersWeb.Plugs.MaintenanceTest do
           actor: admin
         )
 
-      assert conn |> get(PaymentLink.path_for(order)) |> html_response(200) =~ "Pay for order"
+      assert conn |> get(PaymentLink.path_for(order)) |> html_response(200) =~ "Pay for your order"
     end
 
     test "lets a course booking's payment link through", %{conn: conn} do
       registration = course_registration_with_payment_link()
 
       assert conn |> get(PaymentLink.path_for(registration)) |> html_response(200) =~ "Pay for your booking"
-    end
-
-    test "sends a course payment link from before the move under /pay to its new path", %{conn: conn} do
-      registration = course_registration_with_payment_link()
-
-      assert conn |> get("/courses/pay/#{registration.payment_link_token}") |> redirected_to() ==
-               PaymentLink.path_for(registration)
     end
 
     test "lets admin paths reach their own auth check", %{conn: conn} do

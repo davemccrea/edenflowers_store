@@ -197,7 +197,9 @@ defmodule Edenflowers.Email.Preview do
   defp booking_email(:refunded, registration, inputs), do: Email.refunded(registration, refund_details(inputs))
 
   # A link not yet opened has no token until sending opens it.
-  defp link_url(%{payment_link_token: nil}), do: EdenflowersWeb.Endpoint.url() <> "/pay/…"
+  defp link_url(%{payment_link_token: nil} = payable),
+    do: EdenflowersWeb.PaymentLink.url_for(%{payable | payment_link_token: "…"})
+
   defp link_url(payable), do: EdenflowersWeb.PaymentLink.url_for(payable)
 
   defp refund_details(inputs),
