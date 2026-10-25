@@ -226,6 +226,13 @@ defmodule Edenflowers.Accounts.User do
       message: "Must be a valid email address",
       where: changing(:email)
 
+    # A code can only reach a real address, so the sign-in page asks again
+    # instead of waiting on one that never comes.
+    validate match(:email, Edenflowers.Types.Email.format()),
+      message: "Must be a valid email address",
+      on: [:action],
+      where: action_is(:request_otp)
+
     validate attribute_in(:locale, Edenflowers.Locales.all()), where: present(:locale)
   end
 
