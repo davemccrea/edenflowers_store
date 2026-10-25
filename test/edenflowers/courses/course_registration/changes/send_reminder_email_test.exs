@@ -1,4 +1,4 @@
-defmodule Edenflowers.Courses.Changes.SendReminderEmailTest do
+defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest do
   use Edenflowers.DataCase, async: true
   import Generator
   import Swoosh.TestAssertions

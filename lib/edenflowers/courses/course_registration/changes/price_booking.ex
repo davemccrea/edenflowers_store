@@ -1,4 +1,4 @@
-defmodule Edenflowers.Courses.Changes.PriceBooking do
+defmodule Edenflowers.Courses.CourseRegistration.Changes.PriceBooking do
   @moduledoc """
   Refuses a course that has closed or hasn't room for the requested seats,
   then snapshots what the booking costs.

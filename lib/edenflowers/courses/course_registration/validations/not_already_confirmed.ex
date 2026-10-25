@@ -1,4 +1,4 @@
-defmodule Edenflowers.Courses.Validations.NotAlreadyConfirmed do
+defmodule Edenflowers.Courses.CourseRegistration.Validations.NotAlreadyConfirmed do
   @moduledoc "Fails with `AlreadyPaid` when the booking is already confirmed."
   use Ash.Resource.Validation
 

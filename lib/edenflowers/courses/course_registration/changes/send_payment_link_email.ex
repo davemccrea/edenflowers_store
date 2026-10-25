@@ -1,4 +1,4 @@
-defmodule Edenflowers.Courses.Changes.SendPaymentLinkEmail do
+defmodule Edenflowers.Courses.CourseRegistration.Changes.SendPaymentLinkEmail do
   @moduledoc """
   Emails a course customer the private link for paying a remaining balance:
   as the course payment link before the course (`email: :payment_link`), or

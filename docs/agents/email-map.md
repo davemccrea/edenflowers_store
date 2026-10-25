@@ -14,13 +14,15 @@ built back to what sets it off:
    email (some pick between subjects). `from_address()` sends under Jennie's
    name; `automated_from_address()` under "Eden Flowers".
 2. Find each builder's callers: the changes in `lib/edenflowers/*/changes/`
-   and the Oban workers in `lib/edenflowers/*/workers/`. Note where a sender
-   picks one email over another (a balance, a date, a photo, who cancelled).
+   and `lib/edenflowers/*/*/changes/` (a resource's own changes live in its
+   folder), and the Oban workers in `lib/edenflowers/*/workers/`. Note where a
+   sender picks one email over another (a balance, a date, a photo, who
+   cancelled).
 3. Find the resource actions that use those changes, in
-   `lib/edenflowers/orders/order/` (Order's actions and triggers live in its
-   fragments there, mostly `emails.ex`), `orders/subscription.ex`,
-   `lib/edenflowers/courses/course_registration.ex` and
-   `lib/edenflowers/payments/payable.ex`. Read each `where:` condition and each
+   `lib/edenflowers/orders/order/` and
+   `lib/edenflowers/courses/course_registration/` (each resource's actions and
+   triggers live in its fragments there, mostly `emails.ex`),
+   `orders/subscription.ex` and `lib/edenflowers/payments/payable.ex`. Read each `where:` condition and each
    argument's default, such as whether "email the customer" starts ticked.
 4. For an email queued through an AshOban trigger (`oban do triggers`), read
    its `scheduler_cron` and `where expr(...)` for scheduled ones, and the

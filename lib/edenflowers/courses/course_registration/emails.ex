@@ -8,7 +8,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
 
   import Edenflowers.Actors
 
-  alias Edenflowers.Courses.Changes
+  alias Edenflowers.Courses.CourseRegistration.Changes
   alias Edenflowers.Payments.Changes, as: PaymentChanges
 
   oban do

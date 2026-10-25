@@ -10,7 +10,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
   import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
 
-  alias Edenflowers.Courses.Validations
+  alias Edenflowers.Courses.CourseRegistration.Validations
   alias Edenflowers.Payments.Changes, as: PaymentChanges
   alias Edenflowers.Payments.Validations, as: PaymentValidations
 

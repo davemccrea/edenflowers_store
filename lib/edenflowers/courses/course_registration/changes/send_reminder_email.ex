@@ -1,4 +1,4 @@
-defmodule Edenflowers.Courses.Changes.SendReminderEmail do
+defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail do
   @moduledoc "Reminds a booking of its course the day before."
 
   use Ash.Resource.Change
