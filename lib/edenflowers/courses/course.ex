@@ -133,11 +133,16 @@ defmodule Edenflowers.Courses.Course do
   relationships do
     has_many :course_registrations, Edenflowers.Courses.CourseRegistration
 
-    # No pending bookings: an unpaid hold is either still at checkout or
-    # abandoned, and neither is someone who is coming. Cancelled ones stay so
-    # Jennie can see who dropped out.
+    # Paid places. Cancelled ones stay so Jennie can see who dropped out.
     has_many :bookings, Edenflowers.Courses.CourseRegistration do
-      filter expr(status in [:awaiting_payment, :confirmed, :cancelled])
+      filter expr(status in [:confirmed, :cancelled])
+      sort inserted_at: :asc
+    end
+
+    # People Jennie sent a payment link who haven't paid yet. A checkout still
+    # in progress has no link, so it isn't one.
+    has_many :invites, Edenflowers.Courses.CourseRegistration do
+      filter expr(status == :pending and not is_nil(payment_link_token))
       sort inserted_at: :asc
     end
 
@@ -151,9 +156,9 @@ defmodule Edenflowers.Courses.Course do
       argument :now, :utc_datetime_usec, allow_nil?: false, default: &DateTime.utc_now/0
     end
 
-    calculate :seats_left, :integer, expr(total_places - seats_taken)
+    calculate :seats_left, :integer, expr(total_places - seats_booked)
     # Helsinki's date, not the database's UTC `today()`, so the page and the
-    # cutoff in ReserveSeats agree around midnight.
+    # cutoff in PriceBooking agree around midnight.
     calculate :booking_open?,
               :boolean,
               expr(
@@ -171,19 +176,13 @@ defmodule Edenflowers.Courses.Course do
   end
 
   aggregates do
-    # Unauthorized on purpose: a visitor may not read other people's bookings,
-    # but everyone needs the count to see how many seats are left.
-    sum :seats_taken, :course_registrations, :seats_held do
-      filter expr(holds_seats?)
+    # Only paid places count. Unauthorized on purpose: a visitor may not read
+    # other people's bookings, but everyone needs the count to see how many
+    # seats are left.
+    sum :seats_booked, :course_registrations, :seats_held do
+      filter expr(status == :confirmed)
       default 0
       authorize? false
-    end
-
-    # Leaves out holds still at checkout, so the admin counts only who is
-    # coming or whose place waits on their payment link.
-    sum :seats_booked, :course_registrations, :seats_held do
-      filter expr(status in [:awaiting_payment, :confirmed])
-      default 0
     end
   end
 end

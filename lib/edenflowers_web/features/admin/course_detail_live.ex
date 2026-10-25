@@ -154,6 +154,46 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
             </ul>
           </details>
         </section>
+
+        <section :if={@course.invites != []} id="invites" class="admin-card mt-6 p-4 sm:p-5">
+          <h2 class="text-base-content/75 text-sm">{~t"Invited, not paid yet"}</h2>
+          <ul class="divide-base-content/12 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y">
+            <li
+              :for={invite <- @course.invites}
+              id={"invite-#{invite.id}"}
+              class="grid-cols-subgrid col-span-full grid items-center gap-y-3 py-4"
+            >
+              <div class="col-start-1 row-start-1 min-w-0">
+                <p class="text-base-content flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
+                  <span class="min-w-0 break-words">{invite.name}</span>
+                  <span :if={invite.seats > 1} class="text-base-content/75 tabular-nums">+{invite.seats - 1}</span>
+                </p>
+                <p class="text-base-content/75 truncate text-sm">{invite.email}</p>
+              </div>
+              <div class="col-start-2 row-start-1 justify-self-end">
+                <.actions_menu id={"invite-actions-#{invite.id}"}>
+                  <.actions_menu_button
+                    menu={"invite-actions-#{invite.id}"}
+                    phx-click="open_email"
+                    phx-value-kind="payment_link"
+                    phx-value-id={invite.id}
+                  >
+                    {~t"Email payment link"}
+                  </.actions_menu_button>
+                  <.actions_menu_button
+                    menu={"invite-actions-#{invite.id}"}
+                    phx-click="withdraw_invite"
+                    phx-value-id={invite.id}
+                    data-confirm={~t"Withdraw this invite? Its payment link stops working."}
+                    class="text-error"
+                  >
+                    {~t"Withdraw invite"}
+                  </.actions_menu_button>
+                </.actions_menu>
+              </div>
+            </li>
+          </ul>
+        </section>
       </.admin_page>
       <.booking_drawer
         form={@booking_form}
@@ -222,7 +262,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       {:ok, _registration} ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Booking added.")
+         |> put_flash(:info, ~t"Invite added. Their places are booked once they pay.")
          |> assign(:booking_form, nil)
          |> push_event("js-exec", %{to: "#booking-drawer", attr: "phx-hide"})
          |> reload_course()}
@@ -313,6 +353,20 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply, reload_course(socket)}
   end
 
+  def handle_event("withdraw_invite", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
+
+    socket =
+      with {:ok, invite} <- Courses.get_registration_by_id(id, actor: actor),
+           :ok <- Courses.discard_registration(invite, actor: actor) do
+        put_flash(socket, :info, ~t"Invite withdrawn.")
+      else
+        _ -> put_flash(socket, :error, ~t"Could not withdraw the invite.")
+      end
+
+    {:noreply, reload_course(socket)}
+  end
+
   def handle_event("open_cancel", %{"id" => id}, socket) do
     registration = booking(socket.assigns.course, id)
 
@@ -395,7 +449,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply, reload_course(socket)}
   end
 
-  defp booking(course, id), do: Enum.find(course.bookings, &(&1.id == id))
+  defp booking(course, id), do: Enum.find(course.bookings ++ course.invites, &(&1.id == id))
 
   defp send_email(:payment_reminder, registration, message, actor) do
     case Courses.send_registration_payment_reminder(registration, %{message: message}, actor: actor) do
@@ -488,7 +542,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :seats_held,
         :payment_link_open?,
         payments: [:undoable?, :reversal]
-      ]
+      ],
+      invites: [:balance, :payment_link_open?]
     ]
 
     case Courses.get_course_by_id(id, actor: socket.assigns.current_user, load: load) do

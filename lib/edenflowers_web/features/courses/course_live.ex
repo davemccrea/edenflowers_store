@@ -230,9 +230,9 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     end
   end
 
-  # A fresh booking replaces this one, so its hold must not keep the seats.
+  # A fresh registration replaces this unpaid one.
   def handle_event("change", _params, socket) do
-    {:noreply, socket |> release_hold() |> reload_course() |> assign_form() |> assign(focus_booking?: true)}
+    {:noreply, socket |> discard_registration() |> reload_course() |> assign_form() |> assign(focus_booking?: true)}
   end
 
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
@@ -300,11 +300,11 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     end
   end
 
-  defp release_hold(%{assigns: %{registration: nil}} = socket), do: socket
+  defp discard_registration(%{assigns: %{registration: nil}} = socket), do: socket
 
-  # A hold paid for meanwhile is a booking now, so it stays.
-  defp release_hold(socket) do
-    Courses.release_registration_hold(socket.assigns.registration, actor: system_actor())
+  # One paid for meanwhile is a booking now, so it stays.
+  defp discard_registration(socket) do
+    Courses.discard_registration(socket.assigns.registration, actor: system_actor())
     assign(socket, registration: nil)
   end
 

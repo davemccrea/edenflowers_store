@@ -1,6 +1,6 @@
 <%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
 
-<%= ngettext("Thank you for booking. I've kept you a place on %{course}, and paying confirms it.", "Thank you for booking. I've kept you %{count} places on %{course}, and paying confirms them.", @registration.seats, course: @registration.course.name) %>
+<%= ngettext("Here's the link to pay for your place on %{course}. Your place is booked as soon as you've paid.", "Here's the link to pay for your %{count} places on %{course}. They're booked as soon as you've paid.", @registration.seats, course: @registration.course.name) %>
 
 <%= message(@message) %><%= gettext("Amount due") %>: <%= @format_currency.(@registration.balance) %>
 

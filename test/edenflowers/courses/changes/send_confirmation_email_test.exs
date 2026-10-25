@@ -5,18 +5,21 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
 
   alias Edenflowers.Courses.Workers.SendConfirmationEmail
 
-  test "a booking awaiting payment gets its payment link instead of a confirmation" do
+  alias Edenflowers.Courses.Workers.SendPaymentLinkEmail
+
+  test "an invite gets its payment link, promising the place once paid" do
     registration =
-      generate(course_registration(status: :awaiting_payment, payment_link_token: "tok", email: "anna@example.com"))
+      generate(course_registration(status: :pending, payment_link_token: "tok", email: "anna@example.com"))
 
     assert {:ok, _registration} =
-             perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => registration.id}})
+             perform_job(SendPaymentLinkEmail, %{"primary_key" => %{"id" => registration.id}})
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
       assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
-      assert email.subject =~ "Pay for your booking on Course "
-      assert email.text_body =~ ~r/I've kept you a place on Course \d+, and paying confirms it\./
+      assert email.subject =~ "Book your place on Course "
+      assert email.text_body =~ ~r/Here's the link to pay for your place on Course \d+\./
+      assert email.text_body =~ "Your place is booked as soon as you've paid."
       assert email.text_body =~ "/pay/courses/tok"
       assert email.attachments == []
     end)
@@ -40,24 +43,6 @@ defmodule Edenflowers.Courses.Changes.SendConfirmationEmailTest do
     assert_email_sent(fn email ->
       refute email.text_body =~ "You pay at the course"
       assert [_receipt] = email.attachments
-    end)
-  end
-
-  test "a booking still awaiting payment after the course gets a payment reminder, not the link" do
-    registration =
-      generate(course_registration(status: :awaiting_payment, payment_link_token: "tok", email: "anna@example.com"))
-
-    Edenflowers.Courses.Course
-    |> Ash.get!(registration.course_id, authorize?: false)
-    |> Ash.Seed.update!(%{date: Date.add(Edenflowers.ShopTime.today(), -1)})
-
-    assert {:ok, _registration} =
-             perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => registration.id}})
-
-    assert_email_sent(fn email ->
-      refute email.text_body =~ "kept you a place"
-      assert email.subject =~ "A reminder about your booking on"
-      assert email.text_body =~ "/pay/courses/tok"
     end)
   end
 

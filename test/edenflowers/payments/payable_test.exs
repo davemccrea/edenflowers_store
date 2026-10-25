@@ -685,8 +685,11 @@ defmodule Edenflowers.Payments.PayableTest do
         refute_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
       end
 
-      test "a cancelled one can't be cancelled again" do
-        assert {:error, error} = cancel(build(@parent, state: :cancelled), %{})
+      test "a copy loaded before someone else cancelled it can't be cancelled again" do
+        record = build(@parent)
+        assert {:ok, _cancelled} = cancel(record, %{email_customer?: false})
+
+        assert {:error, error} = cancel(record, %{})
         assert Exception.message(error) =~ "This changed while you had it open"
       end
 

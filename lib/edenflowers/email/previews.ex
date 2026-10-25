@@ -443,10 +443,10 @@ defmodule Edenflowers.Email.Previews do
 
   defp course_payment_link(locale) do
     for {title, attrs, message} <- [
-          {"awaiting payment", %{status: :awaiting_payment}, nil},
-          {"2 places, with a message from Jennie",
-           %{status: :awaiting_payment, seats: 2, balance: Decimal.new("90.00")}, message(locale)},
-          {"no first name", %{status: :awaiting_payment, first_name: nil}, nil}
+          {"invite", %{status: :pending}, nil},
+          {"2 places, with a message from Jennie", %{status: :pending, seats: 2, balance: Decimal.new("90.00")},
+           message(locale)},
+          {"no first name", %{status: :pending, first_name: nil}, nil}
         ] do
       {"Course payment link", title, :course_payment_link,
        Email.course_payment_link(registration(attrs, locale), @payment_link, message)}
@@ -454,13 +454,11 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp course_reminder(locale) do
-    for {title, attrs, payment_link} <- [
-          {"paid", %{status: :confirmed, balance: Decimal.new(0)}, nil},
-          {"2 places awaiting payment", %{status: :awaiting_payment, seats: 2, balance: Decimal.new("90.00")},
-           @payment_link},
-          {"no first name", %{status: :confirmed, balance: Decimal.new(0), first_name: nil}, nil}
+    for {title, attrs} <- [
+          {"one place", %{}},
+          {"no first name", %{first_name: nil}}
         ] do
-      {"Course reminder", title, :course_reminder, Email.course_reminder(registration(attrs, locale), payment_link)}
+      {"Course reminder", title, :course_reminder, Email.course_reminder(registration(attrs, locale))}
     end
   end
 

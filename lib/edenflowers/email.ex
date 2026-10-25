@@ -513,8 +513,8 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Confirms a course booking paid at checkout, with the receipt the sender
-  attaches. Expects `:course` translated and `:first_name` loaded.
+  Confirms a paid course booking, with the receipt the sender attaches.
+  Expects `:course` translated and `:first_name` loaded.
   """
   def course_confirmation(registration, message \\ nil) do
     customer_email(registration, from_address(), fn email ->
@@ -525,14 +525,14 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  The link to pay for a booking awaiting payment, before the course; after
-  it, the booking gets a Payment reminder instead. Paying confirms it.
-  Expects `:course` translated, `:first_name` and `:balance` loaded.
+  The link Jennie sends someone she invites to book, before the course; after
+  it, a booking still owing gets a Payment reminder instead. Paying books the
+  places. Expects `:course` translated, `:first_name` and `:balance` loaded.
   """
   def course_payment_link(registration, payment_link_url, message \\ nil) do
     customer_email(registration, from_address(), fn email ->
       email
-      |> subject(~t"Pay for your booking on #{course = registration.course.name}, #{date = course_day(registration)}")
+      |> subject(~t"Book your place on #{course = registration.course.name}, #{date = course_day(registration)}")
       |> text_body(
         Templates.course_payment_link(
           Map.put(course_assigns(registration, message), :payment_link_url, payment_link_url)
@@ -542,17 +542,14 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  The day-before reminder of when and where a course is. A booking still
-  owing gets the amount and `payment_link_url`, nil otherwise. Expects
-  `:course` translated, `:first_name` and `:balance` loaded.
+  The day-before reminder of when and where a course is. Expects `:course`
+  translated and `:first_name` loaded.
   """
-  def course_reminder(registration, payment_link_url) do
+  def course_reminder(registration) do
     customer_email(registration, from_address(), fn email ->
       email
       |> subject(~t"See you tomorrow at #{course = registration.course.name}")
-      |> text_body(
-        Templates.course_reminder(Map.put(course_assigns(registration, nil), :payment_link_url, payment_link_url))
-      )
+      |> text_body(Templates.course_reminder(course_assigns(registration, nil)))
     end)
   end
 

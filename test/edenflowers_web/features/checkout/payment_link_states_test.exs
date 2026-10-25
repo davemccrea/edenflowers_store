@@ -179,14 +179,14 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
 
   for period <- [:future, :past], partial? <- [false, true] do
     @tag period: period, partial?: partial?
-    test "#{period} booking awaiting payment can be paid (partial=#{partial?})", ctx do
+    test "#{period} invite or booking still owing can be paid (partial=#{partial?})", ctx do
       course = generate(course(date: Date.add(ShopTime.today(), if(ctx.period == :past, do: -1, else: 1))))
 
       registration =
         generate(
           course_registration(
             course_id: course.id,
-            status: :awaiting_payment,
+            status: if(ctx.partial?, do: :confirmed, else: :pending),
             seats: 2,
             amount: Decimal.new("170.00"),
             payment_link_token: token()
@@ -321,9 +321,9 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
     refute Ash.load!(cart, :paid?, authorize?: false).paid?
   end
 
-  test "an awaiting-payment booking with no balance does not ask for payment or pretend it is confirming", %{conn: conn} do
+  test "an invite with no balance does not ask for payment or pretend it is confirming", %{conn: conn} do
     registration =
-      generate(course_registration(status: :awaiting_payment, amount: Decimal.new("0"), payment_link_token: token()))
+      generate(course_registration(status: :pending, amount: Decimal.new("0"), payment_link_token: token()))
 
     {:ok, view, _html} = live(conn, PaymentLink.path_for(registration) <> "?redirect_status=succeeded")
 

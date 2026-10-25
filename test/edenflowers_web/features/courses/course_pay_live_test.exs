@@ -128,13 +128,19 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, ~p"/pay/courses/not-a-token")
   end
 
-  test "payment after a course confirms the booking without promising a future place", %{
-    conn: conn,
-    registration: registration
-  } do
-    course = Ash.get!(Edenflowers.Courses.Course, registration.course_id, authorize?: false)
-    Ash.Seed.update!(course, %{date: Date.add(Edenflowers.ShopTime.today(), -1)})
-    registration = Ash.Seed.update!(registration, %{status: :awaiting_payment, payment_intent_id: "pi_after_course"})
+  test "an invite paid after its course confirms the booking without promising a future place", %{conn: conn} do
+    course = generate(course(date: Date.add(Edenflowers.ShopTime.today(), -1)))
+
+    registration =
+      generate(
+        course_registration(
+          course_id: course.id,
+          amount: Decimal.new("85.00"),
+          payment_link_token: "invite-after-course",
+          payment_intent_id: "pi_after_course"
+        )
+      )
+
     {:ok, view, _html} = live(conn, ~p"/pay/courses/#{registration.payment_link_token}?redirect_status=succeeded")
 
     assert has_element?(view, "[data-testid=pay-confirming]")
@@ -143,7 +149,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
       Edenflowers.Payments.complete(%{
         id: "pi_after_course",
         metadata: %{"course_registration_id" => registration.id},
-        amount_received: 12000
+        amount_received: 8500
       })
 
     assert has_element?(view, "h1[data-testid=pay-paid]", "Thank you, Ada.")
