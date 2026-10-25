@@ -4,7 +4,7 @@ title: Prepare customer payments through an authoritative Ash operation
 status: done
 assignee: []
 created_date: '2026-10-25 14:15'
-updated_date: '2026-10-25 15:55'
+updated_date: '2026-10-25 21:45'
 labels:
   - spec
   - customers
@@ -60,6 +60,15 @@ created: 2026-10-25 15:44
 ---
 
 Grilled. Decisions: (1) Order and CourseRegistration each get :prepare_checkout_payment; the Payable fragment gets :prepare_link_payment for both. (2) Store checkout enforces against the reloaded order: still a cart, not empty, not add-ons-only, no line over stock. Date/quote/promotion staleness out of scope. (3) Course checkout refuses unless pending without a payment link, booking still open and enough free places; confirmation stays lenient (TASK-123). (4) Link action enforces payment_link_open? and charges the reloaded balance; the shown-balance check stays in PaymentLink. (5) Checkout actor decides saved cards (guest nil); link preparation takes the token as its argument and never uses the visitor's saved cards. (6) Over-stock refusal is a typed error carrying the lines, rendered by CheckoutLive. (7) update_amount + setup merge into one function only the actions call.
+
+---
+
+author: @claude
+created: 2026-10-25 21:45
+
+---
+
+Architecture-review follow-up, approved in the session: supersedes the earlier decision to leave shown-balance acceptance in PaymentLink. prepare_link_payment now requires shown_balance, checks it against its authoritative token read before touching Stripe, and returns the purchase the page displays. Both Order and Course booking callers pass the displayed Balance. Completion/mismatch handling remains unchanged.
 
 ---
 <!-- COMMENTS:END -->

@@ -6,14 +6,16 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
   """
 
   alias Edenflowers.Email.Preview
-  alias Edenflowers.Orders.Order
+  alias EdenflowersWeb.Admin.Drawers
 
   def build(kind, record, params) do
+    params = if kind == :refunded, do: Drawers.refund_form_params(record, params), else: params
+
     inputs = %{
       message: params["message"] || params["note"],
       refund: params["refund"] || params["amount"] || owed_back(record),
       amount: if(kind == :payment, do: params["amount"] || balance(record)),
-      payment_method: payment_method(record, params["how"])
+      payment_method: payment_method(params["how"])
     }
 
     # Recording a payment emails the same receipt as the menu, for the amount entered.
@@ -28,9 +30,6 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
 
   defp balance(record), do: Decimal.to_string(record.balance, :normal)
 
-  defp payment_method(_record, how) when is_binary(how), do: String.to_existing_atom(how)
-
-  # A refund starts at the order's own default; a booking doesn't load one.
-  defp payment_method(%Order{default_refund_method: method}, nil) when is_atom(method), do: method
-  defp payment_method(_record, nil), do: :stripe
+  defp payment_method(how) when how in [nil, ""], do: :stripe
+  defp payment_method(how) when is_binary(how), do: String.to_existing_atom(how)
 end

@@ -34,7 +34,7 @@ defmodule Edenflowers.Courses do
         action: :prepare_checkout_payment,
         args: [:registration_id, :course_id]
 
-      define :prepare_registration_link_payment, action: :prepare_link_payment, args: [:token]
+      define :prepare_registration_link_payment, action: :prepare_link_payment, args: [:token, :shown_balance]
 
       define :confirm_registration_payment, action: :confirm_payment, args: [:payment_intent_id]
       define :open_registration_payment_link, action: :open_payment_link

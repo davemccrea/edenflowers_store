@@ -302,17 +302,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   amount.
   """
   def refund_form(assigns) do
-    owed_back = Decimal.max(Decimal.negate(assigns.record.balance), 0)
-
-    form =
-      %{
-        "how" => to_string(assigns.record.default_refund_method),
-        "amount" => if(Decimal.positive?(owed_back), do: Decimal.to_string(owed_back, :normal), else: ""),
-        "note" => "",
-        "email_customer" => "true"
-      }
-      |> Map.merge(assigns.params)
-      |> to_form(as: :refund)
+    form = assigns.record |> refund_form_params(assigns.params) |> to_form(as: :refund)
 
     how_options = Enum.map(assigns.record.refund_methods, &{OrderLog.payment_method_label(&1), &1})
     assigns = assign(assigns, form: form, how_options: how_options)
@@ -360,6 +350,21 @@ defmodule EdenflowersWeb.Admin.Drawers do
       </.button>
     </.form>
     """
+  end
+
+  @doc "The Refund form's effective values, shared with its email preview."
+  def refund_form_params(record, params) do
+    owed_back = Decimal.max(Decimal.negate(record.balance), 0)
+
+    Map.merge(
+      %{
+        "how" => to_string(record.default_refund_method),
+        "amount" => if(Decimal.positive?(owed_back), do: Decimal.to_string(owed_back, :normal), else: ""),
+        "note" => "",
+        "email_customer" => "true"
+      },
+      params
+    )
   end
 
   defp refund_confirmation(amount, how, locale) do

@@ -585,7 +585,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply,
      socket
      |> assign(settlement_mode: mode, settlement_error: nil)
-     |> assign_preview(if(mode == :refund, do: :refunded, else: :payment), %{})
+     |> assign_preview(
+       if(mode == :refund, do: :refunded, else: :payment),
+       if(mode == :refund, do: socket.assigns.refund_params, else: socket.assigns.payment_params)
+     )
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
   end
 
@@ -677,7 +680,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   # The drawer closes once the money is recorded. On an error it stays open with
   # the message and the forms as Jennie filled them in, which reloading would clear.
-  defp settlement_result(socket, {:info, _message} = result) do
+  defp settlement_result(socket, {:info, _message} = result), do: settlement_result(socket, {:ok, result})
+
+  defp settlement_result(socket, {:ok, result}) do
     socket
     |> flash_payment_result(result)
     |> assign(:settlement_error, nil)
