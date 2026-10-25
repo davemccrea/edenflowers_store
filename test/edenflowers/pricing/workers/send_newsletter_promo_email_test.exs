@@ -109,6 +109,50 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
     end
   end
 
+  describe "re-subscription with an admin-edited code" do
+    defp resubscribe_with(email, edits) do
+      {:ok, promo} = Pricing.create_newsletter_promotion(actor: system_actor())
+      {:ok, promo} = Ash.update(promo, edits, authorize?: false)
+      {:ok, user} = Accounts.subscribe_to_newsletter(email, "en-GB", authorize?: false)
+      {:ok, _} = Accounts.set_newsletter_promo(user, promo.id, actor: system_actor())
+      promo
+    end
+
+    defp assert_offered(email, promo, offered?) do
+      assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => email, "locale" => "en"})
+      assert_email_sent(fn sent -> assert sent.text_body =~ to_string(promo.code) == offered? end)
+      assert offered? == match?({:ok, _}, Pricing.get_promotion_by_code(to_string(promo.code)))
+    end
+
+    test "offers a code with no expiration date" do
+      promo = resubscribe_with("open@example.com", %{expiration_date: nil})
+      assert_offered("open@example.com", promo, true)
+    end
+
+    test "offers a code expiring today" do
+      promo = resubscribe_with("today@example.com", %{expiration_date: Edenflowers.ShopTime.today()})
+      assert_offered("today@example.com", promo, true)
+    end
+
+    test "withholds a code that starts tomorrow" do
+      tomorrow = Date.add(Edenflowers.ShopTime.today(), 1)
+      promo = resubscribe_with("future@example.com", %{start_date: tomorrow})
+      assert_offered("future@example.com", promo, false)
+    end
+
+    test "offers a used code whose usage limit was raised" do
+      promo = resubscribe_with("raised@example.com", %{usage_limit: 2})
+      Generator.use_promotion(promo)
+      assert_offered("raised@example.com", promo, true)
+    end
+
+    test "offers a used code whose usage limit was removed" do
+      promo = resubscribe_with("unlimited@example.com", %{usage_limit: nil})
+      Generator.use_promotion(promo)
+      assert_offered("unlimited@example.com", promo, true)
+    end
+  end
+
   describe "enqueue" do
     test "is not swallowed by another worker's recent job for the same email" do
       {:ok, _} =

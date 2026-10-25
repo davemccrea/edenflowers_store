@@ -1,9 +1,10 @@
 ---
 id: TASK-129
 title: Use the same promotion-validity rule in checkout and newsletter emails
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-25 14:15'
+updated_date: '2026-10-25 17:12'
 labels:
   - spec
   - customers
@@ -34,8 +35,14 @@ Triage confirms that admin-edited newsletter promotions follow the same validity
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A shared Promotion calculation expresses date and usage validity and is used by both the by-code read filter and newsletter email selection.
-- [ ] #2 Optional expiration/start dates, future starts, inclusive expiration boundaries and finite/unlimited usage limits produce the same validity result for email and checkout.
-- [ ] #3 The worker does not crash when expiration is nil and does not require zero usage when the actual usage limit permits reuse.
-- [ ] #4 Regression tests cover the divergent edited-promotion cases while retaining existing newsletter email variants and normal one-use-code behaviour.
+- [x] #1 A shared Promotion calculation expresses date and usage validity and is used by both the by-code read filter and newsletter email selection.
+- [x] #2 Optional expiration/start dates, future starts, inclusive expiration boundaries and finite/unlimited usage limits produce the same validity result for email and checkout.
+- [x] #3 The worker does not crash when expiration is nil and does not require zero usage when the actual usage limit permits reuse.
+- [x] #4 Regression tests cover the divergent edited-promotion cases while retaining existing newsletter email variants and normal one-use-code behaviour.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Triage (grilled 2026-10-25): calculation usable? on Promotion with optional today argument (default ShopTime.today); :by_code keeps its today argument and filters on usable?(today: ^arg(:today)); worker loads usable?. Minimum cart total stays out of usable?, checkout checks it on the order.
+<!-- SECTION:NOTES:END -->

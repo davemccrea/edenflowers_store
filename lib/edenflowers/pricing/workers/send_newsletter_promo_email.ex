@@ -31,7 +31,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
   end
 
   defp send_email(email, locale) do
-    case Accounts.get_user_by_email(email, authorize?: false, load: [newsletter_promo: [:usage]]) do
+    case Accounts.get_user_by_email(email, authorize?: false, load: [newsletter_promo: [:usable?]]) do
       # The code is kept only once its email has gone, so a failed send is
       # retried as a welcome rather than as "you're already subscribed".
       {:ok, %{newsletter_promo: nil} = user} ->
@@ -44,7 +44,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
 
       {:ok, %{newsletter_promo: promo}} ->
         message =
-          if still_usable?(promo),
+          if promo.usable?,
             do: Email.already_subscribed(email, promo, locale),
             else: Email.already_subscribed(email, nil, locale)
 
@@ -54,13 +54,4 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmail do
         {:error, reason}
     end
   end
-
-  # Mirrors the expiry in Promotion's :by_code read, so the email never offers
-  # a code checkout would turn down.
-  defp still_usable?(%{usage: 0, expiration_date: expiration_date}) do
-    today = Edenflowers.ShopTime.today()
-    Date.compare(today, expiration_date) != :gt
-  end
-
-  defp still_usable?(_used), do: false
 end
