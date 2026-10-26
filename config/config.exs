@@ -25,7 +25,11 @@ config :edenflowers, Oban,
     Oban.Plugins.Lifeline,
     # AshOban adds each trigger's `scheduler_cron` here, so they run on shop time too.
     {Oban.Plugins.Cron,
-     timezone: "Europe/Helsinki", crontab: [{"0 3 * * *", Edenflowers.Accounts.Workers.SyncNewsletterList}]}
+     timezone: "Europe/Helsinki",
+     crontab: [
+       {"0 3 * * *", Edenflowers.Accounts.Workers.SyncNewsletterList},
+       {"30 3 * * *", Edenflowers.ErrorReports.PruneReports}
+     ]}
   ]
 
 config :localize,
