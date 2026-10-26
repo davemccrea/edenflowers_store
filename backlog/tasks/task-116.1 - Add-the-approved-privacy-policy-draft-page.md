@@ -4,7 +4,7 @@ title: Add the approved privacy-policy draft page
 status: done
 assignee: []
 created_date: '2026-10-26 16:39'
-updated_date: '2026-10-26 19:14'
+updated_date: '2026-10-26 19:21'
 labels:
   - quick
 dependencies: []
@@ -58,4 +58,6 @@ Copy-only follow-up requested by David: remove visible draft caveats and move un
 Verification after removing public caveats: 76 focused privacy/terms/localized-page/sitemap/checkout tests passed; targeted formatting and git diff --check passed. Changes remain uncommitted.
 
 Requested presentation/copy follow-up: restrained sans-serif page/section headings and sidebar links, normal body-text colour, and six concise storage/sharing bullets instead of ten. Smaller mapping/security/mailbox providers are disclosed by category rather than listing HERE/Mapbox/Google Maps/Cloudflare individually. Main hosting/payment/email providers, non-subscriber purchase-statistic sharing, accountant access and purchaser/Recipient photo distinction remain disclosed. No technical processing or date changes. Verification: 55 focused privacy/terms/localized-page/FAQ tests passed; targeted format check, Tailwind build and git diff --check passed.
+
+Added Related information beneath the Privacy section index, linking to localised FAQ and Terms. Links remain visible on mobile and are visually/semantically separate from in-page section links. Existing noindex and sitemap settings unchanged. Verification: 58 focused FAQ/Terms/Privacy/localized-page tests passed, assets build and git diff --check passed. No translations generated.
 <!-- SECTION:NOTES:END -->

@@ -4,7 +4,7 @@ title: Rewrite the FAQ around what customers ask
 status: done
 assignee: []
 created_date: '2026-10-24 19:27'
-updated_date: '2026-10-26 19:16'
+updated_date: '2026-10-26 19:21'
 labels:
   - spec
   - customers
@@ -77,4 +77,6 @@ Answers are blocks (paragraphs, lists, links) and one list feeds both the page a
 Validation: compile with warnings as errors, Ash codegen check, unused-dependency check, formatting, strict Credo, Gettext freshness and all 1,702 tests pass. Desktop and mobile browser checks cover the delivery checker and shared section navigation. Full mix precommit is blocked at its existing critical dependency-audit gate by hackney 4.8.7 (EEF-CVE-2026-115693); dependency updates are outside this copy/UI change.
 
 User-approved visual follow-up: FAQ now matches Terms/Privacy with restrained sans-serif page, section and contact-prompt headings, sans-serif sidebar links and normal answer-text colour instead of 80% opacity. No update date added. Copy, accordion behaviour and FAQ structured data remain unchanged. Added typography/date-absence assertions for all three language routes and aligned the Terms navigation test. Verification: 57 focused FAQ/Terms/Privacy/localized-page tests passed, Tailwind build and git diff --check passed; formatting applied.
+
+Added Related information beneath the FAQ sidebar index, linking to Terms and Privacy in the current language. Related navigation also appears on mobile; the in-page index remains desktop-only. Shared SectionIndex component accepts explicit related links and keeps them outside scroll tracking. Verification: 58 focused reference-page/localization tests passed, including all nine language/page combinations; assets build and git diff --check passed.
 <!-- SECTION:NOTES:END -->

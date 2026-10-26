@@ -4,7 +4,7 @@ title: Publish terms of sale
 status: done
 assignee: []
 created_date: '2026-10-24 19:27'
-updated_date: '2026-10-26 19:15'
+updated_date: '2026-10-26 19:21'
 labels:
   - spec
   - customers
@@ -68,4 +68,6 @@ Validation: compile with warnings as errors, Ash codegen check, unused-dependenc
 Requested presentation follow-up: use restrained sans-serif page/section headings and sidebar links for Terms, with normal body-text colour rather than 80% opacity. SectionIndex has an opt-in sans variant; FAQ keeps its existing serif style. No terms wording or last-updated date changed. Verification: 55 focused privacy/terms/localized-page/FAQ tests passed, targeted format check, Tailwind build and git diff --check passed.
 
 Added Updated 26 October 2026 beneath the Terms title, matching the Privacy notice wording, muted date styling and spacing. The date is fixed to this substantive terms revision rather than computed at runtime. Added a date-placement regression test. Verification: focused Terms/Privacy tests and git diff --check passed; formatting applied. No translations generated.
+
+Added a separate Related information group beneath the Terms section index linking to localised FAQ and Privacy routes. Shared sidebar sticks as a group on desktop; related links remain visible on mobile while in-page navigation stays hidden. Related links are outside the section-index hook so active-section tracking is unchanged. Verification: 58 focused FAQ/Terms/Privacy/localized-page tests passed (all nine language/page combinations), assets build and git diff --check passed. New heading remains translatable; translations were not generated.
 <!-- SECTION:NOTES:END -->

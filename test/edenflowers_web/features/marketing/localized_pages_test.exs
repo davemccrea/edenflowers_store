@@ -45,6 +45,33 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     assert has_element?(view, ~s|#locale-picker-footer option[value="/locale/fi?redirect_to=%2Fsign-in"]|)
   end
 
+  test "information sidebars link to the other two pages in the current language", %{conn: conn} do
+    for {faq, terms, privacy} <- [
+          {"/en/faq", "/en/terms", "/en/privacy"},
+          {"/sv/vanliga-fragor", "/sv/kopvillkor", "/sv/privacy"},
+          {"/fi/ukk", "/fi/toimitusehdot", "/fi/privacy"}
+        ],
+        {path, id, related} <- [
+          {faq, "faq-nav", [terms, privacy]},
+          {terms, "terms-nav", [faq, privacy]},
+          {privacy, "privacy-nav", [faq, terms]}
+        ] do
+      {:ok, view, html} = live(conn, path)
+      document = LazyHTML.from_document(html)
+
+      assert has_element?(view, "##{id}-sidebar > nav##{id} + nav##{id}-related")
+      assert has_element?(view, ~s|##{id}-related[aria-labelledby="#{id}-related-heading"]|)
+      assert has_element?(view, "##{id}-related-heading")
+
+      assert document |> LazyHTML.query("##{id}-related a") |> LazyHTML.attribute("href") == related
+
+      refute has_element?(view, ~s|##{id}-related a[href="#{path}"]|)
+      refute has_element?(view, "##{id}-related .category-index__link")
+      refute has_element?(view, "##{id}-related.hidden, ##{id}-sidebar.hidden")
+      assert has_element?(view, "##{id}.hidden.md\\:block")
+    end
+  end
+
   describe "the bare URL" do
     test "goes to the session's language", %{conn: conn} do
       conn = conn |> get("/fi") |> recycle() |> get("/")
