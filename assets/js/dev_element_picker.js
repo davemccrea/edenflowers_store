@@ -112,6 +112,11 @@ if (document.querySelector("[data-phx-loc]")) {
 
   const renderHighlight = (el, flashText = null) => {
     ensureOverlay();
+    // Modal drawers sit in the browser's top layer, above every body z-index.
+    // Keep the picker in the same layer as the element being inspected.
+    const host = el.closest("dialog:modal") || document.body;
+    if (overlay.parentNode !== host) host.append(overlay, label);
+
     const rect = el.getBoundingClientRect();
     Object.assign(overlay.style, {
       display: "block",
