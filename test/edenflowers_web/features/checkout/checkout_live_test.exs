@@ -107,6 +107,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
 
       assert has_element?(view, ~s|#checkout-form-4 [data-testid="terms-acceptance"] a[href="/en/terms"]|)
+      button = view |> element(~s|#checkout-form-4 button[type="submit"]|) |> render()
+      assert button =~ "Pay"
+      assert button =~ Edenflowers.Format.currency(order.grand_total, "en")
     end
 
     test "creates the PaymentIntent at the total, and reuses it when paying again", %{conn: conn, order: order} do
