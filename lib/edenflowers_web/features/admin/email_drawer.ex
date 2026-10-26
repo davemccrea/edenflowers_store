@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Admin.EmailDrawer do
   @moduledoc """
-  The state behind `EdenflowersWeb.Admin.Components.email_drawer`, shared by
+  The state behind `EdenflowersWeb.Admin.Drawers.email_drawer`, shared by
   the order and course pages: opening it for a kind, rebuilding the preview as
   Jennie types, closing it, and what each kind is called. Sending stays on the
   page, because each kind has its own action and flash.

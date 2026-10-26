@@ -433,7 +433,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         </.form>
       </.admin_page>
 
-      <.card_drawer variants={@card_variants} locale={@locale} selected_variant_id={@card && @card.variant_id} />
+      <.card_drawer admin? variants={@card_variants} locale={@locale} selected_variant_id={@card && @card.variant_id} />
     </Layouts.admin>
     """
   end
