@@ -4,7 +4,7 @@ title: Publish a privacy policy
 status: needs-triage
 assignee: []
 created_date: '2026-10-24 19:28'
-updated_date: '2026-10-26 17:13'
+updated_date: '2026-10-26 18:57'
 labels:
   - spec
   - customers
@@ -69,3 +69,16 @@ TASK-116.1 adds the approved draft page and links; it does not finish publicatio
 
 David approved a two-week retention period for delivery photographs. Cleanup is tracked separately as a needs-triage child task; automatic deletion is not implemented by the privacy-page copy change.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-26 18:57
+
+---
+
+Legal review: docs/research/privacy-policy-legal-review.md. David requested policy copy now, technical implementation later. New needs-triage subtasks cover retention, Brevo minimisation, browser/Stripe consent and Article 14 recipient information; TASK-116.2 already owns photo expiry. Provider identity/roles, Article 28 agreements and transfer safeguards still need factual confirmation, plus a proportionate processing register, rights/breach checklist and security review. Do not treat draft/noindex as compliance or finalise publication until these gaps and customer-language notices are resolved.
+
+---
+<!-- COMMENTS:END -->

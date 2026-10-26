@@ -4,6 +4,7 @@ title: Delete delivery photos after two weeks with an Oban job
 status: needs-triage
 assignee: []
 created_date: '2026-10-26 17:13'
+updated_date: '2026-10-26 18:57'
 labels: []
 dependencies: []
 parent_task_id: TASK-116
@@ -38,3 +39,16 @@ Until cleanup is implemented and verified, keep the privacy page marked as a dra
 - [ ] #3 Tests cover retention boundaries, repeat runs, legacy photos and isolation from other uploads and purchase history.
 - [ ] #4 The privacy notice accurately reflects the implemented retention scope, including any separately retained copies.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-26 18:57
+
+---
+
+Source correction from the legal review: delivery-photo attachments are sent to the purchasing Customer (order.customer_email), not necessarily the Recipient. Scope expiry and disclosure around that distinction. Current policy now labels the two-week period as intended and routine deletion as unimplemented; request-only deletion is not presented as an adequate expiry procedure.
+
+---
+<!-- COMMENTS:END -->

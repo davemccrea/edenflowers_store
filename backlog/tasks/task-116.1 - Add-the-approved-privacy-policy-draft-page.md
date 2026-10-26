@@ -4,8 +4,9 @@ title: Add the approved privacy-policy draft page
 status: done
 assignee: []
 created_date: '2026-10-26 16:39'
-updated_date: '2026-10-26 17:13'
-labels: []
+updated_date: '2026-10-26 18:58'
+labels:
+  - quick
 dependencies: []
 parent_task_id: TASK-116
 type: task
@@ -45,4 +46,8 @@ Slightly expanded the shortened notice from 343 to 387 template words: examples 
 Retention decision: David specified that delivery photographs will be kept for two weeks. Record this in the draft while clearly marking automatic deletion as not yet implemented; do not add destructive cleanup in this copy-only change.
 
 Recorded the approved two-week delivery-photo retention period in the draft, with an explicit automatic-deletion-not-yet-implemented marker. Other retention periods remain unresolved. Cleanup implementation is tracked by TASK-116.2 (needs-triage). Targeted format, all 9 privacy-page tests and git diff --check passed.
+
+Policy-only follow-up approved by David in this conversation: apply the legal-review wording corrections concisely, retain draft/noindex safeguards, and track technical changes separately. No retention jobs, Brevo changes, Stripe/consent behaviour, emails, translations or production operations are authorised by this copy change.
+
+Applied the policy-only legal-review corrections: Customer versus Recipient photo sharing, checkout-created accounts and optional fields, purpose-specific lawful bases/interests, accurate six-/ten-year accounting timing, intended versus unenforced retention, approximate routine-backup rotation, overseas/cookie/Article 14 gaps and free rights requests with timely extension notices. Removed the unsupported twelve-month enquiry-deletion promise and request-only photo-expiry workaround. Preserved draft/noindex, existing layout/links and current provider behaviour; no technical processing changes or translations generated. Technical follow-ups: TASK-116.2 (existing photos), TASK-116.3 (retention), TASK-116.4 (Brevo), TASK-116.5 (Stripe/consent), TASK-116.6 (Recipient information), all still needs-triage. Verification: 76 focused privacy/terms/localized-page/sitemap/checkout tests passed, targeted format check and git diff --check passed. Unrelated concurrent homepage/testimonial changes were left untouched.
 <!-- SECTION:NOTES:END -->

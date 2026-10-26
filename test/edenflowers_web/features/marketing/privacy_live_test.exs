@@ -30,17 +30,23 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     refute has_element?(view, "#sharing", "all data stays in the EU")
   end
 
-  test "states the photo period and says automatic deletion is not in place yet", %{conn: conn} do
+  test "distinguishes intended retention from current deletion and accounting requirements", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/privacy")
 
-    assert has_element?(view, "#retention", "Delivery photographs: two weeks")
-    assert has_element?(view, "#retention", "Automatic deletion is not yet in place")
+    assert has_element?(view, "#retention", "Delivery photographs: intended retention is two weeks")
+    assert has_element?(view, "#retention", "Routine deletion is not yet implemented")
+    assert has_element?(view, "#retention", "not yet routinely deleted")
+    assert has_element?(view, "#retention", "calendar year in which the financial year ended")
+    assert has_element?(view, "#retention", "ten years from the financial-year end")
+    assert has_element?(view, "#retention", "do not automatically require us to retain delivery-only details")
+    refute has_element?(view, "#retention", "until it is, ask us")
+    refute has_element?(view, "#retention", "Enquiries: twelve months")
+    refute has_element?(view, "#retention", "our accountant decides which")
 
     for category <- [
-          "Orders and payment records",
-          "Customer and subscription details",
-          "Enquiries",
-          "Newsletter consent",
+          "Accounting records",
+          "Customer, subscription and enquiry records",
+          "Newsletters",
           "Error reports",
           "Backups",
           "Delivery photographs"
@@ -57,12 +63,21 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     assert has_element?(view, "#information", "Newsletters require your consent.")
     assert has_element?(view, "#information", "Instagram handle")
     assert has_element?(view, "#information", "coordinates we look up to calculate delivery distance")
-    assert has_element?(view, "#information", "the contract with you or the steps taken before it")
-    assert has_element?(view, "#information", "The law requires us to keep accounting records")
-    assert has_element?(view, "#information", "We use your data only where the law recognises a reason")
-    assert has_element?(view, "#information", "Recipient deliveries, customer administration and website security")
-    assert has_element?(view, "#information", "our legitimate interests")
-    assert has_element?(view, "#information", "Required details are necessary to fulfil purchases.")
+    assert has_element?(view, "#information", "the contract with you or steps taken at your request")
+    assert has_element?(view, "#information", "Accounting records: our legal obligation")
+    assert has_element?(view, "#information", "Our legal bases are")
+
+    assert has_element?(
+             view,
+             "#information",
+             "legitimate interests in fulfilling gifts and handling purchases and complaints"
+           )
+
+    assert has_element?(view, "#information", "legitimate interest in preventing abuse")
+    assert has_element?(view, "#information", "we cannot complete your purchase")
+    assert has_element?(view, "#information", "Newsletter signup is optional")
+    assert has_element?(view, "#information", "optional Instagram handle")
+    assert has_element?(view, "#information", "Checkout can create a customer account without separate registration")
     assert has_element?(view, "#sharing", "order count, latest order date and total spent")
     assert has_element?(view, "#sharing", "including non-subscribers")
     assert has_element?(view, "#sharing", "Only subscribers receive newsletters.")
@@ -73,14 +88,20 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     assert has_element?(view, "#sharing", "Cloudflare")
     assert has_element?(view, "#sharing", "Our accountant receives purchase and payment records")
     assert has_element?(view, "#sharing", "hosts the #{Business.email()} mailbox")
+    assert has_element?(view, "#sharing", "emailed to the purchasing customer, who may not be the recipient")
     assert has_element?(view, "#sharing", "cannot be recalled")
-    assert has_element?(view, "#sharing", "based outside the EEA")
-    assert has_element?(view, "#cookies", "sign-in for 30 days")
+    refute has_element?(view, "#sharing", "emailed to the recipient")
+    assert has_element?(view, "#sharing", "process data outside the EEA")
+    assert has_element?(view, "#sharing", "how to obtain a copy")
+    assert has_element?(view, "#cookies", "sign-in for up to 30 days")
     assert has_element?(view, "#cookies", "Stripe loads site-wide")
     assert has_element?(view, "#cookies", "We do not use analytics or advertising cookies")
     assert has_element?(view, "#cookies", "block or delete cookies in your browser settings")
     assert has_element?(view, "#cookies", "IP addresses, browser information and submitted form data")
-    assert has_element?(view, "#rights", "normally respond within one month")
+    assert has_element?(view, "#cookies", "consent requirements are still being assessed")
+    assert has_element?(view, "#cookies", "Browser settings do not replace consent")
+    assert has_element?(view, "#rights", "Requests are normally free")
+    assert has_element?(view, "#rights", "respond within one month or explain any lawful extension within that month")
     assert has_element?(view, ~s|#rights a[href="https://tietosuoja.fi/en"]|, "Office of the Data Protection Ombudsman")
     assert has_element?(view, ~s|#rights a[href="/en/terms"]|)
   end
@@ -95,7 +116,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
       |> LazyHTML.text()
       |> String.split(~r/\s+/, trim: true)
 
-    assert length(words) < 700
+    assert length(words) < 800
 
     for right <- ["access", "correction", "deletion", "restriction", "portability", "Object"] do
       assert has_element?(view, "#rights", right)
@@ -112,7 +133,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
       {:ok, view, html} = live(conn, "/#{language}/privacy")
       document = LazyHTML.from_document(html)
 
-      for {section, count} <- [{"information", 7}, {"sharing", 10}, {"cookies", 4}, {"retention", 7}, {"rights", 3}] do
+      for {section, count} <- [{"information", 7}, {"sharing", 10}, {"cookies", 4}, {"retention", 6}, {"rights", 3}] do
         assert has_element?(view, "##{section} ul.list-disc.space-y-3")
         assert document |> LazyHTML.query("##{section} ul > li") |> Enum.count() == count
       end
