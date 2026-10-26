@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
           <p class="text-base-content/70 text-xs leading-relaxed">
             {~t"Only occasional emails. Unsubscribe at any time."}
             <a class="link-underline-static-body" href={~q"/#{language}/privacy"}>
-              {~t"Privacy policy (draft)"}
+              {~t"Privacy policy"}
             </a>
           </p>
         </.form>

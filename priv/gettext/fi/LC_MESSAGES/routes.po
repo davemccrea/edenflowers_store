@@ -46,6 +46,7 @@ msgstr "kurssit"
 #: lib/edenflowers_web/router.ex:50
 #: lib/edenflowers_web/router.ex:50
 #: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:50
 #, elixir-autogen, elixir-format
 msgid "en"
 msgstr ""
@@ -57,6 +58,7 @@ msgstr ""
 msgid "faq"
 msgstr "ukk"
 
+#: lib/edenflowers_web/router.ex:50
 #: lib/edenflowers_web/router.ex:50
 #: lib/edenflowers_web/router.ex:50
 #: lib/edenflowers_web/router.ex:50
@@ -102,6 +104,7 @@ msgstr "kauppa"
 #: lib/edenflowers_web/router.ex:50
 #: lib/edenflowers_web/router.ex:50
 #: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:50
 #, elixir-autogen, elixir-format
 msgid "sv"
 msgstr ""
@@ -119,3 +122,10 @@ msgstr "haat"
 #, elixir-autogen, elixir-format
 msgid "terms"
 msgstr "toimitusehdot"
+
+#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:50
+#, elixir-autogen, elixir-format
+msgid "privacy"
+msgstr ""
