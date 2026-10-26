@@ -5,12 +5,15 @@ defmodule EdenflowersWeb.CardDrawer do
   """
   use EdenflowersWeb, :html
 
+  import EdenflowersWeb.Admin.Drawers, only: [admin_drawer: 1, drawer_body: 1]
+
   alias Edenflowers.Catalog.ProductType
   alias Edenflowers.Catalog.ProductVariantSize
 
   attr :variants, :list, required: true
   attr :locale, :string, required: true
   attr :selected_variant_id, :string, default: nil
+  attr :admin?, :boolean, default: false, doc: "whether it opens in the admin, with the admin drawer's width and header"
 
   def card_drawer(assigns) do
     # Sizes are stored as text, so the database would sort Large before Small.
@@ -26,6 +29,7 @@ defmodule EdenflowersWeb.CardDrawer do
 
     ~H"""
     <.drawer
+      :if={!@admin?}
       id="card-drawer"
       placement="right"
       label={gettext("Select a card")}
@@ -39,61 +43,79 @@ defmodule EdenflowersWeb.CardDrawer do
       </header>
 
       <div class="flex flex-col gap-6 p-4 sm:p-8" data-testid="card-drawer">
-        <div :for={{size, shared_price, shared_details, variants} <- @size_groups} class="flex flex-col gap-3">
-          <div class="flex items-end justify-between gap-3">
-            <div class="flex flex-col gap-1">
-              <h3 class="eyebrow text-base-content/70">{variant_size_label(size)}</h3>
-              <span :if={message_room_label(size)} class="text-base-content/70 text-sm">
-                {message_room_label(size)}
-              </span>
-              <span :if={shared_details} class="text-base-content/70 text-sm">{shared_details}</span>
-            </div>
-            <span :if={shared_price} class="font-serif text-lg">{Edenflowers.Format.currency(shared_price, @locale)}</span>
-          </div>
-          <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
-            <button
-              :for={variant <- variants}
-              type="button"
-              phx-click={
-                JS.push("select_card", value: %{"variant-id" => variant.id})
-                |> JS.exec("phx-hide", to: "#card-drawer")
-              }
-              aria-current={variant.id == @selected_variant_id && "true"}
-              class={["press relative flex flex-col items-center gap-1 border p-2 hover:border-primary", if(variant.id == @selected_variant_id,
-    do: "border-primary bg-primary/5",
-    else: "border-base-300")]}
-              data-testid={"card-option-#{variant.id}"}
-            >
-              <span
-                :if={variant.id == @selected_variant_id}
-                class="bg-primary text-primary-content absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full"
-              >
-                <.icon name="hero-check-mini" class="h-3.5 w-3.5" />
-              </span>
-              <.image
-                src={variant.photo_slug}
-                alt=""
-                width={240}
-                height={240}
-                sizes="(min-width: 1024px) 10rem, 40vw"
-                crop_type="fit"
-                class="aspect-square w-full object-contain p-2"
-              />
-              <%!-- Card names run to 16 characters, wider than a two-column tile on a phone. --%>
-              <span class="font-serif text-balance hyphens-auto wrap-break-word w-full text-center text-lg leading-snug">
-                {variant.product.name}
-              </span>
-              <span :if={is_nil(shared_details) && details(variant)} class="text-base-content/70 text-sm">
-                {details(variant)}
-              </span>
-              <span :if={is_nil(shared_price)} class="font-serif text-lg">
-                {Edenflowers.Format.currency(variant.price, @locale)}
-              </span>
-            </button>
-          </div>
-        </div>
+        <.card_content size_groups={@size_groups} locale={@locale} selected_variant_id={@selected_variant_id} />
       </div>
     </.drawer>
+
+    <.admin_drawer :if={@admin?} id="card-drawer" title={~t"Select a card"}>
+      <.drawer_body>
+        <div class="flex flex-col gap-6" data-testid="card-drawer">
+          <.card_content size_groups={@size_groups} locale={@locale} selected_variant_id={@selected_variant_id} />
+        </div>
+      </.drawer_body>
+    </.admin_drawer>
+    """
+  end
+
+  attr :size_groups, :list, required: true
+  attr :locale, :string, required: true
+  attr :selected_variant_id, :string, default: nil
+
+  defp card_content(assigns) do
+    ~H"""
+    <div :for={{size, shared_price, shared_details, variants} <- @size_groups} class="flex flex-col gap-3">
+      <div class="flex items-end justify-between gap-3">
+        <div class="flex flex-col gap-1">
+          <h3 class="eyebrow text-base-content/70">{variant_size_label(size)}</h3>
+          <span :if={message_room_label(size)} class="text-base-content/70 text-sm">
+            {message_room_label(size)}
+          </span>
+          <span :if={shared_details} class="text-base-content/70 text-sm">{shared_details}</span>
+        </div>
+        <span :if={shared_price} class="font-serif text-lg">{Edenflowers.Format.currency(shared_price, @locale)}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <button
+          :for={variant <- variants}
+          type="button"
+          phx-click={
+            JS.push("select_card", value: %{"variant-id" => variant.id})
+            |> JS.exec("phx-hide", to: "#card-drawer")
+          }
+          aria-current={variant.id == @selected_variant_id && "true"}
+          class={["press relative flex flex-col items-center gap-1 border p-2 hover:border-primary", if(variant.id == @selected_variant_id,
+    do: "border-primary bg-primary/5",
+    else: "border-base-300")]}
+          data-testid={"card-option-#{variant.id}"}
+        >
+          <span
+            :if={variant.id == @selected_variant_id}
+            class="bg-primary text-primary-content absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full"
+          >
+            <.icon name="hero-check-mini" class="h-3.5 w-3.5" />
+          </span>
+          <.image
+            src={variant.photo_slug}
+            alt=""
+            width={240}
+            height={240}
+            sizes="(min-width: 1024px) 10rem, 40vw"
+            crop_type="fit"
+            class="aspect-square w-full object-contain p-2"
+          />
+          <%!-- Card names run to 16 characters, wider than a two-column tile on a phone. --%>
+          <span class="font-serif text-balance hyphens-auto wrap-break-word w-full text-center text-lg leading-snug">
+            {variant.product.name}
+          </span>
+          <span :if={is_nil(shared_details) && details(variant)} class="text-base-content/70 text-sm">
+            {details(variant)}
+          </span>
+          <span :if={is_nil(shared_price)} class="font-serif text-lg">
+            {Edenflowers.Format.currency(variant.price, @locale)}
+          </span>
+        </button>
+      </div>
+    </div>
     """
   end
 
