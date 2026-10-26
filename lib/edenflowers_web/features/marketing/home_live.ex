@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
   use EdenflowersWeb, :live_view
 
+  import EdenflowersWeb.Marketing.CustomerQuote
   import EdenflowersWeb.Marketing.TrustedBy
 
   alias Edenflowers.Catalog
@@ -113,7 +114,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
        review_page: 0,
        review_leaving: nil,
        review_direction: nil,
-       show_review_translations?: Gettext.get_locale(EdenflowersWeb.Gettext) == "en",
        subscribable_products: Catalog.list_subscribable_products!() |> Translations.translate(),
        price_from: price_from(Catalog.list_bouquets!(), locale),
        next_fulfillment: next_fulfillment(locale),
@@ -497,15 +497,16 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <.trusted_by />
 
-      <section class="not-last:border-b" aria-labelledby="reviews-heading">
+      <section class="overflow-x-clip not-last:border-b" aria-labelledby="reviews-heading">
         <div class="container py-20 md:py-28">
-          <div class="mb-12 flex items-end justify-between gap-4">
+          <div class="mb-12 flex items-baseline justify-between gap-4 md:items-center">
             <h2 id="reviews-heading" class="section-title">{~t"What customers say"}</h2>
 
-            <div class="hidden shrink-0 items-center gap-1 md:flex">
+            <div class="flex shrink-0 items-center gap-1 md:-mr-1.5">
               <.icon_button
                 type="button"
                 size="sm"
+                class="max-md:hidden"
                 phx-click="turn_reviews"
                 phx-value-by="-1"
                 aria_label={~t"Previous slide"}
@@ -513,12 +514,18 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               >
                 <.icon name="hero-chevron-left" class="h-5 w-5" />
               </.icon_button>
-              <p class="text-base-content/70 whitespace-nowrap text-sm tabular-nums" aria-hidden="true">
+              <p
+                data-review-counter
+                data-desktop-counter={"#{@review_page + 1} / #{length(@review_pages)}"}
+                class="text-base-content/70 whitespace-nowrap text-sm tabular-nums"
+                aria-hidden="true"
+              >
                 {@review_page + 1} / {length(@review_pages)}
               </p>
               <.icon_button
                 type="button"
                 size="sm"
+                class="max-md:hidden"
                 phx-click="turn_reviews"
                 phx-value-by="1"
                 aria_label={~t"Next slide"}
@@ -544,23 +551,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 data-leaving={i == @review_leaving}
               >
                 <li :for={{review, n} <- Enum.with_index(page)} style={"--n: #{n};"}>
-                  <figure class="flex flex-col gap-6">
-                    <.flower name="flower-30" class="text-base-content/30 h-8 w-8" />
-                    <div class="flex flex-col gap-3">
-                      <blockquote lang={review.lang} class="font-serif text-balance text-xl leading-snug md:text-2xl">
-                        {review.quote}
-                      </blockquote>
-                      <p
-                        :if={@show_review_translations?}
-                        class="text-base-content/70 font-serif text-pretty text-lg italic leading-snug"
-                      >
-                        {review.en}
-                      </p>
-                    </div>
-                    <figcaption class="eyebrow text-base-content/70">
-                      {review.name}<span :if={review[:occasion]}> · {occasion_label(review.occasion)}</span>
-                    </figcaption>
-                  </figure>
+                  <.customer_quote
+                    quote={review.quote}
+                    lang={review.lang}
+                    en={review.en}
+                    name={review.name}
+                    occasion={review[:occasion] && occasion_label(review.occasion)}
+                  />
                 </li>
               </ul>
             </div>
@@ -589,7 +586,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
                 this.embla = EmblaCarousel(this.el, {
                   slides: "li",
-                  align: "center",
+                  align: "start",
                   containScroll: "trimSnaps",
                   slidesToScroll: 1,
                   breakpoints: {
@@ -597,10 +594,17 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                   },
                 });
 
+                this.counterNode = this.el
+                  .closest("section")
+                  ?.querySelector("[data-review-counter]");
+                this.boundOnSelect = this.onSelect.bind(this);
                 this.boundOnTween = this.onTween.bind(this);
+                this.embla.on("select", this.boundOnSelect);
+                this.embla.on("reInit", this.boundOnSelect);
                 this.embla.on("reInit", this.boundOnTween);
                 this.embla.on("scroll", this.boundOnTween);
                 this.embla.on("slideFocus", this.boundOnTween);
+                this.onSelect();
                 this.onTween();
               },
 
@@ -613,13 +617,22 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 if (this.embla) this.embla.destroy();
               },
 
+              onSelect() {
+                if (!this.counterNode) return;
+                if (this.embla.internalEngine().options.active) {
+                  this.counterNode.textContent = `${this.embla.selectedScrollSnap() + 1} / ${this.embla.scrollSnapList().length}`;
+                } else {
+                  this.counterNode.textContent = this.counterNode.dataset.desktopCounter;
+                }
+              },
+
               onTween(eventName) {
                 if (this.reducedMotion) return;
                 const engine = this.embla.internalEngine();
                 if (!engine.options.active) return;
 
                 const snapList = this.embla.scrollSnapList();
-                const tweenFactor = 0.6 * snapList.length;
+                const tweenFactor = snapList.length;
                 const scrollProgress = this.embla.scrollProgress();
                 const slidesInView = this.embla.slidesInView();
                 const slideNodes = this.embla.slideNodes();

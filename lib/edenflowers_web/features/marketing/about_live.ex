@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
 
   use EdenflowersWeb, :live_view
 
+  import EdenflowersWeb.Marketing.CustomerQuote
   import EdenflowersWeb.Marketing.TrustedBy
 
   alias EdenflowersWeb.Business
@@ -22,36 +23,35 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
          ~t"Meet Jennie, the florist behind Eden Flowers in Vaasa: warm, natural bouquets with seasonal flowers that last, made by her from the first message to the finished flowers.",
        og_image: image_url("local:///jennie_1.jpg", 1200, 630),
        json_ld: Business.florist(),
-       quotes: quotes(),
-       page_language: Localize.get_locale().language
+       quotes: quotes()
      )}
   end
 
-  # Kept in the customer's own words. The translation shows only on pages in another language.
+  # Kept in the customer's own words. `en` is shown beneath the original on /en only.
   defp quotes do
     [
       %{
         text: "Det är en underbar underbar skapelse som du har gjort. … Verkligen, jag gillar så mycket din stil.",
-        lang: :sv,
-        translation: ~t"It's a wonderful, wonderful creation you've made. … Truly, I like your style so much.",
+        lang: "sv",
+        en: "It's a wonderful, wonderful creation you've made. … Truly, I like your style so much.",
         name: "Triinu",
         occasion: nil
       },
       %{
         text:
           "Var så smidigt att du kunde ta dej dit under dagen och fixa i lugn och ro och jag kände aldrig någon stress över att blommorna inte skulle vara perfekta under dagen.",
-        lang: :sv,
-        translation:
-          ~t"It was so easy that you could go there during the day and set everything up in peace, and I never felt any stress about the flowers not being perfect on the day.",
+        lang: "sv",
+        en:
+          "It was so easy that you could go there during the day and set everything up in peace, and I never felt any stress about the flowers not being perfect on the day.",
         name: "Julia",
         occasion: ~t"Wedding"
       },
       %{
         text:
           "Teit meille kukat häihimme pari vuotta sitten, joten oli ihana saada kukat sinulta myös tyttäremme ensimmäiseen suureen juhlaan.",
-        lang: :fi,
-        translation:
-          ~t"You made the flowers for our wedding a couple of years ago, so it was lovely to have flowers from you for our daughter's first big celebration too.",
+        lang: "fi",
+        en:
+          "You made the flowers for our wedding a couple of years ago, so it was lovely to have flowers from you for our daughter's first big celebration too.",
         name: "Aino",
         occasion: ~t"Christening"
       }
@@ -156,18 +156,13 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
           <h2 id="quotes-heading" class="section-title mb-12">{~t"Kind words"}</h2>
           <ul class="grid gap-12 md:grid-cols-3 md:gap-8">
             <li :for={quote <- @quotes}>
-              <figure class="flex h-full flex-col gap-6">
-                <.flower name="flower-30" class="text-base-content/30 h-8 w-8" />
-                <blockquote lang={quote.lang} class="font-serif text-balance text-xl leading-snug md:text-2xl">
-                  {quote.text}
-                </blockquote>
-                <p :if={@page_language != quote.lang} class="text-base-content/70 font-serif italic leading-snug">
-                  {quote.translation}
-                </p>
-                <figcaption class="eyebrow text-base-content/70 mt-auto">
-                  {quote.name}<span :if={quote.occasion}> · {quote.occasion}</span>
-                </figcaption>
-              </figure>
+              <.customer_quote
+                quote={quote.text}
+                lang={quote.lang}
+                en={quote.en}
+                name={quote.name}
+                occasion={quote.occasion}
+              />
             </li>
           </ul>
         </div>
