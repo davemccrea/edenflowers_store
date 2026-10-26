@@ -6126,7 +6126,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:168
 #, elixir-autogen, elixir-format
-msgid "%{base} plus %{per_km} per km. Free within %{km} km for chosen bouquets."
+msgid "Free within %{km} km for chosen bouquets, otherwise %{base} plus %{per_km} per km."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:308
