@@ -152,5 +152,12 @@ defmodule Edenflowers.Payments.PreparePaymentTest do
       assert refusal(Courses.prepare_registration_link_payment(ctx.registration.payment_link_token, "85.00")) ==
                :link_closed
     end
+
+    test "refuses a cancelled booking's link even while an old intent remains usable", ctx do
+      Ash.Seed.update!(ctx.registration, %{status: :cancelled, payment_intent_id: "pi_processing"})
+
+      assert refusal(Courses.prepare_registration_link_payment(ctx.registration.payment_link_token, "85.00")) ==
+               :link_closed
+    end
   end
 end

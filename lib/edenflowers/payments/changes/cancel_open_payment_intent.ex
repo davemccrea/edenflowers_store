@@ -1,6 +1,6 @@
 defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
   @moduledoc """
-  Clears a resource's attached PaymentIntent and cancels it in Stripe once committed.
+  Cancels an attached PaymentIntent once committed, clearing it only after Stripe agrees.
 
   With `before_commit?: true` it cancels first and stops the change when Stripe
   refuses, as it does for a payment already under way. For a delete, which would
@@ -13,15 +13,18 @@ defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Payments.Errors.PaymentInProgress
+  import Edenflowers.Actors
 
   @impl true
   def change(%{data: %{payment_intent_id: nil}} = changeset, _opts, _context), do: changeset
 
   def change(%{data: %{payment_intent_id: payment_intent_id}} = changeset, opts, _context) do
-    changeset = Ash.Changeset.force_change_attribute(changeset, :payment_intent_id, nil)
-
     if opts[:before_commit?],
-      do: cancel_before_commit(changeset, payment_intent_id),
+      do:
+        cancel_before_commit(
+          Ash.Changeset.force_change_attribute(changeset, :payment_intent_id, nil),
+          payment_intent_id
+        ),
       else: cancel_after_commit(changeset, payment_intent_id)
   end
 
@@ -55,16 +58,19 @@ defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
     Ash.Changeset.after_transaction(changeset, fn
       _changeset, {:ok, record} ->
         case StripeAPI.impl().cancel_payment_intent(%{id: payment_intent_id}) do
-          {:ok, _payment_intent} ->
-            :ok
+          {:ok, _cancelled} ->
+            case Ash.update(record, %{payment_intent_id: payment_intent_id},
+                   action: :mark_payment_cancelled,
+                   actor: system_actor()
+                 ) do
+              {:ok, cleared} -> {:ok, cleared}
+              {:error, _changed_meanwhile} -> {:ok, record}
+            end
 
           {:error, reason} ->
-            Logger.warning(
-              "Could not cancel PaymentIntent #{payment_intent_id} for #{inspect(record.__struct__)} #{record.id}: #{inspect(reason)}"
-            )
+            Logger.warning("Could not cancel PaymentIntent #{payment_intent_id}: #{inspect(reason)}")
+            {:ok, record}
         end
-
-        {:ok, record}
 
       _changeset, error ->
         error
