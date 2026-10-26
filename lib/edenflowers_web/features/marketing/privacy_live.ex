@@ -42,8 +42,8 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
       <.container>
         <h1 class="page-title mb-8 md:mb-10">{~t"Privacy policy"}</h1>
 
-        <p id="notice-status" class="font-sans text-base-content/80 mb-16 max-w-3xl text-base leading-relaxed md:mb-20">
-          {~t"Last updated 26 October 2026. This notice is still a draft: retention, overseas safeguards, cookie requirements and gift-recipient information remain under review."}
+        <p id="notice-updated" class="font-sans text-base-content/80 mb-16 max-w-3xl text-base leading-relaxed md:mb-20">
+          {~t"Updated 26 October 2026."}
         </p>
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
@@ -51,7 +51,6 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
 
           <div class="space-y-16 md:space-y-20">
             <.privacy_section id="controller" title={~t"Who is responsible?"}>
-              <p>{~t"Eden Flowers is responsible for the personal data described here."}</p>
               <p>
                 {~t"Jennie McCrea, trading as Eden Flowers"}<br />
                 {~t"Business ID:"} {Business.business_id()}<br />
@@ -66,26 +65,26 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
             <.privacy_section id="information" title={~t"What information we use and why"}>
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
                 <li>
-                  {~t"We use contact and purchase details for orders, subscriptions, courses and enquiries. Checkout can create a customer account without separate registration. Custom orders may include an optional Instagram handle."}
+                  {~t"We use names, email, phone and purchase details for orders, subscriptions, courses and enquiries. Checkout may create an account. Instagram handles are optional."}
                 </li>
                 <li>
-                  {~t"Delivery details include recipients, addresses, instructions and card messages, plus the coordinates we look up to calculate delivery distance. Gift-recipient details come from the customer."}
+                  {~t"Delivery details include recipient names, addresses, instructions, card messages and coordinates for calculating distance. Gift-recipient details come from the customer."}
                 </li>
                 <li>
-                  {~t"We may photograph flowers left at the door to show where they were delivered."}
+                  {~t"We may photograph flowers left at the door as delivery evidence."}
                 </li>
               </ul>
               <p>
-                {~t"Without necessary contact and delivery details, we cannot complete your purchase. Newsletter signup is optional."}
+                {~t"We cannot fulfil purchases without necessary contact and delivery details. Newsletter signup is optional."}
               </p>
               <p>{~t"Our legal bases are:"}</p>
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
                 <li>
-                  {~t"Purchases, subscriptions, course bookings and purchase enquiries: the contract with you or steps taken at your request before it."}
+                  {~t"Purchases and purchase enquiries: our contract with you or steps you request before it."}
                 </li>
                 <li>{~t"Accounting records: our legal obligation."}</li>
                 <li>
-                  {~t"Gift deliveries, delivery evidence and customer administration: our legitimate interests in fulfilling gifts and handling purchases and complaints. Website security: our legitimate interest in preventing abuse."}
+                  {~t"Our legitimate interests: fulfilling gifts, documenting delivery, administering purchases, handling complaints and preventing website abuse."}
                 </li>
                 <li>{~t"Newsletters require your consent."}</li>
               </ul>
@@ -93,83 +92,74 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
 
             <.privacy_section id="sharing" title={~t"Where information is stored and who receives it"}>
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
-                <li>{~t"Our main customer database is hosted by Hetzner in Finland."}</li>
+                <li>{~t"Hetzner hosts our main customer database in Finland."}</li>
                 <li>
-                  {~t"Stripe handles payments and saved cards. We store payment references and limited card details, such as the brand and last four digits, not full card numbers or security codes."}
+                  {~t"Stripe handles payments and saved cards. We keep payment references, card brand and last four digits, not full card numbers or security codes."}
                 </li>
                 <li>
-                  {~t"Brevo handles emails and contacts, including non-subscribers with phone numbers. It receives contact details, language, order count, latest order date and total spent. Only subscribers receive newsletters."}
+                  {~t"Brevo handles emails and contacts, including non-subscribers with phone numbers. It receives contact details, language, order count, latest order date and total spent. Newsletters go only to subscribers."}
                 </li>
                 <li>{~t"HERE checks delivery addresses and calculates distances."}</li>
                 <li>{~t"Mapbox displays delivery maps."}</li>
-                <li>{~t"Opening directions shares the destination with Google Maps."}</li>
+                <li>{~t"Opening Google Maps directions shares the destination."}</li>
                 <li>{~t"Cloudflare handles website traffic and security."}</li>
-                <li>{~t"Our accountant receives purchase and payment records each month."}</li>
+                <li>{~t"Our accountant receives monthly purchase and payment records."}</li>
                 <li>
-                  {~t"Our email provider hosts the #{email = Business.email()} mailbox, where enquiries and order emails arrive."}
+                  {~t"Our mailbox provider stores enquiries and order emails at #{email = Business.email()}."}
                 </li>
                 <li>
-                  {~t"Delivery photographs may be emailed to the purchasing customer, who may not be the recipient. Copies in the customer's inbox cannot be recalled."}
+                  {~t"Delivery photos may go to the purchaser, not necessarily the recipient. Emailed copies cannot be recalled."}
                 </li>
               </ul>
-              <p>
-                {~t"We are confirming which services process data outside the EEA, the applicable safeguards and how to obtain a copy of them."}
-              </p>
             </.privacy_section>
 
             <.privacy_section id="cookies" title={~t"Cookies and fraud prevention"}>
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
-                <li>{~t"Our session cookie remembers your cart, language and sign-in for up to 30 days."}</li>
-                <li>{~t"Stripe loads site-wide for fraud prevention and may use cookies, device and activity data."}</li>
+                <li>{~t"Our session cookie keeps your cart, language and sign-in for up to 30 days."}</li>
+                <li>{~t"Stripe loads site-wide for fraud prevention and may use cookies and device/activity data."}</li>
                 <li>{~t"We do not use analytics or advertising cookies."}</li>
                 <li>
-                  {~t"You can block or delete cookies in your browser settings, though the cart and sign-in will stop working."}
+                  {~t"Blocking cookies in your browser may stop the cart and sign-in working."}
                 </li>
               </ul>
               <p>
-                {~t"Stripe's cookie and device-access consent requirements are still being assessed. Browser settings do not replace consent where it is required."}
+                {~t"Browser settings do not replace required consent."}
               </p>
               <p>
-                {~t"Error reports are stored in our own database and may contain IP addresses, browser information and submitted form data."}
+                {~t"Our database stores error reports, which may include IP addresses, browser details and form data."}
               </p>
             </.privacy_section>
 
             <.privacy_section id="retention" title={~t"How long we keep information"}>
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
                 <li>
-                  {~t"Accounting records: vouchers and business correspondence must generally be kept for at least six years from the end of the calendar year in which the financial year ended. Certain accounting records require ten years from the financial-year end. We are confirming the categories with our accountant."}
+                  {~t"Accounting: generally at least six years for vouchers and business correspondence, from the end of the calendar year in which the financial year ended. Certain records require ten years from the financial-year end."}
                 </li>
                 <li>
-                  {~t"Customer, subscription and enquiry records: expiry rules are being confirmed. These records, abandoned checkouts and change histories are not yet routinely deleted."}
-                </li>
-                <li>
-                  {~t"Newsletters: until you unsubscribe or withdraw consent. Limited suppression records prevent further marketing; consent evidence may also be retained where necessary."}
+                  {~t"Newsletters: until withdrawal or unsubscribe. Limited opt-out records prevent further marketing; consent evidence may remain where necessary."}
                 </li>
                 <li>{~t"Error reports: 90 days."}</li>
                 <li>
-                  {~t"Backups: routine database backups rotate after about 30 days. Other copies are being reviewed."}
-                </li>
-                <li>
-                  {~t"Delivery photographs: intended retention is two weeks. Routine deletion is not yet implemented."}
+                  {~t"Routine database backups: about 30 days."}
                 </li>
               </ul>
               <p>
-                {~t"Accounting duties do not automatically require us to retain delivery-only details for the same period."}
+                {~t"Accounting retention does not automatically apply to delivery-only details."}
               </p>
             </.privacy_section>
 
             <.privacy_section id="rights" title={~t"Your rights"}>
               <p>{~t"Email #{email = Business.email()} to:"}</p>
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
-                <li>{~t"Request access to your personal data or correction of incorrect details."}</li>
-                <li>{~t"Request deletion, restriction of processing or portability of your data."}</li>
+                <li>{~t"Request access to or correction of your data."}</li>
+                <li>{~t"Request deletion, restriction or portability."}</li>
                 <li>{~t"Object to legitimate-interest processing or direct marketing."}</li>
               </ul>
               <p>
-                {~t"Rights depend on legal conditions. Requests are normally free. We may need to verify your identity. We respond within one month or explain any lawful extension within that month. Accounting obligations may prevent deletion of some records."}
+                {~t"Requests are normally free. We may verify your identity. Within one month we respond or explain a lawful extension. Legal conditions apply; accounting records may need keeping."}
               </p>
               <p>
-                {~t"Unsubscribe anytime or withdraw newsletter consent by contacting us. Withdrawal does not affect earlier lawful processing."}
+                {~t"Unsubscribe or contact us to withdraw newsletter consent anytime. Earlier lawful processing is unaffected."}
               </p>
               <p>
                 {~t"You can complain to Finland's"}

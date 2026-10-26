@@ -4,7 +4,7 @@ title: Publish a privacy policy
 status: needs-triage
 assignee: []
 created_date: '2026-10-24 19:28'
-updated_date: '2026-10-26 18:57'
+updated_date: '2026-10-26 19:07'
 labels:
   - spec
   - customers
@@ -68,6 +68,8 @@ Conversation decisions: David confirmed Jennie McCrea as the legal controller an
 TASK-116.1 adds the approved draft page and links; it does not finish publication. Retention, transfer safeguards, remaining recipients, browser-cookie/automated-decision assessment and translations remain unresolved. Draft pages are deliberately noindex and not in the sitemap until the notice is completed.
 
 David approved a two-week retention period for delivery photographs. Cleanup is tracked separately as a needs-triage child task; automatic deletion is not implemented by the privacy-page copy change.
+
+David requested removing public draft caveats and keeping unresolved details in the issue instead. Public copy no longer includes draft/under-review/confirmation notices. This is an editorial change, not evidence of completed GDPR compliance. Still open: provider identity and roles, overseas transfers/mechanisms and access to safeguard copies; Stripe device-access/cookie consent assessment; timely Article 14 information for Recipients; accountant classification of six-/ten-year records; actual expiry rules for customer/subscription/enquiry records, abandoned checkouts and histories; non-routine backups; translations and collection-point notices. The unimplemented two-week photo period and unapproved customer-record periods are omitted rather than represented as enforced promises. TASK-116.2–116.6 retain implementation scope and needs-triage status. Existing noindex/sitemap settings are unchanged; do not treat removal of visible caveats as publication sign-off.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
