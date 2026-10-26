@@ -5,7 +5,8 @@
 <%= message(@message) %><%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
 
-<%= gettext("Your receipt is attached.") %>
+<%= if Decimal.positive?(@registration.amount_paid) do %><%= gettext("Your receipt is attached.") %><% end %><%= if Decimal.positive?(@registration.balance) do %>
+<%= gettext("Still to pay: %{amount}. Please pay at the course.", amount: @format_currency.(@registration.balance)) %><% end %>
 
 <%= gettext("To cancel, reply to this email.") %> <%= Edenflowers.Courses.Course.cancellation_terms(@registration.course) %>
 

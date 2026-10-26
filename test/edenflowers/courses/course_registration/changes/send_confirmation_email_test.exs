@@ -5,27 +5,25 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmailTe
 
   alias Edenflowers.Courses.Workers.SendConfirmationEmail
 
-  alias Edenflowers.Courses.Workers.SendPaymentLinkEmail
-
-  test "an invite gets its payment link, promising the place once paid" do
+  test "an unpaid confirmed booking gets its confirmation without a receipt" do
     registration =
-      generate(course_registration(status: :pending, payment_link_token: "tok", email: "anna@example.com"))
+      generate(course_registration(status: :confirmed, email: "anna@example.com"))
 
     assert {:ok, _registration} =
-             perform_job(SendPaymentLinkEmail, %{"primary_key" => %{"id" => registration.id}})
+             perform_job(SendConfirmationEmail, %{"primary_key" => %{"id" => registration.id}})
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "anna@example.com"}]
       assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
-      assert email.subject =~ "Book your place on Course "
-      assert email.text_body =~ ~r/Here's the link to pay for your place on Course \d+\./
-      assert email.text_body =~ "Your place is booked as soon as you've paid."
-      assert email.text_body =~ "/pay/courses/tok"
+      assert email.subject =~ "You're booked on Course "
+      assert email.text_body =~ "Please pay at the course."
+      refute email.text_body =~ "Your receipt is attached."
+      refute email.text_body =~ "/pay/courses/"
       assert email.attachments == []
     end)
 
     reloaded = Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false)
-    assert reloaded.payment_link_emailed_at
+    assert reloaded.confirmation_emailed_at
     refute reloaded.receipt_emailed_at
   end
 

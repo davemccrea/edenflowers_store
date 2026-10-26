@@ -1,10 +1,10 @@
 ---
 id: TASK-133.3
 title: Replace course Invites with confirmed manual bookings payable at the course
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-25 22:24'
-updated_date: '2026-10-26 04:46'
+updated_date: '2026-10-26 05:27'
 labels: []
 dependencies:
   - TASK-133.2
@@ -47,14 +47,14 @@ Before rollout inspect any real pending Invites left by the old workflow. Do not
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Manual entry creates a confirmed booking immediately, sets its commitment time, counts places and appears in normal booking/customer views while an unpaid positive Balance remains accurately visible.
-- [ ] #2 Default manual entry records no Payment and opens/emails no Payment Link; marking actual money already received records real amount/method through the shared ledger, not a separate paid flag.
-- [ ] #3 Jennie can record later non-Stripe course payments using existing shared amount/method/undo/refund controls; explicit online Balance collection remains available without rebooking or duplicate confirmation.
-- [ ] #4 Admin manual booking can pass online cutoff/capacity while retaining field/group-size validation and honest counts; ordinary website restrictions, unpaid-no-places and same-registration edit/retry stay unchanged.
-- [ ] #5 Invite product UI/creation/resend/withdrawal semantics and normal registration hard-delete/purge jobs are removed; retained pending website rows stay hidden from bookings and all payment/email/reminder jobs still work.
-- [ ] #6 Optional confirmation and real pre-save preview agree for paid/unpaid manual bookings: unpaid confirmation has no receipt or receipt stamp; actual payment uses correct receipt behaviour. Ordinary day-before reminders include unpaid confirmed manual bookings.
-- [ ] #7 Tests cover never-paid manual cancellation, initial paid/unpaid creation, after-cutoff/full manual exceptions versus website checks, subsequent offline/link payment, no double place consumption and late money after cancellation.
-- [ ] #8 All changed templates/translations have Email.Previews scenarios and mix print_emails sv fi en review; legacy pending-Invite classification and obsolete queued-discard-job rollout handling are documented without mutating production.
+- [x] #1 Manual entry creates a confirmed booking immediately, sets its commitment time, counts places and appears in normal booking/customer views while an unpaid positive Balance remains accurately visible.
+- [x] #2 Default manual entry records no Payment and opens/emails no Payment Link; marking actual money already received records real amount/method through the shared ledger, not a separate paid flag.
+- [x] #3 Jennie can record later non-Stripe course payments using existing shared amount/method/undo/refund controls; explicit online Balance collection remains available without rebooking or duplicate confirmation.
+- [x] #4 Admin manual booking can pass online cutoff/capacity while retaining field/group-size validation and honest counts; ordinary website restrictions, unpaid-no-places and same-registration edit/retry stay unchanged.
+- [x] #5 Invite product UI/creation/resend/withdrawal semantics and normal registration hard-delete/purge jobs are removed; retained pending website rows stay hidden from bookings and all payment/email/reminder jobs still work.
+- [x] #6 Optional confirmation and real pre-save preview agree for paid/unpaid manual bookings: unpaid confirmation has no receipt or receipt stamp; actual payment uses correct receipt behaviour. Ordinary day-before reminders include unpaid confirmed manual bookings.
+- [x] #7 Tests cover never-paid manual cancellation, initial paid/unpaid creation, after-cutoff/full manual exceptions versus website checks, subsequent offline/link payment, no double place consumption and late money after cancellation.
+- [x] #8 All changed templates/translations have Email.Previews scenarios and mix print_emails sv fi en review; legacy pending-Invite classification and obsolete queued-discard-job rollout handling are documented without mutating production.
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -62,6 +62,12 @@ Before rollout inspect any real pending Invites left by the old workflow. Do not
 <!-- SECTION:PLAN:BEGIN -->
 First test the three commitment points: pending website checkout, confirmed unpaid manual entry and confirmed entry with real initial Payment. Change :add_manually/initial states and shared record_payment exposure, not the website flow or payment engine. Reuse generic settlement UI/domain interfaces for actual methods and Balances. Add admin-only cutoff/capacity bypass, leaving website pricing/preparation strict. Remove Invite UI and hard-delete/purge entry points after callers move to confirmed bookings/cancellation. Update confirmation sender/preview/PDF/stamps and reminder cases together; render all languages. Test actual later offline/link collection, cancellation and place counts. Document safe treatment of any legacy Invites and queued old purge jobs; do not blindly revert the old October 23/25 commits.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Manual entry confirms immediately and records optional real initial money through shared record_payment; default creates no Payment/link. Added generic offline settlement/receipt preview to course drawer. Admin-only capacity/cutoff exception leaves website checks intact. Removed Invite UI/relationship/template and all registration destroy/purge paths. Confirmation attachments/stamps reflect actual money, reminder states Balance, previews and sv/fi/en translations updated without fuzzy flags. Reviewed mix print_emails sv fi en paid/unpaid/part-paid/reminder renders. Added real-action/UI tests including payment validation rollback, initial/later money, unchanged commitment, never-paid cancellation, honest overcapacity and retained hidden checkouts. Purge-retirement migration cancels only obsolete jobs; docs/purchase-retention-rollout.md requires stopped old workers and explicit legacy-Invite classification before rollout. mix precommit passed. No production operation or browser visual check.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 

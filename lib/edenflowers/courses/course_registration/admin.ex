@@ -1,6 +1,6 @@
 defmodule Edenflowers.Courses.CourseRegistration.Admin do
   @moduledoc """
-  What Jennie does with bookings in the admin: inviting people, taking a seat
+   What Jennie does with bookings in the admin: accepting bookings, taking a seat
   back, cancelling, and the list of what is still to settle.
   """
 
@@ -16,7 +16,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
 
   oban do
     triggers do
-      # Queued when Jennie invites someone and ticks "email the customer".
       trigger :send_payment_link_email do
         action :email_payment_link
         queue :default
@@ -26,20 +25,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
         worker_module_name Edenflowers.Courses.Workers.SendPaymentLinkEmail
         scheduler_module_name Edenflowers.Courses.Schedulers.SendPaymentLinkEmail
         default_actor system_actor()
-      end
-
-      # A checkout the customer walked away from. An invite stays until Jennie
-      # withdraws it.
-      trigger :discard_abandoned do
-        action :discard
-        queue :default
-        max_attempts 1
-        lock_for_update? false
-        scheduler_cron "0 3 * * *"
-        worker_module_name Edenflowers.Courses.Workers.DiscardAbandoned
-        scheduler_module_name Edenflowers.Courses.Schedulers.DiscardAbandoned
-        default_actor system_actor()
-        where expr(status == :pending and is_nil(payment_link_token) and updated_at < ago(1, :day))
       end
     end
   end
@@ -52,41 +37,55 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       prepare build(load: [:balance, :payment_overdue?, :course])
     end
 
-    # Someone Jennie invites to book, with a payment link, even after online
-    # booking closes. It holds no places: paying the link books them.
     create :add_manually do
-      description "Jennie sends an Invite: a pending registration with a Payment Link, allowed after online " <>
-                    "booking closes. Holds no places until paid, and emails the link unless told not to."
+      description "Jennie accepts a booking, including after online cutoff or over capacity. Holds places immediately, " <>
+                    "with payment due at the course unless actual received money is entered. Confirmation is optional."
 
       accept [:name, :email, :seats, :course_id, :locale]
       argument :email_customer?, :boolean, default: true
-      argument :message, :string, description: "Jennie's note in the payment link email."
+      argument :message, :string, description: "Jennie's note in the booking confirmation."
+      argument :amount, :decimal, constraints: [greater_than: 0, scale: 2]
+      argument :payment_method, Edenflowers.Payments.PaymentMethod
+      validate present(:payment_method), where: [present(:amount)]
+      validate present(:amount), where: [present(:payment_method)]
+      validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
       validate attribute_in(:locale, @locales)
       change Changes.UpsertUser
-      change {Changes.PriceBooking, allow_after_cutoff?: true}
+      change {Changes.PriceBooking, manual?: true}
+      change set_attribute(:status, :confirmed)
+      change set_attribute(:confirmed_at, &DateTime.utc_now/0)
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
-      change PaymentChanges.OpenPaymentLink
 
-      change {PaymentChanges.QueueEmail, trigger: :send_payment_link_email},
+      change after_action(fn changeset, registration, context ->
+               Ash.update(
+                 registration,
+                 %{
+                   amount: Ash.Changeset.get_argument(changeset, :amount),
+                   payment_method: Ash.Changeset.get_argument(changeset, :payment_method)
+                 },
+                 action: :record_payment,
+                 actor: context.actor
+               )
+             end),
+             where: [present(:amount)]
+
+      change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email},
         where: [argument_equals(:email_customer?, true)]
     end
 
-    # An invite's link, or a balance left on a confirmed booking. A checkout
-    # pays on the course page instead.
     update :open_payment_link do
-      description "Gives an Invite, or a confirmed booking with a Balance, a Payment Link, keeping any it has."
-      validate attribute_in(:status, [:pending, :confirmed]), message: "is cancelled"
+      description "Gives a confirmed booking with a Balance a Payment Link, keeping any it has."
+      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       change PaymentChanges.OpenPaymentLink
       require_atomic? false
     end
 
     # Opens the link if need be, so sending it is opening one.
     update :email_payment_link do
-      description "Emails the customer the Payment Link of an Invite or confirmed booking, opening it if need be. " <>
-                    "Jennie sends it, or add_manually queues it."
+      description "Emails a confirmed booking's Balance collection link, opening it if needed. Jennie sends it explicitly."
 
       argument :message, :string, description: "Jennie's note in the email."
-      validate attribute_in(:status, [:pending, :confirmed]), message: "is cancelled"
+      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       change PaymentChanges.OpenPaymentLink
       change Changes.SendPaymentLinkEmail
       transaction? false
@@ -114,18 +113,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
                  end
                )
              )
-    end
-
-    # A registration nobody paid for: a checkout changed or given up, or an
-    # invite Jennie withdraws. Its PaymentIntent is cancelled first, so a
-    # payment already under way still has a registration to confirm.
-    destroy :discard do
-      description "Deletes an unpaid pending registration, an abandoned checkout or a withdrawn Invite, after " <>
-                    "cancelling its PaymentIntent. Runs nightly for checkouts left a day."
-
-      change filter expr(status == :pending)
-      change {PaymentChanges.CancelOpenPaymentIntent, before_commit?: true}
-      require_atomic? false
     end
 
     # Frees the places. Payments.Changes.Cancel says what happens to the money.

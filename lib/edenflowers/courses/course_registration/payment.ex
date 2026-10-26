@@ -1,7 +1,7 @@
 defmodule Edenflowers.Courses.CourseRegistration.Payment do
   @moduledoc """
   What a payment does to a registration: confirming the places a pending
-  checkout or invite paid for, recording a balance paid through its link, and
+  checkout paid for, recording a balance paid through its link, and
   reconciling a PaymentIntent Stripe never reported.
   """
 
@@ -59,13 +59,13 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
               )
     end
 
-    # Paying at checkout or through an invite's link. Webhook deliveries are
+    # Paying at checkout. Webhook deliveries are
     # at-least-once, so a repeat must not confirm twice. A course that filled
     # up meanwhile still books them: they've paid, and Jennie makes room. So
     # does a payment for other places than the booking now has, revised while
     # it was in flight: the difference is left as a balance for Jennie.
     update :confirm_payment do
-      description "Confirms a pending checkout or Invite when Stripe reports its payment, records the Payment and " <>
+      description "Confirms a pending checkout when Stripe reports its payment, records the Payment and " <>
                     "queues the confirmation email. Books the places even over capacity; refuses a repeat."
 
       argument :payment_intent_id, :string, allow_nil?: false

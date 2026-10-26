@@ -251,66 +251,58 @@ defmodule Edenflowers.Payments.PayableTest do
         for record <- left_out, do: refute(record.id in ids)
       end
 
-      # Courses are only paid by payment link.
-      if parent == :order do
-        for method <- [:cash, :mobilepay, :zettle, :zervant] do
-          test "paying the whole balance by #{method} settles it" do
-            record = build(@parent)
-
-            assert {:ok, record} = record_payment(record, "80.00", unquote(method))
-
-            assert record.settled?
-            assert [%{method: unquote(method), paid_at: %DateTime{}} = payment] = payments(record)
-            assert_money(payment.amount, "80.00")
-          end
-        end
-
-        test "a part-payment leaves the rest owed" do
-          {:ok, record} = record_payment(build(@parent), "30.00")
-
-          assert_money(record.balance, "50.00")
-        end
-
-        test "a payment larger than the balance is refused" do
+      for method <- [:cash, :mobilepay, :zettle, :zervant] do
+        test "paying the whole balance by #{method} settles it" do
           record = build(@parent)
 
-          assert {:error, error} = record_payment(record, "80.01")
-          assert Exception.message(error) =~ "That's more than is owed"
-          assert payments(record) == []
-        end
+          assert {:ok, record} = record_payment(record, "80.00", unquote(method))
 
-        test "a Stripe payment can't be recorded by hand" do
-          assert {:error, error} = record_payment(build(@parent), "80.00", :stripe)
-          assert Exception.message(error) =~ "is recorded from Stripe"
+          assert record.settled?
+          assert [%{method: unquote(method), paid_at: %DateTime{}} = payment] = payments(record)
+          assert_money(payment.amount, "80.00")
         end
+      end
 
-        test "a refusal is in Jennie's language" do
-          Gettext.put_locale(EdenflowersWeb.Gettext, "fi")
+      test "a part-payment leaves the rest owed" do
+        {:ok, record} = record_payment(build(@parent), "30.00")
 
-          assert {:error, error} = record_payment(build(@parent), "80.01")
-          assert Exception.message(error) =~ "Summa on suurempi kuin maksettavaa on jäljellä."
-        end
+        assert_money(record.balance, "50.00")
+      end
 
-        test "a payment on a cancelled one is refused" do
-          assert {:error, _error} = record_payment(build(@parent, state: :cancelled), "10.00")
+      test "a payment larger than the balance is refused" do
+        record = build(@parent)
 
-          assert {:error, _error} =
-                   record_payment(build(@parent, state: :cancelled, payments: [cash: "80.00"]), "10.00")
-        end
+        assert {:error, error} = record_payment(record, "80.01")
+        assert Exception.message(error) =~ "That's more than is owed"
+        assert payments(record) == []
+      end
 
-        test "a payment on an uncommitted one is refused" do
-          assert {:error, error} = record_payment(build(@parent, state: :uncommitted), "10.00")
-          assert Exception.message(error) =~ "Nothing can be recorded until it's placed or confirmed"
-        end
+      test "a Stripe payment can't be recorded by hand" do
+        assert {:error, error} = record_payment(build(@parent), "80.00", :stripe)
+        assert Exception.message(error) =~ "is recorded from Stripe"
+      end
 
-        test "a negative payment is refused: money handed back is a refund" do
-          assert {:error, _error} = record_payment(build(@parent, payments: [cash: "80.00"]), "-10.00")
-        end
-      else
-        test "a payment can't be recorded by hand" do
-          assert {:error, error} = record_payment(build(@parent), "80.00")
-          assert Exception.message(error) =~ "is paid by payment link"
-        end
+      test "a refusal is in Jennie's language" do
+        Gettext.put_locale(EdenflowersWeb.Gettext, "fi")
+
+        assert {:error, error} = record_payment(build(@parent), "80.01")
+        assert Exception.message(error) =~ "Summa on suurempi kuin maksettavaa on jäljellä."
+      end
+
+      test "a payment on a cancelled one is refused" do
+        assert {:error, _error} = record_payment(build(@parent, state: :cancelled), "10.00")
+
+        assert {:error, _error} =
+                 record_payment(build(@parent, state: :cancelled, payments: [cash: "80.00"]), "10.00")
+      end
+
+      test "a payment on an uncommitted one is refused" do
+        assert {:error, error} = record_payment(build(@parent, state: :uncommitted), "10.00")
+        assert Exception.message(error) =~ "Nothing can be recorded until it's placed or confirmed"
+      end
+
+      test "a negative payment is refused: money handed back is a refund" do
+        assert {:error, _error} = record_payment(build(@parent, payments: [cash: "80.00"]), "-10.00")
       end
 
       test "undoing a whole payment recorded by mistake leaves the total owed again" do
@@ -366,14 +358,12 @@ defmodule Edenflowers.Payments.PayableTest do
         assert {:error, _error} = undo_payment(record, other.id)
       end
 
-      if parent == :order do
-        test "recording cancels the open PaymentIntent, which charged the old balance" do
-          record = build(@parent) |> Ash.Seed.update!(%{payment_intent_id: "pi_open"}) |> reload()
-          expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_open"} -> {:ok, %{id: "pi_open"}} end)
+      test "recording cancels the open PaymentIntent, which charged the old balance" do
+        record = build(@parent) |> Ash.Seed.update!(%{payment_intent_id: "pi_open"}) |> reload()
+        expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_open"} -> {:ok, %{id: "pi_open"}} end)
 
-          assert {:ok, record} = record_payment(record, "30.00")
-          assert record.payment_intent_id == nil
-        end
+        assert {:ok, record} = record_payment(record, "30.00")
+        assert record.payment_intent_id == nil
       end
 
       test "a Stripe refund is recorded once, however often it's delivered" do

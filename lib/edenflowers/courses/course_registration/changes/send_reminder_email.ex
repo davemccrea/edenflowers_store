@@ -28,7 +28,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail do
 
   defp load_for_send(registration) do
     registration
-    |> Ash.load!([:course, :first_name], actor: system_actor())
+    |> Ash.load!([:course, :first_name, :balance], actor: system_actor())
     |> Translations.in_own_locale()
   end
 end

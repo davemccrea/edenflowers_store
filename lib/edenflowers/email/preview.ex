@@ -82,12 +82,13 @@ defmodule Edenflowers.Email.Preview do
   end
 
   @doc """
-  The payment link email for someone Jennie is inviting to `course`, from
+   The confirmation email for a booking Jennie is entering for `course`, from
   the form's `changeset`, before anything is saved.
   """
   def build_entered_booking(changeset, course, inputs, locale \\ nil) do
     {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
     seats = entered.seats || 1
+    amount_paid = Ash.Changeset.get_argument(changeset, :amount) || Decimal.new(0)
 
     entered =
       %{
@@ -96,13 +97,13 @@ defmodule Edenflowers.Email.Preview do
           course: course,
           first_name: FirstName.extract(entered.name),
           seats: seats,
-          balance: Decimal.mult(course.price, seats),
-          # Saving opens the link with a token of its own.
+          amount_paid: amount_paid,
+          balance: Decimal.sub(Decimal.mult(course.price, seats), amount_paid),
           payment_link_token: nil
       }
       |> translated()
 
-    booking_email(:payment_link, entered, inputs)
+    booking_email(:confirmation, entered, inputs)
   end
 
   # Placing opens a link for payment-link terms; an edited order keeps the one it has.
@@ -137,21 +138,7 @@ defmodule Edenflowers.Email.Preview do
   defp order_email(:payment_reminder, order, inputs),
     do: Email.payment_reminder(order, link_url(order), inputs[:message])
 
-  defp order_email(:receipt, order, inputs) do
-    {order, amount} =
-      case decimal(inputs[:amount]) do
-        nil ->
-          {order, SendPaymentReceivedEmail.latest_payment(order)}
-
-        amount ->
-          {%{order | amount_paid: Decimal.add(order.amount_paid, amount), balance: Decimal.sub(order.balance, amount)},
-           amount}
-      end
-
-    order
-    |> SendPaymentReceivedEmail.email(amount, inputs[:message])
-    |> Swoosh.Email.attachment(Receipt.attachment("", order.order_reference))
-  end
+  defp order_email(:receipt, order, inputs), do: payment_receipt(order, inputs, order.order_reference)
 
   defp order_email(:fulfillment, order, inputs) do
     if Map.get(inputs, :photo?, order.email_delivery_photo),
@@ -171,19 +158,21 @@ defmodule Edenflowers.Email.Preview do
   defp booking_load(_kind), do: [:course, :first_name, :amount_paid, :balance, :payment_link_open?]
 
   defp booking_email(:confirmation, registration, inputs) do
-    registration
-    |> Email.course_confirmation(inputs[:message])
-    |> Swoosh.Email.attachment(Receipt.attachment("", registration.reference))
+    email = Email.course_confirmation(registration, inputs[:message])
+
+    if Decimal.positive?(registration.amount_paid),
+      do: Swoosh.Email.attachment(email, Receipt.attachment("", registration.reference)),
+      else: email
   end
 
   defp booking_email(:payment_link, registration, inputs) do
-    if Ash.calculate!(registration, :payment_reminder?),
-      do: Email.payment_reminder(registration, link_url(registration), inputs[:message]),
-      else: Email.course_payment_link(registration, link_url(registration), inputs[:message])
+    Email.payment_reminder(registration, link_url(registration), inputs[:message])
   end
 
   defp booking_email(:payment_reminder, registration, inputs),
     do: Email.payment_reminder(registration, link_url(registration), inputs[:message])
+
+  defp booking_email(:receipt, registration, inputs), do: payment_receipt(registration, inputs, registration.reference)
 
   defp booking_email(:cancelled, registration, inputs) do
     money = Cancel.money(registration, refund(inputs))
@@ -191,6 +180,25 @@ defmodule Edenflowers.Email.Preview do
   end
 
   defp booking_email(:refunded, registration, inputs), do: Email.refunded(registration, refund_details(inputs))
+
+  defp payment_receipt(record, inputs, reference) do
+    {record, amount} =
+      case decimal(inputs[:amount]) do
+        nil ->
+          {record, SendPaymentReceivedEmail.latest_payment(record)}
+
+        amount ->
+          {%{
+             record
+             | amount_paid: Decimal.add(record.amount_paid, amount),
+               balance: Decimal.sub(record.balance, amount)
+           }, amount}
+      end
+
+    record
+    |> SendPaymentReceivedEmail.email(amount, inputs[:message])
+    |> Swoosh.Email.attachment(Receipt.attachment("", reference))
+  end
 
   # A link not yet opened has no token until sending opens it.
   defp link_url(%{payment_link_token: nil} = payable),

@@ -513,7 +513,7 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Confirms a paid course booking, with the receipt the sender attaches.
+  Confirms booked places, with a receipt attached by the sender only when money was recorded.
   Expects `:course` translated and `:first_name` loaded.
   """
   def course_confirmation(registration, message \\ nil) do
@@ -521,23 +521,6 @@ defmodule Edenflowers.Email do
       email
       |> subject(~t"You're booked on #{course = registration.course.name}, #{date = course_day(registration)}")
       |> text_body(Templates.course_confirmation(course_assigns(registration, message)))
-    end)
-  end
-
-  @doc """
-  The link Jennie sends someone she invites to book, before the course; after
-  it, a booking still owing gets a Payment reminder instead. Paying books the
-  places. Expects `:course` translated, `:first_name` and `:balance` loaded.
-  """
-  def course_payment_link(registration, payment_link_url, message \\ nil) do
-    customer_email(registration, from_address(), fn email ->
-      email
-      |> subject(~t"Book your place on #{course = registration.course.name}, #{date = course_day(registration)}")
-      |> text_body(
-        Templates.course_payment_link(
-          Map.put(course_assigns(registration, message), :payment_link_url, payment_link_url)
-        )
-      )
     end)
   end
 

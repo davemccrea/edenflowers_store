@@ -50,10 +50,26 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
                 class="select w-full"
               />
             </div>
+            <.input
+              field={@form[:payment_method]}
+              type="select"
+              label={~t"Payment"}
+              prompt={~t"Pay at the course"}
+              options={payment_method_options()}
+              class="select w-full"
+            />
+            <.input
+              :if={@form[:payment_method].value not in [nil, ""]}
+              field={@form[:amount]}
+              type="text"
+              inputmode="decimal"
+              label={~t"Amount received (€)"}
+              class="input w-full tabular-nums"
+            />
             <.customer_email
               id="booking-email"
               send={@form[:email_customer?]}
-              label={~t"Email the payment link to the customer"}
+              label={~t"Email booking confirmation to the customer"}
               message={@form[:message]}
               preview={@preview}
               in_swedish={@form[:locale].value != "sv-FI" && @form[:in_swedish]}
@@ -79,6 +95,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   attr :registration, :any, required: true, doc: "the booking being settled, or nil"
   attr :mode, :atom, required: true, values: [:settle, :refund]
   attr :refund_params, :map, required: true
+  attr :payment_params, :map, required: true
   attr :error, :string, default: nil
   attr :locale, :string, required: true
   attr :preview, Swoosh.Email, default: nil
@@ -104,6 +121,16 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           course={@course}
           registration={@registration}
           locale={@locale}
+        />
+        <.record_payment_form
+          :if={@mode == :settle and @registration.to_collect?}
+          id={"payment-#{@registration.id}"}
+          record={@registration}
+          locale={@locale}
+          params={Map.get(@payment_params, @registration.id, %{})}
+          receipt_email?={true}
+          swedish_toggle?={@registration.locale != "sv-FI"}
+          preview={@preview}
         />
         <p :if={nothing_to_settle?(@registration, @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this booking."}

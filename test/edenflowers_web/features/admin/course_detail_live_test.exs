@@ -149,6 +149,57 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
   end
 
   describe "adding a booking" do
+    test "records an initial received payment with its method", %{conn: conn} do
+      course = generate(course())
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+      view |> element(~s|button[phx-click="new_booking"]|) |> render_click()
+      assert has_element?(view, "#booking-drawer", "Pay at the course")
+
+      params = %{
+        name: "Ada",
+        email: "ada@example.com",
+        seats: "1",
+        locale: "en-GB",
+        email_customer?: "false",
+        payment_method: "cash",
+        amount: "85,00"
+      }
+
+      view |> form("#booking-form-#{course.id}", form: Map.delete(params, :amount)) |> render_change()
+      assert has_element?(view, ~s|input[name="form[amount]"]|)
+      view |> form("#booking-form-#{course.id}", form: params) |> render_submit()
+
+      booking = Ash.read_one!(Edenflowers.Courses.CourseRegistration, authorize?: false, load: [:payments, :balance])
+      assert booking.status == :confirmed
+      assert [%{method: :cash, amount: amount}] = booking.payments
+      assert Decimal.equal?(amount, "85.00")
+      assert Decimal.equal?(booking.balance, 0)
+      refute booking.payment_link_token
+    end
+
+    test "collects a part payment through the shared settlement form and previews its receipt", %{conn: conn} do
+      booking = generate(course_registration(status: :confirmed))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{booking.course_id}")
+      view |> element("#settle-#{booking.id}") |> render_click()
+
+      view
+      |> form("#payment-#{booking.id}-form",
+        payment: %{amount: "30,00", payment_method: "cash", email_receipt: "false"}
+      )
+      |> render_change()
+
+      assert has_element?(view, "#payment-#{booking.id}-form", "Record payment")
+
+      view
+      |> form("#payment-#{booking.id}-form",
+        payment: %{amount: "30,00", payment_method: "cash", email_receipt: "false"}
+      )
+      |> render_submit()
+
+      assert has_element?(view, "#settle-#{booking.id}", "To collect €55.00")
+      assert [%{method: :cash}] = Ash.load!(booking, :payments, authorize?: false).payments
+    end
+
     defp add_booking(view, course, email_customer?) do
       view |> element(~s|button[phx-click="new_booking"]|) |> render_click()
 
@@ -167,32 +218,35 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       Ash.read_one!(Edenflowers.Courses.CourseRegistration, authorize?: false)
     end
 
-    test "invites them with the payment link, holding no places until they pay", %{conn: conn} do
+    test "confirms places and optionally emails without a receipt or automatic payment link", %{conn: conn} do
       course = generate(course(name: "Autumn wreaths", total_places: 10))
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
       view |> element(~s|button[phx-click="new_booking"]|) |> render_click()
-      assert has_element?(view, "#booking-drawer #booking-form-#{course.id}", "Email the payment link")
+      assert has_element?(view, "#booking-drawer #booking-form-#{course.id}", "Email booking confirmation")
       view |> element("#booking-form-#{course.id} button", "Cancel") |> render_click()
       refute has_element?(view, "#booking-form-#{course.id}")
 
       registration = add_booking(view, course, "true")
 
-      assert registration.status == :pending
-      assert has_element?(view, "#invites li", "Birgitta")
-      refute has_element?(view, "#bookings li", "Birgitta")
-      assert render(view) =~ "0 / 10 seats"
+      assert registration.status == :confirmed
+      refute registration.payment_link_token
+      refute has_element?(view, "#invites")
+      assert has_element?(view, "#bookings li", "Birgitta")
+      assert render(view) =~ "2 / 10 seats"
 
       assert %{success: 1} = Oban.drain_queue(queue: :default)
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "birgitta@example.com"}]
-        assert email.text_body =~ "/pay/courses/#{registration.payment_link_token}"
-        assert email.text_body =~ "They're booked as soon as you've paid."
+        refute email.text_body =~ "/pay/courses/"
+        assert email.text_body =~ "Your 2 places on Autumn wreaths are confirmed."
+        assert email.text_body =~ "Please pay at the course."
+        assert email.attachments == []
       end)
     end
 
-    test "withdrawing an invite paid in the meantime retains its booking", %{conn: conn} do
+    test "unfinished website checkouts remain hidden and cannot be withdrawn", %{conn: conn} do
       course = generate(course())
 
       invite =
@@ -200,29 +254,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
-      assert {:ok, :completed} =
-               Edenflowers.Payments.complete(%{
-                 id: "pi_paid",
-                 metadata: %{"course_registration_id" => invite.id},
-                 amount_received: invite.amount |> Decimal.mult(100) |> Decimal.to_integer()
-               })
-
-      render_click(view, "withdraw_invite", %{"id" => invite.id})
-
-      assert has_element?(view, "#registration-#{invite.id}")
-      assert render(view) =~ "Could not withdraw the invite."
-      assert Ash.get!(Edenflowers.Courses.CourseRegistration, invite.id, authorize?: false).status == :confirmed
-    end
-
-    test "withdrawing an invite deletes it", %{conn: conn} do
-      course = generate(course())
-      invite = generate(course_registration(course_id: course.id, name: "Birgitta", payment_link_token: "tok"))
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
-
-      view |> element(~s|#invite-#{invite.id} button[phx-click="withdraw_invite"]|) |> render_click()
-
+      refute has_element?(view, "#registration-#{invite.id}")
       refute has_element?(view, "#invites")
-      assert {:error, _deleted} = Ash.get(Edenflowers.Courses.CourseRegistration, invite.id, authorize?: false)
+      refute has_element?(view, ~s|button[phx-click="withdraw_invite"]|)
+      assert Ash.get!(Edenflowers.Courses.CourseRegistration, invite.id, authorize?: false).status == :pending
     end
 
     @tag :typst
@@ -254,7 +289,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
       registration = add_booking(view, course, "false")
-      assert registration.payment_link_token
+      refute registration.payment_link_token
       refute registration.confirmation_emailed_at
 
       refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)

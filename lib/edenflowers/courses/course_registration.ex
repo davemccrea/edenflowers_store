@@ -1,8 +1,8 @@
 defmodule Edenflowers.Courses.CourseRegistration.Status do
   @moduledoc """
-  The states of a course registration. Pending isn't a booking yet: someone
-  paying at checkout, or someone Jennie invited with a payment link. Paying
-  confirms it, and only a confirmed booking holds places.
+  Pending is unfinished website checkout and holds no places. Confirmed is a
+  commitment to provide places, accepted by Jennie or by successful checkout,
+  regardless of whether money is still owed. Cancelled frees the places.
   """
 
   use Ash.Type.Enum, values: [:pending, :confirmed, :cancelled]
@@ -10,10 +10,10 @@ end
 
 defmodule Edenflowers.Courses.CourseRegistration do
   @moduledoc """
-  A course registration and its payment state. A place is booked only once
-  it is paid: a pending registration holds nothing, and is deleted rather
-  than cancelled when it's given up. A confirmed booking may be cancelled or
-  refunded.
+  A retained course registration and its booking commitment. Website checkout
+  stays pending until paid; Jennie's manual bookings are confirmed immediately.
+  Payment rows separately record money received or returned. Cancellation frees
+  places without deleting their history or preventing late money being recorded.
 
   This file holds what every registration shares: its fields, lifecycle,
   policies and calculations. The actions live in fragments under
@@ -58,7 +58,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
   state_machine do
     state_attribute(:status)
-    initial_states([:pending])
+    initial_states([:pending, :confirmed])
     default_initial_state(:pending)
 
     transitions do
@@ -84,7 +84,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :send_payment_received_email,
                      :send_reminder_email,
                      :reconcile_payment,
-                     :discard,
                      :checkout
                    ])
 
@@ -124,11 +123,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     publish_all :create, ["admin", "bookings"]
     publish_all :update, ["admin", "bookings"]
     publish_all :destroy, ["admin", "bookings"]
-  end
-
-  validations do
-    # Courses are paid by payment link, never in person.
-    validate negate(action_is(:record_payment)), message: "is paid by payment link"
   end
 
   attributes do
@@ -206,8 +200,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled]) do
-      description "Whether money is owed on it at all. Nothing is owed until it is paid for, so only a confirmed " <>
-                    "or cancelled booking is committed."
+      description "Whether places were committed by Jennie or successful website checkout, including cancelled history."
     end
 
     calculate :cancelled?, :boolean, expr(status == :cancelled) do
@@ -215,7 +208,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     calculate :cancellable?, :boolean, expr(status == :confirmed) do
-      description "Whether Jennie can cancel it now: only a confirmed booking. An unpaid one is discarded instead."
+      description "Whether Jennie can cancel it now: a confirmed booking, paid or not."
     end
 
     calculate :refund_on_cancelling,
@@ -240,7 +233,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     calculate :customer_email, :string, expr(email) do
-      description "Who is told about cancels and refunds: the email given at checkout or on the Invite."
+      description "Who is told about cancels and refunds: the email given at checkout or entered by Jennie."
     end
 
     calculate :paid?, :boolean, expr(status == :confirmed and not refunded? and balance <= 0) do
@@ -264,8 +257,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     calculate :payment_reminder?,
               :boolean,
               expr(status == :confirmed or course.date < helsinki_today()) do
-      description "Whether emailing its Payment Link collects an existing booking's Balance rather than inviting " <>
-                    "someone to book: confirmed bookings, and any link sent after the course."
+      description "Whether the Payment reminder is available for the accepted booking's Balance."
     end
 
     calculate :payment_link_open?,
