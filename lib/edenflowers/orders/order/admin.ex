@@ -65,7 +65,6 @@ defmodule Edenflowers.Orders.Order.Admin do
     :cancelled?,
     :editable?,
     :fulfillable?,
-    :deletable?,
     :payment_reminder_sendable?,
     :receipt_available?,
     :details_emailable?,
@@ -447,22 +446,6 @@ defmodule Edenflowers.Orders.Order.Admin do
       change PaymentChanges.Cancel
       change {Changes.AdjustStock, direction: :return}
       change load(@admin_show_load)
-      require_atomic? false
-    end
-
-    # For test orders and ones added by mistake.
-    destroy :delete_custom do
-      description "Deletes a Custom Order no money has moved for, such as a test or a mistake, with its log, " <>
-                    "cancelling any open PaymentIntent and putting stock back. Any other order is cancelled " <>
-                    "instead."
-
-      validate Validations.Deletable
-      change {PaymentChanges.CancelOpenPaymentIntent, before_commit?: true}
-
-      change {Changes.AdjustStock, direction: :return},
-        where: [negate(attribute_equals(:fulfillment_status, :cancelled))]
-
-      change Changes.DeleteOrderLog
       require_atomic? false
     end
 

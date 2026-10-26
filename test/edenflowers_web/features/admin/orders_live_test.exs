@@ -53,12 +53,42 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
   test "lists every placed order once the default filter is cleared", %{conn: conn} do
     placed_order(customer_name: "To Make", paid: true, fulfillment_status: :pending)
     placed_order(customer_name: "Already Done", paid: true, fulfillment_status: :fulfilled)
+    placed_order(customer_name: "Called Off", origin: :custom, fulfillment_status: :cancelled)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders")
     render_patch(view, ~p"/admin/orders")
 
     assert has_element?(view, "[data-item-id]", "To Make")
     assert has_element?(view, "[data-item-id]", "Already Done")
+    assert has_element?(view, "[data-item-id]", "Called Off")
+  end
+
+  test "a cancelled custom order stays searchable and directly accessible, with late money visible in Overview", %{
+    conn: conn
+  } do
+    order = placed_order(origin: :custom, fulfillment_status: :cancelled, order_reference: "CANCELLED123")
+    {:ok, view, _html} = live(conn, ~p"/admin/orders")
+    refute has_element?(view, ~s|[data-item-id="#{order.id}"]|)
+
+    ExUnit.CaptureLog.capture_log(fn ->
+      assert {:ok, :completed} =
+               Edenflowers.Payments.complete(%{
+                 id: "pi_late_filtered",
+                 metadata: %{"order_id" => order.id},
+                 amount_received: 8_850
+               })
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders?search=CANCELLED123")
+    assert has_element?(view, ~s|[data-item-id="#{order.id}"]|)
+    {:ok, view, _html} = live(conn, ~p"/admin/search?q=CANCELLED123")
+    assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}"]|)
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    assert render(view) =~ "To refund"
+    refute has_element?(view, ~s|button[phx-click="delete_order"]|)
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    assert has_element?(view, "#attention-refund summary", "To refund")
+    assert has_element?(view, ~s|#attention-refund a[href="/admin/orders/#{order.id}"]|)
   end
 
   test "filtering by unpaid lists orders still owed for, fulfilled or not", %{conn: conn} do

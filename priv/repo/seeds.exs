@@ -415,18 +415,18 @@ CourseRegistration
 |> Ash.read_one!(authorize?: false)
 |> Edenflowers.Courses.remove_registration_seat!(authorize?: false)
 
-# Someone Jennie invited with a payment link, not paid yet, so holding no places.
+# A manual booking payable at the course: places committed, no money received yet.
 Ash.Seed.seed!(CourseRegistration, %{
   course_id: autumn_wreath.id,
   name: "Maria Nyberg",
   email: "maria.nyberg@example.com",
   seats: 2,
-  status: :pending,
+  status: :confirmed,
   locale: "sv-FI",
   reference: next_reference.(),
   tax_rate: tax_rate.percentage,
   amount: Decimal.mult(autumn_wreath.price, 2),
-  payment_link_token: "seed-course-invite"
+  confirmed_at: DateTime.utc_now()
 })
 
 # Placed orders. Checkout drives orders through a state machine and seals them

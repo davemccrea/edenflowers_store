@@ -768,75 +768,50 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
   end
 
-  describe "deleting" do
-    test "removes an unpaid custom order, its lines and its log, and returns its stock", ctx do
+  describe "retaining cancelled purchases" do
+    test "cancellation retains its lines, VAT and history while returning stock once", ctx do
       wreath = generate(product_variant(product_id: ctx.variant.product_id, size: :large, stock_quantity: 3))
       {:ok, order} = place(ctx, %{line_items: [catalogue_line(wreath, "2")]})
       {:ok, order} = Orders.update_florist_note(order, %{florist_note: "Test"}, actor: ctx.admin)
 
-      assert :ok = Orders.delete_custom_order(order, actor: ctx.admin)
+      original = Ash.load!(order, [:line_items, :paper_trail_versions], authorize?: false)
+      assert {:ok, cancelled} = Orders.cancel_order(order, %{email_customer?: false}, actor: ctx.admin)
+      retained = Ash.load!(cancelled, [:line_items, :paper_trail_versions], authorize?: false)
 
-      assert {:error, _} = Orders.get_order_by_id(order.id, authorize?: false)
+      assert retained.id == original.id
+      assert retained.order_reference == original.order_reference
+      assert retained.vat_breakdown == original.vat_breakdown
+      assert Enum.map(retained.line_items, & &1.id) == Enum.map(original.line_items, & &1.id)
+
+      assert Enum.all?(original.paper_trail_versions, fn version ->
+               Enum.any?(retained.paper_trail_versions, &(&1.id == version.id))
+             end)
+
+      assert Ash.get!(Edenflowers.Catalog.ProductVariant, wreath.id, authorize?: false).stock_quantity == 3
+      assert {:error, _already_cancelled} = Orders.cancel_order(cancelled, actor: ctx.admin)
       assert Ash.get!(Edenflowers.Catalog.ProductVariant, wreath.id, authorize?: false).stock_quantity == 3
     end
 
-    test "doesn't return stock a cancelled order already gave back", ctx do
-      wreath = generate(product_variant(product_id: ctx.variant.product_id, size: :large, stock_quantity: 3))
-      {:ok, order} = place(ctx, %{line_items: [catalogue_line(wreath, "2")]})
-      {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
-
-      assert :ok = Orders.delete_custom_order(order, actor: ctx.admin)
-
-      assert Ash.get!(Edenflowers.Catalog.ProductVariant, wreath.id, authorize?: false).stock_quantity == 3
-    end
-
-    test "refuses an order with a payment, even an undone one", ctx do
+    test "retains undone payment history after cancellation", ctx do
       {:ok, order} = place(ctx)
       {:ok, order} = Orders.record_payment(order, "134.00", :cash, actor: ctx.admin)
       [payment] = Ash.load!(order, :payments, authorize?: false).payments
       {:ok, order} = Orders.undo_payment(order, payment.id, actor: ctx.admin)
 
-      assert {:error, error} = Orders.delete_custom_order(order, actor: ctx.admin)
-      assert Exception.message(error) =~ "has a payment"
+      assert {:ok, cancelled} = Orders.cancel_order(order, %{email_customer?: false}, actor: ctx.admin)
+      payments = Ash.load!(cancelled, :payments, authorize?: false).payments
+      assert length(payments) == 2
+      assert Enum.any?(payments, &(&1.id == payment.id))
+      assert Enum.any?(payments, &(&1.reverses_payment_id == payment.id))
     end
 
-    test "cancels its payment link before deleting it", ctx do
-      {:ok, order} = place(ctx)
-      order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_link"} -> {:ok, %{id: "pi_link"}} end)
+    test "only the empty unused cart purge can physically delete orders" do
+      assert [%{name: :purge_abandoned_cart}] =
+               Enum.filter(Ash.Resource.Info.actions(Edenflowers.Orders.Order), &(&1.type == :destroy))
 
-      assert :ok = Orders.delete_custom_order(order, actor: ctx.admin)
-      assert {:error, _} = Orders.get_order_by_id(order.id, authorize?: false)
-    end
-
-    test "deletes it when its payment link was already cancelled in Stripe", ctx do
-      {:ok, order} = place(ctx)
-      order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn _ -> {:error, :unexpected_state} end)
-      expect(StripeAPI.Mock, :retrieve_payment_intent, fn _ -> {:ok, %{id: "pi_link", status: "canceled"}} end)
-
-      capture_log(fn -> assert :ok = Orders.delete_custom_order(order, actor: ctx.admin) end)
-    end
-
-    test "keeps it while a payment is under way, so the payment has an order to land on", ctx do
-      {:ok, order} = place(ctx)
-      order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn _ -> {:error, :unexpected_state} end)
-      expect(StripeAPI.Mock, :retrieve_payment_intent, fn _ -> {:ok, %{id: "pi_link", status: "processing"}} end)
-
-      capture_log(fn ->
-        assert {:error, error} = Orders.delete_custom_order(order, actor: ctx.admin)
-        assert Exception.message(error) =~ "payment for this order is under way"
-      end)
-
-      assert {:ok, %{payment_intent_id: "pi_link"}} = Orders.get_order_by_id(order.id, authorize?: false)
-    end
-
-    test "refuses an online order", ctx do
-      order = generate(order(state: :placed, origin: :online))
-
-      assert {:error, error} = Orders.delete_custom_order(order, actor: ctx.admin)
-      assert Exception.message(error) =~ "isn't a custom order"
+      placed = generate(order(state: :placed, updated_at: DateTime.add(DateTime.utc_now(), -2, :day)))
+      assert {:error, _not_a_cart} = Ash.destroy(placed, action: :purge_abandoned_cart, authorize?: false)
+      assert Orders.get_order_by_id!(placed.id, authorize?: false).state == :placed
     end
   end
 

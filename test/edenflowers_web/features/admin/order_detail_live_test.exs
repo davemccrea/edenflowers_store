@@ -23,7 +23,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, "#order-missing-phone")
   end
 
-  test "an unpaid custom order can be deleted, an online one can't", %{conn: conn} do
+  test "custom and online orders offer cancellation, never deletion", %{conn: conn} do
     custom = placed_order(origin: :custom, payment_intent_id: nil)
     online = placed_order()
 
@@ -31,26 +31,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, ~s|button[phx-click="delete_order"]|)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{custom.id}")
-    assert has_element?(view, ~s|button[phx-click="delete_order"][data-confirm]|, "Delete order")
-
-    assert {:error, {:live_redirect, %{to: "/admin/orders"}}} =
-             view |> element(~s|button[phx-click="delete_order"]|) |> render_click()
-
-    assert {:error, _} = Orders.get_order_by_id(custom.id, authorize?: false)
-  end
-
-  @tag capture_log: true
-  test "says why a custom order with a payment under way isn't deleted", %{conn: conn} do
-    order = placed_order(origin: :custom, payment_intent_id: "pi_processing")
-    Mox.expect(StripeAPI.Mock, :cancel_payment_intent, fn _ -> {:error, :unexpected_state} end)
-    Mox.expect(StripeAPI.Mock, :retrieve_payment_intent, fn _ -> {:ok, %{status: "processing"}} end)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert view |> element(~s|button[phx-click="delete_order"]|) |> render_click() =~
-             "A payment for this order is under way"
-
-    assert {:ok, _order} = Orders.get_order_by_id(order.id, authorize?: false)
+    refute has_element?(view, ~s|button[phx-click="delete_order"]|)
+    assert has_element?(view, ~s|button[phx-click="open_cancel"]|, "Cancel order")
   end
 
   test "a custom order with a payment can't be deleted", %{conn: conn, admin: admin} do

@@ -581,16 +581,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       <.unavailable_menu_item :if={@cancel_unavailable} reason={@cancel_unavailable}>
         {~t"Cancel order"}
       </.unavailable_menu_item>
-
-      <.actions_menu_button
-        :if={@order.deletable?}
-        menu="order-actions"
-        phx-click="delete_order"
-        data-confirm={~t"Delete this order for good? Nothing about it is kept."}
-        class="text-error"
-      >
-        {~t"Delete order"}
-      </.actions_menu_button>
     </.actions_menu>
     """
   end

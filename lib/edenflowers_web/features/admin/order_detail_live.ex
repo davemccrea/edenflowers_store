@@ -15,7 +15,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
-  alias Edenflowers.Payments.Errors.PaymentInProgress
   alias Edenflowers.PhoneNumber
   alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.DrawerPreview
@@ -550,24 +549,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
       {:error, message} ->
         {:noreply, assign(socket, :cancel_error, message)}
-    end
-  end
-
-  def handle_event("delete_order", _params, socket) do
-    case Orders.delete_custom_order(socket.assigns.order, actor: socket.assigns.current_user) do
-      :ok ->
-        {:noreply, socket |> put_flash(:info, ~t"Order deleted.") |> push_navigate(to: ~p"/admin/orders")}
-
-      {:error, %{errors: [%PaymentInProgress{} = error | _]}} ->
-        {:noreply, put_flash(socket, :error, Exception.message(error))}
-
-      # Says why, e.g. a payment still under way.
-      {:error, %{errors: [%{message: message} | _]}} when is_binary(message) ->
-        {:noreply, put_flash(socket, :error, message)}
-
-      {:error, error} ->
-        Logger.error("Order #{socket.assigns.order.id} not deleted: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"Could not delete the order.")}
     end
   end
 
