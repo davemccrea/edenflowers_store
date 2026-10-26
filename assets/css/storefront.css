@@ -87,20 +87,10 @@
    and never jumps; on a turn the leaving quotes drift away from the arrow pressed and
    the next ones drift in behind them, column by column. */
 @media (width < theme(--breakpoint-md)) {
-  .review-pages {
-    overflow: hidden;
-    margin-inline: calc(50% - 50vw);
-  }
   .review-pages__track {
     display: flex;
-    gap: 1.5rem;
-    padding-inline: 1rem;
+    gap: 2rem;
     touch-action: pan-y pinch-zoom;
-  }
-  @media (width >= theme(--breakpoint-sm)) {
-    .review-pages__track {
-      padding-inline: 2rem;
-    }
   }
   .review-pages__track > ul {
     display: contents;
@@ -108,9 +98,13 @@
   .review-pages__track > ul > li {
     flex: 0 0 85%;
     min-width: 0;
-    --embla-progress: 0;
+    --embla-progress: 1;
+    transform-origin: left top;
     transform: scale(calc(1 - var(--embla-progress) * 0.08));
     opacity: calc(1 - var(--embla-progress) * 0.45);
+  }
+  .review-pages__track > ul:first-child > li:first-child {
+    --embla-progress: 0;
   }
   @media (prefers-reduced-motion: no-preference) {
     .review-pages__track > ul > li {
