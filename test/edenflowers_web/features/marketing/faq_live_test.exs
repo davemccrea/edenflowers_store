@@ -9,24 +9,13 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
   setup :verify_on_exit!
 
-  test "a single button opens every question and then closes them all", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/en/faq")
-
-    assert has_element?(view, "#faq-questions details")
-    assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="open"]|, "Open all answers")
-    refute has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="open"][hidden]|)
-    assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="close"][hidden]|, "Close all answers")
-  end
-
-  test "the toggle button speaks every storefront language", %{conn: conn} do
-    for {path, open, close} <- [
-          {"/sv/vanliga-fragor", "Öppna alla svar", "Stäng alla svar"},
-          {"/fi/ukk", "Avaa kaikki vastaukset", "Sulje kaikki vastaukset"}
-        ] do
+  test "answers expand individually without a toggle-all button in every storefront language", %{conn: conn} do
+    for path <- ["/en/faq", "/sv/vanliga-fragor", "/fi/ukk"] do
       {:ok, view, _html} = live(conn, path)
 
-      assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="open"]|, open)
-      assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="close"]|, close)
+      assert has_element?(view, "#faq-questions details summary")
+      refute has_element?(view, "#faq-questions details[open]")
+      refute has_element?(view, "#faq-toggle-all")
     end
   end
 
