@@ -60,6 +60,20 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     refute has_element?(view, "#main-content details")
   end
 
+  test "groups multiple rules into bullet lists in every language", %{conn: conn} do
+    for path <- ["/en/terms", "/sv/kopvillkor", "/fi/toimitusehdot"] do
+      {:ok, view, html} = live(conn, path)
+      document = LazyHTML.from_document(html)
+
+      for section <- ["checkout-payments", "invoices", "delivery-problems", "quality"] do
+        assert has_element?(view, "##{section} ul.list-disc")
+        assert document |> LazyHTML.query("##{section} ul > li") |> Enum.count() == 2
+      end
+
+      assert has_element?(view, "#seller p")
+    end
+  end
+
   test "related terms are grouped without breaking existing deep links", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
