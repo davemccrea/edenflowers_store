@@ -120,7 +120,11 @@ defmodule EdenflowersWeb.Admin.Drawers do
             type="checkbox"
             label={~t"Preview in Swedish"}
           />
-          <details id={"#{@id}-preview-toggle"} class={!@collapse_preview? && "sm:hidden"}>
+          <details
+            id={"#{@id}-preview-toggle"}
+            phx-mounted={JS.ignore_attributes(["open"])}
+            class={!@collapse_preview? && "sm:hidden"}
+          >
             <summary class="link link-primary text-sm">{~t"Preview the email"}</summary>
             <.email_preview email={@preview} />
           </details>
