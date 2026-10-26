@@ -103,6 +103,10 @@ defmodule Edenflowers.Format do
   @spec day_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
   def day_month(date, locale), do: Localize.Date.to_string!(date, locale: locale, format: "d.M.")
 
+  @doc "Abbreviated standalone month name, e.g. \"Jun\"."
+  @spec short_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
+  def short_month(date, locale), do: Localize.Date.to_string!(date, locale: locale, format: "LLL")
+
   @doc """
   Weekday with day and month, e.g. "Monday 8.6." / "måndag 8.6." /
   "maanantai 8.6.". For labels.

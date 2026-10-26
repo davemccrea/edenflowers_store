@@ -1758,6 +1758,16 @@ msgstr "Kursen hittades inte."
 msgid "Fully booked"
 msgstr "Fullbokad"
 
+#: lib/edenflowers_web/features/courses/courses_live.ex:78
+#, elixir-autogen, elixir-format
+msgid "No experience needed. Materials and teaching included. Take your arrangement home."
+msgstr "Ingen tidigare erfarenhet behövs. Material och undervisning ingår. Ditt binderi tar du med dig hem."
+
+#: lib/edenflowers_web/features/courses/courses_live.ex:98
+#, elixir-autogen, elixir-format
+msgid "I announce new dates in the newsletter first."
+msgstr "Nya datum meddelar jag först i nyhetsbrevet."
+
 #: lib/edenflowers_web/features/courses/courses_live.ex:49
 #, elixir-autogen, elixir-format
 msgid "Come along and learn to make different kinds of floral arrangements. I show you the technique step by step and help you all the way, and of course you take your arrangement home. Materials and teaching are included, and you don't need any previous experience."

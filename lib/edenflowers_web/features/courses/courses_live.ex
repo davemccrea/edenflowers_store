@@ -67,11 +67,14 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
 
         <section
           id="coming-up"
-          class="border-base-content/12 scroll-anchor-below-header mt-14 border-t pt-10 sm:mt-20 sm:pt-14"
+          class="scroll-anchor-below-header mt-10 sm:mt-12"
           aria-labelledby="upcoming-heading"
         >
-          <div class="max-w-2xl">
+          <div>
             <h2 id="upcoming-heading" class="section-title">{~t"Coming up"}</h2>
+            <p :if={@courses != []} class="text-base-content/70 mt-3 max-w-prose">
+              {~t"No experience needed. Materials and teaching included. Take your arrangement home."}
+            </p>
 
             <div :if={@courses == []} class="mt-6" data-testid="no-courses">
               <p class="text-base-content/80 max-w-prose">
@@ -80,11 +83,16 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
               <.button href="#newsletter" variant="text" class="mt-4">{~t"Sign up for the newsletter"}</.button>
             </div>
 
-            <ol :if={@courses != []} class="mt-8" data-testid="courses-list">
-              <li :for={course <- @courses} class="border-base-content/12 border-t first:border-t-0">
+            <ol :if={@courses != []} class="border-base-content/12 mt-6 border-b" data-testid="courses-list">
+              <li :for={course <- @courses} class="border-base-content/12 border-t">
                 <.course_row course={course} locale={@locale} />
               </li>
             </ol>
+
+            <div :if={@courses != []} class="mt-6 flex flex-wrap items-baseline gap-x-4 gap-y-2 text-sm">
+              <p class="text-base-content/70">{~t"I announce new dates in the newsletter first."}</p>
+              <.button href="#newsletter" variant="text">{~t"Sign up for the newsletter"}</.button>
+            </div>
           </div>
         </section>
 
@@ -127,33 +135,71 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
   attr :course, :map, required: true
   attr :locale, :any, required: true
 
-  # A full or closed course keeps its row: it still tells people courses happen.
   defp course_row(assigns) do
     ~H"""
-    <div class="grid-cols-[5rem_1fr] relative grid items-baseline gap-x-4 gap-y-2 py-6 sm:grid-cols-[8rem_1fr_auto] sm:gap-x-8">
-      <p class="text-base-content/70 tabular-nums">{Format.day_month(@course.date, @locale)}</p>
+    <div class="grid-cols-[3.5rem_minmax(0,1fr)] relative grid items-start gap-x-4 gap-y-4 py-7 sm:grid-cols-[4rem_6rem_minmax(0,1fr)] sm:gap-x-6 lg:grid-cols-[4rem_8rem_minmax(0,1fr)_auto] lg:gap-x-8">
+      <time
+        datetime={Date.to_iso8601(@course.date)}
+        aria-label={Format.weekday_date(@course.date, @locale)}
+        class="flex flex-col gap-1 pt-1 tabular-nums"
+      >
+        <span class="font-serif text-4xl leading-none">{@course.date.day}</span>
+        <span class="text-base-content/70 text-sm">{Format.short_month(@course.date, @locale)}</span>
+      </time>
 
-      <div>
-        <h3 class="card-heading text-balance">
-          <%!-- The link's ::after covers the whole row, so the date and price click through too. --%>
+      <.link
+        navigate={~q"/#{language}/courses/#{@course.id}"}
+        aria-label={@course.name}
+        class="hidden sm:block"
+      >
+        <.image
+          src={@course.image_slug}
+          alt=""
+          width={256}
+          height={256}
+          sizes="(min-width: 1024px) 8rem, 6rem"
+          class="bg-cream aspect-square w-full object-cover"
+        />
+      </.link>
+
+      <div class="min-w-0">
+        <h3 class={["card-heading text-balance", !@course.booking_open? && "text-base-content/70"]}>
           <.link
-            :if={@course.booking_open?}
             navigate={~q"/#{language}/courses/#{@course.id}"}
-            class="link-underline-hover after:content-[''] after:absolute after:-inset-x-3 after:inset-y-0 focus-visible:outline-hidden focus-visible:after:border-primary focus-visible:after:border-2"
+            class="link-underline-hover"
           >
             {@course.name}
           </.link>
-          <span :if={!@course.booking_open?} class="text-base-content/70">{@course.name}</span>
         </h3>
-        <p class="text-base-content/70 mt-1 text-sm tabular-nums">
-          {Format.time(@course.start_time, @locale)}–{Format.time(@course.end_time, @locale)} · {@course.location_name} ·
+        <p class="text-base-content/80 mt-2 text-sm tabular-nums">
+          {Format.time(@course.start_time, @locale)}–{Format.time(@course.end_time, @locale)}
+          <span aria-hidden="true"> · </span>
           <span data-testid="course-language">{taught_in(@course.language)}</span>
+        </p>
+        <p class="text-base-content/70 mt-1 text-sm">{@course.location_name}</p>
+        <p
+          :if={@course.description not in [nil, ""]}
+          class="text-base-content/80 line-clamp-2 mt-3 max-w-prose text-sm leading-relaxed"
+        >
+          {@course.description}
         </p>
       </div>
 
-      <div class="col-start-2 sm:col-start-3 sm:row-start-1 sm:text-right">
-        <p class="text-base-content font-serif text-xl tabular-nums">{Format.storefront_price(@course.price, @locale)}</p>
-        <p class="text-base-content/70 text-sm">{availability(@course)}</p>
+      <div class="col-start-2 flex flex-col items-start gap-2 sm:col-start-3 lg:col-start-4 lg:row-start-1 lg:items-end lg:text-right">
+        <p class="text-base-content font-serif text-xl tabular-nums">
+          {~t"#{price = Format.storefront_price(@course.price, @locale)} per person"}
+        </p>
+        <p class="text-base-content/70 text-sm" data-testid="course-availability">{availability(@course)}</p>
+        <.button
+          :if={@course.booking_open?}
+          navigate={~q"/#{language}/courses/#{@course.id}" <> "#book-heading"}
+          variant="primary"
+          size="sm"
+          class="min-h-11 mt-1"
+          aria-label={~t"Book a place" <> ": " <> @course.name}
+        >
+          {~t"Book a place"} <span aria-hidden="true">→</span>
+        </.button>
       </div>
     </div>
     """
