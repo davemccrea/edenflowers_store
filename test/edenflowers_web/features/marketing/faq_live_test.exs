@@ -9,6 +9,27 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
   setup :verify_on_exit!
 
+  test "a single button opens every question and then closes them all", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/faq")
+
+    assert has_element?(view, "#faq-questions details")
+    assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="open"]|, "Open all answers")
+    refute has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="open"][hidden]|)
+    assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="close"][hidden]|, "Close all answers")
+  end
+
+  test "the toggle button speaks every storefront language", %{conn: conn} do
+    for {path, open, close} <- [
+          {"/sv/vanliga-fragor", "Öppna alla svar", "Stäng alla svar"},
+          {"/fi/ukk", "Avaa kaikki vastaukset", "Sulje kaikki vastaukset"}
+        ] do
+      {:ok, view, _html} = live(conn, path)
+
+      assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="open"]|, open)
+      assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="close"]|, close)
+    end
+  end
+
   test "the card answer explains checkout without listing message limits", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
@@ -49,10 +70,11 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     assert has_element?(view, ~s|#ordering a[href="/en/terms#cancellation"]|)
   end
 
-  test "flower care links to quality terms but not the removed substitution section", %{conn: conn} do
+  test "seasonality and damaged flower answers both link to the quality terms", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
-    assert has_element?(view, ~s|#care a[href="/en/terms#quality"]|)
+    assert has_element?(view, ~s|#care-question-1 a[href="/en/terms#quality"]|)
+    assert has_element?(view, ~s|#care-question-2 a[href="/en/terms#quality"]|)
     refute has_element?(view, ~s|a[href="/en/terms#substitution"]|)
   end
 
@@ -109,13 +131,19 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     refute care["acceptedAnswer"]["text"] =~ "sharp, clean knife or secateurs"
   end
 
-  test "delivery dates depend on the chosen products, with midday only a usual cutoff", %{conn: conn} do
+  test "delivery and pickup dates depend on the chosen products, with midday only a usual cutoff", %{conn: conn} do
     Generator.shop_calendar(same_day: true, order_deadline: ~T[11:30:00])
 
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
-    assert has_element?(view, "#delivery", "Checkout shows the available delivery dates for the products you choose.")
+    assert has_element?(
+             view,
+             "#delivery",
+             "Checkout shows the available delivery and pickup dates for the products you choose."
+           )
+
     assert has_element?(view, "#delivery", "The usual cutoff for same-day orders is midday.")
+    assert has_element?(view, "#delivery-question-0", "There are no set delivery times.")
     refute has_element?(view, "#delivery", "order by 11:30")
   end
 
@@ -172,6 +200,21 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     refute has_element?(view, ~s|#weddings a[href="/en/weddings"]|)
     assert has_element?(view, "#courses", "deadline for a full refund and the cancellation fee after that")
     refute has_element?(view, "#courses summary", "what should I bring?")
+  end
+
+  test "purchase rule summaries link to localized terms", %{conn: conn} do
+    for {faq, terms, timing} <- [
+          {"/en/faq", "/en/terms", "There are no set delivery times."},
+          {"/sv/vanliga-fragor", "/sv/kopvillkor", "Det finns inga fasta leveranstider."},
+          {"/fi/ukk", "/fi/toimitusehdot", "Tarkkoja toimitusaikoja ei ole."}
+        ] do
+      {:ok, view, _html} = live(conn, faq)
+
+      assert has_element?(view, "#delivery-question-0", timing)
+      assert has_element?(view, ~s|#care-question-1 a[href="#{terms}#quality"]|)
+      assert has_element?(view, ~s|#subscriptions a[href="#{terms}#subscriptions"]|)
+      assert has_element?(view, ~s|#weddings-question-2 a[href="#{terms}#weddings"]|)
+    end
   end
 
   test "all invitations to contact Jennie link to the contact page", %{conn: conn} do
@@ -250,10 +293,22 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       %{delivery_option: option}
     end
 
-    test "the unlabelled checker follows its introduction and only submits explicitly", %{conn: conn} do
+    test "pricing and free delivery precede the checker introduction, which only submits explicitly", %{conn: conn} do
       {:ok, view, html} = live(conn, ~p"/en/faq")
 
-      assert has_element?(view, "#delivery-question-0 > div > p:first-child + div #faq-delivery-cost")
+      assert has_element?(
+               view,
+               "#delivery-question-0 > div > p:first-child",
+               "€1.20 per km. Some products, like subscriptions, are delivered free within 4 km."
+             )
+
+      assert has_element?(
+               view,
+               "#delivery-question-0 > div > p:first-child + p",
+               "Enter an address below to check the exact price."
+             )
+
+      assert has_element?(view, "#delivery-question-0 > div > p:first-child + p + div #faq-delivery-cost")
       assert has_element?(view, ~s|#address-input-field[aria-label="Check delivery address"]|)
       refute has_element?(view, "#address-input-field[phx-blur]")
       refute has_element?(view, "#faq-delivery-cost label > span")
@@ -317,10 +372,10 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
       for {path, locale, button, availability, price, free} <- [
             {"/sv/vanliga-fragor", "sv", "Kontrollera",
-             "För leverans samma dag behöver du vanligtvis beställa senast klockan 12.", "Leverans:",
-             "levereras gratis till den här adressen"},
+             "I kassan ser du vilka leverans- och avhämtningsdatum som är möjliga för produkterna du väljer.",
+             "Leverans:", "levereras gratis till den här adressen"},
             {"/fi/ukk", "fi", "Tarkista",
-             "Saman päivän toimitusta varten tilaus pitää yleensä tehdä viimeistään klo 12.", "Toimitus:",
+             "Kassalla näet valitsemillesi tuotteille saatavilla olevat toimitus- ja noutopäivät.", "Toimitus:",
              "toimitetaan tähän osoitteeseen ilmaiseksi"}
           ] do
         {:ok, view, _html} = live(conn, path)
@@ -431,7 +486,12 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
-    assert has_element?(view, "#delivery", "Checkout shows the available delivery dates for the products you choose.")
+    assert has_element?(
+             view,
+             "#delivery",
+             "Checkout shows the available delivery and pickup dates for the products you choose."
+           )
+
     refute has_element?(view, "#delivery", "The earliest delivery is the next day the shop is open.")
   end
 end

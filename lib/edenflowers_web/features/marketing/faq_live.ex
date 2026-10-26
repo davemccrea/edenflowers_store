@@ -51,37 +51,46 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             sections={Enum.map(@sections, fn {id, title, _questions} -> {id, title} end)}
           />
 
-          <div class="space-y-16 md:space-y-20">
-            <section
-              :for={{id, title, questions} <- @sections}
-              aria-labelledby={"#{id}-faq-heading"}
-              class="scroll-mt-8"
-              id={id}
-            >
-              <h2 id={"#{id}-faq-heading"} class="section-title mb-6">{title}</h2>
-              <div class="max-w-3xl">
-                <.faq_item
-                  :for={{{question, answer}, index} <- Enum.with_index(questions)}
-                  id={"#{id}-question-#{index}"}
-                  question={question}
-                  answer={answer}
-                  delivery_quote={@delivery_quote}
-                />
-              </div>
-            </section>
+          <div>
+            <.faq_toggle_all />
 
-            <section
-              aria-labelledby="ask-heading"
-              class="bg-cream text-cream-content flex max-w-3xl flex-col items-start gap-6 px-6 py-10 sm:px-10"
-            >
-              <h2 id="ask-heading" class="section-title text-balance">{~t"Didn't find your answer?"}</h2>
-              <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-                <.button href={contact_path()} variant="primary">{~t"Send me a message"}</.button>
-                <a href={"tel:#{Business.phone()}"} class="link-underline-static-body whitespace-nowrap">
-                  {Business.phone_display()}
-                </a>
-              </div>
-            </section>
+            <div id="faq-questions" class="space-y-16 md:space-y-20">
+              <section
+                :for={{id, title, questions} <- @sections}
+                aria-labelledby={"#{id}-faq-heading"}
+                class="scroll-mt-8"
+                id={id}
+              >
+                <h2 id={"#{id}-faq-heading"} class="section-title mb-6">{title}</h2>
+                <div class="max-w-3xl">
+                  <.faq_item
+                    :for={{{question, answer}, index} <- Enum.with_index(questions)}
+                    id={"#{id}-question-#{index}"}
+                    question={question}
+                    answer={answer}
+                    delivery_quote={@delivery_quote}
+                  />
+                  <p :if={id == "subscriptions"} class="pt-4">
+                    <a class="link-underline-static-body" href={terms_path("subscriptions")}>
+                      {~t"See the subscription terms"}
+                    </a>
+                  </p>
+                </div>
+              </section>
+
+              <section
+                aria-labelledby="ask-heading"
+                class="bg-cream text-cream-content flex max-w-3xl flex-col items-start gap-6 px-6 py-10 sm:px-10"
+              >
+                <h2 id="ask-heading" class="section-title text-balance">{~t"Didn't find your answer?"}</h2>
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+                  <.button href={contact_path()} variant="primary">{~t"Send me a message"}</.button>
+                  <a href={"tel:#{Business.phone()}"} class="link-underline-static-body whitespace-nowrap">
+                    {Business.phone_display()}
+                  </a>
+                </div>
+              </section>
+            </div>
           </div>
         </div>
       </.container>
@@ -170,7 +179,9 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           ]},
          {~t"Are your flowers local and seasonal?",
           [
-            ~t"I use local and seasonal flowers whenever possible. If a flower is out of season or unavailable, I use something similar of the same value."
+            ~t"I use local and seasonal flowers whenever possible.",
+            ~t"If a flower is out of season or unavailable, I use something similar of the same value.",
+            {:link, ~t"See the quality terms", terms_path("quality")}
           ]},
          {~t"What if my flowers arrive damaged or wilt early?",
           [
@@ -206,7 +217,8 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
          {~t"Do you provide wedding flowers outside Vaasa?", [~t"Yes, gladly. Travel is quoted separately."]},
          {~t"How does payment for a wedding work?",
           [
-            ~t"Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards."
+            ~t"Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards.",
+            {:link, ~t"See the wedding terms", terms_path("weddings")}
           ]}
        ]},
       {"courses", ~t"Courses",
@@ -235,7 +247,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     area =
       case option do
         %{max_dist_km: max, base_price: base, price_per_km: per_km} when is_integer(max) ->
-          ~t"Within #{km = max} km driving distance of the shop, for #{base = Format.currency(base, locale)} plus #{per_km = Format.currency(per_km, locale)} per km. Enter an address below to check the exact price."
+          ~t"Within #{km = max} km driving distance of the shop, for #{base = Format.currency(base, locale)} plus #{per_km = Format.currency(per_km, locale)} per km."
 
         _ ->
           ~t"Enter the address at checkout to see whether I deliver there and what it costs."
@@ -246,11 +258,13 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
         do: ~t"Some products, like subscriptions, are delivered free within #{km = km} km."
 
     availability =
-      ~t"Checkout shows the available delivery dates for the products you choose. The usual cutoff for same-day orders is midday."
+      ~t"Checkout shows the available delivery and pickup dates for the products you choose. The usual cutoff for same-day orders is midday."
 
+    pricing = {:paragraph, Enum.reject([area, free], &is_nil/1)}
+    checker_intro = if option, do: ~t"Enter an address below to check the exact price."
     checker = if option, do: {:delivery_checker, option}
 
-    Enum.reject([area, checker, free, availability], &is_nil/1)
+    Enum.reject([pricing, checker_intro, checker, availability, ~t"There are no set delivery times."], &is_nil/1)
   end
 
   defp faq_page(sections) do
@@ -295,6 +309,64 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
         [paragraph]
     end)
     |> Enum.join(" ")
+  end
+
+  # <details> keeps its open state in the DOM, so the toggle works there rather than through a patch.
+  defp faq_toggle_all(assigns) do
+    ~H"""
+    <div class="mb-6 flex justify-end">
+      <.button type="button" id="faq-toggle-all" variant="secondary" size="sm" phx-hook=".FaqToggleAll">
+        <span data-faq-toggle="open">{~t"Open all answers"}</span>
+        <span data-faq-toggle="close" hidden>{~t"Close all answers"}</span>
+      </.button>
+    </div>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".FaqToggleAll">
+      export default {
+        mounted() {
+          this.questions = document.getElementById("faq-questions");
+          this.openLabel = this.el.querySelector('[data-faq-toggle="open"]');
+          this.closeLabel = this.el.querySelector('[data-faq-toggle="close"]');
+
+          this.el.addEventListener("click", () => {
+            // A partly open list finishes opening rather than flipping every question shut.
+            const open = !this.allOpen();
+            this.details().forEach((item) => (item.open = open));
+            this.showLabel();
+          });
+
+          // A question opened or closed by hand changes what the button says next.
+          this.onToggle = () => this.showLabel();
+          this.questions.addEventListener("toggle", this.onToggle, true);
+
+          this.showLabel();
+        },
+
+        updated() {
+          this.showLabel();
+        },
+
+        destroyed() {
+          this.questions.removeEventListener("toggle", this.onToggle, true);
+        },
+
+        details() {
+          return [...this.questions.querySelectorAll("details")];
+        },
+
+        allOpen() {
+          const items = this.details();
+          return items.length > 0 && items.every((item) => item.open);
+        },
+
+        showLabel() {
+          const open = this.allOpen();
+          this.openLabel.hidden = open;
+          this.closeLabel.hidden = !open;
+        },
+      };
+    </script>
+    """
   end
 
   attr :id, :string, required: true

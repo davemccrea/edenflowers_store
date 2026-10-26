@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     refute has_element?(view, "#quality a[href^=mailto]")
     refute has_element?(view, "#substitution")
     refute has_element?(view, ~s|a[href="#substitution"]|)
-    assert has_element?(view, "#delivery #pickup", "choose a date at checkout")
+    assert has_element?(view, "#delivery #pickup", "during opening hours, unless we've agreed on another time")
     assert has_element?(view, "#delivery #delivery-problems", "a locked stairwell")
 
     days = Subscription.lead_days()
@@ -83,18 +83,15 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     refute has_element?(view, "#payment", "before each bouquet")
   end
 
-  test "payment and availability wording agrees with the updated FAQ", %{conn: conn} do
+  test "delivery terms keep commitments and leave practical instructions to the FAQ", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
     assert has_element?(view, "#checkout-payments", "Subscriptions require a card.")
 
-    assert has_element?(
-             view,
-             "#delivery-area",
-             "Checkout shows the available delivery dates for the products you choose."
-           )
-
-    assert has_element?(view, "#delivery-area", "The usual cutoff for same-day orders is midday.")
+    assert has_element?(view, "#delivery-area", "There are no set delivery times.")
+    refute has_element?(view, "#delivery", "The usual cutoff for same-day orders is midday.")
+    refute has_element?(view, "#delivery", "choose a date at checkout")
+    refute has_element?(view, "#delivery", "message when your order is ready")
     assert has_element?(view, "#unattended-delivery", "photo showing where I've left them")
     assert has_element?(view, ~s|#online-orders a[href="/account"]|, "Go to your account")
     assert has_element?(view, "#subscription-billing", "You pay for the first bouquet at checkout.")
@@ -124,7 +121,7 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
         ] do
       {:ok, view, html} = live(conn, path)
 
-      for section <- ["pickup", "quality", "online-orders"] do
+      for section <- ["quality", "online-orders"] do
         assert has_element?(view, ~s|##{section} a[href="#{contact}"]|)
       end
 
@@ -201,8 +198,52 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
       assert has_element?(view, "#seller > h2", page.seller)
       assert has_element?(view, "#quality > h2", page.quality)
       assert has_element?(view, ~s|#quality a[href="#{page.faq}#care"]|)
-      assert has_element?(view, ~s|#subscriptions a[href="#{page.faq}#subscriptions"]|)
+      assert has_element?(view, ~s|#subscription-changes a[href="/account"]|)
+      refute has_element?(view, ~s|#subscriptions a[href="#{page.faq}#subscriptions"]|)
       assert has_element?(view, ~s|#courses a[href="#{page.courses}"]|)
+    end
+  end
+
+  test "purchase rules are complete in the terms in every language", %{conn: conn} do
+    days = Subscription.change_deadline_days()
+
+    for page <- [
+          %{
+            path: "/en/terms",
+            substitution: "If a flower is out of season or unavailable, I use something similar of the same value.",
+            deadline: "Make changes at least #{days} days before delivery or pickup.",
+            late_cancellation: "Cancelling after that stops future bouquets, but the booked bouquet still comes.",
+            pickup: "Collect your order during opening hours, unless we've agreed on another time.",
+            wedding: "Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards."
+          },
+          %{
+            path: "/sv/kopvillkor",
+            substitution:
+              "Om en blomma inte är i säsong eller inte finns att få tag på, använder jag något liknande av samma värde.",
+            deadline: "Gör ändringar senast #{days} dagar före leverans eller avhämtning.",
+            late_cancellation:
+              "Om du avslutar prenumerationen efter det stoppas framtida buketter, men den redan bokade buketten kommer ändå.",
+            pickup: "Hämta din beställning under öppettiderna, om vi inte har kommit överens om en annan tid.",
+            wedding: "Hälften faktureras som bokningsavgift ungefär 4 veckor före bröllopet, resten efteråt."
+          },
+          %{
+            path: "/fi/toimitusehdot",
+            substitution: "Jos kukka ei ole sesongissa tai sitä ei saa, käytän jotain samankaltaista ja samanarvoista.",
+            deadline: "Tee muutokset viimeistään #{days} päivää ennen toimitusta tai noutoa.",
+            late_cancellation:
+              "Jos lopetat kestotilauksen sen jälkeen, tulevat kimput peruuntuvat, mutta jo tilattu kimppu tulee silti.",
+            pickup: "Nouda tilauksesi aukioloaikoina, ellei toisesta ajasta ole sovittu.",
+            wedding: "Puolet laskutetaan varausmaksuna noin 4 viikkoa ennen häitä, loput jälkikäteen."
+          }
+        ] do
+      {:ok, view, _html} = live(conn, page.path)
+
+      assert has_element?(view, "#quality", page.substitution)
+      assert has_element?(view, "#subscription-changes", page.deadline)
+      assert has_element?(view, "#subscription-changes", page.late_cancellation)
+      assert has_element?(view, ~s|#subscription-changes a[href="/account"]|)
+      assert has_element?(view, "#pickup", page.pickup)
+      assert has_element?(view, "#wedding-payment", page.wedding)
     end
   end
 

@@ -58,9 +58,9 @@ msgstr "Kontakt"
 #: lib/edenflowers_web/features/admin/courses_live.ex:43
 #: lib/edenflowers_web/features/courses/course_live.ex:77
 #: lib/edenflowers_web/features/courses/courses_live.ex:47
-#: lib/edenflowers_web/features/marketing/faq_live.ex:212
+#: lib/edenflowers_web/features/marketing/faq_live.ex:224
 #: lib/edenflowers_web/features/marketing/terms_live.ex:27
-#: lib/edenflowers_web/features/marketing/terms_live.ex:133
+#: lib/edenflowers_web/features/marketing/terms_live.ex:130
 #: lib/edenflowers_web/features/marketing/terms_live.ex:173
 #, elixir-autogen, elixir-format
 msgid "Courses"
@@ -124,9 +124,9 @@ msgid "Total"
 msgstr "Totalt"
 
 #: lib/edenflowers_web/components/layouts.ex:592
-#: lib/edenflowers_web/features/marketing/faq_live.ex:199
+#: lib/edenflowers_web/features/marketing/faq_live.ex:210
 #: lib/edenflowers_web/features/marketing/terms_live.ex:26
-#: lib/edenflowers_web/features/marketing/terms_live.ex:130
+#: lib/edenflowers_web/features/marketing/terms_live.ex:127
 #: lib/edenflowers_web/features/marketing/terms_live.ex:155
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:59
 #, elixir-autogen, elixir-format
@@ -150,7 +150,7 @@ msgstr "Kassa"
 #: lib/edenflowers_web/features/checkout/components/fields.ex:132
 #: lib/edenflowers_web/features/checkout/order_live.ex:83
 #: lib/edenflowers_web/features/courses/course_live.ex:175
-#: lib/edenflowers_web/features/marketing/faq_live.ex:185
+#: lib/edenflowers_web/features/marketing/faq_live.ex:196
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:447
 #: lib/edenflowers_web/payment_link.ex:112
 #, elixir-autogen, elixir-format
@@ -1149,7 +1149,7 @@ msgstr "Väntande"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:217
 #: lib/edenflowers_web/features/marketing/home_live.ex:649
-#: lib/edenflowers_web/features/marketing/terms_live.ex:78
+#: lib/edenflowers_web/features/marketing/terms_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "Pickup"
 msgstr "Avhämtning"
@@ -3660,9 +3660,9 @@ msgstr "Betalningen misslyckades"
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:56
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:28
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:42
-#: lib/edenflowers_web/features/marketing/faq_live.ex:198
+#: lib/edenflowers_web/features/marketing/faq_live.ex:209
 #: lib/edenflowers_web/features/marketing/terms_live.ex:25
-#: lib/edenflowers_web/features/marketing/terms_live.ex:137
+#: lib/edenflowers_web/features/marketing/terms_live.ex:134
 #, elixir-autogen, elixir-format
 msgid "Subscriptions"
 msgstr "Prenumerationer"
@@ -4179,12 +4179,12 @@ msgstr "Välj en av dagarna som erbjuds."
 msgid "No deliveries until the unpaid one is paid or your card is updated."
 msgstr "Inga leveranser förrän den obetalda är betald eller du har bytt kort."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:107
+#: lib/edenflowers_web/features/marketing/faq_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "What if my card doesn't go through?"
 msgstr "Vad händer om kortbetalningen inte går igenom?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:103
+#: lib/edenflowers_web/features/marketing/faq_live.ex:112
 #, elixir-autogen, elixir-format
 msgid "When do I pay?"
 msgstr "När betalar jag?"
@@ -5436,7 +5436,7 @@ msgstr "Ladda ner"
 msgid "Month"
 msgstr "Månad"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:214
+#: lib/edenflowers_web/features/marketing/faq_live.ex:226
 #, elixir-autogen, elixir-format
 msgid "How do I cancel a course booking?"
 msgstr "Hur avbokar jag en kurs?"
@@ -5996,7 +5996,7 @@ msgstr "Välj bukett"
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:54
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:93
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:200
-#: lib/edenflowers_web/features/marketing/faq_live.ex:116
+#: lib/edenflowers_web/features/marketing/faq_live.ex:125
 #: lib/edenflowers_web/features/marketing/home_live.ex:638
 #: lib/edenflowers_web/features/marketing/terms_live.ex:22
 #: lib/edenflowers_web/features/marketing/terms_live.ex:71
@@ -7344,7 +7344,7 @@ msgid "Weight (g)"
 msgstr "Vikt (g)"
 
 #: lib/edenflowers_web/features/courses/courses_live.ex:107
-#: lib/edenflowers_web/features/marketing/faq_live.ex:221
+#: lib/edenflowers_web/features/marketing/faq_live.ex:233
 #, elixir-autogen, elixir-format
 msgid "Courses for private groups"
 msgstr "Kurs för privata grupper"
@@ -7375,12 +7375,12 @@ msgid "Phone: %{phone}"
 msgstr "Telefon: %{phone}"
 
 #: lib/edenflowers_web/features/courses/courses_live.ex:113
-#: lib/edenflowers_web/features/marketing/about_live.ex:193
+#: lib/edenflowers_web/features/marketing/about_live.ex:190
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:25
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:29
 #: lib/edenflowers_web/features/marketing/condolences_live.ex:83
 #: lib/edenflowers_web/features/marketing/contact_live.ex:63
-#: lib/edenflowers_web/features/marketing/faq_live.ex:79
+#: lib/edenflowers_web/features/marketing/faq_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "Send me a message"
 msgstr "Skicka ett meddelande"
@@ -7415,7 +7415,6 @@ msgstr "Ditt meddelande till Eden Flowers"
 msgid "Thank you for your message. I'll get back to you as soon as I can."
 msgstr "Tack för ditt meddelande. Jag hör av mig så snart jag kan."
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:191
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:36
 #, elixir-autogen, elixir-format
 msgid "During opening hours I usually reply within 4 hours."
@@ -7538,7 +7537,7 @@ msgstr "Hej, jag heter Jennie"
 msgid "By placing your order you accept the"
 msgstr "Genom att lägga beställningen godkänner du"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:125
+#: lib/edenflowers_web/features/marketing/terms_live.ex:122
 #, elixir-autogen, elixir-format
 msgid "Flowers are made to order and perishable, so the 14-day right of withdrawal doesn't apply."
 msgstr "Blommorna görs på beställning och är färskvaror, så den 14 dagar långa ångerrätten gäller inte."
@@ -7575,7 +7574,7 @@ msgid "Prices and payment"
 msgstr "Priser och betalning"
 
 #: lib/edenflowers_web/features/marketing/terms_live.ex:23
-#: lib/edenflowers_web/features/marketing/terms_live.ex:99
+#: lib/edenflowers_web/features/marketing/terms_live.ex:93
 #, elixir-autogen, elixir-format
 msgid "Quality"
 msgstr "Kvalitet"
@@ -7597,57 +7596,57 @@ msgstr "köpvillkoren"
 msgid "Answers about ordering, delivery, pickup, flower care, payment, subscriptions, weddings and courses at Eden Flowers in Vaasa."
 msgstr "Svar om beställning, leverans, avhämtning, blomskötsel, betalning, prenumerationer, bröllop och kurser hos Eden Flowers i Vasa."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:171
+#: lib/edenflowers_web/features/marketing/faq_live.ex:180
 #, elixir-autogen, elixir-format
 msgid "Are your flowers local and seasonal?"
 msgstr "Är dina blommor lokala och säsongsbetonade?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:144
+#: lib/edenflowers_web/features/marketing/faq_live.ex:153
 #, elixir-autogen, elixir-format
 msgid "Can I add a card with a message?"
 msgstr "Kan jag skicka med ett kort med en hälsning?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:218
+#: lib/edenflowers_web/features/marketing/faq_live.ex:230
 #, elixir-autogen, elixir-format
 msgid "Can I book a private course for my group?"
 msgstr "Kan jag boka en privat kurs för min grupp?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:146
+#: lib/edenflowers_web/features/marketing/faq_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "Can I cancel an order I made online?"
 msgstr "Kan jag avboka en beställning jag gjort på webben?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:189
+#: lib/edenflowers_web/features/marketing/faq_live.ex:200
 #, elixir-autogen, elixir-format
 msgid "Can businesses pay by invoice?"
 msgstr "Kan företag betala mot faktura?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:241
+#: lib/edenflowers_web/features/marketing/faq_live.ex:253
 #, elixir-autogen, elixir-format
 msgid "Enter the address at checkout to see whether I deliver there and what it costs."
 msgstr "Fyll i adressen i kassan så ser du om jag levererar dit och vad det kostar."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:158
+#: lib/edenflowers_web/features/marketing/faq_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "Flowers and care"
 msgstr "Blommor och skötsel"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:207
+#: lib/edenflowers_web/features/marketing/faq_live.ex:218
 #, elixir-autogen, elixir-format
 msgid "How does payment for a wedding work?"
 msgstr "Hur fungerar betalningen för ett bröllop?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:201
+#: lib/edenflowers_web/features/marketing/faq_live.ex:212
 #, elixir-autogen, elixir-format
 msgid "How far ahead should I book wedding flowers?"
 msgstr "Hur långt i förväg ska jag boka bröllopsblommor?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:138
+#: lib/edenflowers_web/features/marketing/faq_live.ex:147
 #, elixir-autogen, elixir-format
 msgid "Ordering"
 msgstr "Beställning"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:155
+#: lib/edenflowers_web/features/marketing/faq_live.ex:164
 #, elixir-autogen, elixir-format
 msgid "See the cancellation terms"
 msgstr "Se avbokningsvillkoren"
@@ -7657,27 +7656,28 @@ msgstr "Se avbokningsvillkoren"
 msgid "See the courses"
 msgstr "Se kurserna"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:182
+#: lib/edenflowers_web/features/marketing/faq_live.ex:184
+#: lib/edenflowers_web/features/marketing/faq_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "See the quality terms"
 msgstr "Se villkoren för kvalitet"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:126
+#: lib/edenflowers_web/features/marketing/faq_live.ex:135
 #, elixir-autogen, elixir-format
 msgid "What happens if I can't get in"
 msgstr "Vad händer om jag inte kommer in"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:175
+#: lib/edenflowers_web/features/marketing/faq_live.ex:186
 #, elixir-autogen, elixir-format
 msgid "What if my flowers arrive damaged or wilt early?"
 msgstr "Vad händer om mina blommor kommer fram skadade eller vissnar i förtid?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:123
+#: lib/edenflowers_web/features/marketing/faq_live.ex:132
 #, elixir-autogen, elixir-format
 msgid "What if nobody's home?"
 msgstr "Vad händer om ingen är hemma?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:128
+#: lib/edenflowers_web/features/marketing/faq_live.ex:137
 #, elixir-autogen, elixir-format
 msgid "Where and when can I pick up my order?"
 msgstr "Var och när kan jag hämta min beställning?"
@@ -7687,47 +7687,48 @@ msgstr "Var och när kan jag hämta min beställning?"
 msgid "Stadsgatan 3, 65300 Vasa"
 msgstr "Stadsgatan 3, 65300 Vasa"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:209
+#: lib/edenflowers_web/features/marketing/faq_live.ex:220
+#: lib/edenflowers_web/features/marketing/terms_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards."
 msgstr "Hälften faktureras som bokningsavgift ungefär 4 veckor före bröllopet, resten efteråt."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:187
+#: lib/edenflowers_web/features/marketing/faq_live.ex:198
 #, elixir-autogen, elixir-format
 msgid "How can I pay?"
 msgstr "Hur kan jag betala?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:246
+#: lib/edenflowers_web/features/marketing/faq_live.ex:258
 #, elixir-autogen, elixir-format
 msgid "Some products, like subscriptions, are delivered free within %{km} km."
 msgstr "Vissa produkter, som prenumerationer, levereras gratis inom %{km} km."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:220
+#: lib/edenflowers_web/features/marketing/faq_live.ex:232
 #, elixir-autogen, elixir-format
 msgid "Yes, at Minimossen or at your own premises."
 msgstr "Ja, på Minimossen eller hos er."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:206
+#: lib/edenflowers_web/features/marketing/faq_live.ex:217
 #, elixir-autogen, elixir-format
 msgid "Yes, gladly. Travel is quoted separately."
 msgstr "Ja, gärna. Resan offereras separat."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:121
+#: lib/edenflowers_web/features/marketing/faq_live.ex:130
 #, elixir-autogen, elixir-format
 msgid "Yes, to the ward, if it allows flowers. Please check with the ward first, and put the patient's name and ward in the delivery instructions."
 msgstr "Ja, till avdelningen, om den tillåter blommor. Kolla gärna med avdelningen först, och skriv patientens namn och avdelning i leveransinstruktionerna."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:77
+#: lib/edenflowers_web/features/marketing/faq_live.ex:85
 #, elixir-autogen, elixir-format
 msgid "Didn't find your answer?"
 msgstr "Hittade du inte svaret?"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:93
+#: lib/edenflowers_web/features/marketing/terms_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "If I can't reach the door, for example a locked stairwell, your order goes back to the shop for you to pick up, or you can pay for another delivery. Add any door code to the delivery instructions."
 msgstr "Om jag inte kommer fram till dörren, till exempel på grund av en låst trappuppgång, går beställningen tillbaka till butiken, där du kan hämta den, eller så kan du betala för en ny leverans. Skriv eventuell portkod i leveransinstruktionerna."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:95
+#: lib/edenflowers_web/features/marketing/terms_live.ex:89
 #, elixir-autogen, elixir-format
 msgid "If the address or recipient details given at checkout are wrong, I can't refund the order."
 msgstr "Om adressen eller mottagaruppgifterna du angav i kassan är fel kan jag inte återbetala beställningen."
@@ -7839,12 +7840,12 @@ msgstr "Att betala: %{amount}. Betala på kursen."
 msgid "Pay at the course"
 msgstr "Betala på kursen"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:91
+#: lib/edenflowers_web/features/marketing/terms_live.ex:85
 #, elixir-autogen, elixir-format
 msgid "Access problems or incorrect details"
 msgstr "Problem med tillträde eller felaktiga uppgifter"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:138
+#: lib/edenflowers_web/features/marketing/terms_live.ex:135
 #, elixir-autogen, elixir-format
 msgid "Billing"
 msgstr "Betalning"
@@ -7855,12 +7856,12 @@ msgid "Cancellation and booking fee"
 msgstr "Avbokning och bokningsavgift"
 
 #: lib/edenflowers_web/features/marketing/terms_live.ex:24
-#: lib/edenflowers_web/features/marketing/terms_live.ex:111
+#: lib/edenflowers_web/features/marketing/terms_live.ex:108
 #, elixir-autogen, elixir-format
 msgid "Changes and cancellations"
 msgstr "Ändringar och avbokningar"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:150
+#: lib/edenflowers_web/features/marketing/terms_live.ex:145
 #, elixir-autogen, elixir-format
 msgid "Changing or stopping a subscription"
 msgstr "Ändra eller avsluta en prenumeration"
@@ -7875,7 +7876,7 @@ msgstr "Betalning i kassan"
 msgid "Delivery area and timing"
 msgstr "Leveransområde och tider"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:143
+#: lib/edenflowers_web/features/marketing/terms_live.ex:140
 #, elixir-autogen, elixir-format
 msgid "Failed payments"
 msgstr "Misslyckade betalningar"
@@ -7885,20 +7886,15 @@ msgstr "Misslyckade betalningar"
 msgid "For weddings, final prices depend on the flowers and technique you choose. Delivery costs are added for deliveries outside Vaasa."
 msgstr "Slutgiltiga priser beror på önskade blommor och teknik. Fraktkostnader tillkommer utanför Vasa."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:86
+#: lib/edenflowers_web/features/marketing/terms_live.ex:80
 #, elixir-autogen, elixir-format
 msgid "If nobody is home"
 msgstr "Om ingen är hemma"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:112
+#: lib/edenflowers_web/features/marketing/terms_live.ex:109
 #, elixir-autogen, elixir-format
 msgid "Online flower orders"
 msgstr "Blombeställningar på nätet"
-
-#: lib/edenflowers_web/features/marketing/terms_live.ex:163
-#, elixir-autogen, elixir-format
-msgid "Payment is split into two instalments: the first is sent out four weeks before the wedding and the second after the wedding."
-msgstr "Betalningen delas upp i två rater där den första skickas ut fyra veckor före bröllopet och den andra efter bröllopet."
 
 #: lib/edenflowers_web/features/marketing/terms_live.ex:161
 #, elixir-autogen, elixir-format
@@ -7910,7 +7906,7 @@ msgstr "Betalningsplan"
 msgid "Pricing and delivery"
 msgstr "Priser och leverans"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:123
+#: lib/edenflowers_web/features/marketing/terms_live.ex:120
 #, elixir-autogen, elixir-format
 msgid "Right of withdrawal"
 msgstr "Ångerrätt"
@@ -7926,7 +7922,7 @@ msgstr "Säljare och kontaktuppgifter"
 msgid "The first instalment is a booking fee and is not refunded if you cancel later than four weeks before the wedding."
 msgstr "Den första raten fungerar som en bokningsavgift och fås ej tillbaka vid avbokning som sker senare än fyra veckor före bröllopet."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:129
+#: lib/edenflowers_web/features/marketing/terms_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "Wedding and course bookings have separate cancellation terms:"
 msgstr "Bröllops- och kursbokningar har separata avbokningsvillkor:"
@@ -7936,165 +7932,140 @@ msgstr "Bröllops- och kursbokningar har separata avbokningsvillkor:"
 msgid "Eden Flowers' terms for payment, delivery and pickup, cancellation, quality and invoices."
 msgstr "Eden Flowers villkor för betalning, leverans och avhämtning, avbokning, kvalitet och fakturor."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:167
+#: lib/edenflowers_web/features/marketing/faq_live.ex:176
 #, elixir-autogen, elixir-format
 msgid "Check the water level regularly and top up as needed. Change the water and re-cut the stems every 2–3 days."
 msgstr "Kontrollera vattennivån regelbundet och fyll på vid behov. Byt vatten och snitta om stjälkarna varannan till var tredje dag."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:160
+#: lib/edenflowers_web/features/marketing/faq_live.ex:169
 #, elixir-autogen, elixir-format
 msgid "How long will my flowers last, and how should I care for them?"
 msgstr "Hur länge håller mina blommor, och hur ska jag sköta dem?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:168
+#: lib/edenflowers_web/features/marketing/faq_live.ex:177
 #, elixir-autogen, elixir-format
 msgid "Keep the flowers in a cool spot, away from radiators, other heat sources and ripe fruit."
 msgstr "Ställ blommorna svalt, borta från element, andra värmekällor och mogen frukt."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:106
+#: lib/edenflowers_web/features/marketing/terms_live.ex:103
 #, elixir-autogen, elixir-format
 msgid "Read the care instructions"
 msgstr "Läs skötselråden"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:166
+#: lib/edenflowers_web/features/marketing/faq_live.ex:175
 #, elixir-autogen, elixir-format
 msgid "Remove any leaves that would sit below the waterline."
 msgstr "Ta bort alla blad som hamnar under vattenytan."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:165
+#: lib/edenflowers_web/features/marketing/faq_live.ex:174
 #, elixir-autogen, elixir-format
 msgid "Use a clean vase with fresh water."
 msgstr "Använd en ren vas med friskt vatten."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:102
+#: lib/edenflowers_web/features/marketing/faq_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Can I collect my subscription bouquets?"
 msgstr "Kan jag hämta mina prenumerationsbuketter?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:140
+#: lib/edenflowers_web/features/marketing/faq_live.ex:149
 #, elixir-autogen, elixir-format
 msgid "Can I order something that isn't in the online shop?"
 msgstr "Kan jag beställa något som inte finns i webbutiken?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:105
+#: lib/edenflowers_web/features/marketing/faq_live.ex:114
 #, elixir-autogen, elixir-format
 msgid "Can I pause or cancel my subscription?"
 msgstr "Kan jag pausa eller avsluta min prenumeration?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:119
+#: lib/edenflowers_web/features/marketing/faq_live.ex:128
 #, elixir-autogen, elixir-format
 msgid "Do you deliver to the hospital?"
 msgstr "Levererar du till sjukhuset?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:206
+#: lib/edenflowers_web/features/marketing/faq_live.ex:217
 #, elixir-autogen, elixir-format
 msgid "Do you provide wedding flowers outside Vaasa?"
 msgstr "Gör du bröllopsblommor utanför Vasa?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:104
+#: lib/edenflowers_web/features/marketing/faq_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "For the first bouquet, at checkout. After that, your card is charged %{days} days before each delivery or pickup."
 msgstr "För den första buketten i kassan. Därefter dras betalningen från ditt kort %{days} dagar före varje leverans eller avhämtning."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:154
-#: lib/edenflowers_web/features/marketing/terms_live.ex:120
+#: lib/edenflowers_web/features/marketing/faq_live.ex:163
+#: lib/edenflowers_web/features/marketing/terms_live.ex:117
+#: lib/edenflowers_web/features/marketing/terms_live.ex:150
 #, elixir-autogen, elixir-format
 msgid "Go to your account"
 msgstr "Gå till ditt konto"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:125
+#: lib/edenflowers_web/features/marketing/faq_live.ex:134
 #, elixir-autogen, elixir-format
 msgid "I leave the flowers at the door and email you a photo showing where I've left them. If you're sending a gift, you receive an email when it's delivered. Add any door code to the delivery instructions."
 msgstr "Jag lämnar blommorna vid dörren och mejlar dig en bild som visar var jag har lämnat dem. Om du skickar en gåva får du ett mejl när den har levererats. Skriv eventuell portkod i leveransinstruktionerna."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:173
-#, elixir-autogen, elixir-format
-msgid "I use local and seasonal flowers whenever possible. If a flower is out of season or unavailable, I use something similar of the same value."
-msgstr "Jag använder lokala blommor och säsongens blommor när det är möjligt. Om en blomma inte är i säsong eller inte finns att få tag på, använder jag något liknande av samma värde."
-
-#: lib/edenflowers_web/features/marketing/terms_live.ex:145
+#: lib/edenflowers_web/features/marketing/terms_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "If a charge doesn't go through, the bouquet still comes and I'll get in touch with payment instructions."
 msgstr "Om betalningen inte går igenom kommer buketten ändå, och jag hör av mig med betalningsinstruktioner."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:188
+#: lib/edenflowers_web/features/marketing/faq_live.ex:199
 #, elixir-autogen, elixir-format
 msgid "MobilePay, card, Apple Pay or Google Pay. Subscriptions require a card. Prices include VAT."
 msgstr "MobilePay, kort, Apple Pay eller Google Pay. Prenumerationer kräver kortbetalning. Priserna inkluderar moms."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:216
+#: lib/edenflowers_web/features/marketing/faq_live.ex:228
 #, elixir-autogen, elixir-format
 msgid "Reply to your confirmation email. Each course page lists the deadline for a full refund and the cancellation fee after that."
 msgstr "Svara på bekräftelsemejlet. På varje kurssida står sista dagen för avbokning med full återbetalning och vilken avbokningsavgift som gäller efter det."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:106
+#: lib/edenflowers_web/features/marketing/faq_live.ex:115
 #, elixir-autogen, elixir-format
 msgid "Yes, from your account. You can also change the size, frequency or delivery day. Make changes at least %{close} days before delivery or pickup. Cancelling after that stops future bouquets, but the booked bouquet still comes."
 msgstr "Ja, från ditt konto. Du kan också ändra storlek, hur ofta du får blommor eller leveransdag. Gör ändringar senast %{close} dagar före leverans eller avhämtning. Om du avslutar prenumerationen efter det stoppas framtida buketter, men den redan bokade buketten kommer ändå."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:145
+#: lib/edenflowers_web/features/marketing/faq_live.ex:154
 #, elixir-autogen, elixir-format
 msgid "Yes, if you're sending flowers as a gift. Choose a card at checkout and write your message."
 msgstr "Ja, om du skickar blommor som gåva. Välj ett kort i kassan och skriv din hälsning."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:108
+#: lib/edenflowers_web/features/marketing/faq_live.ex:117
 #, elixir-autogen, elixir-format
 msgid "Your bouquet still comes, and I'll get in touch with payment instructions."
 msgstr "Buketten kommer ändå, och jag hör av mig med betalningsinstruktioner."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:249
-#: lib/edenflowers_web/features/marketing/terms_live.ex:75
-#, elixir-autogen, elixir-format
-msgid "Checkout shows the available delivery dates for the products you choose. The usual cutoff for same-day orders is midday."
-msgstr "I kassan ser du vilka leveransdatum som är möjliga för produkterna du väljer. För leverans samma dag behöver du vanligtvis beställa senast klockan 12."
-
-#: lib/edenflowers_web/features/marketing/faq_live.ex:374
+#: lib/edenflowers_web/features/marketing/faq_live.ex:446
 #, elixir-autogen, elixir-format
 msgid "Delivery: %{price}"
 msgstr "Leverans: %{price}"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:238
-#, elixir-autogen, elixir-format
-msgid "Within %{km} km driving distance of the shop, for %{base} plus %{per_km} per km. Enter an address below to check the exact price."
-msgstr "Inom %{km} km körsträcka från butiken, för %{base} plus %{per_km} per km. Fyll i en adress nedan för att se det exakta priset."
-
-#: lib/edenflowers_web/features/marketing/faq_live.ex:132
+#: lib/edenflowers_web/features/marketing/faq_live.ex:141
 #, elixir-autogen, elixir-format
 msgid "At Minimossen, %{address}, %{town}. Choose your pickup date at checkout. I'll message you when your order is ready. Collect it during opening hours."
 msgstr "På Minimossen, %{address}, %{town}. Välj datum för avhämtning i kassan. Jag skickar ett meddelande när din beställning är klar. Hämta den under öppettiderna."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:370
+#: lib/edenflowers_web/features/marketing/faq_live.ex:442
 #, elixir-autogen, elixir-format
 msgid "Check"
 msgstr "Kontrollera"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:364
+#: lib/edenflowers_web/features/marketing/faq_live.ex:436
 #, elixir-autogen, elixir-format
 msgid "Check delivery address"
 msgstr "Kontrollera leveransadress"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:80
-#, elixir-autogen, elixir-format
-msgid "For pickup, choose a date at checkout and I'll send you a message when your order is ready. Collect it during opening hours."
-msgstr "Välj datum för avhämtning i kassan så skickar jag ett meddelande när din beställning är klar. Hämta den under öppettiderna."
-
-#: lib/edenflowers_web/features/marketing/faq_live.ex:151
-#: lib/edenflowers_web/features/marketing/terms_live.ex:116
+#: lib/edenflowers_web/features/marketing/faq_live.ex:160
+#: lib/edenflowers_web/features/marketing/terms_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "Get in touch after that."
 msgstr "Hör av dig efter det."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:82
-#, elixir-autogen, elixir-format
-msgid "Get in touch and we'll find another time."
-msgstr "Hör av dig så hittar vi en annan tid."
-
-#: lib/edenflowers_web/features/marketing/faq_live.ex:133
+#: lib/edenflowers_web/features/marketing/faq_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "Get in touch for another time."
 msgstr "Hör av dig om en annan tid."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:194
+#: lib/edenflowers_web/features/marketing/faq_live.ex:205
 #, elixir-autogen, elixir-format
 msgid "Get in touch to arrange it."
 msgstr "Hör av dig så ordnar vi det."
@@ -8104,23 +8075,23 @@ msgstr "Hör av dig så ordnar vi det."
 msgid "I deliver within %{km} km driving distance of the shop, on the day you choose at checkout. There are no set delivery times."
 msgstr "Jag levererar inom %{km} km körsträcka från butiken, den dag du väljer i kassan. Det finns inga fasta leveranstider."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:180
-#: lib/edenflowers_web/features/marketing/terms_live.ex:102
+#: lib/edenflowers_web/features/marketing/faq_live.ex:191
+#: lib/edenflowers_web/features/marketing/terms_live.ex:99
 #, elixir-autogen, elixir-format
 msgid "I'll replace them or refund you, provided care instructions are followed."
 msgstr "Jag ersätter blommorna eller betalar tillbaka pengarna, förutsatt att skötselråden har följts."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:152
+#: lib/edenflowers_web/features/marketing/faq_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "I'm usually flexible."
 msgstr "Jag är oftast flexibel."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:88
+#: lib/edenflowers_web/features/marketing/terms_live.ex:82
 #, elixir-autogen, elixir-format
 msgid "If nobody's home, I'll leave the flowers at the door and email you a photo showing where I've left them."
 msgstr "Om ingen är hemma lämnar jag blommorna vid dörren och mejlar dig en bild som visar var jag har lämnat dem."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:179
+#: lib/edenflowers_web/features/marketing/faq_live.ex:190
 #, elixir-autogen, elixir-format
 msgid "Let me know as soon as possible and send a photo."
 msgstr "Hör av dig så snart som möjligt och skicka en bild."
@@ -8130,37 +8101,37 @@ msgstr "Hör av dig så snart som möjligt och skicka en bild."
 msgid "Prices include VAT. At checkout you can pay with MobilePay, card, Apple Pay or Google Pay. Subscriptions require a card."
 msgstr "Priserna inkluderar moms. I kassan kan du betala med MobilePay, kort, Apple Pay eller Google Pay. Prenumerationer kräver kortbetalning."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:142
+#: lib/edenflowers_web/features/marketing/faq_live.ex:151
 #, elixir-autogen, elixir-format
 msgid "Tell me what you have in mind."
 msgstr "Berätta vad du har i tankarna."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:118
+#: lib/edenflowers_web/features/marketing/faq_live.ex:127
 #, elixir-autogen, elixir-format
 msgid "Where and when do you deliver?"
 msgstr "Var och när levererar du?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:150
+#: lib/edenflowers_web/features/marketing/faq_live.ex:159
 #, elixir-autogen, elixir-format
 msgid "Yes, from your account until %{days} days before delivery or pickup, for a full refund."
 msgstr "Ja, från ditt konto fram till %{days} dagar före leverans eller avhämtning, och du får hela beloppet tillbaka."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:142
+#: lib/edenflowers_web/features/marketing/faq_live.ex:151
 #, elixir-autogen, elixir-format
 msgid "Yes."
 msgstr "Ja."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:193
+#: lib/edenflowers_web/features/marketing/faq_live.ex:204
 #, elixir-autogen, elixir-format
 msgid "Yes. I also offer invoice payment for larger orders, such as weddings."
 msgstr "Ja. Jag erbjuder också fakturabetalning för större beställningar, som bröllop."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:114
+#: lib/edenflowers_web/features/marketing/terms_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "You can cancel or change an online order from your account until %{days} days before delivery or pickup, for a full refund."
 msgstr "Du kan avboka eller ändra en webbeställning från ditt konto fram till %{days} dagar före leverans eller avhämtning och få hela beloppet tillbaka."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:140
+#: lib/edenflowers_web/features/marketing/terms_live.ex:137
 #, elixir-autogen, elixir-format
 msgid "You pay for the first bouquet at checkout. After that, your saved card is charged %{days} days before each delivery or pickup."
 msgstr "Du betalar för den första buketten i kassan. Därefter dras betalningen från ditt sparade kort %{days} dagar före varje leverans eller avhämtning."
@@ -8175,17 +8146,17 @@ msgstr "Om dina blommor kommer fram skadade eller vissnar i förtid, %{contact} 
 msgid "let me know"
 msgstr "hör av dig"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:102
+#: lib/edenflowers_web/features/marketing/faq_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Yes, choose pickup at checkout. Pickup is always free."
 msgstr "Ja, välj avhämtning i kassan. Avhämtning är alltid gratis."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:204
+#: lib/edenflowers_web/features/marketing/faq_live.ex:215
 #, elixir-autogen, elixir-format
 msgid "Get in touch well in advance."
 msgstr "Hör av dig i god tid."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:203
+#: lib/edenflowers_web/features/marketing/faq_live.ex:214
 #, elixir-autogen, elixir-format
 msgid "Saturdays in particular fill up quickly, as I can only take on a limited number of weddings each Saturday. Most couples book 9–12 months ahead."
 msgstr "Särskilt lördagar blir snabbt fullbokade, eftersom jag bara kan ta emot ett begränsat antal bröllop per lördag. De flesta par bokar 9–12 månader i förväg."
@@ -8195,7 +8166,68 @@ msgstr "Särskilt lördagar blir snabbt fullbokade, eftersom jag bara kan ta emo
 msgid "All payments on this website are processed by Stripe. Your full card number and security code are not stored on Eden Flowers' servers."
 msgstr "Alla betalningar på den här webbplatsen hanteras av Stripe. Ditt fullständiga kortnummer och din säkerhetskod lagras inte på Eden Flowers servrar."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:162
+#: lib/edenflowers_web/features/marketing/faq_live.ex:171
 #, elixir-autogen, elixir-format
 msgid "A lot depends on the flowers, but typically around 7–10 days."
 msgstr "Det beror mycket på blommorna, men vanligtvis håller de i ungefär 7–10 dagar."
+
+#: lib/edenflowers_web/features/marketing/terms_live.ex:77
+#, elixir-autogen, elixir-format
+msgid "Collect your order during opening hours, unless we've agreed on another time."
+msgstr "Hämta din beställning under öppettiderna, om vi inte har kommit överens om en annan tid."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:182
+#, elixir-autogen, elixir-format
+msgid "I use local and seasonal flowers whenever possible."
+msgstr "Jag använder lokala blommor och säsongens blommor när det är möjligt."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:183
+#: lib/edenflowers_web/features/marketing/terms_live.ex:95
+#, elixir-autogen, elixir-format
+msgid "If a flower is out of season or unavailable, I use something similar of the same value."
+msgstr "Om en blomma inte är i säsong eller inte finns att få tag på, använder jag något liknande av samma värde."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:75
+#, elixir-autogen, elixir-format
+msgid "See the subscription terms"
+msgstr "Se prenumerationsvillkoren"
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:221
+#, elixir-autogen, elixir-format
+msgid "See the wedding terms"
+msgstr "Se bröllopsvillkoren"
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:267
+#, elixir-autogen, elixir-format
+msgid "There are no set delivery times."
+msgstr "Det finns inga fasta leveranstider."
+
+#: lib/edenflowers_web/features/marketing/terms_live.ex:147
+#, elixir-autogen, elixir-format
+msgid "You can pause, cancel or change your subscription from your account. Make changes at least %{close} days before delivery or pickup. Cancelling after that stops future bouquets, but the booked bouquet still comes."
+msgstr "Du kan pausa, avsluta eller ändra din prenumeration från ditt konto. Gör ändringar senast %{close} dagar före leverans eller avhämtning. Om du avslutar prenumerationen efter det stoppas framtida buketter, men den redan bokade buketten kommer ändå."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:264
+#, elixir-autogen, elixir-format
+msgid "Enter an address below to check the exact price."
+msgstr "Fyll i en adress nedan för att se det exakta priset."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:250
+#, elixir-autogen, elixir-format
+msgid "Within %{km} km driving distance of the shop, for %{base} plus %{per_km} per km."
+msgstr "Inom %{km} km körsträcka från butiken, för %{base} plus %{per_km} per km."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:261
+#, elixir-autogen, elixir-format
+msgid "Checkout shows the available delivery and pickup dates for the products you choose. The usual cutoff for same-day orders is midday."
+msgstr "I kassan ser du vilka leverans- och avhämtningsdatum som är möjliga för produkterna du väljer. För leverans samma dag behöver du vanligtvis beställa senast klockan 12."
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:320
+#, elixir-autogen, elixir-format
+msgid "Close all answers"
+msgstr "Stäng alla svar"
+
+#: lib/edenflowers_web/features/marketing/faq_live.ex:319
+#, elixir-autogen, elixir-format
+msgid "Open all answers"
+msgstr "Öppna alla svar"
