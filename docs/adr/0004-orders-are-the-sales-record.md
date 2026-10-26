@@ -11,3 +11,19 @@ Sales reach the shop through Stripe, Zettle, Zervant invoices, MobilePay and cas
 
 - The accountant books sales only from the monthly report, never also from Zettle's or Zervant's own reports.
 - A Zettle sale with no order is missing from the VAT return. Comparing Zettle's own sales total with the Zettle payments recorded on orders would catch a forgotten order; that check is planned for the monthly report but not built yet.
+
+## Amendment: cancellation and filtering, never deletion (TASK-133)
+
+TASK-42's deletion of mistaken Custom Orders is superseded by ordinary cancellation
+and settlement. Placed orders retain their reference, lines, VAT snapshots,
+Payments/refunds/reversals and PaperTrail history. The existing Cinder Still to do
+default excludes cancelled orders; All orders, search and direct links still find
+them. There is no archive action, timestamp, eligibility rule or Archived view.
+Working-list visibility is not financial finality: a cancelled order's late money
+still appears in Overview and the existing settlement controls. Accounting and
+revenue continue reading the same retained sales and actual Payment records.
+
+Course bookings share that ledger and may be accepted before they are paid, with
+payment taken at the course or collected explicitly online. See ADR-0002 and
+[the rollout instructions](../purchase-retention-rollout.md). These choices do not
+approve a privacy-retention period or authorize production data changes.

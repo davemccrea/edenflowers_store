@@ -19,3 +19,11 @@ ADR 0005 still says how each email is queued and sent once.
 
 - A new kind of news is a new email with its own builder, template and scenarios on the admin Emails page.
 - Every action that emails a customer for Jennie takes a message argument as well as `email_customer?`.
+
+TASK-133 keeps paid/unpaid booking confirmation as one email: the news is that
+places are booked, not that payment arrived. A remaining Balance and a receipt
+for actual money are details of that same confirmation. A later payment is
+different news and uses Payment received. Booking/reminder copy may honestly say
+payment is due at the course; no receipt is attached or claimed for money never
+received. This supersedes TASK-120's paid-only confirmation assumption without
+changing the optional-message or queue/retry conventions.

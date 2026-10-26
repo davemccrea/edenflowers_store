@@ -15,12 +15,16 @@ A placed order, or a confirmed course booking, that will not go ahead. When Jenn
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Course booking**:
-A paid place, or group of places, on a course. An unpaid checkout or Invite holds no places; payment confirms the booking, even if the course has filled in the meantime. Until it is paid, the customer can go back and change their checkout's name, email and places. A payment that lands while they do confirms whatever the checkout said at that moment, even if it paid for other places, and leaves the difference as a Balance for Jennie. Once confirmed, customers change or cancel a booking only by asking Jennie.
+A place, or group of places, the shop has committed to provide: confirmed when Jennie accepts a manual booking, or when website checkout is paid. It holds places even while money is owed; customers change or cancel a confirmed booking only by asking Jennie.
 _Avoid_: Hold, reservation, pending booking
 
-**Invite**:
-A Payment Link Jennie sends someone to book places on a course. It holds no places until paid and can be withdrawn while unpaid; a course is only ever paid online, never at the course.
-_Avoid_: Awaiting payment booking, unpaid booking
+**Manual course booking**:
+A Course booking Jennie accepts on a customer's behalf, however the request reached her, including after online booking closes or when the course is full. Payment is due at the course unless already received; confirmation of places does not mean payment was received.
+_Avoid_: Invite, awaiting payment booking
+
+**Course checkout**:
+An unfinished website purchase that holds no places and is not yet a Course booking. The customer may revise the same checkout until payment confirms its current details, with any price difference left as a Balance.
+_Avoid_: Hold, reservation, pending booking
 
 **Online Order**:
 An order a customer places themselves through checkout.
@@ -65,7 +69,7 @@ _Avoid_: Cutoff, lock date
 ### Payment
 
 **Payment Link**:
-A private link Jennie gives a customer so they can pay what an order or course booking still owes online: a custom order not yet paid, an Invite to a course, or a balance left by an edit. It never expires, and asks for nothing once the balance is settled or the order is cancelled.
+A private link Jennie explicitly gives a customer so they can pay what a placed order or confirmed Course booking still owes online. It does not expire with time, and asks for nothing once the Balance is settled or the purchase is cancelled; paying a booking's link does not book its places again.
 _Avoid_: Invoice, payment request, Stripe link
 
 **Payment received**:
@@ -77,7 +81,7 @@ The email Jennie sends by hand to ask for a Balance still owed on an order or bo
 _Avoid_: Bill, dunning, payment request
 
 **Payment**:
-Money that moved for an order or a course booking, by any method: Stripe, the Zettle card reader, MobilePay to Jennie's own number, cash, or a Zervant invoice paid to her bank. Stripe payments are recorded from Stripe; Jennie records every other method herself, wherever it was paid. Course bookings are only paid through Stripe. A refund is a negative Payment, made the same way the money came in. An order or booking can have several.
+Money that moved for an order or Course booking, by Stripe, the Zettle card reader, MobilePay to Jennie's own number, cash, or a Zervant invoice paid to her bank. Stripe reports its own payments and Jennie records the other methods; a refund is a negative Payment, and a purchase can have several, including money arriving after cancellation.
 _Avoid_: Transaction, charge, in-person payment, offline payment, manual payment
 
 **Balance**:
@@ -89,7 +93,7 @@ What a placed order or confirmed course booking is still to be paid for, before 
 _Avoid_: Amount due, outstanding
 
 **Settled**:
-Nothing is owed either way, or everything taken was handed back.
+Nothing is owed either way according to the money recorded now, or everything taken was handed back. This is not a promise that no payment is still processing or could arrive later.
 
 **Refund**:
 Money Jennie hands back on a placed order or confirmed course booking, cancelled or not, once nothing is left to collect, up to what's still held: by card through Stripe, or by recording money she handed back herself. The customer is emailed unless she unticks it, with a message from her if she writes one. What was owed back is an ordinary refund; any more is a Goodwill refund.

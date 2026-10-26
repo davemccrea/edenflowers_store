@@ -151,7 +151,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
         {:ok, %{id: "pi_one_off", client_secret: "pi_one_off_secret"}}
       end)
 
-      expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
+      expect(Edenflowers.External.StripeAPI.Mock, :cancel_payment_intent, fn intent ->
+        {:ok, Map.put(intent, :status, "canceled")}
+      end)
+
       expect(Edenflowers.External.StripeAPI.Mock, :create_customer, fn _params -> {:ok, %{id: "cus_jane"}} end)
 
       expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent_saving_card, fn _amount,

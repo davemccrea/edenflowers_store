@@ -3,13 +3,13 @@ defmodule Edenflowers.Payments do
   Takes Stripe payments for orders and course bookings.
 
   `complete/1` is shared by the Stripe webhook and the reconciliation job, so
-  either may run first or both may run. The completing actions refuse to
-  complete twice, and queue the confirmation email in the same transaction.
+  either may run first or both may run. Unique Stripe IDs prevent recording
+  money twice, and the applicable email is queued in the same transaction.
 
   A PaymentIntent names what it pays for in its metadata, as `order_id` or
-  `course_registration_id`. Completing returns `AlreadyPaid` for a booking
-  already confirmed and `PaymentIntentMismatch` for a PaymentIntent the
-  record no longer holds. See `Edenflowers.Payments.Errors`.
+  `course_registration_id`. Pending checkout commits a purchase; later money on
+  placed/confirmed/cancelled purchases only updates the ledger and Balance.
+  Checkout still checks the attached intent. See `Edenflowers.Payments.Errors`.
   """
   use Ash.Domain,
     otp_app: :edenflowers,
@@ -87,14 +87,14 @@ defmodule Edenflowers.Payments do
   end
 
   defp replace_payment_intent(order, payment_intent, actor) do
-    with {:ok, _cancelled} <- StripeAPI.impl().cancel_payment_intent(payment_intent),
+    with {:ok, %{status: "canceled"}} <- StripeAPI.impl().cancel_payment_intent(payment_intent),
          {:ok, _order} <-
            Orders.mark_payment_cancelled(order, payment_intent.id, actor: system_actor()),
          {:ok, order} <- Orders.get_order_for_checkout(order.id, actor: actor) do
       setup(order, actor)
     else
-      {:error, reason} ->
-        Logger.error("Failed to replace payment intent for #{describe(order)}: #{inspect(reason)}")
+      result ->
+        Logger.error("Failed to replace payment intent for #{describe(order)}: #{inspect(result)}")
         {:error, :payment_intent_replace_failed}
     end
   end

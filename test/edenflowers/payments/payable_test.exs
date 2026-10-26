@@ -360,7 +360,10 @@ defmodule Edenflowers.Payments.PayableTest do
 
       test "recording cancels the open PaymentIntent, which charged the old balance" do
         record = build(@parent) |> Ash.Seed.update!(%{payment_intent_id: "pi_open"}) |> reload()
-        expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_open"} -> {:ok, %{id: "pi_open"}} end)
+
+        expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_open"} ->
+          {:ok, %{id: "pi_open", status: "canceled"}}
+        end)
 
         assert {:ok, record} = record_payment(record, "30.00")
         assert record.payment_intent_id == nil

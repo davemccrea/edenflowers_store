@@ -171,7 +171,10 @@ defmodule Edenflowers.PaymentsTest do
       guest_intent = %{id: order.payment_intent_id, client_secret: "guest_secret", customer: nil}
 
       expect(StripeAPI.Mock, :retrieve_payment_intent, fn ^order -> {:ok, guest_intent} end)
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^guest_intent -> {:ok, guest_intent} end)
+
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^guest_intent ->
+        {:ok, Map.put(guest_intent, :status, "canceled")}
+      end)
 
       expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, "cus_john" ->
         {:ok, %{id: "pi_john", client_secret: "pi_john_secret", amount: 0}}
@@ -185,13 +188,30 @@ defmodule Edenflowers.PaymentsTest do
       johns_intent = %{id: order.payment_intent_id, client_secret: "john_secret", customer: "cus_john"}
 
       expect(StripeAPI.Mock, :retrieve_payment_intent, fn ^order -> {:ok, johns_intent} end)
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^johns_intent -> {:ok, johns_intent} end)
+
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^johns_intent ->
+        {:ok, Map.put(johns_intent, :status, "canceled")}
+      end)
 
       expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, nil ->
         {:ok, %{id: "pi_guest", client_secret: "pi_guest_secret", amount: 0}}
       end)
 
       assert {:ok, _order, "pi_guest_secret"} = Payments.setup(order, nil)
+    end
+
+    test "does not forget or replace an intent still processing after cancellation", %{order: order} do
+      order = Orders.get_order_for_checkout!(order.id, actor: nil)
+      intent = %{id: order.payment_intent_id, client_secret: "old_secret", customer: "cus_signed_out"}
+
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn ^order -> {:ok, intent} end)
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^intent -> {:ok, Map.put(intent, :status, "processing")} end)
+
+      capture_log(fn ->
+        assert {:error, :payment_intent_replace_failed} = Payments.setup(order, nil)
+      end)
+
+      assert Ash.reload!(order, authorize?: false).payment_intent_id == intent.id
     end
 
     test "forgets a Customer deleted in Stripe and takes the payment without it", %{order: order} do
@@ -245,7 +265,10 @@ defmodule Edenflowers.PaymentsTest do
       order_id = order.id
 
       expect(StripeAPI.Mock, :retrieve_payment_intent, fn ^order -> {:ok, old_intent} end)
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^old_intent -> {:ok, %{id: old_intent.id}} end)
+
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^old_intent ->
+        {:ok, %{id: old_intent.id, status: "canceled"}}
+      end)
 
       expect(StripeAPI.Mock, :create_customer, fn %{email: "john.smith@example.com", name: "John Smith"} ->
         {:ok, %{id: "cus_subscription"}}
@@ -272,7 +295,10 @@ defmodule Edenflowers.PaymentsTest do
       order_id = order.id
 
       expect(StripeAPI.Mock, :retrieve_payment_intent, fn ^order -> {:ok, old_intent} end)
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^old_intent -> {:ok, %{id: old_intent.id}} end)
+
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn ^old_intent ->
+        {:ok, %{id: old_intent.id, status: "canceled"}}
+      end)
 
       expect(StripeAPI.Mock, :create_payment_intent, fn _amount, %{"order_id" => ^order_id}, _customer ->
         {:ok, %{id: "pi_one_off", client_secret: "one_off_secret", amount: 0}}

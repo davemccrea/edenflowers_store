@@ -180,6 +180,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
   end
 
   calculations do
+    calculate :receipt_available?, :boolean, expr(status == :confirmed and amount_paid > 0) do
+      description "Whether the customer can download a receipt for actual money recorded on this booking."
+    end
+
     calculate :first_name, :string, {AccountCalculations.FirstName, source: :name} do
       description "A best guess at the first name from the name typed at checkout, for greeting in emails."
     end

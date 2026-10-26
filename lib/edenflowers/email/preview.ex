@@ -155,7 +155,7 @@ defmodule Edenflowers.Email.Preview do
   defp booking_load(kind) when kind in [:cancelled, :refunded],
     do: [:course, :first_name, :payments, :paid_through_stripe]
 
-  defp booking_load(_kind), do: [:course, :first_name, :amount_paid, :balance, :payment_link_open?]
+  defp booking_load(_kind), do: [:course, :first_name, :amount_paid, :balance, :payments, :payment_link_open?]
 
   defp booking_email(:confirmation, registration, inputs) do
     email = Email.course_confirmation(registration, inputs[:message])

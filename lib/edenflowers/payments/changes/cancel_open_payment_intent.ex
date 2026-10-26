@@ -20,8 +20,12 @@ defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
     Ash.Changeset.after_transaction(changeset, fn
       _changeset, {:ok, record} ->
         case StripeAPI.impl().cancel_payment_intent(%{id: payment_intent_id}) do
-          {:ok, _cancelled} ->
+          {:ok, %{status: "canceled"}} ->
             clear_cancelled(record, payment_intent_id)
+
+          {:ok, _nonterminal} ->
+            Logger.warning("PaymentIntent #{payment_intent_id} is not cancelled; retaining its reference")
+            {:ok, record}
 
           {:error, reason} ->
             Logger.warning("Could not cancel PaymentIntent #{payment_intent_id}: #{inspect(reason)}")
