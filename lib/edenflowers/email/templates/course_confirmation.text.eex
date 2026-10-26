@@ -3,9 +3,10 @@
 <%= ngettext("Thank you for booking. Your place on %{course} is confirmed.", "Thank you for booking. Your %{count} places on %{course} are confirmed.", @registration.seats, course: @registration.course.name) %>
 
 <%= message(@message) %><%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
-<%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
+<%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %><%= if Decimal.positive?(@registration.amount_paid) do %>
 
-<%= if Decimal.positive?(@registration.amount_paid) do %><%= gettext("Your receipt is attached.") %><% end %><%= if Decimal.positive?(@registration.balance) do %>
+<%= gettext("Your receipt is attached.") %><% end %><%= if Decimal.positive?(@registration.balance) do %>
+
 <%= gettext("Still to pay: %{amount}. Please pay at the course.", amount: @format_currency.(@registration.balance)) %><% end %>
 
 <%= gettext("To cancel, reply to this email.") %> <%= Edenflowers.Courses.Course.cancellation_terms(@registration.course) %>

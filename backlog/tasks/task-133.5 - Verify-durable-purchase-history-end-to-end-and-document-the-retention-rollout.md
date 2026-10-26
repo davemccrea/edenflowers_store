@@ -6,7 +6,7 @@ title: >-
 status: done
 assignee: []
 created_date: '2026-10-25 22:24'
-updated_date: '2026-10-26 07:37'
+updated_date: '2026-10-26 08:25'
 labels: []
 dependencies:
   - TASK-133.3
@@ -78,6 +78,15 @@ created: 2026-10-26 04:46
 ---
 
 Integration scope now follows the confirmed manual pay-at-course model and existing Cinder filters. Old acceptance of an Archive feature and retained Invite-withdrawal workflow is superseded; do not implement those from historical comments.
+
+---
+
+author: @claude
+created: 2026-10-26 08:25
+
+---
+
+Follow-up from user testing: removed conditional-section blank-line leakage in course confirmation/reminder templates. Added a regression over every affected preview scenario in sv-FI, fi and en-GB; confirmed it failed before the fix and passes afterward. Reran mix print_emails sv fi en and reviewed paid/unpaid/part-paid/reminder spacing in all languages. mix precommit passes with 1,666 tests. Wording/payment behaviour unchanged; worktree and testing server retained at user request.
 
 ---
 <!-- COMMENTS:END -->
