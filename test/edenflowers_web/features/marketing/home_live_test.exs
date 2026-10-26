@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     {:ok, view, _html} = live(conn, ~p"/en")
 
     assert has_element?(view, "#subscription", "Florist's choice")
-    assert has_element?(view, ~s(nav a[href="#subscription"]))
+    refute has_element?(view, ~s(nav[aria-label="What are the flowers for?"]))
   end
 
   test "English visitors get a translation beneath each quote; others see the original alone", %{conn: conn} do
