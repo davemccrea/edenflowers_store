@@ -19,7 +19,7 @@ A place, or group of places, the shop has committed to provide: confirmed when J
 _Avoid_: Hold, reservation, pending booking
 
 **Manual course booking**:
-A Course booking Jennie accepts on a customer's behalf, however the request reached her, including after online booking closes or when the course is full. Payment is due at the course unless already received; confirmation of places does not mean payment was received.
+A Course booking Jennie accepts on a customer's behalf, however the request reached her, including after online booking closes or when the course is full. Like a Custom Order, it can be paid through a Payment Link, by an invoice Jennie handles separately, or in person at the course. Confirmation of places does not mean payment was received.
 _Avoid_: Invite, awaiting payment booking
 
 **Course checkout**:

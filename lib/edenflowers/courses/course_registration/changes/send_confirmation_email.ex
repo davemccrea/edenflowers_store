@@ -33,6 +33,11 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
     now = DateTime.utc_now()
     changeset = Ash.Changeset.force_change_attribute(changeset, :confirmation_emailed_at, now)
 
+    changeset =
+      if registration.payment_link_open? and registration.payment_terms != :invoice,
+        do: Ash.Changeset.force_change_attribute(changeset, :payment_link_emailed_at, now),
+        else: changeset
+
     if Decimal.positive?(registration.amount_paid),
       do: Ash.Changeset.force_change_attribute(changeset, :receipt_emailed_at, now),
       else: changeset
@@ -63,7 +68,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
 
   defp load_for_send(registration) do
     registration
-    |> Ash.load!([:course, :payments, :first_name, :amount_paid, :balance], actor: system_actor())
+    |> Ash.load!([:course, :payments, :first_name, :amount_paid, :balance, :payment_link_open?], actor: system_actor())
     |> translate_course()
   end
 

@@ -160,6 +160,7 @@ defmodule EdenflowersWeb.Router do
       live "/courses/new", EdenflowersWeb.Admin.CourseFormLive
       live "/courses/:id", EdenflowersWeb.Admin.CourseDetailLive
       live "/courses/:id/edit", EdenflowersWeb.Admin.CourseFormLive
+      live "/courses/:id/bookings/new", EdenflowersWeb.Admin.CourseBookingFormLive
       live "/products", EdenflowersWeb.Admin.ProductsLive
       live "/products/new", EdenflowersWeb.Admin.ProductFormLive
       live "/products/:id", EdenflowersWeb.Admin.ProductFormLive

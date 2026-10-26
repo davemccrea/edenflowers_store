@@ -539,6 +539,8 @@ defmodule Edenflowers.Email do
   defp course_assigns(registration, message) do
     %{
       registration: registration,
+      payment_link_url:
+        if(is_binary(registration.payment_link_token), do: EdenflowersWeb.PaymentLink.url_for(registration)),
       message: message,
       format_date: &Format.weekday_date(&1, registration.locale),
       format_time: &Format.time(&1, registration.locale),

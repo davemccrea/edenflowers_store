@@ -288,7 +288,8 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       registration = generate(course_registration(user_id: user.id, status: :confirmed))
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "li", "Still to pay: €85.00. Please pay at the course.")
+      assert has_element?(view, "li", "Amount to pay: €85.00.")
+      assert has_element?(view, "li", "Pay at the course")
       refute has_element?(view, ~s|a[href="/courses/bookings/#{registration.id}/receipt"]|)
       assert conn |> get(~p"/courses/bookings/#{registration.id}/receipt") |> response(404)
     end
@@ -298,6 +299,29 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       registration = generate(course_registration(user_id: user.id, status: :pending))
 
       assert conn |> get(~p"/courses/bookings/#{registration.id}/receipt") |> response(404)
+    end
+
+    test "invoice bookings do not ask the customer to pay at the course", %{conn: conn, user: user} do
+      generate(course_registration(user_id: user.id, status: :confirmed, payment_terms: :invoice))
+      {:ok, view, _html} = live(conn, ~p"/account")
+      assert has_element?(view, "li", "Pay by invoice")
+      refute has_element?(view, "li", "Pay at the course")
+    end
+
+    test "a booking with an open payment link can be paid from the account", %{conn: conn, user: user} do
+      booking =
+        generate(
+          course_registration(
+            user_id: user.id,
+            status: :confirmed,
+            payment_terms: :payment_link,
+            payment_link_token: "account-link"
+          )
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+      assert has_element?(view, ~s|a[href="/pay/courses/#{booking.payment_link_token}"]|, "Pay now")
+      refute has_element?(view, "li", "Pay at the course")
     end
 
     test "does not list a booking that hasn't been paid for", %{conn: conn, user: user} do

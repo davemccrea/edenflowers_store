@@ -1,95 +1,13 @@
 defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   @moduledoc """
-  The course page's drawers for adding a booking and for settling one's balance.
+  The course page's drawer for collecting a booking's balance or refunding it.
   """
   use EdenflowersWeb, :html
 
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.Drawers
 
-  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
-
-  attr :form, :any, required: true
-  attr :course, :map, required: true
-  attr :locale, :string, required: true
-  attr :preview, Swoosh.Email, default: nil
-
-  def booking_drawer(assigns) do
-    ~H"""
-    <.admin_drawer id="booking-drawer" title={~t"Add booking"} on_close={JS.push("close_booking")}>
-      <.form
-        :if={@form}
-        for={@form}
-        id={"booking-form-#{@course.id}"}
-        phx-change="validate_booking"
-        phx-submit="save_booking"
-        class="flex min-h-0 flex-1 flex-col"
-      >
-        <.drawer_body>
-          <p class="text-base-content/75 text-sm">
-            {@course.name} · {Format.date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}
-          </p>
-          <div class="space-y-4">
-            <.input field={@form[:name]} type="text" label={~t"Name"} class="input w-full" />
-            <.input field={@form[:email]} type="email" label={~t"Email"} class="input w-full" />
-            <div class="grid grid-cols-2 gap-x-3 gap-y-4">
-              <.input
-                field={@form[:seats]}
-                type="number"
-                label={~t"Seats"}
-                min="1"
-                max={CourseRegistration.max_seats()}
-                class="input w-full"
-              />
-              <.input
-                field={@form[:locale]}
-                type="select"
-                label={~t"Language"}
-                options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
-                class="select w-full"
-              />
-            </div>
-            <.input
-              field={@form[:payment_method]}
-              type="select"
-              label={~t"Payment"}
-              prompt={~t"Pay at the course"}
-              options={payment_method_options()}
-              class="select w-full"
-            />
-            <.input
-              :if={@form[:payment_method].value not in [nil, ""]}
-              field={@form[:amount]}
-              type="text"
-              inputmode="decimal"
-              label={~t"Amount received (€)"}
-              class="input w-full tabular-nums"
-            />
-            <.customer_email
-              id="booking-email"
-              send={@form[:email_customer?]}
-              label={~t"Email booking confirmation to the customer"}
-              message={@form[:message]}
-              preview={@preview}
-              in_swedish={@form[:locale].value != "sv-FI" && @form[:in_swedish]}
-            />
-          </div>
-        </.drawer_body>
-        <.drawer_footer>
-          <.button type="submit" variant="primary">{~t"Add booking"}</.button>
-          <.button
-            type="button"
-            phx-click={JS.exec("phx-hide", to: "#booking-drawer") |> JS.push("close_booking")}
-            variant="ghost"
-          >
-            {~t"Cancel"}
-          </.button>
-        </.drawer_footer>
-      </.form>
-    </.admin_drawer>
-    """
-  end
 
   attr :course, :map, required: true
   attr :registration, :any, required: true, doc: "the booking being settled, or nil"
@@ -122,16 +40,23 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           registration={@registration}
           locale={@locale}
         />
-        <.record_payment_form
+        <section
           :if={@mode == :settle and @registration.to_collect?}
-          id={"payment-#{@registration.id}"}
-          record={@registration}
-          locale={@locale}
-          params={Map.get(@payment_params, @registration.id, %{})}
-          receipt_email?={true}
-          swedish_toggle?={@registration.locale != "sv-FI"}
-          preview={@preview}
-        />
+          aria-labelledby="record-payment-heading"
+          class="border-base-content/12 space-y-3 border-t pt-5"
+        >
+          <h3 id="record-payment-heading" class="text-base font-semibold">{~t"Record payment"}</h3>
+          <p class="text-base-content/75 text-sm">{~t"For money you’ve already received."}</p>
+          <.record_payment_form
+            id={"payment-#{@registration.id}"}
+            record={@registration}
+            locale={@locale}
+            params={Map.get(@payment_params, @registration.id, %{})}
+            receipt_email?={true}
+            swedish_toggle?={@registration.locale != "sv-FI"}
+            preview={@preview}
+          />
+        </section>
         <p :if={nothing_to_settle?(@registration, @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this booking."}
         </p>
@@ -168,13 +93,13 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
       </p>
     </div>
     <dl class="divide-base-content/12 border-base-content/12 divide-y border-y text-sm tabular-nums">
-      <div class="flex justify-between gap-4 py-2">
-        <dt class="text-base-content/75">{~t"Paid"}</dt>
-        <dd>{Format.currency(@registration.amount_paid, @locale)}</dd>
+      <div :if={@registration.to_collect?} class="flex items-baseline justify-between gap-4 py-3">
+        <dt class="font-medium">{~t"Amount due"}</dt>
+        <dd class="text-lg font-semibold">{Format.currency(@registration.balance, @locale)}</dd>
       </div>
-      <div :if={@registration.to_collect?} class="flex justify-between gap-4 py-2">
-        <dt class="text-base-content/75">{~t"To collect"}</dt>
-        <dd class="font-semibold">{Format.currency(@registration.balance, @locale)}</dd>
+      <div class="flex justify-between gap-4 py-2">
+        <dt class="text-base-content/75">{~t"Already paid"}</dt>
+        <dd>{Format.currency(@registration.amount_paid, @locale)}</dd>
       </div>
       <div
         :if={@registration.status == :cancelled and Decimal.positive?(@registration.kept_amount)}
@@ -209,8 +134,9 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
     assigns = assign(assigns, :emailed?, payment_link_emailed?(assigns.registration))
 
     ~H"""
-    <section class="space-y-3">
-      <h3 class="eyebrow text-base-content/75">{~t"Payment link"}</h3>
+    <section aria-labelledby="payment-link-heading" class="space-y-3">
+      <h3 id="payment-link-heading" class="text-base font-semibold">{~t"Payment link"}</h3>
+      <p class="text-base-content/75 text-sm">{~t"Let the customer pay online."}</p>
       <div :if={@registration.payment_link_open?} class="flex gap-2">
         <input
           id={"payment-link-url-#{@registration.id}"}
@@ -235,7 +161,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           phx-click="open_email"
           phx-value-kind={if @registration.payment_reminder?, do: "payment_reminder", else: "payment_link"}
           phx-value-id={@registration.id}
-          variant="primary"
+          variant="secondary"
           size="sm"
         >
           <.icon name="hero-envelope" class="h-4 w-4" />

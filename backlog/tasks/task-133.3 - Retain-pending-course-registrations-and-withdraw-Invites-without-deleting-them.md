@@ -4,7 +4,7 @@ title: Replace course Invites with confirmed manual bookings payable at the cour
 status: done
 assignee: []
 created_date: '2026-10-25 22:24'
-updated_date: '2026-10-26 05:27'
+updated_date: '2026-10-26 09:43'
 labels: []
 dependencies:
   - TASK-133.2
@@ -67,6 +67,8 @@ First test the three commitment points: pending website checkout, confirmed unpa
 
 <!-- SECTION:NOTES:BEGIN -->
 Manual entry confirms immediately and records optional real initial money through shared record_payment; default creates no Payment/link. Added generic offline settlement/receipt preview to course drawer. Admin-only capacity/cutoff exception leaves website checks intact. Removed Invite UI/relationship/template and all registration destroy/purge paths. Confirmation attachments/stamps reflect actual money, reminder states Balance, previews and sv/fi/en translations updated without fuzzy flags. Reviewed mix print_emails sv fi en paid/unpaid/part-paid/reminder renders. Added real-action/UI tests including payment validation rollback, initial/later money, unchanged commitment, never-paid cancellation, honest overcapacity and retained hidden checkouts. Purge-retirement migration cancels only obsolete jobs; docs/purchase-retention-rollout.md requires stopped old workers and explicit legacy-Invite classification before rollout. mix precommit passed. No production operation or browser visual check.
+
+Follow-up agreed with David: move Add booking to its own admin page, show course name/date/time/venue, and match Custom Order choices exactly: Payment link, Invoice, In person. Default remains in person; explicitly choosing Payment link creates the link and includes it in the optional confirmation, without recording money. Invoicing is handled elsewhere; actual payments use the separate settlement action. Persist payment terms with an additive migration; previews, confirmations, attendance reminders and account instructions follow those terms. Use neutral Att betala rather than Kvar att betala. Settlement drawer now separates Payment link and Record payment with sans-serif headings. Full suite: 1,676 tests passed; Credo, formatting, gettext and Ash codegen checks passed. Rendered and reviewed booking emails in sv/fi/en. No browser visual check or production operation.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
@@ -87,6 +89,15 @@ created: 2026-10-26 04:46
 ---
 
 Supersedes the prior retained-Invite/withdrawal design. User confirmed removing Invites, confirming Jennie-entered unpaid bookings immediately with places, allowing manual cutoff/capacity exceptions, default pay-at-course, optional explicit link collection, optional booking confirmation without unpaid receipt, and ordinary day-before reminders.
+
+---
+
+author: @claude
+created: 2026-10-26 09:43
+
+---
+
+This follow-up supersedes the earlier entry-form wording: payment links remain explicit, but may now be selected at booking creation and included in the optional confirmation. The page offers only Payment link, Invoice and In person; recording actual money is a separate UI action.
 
 ---
 <!-- COMMENTS:END -->

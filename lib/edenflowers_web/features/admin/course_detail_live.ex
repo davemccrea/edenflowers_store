@@ -12,8 +12,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   import EdenflowersWeb.Admin.CourseBookingDrawers
 
   alias Edenflowers.Courses
-  alias Edenflowers.Courses.CourseRegistration
-  alias Edenflowers.Email.Preview
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Translations
@@ -35,7 +33,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          socket
          |> assign(:page_title, socket.assigns.course.name)
          |> assign(:locale, Localize.get_locale())
-         |> assign(booking_form: nil, refund_params: %{}, payment_params: %{})
+         |> assign(refund_params: %{}, payment_params: %{})
          |> assign(settling_id: nil, settlement_mode: :settle, settlement_error: nil)
          |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
          |> assign(email_form: nil, email_kind: nil, emailing_id: nil, preview: nil)}
@@ -88,7 +86,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               <.icon name="hero-pencil-square" class="h-4 w-4" />
               {~t"Edit course"}
             </.button>
-            <.button type="button" phx-click="new_booking" variant="primary" size="sm">
+            <.button navigate={~p"/admin/courses/#{@course.id}/bookings/new"} variant="primary" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" />
               {~t"Add booking"}
             </.button>
@@ -158,12 +156,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           </details>
         </section>
       </.admin_page>
-      <.booking_drawer
-        form={@booking_form}
-        course={@course}
-        locale={@locale}
-        preview={@booking_form && booking_preview(@booking_form, @course)}
-      />
       <.cancel_drawer
         title={~t"Cancel booking"}
         submit_label={~t"Cancel booking"}
@@ -196,53 +188,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   @impl true
-  def handle_event("new_booking", _params, socket) do
-    course_id = socket.assigns.course.id
-
-    form =
-      AshPhoenix.Form.for_create(CourseRegistration, :add_manually,
-        actor: socket.assigns.current_user,
-        params: %{"email_customer?" => "true"},
-        transform_params: fn _form, params, _action ->
-          params =
-            if params["payment_method"] in [nil, ""],
-              do: Map.delete(params, "amount"),
-              else: Map.update(params, "amount", nil, &(&1 && String.replace(&1, ",", ".")))
-
-          Map.put(params, "course_id", course_id)
-        end
-      )
-      |> to_form()
-
-    {:noreply,
-     socket
-     |> assign(:booking_form, form)
-     |> push_event("js-exec", %{to: "#booking-drawer", attr: "phx-show"})}
-  end
-
-  def handle_event("close_booking", _params, socket) do
-    {:noreply, assign(socket, :booking_form, nil)}
-  end
-
-  def handle_event("validate_booking", %{"form" => params}, socket) do
-    {:noreply, assign(socket, :booking_form, AshPhoenix.Form.validate(socket.assigns.booking_form, params))}
-  end
-
-  def handle_event("save_booking", %{"form" => params}, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.booking_form, params: params) do
-      {:ok, _registration} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, ~t"Booking added.")
-         |> assign(:booking_form, nil)
-         |> push_event("js-exec", %{to: "#booking-drawer", attr: "phx-hide"})
-         |> reload_course()}
-
-      {:error, form} ->
-        {:noreply, assign(socket, :booking_form, form)}
-    end
-  end
-
   def handle_event("open_settlement", %{"id" => id} = params, socket) do
     registration = booking(socket.assigns.course, id)
 
@@ -445,13 +390,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       {:error, error} ->
         Logger.error("Confirmation for course registration #{registration.id} not emailed: #{inspect(error)}")
         {:error, ~t"Could not email the confirmation."}
-    end
-  end
-
-  defp booking_preview(form, course) do
-    if form[:email_customer?].value in [true, "true"] and form[:email].value not in [nil, ""] do
-      locale = if form[:in_swedish].value == "true", do: "sv-FI"
-      Preview.build_entered_booking(form.source.source, course, %{message: form[:message].value}, locale)
     end
   end
 
