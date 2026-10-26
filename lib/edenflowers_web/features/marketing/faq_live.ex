@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
       alternates={@alternates}
     >
       <.container>
-        <h1 class="page-title mb-16 md:mb-20">
+        <h1 class="font-sans mb-16 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl md:mb-20">
           {~t"Frequently Asked Questions"}
         </h1>
 
@@ -48,6 +48,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           <%!-- Phones get no index: closed, the page is under three screens and its headings do the job. --%>
           <SectionIndex.section_index
             id="faq-nav"
+            font="sans"
             sections={Enum.map(@sections, fn {id, title, _questions} -> {id, title} end)}
           />
 
@@ -59,7 +60,9 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
                 class="scroll-mt-8"
                 id={id}
               >
-                <h2 id={"#{id}-faq-heading"} class="section-title mb-6">{title}</h2>
+                <h2 id={"#{id}-faq-heading"} class="font-sans mb-6 text-xl font-semibold leading-snug md:text-2xl">
+                  {title}
+                </h2>
                 <div class="max-w-3xl">
                   <.faq_item
                     :for={{{question, answer}, index} <- Enum.with_index(questions)}
@@ -80,7 +83,9 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
                 aria-labelledby="ask-heading"
                 class="bg-cream text-cream-content flex max-w-3xl flex-col items-start gap-6 px-6 py-10 sm:px-10"
               >
-                <h2 id="ask-heading" class="section-title text-balance">{~t"Didn't find your answer?"}</h2>
+                <h2 id="ask-heading" class="font-sans text-balance text-xl font-semibold leading-snug md:text-2xl">
+                  {~t"Didn't find your answer?"}
+                </h2>
                 <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
                   <.button href={contact_path()} variant="primary">{~t"Send me a message"}</.button>
                   <a href={"tel:#{Business.phone()}"} class="link-underline-static-body whitespace-nowrap">
@@ -322,7 +327,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
       <summary class="collapse-title font-sans text-balance pr-10 pl-0 text-base font-medium leading-snug group-open:min-h-0 group-open:pb-2">
         {@question}
       </summary>
-      <div class="collapse-content font-sans text-base-content/80 max-w-[60ch] space-y-3 px-0 text-base font-normal leading-relaxed">
+      <div class="collapse-content font-sans text-base-content max-w-[60ch] space-y-3 px-0 text-base font-normal leading-relaxed">
         <.answer_block :for={block <- @answer} block={block} delivery_quote={@delivery_quote} />
       </div>
     </details>

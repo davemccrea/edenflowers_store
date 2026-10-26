@@ -9,6 +9,21 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
   setup :verify_on_exit!
 
+  test "uses the reference-page typography without an update notice", %{conn: conn} do
+    for path <- ["/en/faq", "/sv/vanliga-fragor", "/fi/ukk"] do
+      {:ok, view, _html} = live(conn, path)
+
+      assert has_element?(view, "#main-content h1.font-sans.font-semibold")
+      assert has_element?(view, "#faq-nav .category-index__name.font-sans.text-sm")
+      assert has_element?(view, "#faq-questions section > h2.font-sans.font-semibold")
+      assert has_element?(view, "#ask-heading.font-sans.font-semibold")
+      assert has_element?(view, "#faq-questions .collapse-content.text-base-content.font-normal.leading-relaxed")
+      refute has_element?(view, "#main-content .page-title, #main-content .section-title, #faq-nav .font-serif")
+      refute has_element?(view, "#faq-questions .collapse-content[class*=\"text-base-content/80\"]")
+      refute has_element?(view, "#notice-updated")
+    end
+  end
+
   test "answers expand individually without a toggle-all button in every storefront language", %{conn: conn} do
     for path <- ["/en/faq", "/sv/vanliga-fragor", "/fi/ukk"] do
       {:ok, view, _html} = live(conn, path)

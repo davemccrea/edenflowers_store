@@ -41,9 +41,13 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
       alternates={@alternates}
     >
       <.container>
-        <h1 class="font-sans mb-16 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl md:mb-20">
+        <h1 class="font-sans mb-8 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl md:mb-10">
           {~t"Terms of sale"}
         </h1>
+
+        <p id="notice-updated" class="font-sans text-base-content/80 mb-16 max-w-3xl text-base leading-relaxed md:mb-20">
+          {~t"Updated 26 October 2026."}
+        </p>
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
           <SectionIndex.section_index id="terms-nav" sections={@sections} font="sans" />

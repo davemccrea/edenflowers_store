@@ -6,6 +6,12 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
 
   alias Edenflowers.Orders.Subscription
 
+  test "shows the last-updated date beneath the title", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/terms")
+
+    assert has_element?(view, "#main-content h1 + #notice-updated", "Updated 26 October 2026.")
+  end
+
   test "reads the delivery distance and cancellation deadline live", %{conn: conn} do
     generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :dynamic, max_dist_km: 17))
     days = Subscription.change_deadline_days()
@@ -43,7 +49,7 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     end
   end
 
-  test "uses formal sans-serif headings without changing the FAQ's typography", %{conn: conn} do
+  test "shares the FAQ's formal sans-serif typography and navigation", %{conn: conn} do
     {:ok, _faq, faq_html} = live(conn, ~p"/en/faq")
     {:ok, view, terms_html} = live(conn, ~p"/en/terms")
 
@@ -57,7 +63,7 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     assert has_element?(view, "#main-content h1.font-sans.font-semibold")
     assert has_element?(view, "#payment > h2.font-sans.font-semibold.mb-6")
     refute has_element?(view, "#main-content .page-title, #main-content .section-title, #terms-nav .font-serif")
-    assert LazyHTML.query(LazyHTML.from_document(faq_html), "#faq-nav .category-index__name.font-serif") != []
+    assert LazyHTML.query(LazyHTML.from_document(faq_html), "#faq-nav .category-index__name.font-sans.text-sm") != []
     assert has_element?(view, "#payment > div.text-base-content.text-base.font-normal.leading-relaxed")
     refute has_element?(view, "#main-content section > div[class*=\"text-base-content/80\"]")
     assert has_element?(view, "#checkout-payments > h3.font-sans.text-base.font-medium")
