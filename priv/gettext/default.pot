@@ -1772,8 +1772,8 @@ msgstr ""
 msgid "Places"
 msgstr ""
 
-#: lib/edenflowers/email/templates/course_confirmation.text.eex:13
-#: lib/edenflowers/email/templates/course_reminder.text.eex:11
+#: lib/edenflowers/email/templates/course_confirmation.text.eex:14
+#: lib/edenflowers/email/templates/course_reminder.text.eex:10
 #, elixir-autogen, elixir-format
 msgid "See you there,"
 msgstr ""
@@ -7202,7 +7202,7 @@ msgstr ""
 msgid "To cancel, reply to your confirmation email."
 msgstr ""
 
-#: lib/edenflowers/email/templates/course_confirmation.text.eex:11
+#: lib/edenflowers/email/templates/course_confirmation.text.eex:12
 #, elixir-autogen, elixir-format
 msgid "To cancel, reply to this email."
 msgstr ""
@@ -8029,7 +8029,7 @@ msgstr ""
 msgid "Pay at the course"
 msgstr ""
 
-#: lib/edenflowers/email/templates/course_confirmation.text.eex:9
+#: lib/edenflowers/email/templates/course_confirmation.text.eex:10
 #: lib/edenflowers/email/templates/course_reminder.text.eex:8
 #: lib/edenflowers_web/features/account/account_live.ex:443
 #, elixir-autogen, elixir-format

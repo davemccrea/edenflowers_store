@@ -3,10 +3,9 @@
 <%= gettext("A reminder that %{course} is tomorrow.", course: @registration.course.name) %>
 
 <%= gettext("When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
-<%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %>
-<%= if Decimal.positive?(@registration.balance) do %>
-<%= gettext("Still to pay: %{amount}. Please pay at the course.", amount: @format_currency.(@registration.balance)) %>
-<% end %>
+<%= gettext("Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %><%= if Decimal.positive?(@registration.balance) do %>
+
+<%= gettext("Still to pay: %{amount}. Please pay at the course.", amount: @format_currency.(@registration.balance)) %><% end %>
 
 <%= gettext("See you there,") %>
 
