@@ -4,7 +4,7 @@ title: Publish terms of sale
 status: done
 assignee: []
 created_date: '2026-10-24 19:27'
-updated_date: '2026-10-26 19:14'
+updated_date: '2026-10-26 19:15'
 labels:
   - spec
   - customers
@@ -66,4 +66,6 @@ Page at TermsLive with seven sections; delivery max_dist_km and change_deadline_
 Validation: compile with warnings as errors, Ash codegen check, unused-dependency check, formatting, strict Credo, Gettext freshness and all 1,702 tests pass. Desktop and mobile browser checks cover the delivery checker and shared section navigation. Full mix precommit is blocked at its existing critical dependency-audit gate by hackney 4.8.7 (EEF-CVE-2026-115693); dependency updates are outside this copy/UI change.
 
 Requested presentation follow-up: use restrained sans-serif page/section headings and sidebar links for Terms, with normal body-text colour rather than 80% opacity. SectionIndex has an opt-in sans variant; FAQ keeps its existing serif style. No terms wording or last-updated date changed. Verification: 55 focused privacy/terms/localized-page/FAQ tests passed, targeted format check, Tailwind build and git diff --check passed.
+
+Added Updated 26 October 2026 beneath the Terms title, matching the Privacy notice wording, muted date styling and spacing. The date is fixed to this substantive terms revision rather than computed at runtime. Added a date-placement regression test. Verification: focused Terms/Privacy tests and git diff --check passed; formatting applied. No translations generated.
 <!-- SECTION:NOTES:END -->

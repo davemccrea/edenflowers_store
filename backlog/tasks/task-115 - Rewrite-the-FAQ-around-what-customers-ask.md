@@ -4,7 +4,7 @@ title: Rewrite the FAQ around what customers ask
 status: done
 assignee: []
 created_date: '2026-10-24 19:27'
-updated_date: '2026-10-26 16:10'
+updated_date: '2026-10-26 19:16'
 labels:
   - spec
   - customers
@@ -75,4 +75,6 @@ Answers are blocks (paragraphs, lists, links) and one list feeds both the page a
 2026-10-26 customer copy review supersedes the earlier card-limit, lifespan and reporting-window details: cards are added at checkout without character counts; flowers typically last 7–10 days depending on the flowers; quality issues should be reported as soon as possible with a photo. Added an address-based delivery-cost checker using checkout pricing, activated by Check or Enter, with an accessible unlabelled field, green price and no duplicate free-delivery result. Preserve native accordion state and focus outlines during updates. Availability depends on products and checkout dates; midday is the usual same-day cutoff. Pickup is always free; subscription answers no longer repeat delivery pricing. Wedding copy explains limited Saturday capacity and typical 9–12-month advance booking. Removed the course-inclusions question and wedding information link; contact invitations go to the Contact page. All three languages updated.
 
 Validation: compile with warnings as errors, Ash codegen check, unused-dependency check, formatting, strict Credo, Gettext freshness and all 1,702 tests pass. Desktop and mobile browser checks cover the delivery checker and shared section navigation. Full mix precommit is blocked at its existing critical dependency-audit gate by hackney 4.8.7 (EEF-CVE-2026-115693); dependency updates are outside this copy/UI change.
+
+User-approved visual follow-up: FAQ now matches Terms/Privacy with restrained sans-serif page, section and contact-prompt headings, sans-serif sidebar links and normal answer-text colour instead of 80% opacity. No update date added. Copy, accordion behaviour and FAQ structured data remain unchanged. Added typography/date-absence assertions for all three language routes and aligned the Terms navigation test. Verification: 57 focused FAQ/Terms/Privacy/localized-page tests passed, Tailwind build and git diff --check passed; formatting applied.
 <!-- SECTION:NOTES:END -->
