@@ -1,6 +1,6 @@
-// In dev (where Phoenix renders data-phx-loc and debug_heex_annotations),
-// hold Option (Alt) to preview elements and Option+Click to copy a single-line
-// inline reference you can paste straight into a sentence for an LLM.
+import { elementReference, findHeexSource } from "./dev_element_reference.mjs";
+
+// In dev, Option+Click copies page context and a source-mapped element reference.
 if (document.querySelector("[data-phx-loc]")) {
   let activeEl = null;
   let lastTarget = null;
@@ -42,50 +42,6 @@ if (document.querySelector("[data-phx-loc]")) {
     document.body.append(overlay, label);
   };
 
-  const prevCommentCaller = (commentNode) => {
-    let prev = commentNode.previousSibling;
-    while (prev?.nodeType === Node.TEXT_NODE && !prev.nodeValue.trim()) {
-      prev = prev.previousSibling;
-    }
-    return prev?.nodeType === Node.COMMENT_NODE
-      ? prev.nodeValue.trim().match(/^@caller\s+(\S+:\d+)/)?.[1]
-      : null;
-  };
-
-  const findHeexSource = (startNode) => {
-    let depth = 0;
-    let slot = null;
-    let node = startNode;
-
-    while (node) {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        const text = node.nodeValue.trim();
-        const close = text.match(/^<\/([^>]+)>$/);
-        const open = text.match(/^<([^>]+)>\s+(\S+):(\d+)/);
-
-        if (close) {
-          depth++;
-        } else if (open) {
-          if (depth > 0) {
-            depth--;
-          } else if (open[1].startsWith(":") && !slot) {
-            slot = { name: open[1], file: open[2], line: open[3] };
-          } else {
-            return {
-              component: open[1],
-              file: slot ? slot.file : open[2],
-              componentFile: slot ? `${open[2]}:${open[3]}` : null,
-              slot: slot?.name,
-              caller: prevCommentCaller(node),
-            };
-          }
-        }
-      }
-      node = node.previousSibling || node.parentNode;
-    }
-    return null;
-  };
-
   const tagSummary = (el) => {
     const tag = el.tagName.toLowerCase();
     const id = el.id ? `#${el.id}` : "";
@@ -94,18 +50,6 @@ if (document.querySelector("[data-phx-loc]")) {
       .map((c) => `.${c}`)
       .join("");
     return `${tag}${id}${cls}`;
-  };
-
-  const elementSnippet = (el) => {
-    const raw =
-      el.innerText?.trim() ||
-      el.getAttribute("aria-label") ||
-      el.getAttribute("placeholder") ||
-      el.getAttribute("alt") ||
-      el.getAttribute("name") ||
-      "";
-    const clean = raw.replace(/\s+/g, " ").slice(0, 50);
-    return clean ? `"${clean}${raw.length > 50 ? "…" : ""}"` : null;
   };
 
   const shortFile = (path) => path?.split("/").slice(-2).join("/") ?? "";
@@ -209,9 +153,9 @@ if (document.querySelector("[data-phx-loc]")) {
 
   document.addEventListener(
     "click",
-    (event) => {
+    async (event) => {
       if (!event.altKey) return;
-      const el = activeEl || event.target.closest?.("[data-phx-loc]");
+      const el = event.target.closest?.("[data-phx-loc]");
       if (!el) return;
 
       event.preventDefault();
@@ -219,31 +163,17 @@ if (document.querySelector("[data-phx-loc]")) {
 
       const loc = el.getAttribute("data-phx-loc");
       const src = findHeexSource(el);
-      const snippet = elementSnippet(el);
-      const sameLoc = [...document.querySelectorAll(`[data-phx-loc="${loc}"]`)];
-      const idx =
-        sameLoc.length > 1
-          ? `#${sameLoc.indexOf(el) + 1}/${sameLoc.length}`
-          : null;
-
-      const where = [
-        src ? `${src.file}:${loc}` : `line ${loc}`,
-        src?.caller && `called from ${src.caller}`,
-      ]
-        .filter(Boolean)
-        .join(", ");
-
-      const what = [`<${tagSummary(el)}>`, idx, snippet]
-        .filter(Boolean)
-        .join(" ");
-
-      navigator.clipboard.writeText(`[${what} at ${where}]`);
+      let message;
+      try {
+        await navigator.clipboard.writeText(elementReference(el, document));
+        message = `✓ Copied ${src ? `${shortFile(src.file)}:${loc}` : `line ${loc}`}`;
+      } catch (error) {
+        console.error("Could not copy element reference", error);
+        message = "Could not copy — check clipboard permissions";
+      }
 
       clearTimeout(copiedTimer);
-      renderHighlight(
-        el,
-        `✓ Copied ${src ? `${shortFile(src.file)}:${loc}` : `line ${loc}`}`,
-      );
+      renderHighlight(el, message);
       copiedTimer = setTimeout(() => {
         copiedTimer = null;
         hideHighlight();
