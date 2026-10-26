@@ -49,6 +49,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         en:
           "It was so easy that you could come over during the day and set up in peace, and I never once worried the flowers wouldn't be perfect.",
         name: "Julia",
+        occasion: :wedding,
         lang: "sv"
       },
       %{
@@ -501,9 +502,10 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <div class="mb-12 flex items-end justify-between gap-4">
             <h2 id="reviews-heading" class="section-title">{~t"What customers say"}</h2>
 
-            <div class="flex items-center gap-2">
+            <div class="hidden shrink-0 items-center gap-1 md:flex">
               <.icon_button
                 type="button"
+                size="sm"
                 phx-click="turn_reviews"
                 phx-value-by="-1"
                 aria_label={~t"Previous slide"}
@@ -511,11 +513,12 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               >
                 <.icon name="hero-chevron-left" class="h-5 w-5" />
               </.icon_button>
-              <p class="text-base-content/70 text-sm tabular-nums" aria-hidden="true">
+              <p class="text-base-content/70 whitespace-nowrap text-sm tabular-nums" aria-hidden="true">
                 {@review_page + 1} / {length(@review_pages)}
               </p>
               <.icon_button
                 type="button"
+                size="sm"
                 phx-click="turn_reviews"
                 phx-value-by="1"
                 aria_label={~t"Next slide"}
@@ -533,40 +536,43 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             data-turned={@review_direction != nil}
             style={@review_direction && "--direction: #{@review_direction};"}
           >
-            <ul
-              :for={{page, i} <- Enum.with_index(@review_pages)}
-              class="grid gap-12 md:grid-cols-3 md:gap-8"
-              data-active={i == @review_page}
-              data-leaving={i == @review_leaving}
-              inert={i != @review_page}
-            >
-              <li :for={{review, n} <- Enum.with_index(page)} style={"--n: #{n};"}>
-                <figure class="flex flex-col gap-6">
-                  <.flower name="flower-30" class="text-base-content/30 h-8 w-8" />
-                  <div class="flex flex-col gap-3">
-                    <blockquote lang={review.lang} class="font-serif text-balance text-xl leading-snug md:text-2xl">
-                      {review.quote}
-                    </blockquote>
-                    <p
-                      :if={@show_review_translations?}
-                      class="text-base-content/70 font-serif text-pretty text-lg italic leading-snug"
-                    >
-                      {review.en}
-                    </p>
-                  </div>
-                  <figcaption class="eyebrow text-base-content/70">
-                    {review.name}<span :if={review[:occasion]}> · {occasion_label(review.occasion)}</span>
-                  </figcaption>
-                </figure>
-              </li>
-            </ul>
+            <div class="review-pages__track">
+              <ul
+                :for={{page, i} <- Enum.with_index(@review_pages)}
+                class="md:grid md:grid-cols-3 md:gap-8"
+                data-active={i == @review_page}
+                data-leaving={i == @review_leaving}
+              >
+                <li :for={{review, n} <- Enum.with_index(page)} style={"--n: #{n};"}>
+                  <figure class="flex flex-col gap-6">
+                    <.flower name="flower-30" class="text-base-content/30 h-8 w-8" />
+                    <div class="flex flex-col gap-3">
+                      <blockquote lang={review.lang} class="font-serif text-balance text-xl leading-snug md:text-2xl">
+                        {review.quote}
+                      </blockquote>
+                      <p
+                        :if={@show_review_translations?}
+                        class="text-base-content/70 font-serif text-pretty text-lg italic leading-snug"
+                      >
+                        {review.en}
+                      </p>
+                    </div>
+                    <figcaption class="eyebrow text-base-content/70">
+                      {review.name}<span :if={review[:occasion]}> · {occasion_label(review.occasion)}</span>
+                    </figcaption>
+                  </figure>
+                </li>
+              </ul>
+            </div>
           </div>
           <script :type={Phoenix.LiveView.ColocatedHook} name=".ReviewsEntrance">
-            // The first quotes arrive like a turn the first time the section scrolls into view.
-            // Skipped when it's already on screen at mount, so nothing visible blinks out and back.
+            import EmblaCarousel from "@/vendor/embla-carousel.esm";
+
+            // On mobile (<md), Embla drives a single-quote carousel with the same focal-point
+            // scale/fade as Favourites. On desktop (>=md), Embla is inactive and the first
+            // quotes arrive like a turn the first time the section scrolls into view.
             export default {
               mounted() {
-                // The observer always reports once on observe, with where the section is right now.
                 let firstReport = true;
                 this.observer = new IntersectionObserver(([entry]) => {
                   if (entry.isIntersecting) {
@@ -576,10 +582,61 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                   firstReport = false;
                 });
                 this.observer.observe(this.el);
+
+                this.reducedMotion = window.matchMedia(
+                  "(prefers-reduced-motion: reduce)",
+                ).matches;
+
+                this.embla = EmblaCarousel(this.el, {
+                  slides: "li",
+                  align: "center",
+                  containScroll: "trimSnaps",
+                  slidesToScroll: 1,
+                  breakpoints: {
+                    "(min-width: 768px)": { active: false },
+                  },
+                });
+
+                this.boundOnTween = this.onTween.bind(this);
+                this.embla.on("reInit", this.boundOnTween);
+                this.embla.on("scroll", this.boundOnTween);
+                this.embla.on("slideFocus", this.boundOnTween);
+                this.onTween();
+              },
+
+              updated() {
+                if (this.embla) this.embla.reInit();
               },
 
               destroyed() {
                 this.observer.disconnect();
+                if (this.embla) this.embla.destroy();
+              },
+
+              onTween(eventName) {
+                if (this.reducedMotion) return;
+                const engine = this.embla.internalEngine();
+                if (!engine.options.active) return;
+
+                const snapList = this.embla.scrollSnapList();
+                const tweenFactor = 0.6 * snapList.length;
+                const scrollProgress = this.embla.scrollProgress();
+                const slidesInView = this.embla.slidesInView();
+                const slideNodes = this.embla.slideNodes();
+                const isScrollEvent = eventName === "scroll";
+
+                snapList.forEach((scrollSnap, snapIndex) => {
+                  const diffToTarget = scrollSnap - scrollProgress;
+
+                  engine.slideRegistry[snapIndex].forEach((slideIndex) => {
+                    if (isScrollEvent && !slidesInView.includes(slideIndex)) return;
+                    const progress = Math.min(Math.abs(diffToTarget * tweenFactor), 1);
+                    slideNodes[slideIndex].style.setProperty(
+                      "--embla-progress",
+                      progress.toFixed(3),
+                    );
+                  });
+                });
               },
             };
           </script>
