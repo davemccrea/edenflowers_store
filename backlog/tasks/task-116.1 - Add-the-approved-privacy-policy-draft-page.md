@@ -4,7 +4,7 @@ title: Add the approved privacy-policy draft page
 status: done
 assignee: []
 created_date: '2026-10-26 16:39'
-updated_date: '2026-10-26 18:58'
+updated_date: '2026-10-26 19:07'
 labels:
   - quick
 dependencies: []
@@ -50,4 +50,10 @@ Recorded the approved two-week delivery-photo retention period in the draft, wit
 Policy-only follow-up approved by David in this conversation: apply the legal-review wording corrections concisely, retain draft/noindex safeguards, and track technical changes separately. No retention jobs, Brevo changes, Stripe/consent behaviour, emails, translations or production operations are authorised by this copy change.
 
 Applied the policy-only legal-review corrections: Customer versus Recipient photo sharing, checkout-created accounts and optional fields, purpose-specific lawful bases/interests, accurate six-/ten-year accounting timing, intended versus unenforced retention, approximate routine-backup rotation, overseas/cookie/Article 14 gaps and free rights requests with timely extension notices. Removed the unsupported twelve-month enquiry-deletion promise and request-only photo-expiry workaround. Preserved draft/noindex, existing layout/links and current provider behaviour; no technical processing changes or translations generated. Technical follow-ups: TASK-116.2 (existing photos), TASK-116.3 (retention), TASK-116.4 (Brevo), TASK-116.5 (Stripe/consent), TASK-116.6 (Recipient information), all still needs-triage. Verification: 76 focused privacy/terms/localized-page/sitemap/checkout tests passed, targeted format check and git diff --check passed. Unrelated concurrent homepage/testimonial changes were left untouched.
+
+After WIP commit 355ccc83, tightened the public copy from 704 to 568 template words (about 19% shorter). Removed repeated explanations while retaining controller/contact information, current collection/sharing, lawful bases, statutory accounting timing, unresolved retention/transfer/cookie/Recipient issues, and all rights. Tightened the rendered-copy regression limit from 800 to 650 words. Draft/noindex and existing routes/links remain unchanged. No translations or technical processing changes. Verification: all 76 focused privacy/terms/localized-page/sitemap/checkout tests passed; formatting and git diff --check passed. The copy-tightening changes remain uncommitted as requested after the WIP checkpoint.
+
+Copy-only follow-up requested by David: remove visible draft caveats and move unresolved details to TASK-116 notes. Kept the update date, known processing facts, statutory accounting wording and current error/routine-backup periods. Removed unconfirmed overseas-safeguard copy, account-expiry work notes and the unimplemented photo-retention target rather than inventing operational guarantees. No processing, translations or SEO settings changed. Updated regression tests to reject draft/work-in-progress wording and unimplemented two-week promises.
+
+Verification after removing public caveats: 76 focused privacy/terms/localized-page/sitemap/checkout tests passed; targeted formatting and git diff --check passed. Changes remain uncommitted.
 <!-- SECTION:NOTES:END -->
