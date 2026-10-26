@@ -16,6 +16,7 @@
       {assigns[:page_title] || if(assigns[:status] == 404, do: ~t"Page not found")}
     </.live_title>
     <meta :if={assigns[:page_description]} name="description" content={@page_description} />
+    <meta :if={assigns[:page_robots]} name="robots" content={@page_robots} />
     <link
       :if={!admin_path?(@conn.request_path) and assigns[:status] != 404}
       rel="canonical"

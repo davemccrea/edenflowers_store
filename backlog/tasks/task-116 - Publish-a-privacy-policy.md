@@ -4,6 +4,7 @@ title: Publish a privacy policy
 status: needs-triage
 assignee: []
 created_date: '2026-10-24 19:28'
+updated_date: '2026-10-26 17:13'
 labels:
   - spec
   - customers
@@ -58,3 +59,13 @@ A privacy policy at `/{lang}/privacy` tells customers what the shop keeps about 
 - [ ] #2 Footer, checkout newsletter checkbox and footer signup link to it
 - [ ] #3 The page is in the sitemap with language alternates
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Conversation decisions: David confirmed Jennie McCrea as the legal controller and Hetzner hosting in Finland. He approved adding the policy as a clearly marked draft with retention and international-transfer details unresolved. The parent remains needs-triage, not complete publication. Current source-backed audit: docs/research/privacy-policy-data-audit.md. Its findings supersede the older description where they conflict, notably global Stripe.js loading, diagnostic IP/form-data capture, Mapbox delivery coordinates and the absence of an approved blanket seven-year retention period.
+
+TASK-116.1 adds the approved draft page and links; it does not finish publication. Retention, transfer safeguards, remaining recipients, browser-cookie/automated-decision assessment and translations remain unresolved. Draft pages are deliberately noindex and not in the sitemap until the notice is completed.
+
+David approved a two-week retention period for delivery photographs. Cleanup is tracked separately as a needs-triage child task; automatic deletion is not implemented by the privacy-page copy change.
+<!-- SECTION:NOTES:END -->

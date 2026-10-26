@@ -55,6 +55,7 @@ defmodule EdenflowersWeb.Router do
         live "/#{language}/contact", Marketing.ContactLive
         live "/#{language}/faq", Marketing.FaqLive
         live "/#{language}/terms", Marketing.TermsLive
+        live "/#{language}/privacy", Marketing.PrivacyLive
         live "/#{language}/store", Store.StoreLive
         live "/#{language}/store/:category", Store.StoreLive
         live "/#{language}/product/:id", Store.ProductLive
