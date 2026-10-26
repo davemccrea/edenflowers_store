@@ -544,6 +544,13 @@ defmodule Edenflowers.Payments do
   @doc """
   Asks Stripe about an order or course booking whose webhook may have been
   missed, and completes it if its PaymentIntent succeeded.
+
+  The ten-minute schedulers include cancelled parents with attached intents,
+  using updated_at older than five minutes and newer than seven days. They
+  cannot discover an intent whose reference is missing or aged out. After
+  verifying the parent/Stripe metadata, a developer can explicitly call
+  `reconcile/1` for an attached intent or `complete/1` with a retrieved succeeded
+  intent outside that window. Follow the backup-first production procedure.
   """
   def reconcile(payable) do
     case StripeAPI.impl().retrieve_payment_intent(payable) do
@@ -609,10 +616,9 @@ defmodule Edenflowers.Payments do
   defp get_payable({"order_id", id}), do: Orders.get_order_by_id(id, actor: system_actor())
   defp get_payable({"course_registration_id", id}), do: Courses.get_registration_by_id(id, actor: system_actor())
 
-  # A payment link on a placed order or a confirmed booking pays what it still
-  # owes; an invite's link books its places, as checkout does.
+  # Once committed or cancelled, money changes only the ledger, not the commitment.
   defp link_payment?(%Order{state: state}), do: state == :placed
-  defp link_payment?(%CourseRegistration{status: status}), do: status == :confirmed
+  defp link_payment?(%CourseRegistration{status: status}), do: status in [:confirmed, :cancelled]
 
   defp complete_checkout(%Order{} = order, payment_intent, amount_paid, paid_with) do
     Orders.finalize_checkout(

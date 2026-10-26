@@ -3,10 +3,10 @@ id: TASK-133.2
 title: >-
   Record and reconcile late payments on retained cancelled orders and course
   bookings
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-25 22:24'
-updated_date: '2026-10-26 04:46'
+updated_date: '2026-10-26 05:03'
 labels: []
 dependencies:
   - TASK-133.1
@@ -38,12 +38,12 @@ The revised parent has **no Invite or Archive workflow**. Do not add special wit
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Normal pending checkout keeps same-record actual-amount/mismatch handling; confirmed manual booking payments use existing Balance collection without duplicate place consumption or original booking confirmation.
-- [ ] #2 Late succeeded payments/refunds on cancelled order and course parents are recorded once and remain visible/refundable while the parent stays cancelled and unbooked/unfulfilled.
-- [ ] #3 Duplicate webhook/reconciliation delivery preserves exactly-once ledger effects and appropriate notifications; received money is not discarded because the purchase was cancelled.
-- [ ] #4 Nonterminal/failed cancellation preserves recoverable intent references; an old cancellation cannot clear a replacement. Closed/cancelled links reject new preparation without pretending old client secrets are instantly revoked.
-- [ ] #5 Existing scheduler/worker tests recover outstanding payments on cancelled parents inside the documented window; cadence, age limits and explicit manual recovery are documented.
-- [ ] #6 Focused tests cover offline collection plus late Stripe success on the same retained purchase, preserving both real payments and exposing any overpayment through existing Balance/refund controls.
+- [x] #1 Normal pending checkout keeps same-record actual-amount/mismatch handling; confirmed manual booking payments use existing Balance collection without duplicate place consumption or original booking confirmation.
+- [x] #2 Late succeeded payments/refunds on cancelled order and course parents are recorded once and remain visible/refundable while the parent stays cancelled and unbooked/unfulfilled.
+- [x] #3 Duplicate webhook/reconciliation delivery preserves exactly-once ledger effects and appropriate notifications; received money is not discarded because the purchase was cancelled.
+- [x] #4 Nonterminal/failed cancellation preserves recoverable intent references; an old cancellation cannot clear a replacement. Closed/cancelled links reject new preparation without pretending old client secrets are instantly revoked.
+- [x] #5 Existing scheduler/worker tests recover outstanding payments on cancelled parents inside the documented window; cadence, age limits and explicit manual recovery are documented.
+- [x] #6 Focused tests cover offline collection plus late Stripe success on the same retained purchase, preserving both real payments and exposing any overpayment through existing Balance/refund controls.
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -51,6 +51,12 @@ The revised parent has **no Invite or Archive workflow**. Do not add special wit
 <!-- SECTION:PLAN:BEGIN -->
 Write narrow pending/confirmed/cancelled payment tests first. Extend current shared dispatch/terminal-state consequences rather than building course-only ingestion. Preserve nonterminal intent discoverability and conditional old-ID clearing. Test scheduler eligibility and duplicate/refund delivery. Keep network calls outside database transactions, no blanket row locks and no new Invite/Archive states.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Cancelled course payments now use ledger-only collection; cancelled order payments cannot restart subscriptions. Reconciliation includes cancelled parents within unchanged five-minute/seven-day updated_at window; manual recovery and limitations documented on Payments.reconcile/1. Cancellation retains intent until Stripe succeeds and atomically checks old ID before clearing; successful-payment clearing is conditional in SQL. Scheduler/worker tests cover both cancelled parents, duplicate success and refund; regression tests cover failed cancellation, replacement during cancellation, offline-plus-Stripe overpayment and cancelled occurrence subscription. Closed course link refuses new preparation. Focused payment/order/booking run: 279 tests passed. Confirmed booking and pending mismatch existing tests pass; restoring manual creation remains TASK-133.3.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 

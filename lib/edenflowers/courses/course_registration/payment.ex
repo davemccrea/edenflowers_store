@@ -27,7 +27,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
         default_actor system_actor()
 
         where expr(
-                status in [:pending, :confirmed] and not is_nil(payment_intent_id) and
+                not is_nil(payment_intent_id) and
                   updated_at < ago(5, :minute) and updated_at > ago(7, :day)
               )
       end
@@ -94,6 +94,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
       argument :paid_with, :map, default: %{}
       change PaymentChanges.ClearPaidPaymentIntent
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
+      change PaymentChanges.ReportAmountMismatch
       change {PaymentChanges.QueueEmail, trigger: :send_payment_received_email, arguments: [amount: :amount_paid]}
       require_atomic? false
     end

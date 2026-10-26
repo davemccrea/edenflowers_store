@@ -27,7 +27,7 @@ defmodule Edenflowers.Orders.Order.PaymentLink do
         # payment_intent_id is only set while a PaymentIntent waits for the
         # customer, at checkout or on a payment link.
         where expr(
-                not is_nil(payment_intent_id) and fulfillment_status != :cancelled and
+                not is_nil(payment_intent_id) and
                   updated_at < ago(5, :minute) and updated_at > ago(7, :day)
               )
       end
@@ -75,7 +75,10 @@ defmodule Edenflowers.Orders.Order.PaymentLink do
 
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
       change Changes.ReportUnexpectedPayment
-      change Changes.ReactivateSubscription, where: [attribute_equals(:origin, :subscription)]
+
+      change Changes.ReactivateSubscription,
+        where: [attribute_equals(:origin, :subscription), attribute_does_not_equal(:fulfillment_status, :cancelled)]
+
       # A phone customer pays a texted link and has no address to send a receipt to.
       change {PaymentChanges.QueueEmail, trigger: :send_payment_received_email, arguments: [amount: :amount_paid]},
         where: [present(:customer_email)]

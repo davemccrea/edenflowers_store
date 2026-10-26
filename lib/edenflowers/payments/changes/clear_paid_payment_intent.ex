@@ -5,11 +5,16 @@ defmodule Edenflowers.Payments.Changes.ClearPaidPaymentIntent do
   still be paid, and that money has arrived all the same.
   """
   use Ash.Resource.Change
+  require Ash.Expr
 
   @impl true
   def change(changeset, _opts, _context) do
-    if changeset.data.payment_intent_id == Ash.Changeset.get_argument(changeset, :payment_intent_id),
-      do: Ash.Changeset.force_change_attribute(changeset, :payment_intent_id, nil),
-      else: changeset
+    paid_id = Ash.Changeset.get_argument(changeset, :payment_intent_id)
+
+    Ash.Changeset.atomic_update(
+      changeset,
+      :payment_intent_id,
+      Ash.Expr.expr(if payment_intent_id == ^paid_id, do: nil, else: payment_intent_id)
+    )
   end
 end

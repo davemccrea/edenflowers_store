@@ -159,9 +159,8 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
     refute_enqueued(worker: SendCourseConfirmationEmail)
   end
 
-  test "skips cancelled bookings, bookings without an intent, fresh payments and old checkouts" do
+  test "skips bookings without an intent, fresh payments and old checkouts" do
     for opts <- [
-          [status: :cancelled, updated_at: minutes_ago(10)],
           [status: :confirmed, payment_intent_id: nil, updated_at: minutes_ago(10)],
           [status: :confirmed, updated_at: minutes_ago(1)],
           [status: :confirmed, updated_at: minutes_ago(8 * 24 * 60)]
@@ -171,6 +170,82 @@ defmodule Edenflowers.Payments.ReconcilePaymentTest do
 
     assert :ok = perform_job(ScheduleCourseReconciliation, %{})
     refute_enqueued(worker: ReconcileCoursePayment)
+  end
+
+  for parent <- [:order, :booking] do
+    @parent parent
+    test "recovers a cancelled #{@parent}'s late payment without recommitting it, then records its refund once" do
+      {record, key, scheduler, worker} = cancelled_parent(@parent)
+
+      intent = %{
+        id: record.payment_intent_id,
+        status: "succeeded",
+        metadata: %{key => record.id},
+        amount_received: 8_500
+      }
+
+      assert :ok = perform_job(scheduler, %{})
+      assert_enqueued(worker: worker, args: %{"primary_key" => %{"id" => record.id}})
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn _record -> {:ok, intent} end)
+
+      capture_log(fn ->
+        assert {:ok, _record} = perform_job(worker, %{"primary_key" => %{"id" => record.id}})
+      end)
+
+      assert {:ok, :already_completed} = Payments.complete(intent)
+
+      paid =
+        Ash.get!(record.__struct__, record.id,
+          authorize?: false,
+          load: [:payments, :cancelled?, :to_refund?, :balance]
+        )
+
+      assert paid.cancelled?
+      assert paid.to_refund?
+      assert Decimal.equal?(paid.balance, "-85.00")
+      assert [%{payment_intent_id: id}] = paid.payments
+      assert id == intent.id
+      assert is_nil(paid.payment_intent_id)
+      refute_enqueued(worker: SendCourseConfirmationEmail)
+      refute_enqueued(worker: SendReceiptEmail)
+
+      refund = %{id: "re_#{intent.id}", status: "succeeded", payment_intent: intent.id, amount: 8_500}
+      assert {:ok, :recorded} = Payments.record_stripe_refund(refund)
+      assert {:ok, :already_recorded} = Payments.record_stripe_refund(refund)
+
+      refunded = Ash.load!(paid, [:payments, :balance, :cancelled?], authorize?: false, reuse_values?: false)
+      assert refunded.cancelled?
+      assert Decimal.equal?(refunded.balance, 0)
+      assert length(refunded.payments) == 2
+    end
+  end
+
+  defp cancelled_parent(:order) do
+    record =
+      generate(
+        order(
+          state: :placed,
+          origin: :custom,
+          fulfillment_status: :cancelled,
+          payment_intent_id: "pi_cancelled_order",
+          updated_at: minutes_ago(10)
+        )
+      )
+
+    {record, "order_id", ScheduleOrderReconciliation, ReconcileOrderPayment}
+  end
+
+  defp cancelled_parent(:booking) do
+    record =
+      generate(
+        course_registration(
+          status: :cancelled,
+          payment_intent_id: "pi_cancelled_booking",
+          updated_at: minutes_ago(10)
+        )
+      )
+
+    {record, "course_registration_id", ScheduleCourseReconciliation, ReconcileCoursePayment}
   end
 
   test "places a paid order the customer stepped back from while paying" do
