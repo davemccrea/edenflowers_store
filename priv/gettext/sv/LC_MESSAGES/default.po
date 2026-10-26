@@ -6126,8 +6126,8 @@ msgstr "Avstånd i km"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:168
 #, elixir-autogen, elixir-format
-msgid "%{base} plus %{per_km} per km. Free within %{km} km for chosen bouquets."
-msgstr "%{base} plus %{per_km} per km. Gratis inom %{km} km för utvalda buketter."
+msgid "Free within %{km} km for chosen bouquets, otherwise %{base} plus %{per_km} per km."
+msgstr "Gratis inom %{km} km för utvalda buketter, annars %{base} plus %{per_km} per km."
 
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:308
 #, elixir-autogen, elixir-format

@@ -171,7 +171,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         nil
 
       %{free_dist_km: km, base_price: base, price_per_km: per_km} when is_integer(km) and km > 0 ->
-        ~t"#{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km. Free within #{km = km} km for chosen bouquets."
+        ~t"Free within #{km = km} km for chosen bouquets, otherwise #{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km."
 
       %{base_price: base, price_per_km: per_km} ->
         ~t"#{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km."
