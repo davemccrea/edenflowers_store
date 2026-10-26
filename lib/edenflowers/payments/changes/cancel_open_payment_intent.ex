@@ -10,10 +10,10 @@ defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
   use Ash.Resource.Change
 
   require Logger
+  import Edenflowers.Actors
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Payments.Errors.PaymentInProgress
-  import Edenflowers.Actors
 
   @impl true
   def change(%{data: %{payment_intent_id: nil}} = changeset, _opts, _context), do: changeset
@@ -59,13 +59,7 @@ defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
       _changeset, {:ok, record} ->
         case StripeAPI.impl().cancel_payment_intent(%{id: payment_intent_id}) do
           {:ok, _cancelled} ->
-            case Ash.update(record, %{payment_intent_id: payment_intent_id},
-                   action: :mark_payment_cancelled,
-                   actor: system_actor()
-                 ) do
-              {:ok, cleared} -> {:ok, cleared}
-              {:error, _changed_meanwhile} -> {:ok, record}
-            end
+            clear_cancelled(record, payment_intent_id)
 
           {:error, reason} ->
             Logger.warning("Could not cancel PaymentIntent #{payment_intent_id}: #{inspect(reason)}")
@@ -75,5 +69,15 @@ defmodule Edenflowers.Payments.Changes.CancelOpenPaymentIntent do
       _changeset, error ->
         error
     end)
+  end
+
+  defp clear_cancelled(record, payment_intent_id) do
+    case Ash.update(record, %{payment_intent_id: payment_intent_id},
+           action: :mark_payment_cancelled,
+           actor: system_actor()
+         ) do
+      {:ok, cleared} -> {:ok, cleared}
+      {:error, _changed_meanwhile} -> {:ok, record}
+    end
   end
 end

@@ -1,6 +1,6 @@
 defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail do
   @moduledoc """
-  Sends a paid course booking its confirmation, with the receipt attached.
+   Confirms booked places, attaching a receipt only for actual recorded money.
   """
 
   use Ash.Resource.Change
@@ -21,8 +21,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
       case deliver(registration, Ash.Changeset.get_argument(changeset, :message)) do
         :ok ->
           Logger.info("Sent confirmation email for course registration #{registration.id}")
-          now = DateTime.utc_now()
-          Ash.Changeset.force_change_attributes(changeset, confirmation_emailed_at: now, receipt_emailed_at: now)
+          stamp_sent(changeset, registration)
 
         {:error, error} ->
           Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")
@@ -30,14 +29,35 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
     end)
   end
 
+  defp stamp_sent(changeset, registration) do
+    now = DateTime.utc_now()
+    changeset = Ash.Changeset.force_change_attribute(changeset, :confirmation_emailed_at, now)
+
+    if Decimal.positive?(registration.amount_paid),
+      do: Ash.Changeset.force_change_attribute(changeset, :receipt_emailed_at, now),
+      else: changeset
+  end
+
   defp deliver(registration, message) do
-    with {:ok, pdf} <- Receipt.generate(registration),
-         {:ok, _result} <-
-           registration
-           |> Email.course_confirmation(message)
-           |> Swoosh.Email.attachment(Receipt.attachment(pdf, registration.reference))
-           |> Mailer.deliver() do
-      :ok
+    email = Email.course_confirmation(registration, message)
+
+    if Decimal.positive?(registration.amount_paid),
+      do: deliver_with_receipt(email, registration),
+      else: deliver_email(email)
+  end
+
+  defp deliver_with_receipt(email, registration) do
+    with {:ok, pdf} <- Receipt.generate(registration) do
+      email
+      |> Swoosh.Email.attachment(Receipt.attachment(pdf, registration.reference))
+      |> deliver_email()
+    end
+  end
+
+  defp deliver_email(email) do
+    case Mailer.deliver(email) do
+      {:ok, _result} -> :ok
+      error -> error
     end
   end
 

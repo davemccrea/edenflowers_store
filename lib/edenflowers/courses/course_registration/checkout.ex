@@ -18,7 +18,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Checkout do
     # payment's return can pick it up again.
     read :checkout do
       description "A pending course-page checkout by id and course, so a failed payment's return can pick it up. " <>
-                    "Never an Invite."
+                    "Never an accepted booking or a legacy payment-link registration."
 
       get? true
       filter expr(status == :pending and is_nil(payment_link_token))
@@ -50,7 +50,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Checkout do
     # payment that wins books what was registered when it landed.
     update :revise do
       description "Changes the name, email or places of an unpaid course-page checkout when the customer goes " <>
-                    "back, and reprices it. Refused once confirmed, and for an Invite."
+                    "back, and reprices it. Refused once confirmed or on a legacy payment-link registration."
 
       accept [:name, :email, :seats]
       change filter expr(status == :pending and is_nil(payment_link_token))

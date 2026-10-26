@@ -122,21 +122,13 @@ defmodule Edenflowers.Courses.Course do
 
   relationships do
     has_many :course_registrations, Edenflowers.Courses.CourseRegistration do
-      description "Every registration in any status: checkouts in progress, Invites, Course bookings and " <>
+      description "Every retained registration in any status: unfinished checkouts, accepted bookings and " <>
                     "cancelled ones."
     end
 
     has_many :bookings, Edenflowers.Courses.CourseRegistration do
       description "Course bookings, oldest first. Cancelled ones stay so Jennie can see who dropped out."
       filter expr(status in [:confirmed, :cancelled])
-      sort inserted_at: :asc
-    end
-
-    has_many :invites, Edenflowers.Courses.CourseRegistration do
-      description "Invites Jennie sent that haven't been paid yet, oldest first. A checkout still in progress " <>
-                    "has no Payment Link, so it isn't one."
-
-      filter expr(status == :pending and not is_nil(payment_link_token))
       sort inserted_at: :asc
     end
 
@@ -155,7 +147,7 @@ defmodule Edenflowers.Courses.Course do
     end
 
     calculate :seats_left, :integer, expr(total_places - seats_booked) do
-      description "Places not yet taken by a confirmed Course booking. Unpaid checkouts and Invites hold none."
+      description "Places not yet committed to confirmed bookings, paid or unpaid. Pending checkouts hold none."
     end
 
     # Helsinki's date, not the database's UTC `today()`, so the page and the
@@ -188,7 +180,7 @@ defmodule Edenflowers.Courses.Course do
     # Unauthorized on purpose: a visitor may not read other people's bookings,
     # but everyone needs the count to see how many seats are left.
     sum :seats_booked, :course_registrations, :seats_held do
-      description "Places taken by confirmed Course bookings, less seats Jennie removed. Only paid places count."
+      description "Places committed to confirmed bookings, paid or unpaid, less seats Jennie removed."
       filter expr(status == :confirmed)
       default 0
       authorize? false

@@ -25,6 +25,8 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
       assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
       assert email.subject =~ ~r/^See you tomorrow at Course \d+$/
       assert email.text_body =~ ~r/A reminder that Course \d+ is tomorrow\./
+      assert email.text_body =~ "Still to pay: €85.00. Please pay at the course."
+      assert email.attachments == []
     end)
 
     assert Ash.get!(CourseRegistration, confirmed.id, authorize?: false).reminder_emailed_at
@@ -32,7 +34,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
     assert scheduled_reminders() == []
   end
 
-  test "cancelled bookings, unpaid invites and other days' courses get nothing", %{tomorrow: course_id} do
+  test "cancelled bookings, unfinished checkouts and other days' courses get nothing", %{tomorrow: course_id} do
     generate(course_registration(course_id: course_id, status: :cancelled))
     generate(course_registration(course_id: course_id, status: :pending, payment_link_token: "tok"))
     generate(course_registration(status: :confirmed))

@@ -86,11 +86,12 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
     end
 
     update :send_confirmation_email do
-      description "Emails a paid booking its confirmation with the receipt attached, stamping both sent times. " <>
-                    "Queued by confirm_payment."
+      description "Emails a confirmed booking its details. Attaches and stamps a receipt only for actual money. " <>
+                    "Queued by confirm_payment or manual entry."
 
       accept []
       argument :message, :string
+      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       transaction? false
       require_atomic? false
       change Changes.SendConfirmationEmail
@@ -99,6 +100,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
     update :send_reminder_email do
       description "Reminds a confirmed booking of its course the day before, once. Run daily by Oban."
       accept []
+      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       transaction? false
       require_atomic? false
       change Changes.SendReminderEmail

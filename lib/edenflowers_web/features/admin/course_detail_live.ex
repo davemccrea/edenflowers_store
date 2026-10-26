@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          socket
          |> assign(:page_title, socket.assigns.course.name)
          |> assign(:locale, Localize.get_locale())
-         |> assign(booking_form: nil, refund_params: %{})
+         |> assign(booking_form: nil, refund_params: %{}, payment_params: %{})
          |> assign(settling_id: nil, settlement_mode: :settle, settlement_error: nil)
          |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
          |> assign(email_form: nil, email_kind: nil, emailing_id: nil, preview: nil)}
@@ -157,46 +157,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
             </ul>
           </details>
         </section>
-
-        <section :if={@course.invites != []} id="invites" class="admin-card mt-6 p-4 sm:p-5">
-          <h2 class="text-base-content/75 text-sm">{~t"Invited, not paid yet"}</h2>
-          <ul class="divide-base-content/12 grid-cols-[minmax(0,1fr)_2rem] grid gap-x-3 divide-y">
-            <li
-              :for={invite <- @course.invites}
-              id={"invite-#{invite.id}"}
-              class="grid-cols-subgrid col-span-full grid items-center gap-y-3 py-4"
-            >
-              <div class="col-start-1 row-start-1 min-w-0">
-                <p class="text-base-content flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
-                  <span class="min-w-0 break-words">{invite.name}</span>
-                  <span :if={invite.seats > 1} class="text-base-content/75 tabular-nums">+{invite.seats - 1}</span>
-                </p>
-                <p class="text-base-content/75 truncate text-sm">{invite.email}</p>
-              </div>
-              <div class="col-start-2 row-start-1 justify-self-end">
-                <.actions_menu id={"invite-actions-#{invite.id}"}>
-                  <.actions_menu_button
-                    menu={"invite-actions-#{invite.id}"}
-                    phx-click="open_email"
-                    phx-value-kind="payment_link"
-                    phx-value-id={invite.id}
-                  >
-                    {~t"Email payment link"}
-                  </.actions_menu_button>
-                  <.actions_menu_button
-                    menu={"invite-actions-#{invite.id}"}
-                    phx-click="withdraw_invite"
-                    phx-value-id={invite.id}
-                    data-confirm={~t"Withdraw this invite? Its payment link stops working."}
-                    class="text-error"
-                  >
-                    {~t"Withdraw invite"}
-                  </.actions_menu_button>
-                </.actions_menu>
-              </div>
-            </li>
-          </ul>
-        </section>
       </.admin_page>
       <.booking_drawer
         form={@booking_form}
@@ -226,6 +186,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         registration={@settling_id && booking(@course, @settling_id)}
         mode={@settlement_mode}
         refund_params={@refund_params}
+        payment_params={@payment_params}
         error={@settlement_error}
         locale={@locale}
         preview={@preview}
@@ -242,7 +203,14 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       AshPhoenix.Form.for_create(CourseRegistration, :add_manually,
         actor: socket.assigns.current_user,
         params: %{"email_customer?" => "true"},
-        transform_params: fn _form, params, _action -> Map.put(params, "course_id", course_id) end
+        transform_params: fn _form, params, _action ->
+          params =
+            if params["payment_method"] in [nil, ""],
+              do: Map.delete(params, "amount"),
+              else: Map.update(params, "amount", nil, &(&1 && String.replace(&1, ",", ".")))
+
+          Map.put(params, "course_id", course_id)
+        end
       )
       |> to_form()
 
@@ -265,7 +233,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       {:ok, _registration} ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Invite added. Their places are booked once they pay.")
+         |> put_flash(:info, ~t"Booking added.")
          |> assign(:booking_form, nil)
          |> push_event("js-exec", %{to: "#booking-drawer", attr: "phx-hide"})
          |> reload_course()}
@@ -311,6 +279,17 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     settle(socket, id, &PaymentActions.refund(&1, params, actor))
   end
 
+  def handle_event("change_payment", %{"record_id" => id, "payment" => params}, socket) do
+    preview = DrawerPreview.build(:payment, booking(socket.assigns.course, id), params)
+    {:noreply, socket |> update(:payment_params, &Map.put(&1, id, params)) |> assign(:preview, preview)}
+  end
+
+  def handle_event("record_payment", %{"record_id" => id, "payment" => params}, socket) do
+    actor = socket.assigns.current_user
+    socket = update(socket, :payment_params, &Map.put(&1, id, params))
+    settle(socket, id, &PaymentActions.record_payment(&1, params, actor))
+  end
+
   def handle_event("open_payment_link", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
     with_registration(socket, id, &PaymentActions.open_payment_link(&1, actor))
@@ -347,20 +326,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         put_flash(socket, :info, ~t"Seat removed.")
       else
         _ -> put_flash(socket, :error, ~t"Could not remove the seat.")
-      end
-
-    {:noreply, reload_course(socket)}
-  end
-
-  def handle_event("withdraw_invite", %{"id" => id}, socket) do
-    actor = socket.assigns.current_user
-
-    socket =
-      with {:ok, invite} <- Courses.get_registration_by_id(id, actor: actor),
-           :ok <- Courses.discard_registration(invite, actor: actor) do
-        put_flash(socket, :info, ~t"Invite withdrawn.")
-      else
-        _ -> put_flash(socket, :error, ~t"Could not withdraw the invite.")
       end
 
     {:noreply, reload_course(socket)}
@@ -431,11 +396,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         {:ok, registration} ->
           case payment_action.(registration) do
             {:info, message} ->
-              socket
-              |> put_flash(:info, message)
-              |> assign(settling_id: nil, settlement_error: nil)
-              |> update(:refund_params, &Map.delete(&1, id))
-              |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-hide"})
+              settlement_recorded(socket, id, :info, message)
+
+            {:ok, {kind, message}} ->
+              settlement_recorded(socket, id, kind, message)
 
             {:error, message} ->
               assign(socket, :settlement_error, message)
@@ -448,7 +412,16 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply, reload_course(socket)}
   end
 
-  defp booking(course, id), do: Enum.find(course.bookings ++ course.invites, &(&1.id == id))
+  defp booking(course, id), do: Enum.find(course.bookings, &(&1.id == id))
+
+  defp settlement_recorded(socket, id, kind, message) do
+    socket
+    |> put_flash(kind, message)
+    |> assign(settling_id: nil, settlement_error: nil)
+    |> update(:refund_params, &Map.delete(&1, id))
+    |> update(:payment_params, &Map.delete(&1, id))
+    |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-hide"})
+  end
 
   defp send_email(:payment_reminder, registration, message, actor) do
     case Courses.send_registration_payment_reminder(registration, %{message: message}, actor: actor) do
@@ -503,8 +476,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :payment_link_open?,
         :payment_reminder?,
         payments: [:undoable?, :reversal]
-      ],
-      invites: [:balance, :payment_link_open?]
+      ]
     ]
 
     case Courses.get_course_by_id(id, actor: socket.assigns.current_user, load: load) do

@@ -79,26 +79,26 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
   end
 
   describe "paying through the link" do
-    test "books an invite's places, records the Stripe payment and emails the confirmation", ctx do
+    test "settles an accepted manual booking without confirming or consuming places twice", ctx do
       registration = Ash.Seed.update!(ctx.registration, %{payment_intent_id: "pi_link"})
 
-      assert registration.status == :pending
+      assert registration.status == :confirmed
       assert {:ok, :completed} = Payments.complete(link_intent(registration, "pi_link", 8500))
 
       paid = reload(registration)
       assert paid.status == :confirmed
-      assert paid.confirmed_at
+      assert paid.confirmed_at == registration.confirmed_at
       assert paid.settled?
       assert paid.payment_intent_id == nil
       assert [%{method: :stripe, payment_intent_id: "pi_link"}] = paid.payments
 
       assert_enqueued(
-        worker: Edenflowers.Courses.Workers.SendConfirmationEmail,
+        worker: Edenflowers.Courses.Workers.SendPaymentReceivedEmail,
         args: %{"primary_key" => %{"id" => registration.id}}
       )
     end
 
-    test "books an invite even once the course has filled up", ctx do
+    test "collects a manual booking even once the course has filled up", ctx do
       course =
         Course |> Ash.get!(ctx.registration.course_id, authorize?: false) |> Ash.Seed.update!(%{total_places: 2})
 
@@ -107,6 +107,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
 
       assert {:ok, :completed} = Payments.complete(link_intent(registration, "pi_link", 8500))
       assert reload(registration).status == :confirmed
+      assert Ash.load!(course, :seats_booked, authorize?: false).seats_booked == 3
     end
 
     test "pays a balance left on a confirmed booking and emails Payment received", ctx do
@@ -160,6 +161,8 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
         |> Ash.Seed.update!(%{status: :confirmed})
         |> pay_in_person("30.00")
 
+      {:ok, confirmed} = Courses.open_registration_payment_link(confirmed, actor: ctx.admin)
+
       preview = Preview.build(:payment_link, confirmed, %{message: "See you soon."})
 
       {:ok, _emailed} =
@@ -174,17 +177,17 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
     end
 
     test "opens the link and sends one email in the booking's language", ctx do
-      preview = Preview.build(:payment_link, ctx.registration, %{})
       {:ok, emailed} = Courses.email_registration_payment_link(ctx.registration, actor: ctx.admin)
+      preview = Preview.build(:payment_link, emailed, %{})
 
       assert emailed.payment_link_emailed_at
       assert reload(emailed).payment_link_open?
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
-        assert email.subject =~ "Varaa paikkasi kurssille"
+        assert email.subject =~ "Muistutus varauksestasi kurssille"
         assert email.text_body == preview.text_body
-        assert email.text_body =~ "Paikkasi varataan heti, kun olet maksanut."
+        refute email.text_body =~ "Paikkasi varataan heti, kun olet maksanut."
         refute email.text_body =~ "palautan koko summan"
         assert email.text_body =~ "/pay/courses/#{emailed.payment_link_token}"
         assert email.text_body =~ "85,00"

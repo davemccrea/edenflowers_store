@@ -3,7 +3,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.PriceBooking do
   Refuses a course that has closed or hasn't room for the requested seats,
   then snapshots what the booking costs.
 
-  Nothing is held: places are counted from paid bookings, so two people
+  Nothing is held at website checkout: places are counted from confirmed bookings, so two people
   paying for the last place at once are both booked and Jennie makes room.
   """
 
@@ -19,18 +19,18 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.PriceBooking do
       seats = Ash.Changeset.get_attribute(changeset, :seats)
 
       case Ash.get(Course, course_id, load: [:seats_left, :tax_rate], authorize?: false) do
-        {:ok, course} -> price(changeset, course, seats, opts[:allow_after_cutoff?] || false)
+        {:ok, course} -> price(changeset, course, seats, opts[:manual?] || false)
         {:error, _not_found} -> Ash.Changeset.add_error(changeset, field: :course_id, message: "course not found")
       end
     end)
   end
 
-  defp price(changeset, course, seats, allow_after_cutoff?) do
+  defp price(changeset, course, seats, manual?) do
     cond do
-      not allow_after_cutoff? and Date.before?(course.register_before, Edenflowers.ShopTime.today()) ->
+      not manual? and Date.before?(course.register_before, Edenflowers.ShopTime.today()) ->
         Ash.Changeset.add_error(changeset, field: :course_id, message: "booking has closed")
 
-      seats > course.seats_left ->
+      not manual? and seats > course.seats_left ->
         Ash.Changeset.add_error(
           changeset,
           InvalidAttribute.exception(

@@ -108,6 +108,7 @@ defmodule Edenflowers.Payments.PreparePaymentTest do
           actor: admin
         )
 
+      {:ok, registration} = Courses.open_registration_payment_link(registration, actor: admin)
       %{registration: registration}
     end
 

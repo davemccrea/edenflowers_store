@@ -101,33 +101,96 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       )
     end
 
-    test "invites them with a payment link, holding no places until they pay" do
+    test "confirms places immediately without a payment, receipt or automatic link" do
       course = generate(course(total_places: 5))
 
       assert {:ok, registration} = add_manually(course, 2, generate(admin_user()))
-      assert registration.status == :pending
-      refute registration.confirmed_at
-      assert registration.payment_link_token
-      assert seats_left(course) == 5
+      assert registration.status == :confirmed
+      assert registration.confirmed_at
+      refute registration.payment_link_token
+      refute registration.receipt_emailed_at
+      assert seats_left(course) == 3
+      assert Ash.load!(registration, :payments, authorize?: false).payments == []
 
       assert_enqueued(
-        worker: Edenflowers.Courses.Workers.SendPaymentLinkEmail,
+        worker: Edenflowers.Courses.Workers.SendConfirmationEmail,
         args: %{"primary_key" => %{"id" => registration.id}}
       )
     end
 
-    test "is allowed after register_before but not beyond the course's free places" do
+    test "is allowed after register_before and beyond the course's free places" do
       course = generate(course(register_before: Date.add(ShopTime.today(), -2), total_places: 3))
       generate(course_registration(course_id: course.id, seats: 2, status: :confirmed))
       admin = generate(admin_user())
 
       assert {:ok, _} = add_manually(course, 1, admin)
-      assert {:error, error} = add_manually(course, 2, admin)
-      assert Exception.message(error) =~ "only 1 places left"
+      assert {:ok, _} = add_manually(course, 2, admin)
+      assert seats_left(course) == -2
     end
 
     test "is refused for customers" do
       assert {:error, %Ash.Error.Forbidden{}} = add_manually(generate(course()), 1, nil)
+    end
+
+    test "an initial received payment uses the ledger and records its real method" do
+      course = generate(course())
+      admin = generate(admin_user())
+
+      assert {:ok, registration} =
+               Courses.add_registration_manually(
+                 %{
+                   name: "Ada",
+                   email: "ada@example.com",
+                   seats: 2,
+                   course_id: course.id,
+                   amount: "100.00",
+                   payment_method: :zettle,
+                   email_customer?: false
+                 },
+                 actor: admin
+               )
+
+      registration = Ash.load!(registration, [:payments, :balance], authorize?: false)
+      assert registration.status == :confirmed
+      assert [%{method: :zettle, amount: amount}] = registration.payments
+      assert Decimal.equal?(amount, "100.00")
+      assert Decimal.equal?(registration.balance, "70.00")
+      assert seats_left(course) == 6
+      refute registration.payment_link_token
+      refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
+    end
+
+    test "an invalid initial payment rolls the entire booking back" do
+      course = generate(course())
+      admin = generate(admin_user())
+
+      for payment <- [
+            %{amount: "85.00"},
+            %{payment_method: :cash},
+            %{amount: "86.00", payment_method: :cash},
+            %{amount: "85.00", payment_method: :stripe}
+          ] do
+        assert {:error, _error} =
+                 Courses.add_registration_manually(
+                   Map.merge(%{name: "Ada", email: "ada@example.com", seats: 1, course_id: course.id}, payment),
+                   actor: admin
+                 )
+      end
+
+      assert Ash.count!(Edenflowers.Courses.CourseRegistration, authorize?: false) == 0
+      assert seats_left(course) == 8
+    end
+
+    test "cancelling a never-paid accepted booking frees its places without inventing a refund" do
+      course = generate(course(cancellation_fee_percent: 100))
+      admin = generate(admin_user())
+      {:ok, registration} = add_manually(course, 2, admin)
+      assert seats_left(course) == 6
+      assert {:ok, cancelled} = Courses.cancel_registration(registration, %{email_customer?: false}, actor: admin)
+      assert cancelled.status == :cancelled
+      assert Decimal.equal?(balance(cancelled), 0)
+      assert Ash.load!(cancelled, :payments, authorize?: false).payments == []
+      assert seats_left(course) == 8
     end
   end
 
@@ -149,14 +212,15 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert Decimal.equal?(balance(registration), "170.00")
     end
 
-    test "a manual booking can't be marked paid by hand", %{admin: admin, registration: registration} do
-      assert {:error, error} =
+    test "manual collection uses the shared ledger", %{admin: admin, registration: registration} do
+      assert {:ok, paid} =
                Ash.update(registration, %{amount: "170.00", payment_method: :cash},
                  action: :record_payment,
                  actor: admin
                )
 
-      assert Exception.message(error) =~ "is paid by payment link"
+      assert Decimal.equal?(balance(paid), 0)
+      assert [%{method: :cash}] = Ash.load!(paid, :payments, authorize?: false).payments
     end
 
     test "a paid booking owes a refund after a seat is removed or it is cancelled", %{
@@ -279,8 +343,8 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
     end
   end
 
-  describe "discarding an unpaid registration" do
-    test "every night, purges checkouts left unpaid for a day but keeps invites" do
+  describe "retaining an unfinished checkout" do
+    test "old pending registrations have no destructive action and hold no places" do
       course = generate(course())
       yesterday = DateTime.add(DateTime.utc_now(), -25, :hour)
       abandoned = generate(course_registration(course_id: course.id, updated_at: yesterday))
@@ -289,15 +353,13 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       invite =
         generate(course_registration(course_id: course.id, payment_link_token: "invite-token", updated_at: yesterday))
 
-      assert :ok = perform_job(Edenflowers.Courses.Schedulers.DiscardAbandoned, %{})
-
-      for %{args: args} <- all_enqueued(worker: Edenflowers.Courses.Workers.DiscardAbandoned),
-          do: perform_job(Edenflowers.Courses.Workers.DiscardAbandoned, args)
+      refute Enum.any?(Ash.Resource.Info.actions(Edenflowers.Courses.CourseRegistration), &(&1.type == :destroy))
 
       system = Edenflowers.Actors.system_actor()
-      assert {:error, _purged} = Courses.get_registration_by_id(abandoned.id, actor: system)
+      assert {:ok, _} = Courses.get_registration_by_id(abandoned.id, actor: system)
       assert {:ok, _} = Courses.get_registration_by_id(fresh.id, actor: system)
       assert {:ok, _} = Courses.get_registration_by_id(invite.id, actor: system)
+      assert seats_left(course) == course.total_places
     end
   end
 

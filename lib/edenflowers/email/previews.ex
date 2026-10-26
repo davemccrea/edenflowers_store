@@ -41,7 +41,6 @@ defmodule Edenflowers.Email.Previews do
         cancellation_confirmed(locale) ++
         order_refunded(locale) ++
         course_confirmation(locale) ++
-        course_payment_link(locale) ++
         course_reminder(locale) ++
         booking_cancelled(locale) ++
         booking_refunded(locale) ++
@@ -431,6 +430,9 @@ defmodule Edenflowers.Email.Previews do
   defp course_confirmation(locale) do
     for {title, attrs} <- [
           {"paid, full refund until 7 days before", %{}},
+          {"manual, pay at the course, no receipt", %{amount_paid: Decimal.new(0), balance: Decimal.new("45.00")}},
+          {"manual, part paid, balance at the course",
+           %{amount_paid: Decimal.new("20.00"), balance: Decimal.new("25.00")}},
           {"2 places, half kept after 10 days before",
            %{
              seats: 2,
@@ -446,21 +448,10 @@ defmodule Edenflowers.Email.Previews do
     end
   end
 
-  defp course_payment_link(locale) do
-    for {title, attrs, message} <- [
-          {"invite", %{status: :pending}, nil},
-          {"2 places, with a message from Jennie", %{status: :pending, seats: 2, balance: Decimal.new("90.00")},
-           message(locale)},
-          {"no first name", %{status: :pending, first_name: nil}, nil}
-        ] do
-      {"Course payment link", title, :course_payment_link,
-       Email.course_payment_link(registration(attrs, locale), @payment_link, message)}
-    end
-  end
-
   defp course_reminder(locale) do
     for {title, attrs} <- [
-          {"one place", %{}},
+          {"paid place", %{amount_paid: Decimal.new("45.00"), balance: Decimal.new(0)}},
+          {"unpaid manual booking", %{}},
           {"no first name", %{first_name: nil}}
         ] do
       {"Course reminder", title, :course_reminder, Email.course_reminder(registration(attrs, locale))}

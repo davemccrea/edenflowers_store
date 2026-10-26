@@ -34,7 +34,6 @@ defmodule Edenflowers.Email.Templates do
     {:refund_line, [:assigns]},
     {:order_refunded, [:assigns]},
     {:course_confirmation, [:assigns]},
-    {:course_payment_link, [:assigns]},
     {:course_reminder, [:assigns]},
     {:booking_cancelled, [:assigns]},
     {:booking_refunded, [:assigns]},
