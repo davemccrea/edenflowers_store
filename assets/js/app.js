@@ -7,6 +7,7 @@ import liveSelect from "live_select";
 import { customerLiveSelect } from "./customer_select";
 import { cinderDom } from "./cinder_a11y";
 import { onDocumentPatch } from "./admin_transitions";
+import faqSection from "./faq_section_toggle.mjs";
 import "./unsaved_forms";
 import "./dev_element_picker";
 import { loadStripe } from "./stripe";
@@ -24,6 +25,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
     ...colocatedHooks,
     ...liveSelect,
     LiveSelect: customerLiveSelect,
+    FaqSection: faqSection,
   },
   dom: {
     onDocumentPatch,
