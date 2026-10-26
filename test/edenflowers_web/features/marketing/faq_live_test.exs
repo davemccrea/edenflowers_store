@@ -57,11 +57,15 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     assert has_element?(view, "#ordering details", "until #{days} days before delivery or pickup")
     assert has_element?(view, ~s|#ordering a[href="/account"]|, "Go to your account")
     assert has_element?(view, ~s|#ordering a[href="/en/terms#cancellation"]|)
+    assert has_element?(view, ~s|#ordering-question-2 a[href="/en/contact"]|, "Get in touch after that.")
+    refute has_element?(view, "#ordering", "I'm usually flexible.")
   end
 
   test "seasonality and damaged flower answers both link to the quality terms", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
+    assert has_element?(view, "#care-question-1", "I use local and seasonal flowers whenever possible.")
+    refute has_element?(view, "#care-question-1", "something similar of the same value")
     assert has_element?(view, ~s|#care-question-1 a[href="/en/terms#quality"]|)
     assert has_element?(view, ~s|#care-question-2 a[href="/en/terms#quality"]|)
     refute has_element?(view, ~s|a[href="/en/terms#substitution"]|)

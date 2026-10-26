@@ -180,7 +180,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     />
                     <p class="text-base-content/70 text-sm">
                       <a class="link-underline-static-body" href={~q"/#{language}/privacy"}>
-                        {~t"Privacy policy (draft)"}
+                        {~t"Privacy policy"}
                       </a>
                     </p>
 

@@ -155,8 +155,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             {:paragraph,
              [
                ~t"Yes, from your account until #{days = Subscription.change_deadline_days()} days before delivery or pickup, for a full refund.",
-               {:link, ~t"Get in touch after that.", contact_path()},
-               ~t"I'm usually flexible."
+               {:link, ~t"Get in touch after that.", contact_path()}
              ]},
             {:link, ~t"Go to your account", ~p"/account"},
             {:link, ~t"See the cancellation terms", terms_path("cancellation")}
@@ -178,7 +177,6 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
          {~t"Are your flowers local and seasonal?",
           [
             ~t"I use local and seasonal flowers whenever possible.",
-            ~t"If a flower is out of season or unavailable, I use something similar of the same value.",
             {:link, ~t"See the quality terms", terms_path("quality")}
           ]},
          {~t"What if my flowers arrive damaged or wilt early?",

@@ -56,7 +56,10 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
                     {~t"Prices include VAT. At checkout you can pay with MobilePay, card, Apple Pay or Google Pay. Subscriptions require a card."}
                   </li>
                   <li>
-                    {~t"All payments on this website are processed by Stripe. Your full card number and security code are not stored on Eden Flowers' servers."}
+                    {~t"All payments on this website are processed by Stripe."}
+                    <a class="link-underline-static-body" href={~q"/#{language}/privacy" <> "#sharing"}>
+                      {~t"Privacy policy"}
+                    </a>
                   </li>
                 </ul>
               </.terms_subsection>

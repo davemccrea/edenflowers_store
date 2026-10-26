@@ -112,18 +112,19 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     refute has_element?(view, "#delivery", "The earliest delivery is the next day")
   end
 
-  test "explains Stripe processing and which card details are not stored in every language", %{conn: conn} do
-    for {path, statement} <- [
-          {"/en/terms",
-           "All payments on this website are processed by Stripe. Your full card number and security code are not stored on Eden Flowers' servers."},
-          {"/sv/kopvillkor",
-           "Alla betalningar på den här webbplatsen hanteras av Stripe. Ditt fullständiga kortnummer och din säkerhetskod lagras inte på Eden Flowers servrar."},
-          {"/fi/toimitusehdot",
-           "Stripe käsittelee kaikki tämän verkkosivuston kautta tehtävät maksut. Korttisi koko numeroa tai turvakoodia ei tallenneta Eden Flowersin palvelimille."}
+  test "names the payment processor but leaves card-data handling to privacy in every language", %{conn: conn} do
+    for {path, privacy, statement, storage_detail} <- [
+          {"/en/terms", "/en/privacy", "All payments on this website are processed by Stripe.", "security code"},
+          {"/sv/kopvillkor", "/sv/privacy", "Alla betalningar på den här webbplatsen hanteras av Stripe.",
+           "säkerhetskod"},
+          {"/fi/toimitusehdot", "/fi/privacy", "Stripe käsittelee kaikki tämän verkkosivuston kautta tehtävät maksut.",
+           "turvakoodia"}
         ] do
       {:ok, view, _html} = live(conn, path)
 
       assert has_element?(view, "#checkout-payments", statement)
+      assert has_element?(view, ~s|#checkout-payments a[href="#{privacy}#sharing"]|)
+      refute has_element?(view, "#checkout-payments", storage_detail)
     end
   end
 
