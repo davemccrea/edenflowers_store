@@ -4,7 +4,7 @@ title: Add the approved privacy-policy draft page
 status: done
 assignee: []
 created_date: '2026-10-26 16:39'
-updated_date: '2026-10-26 19:07'
+updated_date: '2026-10-26 19:14'
 labels:
   - quick
 dependencies: []
@@ -56,4 +56,6 @@ After WIP commit 355ccc83, tightened the public copy from 704 to 568 template wo
 Copy-only follow-up requested by David: remove visible draft caveats and move unresolved details to TASK-116 notes. Kept the update date, known processing facts, statutory accounting wording and current error/routine-backup periods. Removed unconfirmed overseas-safeguard copy, account-expiry work notes and the unimplemented photo-retention target rather than inventing operational guarantees. No processing, translations or SEO settings changed. Updated regression tests to reject draft/work-in-progress wording and unimplemented two-week promises.
 
 Verification after removing public caveats: 76 focused privacy/terms/localized-page/sitemap/checkout tests passed; targeted formatting and git diff --check passed. Changes remain uncommitted.
+
+Requested presentation/copy follow-up: restrained sans-serif page/section headings and sidebar links, normal body-text colour, and six concise storage/sharing bullets instead of ten. Smaller mapping/security/mailbox providers are disclosed by category rather than listing HERE/Mapbox/Google Maps/Cloudflare individually. Main hosting/payment/email providers, non-subscriber purchase-statistic sharing, accountant access and purchaser/Recipient photo distinction remain disclosed. No technical processing or date changes. Verification: 55 focused privacy/terms/localized-page/FAQ tests passed; targeted format check, Tailwind build and git diff --check passed.
 <!-- SECTION:NOTES:END -->

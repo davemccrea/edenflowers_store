@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.SectionIndex do
 
   attr :id, :string, required: true
   attr :sections, :list, required: true
+  attr :font, :string, values: ["serif", "sans"], default: "serif"
 
   def section_index(assigns) do
     ~H"""
@@ -20,7 +21,7 @@ defmodule EdenflowersWeb.SectionIndex do
       <ul class="category-index m-0 list-none p-0">
         <li :for={{id, title} <- @sections}>
           <a href={"##{id}"} class="category-index__link text-base-content block py-1 no-underline">
-            <span class="category-index__name font-serif text-lg">{title}</span>
+            <span class={["category-index__name", if(@font == "sans", do: "font-sans text-sm", else: "font-serif text-lg")]}>{title}</span>
           </a>
         </li>
       </ul>
