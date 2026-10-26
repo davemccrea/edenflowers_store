@@ -6,11 +6,10 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
 
   use EdenflowersWeb, :live_view
 
-  alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Format
   alias Edenflowers.Orders.Subscription
   alias EdenflowersWeb.Business
-  alias EdenflowersWeb.Marketing.ContactDrawer
+  alias EdenflowersWeb.SectionIndex
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -25,6 +24,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
        page_description:
          ~t"Answers about ordering, delivery, pickup, flower care, payment, subscriptions, weddings and courses at Eden Flowers in Vaasa.",
        sections: sections,
+       delivery_quote: nil,
        json_ld: faq_page(sections)
      )}
   end
@@ -46,21 +46,10 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
           <%!-- Phones get no index: closed, the page is under three screens and its headings do the job. --%>
-          <nav
+          <SectionIndex.section_index
             id="faq-nav"
-            phx-hook=".SectionIndex"
-            aria-labelledby="faq-nav-heading"
-            class="top-[calc(var(--shy-header-offset,0px)+2rem)] transition-[top] sticky hidden self-start duration-200 ease-out motion-reduce:transition-none md:block"
-          >
-            <h2 id="faq-nav-heading" class="text-base-content/75 mb-3 text-sm">{~t"On this page"}</h2>
-            <ul class="category-index m-0 list-none p-0">
-              <li :for={{id, title, _questions} <- @sections}>
-                <a href={"##{id}"} class="category-index__link text-base-content block py-1 no-underline">
-                  <span class="category-index__name font-serif text-lg">{title}</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
+            sections={Enum.map(@sections, fn {id, title, _questions} -> {id, title} end)}
+          />
 
           <div class="space-y-16 md:space-y-20">
             <section
@@ -71,7 +60,13 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             >
               <h2 id={"#{id}-faq-heading"} class="section-title mb-6">{title}</h2>
               <div class="max-w-3xl">
-                <.faq_item :for={{question, answer} <- questions} question={question} answer={answer} />
+                <.faq_item
+                  :for={{{question, answer}, index} <- Enum.with_index(questions)}
+                  id={"#{id}-question-#{index}"}
+                  question={question}
+                  answer={answer}
+                  delivery_quote={@delivery_quote}
+                />
               </div>
             </section>
 
@@ -81,7 +76,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             >
               <h2 id="ask-heading" class="section-title text-balance">{~t"Didn't find your answer?"}</h2>
               <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-                <.button phx-click={ContactDrawer.open()} variant="primary">{~t"Send me a message"}</.button>
+                <.button href={contact_path()} variant="primary">{~t"Send me a message"}</.button>
                 <a href={"tel:#{Business.phone()}"} class="link-underline-static-body whitespace-nowrap">
                   {Business.phone_display()}
                 </a>
@@ -90,47 +85,13 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           </div>
         </div>
       </.container>
-
-      <.live_component module={ContactDrawer} id="contact-drawer" />
     </Layouts.app>
-
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".SectionIndex">
-      // Marks the section being read as the current one in the index. It's worked out from the
-      // scroll position each time, so jumps (to the top, or to a link) can't leave a stale mark.
-      export default {
-        mounted() {
-          const links = [...this.el.querySelectorAll("a[href^='#']")];
-          const sections = links.map((link) =>
-            document.getElementById(link.hash.slice(1)),
-          );
-
-          this.update = () => {
-            const line = window.innerHeight * 0.25;
-            // The last section is too short to reach the line, so the bottom of the page marks it.
-            const atBottom =
-              window.innerHeight + window.scrollY >=
-              document.documentElement.scrollHeight - 2;
-            const passed = sections.filter(
-              (s) => s.getBoundingClientRect().top <= line,
-            ).length;
-            const current = atBottom ? links.length - 1 : Math.max(passed - 1, 0);
-
-            links.forEach((link, i) => {
-              if (i === current) link.setAttribute("aria-current", "location");
-              else link.removeAttribute("aria-current");
-            });
-          };
-
-          this.update();
-          document.addEventListener("scroll", this.update, { passive: true });
-        },
-
-        destroyed() {
-          document.removeEventListener("scroll", this.update);
-        },
-      };
-    </script>
     """
+  end
+
+  @impl true
+  def handle_info({:delivery_quoted, quote}, socket) do
+    {:noreply, assign(socket, delivery_quote: quote)}
   end
 
   @doc "Answered here and on a subscribable product's page."
@@ -138,100 +99,121 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     days = Subscription.lead_days()
 
     [
-      {~t"Can I pick it up instead?", pickup_answer()},
+      {~t"Can I collect my subscription bouquets?", ~t"Yes, choose pickup at checkout. Pickup is always free."},
       {~t"When do I pay?",
-       ~t"For the first bouquet, at checkout. After that, your card is charged #{days = days} days before each one."},
-      {~t"Can I take a break or stop?",
-       ~t"Yes, from your account, where you can also change the size, how often or the day. Changes close #{close = Subscription.change_deadline_days()} days before a bouquet."},
+       ~t"For the first bouquet, at checkout. After that, your card is charged #{days = days} days before each delivery or pickup."},
+      {~t"Can I pause or cancel my subscription?",
+       ~t"Yes, from your account. You can also change the size, frequency or delivery day. Make changes at least #{close = Subscription.change_deadline_days()} days before delivery or pickup. Cancelling after that stops future bouquets, but the booked bouquet still comes."},
       {~t"What if my card doesn't go through?",
-       ~t"Your bouquet still comes, and I'll email you a payment link. Nothing more is sent or charged until it's paid or you add a new card."}
+       ~t"Your bouquet still comes, and I'll get in touch with payment instructions."}
     ]
   end
 
-  # An answer is a list of blocks: a paragraph (a string), {:list, lines} or
-  # {:link, text, path}. Links show on the page but stay out of the JSON-LD.
+  # Answers share their blocks with the JSON-LD; links are shown only on the page.
+  # Lists may be plain (opening hours, for example) or bulleted.
   defp sections do
     [
       {"delivery", ~t"Delivery and pickup",
        [
-         {~t"Where do you deliver?", delivery_area_answer()},
-         {~t"Do you deliver to hospitals?",
+         {~t"Where and when do you deliver?", delivery_area_answer()},
+         {~t"Do you deliver to the hospital?",
           [
             ~t"Yes, to the ward, if it allows flowers. Please check with the ward first, and put the patient's name and ward in the delivery instructions."
           ]},
          {~t"What if nobody's home?",
           [
-            ~t"I leave the flowers at the door and email you a photo of where. For gifts, I also email you when they're delivered. Add any door code to the delivery instructions.",
+            ~t"I leave the flowers at the door and email you a photo showing where I've left them. If you're sending a gift, you receive an email when it's delivered. Add any door code to the delivery instructions.",
             {:link, ~t"What happens if I can't get in", terms_path("delivery")}
           ]},
          {~t"Where and when can I pick up my order?",
           [
-            ~t"At Minimossen, #{address = Business.street_address()}, #{town = Business.postal_town()}. I'll message you when your order is ready. Collect it during opening hours, or get in touch for another time.",
+            {:paragraph,
+             [
+               ~t"At Minimossen, #{address = Business.street_address()}, #{town = Business.postal_town()}. Choose your pickup date at checkout. I'll message you when your order is ready. Collect it during opening hours.",
+               {:link, ~t"Get in touch for another time.", contact_path()}
+             ]},
             {:list, Business.opening_hours_lines()}
           ]}
        ]},
       {"ordering", ~t"Ordering",
        [
-         {~t"Can I order something that isn't in the store?",
+         {~t"Can I order something that isn't in the online shop?",
           [
-            ~t"Yes. Tell me what you have in mind.",
-            {:link, ~t"Get in touch", ~q"/#{language}/contact"}
+            {:paragraph, [~t"Yes.", {:link, ~t"Tell me what you have in mind.", contact_path()}]}
           ]},
-         {~t"Can I add a card with a message?", card_answer()},
+         {~t"Can I add a card with a message?",
+          [~t"Yes, if you're sending flowers as a gift. Choose a card at checkout and write your message."]},
          {~t"Can I cancel an order I made online?",
           [
-            ~t"Yes, from your account until #{days = Subscription.change_deadline_days()} days before delivery or pickup, for a full refund. After that, get in touch. I'm usually flexible.",
+            {:paragraph,
+             [
+               ~t"Yes, from your account until #{days = Subscription.change_deadline_days()} days before delivery or pickup, for a full refund.",
+               {:link, ~t"Get in touch after that.", contact_path()},
+               ~t"I'm usually flexible."
+             ]},
+            {:link, ~t"Go to your account", ~p"/account"},
             {:link, ~t"See the cancellation terms", terms_path("cancellation")}
           ]}
        ]},
       {"care", ~t"Flowers and care",
        [
-         {~t"How long will my flowers last?",
+         {~t"How long will my flowers last, and how should I care for them?",
           [
-            ~t"5–7 days with care. Change the water every 2–3 days, trim the stems, and keep them out of direct sun and drafts."
+            ~t"A lot depends on the flowers, but typically around 7–10 days.",
+            {:bullets,
+             [
+               ~t"Use a clean vase with fresh water.",
+               ~t"Remove any leaves that would sit below the waterline.",
+               ~t"Check the water level regularly and top up as needed. Change the water and re-cut the stems every 2–3 days.",
+               ~t"Keep the flowers in a cool spot, away from radiators, other heat sources and ripe fruit."
+             ]}
           ]},
          {~t"Are your flowers local and seasonal?",
           [
-            ~t"Where I can. If a flower is out of season or unavailable, I use something similar of the same value.",
-            {:link, ~t"See the substitution terms", terms_path("substitution")}
+            ~t"I use local and seasonal flowers whenever possible. If a flower is out of season or unavailable, I use something similar of the same value."
           ]},
          {~t"What if my flowers arrive damaged or wilt early?",
           [
-            ~t"Send me a photo within 4 days and I'll replace them or refund you, as long as they've had fresh water.",
+            {:paragraph,
+             [
+               {:link, ~t"Let me know as soon as possible and send a photo.", contact_path()},
+               ~t"I'll replace them or refund you, provided care instructions are followed."
+             ]},
             {:link, ~t"See the quality terms", terms_path("quality")}
           ]}
        ]},
       {"payment", ~t"Payment",
        [
-         {~t"How can I pay?", [~t"MobilePay, card, Apple Pay or Google Pay. Prices include VAT."]},
+         {~t"How can I pay?",
+          [~t"MobilePay, card, Apple Pay or Google Pay. Subscriptions require a card. Prices include VAT."]},
          {~t"Can businesses pay by invoice?",
           [
-            ~t"Yes, and so can larger orders such as weddings.",
-            {:link, ~t"Get in touch", ~q"/#{language}/contact"}
+            {:paragraph,
+             [
+               ~t"Yes. I also offer invoice payment for larger orders, such as weddings.",
+               {:link, ~t"Get in touch to arrange it.", contact_path()}
+             ]}
           ]}
        ]},
       {"subscriptions", ~t"Subscriptions", Enum.map(subscription_questions(), fn {q, a} -> {q, [a]} end)},
       {"weddings", ~t"Weddings",
        [
          {~t"How far ahead should I book wedding flowers?",
-          [~t"The sooner the better, as my calendar fills up quickly."]},
-         {~t"Do you do weddings outside Vaasa?", [~t"Yes, gladly. Travel is quoted separately."]},
+          [
+            ~t"Saturdays in particular fill up quickly, as I can only take on a limited number of weddings each Saturday. Most couples book 9–12 months ahead.",
+            {:link, ~t"Get in touch well in advance.", contact_path()}
+          ]},
+         {~t"Do you provide wedding flowers outside Vaasa?", [~t"Yes, gladly. Travel is quoted separately."]},
          {~t"How does payment for a wedding work?",
           [
-            ~t"Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards.",
-            {:link, ~t"Read about wedding flowers", ~q"/#{language}/weddings"}
+            ~t"Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards."
           ]}
        ]},
       {"courses", ~t"Courses",
        [
          {~t"How do I cancel a course booking?",
           [
-            ~t"Reply to your confirmation email. Each course's page says how long you can cancel for a full refund, and what's kept after that."
-          ]},
-         {~t"What's included in a course, and what should I bring?",
-          [
-            ~t"It's on each course's page.",
-            {:link, ~t"See the courses", ~q"/#{language}/courses"}
+            ~t"Reply to your confirmation email. Each course page lists the deadline for a full refund and the cancellation fee after that."
           ]},
          {~t"Can I book a private course for my group?",
           [
@@ -243,33 +225,17 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
   end
 
   defp terms_path(section), do: ~q"/#{language}/terms" <> "##{section}"
-
-  # Sizes the catalogue has cards in, each with its message limit and lowest price.
-  defp card_answer do
-    locale = Format.locale()
-    cards = Edenflowers.Catalog.list_card_drawer_variants!()
-
-    sizes =
-      for size <- ProductVariantSize.values(),
-          variants = Enum.filter(cards, &(&1.size == size)),
-          variants != [] do
-        price = variants |> Enum.min_by(& &1.price, Decimal) |> Map.fetch!(:price)
-
-        ~t"#{name = variant_size_label(size)}: up to #{chars = ProductVariantSize.max_message_length(size)} characters, from #{price = Format.currency(price, locale)}"
-      end
-
-    intro = ~t"Yes, on gifts. Choose a card at checkout and write your message."
-
-    if sizes == [], do: [intro], else: [intro, {:list, sizes}]
-  end
+  defp contact_path, do: ~q"/#{language}/contact"
 
   defp delivery_area_answer do
     locale = Format.locale()
 
+    option = Edenflowers.Fulfillment.distance_priced_delivery()
+
     area =
-      case Edenflowers.Fulfillment.distance_priced_delivery() do
+      case option do
         %{max_dist_km: max, base_price: base, price_per_km: per_km} when is_integer(max) ->
-          ~t"Within #{km = max} km of the shop, for #{base = Format.currency(base, locale)} plus #{per_km = Format.currency(per_km, locale)} per km. Checkout shows the exact price."
+          ~t"Within #{km = max} km driving distance of the shop, for #{base = Format.currency(base, locale)} plus #{per_km = Format.currency(per_km, locale)} per km. Enter an address below to check the exact price."
 
         _ ->
           ~t"Enter the address at checkout to see whether I deliver there and what it costs."
@@ -279,33 +245,12 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
       if km = Edenflowers.Fulfillment.free_dist_km(),
         do: ~t"Some products, like subscriptions, are delivered free within #{km = km} km."
 
-    Enum.reject([area, free, same_day_answer()], &is_nil/1)
-  end
+    availability =
+      ~t"Checkout shows the available delivery dates for the products you choose. The usual cutoff for same-day orders is midday."
 
-  defp same_day_answer do
-    calendar = Edenflowers.Fulfillment.get_shop_calendar!()
+    checker = if option, do: {:delivery_checker, option}
 
-    if calendar.same_day do
-      time = Format.time(calendar.order_deadline, Format.locale())
-
-      ~t"Order by #{time = time} for delivery the same day."
-    else
-      ~t"The earliest delivery is the next day the shop is open."
-    end
-  end
-
-  # Free-delivery products, subscriptions among them, get the free distance;
-  # past it, the option's usual fee applies, counted from the shop.
-  defp pickup_answer do
-    case Edenflowers.Fulfillment.distance_priced_delivery() do
-      %{free_dist_km: km, base_price: base, price_per_km: per_km} when km > 0 ->
-        locale = Format.locale()
-
-        ~t"Of course, choose pickup at checkout. Delivered, it's free within #{km = km} km, then #{base = Format.currency(base, locale)} plus #{per_km = Format.currency(per_km, locale)} per km further out."
-
-      _ ->
-        ~t"Of course, choose pickup at checkout."
-    end
+    Enum.reject([area, checker, free, availability], &is_nil/1)
   end
 
   defp faq_page(sections) do
@@ -326,34 +271,59 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
   defp plain_text(answer) do
     answer
     |> Enum.flat_map(fn
-      {:link, _text, _path} -> []
-      {:list, lines} -> Enum.map(lines, &(&1 <> "."))
-      paragraph -> [paragraph]
+      {:link, _text, _path} ->
+        []
+
+      {:delivery_checker, _option} ->
+        []
+
+      {:paragraph, parts} ->
+        [
+          Enum.map_join(parts, " ", fn
+            {:link, text, _path} -> text
+            text -> text
+          end)
+        ]
+
+      {:list, lines} ->
+        Enum.map(lines, &(&1 <> "."))
+
+      {:bullets, lines} ->
+        lines
+
+      paragraph ->
+        [paragraph]
     end)
     |> Enum.join(" ")
   end
 
+  attr :id, :string, required: true
   attr :question, :string, required: true
   attr :answer, :list, required: true
+  attr :delivery_quote, :map, default: nil
 
   defp faq_item(assigns) do
     ~H"""
-    <details class="collapse-arrow border-base-content/12 collapse rounded-none border-b has-[summary:focus-visible]:outline-primary has-[summary:focus-visible]:outline-2 has-[summary:focus-visible]:outline-offset-2 first-of-type:border-t">
-      <summary class="collapse-title font-serif text-balance pr-10 pl-0 text-xl leading-snug">
+    <details
+      id={@id}
+      phx-mounted={JS.ignore_attributes(["open"])}
+      class="collapse-arrow border-base-content/12 collapse group overflow-visible rounded-none border-b has-[summary:focus-visible]:outline-primary has-[summary:focus-visible]:outline-2 has-[summary:focus-visible]:outline-offset-2 first-of-type:border-t"
+    >
+      <summary class="collapse-title font-sans text-balance pr-10 pl-0 text-base font-medium leading-snug group-open:min-h-0 group-open:pb-2">
         {@question}
       </summary>
-      <div class="collapse-content text-[1.0625rem] max-w-[60ch] space-y-3 px-0 leading-relaxed">
-        <.answer_block :for={block <- @answer} block={block} />
+      <div class="collapse-content font-sans text-base-content/80 max-w-[60ch] space-y-3 px-0 text-base font-normal leading-relaxed">
+        <.answer_block :for={block <- @answer} block={block} delivery_quote={@delivery_quote} />
       </div>
     </details>
     """
   end
 
-  defp answer_block(%{block: {:list, lines}} = assigns) do
-    assigns = assign(assigns, :lines, lines)
+  defp answer_block(%{block: {kind, lines}} = assigns) when kind in [:list, :bullets] do
+    assigns = assign(assigns, lines: lines, bullets?: kind == :bullets)
 
     ~H"""
-    <ul>
+    <ul class={@bullets? && "list-disc space-y-2 pl-5"}>
       <li :for={line <- @lines}>{line}</li>
     </ul>
     """
@@ -367,9 +337,64 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     """
   end
 
+  defp answer_block(%{block: {:paragraph, parts}} = assigns) do
+    assigns = assign(assigns, parts: parts)
+
+    ~H"""
+    <p>
+      <%= for part <- @parts do %>
+        <.answer_part part={part} />{" "}
+      <% end %>
+    </p>
+    """
+  end
+
+  defp answer_block(%{block: {:delivery_checker, option}} = assigns) do
+    assigns = assign(assigns, option: option)
+
+    ~H"""
+    <div class="space-y-4 pt-2">
+      <form id="faq-delivery-cost" phx-submit="lookup_address" phx-target="#address-input" class="space-y-4">
+        <.live_component
+          module={EdenflowersWeb.Checkout.AddressInput}
+          id="address-input"
+          address=""
+          fulfillment_option={@option}
+          quote={@delivery_quote}
+          label={~t"Check delivery address"}
+          autocomplete="street-address"
+          show_confirmation={false}
+          show_label={false}
+          lookup_on_blur={false}
+        />
+        <.button type="submit" variant="secondary">{~t"Check"}</.button>
+      </form>
+      <div aria-live="polite" aria-atomic="true" data-testid="faq-delivery-quote">
+        <p :if={@delivery_quote} class="text-success font-medium">
+          {~t"Delivery: #{price = Format.currency(@delivery_quote.fulfillment_fee, Format.locale())}"}
+        </p>
+      </div>
+    </div>
+    """
+  end
+
   defp answer_block(assigns) do
     ~H"""
     <p>{@block}</p>
+    """
+  end
+
+  defp answer_part(%{part: {:link, text, path}} = assigns) do
+    assigns = assign(assigns, text: text, path: path)
+
+    ~H"""
+    <a class="link-underline-static-body" href={@path}>{@text}</a>
+    """
+  end
+
+  defp answer_part(assigns) do
+    ~H"""
+    {@part}
     """
   end
 end

@@ -4,7 +4,7 @@ title: Publish terms of sale
 status: done
 assignee: []
 created_date: '2026-10-24 19:27'
-updated_date: '2026-10-25 03:35'
+updated_date: '2026-10-26 16:10'
 labels:
   - spec
   - customers
@@ -60,4 +60,8 @@ Decided in grilling (2026-10-24). Keep it to the main points and leave out any c
 
 <!-- SECTION:NOTES:BEGIN -->
 Page at TermsLive with seven sections; delivery max_dist_km and change_deadline_days read live. Localized slugs like every other page: /sv/kopvillkor, /fi/toimitusehdot. Business ID moved into EdenflowersWeb.Business (footer reads it too). Checkout line opens the terms in a new tab so the Stripe form isn't lost. sv/fi are drafts for TASK-117.
+
+2026-10-26 copy review: terms now group general purchase rules before service-specific terms, use the shared FAQ section index and reading styles, and link contact invitations to the Contact page. Quality concerns should be reported as soon as possible with a photo, replacing the earlier fixed reporting window. Delivery availability is product-dependent and shown at checkout; midday is only the usual same-day cutoff. Added Stripe processing and full-card-number/security-code storage wording. English, Swedish and Finnish are aligned; TASK-117 remains the separate human Swedish review.
+
+Validation: compile with warnings as errors, Ash codegen check, unused-dependency check, formatting, strict Credo, Gettext freshness and all 1,702 tests pass. Desktop and mobile browser checks cover the delivery checker and shared section navigation. Full mix precommit is blocked at its existing critical dependency-audit gate by hackney 4.8.7 (EEF-CVE-2026-115693); dependency updates are outside this copy/UI change.
 <!-- SECTION:NOTES:END -->

@@ -4,7 +4,7 @@ title: Rewrite the FAQ around what customers ask
 status: done
 assignee: []
 created_date: '2026-10-24 19:27'
-updated_date: '2026-10-25 03:46'
+updated_date: '2026-10-26 16:10'
 labels:
   - spec
   - customers
@@ -71,4 +71,8 @@ The side nav lists every section. Draft sv and fi. Jennie Swedish becomes the ma
 
 <!-- SECTION:NOTES:BEGIN -->
 Answers are blocks (paragraphs, lists, links) and one list feeds both the page and the FAQPage JSON-LD; links stay out of the JSON-LD text. Card sizes and prices come from the card drawer variants, limits from ProductVariantSize. The same-day/next-day sentence from the old delivery answer now sits in 'Where do you deliver?'. Card size names come from CardDrawer.size_label/1, now public. Check the Stripe dashboard for which payment methods are really enabled.
+
+2026-10-26 customer copy review supersedes the earlier card-limit, lifespan and reporting-window details: cards are added at checkout without character counts; flowers typically last 7–10 days depending on the flowers; quality issues should be reported as soon as possible with a photo. Added an address-based delivery-cost checker using checkout pricing, activated by Check or Enter, with an accessible unlabelled field, green price and no duplicate free-delivery result. Preserve native accordion state and focus outlines during updates. Availability depends on products and checkout dates; midday is the usual same-day cutoff. Pickup is always free; subscription answers no longer repeat delivery pricing. Wedding copy explains limited Saturday capacity and typical 9–12-month advance booking. Removed the course-inclusions question and wedding information link; contact invitations go to the Contact page. All three languages updated.
+
+Validation: compile with warnings as errors, Ash codegen check, unused-dependency check, formatting, strict Credo, Gettext freshness and all 1,702 tests pass. Desktop and mobile browser checks cover the delivery checker and shared section navigation. Full mix precommit is blocked at its existing critical dependency-audit gate by hackney 4.8.7 (EEF-CVE-2026-115693); dependency updates are outside this copy/UI change.
 <!-- SECTION:NOTES:END -->

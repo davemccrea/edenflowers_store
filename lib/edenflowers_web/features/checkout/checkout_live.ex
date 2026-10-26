@@ -248,7 +248,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                         :if={@order.fulfillment_method == :delivery}
                         id="address-input"
                         module={EdenflowersWeb.Checkout.AddressInput}
-                        order={@order}
+                        address={@order.delivery_address}
+                        fulfillment_option={@order.fulfillment_option}
                         quote={@delivery_quote}
                         label={recipient_label(@order, :address)}
                         autocomplete={own_details_autocomplete(@order, "street-address")}
