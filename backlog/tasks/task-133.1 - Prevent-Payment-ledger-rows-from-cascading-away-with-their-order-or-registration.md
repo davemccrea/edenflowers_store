@@ -3,12 +3,11 @@ id: TASK-133.1
 title: >-
   Prevent Payment ledger rows from cascading away with their order or
   registration
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-25 22:24'
-updated_date: '2026-10-25 22:24'
-labels:
-  - quick
+updated_date: '2026-10-26 04:59'
+labels: []
 dependencies: []
 references:
   - lib/edenflowers/payments/payment.ex
@@ -32,10 +31,10 @@ Add tests using actual database deletes (not only Ash validations or authorizati
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Payment order/course_registration foreign keys reject parent deletion; neither money rows nor parent records disappear on a rejected delete.
-- [ ] #2 Generated migration and resource snapshots match the Ash definitions; existing exactly-one-parent, unique Stripe IDs and reversal behaviour remain intact.
-- [ ] #3 Database-level tests cover both parent types and refunded/reversed history; the existing course-parent restriction is verified, including deletion of a course with no registrations.
-- [ ] #4 The full relevant payment/refund/accounting tests and migration checks pass; no existing data is deleted or marked archived.
+- [x] #1 Payment order/course_registration foreign keys reject parent deletion; neither money rows nor parent records disappear on a rejected delete.
+- [x] #2 Generated migration and resource snapshots match the Ash definitions; existing exactly-one-parent, unique Stripe IDs and reversal behaviour remain intact.
+- [x] #3 Database-level tests cover both parent types and refunded/reversed history; the existing course-parent restriction is verified, including deletion of a course with no registrations.
+- [x] #4 The full relevant payment/refund/accounting tests and migration checks pass; no existing data is deleted or marked archived.
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -43,3 +42,9 @@ Add tests using actual database deletes (not only Ash validations or authorizati
 <!-- SECTION:PLAN:BEGIN -->
 Change only the two Payment parent reference deletion behaviours; generate migration/snapshots; add database delete-protection assertions for both parents and course ownership; run payment/refund/accounting tests and migration consistency checks. Keep this safety change independent of UI archival.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Changed both Payment parent references to restrictive deletion and generated/reviewed migration and snapshot. Seven real-database deletion regression tests cover paid/refunded/reversed histories for both parent types and retained/unused courses. Relevant payment/accounting/refund run: 149 tests passed. mix ash.codegen --check passed. No production operations.
+<!-- SECTION:NOTES:END -->

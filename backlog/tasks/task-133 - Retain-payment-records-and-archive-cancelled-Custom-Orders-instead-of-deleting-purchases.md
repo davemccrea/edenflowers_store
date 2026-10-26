@@ -3,10 +3,10 @@ id: TASK-133
 title: >-
   Retain purchases and restore confirmed manual course bookings payable at the
   course
-status: ready-for-agent
+status: in-progress
 assignee: []
 created_date: '2026-10-25 22:22'
-updated_date: '2026-10-26 04:46'
+updated_date: '2026-10-26 04:55'
 labels:
   - spec
   - customers

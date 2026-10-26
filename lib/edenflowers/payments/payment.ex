@@ -44,8 +44,8 @@ defmodule Edenflowers.Payments.Payment do
     end
 
     references do
-      reference :order, on_delete: :delete
-      reference :course_registration, on_delete: :delete
+      reference :order, on_delete: :restrict
+      reference :course_registration, on_delete: :restrict
       reference :reverses_payment, on_delete: :delete
     end
   end
