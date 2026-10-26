@@ -41,12 +41,12 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
       alternates={@alternates}
     >
       <.container>
-        <h1 class="page-title mb-16 md:mb-20">
+        <h1 class="font-sans mb-16 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl md:mb-20">
           {~t"Terms of sale"}
         </h1>
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
-          <SectionIndex.section_index id="terms-nav" sections={@sections} />
+          <SectionIndex.section_index id="terms-nav" sections={@sections} font="sans" />
 
           <div class="space-y-16 md:space-y-20">
             <.terms_section id="payment" title={~t"Prices and payment"}>
@@ -236,8 +236,8 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
   defp terms_section(assigns) do
     ~H"""
     <section aria-labelledby={"#{@id}-heading"} class="max-w-3xl scroll-mt-8" id={@id}>
-      <h2 id={"#{@id}-heading"} class="section-title mb-6">{@title}</h2>
-      <div class="font-sans text-base-content/80 max-w-[60ch] space-y-6 text-base font-normal leading-relaxed">
+      <h2 id={"#{@id}-heading"} class="font-sans mb-6 text-xl font-semibold leading-snug md:text-2xl">{@title}</h2>
+      <div class="font-sans text-base-content max-w-[60ch] space-y-6 text-base font-normal leading-relaxed">
         {render_slot(@inner_block)}
       </div>
     </section>

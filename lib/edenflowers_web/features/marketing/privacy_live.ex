@@ -40,14 +40,16 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
       alternates={@alternates}
     >
       <.container>
-        <h1 class="page-title mb-8 md:mb-10">{~t"Privacy policy"}</h1>
+        <h1 class="font-sans mb-8 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl md:mb-10">
+          {~t"Privacy policy"}
+        </h1>
 
         <p id="notice-updated" class="font-sans text-base-content/80 mb-16 max-w-3xl text-base leading-relaxed md:mb-20">
           {~t"Updated 26 October 2026."}
         </p>
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
-          <SectionIndex.section_index id="privacy-nav" sections={@sections} />
+          <SectionIndex.section_index id="privacy-nav" sections={@sections} font="sans" />
 
           <div class="space-y-16 md:space-y-20">
             <.privacy_section id="controller" title={~t"Who is responsible?"}>
@@ -94,19 +96,15 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
                 <li>{~t"Hetzner hosts our main customer database in Finland."}</li>
                 <li>
-                  {~t"Stripe handles payments and saved cards. We keep payment references, card brand and last four digits, not full card numbers or security codes."}
+                  {~t"Stripe handles payments and saved cards. We keep payment references and limited card details, not full card numbers or security codes."}
                 </li>
                 <li>
-                  {~t"Brevo handles emails and contacts, including non-subscribers with phone numbers. It receives contact details, language, order count, latest order date and total spent. Newsletters go only to subscribers."}
+                  {~t"Brevo handles emails and stores contact details, language and purchase statistics, including for non-subscribers with phone numbers. Newsletters go only to subscribers."}
                 </li>
-                <li>{~t"HERE checks delivery addresses and calculates distances."}</li>
-                <li>{~t"Mapbox displays delivery maps."}</li>
-                <li>{~t"Opening Google Maps directions shares the destination."}</li>
-                <li>{~t"Cloudflare handles website traffic and security."}</li>
+                <li>
+                  {~t"Mapping services receive delivery addresses or coordinates. Website-security and mailbox providers handle traffic and emails."}
+                </li>
                 <li>{~t"Our accountant receives monthly purchase and payment records."}</li>
-                <li>
-                  {~t"Our mailbox provider stores enquiries and order emails at #{email = Business.email()}."}
-                </li>
                 <li>
                   {~t"Delivery photos may go to the purchaser, not necessarily the recipient. Emailed copies cannot be recalled."}
                 </li>
@@ -188,8 +186,8 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
   defp privacy_section(assigns) do
     ~H"""
     <section aria-labelledby={"#{@id}-heading"} class="max-w-3xl scroll-mt-8" id={@id}>
-      <h2 id={"#{@id}-heading"} class="section-title mb-6">{@title}</h2>
-      <div class="font-sans text-base-content/80 max-w-[60ch] space-y-6 text-base font-normal leading-relaxed">
+      <h2 id={"#{@id}-heading"} class="font-sans mb-6 text-xl font-semibold leading-snug md:text-2xl">{@title}</h2>
+      <div class="font-sans text-base-content max-w-[60ch] space-y-6 text-base font-normal leading-relaxed">
         {render_slot(@inner_block)}
       </div>
     </section>

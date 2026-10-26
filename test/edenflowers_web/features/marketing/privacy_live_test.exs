@@ -85,16 +85,14 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     assert has_element?(view, "#information", "Newsletter signup is optional")
     assert has_element?(view, "#information", "Instagram handles are optional")
     assert has_element?(view, "#information", "Checkout may create an account")
-    assert has_element?(view, "#sharing", "order count, latest order date and total spent")
-    assert has_element?(view, "#sharing", "including non-subscribers")
+    assert has_element?(view, "#sharing", "contact details, language and purchase statistics")
+    assert has_element?(view, "#sharing", "including for non-subscribers with phone numbers")
     assert has_element?(view, "#sharing", "Newsletters go only to subscribers.")
-    assert has_element?(view, "#sharing", "brand and last four digits")
-    assert has_element?(view, "#sharing", "HERE checks delivery addresses and calculates distances")
-    assert has_element?(view, "#sharing", "Mapbox displays delivery maps")
-    assert has_element?(view, "#sharing", "Opening Google Maps directions shares the destination")
-    assert has_element?(view, "#sharing", "Cloudflare")
+    assert has_element?(view, "#sharing", "limited card details, not full card numbers or security codes")
+    assert has_element?(view, "#sharing", "Mapping services receive delivery addresses or coordinates")
+    assert has_element?(view, "#sharing", "Website-security and mailbox providers handle traffic and emails")
+    refute has_element?(view, "#sharing", "Google Maps")
     assert has_element?(view, "#sharing", "Our accountant receives monthly purchase and payment records")
-    assert has_element?(view, "#sharing", "mailbox provider stores enquiries and order emails at #{Business.email()}")
     assert has_element?(view, "#sharing", "photos may go to the purchaser, not necessarily the recipient")
     assert has_element?(view, "#sharing", "cannot be recalled")
     refute has_element?(view, "#sharing", "emailed to the recipient")
@@ -137,7 +135,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
       {:ok, view, html} = live(conn, "/#{language}/privacy")
       document = LazyHTML.from_document(html)
 
-      for {section, count} <- [{"information", 7}, {"sharing", 10}, {"cookies", 4}, {"retention", 4}, {"rights", 3}] do
+      for {section, count} <- [{"information", 7}, {"sharing", 6}, {"cookies", 4}, {"retention", 4}, {"rights", 3}] do
         assert has_element?(view, "##{section} ul.list-disc.space-y-3")
         assert document |> LazyHTML.query("##{section} ul > li") |> Enum.count() == count
       end
@@ -146,7 +144,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     end
   end
 
-  test "uses the Terms page's section navigation and reading style", %{conn: conn} do
+  test "uses formal sans-serif headings and section navigation", %{conn: conn} do
     {:ok, view, html} = live(conn, ~p"/en/privacy")
     document = LazyHTML.from_document(html)
     sections = ["controller", "information", "sharing", "cookies", "retention", "rights"]
@@ -154,9 +152,14 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     assert document |> LazyHTML.query("nav[aria-labelledby=privacy-nav-heading] a") |> LazyHTML.attribute("href") ==
              Enum.map(sections, &"##{&1}")
 
+    assert has_element?(view, "#main-content h1.font-sans.font-semibold")
+    assert has_element?(view, "#privacy-nav .category-index__name.font-sans.text-sm")
+    refute has_element?(view, "#main-content .page-title, #main-content .section-title, #privacy-nav .font-serif")
+
     for section <- sections do
-      assert has_element?(view, "##{section} > h2.section-title")
-      assert has_element?(view, "##{section} > div.text-base.leading-relaxed")
+      assert has_element?(view, "##{section} > h2.font-sans.font-semibold")
+      assert has_element?(view, "##{section} > div.text-base-content.text-base.font-normal.leading-relaxed")
+      refute has_element?(view, "##{section} > div[class*=\"text-base-content/80\"]")
     end
 
     refute has_element?(view, "#main-content details")

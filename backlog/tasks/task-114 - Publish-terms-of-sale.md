@@ -4,7 +4,7 @@ title: Publish terms of sale
 status: done
 assignee: []
 created_date: '2026-10-24 19:27'
-updated_date: '2026-10-26 16:10'
+updated_date: '2026-10-26 19:14'
 labels:
   - spec
   - customers
@@ -64,4 +64,6 @@ Page at TermsLive with seven sections; delivery max_dist_km and change_deadline_
 2026-10-26 copy review: terms now group general purchase rules before service-specific terms, use the shared FAQ section index and reading styles, and link contact invitations to the Contact page. Quality concerns should be reported as soon as possible with a photo, replacing the earlier fixed reporting window. Delivery availability is product-dependent and shown at checkout; midday is only the usual same-day cutoff. Added Stripe processing and full-card-number/security-code storage wording. English, Swedish and Finnish are aligned; TASK-117 remains the separate human Swedish review.
 
 Validation: compile with warnings as errors, Ash codegen check, unused-dependency check, formatting, strict Credo, Gettext freshness and all 1,702 tests pass. Desktop and mobile browser checks cover the delivery checker and shared section navigation. Full mix precommit is blocked at its existing critical dependency-audit gate by hackney 4.8.7 (EEF-CVE-2026-115693); dependency updates are outside this copy/UI change.
+
+Requested presentation follow-up: use restrained sans-serif page/section headings and sidebar links for Terms, with normal body-text colour rather than 80% opacity. SectionIndex has an opt-in sans variant; FAQ keeps its existing serif style. No terms wording or last-updated date changed. Verification: 55 focused privacy/terms/localized-page/FAQ tests passed, targeted format check, Tailwind build and git diff --check passed.
 <!-- SECTION:NOTES:END -->

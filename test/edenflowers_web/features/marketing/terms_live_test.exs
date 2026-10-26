@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     end
   end
 
-  test "uses the FAQ's section navigation and reading style without collapsing the terms", %{conn: conn} do
+  test "uses formal sans-serif headings without changing the FAQ's typography", %{conn: conn} do
     {:ok, _faq, faq_html} = live(conn, ~p"/en/faq")
     {:ok, view, terms_html} = live(conn, ~p"/en/terms")
 
@@ -53,9 +53,13 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     assert LazyHTML.attribute(terms_nav, "class") == LazyHTML.attribute(faq_nav, "class")
     assert LazyHTML.attribute(terms_nav, "phx-hook") == LazyHTML.attribute(faq_nav, "phx-hook")
     assert has_element?(view, "#terms-nav.hidden.md\\:block.sticky")
-    assert has_element?(view, "#terms-nav .category-index__link .category-index__name")
-    assert has_element?(view, "#payment > h2.mb-6")
-    assert has_element?(view, "#payment > div.text-base.leading-relaxed")
+    assert has_element?(view, "#terms-nav .category-index__link .category-index__name.font-sans.text-sm")
+    assert has_element?(view, "#main-content h1.font-sans.font-semibold")
+    assert has_element?(view, "#payment > h2.font-sans.font-semibold.mb-6")
+    refute has_element?(view, "#main-content .page-title, #main-content .section-title, #terms-nav .font-serif")
+    assert LazyHTML.query(LazyHTML.from_document(faq_html), "#faq-nav .category-index__name.font-serif") != []
+    assert has_element?(view, "#payment > div.text-base-content.text-base.font-normal.leading-relaxed")
+    refute has_element?(view, "#main-content section > div[class*=\"text-base-content/80\"]")
     assert has_element?(view, "#checkout-payments > h3.font-sans.text-base.font-medium")
     refute has_element?(view, "#main-content details")
   end
