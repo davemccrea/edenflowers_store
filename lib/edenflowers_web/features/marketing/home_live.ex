@@ -14,22 +14,24 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Translations
 
-  # From feedback.md, in the customer's own language, with emoji dropped and long messages trimmed.
+  # Complete-sentence excerpts from feedback.md, preserving the customer's wording and emojis.
   # `en` is shown beneath the original on /en only. `occasion` is set only where the message names it.
   @review_pages [
     [
       %{
         quote:
-          "Fick otroligt många komplimanger för brudbuketten under kvällens gång. Buketten lyfte liksom bilderna, och det blev bättre än vad vi hade hoppats på!",
+          "Vi var såååå nöjda med både arrangemangen och speciellt av allt brudbuketten! Också kostymblommorna, hårbanden o tärnbuketterna var fantstiska! 💐😍 Buketten lyfte liksom bilderna, och det blev bättre än vad vi hade hoppats på!",
         en:
-          "So many compliments on the bridal bouquet all evening. It really lifted the photos, and it turned out better than we'd hoped!",
+          "We were soooo happy with both the arrangements and especially the bridal bouquet! The buttonholes, hairbands and bridesmaids' bouquets were fantastic too! 💐😍 The bouquet really lifted the photos, and it turned out better than we'd hoped!",
         name: "Fanny",
         occasion: :wedding,
         lang: "sv"
       },
       %{
-        quote: "Kiitos paljon ihanista hääkukista. Ne olivat täydellisemmät kuin osasin edes toivoa.",
-        en: "Thank you so much for the lovely wedding flowers. They were more perfect than I could have hoped for.",
+        quote:
+          "Kiitos paljon ihanista hääkukista. Ne olivat täydellisemmät kuin osasin edes toivoa. 😍 Sopivat mielestäni täysin myös kokonaisuuteen ja tyyliini, kiitos siis niistä",
+        en:
+          "Thank you so much for the lovely wedding flowers. They were more perfect than I could have hoped for. 😍 I think they also suited the overall look and my style perfectly, so thank you for them",
         name: "Aino",
         occasion: :wedding,
         lang: "fi"
@@ -46,49 +48,53 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
     [
       %{
         quote:
-          "Var så smidigt att du kunde ta dej dit under dagen och fixa i lugn och ro, och jag kände aldrig någon stress över att blommorna inte skulle vara perfekta.",
+          "Var så smidigt att du kunde ta dej dit under dagen och fixa i lugn och ro och jag kände aldrig någon stress över att blommorna inte skulle vara perfekta under dagen så tack för det! 💐💕",
         en:
-          "It was so easy that you could come over during the day and set up in peace, and I never once worried the flowers wouldn't be perfect.",
+          "It was so easy that you could come over during the day and set up in peace and I never once worried the flowers wouldn't be perfect during the day so thank you for that! 💐💕",
         name: "Julia",
         occasion: :wedding,
         lang: "sv"
       },
       %{
         quote:
-          "Teit meille kukat häihimme pari vuotta sitten, joten oli ihana saada kukat sinulta myös tyttäremme ensimmäiseen suureen juhlaan.",
+          "Kiitos vielä ristiäisten kukista, ne olivat todella kauniit! 😍 Teit meille kukat häihimme pari vuotta sitten, joten oli ihana saada kukat sinulta myös tyttäremme ensimmäiseen suureen juhlaan. Ja miten upeat kukat jälleen saimmekaan. Kiitos paljon.",
         en:
-          "You did the flowers for our wedding a couple of years ago, so it was lovely to have your flowers for our daughter's first big celebration too.",
+          "Thank you again for the christening flowers, they were really beautiful! 😍 You did the flowers for our wedding a couple of years ago, so it was lovely to have your flowers for our daughter's first big celebration too. And what gorgeous flowers we received once again. Thank you so much.",
         name: "Aino",
         occasion: :christening,
         lang: "fi"
       },
       %{
-        quote: "Så fint att du finns, du är en riktig räddare i nöden!",
-        en: "So glad you're here, you're a real lifesaver!",
+        quote: "Så fint att du finns - du är en riktig räddare i nöden👍",
+        en: "So glad you're here - you're a real lifesaver👍",
         name: "Elinor",
         lang: "sv"
       }
     ],
     [
       %{
-        quote: "Vi fick så mycket beröm för dekoren på bröllopet. Det blev både elegant, vackert och romantiskt!",
-        en: "We got so much praise for the decor at the wedding. It was elegant, beautiful and romantic!",
+        quote:
+          "Så tusen tusen tack att du fick det fixat exakt som jag hade tänkt! Det blev både elegant, vackert och romantiskt! Så tack❤️",
+        en:
+          "So thank you so, so much for getting it exactly as I'd imagined! It was elegant, beautiful and romantic! So thank you❤️",
         name: "Lena",
         occasion: :wedding,
         lang: "sv"
       },
       %{
         quote:
-          "Brudbuketten var ännu vackrare än vad jag hade förväntat mig. Absolut perfekt och passade superbra till helheten.",
+          "Brudbuketten var ännu vackrare än vad jag hade förväntat mig. Absolut perfekt och passade superbra till helheten 😍 Jag kan lätt rekommendera dig för alla bekanta.",
         en:
-          "The bridal bouquet was even more beautiful than I'd expected. Absolutely perfect, and it suited the whole look.",
+          "The bridal bouquet was even more beautiful than I'd expected. Absolutely perfect and it suited the whole look so well 😍 I can easily recommend you to everyone I know.",
         name: "Katariina",
         occasion: :wedding,
         lang: "sv"
       },
       %{
-        quote: "Tack för underbara buketter! Vi var verkligen så nöjda! Och gästerna frågade också varifrån de var!",
-        en: "Thank you for the wonderful bouquets! We were so happy! And the guests kept asking where they were from!",
+        quote:
+          "Tack till dej för underbara buketter! Vi var verkligen så nöjda! Och gästerna frågade också varifrån de var! 😉😘 Tack!",
+        en:
+          "Thank you for the wonderful bouquets! We were so happy! And the guests also asked where they were from! 😉😘 Thank you!",
         name: "Anna",
         lang: "sv"
       }

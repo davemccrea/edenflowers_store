@@ -52,6 +52,41 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     assert has_element?(sv, "#review-pages", "räddare i nöden")
   end
 
+  test "customer quotes keep original wording and read as complete excerpts", %{conn: conn} do
+    originals =
+      Regex.scan(~r/”([^”]+)”/u, File.read!("feedback.md"), capture: :all_but_first)
+      |> List.flatten()
+
+    for locale <- ["en", "sv", "fi"] do
+      {:ok, view, _html} = live(conn, "/#{locale}")
+
+      quotes =
+        view
+        |> render()
+        |> LazyHTML.from_document()
+        |> LazyHTML.query("#review-pages blockquote")
+        |> Enum.map(&LazyHTML.text/1)
+        |> Enum.map(&String.trim/1)
+
+      assert length(quotes) == 9
+
+      for quote <- quotes do
+        pattern =
+          quote
+          |> String.split()
+          |> Enum.map(&Regex.escape/1)
+          |> Enum.join("\\s+(?:.*?\\s+)?")
+          |> then(&Regex.compile!(&1, "s"))
+
+        assert Enum.any?(originals, &Regex.match?(pattern, &1)),
+               "Customer quote changes words or their order from feedback.md: #{inspect(quote)}"
+
+        refute quote =~ "…"
+        assert String.length(quote) <= 280
+      end
+    end
+  end
+
   test "states the shop's details to search engines, matching the footer", %{conn: conn} do
     html = conn |> get(~p"/en") |> html_response(200)
 
