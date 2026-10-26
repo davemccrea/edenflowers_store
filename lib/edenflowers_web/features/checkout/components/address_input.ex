@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Checkout.AddressInput do
   @moduledoc """
-  Delivery address input with asynchronous geocoding on blur.
+  Delivery address input with asynchronous geocoding on blur or form submit.
 
   Geocoding runs on blur so the order summary can price the address, but
   the result is *not* trusted by the server. On submit, `submit_delivery`
@@ -19,7 +19,8 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   HERE matching the wrong place. It is never written back into the field:
   HERE drops flat numbers and stair codes the courier needs.
 
-  The parent owns the quote (`%{address: ..., geocoded_address: ..., distance: ...}`). A lookup
+  The parent supplies `address` and `fulfillment_option` and owns the quote
+  (the typed address, resolved address, distance, fee and free-delivery eligibility). A lookup
   sends `{:delivery_quoted, quote}` to the parent, and `nil` when the quote
   no longer describes the typed address. The quote never touches the form.
   """
@@ -34,7 +35,15 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, loading: false, touched: false, error: nil)}
+    {:ok,
+     assign(socket,
+       loading: false,
+       touched: false,
+       error: nil,
+       show_confirmation: true,
+       show_label: true,
+       lookup_on_blur: true
+     )}
   end
 
   @impl true
@@ -46,7 +55,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
     socket =
       socket
       |> assign(assigns)
-      |> assign_new(:typed, fn -> assigns.order.delivery_address end)
+      |> assign_new(:typed, fn -> assigns.address end)
 
     {:ok, socket}
   end
@@ -54,26 +63,27 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
+    <div id={@id}>
       <.input
         id="address-input-field"
         name="delivery_address"
         value={@typed}
-        label={@label}
+        label={if @show_label, do: @label}
+        aria-label={if not @show_label, do: @label}
         type="text"
         placeholder="Myrvägen 1, 65230 Vasa"
         autocomplete={@autocomplete}
         aria-required="true"
         errors={errors(@error, @touched)}
         phx-change="typing"
-        phx-blur="lookup_address"
+        phx-blur={if @lookup_on_blur, do: "lookup_address"}
         phx-target={@myself}
         loading={@loading}
         confirmed={confirmed?(@typed, @quote, @loading)}
       />
       <div aria-live="polite">
         <p
-          :if={confirmed?(@typed, @quote, @loading)}
+          :if={@show_confirmation && confirmed?(@typed, @quote, @loading)}
           data-testid="address-confirmation"
           class="text-base-content/65 mt-1.5 text-sm"
         >
@@ -94,7 +104,13 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
         do: {:required, DeliveryError.message(:address_required)},
         else: nil
 
-    {:noreply, assign(socket, typed: value, touched: true, error: error)}
+    socket = if socket.assigns.loading, do: cancel_async(socket, :lookup_address), else: socket
+
+    {:noreply, assign(socket, typed: value, touched: true, error: error, loading: false)}
+  end
+
+  def handle_event("lookup_address", %{"delivery_address" => address}, socket) do
+    handle_event("lookup_address", %{"value" => address}, socket)
   end
 
   def handle_event("lookup_address", %{"value" => address}, socket) do
@@ -102,14 +118,15 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
 
     cond do
       String.trim(address) == "" ->
-        {:noreply, socket}
+        {:noreply, fail(socket, DeliveryError.message(:address_required))}
 
       quote && address == quote.address ->
         {:noreply, socket}
 
       true ->
-        fulfillment_option = socket.assigns.order.fulfillment_option
+        fulfillment_option = socket.assigns.fulfillment_option
         locale = Gettext.get_locale(EdenflowersWeb.Gettext)
+        send(self(), {:delivery_quoted, nil})
 
         # start_async with the same name cancels any in-flight lookup, so the
         # final blur wins when the user types fast.
@@ -133,7 +150,13 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
       send(
         self(),
         {:delivery_quoted,
-         %{address: socket.assigns.typed, geocoded_address: result.geocoded_address, distance: result.distance}}
+         %{
+           address: socket.assigns.typed,
+           geocoded_address: result.geocoded_address,
+           distance: result.distance,
+           fulfillment_fee: result.fulfillment_fee,
+           in_free_delivery_zone: result.in_free_delivery_zone
+         }}
       )
 
       {:noreply, assign(socket, loading: false, error: nil)}

@@ -4,15 +4,206 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
   import Generator
   import Phoenix.LiveViewTest
 
+  alias Edenflowers.Orders.Subscription
+
   test "reads the delivery distance and cancellation deadline live", %{conn: conn} do
     generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :dynamic, max_dist_km: 17))
-    days = Edenflowers.Orders.Subscription.change_deadline_days()
+    days = Subscription.change_deadline_days()
 
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
-    assert has_element?(view, "#delivery", "I deliver within 17 km of the shop")
+    assert has_element?(view, "#delivery", "I deliver within 17 km driving distance of the shop")
     assert has_element?(view, "#cancellation", "until #{days} days before delivery or pickup")
     assert has_element?(view, "#seller", EdenflowersWeb.Business.business_id())
+  end
+
+  test "the index follows the general terms, special services and seller details", %{conn: conn} do
+    {:ok, view, html} = live(conn, ~p"/en/terms")
+    document = LazyHTML.from_document(html)
+
+    sections = [
+      {"payment", "Prices and payment"},
+      {"delivery", "Delivery and pickup"},
+      {"quality", "Quality"},
+      {"cancellation", "Changes and cancellations"},
+      {"subscriptions", "Subscriptions"},
+      {"weddings", "Weddings"},
+      {"courses", "Courses"},
+      {"seller", "Seller and contact details"}
+    ]
+
+    assert document |> LazyHTML.query("nav[aria-labelledby=terms-nav-heading] a") |> LazyHTML.attribute("href") ==
+             Enum.map(sections, fn {id, _title} -> "##{id}" end)
+
+    assert document |> LazyHTML.query("#main-content section > h2") |> Enum.map(&LazyHTML.text/1) ==
+             Enum.map(sections, fn {_id, title} -> title end)
+
+    for {id, title} <- sections do
+      assert has_element?(view, "##{id} > h2", title)
+    end
+  end
+
+  test "uses the FAQ's section navigation and reading style without collapsing the terms", %{conn: conn} do
+    {:ok, _faq, faq_html} = live(conn, ~p"/en/faq")
+    {:ok, view, terms_html} = live(conn, ~p"/en/terms")
+
+    faq_nav = faq_html |> LazyHTML.from_document() |> LazyHTML.query("#faq-nav")
+    terms_nav = terms_html |> LazyHTML.from_document() |> LazyHTML.query("#terms-nav")
+
+    assert LazyHTML.attribute(terms_nav, "class") == LazyHTML.attribute(faq_nav, "class")
+    assert LazyHTML.attribute(terms_nav, "phx-hook") == LazyHTML.attribute(faq_nav, "phx-hook")
+    assert has_element?(view, "#terms-nav.hidden.md\\:block.sticky")
+    assert has_element?(view, "#terms-nav .category-index__link .category-index__name")
+    assert has_element?(view, "#payment > h2.mb-6")
+    assert has_element?(view, "#payment > div.text-base.leading-relaxed")
+    assert has_element?(view, "#checkout-payments > h3.font-sans.text-base.font-medium")
+    refute has_element?(view, "#main-content details")
+  end
+
+  test "related terms are grouped without breaking existing deep links", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/terms")
+
+    assert has_element?(view, "#payment #invoices", "Payment is due as stated on the invoice.")
+    assert has_element?(view, "#quality", "let me know as soon as possible and send a photo")
+    assert has_element?(view, "#quality", "provided care instructions are followed")
+    assert has_element?(view, ~s|#quality a[href="/en/faq#care"]|, "Read the care instructions")
+    refute has_element?(view, "#quality", "within 3 days")
+    refute has_element?(view, "#quality", "within 4 days")
+    refute has_element?(view, "#quality a[href^=mailto]")
+    refute has_element?(view, "#substitution")
+    refute has_element?(view, ~s|a[href="#substitution"]|)
+    assert has_element?(view, "#delivery #pickup", "choose a date at checkout")
+    assert has_element?(view, "#delivery #delivery-problems", "a locked stairwell")
+
+    days = Subscription.lead_days()
+    assert has_element?(view, "#subscriptions #subscription-billing", "#{days} days before each delivery or pickup")
+    assert has_element?(view, "#subscriptions #failed-payments", "the bouquet still comes")
+    assert has_element?(view, "#subscriptions #failed-payments", "I'll get in touch with payment instructions")
+    refute has_element?(view, "#subscriptions #failed-payments", "Nothing more is sent or charged")
+    refute has_element?(view, "#payment", "before each bouquet")
+  end
+
+  test "payment and availability wording agrees with the updated FAQ", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/terms")
+
+    assert has_element?(view, "#checkout-payments", "Subscriptions require a card.")
+
+    assert has_element?(
+             view,
+             "#delivery-area",
+             "Checkout shows the available delivery dates for the products you choose."
+           )
+
+    assert has_element?(view, "#delivery-area", "The usual cutoff for same-day orders is midday.")
+    assert has_element?(view, "#unattended-delivery", "photo showing where I've left them")
+    assert has_element?(view, ~s|#online-orders a[href="/account"]|, "Go to your account")
+    assert has_element?(view, "#subscription-billing", "You pay for the first bouquet at checkout.")
+    refute has_element?(view, "#delivery", "The earliest delivery is the next day")
+  end
+
+  test "explains Stripe processing and which card details are not stored in every language", %{conn: conn} do
+    for {path, statement} <- [
+          {"/en/terms",
+           "All payments on this website are processed by Stripe. Your full card number and security code are not stored on Eden Flowers' servers."},
+          {"/sv/kopvillkor",
+           "Alla betalningar på den här webbplatsen hanteras av Stripe. Ditt fullständiga kortnummer och din säkerhetskod lagras inte på Eden Flowers servrar."},
+          {"/fi/toimitusehdot",
+           "Stripe käsittelee kaikki tämän verkkosivuston kautta tehtävät maksut. Korttisi koko numeroa tai turvakoodia ei tallenneta Eden Flowersin palvelimille."}
+        ] do
+      {:ok, view, _html} = live(conn, path)
+
+      assert has_element?(view, "#checkout-payments", statement)
+    end
+  end
+
+  test "contact invitations use the contact page, with email only in seller details", %{conn: conn} do
+    for {path, contact} <- [
+          {"/en/terms", "/en/contact"},
+          {"/sv/kopvillkor", "/sv/kontakt"},
+          {"/fi/toimitusehdot", "/fi/yhteystiedot"}
+        ] do
+      {:ok, view, html} = live(conn, path)
+
+      for section <- ["pickup", "quality", "online-orders"] do
+        assert has_element?(view, ~s|##{section} a[href="#{contact}"]|)
+      end
+
+      email_sections =
+        html
+        |> LazyHTML.from_document()
+        |> LazyHTML.query("#main-content a[href^=mailto]")
+        |> LazyHTML.attribute("href")
+
+      assert email_sections == ["mailto:#{EdenflowersWeb.Business.email()}"]
+      assert has_element?(view, "#seller a[href^=mailto]")
+    end
+  end
+
+  test "only the contact phrase in the quality sentence is linked in each language", %{conn: conn} do
+    for {path, contact, phrase, sentence} <- [
+          {"/en/terms", "/en/contact", "let me know",
+           "If your flowers arrive damaged or wilt early, let me know as soon as possible and send a photo."},
+          {"/sv/kopvillkor", "/sv/kontakt", "hör av dig",
+           "Om dina blommor kommer fram skadade eller vissnar i förtid, hör av dig så snart som möjligt och skicka en bild."},
+          {"/fi/toimitusehdot", "/fi/yhteystiedot", "ilmoita minulle",
+           "Jos kukkasi saapuvat vahingoittuneina tai kuihtuvat ennenaikaisesti, ilmoita minulle mahdollisimman pian ja lähetä kuva."}
+        ] do
+      {:ok, view, html} = live(conn, path)
+      document = LazyHTML.from_document(html)
+
+      assert has_element?(view, "#quality", sentence)
+      assert document |> LazyHTML.query(~s|#quality a[href="#{contact}"]|) |> LazyHTML.text() == phrase
+      refute html =~ "__CONTACT_LINK__"
+    end
+  end
+
+  test "special booking cancellation terms are separate from online flower orders", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/terms")
+
+    assert has_element?(view, "#cancellation #online-orders > h3", "Online flower orders")
+    assert has_element?(view, ~s|#cancellation a[href="#weddings"]|, "Weddings")
+    assert has_element?(view, ~s|#cancellation a[href="#courses"]|, "Courses")
+    assert has_element?(view, "#wedding-cancellation", "not refunded if you cancel later than four weeks")
+    assert has_element?(view, "#courses", "the cancellation terms on each course's page apply")
+    refute has_element?(view, "#cancellation", "For courses, the cancellation terms")
+  end
+
+  test "service links and new headings are localized", %{conn: conn} do
+    for page <- [
+          %{
+            path: "/en/terms",
+            faq: "/en/faq",
+            courses: "/en/courses",
+            cancellation: "Changes and cancellations",
+            seller: "Seller and contact details",
+            quality: "Quality"
+          },
+          %{
+            path: "/sv/kopvillkor",
+            faq: "/sv/vanliga-fragor",
+            courses: "/sv/kurser",
+            cancellation: "Ändringar och avbokningar",
+            seller: "Säljare och kontaktuppgifter",
+            quality: "Kvalitet"
+          },
+          %{
+            path: "/fi/toimitusehdot",
+            faq: "/fi/ukk",
+            courses: "/fi/kurssit",
+            cancellation: "Muutokset ja peruutukset",
+            seller: "Myyjä ja yhteystiedot",
+            quality: "Laatu"
+          }
+        ] do
+      {:ok, view, _html} = live(conn, page.path)
+
+      assert has_element?(view, "#cancellation > h2", page.cancellation)
+      assert has_element?(view, "#seller > h2", page.seller)
+      assert has_element?(view, "#quality > h2", page.quality)
+      assert has_element?(view, ~s|#quality a[href="#{page.faq}#care"]|)
+      assert has_element?(view, ~s|#subscriptions a[href="#{page.faq}#subscriptions"]|)
+      assert has_element?(view, ~s|#courses a[href="#{page.courses}"]|)
+    end
   end
 
   test "leaves out the distance when nothing is delivered by distance", %{conn: conn} do
