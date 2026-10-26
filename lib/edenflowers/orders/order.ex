@@ -189,7 +189,6 @@ defmodule Edenflowers.Orders.Order do
                      :quote_entered,
                      :update_florist_note,
                      :cancel,
-                     :delete_custom,
                      :record_payment,
                      :undo_payment,
                      :refund,
@@ -241,7 +240,6 @@ defmodule Edenflowers.Orders.Order do
     # Carts are left out: they change with every checkout step.
     publish :place_custom, ["admin", "orders"]
     publish_all :update, ["admin", "orders"], filter: fn %{data: order} -> order.state == :placed end
-    publish :delete_custom, ["admin", "orders"]
     publish_all :update, ["order", "changed", :id], filter: fn %{data: order} -> order.state == :placed end
     publish :add_promotion_with_code, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
@@ -498,11 +496,6 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
       description "Whether Jennie can mark it fulfilled: placed and still to make."
-    end
-
-    calculate :deletable?, :boolean, expr(origin == :custom and not exists(payments, true)) do
-      description "Only a Custom Order no money has moved for can be deleted. Any other is cancelled instead, " <>
-                    "so the accounts stay whole."
     end
 
     calculate :open?,

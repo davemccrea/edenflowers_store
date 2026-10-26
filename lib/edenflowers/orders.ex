@@ -61,7 +61,6 @@ defmodule Edenflowers.Orders do
       define :quote_entered_order, action: :quote_entered, args: [:order, :params, :delivery_quote]
       define :update_florist_note, action: :update_florist_note
       define :cancel_order, action: :cancel
-      define :delete_custom_order, action: :delete_custom
       define :refresh_vat_breakdown, action: :refresh_vat_breakdown
 
       # Customer

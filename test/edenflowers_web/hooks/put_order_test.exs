@@ -13,6 +13,7 @@ defmodule EdenflowersWeb.Hooks.PutOrderTest do
   end
 
   test "redirects to the same page when the session cart has been purged", %{conn: conn, order: order} do
+    order = Ash.Seed.update!(order, %{updated_at: DateTime.add(DateTime.utc_now(), -2, :day)})
     Ash.destroy!(order, action: :purge_abandoned_cart, authorize?: false)
 
     assert {:error, {:redirect, %{to: "/en/about"}}} = live(conn)

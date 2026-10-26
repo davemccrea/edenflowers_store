@@ -63,6 +63,11 @@ defmodule Edenflowers.Orders.Order.Checkout do
     destroy :purge_abandoned_cart do
       description "Run nightly: deletes a cart that was never placed, has no lines or PaymentIntent and hasn't " <>
                     "changed for a day."
+
+      change filter expr(
+                      state != :placed and is_nil(payment_intent_id) and not exists(line_items, true) and
+                        updated_at < ago(1, :day)
+                    )
     end
 
     read :for_checkout do

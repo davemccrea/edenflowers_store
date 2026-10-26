@@ -3,10 +3,10 @@ id: TASK-133.4
 title: >-
   Remove Custom Order deletion and use cancellation with existing Cinder
   filtering
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-25 22:24'
-updated_date: '2026-10-26 04:46'
+updated_date: '2026-10-26 05:35'
 labels: []
 dependencies:
   - TASK-133.2
@@ -41,11 +41,11 @@ This change does not require a zero-Balance guarantee before a table can filter 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No normal application action or UI permits hard deletion of a placed Custom/Online Order; obsolete Delete domain/policy/dispatch references and genuinely unused destructive-only helpers are removed.
-- [ ] #2 Existing cancellation/settlement returns stock and accounts for money through the current explicit actions, retaining identity, lines, VAT snapshots, Payments/reversals and full history.
-- [ ] #3 The current Cinder Still to do default excludes cancelled orders, while All orders, ordinary search and direct details still find them; no archive/hidden schema, action, eligibility or special view is introduced.
-- [ ] #4 Late payment/refund callbacks still find cancelled orders and expose new obligations in Overview/settlement even when the working table excludes them; customer history, receipts, revenue and accounting remain correct.
-- [ ] #5 Tests cover removed deletion paths, retained cancelled records/history, default versus All/search/direct access, late financial attention and unchanged empty unused store-cart cleanup.
+- [x] #1 No normal application action or UI permits hard deletion of a placed Custom/Online Order; obsolete Delete domain/policy/dispatch references and genuinely unused destructive-only helpers are removed.
+- [x] #2 Existing cancellation/settlement returns stock and accounts for money through the current explicit actions, retaining identity, lines, VAT snapshots, Payments/reversals and full history.
+- [x] #3 The current Cinder Still to do default excludes cancelled orders, while All orders, ordinary search and direct details still find them; no archive/hidden schema, action, eligibility or special view is introduced.
+- [x] #4 Late payment/refund callbacks still find cancelled orders and expose new obligations in Overview/settlement even when the working table excludes them; customer history, receipts, revenue and accounting remain correct.
+- [x] #5 Tests cover removed deletion paths, retained cancelled records/history, default versus All/search/direct access, late financial attention and unchanged empty unused store-cart cleanup.
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -53,6 +53,12 @@ This change does not require a zero-Balance guarantee before a table can filter 
 <!-- SECTION:PLAN:BEGIN -->
 Search Delete action/UI/domain/log/helper callers, replace the product instruction with existing cancellation/settlement and remove the hard-delete operation. Add preservation assertions. Verify Cinder default/All/search/direct access and financial attention with a late payment through the shared code. Leave normal cancelled histories and accounting reads untouched. Remove unused destructive helpers only after caller checks; no archive migration, state, action or new view.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Removed Custom Order delete action/interface/calculation/policy/pubsub/UI/handler and deletion-only validation, log-erasure helper and payment-in-progress exception. Simplified shared cancellation now deletion orchestration is gone. Existing sole order destroy action is empty old store-cart cleanup; added the same eligibility filter to the action so it cannot be called directly to delete placed/active carts. Adapted stale-session fixture to an old eligible cart. Tests retain cancelled identity/lines/VAT/log/payment reversal history and stock exactly once; All orders/search/global search/direct links retain cancelled Custom Orders, and actual late payment appears in Overview independent of working-list filter. Targeted tests passed. Full precommit lint/migration checks passed and exposed only the now-fixed stale-session fixture. Updated seeded course example to accepted unpaid booking. No archive state/schema/view or production operation.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 
