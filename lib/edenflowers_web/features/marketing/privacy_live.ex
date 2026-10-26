@@ -49,7 +49,15 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
         </p>
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
-          <SectionIndex.section_index id="privacy-nav" sections={@sections} font="sans" />
+          <SectionIndex.section_index
+            id="privacy-nav"
+            sections={@sections}
+            font="sans"
+            related_links={[
+              {~q"/#{language}/faq", ~t"FAQ"},
+              {~q"/#{language}/terms", ~t"Terms of sale"}
+            ]}
+          />
 
           <div class="space-y-16 md:space-y-20">
             <.privacy_section id="controller" title={~t"Who is responsible?"}>

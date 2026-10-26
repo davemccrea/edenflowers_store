@@ -50,7 +50,15 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
         </p>
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
-          <SectionIndex.section_index id="terms-nav" sections={@sections} font="sans" />
+          <SectionIndex.section_index
+            id="terms-nav"
+            sections={@sections}
+            font="sans"
+            related_links={[
+              {~q"/#{language}/faq", ~t"FAQ"},
+              {~q"/#{language}/privacy", ~t"Privacy policy"}
+            ]}
+          />
 
           <div class="space-y-16 md:space-y-20">
             <.terms_section id="payment" title={~t"Prices and payment"}>

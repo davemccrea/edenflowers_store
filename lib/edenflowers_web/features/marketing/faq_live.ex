@@ -50,6 +50,10 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             id="faq-nav"
             font="sans"
             sections={Enum.map(@sections, fn {id, title, _questions} -> {id, title} end)}
+            related_links={[
+              {~q"/#{language}/terms", ~t"Terms of sale"},
+              {~q"/#{language}/privacy", ~t"Privacy policy"}
+            ]}
           />
 
           <div>

@@ -58,7 +58,8 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
 
     assert LazyHTML.attribute(terms_nav, "class") == LazyHTML.attribute(faq_nav, "class")
     assert LazyHTML.attribute(terms_nav, "phx-hook") == LazyHTML.attribute(faq_nav, "phx-hook")
-    assert has_element?(view, "#terms-nav.hidden.md\\:block.sticky")
+    assert has_element?(view, "#terms-nav.hidden.md\\:block")
+    assert has_element?(view, "#terms-nav-sidebar.md\\:sticky")
     assert has_element?(view, "#terms-nav .category-index__link .category-index__name.font-sans.text-sm")
     assert has_element?(view, "#main-content h1.font-sans.font-semibold")
     assert has_element?(view, "#payment > h2.font-sans.font-semibold.mb-6")

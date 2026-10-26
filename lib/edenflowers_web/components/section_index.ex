@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.SectionIndex do
   @moduledoc """
-  Desktop section navigation shared by long storefront pages.
+  Section navigation and related-page links shared by long storefront pages.
   """
 
   use EdenflowersWeb, :html
@@ -8,24 +8,39 @@ defmodule EdenflowersWeb.SectionIndex do
   attr :id, :string, required: true
   attr :sections, :list, required: true
   attr :font, :string, values: ["serif", "sans"], default: "serif"
+  attr :related_links, :list, default: []
 
   def section_index(assigns) do
     ~H"""
-    <nav
-      id={@id}
-      phx-hook=".SectionIndex"
-      aria-labelledby={@id <> "-heading"}
-      class="top-[calc(var(--shy-header-offset,0px)+2rem)] transition-[top] sticky hidden self-start duration-200 ease-out motion-reduce:transition-none md:block"
+    <div
+      id={@id <> "-sidebar"}
+      class="top-[calc(var(--shy-header-offset,0px)+2rem)] transition-[top] self-start duration-200 ease-out motion-reduce:transition-none md:sticky"
     >
-      <h2 id={@id <> "-heading"} class="text-base-content/75 mb-3 text-sm">{~t"On this page"}</h2>
-      <ul class="category-index m-0 list-none p-0">
-        <li :for={{id, title} <- @sections}>
-          <a href={"##{id}"} class="category-index__link text-base-content block py-1 no-underline">
-            <span class={["category-index__name", if(@font == "sans", do: "font-sans text-sm", else: "font-serif text-lg")]}>{title}</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
+      <nav id={@id} phx-hook=".SectionIndex" aria-labelledby={@id <> "-heading"} class="hidden md:block">
+        <h2 id={@id <> "-heading"} class="text-base-content/75 mb-3 text-sm">{~t"On this page"}</h2>
+        <ul class="category-index m-0 list-none p-0">
+          <li :for={{id, title} <- @sections}>
+            <a href={"##{id}"} class="category-index__link text-base-content block py-1 no-underline">
+              <span class={["category-index__name", if(@font == "sans", do: "font-sans text-sm", else: "font-serif text-lg")]}>{title}</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <nav
+        :if={@related_links != []}
+        id={@id <> "-related"}
+        aria-labelledby={@id <> "-related-heading"}
+        class="font-sans mb-10 md:border-base-300 md:mt-8 md:mb-0 md:border-t md:pt-6"
+      >
+        <h2 id={@id <> "-related-heading"} class="text-base-content/75 mb-3 text-sm">{~t"Related information"}</h2>
+        <ul class="m-0 list-none p-0">
+          <li :for={{href, title} <- @related_links}>
+            <.link navigate={href} class="link-underline-static-body block py-1 text-sm">{title}</.link>
+          </li>
+        </ul>
+      </nav>
+    </div>
 
     <script :type={Phoenix.LiveView.ColocatedHook} name=".SectionIndex">
       // Track scroll position so both anchor jumps and scrolling update the current section.
