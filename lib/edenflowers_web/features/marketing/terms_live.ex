@@ -71,16 +71,10 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
             <.terms_section id="delivery" title={~t"Delivery and pickup"}>
               <.terms_subsection id="delivery-area" title={~t"Delivery area and timing"}>
                 <p>{delivery_area()}</p>
-                <p>
-                  {~t"Checkout shows the available delivery dates for the products you choose. The usual cutoff for same-day orders is midday."}
-                </p>
               </.terms_subsection>
               <.terms_subsection id="pickup" title={~t"Pickup"}>
                 <p>
-                  {~t"For pickup, choose a date at checkout and I'll send you a message when your order is ready. Collect it during opening hours."}
-                  <a class="link-underline-static-body" href={~q"/#{language}/contact"}>
-                    {~t"Get in touch and we'll find another time."}
-                  </a>
+                  {~t"Collect your order during opening hours, unless we've agreed on another time."}
                 </p>
               </.terms_subsection>
               <.terms_subsection id="unattended-delivery" title={~t"If nobody is home"}>
@@ -97,6 +91,9 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
             </.terms_section>
 
             <.terms_section id="quality" title={~t"Quality"}>
+              <p>
+                {~t"If a flower is out of season or unavailable, I use something similar of the same value."}
+              </p>
               <p>
                 <.quality_contact />
                 {~t"I'll replace them or refund you, provided care instructions are followed."}
@@ -145,11 +142,14 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
                   {~t"If a charge doesn't go through, the bouquet still comes and I'll get in touch with payment instructions."}
                 </p>
               </.terms_subsection>
-              <p>
-                <a class="link-underline-static-body" href={~q"/#{language}/faq" <> "#subscriptions"}>
-                  {~t"Changing or stopping a subscription"}
-                </a>
-              </p>
+              <.terms_subsection id="subscription-changes" title={~t"Changing or stopping a subscription"}>
+                <p>
+                  {~t"You can pause, cancel or change your subscription from your account. Make changes at least #{close = Edenflowers.Orders.Subscription.change_deadline_days()} days before delivery or pickup. Cancelling after that stops future bouquets, but the booked bouquet still comes."}
+                </p>
+                <p>
+                  <a class="link-underline-static-body" href={~p"/account"}>{~t"Go to your account"}</a>
+                </p>
+              </.terms_subsection>
             </.terms_section>
 
             <.terms_section id="weddings" title={~t"Weddings"}>
@@ -160,7 +160,7 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
               </.terms_subsection>
               <.terms_subsection id="wedding-payment" title={~t"Payment schedule"}>
                 <p>
-                  {~t"Payment is split into two instalments: the first is sent out four weeks before the wedding and the second after the wedding."}
+                  {~t"Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards."}
                 </p>
               </.terms_subsection>
               <.terms_subsection id="wedding-cancellation" title={~t"Cancellation and booking fee"}>
