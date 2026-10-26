@@ -6,14 +6,12 @@ import {
 } from "../../assets/js/dev_element_reference.mjs";
 
 const comment = (text) => ({ nodeType: 8, nodeValue: text });
-const element = (tag, attrs = {}, text = "") => ({
+const element = (tag, attrs = {}) => ({
   nodeType: 1,
   tagName: tag.toUpperCase(),
   id: attrs.id || "",
-  textContent: text,
   children: [],
   getAttribute: (name) => attrs[name] ?? null,
-  hasAttribute: (name) => name in attrs,
 });
 const append = (parent, ...nodes) => {
   for (const node of nodes) {
@@ -29,36 +27,44 @@ const fixture = () => {
   const entry = comment(" <App.render> lib/app.ex:10 (app) ");
   const call = comment(" @caller lib/app.ex:20 (app) ");
   const button = comment(" <Components.button> lib/components.ex:100 (app) ");
-  const target = element("button", { "data-phx-loc": "105" }, "Save");
+  const target = element("button", { "data-phx-loc": "105" });
   append(root, entry, call, button, target);
-  const comments = [entry, call, button];
   const document = {
     location: { href: "http://app.localhost/orders" },
-    createTreeWalker: () => {
-      let index = 0;
-      return { nextNode: () => comments[index++] ?? null };
-    },
-    querySelectorAll: () => [],
   };
   return { root, target, document };
 };
 
-test("copies Tidewave-style context and rendering details without a user prompt", () => {
+test("copies only the URL, selector, source location, and component tree", () => {
   globalThis.CSS = { escape: (value) => value };
   const { target, document } = fixture();
   const result = elementReference(target, document);
-  assert.ok(result.startsWith('<context name="current-page">'));
-  assert.ok(!result.includes("user_prompt"));
-  assert.ok(result.includes("entrypoint: App.render\nsource: lib/app.ex:10"));
-  assert.ok(result.includes("<selector>\n#orders > button\n</selector>"));
-  assert.ok(
-    result.includes("The element source is at:\n\nlib/components.ex:105"),
+  assert.equal(
+    result,
+    `<context name="current-page">
+<url>
+http://app.localhost/orders
+</url>
+</context>
+
+<references>
+<reference id="0" type="selected_element">
+<selector>
+#orders > button
+</selector>
+<framework-details>
+The element source is at:
+
+lib/components.ex:105
+
+Component rendering tree (from innermost to outermost):
+
+lib/app.ex:20: Components.button
+entrypoint: App.render
+</framework-details>
+</reference>
+</references>`,
   );
-  assert.ok(
-    result.includes("lib/app.ex:20: Components.button\nentrypoint: App.render"),
-  );
-  assert.ok(result.includes("Components.button: lib/components.ex:100"));
-  assert.ok(result.includes("<text-content>\nSave\n</text-content>"));
 });
 
 test("slot content uses the caller file and skips completed sibling components", () => {
@@ -81,25 +87,8 @@ test("selectors distinguish repeated tags without IDs and missing annotations st
   const second = element("button");
   append(root, first, second);
   const { document } = fixture();
-  document.createTreeWalker = () => ({ nextNode: () => null });
   const result = elementReference(second, document);
   assert.ok(result.includes("div > button:nth-of-type(2)"));
   assert.ok(!result.includes("framework-details"));
   assert.equal(findHeexSource(second), null);
-});
-
-test("includes live view runtime details when available", () => {
-  const { target, document } = fixture();
-  document.querySelectorAll = () => [
-    element("div", {
-      id: "phx-1",
-      "data-phx-main": "",
-      "data-phx-pid": "<0.123.0>",
-    }),
-  ];
-  assert.ok(
-    elementReference(target, document).includes(
-      "* Main LiveView #phx-1 with PID <0.123.0>",
-    ),
-  );
 });
