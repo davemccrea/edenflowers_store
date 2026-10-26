@@ -55,20 +55,8 @@ defmodule EdenflowersWeb.Courses.CourseLive do
       alternates={@alternates}
     >
       <.container>
-        <div class="grid gap-10 md:grid-cols-[minmax(0,480px)_1fr] md:items-start md:gap-16">
-          <figure class="bg-cream aspect-[4/5] relative overflow-hidden">
-            <.image
-              src={@course.image_slug}
-              alt={@course.name}
-              width={1000}
-              height={1250}
-              sizes="(min-width: 768px) 480px, 100vw"
-              priority
-              class="h-full w-full object-cover"
-            />
-          </figure>
-
-          <div class="flex flex-col gap-8 md:max-w-prose">
+        <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.9fr)] lg:items-start lg:gap-12 xl:gap-20">
+          <div class="flex min-w-0 flex-col gap-6">
             <header>
               <.link
                 navigate={~q"/#{language}/courses"}
@@ -79,7 +67,19 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               <h1 class="page-title" data-testid="course-name">{@course.name}</h1>
             </header>
 
-            <p class="leading-relaxed">{@course.description}</p>
+            <figure class="bg-cream aspect-[3/2] relative w-full max-w-md overflow-hidden">
+              <.image
+                src={@course.image_slug}
+                alt={@course.name}
+                width={900}
+                height={600}
+                sizes="(min-width: 480px) 448px, calc(100vw - 2rem)"
+                priority
+                class="h-full w-full object-cover"
+              />
+            </figure>
+
+            <p class="max-w-prose leading-relaxed">{@course.description}</p>
 
             <dl class="border-base-content/12 grid-cols-[auto_1fr] grid items-baseline gap-x-6 gap-y-3 border-y py-6">
               <dt class="eyebrow text-base-content/70">{~t"When"}</dt>
@@ -108,8 +108,10 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               <dt :if={@course.booking_open?} class="eyebrow text-base-content/70">{~t"Book by"}</dt>
               <dd :if={@course.booking_open?}>{Format.weekday_date(@course.register_before, @locale)}</dd>
             </dl>
+          </div>
 
-            <p :if={@booked_seats > 0} data-testid="already-booked">
+          <div class="border-base-content/12 min-w-0 border-t pt-8 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10 xl:pl-12">
+            <p :if={@booked_seats > 0} class="mb-6" data-testid="already-booked">
               {~t"You have #{count = @booked_seats} place(s) on this course."N}
               <.link navigate={~p"/account#courses-heading"} class="link-underline-hover">
                 {~t"See your bookings"}
@@ -129,10 +131,13 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 id="book-heading"
                 tabindex="-1"
                 phx-mounted={@focus_booking? && JS.focus()}
-                class="section-title mb-6 focus-visible:outline-none"
+                class="section-title scroll-anchor-below-header mb-6 focus-visible:outline-none"
               >
                 {if @booked_seats > 0, do: ~t"Book more places", else: ~t"Book a place"}
               </h2>
+              <p class="text-base-content/70 mb-6 max-w-prose text-sm leading-relaxed">
+                {~t"No experience needed. Materials and teaching included. Take your arrangement home."}
+              </p>
               <.form
                 id="booking-form"
                 for={@form}
