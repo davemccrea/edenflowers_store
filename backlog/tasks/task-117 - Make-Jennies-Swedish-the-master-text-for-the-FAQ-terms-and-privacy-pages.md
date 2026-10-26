@@ -4,6 +4,7 @@ title: 'Make Jennie''s Swedish the master text for the FAQ, terms and privacy pa
 status: ready-for-human
 assignee: []
 created_date: '2026-10-24 19:28'
+updated_date: '2026-10-26 19:25'
 labels:
   - spec
   - customers
@@ -34,3 +35,16 @@ Decided in grilling (2026-10-24):
 - [ ] #1 Jennie has corrected the Swedish on all three pages
 - [ ] #2 English and Finnish say the same as her Swedish, and no fuzzy entries are left
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-26 19:25
+
+---
+
+FAQ inline-link copy and checker distance/price wording now introduce new/split source strings. Swedish/Finnish translations have not been generated (opt-in); changed fragments fall back to English. Include these phrases in the next language pass and review the complete linked sentences, not just isolated anchor labels. See TASK-115 notes.
+
+---
+<!-- COMMENTS:END -->

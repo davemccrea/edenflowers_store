@@ -70,9 +70,9 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
     assert has_element?(view, "#ordering details", "until #{days} days before delivery or pickup")
-    assert has_element?(view, ~s|#ordering a[href="/account"]|, "Go to your account")
+    assert has_element?(view, ~s|#ordering a[href="/account"]|, "from your account")
     assert has_element?(view, ~s|#ordering a[href="/en/terms#cancellation"]|)
-    assert has_element?(view, ~s|#ordering-question-2 a[href="/en/contact"]|, "Get in touch after that.")
+    assert has_element?(view, ~s|#ordering-question-2 a[href="/en/contact"]|, "get in touch")
     refute has_element?(view, "#ordering", "I'm usually flexible.")
   end
 
@@ -109,6 +109,26 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     refute has_element?(view, "#care", "5–7 days")
   end
 
+  test "answer links are phrases within prose rather than standalone link paragraphs", %{conn: conn} do
+    {:ok, view, html} = live(conn, ~p"/en/faq")
+    document = LazyHTML.from_document(html)
+
+    paragraphs = LazyHTML.query(document, "#faq-questions .collapse-content p")
+    linked_paragraphs = Enum.filter(paragraphs, &(Enum.count(LazyHTML.query(&1, "a")) > 0))
+    assert length(linked_paragraphs) >= 10
+
+    for paragraph <- linked_paragraphs do
+      linked_text = paragraph |> LazyHTML.query("a") |> Enum.map_join(" ", &LazyHTML.text/1)
+      prose = paragraph |> LazyHTML.text() |> String.replace(~r/\s+/, " ") |> String.trim()
+      assert String.length(prose) > String.length(linked_text)
+    end
+
+    assert has_element?(view, ~s|#ordering-question-2 p a[href="/account"]|, "from your account")
+    refute has_element?(view, "#faq-questions", "See the quality terms")
+    refute has_element?(view, "#faq-questions", "Go to your account")
+    assert has_element?(view, "#subscriptions > div > p", "Your subscription is covered by our")
+  end
+
   test "emits FAQPage structured data with the page's questions as plain text", %{conn: conn} do
     days = Subscription.change_deadline_days()
 
@@ -126,6 +146,8 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     cancel = Enum.find(questions, &(&1["name"] == "Can I cancel an order I made online?"))
     assert %{"@type" => "Question", "acceptedAnswer" => %{"@type" => "Answer", "text" => text}} = cancel
     assert text =~ "until #{days} days before"
+    assert text =~ "from your account"
+    assert text =~ "cancellation terms."
     refute text =~ "<"
 
     assert Enum.any?(questions, &(&1["name"] == "When do I pay?"))
@@ -203,7 +225,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     assert has_element?(view, "#weddings", "Saturdays in particular fill up quickly")
     assert has_element?(view, "#weddings", "a limited number of weddings each Saturday")
     assert has_element?(view, "#weddings", "Most couples book 9–12 months ahead.")
-    assert has_element?(view, ~s|#weddings a[href="/en/contact"]|, "Get in touch well in advance.")
+    assert has_element?(view, ~s|#weddings a[href="/en/contact"]|, "get in touch")
     assert has_element?(view, "#weddings summary", "Do you provide wedding flowers outside Vaasa?")
     refute has_element?(view, ~s|#weddings a[href="/en/weddings"]|)
     assert has_element?(view, "#courses", "deadline for a full refund and the cancellation fee after that")
@@ -249,14 +271,12 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     end
   end
 
-  test "updated answers are localized in Swedish and Finnish", %{conn: conn} do
+  test "unchanged answers remain localized in Swedish and Finnish", %{conn: conn} do
     for page <- [
           %{
             path: "/sv/vanliga-fragor",
             hospital: "Levererar du till sjukhuset?",
-            account: "Gå till ditt konto",
             care: "Det beror mycket på blommorna, men vanligtvis håller de i ungefär 7–10 dagar.",
-            quality: "Hör av dig så snart som möjligt och skicka en bild.",
             payment: "Prenumerationer kräver kortbetalning.",
             subscription: "Kan jag pausa eller avsluta min prenumeration?",
             pickup: "Ja, välj avhämtning i kassan."
@@ -264,9 +284,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
           %{
             path: "/fi/ukk",
             hospital: "Toimitatko Vaasan sairaalaan?",
-            account: "Siirry tilillesi",
             care: "Kestävyys riippuu paljon kukista, mutta yleensä ne kestävät noin 7–10 päivää.",
-            quality: "Ilmoita minulle mahdollisimman pian ja lähetä kuva.",
             payment: "Kestotilaukset edellyttävät korttimaksua.",
             subscription: "Voinko pitää tauon kestotilauksestani tai lopettaa sen?",
             pickup: "Kyllä, valitse kassalla nouto."
@@ -275,9 +293,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       {:ok, view, _html} = live(conn, page.path)
 
       assert has_element?(view, "#delivery summary", page.hospital)
-      assert has_element?(view, ~s|#ordering a[href="/account"]|, page.account)
       assert has_element?(view, "#care", page.care)
-      assert has_element?(view, "#care", page.quality)
       assert has_element?(view, "#payment", page.payment)
       assert has_element?(view, "#subscriptions summary", page.subscription)
       assert has_element?(view, "#subscriptions", page.pickup)
@@ -301,7 +317,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       %{delivery_option: option}
     end
 
-    test "pricing and free delivery precede the checker introduction, which only submits explicitly", %{conn: conn} do
+    test "pricing precedes the checkout-sized checker with lookup on blur", %{conn: conn} do
       {:ok, view, html} = live(conn, ~p"/en/faq")
 
       assert has_element?(
@@ -313,14 +329,18 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       assert has_element?(
                view,
                "#delivery-question-0 > div > p:first-child + p",
-               "Enter an address below to check the exact price."
+               "Enter an address below to check the delivery distance and price."
              )
 
       assert has_element?(view, "#delivery-question-0 > div > p:first-child + p + div #faq-delivery-cost")
-      assert has_element?(view, ~s|#address-input-field[aria-label="Check delivery address"]|)
-      refute has_element?(view, "#address-input-field[phx-blur]")
+      assert has_element?(view, ~s|#address-input-field[aria-label="Check delivery distance and price"]|)
+      assert has_element?(view, ~s|#address-input-field[placeholder="Myrvägen 1, 65230 Vasa"]|)
+      assert has_element?(view, "#address-input-field.input-lg.w-full.text-base")
+      assert has_element?(view, ~s|#address-input-field[phx-blur="lookup_address"]|)
       refute has_element?(view, "#faq-delivery-cost label > span")
-      assert has_element?(view, "#faq-delivery-cost button.btn-outline", "Check")
+      refute has_element?(view, "#faq-delivery-cost button")
+      refute has_element?(view, "#faq-delivery-cost.max-w-sm")
+
       assert has_element?(view, "#delivery-question-0.overflow-visible")
 
       [mounted] =
@@ -329,7 +349,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       assert [["ignore_attrs", %{"attrs" => ["open"]}]] = Jason.decode!(mounted)
     end
 
-    test "quotes the driving-distance price without checkout", %{conn: conn} do
+    test "quotes the driving-distance price when tabbing out of the address", %{conn: conn} do
       expect(Edenflowers.External.HereAPI.Mock, :geocode, fn "Stadsgatan 3" ->
         {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
       end)
@@ -339,7 +359,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       {:ok, view, _html} = live(conn, ~p"/en/faq")
       refute has_element?(view, "[data-testid=faq-delivery-quote]", "Delivery:")
 
-      view |> element("#faq-delivery-cost") |> render_submit(%{"delivery_address" => "Stadsgatan 3"})
+      view |> element("#address-input-field") |> render_blur(%{"value" => "Stadsgatan 3"})
       render_async(view, 1000)
 
       assert has_element?(view, "[data-testid=faq-delivery-quote] > p.text-success", "Delivery: €14.60")
@@ -378,17 +398,16 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
       expect(Edenflowers.External.HereAPI.Mock, :route_distance, 2, fn _position -> {:ok, 3000} end)
 
-      for {path, locale, button, availability, price, free} <- [
-            {"/sv/vanliga-fragor", "sv", "Kontrollera",
+      for {path, locale, availability, price, free} <- [
+            {"/sv/vanliga-fragor", "sv",
              "I kassan ser du vilka leverans- och avhämtningsdatum som är möjliga för produkterna du väljer.",
              "Leverans:", "levereras gratis till den här adressen"},
-            {"/fi/ukk", "fi", "Tarkista",
-             "Kassalla näet valitsemillesi tuotteille saatavilla olevat toimitus- ja noutopäivät.", "Toimitus:",
-             "toimitetaan tähän osoitteeseen ilmaiseksi"}
+            {"/fi/ukk", "fi", "Kassalla näet valitsemillesi tuotteille saatavilla olevat toimitus- ja noutopäivät.",
+             "Toimitus:", "toimitetaan tähän osoitteeseen ilmaiseksi"}
           ] do
         {:ok, view, _html} = live(conn, path)
 
-        assert has_element?(view, "#faq-delivery-cost button", button)
+        refute has_element?(view, "#faq-delivery-cost button")
         assert has_element?(view, "#delivery", availability)
 
         view |> element("#faq-delivery-cost") |> render_submit(%{"delivery_address" => "Stadsgatan 3"})
@@ -448,6 +467,25 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
       assert has_element?(view, "#faq-delivery-cost", "please try again later")
       refute has_element?(view, "[data-testid=faq-delivery-quote]", "Delivery:")
+    end
+
+    test "tabbing past an empty checker does not show a required-field error", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/en/faq")
+
+      view |> element("#address-input-field") |> render_blur(%{"value" => ""})
+      refute has_element?(view, "#faq-delivery-cost", "This field is required")
+      assert has_element?(view, ~s|#address-input-field[aria-required="false"]|)
+
+      for address <- ["", "   "] do
+        view |> element("#address-input-field") |> render_change(%{"delivery_address" => address})
+        refute has_element?(view, "#faq-delivery-cost", "This field is required")
+
+        view |> element("#address-input-field") |> render_blur(%{"value" => address})
+
+        refute has_element?(view, "#faq-delivery-cost", "This field is required")
+        refute has_element?(view, ~s|#address-input-field[aria-invalid="true"]|)
+        refute has_element?(view, "[data-testid=faq-delivery-quote]", "Delivery:")
+      end
     end
 
     test "an empty address is required before a price can be checked", %{conn: conn} do

@@ -122,6 +122,32 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   end
 
   describe "validation" do
+    test "checkout retains the required full-sized input and original placeholder", %{
+      conn: conn,
+      delivery_option: delivery_option
+    } do
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+      select_delivery_option(view, delivery_option.id)
+
+      assert has_element?(view, "#address-input-field.input-lg.w-full.text-base")
+      assert has_element?(view, ~s|#address-input-field[aria-required="true"]|)
+      assert has_element?(view, ~s|#address-input-field[placeholder="Myrvägen 1, 65230 Vasa"]|)
+      assert has_element?(view, ~s|#address-input-field[phx-blur="lookup_address"]|)
+      refute render(view) =~ "This field is required"
+    end
+
+    test "blurring an empty checkout address still shows the required error", %{
+      conn: conn,
+      delivery_option: delivery_option
+    } do
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+      select_delivery_option(view, delivery_option.id)
+      blur_address(view, "")
+
+      assert render(view) =~ "This field is required"
+      assert has_element?(view, ~s|#address-input-field[aria-invalid="true"]|)
+    end
+
     test "typing a partial address does not show a premature required error", %{
       conn: conn,
       delivery_option: delivery_option
