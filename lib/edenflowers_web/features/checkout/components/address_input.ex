@@ -9,7 +9,8 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   client cannot inject those values.
 
   Error display is component-owned. `{:required, _}` is raised the
-  instant the user empties the field. Blur-time API errors set
+  instant the user empties a required field; optional fields stay quiet
+  unless an empty lookup is explicitly submitted. Blur-time API errors set
   `{:api, _}` directly. On submit-time failures, the parent forwards the
   `delivery_address` field error via `send_update(__MODULE__, id:
   "address-input", error_message: msg)` so the message renders next to
@@ -40,6 +41,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
        loading: false,
        touched: false,
        error: nil,
+       required: true,
        show_confirmation: true,
        show_label: true,
        lookup_on_blur: true
@@ -73,7 +75,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
         type="text"
         placeholder="Myrvägen 1, 65230 Vasa"
         autocomplete={@autocomplete}
-        aria-required="true"
+        aria-required={to_string(@required)}
         errors={errors(@error, @touched)}
         phx-change="typing"
         phx-blur={if @lookup_on_blur, do: "lookup_address"}
@@ -100,7 +102,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
     if quote && value != quote.address, do: send(self(), {:delivery_quoted, nil})
 
     error =
-      if String.trim(value) == "",
+      if socket.assigns.required && String.trim(value) == "",
         do: {:required, DeliveryError.message(:address_required)},
         else: nil
 
@@ -110,13 +112,22 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   end
 
   def handle_event("lookup_address", %{"delivery_address" => address}, socket) do
-    handle_event("lookup_address", %{"value" => address}, socket)
+    if String.trim(address) == "" do
+      {:noreply, fail(socket, DeliveryError.message(:address_required))}
+    else
+      handle_event("lookup_address", %{"value" => address}, socket)
+    end
   end
 
   def handle_event("lookup_address", %{"value" => address}, socket) do
     quote = socket.assigns.quote
 
     cond do
+      String.trim(address) == "" && not socket.assigns.required ->
+        send(self(), {:delivery_quoted, nil})
+        socket = if socket.assigns.loading, do: cancel_async(socket, :lookup_address), else: socket
+        {:noreply, assign(socket, typed: address, touched: false, error: nil, loading: false)}
+
       String.trim(address) == "" ->
         {:noreply, fail(socket, DeliveryError.message(:address_required))}
 

@@ -76,9 +76,10 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
                     delivery_quote={@delivery_quote}
                   />
                   <p :if={id == "subscriptions"} class="pt-4">
+                    {~t"Your subscription is covered by our"}
                     <a class="link-underline-static-body" href={terms_path("subscriptions")}>
-                      {~t"See the subscription terms"}
-                    </a>
+                      {~t"subscription terms"}
+                    </a>.
                   </p>
                 </div>
               </section>
@@ -125,7 +126,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     ]
   end
 
-  # Answers share their blocks with the JSON-LD; links are shown only on the page.
+  # Answers share their text with the JSON-LD; only the page renders link markup.
   # Lists may be plain (opening hours, for example) or bulleted.
   defp sections do
     [
@@ -138,15 +139,22 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           ]},
          {~t"What if nobody's home?",
           [
-            ~t"I leave the flowers at the door and email you a photo showing where I've left them. If you're sending a gift, you receive an email when it's delivered. Add any door code to the delivery instructions.",
-            {:link, ~t"What happens if I can't get in", terms_path("delivery")}
+            {:paragraph,
+             [
+               ~t"I leave the flowers at the door and email you a photo showing where I've left them. If you're sending a gift, you receive an email when it's delivered. Add any door code to the delivery instructions.",
+               ~t"If I can't get in, the",
+               {:link, ~t"delivery terms", terms_path("delivery")},
+               ~t"explain what happens next."
+             ]}
           ]},
          {~t"Where and when can I pick up my order?",
           [
             {:paragraph,
              [
                ~t"At Minimossen, #{address = Business.street_address()}, #{town = Business.postal_town()}. Choose your pickup date at checkout. I'll message you when your order is ready. Collect it during opening hours.",
-               {:link, ~t"Get in touch for another time.", contact_path()}
+               ~t"Please",
+               {:link, ~t"get in touch", contact_path()},
+               ~t"if you need another time."
              ]},
             {:list, Business.opening_hours_lines()}
           ]}
@@ -155,7 +163,12 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
        [
          {~t"Can I order something that isn't in the online shop?",
           [
-            {:paragraph, [~t"Yes.", {:link, ~t"Tell me what you have in mind.", contact_path()}]}
+            {:paragraph,
+             [
+               ~t"Yes.",
+               {:link, ~t"Tell me what you have in mind", contact_path()},
+               ~t"and I'll make it to order."
+             ]}
           ]},
          {~t"Can I add a card with a message?",
           [~t"Yes, if you're sending flowers as a gift. Choose a card at checkout and write your message."]},
@@ -163,11 +176,13 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           [
             {:paragraph,
              [
-               ~t"Yes, from your account until #{days = Subscription.change_deadline_days()} days before delivery or pickup, for a full refund.",
-               {:link, ~t"Get in touch after that.", contact_path()}
-             ]},
-            {:link, ~t"Go to your account", ~p"/account"},
-            {:link, ~t"See the cancellation terms", terms_path("cancellation")}
+               ~t"Yes, cancel",
+               {:link, ~t"from your account", ~p"/account"},
+               ~t"until #{days = Subscription.change_deadline_days()} days before delivery or pickup, for a full refund. After that,",
+               {:link, ~t"get in touch", contact_path()},
+               ~t"to discuss the options in the",
+               {:link, ~t"cancellation terms.", terms_path("cancellation")}
+             ]}
           ]}
        ]},
       {"care", ~t"Flowers and care",
@@ -185,17 +200,24 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           ]},
          {~t"Are your flowers local and seasonal?",
           [
-            ~t"I use local and seasonal flowers whenever possible.",
-            {:link, ~t"See the quality terms", terms_path("quality")}
+            {:paragraph,
+             [
+               ~t"I use local and seasonal flowers whenever possible.",
+               ~t"Any substitutions follow the",
+               {:link, ~t"quality terms.", terms_path("quality")}
+             ]}
           ]},
          {~t"What if my flowers arrive damaged or wilt early?",
           [
             {:paragraph,
              [
-               {:link, ~t"Let me know as soon as possible and send a photo.", contact_path()},
-               ~t"I'll replace them or refund you, provided care instructions are followed."
-             ]},
-            {:link, ~t"See the quality terms", terms_path("quality")}
+               {:link, ~t"Let me know", contact_path()},
+               ~t"as soon as possible and send a photo.",
+               ~t"I'll replace them or refund you, provided care instructions are followed.",
+               ~t"Our",
+               {:link, ~t"quality terms", terms_path("quality")},
+               ~t"explain the conditions."
+             ]}
           ]}
        ]},
       {"payment", ~t"Payment",
@@ -207,7 +229,8 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             {:paragraph,
              [
                ~t"Yes. I also offer invoice payment for larger orders, such as weddings.",
-               {:link, ~t"Get in touch to arrange it.", contact_path()}
+               {:link, ~t"Get in touch", contact_path()},
+               ~t"to arrange it."
              ]}
           ]}
        ]},
@@ -216,14 +239,23 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
        [
          {~t"How far ahead should I book wedding flowers?",
           [
-            ~t"Saturdays in particular fill up quickly, as I can only take on a limited number of weddings each Saturday. Most couples book 9–12 months ahead.",
-            {:link, ~t"Get in touch well in advance.", contact_path()}
+            {:paragraph,
+             [
+               ~t"Saturdays in particular fill up quickly, as I can only take on a limited number of weddings each Saturday. Most couples book 9–12 months ahead.",
+               ~t"Please",
+               {:link, ~t"get in touch", contact_path()},
+               ~t"well in advance."
+             ]}
           ]},
          {~t"Do you provide wedding flowers outside Vaasa?", [~t"Yes, gladly. Travel is quoted separately."]},
          {~t"How does payment for a wedding work?",
           [
-            ~t"Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards.",
-            {:link, ~t"See the wedding terms", terms_path("weddings")}
+            {:paragraph,
+             [
+               ~t"Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards.",
+               ~t"Your booking follows the",
+               {:link, ~t"wedding terms.", terms_path("weddings")}
+             ]}
           ]}
        ]},
       {"courses", ~t"Courses",
@@ -234,8 +266,12 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           ]},
          {~t"Can I book a private course for my group?",
           [
-            ~t"Yes, at Minimossen or at your own premises.",
-            {:link, ~t"Courses for private groups", ~q"/#{language}/courses" <> "#groups"}
+            {:paragraph,
+             [
+               ~t"Yes, I offer",
+               {:link, ~t"courses for private groups", ~q"/#{language}/courses" <> "#groups"},
+               ~t"at Minimossen or at your own premises."
+             ]}
           ]}
        ]}
     ]
@@ -266,7 +302,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
       ~t"Checkout shows the available delivery and pickup dates for the products you choose. The usual cutoff for same-day orders is midday."
 
     pricing = {:paragraph, Enum.reject([area, free], &is_nil/1)}
-    checker_intro = if option, do: ~t"Enter an address below to check the exact price."
+    checker_intro = if option, do: ~t"Enter an address below to check the delivery distance and price."
     checker = if option, do: {:delivery_checker, option}
 
     Enum.reject([pricing, checker_intro, checker, availability, ~t"There are no set delivery times."], &is_nil/1)
@@ -290,9 +326,6 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
   defp plain_text(answer) do
     answer
     |> Enum.flat_map(fn
-      {:link, _text, _path} ->
-        []
-
       {:delivery_checker, _option} ->
         []
 
@@ -348,14 +381,6 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
     """
   end
 
-  defp answer_block(%{block: {:link, text, path}} = assigns) do
-    assigns = assign(assigns, text: text, path: path)
-
-    ~H"""
-    <p><a class="link-underline-static-body" href={@path}>{@text}</a></p>
-    """
-  end
-
   defp answer_block(%{block: {:paragraph, parts}} = assigns) do
     assigns = assign(assigns, parts: parts)
 
@@ -373,20 +398,19 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
 
     ~H"""
     <div class="space-y-4 pt-2">
-      <form id="faq-delivery-cost" phx-submit="lookup_address" phx-target="#address-input" class="space-y-4">
+      <form id="faq-delivery-cost" phx-submit="lookup_address" phx-target="#address-input">
         <.live_component
           module={EdenflowersWeb.Checkout.AddressInput}
           id="address-input"
           address=""
           fulfillment_option={@option}
           quote={@delivery_quote}
-          label={~t"Check delivery address"}
+          label={~t"Check delivery distance and price"}
           autocomplete="street-address"
           show_confirmation={false}
           show_label={false}
-          lookup_on_blur={false}
+          required={false}
         />
-        <.button type="submit" variant="secondary">{~t"Check"}</.button>
       </form>
       <div aria-live="polite" aria-atomic="true" data-testid="faq-delivery-quote">
         <p :if={@delivery_quote} class="text-success font-medium">
