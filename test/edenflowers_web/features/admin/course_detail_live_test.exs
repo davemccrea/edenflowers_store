@@ -185,6 +185,33 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert Ash.read!(Edenflowers.Courses.CourseRegistration, authorize?: false) == []
     end
 
+    test "preview keeps browser-controlled disclosure state while its contents update", %{conn: conn} do
+      course = generate(course())
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
+
+      view
+      |> form("#booking-form", form: %{email: "ada@example.com", locale: "en-GB"})
+      |> render_change()
+
+      [disclosure] =
+        view
+        |> element("#booking-email-preview-toggle")
+        |> render()
+        |> LazyHTML.from_fragment()
+        |> LazyHTML.attribute("phx-mounted")
+
+      assert Jason.decode!(disclosure) == [["ignore_attrs", %{"attrs" => ["open"]}]]
+      assert has_element?(view, "#booking-email-preview-toggle", "Please pay at the course.")
+
+      view
+      |> form("#booking-form", form: %{payment_terms: "payment_link", message: "See you soon!"})
+      |> render_change()
+
+      assert has_element?(view, "#booking-email-preview-toggle", "You can pay online here:")
+      assert has_element?(view, "#booking-email-preview-toggle", "See you soon!")
+      refute has_element?(view, "#booking-email-preview-toggle", "Please pay at the course.")
+    end
+
     test "invalid details leave the form open without creating a booking", %{conn: conn} do
       course = generate(course())
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
