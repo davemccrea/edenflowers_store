@@ -52,8 +52,6 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           />
 
           <div>
-            <.faq_toggle_all />
-
             <div id="faq-questions" class="space-y-16 md:space-y-20">
               <section
                 :for={{id, title, questions} <- @sections}
@@ -309,64 +307,6 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
         [paragraph]
     end)
     |> Enum.join(" ")
-  end
-
-  # <details> keeps its open state in the DOM, so the toggle works there rather than through a patch.
-  defp faq_toggle_all(assigns) do
-    ~H"""
-    <div class="mb-6 flex justify-end">
-      <.button type="button" id="faq-toggle-all" variant="secondary" size="sm" phx-hook=".FaqToggleAll">
-        <span data-faq-toggle="open">{~t"Open all answers"}</span>
-        <span data-faq-toggle="close" hidden>{~t"Close all answers"}</span>
-      </.button>
-    </div>
-
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".FaqToggleAll">
-      export default {
-        mounted() {
-          this.questions = document.getElementById("faq-questions");
-          this.openLabel = this.el.querySelector('[data-faq-toggle="open"]');
-          this.closeLabel = this.el.querySelector('[data-faq-toggle="close"]');
-
-          this.el.addEventListener("click", () => {
-            // A partly open list finishes opening rather than flipping every question shut.
-            const open = !this.allOpen();
-            this.details().forEach((item) => (item.open = open));
-            this.showLabel();
-          });
-
-          // A question opened or closed by hand changes what the button says next.
-          this.onToggle = () => this.showLabel();
-          this.questions.addEventListener("toggle", this.onToggle, true);
-
-          this.showLabel();
-        },
-
-        updated() {
-          this.showLabel();
-        },
-
-        destroyed() {
-          this.questions.removeEventListener("toggle", this.onToggle, true);
-        },
-
-        details() {
-          return [...this.questions.querySelectorAll("details")];
-        },
-
-        allOpen() {
-          const items = this.details();
-          return items.length > 0 && items.every((item) => item.open);
-        },
-
-        showLabel() {
-          const open = this.allOpen();
-          this.openLabel.hidden = open;
-          this.closeLabel.hidden = !open;
-        },
-      };
-    </script>
-    """
   end
 
   attr :id, :string, required: true
