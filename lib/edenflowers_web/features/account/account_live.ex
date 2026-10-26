@@ -439,9 +439,12 @@ defmodule EdenflowersWeb.Account.AccountLive do
       <p class="text-base-content/70 mt-1 text-sm tabular-nums">
         {~t"Course"} · {course_state(@registration, @upcoming?, @locale)} · {@registration.course.location_name} · {~t"#{count = @registration.seats_held} place(s)"N}
       </p>
+      <p :if={Decimal.positive?(@registration.balance)} class="text-base-content/70 mt-1 text-sm">
+        {~t"Still to pay: #{amount = Format.currency(@registration.balance, @locale)}. Please pay at the course."}
+      </p>
     </div>
     <.entry_price price={@registration.amount} locale={@locale}>
-      <.receipt_link href={~p"/courses/bookings/#{@registration.id}/receipt"} />
+      <.receipt_link :if={@registration.receipt_available?} href={~p"/courses/bookings/#{@registration.id}/receipt"} />
     </.entry_price>
     """
   end
@@ -632,7 +635,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp order_date(order), do: order.fulfillment_date || ordered_on(order)
 
   defp registrations(user) do
-    Courses.list_my_registrations!(actor: user, load: [:course, :seats_held, :upcoming?])
+    Courses.list_my_registrations!(actor: user, load: [:course, :seats_held, :upcoming?, :balance, :receipt_available?])
     |> Translations.translate_assoc(:course)
   end
 

@@ -923,7 +923,10 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
     test "cancels the order and closes its payment link", ctx do
       order = place_custom_order(ctx) |> Ash.Seed.update!(%{payment_intent_id: "pi_link"})
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_link"} -> {:ok, %{id: "pi_link"}} end)
+
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_link"} ->
+        {:ok, %{id: "pi_link", status: "canceled"}}
+      end)
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 

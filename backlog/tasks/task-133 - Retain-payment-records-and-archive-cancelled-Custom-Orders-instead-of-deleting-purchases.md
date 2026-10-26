@@ -3,10 +3,10 @@ id: TASK-133
 title: >-
   Retain purchases and restore confirmed manual course bookings payable at the
   course
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-25 22:22'
-updated_date: '2026-10-26 04:55'
+updated_date: '2026-10-26 07:38'
 labels:
   - spec
   - customers
@@ -143,15 +143,15 @@ Sources verified during this discussion:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No normal app action or routine Oban job deletes course registrations or placed orders. Pending website registrations stay retained, hidden from normal bookings and uncommitted until payment; existing empty unused store-cart cleanup remains.
-- [ ] #2 The Invite workflow is removed. Jennie adds confirmed manual bookings that immediately count places and appear in normal booking lists, may bypass online cutoff/capacity, and default to payment at the course.
-- [ ] #3 Manual entry can record an actual already-received payment with its method; later offline collection, undo, partial settlement/refunds and optional online Balance collection reuse shared payment actions. No fake paid flag or automatically emailed/opened link.
-- [ ] #4 Optional manual booking confirmation and ordinary day-before reminders work while unpaid, with accurate pay-at-course wording and no unpaid receipt; actual paid receipt handling, previews, stamps and all email languages agree.
-- [ ] #5 Custom Order Delete is removed; existing cancellation/settlement plus Cinder Still to do/All orders filtering suffice. No archive action/schema/view is added; cancelled orders stay searchable and directly accessible, including financial attention.
-- [ ] #6 Both Payment parent foreign keys reject parent deletion instead of deleting ledger rows. Courses with registrations remain deletion-restricted; actual paid/refunded/reversed history is preserved even outside normal Ash authorization.
-- [ ] #7 Existing shared actual-amount recording, duplicate protection, mismatch Balance handling, refunds and reconciliation work for confirmed manual bookings and retained cancelled records. Late money does not reopen/rebook/reactivate a cancelled purchase.
-- [ ] #8 Targeted tests cover the full outcome matrix, closed-link preparation, both relevant edit/payment orderings, offline-versus-Stripe double collection, manual capacity exceptions, real database deletion protection and scheduler recovery; mix precommit passes.
-- [ ] #9 CONTEXT/ADR/email/job documentation and rollout instructions match the revised model, including explicit legacy-Invite review, obsolete purge-job handling, point-in-time settlement/reconciliation limits and separate privacy retention. No production operation or historical-data destruction is performed.
+- [x] #1 No normal app action or routine Oban job deletes course registrations or placed orders. Pending website registrations stay retained, hidden from normal bookings and uncommitted until payment; existing empty unused store-cart cleanup remains.
+- [x] #2 The Invite workflow is removed. Jennie adds confirmed manual bookings that immediately count places and appear in normal booking lists, may bypass online cutoff/capacity, and default to payment at the course.
+- [x] #3 Manual entry can record an actual already-received payment with its method; later offline collection, undo, partial settlement/refunds and optional online Balance collection reuse shared payment actions. No fake paid flag or automatically emailed/opened link.
+- [x] #4 Optional manual booking confirmation and ordinary day-before reminders work while unpaid, with accurate pay-at-course wording and no unpaid receipt; actual paid receipt handling, previews, stamps and all email languages agree.
+- [x] #5 Custom Order Delete is removed; existing cancellation/settlement plus Cinder Still to do/All orders filtering suffice. No archive action/schema/view is added; cancelled orders stay searchable and directly accessible, including financial attention.
+- [x] #6 Both Payment parent foreign keys reject parent deletion instead of deleting ledger rows. Courses with registrations remain deletion-restricted; actual paid/refunded/reversed history is preserved even outside normal Ash authorization.
+- [x] #7 Existing shared actual-amount recording, duplicate protection, mismatch Balance handling, refunds and reconciliation work for confirmed manual bookings and retained cancelled records. Late money does not reopen/rebook/reactivate a cancelled purchase.
+- [x] #8 Targeted tests cover the full outcome matrix, closed-link preparation, both relevant edit/payment orderings, offline-versus-Stripe double collection, manual capacity exceptions, real database deletion protection and scheduler recovery; mix precommit passes.
+- [x] #9 CONTEXT/ADR/email/job documentation and rollout instructions match the revised model, including explicit legacy-Invite review, obsolete purge-job handling, point-in-time settlement/reconciliation limits and separate privacy retention. No production operation or historical-data destruction is performed.
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -176,6 +176,12 @@ Sources verified during this discussion:
 - Test late money on a cancelled Custom Order remains visible in Overview even though the default working table excludes that order.
 - Do not automatically convert legacy pending Invites into confirmed bookings; real data requires explicit review before retiring old assumptions.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+All five subtasks completed. Purchases and their Payment history are retained; manual course bookings confirm immediately with optional real ledger payments and truthful paid/unpaid emails/receipts/reminders; no Invite or Archive workflow remains. Late cancelled-parent money reconciles without reopening purchases, processing/failed cancellation keeps intent references, and replacement IDs are protected. Custom Order deletion removed; existing filtering/search/financial attention retained. Final mix precommit: 1,665 tests passed. All-language email render review, migration/snapshot checks, translation extraction and rollout/domain/email docs completed. Production untouched and deployment not performed; rollout requires explicit legacy-Invite review and backup-first approval. No automated browser visual QA.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 

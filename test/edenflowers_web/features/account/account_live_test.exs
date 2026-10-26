@@ -274,11 +274,23 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       registration =
         generate(course_registration(course_id: course.id, user_id: user.id, status: :confirmed, seats: 2))
 
+      generate(payment(course_registration_id: registration.id, amount: registration.amount))
+
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, ~s|li a[href="/en/courses/#{course.id}"]|, "Autumn Wreaths")
       assert has_element?(view, "li", "2 places")
       assert has_element?(view, ~s|a[href="/courses/bookings/#{registration.id}/receipt"]|, "Receipt")
+    end
+
+    @tag :typst
+    test "an unpaid confirmed booking is visible with its balance but no receipt", %{conn: conn, user: user} do
+      registration = generate(course_registration(user_id: user.id, status: :confirmed))
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "li", "Still to pay: €85.00. Please pay at the course.")
+      refute has_element?(view, ~s|a[href="/courses/bookings/#{registration.id}/receipt"]|)
+      assert conn |> get(~p"/courses/bookings/#{registration.id}/receipt") |> response(404)
     end
 
     @tag :typst

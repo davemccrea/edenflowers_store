@@ -731,7 +731,9 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = place(ctx)
       order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
 
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_link"} -> {:ok, %{id: "pi_link"}} end)
+      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_link"} ->
+        {:ok, %{id: "pi_link", status: "canceled"}}
+      end)
 
       {:ok, order} = Orders.cancel_order(order, actor: ctx.admin)
 
@@ -744,7 +746,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     test "Stripe cancelling the PaymentIntent leaves a cancelled order alone", ctx do
       {:ok, order} = place(ctx)
       order = Ash.Seed.update!(order, %{payment_intent_id: "pi_link"})
-      stub(StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, intent} end)
+      stub(StripeAPI.Mock, :cancel_payment_intent, fn intent -> {:ok, Map.put(intent, :status, "canceled")} end)
       {:ok, _order} = Orders.cancel_order(order, actor: ctx.admin)
 
       {:ok, :unchanged} = Payments.cancel(%{id: "pi_link", metadata: %{"order_id" => order.id}})

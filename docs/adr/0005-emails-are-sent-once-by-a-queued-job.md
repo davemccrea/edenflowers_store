@@ -16,3 +16,23 @@ An email gets a `<email>_failed_at` field, set by the trigger's `on_error`, only
 - An email that fails 3 times is not sent until someone sends it again. The error alert email is how a developer finds out.
 - An AshOban trigger's `where` is only for checking the email still makes sense when the job runs, such as the payment-failed email skipping an order already paid. It isn't for deciding whether to queue the email.
 - A sign-in code that can't send stops retrying within about a minute, before the code expires.
+
+## Course booking consequences (TASK-133)
+
+Manual entry queues the ordinary booking confirmation only when Jennie keeps
+Email booking confirmation ticked, true by default, and keeps her optional
+message. Website payment queues that confirmation when it first confirms the
+pending checkout. A later Payment Link payment queues Payment received, never
+the original booking confirmation. Explicit collection remains a manual action;
+there is no automatic Invite email or Invite template.
+
+Confirmation and receipt stamps differ: a successful unpaid confirmation stamps
+only `confirmation_emailed_at`; an actual attached receipt also stamps
+`receipt_emailed_at`. Sender and drawer preview make the same actual-money
+decision. Customer receipt downloads use the same financial eligibility rather
+than treating confirmed as paid. Reminders still run daily at 07:00 Finnish time
+for tomorrow's confirmed bookings, including unpaid ones, stating any Balance to
+pay at the course. Cancelled/pending bookings do not get attendance reminders or
+normal confirmation. Payment reconciliation and these email queues remain; only
+the obsolete registration-purge scheduler/worker was retired. See
+[rollout instructions](../purchase-retention-rollout.md) for queued old jobs.

@@ -12,8 +12,11 @@ defmodule EdenflowersWeb.Courses.CourseReceiptController do
   # Read as the signed-in customer, so the owner policy decides: the receipt
   # carries their email address.
   def show(conn, %{"id" => id}) do
-    with {:ok, %{status: :confirmed} = registration} <-
-           Courses.get_registration_by_id(id, actor: conn.assigns[:current_user], load: [:course, :payments]),
+    with {:ok, %{receipt_available?: true} = registration} <-
+           Courses.get_registration_by_id(id,
+             actor: conn.assigns[:current_user],
+             load: [:course, :payments, :receipt_available?]
+           ),
          {:ok, pdf} <- Receipt.generate(translate_course(registration)) do
       send_download(conn, {:binary, pdf},
         filename: "eden-flowers-#{registration.reference}.pdf",

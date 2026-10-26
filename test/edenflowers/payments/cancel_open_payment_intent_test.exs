@@ -5,6 +5,7 @@ defmodule Edenflowers.Payments.CancelOpenPaymentIntentTest do
   import Generator
   import Mox
 
+  alias Edenflowers.Courses
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias Edenflowers.Payments
@@ -43,6 +44,54 @@ defmodule Edenflowers.Payments.CancelOpenPaymentIntentTest do
 
     assert {:ok, _recorded} = Orders.record_payment(order, "10.00", :cash, authorize?: false)
     assert Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id == "pi_replacement"
+  end
+
+  test "offline collection and late Stripe success on a manual booking retain both real payments" do
+    admin = generate(admin_user())
+    course = generate(course())
+
+    booking =
+      Courses.add_registration_manually!(
+        %{name: "Ada", email: "ada@example.com", course_id: course.id, email_customer?: false},
+        actor: admin
+      )
+      |> Ash.Seed.update!(%{payment_intent_id: "pi_course_double_collection"})
+
+    expect(StripeAPI.Mock, :cancel_payment_intent, fn _intent -> {:error, :processing} end)
+
+    capture_log(fn ->
+      assert {:ok, _collected} = Courses.record_registration_payment(booking, "85.00", :cash, actor: admin)
+
+      assert {:ok, :completed} =
+               Payments.complete(%{
+                 id: booking.payment_intent_id,
+                 metadata: %{"course_registration_id" => booking.id},
+                 amount_received: 8_500
+               })
+    end)
+
+    paid = Ash.reload!(booking, authorize?: false, load: [:payments, :balance])
+    assert paid.confirmed_at == booking.confirmed_at
+    assert paid.status == :confirmed
+    assert length(paid.payments) == 2
+    assert Decimal.equal?(paid.balance, "-85.00")
+    assert Ash.load!(course, :seats_booked, authorize?: false).seats_booked == 1
+    refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
+  end
+
+  test "a cancellation response still reporting processing retains the attached intent" do
+    order = placed_order(payment_intent_id: "pi_processing_response")
+
+    expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: id} ->
+      {:ok, %{id: id, status: "processing"}}
+    end)
+
+    capture_log(fn ->
+      assert {:ok, recorded} = Orders.record_payment(order, "10.00", :cash, authorize?: false)
+      assert recorded.payment_intent_id == "pi_processing_response"
+    end)
+
+    assert Ash.reload!(order, authorize?: false).payment_intent_id == "pi_processing_response"
   end
 
   test "a cancelled occurrence's late payment does not restart its held subscription" do
