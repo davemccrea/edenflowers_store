@@ -243,34 +243,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </p>
       </section>
 
-      <nav aria-label={~t"What are the flowers for?"} class="not-last:border-b">
-        <ul class="container flex flex-wrap items-center justify-center gap-x-10 gap-y-4 py-8">
-          <li>
-            <.link navigate={~q"/#{language}/store"} class="eyebrow link-underline-hover touch-target">
-              {~t"Bouquets"}
-            </.link>
-          </li>
-          <li :if={@subscribable_products != []}>
-            <a href="#subscription" class="eyebrow link-underline-hover touch-target">{~t"Flower subscription"}</a>
-          </li>
-          <li>
-            <.link navigate={~q"/#{language}/condolences"} class="eyebrow link-underline-hover touch-target">
-              {~t"Funeral flowers"}
-            </.link>
-          </li>
-          <li>
-            <.link navigate={~q"/#{language}/weddings"} class="eyebrow link-underline-hover touch-target">
-              {~t"Weddings"}
-            </.link>
-          </li>
-          <li>
-            <.link navigate={~q"/#{language}/courses"} class="eyebrow link-underline-hover touch-target">
-              {~t"Courses"}
-            </.link>
-          </li>
-        </ul>
-      </nav>
-
       <section :if={@products != []} id="store" class="not-last:border-b">
         <div class="container py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
