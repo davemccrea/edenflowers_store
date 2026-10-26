@@ -892,6 +892,14 @@ defmodule EdenflowersWeb.Layouts do
                 </li>
                 <li>
                   <.link
+                    navigate={~q"/#{language}/privacy"}
+                    class="footer-line link-underline-hover touch-target"
+                  >
+                    {~t"Privacy policy (draft)"}
+                  </.link>
+                </li>
+                <li>
+                  <.link
                     navigate={~q"/#{language}/contact"}
                     class="footer-line link-underline-hover touch-target"
                   >

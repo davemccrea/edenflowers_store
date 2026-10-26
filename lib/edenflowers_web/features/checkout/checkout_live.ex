@@ -178,6 +178,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       class="checkbox checkbox-sm"
                       data-testid="newsletter-opt-in-checkbox"
                     />
+                    <p class="text-base-content/70 text-sm">
+                      <a class="link-underline-static-body" href={~q"/#{language}/privacy"}>
+                        {~t"Privacy policy (draft)"}
+                      </a>
+                    </p>
 
                     <.button type="submit" variant="primary" size="lg" class="mt-2" data-testid="step-1-next-button">{~t"Next"}</.button>
                   </.form>
