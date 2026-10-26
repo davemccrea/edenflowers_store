@@ -187,9 +187,6 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
             <h2 id="message-heading" class="pull-quote text-forest-content max-w-xl">
               {~t"Whether it's a bouquet for the kitchen table or flowers for your wedding, I'd love to hear from you."}
             </h2>
-            <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
-              {~t"During opening hours I usually reply within 4 hours."}
-            </p>
             <.button phx-click={ContactDrawer.open()} variant="inverse">{~t"Send me a message"}</.button>
           </div>
         </div>
