@@ -51,20 +51,24 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
           <div class="space-y-16 md:space-y-20">
             <.terms_section id="payment" title={~t"Prices and payment"}>
               <.terms_subsection id="checkout-payments" title={~t"Checkout payments"}>
-                <p>
-                  {~t"Prices include VAT. At checkout you can pay with MobilePay, card, Apple Pay or Google Pay. Subscriptions require a card."}
-                </p>
-                <p>
-                  {~t"All payments on this website are processed by Stripe. Your full card number and security code are not stored on Eden Flowers' servers."}
-                </p>
+                <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
+                  <li>
+                    {~t"Prices include VAT. At checkout you can pay with MobilePay, card, Apple Pay or Google Pay. Subscriptions require a card."}
+                  </li>
+                  <li>
+                    {~t"All payments on this website are processed by Stripe. Your full card number and security code are not stored on Eden Flowers' servers."}
+                  </li>
+                </ul>
               </.terms_subsection>
               <.terms_subsection id="invoices" title={~t"Invoices"}>
-                <p>
-                  {~t"I offer invoices to businesses and for larger orders such as weddings. Payment is due as stated on the invoice."}
-                </p>
-                <p>
-                  {~t"Late payment adds interest under the Interest Act, plus #{fee = Edenflowers.Format.storefront_price(5, Edenflowers.Format.locale())} for each reminder."}
-                </p>
+                <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
+                  <li>
+                    {~t"I offer invoices to businesses and for larger orders such as weddings. Payment is due as stated on the invoice."}
+                  </li>
+                  <li>
+                    {~t"Late payment adds interest under the Interest Act, plus #{fee = Edenflowers.Format.storefront_price(5, Edenflowers.Format.locale())} for each reminder."}
+                  </li>
+                </ul>
               </.terms_subsection>
             </.terms_section>
 
@@ -83,21 +87,25 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
                 </p>
               </.terms_subsection>
               <.terms_subsection id="delivery-problems" title={~t"Access problems or incorrect details"}>
-                <p>
-                  {~t"If I can't reach the door, for example a locked stairwell, your order goes back to the shop for you to pick up, or you can pay for another delivery. Add any door code to the delivery instructions."}
-                </p>
-                <p>{~t"If the address or recipient details given at checkout are wrong, I can't refund the order."}</p>
+                <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
+                  <li>
+                    {~t"If I can't reach the door, for example a locked stairwell, your order goes back to the shop for you to pick up, or you can pay for another delivery. Add any door code to the delivery instructions."}
+                  </li>
+                  <li>{~t"If the address or recipient details given at checkout are wrong, I can't refund the order."}</li>
+                </ul>
               </.terms_subsection>
             </.terms_section>
 
             <.terms_section id="quality" title={~t"Quality"}>
-              <p>
-                {~t"If a flower is out of season or unavailable, I use something similar of the same value."}
-              </p>
-              <p>
-                <.quality_contact />
-                {~t"I'll replace them or refund you, provided care instructions are followed."}
-              </p>
+              <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
+                <li>
+                  {~t"If a flower is out of season or unavailable, I use something similar of the same value."}
+                </li>
+                <li>
+                  <.quality_contact />
+                  {~t"I'll replace them or refund you, provided care instructions are followed."}
+                </li>
+              </ul>
               <p>
                 <a class="link-underline-static-body" href={~q"/#{language}/faq" <> "#care"}>
                   {~t"Read the care instructions"}
