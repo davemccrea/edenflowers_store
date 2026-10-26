@@ -8,6 +8,12 @@
         "value": "cubic-bezier(0.34, 1.25, 0.64, 1)",
         "createdAt": "2026-10-20T12:43:41.072Z",
         "reason": "code comment on .card-tuck in storefront.css: 'The easing curve supplies the overshoot' (deliberate, predates this session)"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "sfmono-regular",
+        "createdAt": "2026-10-26T08:43:33.527Z",
+        "reason": "Codex: existing developer element picker displays source references in a system monospace font, outside the product typography."
       }
     ]
   }
