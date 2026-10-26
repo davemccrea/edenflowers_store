@@ -9,30 +9,24 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
   setup :verify_on_exit!
 
-  test "each section heading controls its own answers", %{conn: conn} do
+  test "a single button opens every question and then closes them all", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
-    for section <- ~w(delivery ordering care payment weddings courses subscriptions) do
-      assert has_element?(
-               view,
-               ~s|##{section}[phx-hook="FaqSection"] h2 button[aria-controls="#{section}-answers"][aria-expanded="false"]|
-             )
-
-      assert has_element?(view, "##{section}-answers details")
-    end
-
-    refute has_element?(view, "#faq-toggle-all")
-    refute has_element?(view, "#ask-heading button")
+    assert has_element?(view, "#faq-questions details")
+    assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="open"]|, "Open all answers")
+    refute has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="open"][hidden]|)
+    assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="close"][hidden]|, "Close all answers")
   end
 
-  test "section toggles use the localized headings", %{conn: conn} do
-    for {path, title} <- [
-          {"/sv/vanliga-fragor", "Beställning"},
-          {"/fi/ukk", "Tilaaminen"}
+  test "the toggle button speaks every storefront language", %{conn: conn} do
+    for {path, open, close} <- [
+          {"/sv/vanliga-fragor", "Öppna alla svar", "Stäng alla svar"},
+          {"/fi/ukk", "Avaa kaikki vastaukset", "Sulje kaikki vastaukset"}
         ] do
       {:ok, view, _html} = live(conn, path)
 
-      assert has_element?(view, "#ordering-faq-heading button", title)
+      assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="open"]|, open)
+      assert has_element?(view, ~s|#faq-toggle-all [data-faq-toggle="close"]|, close)
     end
   end
 
