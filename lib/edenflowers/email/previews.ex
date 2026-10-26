@@ -431,6 +431,15 @@ defmodule Edenflowers.Email.Previews do
     for {title, attrs} <- [
           {"paid, full refund until 7 days before", %{}},
           {"manual, pay at the course, no receipt", %{amount_paid: Decimal.new(0), balance: Decimal.new("45.00")}},
+          {"manual, payment link, no receipt",
+           %{
+             amount_paid: Decimal.new(0),
+             balance: Decimal.new("45.00"),
+             payment_terms: :payment_link,
+             payment_link_token: "preview"
+           }},
+          {"manual, separate invoice, no receipt",
+           %{amount_paid: Decimal.new(0), balance: Decimal.new("45.00"), payment_terms: :invoice}},
           {"manual, part paid, balance at the course",
            %{amount_paid: Decimal.new("20.00"), balance: Decimal.new("25.00")}},
           {"2 places, half kept after 10 days before",
@@ -452,6 +461,8 @@ defmodule Edenflowers.Email.Previews do
     for {title, attrs} <- [
           {"paid place", %{amount_paid: Decimal.new("45.00"), balance: Decimal.new(0)}},
           {"unpaid manual booking", %{}},
+          {"unpaid, payment link", %{payment_terms: :payment_link, payment_link_token: "preview"}},
+          {"unpaid, separate invoice", %{payment_terms: :invoice}},
           {"no first name", %{first_name: nil}}
         ] do
       {"Course reminder", title, :course_reminder, Email.course_reminder(registration(attrs, locale))}

@@ -149,38 +149,60 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
   end
 
   describe "adding a booking" do
-    test "records an initial received payment with its method", %{conn: conn} do
+    test "opens a dedicated booking page with the custom-order payment choices", %{conn: conn} do
       course = generate(course())
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
-      view |> element(~s|button[phx-click="new_booking"]|) |> render_click()
-      assert has_element?(view, "#booking-drawer", "Pay at the course")
+      view |> element(~s|a[href="/admin/courses/#{course.id}/bookings/new"]|) |> render_click()
+      assert_redirect(view, ~p"/admin/courses/#{course.id}/bookings/new")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
 
-      params = %{
-        name: "Ada",
-        email: "ada@example.com",
-        seats: "1",
-        locale: "en-GB",
-        email_customer?: "false",
-        payment_method: "cash",
-        amount: "85,00"
-      }
+      assert has_element?(view, "#booking-course", course.name)
+      assert has_element?(view, "#booking-course", Edenflowers.Format.date(course.date, "en-GB"))
+      assert has_element?(view, "#booking-course", course.location_name)
+      assert has_element?(view, "#booking-form h2", "Booking details")
+      assert has_element?(view, "#booking-form h2", "Payment")
+      assert has_element?(view, "#booking-form h2", "Confirmation")
+      assert has_element?(view, "#booking-form label", "Email language")
+      assert has_element?(view, ~s|input[type="radio"][value="on_fulfillment"][checked]|)
+      assert has_element?(view, "#booking-form label", "Payment link")
+      assert has_element?(view, "#booking-form label", "Invoice")
+      assert has_element?(view, "#booking-form label", "In person")
+      refute has_element?(view, ~s|input[type="radio"][value="received"]|)
+      refute has_element?(view, "#booking-drawer")
 
-      view |> form("#booking-form-#{course.id}", form: Map.delete(params, :amount)) |> render_change()
-      assert has_element?(view, ~s|input[name="form[amount]"]|)
-      view |> form("#booking-form-#{course.id}", form: params) |> render_submit()
+      view |> form("#booking-form", form: %{email: "ada@example.com"}) |> render_change()
 
-      booking = Ash.read_one!(Edenflowers.Courses.CourseRegistration, authorize?: false, load: [:payments, :balance])
-      assert booking.status == :confirmed
-      assert [%{method: :cash, amount: amount}] = booking.payments
-      assert Decimal.equal?(amount, "85.00")
-      assert Decimal.equal?(booking.balance, 0)
-      refute booking.payment_link_token
+      assert has_element?(view, "#booking-email-preview-toggle summary", "Preview the email")
+      refute has_element?(view, "#booking-email-preview-toggle[open]")
+      refute has_element?(view, "#booking-email-preview")
+    end
+
+    test "cancel returns to the course without creating a booking", %{conn: conn} do
+      course = generate(course())
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
+      view |> element("a", "Cancel") |> render_click()
+      assert_redirect(view, ~p"/admin/courses/#{course.id}")
+      assert Ash.read!(Edenflowers.Courses.CourseRegistration, authorize?: false) == []
+    end
+
+    test "invalid details leave the form open without creating a booking", %{conn: conn} do
+      course = generate(course())
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
+      view |> form("#booking-form", form: %{name: "", email: "invalid"}) |> render_submit()
+      assert has_element?(view, "#booking-form")
+      assert Ash.read!(Edenflowers.Courses.CourseRegistration, authorize?: false) == []
     end
 
     test "collects a part payment through the shared settlement form and previews its receipt", %{conn: conn} do
       booking = generate(course_registration(status: :confirmed))
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{booking.course_id}")
       view |> element("#settle-#{booking.id}") |> render_click()
+
+      assert has_element?(view, "#settlement-drawer h3", "Payment link")
+      assert has_element?(view, "#settlement-drawer h3", "Record payment")
+      assert has_element?(view, "#settlement-drawer dl > div:first-child", "Amount due")
+      assert has_element?(view, "#payment-#{booking.id}-form label", "Payment method")
+      assert has_element?(view, "#payment-#{booking.id}-form label", "Amount received (€)")
 
       view
       |> form("#payment-#{booking.id}-form",
@@ -200,37 +222,35 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert [%{method: :cash}] = Ash.load!(booking, :payments, authorize?: false).payments
     end
 
-    defp add_booking(view, course, email_customer?) do
-      view |> element(~s|button[phx-click="new_booking"]|) |> render_click()
-
+    defp add_booking(view, course, email_customer?, terms \\ "on_fulfillment") do
       view
-      |> form("#booking-form-#{course.id}",
+      |> form("#booking-form",
         form: %{
           name: "Birgitta",
           email: "birgitta@example.com",
           seats: "2",
           locale: "en-GB",
-          email_customer?: email_customer?
+          email_customer?: email_customer?,
+          payment_terms: terms
         }
       )
       |> render_submit()
+
+      assert_redirect(view, ~p"/admin/courses/#{course.id}")
 
       Ash.read_one!(Edenflowers.Courses.CourseRegistration, authorize?: false)
     end
 
     test "confirms places and optionally emails without a receipt or automatic payment link", %{conn: conn} do
       course = generate(course(name: "Autumn wreaths", total_places: 10))
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
-
-      view |> element(~s|button[phx-click="new_booking"]|) |> render_click()
-      assert has_element?(view, "#booking-drawer #booking-form-#{course.id}", "Email booking confirmation")
-      view |> element("#booking-form-#{course.id} button", "Cancel") |> render_click()
-      refute has_element?(view, "#booking-form-#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
+      assert has_element?(view, "#booking-form", "Email booking confirmation")
 
       registration = add_booking(view, course, "true")
 
       assert registration.status == :confirmed
       refute registration.payment_link_token
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
       refute has_element?(view, "#invites")
       assert has_element?(view, "#bookings li", "Birgitta")
       assert render(view) =~ "2 / 10 seats"
@@ -286,7 +306,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
     test "without emailing queues nothing", %{conn: conn} do
       course = generate(course(total_places: 10))
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
 
       registration = add_booking(view, course, "false")
       refute registration.payment_link_token
@@ -294,6 +314,69 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
       assert_no_email_sent()
+    end
+
+    test "payment-link confirmation previews and sends a link without recording money", %{conn: conn} do
+      course = generate(course(total_places: 10))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
+
+      view
+      |> form("#booking-form", form: %{email: "birgitta@example.com", locale: "en-GB", payment_terms: "payment_link"})
+      |> render_change()
+
+      assert has_element?(view, "#booking-email-preview-toggle", "You can pay online here:")
+      refute has_element?(view, "#booking-email-preview-toggle", "Please pay at the course.")
+
+      booking = add_booking(view, course, "true", "payment_link")
+      assert booking.status == :confirmed
+      assert booking.payment_terms == :payment_link
+      assert booking.payment_link_token
+      assert Ash.load!(booking, :payments, authorize?: false).payments == []
+      assert %{success: 1} = Oban.drain_queue(queue: :default)
+
+      assert_email_sent(fn email ->
+        assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(booking)
+        assert email.text_body =~ "confirmed"
+        refute email.text_body =~ "Please pay at the course."
+        assert email.attachments == []
+      end)
+
+      booking = Ash.get!(Edenflowers.Courses.CourseRegistration, booking.id, authorize?: false)
+      assert booking.payment_link_emailed_at
+      assert booking.confirmation_emailed_at
+      refute booking.receipt_emailed_at
+    end
+
+    test "invoice confirmation previews and sends separate-invoice instructions", %{conn: conn} do
+      course = generate(course(total_places: 10))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
+
+      view
+      |> form("#booking-form", form: %{email: "birgitta@example.com", locale: "en-GB", payment_terms: "invoice"})
+      |> render_change()
+
+      assert has_element?(view, "#booking-email-preview-toggle", "I'll send you an invoice separately.")
+      booking = add_booking(view, course, "true", "invoice")
+      assert booking.payment_terms == :invoice
+      refute booking.payment_link_token
+      assert Ash.load!(booking, :payments, authorize?: false).payments == []
+      assert %{success: 1} = Oban.drain_queue(queue: :default)
+
+      assert_email_sent(fn email ->
+        assert email.text_body =~ "I'll send you an invoice separately."
+        refute email.text_body =~ "/pay/courses/"
+        refute email.text_body =~ "Please pay at the course."
+        assert email.attachments == []
+      end)
+    end
+
+    test "a payment link is still created when confirmation is not emailed", %{conn: conn} do
+      course = generate(course(total_places: 10))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
+      booking = add_booking(view, course, "false", "payment_link")
+      assert booking.payment_link_token
+      refute booking.payment_link_emailed_at
+      refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
     end
   end
 

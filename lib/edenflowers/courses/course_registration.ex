@@ -145,6 +145,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :amount, :decimal, allow_nil?: false, constraints: [min: 0, scale: 2]
 
     attribute :payment_intent_id, :string
+
+    attribute :payment_terms, :atom do
+      constraints one_of: [:payment_link, :invoice, :on_fulfillment]
+      allow_nil? false
+      default :on_fulfillment
+    end
+
     attribute :payment_link_token, :string, sensitive?: true
     attribute :payment_link_emailed_at, :utc_datetime
     attribute :confirmed_at, :utc_datetime

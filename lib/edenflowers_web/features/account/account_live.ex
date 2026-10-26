@@ -440,7 +440,17 @@ defmodule EdenflowersWeb.Account.AccountLive do
         {~t"Course"} · {course_state(@registration, @upcoming?, @locale)} · {@registration.course.location_name} · {~t"#{count = @registration.seats_held} place(s)"N}
       </p>
       <p :if={Decimal.positive?(@registration.balance)} class="text-base-content/70 mt-1 text-sm">
-        {~t"Still to pay: #{amount = Format.currency(@registration.balance, @locale)}. Please pay at the course."}
+        {~t"Amount to pay: #{amount = Format.currency(@registration.balance, @locale)}."}
+        <%= cond do %>
+          <% @registration.payment_terms == :invoice -> %>
+            {~t"Pay by invoice"}
+          <% @registration.payment_link_open? -> %>
+            <.link navigate={EdenflowersWeb.PaymentLink.path_for(@registration)} class="link-underline-hover text-primary">
+              {~t"Pay now"}
+            </.link>
+          <% true -> %>
+            {~t"Pay at the course"}
+        <% end %>
       </p>
     </div>
     <.entry_price price={@registration.amount} locale={@locale}>
@@ -635,7 +645,10 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp order_date(order), do: order.fulfillment_date || ordered_on(order)
 
   defp registrations(user) do
-    Courses.list_my_registrations!(actor: user, load: [:course, :seats_held, :upcoming?, :balance, :receipt_available?])
+    Courses.list_my_registrations!(
+      actor: user,
+      load: [:course, :seats_held, :upcoming?, :balance, :receipt_available?, :payment_link_open?]
+    )
     |> Translations.translate_assoc(:course)
   end
 

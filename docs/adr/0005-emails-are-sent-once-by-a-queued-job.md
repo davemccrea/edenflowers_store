@@ -31,8 +31,15 @@ only `confirmation_emailed_at`; an actual attached receipt also stamps
 `receipt_emailed_at`. Sender and drawer preview make the same actual-money
 decision. Customer receipt downloads use the same financial eligibility rather
 than treating confirmed as paid. Reminders still run daily at 07:00 Finnish time
-for tomorrow's confirmed bookings, including unpaid ones, stating any Balance to
-pay at the course. Cancelled/pending bookings do not get attendance reminders or
+for tomorrow's confirmed bookings, including unpaid ones, stating any Balance and
+the chosen payment instructions. Cancelled/pending bookings do not get attendance reminders or
 normal confirmation. Payment reconciliation and these email queues remain; only
 the obsolete registration-purge scheduler/worker was retired. See
 [rollout instructions](../purchase-retention-rollout.md) for queued old jobs.
+
+Manual booking entry now offers the same terms as Custom Orders: Payment Link,
+Invoice, or In person. Choosing Payment Link creates it when the booking is
+accepted; the optional confirmation includes it and stamps it as emailed only
+after successful delivery. Invoice means Jennie handles invoicing elsewhere,
+never that money was received. Confirmation and attendance reminders follow
+those terms rather than always asking for payment at the course.

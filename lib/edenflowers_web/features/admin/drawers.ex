@@ -85,6 +85,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :to, :string, default: nil, doc: "the customer's address, when the form already knows it"
   attr :preview, Swoosh.Email, default: nil, doc: "what would be sent, from `Edenflowers.Email.Preview`"
   attr :in_swedish, Phoenix.HTML.FormField, default: nil, doc: "the toggle to preview it in Swedish, if not already"
+  attr :collapse_preview?, :boolean, default: false
   slot :inner_block, doc: "more choices about the email, like whether to attach the photo"
 
   @doc """
@@ -119,11 +120,11 @@ defmodule EdenflowersWeb.Admin.Drawers do
             type="checkbox"
             label={~t"Preview in Swedish"}
           />
-          <details class="sm:hidden">
+          <details id={"#{@id}-preview-toggle"} class={!@collapse_preview? && "sm:hidden"}>
             <summary class="link link-primary text-sm">{~t"Preview the email"}</summary>
             <.email_preview email={@preview} />
           </details>
-          <div id={"#{@id}-preview"} class="hidden sm:block">
+          <div :if={!@collapse_preview?} id={"#{@id}-preview"} class="hidden sm:block">
             <.email_preview email={@preview} />
           </div>
         <% end %>
@@ -232,7 +233,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           field={@form[:payment_method]}
           id={"#{@id}-method"}
           type="select"
-          label={~t"How"}
+          label={~t"Payment method"}
           class="select w-full"
           options={payment_method_options()}
         />
@@ -241,7 +242,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           id={"#{@id}-amount"}
           type="text"
           inputmode="decimal"
-          label={~t"Amount (€)"}
+          label={~t"Amount received (€)"}
           class="input w-full tabular-nums"
         />
       </div>

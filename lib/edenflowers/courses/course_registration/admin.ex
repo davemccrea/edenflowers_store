@@ -39,9 +39,9 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
 
     create :add_manually do
       description "Jennie accepts a booking, including after online cutoff or over capacity. Holds places immediately, " <>
-                    "with payment due at the course unless actual received money is entered. Confirmation is optional."
+                    "with payment by link, separate invoice, at the course, or already received. Confirmation is optional."
 
-      accept [:name, :email, :seats, :course_id, :locale]
+      accept [:name, :email, :seats, :course_id, :locale, :payment_terms]
       argument :email_customer?, :boolean, default: true
       argument :message, :string, description: "Jennie's note in the booking confirmation."
       argument :amount, :decimal, constraints: [greater_than: 0, scale: 2]
@@ -54,6 +54,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       change {Changes.PriceBooking, manual?: true}
       change set_attribute(:status, :confirmed)
       change set_attribute(:confirmed_at, &DateTime.utc_now/0)
+      change PaymentChanges.OpenPaymentLink, where: [attribute_equals(:payment_terms, :payment_link)]
       change atomic_set(:reference, expr(fragment("nextval('reference_seq')::text")))
 
       change after_action(fn changeset, registration, context ->

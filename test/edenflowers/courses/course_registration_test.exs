@@ -132,6 +132,35 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert {:error, %Ash.Error.Forbidden{}} = add_manually(generate(course()), 1, nil)
     end
 
+    test "payment terms persist without treating a link or invoice as money received" do
+      course = generate(course(total_places: 10))
+      admin = generate(admin_user())
+
+      for terms <- [:payment_link, :invoice, :on_fulfillment] do
+        assert {:ok, booking} =
+                 Courses.add_registration_manually(
+                   %{
+                     name: "Ada",
+                     email: "ada@example.com",
+                     course_id: course.id,
+                     payment_terms: terms,
+                     email_customer?: false
+                   },
+                   actor: admin
+                 )
+
+        booking = Ash.load!(booking, [:payments, :balance], authorize?: false)
+        assert booking.status == :confirmed
+        assert booking.payment_terms == terms
+        assert is_binary(booking.payment_link_token) == (terms == :payment_link)
+        assert booking.payments == []
+        assert Decimal.equal?(booking.balance, "85.00")
+        refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
+      end
+
+      assert seats_left(course) == 7
+    end
+
     test "an initial received payment uses the ledger and records its real method" do
       course = generate(course())
       admin = generate(admin_user())

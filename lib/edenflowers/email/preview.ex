@@ -99,7 +99,7 @@ defmodule Edenflowers.Email.Preview do
           seats: seats,
           amount_paid: amount_paid,
           balance: Decimal.sub(Decimal.mult(course.price, seats), amount_paid),
-          payment_link_token: nil
+          payment_link_token: if(entered.payment_terms == :payment_link, do: "preview")
       }
       |> translated()
 

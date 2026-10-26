@@ -7,7 +7,7 @@
 
 <%= gettext("Your receipt is attached.") %><% end %><%= if Decimal.positive?(@registration.balance) do %>
 
-<%= gettext("Still to pay: %{amount}. Please pay at the course.", amount: @format_currency.(@registration.balance)) %><% end %>
+<%= course_payment(assigns) |> String.trim() %><% end %>
 
 <%= gettext("To cancel, reply to this email.") %> <%= Edenflowers.Courses.Course.cancellation_terms(@registration.course) %>
 
