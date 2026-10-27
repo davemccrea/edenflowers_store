@@ -5,7 +5,7 @@ defmodule Edenflowers.Catalog.ProductType do
   """
 
   use Ash.Type.Enum, values: [:flowers, :card, :plant, :chocolate, :other]
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "shared"]
 
   @doc "The `ProductVariant` attributes a size of the type has, in display order."
   def attribute_keys(:flowers), do: [:height_cm, :stem_count]

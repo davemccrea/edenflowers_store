@@ -1,0 +1,189 @@
+## This file is a PO Template file.
+##
+## "msgid"s here are often extracted from source code.
+## Add new messages manually only if they're dynamic
+## messages that can't be statically extracted.
+##
+## Run "mix gettext.extract" to bring this file up to
+## date. Leave "msgstr"s empty as changing them here has no
+## effect: edit them in PO (.po) files instead.
+#
+msgid ""
+msgstr ""
+
+#: lib/edenflowers/catalog/product_type.ex:43
+#, elixir-autogen, elixir-format
+msgid "%{count} pieces"
+msgstr ""
+
+#: lib/edenflowers/catalog/product_type.ex:39
+#, elixir-autogen, elixir-format
+msgid "%{count} stems"
+msgstr ""
+
+#: lib/edenflowers/format.ex:14
+#, elixir-autogen, elixir-format
+msgid "%{name} card"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:916
+#, elixir-autogen, elixir-format
+msgid "(opens a larger view)"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:1056
+#, elixir-autogen, elixir-format
+msgid "Cart, empty"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:132
+#, elixir-autogen, elixir-format
+msgid "Connection lost"
+msgstr ""
+
+#: lib/edenflowers/catalog/product_type.ex:20
+#, elixir-autogen, elixir-format
+msgid "Dimensions (cm)"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:986
+#, elixir-autogen, elixir-format
+msgid "Eden Flowers on Facebook"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:995
+#, elixir-autogen, elixir-format
+msgid "Eden Flowers on Instagram"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:970
+#, elixir-autogen, elixir-format
+msgid "Free delivery"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:960
+#, elixir-autogen, elixir-format
+msgid "From"
+msgstr ""
+
+#: lib/edenflowers/catalog/product_type.ex:18
+#, elixir-autogen, elixir-format
+msgid "Height (cm)"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:65
+#, elixir-autogen, elixir-format
+msgid "Language"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:1255
+#, elixir-autogen, elixir-format
+msgid "Large"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:1254
+#, elixir-autogen, elixir-format
+msgid "Medium"
+msgstr ""
+
+#: lib/edenflowers_web/components/month_grid.ex:105
+#, elixir-autogen, elixir-format
+msgid "Next month"
+msgstr ""
+
+#: lib/edenflowers/catalog/product_type.ex:23
+#, elixir-autogen, elixir-format
+msgid "Pieces"
+msgstr ""
+
+#: lib/edenflowers/catalog/product_type.ex:41
+#, elixir-autogen, elixir-format
+msgid "Pot %{size} cm"
+msgstr ""
+
+#: lib/edenflowers/catalog/product_type.ex:21
+#, elixir-autogen, elixir-format
+msgid "Pot (cm)"
+msgstr ""
+
+#: lib/edenflowers_web/components/month_grid.ex:83
+#, elixir-autogen, elixir-format
+msgid "Previous month"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:137
+#, elixir-autogen, elixir-format
+msgid "Reconnecting…"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:1253
+#, elixir-autogen, elixir-format
+msgid "Small"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:968
+#, elixir-autogen, elixir-format
+msgid "Sold out"
+msgstr ""
+
+#: lib/edenflowers/catalog/product_type.ex:19
+#, elixir-autogen, elixir-format
+msgid "Stems"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:972
+#, elixir-autogen, elixir-format
+msgid "Subscription"
+msgstr ""
+
+#: lib/edenflowers/catalog/product_type.ex:22
+#, elixir-autogen, elixir-format
+msgid "Weight (g)"
+msgstr ""
+
+#: lib/edenflowers/format.ex:82
+#, elixir-autogen, elixir-format
+msgid "at %{time}"
+msgstr ""
+
+#: lib/edenflowers_web/components/core_components.ex:122
+#, elixir-autogen, elixir-format
+msgid "close"
+msgstr ""
+
+#: lib/edenflowers_web/components/month_grid.ex:95
+#, elixir-autogen, elixir-format
+msgid "go to current month"
+msgstr ""
+
+#: lib/edenflowers/fulfillment/delivery_error.ex:16
+#, elixir-autogen, elixir-format
+msgid "Address not found"
+msgstr ""
+
+#: lib/edenflowers/fulfillment/delivery_error.ex:17
+#, elixir-autogen, elixir-format
+msgid "Outside delivery range"
+msgstr ""
+
+#: lib/edenflowers/fulfillment/delivery_error.ex:18
+#, elixir-autogen, elixir-format
+msgid "There was a problem calculating delivery cost, please try again later"
+msgstr ""
+
+#: lib/edenflowers/fulfillment/delivery_error.ex:15
+#, elixir-autogen, elixir-format
+msgid "This field is required"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:396
+#: lib/edenflowers_web/components/layouts.ex:618
+#, elixir-autogen, elixir-format
+msgid "Close navigation menu"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:271
+#: lib/edenflowers_web/components/layouts.ex:679
+#, elixir-autogen, elixir-format
+msgid "Open navigation menu"
+msgstr ""

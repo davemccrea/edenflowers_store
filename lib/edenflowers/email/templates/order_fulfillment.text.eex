@@ -1,5 +1,5 @@
-<%= if @order.fulfillment_status != :fulfilled or (@order.gift && @order.recipient_name) do %><%= if @order.fulfillment_status != :fulfilled do %><%= if @order.fulfillment_method == :delivery do %><%= gettext("Delivery on %{date} to %{address}", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= gettext("Collect on %{date} from %{shop}", date: @fulfillment_on, shop: shop_address()) %><% end %>
-<% end %><%= if @order.gift && @order.recipient_name do %><%= gettext("For %{recipient}", recipient: @order.recipient_name) %>
-<%= if @order.card_message do %><%= gettext("Card message: %{message}", message: @order.card_message) %>
+<%= if @order.fulfillment_status != :fulfilled or (@order.gift && @order.recipient_name) do %><%= if @order.fulfillment_status != :fulfilled do %><%= if @order.fulfillment_method == :delivery do %><%= dgettext("emails", "Delivery on %{date} to %{address}", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= dgettext("emails", "Collect on %{date} from %{shop}", date: @fulfillment_on, shop: shop_address()) %><% end %>
+<% end %><%= if @order.gift && @order.recipient_name do %><%= dgettext("emails", "For %{recipient}", recipient: @order.recipient_name) %>
+<%= if @order.card_message do %><%= dgettext("emails", "Card message: %{message}", message: @order.card_message) %>
 <% end %><% end %>
 <% end %>

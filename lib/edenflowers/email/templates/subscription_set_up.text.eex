@@ -1,24 +1,24 @@
-<%= if @subscription.user.first_name do %><%= gettext("Hi %{name},", name: @subscription.user.first_name) %><% else %><%= gettext("Hi,") %><% end %>
+<%= if @subscription.user.first_name do %><%= dgettext("emails", "Hi %{name},", name: @subscription.user.first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= gettext("Thank you for starting a %{product} subscription.", product: @subscription.product_variant.product.name) %>
+<%= dgettext("emails", "Thank you for starting a %{product} subscription.", product: @subscription.product_variant.product.name) %>
 
-<%= gettext("Size") %>: <%= @size %>
-<%= gettext("How often") %>: <%= @interval %>
-<%= if @pickup? do %><%= gettext("Price per pickup") %>: <%= @price %>
-<%= gettext("Collect from") %>: <%= shop_address() %>
-<%= gettext("First pickup") %><% else %><%= gettext("Price per delivery") %>: <%= @price %>
-<%= gettext("Delivered to") %>: <%= @subscription.delivery_address %>
-<%= gettext("First delivery") %><% end %>: <%= @format_date.(@subscription.first_delivery_date) %>
-<%= if @pickup? do %><%= gettext("Next pickup") %><% else %><%= gettext("Next delivery") %><% end %>: <%= @format_date.(@subscription.next_fulfillment_date) %>
+<%= dgettext("emails", "Size") %>: <%= @size %>
+<%= dgettext("emails", "How often") %>: <%= @interval %>
+<%= if @pickup? do %><%= dgettext("emails", "Price per pickup") %>: <%= @price %>
+<%= dgettext("emails", "Collect from") %>: <%= shop_address() %>
+<%= dgettext("emails", "First pickup") %><% else %><%= dgettext("emails", "Price per delivery") %>: <%= @price %>
+<%= dgettext("emails", "Delivered to") %>: <%= @subscription.delivery_address %>
+<%= dgettext("emails", "First delivery") %><% end %>: <%= @format_date.(@subscription.first_delivery_date) %>
+<%= if @pickup? do %><%= dgettext("emails", "Next pickup") %><% else %><%= dgettext("emails", "Next delivery") %><% end %>: <%= @format_date.(@subscription.next_fulfillment_date) %>
 <%= if @subscription.first_order_discounted? || @subscription.card_message do %>
-<%= if @subscription.first_order_discounted? do %><%= gettext("Your promo code discount was for the first order only. Later orders are at the price above.") %>
-<% end %><%= if @subscription.card_message do %><%= gettext("Your card message goes with the first order only.") %>
+<%= if @subscription.first_order_discounted? do %><%= dgettext("emails", "Your promo code discount was for the first order only. Later orders are at the price above.") %>
+<% end %><%= if @subscription.card_message do %><%= dgettext("emails", "Your card message goes with the first order only.") %>
 <% end %><% end %>
-<%= if @pickup? do %><%= gettext("The first order's receipt is in a separate email. After that, your saved card is charged %{days} days before each pickup.", days: @charge_days) %><% else %><%= gettext("The first order's receipt is in a separate email. After that, your saved card is charged %{days} days before each delivery.", days: @charge_days) %><% end %>
+<%= if @pickup? do %><%= dgettext("emails", "The first order's receipt is in a separate email. After that, your saved card is charged %{days} days before each pickup.", days: @charge_days) %><% else %><%= dgettext("emails", "The first order's receipt is in a separate email. After that, your saved card is charged %{days} days before each delivery.", days: @charge_days) %><% end %>
 
-<%= if @pickup? do %><%= gettext("To pause, change or cancel, use your account at least %{days} days before a pickup:", days: @change_days) %><% else %><%= gettext("To pause, change or cancel, use your account at least %{days} days before a delivery:", days: @change_days) %><% end %>
+<%= if @pickup? do %><%= dgettext("emails", "To pause, change or cancel, use your account at least %{days} days before a pickup:", days: @change_days) %><% else %><%= dgettext("emails", "To pause, change or cancel, use your account at least %{days} days before a delivery:", days: @change_days) %><% end %>
 <%= @account_url %>
 
-<%= gettext("Warm wishes,") %>
+<%= dgettext("emails", "Warm wishes,") %>
 
 <%= signature() %>

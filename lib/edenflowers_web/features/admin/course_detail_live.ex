@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   Admin course page for bookings, balances, refunds, and customer emails.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   require Logger
 
@@ -66,7 +66,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               </span>
               <span aria-hidden="true">·</span>
               <span class="whitespace-nowrap">{~t"#{seats = @course.seats_booked} / #{total = @course.total_places} seats"}</span>
-              <.badge :if={@past?} tone={:tag}>{pgettext("course", "Past")}</.badge>
+              <.badge :if={@past?} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
             </span>
           </:subtitle>
           <:actions>
@@ -508,7 +508,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         phx-value-id={@registration.id}
         class="text-error"
       >
-        {pgettext("course booking", "Cancel")}
+        {dpgettext("admin", "course booking", "Cancel")}
       </.actions_menu_button>
     </.actions_menu>
     """

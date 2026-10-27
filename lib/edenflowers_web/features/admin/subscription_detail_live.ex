@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   Admin view of a subscription and its occurrences, with pause, resume, and cancel controls.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   require Ash.Query
 

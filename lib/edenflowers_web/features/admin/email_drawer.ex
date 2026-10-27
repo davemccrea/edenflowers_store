@@ -6,7 +6,7 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
   page, because each kind has its own action and flash.
   """
 
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   import Phoenix.Component, only: [assign: 2, assign: 3, to_form: 2]
   import Phoenix.LiveView, only: [push_event: 3]

@@ -7,6 +7,7 @@ defmodule EdenflowersWeb do
       use EdenflowersWeb, :controller
       use EdenflowersWeb, :live_view
       use EdenflowersWeb, :html
+      use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   The role macros add localized routes, Gettext sigils, layouts, and core
   components as appropriate. Keep the quoted definitions here limited to
@@ -33,49 +34,54 @@ defmodule EdenflowersWeb do
     end
   end
 
-  def controller do
+  def controller(opts \\ []) do
+    domain = Keyword.get(opts, :gettext_domain, "storefront")
+
     quote do
       use Phoenix.Controller, formats: [:html, :json]
 
       import Plug.Conn
 
       use GettextSigils,
-        backend: EdenflowersWeb.Gettext
+        backend: EdenflowersWeb.Gettext,
+        sigils: [domain: unquote(domain)]
 
       unquote(verified_routes())
     end
   end
 
-  def live_view do
+  def live_view(opts \\ []) do
     quote do
       use Phoenix.LiveView
 
-      unquote(html_helpers())
+      unquote(html_helpers(opts))
     end
   end
 
-  def live_component do
+  def live_component(opts \\ []) do
     quote do
       use Phoenix.LiveComponent
 
-      unquote(html_helpers())
+      unquote(html_helpers(opts))
     end
   end
 
-  def html do
+  def html(opts \\ []) do
     quote do
       use Phoenix.Component
 
       import Phoenix.Controller,
         only: [get_csrf_token: 0, view_module: 1, view_template: 1]
 
-      unquote(html_helpers())
+      unquote(html_helpers(opts))
     end
   end
 
-  defp html_helpers do
+  defp html_helpers(opts) do
+    domain = Keyword.get(opts, :gettext_domain, "storefront")
+
     quote do
-      use GettextSigils, backend: EdenflowersWeb.Gettext
+      use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: unquote(domain)]
 
       import Phoenix.HTML
       import EdenflowersWeb.CoreComponents
@@ -102,6 +108,10 @@ defmodule EdenflowersWeb do
   @doc """
   When used, dispatch to the appropriate controller/live_view/etc.
   """
+  defmacro __using__({which, opts}) when is_atom(which) and is_list(opts) do
+    apply(__MODULE__, which, [opts])
+  end
+
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
   end

@@ -1,13 +1,13 @@
-<%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
+<%= if @registration.first_name do %><%= dgettext("emails", "Hi %{name},", name: @registration.first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= gettext("Your booking on %{course} on %{date} is cancelled.", course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
+<%= dgettext("emails", "Your booking on %{course} on %{date} is cancelled.", course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
 
 <%= message(@message) %><%= if Decimal.positive?(@refunded) do %><%= refund_line(%{amount: @refunded, how: @refunded_to, format_currency: @format_currency}) %>
 
-<% end %><%= if Decimal.positive?(@to_return) do %><%= if Decimal.positive?(@refunded) do %><%= gettext("I'll pay back the other %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% else %><%= gettext("I'll pay back %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% end %>
+<% end %><%= if Decimal.positive?(@to_return) do %><%= if Decimal.positive?(@refunded) do %><%= dgettext("emails", "I'll pay back the other %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% else %><%= dgettext("emails", "I'll pay back %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% end %>
 
-<% end %><%= gettext("If you have any questions, just reply to this email.") %>
+<% end %><%= dgettext("emails", "If you have any questions, just reply to this email.") %>
 
-<%= gettext("Warm wishes,") %>
+<%= dgettext("emails", "Warm wishes,") %>
 
 <%= signature() %>

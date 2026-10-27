@@ -10,7 +10,7 @@ defmodule EdenflowersWeb.CoreComponents do
     * [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) — `<.link>`, `<.form>`, and friends.
   """
   use Phoenix.Component
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "shared"]
 
   alias Phoenix.LiveView.JS
 
@@ -1049,7 +1049,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   defp cart_aria_label(count) when is_integer(count) and count > 0,
     do:
-      Gettext.dngettext(EdenflowersWeb.Gettext, "default", "Cart, %{count} item", "Cart, %{count} items", count, %{
+      dngettext("storefront", "Cart, %{count} item", "Cart, %{count} items", count, %{
         count: count
       })
 

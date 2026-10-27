@@ -22,7 +22,10 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   speak to, from the option or else the action's `cancelled_by` argument.
   """
   use Ash.Resource.Change
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+
+  use GettextSigils,
+    backend: EdenflowersWeb.Gettext,
+    sigils: [modifiers: [a: [domain: "admin"]]]
 
   require Ash.Expr
   require Logger
@@ -94,7 +97,8 @@ defmodule Edenflowers.Payments.Changes.Cancel do
 
           Decimal.negative?(refund) or Decimal.gt?(refund, held) ->
             {:error,
-             field: :refund, message: ~t"Enter an amount from €0 to #{amount = Format.currency(held, Format.locale())}."}
+             field: :refund,
+             message: ~t"Enter an amount from €0 to #{amount = Format.currency(held, Format.locale())}."a}
 
           true ->
             {:ok, Decimal.sub(held, refund)}
@@ -136,8 +140,10 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   end
 
   defp changed_message(:customer), do: ~t"This order can no longer be cancelled online. Please contact us."
-  defp changed_message(:shop), do: ~t"This changed while you had it open, so it wasn't cancelled."
+  defp changed_message(:shop), do: ~t"This changed while you had it open, so it wasn't cancelled."a
 
   defp refused_message(:customer), do: ~t"We couldn't refund your order. Please contact us to cancel it."
-  defp refused_message(:shop), do: ~t"Stripe refused the refund, so nothing was cancelled. Check the payment in Stripe."
+
+  defp refused_message(:shop),
+    do: ~t"Stripe refused the refund, so nothing was cancelled. Check the payment in Stripe."a
 end

@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   @moduledoc """
   The course page's drawer for collecting a booking's balance or refunding it.
   """
-  use EdenflowersWeb, :html
+  use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.Drawers

@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   Admin list of courses, including capacity and booking status.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
   use Cinder.UrlSync
 
   import EdenflowersWeb.Admin.Components
@@ -89,12 +89,12 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
               type: :select,
               label: ~t"Show",
               prompt: ~t"All courses",
-              options: [{~t"Still to do", :current}, {pgettext("course", "Done"), :past}]
+              options: [{~t"Still to do", :current}, {dpgettext("admin", "course", "Done"), :past}]
             ]}
             label={~t"Status"}
           >
             <span class="flex flex-wrap gap-1">
-              <.badge :if={Date.before?(course.date, @today)} tone={:tag}>{pgettext("course", "Past")}</.badge>
+              <.badge :if={Date.before?(course.date, @today)} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
               <.badge :if={course.to_settle?} tone={:warning}>{~t"To settle"}</.badge>
             </span>
           </:col>

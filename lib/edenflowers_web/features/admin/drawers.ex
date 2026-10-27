@@ -5,7 +5,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   all the same width and header.
   """
 
-  use EdenflowersWeb, :html
+  use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
   alias EdenflowersWeb.Admin.OrderLog
 

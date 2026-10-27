@@ -11,7 +11,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
   A receipt Papra can't serve doesn't stop the report: its row says so.
   """
-  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [context: "accounting report"]
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin", context: "accounting report"]
 
   require Ash.Query
   require Logger

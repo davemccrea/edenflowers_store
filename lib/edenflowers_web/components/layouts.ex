@@ -62,7 +62,7 @@ defmodule EdenflowersWeb.Layouts do
       <span aria-hidden="true">{render_slot(@inner_block)}</span>
       <select
         id={@id}
-        aria-label={~t"Language"}
+        aria-label={dgettext("shared", "Language")}
         onpointerdown="this.dataset.pointer = ''"
         onkeydown="delete this.dataset.pointer"
         onblur="delete this.dataset.pointer"
@@ -129,12 +129,12 @@ defmodule EdenflowersWeb.Layouts do
       <.flash
         id="client-error"
         kind={:error}
-        title={~t"Connection lost"}
+        title={dgettext("shared", "Connection lost")}
         phx-disconnected={show("#client-error") |> JS.remove_attribute("hidden")}
         phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
-        {~t"Reconnecting…"}
+        {dgettext("shared", "Reconnecting…")}
         <.icon name="hero-arrow-path" class="size-3 align-[-0.125em] ml-1 motion-safe:animate-spin" />
       </.flash>
     </div>
@@ -191,26 +191,27 @@ defmodule EdenflowersWeb.Layouts do
 
   def admin(assigns) do
     nav_sections = [
-      {nil, [{~p"/admin", ~t"Overview", true, "hero-squares-2x2"}]},
-      {~t"Sales",
+      {nil, [{~p"/admin", dgettext("admin", "Overview"), true, "hero-squares-2x2"}]},
+      {dgettext("admin", "Sales"),
        [
-         {~p"/admin/orders", ~t"Orders", true, "hero-shopping-bag"},
-         {~p"/admin/subscriptions", ~t"Subscriptions", true, "hero-arrow-path"},
-         {~p"/admin/customers", ~t"Customers", true, "hero-users"}
+         {~p"/admin/orders", dgettext("admin", "Orders"), true, "hero-shopping-bag"},
+         {~p"/admin/subscriptions", dgettext("admin", "Subscriptions"), true, "hero-arrow-path"},
+         {~p"/admin/customers", dgettext("admin", "Customers"), true, "hero-users"}
        ]},
-      {~t"Shop",
+      {dgettext("admin", "Shop"),
        [
-         {~p"/admin/products", ~t"Products", true, "hero-gift"},
-         {~p"/admin/courses", ~t"Courses", true, "hero-academic-cap"},
-         {EdenflowersWeb.Admin.PromotionsLive.default_path(), ~t"Promotions", true, "hero-receipt-percent"},
-         {~p"/admin/fulfillments", ~t"Delivery and pickup", true, "hero-calendar-days"}
+         {~p"/admin/products", dgettext("admin", "Products"), true, "hero-gift"},
+         {~p"/admin/courses", dgettext("admin", "Courses"), true, "hero-academic-cap"},
+         {EdenflowersWeb.Admin.PromotionsLive.default_path(), dgettext("admin", "Promotions"), true,
+          "hero-receipt-percent"},
+         {~p"/admin/fulfillments", dgettext("admin", "Delivery and pickup"), true, "hero-calendar-days"}
        ]},
-      {~t"Marketing", [{"https://app.brevo.com", "Brevo", false, "hero-paper-airplane"}]},
-      {~t"Finances", [{~p"/admin/expenses", ~t"Expenses", true, "hero-banknotes"}]}
+      {dgettext("admin", "Marketing"), [{"https://app.brevo.com", "Brevo", false, "hero-paper-airplane"}]},
+      {dgettext("admin", "Finances"), [{~p"/admin/expenses", dgettext("admin", "Expenses"), true, "hero-banknotes"}]}
     ]
 
     system_nav = [
-      {"/admin/errors", ~t"Errors", false, "hero-exclamation-triangle"},
+      {"/admin/errors", dgettext("admin", "Errors"), false, "hero-exclamation-triangle"},
       {"/admin/oban", "Oban", false, "hero-cpu-chip"},
       {"/admin/ash", "AshAdmin", false, "hero-circle-stack"}
     ]
@@ -232,7 +233,7 @@ defmodule EdenflowersWeb.Layouts do
       <.drawer
         id="admin-nav-drawer"
         placement="left"
-        label={~t"Admin navigation"}
+        label={dgettext("admin", "Admin navigation")}
         class="bg-base-200 border-base-content/20 w-[80vw] flex h-full flex-col border-r sm:w-[25rem]"
       >
         <.admin_sidebar_content
@@ -245,7 +246,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <%!-- Desktop: persistent sidebar, pinned so it stays in view while content scrolls --%>
       <aside
-        aria-label={~t"Admin navigation"}
+        aria-label={dgettext("admin", "Admin navigation")}
         class="admin-sidebar [view-transition-name:admin-sidebar] bg-base-200 border-base-content/20 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
       >
         <.admin_sidebar_content
@@ -267,7 +268,7 @@ defmodule EdenflowersWeb.Layouts do
               type="button"
               class="flex h-12 w-12 items-center justify-center"
               phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
-              aria-label={~t"Open navigation menu"}
+              aria-label={dgettext("shared", "Open navigation menu")}
             >
               <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
             </button>
@@ -333,7 +334,7 @@ defmodule EdenflowersWeb.Layouts do
   defp admin_search(assigns) do
     ~H"""
     <form action={~p"/admin/search"} method="get" role="search" class={["relative", @class]}>
-      <label for={@id} class="sr-only">{~t"Search orders and customers"}</label>
+      <label for={@id} class="sr-only">{dgettext("admin", "Search orders and customers")}</label>
       <.icon
         name="hero-magnifying-glass"
         class="text-base-content/50 pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2"
@@ -343,7 +344,7 @@ defmodule EdenflowersWeb.Layouts do
         type="search"
         name="q"
         data-admin-search
-        placeholder={~t"Search orders and customers…"}
+        placeholder={dgettext("admin", "Search orders and customers…")}
         class="input w-full pl-9 lg:input-sm"
       />
       <kbd
@@ -392,7 +393,7 @@ defmodule EdenflowersWeb.Layouts do
           :if={@closeable}
           phx-click={JS.exec("phx-hide", to: "#admin-nav-drawer")}
           size="sm"
-          aria_label={~t"Close navigation menu"}
+          aria_label={dgettext("shared", "Close navigation menu")}
         >
           <.icon name="hero-x-mark" class="h-5 w-5" />
         </.icon_button>
@@ -414,7 +415,7 @@ defmodule EdenflowersWeb.Layouts do
       </nav>
 
       <div class="border-base-content/12 mt-auto border-t px-3 pt-4">
-        <p class="text-base-content/75 mb-1 px-3 text-xs">{~t"System"}</p>
+        <p class="text-base-content/75 mb-1 px-3 text-xs">{dgettext("admin", "System")}</p>
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @system_nav}
           path={path}
@@ -490,7 +491,7 @@ defmodule EdenflowersWeb.Layouts do
       <button
         type="button"
         tabindex="0"
-        aria-label={~t"Admin account menu"}
+        aria-label={dgettext("admin", "Admin account menu")}
         class={["inline-flex items-center transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "touch-target h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
       >
         <img
@@ -526,19 +527,19 @@ defmodule EdenflowersWeb.Layouts do
         <li>
           <.link navigate={~p"/admin/account"}>
             <.icon name="hero-user-circle" class="h-4 w-4" />
-            {~t"Account"}
+            {dgettext("admin", "Account")}
           </.link>
         </li>
         <li>
           <.link href={~q"/#{language}"}>
             <.icon name="hero-building-storefront" class="h-4 w-4" />
-            {~t"View store"}
+            {dgettext("admin", "View store")}
           </.link>
         </li>
         <li>
           <.link href={~p"/sign-out"} method="delete">
             <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
-            {~t"Sign out"}
+            {dgettext("admin", "Sign out")}
           </.link>
         </li>
       </ul>
@@ -613,7 +614,10 @@ defmodule EdenflowersWeb.Layouts do
           Eden Flowers
         </.link>
 
-        <.icon_button aria_label={~t"Close navigation menu"} phx-click={JS.exec("phx-hide", to: "#nav-drawer")}>
+        <.icon_button
+          aria_label={dgettext("shared", "Close navigation menu")}
+          phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
+        >
           <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
         </.icon_button>
       </header>
@@ -672,7 +676,7 @@ defmodule EdenflowersWeb.Layouts do
                 <button
                   type="button"
                   class="flex h-12 w-12 items-center justify-center"
-                  aria-label={~t"Open navigation menu"}
+                  aria-label={dgettext("shared", "Open navigation menu")}
                   aria-controls="nav-drawer"
                   aria-expanded="false"
                   phx-click={JS.exec("phx-show", to: "#nav-drawer")}

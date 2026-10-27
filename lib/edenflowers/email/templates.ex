@@ -5,7 +5,7 @@ defmodule Edenflowers.Email.Templates do
   `Edenflowers.Email` can stay focused on building Swoosh envelopes.
   """
 
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "emails"]
 
   require EEx
 

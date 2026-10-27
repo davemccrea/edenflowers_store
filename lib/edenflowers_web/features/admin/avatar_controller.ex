@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.AvatarController do
   Serves the admin avatar image used by the back office.
   """
 
-  use EdenflowersWeb, :controller
+  use EdenflowersWeb, {:controller, gettext_domain: "admin"}
 
   def show(conn, _params) do
     with %{admin: true} = user <- conn.assigns[:current_user],

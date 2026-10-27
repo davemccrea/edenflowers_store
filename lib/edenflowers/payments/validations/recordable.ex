@@ -8,7 +8,7 @@ defmodule Edenflowers.Payments.Validations.Recordable do
   undo takes back a payment recorded by mistake, whatever is owed.
   """
   use Ash.Resource.Validation
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   @impl true
   def validate(changeset, opts, _context) do

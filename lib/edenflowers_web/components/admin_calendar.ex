@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.AdminCalendar do
   `"toggle-week"`. `EdenflowersWeb.MonthGrid` draws the month and handles
   month navigation and the keyboard; this module fills its slots.
   """
-  use EdenflowersWeb, :html
+  use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
   import EdenflowersWeb.KeyDateIcon
 

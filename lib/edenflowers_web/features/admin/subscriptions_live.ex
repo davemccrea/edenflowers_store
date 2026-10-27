@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
   Admin list of subscriptions and their current states.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
   use Cinder.UrlSync
 
   import EdenflowersWeb.Admin.Components

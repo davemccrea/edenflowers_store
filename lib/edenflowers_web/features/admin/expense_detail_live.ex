@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   Admin page for reviewing, correcting, or deleting an imported expense.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   require Logger
 

@@ -3,7 +3,7 @@ defmodule Edenflowers.Fulfillment.DeliveryError do
   Maps delivery-pricing failures to messages suitable for the checkout form.
   """
 
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "shared"]
 
   @doc """
   Single source of truth for user-facing delivery-related error messages.

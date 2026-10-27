@@ -5,7 +5,7 @@ defmodule Edenflowers.Orders.Order.Changes.SetFulfillmentTime do
   Without a choice the times are left as they are.
   """
   use Ash.Resource.Change
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   @impl true
   def change(changeset, _opts, _context) do

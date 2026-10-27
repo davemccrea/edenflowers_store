@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   Lines live on another resource, so a version shows them only through its
   `items`, which `RecordEnteredLineItems` sets when they change.
   """
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   alias Edenflowers.Format
   alias Edenflowers.Locales

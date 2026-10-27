@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   order page and the courses page. Returns the flash to show, keeping a
   committed payment distinct from a receipt failure. The page reloads what it shows.
   """
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   require Logger
 

@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
   Admin list of promotion codes and their use.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
   use Cinder.UrlSync
 
   import EdenflowersWeb.Admin.Components

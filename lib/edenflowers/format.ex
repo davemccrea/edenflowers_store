@@ -4,7 +4,7 @@ defmodule Edenflowers.Format do
   All functions return strings formatted via CLDR for the supplied locale.
   """
 
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "shared"]
 
   @spec locale() :: Localize.Locale.locale_id()
   def locale, do: Localize.get_locale().cldr_locale_id

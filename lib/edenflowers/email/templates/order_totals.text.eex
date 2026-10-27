@@ -1,10 +1,10 @@
 <%= for line_item <- @order.line_items do %><%= line_item.quantity %> × <%= Edenflowers.Format.line_item_name(line_item) %>  <%= @format_currency.(line_item.subtotal) %>
-<% end %><%= if match?(%Decimal{}, @order.discount) and Decimal.positive?(@order.discount) do %><%= gettext("Discount") %>  −<%= @format_currency.(@order.discount) %>
-<% end %><%= if @order.fulfillment_fee && Decimal.positive?(@order.fulfillment_fee) do %><%= gettext("Delivery") %>  <%= @format_currency.(@order.fulfillment_fee) %>
-<% end %><%= gettext("Total") %>  <%= @format_currency.(@order.grand_total) %>
-<%= cond do %><% Decimal.negative?(@order.balance) -> %><%= gettext("Paid") %>  <%= @format_currency.(@order.amount_paid) %>
-<%= gettext("To be refunded") %>  <%= @format_currency.(Decimal.abs(@order.balance)) %>
-<% Decimal.positive?(@order.balance) and Decimal.positive?(@order.amount_paid) -> %><%= gettext("Paid so far") %>  <%= @format_currency.(@order.amount_paid) %>
-<%= gettext("Left to pay") %>  <%= @format_currency.(@order.balance) %>
-<% Decimal.positive?(@order.balance) -> %><% true -> %><%= gettext("Paid in full") %>  <%= @format_currency.(@order.amount_paid) %>
+<% end %><%= if match?(%Decimal{}, @order.discount) and Decimal.positive?(@order.discount) do %><%= dgettext("emails", "Discount") %>  −<%= @format_currency.(@order.discount) %>
+<% end %><%= if @order.fulfillment_fee && Decimal.positive?(@order.fulfillment_fee) do %><%= dgettext("emails", "Delivery") %>  <%= @format_currency.(@order.fulfillment_fee) %>
+<% end %><%= dgettext("emails", "Total") %>  <%= @format_currency.(@order.grand_total) %>
+<%= cond do %><% Decimal.negative?(@order.balance) -> %><%= dgettext("emails", "Paid") %>  <%= @format_currency.(@order.amount_paid) %>
+<%= dgettext("emails", "To be refunded") %>  <%= @format_currency.(Decimal.abs(@order.balance)) %>
+<% Decimal.positive?(@order.balance) and Decimal.positive?(@order.amount_paid) -> %><%= dgettext("emails", "Paid so far") %>  <%= @format_currency.(@order.amount_paid) %>
+<%= dgettext("emails", "Left to pay") %>  <%= @format_currency.(@order.balance) %>
+<% Decimal.positive?(@order.balance) -> %><% true -> %><%= dgettext("emails", "Paid in full") %>  <%= @format_currency.(@order.amount_paid) %>
 <% end %>
