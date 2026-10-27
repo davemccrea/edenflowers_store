@@ -927,11 +927,15 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :product, :map,
     required: true,
-    doc: "must respond to :name, :main_photo_slug, :cheapest_price, :free_delivery, :subscribable, :sold_out?"
+    doc: "must respond to :name, :main_photo_slug, :cheapest_price, :free_delivery, :sold_out?"
 
   attr :navigate, :string, required: true
   attr :locale, :string, required: true
   attr :heading, :string, default: "h3", doc: "h2 where the card sits directly under the page's h1"
+
+  attr :free_dist_km, :integer,
+    default: nil,
+    doc: "the free delivery distance; the Free delivery tag shows only when set, beside a `free_delivery_note`"
 
   def product_card(assigns) do
     ~H"""
@@ -949,30 +953,41 @@ defmodule EdenflowersWeb.CoreComponents do
           sizes="(min-width: 640px) 25vw, 50vw"
           class={["h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]", @product.sold_out? && "opacity-50"]}
         />
+        <span
+          :if={@product.free_delivery and @free_dist_km}
+          class="bg-base-100/90 text-base-content absolute top-3 left-3 px-2.5 py-1 text-xs"
+        >
+          {~t"Free delivery"}
+        </span>
       </figure>
 
-      <div class="text-base-content flex flex-col gap-1.5">
+      <div class="text-base-content flex flex-col gap-1">
         <.dynamic_tag tag_name={@heading} class="card-heading link-underline-group-hover">
           {@product.name}
         </.dynamic_tag>
-        <p class="font-serif text-base-content text-lg leading-none">
-          <span class="text-base-content/65 font-sans tracking-[0.18em] mr-1 text-xs uppercase">
-            {~t"From"}
-          </span>
-          {Edenflowers.Format.storefront_price(@product.cheapest_price, @locale)}
+        <p class="text-base-content/65 text-sm">
+          {~t"From"} {Edenflowers.Format.storefront_price(@product.cheapest_price, @locale)}
         </p>
-        <p
-          :if={@product.sold_out? or @product.free_delivery or @product.subscribable}
-          class="text-base-content/65 font-sans tracking-[0.18em] text-xs uppercase leading-snug"
-        >
-          <span :if={@product.sold_out?} class="text-base-content/80 font-bold" data-testid="sold-out">{~t"Sold out"}</span>
-          <span :if={@product.sold_out? and (@product.free_delivery or @product.subscribable)} aria-hidden="true">·</span>
-          <span :if={@product.free_delivery}>{~t"Free delivery"}</span>
-          <span :if={@product.free_delivery and @product.subscribable} aria-hidden="true">·</span>
-          <span :if={@product.subscribable}>{~t"Subscription"}</span>
+        <p :if={@product.sold_out?} class="text-base-content/80 text-sm font-bold" data-testid="sold-out">
+          {~t"Sold out"}
         </p>
       </div>
     </.link>
+    """
+  end
+
+  @doc """
+  States the condition behind the product cards' Free delivery tag once for
+  the whole list, so the tag itself can stay short.
+  """
+  attr :free_dist_km, :integer, required: true
+  attr :class, :any, default: nil
+
+  def free_delivery_note(assigns) do
+    ~H"""
+    <p class={["text-base-content/65 text-sm", @class]}>
+      {~t"Free delivery within #{km = @free_dist_km} km of Minimossen on marked bouquets."}
+    </p>
     """
   end
 

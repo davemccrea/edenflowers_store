@@ -116,6 +116,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
          ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within 5 km of Minimossen on selected bouquets.",
        json_ld: EdenflowersWeb.Business.florist(),
        products: products,
+       free_dist_km: Fulfillment.free_dist_km(),
        review_pages: @review_pages,
        review_page: 0,
        review_leaving: nil,
@@ -252,7 +253,14 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       <section :if={@products != []} id="store" class="not-last:border-b">
         <div class="container py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
-            <h2 class="section-title">{~t"Favourites"}</h2>
+            <div>
+              <h2 class="section-title">{~t"Favourites"}</h2>
+              <.free_delivery_note
+                :if={@free_dist_km && Enum.any?(@products, & &1.free_delivery)}
+                free_dist_km={@free_dist_km}
+                class="mt-2"
+              />
+            </div>
 
             <div class="hidden items-center gap-2 md:flex">
               <.icon_button
@@ -299,6 +307,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                     product={product}
                     navigate={~q"/#{language}/product/#{product}"}
                     locale={Edenflowers.Format.locale()}
+                    free_dist_km={@free_dist_km}
                   />
                 </div>
               </div>

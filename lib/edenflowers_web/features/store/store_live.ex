@@ -24,6 +24,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
        categories: categories,
        bouquets: bouquets,
        products: [],
+       free_dist_km: Edenflowers.Fulfillment.free_dist_km(),
        selected_category: nil
      )}
   end
@@ -131,6 +132,11 @@ defmodule EdenflowersWeb.Store.StoreLive do
               </.button>
             </div>
           <% else %>
+            <.free_delivery_note
+              :if={@free_dist_km && Enum.any?(@products, & &1.free_delivery)}
+              free_dist_km={@free_dist_km}
+              class="mb-8"
+            />
             <ul
               class="grid gap-x-6 gap-y-16 md:grid-cols-2 md:gap-y-20 xl:grid-cols-3 xl:gap-x-8"
               role="list"
@@ -141,6 +147,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
                   navigate={~q"/#{language}/product/#{product}"}
                   locale={Edenflowers.Format.locale()}
                   heading="h2"
+                  free_dist_km={@free_dist_km}
                 />
               </li>
             </ul>
