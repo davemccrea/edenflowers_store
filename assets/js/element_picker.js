@@ -493,6 +493,22 @@ if (dev || reviewer) {
     }
   };
 
+  const iconButton = (label, path) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}" /></svg>`;
+    Object.assign(button.style, {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: touch ? "44px" : "36px",
+      minHeight: touch ? "44px" : "36px",
+    });
+    return button;
+  };
+
   const openBox = (el, heading, note = null) => {
     if (box) releaseAnchor(activeEl);
     box?.remove();
@@ -516,33 +532,9 @@ if (dev || reviewer) {
       whiteSpace: "nowrap",
     });
 
-    // The buttons version of Option+↑ and Option+↓, for touch screens.
-    const larger = document.createElement("button");
-    larger.type = "button";
-    larger.textContent = "Larger";
-    larger.disabled = !el.parentElement || el.parentElement === document.body;
-    larger.addEventListener("click", () => {
-      selectionPath.push(el);
-      pick(el.parentElement);
-    });
-
-    const smaller = document.createElement("button");
-    smaller.type = "button";
-    smaller.textContent = "Smaller";
-    smaller.disabled = !selectionPath.length;
-    smaller.addEventListener("click", () => pick(selectionPath.pop()));
-
-    const header = document.createElement("div");
-    Object.assign(header.style, {
-      display: "flex",
-      gap: "10px",
-      alignItems: "center",
-    });
-    header.append(title, larger, smaller);
-
     const textarea = document.createElement("textarea");
     textarea.rows = 4;
-    textarea.placeholder = "What should change here?";
+    textarea.placeholder = "Write comment here";
     textarea.value = note?.body ?? "";
     textarea.setAttribute("aria-label", "Review note");
     Object.assign(textarea.style, {
@@ -558,41 +550,44 @@ if (dev || reviewer) {
     });
 
     const status = document.createElement("span");
-    status.textContent = touch ? "" : "⌘↵ to save, Esc to cancel";
+    status.textContent = touch
+      ? ""
+      : dev
+        ? "⌘↵ to copy, ⌘S to save, Esc to cancel"
+        : "⌘S to save, Esc to cancel";
     Object.assign(status.style, {
-      flex: "1",
       fontSize: "11px",
       opacity: "0.7",
+      textAlign: "right",
     });
 
-    const cancel = document.createElement("button");
-    cancel.type = "button";
-    cancel.textContent = "Cancel";
-    cancel.addEventListener("click", closeBox);
-
-    const save = document.createElement("button");
+    const save = iconButton(
+      "Save",
+      "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12l4 4v12a2 2 0 0 1-2 2Z M17 21v-8H7v8 M7 3v5h8V3",
+    );
     save.type = "submit";
-    save.textContent = "Save";
-    Object.assign(save.style, { fontWeight: "600" });
 
     const actions = document.createElement("div");
     Object.assign(actions.style, {
       display: "flex",
+      flexWrap: "wrap",
+      justifyContent: "flex-end",
       gap: "10px",
       alignItems: "center",
     });
     // A reviewer may have copied text to paste into the note, so the reference
     // is copied only when asked for.
-    const copy = document.createElement("button");
-    copy.type = "button";
-    copy.textContent = "Copy ref";
-    copy.addEventListener("click", async () => {
+    const copy = iconButton("Copy ref", "M9 9h12v12H9z M5 15H3V3h12v2");
+    const copyNoteReference = async () => {
       const message = await copyReference(el, textarea.value);
       if (box === thisBox && path === pagePath()) status.textContent = message;
-    });
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.textContent = "Delete";
+    };
+    copy.addEventListener("click", copyNoteReference);
+    const remove = iconButton(
+      "Delete",
+      "M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7",
+    );
+    remove.style.marginRight = "auto";
     remove.addEventListener("click", async () => {
       if (!confirm("Delete this note?")) return;
       status.textContent = "Deleting…";
@@ -606,17 +601,11 @@ if (dev || reviewer) {
         status.textContent = `Could not delete (${response?.status ?? "offline"}), try again`;
       }
     });
-    actions.append(
-      status,
-      ...(note ? [remove] : []),
-      ...(dev ? [copy] : []),
-      cancel,
-      save,
-    );
+    actions.append(...(note ? [remove] : []), ...(dev ? [copy] : []), save);
     const strings = document.createElement("div");
     strings.textContent = "Looking up strings…";
     Object.assign(strings.style, { fontSize: "11px", opacity: "0.7" });
-    box.append(header, strings, textarea, actions);
+    box.append(title, strings, textarea, actions, status);
 
     const stringsRequest = sendJson("/review-notes/strings", {
       texts: textsFor(el),
@@ -635,9 +624,17 @@ if (dev || reviewer) {
     box.addEventListener("keydown", (event) => {
       event.stopPropagation();
       if (event.key === "Escape") closeBox();
-      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      if (
+        event.key.toLowerCase() === "s" &&
+        (event.metaKey || event.ctrlKey) &&
+        !event.shiftKey
+      ) {
         event.preventDefault();
         box.requestSubmit();
+      }
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        if (dev) return copyNoteReference();
       }
     });
 
