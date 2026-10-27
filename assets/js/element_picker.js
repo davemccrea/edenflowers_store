@@ -19,6 +19,10 @@ if (dev || reviewer) {
   let label = null;
   let hint = null;
   let box = null;
+  let optionHeld = false;
+  let notesPath = null;
+  let notesRequest = null;
+  let markers = [];
 
   const clickHint = dev ? (reviewer ? "copy + note" : "copy") : "note";
 
@@ -169,7 +173,167 @@ if (dev || reviewer) {
     hideHighlight();
   };
 
-  const noteFor = (el, body) => ({
+  const sendJson = (url, data, method = "POST") =>
+    fetch(url, {
+      method,
+      headers: {
+        "content-type": "application/json",
+        "x-csrf-token": document.querySelector("meta[name='csrf-token']")
+          .content,
+      },
+      body: JSON.stringify(data),
+    }).catch(() => null);
+
+  const pagePath = () => location.pathname + location.search;
+
+  // Everything a translated string could render as: the whole text, each text
+  // node, and the attributes people read, such as a placeholder or alt text.
+  const textsFor = (el) => {
+    const texts = [el.innerText];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) texts.push(walker.currentNode.textContent);
+    const attributes = ["placeholder", "alt", "aria-label", "title"];
+    const labelled = el.querySelectorAll(
+      attributes.map((name) => `[${name}]`).join(","),
+    );
+    for (const node of [el, ...labelled])
+      for (const name of attributes) texts.push(node.getAttribute(name));
+    const cleaned = texts
+      .map((text) => text?.replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+    return [...new Set(cleaned)].slice(0, 50);
+  };
+
+  const stringsList = (strings) => {
+    const list = document.createElement("div");
+    Object.assign(list.style, {
+      display: "grid",
+      maxHeight: "200px",
+      overflowY: "auto",
+      fontSize: "12px",
+    });
+    const locale = document.documentElement.lang.split("-")[0];
+    strings.forEach((string, index) => {
+      const entry = document.createElement("div");
+      Object.assign(entry.style, {
+        display: "grid",
+        gridTemplateColumns: "auto 1fr",
+        columnGap: "8px",
+        rowGap: "2px",
+        padding: "6px 0",
+        borderTop: index ? "1px solid oklch(90% 0.01 155)" : "none",
+      });
+      // The page already shows its own language, so only the others to compare against.
+      for (const other of ["en", "sv", "fi"]) {
+        if (other === locale || !(other in string.translations)) continue;
+        const code = document.createElement("span");
+        code.textContent = other.toUpperCase();
+        Object.assign(code.style, {
+          fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+          fontSize: "10px",
+          lineHeight: "18px",
+          opacity: "0.5",
+        });
+        const text = document.createElement("span");
+        text.textContent = string.translations[other] ?? "Not translated";
+        if (string.translations[other] == null)
+          Object.assign(text.style, { fontStyle: "italic", opacity: "0.5" });
+        entry.append(code, text);
+      }
+      const where = document.createElement("span");
+      where.textContent = [`${string.domain}.po`, string.msgctxt]
+        .filter(Boolean)
+        .join(" · ");
+      Object.assign(where.style, {
+        gridColumn: "2",
+        fontSize: "10px",
+        opacity: "0.45",
+      });
+      entry.append(where);
+      list.append(entry);
+    });
+    return list;
+  };
+
+  const hideNotes = () => {
+    for (const marker of markers) marker.remove();
+    markers = [];
+  };
+
+  const noteElement = (note) => {
+    try {
+      return document.querySelector(note.selector);
+    } catch {
+      return null;
+    }
+  };
+
+  const renderNotes = (notes) => {
+    hideNotes();
+    for (const note of notes) {
+      const el = noteElement(note);
+      if (!el) continue;
+
+      const rect = el.getBoundingClientRect();
+      const marker = document.createElement("div");
+      Object.assign(marker.style, {
+        position: "fixed",
+        pointerEvents: "none",
+        zIndex: "2147483646",
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        border: "1.5px dashed oklch(70% 0.16 70)",
+        borderRadius: "4px",
+      });
+      const text = document.createElement("div");
+      text.textContent =
+        note.body.length > 80 ? `${note.body.slice(0, 77)}...` : note.body;
+      Object.assign(text.style, {
+        position: "absolute",
+        top: "100%",
+        left: "0",
+        maxWidth: "260px",
+        marginTop: "2px",
+        padding: "2px 6px",
+        background: "oklch(92% 0.08 85)",
+        color: "oklch(25% 0.05 70)",
+        font: "11px/1.4 system-ui, sans-serif",
+        borderRadius: "4px",
+      });
+      marker.append(text);
+      hostFor(el).append(marker);
+      markers.push(marker);
+    }
+  };
+
+  // Open notes for this page, fetched once per path.
+  const pageNotes = () => {
+    if (notesPath !== pagePath()) {
+      notesPath = pagePath();
+      notesRequest = fetch(
+        `/review-notes?path=${encodeURIComponent(notesPath)}`,
+      )
+        .then((response) => (response.ok ? response.json() : []))
+        .catch(() => []);
+    }
+    return notesRequest;
+  };
+
+  const showNotes = async () => {
+    if (!reviewer) return;
+    const notes = await pageNotes();
+    if (optionHeld && !box) renderNotes(notes);
+  };
+
+  // Option+Clicking an element again opens the reviewer's own note on it.
+  const ownNoteOn = async (el) =>
+    (await pageNotes()).find(
+      (note) => note["mine?"] && noteElement(note) === el,
+    );
+
+  const noteFor = (el, body, strings) => ({
     body,
     path: location.pathname + location.search,
     locale: document.documentElement.lang,
@@ -178,12 +342,28 @@ if (dev || reviewer) {
     element_text: el.innerText?.trim().replace(/\s+/g, " ").slice(0, 500),
     element_html: el.outerHTML.slice(0, 2000),
     source: findHeexSource(el)?.location,
+    strings: strings.map(({ domain, msgctxt, msgid }) => ({
+      domain,
+      msgctxt,
+      msgid,
+    })),
   });
 
-  const openBox = (el, heading) => {
+  const copyReference = async (el) => {
+    try {
+      await navigator.clipboard.writeText(elementReference(el, document));
+      return "✓ Copied";
+    } catch (error) {
+      console.error("Could not copy element reference", error);
+      return "Could not copy — check clipboard permissions";
+    }
+  };
+
+  const openBox = (el, heading, note = null) => {
     box?.remove();
     activeEl = el;
     box = document.createElement("form");
+    hideNotes();
     renderHighlight(el);
 
     Object.assign(box.style, {
@@ -214,6 +394,7 @@ if (dev || reviewer) {
     const textarea = document.createElement("textarea");
     textarea.rows = 4;
     textarea.placeholder = "What should change here?";
+    textarea.value = note?.body ?? "";
     textarea.setAttribute("aria-label", "Review note");
     Object.assign(textarea.style, {
       width: "100%",
@@ -248,8 +429,32 @@ if (dev || reviewer) {
       gap: "10px",
       alignItems: "center",
     });
-    actions.append(status, cancel, save);
-    box.append(title, textarea, actions);
+    // A reviewer may have copied text to paste into the note, so the reference
+    // is copied only when asked for.
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.textContent = "Copy ref";
+    copy.addEventListener("click", async () => {
+      status.textContent = await copyReference(el);
+    });
+    actions.append(status, ...(dev ? [copy] : []), cancel, save);
+    const strings = document.createElement("div");
+    strings.textContent = "Looking up strings…";
+    Object.assign(strings.style, { fontSize: "11px", opacity: "0.7" });
+    box.append(title, strings, textarea, actions);
+
+    const stringsRequest = sendJson("/review-notes/strings", {
+      texts: textsFor(el),
+      locale: document.documentElement.lang,
+    })
+      .then((response) => (response?.ok ? response.json() : []))
+      .catch(() => []);
+
+    stringsRequest.then((found) => {
+      if (found.length) strings.replaceWith(stringsList(found));
+      else strings.textContent = "No translated strings found here";
+      if (box) positionBox();
+    });
 
     // Keep the page's own shortcuts, like Escape closing a drawer, out of the box.
     box.addEventListener("keydown", (event) => {
@@ -268,17 +473,15 @@ if (dev || reviewer) {
 
       save.disabled = true;
       status.textContent = "Saving…";
-      const response = await fetch("/review-notes", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-csrf-token": document.querySelector("meta[name='csrf-token']")
-            .content,
-        },
-        body: JSON.stringify(noteFor(el, body)),
-      }).catch(() => null);
+      const response = note
+        ? await sendJson(`/review-notes/${note.id}`, { body }, "PATCH")
+        : await sendJson(
+            "/review-notes",
+            noteFor(el, body, await stringsRequest),
+          );
 
       if (response?.ok) {
+        notesPath = null;
         closeBox();
         flash(el, "✓ Note saved");
       } else {
@@ -314,6 +517,10 @@ if (dev || reviewer) {
     (event) => {
       // Option types characters such as å, so leave keys alone while writing a note.
       if (copiedTimer || box) return;
+      if (event.key === "Alt" && !optionHeld) {
+        optionHeld = true;
+        showNotes();
+      }
       if (event.key === "Alt" && !activeEl && lastTarget) {
         selectionPath = [];
         activeEl = lastTarget;
@@ -335,11 +542,19 @@ if (dev || reviewer) {
   );
 
   document.addEventListener("keyup", (event) => {
-    if (event.key === "Alt") hideHighlight();
+    if (event.key !== "Alt") return;
+    optionHeld = false;
+    hideNotes();
+    hideHighlight();
   });
 
-  window.addEventListener("blur", hideHighlight);
+  window.addEventListener("blur", () => {
+    optionHeld = false;
+    hideNotes();
+    hideHighlight();
+  });
   const refreshHighlight = () => {
+    if (markers.length) showNotes();
     if (!activeEl || copiedTimer) return;
     if (!activeEl.isConnected) return hideHighlight();
     renderHighlight(activeEl);
@@ -359,6 +574,14 @@ if (dev || reviewer) {
 
   document.addEventListener("mousedown", stopAltPointer, true);
   document.addEventListener("pointerdown", stopAltPointer, true);
+  // Option+Click elsewhere opens a new box instead, through the click handler.
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (box && !event.altKey && !box.contains(event.target)) closeBox();
+    },
+    true,
+  );
 
   document.addEventListener(
     "click",
@@ -371,19 +594,12 @@ if (dev || reviewer) {
       event.preventDefault();
       event.stopPropagation();
 
-      if (!dev) return openBox(el, tagSummary(el));
-
-      let message;
-      try {
-        await navigator.clipboard.writeText(elementReference(el, document));
-        message = "✓ Copied";
-      } catch (error) {
-        console.error("Could not copy element reference", error);
-        message = "Could not copy — check clipboard permissions";
-      }
-
-      if (reviewer) openBox(el, `${message} · ${tagSummary(el)}`);
-      else flash(el, message);
+      const note = reviewer ? await ownNoteOn(el) : null;
+      const heading = note
+        ? `Editing note · ${tagSummary(el)}`
+        : tagSummary(el);
+      if (reviewer) openBox(el, heading, note);
+      else flash(el, await copyReference(el));
     },
     true,
   );

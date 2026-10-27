@@ -21,7 +21,7 @@ defmodule Edenflowers.Feedback.Note do
       description "A reviewer leaves a note on the element they Option+Clicked. The app version is recorded so " <>
                     "you can tell whether a later release already fixed it."
 
-      accept [:body, :path, :locale, :viewport, :selector, :element_text, :element_html, :source]
+      accept [:body, :path, :locale, :viewport, :selector, :element_text, :element_html, :source, :strings]
       # Without an actor the policy, not this change, turns the request away.
       change relate_actor(:author, allow_nil?: true)
       change set_attribute(:app_version, &__MODULE__.app_version/0)
@@ -31,6 +31,45 @@ defmodule Edenflowers.Feedback.Note do
       description "Notes nobody has resolved yet, oldest first, for `just review-comments`."
       filter expr(is_nil(resolved_at))
       prepare build(sort: [inserted_at: :asc])
+    end
+
+    read :open_on_page do
+      description "Open notes left on one page (path and query string), so the picker can mark their elements " <>
+                    "while a reviewer holds Option."
+
+      argument :path, :string do
+        description "The page's path and query string, matched exactly as `leave` stored it."
+        allow_nil? false
+      end
+
+      filter expr(is_nil(resolved_at) and path == ^arg(:path))
+      prepare build(sort: [inserted_at: :asc], load: [:mine?])
+    end
+
+    action :find_strings, {:array, :map} do
+      description "The Gettext messages whose rendered text equals one of `texts` in `locale`, each with its " <>
+                    "domain, msgctxt, msgid and its text in every locale, for the note box. A reverse lookup " <>
+                    "in `priv/gettext`, see `Edenflowers.Feedback.Catalogue`."
+
+      argument :texts, {:array, :string} do
+        description "The clicked element's visible text, its text nodes and attributes such as placeholder and alt."
+        allow_nil? false
+        constraints max_length: 50
+      end
+
+      argument :locale, :string do
+        description "The page's language, from its <html lang>."
+        allow_nil? false
+      end
+
+      run fn input, _context ->
+        {:ok, Edenflowers.Feedback.Catalogue.matches(input.arguments.texts, input.arguments.locale)}
+      end
+    end
+
+    update :edit do
+      description "The reviewer rewrites their note after Option+Clicking the same element again."
+      accept [:body]
     end
 
     update :resolve do
@@ -50,8 +89,12 @@ defmodule Edenflowers.Feedback.Note do
       authorize_if always()
     end
 
-    policy action(:leave) do
+    policy action([:read, :leave, :open_on_page, :find_strings]) do
       authorize_if actor_attribute_equals(:reviewer, true)
+    end
+
+    policy action(:edit) do
+      authorize_if relates_to_actor_via(:author)
     end
   end
 
@@ -100,6 +143,14 @@ defmodule Edenflowers.Feedback.Note do
                     "have none."
     end
 
+    attribute :strings, {:array, :map} do
+      description "The Gettext messages the element seemed to render when the note was left, as " <>
+                    "`find_strings` returned them: domain, msgctxt, msgid and their text in every locale. " <>
+                    "Empty for text from the database."
+
+      default []
+    end
+
     attribute :app_version, :string do
       description "The release the reviewer was looking at, e.g. v1.14.4."
       allow_nil? false
@@ -116,6 +167,12 @@ defmodule Edenflowers.Feedback.Note do
     belongs_to :author, Edenflowers.Accounts.User do
       description "The reviewer who left the note."
       allow_nil? false
+    end
+  end
+
+  calculations do
+    calculate :mine?, :boolean, expr(author_id == ^actor(:id)) do
+      description "Whether the actor wrote the note, so Option+Clicking its element opens it for editing."
     end
   end
 
