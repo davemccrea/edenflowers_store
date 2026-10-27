@@ -2,12 +2,13 @@ defmodule Edenflowers.Fulfillment.ShopCalendarTest do
   use Edenflowers.DataCase, async: false
   import Generator
   alias Edenflowers.Fulfillment
+  alias Edenflowers.Fulfillment.Weekday
 
   test "is created on first use, open every day with same-day off" do
     Edenflowers.Repo.delete_all("shop_calendar")
     calendar = Fulfillment.get_shop_calendar!()
 
-    assert calendar.available_days == Edenflowers.Fulfillment.Weekday.all()
+    assert calendar.available_days == Weekday.all()
     assert {calendar.enabled_dates, calendar.disabled_dates, calendar.same_day} == {[], [], false}
   end
 
@@ -37,7 +38,7 @@ defmodule Edenflowers.Fulfillment.ShopCalendarTest do
 
     updates = [
       {:toggle_date, %{date: date}},
-      {:set_weekday, %{weekday: Edenflowers.Fulfillment.Weekday.from_date(date), direction: :off}},
+      {:set_weekday, %{weekday: Weekday.from_date(date), direction: :off}},
       {:set_week, %{week: [date], today: today, direction: :open}},
       {:update_same_day, %{same_day: true, order_deadline: ~T[12:00:00]}},
       {:reset_calendar, %{}}
