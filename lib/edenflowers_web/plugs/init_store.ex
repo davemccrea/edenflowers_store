@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Plugs.InitStore do
   def init(opts), do: opts
 
   def call(conn, _opts) do
+    conn = put_session(conn, :visitor_id, get_session(conn, :visitor_id) || Ecto.UUID.generate())
     order_id = get_session(conn, :order_id)
     actor = conn.assigns[:current_user]
 

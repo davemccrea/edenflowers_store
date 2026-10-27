@@ -25,6 +25,7 @@ defmodule Edenflowers.Application do
          Application.fetch_env!(:edenflowers, Oban)
        )},
       {Phoenix.PubSub, name: Edenflowers.PubSub},
+      EdenflowersWeb.Presence,
       {Edenflowers.RateLimiter, clean_period: :timer.minutes(1)},
       EdenflowersWeb.Endpoint,
       {AshAuthentication.Supervisor, [otp_app: :edenflowers]}
