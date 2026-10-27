@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.GettextTest do
   alias EdenflowersWeb.Gettext, as: Backend
 
   @root Path.expand("../..", __DIR__)
-  @domains ~w(storefront emails shared admin)
+  @domains ~w(storefront emails receipts shared admin)
 
   test "the default domain is customer-facing and the mixed catalogue is gone" do
     assert Backend.__gettext__(:default_domain) == "storefront"
@@ -70,6 +70,7 @@ defmodule EdenflowersWeb.GettextTest do
 
     assert output =~ ~r/sv\s+critical\s+storefront/
     assert output =~ ~r/fi\s+critical\s+emails/
+    assert output =~ ~r/sv\s+critical\s+receipts/
     assert output =~ ~r/sv\s+can wait\s+admin/
     assert output =~ "Obsolete entries are excluded."
   end

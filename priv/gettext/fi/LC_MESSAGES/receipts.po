@@ -1,0 +1,183 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: fi\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/edenflowers/orders/receipt_labels.ex:48
+#, elixir-autogen, elixir-format
+msgid "Bank transfer"
+msgstr "Tilisiirto"
+
+#: lib/edenflowers/orders/receipt_labels.ex:14
+#, elixir-autogen, elixir-format
+msgid "Business ID"
+msgstr "Y-tunnus"
+
+#: lib/edenflowers/orders/receipt_labels.ex:43
+#: lib/edenflowers/orders/receipt_labels.ex:44
+#, elixir-autogen, elixir-format
+msgid "Card"
+msgstr "Kortti"
+
+#: lib/edenflowers/orders/receipt_labels.ex:20
+#, elixir-autogen, elixir-format
+msgid "Card message"
+msgstr "Korttiviesti"
+
+#: lib/edenflowers/orders/receipt_labels.ex:47
+#, elixir-autogen, elixir-format
+msgid "Cash"
+msgstr "Käteinen"
+
+#: lib/edenflowers/orders/receipt_labels.ex:18
+#, elixir-autogen, elixir-format
+msgid "Course"
+msgstr "Kurssi"
+
+#: lib/edenflowers/orders/receipt_labels.ex:15
+#, elixir-autogen, elixir-format
+msgid "Customer"
+msgstr "Asiakas"
+
+#: lib/edenflowers/orders/receipt_labels.ex:19
+#, elixir-autogen, elixir-format
+msgid "Date"
+msgstr "Päivämäärä"
+
+#: lib/edenflowers/orders/receipt_labels.ex:16
+#, elixir-autogen, elixir-format
+msgid "Delivery"
+msgstr "Kotiinkuljetus"
+
+#: lib/edenflowers/orders/receipt_labels.ex:12
+#, elixir-autogen, elixir-format
+msgid "Delivery date"
+msgstr "Toimituspäivä"
+
+#: lib/edenflowers/orders/receipt_labels.ex:33
+#, elixir-autogen, elixir-format
+msgid "Delivery fee"
+msgstr "Kotiinkuljetusmaksu"
+
+#: lib/edenflowers/orders/receipt_labels.ex:35
+#, elixir-autogen, elixir-format
+msgid "Discount"
+msgstr "Alennus"
+
+#: lib/edenflowers/orders/receipt_labels.ex:32
+#, elixir-autogen, elixir-format
+msgid "Gross"
+msgstr "Verollinen"
+
+#: lib/edenflowers/orders/receipt_labels.ex:22
+#, elixir-autogen, elixir-format
+msgid "Item"
+msgstr "Tuote"
+
+#: lib/edenflowers/orders/receipt_labels.ex:46
+#, elixir-autogen, elixir-format
+msgid "Klarna"
+msgstr "Klarna"
+
+#: lib/edenflowers/orders/receipt_labels.ex:45
+#, elixir-autogen, elixir-format
+msgid "MobilePay"
+msgstr "MobilePay"
+
+#: lib/edenflowers/orders/receipt_labels.ex:31
+#, elixir-autogen, elixir-format
+msgid "Net"
+msgstr "Veroton"
+
+#: lib/edenflowers/orders/receipt_labels.ex:21
+#, elixir-autogen, elixir-format
+msgid "Order"
+msgstr "Tilaus"
+
+#: lib/edenflowers/orders/receipt_labels.ex:11
+#, elixir-autogen, elixir-format
+msgid "Order date"
+msgstr "Tilauspäivä"
+
+#: lib/edenflowers/orders/receipt_labels.ex:36
+#, elixir-autogen, elixir-format
+msgid "Order total"
+msgstr "Tilauksen loppusumma"
+
+#: lib/edenflowers/orders/receipt_labels.ex:17
+#, elixir-autogen, elixir-format
+msgid "Pickup"
+msgstr "Nouto"
+
+#: lib/edenflowers/orders/receipt_labels.ex:13
+#, elixir-autogen, elixir-format
+msgid "Pickup date"
+msgstr "Noutopäivä"
+
+#: lib/edenflowers/orders/receipt_labels.ex:34
+#, elixir-autogen, elixir-format
+msgid "Pickup fee"
+msgstr "Noutomaksu"
+
+#: lib/edenflowers/orders/receipt_labels.ex:25
+#, elixir-autogen, elixir-format
+msgid "Qty"
+msgstr "Määrä"
+
+#: lib/edenflowers/orders/receipt_labels.ex:39
+#, elixir-autogen, elixir-format
+msgid "Questions or changes? Reply to your confirmation email and Jennie will get back to you."
+msgstr "Kysymyksiä tai muutoksia? Vastaa vahvistussähköpostiin ja Jennie palaa asiaan."
+
+#: lib/edenflowers/orders/receipt_labels.ex:9
+#, elixir-autogen, elixir-format
+msgid "Receipt"
+msgstr "Kuitti"
+
+#: lib/edenflowers/orders/receipt_labels.ex:10
+#, elixir-autogen, elixir-format
+msgid "Reference"
+msgstr "Viite"
+
+#: lib/edenflowers/orders/receipt_labels.ex:28
+#, elixir-autogen, elixir-format
+msgid "Subtotal"
+msgstr "Välisumma"
+
+#: lib/edenflowers/orders/receipt_labels.ex:37
+#, elixir-autogen, elixir-format
+msgid "Thank you for your order"
+msgstr "Kiitos tilauksestasi"
+
+#: lib/edenflowers/orders/receipt_labels.ex:27
+#, elixir-autogen, elixir-format
+msgid "Total"
+msgstr "Yhteensä"
+
+#: lib/edenflowers/orders/receipt_labels.ex:23
+#, elixir-autogen, elixir-format
+msgid "Unit price net"
+msgstr "Veroton à-hinta"
+
+#: lib/edenflowers/orders/receipt_labels.ex:26
+#, elixir-autogen, elixir-format
+msgid "VAT"
+msgstr "Vero"
+
+#: lib/edenflowers/orders/receipt_labels.ex:30
+#, elixir-autogen, elixir-format
+msgid "VAT breakdown"
+msgstr "ALV-erittely"
+
+#: lib/edenflowers/orders/receipt_labels.ex:29
+#, elixir-autogen, elixir-format
+msgid "VAT rate"
+msgstr "Verokanta"
