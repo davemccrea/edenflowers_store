@@ -252,13 +252,14 @@ defmodule Edenflowers.Orders.ReceiptTest do
   describe "generate/1" do
     @describetag :typst
 
-    test "renders a non-empty PDF binary" do
-      order = build_delivery_order(locale: "en-GB")
+    test "renders a non-empty PDF binary in every customer language" do
+      for locale <- ~w(en-GB sv-FI fi) do
+        order = build_delivery_order(locale: locale)
 
-      assert {:ok, pdf} = Receipt.generate(order)
-      assert is_binary(pdf)
-      # PDF files start with the "%PDF-" magic bytes.
-      assert <<"%PDF-", _rest::binary>> = pdf
+        assert {:ok, pdf} = Receipt.generate(order)
+        assert is_binary(pdf)
+        assert <<"%PDF-", _rest::binary>> = pdf
+      end
     end
   end
 

@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths-ignore: ["infra/**"]
   push:
-    branches: [main, weblate-translations]
+    branches: [main]
     paths-ignore: ["infra/**"]
 
 jobs:
@@ -61,6 +61,7 @@ jobs:
       - run: mix deps.get
       - run: mix localize.download_locales
       - run: mix compile --warnings-as-errors
+      - run: mix gettext.check
       - run: mix ash.codegen --check
       - run: mix credo --strict
       - run: mix test

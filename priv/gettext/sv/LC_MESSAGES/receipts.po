@@ -160,7 +160,7 @@ msgstr "Tack för din beställning"
 #: lib/edenflowers/orders/receipt_labels.ex:27
 #, elixir-autogen, elixir-format
 msgid "Total"
-msgstr "Total"
+msgstr "Totalt"
 
 #: lib/edenflowers/orders/receipt_labels.ex:23
 #, elixir-autogen, elixir-format
