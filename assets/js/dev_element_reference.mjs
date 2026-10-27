@@ -73,7 +73,9 @@ const frameworkDetails = (source) => {
 export const selectorFor = (element) => {
   const parts = [];
   for (let node = element; node; node = node.parentElement) {
-    if (node.id) {
+    // LiveView gives its root a fresh phx-… id on every mount, so a selector
+    // through it stops matching after a reload.
+    if (node.id && !node.id.startsWith("phx-")) {
       parts.unshift(`#${CSS.escape(node.id)}`);
       break;
     }
