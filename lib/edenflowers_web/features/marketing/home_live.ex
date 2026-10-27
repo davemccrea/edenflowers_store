@@ -189,17 +189,21 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       current_path={@current_path}
       alternates={@alternates}
     >
-      <section class="relative overflow-hidden not-last:border-b">
+      <section data-header-overlay class="relative overflow-hidden not-last:border-b">
+        <%!-- Phones get the photo's own 2:3 portrait so the box crops it only once --%>
         <.image
           src="local:///wedding/daniela_streng_1.jpg"
           alt=""
           width={1920}
           height={1080}
-          sources={[%{media: "(max-width: 767px)", width: 1080, height: 1920, max_width: 960}]}
+          sources={[%{media: "(max-width: 767px)", width: 960, height: 1440, max_width: 960}]}
           quality={50}
           priority
-          class="hero-zoom h-[75dvh] w-full object-cover md:h-dvh"
+          class="hero-zoom h-[90svh] w-full object-cover md:h-dvh"
         />
+        <%!-- On phones the headline lands on the pale clouds and bouquet, so a faint shade keeps the white text legible --%>
+        <div class="from-black/20 bg-linear-to-t pointer-events-none absolute inset-x-0 bottom-0 h-2/3 to-transparent md:hidden">
+        </div>
 
         <div class="container absolute inset-0 flex flex-col justify-end pb-16 sm:pb-28 md:justify-center md:pb-0">
           <h1 class="hero-display hero-focus max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
@@ -252,7 +256,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       </section>
 
       <section :if={@products != []} id="store" class="not-last:border-b">
-        <div class="container py-24 xl:max-w-[70vw]">
+        <div class="container py-16 md:py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
             <div>
               <h2 class="section-title">{~t"Favourites"}</h2>
