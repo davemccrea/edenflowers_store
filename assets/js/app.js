@@ -8,7 +8,7 @@ import { customerLiveSelect } from "./customer_select";
 import { cinderDom } from "./cinder_a11y";
 import { onDocumentPatch } from "./admin_transitions";
 import "./unsaved_forms";
-import "./dev_element_picker";
+import "./element_picker";
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")

@@ -4,11 +4,11 @@ import { test } from "node:test";
 import vm from "node:vm";
 
 const picker = readFileSync(
-  new URL("../../assets/js/dev_element_picker.js", import.meta.url),
+  new URL("../../assets/js/element_picker.js", import.meta.url),
   "utf8",
-).replace(/^import .*;\n/, "");
+).replace(/^import [^;]*;\n/, "");
 
-const fixture = () => {
+const fixture = ({ dev = true, reviewer = false } = {}) => {
   const listeners = new Map();
   const overlays = [];
   const copied = [];
@@ -22,6 +22,12 @@ const fixture = () => {
     id: "",
     classList: [],
     getAttribute: () => null,
+    hasAttribute: () => reviewer,
+    setAttribute() {},
+    addEventListener() {},
+    focus() {},
+    remove() {},
+    contains: () => false,
     style: {},
     parentElement,
     isConnected: true,
@@ -42,7 +48,7 @@ const fixture = () => {
   const child = element("span", parent);
   const document = {
     body,
-    querySelector: () => parent,
+    querySelector: () => (dev ? parent : null),
     addEventListener: listen,
     createElement: (tag) => {
       const node = element(tag);
@@ -56,6 +62,7 @@ const fixture = () => {
     navigator: { clipboard: { writeText: async (text) => copied.push(text) } },
     findHeexSource: () => null,
     elementReference: (node) => node.tagName,
+    selectorFor: () => "",
     innerWidth: 1000,
     innerHeight: 800,
     setTimeout: () => 1,
@@ -146,4 +153,26 @@ test("highlight uses the top-layer host and clears a disconnected selection", as
   child.isConnected = false;
   await fire("scroll");
   assert.equal(overlays[0].style.display, "none");
+});
+
+test("a reviewer on a page without dev annotations gets a note box, not a copy", async () => {
+  const { fire, copied, overlays } = fixture({ dev: false, reviewer: true });
+  const event = await fire("click");
+  assert.deepEqual(copied, []);
+  assert.ok(event.defaultPrevented);
+  assert.ok(overlays.some((node) => node.tagName === "TEXTAREA"));
+});
+
+test("a reviewer in dev both copies and gets a note box", async () => {
+  const { fire, copied, overlays } = fixture({ reviewer: true });
+  await fire("click");
+  assert.deepEqual(copied, ["SPAN"]);
+  assert.ok(overlays.some((node) => node.tagName === "TEXTAREA"));
+});
+
+test("a customer on a page without dev annotations gets nothing", async () => {
+  const { fire, listeners } = fixture({ dev: false });
+  const event = await fire("click");
+  assert.equal(listeners.size, 0);
+  assert.equal(event.defaultPrevented, undefined);
 });

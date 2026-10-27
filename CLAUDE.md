@@ -7,7 +7,7 @@
 - Start the dev server with `just dev`, never `mix phx.server`: only `just dev` starts the local imgproxy and points `IMGPROXY_PREFIX` at it, so uploaded photos show.
 - When giving a worktree's dev server URL, use its `PHX_HOST` and `PORT` from the worktree's `.env`, e.g. `http://faq-sidebar-52s.localhost:16381/en/faq`, never `http://localhost:16381/en/faq`. The plain localhost URL shares cookies with main and other worktrees.
 - Pushing `main` deploys nothing. `just deploy` tags a release from `main`.
-- Before touching the production database directly (psql, rpc writes, data fixes) or deploying production, run `just backup` and confirm the dump landed in `tmp/`. `just deploy` does this itself. To undo, `just rollback <previous tag> <dump>` restores that dump and runs that tag's image (leave out the dump to keep the data).
+- Before touching the production database directly (psql, rpc writes, data fixes) or deploying production, run `just backup` and confirm the dump landed in `tmp/`. `just deploy` does this itself. `just resolve-review-comment` is exempt: it only stamps review notes as resolved. To undo, `just rollback <previous tag> <dump>` restores that dump and runs that tag's image (leave out the dump to keep the data).
 - When a commit finishes or changes a Backlog task, update the task's status (and `quick` label) in the same commit.
 
 ## Ash

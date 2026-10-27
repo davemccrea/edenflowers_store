@@ -304,6 +304,15 @@ defmodule Edenflowers.Accounts.User do
       writable? false
     end
 
+    attribute :reviewer, :boolean do
+      description "Lets them leave review notes on any element of the site with Option+Click, without back " <>
+                    "office access. No action can set it, so it is set in the database."
+
+      default false
+      public? true
+      writable? false
+    end
+
     attribute :avatar, :binary, allow_nil?: true, select_by_default?: false
     attribute :avatar_content_type, :string, allow_nil?: true
 
@@ -331,6 +340,11 @@ defmodule Edenflowers.Accounts.User do
   end
 
   calculations do
+    calculate :can_review?, :boolean, expr(admin or reviewer) do
+      description "Whether every page turns on the Option+Click picker for leaving review notes. " <>
+                    "`Feedback.Note`'s policies grant the same people."
+    end
+
     calculate :first_name, :string, {Calculations.FirstName, source: :name} do
       description "Best guess from the free-text `name`, also handling \"Smith, Jane\". Sent to Brevo."
     end

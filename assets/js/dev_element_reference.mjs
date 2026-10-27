@@ -70,7 +70,7 @@ const frameworkDetails = (source) => {
   return tree.join("\n");
 };
 
-const selectorFor = (element) => {
+export const selectorFor = (element) => {
   const parts = [];
   for (let node = element; node; node = node.parentElement) {
     if (node.id) {

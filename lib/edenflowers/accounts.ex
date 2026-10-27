@@ -39,6 +39,7 @@ defmodule Edenflowers.Accounts do
       define :ensure_stripe_customer, action: :ensure_stripe_customer
       define :forget_stripe_customer, action: :forget_stripe_customer
       define :set_newsletter_promo, action: :set_newsletter_promo, args: [:newsletter_promo_id]
+      define_calculation :can_review?, args: [:_record]
     end
   end
 end

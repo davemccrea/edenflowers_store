@@ -89,7 +89,8 @@ config :edenflowers,
     Edenflowers.Pricing,
     Edenflowers.Courses,
     Edenflowers.Payments,
-    Edenflowers.Expenses
+    Edenflowers.Expenses,
+    Edenflowers.Feedback
   ]
 
 # Admin photo uploads. Dev keeps them out of images/, the photos synced to the

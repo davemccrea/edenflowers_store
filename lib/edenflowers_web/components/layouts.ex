@@ -108,6 +108,10 @@ defmodule EdenflowersWeb.Layouts do
 
   defp admin_path?(path), do: path == "/admin" or String.starts_with?(path, "/admin/")
 
+  # The Option+Click picker in element_picker.js only turns on for reviewers.
+  defp reviewer?(nil), do: false
+  defp reviewer?(user), do: Edenflowers.Accounts.can_review?(user)
+
   @doc """
   Renders the page's flash notices plus the connection-lost toasts, which
   LiveView reveals on disconnect and hides again on reconnect.

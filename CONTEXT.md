@@ -116,3 +116,13 @@ _Avoid_: Buyer, sender, client
 **Recipient**:
 The person the flowers are for. Often not the Customer; for a funeral it is effectively the church or chapel receiving the delivery.
 _Avoid_: Receiver, giftee
+
+**Reviewer**:
+Someone invited to check the site before it goes out, by a `reviewer` flag set in the database. Admins count as Reviewers too. They have no back office access.
+_Avoid_: Tester, QA
+
+### Review
+
+**Review note**:
+A Reviewer's comment on one element of a page, left with Option+Click and stored with the element's context. Open until resolved; there is no admin page for them.
+_Avoid_: Review on its own (it could mean a customer's product review)
