@@ -147,7 +147,10 @@ defmodule EdenflowersWeb.Router do
   scope "/", EdenflowersWeb do
     pipe_through :browser_json
 
+    get "/review-notes", Review.NoteController, :index
     post "/review-notes", Review.NoteController, :create
+    patch "/review-notes/:id", Review.NoteController, :update
+    post "/review-notes/strings", Review.NoteController, :strings
   end
 
   scope "/admin" do

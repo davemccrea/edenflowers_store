@@ -53,6 +53,48 @@ defmodule EdenflowersWeb.Review.NoteControllerTest do
     refute build_conn() |> get("/en/about") |> html_response(200) =~ "data-reviewer"
   end
 
+  test "the strings lookup finds the message behind translated text, in every locale", %{conn: conn} do
+    conn =
+      conn
+      |> log_in(signed_in_user(admin: false, reviewer: true))
+      |> post("/review-notes/strings", %{"texts" => ["Lisää ostoskoriin"], "locale" => "fi"})
+
+    assert [%{"domain" => "storefront", "msgid" => "Add to cart", "translations" => translations}] =
+             json_response(conn, 200)
+
+    assert translations["en"] == "Add to cart"
+    assert translations["sv"] == "Lägg i varukorgen"
+    assert build_conn() |> post("/review-notes/strings", %{"texts" => ["x"], "locale" => "fi"}) |> response(403)
+  end
+
+  test "a note keeps its strings, and the page's open notes list it", %{conn: conn} do
+    conn = log_in(conn, signed_in_user(admin: false, reviewer: true))
+    string = %{"domain" => "storefront", "msgctxt" => nil, "msgid" => "About us"}
+    post(conn, "/review-notes", Map.put(@note, "strings", [string]))
+
+    assert Feedback.open_notes_markdown() =~ ~s(- String: storefront.po msgid "About us")
+
+    assert [%{"body" => "Make this headline shorter", "selector" => "#main-content > h1"}] =
+             conn |> get("/review-notes", %{"path" => "/en/about?x=1"}) |> json_response(200)
+
+    assert [] = conn |> get("/review-notes", %{"path" => "/en/other"}) |> json_response(200)
+    assert [] = build_conn() |> get("/review-notes", %{"path" => "/en/about?x=1"}) |> json_response(200)
+  end
+
+  test "only a note's author can rewrite it", %{conn: conn} do
+    author = signed_in_user(admin: false, reviewer: true)
+    other = signed_in_user(admin: false, reviewer: true)
+    conn |> log_in(author) |> post("/review-notes", @note)
+    [note] = open_notes()
+
+    assert build_conn() |> log_in(other) |> patch("/review-notes/#{note.id}", %{"body" => "Mine now"}) |> response(403)
+    assert build_conn() |> log_in(author) |> patch("/review-notes/#{note.id}", %{"body" => "Shorter"}) |> response(204)
+    assert [%{body: "Shorter"}] = open_notes()
+
+    assert [%{"mine?" => true}] =
+             build_conn() |> log_in(author) |> get("/review-notes", %{"path" => @note["path"]}) |> json_response(200)
+  end
+
   test "resolved notes drop out of the open list and its Markdown", %{conn: conn} do
     conn |> log_in(signed_in_user(admin: false, reviewer: true)) |> post("/review-notes", @note)
     [note] = open_notes()
