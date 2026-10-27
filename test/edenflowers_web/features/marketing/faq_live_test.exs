@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     document = LazyHTML.from_document(html)
 
     paragraphs = LazyHTML.query(document, "#faq-questions .collapse-content p")
-    linked_paragraphs = Enum.filter(paragraphs, &(Enum.count(LazyHTML.query(&1, "a")) > 0))
+    linked_paragraphs = Enum.reject(paragraphs, &Enum.empty?(LazyHTML.query(&1, "a")))
     assert length(linked_paragraphs) >= 10
 
     for paragraph <- linked_paragraphs do
