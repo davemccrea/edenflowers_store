@@ -8,8 +8,8 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
 
   alias Edenflowers.Format
   alias Edenflowers.Orders.Subscription
-  alias EdenflowersWeb.FaqComponents
   alias EdenflowersWeb.Business
+  alias EdenflowersWeb.FaqComponents
   alias EdenflowersWeb.SectionIndex
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
