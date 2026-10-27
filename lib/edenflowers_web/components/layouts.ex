@@ -667,6 +667,8 @@ defmodule EdenflowersWeb.Layouts do
       phx-hook=".HotFxShyHeader"
       data-hide={JS.add_class("shy-header--hidden")}
       data-show={JS.remove_class("shy-header--hidden")}
+      data-solid={JS.add_class("shy-header--solid")}
+      data-overlay={JS.remove_class("shy-header--solid")}
     >
       <header class="w-full">
         <section class="bg-base-100 border-b px-3 py-2 sm:px-6 sm:py-4">
@@ -796,6 +798,8 @@ defmodule EdenflowersWeb.Layouts do
         mounted() {
           this.hideJS = this.el.getAttribute("data-hide");
           this.showJS = this.el.getAttribute("data-show");
+          this.solidJS = this.el.getAttribute("data-solid");
+          this.overlayJS = this.el.getAttribute("data-overlay");
 
           this.lastScroll = 0;
           this.lastMaxScroll = 0;
@@ -804,6 +808,7 @@ defmodule EdenflowersWeb.Layouts do
 
           document.addEventListener("scroll", this.boundHandleScroll);
           this.setOffset(true);
+          this.setSolid();
         },
 
         destroyed() {
@@ -817,7 +822,18 @@ defmodule EdenflowersWeb.Layouts do
           document.documentElement.style.setProperty("--shy-header-offset", offset);
         },
 
+        // Solid once the header would sit over the page instead of the opening photo.
+        setSolid() {
+          const overlay = document.querySelector("[data-header-overlay]");
+          const overPhoto =
+            overlay && overlay.getBoundingClientRect().bottom > this.el.offsetHeight;
+          if (overPhoto === this.overPhoto) return;
+          this.overPhoto = overPhoto;
+          this.liveSocket.execJS(this.el, overPhoto ? this.overlayJS : this.solidJS);
+        },
+
         handleScroll() {
+          this.setSolid();
           if (window.scrollY > Math.max(150, this.lastScroll)) {
             this.liveSocket.execJS(this.el, this.hideJS);
             this.setOffset(false);

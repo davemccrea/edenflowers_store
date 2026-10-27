@@ -9,7 +9,25 @@
   background: var(--color-base-100);
   transition:
     transform 0.2s ease-out,
-    visibility 0s linear;
+    visibility 0s linear,
+    background-color 0.2s ease-out;
+}
+
+/* Over a page's opening photo the header turns see-through with white marks,
+   and the shy-header hook makes it solid again once the photo scrolls away.
+   Recolouring the theme variables reaches every icon, link and the cart badge at once. */
+body:has([data-header-overlay]) #hotfx-shy-header:not(.shy-header--solid) {
+  --color-base-100: transparent;
+  --color-base-content: white;
+  --color-primary: white;
+  --color-primary-content: var(--color-forest);
+  background-image: linear-gradient(rgb(0 0 0 / 0.25), transparent);
+  text-shadow: 0 1px 12px rgb(0 0 0 / 0.25);
+}
+body:has([data-header-overlay])
+  #hotfx-shy-header:not(.shy-header--solid)
+  section {
+  border-color: transparent;
 }
 
 #hotfx-shy-header.shy-header--hidden {
