@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Marketing.SitemapController do
       alternates("/#{language}/contact"),
       alternates("/#{language}/faq"),
       alternates("/#{language}/terms"),
+      alternates("/#{language}/privacy"),
       alternates("/#{language}/courses")
     ]
 

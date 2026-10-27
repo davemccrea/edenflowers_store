@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
   test "shows the update date without draft caveats or internal work notes", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/privacy")
 
-    assert has_element?(view, "#notice-updated", "Updated 26 October 2026.")
+    assert has_element?(view, "#notice-updated", "Updated 27 October 2026.")
 
     for caveat <- ["draft", "confirming", "under review", "need checking", "not yet", "intended"] do
       refute has_element?(view, "#main-content", caveat)
@@ -41,7 +41,8 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     refute has_element?(view, "#retention", "two weeks")
     assert has_element?(view, "#retention", "end of the calendar year in which the financial year ended")
     assert has_element?(view, "#retention", "ten years from the financial-year end")
-    assert has_element?(view, "#retention", "does not automatically apply to delivery-only details")
+    assert has_element?(view, "#retention", "Delivery photos: kept with the order until you ask us to delete them.")
+    assert has_element?(view, "#retention", "we keep until you ask us to delete it")
     refute has_element?(view, "#retention", "until it is, ask us")
     refute has_element?(view, "#retention", "Enquiries: twelve months")
     refute has_element?(view, "#retention", "our accountant decides which")
@@ -59,7 +60,8 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
   test "describes current collection and sharing rather than the older assumptions", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/privacy")
 
-    assert has_element?(view, "#information", "Gift-recipient details come from the customer.")
+    assert has_element?(view, "#information", "your details came from the person who ordered them")
+    assert has_element?(view, "#information", "never for marketing")
     assert has_element?(view, "#information", "photograph flowers left at the door")
     assert has_element?(view, "#information", "Newsletters require your consent.")
     assert has_element?(view, "#information", "Instagram handle")
@@ -135,7 +137,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
       {:ok, view, html} = live(conn, "/#{language}/privacy")
       document = LazyHTML.from_document(html)
 
-      for {section, count} <- [{"information", 7}, {"sharing", 6}, {"cookies", 4}, {"retention", 4}, {"rights", 3}] do
+      for {section, count} <- [{"information", 8}, {"sharing", 6}, {"cookies", 4}, {"retention", 5}, {"rights", 3}] do
         assert has_element?(view, "##{section} ul.list-disc.space-y-3")
         assert document |> LazyHTML.query("##{section} ul > li") |> Enum.count() == count
       end
@@ -190,9 +192,9 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
   test "translates privacy headings, body and interpolated contact instructions", %{conn: conn} do
     for {language, title, hosting, contact, updated} <- [
           {"sv", "Integritetspolicy", "Vår huvudsakliga kunddatabas finns hos Hetzner i Finland.",
-           "Mejla #{Business.email()} för att:", "Uppdaterad 26 oktober 2026."},
+           "Mejla #{Business.email()} för att:", "Uppdaterad 27 oktober 2026."},
           {"fi", "Tietosuojaseloste", "Pääasiallinen asiakastietokantamme sijaitsee Hetznerin palvelimilla Suomessa.",
-           "Lähetä sähköpostia osoitteeseen #{Business.email()}, jos haluat:", "Päivitetty 26. lokakuuta 2026."}
+           "Lähetä sähköpostia osoitteeseen #{Business.email()}, jos haluat:", "Päivitetty 27. lokakuuta 2026."}
         ] do
       {:ok, view, _html} = live(conn, "/#{language}/privacy")
 
@@ -205,17 +207,16 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     end
   end
 
-  test "keeps the existing noindex and sitemap settings", %{conn: conn} do
+  test "is indexable and in the sitemap in every language", %{conn: conn} do
     for language <- ["en", "sv", "fi"] do
       html = conn |> get("/#{language}/privacy") |> html_response(200)
-      assert html =~ ~s|<meta name="robots" content="noindex"|
+      refute html =~ ~s|<meta name="robots" content="noindex"|
     end
 
-    terms = conn |> get(~p"/en/terms") |> html_response(200)
-    refute terms =~ ~s|<meta name="robots" content="noindex"|
-
     xml = conn |> get(~p"/sitemap.xml") |> response(200)
-    refute xml =~ "/privacy"
+    assert xml =~ "/en/privacy"
+    assert xml =~ "/sv/privacy"
+    assert xml =~ "/fi/privacy"
   end
 
   test "checkout links to the privacy policy alongside the newsletter preference", %{conn: conn} do

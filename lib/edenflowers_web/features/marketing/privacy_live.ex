@@ -16,7 +16,6 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
      assign(socket,
        page_title: ~t"Privacy policy",
        page_description: ~t"How Eden Flowers handles personal data.",
-       page_robots: "noindex",
        alternates: alternates("/#{language}/privacy"),
        sections: [
          {"controller", ~t"Who is responsible?"},
@@ -45,7 +44,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
         </h1>
 
         <p id="notice-updated" class="font-sans text-base-content/80 mb-16 max-w-3xl text-base leading-relaxed md:mb-20">
-          {~t"Updated 26 October 2026."}
+          {~t"Updated 27 October 2026."}
         </p>
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
@@ -77,7 +76,10 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
                   {~t"We use names, email, phone and purchase details for orders, subscriptions, courses and enquiries. Checkout may create an account. Instagram handles are optional."}
                 </li>
                 <li>
-                  {~t"Delivery details include recipient names, addresses, instructions, card messages and coordinates for calculating distance. Gift-recipient details come from the customer."}
+                  {~t"Delivery details include recipient names, addresses, instructions, card messages and coordinates for calculating distance."}
+                </li>
+                <li>
+                  {~t"If you received flowers from us, your details came from the person who ordered them. We use them only to deliver, and never for marketing."}
                 </li>
                 <li>
                   {~t"We may photograph flowers left at the door as delivery evidence."}
@@ -145,13 +147,14 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
                 <li>
                   {~t"Newsletters: until withdrawal or unsubscribe. Limited opt-out records prevent further marketing; consent evidence may remain where necessary."}
                 </li>
+                <li>{~t"Delivery photos: kept with the order until you ask us to delete them."}</li>
                 <li>{~t"Error reports: 90 days."}</li>
                 <li>
                   {~t"Routine database backups: about 30 days."}
                 </li>
               </ul>
               <p>
-                {~t"Accounting retention does not automatically apply to delivery-only details."}
+                {~t"Everything else, such as your account, delivery details and enquiries, we keep until you ask us to delete it, except what accounting law requires us to keep."}
               </p>
             </.privacy_section>
 

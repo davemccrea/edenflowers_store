@@ -1,10 +1,10 @@
 ---
 id: TASK-116
 title: Publish a privacy policy
-status: ready-for-agent
+status: ready-for-human
 assignee: []
 created_date: '2026-10-24 19:28'
-updated_date: '2026-10-27 13:58'
+updated_date: '2026-10-27 14:12'
 labels:
   - spec
   - customers
@@ -56,21 +56,15 @@ A privacy policy at `/{lang}/privacy` tells customers what the shop keeps about 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 /en/privacy, /sv/privacy and /fi/privacy name the controller, the data kept, each processor, cookies, retention and how to request access or deletion
-- [ ] #2 Footer, checkout newsletter checkbox and footer signup link to it
-- [ ] #3 The page is in the sitemap with language alternates
+- [x] #1 /en/privacy, /sv/privacy and /fi/privacy name the controller, the data kept, each processor, cookies, retention and how to request access or deletion
+- [x] #2 Footer, checkout newsletter checkbox and footer signup link to it
+- [x] #3 The page is in the sitemap with language alternates
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Conversation decisions: David confirmed Jennie McCrea as the legal controller and Hetzner hosting in Finland. He approved adding the policy as a clearly marked draft with retention and international-transfer details unresolved. The parent remains needs-triage, not complete publication. Current source-backed audit: docs/research/privacy-policy-data-audit.md. Its findings supersede the older description where they conflict, notably global Stripe.js loading, diagnostic IP/form-data capture, Mapbox delivery coordinates and the absence of an approved blanket seven-year retention period.
-
-TASK-116.1 adds the approved draft page and links; it does not finish publication. Retention, transfer safeguards, remaining recipients, browser-cookie/automated-decision assessment and translations remain unresolved. Draft pages are deliberately noindex and not in the sitemap until the notice is completed.
-
-David approved a two-week retention period for delivery photographs. Cleanup is tracked separately as a needs-triage child task; automatic deletion is not implemented by the privacy-page copy change.
-
-David requested removing public draft caveats and keeping unresolved details in the issue instead. Public copy no longer includes draft/under-review/confirmation notices. This is an editorial change, not evidence of completed GDPR compliance. Still open: provider identity and roles, overseas transfers/mechanisms and access to safeguard copies; Stripe device-access/cookie consent assessment; timely Article 14 information for Recipients; accountant classification of six-/ten-year records; actual expiry rules for customer/subscription/enquiry records, abandoned checkouts and histories; non-routine backups; translations and collection-point notices. The unimplemented two-week photo period and unapproved customer-record periods are omitted rather than represented as enforced promises. TASK-116.2–116.6 retain implementation scope and needs-triage status. Existing noindex/sitemap settings are unchanged; do not treat removal of visible caveats as publication sign-off.
+Policy finished for launch (2026-10-27): gift recipients told their details come from the person who ordered and are used only to deliver; delivery photos kept with the order until deletion is requested (TASK-116.2 will shorten this); everything else kept until a deletion request, except what accounting law requires. noindex removed and /{lang}/privacy added to the sitemap with alternates. Date bumped to 27 October 2026.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
@@ -91,6 +85,15 @@ created: 2026-10-27 13:58
 ---
 
 Launch triage 2026-10-27 with David: launch blocker. Finish line: TASK-116.4 and TASK-116.5 land; the policy gains one sentence each for retention (orders kept for the bookkeeping period, other data deleted on request to info@), gift recipients (details come from the person who ordered, used only to deliver) and delivery photos (kept with the order until TASK-116.2 lands); then drop noindex, add the page to the sitemap with language alternates and Jennie reviews the Swedish (TASK-117). 116.3 and 116.6 closed; 116.2 is after launch.
+
+---
+
+author: @claude
+created: 2026-10-27 14:12
+
+---
+
+Left before launch: the Brevo cleanup on TASK-116.4 and Jennie's Swedish review (TASK-117). TASK-116.2 is after launch, so this parent stays open until it lands.
 
 ---
 <!-- COMMENTS:END -->
