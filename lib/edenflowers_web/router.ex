@@ -150,6 +150,7 @@ defmodule EdenflowersWeb.Router do
     get "/review-notes", Review.NoteController, :index
     post "/review-notes", Review.NoteController, :create
     patch "/review-notes/:id", Review.NoteController, :update
+    delete "/review-notes/:id", Review.NoteController, :delete
     post "/review-notes/strings", Review.NoteController, :strings
   end
 

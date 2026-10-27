@@ -95,6 +95,19 @@ defmodule EdenflowersWeb.Review.NoteControllerTest do
              build_conn() |> log_in(author) |> get("/review-notes", %{"path" => @note["path"]}) |> json_response(200)
   end
 
+  test "only a note's author can delete it", %{conn: conn} do
+    author = signed_in_user(admin: false, reviewer: true)
+    other = signed_in_user(admin: false, reviewer: true)
+    conn |> log_in(author) |> post("/review-notes", @note)
+    [note] = open_notes()
+
+    assert build_conn() |> log_in(other) |> delete("/review-notes/#{note.id}") |> response(403)
+    assert [_note] = open_notes()
+
+    assert build_conn() |> log_in(author) |> delete("/review-notes/#{note.id}") |> response(204)
+    assert open_notes() == []
+  end
+
   test "resolved notes drop out of the open list and its Markdown", %{conn: conn} do
     conn |> log_in(signed_in_user(admin: false, reviewer: true)) |> post("/review-notes", @note)
     [note] = open_notes()
