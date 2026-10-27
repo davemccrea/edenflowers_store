@@ -284,6 +284,28 @@ test("a reviewer in dev keeps their clipboard until they ask for the reference",
   assert.deepEqual(copied, ["SPAN"]);
 });
 
+test("Copy ref includes the current message without saving the note", async () => {
+  const { fire, copied, overlays, requests } = fixture({ reviewer: true });
+  await fire("click");
+  const textarea = overlays.find((node) => node.tagName === "TEXTAREA");
+  const copy = overlays.find((node) => node.textContent === "Copy ref");
+  textarea.value = "  Make this larger\nKeep the colour  ";
+  await copy.on.click();
+  assert.deepEqual(copied, ["SPAN\n\nMake this larger\nKeep the colour"]);
+  textarea.value = "Updated message";
+  await copy.on.click();
+  assert.equal(copied[1], "SPAN\n\nUpdated message");
+  assert.ok(!requests.some((request) => request.url === "/review-notes"));
+});
+
+test("Copy ref omits whitespace-only messages", async () => {
+  const { fire, copied, overlays } = fixture({ reviewer: true });
+  await fire("click");
+  overlays.find((node) => node.tagName === "TEXTAREA").value = " \n ";
+  await overlays.find((node) => node.textContent === "Copy ref").on.click();
+  assert.deepEqual(copied, ["SPAN"]);
+});
+
 test("a customer on a page without dev annotations gets nothing", async () => {
   const { fire, listeners } = fixture({ dev: false });
   const event = await fire("click");

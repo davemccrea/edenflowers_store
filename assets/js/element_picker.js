@@ -480,9 +480,12 @@ if (dev || reviewer) {
     })),
   });
 
-  const copyReference = async (el) => {
+  const copyReference = async (el, body = "") => {
     try {
-      await navigator.clipboard.writeText(elementReference(el, document));
+      const reference = elementReference(el, document);
+      await navigator.clipboard.writeText(
+        body.trim() ? `${reference}\n\n${body.trim()}` : reference,
+      );
       return "✓ Copied";
     } catch (error) {
       console.error("Could not copy element reference", error);
@@ -584,7 +587,7 @@ if (dev || reviewer) {
     copy.type = "button";
     copy.textContent = "Copy ref";
     copy.addEventListener("click", async () => {
-      const message = await copyReference(el);
+      const message = await copyReference(el, textarea.value);
       if (box === thisBox && path === pagePath()) status.textContent = message;
     });
     const remove = document.createElement("button");
