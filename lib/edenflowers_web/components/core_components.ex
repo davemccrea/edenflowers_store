@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
-  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :kind, :atom, values: [:success, :info, :error], doc: "used for styling and flash lookup"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -106,12 +106,13 @@ defmodule EdenflowersWeb.CoreComponents do
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      phx-hook={@kind == :info && "EdenflowersWeb.CoreComponents.AutoDismissFlash"}
+      phx-hook={@kind != :error && "EdenflowersWeb.CoreComponents.AutoDismissFlash"}
       role="alert"
       {@rest}
     >
-      <div class={["bg-base-100 text-base-content border-base-content/12 shadow-base-content/10 border-l-3 flex w-full items-start gap-3 border py-3.5 pr-2 pl-4 shadow-lg sm:w-96", @kind == :info && "border-l-primary", @kind == :error && "border-l-error"]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="text-primary size-5 mt-0.5 shrink-0" />
+      <div class={["bg-base-100 text-base-content border-base-content/12 shadow-base-content/10 flex w-full items-start gap-3 border border-l-4 py-3.5 pr-2 pl-4 shadow-lg sm:w-96", @kind == :success && "border-l-success", @kind == :info && "border-l-info", @kind == :error && "border-l-error"]}>
+        <.icon :if={@kind == :success} name="hero-check-circle" class="text-success size-5 mt-0.5 shrink-0" />
+        <.icon :if={@kind == :info} name="hero-information-circle" class="text-info size-5 mt-0.5 shrink-0" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="text-error size-5 mt-0.5 shrink-0" />
         <div class="text-pretty min-w-0 flex-1 text-sm leading-relaxed">
           <p :if={@title} class="font-semibold">{@title}</p>
@@ -128,7 +129,7 @@ defmodule EdenflowersWeb.CoreComponents do
     </div>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoDismissFlash">
       /**
-       * Dismisses an info flash after a few seconds by running its own phx-click
+       * Dismisses a success or info flash after a few seconds by running its own phx-click
        * (clear-flash + hide), so a timed dismissal and a click look identical.
        * The countdown pauses while the toast is hovered or holds keyboard focus,
        * and restarts in full afterwards. Errors never get this hook: they stay

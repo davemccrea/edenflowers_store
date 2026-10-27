@@ -509,7 +509,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   def handle_event("save_florist_note", %{"note" => %{"florist_note" => note}}, socket) do
     case Orders.update_florist_note(socket.assigns.order, %{florist_note: note}, actor: socket.assigns.current_user) do
       {:ok, order} ->
-        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:info, ~t"Note saved.")}
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:success, ~t"Note saved.")}
 
       {:error, error} ->
         Logger.error("Florist note for order #{socket.assigns.order.id} not saved: #{inspect(error)}")
@@ -545,7 +545,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign_order(reload(order, socket))
          |> assign(cancel_form: nil, cancel_error: nil)
          |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
-         |> put_flash(:info, ~t"Order cancelled.")}
+         |> put_flash(:success, ~t"Order cancelled.")}
 
       {:error, message} ->
         {:noreply, assign(socket, :cancel_error, message)}
@@ -632,7 +632,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {:noreply,
          socket
          |> assign_order(reload(socket.assigns.order, socket))
-         |> put_flash(:info, ~t"Refunds from Stripe recorded.")}
+         |> put_flash(:success, ~t"Refunds from Stripe recorded.")}
 
       {:error, reason} ->
         Logger.error("Fetching Stripe refunds for order #{socket.assigns.order.id} failed: #{inspect(reason)}")
@@ -661,7 +661,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   # The drawer closes once the money is recorded. On an error it stays open with
   # the message and the forms as Jennie filled them in, which reloading would clear.
-  defp settlement_result(socket, {:info, _message} = result), do: settlement_result(socket, {:ok, result})
+  defp settlement_result(socket, {:success, _message} = result), do: settlement_result(socket, {:ok, result})
 
   defp settlement_result(socket, {:ok, result}) do
     socket
@@ -706,7 +706,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          socket
          |> assign_order(reload(order, socket))
          |> assign(:fulfillment_form, nil)
-         |> put_flash(:info, message)}
+         |> put_flash(:success, message)}
 
       {:error, error} ->
         Logger.error("Order #{socket.assigns.order.id} not marked fulfilled: #{inspect(error)}")
@@ -747,7 +747,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp send_email(:order_details, order, message, actor) do
     case Orders.send_order_details_email(order, %{message: message}, actor: actor) do
       {:ok, _order} ->
-        {:info, ~t"Order details sent."}
+        {:success, ~t"Order details sent."}
 
       {:error, error} ->
         Logger.error("Order details for order #{order.id} not sent: #{inspect(error)}")
@@ -758,7 +758,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp send_email(:receipt, order, message, actor) do
     case Orders.email_receipt(order, %{message: message}, actor: actor) do
       {:ok, _order} ->
-        {:info, ~t"Receipt sent."}
+        {:success, ~t"Receipt sent."}
 
       {:error, error} ->
         Logger.error("Receipt for order #{order.id} not sent: #{inspect(error)}")
@@ -769,7 +769,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp send_email(:fulfillment, order, message, actor) do
     case Orders.email_fulfillment_confirmation(order, %{message: message}, actor: actor) do
       {:ok, _order} ->
-        {:info, ~t"Confirmation queued."}
+        {:success, ~t"Confirmation queued."}
 
       {:error, error} ->
         Logger.error("Fulfillment confirmation for order #{order.id} not queued: #{inspect(error)}")
@@ -780,7 +780,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp send_email(:payment_reminder, order, message, actor) do
     case Orders.send_payment_reminder(order, %{message: message}, actor: actor) do
       {:ok, _order} ->
-        {:info, ~t"Payment reminder sent."}
+        {:success, ~t"Payment reminder sent."}
 
       {:error, error} ->
         Logger.error("Payment reminder for order #{order.id} not sent: #{inspect(error)}")

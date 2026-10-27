@@ -7,6 +7,7 @@
   --color-warning: var(--color-amber-400);
   --color-warning-content: var(--color-amber-800);
   --color-error: var(--color-red-600);
+  --color-info: var(--color-sky-600);
   --color-error-content: var(--color-red-700);
 }
 

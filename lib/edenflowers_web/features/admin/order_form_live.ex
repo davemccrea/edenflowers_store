@@ -499,7 +499,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       {:ok, order} ->
         {:noreply,
          socket
-         |> put_flash(:info, saved_message(socket.assigns.mode))
+         |> put_flash(:success, saved_message(socket.assigns.mode))
          |> push_navigate(to: ~p"/admin/orders/#{order.id}")}
 
       {:error, form} ->

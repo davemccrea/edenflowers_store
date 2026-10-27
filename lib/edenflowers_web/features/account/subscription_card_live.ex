@@ -128,7 +128,7 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
     case Payments.save_subscription_card(setup_intent_id, user) do
       {:ok, _subscription} ->
         socket
-        |> put_flash(:info, ~t"Your card has been updated.")
+        |> put_flash(:success, ~t"Your card has been updated.")
         |> push_navigate(to: ~p"/account")
 
       error ->

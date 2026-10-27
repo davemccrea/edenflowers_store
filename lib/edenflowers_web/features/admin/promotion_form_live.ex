@@ -215,7 +215,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
       {:ok, promotion} ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Promotion saved.")
+         |> put_flash(:success, ~t"Promotion saved.")
          |> push_navigate(to: ~p"/admin/promotions/#{promotion.id}")}
 
       {:error, form} ->
@@ -231,7 +231,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
       :ok ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Promotion deleted.")
+         |> put_flash(:success, ~t"Promotion deleted.")
          |> push_navigate(to: PromotionsLive.default_path())}
 
       # Orders and newsletter subscribers keep a reference to the promotion.

@@ -323,7 +323,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
          {:ok, subscription} <- get_subscription(socket.assigns.subscription.id, actor) do
       socket
       |> assign_subscription(subscription)
-      |> put_flash(:info, success_message)
+      |> put_flash(:success, success_message)
       |> Cinder.refresh_table("subscription-orders-table")
     else
       _ -> put_flash(socket, :error, ~t"Could not change the subscription.")

@@ -154,7 +154,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   def handle_event("resend", _params, %{assigns: %{email: email, resend_remaining: 0}} = socket)
       when is_binary(email) do
     case request_code(socket, email) do
-      {:ok, socket} -> {:noreply, put_flash(socket, :info, ~t"We've sent you a new code.")}
+      {:ok, socket} -> {:noreply, put_flash(socket, :success, ~t"We've sent you a new code.")}
       {:error, socket} -> {:noreply, socket}
     end
   end
