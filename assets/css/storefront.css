@@ -200,6 +200,11 @@
   text-underline-offset: var(--link-underline-offset);
 }
 
+/* The index scrolls sideways, which clips an outside outline to a stray bar. */
+.category-index__link:focus-visible {
+  outline-offset: -2px;
+}
+
 #store-products {
   transition: opacity 150ms ease;
 }
