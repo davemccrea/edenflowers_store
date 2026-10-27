@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   elementReference,
   findHeexSource,
+  selectorFor,
 } from "../../assets/js/dev_element_reference.mjs";
 
 const comment = (text) => ({ nodeType: 8, nodeValue: text });
@@ -101,4 +102,15 @@ test("descriptions bound text and omit form values", () => {
   assert.ok(!result.includes("secret"));
   assert.ok(result.includes(`${"x".repeat(117)}...`));
   assert.ok(!result.includes("x".repeat(121)));
+});
+
+test("selectors skip LiveView's generated root id so they survive a reload", () => {
+  globalThis.CSS = { escape: (value) => value };
+  const body = element("body");
+  const root = element("div", { id: "phx-GOKCZQoxJwRGIn6h" });
+  const footer = element("footer");
+  append(body, root);
+  append(root, footer);
+
+  assert.equal(selectorFor(footer), "body > div > footer");
 });
