@@ -260,7 +260,7 @@ The admin groups its forms and tables in `admin-card`, a `base-100` panel with a
 ### Signature components
 - **Size picker:** three serif words, the active one underlined in honey like the category index.
 - **Carousels:** Embla on phones, bleeding to the viewport edge with neighbours scaled and faded around the focused slide; a plain row from `sm` (Favourites) or `md` (customer quotes).
-- **Customer quotes:** a figure, not a card. A faint flower mark, the quote in serif in its original language with the customer's own words and emojis, an italic English translation on `/en`, and the name as an eyebrow.
+- **Customer quotes:** a figure, not a card: the quote in serif in its original language with the customer's own words and emojis, an italic English translation on `/en`, and the name as an eyebrow. One faint flower mark sits above the section heading, not one per quote.
 - **FAQ accordion:** native `<details>` separated by `/12` rules, with no box or fill.
 
 ### Named Rules

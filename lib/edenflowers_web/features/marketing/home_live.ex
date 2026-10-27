@@ -496,7 +496,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="overflow-x-clip not-last:border-b" aria-labelledby="reviews-heading">
         <div class="container py-20 md:py-28">
-          <div class="mb-12 flex items-baseline justify-between gap-4 md:items-center">
+          <.flower name="flower-30" class="text-base-content/20 -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20" />
+          <div class="relative mb-12 flex items-baseline justify-between gap-4 md:items-center">
             <h2 id="reviews-heading" class="section-title">{~t"What customers say"}</h2>
 
             <div class="flex shrink-0 items-center gap-1 md:-mr-1.5">
@@ -658,14 +659,11 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <section class="bg-cream relative not-last:border-b" aria-labelledby="location-heading">
-        <.flower
-          name="flower-41"
-          class="text-base-content/15 pointer-events-none absolute top-4 left-4 h-16 w-16 md:top-8 md:left-8 md:h-24 md:w-24"
-        />
+      <section class="bg-cream not-last:border-b" aria-labelledby="location-heading">
         <div class="grid md:grid-cols-[3fr_2fr]">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
-            <h2 id="location-heading" class="section-title mb-8">{~t"Delivery and pickup"}</h2>
+            <.flower name="flower-41" class="text-base-content/20 -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20" />
+            <h2 id="location-heading" class="section-title relative mb-8">{~t"Delivery and pickup"}</h2>
             <dl class="grid max-w-prose gap-6 text-lg leading-relaxed">
               <div :if={@next_fulfillment}>
                 <dt class="eyebrow text-base-content/70 mb-1">{~t"Next available day"}</dt>

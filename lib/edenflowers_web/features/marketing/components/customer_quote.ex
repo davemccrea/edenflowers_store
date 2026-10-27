@@ -16,9 +16,8 @@ defmodule EdenflowersWeb.Marketing.CustomerQuote do
 
     ~H"""
     <figure class="flex flex-col gap-6">
-      <.flower name="flower-30" class="text-base-content/30 h-8 w-8" />
       <div class="flex flex-col gap-3">
-        <blockquote lang={@lang} class="font-serif text-balance whitespace-pre-line text-xl leading-snug md:text-2xl">
+        <blockquote lang={@lang} class="font-serif text-balance text-xl leading-snug md:text-2xl">
           {@quote}
         </blockquote>
         <p
