@@ -3,10 +3,13 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
   import ExUnit.CaptureLog
   import Generator
+  import Mox
   import Swoosh.TestAssertions
 
   alias Edenflowers.Orders
   alias EdenflowersWeb.Webhooks.StripeHandler
+
+  setup :verify_on_exit!
 
   setup do
     order = order_in_payment()
@@ -292,6 +295,106 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     end
   end
 
+  describe "a refund delivered before its payment" do
+    test "asks Stripe to retry, then records the refund once after the payment arrives", %{
+      order: order,
+      expected_amount: expected_amount
+    } do
+      payment_intent = %{
+        id: order.payment_intent_id,
+        metadata: %{"order_id" => order.id},
+        amount_received: expected_amount
+      }
+
+      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: id} ->
+        assert id == order.payment_intent_id
+        {:ok, payment_intent}
+      end)
+
+      refund = %Stripe.Event{
+        id: "evt_refund_early",
+        type: "refund.created",
+        data: %{object: %{id: "re_early", payment_intent: order.payment_intent_id, amount: 500, status: "succeeded"}}
+      }
+
+      capture_log(fn -> assert :error = StripeHandler.handle_event(refund) end)
+
+      assert :ok =
+               StripeHandler.handle_event(%Stripe.Event{
+                 id: "evt_paid_later",
+                 type: "payment_intent.succeeded",
+                 data: %{object: payment_intent}
+               })
+
+      assert :ok = StripeHandler.handle_event(refund)
+      assert :ok = StripeHandler.handle_event(refund)
+
+      payments = Orders.get_order_by_id!(order.id, authorize?: false, load: [:payments]).payments
+      assert [refund] = Enum.filter(payments, &(&1.stripe_refund_id == "re_early"))
+      assert Decimal.equal?(refund.amount, "-5.00")
+    end
+  end
+
+  describe "looking up a refund's missing payment" do
+    test "asks Stripe to retry when the payment lookup fails" do
+      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_lookup"} ->
+        {:error, :unavailable}
+      end)
+
+      event = %Stripe.Event{
+        id: "evt_refund_lookup",
+        type: "refund.updated",
+        data: %{object: %{id: "re_lookup", payment_intent: "pi_lookup", amount: 500, status: "succeeded"}}
+      }
+
+      capture_log(fn -> assert :error = StripeHandler.handle_event(event) end)
+    end
+
+    test "also retries an early course refund, then records it after confirmation" do
+      registration =
+        generate(course_registration(course_id: generate(course()).id, payment_intent_id: "pi_early_course"))
+
+      payment_intent = %{
+        id: registration.payment_intent_id,
+        metadata: %{"course_registration_id" => registration.id},
+        amount_received: Edenflowers.External.StripeAPI.to_stripe_amount(registration.amount)
+      }
+
+      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_early_course"} ->
+        {:ok, payment_intent}
+      end)
+
+      refund = %Stripe.Event{
+        id: "evt_course_refund_early",
+        type: "refund.updated",
+        data: %{
+          object: %{
+            id: "re_early_course",
+            payment_intent: registration.payment_intent_id,
+            amount: 500,
+            status: "succeeded"
+          }
+        }
+      }
+
+      capture_log(fn -> assert :error = StripeHandler.handle_event(refund) end)
+
+      assert :ok =
+               StripeHandler.handle_event(%Stripe.Event{
+                 id: "evt_course_paid_later",
+                 type: "payment_intent.succeeded",
+                 data: %{object: payment_intent}
+               })
+
+      assert :ok = StripeHandler.handle_event(refund)
+      assert :ok = StripeHandler.handle_event(refund)
+
+      registration = Edenflowers.Courses.get_registration_by_id!(registration.id, authorize?: false, load: [:payments])
+      assert [refund] = Enum.filter(registration.payments, &(&1.stripe_refund_id == "re_early_course"))
+      assert Decimal.equal?(refund.amount, "-5.00")
+    end
+  end
+
   describe "a refund made in the Stripe dashboard" do
     setup %{order: order, expected_amount: expected_amount} do
       payment_intent_id = order.payment_intent_id
@@ -349,6 +452,10 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     end
 
     test "of a payment the shop doesn't know is ignored" do
+      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_course"} ->
+        {:ok, %{id: "pi_course", metadata: %{}}}
+      end)
+
       assert :ok =
                StripeHandler.handle_event(refund_event("refund.created", "pi_course", "succeeded"))
 

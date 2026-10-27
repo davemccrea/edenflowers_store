@@ -1,5 +1,5 @@
 defmodule Edenflowers.Payments.PreparePaymentTest do
-  use Edenflowers.DataCase, async: true
+  use Edenflowers.DataCase, async: false
 
   import Generator
   import Mox
@@ -20,7 +20,16 @@ defmodule Edenflowers.Payments.PreparePaymentTest do
   describe "preparing a store checkout payment" do
     setup do
       variant = generate(product_variant(product_id: generate(product()).id, stock_quantity: 1))
-      %{order: order_in_payment(product_variant_id: variant.id), variant: variant}
+
+      order =
+        order_in_payment(
+          product_variant_id: variant.id,
+          fulfillment_method: :pickup,
+          customer_phone_number: "040 1234567",
+          fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 7)
+        )
+
+      %{order: order, variant: variant}
     end
 
     test "refuses a cart over stock, then charges the cart's current total once it fits", ctx do
@@ -41,6 +50,41 @@ defmodule Edenflowers.Payments.PreparePaymentTest do
       end)
 
       assert {:ok, %{client_secret: "pi_secret"}} = Orders.prepare_checkout_payment(ctx.order.id, actor: nil)
+    end
+
+    test "refuses payment from an older tab after gift options clear the delivery address", ctx do
+      order = Ash.Seed.update!(ctx.order, %{fulfillment_method: :delivery, delivery_address: "Stadsgatan 3, Vasa"})
+      order = Orders.return_to_gift_options!(order, actor: nil)
+      order = Orders.set_gift!(order, true, actor: nil)
+
+      assert is_nil(order.delivery_address)
+      assert refusal(Orders.prepare_checkout_payment(order.id, actor: nil)) == :checkout_not_ready
+    end
+
+    test "refuses a fulfillment date that became past while checkout was left at payment", ctx do
+      Ash.Seed.update!(ctx.order, %{fulfillment_date: Date.add(Edenflowers.ShopTime.today(), -1)})
+
+      assert refusal(Orders.prepare_checkout_payment(ctx.order.id, actor: nil)) == :fulfillment_unavailable
+    end
+
+    test "refuses a date the shop closed after delivery details were submitted", ctx do
+      shop_calendar(disabled_dates: [ctx.order.fulfillment_date])
+
+      assert refusal(Orders.prepare_checkout_payment(ctx.order.id, actor: nil)) == :fulfillment_unavailable
+    end
+
+    test "rechecks same-day availability before paying", ctx do
+      Ash.Seed.update!(ctx.order, %{fulfillment_date: Edenflowers.ShopTime.today()})
+      shop_calendar(same_day: false)
+
+      assert refusal(Orders.prepare_checkout_payment(ctx.order.id, actor: nil)) == :fulfillment_unavailable
+    end
+
+    test "refuses details cleared by a stale gift tab even if the order is still at payment", ctx do
+      order = Orders.set_gift!(ctx.order, true, actor: nil)
+      assert order.state == :payment
+
+      assert refusal(Orders.prepare_checkout_payment(order.id, actor: nil)) == :checkout_not_ready
     end
 
     test "refuses a cart holding only add-ons" do

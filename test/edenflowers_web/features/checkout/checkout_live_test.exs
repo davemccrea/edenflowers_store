@@ -64,9 +64,43 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
   describe "paying" do
     setup %{variant: variant} do
-      order = generate(order(state: :payment, customer_name: "Jane Doe", customer_email: "jane@example.com"))
-      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      order =
+        order_in_payment(
+          product_variant_id: variant.id,
+          payment_intent_id: nil,
+          customer_name: "Jane Doe",
+          customer_email: "jane@example.com",
+          customer_phone_number: "040 1234567",
+          fulfillment_method: :pickup,
+          fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 7)
+        )
+
       %{order: Orders.get_order_for_checkout!(order.id, actor: nil)}
+    end
+
+    test "paying an old tab returns to checkout when another tab edits gift options", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+      order = Orders.return_to_gift_options!(order, actor: nil)
+      Orders.set_gift!(order, true, actor: nil)
+
+      view |> element("#checkout-form-4") |> render_submit()
+
+      assert_redirect(view, ~p"/checkout", 1_000)
+      refute_push_event(view, "stripe:process_payment", %{})
+      assert is_nil(Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id)
+    end
+
+    test "an unavailable date sends the customer back to delivery without charging", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+      Ash.Seed.update!(order, %{fulfillment_date: Date.add(Edenflowers.ShopTime.today(), -1)})
+
+      view |> element("#checkout-form-4") |> render_submit()
+
+      assert_redirect(view, ~p"/checkout", 1_000)
+      refute_push_event(view, "stripe:process_payment", %{})
+      saved = Orders.get_order_by_id!(order.id, authorize?: false)
+      assert saved.state == :delivery
+      assert is_nil(saved.payment_intent_id)
     end
 
     test "removing the last item from payment redirects without rendering a missing form", %{conn: conn, order: order} do
@@ -139,16 +173,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       subscribable = generate(product_variant(product_id: product.id))
 
       order =
-        generate(
-          order(
-            state: :payment,
-            customer_name: "Jane Doe",
-            customer_email: "jane@example.com",
-            payment_intent_id: "pi_one_off"
-          )
+        order_in_payment(
+          product_variant_id: subscribable.id,
+          customer_name: "Jane Doe",
+          customer_email: "jane@example.com",
+          customer_phone_number: "040 1234567",
+          fulfillment_method: :pickup,
+          fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 7),
+          payment_intent_id: "pi_one_off"
         )
-
-      Orders.add_line_item!(order.id, subscribable.id, 1, authorize?: false)
 
       stub(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn _order ->
         {:ok, %{id: "pi_one_off", client_secret: "pi_one_off_secret"}}
@@ -830,8 +863,19 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
   describe "Stock that ran out during checkout" do
     setup %{conn: conn, product: product} do
       wreath = generate(product_variant(product_id: product.id, size: :large, stock_quantity: 2))
-      order = generate(order(state: :payment, customer_name: "Jane Doe", customer_email: "jane@example.com"))
-      line_item = Orders.add_line_item!(order.id, wreath.id, 2, authorize?: false)
+
+      order =
+        order_in_payment(
+          product_variant_id: wreath.id,
+          payment_intent_id: nil,
+          customer_name: "Jane Doe",
+          customer_email: "jane@example.com",
+          customer_phone_number: "040 1234567",
+          fulfillment_method: :pickup,
+          fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 7)
+        )
+
+      line_item = Orders.add_line_item!(order.id, wreath.id, 1, authorize?: false)
 
       {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), "/checkout")
 

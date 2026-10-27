@@ -49,12 +49,12 @@ msgid_plural "%{count} place(s) left"
 msgstr[0] "%{count} plats kvar"
 msgstr[1] "%{count} platser kvar"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:944
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:968
 #, elixir-autogen, elixir-format
 msgid "%{name}'s address *"
 msgstr "%{name}s adress *"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:945
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:969
 #, elixir-autogen, elixir-format
 msgid "%{name}'s phone number *"
 msgstr "%{name}s telefonnummer *"
@@ -71,7 +71,7 @@ msgstr "%{price} per leverans"
 msgid "%{price} per person"
 msgstr "%{price} per person"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:864
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:888
 #, elixir-autogen, elixir-format
 msgid "%{product}: %{stock}."
 msgstr "%{product}: %{stock}."
@@ -152,7 +152,7 @@ msgstr "Bokföringsmaterial: vår lagstadgade skyldighet."
 msgid "Accounting: generally at least six years for vouchers and business correspondence, from the end of the calendar year in which the financial year ended. Certain records require ten years from the financial-year end."
 msgstr "Bokföring: i allmänhet minst sex år för verifikationer och affärskorrespondens, räknat från slutet av det kalenderår då räkenskapsperioden avslutades. Vissa handlingar ska sparas i tio år från räkenskapsperiodens slut."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:769
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:772
 #, elixir-autogen, elixir-format
 msgid "Add a card"
 msgstr "Lägg till ett kort"
@@ -178,7 +178,7 @@ msgid "Add to the estimate: %{item_label}"
 msgstr "Lägg till i uppskattningen: %{item_label}"
 
 #: lib/edenflowers_web/components/cart/drawer.ex:46
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:638
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:641
 #, elixir-autogen, elixir-format
 msgid "Add-ons are sold with flowers. Add a bouquet to check out."
 msgstr "Tillägg säljs bara tillsammans med blommor. Lägg till en bukett för att gå till kassan."
@@ -189,7 +189,7 @@ msgstr "Tillägg säljs bara tillsammans med blommor. Lägg till en bukett för 
 msgid "Address"
 msgstr "Adress"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:951
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:975
 #, elixir-autogen, elixir-format
 msgid "Address *"
 msgstr "Adress *"
@@ -441,7 +441,7 @@ msgstr "FO-nummer:"
 msgid "Buy once"
 msgstr "Köp en gång"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:326
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:329
 #, elixir-autogen, elixir-format
 msgid "By placing your order you accept the"
 msgstr "Genom att lägga beställningen godkänner du"
@@ -528,7 +528,7 @@ msgstr "Annullerad"
 msgid "Card"
 msgstr "Kort"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:706
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:709
 #, elixir-autogen, elixir-format
 msgid "Card message"
 msgstr "Kortmeddelande"
@@ -537,12 +537,12 @@ msgstr "Kortmeddelande"
 #: lib/edenflowers_web/components/cart/drawer.ex:28
 #: lib/edenflowers_web/components/layouts.ex:796
 #: lib/edenflowers_web/components/layouts.ex:798
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:404
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:407
 #, elixir-autogen, elixir-format
 msgid "Cart"
 msgstr "Varukorg"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:80
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:83
 #, elixir-autogen, elixir-format
 msgid "Cart is empty"
 msgstr "Varukorgen är tom"
@@ -578,13 +578,13 @@ msgid "Change booking"
 msgstr "Ändra bokningen"
 
 #: lib/edenflowers_web/components/cart/line_items.ex:75
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:738
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:749
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:741
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:752
 #, elixir-autogen, elixir-format
 msgid "Change card"
 msgstr "Byt kort"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:867
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:891
 #, elixir-autogen, elixir-format
 msgid "Change your cart to continue."
 msgstr "Ändra din varukorg för att fortsätta."
@@ -628,7 +628,7 @@ msgstr "Kolla din e-post"
 
 #: lib/edenflowers_web/components/cart/drawer.ex:76
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:66
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:132
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:135
 #, elixir-autogen, elixir-format
 msgid "Checkout"
 msgstr "Kassa"
@@ -858,16 +858,16 @@ msgstr "Levereras till %{address}"
 msgid "Delivers to"
 msgstr "Levereras till"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:880
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:904
 #: lib/edenflowers_web/features/checkout/components/fields.ex:131
 #: lib/edenflowers_web/features/checkout/pay_live.ex:133
-#: lib/edenflowers_web/features/marketing/home_live.ex:673
+#: lib/edenflowers_web/features/marketing/home_live.ex:703
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr "Leverans"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:118
-#: lib/edenflowers_web/features/marketing/home_live.ex:666
+#: lib/edenflowers_web/features/marketing/home_live.ex:696
 #: lib/edenflowers_web/features/marketing/terms_live.ex:22
 #: lib/edenflowers_web/features/marketing/terms_live.ex:89
 #, elixir-autogen, elixir-format
@@ -879,7 +879,7 @@ msgstr "Leverans och avhämtning"
 msgid "Delivery area and timing"
 msgstr "Leveransområde och tider"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:284
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:287
 #, elixir-autogen, elixir-format
 msgid "Delivery date *"
 msgstr "Leveransdatum *"
@@ -889,12 +889,12 @@ msgstr "Leveransdatum *"
 msgid "Delivery day"
 msgstr "Leveransdag"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:263
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:266
 #, elixir-autogen, elixir-format
 msgid "Delivery instructions"
 msgstr "Leverans­instruktioner"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:236
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:239
 #, elixir-autogen, elixir-format
 msgid "Delivery method *"
 msgstr "Leveransmetod *"
@@ -919,7 +919,7 @@ msgstr "Leverans: %{price}"
 msgid "Didn't find your answer?"
 msgstr "Hittade du inte svaret?"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:437
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:440
 #, elixir-autogen, elixir-format
 msgid "Discount"
 msgstr "Rabatt"
@@ -961,7 +961,7 @@ msgstr "E-post"
 msgid "Email %{email} to:"
 msgstr "Mejla %{email} för att:"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:158
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:161
 #: lib/edenflowers_web/features/courses/course_live.ex:167
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:49
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:526
@@ -1005,7 +1005,7 @@ msgstr "Ange en adress nedan för att kontrollera leveransavstånd och pris."
 msgid "Enter the address at checkout to see whether I deliver there and what it costs."
 msgstr "Fyll i adressen i kassan så ser du om jag levererar dit och vad det kostar."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:87
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:90
 #, elixir-autogen, elixir-format
 msgid "Error loading checkout"
 msgstr "Kassan kunde inte laddas"
@@ -1123,7 +1123,7 @@ msgstr "Blomsterport"
 msgid "Flower girl or toss bouquet"
 msgstr "Brudnäbbsbukett eller kastbukett"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:701
+#: lib/edenflowers_web/features/marketing/home_live.ex:731
 #, elixir-autogen, elixir-format
 msgid "Flower subscription"
 msgstr "Blomsterprenumeration"
@@ -1168,7 +1168,7 @@ msgstr "Blommor ni är intresserade av"
 msgid "For %{name}"
 msgstr "Till %{name}"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:718
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:721
 #, elixir-autogen, elixir-format
 msgid "For %{recipient_first_name}"
 msgstr "Till %{recipient_first_name}"
@@ -1188,7 +1188,7 @@ msgstr "Till %{shown_order_recipient_name}"
 msgid "For courses, the cancellation terms on each course's page apply."
 msgstr "För kurser gäller avbokningsvillkoren på respektive kurssida."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:203
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:206
 #: lib/edenflowers_web/features/checkout/components/fields.ex:138
 #, elixir-autogen, elixir-format
 msgid "For me"
@@ -1199,7 +1199,7 @@ msgstr "Till mig själv"
 msgid "For pickup"
 msgstr "Hämtas"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:203
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:206
 #, elixir-autogen, elixir-format
 msgid "For somebody else"
 msgstr "Till någon annan"
@@ -1214,12 +1214,12 @@ msgstr "För den första buketten i kassan. Därefter dras betalningen från dit
 msgid "For weddings, final prices depend on the flowers and technique you choose. Delivery costs are added for deliveries outside Vaasa."
 msgstr "Slutgiltiga priser beror på önskade blommor och teknik. Fraktkostnader tillkommer utanför Vasa."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:889
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:913
 #, elixir-autogen, elixir-format
 msgid "Free"
 msgstr "Gratis"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:678
+#: lib/edenflowers_web/features/marketing/home_live.ex:708
 #, elixir-autogen, elixir-format
 msgid "Free from Minimossen."
 msgstr "Gratis från Minimossen."
@@ -1240,12 +1240,12 @@ msgstr "Vanliga frågor"
 msgid "Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within 5 km of Minimossen on selected bouquets."
 msgstr "Färska blommor av Jennie på Eden Flowers i Vasa: buketter, blomsterprenumerationer, bröllops- och begravningsblommor. Fri leverans inom 5 km från Minimossen för utvalda buketter."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:703
+#: lib/edenflowers_web/features/marketing/home_live.ex:733
 #, elixir-autogen, elixir-format
 msgid "Fresh flowers every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to %{days} days before a bouquet."
 msgstr "Färska blommor varje vecka, varannan vecka eller var fjärde vecka, levererade eller klara att hämta. Pausa, ändra eller avsluta från ditt konto senast %{days} dagar före en bukett."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:771
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:774
 #, elixir-autogen, elixir-format
 msgid "From %{card_from_price}, with your personal message"
 msgstr "Från %{card_from_price}, med ditt personliga meddelande"
@@ -1387,7 +1387,7 @@ msgstr "Hej, %{current_user_first_name}"
 msgid "Hi, I'm Jennie"
 msgstr "Hej, jag heter Jennie"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:730
+#: lib/edenflowers_web/features/marketing/home_live.ex:509
 #, elixir-autogen, elixir-format
 msgid "Hi, I'm Jennie. I make every arrangement myself at my shop in Minimossen, from a bouquet for your kitchen table to flowers for your wedding."
 msgstr "Hej, jag heter Jennie. Jag binder alla blommor själv i min butik i Minimossen, från buketten på ditt köksbord till blommorna på ditt bröllop."
@@ -1519,12 +1519,12 @@ msgstr "Jag är född och uppvuxen i Vasa. Jag gick ett par floristkurser när j
 msgid "I'll deliver your order on %{date}."
 msgstr "Jag levererar din beställning %{date}."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:961
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:985
 #, elixir-autogen, elixir-format
 msgid "I'll only call if I need to reach %{name} about the delivery."
 msgstr "Jag ringer bara om jag behöver nå %{name} om leveransen."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:963
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:987
 #, elixir-autogen, elixir-format
 msgid "I'll only call if I need to reach you about the delivery."
 msgstr "Jag ringer bara om jag behöver nå dig om leveransen."
@@ -1535,7 +1535,7 @@ msgstr "Jag ringer bara om jag behöver nå dig om leveransen."
 msgid "I'll replace them or refund you, provided care instructions are followed."
 msgstr "Jag ersätter blommorna eller betalar tillbaka pengarna, förutsatt att skötselråden har följts."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:957
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:981
 #, elixir-autogen, elixir-format
 msgid "I'll send a message when your order is ready for pick up."
 msgstr "Jag skickar ett meddelande när din beställning är klar att hämtas."
@@ -1620,7 +1620,7 @@ msgstr "På svenska"
 msgid "In-store pickup"
 msgstr "Avhämtning i butik"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:468
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:471
 #, elixir-autogen, elixir-format
 msgid "Includes VAT"
 msgstr "Inklusive moms"
@@ -1733,7 +1733,7 @@ msgstr "Hantera den från ditt konto."
 msgid "Manage subscription"
 msgstr "Hantera prenumerationen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:685
+#: lib/edenflowers_web/features/marketing/home_live.ex:715
 #, elixir-autogen, elixir-format
 msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr "Karta över Vasa med Minimossen utmärkt"
@@ -1743,7 +1743,7 @@ msgstr "Karta över Vasa med Minimossen utmärkt"
 msgid "Mapping services receive delivery addresses or coordinates. Website-security and mailbox providers handle traffic and emails."
 msgstr "Karttjänster får leveransadresser eller koordinater. Leverantörer av webbplatssäkerhet och e-posttjänster hanterar trafik och e-post."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:736
+#: lib/edenflowers_web/features/marketing/home_live.ex:515
 #, elixir-autogen, elixir-format
 msgid "Meet Jennie"
 msgstr "Lär känna Jennie"
@@ -1840,14 +1840,14 @@ msgstr "Nyhetsbrev kräver ditt samtycke."
 msgid "Newsletters: until withdrawal or unsubscribe. Limited opt-out records prevent further marketing; consent evidence may remain where necessary."
 msgstr "Nyhetsbrev: tills samtycket återkallas eller prenumerationen avslutas. Begränsade uppgifter om avregistrering förhindrar fortsatt marknadsföring. Bevis på samtycke kan sparas vid behov."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:185
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:221
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:304
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:188
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:224
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:307
 #, elixir-autogen, elixir-format
 msgid "Next"
 msgstr "Nästa"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:669
+#: lib/edenflowers_web/features/marketing/home_live.ex:699
 #, elixir-autogen, elixir-format
 msgid "Next available day"
 msgstr "Nästa lediga dag"
@@ -1860,7 +1860,7 @@ msgid "Next delivery"
 msgstr "Nästa leverans"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:282
-#: lib/edenflowers_web/features/marketing/home_live.ex:529
+#: lib/edenflowers_web/features/marketing/home_live.ex:559
 #, elixir-autogen, elixir-format
 msgid "Next slide"
 msgstr "Nästa bild"
@@ -2087,7 +2087,7 @@ msgstr "Pausa eller avsluta när som helst."
 msgid "Paused"
 msgstr "Pausad"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:330
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:333
 #: lib/edenflowers_web/features/courses/course_live.ex:216
 #: lib/edenflowers_web/payment_link.ex:133
 #, elixir-autogen, elixir-format
@@ -2157,7 +2157,7 @@ msgid "Payment failed"
 msgstr "Betalningen misslyckades"
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:112
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:597
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:600
 #: lib/edenflowers_web/features/courses/course_live.ex:265
 #: lib/edenflowers_web/payment_link.ex:90
 #, elixir-autogen, elixir-format
@@ -2171,7 +2171,7 @@ msgstr "Betalningen är tillfälligt otillgänglig. Ladda om sidan och försök 
 msgid "Payment is temporarily unavailable. Please try again in a moment."
 msgstr "Betalningen är tillfälligt otillgänglig. Försök igen om en stund."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:854
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:867
 #, elixir-autogen, elixir-format
 msgid "Payment processing error. Please try again."
 msgstr "Ett fel uppstod vid betalningen. Försök igen."
@@ -2192,7 +2192,7 @@ msgstr "Persikofärgad, orange och vit bukett mot en spetsklänning"
 msgid "Phone"
 msgstr "Telefonnummer"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:952
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:976
 #, elixir-autogen, elixir-format
 msgid "Phone number *"
 msgstr "Telefonnummer *"
@@ -2219,13 +2219,13 @@ msgstr "Bilder"
 msgid "Pick up your flowers from Eden Flowers"
 msgstr "Hämta dina blommor från Eden Flowers"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:677
+#: lib/edenflowers_web/features/marketing/home_live.ex:707
 #: lib/edenflowers_web/features/marketing/terms_live.ex:93
 #, elixir-autogen, elixir-format
 msgid "Pickup"
 msgstr "Avhämtning"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:286
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:289
 #, elixir-autogen, elixir-format
 msgid "Pickup date *"
 msgstr "Avhämtningsdatum *"
@@ -2255,7 +2255,7 @@ msgid "Please"
 msgstr "Vänligen"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:274
-#: lib/edenflowers_web/features/marketing/home_live.ex:510
+#: lib/edenflowers_web/features/marketing/home_live.ex:540
 #, elixir-autogen, elixir-format
 msgid "Previous slide"
 msgstr "Föregående bild"
@@ -2288,7 +2288,7 @@ msgstr "Priser och leverans"
 
 #: lib/edenflowers_web/components/layouts.ex:929
 #: lib/edenflowers_web/components/newsletter_signup.ex:71
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:182
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:185
 #: lib/edenflowers_web/features/marketing/faq_live.ex:55
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:17
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:43
@@ -2355,12 +2355,12 @@ msgstr "Kvitto"
 msgid "Receipt (opens in a new tab)"
 msgstr "Kvitto (öppnas i en ny flik)"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:201
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:204
 #, elixir-autogen, elixir-format
 msgid "Recipient *"
 msgstr "Mottagare *"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:212
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:215
 #, elixir-autogen, elixir-format
 msgid "Recipient name *"
 msgstr "Mottagarens namn *"
@@ -2954,12 +2954,12 @@ msgstr "Det är redan din e-postadress."
 msgid "The booking changed. Please try again."
 msgstr "Bokningen har ändrats. Försök igen."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:778
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:781
 #, elixir-autogen, elixir-format
 msgid "The card comes with your first delivery."
 msgstr "Kortet kommer med din första leverans."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:450
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:453
 #, elixir-autogen, elixir-format
 msgid "The discount applies to your first delivery."
 msgstr "Rabatten gäller din första leverans."
@@ -2994,7 +2994,7 @@ msgstr "Sidan du letar efter finns inte eller har flyttats."
 msgid "The wedding day"
 msgstr "Bröllopsdagen"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:804
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:807
 #, elixir-autogen, elixir-format
 msgid "Then %{amount} %{interval} from %{date}, charged %{days} days before each delivery. Pause or cancel anytime."
 msgstr "Sedan %{amount} %{interval} från %{date}, debiteras %{days} dagar före varje leverans. Pausa eller avsluta när som helst."
@@ -3050,6 +3050,7 @@ msgid "This course is no longer taking bookings. I announce new dates in the new
 msgstr "Den här kursen tar inte längre emot bokningar. Nya datum meddelar jag först i nyhetsbrevet."
 
 #: lib/edenflowers/orders/order/validations/fulfillment_date.ex:32
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:860
 #, elixir-autogen, elixir-format
 msgid "This date is no longer available, please choose another"
 msgstr "Det här datumet är inte längre tillgängligt, välj ett annat"
@@ -3131,7 +3132,7 @@ msgstr "För många felaktiga koder. Försök igen."
 msgid "Took place"
 msgstr "Genomförd"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:457
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:460
 #: lib/edenflowers_web/features/checkout/pay_live.ex:137
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:114
 #, elixir-autogen, elixir-format
@@ -3294,7 +3295,7 @@ msgstr "Vi mailar dig en inloggningskod."
 msgid "We'll refund %{amount} to your card. It can take 5–10 days to arrive."
 msgstr "Vi återbetalar %{amount} till ditt kort. Det kan ta 5–10 dagar."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:170
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:173
 #, elixir-autogen, elixir-format
 msgid "We'll set up an account with this email so you can pause or cancel."
 msgstr "Vi skapar ett konto med den här e-postadressen så att du kan pausa eller avsluta."
@@ -3350,7 +3351,7 @@ msgstr "Bröllop"
 msgid "Welcome sign arrangement"
 msgstr "Arrangemang på välkomsttavla"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:501
+#: lib/edenflowers_web/features/marketing/home_live.ex:531
 #, elixir-autogen, elixir-format
 msgid "What customers say"
 msgstr "Vad kunderna säger"
@@ -3452,7 +3453,7 @@ msgstr "Krans av gula rosor, anemoner och persikofärgade nejlikor"
 msgid "Wrist corsages of peach roses"
 msgstr "Handledskorsager med persikofärgade rosor"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:726
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:729
 #, elixir-autogen, elixir-format
 msgid "Write your message…"
 msgstr "Skriv ditt meddelande…"
@@ -3512,7 +3513,7 @@ msgstr "Du har redan en prenumeration."
 msgid "You are now signed in"
 msgstr "Du är nu inloggad"
 
-#: lib/edenflowers_web/features/auth/auth_controller.ex:66
+#: lib/edenflowers_web/features/auth/auth_controller.ex:64
 #, elixir-autogen, elixir-format
 msgid "You are now signed out"
 msgstr "Du är nu utloggad"
@@ -3689,7 +3690,7 @@ msgstr "Meddelandet kunde inte skickas. Försök igen eller maila mig direkt."
 msgid "Your message is on its way, and a copy is in your inbox. I'll get back to you as soon as I can."
 msgstr "Ditt meddelande är på väg, och en kopia finns i din inkorg. Jag hör av mig så snart jag kan."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:150
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:153
 #: lib/edenflowers_web/features/courses/course_live.ex:166
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:48
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:525
@@ -3802,7 +3803,7 @@ msgstr "kurser för privata grupper"
 msgid "delivery terms"
 msgstr "leveransvillkor"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:266
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:269
 #, elixir-autogen, elixir-format
 msgid "e.g. Door code 1234, leave at the front door"
 msgstr "t.ex. Portkod 1234, lämna vid ytterdörren"
@@ -3893,7 +3894,7 @@ msgstr "vald"
 msgid "subscription terms"
 msgstr "prenumerationsvillkor"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:327
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:330
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:183
 #, elixir-autogen, elixir-format
 msgid "terms of sale"
@@ -3996,7 +3997,7 @@ msgstr "Uppdaterad 27 oktober 2026."
 msgid "Free delivery within %{km} km of Minimossen"
 msgstr "Gratis leverans inom %{km} km från Minimossen"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:175
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:178
 #, elixir-autogen, elixir-format
 msgid "Subscribe to the newsletter and a 15% off code will be emailed to you."
 msgstr "Prenumerera på nyhetsbrevet så skickar vi dig en kod på 15 % rabatt per e-post."
@@ -4015,3 +4016,8 @@ msgstr "Dekorera i kyrkan och/eller festlokalen"
 #, elixir-autogen, elixir-format
 msgid "Every wedding is different, so you'll get a more accurate quote once we've talked through what you need and which flowers you'd like."
 msgstr "Varje bröllop är unikt, så ni får en mer riktgivande offert när vi har pratat igenom era behov och specifika önskemål när det gäller blomsorter."
+
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:856
+#, elixir-autogen, elixir-format
+msgid "Your checkout details have changed. Please review them before paying."
+msgstr "Dina uppgifter i kassan har ändrats. Kontrollera dem innan du betalar."

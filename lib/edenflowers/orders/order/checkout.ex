@@ -244,9 +244,9 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     action :prepare_checkout_payment, :map do
-      description "Readies the cart's Stripe PaymentIntent for what it owes now and returns its client secret, " <>
-                    "refusing a placed cart, one of only cards or add-ons, or one over stock. Run as the customer, " <>
-                    "or nil for a guest: the actor decides which saved cards are offered."
+      description "Readies the cart's Stripe PaymentIntent and returns its client secret. Refuses incomplete " <>
+                    "checkouts, unavailable dates, carts of only cards or add-ons, and stock shortages. Run as " <>
+                    "the customer, or nil for a guest: the actor decides which saved cards are offered."
 
       argument :order_id, :uuid, allow_nil?: false
       run Actions.PrepareCheckoutPayment
