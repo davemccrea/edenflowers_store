@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/en/courses")
 
-      assert has_element?(view, "#coming-up", "No experience needed. Materials and teaching included.")
+      refute has_element?(view, "#coming-up", "No experience needed. Materials and teaching included.")
       assert has_element?(view, "[data-testid=courses-list]", "85")
       assert has_element?(view, "[data-testid=courses-list]", "per person")
       assert has_element?(view, "[data-testid=courses-list]", "Make a wreath with seasonal flowers.")
