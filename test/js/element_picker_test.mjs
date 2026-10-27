@@ -6,9 +6,14 @@ import vm from "node:vm";
 const picker = readFileSync(
   new URL("../../assets/js/element_picker.js", import.meta.url),
   "utf8",
-).replace(/^import [^;]*;\n/, "");
+).replace(/^import [^;]*;\n/m, "");
 
-const fixture = ({ dev = true, reviewer = false, responses = {} } = {}) => {
+const fixture = ({
+  dev = true,
+  reviewer = false,
+  touch = false,
+  responses = {},
+} = {}) => {
   const listeners = new Map();
   const overlays = [];
   const copied = [];
@@ -84,6 +89,7 @@ const fixture = ({ dev = true, reviewer = false, responses = {} } = {}) => {
       requests.push({ url, body: options.body && JSON.parse(options.body) });
       return { ok: true, json: async () => responses[url.split("?")[0]] ?? [] };
     },
+    matchMedia: () => ({ matches: touch }),
     innerWidth: 1000,
     innerHeight: 800,
     setTimeout: () => 1,
@@ -181,6 +187,23 @@ test("a reviewer on a page without dev annotations gets a note box, not a copy",
   const event = await fire("click");
   assert.deepEqual(copied, []);
   assert.ok(event.defaultPrevented);
+  assert.ok(overlays.some((node) => node.tagName === "TEXTAREA"));
+});
+
+test("on a touch screen, review mode turns a plain tap into a note box", async () => {
+  const { fire, overlays } = fixture({
+    dev: false,
+    reviewer: true,
+    touch: true,
+  });
+  const toggle = overlays.find((node) => node.textContent === "✎");
+
+  const before = await fire("click", { altKey: false });
+  assert.ok(!before.defaultPrevented);
+
+  toggle.on.click();
+  const tap = await fire("click", { altKey: false });
+  assert.ok(tap.defaultPrevented);
   assert.ok(overlays.some((node) => node.tagName === "TEXTAREA"));
 });
 
