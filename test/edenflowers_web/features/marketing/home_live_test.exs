@@ -65,8 +65,7 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
         |> render()
         |> LazyHTML.from_document()
         |> LazyHTML.query("#review-pages blockquote")
-        |> Enum.map(&LazyHTML.text/1)
-        |> Enum.map(&String.trim/1)
+        |> Enum.map(&(LazyHTML.text(&1) |> String.trim()))
 
       assert length(quotes) == 9
 
@@ -74,8 +73,7 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
         pattern =
           quote
           |> String.split()
-          |> Enum.map(&Regex.escape/1)
-          |> Enum.join("\\s+(?:.*?\\s+)?")
+          |> Enum.map_join("\\s+(?:.*?\\s+)?", &Regex.escape/1)
           |> then(&Regex.compile!(&1, "s"))
 
         assert Enum.any?(originals, &Regex.match?(pattern, &1)),
