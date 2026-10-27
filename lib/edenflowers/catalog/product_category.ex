@@ -30,13 +30,14 @@ defmodule Edenflowers.Catalog.ProductCategory do
 
   actions do
     defaults [:read, :destroy, :create, :update]
-    default_accept [:slug, :visibility, :add_on, :product_type, :name, :description, :translations]
+    default_accept [:slug, :visibility, :add_on, :product_type, :name, :description, :translations, :position]
 
     read :public do
-      description "Categories browsable in the store and listed in the sitemap. Draft and hidden categories are " <>
-                    "left out."
+      description "Categories browsable in the store and listed in the sitemap, in store order. Draft and hidden " <>
+                    "categories are left out."
 
       filter expr(visibility == :public)
+      prepare build(sort: [position: :asc_nils_last, name: :asc])
     end
 
     read :public_by_slug do
@@ -67,6 +68,11 @@ defmodule Edenflowers.Catalog.ProductCategory do
     attribute :name, :string, allow_nil?: false
     attribute :description, :string, allow_nil?: true
     attribute :slug, :string, allow_nil?: false
+
+    attribute :position, :integer do
+      description "Store order: 0 first, unset after all positioned categories."
+      constraints min: 0
+    end
 
     attribute :visibility, __MODULE__.Visibility do
       description ":public is browsable in the store ribbon and at /store/:slug. :draft is work in progress, " <>
