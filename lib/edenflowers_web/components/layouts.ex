@@ -124,6 +124,7 @@ defmodule EdenflowersWeb.Layouts do
       aria-live="polite"
       class="toast bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 max-sm:inset-x-4 max-sm:w-auto sm:end-6 sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
     >
+      <.flash kind={:success} flash={@flash} />
       <.flash kind={:info} flash={@flash} />
       <.flash kind={:error} flash={@flash} />
       <.flash

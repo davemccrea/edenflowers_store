@@ -547,7 +547,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       {:ok, product} ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Product saved.")
+         |> put_flash(:success, ~t"Product saved.")
          |> push_navigate(to: ~p"/admin/products/#{product.id}")}
 
       {:error, form} ->

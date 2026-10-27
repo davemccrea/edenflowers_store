@@ -124,7 +124,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
          socket
          |> assign(:form, pricing_form(option, socket.assigns.current_user))
          |> push_event("admin-form-saved", %{id: "pricing-form"})
-         |> put_flash(:info, ~t"Saved.")}
+         |> put_flash(:success, ~t"Saved.")}
 
       {:error, form} ->
         {:noreply,
@@ -148,7 +148,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         {:noreply,
          socket
          |> assign_calendar(calendar)
-         |> put_flash(:info, ~t"Saved.")}
+         |> put_flash(:success, ~t"Saved.")}
 
       {:error, form} ->
         {:noreply,

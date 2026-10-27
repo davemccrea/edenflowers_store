@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Auth.AuthController do
     |> delete_session(:return_to)
     |> store_in_session(user)
     |> assign(:current_user, user)
-    |> put_flash(:info, message)
+    |> put_flash(:success, message)
     |> redirect(to: return_to)
   end
 
@@ -63,7 +63,7 @@ defmodule EdenflowersWeb.Auth.AuthController do
 
     conn
     |> clear_session(:edenflowers)
-    |> put_flash(:info, ~t"You are now signed out")
+    |> put_flash(:success, ~t"You are now signed out")
     |> redirect(to: return_to)
   end
 end

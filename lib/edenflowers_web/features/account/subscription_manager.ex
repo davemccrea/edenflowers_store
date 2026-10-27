@@ -83,7 +83,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     # A component's own flash only reaches the page on a redirect.
     case socket.assigns.notice do
       {:status, :info, message} ->
-        send(self(), {:put_flash, :info, message})
+        send(self(), {:put_flash, :success, message})
         {:noreply, assign(socket, notice: nil)}
 
       _other ->

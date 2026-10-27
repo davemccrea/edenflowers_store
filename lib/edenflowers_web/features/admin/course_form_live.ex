@@ -194,7 +194,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
       {:ok, course} ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Course saved.")
+         |> put_flash(:success, ~t"Course saved.")
          |> push_navigate(to: saved_path(socket.assigns.form, course))}
 
       {:error, form} ->

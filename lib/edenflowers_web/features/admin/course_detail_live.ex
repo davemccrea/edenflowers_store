@@ -268,7 +268,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     socket =
       with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
            {:ok, _} <- Courses.remove_registration_seat(registration, actor: actor) do
-        put_flash(socket, :info, ~t"Seat removed.")
+        put_flash(socket, :success, ~t"Seat removed.")
       else
         _ -> put_flash(socket, :error, ~t"Could not remove the seat.")
       end
@@ -306,7 +306,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          socket
          |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
          |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
-         |> put_flash(:info, ~t"Booking cancelled.")
+         |> put_flash(:success, ~t"Booking cancelled.")
          |> reload_course()}
 
       {:error, message} ->
@@ -340,8 +340,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       case Courses.get_registration_by_id(id, actor: socket.assigns.current_user, load: [:balance]) do
         {:ok, registration} ->
           case payment_action.(registration) do
-            {:info, message} ->
-              settlement_recorded(socket, id, :info, message)
+            {:success, message} ->
+              settlement_recorded(socket, id, :success, message)
 
             {:ok, {kind, message}} ->
               settlement_recorded(socket, id, kind, message)
@@ -371,7 +371,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   defp send_email(:payment_reminder, registration, message, actor) do
     case Courses.send_registration_payment_reminder(registration, %{message: message}, actor: actor) do
       {:ok, _registration} ->
-        {:info, ~t"Payment reminder sent."}
+        {:success, ~t"Payment reminder sent."}
 
       {:error, error} ->
         Logger.error("Payment reminder for course registration #{registration.id} not sent: #{inspect(error)}")
@@ -385,7 +385,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   defp send_email(:confirmation, registration, message, actor) do
     case Courses.email_registration_confirmation(registration, %{message: message}, actor: actor) do
       {:ok, _registration} ->
-        {:info, ~t"Confirmation emailed."}
+        {:success, ~t"Confirmation emailed."}
 
       {:error, error} ->
         Logger.error("Confirmation for course registration #{registration.id} not emailed: #{inspect(error)}")

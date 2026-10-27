@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
       {:ok, _registration} ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Booking added.")
+         |> put_flash(:success, ~t"Booking added.")
          |> push_navigate(to: ~p"/admin/courses/#{socket.assigns.course.id}")}
 
       {:error, form} ->

@@ -194,7 +194,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
          socket
          |> assign_expense(updated)
          |> push_event("admin-form-saved", %{id: "expense-form"})
-         |> put_flash(:info, ~t"Expense updated.")}
+         |> put_flash(:success, ~t"Expense updated.")}
 
       {:error, form} ->
         {:noreply,
@@ -209,7 +209,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
       :ok ->
         {:noreply,
          socket
-         |> put_flash(:info, ~t"Expense deleted.")
+         |> put_flash(:success, ~t"Expense deleted.")
          |> push_navigate(to: ~p"/admin/expenses")}
 
       # Deleting removes the tags in Papra first, which is what usually fails.
@@ -232,7 +232,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
          socket
          |> assign_expense(reviewed)
          |> push_event("admin-form-saved", %{id: "expense-form"})
-         |> put_flash(:info, ~t"Expense saved and marked as reviewed.")}
+         |> put_flash(:success, ~t"Expense saved and marked as reviewed.")}
 
       {:error, error} ->
         Logger.error("Expense #{expense.id} not marked reviewed: #{inspect(error)}")

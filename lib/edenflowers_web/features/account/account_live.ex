@@ -236,7 +236,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     socket =
       with {:ok, order} <- Orders.get_order_by_id(id, actor: user),
            {:ok, _order} <- Orders.cancel_order_by_customer(order, actor: user) do
-        put_flash(socket, :info, ~t"Your order is cancelled. A confirmation is on its way to your email.")
+        put_flash(socket, :success, ~t"Your order is cancelled. A confirmation is on its way to your email.")
       else
         {:error, error} ->
           Logger.info("Order cancel refused: #{inspect(error)}")
