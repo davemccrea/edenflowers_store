@@ -60,12 +60,12 @@
 @media (prefers-reduced-motion: no-preference) {
   /* Waits for the subtitle and button to land before the first change. */
   .hero-rotator > * {
-    --step: 1800ms;
+    --step: 2200ms;
     animation-delay: calc(800ms + var(--i) * var(--step));
   }
   .hero-rotator > :not(:last-child) {
     animation-name: hero-rotator-pass;
-    animation-duration: 2200ms;
+    animation-duration: 2700ms;
     animation-timing-function: ease-in-out;
     animation-fill-mode: both;
   }
@@ -73,7 +73,7 @@
   .hero-rotator > :first-child {
     opacity: 1;
     animation-name: hero-rotator-leave;
-    animation-duration: 550ms;
+    animation-duration: 650ms;
     animation-delay: calc(800ms + var(--step));
   }
   .hero-rotator > :last-child {
