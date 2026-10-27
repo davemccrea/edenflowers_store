@@ -212,6 +212,23 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     refute has_element?(view, "#subscriptions", "Nothing more is sent or charged")
   end
 
+  test "linked answers form complete translated sentences", %{conn: conn} do
+    for {path, delivery, quality, wedding} <- [
+          {"/sv/vanliga-fragor", "Om jag inte kommer in förklarar våra leveransvillkor vad som händer sedan.",
+           "Våra kvalitetsvillkor beskriver villkoren.", "Din bokning följer våra bröllopsvillkor."},
+          {"/fi/ukk", "Jos en pääse sisään, toimitusehdoissa kerrotaan, mitä seuraavaksi tapahtuu.",
+           "Meidän laatuehtomme kertovat tarkemmat ehdot.", "Varaukseesi sovelletaan hääkukkien ehtoja."}
+        ] do
+      {:ok, _view, html} = live(conn, path)
+      document = LazyHTML.from_document(html)
+
+      for {section, sentence} <- [{"delivery", delivery}, {"care", quality}, {"weddings", wedding}] do
+        text = document |> LazyHTML.query("##{section}") |> LazyHTML.text() |> String.replace(~r/\s+/, " ")
+        assert text =~ sentence
+      end
+    end
+  end
+
   test "practical answers cover pickup, delivery notifications and payment exceptions", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 

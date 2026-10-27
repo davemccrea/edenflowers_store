@@ -166,12 +166,12 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
   end
 
   test "is available in each language route with alternate and signup links", %{conn: conn} do
-    for language <- ["en", "sv", "fi"] do
+    for {language, title} <- [{"en", "Privacy policy"}, {"sv", "Integritetspolicy"}, {"fi", "Tietosuojaseloste"}] do
       path = "/#{language}/privacy"
       {:ok, view, _html} = live(conn, path)
 
       refute has_element?(view, "#privacy-draft")
-      assert has_element?(view, ~s|footer a[href="#{path}"]|, "Privacy policy")
+      assert has_element?(view, ~s|footer a[href="#{path}"]|, title)
       refute has_element?(view, "#main-content", "(draft)")
       assert has_element?(view, ~s|#newsletter-form a[href="#{path}"]|)
 
@@ -184,6 +184,24 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
       for alternate <- ["en", "sv", "fi"] do
         assert html =~ ~s|hreflang="#{alternate}" href="http://localhost:4002/#{alternate}/privacy"|
       end
+    end
+  end
+
+  test "translates privacy headings, body and interpolated contact instructions", %{conn: conn} do
+    for {language, title, hosting, contact, updated} <- [
+          {"sv", "Integritetspolicy", "Vår huvudsakliga kunddatabas finns hos Hetzner i Finland.",
+           "Mejla #{Business.email()} för att:", "Uppdaterad 26 oktober 2026."},
+          {"fi", "Tietosuojaseloste", "Pääasiallinen asiakastietokantamme sijaitsee Hetznerin palvelimilla Suomessa.",
+           "Lähetä sähköpostia osoitteeseen #{Business.email()}, jos haluat:", "Päivitetty 26. lokakuuta 2026."}
+        ] do
+      {:ok, view, _html} = live(conn, "/#{language}/privacy")
+
+      assert has_element?(view, "h1", title)
+      assert has_element?(view, "#sharing", hosting)
+      assert has_element?(view, "#rights", contact)
+      assert has_element?(view, "#notice-updated", updated)
+      refute has_element?(view, "#main-content", "Our legal bases are:")
+      refute has_element?(view, "#main-content", "Newsletters require your consent.")
     end
   end
 
