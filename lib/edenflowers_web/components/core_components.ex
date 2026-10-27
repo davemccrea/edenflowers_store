@@ -657,12 +657,17 @@ defmodule EdenflowersWeb.CoreComponents do
   seed placeholders) skip the `<picture>` machinery and render a plain `<img>`.
 
   Pass `sources` to swap crops per breakpoint — see `product_card/1`. A source
-  may set its own `crop`; otherwise it uses the image's.
+  may set its own `crop`; otherwise it uses the image's. A source may also set
+  `max_width` to drop larger candidates, so 3x phones get a photo sized for 2x,
+  which looks the same at that density for half the bytes.
 
   Pass `crop` to cut a region out of the original before resizing, using
   Imgproxy's `width:height:gravity` format. A focus-point gravity keeps a
   subject centred where possible; the crop is shifted to stay inside the
   photo when the subject is near an edge.
+
+  Pass a lower `quality` for a full-bleed photo that sits behind text, where
+  compression doesn't show and every byte delays first paint.
 
   ## Examples
 
@@ -679,6 +684,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :priority, :boolean, default: false
   attr :crop_type, :string, default: "fill", values: ~w(fit fill auto)
   attr :crop, :string, default: nil
+  attr :quality, :integer, default: @image_quality
   attr :sources, :list, default: []
   attr :class, :any, default: nil
   attr :rest, :global, include: ~w(id data-testid)
@@ -695,7 +701,9 @@ defmodule EdenflowersWeb.CoreComponents do
                 source.width,
                 source.height,
                 assigns.crop_type,
-                Map.get(source, :crop, assigns.crop)
+                Map.get(source, :crop, assigns.crop),
+                assigns.quality,
+                Map.get(source, :max_width)
               )
           }
         end)
@@ -705,8 +713,17 @@ defmodule EdenflowersWeb.CoreComponents do
 
     assigns =
       assign(assigns,
-        resolved_src: resolve_image_url(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.crop),
-        srcset: image_srcset(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.crop),
+        resolved_src:
+          resolve_image_url(
+            assigns.src,
+            assigns.width,
+            assigns.height,
+            assigns.crop_type,
+            assigns.crop,
+            assigns.quality
+          ),
+        srcset:
+          image_srcset(assigns.src, assigns.width, assigns.height, assigns.crop_type, assigns.crop, assigns.quality),
         resolved_sources: sources
       )
 
@@ -750,9 +767,10 @@ defmodule EdenflowersWeb.CoreComponents do
     """
   end
 
-  defp image_srcset(src, width, height, crop_type, crop) do
+  defp image_srcset(src, width, height, crop_type, crop, quality, width_cap \\ nil) do
     if raster_src?(src) do
       {max_width, _} = capped_dimensions(width * 2, height * 2)
+      max_width = if width_cap, do: min(max_width, width_cap), else: max_width
 
       (@image_widths ++ [min(width, max_width), max_width])
       |> Enum.filter(&(&1 <= max_width))
@@ -760,7 +778,7 @@ defmodule EdenflowersWeb.CoreComponents do
       |> Enum.sort()
       |> Enum.map_join(", ", fn candidate_width ->
         candidate_height = max(1, round(height * candidate_width / width))
-        url = resolve_image_url(src, candidate_width, candidate_height, crop_type, crop)
+        url = resolve_image_url(src, candidate_width, candidate_height, crop_type, crop, quality)
         "#{url} #{candidate_width}w"
       end)
     end
@@ -776,10 +794,10 @@ defmodule EdenflowersWeb.CoreComponents do
   without resizing or format conversion.
   """
   def image_url(src, width, height, crop_type \\ "fill") do
-    resolve_image_url(src, width, height, crop_type, nil)
+    resolve_image_url(src, width, height, crop_type, nil, @image_quality)
   end
 
-  defp resolve_image_url(src, width, height, crop_type, crop) do
+  defp resolve_image_url(src, width, height, crop_type, crop, quality) do
     cond do
       external_src?(src) ->
         src
@@ -794,7 +812,7 @@ defmodule EdenflowersWeb.CoreComponents do
         |> Imgproxy.new()
         |> maybe_crop(crop)
         |> Imgproxy.resize(width, height, type: crop_type)
-        |> Imgproxy.add_option(:q, [@image_quality])
+        |> Imgproxy.add_option(:q, [quality])
         |> Imgproxy.set_extension("webp")
         |> to_string()
     end
@@ -822,7 +840,6 @@ defmodule EdenflowersWeb.CoreComponents do
     </div>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".PhotoGallery">
       import PhotoSwipeLightbox from "@/vendor/photoswipe-lightbox.esm";
-      import PhotoSwipe from "@/vendor/photoswipe.esm";
 
       /**
        * Click-to-zoom photo gallery (PhotoSwipe 5).
@@ -834,12 +851,12 @@ defmodule EdenflowersWeb.CoreComponents do
        */
       export default {
         mounted() {
-          // Passing pswpModule as a value rather than a dynamic import keeps
-          // everything in the single esbuild bundle — no runtime chunk fetch.
+          // The core is fetched on the first click, alongside the first photo,
+          // so it stays out of the bundle every page downloads before painting.
           this.lightbox = new PhotoSwipeLightbox({
             gallery: this.el,
             children: "a[data-pswp-width]",
-            pswpModule: PhotoSwipe,
+            pswpModule: () => import("@/vendor/photoswipe.esm"),
           });
 
           // A mouse click leaves the thumbnail focused, so Escape rings it on close.

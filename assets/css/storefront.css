@@ -12,10 +12,12 @@
   }
 }
 
-/* The headline comes into focus rather than sliding, matching the rotator below. */
+/* The headline comes into focus rather than sliding, matching the rotator below.
+   It starts at 1% rather than 0: Chrome skips text first painted at opacity 0 as
+   an LCP candidate, so the headline only counted once the web font swapped in. */
 @keyframes hero-focus {
   from {
-    opacity: 0;
+    opacity: 0.01;
     filter: blur(8px);
   }
 }
