@@ -867,7 +867,10 @@ defmodule EdenflowersWeb.Layouts do
           if (window.scrollY > Math.max(150, this.lastScroll)) {
             this.liveSocket.execJS(this.el, this.hideJS);
             this.setOffset(false);
-          } else if (window.scrollY < this.lastMaxScroll - 150) {
+          } else if (
+            window.scrollY <= 150 ||
+            window.scrollY < this.lastMaxScroll - 150
+          ) {
             this.liveSocket.execJS(this.el, this.showJS);
             this.setOffset(true);
             this.lastMaxScroll = window.scrollY;
