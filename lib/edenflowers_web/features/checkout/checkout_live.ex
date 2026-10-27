@@ -50,6 +50,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "shop_calendar:changed")
     end
 
     with :ok <- validate_cart_not_empty(order),
@@ -128,6 +129,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :selected_date_unavailable?, selected_date_unavailable?(assigns))
+
     ~H"""
     <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
       <.container>
@@ -139,6 +142,25 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
             <div id={@id} class="md:max-w-lg md:flex-1" phx-hook=".FocusElement">
               <%!-- Outer step chrome (titles, summaries, edit links) lives in Checkout.Fields.
                    The <section>s below are the inner content for the active step. --%>
+              <div
+                :if={@selected_date_unavailable?}
+                class="border-error/30 border p-4"
+                role="alert"
+                data-testid="fulfillment-date-unavailable"
+              >
+                <p class="text-error">{~t"This date is no longer available, please choose another"}</p>
+                <.button
+                  :if={@order.state == :payment}
+                  type="button"
+                  variant="text"
+                  size="sm"
+                  phx-click="edit_step"
+                  phx-value-state="delivery"
+                  data-locked-while-paying
+                >
+                  {~t"Edit"}
+                </.button>
+              </div>
               <.steps state={@order.state} order={@order}>
                 <.checkout_step order={@order} id={@id} state={:contact_details} testid="checkout-step-1">
                   <.form
@@ -293,8 +315,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                           <.store_calendar
                             id="calendar"
                             error={
-                              Phoenix.Component.used_input?(@form[:fulfillment_date]) and
-                                Enum.any?(@form[:fulfillment_date].errors)
+                              @selected_date_unavailable? or
+                                (Phoenix.Component.used_input?(@form[:fulfillment_date]) and
+                                   Enum.any?(@form[:fulfillment_date].errors))
                             }
                             selected_date={@form[:fulfillment_date].value}
                             calendar={@shop_calendar}
@@ -616,6 +639,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
     {:noreply, push_navigate(socket, to: ~q"/#{language}")}
+  end
+
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "shop_calendar:changed"}, socket) do
+    {:noreply, refresh_calendar(socket)}
   end
 
   def handle_info(:focus_first_error, socket) do
@@ -1095,11 +1122,26 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
+  defp selected_date_unavailable?(%{order: %{state: state} = order, form: form, shop_calendar: calendar})
+       when state in [:delivery, :payment] do
+    selected = if form, do: form[:fulfillment_date].value, else: order.fulfillment_date
+
+    case Date.from_iso8601(to_string(selected)) do
+      {:ok, date} -> Availability.customer_cell_state(calendar, date) != :open
+      {:error, _} -> false
+    end
+  end
+
+  defp selected_date_unavailable?(_assigns), do: false
+
+  defp refresh_calendar(socket), do: assign(socket, :shop_calendar, Fulfillment.get_shop_calendar!())
+
   defp reload_order(socket, opts \\ []) do
     order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
     order = ensure_fulfillment_default(order, socket.assigns.fulfillment_options, actor(socket))
 
     socket
+    |> refresh_calendar()
     |> maybe_quote_on_entering_delivery(order)
     |> assign_forms(order, opts)
     |> ensure_customer_session(order, actor(socket))
