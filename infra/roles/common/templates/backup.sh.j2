@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+backup_dir={{ ('/opt/' ~ project_name ~ '/backups') | quote }}
+database={{ db_name | quote }}
+
+# Keep incomplete dumps out of the mirror and preserve good dumps on failure.
+f="$backup_dir/${database}_$(date +%Y%m%dT%H%M%S).dump"
+pg_dump -Fc "$database" > "$f.tmp"
+mv "$f.tmp" "$f"
+find "$backup_dir" -name '*.dump*' -mtime +30 -delete
+{% if inventory_hostname == 'production' %}
+
+photos_dir={{ ('/opt/' ~ project_name ~ '/images/uploads') | quote }}
+backup_ssh='ssh -p23 -i /var/lib/postgresql/.ssh/backup_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=30 -o ServerAliveInterval=30 -o ServerAliveCountMax=3'
+
+# Never mirror to the shared parent: --delete would remove the other backup set.
+rsync -a --delete --exclude='*.tmp' -e "$backup_ssh" \
+  "$backup_dir/" {{ (vault_backup_storage_user ~ '@' ~ vault_backup_storage_host ~ ':edenflowers/database/') | quote }}
+rsync -a --delete -e "$backup_ssh" \
+  "$photos_dir/" {{ (vault_backup_storage_user ~ '@' ~ vault_backup_storage_host ~ ':edenflowers/photos/') | quote }}
+curl --fail --silent --show-error --retry 3 --max-time 30 \
+  {{ vault_backup_heartbeat_url | quote }} > /dev/null
+{% endif %}

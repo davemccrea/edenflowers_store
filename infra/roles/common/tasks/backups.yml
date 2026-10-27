@@ -6,15 +6,74 @@
     owner: postgres
     mode: "0750"
 
+- name: Set up production off-site backups
+  when: inventory_hostname == 'production'
+  block:
+    - name: Require Storage Box and Better Stack settings
+      ansible.builtin.assert:
+        that:
+          - vault_backup_storage_user | default('') | length > 0
+          - vault_backup_storage_host | default('') | length > 0
+          - vault_backup_storage_host_key | default('') | length > 0
+          - vault_backup_heartbeat_url | default('') is match('^https://')
+        fail_msg: Configure the backup settings in the vault before provisioning.
+      no_log: true
+
+    - name: Install backup transfer tools
+      ansible.builtin.apt:
+        name:
+          - rsync
+          - openssh-client
+          - curl
+        state: present
+
+    - name: Create postgres SSH directory
+      ansible.builtin.file:
+        path: /var/lib/postgresql/.ssh
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: "0700"
+
+    - name: Generate dedicated backup SSH key
+      ansible.builtin.user:
+        name: postgres
+        generate_ssh_key: true
+        ssh_key_type: ed25519
+        ssh_key_file: /var/lib/postgresql/.ssh/backup_ed25519
+      register: common_backup_ssh_key
+
+    - name: Show public key to authorize on the Storage Box
+      ansible.builtin.debug:
+        msg: "{{ common_backup_ssh_key.ssh_public_key }}"
+      when: not ansible_check_mode
+
+    - name: Pin verified Storage Box host key
+      ansible.builtin.known_hosts:
+        path: /var/lib/postgresql/.ssh/known_hosts
+        name: "[{{ vault_backup_storage_host }}]:23"
+        key: "[{{ vault_backup_storage_host }}]:23 {{ vault_backup_storage_host_key }}"
+
+    - name: Set postgres known_hosts permissions
+      ansible.builtin.file:
+        path: /var/lib/postgresql/.ssh/known_hosts
+        owner: postgres
+        group: postgres
+        mode: "0600"
+
+- name: Install nightly backup script
+  ansible.builtin.template:
+    src: backup.sh.j2
+    dest: "/opt/{{ project_name }}/backup.sh"
+    owner: root
+    group: postgres
+    mode: "0750"
+  no_log: true
+
 - name: Schedule daily pg_dump
   ansible.builtin.cron:
     name: "Backup {{ db_name }}"
     hour: "2"
     minute: "0"
     user: postgres
-    # Dump to .tmp so a failed run never leaves a .dump that looks good, and prune only after
-    # a successful dump, so a run of failing dumps can't age out the last good ones
-    job: >-
-      f=/opt/{{ project_name }}/backups/{{ db_name }}_$(date +\%Y\%m\%dT\%H\%M\%S).dump;
-      pg_dump -Fc {{ db_name }} > "$f.tmp" && mv "$f.tmp" "$f"
-      && find /opt/{{ project_name }}/backups -name '*.dump*' -mtime +30 -delete
+    job: "/opt/{{ project_name }}/backup.sh"
