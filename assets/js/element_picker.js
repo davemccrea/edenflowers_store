@@ -52,8 +52,9 @@ if (dev || reviewer) {
     }
     .ep-highlight, .ep-note {
       pointer-events: none;
-      top: anchor(top);
-      left: anchor(left);
+      /* Closed drawers have no anchor box; anchors-visible doesn't hide that case. */
+      top: anchor(top, -10000px);
+      left: anchor(left, -10000px);
       width: anchor-size(width);
       height: anchor-size(height);
       box-sizing: border-box;
@@ -435,6 +436,17 @@ if (dev || reviewer) {
       markers.push({ marker, el });
     }
   };
+
+  // Follow drawers into and out of the top layer as they open and close.
+  document.addEventListener(
+    "toggle",
+    (event) => {
+      for (const { marker, el } of markers) {
+        if (event.target.contains(el)) show(marker, hostFor(el));
+      }
+    },
+    true,
+  );
 
   // Open notes for this page, fetched once per path.
   const pageNotes = () => {

@@ -436,6 +436,44 @@ test("holding Option outlines the page's open notes with their text", async () =
   assert.ok(text.parentNode.open);
 });
 
+test("saved-note markers follow a drawer as it opens and closes", async () => {
+  const { fire, overlays, parent, body } = fixture({
+    dev: false,
+    reviewer: true,
+    responses: {
+      "/review-notes": [{ body: "Drawer note", selector: "#noted" }],
+    },
+  });
+  await fire("keydown", { key: "Alt" });
+  await new Promise(setImmediate);
+  const marker = overlays.find((node) => node.className === "ep-note");
+  assert.equal(marker.parentNode, body);
+
+  const drawer = {
+    contains: (node) => node === parent,
+    append: (node) => {
+      node.parentNode = drawer;
+    },
+  };
+  parent.closest = () => drawer;
+  await fire("toggle", { target: drawer });
+  assert.equal(marker.parentNode, drawer);
+  assert.ok(marker.open);
+
+  parent.closest = () => null;
+  await fire("toggle", { target: drawer });
+  assert.equal(marker.parentNode, body);
+});
+
+test("note overlays fall back off screen when a hidden target has no CSS anchor", () => {
+  const { overlays } = fixture({ dev: false, reviewer: true });
+  const css = overlays.find((node) => node.tagName === "STYLE").textContent;
+  const rule = css.match(/\.ep-highlight, \.ep-note \{([^}]+)\}/)[1];
+  assert.match(rule, /top: anchor\(top, -10000px\)/);
+  assert.match(rule, /left: anchor\(left, -10000px\)/);
+  assert.match(rule, /position-visibility: anchors-visible/);
+});
+
 test("Option+Clicking an element with my note opens it for editing", async () => {
   const { fire, overlays, requests, parent } = fixture({
     dev: false,
