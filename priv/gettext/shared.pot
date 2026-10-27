@@ -178,7 +178,7 @@ msgid "Close navigation menu"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:271
-#: lib/edenflowers_web/components/layouts.ex:679
+#: lib/edenflowers_web/components/layouts.ex:681
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr ""
