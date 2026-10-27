@@ -759,7 +759,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         type="button"
         phx-click={JS.exec("phx-show", to: "#card-drawer")}
         aria-haspopup="dialog"
-        class="press border-base-300 flex w-full items-center gap-4 border px-4 py-3 text-left hover:border-primary"
+        class="press border-base-content/12 flex w-full items-center gap-4 border px-4 py-3 text-left hover:border-primary"
         data-testid="select-card-button"
       >
         <.icon name="hero-gift" class="h-6 w-6 shrink-0" />

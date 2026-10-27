@@ -49,7 +49,6 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
           <%!-- Phones get no index: closed, the page is under three screens and its headings do the job. --%>
           <SectionIndex.section_index
             id="faq-nav"
-            font="sans"
             sections={Enum.map(@sections, fn {id, title, _questions} -> {id, title} end)}
             related_links={[
               {~q"/#{language}/terms", ~t"Terms of sale"},

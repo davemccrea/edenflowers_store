@@ -53,7 +53,6 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
           <SectionIndex.section_index
             id="terms-nav"
             sections={@sections}
-            font="sans"
             related_links={[
               {~q"/#{language}/faq", ~t"FAQ"},
               {~q"/#{language}/privacy", ~t"Privacy policy"}

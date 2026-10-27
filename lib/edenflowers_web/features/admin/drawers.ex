@@ -143,7 +143,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
     ~H"""
     <section
       aria-label={~t"Email preview"}
-      class="border-base-content/12 bg-base-200/40 mt-3 space-y-3 rounded-lg border p-3 text-sm"
+      class="border-base-content/12 bg-base-200/40 mt-3 space-y-3 border p-3 text-sm"
     >
       <h3 class="eyebrow text-base-content/75">{~t"Preview"}</h3>
       <p class="font-semibold">{@email.subject}</p>

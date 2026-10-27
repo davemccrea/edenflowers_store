@@ -52,7 +52,6 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
           <SectionIndex.section_index
             id="privacy-nav"
             sections={@sections}
-            font="sans"
             related_links={[
               {~q"/#{language}/faq", ~t"FAQ"},
               {~q"/#{language}/terms", ~t"Terms of sale"}
