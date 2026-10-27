@@ -146,17 +146,12 @@ msgstr ""
 msgid "Account"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:94
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "Accounting records: our legal obligation."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:154
-#, elixir-autogen, elixir-format
-msgid "Accounting retention does not automatically apply to delivery-only details."
-msgstr ""
-
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:143
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:145
 #, elixir-autogen, elixir-format
 msgid "Accounting: generally at least six years for vouchers and business correspondence, from the end of the calendar year in which the financial year ended. Certain records require ten years from the financial-year end."
 msgstr ""
@@ -296,7 +291,7 @@ msgstr ""
 msgid "Billing"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:129
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:131
 #, elixir-autogen, elixir-format
 msgid "Blocking cookies in your browser may stop the cart and sign-in working."
 msgstr ""
@@ -433,7 +428,7 @@ msgstr ""
 msgid "Browse the store"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:133
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:135
 #, elixir-autogen, elixir-format
 msgid "Browser settings do not replace required consent."
 msgstr ""
@@ -444,7 +439,7 @@ msgid "Built with "
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:937
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:65
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:64
 #: lib/edenflowers_web/features/marketing/terms_live.ex:205
 #, elixir-autogen, elixir-format
 msgid "Business ID:"
@@ -783,8 +778,8 @@ msgstr ""
 msgid "Continue to payment"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:25
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:121
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:24
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Cookies and fraud prevention"
 msgstr ""
@@ -903,11 +898,6 @@ msgstr ""
 msgid "Delivery day"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:80
-#, elixir-autogen, elixir-format
-msgid "Delivery details include recipient names, addresses, instructions, card messages and coordinates for calculating distance. Gift-recipient details come from the customer."
-msgstr ""
-
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:265
 #, elixir-autogen, elixir-format
 msgid "Delivery instructions"
@@ -923,7 +913,7 @@ msgstr ""
 msgid "Delivery on %{date} to %{address}"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:116
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:118
 #, elixir-autogen, elixir-format
 msgid "Delivery photos may go to the purchaser, not necessarily the recipient. Emailed copies cannot be recalled."
 msgstr ""
@@ -975,7 +965,7 @@ msgstr ""
 msgid "Email"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:159
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:162
 #, elixir-autogen, elixir-format
 msgid "Email %{email} to:"
 msgstr ""
@@ -1029,7 +1019,7 @@ msgstr ""
 msgid "Error loading checkout"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:148
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:151
 #, elixir-autogen, elixir-format
 msgid "Error reports: 90 days."
 msgstr ""
@@ -1075,7 +1065,7 @@ msgid "Every week"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:886
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:56
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:55
 #: lib/edenflowers_web/features/marketing/terms_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "FAQ"
@@ -1102,7 +1092,7 @@ msgstr ""
 msgid "Final prices depend on the flowers and techniques you choose. Delivery outside Vaasa is quoted separately."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:66
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "Finland"
 msgstr ""
@@ -1401,7 +1391,7 @@ msgstr ""
 msgid "Here's a little about me, how it all started and how I work with flowers."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:104
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:106
 #, elixir-autogen, elixir-format
 msgid "Hetzner hosts our main customer database in Finland."
 msgstr ""
@@ -1466,8 +1456,8 @@ msgstr ""
 msgid "How it works"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:26
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:140
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:25
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "How long we keep information"
 msgstr ""
@@ -1685,7 +1675,7 @@ msgstr ""
 msgid "It's too late to change your next delivery."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:64
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:63
 #, elixir-autogen, elixir-format
 msgid "Jennie McCrea, trading as Eden Flowers"
 msgstr ""
@@ -1767,7 +1757,7 @@ msgstr ""
 msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:112
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:114
 #, elixir-autogen, elixir-format
 msgid "Mapping services receive delivery addresses or coordinates. Website-security and mailbox providers handle traffic and emails."
 msgstr ""
@@ -1859,12 +1849,12 @@ msgstr ""
 msgid "Newsletter"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:98
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:100
 #, elixir-autogen, elixir-format
 msgid "Newsletters require your consent."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:146
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:148
 #, elixir-autogen, elixir-format
 msgid "Newsletters: until withdrawal or unsubscribe. Limited opt-out records prevent further marketing; consent evidence may remain where necessary."
 msgstr ""
@@ -1924,12 +1914,12 @@ msgstr ""
 msgid "Number of guests"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:163
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:166
 #, elixir-autogen, elixir-format
 msgid "Object to legitimate-interest processing or direct marketing."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:174
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:177
 #, elixir-autogen, elixir-format
 msgid "Office of the Data Protection Ombudsman"
 msgstr ""
@@ -2053,27 +2043,27 @@ msgstr ""
 msgid "Our"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:114
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Our accountant receives monthly purchase and payment records."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:136
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:138
 #, elixir-autogen, elixir-format
 msgid "Our database stores error reports, which may include IP addresses, browser details and form data."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:89
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "Our legal bases are:"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:96
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:98
 #, elixir-autogen, elixir-format
 msgid "Our legitimate interests: fulfilling gifts, documenting delivery, administering purchases, handling complaints and preventing website abuse."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:123
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:125
 #, elixir-autogen, elixir-format
 msgid "Our session cookie keeps your cart, language and sign-in for up to 30 days."
 msgstr ""
@@ -2320,7 +2310,7 @@ msgstr ""
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:183
 #: lib/edenflowers_web/features/marketing/faq_live.ex:55
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:17
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:44
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:43
 #: lib/edenflowers_web/features/marketing/terms_live.ex:58
 #: lib/edenflowers_web/features/marketing/terms_live.ex:72
 #, elixir-autogen, elixir-format
@@ -2333,7 +2323,7 @@ msgstr ""
 msgid "Promo code"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:92
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:94
 #, elixir-autogen, elixir-format
 msgid "Purchases and purchase enquiries: our contract with you or steps you request before it."
 msgstr ""
@@ -2354,7 +2344,7 @@ msgstr ""
 msgid "Quote"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:178
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:181
 #, elixir-autogen, elixir-format
 msgid "Read also our"
 msgstr ""
@@ -2405,7 +2395,7 @@ msgstr ""
 msgid "Refunded"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:66
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "Registered address:"
 msgstr ""
@@ -2454,17 +2444,17 @@ msgstr ""
 msgid "Request a quote"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:161
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:164
 #, elixir-autogen, elixir-format
 msgid "Request access to or correction of your data."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:162
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:165
 #, elixir-autogen, elixir-format
 msgid "Request deletion, restriction or portability."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:166
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:169
 #, elixir-autogen, elixir-format
 msgid "Requests are normally free. We may verify your identity. Within one month we respond or explain a lawful extension. Legal conditions apply; accounting records may need keeping."
 msgstr ""
@@ -2514,7 +2504,7 @@ msgstr ""
 msgid "Round gold flower arch with white and peach roses"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:150
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:153
 #, elixir-autogen, elixir-format
 msgid "Routine database backups: about 30 days."
 msgstr ""
@@ -2855,7 +2845,7 @@ msgstr ""
 msgid "Store"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:106
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:108
 #, elixir-autogen, elixir-format
 msgid "Stripe handles payments and saved cards. We keep payment references and limited card details, not full card numbers or security codes."
 msgstr ""
@@ -2928,7 +2918,7 @@ msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:894
 #: lib/edenflowers_web/features/marketing/faq_live.ex:54
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:57
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:56
 #: lib/edenflowers_web/features/marketing/terms_live.ex:17
 #: lib/edenflowers_web/features/marketing/terms_live.ex:45
 #, elixir-autogen, elixir-format
@@ -3204,7 +3194,7 @@ msgstr ""
 msgid "Unpaid"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:169
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:172
 #, elixir-autogen, elixir-format
 msgid "Unsubscribe or contact us to withdraw newsletter consent anytime. Earlier lawful processing is unaffected."
 msgstr ""
@@ -3238,7 +3228,6 @@ msgstr ""
 msgid "Update your card to restart your subscription."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:48
 #: lib/edenflowers_web/features/marketing/terms_live.ex:49
 #, elixir-autogen, elixir-format
 msgid "Updated 26 October 2026."
@@ -3289,7 +3278,7 @@ msgstr ""
 msgid "Want a break instead?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:87
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:89
 #, elixir-autogen, elixir-format
 msgid "We cannot fulfil purchases without necessary contact and delivery details. Newsletter signup is optional."
 msgstr ""
@@ -3314,17 +3303,17 @@ msgstr ""
 msgid "We couldn't sign you in. Please try again."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:127
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:129
 #, elixir-autogen, elixir-format
 msgid "We do not use analytics or advertising cookies."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:83
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:85
 #, elixir-autogen, elixir-format
 msgid "We may photograph flowers left at the door as delivery evidence."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:77
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:76
 #, elixir-autogen, elixir-format
 msgid "We use names, email, phone and purchase details for orders, subscriptions, courses and enquiries. Checkout may create an account. Instagram handles are optional."
 msgstr ""
@@ -3415,8 +3404,8 @@ msgstr ""
 msgid "What if nobody's home?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:23
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:74
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:22
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "What information we use and why"
 msgstr ""
@@ -3450,8 +3439,8 @@ msgstr ""
 msgid "Where and when do you deliver?"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:24
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:102
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:23
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:104
 #, elixir-autogen, elixir-format
 msgid "Where information is stored and who receives it"
 msgstr ""
@@ -3466,8 +3455,8 @@ msgstr ""
 msgid "White and rust bouquet held low at the bride's side"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:22
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:62
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:21
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:61
 #, elixir-autogen, elixir-format
 msgid "Who is responsible?"
 msgstr ""
@@ -3572,7 +3561,7 @@ msgstr ""
 msgid "You can cancel until %{date}"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:172
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:175
 #, elixir-autogen, elixir-format
 msgid "You can complain to Finland's"
 msgstr ""
@@ -3784,8 +3773,8 @@ msgstr ""
 msgid "Your payment didn't go through. Please try again or choose another payment method."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:27
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:158
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:26
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "Your rights"
 msgstr ""
@@ -3939,7 +3928,7 @@ msgid "subscription terms"
 msgstr ""
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:329
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:180
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:183
 #, elixir-autogen, elixir-format
 msgid "terms of sale"
 msgstr ""
@@ -4001,12 +3990,37 @@ msgid_plural "Cart, %{count} items"
 msgstr[0] ""
 msgstr[1] ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:109
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Brevo handles emails. For newsletter subscribers only, it also stores contact details, language and purchase statistics."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:125
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:127
 #, elixir-autogen, elixir-format
 msgid "Stripe loads only on payment pages, for fraud prevention, and may use cookies and device/activity data there."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:79
+#, elixir-autogen, elixir-format
+msgid "Delivery details include recipient names, addresses, instructions, card messages and coordinates for calculating distance."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:150
+#, elixir-autogen, elixir-format
+msgid "Delivery photos: kept with the order until you ask us to delete them."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:157
+#, elixir-autogen, elixir-format
+msgid "Everything else, such as your account, delivery details and enquiries, we keep until you ask us to delete it, except what accounting law requires us to keep."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:82
+#, elixir-autogen, elixir-format
+msgid "If you received flowers from us, your details came from the person who ordered them. We use them only to deliver, and never for marketing."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:47
+#, elixir-autogen, elixir-format
+msgid "Updated 27 October 2026."
 msgstr ""
