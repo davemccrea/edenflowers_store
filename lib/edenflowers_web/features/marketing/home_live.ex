@@ -492,6 +492,36 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
+      <section class="bg-forest not-last:border-b">
+        <div class="grid md:grid-cols-2">
+          <.image
+            src="local:///jennie_6.jpg"
+            alt="Jennie"
+            width={1500}
+            height={1500}
+            sizes="(min-width: 768px) 50vw, 100vw"
+            class="aspect-[4/5] max-h-[640px] h-full w-full object-cover md:aspect-auto md:h-[640px]"
+          />
+
+          <div class="flex flex-col items-start gap-10 px-4 py-20 sm:px-8 md:justify-center md:px-12 lg:px-20">
+            <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
+            <p class="pull-quote text-forest-content max-w-xl">
+              {~t"Hi, I'm Jennie. I make every arrangement myself at my shop in Minimossen, from a bouquet for your kitchen table to flowers for your wedding."}
+            </p>
+            <.link
+              navigate={~q"/#{language}/about"}
+              class="eyebrow text-forest-content link-underline-hover touch-target group inline-flex items-center gap-2"
+            >
+              {~t"Meet Jennie"}
+              <.icon
+                name="hero-arrow-right"
+                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
+              />
+            </.link>
+          </div>
+        </div>
+      </section>
+
       <.trusted_by />
 
       <section class="overflow-x-clip not-last:border-b" aria-labelledby="reviews-heading">
@@ -709,36 +739,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               navigate={~q"/#{language}/product/#{product}"}
               locale={Edenflowers.Format.locale()}
             />
-          </div>
-        </div>
-      </section>
-
-      <section class="bg-forest not-last:border-b">
-        <div class="grid md:grid-cols-2">
-          <.image
-            src="local:///jennie_6.jpg"
-            alt="Jennie"
-            width={1500}
-            height={1500}
-            sizes="(min-width: 768px) 50vw, 100vw"
-            class="aspect-[4/5] max-h-[640px] h-full w-full object-cover md:aspect-auto md:h-[640px]"
-          />
-
-          <div class="flex flex-col items-start gap-10 px-4 py-20 sm:px-8 md:justify-center md:px-12 lg:px-20">
-            <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
-            <p class="pull-quote text-forest-content max-w-xl">
-              {~t"Hi, I'm Jennie. I make every arrangement myself at my shop in Minimossen, from a bouquet for your kitchen table to flowers for your wedding."}
-            </p>
-            <.link
-              navigate={~q"/#{language}/about"}
-              class="eyebrow text-forest-content link-underline-hover touch-target group inline-flex items-center gap-2"
-            >
-              {~t"Meet Jennie"}
-              <.icon
-                name="hero-arrow-right"
-                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
-              />
-            </.link>
           </div>
         </div>
       </section>
