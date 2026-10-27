@@ -733,9 +733,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             </p>
             <.link
               navigate={~q"/#{language}/about"}
-              class="eyebrow text-forest-content link-underline-hover touch-target"
+              class="eyebrow text-forest-content link-underline-hover touch-target group inline-flex items-center gap-2"
             >
               {~t"Meet Jennie"}
+              <.icon
+                name="hero-arrow-right"
+                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
+              />
             </.link>
           </div>
         </div>
