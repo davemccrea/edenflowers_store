@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
   import Mox
   import Swoosh.TestAssertions
 
+  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
   alias EdenflowersWeb.Webhooks.StripeHandler
 
@@ -17,7 +18,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     # Derive the expected Stripe amount from the order's real grand_total via the
     # same conversion the handler uses, so the fixture can't silently diverge from
     # production's rounding.
-    expected_amount = Edenflowers.External.StripeAPI.to_stripe_amount(order.grand_total)
+    expected_amount = StripeAPI.to_stripe_amount(order.grand_total)
 
     %{order: order, expected_amount: expected_amount}
   end
@@ -306,7 +307,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
         amount_received: expected_amount
       }
 
-      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: id} ->
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: id} ->
         assert id == order.payment_intent_id
         {:ok, payment_intent}
       end)
@@ -337,7 +338,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
 
   describe "looking up a refund's missing payment" do
     test "asks Stripe to retry when the payment lookup fails" do
-      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_lookup"} ->
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_lookup"} ->
         {:error, :unavailable}
       end)
 
@@ -357,10 +358,10 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
       payment_intent = %{
         id: registration.payment_intent_id,
         metadata: %{"course_registration_id" => registration.id},
-        amount_received: Edenflowers.External.StripeAPI.to_stripe_amount(registration.amount)
+        amount_received: StripeAPI.to_stripe_amount(registration.amount)
       }
 
-      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_early_course"} ->
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_early_course"} ->
         {:ok, payment_intent}
       end)
 
@@ -452,7 +453,7 @@ defmodule EdenflowersWeb.Webhooks.StripeHandlerTest do
     end
 
     test "of a payment the shop doesn't know is ignored" do
-      expect(Edenflowers.External.StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_course"} ->
+      expect(StripeAPI.Mock, :retrieve_payment_intent, fn %{payment_intent_id: "pi_course"} ->
         {:ok, %{id: "pi_course", metadata: %{}}}
       end)
 
