@@ -1,19 +1,18 @@
 #import "theme.typ": colors, fonts, type-scale, eyebrow, display, hairline, honey-rule
-#import "i18n.typ": translate
 
 #let shop = toml("shop.toml")
 
 // Render a single receipt. `order` is a flat dict whose keys mirror the
 // Ash `Order` / `LineItem` attribute names; see sample/order.*.json.
 // `shop` is loaded from shop.toml. All currency / date / VAT values
-// arrive pre-formatted as strings; labels are translated via order.lang.
+// arrive pre-formatted as strings; labels arrive translated by Gettext.
 #let receipt(order) = {
   // Schema contract. Typst has no struct types, so we assert keys
   // exist up-front rather than discovering a missing field mid-render.
   // Required: read unconditionally on every receipt. Optional: key must
   // still be present in the dict; the value may be `none`.
   let required = (
-    "lang", "order_reference", "ordered_at",
+    "lang", "labels", "order_reference", "ordered_at",
     "customer_name", "customer_email",
     "fulfillment_method", "fulfillment_date",
     "line_items", "vat_breakdown",
@@ -53,7 +52,7 @@
     }
   }
 
-  let t(key) = translate(key, order.lang)
+  let t(key) = order.labels.at(key)
   let fulfillment-label = if order.fulfillment_method == "delivery" {
     t("delivery")
   } else if order.fulfillment_method == "course" {

@@ -1,0 +1,183 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/edenflowers/orders/receipt_labels.ex:48
+#, elixir-autogen, elixir-format
+msgid "Bank transfer"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:14
+#, elixir-autogen, elixir-format
+msgid "Business ID"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:43
+#: lib/edenflowers/orders/receipt_labels.ex:44
+#, elixir-autogen, elixir-format
+msgid "Card"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:20
+#, elixir-autogen, elixir-format
+msgid "Card message"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:47
+#, elixir-autogen, elixir-format
+msgid "Cash"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:18
+#, elixir-autogen, elixir-format
+msgid "Course"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:15
+#, elixir-autogen, elixir-format
+msgid "Customer"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:19
+#, elixir-autogen, elixir-format
+msgid "Date"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:16
+#, elixir-autogen, elixir-format
+msgid "Delivery"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:12
+#, elixir-autogen, elixir-format
+msgid "Delivery date"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:33
+#, elixir-autogen, elixir-format
+msgid "Delivery fee"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:35
+#, elixir-autogen, elixir-format
+msgid "Discount"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:32
+#, elixir-autogen, elixir-format
+msgid "Gross"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:22
+#, elixir-autogen, elixir-format
+msgid "Item"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:46
+#, elixir-autogen, elixir-format
+msgid "Klarna"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:45
+#, elixir-autogen, elixir-format
+msgid "MobilePay"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:31
+#, elixir-autogen, elixir-format
+msgid "Net"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:21
+#, elixir-autogen, elixir-format
+msgid "Order"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:11
+#, elixir-autogen, elixir-format
+msgid "Order date"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:36
+#, elixir-autogen, elixir-format
+msgid "Order total"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:17
+#, elixir-autogen, elixir-format
+msgid "Pickup"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:13
+#, elixir-autogen, elixir-format
+msgid "Pickup date"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:34
+#, elixir-autogen, elixir-format
+msgid "Pickup fee"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:25
+#, elixir-autogen, elixir-format
+msgid "Qty"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:39
+#, elixir-autogen, elixir-format
+msgid "Questions or changes? Reply to your confirmation email and Jennie will get back to you."
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:9
+#, elixir-autogen, elixir-format
+msgid "Receipt"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:10
+#, elixir-autogen, elixir-format
+msgid "Reference"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:28
+#, elixir-autogen, elixir-format
+msgid "Subtotal"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:37
+#, elixir-autogen, elixir-format
+msgid "Thank you for your order"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:27
+#, elixir-autogen, elixir-format
+msgid "Total"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:23
+#, elixir-autogen, elixir-format
+msgid "Unit price net"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:26
+#, elixir-autogen, elixir-format
+msgid "VAT"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:30
+#, elixir-autogen, elixir-format
+msgid "VAT breakdown"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:29
+#, elixir-autogen, elixir-format
+msgid "VAT rate"
+msgstr ""

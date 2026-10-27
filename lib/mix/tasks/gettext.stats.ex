@@ -9,7 +9,7 @@ defmodule Mix.Tasks.Gettext.Stats do
 
   @shortdoc "Shows translation progress by audience and priority"
 
-  @critical ~w(storefront emails shared errors routes)
+  @critical ~w(storefront emails receipts shared errors routes)
 
   @impl Mix.Task
   def run(_args) do

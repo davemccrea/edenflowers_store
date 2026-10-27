@@ -12,7 +12,7 @@ typst watch main.typ preview.pdf --font-path fonts                       # sv de
 typst compile main.typ preview.pdf --font-path fonts --input fixture=en.pickup
 ```
 
-Fixtures are the files in `sample/` (`order.<fixture>.json`), which also show the payload shape. Money, dates and VAT arrive pre-formatted as strings. The `lang` field picks the column in `translations.toml`.
+Fixtures are the files in `sample/` (`order.<fixture>.json`), which also show the payload shape. Money, dates and VAT arrive pre-formatted as strings. The `lang` field sets Typst's text language. The `labels` dictionary arrives translated from the `receipts` Gettext domain, using the order or booking locale. Sample labels are snapshots for standalone Typst previews; update them alongside receipt translations.
 
 ## Fonts
 

@@ -45,6 +45,16 @@ defmodule Edenflowers.Orders.ReceiptTest do
       assert Receipt.build_payload(build_delivery_order(locale: "en-GB")).lang == "en"
     end
 
+    test "translates PDF labels in the order locale without changing the caller locale" do
+      Gettext.with_locale(EdenflowersWeb.Gettext, "en", fn ->
+        for {locale, fixture} <- [{"sv-FI", "order.sv.json"}, {"fi-FI", "order.fi.json"}, {"en-GB", "order.en.json"}] do
+          payload = Receipt.build_payload(build_delivery_order(locale: locale))
+          assert payload.labels == read_fixture(fixture)["labels"]
+          assert Gettext.get_locale(EdenflowersWeb.Gettext) == "en"
+        end
+      end)
+    end
+
     test "uses fi locale conventions for currency and percentage" do
       order = build_delivery_order(locale: "fi")
       payload = Receipt.build_payload(order)

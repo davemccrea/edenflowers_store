@@ -49,6 +49,7 @@ defmodule Edenflowers.Orders.Receipt do
 
     %{
       lang: lang_from_locale(locale),
+      labels: Edenflowers.Orders.ReceiptLabels.for_locale(locale),
       order_reference: order.order_reference,
       ordered_at: Format.datetime(order.ordered_at, locale),
       customer_name: order.customer_name,
@@ -84,6 +85,7 @@ defmodule Edenflowers.Orders.Receipt do
 
     %{
       lang: lang_from_locale(locale),
+      labels: Edenflowers.Orders.ReceiptLabels.for_locale(locale),
       order_reference: registration.reference,
       ordered_at: Format.datetime(registration.confirmed_at || registration.inserted_at, locale),
       customer_name: registration.name,
@@ -212,9 +214,7 @@ defmodule Edenflowers.Orders.Receipt do
     end)
   end
 
-  # `translations.toml` keys are two-letter subtags, but `order.locale` is e.g.
-  # "sv-FI". `parse!/1` (not `validate_locale/1`, which is gated by
-  # `:supported_locales`) just extracts the language subtag.
+  # Typst expects a language subtag, while app locales include a region.
   defp lang_from_locale(locale) when is_binary(locale) do
     Localize.LanguageTag.parse!(locale).language |> to_string()
   end
