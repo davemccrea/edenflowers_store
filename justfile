@@ -54,18 +54,6 @@ forward-stripe:
 open-issues:
     backlog browser
 
-# Make plain `claude` in this repo use a subscription: save each account's `claude setup-token` output as ~/.config/claude-accounts/<account>
-[group('development')]
-claude account:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    token=$(cat ~/.config/claude-accounts/{{ account }})
-    settings=.claude/settings.local.json
-    # New worktrees copy this gitignored file from main, so they inherit the account.
-    { cat "$settings" 2>/dev/null || echo '{}'; } | jq --arg token "$token" '.env.CLAUDE_CODE_OAUTH_TOKEN = $token' > "$settings.new"
-    mv "$settings.new" "$settings"
-    echo "claude in this repo now uses {{ account }}"
-
 # Drop and migrate the local dev and test databases
 [group('development')]
 reset-db:
