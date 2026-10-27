@@ -19,7 +19,7 @@ main p {
 }
 
 @utility card-heading {
-  @apply font-serif text-2xl leading-snug tracking-normal sm:text-xl sm:tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-normal text-balance sm:text-xl sm:tracking-wide;
 }
 
 @utility pull-quote {

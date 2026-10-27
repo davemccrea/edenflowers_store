@@ -69,20 +69,20 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   @impl true
   def handle_event("pause_subscription", _params, socket) do
-    {:noreply, change_subscription(socket, &Orders.pause_subscription/2, fn _ -> ~t"Subscription paused" end)}
+    {:noreply, change_subscription(socket, :status, &Orders.pause_subscription/2, nil)}
   end
 
   def handle_event("resume_subscription", _params, socket) do
-    {:noreply, change_subscription(socket, &Orders.resume_subscription/2, fn _ -> ~t"Subscription resumed" end)}
+    {:noreply, change_subscription(socket, :status, &Orders.resume_subscription/2, nil)}
   end
 
   def handle_event("cancel_subscription", _params, socket) do
-    socket = change_subscription(socket, &Orders.cancel_subscription/2, fn _ -> ~t"Subscription cancelled" end)
+    socket = change_subscription(socket, :status, &Orders.cancel_subscription/2, fn _ -> ~t"Subscription cancelled" end)
 
     # The card leaves the page once nothing is left to deliver, so the page says it instead.
     # A component's own flash only reaches the page on a redirect.
     case socket.assigns.notice do
-      {:info, message} ->
+      {:status, :info, message} ->
         send(self(), {:put_flash, :info, message})
         {:noreply, assign(socket, notice: nil)}
 
@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
     socket =
       socket
-      |> change_subscription(change, &change_confirmation(&1, socket.assigns.locale))
+      |> change_subscription(:plan, change, &change_confirmation(&1, socket.assigns.locale))
       |> assign(edited?: false)
 
     {:noreply, socket}
@@ -117,9 +117,10 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   def subscription_name(subscription), do: Translations.translate(subscription.product_variant.product).name
 
   # The outcome shows inside the subscription's drawer, which sits above the
-  # page's flash while it's open. The subscription is read again so the change
+  # page's flash while it's open, in the row whose action caused it. Pause and
+  # resume pass no success message: the status line and button already show it. The subscription is read again so the change
   # is checked against what's saved, not what the page last showed.
-  defp change_subscription(socket, action, success_message) do
+  defp change_subscription(socket, row, action, success_message) do
     %{subscription: subscription, current_user: user} = socket.assigns
 
     socket =
@@ -127,11 +128,11 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
         {:ok, subscription} ->
           case action.(subscription, actor: user) do
             {:ok, subscription} ->
-              assign(socket, notice: {:info, success_message.(subscription)})
+              assign(socket, notice: success_message && {row, :info, success_message.(subscription)})
 
             {:error, error} ->
               Logger.info("Subscription change refused: #{inspect(error)}")
-              assign(socket, notice: {:error, subscription_error_message(error)})
+              assign(socket, notice: {row, :error, subscription_error_message(error)})
           end
 
         {:error, error} ->
@@ -191,17 +192,17 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     ~H"""
     <section
       id={"cancel-subscription-#{@id}"}
-      class="mt-4 hidden"
+      class="bg-cream text-cream-content mt-4 hidden p-5"
       aria-labelledby={"cancel-subscription-#{@id}-title"}
     >
       <h3 id={"cancel-subscription-#{@id}-title"} tabindex="-1" class="card-heading outline-hidden">
         {~t"Stop your subscription?"}
       </h3>
-      <p :if={@final_delivery?} class="mt-2" data-testid="final-delivery-warning">
+      <p :if={@final_delivery?} class="mt-2 text-sm" data-testid="final-delivery-warning">
         {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} is already being prepared and will be your final delivery. There will be no deliveries or charges after that."}
       </p>
-      <p :if={not @final_delivery?} class="mt-2">{~t"There will be no more deliveries or charges."}</p>
-      <p :if={@subscription.state == :active} class="mt-2">
+      <p :if={not @final_delivery?} class="mt-2 text-sm">{~t"There will be no more deliveries or charges."}</p>
+      <p :if={@subscription.state == :active} class="mt-2 text-sm">
         {~t"Want a break instead?"}
         <.button
           type="button"
@@ -424,15 +425,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       </header>
 
       <div class="flex flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-4 sm:p-8">
-        <p
-          :if={@notice}
-          role="status"
-          class={["bg-cream px-4 py-3 text-sm", if(elem(@notice, 0) == :error, do: "text-error", else: "text-cream-content")]}
-          data-testid="subscription-notice"
-        >
-          {elem(@notice, 1)}
-        </p>
-
         <.subscription_payment subscription={@subscription} unpaid={@unpaid} locale={@locale} />
 
         <dl class="border-base-content/12 border-t">
@@ -470,13 +462,15 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 id={"cancel-subscription-#{@id}-open"}
                 type="button"
                 variant="text"
-                class="text-base-content/70 min-h-11"
+                class="min-h-11"
                 aria-controls={"cancel-subscription-#{@id}"}
                 phx-click={show_cancel_confirmation(@id)}
               >
                 {~t"Cancel subscription"}
               </.button>
             </div>
+
+            <.notice notice={@notice} row={:status} />
 
             <.cancel_confirmation
               :if={@subscription.state != :cancelled}
@@ -551,6 +545,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 {~t"Save changes"}
               </.button>
             </form>
+            <.notice notice={@notice} row={:plan} />
           </.detail_row>
 
           <.detail_row :if={@subscription.state != :cancelled and @subscription.delivery_address} label={~t"Delivers to"}>
@@ -566,14 +561,14 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
           </.detail_row>
 
           <.detail_row :if={@subscription.state not in [:cancelled, :payment_failed]} label={~t"Card"}>
-            <div class="flex items-baseline justify-between gap-4">
-              <p data-testid="subscription-card">
+            <div class="flex items-center justify-between gap-4">
+              <p class="font-serif text-lg" data-testid="subscription-card">
                 <Fields.saved_card :if={@subscription.card_brand} card={@subscription} />
                 <span :if={!@subscription.card_brand}>{~t"Saved card"}</span>
               </p>
               <.link
                 navigate={~p"/account/subscriptions/#{@id}/card"}
-                class="link-underline-hover text-primary min-h-11 inline-flex shrink-0 items-center"
+                class="link-underline-static-body min-h-11 inline-flex shrink-0 items-center hover:decoration-current"
               >
                 {~t"Update card"}
               </.link>
@@ -584,6 +579,25 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     </.drawer>
     """
   end
+
+  attr :notice, :any, required: true
+  attr :row, :atom, required: true
+
+  defp notice(%{notice: {row, kind, message}, row: row} = assigns) do
+    assigns = assign(assigns, kind: kind, message: message)
+
+    ~H"""
+    <p
+      role="status"
+      class={["bg-cream mt-4 px-4 py-3 text-sm", if(@kind == :error, do: "text-error", else: "text-cream-content")]}
+      data-testid="subscription-notice"
+    >
+      {@message}
+    </p>
+    """
+  end
+
+  defp notice(assigns), do: ~H""
 
   attr :label, :string, required: true
   slot :inner_block, required: true
