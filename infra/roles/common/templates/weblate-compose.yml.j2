@@ -84,6 +84,8 @@ networks:
     ipam:
       config:
         - subnet: {{ weblate_network_subnet | to_json }}
+          # Keep dynamic allocations away from the tunnel's fixed proxy address.
+          ip_range: {{ weblate_network_dynamic_range | to_json }}
 
 volumes:
   postgres-data:
