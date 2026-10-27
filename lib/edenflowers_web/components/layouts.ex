@@ -959,13 +959,6 @@ defmodule EdenflowersWeb.Layouts do
             >
               {Business.business_id()}
             </a>
-            •
-            <a
-              class="text-base-content link-underline-hover whitespace-nowrap"
-              href="https://github.com/davemccrea/edenflowers_store"
-            >
-              {~t"Built with "} <span>❤️</span>
-            </a>
           </span>
         </div>
       </div>
