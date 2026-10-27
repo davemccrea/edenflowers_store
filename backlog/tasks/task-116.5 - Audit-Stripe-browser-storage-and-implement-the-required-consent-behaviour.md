@@ -1,10 +1,10 @@
 ---
 id: TASK-116.5
 title: Load Stripe.js only on payment pages
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-26 18:57'
-updated_date: '2026-10-27 13:58'
+updated_date: '2026-10-27 14:07'
 labels:
   - launch
   - quick
@@ -27,7 +27,13 @@ Decided in launch triage (2026-10-27): load Stripe.js only where a payment happe
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 js.stripe.com is not requested on store, product, cart or account pages
-- [ ] #2 Checkout payment and payment-link pages still take a card payment (checked in the browser)
-- [ ] #3 The privacy policy describes Stripe cookies as limited to the payment pages
+- [x] #1 js.stripe.com is not requested on store, product, cart or account pages
+- [x] #2 Checkout payment and payment-link pages still take a card payment (checked in the browser)
+- [x] #3 The privacy policy describes Stripe cookies as limited to the payment pages
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Removed the idle site-wide Stripe warm-up from app.js; StripeForm still loads Stripe when a payment form mounts. Dev browser: homepage requests nothing from Stripe after 4s idle and sets no cookies; /pay/orders/:token loads Stripe, renders the Payment Element and enables Pay. Privacy page cookie line rewritten (en/sv/fi).
+<!-- SECTION:NOTES:END -->

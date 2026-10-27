@@ -106,7 +106,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
                   {~t"Stripe handles payments and saved cards. We keep payment references and limited card details, not full card numbers or security codes."}
                 </li>
                 <li>
-                  {~t"Brevo handles emails and stores contact details, language and purchase statistics, including for non-subscribers with phone numbers. Newsletters go only to subscribers."}
+                  {~t"Brevo handles emails. For newsletter subscribers only, it also stores contact details, language and purchase statistics."}
                 </li>
                 <li>
                   {~t"Mapping services receive delivery addresses or coordinates. Website-security and mailbox providers handle traffic and emails."}
@@ -121,7 +121,9 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
             <.privacy_section id="cookies" title={~t"Cookies and fraud prevention"}>
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
                 <li>{~t"Our session cookie keeps your cart, language and sign-in for up to 30 days."}</li>
-                <li>{~t"Stripe loads site-wide for fraud prevention and may use cookies and device/activity data."}</li>
+                <li>
+                  {~t"Stripe loads only on payment pages, for fraud prevention, and may use cookies and device/activity data there."}
+                </li>
                 <li>{~t"We do not use analytics or advertising cookies."}</li>
                 <li>
                   {~t"Blocking cookies in your browser may stop the cart and sign-in working."}

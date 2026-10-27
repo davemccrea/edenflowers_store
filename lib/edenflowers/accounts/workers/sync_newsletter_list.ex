@@ -10,9 +10,7 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterList do
   unsubscribe blocklists rather than just leaving the list; with a list-only
   unsubscribe page this would add people straight back.
 
-  Customers who gave a phone number at checkout are kept as contacts too, off
-  the list, so order texts can reach them. Their blocklist is left alone: they
-  never opted in to campaigns.
+  Customers who never opted in are not sent to Brevo at all (privacy policy).
 
   Each contact carries FIRSTNAME, LASTNAME, SMS (E.164, from their latest
   order), LANGUAGE (en-GB, sv-FI or fi), ORDER_COUNT, LAST_ORDER_DATE and
@@ -46,9 +44,7 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterList do
   end
 
   defp sync(list_id) do
-    {users, customers} =
-      Accounts.list_brevo_contacts!(actor: system_actor())
-      |> Enum.split_with(& &1.newsletter_opt_in)
+    users = Accounts.list_brevo_contacts!(actor: system_actor())
 
     with {:ok, contacts} <- list_contacts(list_id, 0, []) do
       listed = MapSet.new(contacts, &normalize(&1["email"]))
@@ -61,8 +57,7 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterList do
 
       leaving = MapSet.difference(listed, MapSet.new(subscribers, &normalize(&1.email)))
 
-      with :ok <- upsert_subscribers(list_id, subscribers),
-           :ok <- upsert_customers(customers) do
+      with :ok <- upsert_subscribers(list_id, subscribers) do
         remove_contacts(list_id, leaving)
       end
     end
@@ -92,12 +87,6 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterList do
         updateEnabled: true,
         emailBlacklisted: false
       }
-    end)
-  end
-
-  defp upsert_customers(users) do
-    upsert_each(users, fn user ->
-      %{email: normalize(user.email), attributes: attributes(user), updateEnabled: true}
     end)
   end
 

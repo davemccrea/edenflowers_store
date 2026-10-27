@@ -206,10 +206,10 @@ defmodule Edenflowers.Accounts.User do
     end
 
     read :brevo_contacts do
-      description "Everyone the newsletter sync sends to Brevo: newsletter subscribers, plus customers with a phone " <>
-                    "number so order texts can reach them."
+      description "Everyone the newsletter sync sends to Brevo: newsletter subscribers only, so customers who never " <>
+                    "opted in have no profile there (privacy policy)."
 
-      filter expr(newsletter_opt_in or not is_nil(phone_number))
+      filter expr(newsletter_opt_in)
       prepare build(load: [:first_name, :last_name, :phone_number, :placed_order_count, :last_ordered_at, :total_spent])
     end
 

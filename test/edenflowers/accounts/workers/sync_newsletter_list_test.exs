@@ -66,9 +66,8 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
     assert_received {:removed, %{"emails" => ["left@example.com"]}}
   end
 
-  test "keeps customers with a phone as contacts, off the list and blocklist untouched" do
+  test "sends customers who never opted in nowhere, even with a phone number" do
     {:ok, customer} = Accounts.upsert_user("customer@example.com", "Matti Meikäläinen", authorize?: false)
-    {:ok, _} = Accounts.upsert_user("emailonly@example.com", "Email Only", authorize?: false)
 
     generate(
       order(state: :placed, user_id: customer.id, customer_phone_number: "040 1234567", ordered_at: DateTime.utc_now())
@@ -78,14 +77,11 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
 
     assert :ok = perform_job(SyncNewsletterList, %{})
 
-    assert_received {:created, %{"email" => "customer@example.com", "attributes" => %{"SMS" => "+358401234567"}} = body}
-    refute Map.has_key?(body, "listIds")
-    refute Map.has_key?(body, "emailBlacklisted")
-    refute_received {:created, %{"email" => "emailonly@example.com"}}
+    refute_received {:created, %{"email" => "customer@example.com"}}
   end
 
   test "leaves off an SMS number another contact already has" do
-    {:ok, customer} = Accounts.upsert_user("shared@example.com", "Shared Phone", authorize?: false)
+    {:ok, customer} = Accounts.subscribe_to_newsletter("shared@example.com", "fi", authorize?: false)
 
     generate(
       order(state: :placed, user_id: customer.id, customer_phone_number: "040 1234567", ordered_at: DateTime.utc_now())

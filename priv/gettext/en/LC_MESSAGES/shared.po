@@ -137,7 +137,7 @@ msgstr ""
 msgid "Weight (g)"
 msgstr ""
 
-#: lib/edenflowers/format.ex:82
+#: lib/edenflowers/format.ex:90
 #, elixir-autogen, elixir-format
 msgid "at %{time}"
 msgstr ""

@@ -1,6 +1,5 @@
-// Stripe.js loads on every page so Radar sees the whole visit, but only once
-// the page is idle (app.js), so it never holds up LiveView connecting. A payment
-// form asks for it straight away. One script tag, however often it's asked for.
+// Stripe.js loads only when a payment form mounts, so browsing the store sets no
+// Stripe cookies (privacy policy). One script tag, however often it's asked for.
 let loading = null;
 
 export function loadStripe() {
