@@ -4,7 +4,7 @@ title: Load Stripe.js once the page is idle
 status: ready-for-human
 assignee: []
 created_date: '2026-10-22 21:05'
-updated_date: '2026-10-23 09:57'
+updated_date: '2026-10-27 06:00'
 labels:
   - customers
   - spec
@@ -31,7 +31,7 @@ ordinal: 210000
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 LiveView connects without waiting for Stripe.js: no Stripe.js script tag in the page HTML, one added once the page is idle
-- [ ] #2 The Payment Element mounts on checkout, course registration, payment links and the subscription card, opened directly and after live navigation
+- [x] #2 The Payment Element mounts on checkout, course registration, payment links and the subscription card, opened directly and after live navigation
 - [x] #3 A Stripe.js load failure shows the error and re-enables the pay button
 - [x] #4 mix test passes
 <!-- AC:END -->
