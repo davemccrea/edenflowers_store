@@ -109,7 +109,7 @@ defmodule EdenflowersWeb.CoreComponents do
       role="alert"
       {@rest}
     >
-      <div class={["bg-base-100 text-base-content border-base-300 shadow-base-content/10 border-l-3 flex w-full items-start gap-3 border py-3.5 pr-2 pl-4 shadow-lg sm:w-96", @kind == :info && "border-l-primary", @kind == :error && "border-l-error"]}>
+      <div class={["bg-base-100 text-base-content border-base-content/12 shadow-base-content/10 border-l-3 flex w-full items-start gap-3 border py-3.5 pr-2 pl-4 shadow-lg sm:w-96", @kind == :info && "border-l-primary", @kind == :error && "border-l-error"]}>
         <.icon :if={@kind == :info} name="hero-information-circle" class="text-primary size-5 mt-0.5 shrink-0" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="text-error size-5 mt-0.5 shrink-0" />
         <div class="text-pretty min-w-0 flex-1 text-sm leading-relaxed">

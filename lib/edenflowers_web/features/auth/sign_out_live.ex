@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.Auth.SignOutLive do
   def render(assigns) do
     ~H"""
     <Layouts.auth flash={@flash} current_path={@current_path}>
-      <section class="bg-base-100 border-base-300 mx-4 flex w-full max-w-md flex-col space-y-6 border p-8 sm:p-10">
+      <section class="bg-base-100 border-base-content/12 mx-4 flex w-full max-w-md flex-col space-y-6 border p-8 sm:p-10">
         <%= if @current_user do %>
           <div class="space-y-2 text-center">
             <h1 class="text-xl font-semibold">{~t"Sign out"}</h1>

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-19T00:00:00Z",
+  "generatedAt": "2026-10-27T13:41:37Z",
   "title": "Design System: Eden Flowers",
   "extensions": {
     "colorMeta": {
@@ -221,19 +221,39 @@
     ],
     "shadows": [
       {
-        "name": "admin-overflow-cue",
-        "value": "inset -0.75rem 0 0.75rem -0.75rem color-mix(in oklab, var(--color-base-content) 38%, transparent)",
-        "purpose": "Below lg on .admin-table-scroll: signals a compact admin table continues horizontally. Functional — the only structural shadow in the system."
+        "name": "flash-toast",
+        "value": "shadow-lg shadow-base-content/10",
+        "purpose": "the toast floats over whatever page it lands on, so it is the one storefront element allowed a drop shadow."
+      },
+      {
+        "name": "admin-sidebar-edge",
+        "value": "box-shadow: 4px 0 12px -6px` of `base-content` at 24%",
+        "purpose": "keeps the sidebar's edge visible beside sticky form headers that scroll under it."
+      },
+      {
+        "name": "admin-page-transition",
+        "value": "-8px 0 24px rgb(0 0 0 / 0.12)",
+        "purpose": "during a push/pop view transition the incoming page casts a shadow on the one beneath, as on iOS. Only visible mid-transition."
+      },
+      {
+        "name": "row-flash",
+        "value": "a 1px `amber-600/25` ring",
+        "purpose": "part of the admin's row-flash animation, fading in to the warning badge's colours to point at the row that just changed."
+      },
+      {
+        "name": "newsletter-focus",
+        "value": "shadow-[0_1px_0_0_…base-content]` on `:focus-visible",
+        "purpose": "thickens the newsletter field's bottom rule to 2px as its focus indicator. It is a line, not elevation."
+      },
+      {
+        "name": "overflow-cue",
+        "value": "box-shadow: inset -0.75rem 0 0.75rem -0.75rem color-mix(in oklab, var(--color-base-content) 38%, transparent)",
+        "purpose": "on `.admin-table-scroll` below `lg`, telling the user a compact admin table continues horizontally. A scroll-driven animation shows it only while the table actually overflows and fades it out at the last column; browsers without `animation-timeline` get no cue. Functional; keep."
       },
       {
         "name": "lightbox-credit",
         "value": "text-shadow: 0 1px 3px rgb(0 0 0 / 0.6)",
-        "purpose": "Keeps the photographer credit legible over an arbitrary photograph in PhotoSwipe."
-      },
-      {
-        "name": "product-mark-backdrop",
-        "value": "backdrop-filter: blur(2px)",
-        "purpose": "Not a shadow: the 'Favourite' mark sits ON the photograph via an 85%-opaque base-100 backdrop with a 2px blur and a hairline frame."
+        "purpose": "keeps the photographer credit legible over an arbitrary photograph in PhotoSwipe. Functional; keep."
       }
     ],
     "motion": [
@@ -442,116 +462,132 @@
   ],
   "narrative": {
     "northStar": "The Paper Florist",
-    "overview": "Everything sits on warm oat paper. A single serif — Crimson Text — carries the voice, and its italic is the closest thing the system has to handwriting. Sections are separated by a one-pixel rule, never by a card, never by a shadow, never by a change of background unless that change means something. Photographs run to the edge of the container or past it, and the interface never frames them: no radius, no border, no drop shadow, no caption box. The page is paper; the flowers are the ink.\n\nThe whole palette lives in one warm family. Every neutral sits at hue ~75 — oat, cream, near-black — so nothing on screen reads as cold grey. Forest green appears only where a section needs to reverse out entirely, and the deep green primary appears only on the things that act. One amber-honey stroke does all the interactive work: a 2px underline at a 0.3em offset, and nothing else. It never becomes a fill, a badge, or a body colour.\n\nDensity is generous and editorial. Sections breathe at 5–9rem of vertical padding, headings balance their own line breaks, and body copy avoids orphans. Interaction is quiet and physical: hover underlines fade in rather than pop, presses land instantly with a 1px downward translate and an opacity dip, and the release fades back. Motion is used for arrival and for photography — a 700ms rise on hero text, a 7s settle on hero photographs — and almost nowhere else.",
+    "overview": "**Creative North Star: \"The Paper Florist\"**\n\nEverything sits on warm oat paper. A single serif, Crimson Text, carries the voice, and its italic is the closest thing the system has to handwriting. Sections are separated by a one-pixel rule, never by a card, never by a shadow, never by a change of background unless that change means something. Photographs run to the edge of the container or past it, and the interface never frames them: no radius, no border, no drop shadow, no caption box. The one exception is the contact page's portrait of Jennie (see Shapes). The page is paper; the flowers are the ink.\n\nThe whole palette lives in one warm family. Every neutral sits at hue ~75 (oat, cream, near-black), so nothing on screen reads as cold grey. Forest green appears only where a section needs to reverse out entirely, and the deep green primary appears only on the things that act. One amber-honey stroke does all the interactive work: a 2px underline at a 0.3em offset, and nothing else. It never becomes a fill, a badge, or a body colour.\n\nDensity is generous and editorial. Sections breathe at 5–9rem of vertical padding, headings balance their own line breaks, and body copy avoids orphans. Interaction is quiet and physical: hover underlines fade in rather than pop, presses land instantly with a 1px downward translate and an opacity dip, and the release fades back. Motion is used for arrival and for photography (a 700ms rise on hero text, a 7s settle on hero photographs) and almost nowhere else.",
     "keyCharacteristics": [
       "Warm oat paper (hue ~75) under everything; no cold grey anywhere.",
-      "Serif for voice, sans for interface — an absolute split.",
-      "Square at the token level — --radius-field and --radius-box are 0; only radios stay soft.",
-      "Hairline rules instead of cards, panels, or elevation.",
+      "Serif for the shop's voice, sans for the interface. The admin and the reference pages (FAQ, terms, privacy) are sans throughout.",
+      "Square at the token level: `--radius-field` and `--radius-box` are `0`. The only curves are radios, status badges and `rounded-full` pills (see The Square Edge Rule).",
+      "Hairline rules instead of cards, panels, or elevation on the storefront.",
       "One honey underline is the entire interactive vocabulary.",
-      "Photographs are full-bleed and unframed; they carry the persuasion.",
+      "Photographs are full-bleed and unframed (one portrait excepted); they carry the persuasion.",
       "Flat by default; a shadow must carry information to exist."
     ],
     "rules": [
       {
         "name": "The One Family Rule",
-        "body": "Every surface, text and border colour sits at hue 60–80 (paper) or hue ~150 (forest). A colour outside those two families is a defect unless it is a semantic status colour inside /admin.",
+        "body": "Every surface, text and border colour sits at hue 60–80 (paper) or hue ~150 (forest). A colour outside those two families is a defect unless it is a semantic status colour inside `/admin`.",
+        "section": "colors"
+      },
+      {
+        "name": "The Admin Status Carve-out",
+        "body": "The admin is an operating tool, and its status colours are deliberately bright Tailwind palette (emerald, amber, orange, red) rather than the storefront's muted tokens. `.admin-theme` on the admin layout re-points `--color-success`, `--color-warning` and `--color-error` (and their `-content` text shades) at the palette. The `admin-badge-*` pills carry status in their fill and text while keeping the common neutral border. The overview's \"Needs attention\" card is tinted with `amber-*` utilities, so it reads as a warning before any row is opened. Keep that vividness inside `/admin`; it never leaks into the storefront.",
         "section": "colors"
       },
       {
         "name": "The Honey-Only Rule",
-        "body": "The amber accent exists as a 2px text-decoration and nothing else. Never a background, never a border, never a text colour, never a badge. Its scarcity is what makes an underline read as 'this responds to you'.",
+        "body": "The amber accent exists as a 2px text-decoration and nothing else. Never a background, never a border, never a text colour, never a badge. Its scarcity is what makes an underline read as \"this responds to you\".",
         "section": "colors"
       },
       {
         "name": "The Opacity-Not-New-Token Rule",
-        "body": "Secondary text, dividers and decoration are produced by mixing base-content with transparency (/70, /65, /40, /15), not by adding grey tokens. Reach for an opacity step before proposing a new colour.",
+        "body": "Secondary text, rules and decoration are produced by mixing `base-content` with transparency, not by adding grey tokens. The steps in use fall into three bands: secondary text from `/85` down to `/60` (`/75` and `/70` are the workhorses), faint text and decoration from `/50` down to `/15`, and rules at `/30` (the newsletter field's resting underline), `/20` and `/12` (see The Hairline Rule). Reach for an existing step before proposing a new colour.",
         "section": "colors"
       },
       {
         "name": "The Serif-Sans Split Rule",
-        "body": "Serif is for what the shop says — headings, product names, prices, quotes, addresses, opening hours. Sans is for what the interface says about itself — eyebrows, buttons, nav, form labels, the wordmark. A serif button or a sans product name is a defect.",
+        "body": "On the storefront, serif is for what the shop says: headings, product names, prices, quotes, addresses, opening hours. Sans is for what the interface says about itself: eyebrows, buttons, nav, form labels, the wordmark. A serif button or a sans product name is a defect. Two places are sans throughout, headings included: the admin, which is an operating tool, and the reference pages (below).",
+        "section": "typography"
+      },
+      {
+        "name": "The Reference Page Carve-out",
+        "body": "FAQ, terms of sale and privacy policy are documents people consult, not pages that persuade, so they use the reference heading and set FAQ questions in sans at `text-base font-medium`. Body stays `text-base`. Keep this restraint to reference pages; editorial pages keep serif headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Open Price Rule",
+        "body": "A price is never smaller or fainter than the thing it prices: serif, upright, full `base-content`, `text-lg` or larger beside a title. No italic, no muted opacity, no `text-xs`. A price that whispers reads as one being hidden. Storefront prices go through `Format.storefront_price/2`, which drops the cents on whole euros.",
         "section": "typography"
       },
       {
         "name": "The Eyebrow Rule",
-        "body": "A section that needs a category label above its heading uses the eyebrow (0.75rem, 700, uppercase, 0.18em) at base-content/70. Never a smaller heading, never a coloured chip, never a pill.",
+        "body": "A section that needs a category label above its heading uses the eyebrow (0.75rem, 700, uppercase, 0.18em) at `base-content/70`. Never a smaller heading, never a coloured chip, never a pill.",
         "section": "typography"
       },
       {
         "name": "The Balanced Heading Rule",
-        "body": "Every display, headline, section and pull-quote utility carries text-balance. Body copy carries text-wrap: pretty. Neither is optional — Swedish and Finnish produce much longer strings than English, and unbalanced headings break first in those locales.",
+        "body": "Every display, headline, section and pull-quote utility carries `text-balance`. Body copy carries `text-wrap: pretty`. Neither is optional: Swedish and Finnish produce much longer strings than English, and unbalanced headings break first in those locales.",
         "section": "typography"
       },
       {
         "name": "The Rule-Not-Card Rule",
-        "body": "Vertical separation between sections is a one-pixel border (not-last:border-b) in base-300. Do not introduce a card, a panel, a margin-only gap, or an alternating background to separate sections. A background change (cream, forest) is reserved for sections that are genuinely a different kind of thing.",
+        "body": "Vertical separation between sections is a one-pixel border (`not-last:border-b`). Between full-width page sections it carries no colour class and so draws in full `base-content` ink; rules inside content use `base-content/12` (see The Hairline Rule). Do not introduce a card, a panel, a margin-only gap, or an alternating background to separate sections. A background change (`cream`, `forest`) is reserved for sections that are genuinely a different kind of thing.",
         "section": "layout"
       },
       {
         "name": "The Full-Bleed Rule",
-        "body": "Photographs run to the container edge or past it. On mobile the carousel deliberately breaks out to the viewport edges (margin-inline: calc(50% - 50vw)). Never frame a photograph with a border, a radius, a shadow, or a caption box.",
+        "body": "Photographs run to the container edge or past it. On mobile the carousel deliberately breaks out to the viewport edges (`margin-inline: calc(50% - 50vw)`). Never frame a photograph with a border, a radius, a shadow, or a caption box.",
         "section": "layout"
       },
       {
         "name": "The Functional-Shadow Rule",
-        "body": "A shadow must answer the question 'what would the user not know without this?' Overflow, floating layers and legibility over photography qualify. Cards, buttons, inputs, tiles and images do not.",
+        "body": "A shadow must answer the question \"what would the user not know without this?\" Overflow, floating layers and legibility over photography qualify. Cards, buttons, inputs, tiles and images do not.",
         "section": "elevation"
       },
       {
         "name": "The Gradient-For-Legibility Rule",
-        "body": "Text over a photograph is made legible by a gradient scrim (from-black/50 via-black/15 to-transparent, bottom-up), never by a solid box, a blur panel or a shadow on the text.",
+        "body": "Text set over a photograph on a page is made legible by a gradient scrim (`from-black/50 via-black/15 to-transparent`, bottom-up), never by a solid box, a blur panel or a shadow on the text. The lightbox credit is the exception: PhotoSwipe shows an arbitrary photograph with no room for a scrim, so it gets the text shadow above.",
         "section": "elevation"
       },
       {
         "name": "The Square Edge Rule",
-        "body": "Radius is 0, set at the token so nothing has to remember: the theme block pins daisyUI's --radius-field and --radius-box to 0. Exactly two exceptions exist: --radius-selector (kept at 0.5rem so radios stay circular) and rounded-full (things whose roundness is their meaning). rounded-full is the only radius utility in the entire codebase — nine of them. Any other radius in markup is a defect by construction.",
+        "body": "Radius is `0`, set at the token so nothing has to remember. Exactly two exceptions exist: `--radius-selector` (radios stay circular, status badges stay soft) and `rounded-full` (the pills above and the contact portrait, things whose roundness is their meaning). `rounded-full` is the only radius utility in the codebase, fourteen of them. Any other radius in markup is a defect by construction, because the token already gives you square and a utility can only move away from it.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Orphan Rule",
+        "body": "A hand-written value that duplicates a token is a future defect. The old `0.25rem` sites were invisible until the token beneath them moved, and then a radio card and the text input below it disagreed in the same form. If you find yourself typing a value that a token already sets, delete the value.",
         "section": "shapes"
       },
       {
         "name": "The Hairline Rule",
-        "body": "Borders are 1px. If a boundary needs more weight than a hairline, it needs a different colour surface, not a thicker border.",
+        "body": "Borders are 1px. If a boundary needs more weight than a hairline, it needs a different colour surface, not a thicker border. The weight comes from colour, in three steps:",
         "section": "shapes"
       },
       {
         "name": "The Press Rule",
-        "body": "Every pressable control lands instantly: opacity 0.9, translate 0 1px, transition: none. The release fades back over 150ms. Do not add a scale, a ripple or a colour flash to a press.",
+        "body": "Every pressable control lands instantly: `opacity: 0.9`, `translate: 0 1px`, `transition: none`. The release fades back over 150ms. Do not add a scale, a ripple or a colour flash to a press.",
         "section": "components"
       },
       {
         "name": "The Breathe-Don't-Pop Rule",
         "body": "Hover underlines are permanently present and transparent; only their colour transitions in over 150ms. Active-state underlines snap with no transition. That difference is deliberate: hover is an invitation, active is a fact.",
         "section": "components"
-      },
-      {
-        "name": "The Orphan Rule",
-        "body": "A hand-written value that duplicates a token is a future defect. The old 0.25rem sites — radio card, checkout date-picker frame, admin warning banner, admin calendar cells, admin nav rounded-r, skip link — were all hand-matching daisyUI's --radius-field default. They were invisible until that token moved to 0, and then a radio card and the text input below it disagreed in the same checkout form. If you find yourself typing a value a token already sets, delete the value.",
-        "section": "shapes"
       }
     ],
     "dos": [
-      "Do set every new heading in Crimson Text and every new label, button and nav item in Open Sans. The split is absolute.",
-      "Do separate sections with not-last:border-b and reach for bg-cream or bg-forest only when the section is genuinely a different kind of thing.",
+      "Do set every new storefront heading in Crimson Text and every new label, button and nav item in Open Sans. Admin and reference-page headings are sans.",
+      "Do separate sections with `not-last:border-b` and reach for `bg-cream` or `bg-forest` only when the section is genuinely a different kind of thing.",
       "Do let the radius tokens carry squareness. A component should need no radius utility at all; if you are typing one, the token is wrong or you are making an exception you have not justified.",
-      "Do express secondary text and decoration as opacity steps on base-content (/70, /65, /40, /15) rather than introducing grey tokens.",
-      "Do run photographs full-bleed and unframed, and make text over them legible with the bottom-up gradient scrim.",
-      "Do put text-balance on every serif heading and let main p handle body rag — Swedish and Finnish strings are materially longer than English and break first.",
-      "Do guard every new animation with @media (prefers-reduced-motion: no-preference), the way every existing one is.",
-      "Do give any visually-replaced control its focus ring back through :has(input:focus-visible), as the size picker does.",
-      "Do use --focus-color to recolour the focus ring when the default green would vanish against the surface, as the inverse button does over photography."
+      "Do express secondary text and decoration as an existing opacity step on `base-content` rather than introducing grey tokens.",
+      "Do run photographs full-bleed and unframed, and make text over them legible with the bottom-up gradient scrim. The contact portrait is the only framed photograph.",
+      "Do put `text-balance` on every serif heading and let `main p` handle body rag. Swedish and Finnish strings are materially longer than English and break first.",
+      "Do guard every new animation with `@media (prefers-reduced-motion: no-preference)`, the way every existing one is.",
+      "Do give any visually-replaced control its focus ring back through `:has(input:focus-visible)`, as the size picker does.",
+      "Do use `--focus-color` to recolour the focus ring when the default green would vanish against the surface, as the inverse button does over photography."
     ],
     "donts": [
       "Don't let the honey accent become anything other than a 2px underline at a 0.3em offset. No honey fills, borders, badges or text.",
-      "Don't add a shadow that does not answer 'what would the user not know without this?'. There is no elevation scale and none should be created.",
-      "Don't wrap content in a card, a panel or a bordered box to group it. Use a rule, a background family, or vertical space.",
-      "Don't introduce a colour outside hue 60–80 or hue ~150, except for semantic status colours inside /admin.",
+      "Don't add a shadow that does not answer \"what would the user not know without this?\". There is no elevation scale and none should be created.",
+      "Don't wrap storefront content in a card, a panel or a bordered box to group it. Use a rule, a background family, or vertical space. In the admin, `admin-card` is the panel.",
+      "Don't introduce a colour outside hue 60–80 or hue ~150, except for semantic status colours inside `/admin`.",
       "Don't drift toward the generic florist e-commerce template: no pastel pinks, script fonts, pill buttons, heart icons, soft drop shadows or stock bouquet photography.",
       "Don't bring SaaS dashboard chrome onto the storefront: no cards-in-cards, no elevated panels, no gradient CTAs, no coloured status pills.",
-      "Don't reach for luxury-brand pastiche: no all-caps thin sans at large sizes, no black-and-gold, no borrowed-prestige letter-spacing. The wordmark is the only large sans in the system.",
-      "Don't add any radius utility except rounded-full. rounded-full is the only one left in the codebase, storefront and admin alike — that is the invariant, not a coincidence.",
-      "Don't transition an active state. Hover breathes; active snaps.",
-      "Don't square --radius-selector. Radios must stay circular.",
-      "Don't hand-write a value a token already sets. That is how the 0.25rem tier survived invisibly until the token under it moved."
+      "Don't reach for luxury-brand pastiche: no all-caps thin sans at large sizes, no black-and-gold, no borrowed-prestige letter-spacing. The wordmark is the only large uppercase sans in the system.",
+      "Don't add any radius utility except `rounded-full`. It is the only one in the codebase, storefront and admin alike. That is the invariant, not a coincidence.",
+      "Don't set a storefront heading in sans outside the reference pages (FAQ, terms, privacy).",
+      "Don't hand-write a value a token already sets. That is how the `0.25rem` tier survived invisibly until the token under it moved.",
+      "Don't square `--radius-selector`. Radios must stay circular.",
+      "Don't transition an active state. Hover breathes; active snaps."
     ]
   }
 }

@@ -711,7 +711,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       patch={if @today?, do: ~p"/admin", else: ~p"/admin?#{[day: Date.to_iso8601(@date)]}"}
       aria-current={@selected? && "true"}
       aria-label={day_cell_label(@date, @count, @closed?, @locale)}
-      class={["flex flex-col items-center gap-0.5 rounded-lg py-2 transition-colors", day_cell_class(@selected?, @closed?)]}
+      class={["flex flex-col items-center gap-0.5 py-2 transition-colors", day_cell_class(@selected?, @closed?)]}
     >
       <span class={["text-xs", !@selected? && !@closed? && "text-base-content/75"]}>
         {Localize.Date.to_string!(@date, locale: @locale, format: "ccc")}

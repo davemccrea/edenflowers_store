@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   def render(assigns) do
     ~H"""
     <Layouts.auth flash={@flash} current_path={@current_path}>
-      <section class="border-base-300 flex w-full max-w-md flex-col space-y-6 px-6 py-8 sm:bg-base-100 sm:border sm:p-10">
+      <section class="border-base-content/12 flex w-full max-w-md flex-col space-y-6 px-6 py-8 sm:bg-base-100 sm:border sm:p-10">
         <%= if @email do %>
           <div class="space-y-2 text-center">
             <h1 class="text-xl font-semibold">{~t"Check your email"}</h1>

@@ -7,7 +7,6 @@ defmodule EdenflowersWeb.SectionIndex do
 
   attr :id, :string, required: true
   attr :sections, :list, required: true
-  attr :font, :string, values: ["serif", "sans"], default: "serif"
   attr :related_links, :list, default: []
 
   def section_index(assigns) do
@@ -21,7 +20,7 @@ defmodule EdenflowersWeb.SectionIndex do
         <ul class="category-index m-0 list-none p-0">
           <li :for={{id, title} <- @sections}>
             <a href={"##{id}"} class="category-index__link text-base-content block py-1 no-underline">
-              <span class={["category-index__name", if(@font == "sans", do: "font-sans text-sm", else: "font-serif text-lg")]}>{title}</span>
+              <span class="category-index__name font-sans text-sm">{title}</span>
             </a>
           </li>
         </ul>
@@ -31,7 +30,7 @@ defmodule EdenflowersWeb.SectionIndex do
         :if={@related_links != []}
         id={@id <> "-related"}
         aria-labelledby={@id <> "-related-heading"}
-        class="font-sans mb-10 md:border-base-300 md:mt-8 md:mb-0 md:border-t md:pt-6"
+        class="font-sans mb-10 md:border-base-content/12 md:mt-8 md:mb-0 md:border-t md:pt-6"
       >
         <h2 id={@id <> "-related-heading"} class="text-base-content/75 mb-3 text-sm">{~t"Related information"}</h2>
         <ul class="m-0 list-none p-0">
