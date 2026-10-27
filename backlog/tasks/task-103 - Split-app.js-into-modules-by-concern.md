@@ -1,10 +1,10 @@
 ---
 id: TASK-103
 title: Split app.js into modules by concern
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-23 07:51'
-updated_date: '2026-10-23 09:16'
+updated_date: '2026-10-27 13:57'
 labels:
   - developers
   - spec
@@ -58,6 +58,15 @@ created: 2026-10-23 09:16
 ---
 
 Left for a human: admin page transitions only animate in the installed app, which headless Chrome cannot emulate. Open the installed admin on a phone, move between pages (push, pop, fade), then check AC #3 and set done.
+
+---
+
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: marked done. Only watching view transitions animate in the installed app was left.
 
 ---
 <!-- COMMENTS:END -->

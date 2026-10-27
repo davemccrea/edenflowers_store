@@ -1,10 +1,12 @@
 ---
 id: TASK-116.3
 title: Enforce category-specific customer-data retention
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-26 18:57'
-labels: []
+updated_date: '2026-10-27 13:57'
+labels:
+  - wontfix
 dependencies: []
 parent_task_id: TASK-116
 type: task
@@ -28,3 +30,16 @@ Open before implementation: accountant-approved record classification and applic
 - [ ] #3 Tests cover boundaries, histories, retries and financial integrity; backup restoration does not silently reintroduce erased data.
 - [ ] #4 The notice describes verified behaviour rather than intended or unimplemented expiry.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed as disproportionate for a one-person shop. The policy states orders are kept for the bookkeeping period and other data is deleted on request by email, handled by hand.
+
+---
+<!-- COMMENTS:END -->

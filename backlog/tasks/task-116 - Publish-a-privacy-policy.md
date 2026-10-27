@@ -1,16 +1,17 @@
 ---
 id: TASK-116
 title: Publish a privacy policy
-status: needs-triage
+status: ready-for-agent
 assignee: []
 created_date: '2026-10-24 19:28'
-updated_date: '2026-10-26 19:07'
+updated_date: '2026-10-27 13:58'
 labels:
   - spec
   - customers
   - admin
+  - launch
 dependencies: []
-priority: medium
+priority: high
 type: feature
 ordinal: 237000
 ---
@@ -81,6 +82,15 @@ created: 2026-10-26 18:57
 ---
 
 Legal review: docs/research/privacy-policy-legal-review.md. David requested policy copy now, technical implementation later. New needs-triage subtasks cover retention, Brevo minimisation, browser/Stripe consent and Article 14 recipient information; TASK-116.2 already owns photo expiry. Provider identity/roles, Article 28 agreements and transfer safeguards still need factual confirmation, plus a proportionate processing register, rights/breach checklist and security review. Do not treat draft/noindex as compliance or finalise publication until these gaps and customer-language notices are resolved.
+
+---
+
+author: @claude
+created: 2026-10-27 13:58
+
+---
+
+Launch triage 2026-10-27 with David: launch blocker. Finish line: TASK-116.4 and TASK-116.5 land; the policy gains one sentence each for retention (orders kept for the bookkeeping period, other data deleted on request to info@), gift recipients (details come from the person who ordered, used only to deliver) and delivery photos (kept with the order until TASK-116.2 lands); then drop noindex, add the page to the sitemap with language alternates and Jennie reviews the Swedish (TASK-117). 116.3 and 116.6 closed; 116.2 is after launch.
 
 ---
 <!-- COMMENTS:END -->

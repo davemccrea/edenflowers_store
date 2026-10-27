@@ -1,13 +1,14 @@
 ---
 id: TASK-68
 title: Give the admin a Reports page
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-20 06:53'
-updated_date: '2026-10-20 17:19'
+updated_date: '2026-10-27 13:57'
 labels:
   - spec
   - admin
+  - wontfix
 dependencies: []
 priority: medium
 type: feature
@@ -36,6 +37,15 @@ created: 2026-10-20 17:19
 ---
 
 From David (2026-10-20): wants visual tools for sales, e.g. a chart of this month against last. An expense tally is interesting too, but expenses get entered late, so a month-to-date expense figure undercounts what was actually spent; it's only reliable for closed months (expenses against sales by month).
+
+---
+
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. No spec, only 'which charts?'. Revisit once there is sales data worth charting.
 
 ---
 <!-- COMMENTS:END -->

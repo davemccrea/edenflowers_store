@@ -1,13 +1,14 @@
 ---
 id: TASK-85
 title: Rename a course's image_slug to photo_slug
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-21 15:39'
-updated_date: '2026-10-21 15:40'
+updated_date: '2026-10-27 13:57'
 labels:
   - spec
   - developers
+  - wontfix
 dependencies:
   - TASK-84.1
 priority: low
@@ -32,3 +33,16 @@ Courses call their photo `photo_slug`, matching products and sizes after TASK-84
 - [ ] #1 Course has photo_slug and no image_slug, and course photos show everywhere they did before
 - [ ] #2 The generated migration renames the column without losing data
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. Cosmetic rename; a column-rename migration before launch is risk for no gain.
+
+---
+<!-- COMMENTS:END -->

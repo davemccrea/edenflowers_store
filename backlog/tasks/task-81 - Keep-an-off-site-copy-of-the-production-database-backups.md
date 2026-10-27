@@ -1,13 +1,14 @@
 ---
 id: TASK-81
 title: Keep off-site copies of the production database backups and uploaded photos
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-21 08:32'
-updated_date: '2026-10-27 08:28'
+updated_date: '2026-10-27 14:07'
 labels:
   - spec
   - admin
+  - launch
 dependencies: []
 priority: high
 type: chore
@@ -38,9 +39,9 @@ Keep the latest 10 daily Storage Box snapshots (the included allowance), schedul
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 A dump from the latest night is on the Storage Box
-- [ ] #2 Storage Box automatic snapshots run daily after backups normally finish and retain the latest 10 snapshots (roughly 10 days of mirror recovery)
-- [ ] #3 A missed or failed nightly copy sends an alert
-- [ ] #4 Uploaded production photos are copied nightly to the Storage Box; snapshot recovery of a deleted photo is verified
+- [x] #2 Storage Box automatic snapshots run daily after backups normally finish and retain the latest 10 snapshots (roughly 10 days of mirror recovery)
+- [x] #3 A missed or failed nightly copy sends an alert
+- [x] #4 Uploaded production photos are copied nightly to the Storage Box; snapshot recovery of a deleted photo is verified
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -85,6 +86,24 @@ created: 2026-10-27 08:28
 ---
 
 David chose the 10 included daily snapshots. This supersedes the former 30-day snapshot requirement. Snapshot settings and recovery remain to be verified by the human.
+
+---
+
+author: @claude
+created: 2026-10-27 13:58
+
+---
+
+Launch triage 2026-10-27 with David: launch blocker. Left: turn on the 10 daily Storage Box snapshots, confirm the Better Stack missed-heartbeat alert, and restore one dump and one deleted photo (TASK-81.2).
+
+---
+
+author: @claude
+created: 2026-10-27 14:07
+
+---
+
+David confirmed complete on 2026-10-27: snapshots, missed-heartbeat alert and restores verified.
 
 ---
 <!-- COMMENTS:END -->

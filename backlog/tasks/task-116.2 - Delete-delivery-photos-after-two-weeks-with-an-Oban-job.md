@@ -4,7 +4,7 @@ title: Delete delivery photos after two weeks with an Oban job
 status: needs-triage
 assignee: []
 created_date: '2026-10-26 17:13'
-updated_date: '2026-10-26 18:57'
+updated_date: '2026-10-27 13:58'
 labels: []
 dependencies: []
 parent_task_id: TASK-116
@@ -49,6 +49,15 @@ created: 2026-10-26 18:57
 ---
 
 Source correction from the legal review: delivery-photo attachments are sent to the purchasing Customer (order.customer_email), not necessarily the Recipient. Scope expiry and disclosure around that distinction. Current policy now labels the two-week period as intended and routine deletion as unimplemented; request-only deletion is not presented as an adequate expiry procedure.
+
+---
+
+author: @claude
+created: 2026-10-27 13:58
+
+---
+
+Launch triage 2026-10-27 with David: after launch, not a blocker. Until it lands the policy says delivery photos are kept with the order.
 
 ---
 <!-- COMMENTS:END -->

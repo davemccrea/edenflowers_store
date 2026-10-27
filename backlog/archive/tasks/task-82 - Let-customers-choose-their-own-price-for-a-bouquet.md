@@ -1,13 +1,15 @@
 ---
 id: TASK-82
 title: Let customers choose their own price for a bouquet
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-21 14:36'
+updated_date: '2026-10-27 13:57'
 labels:
   - spec
   - customers
   - admin
+  - wontfix
 dependencies: []
 priority: medium
 type: feature
@@ -41,3 +43,16 @@ Every size (`ProductVariant`) has one fixed price. A customer who wants to spend
 - [ ] #2 The chosen price is what's charged, and shows on the cart, checkout, confirmation email and the admin order
 - [ ] #3 A price below the minimum is rejected by the order line's action, not only in the form
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. A Custom Order covers the rare customer who wants to spend more.
+
+---
+<!-- COMMENTS:END -->

@@ -4,7 +4,7 @@ title: Remind customers to reorder before last year's occasion
 status: needs-triage
 assignee: []
 created_date: '2026-10-10 14:30'
-updated_date: '2026-10-18 11:37'
+updated_date: '2026-10-27 13:58'
 labels:
   - spec
   - customers
@@ -67,3 +67,16 @@ A signed-in customer should be able to save the dates they buy flowers for and g
 - Storing the recipient's address on the reminder to prefill checkout. Add if customers ask, since it's more personal data to look after.
 - Reminders for one-off dates that don't repeat.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:58
+
+---
+
+Launch triage 2026-10-27 with David: kept for after launch, not a blocker.
+
+---
+<!-- COMMENTS:END -->

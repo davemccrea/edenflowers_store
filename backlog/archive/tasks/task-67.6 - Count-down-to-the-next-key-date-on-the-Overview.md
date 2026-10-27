@@ -1,11 +1,12 @@
 ---
 id: TASK-67.6
 title: Count down to the next key date on the Overview
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-20 06:52'
-labels: []
+updated_date: '2026-10-27 13:57'
+labels:
+  - wontfix
 dependencies:
   - TASK-67.1
 parent_task_id: TASK-67
@@ -30,3 +31,16 @@ ordinal: 147000
 - [ ] #2 Nothing shows when none is within 30 days
 - [ ] #3 The existing suite passes
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. Jennie knows when the key dates are.
+
+---
+<!-- COMMENTS:END -->

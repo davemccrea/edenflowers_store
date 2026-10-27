@@ -1,11 +1,12 @@
 ---
 id: TASK-81.2
 title: Copy nightly database dumps and uploaded photos to the Storage Box
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-21 08:32'
-updated_date: '2026-10-27 08:28'
-labels: []
+updated_date: '2026-10-27 14:07'
+labels:
+  - launch
 dependencies:
   - TASK-81.1
 parent_task_id: TASK-81
@@ -35,7 +36,7 @@ Keep the latest 10 daily Storage Box snapshots (the included allowance), schedul
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 The nightly job mirrors the backup folder to the Storage Box over SSH on port 23
-- [ ] #2 A successful run pings a Better Stack heartbeat, and a missed heartbeat sends an alert
+- [x] #2 A successful run pings a Better Stack heartbeat, and a missed heartbeat sends an alert
 - [x] #3 Nightly backups mirror original uploaded photos to a separate photos/ destination without deleting database backups
 - [x] #4 The success heartbeat is suppressed if either database or photo transfer fails
 <!-- AC:END -->
@@ -120,6 +121,15 @@ created: 2026-10-27 08:28
 ---
 
 Updated snapshot policy to the latest 10 daily snapshots. Database and photo transfer criteria are checked based on production checksum verification; failure suppression is covered by local tests. Heartbeat/alert criterion remains unchecked. Status stays ready-for-human for remaining checks.
+
+---
+
+author: @claude
+created: 2026-10-27 14:07
+
+---
+
+David confirmed TASK-81 complete on 2026-10-27, including heartbeat alerts.
 
 ---
 <!-- COMMENTS:END -->

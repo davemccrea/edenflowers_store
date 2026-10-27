@@ -1,13 +1,15 @@
 ---
 id: TASK-80
 title: Send order texts to customers from the admin
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-21 08:17'
+updated_date: '2026-10-27 13:57'
 labels:
   - spec
   - customers
   - admin
+  - wontfix
 dependencies: []
 priority: medium
 type: feature
@@ -38,3 +40,16 @@ Brevo setup (human): buy SMS credits and register the sender name (max 11 charac
 - [ ] #3 A failed send shows an error in the admin and is logged
 - [ ] #4 Brevo has SMS credits and an approved sender name
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. The order page's SMS links already let Jennie text from her phone; Brevo SMS adds paid credits for no gain.
+
+---
+<!-- COMMENTS:END -->
