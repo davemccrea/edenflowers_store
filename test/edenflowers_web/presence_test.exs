@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.PresenceTest do
     eventually(fn -> refute Enum.any?(Presence.connected_customers(), &(&1.key == key)) end)
   end
 
-  test "groups signed-in customers across browsers and includes admins" do
+  test "groups signed-in customers across browsers and excludes admins" do
     user = %{id: Ecto.UUID.generate(), name: "Connected customer", email: "customer@example.com", admin: false}
     first = connection(user, Ecto.UUID.generate())
     second = connection(user, Ecto.UUID.generate())
@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.PresenceTest do
                Enum.filter(Presence.connected_customers(), &(&1.user_id == user.id))
 
       assert id == user.id
-      assert Enum.any?(Presence.connected_customers(), &(&1.key == "customer:#{admin_user.id}"))
+      refute Enum.any?(Presence.connected_customers(), &(&1.key == "customer:#{admin_user.id}"))
     end)
 
     Enum.each([first, second, admin], &stop_connection/1)

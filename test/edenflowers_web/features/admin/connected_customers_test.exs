@@ -17,13 +17,13 @@ defmodule EdenflowersWeb.Admin.ConnectedCustomersTest do
     eventually(fn -> refute has_element?(admin, "#anonymous-visitors-count") end)
   end
 
-  test "admin browsing the store is counted and shown by name", %{conn: conn, admin: user} do
+  test "admin browsing the store is excluded", %{conn: conn, admin: user} do
     {:ok, _store, _html} = live(conn, ~p"/en/store")
     {:ok, view, _html} = live(conn, ~p"/admin")
 
     eventually(fn ->
-      assert has_element?(view, "#connected-customers a[href='/admin/customers/#{user.id}']", user.name)
-      assert has_element?(view, "#connected-customers-count", "1")
+      refute has_element?(view, "#connected-customers a[href='/admin/customers/#{user.id}']")
+      assert has_element?(view, "#connected-customers-count", "0")
     end)
   end
 
