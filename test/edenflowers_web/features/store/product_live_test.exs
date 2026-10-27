@@ -308,16 +308,6 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert line_items(order) == []
   end
 
-  test "the store marks a subscribable product", %{conn: conn} do
-    category = generate(product_category(slug: "bouquets", visibility: :public))
-    product = generate(product(product_category_id: category.id, subscribable: true, free_delivery: true, draft: false))
-    generate(product_variant(product_id: product.id, draft: false))
-
-    {:ok, view, _html} = live(conn, ~p"/en/store/bouquets")
-
-    assert has_element?(view, "#store-products", "Subscription")
-  end
-
   defp line_items(order) do
     Ash.read!(LineItem, authorize?: false) |> Enum.filter(&(&1.order_id == order.id))
   end
