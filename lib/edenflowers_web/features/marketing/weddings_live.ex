@@ -18,6 +18,9 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     "Sara Björkskog" => "https://www.grann.fi/"
   }
 
+  # Jennie has taken the price list and estimate off the page for now.
+  @show_prices? false
+
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
@@ -33,10 +36,11 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
      )
      |> assign(gallery: gallery())
      |> assign(
+       show_prices?: @show_prices?,
        personal_flowers: personal_flowers(),
        decorations: decorations(),
        decoration_photos: decoration_photos(),
-       quantities: %{"bridal_bouquet" => 1}
+       quantities: if(@show_prices?, do: %{"bridal_bouquet" => 1}, else: %{})
      )
      |> assign(enquiry_form: build_enquiry_form(%{}), enquiry_sent?: false)
      |> assign(steps: steps(), testimonial: testimonial())}
@@ -62,7 +66,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               </p>
               <div class="mt-8 flex flex-wrap items-center gap-6">
                 <.button href="#my-work" variant="primary">{~t"See my work"}</.button>
-                <.button href="#prices" variant="secondary">{~t"Estimate your price"}</.button>
+                <.button :if={@show_prices?} href="#prices" variant="secondary">{~t"Estimate your price"}</.button>
               </div>
             </div>
 
@@ -103,13 +107,20 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </figure>
       </section>
 
-      <section id="prices" class="scroll-anchor-below-header not-last:border-b" aria-labelledby="prices-heading">
+      <section
+        id="prices"
+        class="scroll-anchor-below-header not-last:border-b"
+        aria-labelledby={@show_prices? && "prices-heading"}
+      >
         <div class="container py-24">
-          <div class="grid items-start gap-10 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-16 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div
+            :if={@show_prices?}
+            class="grid items-start gap-10 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-16 lg:grid-cols-[minmax(0,1fr)_22rem]"
+          >
             <div>
               <h2 id="prices-heading" class="section-title mb-4">{~t"Prices"}</h2>
               <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
-                {~t"Every wedding is different, so you'll get an exact quote once we've talked through your plans."}
+                {~t"Every wedding is different, so you'll get a more accurate quote once we've talked through what you need and which flowers you'd like."}
               </p>
               <h3 class="tile-title mb-3">{~t"Bouquets and accessories"}</h3>
               <.price_list items={@personal_flowers} quantities={@quantities} />
@@ -129,6 +140,13 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               <p :if={selected?(@quantities, "cake_flowers")} id="estimate-cake-flowers" class="text-cream-content/80 mt-2">
                 {~t"+ cake flowers on request"}
               </p>
+              <p
+                :if={selected?(@quantities, "venue_decoration")}
+                id="estimate-venue-decoration"
+                class="text-cream-content/80 mt-2"
+              >
+                {~t"+ church and venue decoration on request"}
+              </p>
               <p class="text-cream-content/70 mt-6 text-sm leading-relaxed">
                 {~t"Final prices depend on the flowers and techniques you choose. Delivery outside Vaasa is quoted separately."}
               </p>
@@ -138,7 +156,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             </div>
           </div>
 
-          <div class="mt-20 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
+          <div class={["grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6", @show_prices? && "mt-20"]}>
             <figure :for={photo <- @decoration_photos}>
               <.image
                 src={photo.src}
@@ -407,7 +425,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       %{id: "silk_garland", label: ~t"Silk flower garland, to rent", price: {:fixed, 95}},
       %{id: "flower_arch", label: ~t"Flower arch or flower gate", price: {:from, 320}},
       %{id: "urn_arrangement", label: ~t"Arrangement in an urn or on a pedestal", price: {:from, 95}},
-      %{id: "welcome_sign", label: ~t"Welcome sign arrangement", price: {:from, 70}}
+      %{id: "welcome_sign", label: ~t"Welcome sign arrangement", price: {:from, 70}},
+      %{id: "venue_decoration", label: ~t"Decorating the church and/or venue", price: :on_request}
     ]
   end
 

@@ -26,17 +26,17 @@ msgstr ""
 msgid "%{name} card"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:935
+#: lib/edenflowers_web/components/core_components.ex:937
 #, elixir-autogen, elixir-format
 msgid "(opens a larger view)"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1090
+#: lib/edenflowers_web/components/core_components.ex:1092
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:132
+#: lib/edenflowers_web/components/layouts.ex:133
 #, elixir-autogen, elixir-format
 msgid "Connection lost"
 msgstr ""
@@ -46,22 +46,22 @@ msgstr ""
 msgid "Dimensions (cm)"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1020
+#: lib/edenflowers_web/components/core_components.ex:1022
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Facebook"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1029
+#: lib/edenflowers_web/components/core_components.ex:1031
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Instagram"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:979
+#: lib/edenflowers_web/components/core_components.ex:981
 #, elixir-autogen, elixir-format
 msgid "Free delivery"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:988
+#: lib/edenflowers_web/components/core_components.ex:990
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr ""
@@ -76,12 +76,12 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1289
+#: lib/edenflowers_web/components/core_components.ex:1291
 #, elixir-autogen, elixir-format
 msgid "Large"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1288
+#: lib/edenflowers_web/components/core_components.ex:1290
 #, elixir-autogen, elixir-format
 msgid "Medium"
 msgstr ""
@@ -111,17 +111,17 @@ msgstr ""
 msgid "Previous month"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:137
+#: lib/edenflowers_web/components/layouts.ex:138
 #, elixir-autogen, elixir-format
 msgid "Reconnecting…"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1287
+#: lib/edenflowers_web/components/core_components.ex:1289
 #, elixir-autogen, elixir-format
 msgid "Small"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:991
+#: lib/edenflowers_web/components/core_components.ex:993
 #, elixir-autogen, elixir-format
 msgid "Sold out"
 msgstr ""
@@ -141,7 +141,7 @@ msgstr ""
 msgid "at %{time}"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:122
+#: lib/edenflowers_web/components/core_components.ex:124
 #, elixir-autogen, elixir-format
 msgid "close"
 msgstr ""
@@ -171,19 +171,19 @@ msgstr ""
 msgid "This field is required"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:412
-#: lib/edenflowers_web/components/layouts.ex:628
+#: lib/edenflowers_web/components/layouts.ex:413
+#: lib/edenflowers_web/components/layouts.ex:629
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:271
-#: lib/edenflowers_web/components/layouts.ex:691
+#: lib/edenflowers_web/components/layouts.ex:272
+#: lib/edenflowers_web/components/layouts.ex:692
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1008
+#: lib/edenflowers_web/components/core_components.ex:1010
 #, elixir-autogen, elixir-format
 msgid "Free delivery within %{km} km of Minimossen on marked bouquets."
 msgstr ""

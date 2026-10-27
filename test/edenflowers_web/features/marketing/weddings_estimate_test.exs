@@ -8,15 +8,19 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
 
   @enquiry %{"name" => "Anna Svensson", "email" => "anna@example.com", "wedding_date" => "2027-06-12"}
 
-  test "the hero leads to the work and the estimator, not a quote", %{conn: conn} do
+  test "the prices are hidden, so an enquiry goes without a selection", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/weddings")
 
     assert has_element?(view, ~s|a[href="#my-work"]|, "See my work")
-    assert has_element?(view, ~s|a[href="#prices"]|, "Estimate your price")
-    assert has_element?(view, "section#prices")
-    refute has_element?(view, ~s|a[href="#enquire"]|)
+    refute has_element?(view, ~s|a[href="#prices"]|)
+    refute has_element?(view, "#wedding-estimate")
+
+    view |> form("#enquiry-form", enquiry: @enquiry) |> render_submit()
+
+    assert_enqueued(worker: SendEmails, args: %{name: "Anna Svensson", selection: []})
   end
 
+  @tag skip: "prices are hidden; unskip when @show_prices? is true again"
   test "the estimate sums the lowest prices and goes along with the enquiry", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/weddings")
 
