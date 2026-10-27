@@ -39,19 +39,19 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
       },
       %{
         text:
-          "Var så smidigt att du kunde ta dej dit under dagen och fixa i lugn och ro och jag kände aldrig någon stress över att blommorna inte skulle vara perfekta under dagen.",
+          "Var så smidigt att du kunde ta dej dit under dagen och fixa i lugn och ro och jag kände aldrig någon stress över att blommorna inte skulle vara perfekta under dagen så tack för det! 💐💕",
         lang: "sv",
         en:
-          "It was so easy that you could go there during the day and set everything up in peace, and I never felt any stress about the flowers not being perfect on the day.",
+          "It was so easy that you could go there during the day and set everything up in peace, and I never felt any stress about the flowers not being perfect on the day, so thank you for that! 💐💕",
         name: "Julia",
         occasion: ~t"Wedding"
       },
       %{
         text:
-          "Teit meille kukat häihimme pari vuotta sitten, joten oli ihana saada kukat sinulta myös tyttäremme ensimmäiseen suureen juhlaan.",
+          "Kiitos vielä ristiäisten kukista, ne olivat todella kauniit! 😍 Teit meille kukat häihimme pari vuotta sitten, joten oli ihana saada kukat sinulta myös tyttäremme ensimmäiseen suureen juhlaan.",
         lang: "fi",
         en:
-          "You made the flowers for our wedding a couple of years ago, so it was lovely to have flowers from you for our daughter's first big celebration too.",
+          "Thank you again for the christening flowers, they were really beautiful! 😍 You made the flowers for our wedding a couple of years ago, so it was lovely to have flowers from you for our daughter's first big celebration too.",
         name: "Aino",
         occasion: ~t"Christening"
       }
