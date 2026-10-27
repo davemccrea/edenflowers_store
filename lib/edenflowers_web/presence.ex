@@ -12,6 +12,8 @@ defmodule EdenflowersWeb.Presence do
 
   def subscribe, do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, @topic)
 
+  def track_customer(%{admin: true}, _visitor_id), do: :ok
+
   def track_customer(user, visitor_id) do
     {key, name, user_id} =
       case user do
