@@ -280,15 +280,29 @@ test("a reviewer in dev keeps their clipboard until they ask for the reference",
   await fire("click");
   assert.deepEqual(copied, []);
   assert.ok(overlays.some((node) => node.tagName === "TEXTAREA"));
-  await overlays.find((node) => node.textContent === "Copy ref").on.click();
+  await overlays.find((node) => node.title === "Copy ref").on.click();
   assert.deepEqual(copied, ["SPAN"]);
+});
+
+test("shortcut hints sit outside the wrapping button row", async () => {
+  const { fire, overlays } = fixture({ reviewer: true });
+  await fire("click");
+  const form = overlays.find((node) => node.tagName === "FORM");
+  const copy = overlays.find((node) => node.title === "Copy ref");
+  const status = overlays.find((node) =>
+    node.textContent?.includes("⌘↵ to copy"),
+  );
+  assert.equal(status.parentNode, form);
+  assert.notEqual(copy.parentNode, form);
+  assert.equal(copy.parentNode.style.flexWrap, "wrap");
+  assert.equal(copy.parentNode.style.justifyContent, "flex-end");
 });
 
 test("Copy ref includes the current message without saving the note", async () => {
   const { fire, copied, overlays, requests } = fixture({ reviewer: true });
   await fire("click");
   const textarea = overlays.find((node) => node.tagName === "TEXTAREA");
-  const copy = overlays.find((node) => node.textContent === "Copy ref");
+  const copy = overlays.find((node) => node.title === "Copy ref");
   textarea.value = "  Make this larger\nKeep the colour  ";
   await copy.on.click();
   assert.deepEqual(copied, ["SPAN\n\nMake this larger\nKeep the colour"]);
@@ -298,11 +312,70 @@ test("Copy ref includes the current message without saving the note", async () =
   assert.ok(!requests.some((request) => request.url === "/review-notes"));
 });
 
+for (const modifier of ["metaKey", "ctrlKey"]) {
+  test(`${modifier}+Enter copies the reference and message instead of saving`, async () => {
+    const { fire, copied, overlays } = fixture({ reviewer: true });
+    await fire("click");
+    overlays.find((node) => node.tagName === "TEXTAREA").value =
+      "Make it larger";
+    const form = overlays.find((node) => node.tagName === "FORM");
+    let saves = 0;
+    form.requestSubmit = () => saves++;
+    let prevented = false;
+    await form.on.keydown({
+      key: "Enter",
+      [modifier]: true,
+      preventDefault() {
+        prevented = true;
+      },
+      stopPropagation() {},
+    });
+    assert.ok(prevented);
+    assert.deepEqual(copied, ["SPAN\n\nMake it larger"]);
+    assert.equal(saves, 0);
+
+    await form.on.keydown({
+      key: "Enter",
+      [modifier]: true,
+      preventDefault() {},
+      stopPropagation() {},
+    });
+    assert.equal(saves, 0);
+    assert.equal(copied.length, 2);
+
+    prevented = false;
+    await form.on.keydown({
+      key: "s",
+      [modifier]: true,
+      preventDefault() {
+        prevented = true;
+      },
+      stopPropagation() {},
+    });
+    assert.ok(prevented);
+    assert.equal(saves, 1);
+  });
+}
+
+test("the copy shortcut is unavailable outside dev", async () => {
+  const { fire, copied, overlays } = fixture({ dev: false, reviewer: true });
+  await fire("click");
+  const form = overlays.find((node) => node.tagName === "FORM");
+  form.requestSubmit = () => assert.fail("must not save");
+  await form.on.keydown({
+    key: "Enter",
+    metaKey: true,
+    preventDefault() {},
+    stopPropagation() {},
+  });
+  assert.deepEqual(copied, []);
+});
+
 test("Copy ref omits whitespace-only messages", async () => {
   const { fire, copied, overlays } = fixture({ reviewer: true });
   await fire("click");
   overlays.find((node) => node.tagName === "TEXTAREA").value = " \n ";
-  await overlays.find((node) => node.textContent === "Copy ref").on.click();
+  await overlays.find((node) => node.title === "Copy ref").on.click();
   assert.deepEqual(copied, ["SPAN"]);
 });
 
@@ -396,7 +469,7 @@ test("I can delete my own note from its box, and only my own", async () => {
   };
   const mine = fixture({ dev: false, reviewer: true, responses: notes });
   await mine.fire("click", { target: mine.parent });
-  const remove = mine.overlays.find((node) => node.textContent === "Delete");
+  const remove = mine.overlays.find((node) => node.title === "Delete");
   await remove.on.click();
   assert.deepEqual(mine.requests.at(-1), {
     url: "/review-notes/n1",
@@ -408,9 +481,7 @@ test("I can delete my own note from its box, and only my own", async () => {
   await fresh.fire("click");
   const form = fresh.overlays.find((node) => node.tagName === "FORM");
   assert.ok(
-    !fresh.overlays.some(
-      (node) => node.textContent === "Delete" && node.parentNode,
-    ),
+    !fresh.overlays.some((node) => node.title === "Delete" && node.parentNode),
   );
   assert.ok(form);
 });
@@ -473,7 +544,7 @@ for (const action of ["save", "delete"]) {
     const pending =
       action === "save"
         ? first.on.submit({ preventDefault() {} })
-        : f.overlays.find((node) => node.textContent === "Delete").on.click();
+        : f.overlays.find((node) => node.title === "Delete").on.click();
     await f.fire("click");
     const second = f.overlays.filter((node) => node.tagName === "FORM").at(-1);
     let removed = false;
