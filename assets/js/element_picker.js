@@ -13,8 +13,9 @@ import {
 const dev = !!document.querySelector("[data-phx-loc]");
 const reviewer = document.body.hasAttribute("data-reviewer");
 const touch = matchMedia("(hover: none)").matches;
+const admin = location.pathname.startsWith("/admin");
 
-if (dev || reviewer) {
+if ((dev || reviewer) && !admin) {
   let activeEl = null;
   let selection = 0;
   let lastTarget = null;
@@ -574,6 +575,8 @@ if (dev || reviewer) {
       "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12l4 4v12a2 2 0 0 1-2 2Z M17 21v-8H7v8 M7 3v5h8V3",
     );
     save.type = "submit";
+    const close = iconButton("Close", "M18 6 6 18 M6 6l12 12");
+    close.addEventListener("click", closeBox);
 
     const actions = document.createElement("div");
     Object.assign(actions.style, {
@@ -609,7 +612,12 @@ if (dev || reviewer) {
         status.textContent = `Could not delete (${response?.status ?? "offline"}), try again`;
       }
     });
-    actions.append(...(note ? [remove] : []), ...(dev ? [copy] : []), save);
+    actions.append(
+      ...(note ? [remove] : []),
+      ...(dev ? [copy] : []),
+      close,
+      save,
+    );
     const strings = document.createElement("div");
     strings.textContent = "Looking up strings…";
     Object.assign(strings.style, { fontSize: "11px", opacity: "0.7" });
