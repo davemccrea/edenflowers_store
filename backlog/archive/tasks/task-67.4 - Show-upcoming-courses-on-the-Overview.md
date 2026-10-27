@@ -1,11 +1,12 @@
 ---
 id: TASK-67.4
 title: Show upcoming courses on the Overview
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-20 06:52'
-updated_date: '2026-10-20 06:52'
-labels: []
+updated_date: '2026-10-27 13:57'
+labels:
+  - wontfix
 dependencies:
   - TASK-67.1
 parent_task_id: TASK-67
@@ -31,3 +32,16 @@ ordinal: 145000
 - [ ] #2 Today's course appears under Today
 - [ ] #3 The existing suite passes
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. The admin courses page already shows seats taken.
+
+---
+<!-- COMMENTS:END -->

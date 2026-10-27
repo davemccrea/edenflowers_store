@@ -4,7 +4,7 @@ title: Let customers pay extra for a delivery time window
 status: needs-triage
 assignee: []
 created_date: '2026-10-09 00:15'
-updated_date: '2026-10-18 11:38'
+updated_date: '2026-10-27 13:58'
 labels:
   - spec
   - customers
@@ -67,3 +67,16 @@ Add to `CONTEXT.md` when this is picked up.
 - An admin editor for windows: when Jennie wants to change them without a deploy.
 - Recording an arrival time and refunding automatically.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:58
+
+---
+
+Launch triage 2026-10-27 with David: kept for after launch, not a blocker.
+
+---
+<!-- COMMENTS:END -->

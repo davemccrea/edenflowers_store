@@ -1,13 +1,15 @@
 ---
 id: TASK-134
 title: Let Jennie edit every admin-initiated customer email before it is queued
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-26 10:51'
+updated_date: '2026-10-27 13:57'
 labels:
   - spec
   - admin
   - customers
+  - wontfix
 dependencies: []
 priority: medium
 type: feature
@@ -48,3 +50,16 @@ This discussion established the product direction but has not undergone the repo
 - [ ] #6 Subject/body validation and send authorization are enforced in the domain, and tests cover composed delivery, retries, draft preservation/reset, optional-send behavior and real payment-link resolution.
 - [ ] #7 Automatically triggered emails remain unchanged, and rendered standard emails are reviewed in Swedish, Finnish and English using mix print_emails.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. Too large for the gain: the optional note covers one-off wording, and standard wording changes are a code edit.
+
+---
+<!-- COMMENTS:END -->

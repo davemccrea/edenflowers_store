@@ -1,10 +1,13 @@
 ---
 id: TASK-116.4
-title: Limit Brevo contact synchronisation to necessary data
-status: needs-triage
+title: Sync only newsletter subscribers to Brevo
+status: ready-for-agent
 assignee: []
 created_date: '2026-10-26 18:57'
-labels: []
+updated_date: '2026-10-27 13:58'
+labels:
+  - launch
+  - quick
 dependencies: []
 parent_task_id: TASK-116
 type: task
@@ -14,16 +17,20 @@ ordinal: 265000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-**Why:** Customers should not acquire unnecessary purchase-statistics profiles in the email provider merely because they ordered flowers.
+**Why:** Customers who never signed up for the newsletter should not have a purchase profile (order count, last order date, total spent) in Brevo just because they gave a phone number at checkout.
 
-Review Accounts.Workers.SyncNewsletterList and Accounts.User.brevo_contacts against actual transactional SMS and newsletter-segmentation use. The current sync includes non-subscribers with phone numbers and sends order count, latest order date and total spent. Remove attributes/contacts with no necessary current purpose, preserving transactional emails, subscriber preferences and suppression behaviour.
+Decided in launch triage (2026-10-27): Brevo holds newsletter subscribers only.
 
-Open before implementation: whether order SMS and purchase-based segmentation are actually used, the purpose/basis for retained fields, and how existing Brevo profiles should be minimised without removing suppression or resubscribing anyone. Do not assume deleting list membership deletes a contact or its attributes.
+- `User.brevo_contacts` filters on `newsletter_opt_in` alone and its description drops the order-texts reason. Order texts through Brevo (TASK-80) are closed, and Brevo transactional SMS would only need the order's number anyway.
+- `SyncNewsletterList` loses `upsert_customers` and the moduledoc paragraph about phone-number customers. Subscribers keep their attributes; they consented to marketing.
+- One-off human cleanup: in Brevo, delete the contacts that are not on the newsletter list. Prod has had few real customers, so this is minutes in the UI.
+- The privacy policy says Brevo holds newsletter subscribers (and sends transactional email).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every retained contact category and attribute has a confirmed current purpose and lawful basis; unused enrichment is removed.
-- [ ] #2 Existing provider-held unnecessary data is handled explicitly and safely, not merely omitted from future upserts.
-- [ ] #3 Tests preserve transactional delivery, newsletter opt-in/out, suppression and shared-phone behaviour; the notice matches the resulting sync.
+- [ ] #1 brevo_contacts returns only users with newsletter_opt_in, and the sync no longer upserts non-subscribers
+- [ ] #2 Sync tests still cover opt-in, opt-out, blocklist and shared-phone behaviour
+- [ ] #3 Existing non-subscriber contacts are deleted from Brevo (human step)
+- [ ] #4 The privacy policy describes Brevo as holding newsletter subscribers only
 <!-- AC:END -->

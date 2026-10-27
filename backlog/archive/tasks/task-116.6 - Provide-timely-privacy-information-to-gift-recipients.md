@@ -1,10 +1,12 @@
 ---
 id: TASK-116.6
 title: Provide timely privacy information to gift recipients
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-26 18:57'
-labels: []
+updated_date: '2026-10-27 13:57'
+labels:
+  - wontfix
 dependencies: []
 parent_task_id: TASK-116
 type: task
@@ -27,3 +29,16 @@ Open before implementation: available contact channels, when data first reaches 
 - [ ] #2 Appropriate recipient-facing information identifies controller, purposes/bases, source, relevant sharing, retention and rights via a concise notice/link.
 - [ ] #3 Tests cover relevant communication paths, Customer versus Recipient distinction and exclusion from marketing; email changes include previews and rendered review in each language.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. One sentence in the privacy policy says recipient details come from the person who ordered and are used only to deliver.
+
+---
+<!-- COMMENTS:END -->

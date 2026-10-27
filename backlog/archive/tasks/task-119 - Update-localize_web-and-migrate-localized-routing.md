@@ -1,11 +1,13 @@
 ---
 id: TASK-119
 title: Update localize_web and migrate localized routing
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-25 06:55'
+updated_date: '2026-10-27 13:57'
 labels:
   - developers
+  - wontfix
 dependencies: []
 priority: low
 type: chore
@@ -34,3 +36,16 @@ Open for triage: agree on how localized sessions integrate with Ash authenticati
 - [ ] #4 Canonical and hreflang annotations remain correct for localized pages.
 - [ ] #5 mix precommit passes.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. The ~> 1.1.0 pin works and only developers notice. Reopen if an upstream fix becomes necessary.
+
+---
+<!-- COMMENTS:END -->

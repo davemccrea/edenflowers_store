@@ -1,9 +1,10 @@
 ---
 id: TASK-135
 title: Follow up production Stripe TLS session-ticket crash
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-27 08:34'
+updated_date: '2026-10-27 13:57'
 labels:
   - customers
   - admin
@@ -36,3 +37,16 @@ Open for triage: recurrence, customer impact, affected payment recovery, and whe
 - [ ] #1 Check recurrence and confirm whether the affected payment subsequently reconciled.
 - [ ] #2 Record a decision to continue monitoring or apply a verified mitigation/upstream fix, including supporting evidence.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed as monitored. One occurrence; ReconcilePayment runs every 10 minutes, so a missed check is picked up. If it recurs on /admin/errors, apply the Stripe-only ssl_options session_tickets: :disabled one-liner.
+
+---
+<!-- COMMENTS:END -->

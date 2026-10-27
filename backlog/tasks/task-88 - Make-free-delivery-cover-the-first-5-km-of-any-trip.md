@@ -1,9 +1,10 @@
 ---
 id: TASK-88
 title: Make free delivery cover the first 5 km of any trip
-status: needs-triage
+status: ready-for-agent
 assignee: []
 created_date: '2026-10-21 19:23'
+updated_date: '2026-10-27 13:58'
 labels:
   - spec
   - customers
@@ -44,3 +45,16 @@ Products without free delivery stay at `base + per_km × distance`.
 - [ ] #2 Store and admin copy says the first 5 km are free, in en, fi and sv
 - [ ] #3 The delivery admin graph shows the free-delivery fee curve under the chosen rule
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:58
+
+---
+
+Launch triage 2026-10-27 with David: after launch, not a blocker (today's 'within 5 km' copy is accurate). Rule decided: option 1, a free-delivery cart past free_dist_km pays price_per_km × (distance − free_dist_km), no base price, so there is no jump at the boundary. Products without free delivery stay at base + per_km × distance.
+
+---
+<!-- COMMENTS:END -->

@@ -1,13 +1,14 @@
 ---
 id: TASK-110
 title: Developer role that hides the System tools from the shop admin
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-23 20:28'
-updated_date: '2026-10-23 20:53'
+updated_date: '2026-10-27 13:57'
 labels:
   - spec
   - admin
+  - wontfix
 dependencies: []
 priority: medium
 type: feature
@@ -50,3 +51,16 @@ Replace the admin boolean on User with a role, so the developer keeps the System
 - [ ] #7 Push notifications, maintenance mode, reports, avatars and subscription changes treat developers and admins alike, as today
 - [ ] #8 production.exs seeds roles with Ash.Seed and no raw SQL
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. Jennie can ignore the System section. Revisit when a second staff role (e.g. driver) is real.
+
+---
+<!-- COMMENTS:END -->

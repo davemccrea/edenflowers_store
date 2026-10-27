@@ -4,13 +4,14 @@ title: Send transactional email through Scaleway instead of Brevo
 status: needs-triage
 assignee: []
 created_date: '2026-10-25 14:24'
+updated_date: '2026-10-27 13:58'
 labels:
   - spec
   - customers
 dependencies: []
 references:
   - 'https://help.brevo.com/hc/en-us/articles/19100260472850'
-priority: medium
+priority: low
 type: chore
 ordinal: 253000
 ---
@@ -43,3 +44,16 @@ Human steps: create the Scaleway project, add edenflowers.fi under Transactional
 - [ ] #3 SPF, DKIM and DMARC pass for edenflowers.fi on Scaleway-sent mail
 - [ ] #4 Receipt PDF and delivery photo attachments arrive intact
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:58
+
+---
+
+Launch triage 2026-10-27 with David: after launch, not a blocker. The unsubscribe-on-sign-in-code risk is real but rare.
+
+---
+<!-- COMMENTS:END -->

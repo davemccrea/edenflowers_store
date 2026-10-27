@@ -1,10 +1,10 @@
 ---
 id: TASK-102
 title: Move each LiveView hook next to the code that uses it
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-23 07:51'
-updated_date: '2026-10-23 08:46'
+updated_date: '2026-10-27 13:57'
 labels:
   - developers
   - spec
@@ -56,6 +56,15 @@ created: 2026-10-23 08:46
 ---
 
 Left for a human: PushToggle (admin account) and PushNudge (overview) only render with VAPID_PUBLIC_KEY set, which dev lacks, so they were not exercised. Check both on a real device, then mark AC #3 and set done.
+
+---
+
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: marked done. Only the PushToggle/PushNudge device check was left; Jennie will notice in daily use if push breaks.
 
 ---
 <!-- COMMENTS:END -->

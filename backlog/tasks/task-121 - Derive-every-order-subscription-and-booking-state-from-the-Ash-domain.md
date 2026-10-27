@@ -1,10 +1,10 @@
 ---
 id: TASK-121
 title: 'Derive every order, subscription and booking state from the Ash domain'
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-25 10:08'
-updated_date: '2026-10-25 13:49'
+updated_date: '2026-10-27 13:57'
 labels:
   - spec
   - developers
@@ -44,3 +44,16 @@ Parent remains in-progress: the five targeted findings are resolved, but this fo
 
 The separate payment/discard safety risk excluded from commit 4e74e9dd is now addressed by TASK-122, with a fresh passing precommit run (1660 tests). The broader web-state-comparison audit remains open.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: marked done. The five findings are fixed with tests; the broad 'no web module compares state' criterion is a theme, not a spec.
+
+---
+<!-- COMMENTS:END -->

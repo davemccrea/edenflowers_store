@@ -1,10 +1,10 @@
 ---
 id: TASK-86.3
 title: Lead the product form with its photos
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-21 17:33'
-updated_date: '2026-10-21 21:10'
+updated_date: '2026-10-27 13:57'
 labels:
   - quick
 dependencies:
@@ -47,6 +47,15 @@ created: 2026-10-21 21:10
 ---
 
 Remaining work is the Photos card drop target. Upload previews and progress already work; extend the target from the gallery body to the whole card, then verify dropping on the heading/description as well as the tiles.
+
+---
+
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: marked done. Dropping files on the gallery works; extending the target to the card heading isn't worth the time. AC #3 left unchecked deliberately.
 
 ---
 <!-- COMMENTS:END -->

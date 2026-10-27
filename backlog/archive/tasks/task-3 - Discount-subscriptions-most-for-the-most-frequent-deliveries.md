@@ -1,14 +1,15 @@
 ---
 id: TASK-3
 title: 'Discount subscriptions, most for the most frequent deliveries'
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-09 02:13'
-updated_date: '2026-10-18 11:38'
+updated_date: '2026-10-27 13:57'
 labels:
   - spec
   - customers
   - admin
+  - wontfix
 dependencies: []
 priority: medium
 type: feature
@@ -79,3 +80,16 @@ Minimum terms and clawbacks were ruled out because they undercut "cancel anytime
 - Free or reduced delivery for subscribers.
 - Perks such as priority on peak days or a vase with the first delivery.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 13:57
+
+---
+
+Launch triage 2026-10-27 with David: closed. A pricing change best made once there are subscribers to learn from.
+
+---
+<!-- COMMENTS:END -->
