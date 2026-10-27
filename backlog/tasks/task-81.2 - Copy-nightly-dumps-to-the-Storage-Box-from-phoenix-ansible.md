@@ -4,7 +4,7 @@ title: Copy nightly database dumps and uploaded photos to the Storage Box
 status: ready-for-human
 assignee: []
 created_date: '2026-10-21 08:32'
-updated_date: '2026-10-27 07:05'
+updated_date: '2026-10-27 08:28'
 labels: []
 dependencies:
   - TASK-81.1
@@ -28,14 +28,16 @@ In `infra/roles/common/tasks/backups.yml`:
 Use the main Storage Box account for now; a dedicated sub-account is deferred. Keep the dedicated postgres transfer key and pinned host verification. Restrict the rsync destinations to `edenflowers/database/` and `edenflowers/photos/` and keep unrelated files out of it: `--delete` applies there. The key is not restricted to that directory and exposes the main account if the production server is compromised. Independently managed snapshots remain required.
 
 Also mirror original uploaded photos from the production uploads directory (resolve the actual UPLOADS_DIR and postgres read permissions before implementation) to `edenflowers/photos/`. Keep database dumps under `edenflowers/database/`. Each rsync --delete must target only its own directory, never `edenflowers/`. Safely relocate any existing remote dumps when changing layout; do not delete the only off-site copy. Database dump, local pruning, database transfer and photo transfer must all succeed before the Better Stack heartbeat. A failed photo transfer must suppress the heartbeat too. Snapshot retention supplies photo deletion/version history; no separate photo pruning job is needed. A live photo mirror is not guaranteed to be transactionally consistent with the database dump; do not claim atomic recovery.
+
+Keep the latest 10 daily Storage Box snapshots (the included allowance), scheduled after the 02:00 backup normally finishes; 04:00 is suggested if sufficient. This provides roughly 10 days of photo/mirror recovery, not 30 days. Dated database dumps remain retained for roughly 30 days. Snapshot configuration and restore verification are manual; successful rsync alone does not verify them.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The nightly job mirrors the backup folder to the Storage Box over SSH on port 23
+- [x] #1 The nightly job mirrors the backup folder to the Storage Box over SSH on port 23
 - [ ] #2 A successful run pings a Better Stack heartbeat, and a missed heartbeat sends an alert
-- [ ] #3 Nightly backups mirror original uploaded photos to a separate photos/ destination without deleting database backups
-- [ ] #4 The success heartbeat is suppressed if either database or photo transfer fails
+- [x] #3 Nightly backups mirror original uploaded photos to a separate photos/ destination without deleting database backups
+- [x] #4 The success heartbeat is suppressed if either database or photo transfer fails
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -60,6 +62,8 @@ Photo scope supersedes the earlier database-only implementation: resolve product
 Implemented the nightly dump/prune/rsync/Better Stack script, production-only SSH setup with a dedicated postgres key and pinned host key, vault examples, setup/restore instructions, and local failure-path tests. Verified: 3 unittest tests (including each failing stage), ShellCheck on rendered production/staging scripts, ansible-lint, ansible-playbook site.yml --syntax-check, and git diff --check. No production provisioning or transfers performed. The encrypted vault currently contains none of the four required vault_backup_* settings. Acceptance criteria remain unchecked pending live verification.
 
 Implemented uploaded-photo backups and the main-account decision. Production mirrors completed dumps to edenflowers/database/ and /opt/<project>/images/uploads/ to edenflowers/photos/, with --delete scoped to each child directory. Both transfers must succeed before the heartbeat. Confirmed the compose mount maps the source to UPLOADS_DIR; provisioning uses 0755 directories and the upload callback sets files to 0644, allowing postgres reads without changing ownership. Updated vault example and setup/restore docs, including safe migration from the old root-level destination and non-atomic DB/photo recovery caveat. Verified 4 unittest tests using Ansible Python, including real local rsync deletion/isolation and missing-source behavior; rendered scripts pass sh -n and ShellCheck; ansible-lint, playbook syntax-check and git diff --check pass. System python3 lacks Jinja, so tests used /opt/homebrew/Cellar/ansible/14.4.0/libexec/bin/python. No production provisioning or transfers performed; acceptance criteria remain unchecked pending live verification.
+
+Production verification on 2026-10-27: latest remote dump edenflowers_store_prod_20261027T082043.dump is 805631 bytes. Read-only rsync -acni --delete checks for database and photos returned no differences; all 10 uploaded photo files match. Local tests verify heartbeat suppression if either transfer fails. Script comments explain failure/retention/snapshot/heartbeat intent without changing behavior. Remaining: configure and verify 10 daily snapshots after backups, heartbeat delivery and missed-heartbeat alerts, and database/photo restores including a deleted photo from snapshot. Launching manually from /home/david exposed find working-directory permissions; launching from /tmp succeeded.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
@@ -107,6 +111,15 @@ created: 2026-10-27 07:05
 ---
 
 Ready for human provisioning: configure main-account vault settings, independently verified host key, heartbeat alerts and snapshots; authorize postgres transfer key; ensure separate database/ and photos/ remote directories (pause any old root-level mirror before layout migration); verify existing photo read permissions, both nightly copies, missed-heartbeat alert, and database/photo restores including a deleted photo recovered from snapshot. See infra/README.md.
+
+---
+
+author: @claude
+created: 2026-10-27 08:28
+
+---
+
+Updated snapshot policy to the latest 10 daily snapshots. Database and photo transfer criteria are checked based on production checksum verification; failure suppression is covered by local tests. Heartbeat/alert criterion remains unchecked. Status stays ready-for-human for remaining checks.
 
 ---
 <!-- COMMENTS:END -->
