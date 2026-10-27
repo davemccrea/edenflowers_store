@@ -21,7 +21,7 @@
   )
   let optional = (
     "card_message",
-    "recipient_name", "recipient_phone_number",
+    "recipient_name", "contact_phone_number",
     "delivery_address", "delivery_instructions",
     "fulfillment_fee", "discount",
     "venue_name", "venue_address",
@@ -139,7 +139,7 @@
   let fulfillment-lines = if order.fulfillment_method == "delivery" {
     (
       text(weight: "semibold")[#recipient],
-      order.recipient_phone_number,
+      order.contact_phone_number,
       order.delivery_address,
       if order.delivery_instructions != none {
         text(font: fonts.serif, style: "italic")[#order.delivery_instructions]
@@ -152,12 +152,12 @@
       order.venue_address,
     )
   } else {
-    // `recipient_phone_number` is mandatory for pickup precisely so Jennie can
-    // text when the order is ready — the customer should see the number we hold.
+    // The phone is mandatory for pickup precisely so Jennie can text when the
+    // order is ready — the customer should see the number we hold.
     (
       text(weight: "semibold")[#shop.name],
       shop.address,
-      order.recipient_phone_number,
+      order.contact_phone_number,
     )
   }
 

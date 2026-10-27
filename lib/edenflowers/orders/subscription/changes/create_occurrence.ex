@@ -117,6 +117,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
         customer_name: subscription.user.name,
         customer_email: to_string(subscription.user.email),
         locale: subscription.locale,
+        customer_phone_number: subscription.customer_phone_number,
         recipient_name: subscription.recipient_name,
         recipient_phone_number: subscription.recipient_phone_number,
         delivery_address: subscription.delivery_address,

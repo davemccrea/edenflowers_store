@@ -36,7 +36,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
       assert payload.delivery_address == nil
       assert payload.delivery_instructions == nil
       # Mandatory for pickup (order.ex) so Jennie can text when it's ready.
-      assert payload.recipient_phone_number == "+358 40 555 0123"
+      assert payload.contact_phone_number == "+358 40 555 0123"
     end
 
     test "carries the order locale into the payload language code" do
@@ -307,7 +307,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
         fulfillment_fee: fee,
         fulfillment_tax_rate: Decimal.new("0.255"),
         recipient_name: nil,
-        recipient_phone_number: nil,
+        contact_phone_number: nil,
         delivery_address: nil,
         geocoded_address: nil,
         delivery_instructions: nil,
@@ -343,7 +343,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
       order_reference: "TEST-001",
       fulfillment_method: :delivery,
       recipient_name: "Margareta Lindqvist",
-      recipient_phone_number: "+358 40 555 0123",
+      contact_phone_number: "+358 40 555 0123",
       delivery_address: "Raw Street 1",
       geocoded_address: Keyword.get(opts, :geocoded_address, "Korsholmsesplanaden 12 A 4, 65100 Vaasa"),
       delivery_instructions: "Doorbell to top-floor flat.",
@@ -360,7 +360,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
       order_reference: "TEST-002",
       ordered_at: ~U[2026-05-13 16:08:00Z],
       fulfillment_method: :pickup,
-      recipient_phone_number: "+358 40 555 0123"
+      contact_phone_number: "+358 40 555 0123"
     )
   end
 

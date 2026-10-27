@@ -21,6 +21,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
   @checkout_load [
     :payment_status,
     :recipient_first_name,
+    :contact_phone_number,
     :total_items_in_cart,
     :discount,
     :items_subtotal,
@@ -102,15 +103,16 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     update :submit_gift_options do
-      description "Checkout step 2: requires a recipient for a gift, and otherwise drops the recipient, card " <>
-                    "message and card. Moves to delivery, prefilled from the signed-in customer's last order for " <>
-                    "themselves."
+      description "Checkout step 2: requires a recipient for a gift, and otherwise drops the recipient, their " <>
+                    "phone, the card message and card. Moves to delivery, prefilled from the signed-in customer's " <>
+                    "last order."
 
       accept [:gift, :recipient_name, :card_message]
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
       validate Validations.CardMessageLength
       change set_attribute(:recipient_name, nil), where: attribute_equals(:gift, false)
       change set_attribute(:card_message, nil), where: attribute_equals(:gift, false)
+      change set_attribute(:recipient_phone_number, nil), where: attribute_equals(:gift, false)
       change Changes.RemoveCardLineItem, where: attribute_equals(:gift, false)
       change Changes.PrefillFromLastOrder
       change transition_state(:delivery)
@@ -118,24 +120,29 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     update :submit_delivery do
-      description "Checkout step 3: checks the date and address, prices the fee server side from the chosen " <>
-                    "fulfillment option, and moves to payment."
+      description "Checkout step 3: checks the date, address and phone, prices the fee server side from the " <>
+                    "chosen fulfillment option, and moves to payment."
 
       accept [
         :fulfillment_option_id,
         :recipient_name,
-        :recipient_phone_number,
         :delivery_instructions,
         :fulfillment_date,
         :delivery_address
       ]
 
+      argument :contact_phone_number, :string do
+        description "The step's one phone field. Stored as the Recipient's number on a gift delivery, otherwise " <>
+                      "as the Customer's own; read it back through the contact_phone_number calculation."
+      end
+
       change Changes.SnapshotFulfillmentMethod
       validate present(:fulfillment_date)
       validate Validations.FulfillmentDate
       validate Validations.DeliveryAddress
-      validate present(:recipient_phone_number)
-      change Changes.NormalizePhoneNumber
+      validate present(:contact_phone_number)
+      change {Changes.NormalizePhoneNumber, argument: :contact_phone_number}
+      change Changes.SetContactPhoneNumber
       change Changes.CalculateFulfillmentCost
       change transition_state(:payment)
       require_atomic? false
@@ -219,9 +226,13 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
     update :set_gift do
       description "Saves the gift toggle as the customer flips it, so the page shows the matching fields. " <>
-                    "Unlike submit_gift_options, it checks and clears nothing."
+                    "An actual flip clears the address entered so far, which was for the other person; going back " <>
+                    "to For me refills the Customer's own on entering delivery. Unlike submit_gift_options, it " <>
+                    "checks nothing."
 
       accept [:gift]
+      change Changes.ClearDeliveryFields, where: [changing(:gift)]
+      require_atomic? false
     end
 
     update :update_locale do

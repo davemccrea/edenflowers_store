@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> element("#checkout-form-3b")
     |> render_submit(%{
       "form" => %{
-        "recipient_phone_number" => "045 1234567",
+        "contact_phone_number" => "045 1234567",
         "fulfillment_date" => fulfillment_date
       }
     })
@@ -171,7 +171,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
     |> render_submit(%{
       "form" => %{
         "delivery_address" => "Stadsgatan 3, 65300 Vasa",
-        "recipient_phone_number" => "045 1234567",
+        "contact_phone_number" => "045 1234567",
         "delivery_instructions" => "Leave at back door",
         "fulfillment_date" => fulfillment_date
       }

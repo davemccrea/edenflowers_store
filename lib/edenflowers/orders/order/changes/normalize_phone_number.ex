@@ -3,7 +3,8 @@ defmodule Edenflowers.Orders.Order.Changes.NormalizePhoneNumber do
   Stores the phone number in a consistent format, so the admin's SMS and
   WhatsApp links can rely on it. A blank number is left to `present/1`.
 
-  Normalises `recipient_phone_number` unless given another `attribute:`.
+  Normalises the `attribute:` given, or the `argument:` given, so an error
+  lands on the field the form shows.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -12,22 +13,29 @@ defmodule Edenflowers.Orders.Order.Changes.NormalizePhoneNumber do
 
   @impl true
   def change(changeset, opts, _context) do
-    attribute = Keyword.get(opts, :attribute, :recipient_phone_number)
+    {field, get, set} =
+      case Keyword.fetch(opts, :argument) do
+        {:ok, argument} ->
+          {argument, &Ash.Changeset.get_argument/2, &Ash.Changeset.set_argument/3}
 
-    case Ash.Changeset.get_attribute(changeset, attribute) do
+        :error ->
+          {Keyword.fetch!(opts, :attribute), &Ash.Changeset.get_attribute/2, &Ash.Changeset.force_change_attribute/3}
+      end
+
+    case get.(changeset, field) do
       nil -> changeset
-      input -> normalize(changeset, attribute, input)
+      input -> normalize(changeset, field, input, set)
     end
   end
 
-  defp normalize(changeset, attribute, input) do
+  defp normalize(changeset, field, input, set) do
     case PhoneNumber.format(input) do
       {:ok, formatted} ->
-        Ash.Changeset.force_change_attribute(changeset, attribute, formatted)
+        set.(changeset, field, formatted)
 
       :error ->
         Ash.Changeset.add_error(changeset,
-          field: attribute,
+          field: field,
           message: ~t"Enter a valid phone number. For non-Finnish numbers, start with the country code, e.g. +44."
         )
     end

@@ -46,6 +46,7 @@ defmodule Edenflowers.Orders.Order.Occurrences do
         :customer_name,
         :customer_email,
         :locale,
+        :customer_phone_number,
         :recipient_name,
         :recipient_phone_number,
         :delivery_address,

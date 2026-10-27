@@ -327,7 +327,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
           origin: :online,
           gift: false,
           fulfillment_method: :delivery,
-          recipient_phone_number: "+358401234567",
+          customer_phone_number: "+358401234567",
           ordered_at: ~U[2026-10-01 12:00:00Z]
         )
       )
@@ -363,7 +363,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
           origin: :online,
           gift: true,
           fulfillment_method: :pickup,
-          recipient_phone_number: "+358401234567",
+          customer_phone_number: "+358401234567",
           ordered_at: ~U[2026-10-01 12:00:00Z]
         )
       )
@@ -533,6 +533,15 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert order.gift
       assert order.recipient_name == "St. Olof's church"
       assert order.card_message == "Rest in peace"
+    end
+
+    test "edits an online order's own phone as the customer's, with no recipient phone", ctx do
+      order = placed_order(origin: :online, customer_phone_number: "+358401234567")
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
+
+      assert has_element?(view, ~s|#form_customer_phone_number[value="040 1234567"]|)
+      refute has_element?(view, ~s|input[name="form[recipient_phone_number]"]|)
     end
 
     test "picks the card from the card drawer, not the items", ctx do

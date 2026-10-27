@@ -362,12 +362,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <:contact :if={present?(@order.customer_instagram)}>
                   <.instagram_link handle={@order.customer_instagram} />
                 </:contact>
-                <:contact :if={
-                  !present?(@order.customer_phone_number) && customer_phone?(@order) &&
-                    present?(@order.recipient_phone_number)
-                }>
-                  <.phone_link phone_number={@order.recipient_phone_number} />
-                </:contact>
                 <:contact :if={@pickup_message_urls}>
                   <.message_links
                     urls={@pickup_message_urls}
@@ -394,10 +388,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               title={~t"Recipient"}
             >
               <.person_block :if={@order.gift && present?(@order.recipient_name)} name={@order.recipient_name}>
-                <:contact :if={
-                  (present?(@order.customer_phone_number) || !customer_phone?(@order)) &&
-                    present?(@order.recipient_phone_number)
-                }>
+                <:contact :if={present?(@order.recipient_phone_number)}>
                   <.phone_link phone_number={@order.recipient_phone_number} />
                 </:contact>
               </.person_block>
@@ -823,23 +814,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp pickup_message_urls(%{fulfillment_method: :pickup, fulfillment_status: :pending} = order) do
-    message_urls(order.recipient_phone_number, pickup_message(order))
+    message_urls(order.customer_phone_number, pickup_message(order))
   end
 
   defp pickup_message_urls(_order), do: nil
 
   defp payment_message_urls(order) do
     if order.payment_link_open?,
-      do: message_urls(customer_phone_number(order), payment_message(order)),
+      do: message_urls(order.customer_phone_number, payment_message(order)),
       else: nil
-  end
-
-  defp customer_phone_number(order) do
-    cond do
-      present?(order.customer_phone_number) -> order.customer_phone_number
-      customer_phone?(order) -> order.recipient_phone_number
-      true -> nil
-    end
   end
 
   # Links that open Jennie's own messaging app with the message written; she sends it.

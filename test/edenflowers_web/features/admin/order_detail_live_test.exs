@@ -14,7 +14,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   test "warns when a delivery has no phone to call", %{conn: conn} do
     missing = placed_order(fulfillment_method: :delivery, gift: true, recipient_name: "Grandma")
-    phoned = placed_order(fulfillment_method: :delivery, recipient_phone_number: "+358401234567")
+    phoned = placed_order(fulfillment_method: :delivery, customer_phone_number: "+358401234567")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{missing.id}")
     assert has_element?(view, "#order-recipient #order-missing-phone", "Missing recipient phone")
@@ -428,7 +428,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       placed_order(
         gift: true,
         recipient_name: "Grace Hopper",
-        recipient_phone_number: "040 123 4567"
+        customer_phone_number: "040 123 4567"
       )
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
@@ -596,7 +596,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "offers ready-for-pickup message links in the customer's language", %{conn: conn} do
-    order = placed_order(order_reference: "DETAIL", recipient_phone_number: "040 123 4567", locale: "sv-FI")
+    order = placed_order(order_reference: "DETAIL", customer_phone_number: "040 123 4567", locale: "sv-FI")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -608,7 +608,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   test "omits ready-for-pickup links for deliveries and fulfilled pickups", %{conn: conn} do
     delivery =
       placed_order(
-        recipient_phone_number: "040 123 4567",
+        customer_phone_number: "040 123 4567",
         fulfillment_method: :delivery,
         delivery_address: "Kauppapuistikko 20, 65100 Vaasa"
       )
@@ -616,7 +616,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     fulfilled =
       placed_order(
         order_reference: "FULFILLED",
-        recipient_phone_number: "040 123 4567",
+        customer_phone_number: "040 123 4567",
         fulfillment_status: :fulfilled
       )
 

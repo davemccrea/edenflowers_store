@@ -267,7 +267,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       |> render_submit(%{
         "form" => %{
           "delivery_address" => "Stadsgatan 3, 65300 Vasa",
-          "recipient_phone_number" => "045 1234567",
+          "contact_phone_number" => "045 1234567",
           "delivery_instructions" => "Leave at back door 99B",
           "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
         }
@@ -281,7 +281,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       assert reloaded.here_id == "here-id-123"
       assert reloaded.distance == 3000
       assert Decimal.eq?(reloaded.fulfillment_fee, Decimal.new("5.00"))
-      assert reloaded.recipient_phone_number == "045 1234567"
+      assert reloaded.customer_phone_number == "045 1234567"
       assert reloaded.delivery_instructions == "Leave at back door 99B"
       assert reloaded.fulfillment_date == Edenflowers.ShopTime.today() |> Date.add(7)
     end
@@ -306,7 +306,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       |> render_submit(%{
         "delivery_address" => "Stadsgatan 3, 65300 Vasa",
         "form" => %{
-          "recipient_phone_number" => "045 1234567",
+          "contact_phone_number" => "045 1234567",
           "delivery_instructions" => "",
           "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
         }
