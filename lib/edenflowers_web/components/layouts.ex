@@ -273,6 +273,13 @@ defmodule EdenflowersWeb.Layouts do
             >
               <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
             </button>
+            <.link
+              href={~q"/#{language}"}
+              aria-label={dgettext("admin", "Storefront")}
+              class="touch-target group flex h-12 w-8 items-center justify-center"
+            >
+              <.icon name="hero-building-storefront" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+            </.link>
           </div>
           <.link
             navigate={~p"/admin"}
@@ -281,13 +288,6 @@ defmodule EdenflowersWeb.Layouts do
             Eden Flowers
           </.link>
           <div class="flex items-center justify-self-end">
-            <.link
-              href={~q"/#{language}"}
-              aria-label={dgettext("admin", "Storefront")}
-              class="touch-target text-base-content/75 flex h-9 w-9 items-center justify-center hover:text-base-content"
-            >
-              <.icon name="hero-building-storefront" class="h-5 w-5" />
-            </.link>
             <.admin_account_menu current_user={@current_user} compact={true} />
           </div>
         </div>
