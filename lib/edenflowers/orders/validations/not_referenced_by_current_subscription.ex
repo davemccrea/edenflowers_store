@@ -4,7 +4,7 @@ defmodule Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription do
   """
 
   use Ash.Resource.Validation
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   alias Edenflowers.Orders.Subscription
 

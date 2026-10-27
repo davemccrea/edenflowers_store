@@ -1,11 +1,11 @@
-<%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
+<%= if @registration.first_name do %><%= dgettext("emails", "Hi %{name},", name: @registration.first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= gettext("I've received your payment of %{amount}. Your receipt is attached.", amount: @format_currency.(@amount)) %>
+<%= dgettext("emails", "I've received your payment of %{amount}. Your receipt is attached.", amount: @format_currency.(@amount)) %>
 
-<%= message(@message) %><%= ngettext("1 place on %{course}, %{date}", "%{count} places on %{course}, %{date}", @registration.seats, course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
-<%= gettext("Paid") %>  <%= @format_currency.(@registration.amount_paid) %>
-<%= if Decimal.positive?(@registration.balance) do %><%= gettext("Left to pay") %>  <%= @format_currency.(@registration.balance) %>
+<%= message(@message) %><%= dngettext("emails", "1 place on %{course}, %{date}", "%{count} places on %{course}, %{date}", @registration.seats, course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
+<%= dgettext("emails", "Paid") %>  <%= @format_currency.(@registration.amount_paid) %>
+<%= if Decimal.positive?(@registration.balance) do %><%= dgettext("emails", "Left to pay") %>  <%= @format_currency.(@registration.balance) %>
 <% end %>
-<%= gettext("Warm wishes,") %>
+<%= dgettext("emails", "Warm wishes,") %>
 
 <%= signature() %>

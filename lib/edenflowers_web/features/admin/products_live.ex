@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
   Admin product list for finding and managing catalogue items.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
   use Cinder.UrlSync
 
   import EdenflowersWeb.Admin.Components

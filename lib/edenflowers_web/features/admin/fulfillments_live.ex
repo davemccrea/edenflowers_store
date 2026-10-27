@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   Prices are edited through `:update_pricing`, which can't touch the option's
   method and rate type.
   """
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   import EdenflowersWeb.AdminCalendar, only: [admin_calendar: 1, legend: 1]
   import EdenflowersWeb.Admin.Components

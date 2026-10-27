@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
   Back-office search across orders and customers.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
 

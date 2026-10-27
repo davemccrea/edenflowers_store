@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
   @moduledoc "Admin page for accepting a course booking and choosing how it will be paid."
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.Drawers, only: [customer_email: 1]

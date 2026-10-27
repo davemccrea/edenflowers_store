@@ -10,7 +10,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
   Files land in `:uploads_dir`, which production mounts inside imgproxy's
   images folder, so the slug is `local:///uploads/<file>`.
   """
-  use EdenflowersWeb, :html
+  use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
   @accept ~w(.jpg .jpeg .png .webp)
   @max_file_size 40_000_000

@@ -1,9 +1,9 @@
-<%= gettext("Hi,") %>
+<%= dgettext("emails", "Hi,") %>
 
-<%= gettext("Enter this code in your account to confirm your new email address:") %>
+<%= dgettext("emails", "Enter this code in your account to confirm your new email address:") %>
 
 <%= @code %>
 
-<%= gettext("It expires in 10 minutes. If you didn't ask for it, you can ignore this email.") %>
+<%= dgettext("emails", "It expires in 10 minutes. If you didn't ask for it, you can ignore this email.") %>
 
 Eden Flowers

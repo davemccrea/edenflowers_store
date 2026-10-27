@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
   Admin view of a customer, their orders, and their subscriptions.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   require Ash.Query
 

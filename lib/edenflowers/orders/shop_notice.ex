@@ -6,7 +6,7 @@ defmodule Edenflowers.Orders.ShopNotice do
   or `{:cancelled, order}` or `{:cancelled, subscription}`, for one its
   customer cancelled.
   """
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   alias Edenflowers.Format
   alias Edenflowers.Orders

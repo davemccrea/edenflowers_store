@@ -2,9 +2,17 @@ defmodule EdenflowersWeb.Gettext do
   @moduledoc """
   Gettext backend for the app. Supports `en`, `sv`, and `fi`, defaulting to `en`.
 
+  The default domain is `storefront`. Customer emails, shared components and
+  admin copy use separate domains; translator priorities and conventions are
+  documented in `priv/gettext/README.md`.
+
   See the [Gettext docs](https://hexdocs.pm/gettext) for the translation API.
   """
-  use Gettext.Backend, otp_app: :edenflowers, default_locale: "en", locales: ~w(en sv fi)
+  use Gettext.Backend,
+    otp_app: :edenflowers,
+    default_locale: "en",
+    default_domain: "storefront",
+    locales: ~w(en sv fi)
 
   require Logger
 

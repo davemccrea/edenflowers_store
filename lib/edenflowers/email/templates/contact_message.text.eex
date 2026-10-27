@@ -1,16 +1,16 @@
-<%= if @first_name do %><%= gettext("Hi %{name},", name: @first_name) %><% else %><%= gettext("Hi,") %><% end %>
+<%= if @first_name do %><%= dgettext("emails", "Hi %{name},", name: @first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= gettext("Thank you for your message. I'll get back to you as soon as I can.") %>
+<%= dgettext("emails", "Thank you for your message. I'll get back to you as soon as I can.") %>
 
-<%= gettext("Here's a copy of what you sent:") %>
+<%= dgettext("emails", "Here's a copy of what you sent:") %>
 
-<%= gettext("Name: %{name}", name: @message["name"]) %>
-<%= gettext("Email: %{email}", email: @message["email"]) %>
-<%= if @message["phone"] do %><%= gettext("Phone: %{phone}", phone: @message["phone"]) %>
+<%= dgettext("emails", "Name: %{name}", name: @message["name"]) %>
+<%= dgettext("emails", "Email: %{email}", email: @message["email"]) %>
+<%= if @message["phone"] do %><%= dgettext("emails", "Phone: %{phone}", phone: @message["phone"]) %>
 <% end %>
-<%= gettext("Your message:") %>
+<%= dgettext("emails", "Your message:") %>
 <%= @message["message"] %>
 
-<%= gettext("Warm wishes,") %>
+<%= dgettext("emails", "Warm wishes,") %>
 
 <%= signature() %>

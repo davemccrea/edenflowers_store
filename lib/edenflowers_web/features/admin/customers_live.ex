@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
   Searchable admin list of customer accounts.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
   use Cinder.UrlSync
 
   import EdenflowersWeb.Admin.Components

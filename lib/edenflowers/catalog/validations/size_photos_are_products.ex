@@ -4,7 +4,7 @@ defmodule Edenflowers.Catalog.Validations.SizePhotosAreProducts do
   Both are in this changeset, so the size never re-reads its product.
   """
   use Ash.Resource.Validation
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   @impl true
   def validate(changeset, _opts, _context) do

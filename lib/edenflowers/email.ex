@@ -4,7 +4,9 @@ defmodule Edenflowers.Email do
   `Edenflowers.Email.Templates`; subjects are localised per the order's locale.
   """
 
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils,
+    backend: EdenflowersWeb.Gettext,
+    sigils: [domain: "emails", modifiers: [a: [domain: "admin"]]]
 
   import Swoosh.Email
 
@@ -650,7 +652,7 @@ defmodule Edenflowers.Email do
       |> to(Application.fetch_env!(:edenflowers, :shop_notice_email))
       |> subject(ShopNotice.title(notice, "sv-FI"))
       |> text_body("""
-      #{shop_notice_time(notice)}#{~t"Open in the admin:"}
+      #{shop_notice_time(notice)}#{~t"Open in the admin:"a}
       #{EdenflowersWeb.Endpoint.url()}#{ShopNotice.path(notice)}
       """)
     end)

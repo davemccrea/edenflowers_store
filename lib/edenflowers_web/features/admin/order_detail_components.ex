@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   The order page's drawers, queue nav and menus, with the view helpers they need.
   """
 
-  use EdenflowersWeb, :html
+  use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.Drawers

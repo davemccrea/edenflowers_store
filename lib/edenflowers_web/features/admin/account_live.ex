@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   Admin account settings for avatar and browser push notifications.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   require Logger
 

@@ -6,7 +6,7 @@ defmodule Edenflowers.Payments.Changes.Refund do
   `SplitOffGoodwill` to split and `RecordPayment` to record.
   """
   use Ash.Resource.Change
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   require Logger
 

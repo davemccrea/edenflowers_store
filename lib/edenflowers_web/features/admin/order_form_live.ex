@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   Where Jennie enters a custom order (`:new`), and edits any open order
   after it is placed (`:edit`), online or custom, paid or not.
   """
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   require Logger
 

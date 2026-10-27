@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   Admin editor for a product's copy, photos, sizes, stock, and translations.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.Drawers

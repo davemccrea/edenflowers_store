@@ -1,11 +1,11 @@
-<%= if @subscription.user.first_name do %><%= gettext("Hi %{name},", name: @subscription.user.first_name) %><% else %><%= gettext("Hi,") %><% end %>
+<%= if @subscription.user.first_name do %><%= dgettext("emails", "Hi %{name},", name: @subscription.user.first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= gettext("I've cancelled your %{product} subscription. You won't be charged again.", product: @product) %>
+<%= dgettext("emails", "I've cancelled your %{product} subscription. You won't be charged again.", product: @product) %>
 
-<%= message(@message) %><%= if @charged_on do %><%= if @pickup? do %><%= gettext("Any order already charged will still be ready to collect on %{date}.", date: @format_date.(@charged_on)) %><% else %><%= gettext("Any delivery already charged will still come on %{date}.", date: @format_date.(@charged_on)) %><% end %>
+<%= message(@message) %><%= if @charged_on do %><%= if @pickup? do %><%= dgettext("emails", "Any order already charged will still be ready to collect on %{date}.", date: @format_date.(@charged_on)) %><% else %><%= dgettext("emails", "Any delivery already charged will still come on %{date}.", date: @format_date.(@charged_on)) %><% end %>
 
-<% end %><%= gettext("If you have any questions, just reply to this email.") %>
+<% end %><%= dgettext("emails", "If you have any questions, just reply to this email.") %>
 
-<%= gettext("Warm wishes,") %>
+<%= dgettext("emails", "Warm wishes,") %>
 
 <%= signature() %>

@@ -1,15 +1,15 @@
-<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
+<%= if @order.customer_first_name do %><%= dgettext("emails", "Hi %{name},", name: @order.customer_first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= if @order.fulfillment_method == :delivery do %><%= gettext("Thank you for your order. I'll deliver it on %{date} to %{address}.", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= gettext("Thank you for your order. You can collect it on %{date} from %{shop}.", date: @fulfillment_on, shop: shop_address()) %><% end %>
+<%= if @order.fulfillment_method == :delivery do %><%= dgettext("emails", "Thank you for your order. I'll deliver it on %{date} to %{address}.", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= dgettext("emails", "Thank you for your order. You can collect it on %{date} from %{shop}.", date: @fulfillment_on, shop: shop_address()) %><% end %>
 
 <%= order_totals(assigns) %>
-<%= if @order.gift && @order.recipient_name do %><%= gettext("For %{recipient}", recipient: @order.recipient_name) %>
-<%= if @order.card_message do %><%= gettext("Card message: %{message}", message: @order.card_message) %>
+<%= if @order.gift && @order.recipient_name do %><%= dgettext("emails", "For %{recipient}", recipient: @order.recipient_name) %>
+<%= if @order.card_message do %><%= dgettext("emails", "Card message: %{message}", message: @order.card_message) %>
 <% end %>
-<% end %><%= gettext("Your receipt is attached. If you have a question about your order, reply to this email.") %>
+<% end %><%= dgettext("emails", "Your receipt is attached. If you have a question about your order, reply to this email.") %>
 <%= if @order.cancellable_by_customer? do %>
-<%= gettext("Plans changed? You can cancel from your account until %{date} for a full refund: %{url}", date: @format_date.(@order.cancellable_until), url: @account_url) %>
+<%= dgettext("emails", "Plans changed? You can cancel from your account until %{date} for a full refund: %{url}", date: @format_date.(@order.cancellable_until), url: @account_url) %>
 <% end %>
-<%= gettext("Warm wishes,") %>
+<%= dgettext("emails", "Warm wishes,") %>
 
 <%= signature() %>

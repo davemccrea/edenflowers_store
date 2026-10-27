@@ -8,7 +8,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
   """
 
   use Ash.Resource.Change
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   require Logger
 

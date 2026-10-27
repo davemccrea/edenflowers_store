@@ -1,8 +1,8 @@
-<%= if @order.customer_first_name do %><%= gettext("Hi %{name},", name: @order.customer_first_name) %><% else %><%= gettext("Hi,") %><% end %>
+<%= if @order.customer_first_name do %><%= dgettext("emails", "Hi %{name},", name: @order.customer_first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= gettext("Thank you for your purchase. Your receipt is attached.") %>
+<%= dgettext("emails", "Thank you for your purchase. Your receipt is attached.") %>
 
 <%= message(@message) %><%= order_totals(assigns) %>
-<%= gettext("Warm wishes,") %>
+<%= dgettext("emails", "Warm wishes,") %>
 
 <%= signature() %>

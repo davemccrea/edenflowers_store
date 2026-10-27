@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   fulfillment date first.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
   use Cinder.UrlSync
 
   import EdenflowersWeb.Admin.Components

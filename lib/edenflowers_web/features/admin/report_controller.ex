@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.ReportController do
   Builds and downloads an authenticated monthly accounting report ZIP.
   """
 
-  use EdenflowersWeb, :controller
+  use EdenflowersWeb, {:controller, gettext_domain: "admin"}
 
   require Logger
 

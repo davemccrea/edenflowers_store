@@ -9,7 +9,7 @@ defmodule Edenflowers.Orders.Order.Changes.PriceFulfillment do
   order already has, even if the option's prices have changed since.
   """
   use Ash.Resource.Change
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.DeliveryError

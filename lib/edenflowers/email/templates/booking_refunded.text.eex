@@ -1,9 +1,9 @@
-<%= if @registration.first_name do %><%= gettext("Hi %{name},", name: @registration.first_name) %><% else %><%= gettext("Hi,") %><% end %>
+<%= if @registration.first_name do %><%= dgettext("emails", "Hi %{name},", name: @registration.first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
 <%= refund_line(%{amount: @refund.amount, how: @refunded_to, format_currency: @format_currency}) %>
 
-<%= message(@refund.note) %><%= gettext("If you have any questions, just reply to this email.") %>
+<%= message(@refund.note) %><%= dgettext("emails", "If you have any questions, just reply to this email.") %>
 
-<%= gettext("Warm wishes,") %>
+<%= dgettext("emails", "Warm wishes,") %>
 
 <%= signature() %>

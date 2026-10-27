@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.MonthGrid do
     * `:week` - a column before each week, given the week's seven dates.
     * `:footer` - below the grid, given the first of the month on screen.
   """
-  use EdenflowersWeb, :live_component
+  use EdenflowersWeb, {:live_component, gettext_domain: "shared"}
 
   require Logger
 

@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   Admin order page for fulfillment, florist notes, cancellation, and payment actions.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   require Logger
 

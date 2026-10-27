@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.Admin.TranslationFields do
       def handle_async(:translate, result, socket),
         do: {:noreply, TranslationFields.put_translations(socket, result)}
   """
-  use EdenflowersWeb, :html
+  use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
   import Phoenix.LiveView, only: [put_flash: 3, start_async: 3]
 

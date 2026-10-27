@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
   card. A version names its user when a person made the change; the job's and
   webhook's changes are made by the system and name no one.
   """
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   import EdenflowersWeb.CoreComponents, only: [variant_size_label: 1]
 
@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
   defp event(%{version_action_name: :resume}), do: ~t"Resumed"
   defp event(%{version_action_name: :change}), do: ~t"Changed"
   defp event(%{version_action_name: :replace_card}), do: ~t"Card replaced"
-  defp event(%{version_action_name: :cancel}), do: pgettext("subscription", "Cancelled")
+  defp event(%{version_action_name: :cancel}), do: dpgettext("admin", "subscription", "Cancelled")
   defp event(%{version_action_name: other}), do: to_string(other)
 
   # A creation's fields are the whole subscription, already on the page.

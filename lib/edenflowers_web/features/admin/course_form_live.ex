@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   Admin form to create or edit a course and its translations.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.PhotoUpload, only: [photo_input: 1]

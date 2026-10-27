@@ -3,7 +3,7 @@ defmodule EdenflowersWeb.Admin.Components do
   Shared back-office components for forms, tables, page headers, and status displays.
   """
 
-  use EdenflowersWeb, :html
+  use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
   attr :count, :integer, required: true
   attr :active, :boolean, required: true
@@ -299,7 +299,7 @@ defmodule EdenflowersWeb.Admin.Components do
   def subscription_state_label(:active), do: ~t"Active"
   def subscription_state_label(:paused), do: ~t"Paused"
   def subscription_state_label(:payment_failed), do: ~t"Payment failed"
-  def subscription_state_label(:cancelled), do: pgettext("subscription", "Cancelled")
+  def subscription_state_label(:cancelled), do: dpgettext("admin", "subscription", "Cancelled")
 
   defp subscription_state_tone(:active), do: :success
   defp subscription_state_tone(:payment_failed), do: :error
@@ -659,9 +659,9 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   # Context keeps "Medium" apart from the variant size, which translates differently.
-  defp confidence_label(:low), do: pgettext("expense confidence", "Low")
-  defp confidence_label(:medium), do: pgettext("expense confidence", "Medium")
-  defp confidence_label(:high), do: pgettext("expense confidence", "High")
+  defp confidence_label(:low), do: dpgettext("admin", "expense confidence", "Low")
+  defp confidence_label(:medium), do: dpgettext("admin", "expense confidence", "Medium")
+  defp confidence_label(:high), do: dpgettext("admin", "expense confidence", "High")
   defp confidence_label(value), do: to_string(value)
 
   defp payment_status_tone(:paid), do: :success

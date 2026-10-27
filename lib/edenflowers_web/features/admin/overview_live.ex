@@ -4,7 +4,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   attention, sales, and the monthly accounting report.
   """
 
-  use EdenflowersWeb, :live_view
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
 

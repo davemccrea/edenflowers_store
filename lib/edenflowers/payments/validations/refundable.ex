@@ -6,7 +6,7 @@ defmodule Edenflowers.Payments.Validations.Refundable do
   paid outside it.
   """
   use Ash.Resource.Validation
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   @impl true
   def validate(changeset, _opts, _context) do
