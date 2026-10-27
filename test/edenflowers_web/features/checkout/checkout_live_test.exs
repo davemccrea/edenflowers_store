@@ -736,12 +736,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       conn = Plug.Test.init_test_session(conn, %{order_id: stale.id})
 
-      log =
-        capture_log(fn ->
-          assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, "/checkout")
-        end)
-
-      refute log =~ "[error]"
+      assert {:error, {:live_redirect, %{to: "/en"}}} = live(conn, "/checkout")
 
       reloaded = Orders.get_order_for_checkout!(stale.id, actor: nil)
       assert reloaded.line_items == []

@@ -101,6 +101,9 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
   end
 
   defp customer(name, email) do
+    [local, domain] = String.split(email, "@")
+    email = "#{local}+#{System.unique_integer([:positive])}@#{domain}"
+
     Ash.Seed.seed!(Edenflowers.Accounts.User, %{name: name, email: email})
   end
 end
