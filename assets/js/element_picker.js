@@ -1,3 +1,4 @@
+// @ts-check
 import {
   elementReference,
   findHeexSource,
@@ -178,8 +179,9 @@ if (dev || reviewer) {
       method,
       headers: {
         "content-type": "application/json",
-        "x-csrf-token": document.querySelector("meta[name='csrf-token']")
-          .content,
+        "x-csrf-token": /** @type {HTMLMetaElement} */ (
+          document.querySelector("meta[name='csrf-token']")
+        ).content,
       },
       body: JSON.stringify(data),
     }).catch(() => null);
