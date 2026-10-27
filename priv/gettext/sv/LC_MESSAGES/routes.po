@@ -3,129 +3,129 @@ msgstr ""
 "Language: sv\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "about"
 msgstr "om"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "condolences"
 msgstr "begravning"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "contact"
 msgstr "kontakt"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "courses"
 msgstr "kurser"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "en"
 msgstr ""
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "faq"
 msgstr "vanliga-fragor"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "fi"
 msgstr ""
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "product"
 msgstr "produkt"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "store"
 msgstr "butik"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "sv"
 msgstr ""
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "weddings"
 msgstr "brollop"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "terms"
 msgstr "kopvillkor"
 
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
-#: lib/edenflowers_web/router.ex:50
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
+#: lib/edenflowers_web/router.ex:58
 #, elixir-autogen, elixir-format
 msgid "privacy"
 msgstr ""

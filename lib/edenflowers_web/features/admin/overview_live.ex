@@ -25,6 +25,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     if connected?(socket) do
       EdenflowersWeb.Endpoint.subscribe("admin:orders")
       EdenflowersWeb.Endpoint.subscribe("admin:bookings")
+      EdenflowersWeb.Presence.subscribe()
     end
 
     {:ok,
@@ -33,6 +34,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
      |> assign(:locale, Localize.get_locale())
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
      |> assign(:report_month, previous_month())
+     |> assign(:connected_customers, EdenflowersWeb.Presence.connected_customers())
      |> assign(:calendar, Fulfillment.get_shop_calendar!(actor: socket.assigns.current_user))
      |> assign_orders()}
   end
@@ -77,6 +79,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           </div>
           <div class="min-w-0 xl:col-start-2">
             <.report_widget month={@report_month} />
+            <.online_customers customers={@connected_customers} />
           </div>
         </div>
       </.admin_page>
@@ -112,6 +115,10 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: "store:presence", event: "presence_diff"}, socket) do
+    {:noreply, assign(socket, :connected_customers, EdenflowersWeb.Presence.connected_customers())}
+  end
+
   def handle_info(%Phoenix.Socket.Broadcast{}, socket), do: {:noreply, assign_orders(socket)}
 
   # Whether customers can book `date` (:open), Jennie closed just that day (:closed),
@@ -466,6 +473,36 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   defp svg_path([{x, y} | rest]), do: Enum.reduce(rest, "M#{x},#{y}", fn {x, y}, path -> path <> " L#{x},#{y}" end)
+
+  attr :customers, :list, required: true
+
+  defp online_customers(assigns) do
+    {named, anonymous} = Enum.split_with(assigns.customers, & &1.user_id)
+    assigns = assign(assigns, named: named, anonymous_count: length(anonymous))
+
+    ~H"""
+    <div id="connected-customers" class="mt-6">
+      <.widget title={~t"Online customers"}>
+        <p class="text-2xl font-semibold tabular-nums" id="connected-customers-count">
+          {length(@customers)}
+        </p>
+        <p :if={@customers == []} class="text-base-content/75 mt-2 text-sm">
+          {~t"No customers online"}
+        </p>
+        <p :if={@anonymous_count > 0} id="anonymous-visitors-count" class="text-base-content/75 mt-2 text-sm">
+          {dngettext("admin", "%{count} anonymous visitor", "%{count} anonymous visitors", @anonymous_count)}
+        </p>
+        <ul :if={@named != []} id="online-customers-list" class="mt-2 max-h-60 space-y-2 overflow-y-auto text-sm">
+          <li :for={customer <- @named} id={"connected-#{customer.key}"}>
+            <.link navigate={~p"/admin/customers/#{customer.user_id}"} class="break-words hover:underline">
+              {customer.name}
+            </.link>
+          </li>
+        </ul>
+      </.widget>
+    </div>
+    """
+  end
 
   attr :month, :string, required: true
 

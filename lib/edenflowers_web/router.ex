@@ -49,6 +49,7 @@ defmodule EdenflowersWeb.Router do
     ash_authentication_live_session :public,
       on_mount: [
         EdenflowersWeb.Hooks.Maintenance,
+        EdenflowersWeb.Hooks.TrackPresence,
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath,
         EdenflowersWeb.Hooks.PutOrder,
@@ -89,6 +90,7 @@ defmodule EdenflowersWeb.Router do
     # its maintenance hook. Leaving one is a full page load through Plugs.Maintenance.
     ash_authentication_live_session :payment_link,
       on_mount: [
+        EdenflowersWeb.Hooks.TrackPresence,
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath,
         EdenflowersWeb.Hooks.PutOrder,
