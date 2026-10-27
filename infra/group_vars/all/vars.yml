@@ -54,22 +54,6 @@ papra_api_key: "{{ vault_papra_api_key }}"
 papra_webhook_secret: "{{ vault_papra_webhook_secret }}"
 papra_organization_id: "{{ vault_papra_organization_id }}"
 
-# Weblate (separate Compose project and Cloudflare Tunnel)
-weblate_domain: weblate.edenflowers.fi
-weblate_image: weblate/weblate:2026.10.1.4
-weblate_postgres_image: postgres:18-alpine
-weblate_valkey_image: valkey/valkey:9.1.3
-weblate_network_subnet: 172.30.50.0/24
-weblate_network_dynamic_range: 172.30.50.128/25
-weblate_tunnel_address: 172.30.50.2
-weblate_cloudflared_image: cloudflare/cloudflared:latest
-weblate_cloudflare_tunnel_token: "{{ vault_weblate_cloudflare_tunnel_token }}"
-weblate_admin_name: David
-weblate_admin_email: "{{ error_alert_email }}"
-weblate_db_password: "{{ vault_weblate_db_password }}"
-weblate_smtp_user: "{{ vault_brevo_smtp_user }}"
-weblate_smtp_password: "{{ vault_brevo_smtp_password }}"
-
 # Anthropic
 anthropic_api_key: "{{ vault_anthropic_api_key }}"
 
