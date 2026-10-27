@@ -172,7 +172,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                     <.input
                       :if={not @order.subscription? and !hide_newsletter_offer?(@order, @current_user)}
-                      label={~t"Subscribe to the newsletter and we'll email you a 15% off code."}
+                      label={~t"Subscribe to the newsletter and a 15% off code will be emailed to you."}
                       field={@form[:newsletter_opt_in]}
                       type="checkbox"
                       class="checkbox size-[18px] mt-1 self-start"
