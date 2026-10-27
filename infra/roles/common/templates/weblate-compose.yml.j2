@@ -48,6 +48,7 @@ services:
       WEBLATE_SITE_DOMAIN: {{ weblate_domain | to_json }}
       WEBLATE_ALLOWED_HOSTS: {{ weblate_domain | to_json }}
       WEBLATE_ENABLE_HTTPS: "1"
+      WEBLATE_SECURE_PROXY_SSL_HEADER: HTTP_X_FORWARDED_PROTO,https
       WEBLATE_IP_PROXY_HEADER: HTTP_CF_CONNECTING_IP
       WEBLATE_TRUSTED_PROXY_ADDRESSES: {{ weblate_tunnel_address | to_json }}
       WEBLATE_REGISTRATION_OPEN: "0"

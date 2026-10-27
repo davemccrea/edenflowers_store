@@ -12,8 +12,8 @@ import yaml
 INFRA = Path(__file__).parents[1]
 
 
-class WeblateNetworkTest(unittest.TestCase):
-    def test_dynamic_addresses_cannot_claim_the_tunnel_address(self):
+class WeblateConfigurationTest(unittest.TestCase):
+    def setUp(self):
         variables = yaml.safe_load((INFRA / "group_vars/all/vars.yml").read_text())
         variables.update(
             weblate_db_password="dummy-database-password",
@@ -25,9 +25,18 @@ class WeblateNetworkTest(unittest.TestCase):
         environment = Environment(undefined=StrictUndefined)
         environment.filters["to_json"] = json.dumps
         template = INFRA / "roles/common/templates/weblate-compose.yml.j2"
-        compose = yaml.safe_load(environment.from_string(template.read_text()).render(variables))
-        services = compose["services"]
-        network = compose["networks"]["default"]["ipam"]["config"][0]
+        self.compose = yaml.safe_load(environment.from_string(template.read_text()).render(variables))
+
+    def test_https_is_recognized_behind_cloudflare(self):
+        environment = self.compose["services"]["weblate"]["environment"]
+        self.assertEqual(environment["WEBLATE_ENABLE_HTTPS"], "1")
+        self.assertEqual(
+            environment.get("WEBLATE_SECURE_PROXY_SSL_HEADER"), "HTTP_X_FORWARDED_PROTO,https"
+        )
+
+    def test_dynamic_addresses_cannot_claim_the_tunnel_address(self):
+        services = self.compose["services"]
+        network = self.compose["networks"]["default"]["ipam"]["config"][0]
         subnet = ipaddress.ip_network(network["subnet"])
         dynamic_range = ipaddress.ip_network(network.get("ip_range", network["subnet"]))
         tunnel = ipaddress.ip_address(
