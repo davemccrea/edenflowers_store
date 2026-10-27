@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
 
   alias Edenflowers.Format
   alias Edenflowers.Orders.Subscription
+  alias EdenflowersWeb.FaqComponents
   alias EdenflowersWeb.Business
   alias EdenflowersWeb.SectionIndex
 
@@ -68,13 +69,13 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
                   {title}
                 </h2>
                 <div class="max-w-3xl">
-                  <.faq_item
+                  <FaqComponents.faq_item
                     :for={{{question, answer}, index} <- Enum.with_index(questions)}
                     id={"#{id}-question-#{index}"}
                     question={question}
-                    answer={answer}
-                    delivery_quote={@delivery_quote}
-                  />
+                  >
+                    <.answer_block :for={block <- answer} block={block} delivery_quote={@delivery_quote} />
+                  </FaqComponents.faq_item>
                   <p :if={id == "subscriptions"} class="pt-4">
                     {~t"Your subscription is covered by our"}
                     <a class="link-underline-static-body" href={terms_path("subscriptions")}>
@@ -109,21 +110,6 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
   @impl true
   def handle_info({:delivery_quoted, quote}, socket) do
     {:noreply, assign(socket, delivery_quote: quote)}
-  end
-
-  @doc "Answered here and on a subscribable product's page."
-  def subscription_questions do
-    days = Subscription.lead_days()
-
-    [
-      {~t"Can I collect my subscription bouquets?", ~t"Yes, choose pickup at checkout. Pickup is always free."},
-      {~t"When do I pay?",
-       ~t"For the first bouquet, at checkout. After that, your card is charged #{days = days} days before each delivery or pickup."},
-      {~t"Can I pause or cancel my subscription?",
-       ~t"Yes, from your account. You can also change the size, frequency or delivery day. Make changes at least #{close = Subscription.change_deadline_days()} days before delivery or pickup. Cancelling after that stops future bouquets, but the booked bouquet still comes."},
-      {~t"What if my card doesn't go through?",
-       ~t"Your bouquet still comes, and I'll get in touch with payment instructions."}
-    ]
   end
 
   # Answers share their text with the JSON-LD; only the page renders link markup.
@@ -234,7 +220,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
              ]}
           ]}
        ]},
-      {"subscriptions", ~t"Subscriptions", Enum.map(subscription_questions(), fn {q, a} -> {q, [a]} end)},
+      {"subscriptions", ~t"Subscriptions", Enum.map(FaqComponents.subscription_questions(), fn {q, a} -> {q, [a]} end)},
       {"weddings", ~t"Weddings",
        [
          {~t"How far ahead should I book wedding flowers?",
@@ -347,28 +333,6 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
         [paragraph]
     end)
     |> Enum.join(" ")
-  end
-
-  attr :id, :string, required: true
-  attr :question, :string, required: true
-  attr :answer, :list, required: true
-  attr :delivery_quote, :map, default: nil
-
-  defp faq_item(assigns) do
-    ~H"""
-    <details
-      id={@id}
-      phx-mounted={JS.ignore_attributes(["open"])}
-      class="collapse-arrow border-base-content/12 collapse group overflow-visible rounded-none border-b has-[summary:focus-visible]:outline-primary has-[summary:focus-visible]:outline-2 has-[summary:focus-visible]:outline-offset-2 first-of-type:border-t"
-    >
-      <summary class="collapse-title font-sans text-balance pr-10 pl-0 text-base font-medium leading-snug group-open:min-h-0 group-open:pb-2">
-        {@question}
-      </summary>
-      <div class="collapse-content font-sans text-base-content max-w-[60ch] space-y-3 px-0 text-base font-normal leading-relaxed">
-        <.answer_block :for={block <- @answer} block={block} delivery_quote={@delivery_quote} />
-      </div>
-    </details>
-    """
   end
 
   defp answer_block(%{block: {kind, lines}} = assigns) when kind in [:list, :bullets] do

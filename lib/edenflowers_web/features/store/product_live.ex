@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   alias Edenflowers.Orders.LineItem.Changes.KeepSubscriptionAlone
   alias Edenflowers.Orders.Subscription
   alias EdenflowersWeb.Checkout.Fields
+  alias EdenflowersWeb.FaqComponents
 
   alias Edenflowers.Catalog
   alias Edenflowers.Catalog.ProductType
@@ -321,23 +322,22 @@ defmodule EdenflowersWeb.Store.ProductLive do
         </div>
 
         <section
-          :if={@product.subscribable}
+          :if={@product.subscribable and @subscribe?}
           aria-labelledby="subscription-faq-heading"
           class="mt-20 max-w-3xl md:mt-28"
           data-testid="subscription-faq"
         >
-          <h2 id="subscription-faq-heading" class="section-title mb-6">{~t"How subscriptions work"}</h2>
-          <details
-            :for={{question, answer} <- EdenflowersWeb.Marketing.FaqLive.subscription_questions()}
-            class="collapse-arrow border-base-content/12 collapse rounded-none border-b has-[summary:focus-visible]:outline-primary has-[summary:focus-visible]:outline-2 has-[summary:focus-visible]:outline-offset-2 first-of-type:border-t"
+          <h2 id="subscription-faq-heading" class="section-title mb-6">
+            {~t"How subscriptions work"}
+          </h2>
+          <FaqComponents.faq_item
+            :for={{{question, answer}, index} <- Enum.with_index(FaqComponents.subscription_questions())}
+            id={"subscription-question-#{index}"}
+            question={question}
+            variant="product"
           >
-            <summary class="collapse-title font-serif text-balance pr-10 pl-0 text-xl leading-snug">
-              {question}
-            </summary>
-            <div class="collapse-content text-base-content/80 text-[1.0625rem] px-0 leading-relaxed">
-              <p class="max-w-[60ch]">{answer}</p>
-            </div>
-          </details>
+            <p>{answer}</p>
+          </FaqComponents.faq_item>
         </section>
       </.container>
     </Layouts.app>

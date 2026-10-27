@@ -116,13 +116,33 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
       refute has_element?(view, "[data-testid=subscribe-option][checked]")
-      assert has_element?(view, "[data-testid=subscription-faq] summary", "When do I pay?")
+      refute has_element?(view, "[data-testid=subscription-faq]")
       refute has_element?(view, "[data-testid=interval-options]")
       refute has_element?(view, "[data-testid=per-delivery]")
 
       view |> form("[data-testid=product-form]") |> render_submit()
 
       assert [%LineItem{interval_weeks: nil}] = line_items(order)
+    end
+
+    test "subscription FAQs follow the purchase selection", %{conn: conn, product: product} do
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+      refute has_element?(view, "[data-testid=subscription-faq]")
+
+      view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
+      assert has_element?(view, "[data-testid=subscription-faq] summary.font-serif.text-xl", "When do I pay?")
+
+      assert has_element?(view, "#subscription-faq-heading.section-title")
+      assert has_element?(view, ~s|#subscription-question-1 > .collapse-content[class*="text-base-content/80"]|)
+
+      {:ok, faq, _html} = live(conn, ~p"/en/faq")
+      assert has_element?(faq, "#subscriptions-question-1", "When do I pay?")
+
+      assert view |> element("#subscription-question-1 > div > p") |> render() ==
+               faq |> element("#subscriptions-question-1 > div > p") |> render()
+
+      view |> form("[data-testid=product-form]", %{subscribe: "false"}) |> render_change()
+      refute has_element?(view, "[data-testid=subscription-faq]")
     end
 
     test "can be subscribed to every few weeks", %{conn: conn, product: product, variant: variant, order: order} do
