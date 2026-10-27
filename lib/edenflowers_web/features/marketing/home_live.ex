@@ -205,7 +205,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         <div class="from-black/20 bg-linear-to-t pointer-events-none absolute inset-x-0 bottom-0 h-2/3 to-transparent md:hidden">
         </div>
 
-        <div class="container absolute inset-0 flex flex-col justify-end pb-16 sm:pb-28 md:justify-center md:pb-0">
+        <div class="container absolute inset-0 flex flex-col justify-end pb-16 sm:pb-28 md:pb-20">
           <h1 class="hero-display hero-focus max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
             <span class="sr-only">{~t"Flowers for every stage of life"}</span>
             <span aria-hidden="true">
@@ -229,7 +229,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <div class="hero-reveal mt-10" style="--reveal-delay: 750ms;">
             <.button
               navigate={~q"/#{language}/store"}
-              variant="inverse"
+              variant="light"
               size="lg"
               class="group w-fit"
             >

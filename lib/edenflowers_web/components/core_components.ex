@@ -25,6 +25,7 @@ defmodule EdenflowersWeb.CoreComponents do
     "ghost" => "btn-ghost",
     "inverse" =>
       "btn-outline border-white/80 text-white [--focus-color:white] hover:border-white hover:bg-white hover:text-base-content focus-visible:border-white focus-visible:bg-white focus-visible:text-base-content",
+    "light" => "border-white bg-white text-base-content [--focus-color:white] hover:border-white/90 hover:bg-white/90",
     "destructive" => "btn-error btn-outline"
   }
 
@@ -184,7 +185,7 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :rest, :global, include: ~w(href navigate patch method download target rel name value disabled type form)
   attr :class, :any, default: nil
-  attr :variant, :string, default: "secondary", values: ~w(primary secondary ghost text inverse destructive)
+  attr :variant, :string, default: "secondary", values: ~w(primary secondary ghost text inverse light destructive)
   attr :size, :string, default: "md", values: ~w(sm md lg)
   slot :inner_block, required: true
 
