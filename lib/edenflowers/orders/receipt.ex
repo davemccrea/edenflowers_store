@@ -12,6 +12,7 @@ defmodule Edenflowers.Orders.Receipt do
   alias Edenflowers.Format
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.ReceiptLabels
 
   @typst_bin "typst"
 
@@ -49,7 +50,7 @@ defmodule Edenflowers.Orders.Receipt do
 
     %{
       lang: lang_from_locale(locale),
-      labels: Edenflowers.Orders.ReceiptLabels.for_locale(locale),
+      labels: ReceiptLabels.for_locale(locale),
       order_reference: order.order_reference,
       ordered_at: Format.datetime(order.ordered_at, locale),
       customer_name: order.customer_name,
@@ -85,7 +86,7 @@ defmodule Edenflowers.Orders.Receipt do
 
     %{
       lang: lang_from_locale(locale),
-      labels: Edenflowers.Orders.ReceiptLabels.for_locale(locale),
+      labels: ReceiptLabels.for_locale(locale),
       order_reference: registration.reference,
       ordered_at: Format.datetime(registration.confirmed_at || registration.inserted_at, locale),
       customer_name: registration.name,
