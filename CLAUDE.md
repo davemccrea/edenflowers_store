@@ -25,6 +25,15 @@ The domain is modelled in Ash. Put domain logic in the resources, the way the As
 - Do not leave dead code or commented-out blocks.
 - Optimise for readability and maintainability over DRY. More lines are fine if future-me understands them more easily.
 
+## Translations
+
+- English source lives in code. After changing Gettext strings, run `mix gettext.extract --merge`, review the diff, and commit `.pot`/`.po` updates with the code.
+- Agents may create or improve Finnish/Swedish translations when requested. Prefer Weblate's API for translation-only edits; use Git for coordinated code/catalog changes. Before editing translations in Git, have Weblate commit/push pending work and reconcile its translation PR with your branch; preserve outstanding translator edits.
+- Flow: `main` → webhook → Weblate → `weblate-translations` → PR → `main`. `.github/workflows/translations.yml` opens/reuses the PR; CI checks translation-branch pushes. Merge and deployment remain manual.
+- Add translator comments for ambiguous strings, placeholders, and length limits; follow Weblate's glossary. Review terminology, placeholders, plural forms, and CI for human and agent translations alike. Review route translations as URL changes; follow the email review instructions below for emails.
+- When adding/splitting domains, update Weblate components to match their `.po` files and source `.pot`. Use language filter `^(fi|sv)$` to exclude English `.po` translations. Scan for translation files after configuration changes if import warnings persist.
+- For missed updates, compare Weblate's revision with GitHub `main` and inspect webhook deliveries.
+
 ## Agent skills
 
 - Issue tracker: Backlog.md tasks under `backlog/`, managed with the `backlog` CLI. See `docs/agents/issue-tracker.md`. Ungrilled tasks stay `needs-triage`; never implement one until you've grilled the user on it (`grilling` skill).
