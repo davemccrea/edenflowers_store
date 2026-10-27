@@ -173,6 +173,29 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
   end
 
   describe "live calendar availability" do
+    test "announces a closed selected date through an already mounted live region", %{conn: conn} do
+      date = Date.add(Edenflowers.ShopTime.today(), 7)
+      admin = generate(admin_user())
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+      region = ~s|#fulfillment-date-status[role="status"][aria-live="polite"][aria-atomic="true"]|
+      message = "This date is no longer available, please choose another"
+
+      assert has_element?(view, region)
+      refute has_element?(view, region, message)
+      render_click(view, "select-date", %{"date" => Date.to_string(date)})
+
+      calendar = Edenflowers.Fulfillment.get_shop_calendar!()
+      calendar = Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+
+      assert has_element?(view, region, message)
+      refute has_element?(view, "[data-testid=fulfillment-date-unavailable][role=alert]")
+
+      Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+
+      assert has_element?(view, region)
+      refute has_element?(view, region, message)
+    end
+
     test "flags a selected date that closes without losing the customer's input", %{conn: conn} do
       date = Date.add(Edenflowers.ShopTime.today(), 7)
       admin = generate(admin_user())
