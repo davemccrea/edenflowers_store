@@ -31,7 +31,7 @@
   "delivery_instructions": null,
   "ordered_at": "13.5.2026 14.32",
   "recipient_name": null,
-  "recipient_phone_number": null,
+  "contact_phone_number": null,
   "lang": "sv",
   "vat_breakdown": [
     {

@@ -197,19 +197,12 @@ defmodule Edenflowers.Orders.Order.Admin do
 
     read :last_with_customer_phone do
       description "The customer's latest placed order that holds their own phone number, to prefill a Custom Order " <>
-                    "Jennie enters for them."
+                    "Jennie enters for them and the phone on their next checkout."
 
       argument :customer_id, :uuid, allow_nil?: false
       get? true
 
-      # Checkout (and its subscription occurrences) stores the buyer's phone in
-      # recipient_phone_number except for gift deliveries; custom gifts keep a separate recipient.
-      filter expr(
-               state == :placed and user_id == ^arg(:customer_id) and
-                 (not is_nil(customer_phone_number) or
-                    (origin in [:online, :subscription] and
-                       (gift == false or fulfillment_method == :pickup) and not is_nil(recipient_phone_number)))
-             )
+      filter expr(state == :placed and user_id == ^arg(:customer_id) and not is_nil(customer_phone_number))
 
       prepare build(sort: [ordered_at: :desc], limit: 1)
     end
@@ -268,7 +261,7 @@ defmodule Edenflowers.Orders.Order.Admin do
       validate Validations.DeliveryAddress
       validate Validations.CardMessageLength
       change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
-      change Changes.NormalizePhoneNumber
+      change {Changes.NormalizePhoneNumber, attribute: :recipient_phone_number}
       change Changes.ClearGiftFields
       change Changes.PriceFulfillment
       change manage_relationship(:customer_id, :user, type: :append)
@@ -326,7 +319,7 @@ defmodule Edenflowers.Orders.Order.Admin do
       validate Validations.DeliveryAddress
       validate Validations.CardMessageLength
       change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
-      change Changes.NormalizePhoneNumber
+      change {Changes.NormalizePhoneNumber, attribute: :recipient_phone_number}
       change Changes.ClearGiftFields
       change Changes.PriceFulfillment
       change set_attribute(:user_id, nil), where: [changing(:customer_email)]

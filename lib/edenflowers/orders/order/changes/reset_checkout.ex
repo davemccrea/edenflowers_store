@@ -21,6 +21,7 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
                |> Map.merge(%{
                  customer_name: nil,
                  customer_email: nil,
+                 customer_phone_number: nil,
                  user_id: nil,
                  gift: false,
                  recipient_name: nil,
@@ -37,7 +38,7 @@ defmodule Edenflowers.Orders.Order.Changes.ResetCheckout do
   def change(changeset, _opts, _context) do
     reset_attrs =
       if changeset.data.payment_intent_id do
-        Map.drop(@reset_attrs, [:customer_name, :customer_email, :user_id])
+        Map.drop(@reset_attrs, [:customer_name, :customer_email, :customer_phone_number, :user_id])
       else
         @reset_attrs
       end

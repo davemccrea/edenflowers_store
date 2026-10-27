@@ -65,7 +65,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
               <% end %>
             </p>
             <p
-              :if={@shown_order.fulfillment_method == :pickup && @shown_order.recipient_phone_number}
+              :if={@shown_order.fulfillment_method == :pickup && @shown_order.customer_phone_number}
               class="text-base-content/80 leading-relaxed"
             >
               {~t"I'll send a text message when it's ready."}

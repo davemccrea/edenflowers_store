@@ -236,7 +236,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       |> render_submit(%{
         "form" => %{
           "delivery_address" => "Stadsgatan 3, 65300 Vasa",
-          "recipient_phone_number" => "045 1234567",
+          "contact_phone_number" => "045 1234567",
           "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
         }
       })
@@ -258,7 +258,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
 
-      submit_delivery = fn ->
+      submit_delivery = fn phone_number ->
         {:ok, view, _html} = live(conn, ~p"/checkout")
         view |> element("#address-input-field") |> render_blur(%{"value" => "Stadsgatan 3, 65300 Vasa"})
         render_async(view, 500)
@@ -268,7 +268,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
         |> render_submit(%{
           "form" => %{
             "delivery_address" => "Stadsgatan 3, 65300 Vasa",
-            "recipient_phone_number" => "045 1234567",
+            "contact_phone_number" => phone_number,
             "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
           }
         })
@@ -276,7 +276,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
         view
       end
 
-      view = submit_delivery.()
+      view = submit_delivery.("045 1234567")
       assert has_element?(view, ~s|#checkout-form-4[data-billing-phone="+358451234567"]|)
 
       step_3_order.id
@@ -284,9 +284,33 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       |> Orders.return_to_delivery!(actor: nil)
       |> Orders.set_gift!(true, actor: nil)
 
-      view = submit_delivery.()
-      assert has_element?(view, "#checkout-form-4")
-      refute has_element?(view, "#checkout-form-4[data-billing-phone]")
+      view = submit_delivery.("040 7654321")
+      assert has_element?(view, ~s|#checkout-form-4[data-billing-phone="+358451234567"]|)
+    end
+
+    test "shows the customer's own number for themselves, and an empty field for a gift recipient", %{
+      conn: conn,
+      step_3_order: step_3_order
+    } do
+      step_3_order
+      |> Ash.Changeset.for_update(:submit_delivery, %{
+        fulfillment_date: Edenflowers.ShopTime.today() |> Date.add(7),
+        delivery_address: "Stadsgatan 3, 65300 Vasa",
+        contact_phone_number: "045 1234567"
+      })
+      |> Ash.Changeset.force_change_attributes(geocoded_address: "Stadsgatan 3, 65300 Vasa", distance: 3000)
+      |> Ash.update!(authorize?: false)
+      |> Orders.return_to_delivery!(actor: nil)
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+      assert has_element?(view, ~s|input[name="form[contact_phone_number]"][value="045 1234567"]|)
+
+      step_3_order.id
+      |> Orders.get_order_for_checkout!(actor: nil)
+      |> Orders.set_gift!(true, actor: nil)
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+      refute has_element?(view, ~s|input[name="form[contact_phone_number]"][value]|)
     end
 
     # Closed days are only aria-disabled, so a click on one still arrives.

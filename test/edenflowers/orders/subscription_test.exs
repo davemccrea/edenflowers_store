@@ -229,6 +229,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       assert subscription.interval_weeks == 2
       assert subscription.next_fulfillment_date == Date.add(order.fulfillment_date, 14)
       assert subscription.fulfillment_option_id == ctx.delivery.id
+      assert subscription.customer_phone_number == "045 7654321"
       assert subscription.recipient_name == "Grace Hopper"
       assert subscription.recipient_phone_number == "040 1234567"
       assert subscription.delivery_address == "Hovrättsesplanaden 1, Vasa"
@@ -370,6 +371,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
           [
             customer_name: "Ada Lovelace",
             customer_email: "ada@example.com",
+            customer_phone_number: "045 7654321",
             user_id: user.id,
             gift: true,
             recipient_name: "Grace Hopper",
@@ -398,7 +400,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
   defp submit_delivery(order, params) do
     params =
       Map.merge(
-        %{fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 3), recipient_phone_number: "040 1234567"},
+        %{fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 3), contact_phone_number: "040 1234567"},
         params
       )
 

@@ -911,7 +911,7 @@ defmodule Edenflowers.Orders.OrderTest do
                order
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
-                 recipient_phone_number: "045 1234567"
+                 contact_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
 
@@ -929,7 +929,7 @@ defmodule Edenflowers.Orders.OrderTest do
                })
                |> Ash.update(authorize?: false)
 
-      assert Enum.any?(errors, &(&1.field == :recipient_phone_number))
+      assert Enum.any?(errors, &(&1.field == :contact_phone_number))
     end
 
     test "save_step_3 stores the phone number in international format", %{pickup_option: pickup_option} do
@@ -944,11 +944,11 @@ defmodule Edenflowers.Orders.OrderTest do
                  |> Ash.Changeset.for_update(:submit_delivery, %{
                    fulfillment_option_id: pickup_option.id,
                    fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
-                   recipient_phone_number: typed
+                   contact_phone_number: typed
                  })
                  |> Ash.update(authorize?: false)
 
-        assert order.recipient_phone_number == stored
+        assert order.customer_phone_number == stored
       end
     end
 
@@ -960,11 +960,11 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
                  fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
-                 recipient_phone_number: "123"
+                 contact_phone_number: "123"
                })
                |> Ash.update(authorize?: false)
 
-      assert Enum.any?(errors, &(&1.field == :recipient_phone_number))
+      assert Enum.any?(errors, &(&1.field == :contact_phone_number))
     end
 
     test "save_step_3 with pickup clears delivery fields", %{pickup_option: pickup_option} do
@@ -975,7 +975,7 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
                  fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
-                 recipient_phone_number: "045 1234567"
+                 contact_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
 
@@ -1000,7 +1000,7 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
                  fulfillment_date: yesterday,
-                 recipient_phone_number: "045 1234567"
+                 contact_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
 
@@ -1018,7 +1018,7 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.Changeset.for_update(:submit_delivery, %{
                  fulfillment_option_id: pickup_option.id,
                  fulfillment_date: closed_date,
-                 recipient_phone_number: "045 1234567"
+                 contact_phone_number: "045 1234567"
                })
                |> Ash.update(authorize?: false)
 
@@ -1126,6 +1126,7 @@ defmodule Edenflowers.Orders.OrderTest do
             gift: true,
             recipient_name: "Recipient",
             card_message: "With love",
+            customer_phone_number: "+358407654321",
             recipient_phone_number: "+358401234567",
             delivery_address: "Test Address",
             delivery_instructions: "Ring twice",
@@ -1148,6 +1149,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert reset_order.gift == false
       assert is_nil(reset_order.recipient_name)
       assert is_nil(reset_order.card_message)
+      assert is_nil(reset_order.customer_phone_number)
       assert is_nil(reset_order.recipient_phone_number)
       assert is_nil(reset_order.delivery_address)
       assert is_nil(reset_order.delivery_instructions)

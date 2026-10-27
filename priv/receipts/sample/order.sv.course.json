@@ -30,7 +30,7 @@
   ],
   "card_message": null,
   "recipient_name": null,
-  "recipient_phone_number": null,
+  "contact_phone_number": null,
   "delivery_address": null,
   "delivery_instructions": null,
   "fulfillment_fee": null,

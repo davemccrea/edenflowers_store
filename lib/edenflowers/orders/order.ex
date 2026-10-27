@@ -276,7 +276,8 @@ defmodule Edenflowers.Orders.Order do
     # Step 1 - Your Details
     attribute :customer_name, :string
     attribute :customer_email, Edenflowers.Types.Email
-    # Only custom orders ask for it: a phone customer may have no email.
+    # The Customer's own number, on every origin. Checkout asks for it on the
+    # delivery step unless the order is a gift delivery.
     attribute :customer_phone_number, :string
     # Stored as Jennie typed it, with or without the @.
     attribute :customer_instagram, :string
@@ -287,6 +288,7 @@ defmodule Edenflowers.Orders.Order do
 
     # Step 3 - Delivery Information
     attribute :recipient_name, :string
+    # Only a gift's Recipient's number, never the Customer's own.
     attribute :recipient_phone_number, :string
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string
@@ -426,14 +428,23 @@ defmodule Edenflowers.Orders.Order do
                     "distance was measured."
     end
 
+    calculate :contact_phone_number,
+              :string,
+              expr(
+                if gift and fulfillment_method == :delivery do
+                  recipient_phone_number
+                else
+                  customer_phone_number
+                end
+              ) do
+      description "The number to call or text about this order: the Recipient's for a gift delivery, otherwise " <>
+                    "the Customer's own, who receives it or collects it. Checkout's phone field edits this number."
+    end
+
     calculate :missing_delivery_phone?,
               :boolean,
-              expr(
-                fulfillment_method == :delivery and is_nil(recipient_phone_number) and
-                  (gift or is_nil(customer_phone_number))
-              ) do
-      description "A delivery with no number to call at the door: the Recipient's for a gift, otherwise " <>
-                    "the Customer's own. A Custom Order may be saved before Jennie has one."
+              expr(fulfillment_method == :delivery and is_nil(contact_phone_number)) do
+      description "A delivery with no number to call at the door. A Custom Order may be saved before Jennie has one."
     end
 
     calculate :promotion_applied?, :boolean, Calculations.PromotionApplied do

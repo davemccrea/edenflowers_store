@@ -387,6 +387,44 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> assert_has("[data-testid='select-card-button']")
       |> refute_has("[data-testid='first-delivery-card']")
     end
+
+    test "entering delivery fills a signed-in customer's own phone and address", %{conn: conn} do
+      user = generate(admin_user(admin: false)) |> with_token()
+      delivery = generate(fulfillment_option(fulfillment_method: :delivery))
+
+      generate(
+        order(
+          state: :placed,
+          user_id: user.id,
+          ordered_at: DateTime.utc_now(),
+          fulfillment_method: :delivery,
+          customer_phone_number: "+358401111111",
+          delivery_address: "Kauppatori 1, Helsinki"
+        )
+      )
+
+      cart =
+        generate(
+          order(
+            state: :gift_options,
+            user_id: user.id,
+            customer_name: "Jane",
+            customer_email: to_string(user.email),
+            fulfillment_option_id: delivery.id,
+            fulfillment_method: :delivery
+          )
+        )
+
+      variant = generate(product_variant(product_id: generate(product()).id))
+      Orders.add_line_item!(cart.id, variant.id, 1, authorize?: false)
+
+      conn
+      |> log_in(user, %{order_id: cart.id})
+      |> visit("/checkout")
+      |> click_button("Next")
+      |> assert_has(~s|input[name="form[contact_phone_number]"][value="+358401111111"]|)
+      |> assert_has(~s|#address-input-field[value="Kauppatori 1, Helsinki"]|)
+    end
   end
 
   describe "Card selection" do

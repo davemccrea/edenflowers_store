@@ -643,9 +643,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   def arrow_symbol("ArrowLeft"), do: "←"
   def arrow_symbol("ArrowRight"), do: "→"
 
-  # The phone number is the recipient's only on gift deliveries; the buyer collects pickups.
-  def customer_phone?(order), do: !order.gift or order.fulfillment_method == :pickup
-
   def positive?(nil), do: false
   def positive?(value), do: Decimal.compare(value, 0) == :gt
 

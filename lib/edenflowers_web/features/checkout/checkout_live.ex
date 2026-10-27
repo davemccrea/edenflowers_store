@@ -69,7 +69,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
        |> assign(:delivery_quote, quote_from_order(order))
-       |> assign(:form, build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user])))
+       |> assign(
+         :form,
+         build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user]), actor(socket))
+       )
        |> assign(:customer_session_client_secret, nil)
        |> ensure_customer_session(order, actor(socket))
        |> maybe_scroll_to_current_step()}
@@ -270,7 +273,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                         label={recipient_label(@order, :phone)}
                         help={phone_help(@order)}
                         placeholder="040 123 4567"
-                        field={@form[:recipient_phone_number]}
+                        field={@form[:contact_phone_number]}
                         value={typed_phone_number(@form)}
                         phx-blur="format_phone_number"
                         type="tel"
@@ -495,7 +498,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   def handle_event("format_phone_number", %{"value" => typed}, socket) do
     case PhoneNumber.format(typed) do
       {:ok, formatted} ->
-        params = Map.put(socket.assigns.form.params, "recipient_phone_number", formatted)
+        params = Map.put(socket.assigns.form.params, "contact_phone_number", formatted)
         {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
 
       :error ->
@@ -556,7 +559,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   def handle_event("update_fulfillment_option", %{"form" => %{"fulfillment_option_id" => id}}, socket) do
     previous_method = socket.assigns.order.fulfillment_method
     Orders.update_fulfillment_option!(socket.assigns.order, id, actor: actor(socket))
-    socket = reload_order(socket)
+
+    # On a gift the phone field swaps between the Recipient's number and the
+    # Customer's own, so a number typed for one mustn't follow to the other.
+    drop = if socket.assigns.order.gift, do: ["contact_phone_number"], else: []
+    socket = reload_order(socket, drop: drop)
 
     # Switching to pickup unmounts the address field. It remounts with
     # whatever address the order holds, which may be prefilled.
@@ -962,14 +969,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # that while typing leaves the value attribute unchanged when the blur handler
   # formats it, so LiveView never repaints the box. Show what was typed until blur.
   defp typed_phone_number(form) do
-    Map.get(form.params, "recipient_phone_number", form[:recipient_phone_number].value)
+    Map.get(form.params, "contact_phone_number", form[:contact_phone_number].value)
   end
 
   # Stripe needs the country code to hand the number to Link.
-  defp buyer_phone_number(%{gift: true, fulfillment_method: :delivery}), do: nil
-
   defp buyer_phone_number(order) do
-    case Edenflowers.PhoneNumber.format(order.recipient_phone_number, :e164) do
+    case Edenflowers.PhoneNumber.format(order.customer_phone_number, :e164) do
       {:ok, e164} -> e164
       :error -> nil
     end
@@ -990,9 +995,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp actor(socket), do: socket.assigns[:current_user]
 
-  defp make_form(order, action, params) do
+  # The actor lets submit_gift_options prefill from a signed-in customer's last order.
+  defp make_form(order, action, params, actor) do
     order
-    |> AshPhoenix.Form.for_update(action, params: params)
+    |> AshPhoenix.Form.for_update(action, params: params, actor: actor)
     |> to_form()
   end
 
@@ -1010,10 +1016,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp prefill_contact_details(_order, _user), do: %{}
 
   # Nil on the payment step, which Stripe Elements drives.
-  defp build_submit_form(order, params) do
+  defp build_submit_form(order, params, actor) do
     case submit_action_for(order.state) do
       nil -> nil
-      action -> make_form(order, action, params)
+      action -> make_form(order, action, params, actor)
     end
   end
 
@@ -1030,7 +1036,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
     socket
     |> assign(order: order)
-    |> assign(form: build_submit_form(order, form_params))
+    |> assign(form: build_submit_form(order, form_params, actor(socket)))
   end
 
   defp submit_form(socket, params) do

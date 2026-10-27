@@ -22,6 +22,7 @@ defmodule Edenflowers.Orders.Receipt do
     :discount,
     :promotion_applied?,
     :grand_total,
+    :contact_phone_number,
     :payments,
     line_items: [:subtotal, :total, :unit_price_ex_tax]
   ]
@@ -58,7 +59,7 @@ defmodule Edenflowers.Orders.Receipt do
       fulfillment_method: to_string(order.fulfillment_method),
       fulfillment_date: Format.weekday_date(order.fulfillment_date, locale),
       recipient_name: order.recipient_name,
-      recipient_phone_number: order.recipient_phone_number,
+      contact_phone_number: order.contact_phone_number,
       # Customer's typed address, not `geocoded_address` — HERE strips flat numbers and stair codes.
       delivery_address: order.delivery_address,
       delivery_instructions: order.delivery_instructions,
@@ -98,7 +99,7 @@ defmodule Edenflowers.Orders.Receipt do
       venue_name: course.location_name,
       venue_address: course.location_address,
       recipient_name: nil,
-      recipient_phone_number: nil,
+      contact_phone_number: nil,
       delivery_address: nil,
       delivery_instructions: nil,
       card_message: nil,

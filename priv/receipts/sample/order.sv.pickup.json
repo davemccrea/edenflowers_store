@@ -31,7 +31,7 @@
   "delivery_instructions": null,
   "ordered_at": "13.5.2026 16.08",
   "recipient_name": null,
-  "recipient_phone_number": "+358 40 555 0123",
+  "contact_phone_number": "+358 40 555 0123",
   "lang": "sv",
   "vat_breakdown": [
     {

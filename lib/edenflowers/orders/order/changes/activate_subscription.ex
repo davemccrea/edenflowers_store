@@ -31,6 +31,7 @@ defmodule Edenflowers.Orders.Order.Changes.ActivateSubscription do
       product_variant_id: line_item.product_variant_id,
       interval_weeks: line_item.interval_weeks,
       next_fulfillment_date: Date.add(order.fulfillment_date, line_item.interval_weeks * 7),
+      customer_phone_number: order.customer_phone_number,
       recipient_name: order.recipient_name,
       recipient_phone_number: order.recipient_phone_number,
       delivery_address: order.delivery_address,

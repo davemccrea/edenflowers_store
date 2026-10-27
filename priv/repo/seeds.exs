@@ -611,7 +611,7 @@ orders = [
     fulfillment_option: home_delivery,
     fulfillment_date: fulfillment_date_for.(4),
     recipient_name: "Liisa Mäkinen",
-    recipient_phone_number: "041 5550099",
+    customer_phone_number: "041 5550099",
     locale: "fi",
     promotion: promotion_by_code.("SUMMER15"),
     items: [line_item.("Bouquet 2", :large, 2), line_item.("Plant", :medium, 1)]
@@ -625,7 +625,7 @@ orders = [
     ordered_at: DateTime.add(DateTime.utc_now(), -6, :day),
     fulfillment_date: fulfillment_date_for.(-2),
     recipient_name: "Hanna Järvinen",
-    recipient_phone_number: "045 3217654",
+    customer_phone_number: "045 3217654",
     fulfillment_status: :fulfilled,
     items: [line_item.("Bouquet 2", :medium, 1)]
   }),
@@ -686,7 +686,7 @@ orders = [
     fulfillment_time_start: ~T[10:00:00],
     fulfillment_time_end: ~T[12:00:00],
     recipient_name: "Karin Öst",
-    recipient_phone_number: "040 1112233",
+    customer_phone_number: "040 1112233",
     items: [line_item.("Bouquet 2", :medium, 1)]
   }),
   %{
@@ -733,7 +733,7 @@ seed_placed_order.(
     ordered_at: DateTime.add(DateTime.utc_now(), -24, :day),
     fulfillment_date: fulfillment_date_for.(-21),
     recipient_name: "Sven Dahl",
-    recipient_phone_number: "050 4443322",
+    customer_phone_number: "050 4443322",
     fulfillment_status: :fulfilled,
     items: [line_item.("Bouquet 1", :large, 1)]
   })
@@ -776,6 +776,7 @@ seed_subscription_order = fn subscription, user, attrs ->
     user_id: user.id,
     gift: subscription.recipient_name != user.name,
     card_message: attrs[:card_message],
+    customer_phone_number: subscription.customer_phone_number,
     recipient_name: subscription.recipient_name,
     recipient_phone_number: subscription.recipient_phone_number,
     fulfillment_date: attrs.fulfillment_date,
@@ -863,8 +864,9 @@ for attrs <- subscriptions do
       state: attrs.state,
       interval_weeks: attrs.interval_weeks,
       next_fulfillment_date: scheduled_date.(length(attrs.occurrences) + 1),
+      customer_phone_number: "045 7651234",
       recipient_name: attrs.recipient_name,
-      recipient_phone_number: "040 1234567",
+      recipient_phone_number: if(attrs.recipient_name != attrs.name, do: "040 1234567"),
       delivery_address: nearby_address.delivery_address,
       card_message: attrs[:card_message],
       locale: attrs.locale,

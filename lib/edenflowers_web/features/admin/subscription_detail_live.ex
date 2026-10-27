@@ -180,6 +180,9 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                 <:contact>
                   <.email_link email={@subscription.user.email} />
                 </:contact>
+                <:contact :if={@subscription.customer_phone_number}>
+                  <.phone_link phone_number={@subscription.customer_phone_number} />
+                </:contact>
                 <:contact>
                   <.link
                     id="subscription-customer-link"

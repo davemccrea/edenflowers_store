@@ -207,6 +207,7 @@ defmodule Edenflowers.Orders.Subscription do
         :product_variant_id,
         :interval_weeks,
         :next_fulfillment_date,
+        :customer_phone_number,
         :recipient_name,
         :recipient_phone_number,
         :delivery_address,
@@ -411,7 +412,9 @@ defmodule Edenflowers.Orders.Subscription do
 
     # Copied from the first order. Each occurrence prices its fee afresh from
     # the address, so no fee or geocode is kept here.
+    attribute :customer_phone_number, :string
     attribute :recipient_name, :string
+    # Only a gift's Recipient's number, as on Order.
     attribute :recipient_phone_number, :string
     attribute :delivery_address, :string
     attribute :delivery_instructions, :string

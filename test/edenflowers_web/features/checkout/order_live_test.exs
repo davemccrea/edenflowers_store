@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
   end
 
   test "says a text will follow when a pickup order has a phone number", %{conn: conn, user: user} do
-    order = placed_order(user_id: user.id, recipient_phone_number: "045 1505141", paid: true)
+    order = placed_order(user_id: user.id, customer_phone_number: "045 1505141", paid: true)
 
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
 

@@ -316,9 +316,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   class="input w-full"
                   autocapitalize="words"
                 />
-                <%!-- An online order keeps the buyer's own number here when it isn't a gift. --%>
                 <.input
-                  :if={@gift? or (@order && @order.origin != :custom)}
+                  :if={@gift?}
                   field={@form[:recipient_phone_number]}
                   type="tel"
                   label={if @method == :delivery, do: ~t"Recipient phone (for the delivery)", else: ~t"Recipient phone"}
@@ -726,7 +725,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp prefill_customer(params, _assigns), do: params
 
   defp last_phone_number(nil), do: ""
-  defp last_phone_number(order), do: order.customer_phone_number || order.recipient_phone_number || ""
+  defp last_phone_number(order), do: order.customer_phone_number
 
   defp last_locale(nil), do: nil
   defp last_locale(order), do: order.locale
