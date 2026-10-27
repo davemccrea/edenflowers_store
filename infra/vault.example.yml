@@ -9,6 +9,14 @@ vault_release_cookie: "generate with: openssl rand -base64 32"
 vault_db_user: "your_db_user"
 vault_db_password: "your_db_password"
 
+# Production off-site database and photo backups (main Hetzner Storage Box account)
+vault_backup_storage_user: "u123456"
+vault_backup_storage_host: "u123456.your-storagebox.de"
+# Verify independently with Hetzner; key type and base64 key, without hostname.
+vault_backup_storage_host_key: "ssh-ed25519 AAAA..."
+# Better Stack heartbeat: daily, with a grace period long enough for dump + transfer.
+vault_backup_heartbeat_url: "https://uptime.betterstack.com/api/v1/heartbeat/REPLACE_ME"
+
 # GitHub (personal access token with read:packages scope for ghcr.io pulls)
 vault_github_token: "ghp_..."
 
