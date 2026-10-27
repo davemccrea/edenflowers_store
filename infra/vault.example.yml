@@ -54,6 +54,16 @@ vault_anthropic_api_key: "sk-ant-..."
 # Brevo API key (SMTP & API > API keys)
 vault_brevo_api_key: "your_brevo_api_key"
 
+# Weblate (generate with: openssl rand -hex 32)
+vault_weblate_db_password: "your_weblate_db_password"
+
+# Dedicated Weblate tunnel, separate from the shop's tunnel
+vault_weblate_cloudflare_tunnel_token: "eyJ..."
+
+# Brevo SMTP & API > SMTP: login and SMTP key, NOT the REST API key
+vault_brevo_smtp_user: "your_brevo_smtp_login"
+vault_brevo_smtp_password: "your_brevo_smtp_key"
+
 # Web Push VAPID private key for admin order notifications. The matching public
 # key goes in group_vars/all/vars.yml.
 # Generate a pair in the app repo with:

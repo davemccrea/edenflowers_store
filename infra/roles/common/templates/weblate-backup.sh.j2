@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+cd /opt/weblate
+
+exec 9>/opt/weblate/backup.lock
+flock -n 9 || exit 0
+
+backup="/opt/weblate/backups/$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir "$backup.tmp"
+
+# Quiesce repository writers so the database and Git repositories agree.
+restart_weblate() {
+  docker compose start weblate
+}
+trap restart_weblate EXIT
+docker compose stop weblate
+docker compose exec -T database pg_dump -U weblate -d weblate -Fc > "$backup.tmp/database.dump"
+tar -czf "$backup.tmp/data.tar.gz" -C /opt/weblate data
+mv "$backup.tmp" "$backup"
+restart_weblate
+trap - EXIT
+
+find /opt/weblate/backups -mindepth 1 -maxdepth 1 -type d ! -name '*.tmp' -mtime +30 -exec rm -rf -- {} +
