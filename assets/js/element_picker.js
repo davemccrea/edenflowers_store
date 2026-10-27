@@ -464,8 +464,7 @@ if (dev || reviewer) {
       (note) => note["mine?"] && noteElement(note) === el,
     );
 
-  const noteFor = (el, body, strings) => ({
-    body,
+  const noteContextFor = (el) => ({
     path: location.pathname + location.search,
     locale: document.documentElement.lang,
     viewport: `${innerWidth}x${innerHeight}`,
@@ -473,11 +472,6 @@ if (dev || reviewer) {
     element_text: el.innerText?.trim().replace(/\s+/g, " ").slice(0, 500),
     element_html: el.outerHTML.slice(0, 2000),
     source: findHeexSource(el)?.location,
-    strings: strings.map(({ domain, msgctxt, msgid }) => ({
-      domain,
-      msgctxt,
-      msgid,
-    })),
   });
 
   const copyReference = async (el, body = "") => {
@@ -510,6 +504,8 @@ if (dev || reviewer) {
   };
 
   const openBox = (el, heading, note = null) => {
+    const noteContext = note ? null : noteContextFor(el);
+    let saving = false;
     if (box) releaseAnchor(activeEl);
     box?.remove();
     activeEl = el;
@@ -640,17 +636,26 @@ if (dev || reviewer) {
 
     box.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (saving) return;
       const body = textarea.value.trim();
       if (!body) return textarea.focus();
 
+      saving = true;
       save.disabled = true;
       status.textContent = "Saving…";
       const response = note
         ? await sendJson(`/review-notes/${note.id}`, { body }, "PATCH")
-        : await sendJson(
-            "/review-notes",
-            noteFor(el, body, await stringsRequest),
-          );
+        : await sendJson("/review-notes", {
+            ...noteContext,
+            body,
+            strings: (await stringsRequest).map(
+              ({ domain, msgctxt, msgid }) => ({
+                domain,
+                msgctxt,
+                msgid,
+              }),
+            ),
+          });
 
       if (response?.ok) notesPath = null;
       if (box !== thisBox || path !== pagePath()) return;
@@ -658,6 +663,7 @@ if (dev || reviewer) {
         closeBox();
         flash(el, "✓ Note saved");
       } else {
+        saving = false;
         save.disabled = false;
         status.textContent = `Could not save (${response?.status ?? "offline"}), try again`;
       }

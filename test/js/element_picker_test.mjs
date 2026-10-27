@@ -576,6 +576,56 @@ test("a submitted note still saves when its box closes before its strings arrive
   assert.ok(f.requests.some((request) => request.url === "/review-notes"));
 });
 
+test("a submitted note keeps its original page context while strings are pending", async () => {
+  const strings = deferred();
+  const f = fixture({
+    reviewer: true,
+    fetchReply: (url) => url === "/review-notes/strings" && strings.promise,
+  });
+  f.location.search = "?sort=price";
+  await f.fire("click");
+  f.overlays.find((node) => node.tagName === "TEXTAREA").value =
+    "Original page";
+  const pending = f.overlays
+    .find((node) => node.tagName === "FORM")
+    .on.submit({ preventDefault() {} });
+  f.location.pathname = "/en/about";
+  f.location.search = "";
+  f.child.innerText = "Changed element";
+  strings.resolve({ ok: true, json: async () => [] });
+  await pending;
+  const saved = f.requests.find((request) => request.url === "/review-notes");
+  assert.equal(saved.body.path, "/fi/kauppa?sort=price");
+  assert.equal(saved.body.element_text, "Lisää ostoskoriin");
+});
+
+for (const editing of [false, true]) {
+  test(`repeated submissions send only one ${editing ? "update" : "create"} request`, async () => {
+    const reply = deferred();
+    const url = editing ? "/review-notes/n1" : "/review-notes";
+    const f = fixture({
+      reviewer: true,
+      responses: {
+        "/review-notes": editing
+          ? [{ id: "n1", body: "Old note", selector: "#noted", "mine?": true }]
+          : [],
+      },
+      fetchReply: (requested) => requested === url && reply.promise,
+    });
+    await f.fire("click", { target: f.parent });
+    f.overlays.find((node) => node.tagName === "TEXTAREA").value = "Save once";
+    const form = f.overlays.find((node) => node.tagName === "FORM");
+    const first = form.on.submit({ preventDefault() {} });
+    const second = form.on.submit({ preventDefault() {} });
+    await flush();
+    assert.equal(f.requests.filter((request) => request.url === url).length, 1);
+    reply.resolve({ ok: false, status: 503 });
+    await Promise.all([first, second]);
+    await form.on.submit({ preventDefault() {} });
+    assert.equal(f.requests.filter((request) => request.url === url).length, 2);
+  });
+}
+
 test("only the latest pending selection opens a box", async () => {
   const notes = deferred();
   const f = fixture({
