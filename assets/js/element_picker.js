@@ -7,9 +7,12 @@ import {
 
 // Option+Click on an element. In dev it copies page context and a
 // source-mapped element reference. For reviewers (in dev or production) it
-// also opens a box to leave a review note on the element.
+// also opens a box to leave a review note on the element. Touch screens have
+// no Option key, so reviewers there get a button that toggles review mode,
+// where a tap does what Option+Click does.
 const dev = !!document.querySelector("[data-phx-loc]");
 const reviewer = document.body.hasAttribute("data-reviewer");
+const touch = matchMedia("(hover: none)").matches;
 
 if (dev || reviewer) {
   let activeEl = null;
@@ -24,6 +27,11 @@ if (dev || reviewer) {
   let notesPath = null;
   let notesRequest = null;
   let markers = [];
+  let reviewMode = false;
+  let toggle = null;
+
+  const picking = (event) => event.altKey || reviewMode;
+  const ours = (target) => box?.contains(target) || toggle?.contains(target);
 
   const clickHint = dev ? (reviewer ? "copy + note" : "copy") : "note";
 
@@ -151,6 +159,18 @@ if (dev || reviewer) {
   };
 
   const positionBox = () => {
+    // A sheet along the bottom of the visual viewport stays above the on-screen keyboard.
+    if (touch) {
+      const viewport = window.visualViewport;
+      const bottom = viewport
+        ? viewport.offsetTop + viewport.height
+        : innerHeight;
+      Object.assign(box.style, {
+        top: `${bottom - box.offsetHeight - 8}px`,
+        left: "8px",
+      });
+      return;
+    }
     const rect = activeEl.getBoundingClientRect();
     const height = box.offsetHeight;
     const below = rect.bottom + 8;
@@ -172,6 +192,7 @@ if (dev || reviewer) {
     box?.remove();
     box = null;
     hideHighlight();
+    if (reviewMode) showNotes();
   };
 
   const sendJson = (url, data, method = "POST") =>
@@ -326,7 +347,7 @@ if (dev || reviewer) {
   const showNotes = async () => {
     if (!reviewer) return;
     const notes = await pageNotes();
-    if (optionHeld && !box) renderNotes(notes);
+    if ((optionHeld || reviewMode) && !box) renderNotes(notes);
   };
 
   // Option+Clicking an element again opens the reviewer's own note on it.
@@ -371,9 +392,11 @@ if (dev || reviewer) {
     Object.assign(box.style, {
       position: "fixed",
       zIndex: "2147483647",
-      width: "320px",
+      width: touch ? "calc(100vw - 16px)" : "320px",
+      boxSizing: "border-box",
       padding: "10px",
       display: "grid",
+      gridTemplateColumns: "minmax(0, 1fr)",
       gap: "8px",
       background: "oklch(99% 0.005 155)",
       color: "oklch(22% 0.03 155)",
@@ -386,12 +409,38 @@ if (dev || reviewer) {
     const title = document.createElement("div");
     title.textContent = heading;
     Object.assign(title.style, {
+      flex: "1",
+      minWidth: "0",
       fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
       fontSize: "11px",
       overflow: "hidden",
       textOverflow: "ellipsis",
       whiteSpace: "nowrap",
     });
+
+    // The buttons version of Option+↑ and Option+↓, for touch screens.
+    const larger = document.createElement("button");
+    larger.type = "button";
+    larger.textContent = "Larger";
+    larger.disabled = !el.parentElement || el.parentElement === document.body;
+    larger.addEventListener("click", () => {
+      selectionPath.push(el);
+      pick(el.parentElement);
+    });
+
+    const smaller = document.createElement("button");
+    smaller.type = "button";
+    smaller.textContent = "Smaller";
+    smaller.disabled = !selectionPath.length;
+    smaller.addEventListener("click", () => pick(selectionPath.pop()));
+
+    const header = document.createElement("div");
+    Object.assign(header.style, {
+      display: "flex",
+      gap: "10px",
+      alignItems: "center",
+    });
+    header.append(title, larger, smaller);
 
     const textarea = document.createElement("textarea");
     textarea.rows = 4;
@@ -404,11 +453,13 @@ if (dev || reviewer) {
       border: "1px solid oklch(80% 0.02 155)",
       borderRadius: "4px",
       font: "inherit",
+      // iOS zooms into inputs with text under 16px.
+      fontSize: touch ? "16px" : "inherit",
       resize: "vertical",
     });
 
     const status = document.createElement("span");
-    status.textContent = "⌘↵ to save, Esc to cancel";
+    status.textContent = touch ? "" : "⌘↵ to save, Esc to cancel";
     Object.assign(status.style, {
       flex: "1",
       fontSize: "11px",
@@ -443,7 +494,7 @@ if (dev || reviewer) {
     const strings = document.createElement("div");
     strings.textContent = "Looking up strings…";
     Object.assign(strings.style, { fontSize: "11px", opacity: "0.7" });
-    box.append(title, strings, textarea, actions);
+    box.append(header, strings, textarea, actions);
 
     const stringsRequest = sendJson("/review-notes/strings", {
       texts: textsFor(el),
@@ -496,6 +547,47 @@ if (dev || reviewer) {
     positionBox();
     textarea.focus();
   };
+
+  const pick = async (el) => {
+    const note = reviewer ? await ownNoteOn(el) : null;
+    const heading = note ? `Editing note · ${tagSummary(el)}` : tagSummary(el);
+    if (reviewer) openBox(el, heading, note);
+    else flash(el, await copyReference(el));
+  };
+
+  if (reviewer && touch) {
+    toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.textContent = "✎";
+    toggle.setAttribute("aria-label", "Review mode");
+    toggle.setAttribute("aria-pressed", "false");
+    Object.assign(toggle.style, {
+      position: "fixed",
+      zIndex: "2147483646",
+      left: "16px",
+      bottom: "calc(16px + env(safe-area-inset-bottom))",
+      width: "44px",
+      height: "44px",
+      borderRadius: "50%",
+      border: "1.5px solid oklch(55% 0.16 155)",
+      background: "oklch(99% 0.005 155)",
+      color: "oklch(22% 0.03 155)",
+      fontSize: "20px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.28)",
+    });
+    toggle.addEventListener("click", () => {
+      reviewMode = !reviewMode;
+      toggle.setAttribute("aria-pressed", String(reviewMode));
+      Object.assign(toggle.style, {
+        background: reviewMode ? "oklch(55% 0.16 155)" : "oklch(99% 0.005 155)",
+        color: reviewMode ? "oklch(99% 0.005 155)" : "oklch(22% 0.03 155)",
+      });
+      if (reviewMode) return showNotes();
+      closeBox();
+      hideNotes();
+    });
+    document.body.append(toggle);
+  }
 
   document.addEventListener(
     "mousemove",
@@ -552,6 +644,7 @@ if (dev || reviewer) {
 
   window.addEventListener("blur", () => {
     optionHeld = false;
+    if (reviewMode) return;
     hideNotes();
     hideHighlight();
   });
@@ -567,9 +660,11 @@ if (dev || reviewer) {
     capture: true,
   });
   window.addEventListener("resize", refreshHighlight);
+  window.visualViewport?.addEventListener("resize", refreshHighlight);
+  window.visualViewport?.addEventListener("scroll", refreshHighlight);
 
   const stopAltPointer = (event) => {
-    if (!event.altKey || box?.contains(event.target)) return;
+    if (!picking(event) || ours(event.target)) return;
     event.preventDefault();
     event.stopPropagation();
   };
@@ -580,7 +675,7 @@ if (dev || reviewer) {
   document.addEventListener(
     "pointerdown",
     (event) => {
-      if (box && !event.altKey && !box.contains(event.target)) closeBox();
+      if (box && !picking(event) && !box.contains(event.target)) closeBox();
     },
     true,
   );
@@ -588,20 +683,15 @@ if (dev || reviewer) {
   document.addEventListener(
     "click",
     async (event) => {
-      if (!event.altKey || box?.contains(event.target)) return;
+      if (!picking(event) || ours(event.target)) return;
       const target = pickTarget(event.target);
-      const el =
-        target === lastTarget && activeEl?.isConnected ? activeEl : target;
+      const kept = target === lastTarget && activeEl?.isConnected;
+      const el = kept ? activeEl : target;
+      if (!kept) selectionPath = [];
 
       event.preventDefault();
       event.stopPropagation();
-
-      const note = reviewer ? await ownNoteOn(el) : null;
-      const heading = note
-        ? `Editing note · ${tagSummary(el)}`
-        : tagSummary(el);
-      if (reviewer) openBox(el, heading, note);
-      else flash(el, await copyReference(el));
+      await pick(el);
     },
     true,
   );
