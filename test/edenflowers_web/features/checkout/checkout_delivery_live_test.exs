@@ -172,6 +172,81 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
     end
   end
 
+  describe "live calendar availability" do
+    test "flags a selected date that closes without losing the customer's input", %{conn: conn} do
+      date = Date.add(Edenflowers.ShopTime.today(), 7)
+      admin = generate(admin_user())
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+      render_click(view, "select-date", %{"date" => Date.to_string(date)})
+
+      view
+      |> element("#checkout-form-3b")
+      |> render_change(%{
+        "form" => %{"fulfillment_date" => Date.to_string(date), "contact_phone_number" => "040 1234567"}
+      })
+
+      calendar = Edenflowers.Fulfillment.get_shop_calendar!()
+      calendar = Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+
+      assert has_element?(view, "[data-testid=fulfillment-date-unavailable]", "This date is no longer available")
+      assert has_element?(view, ~s|input[name="form[fulfillment_date]"][value="#{date}"]|)
+      assert has_element?(view, ~s|input[name="form[contact_phone_number]"][value="040 1234567"]|)
+
+      assert has_element?(
+               view,
+               ~s|#calendar button[phx-value-date="#{date}"][aria-pressed="true"][aria-disabled="true"]|
+             )
+
+      Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+
+      refute has_element?(view, "[data-testid=fulfillment-date-unavailable]")
+      assert has_element?(view, ~s|input[name="form[fulfillment_date]"][value="#{date}"]|)
+    end
+
+    test "warns on payment without changing the order, and lets the customer edit the date", %{conn: conn} do
+      date = Date.add(Edenflowers.ShopTime.today(), 7)
+      order = order_in_payment(fulfillment_method: :pickup, fulfillment_date: date)
+      admin = generate(admin_user())
+      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      calendar = Edenflowers.Fulfillment.get_shop_calendar!()
+      Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+
+      assert has_element?(view, "[data-testid=fulfillment-date-unavailable]", "This date is no longer available")
+      assert has_element?(view, "#checkout-form-4")
+      saved = Orders.get_order_by_id!(order.id, authorize?: false)
+      assert saved.state == :payment
+      assert saved.fulfillment_date == date
+      assert saved.payment_intent_id == order.payment_intent_id
+      refute_push_event(view, "stripe:process_payment", %{})
+
+      view |> element("[data-testid=fulfillment-date-unavailable] button", "Edit") |> render_click()
+
+      assert_patch(view, ~p"/checkout?step=delivery")
+      assert has_element?(view, ~s|#calendar button[phx-value-date="#{date}"][aria-disabled="true"]|)
+      assert Orders.get_order_by_id!(order.id, authorize?: false).state == :delivery
+    end
+
+    test "an open checkout sees dates close and reopen without a reload", %{conn: conn} do
+      date = Date.add(Edenflowers.ShopTime.today(), 1)
+      admin = generate(admin_user())
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+      selector = ~s|#calendar button[phx-value-date="#{date}"]|
+      refute has_element?(view, selector <> ~s|[aria-disabled="true"]|)
+
+      calendar = Edenflowers.Fulfillment.get_shop_calendar!()
+      calendar = Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+
+      assert has_element?(view, selector <> ~s|[aria-disabled="true"]|)
+
+      Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+
+      assert has_element?(view, selector)
+      refute has_element?(view, selector <> ~s|[aria-disabled="true"]|)
+    end
+  end
+
   describe "Step 3: Delivery Information" do
     test "fresh order at step 3 defaults the radio to home delivery", %{
       conn: conn,

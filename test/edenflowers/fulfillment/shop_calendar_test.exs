@@ -28,6 +28,38 @@ defmodule Edenflowers.Fulfillment.ShopCalendarTest do
              Fulfillment.update_same_day(calendar, %{same_day: true, order_deadline: ~T[12:00:00]}, actor: admin)
   end
 
+  test "every calendar update broadcasts the changed availability" do
+    Phoenix.PubSub.subscribe(Edenflowers.PubSub, "shop_calendar:changed")
+    admin = generate(admin_user())
+    today = Edenflowers.ShopTime.today()
+    date = Date.add(today, 7)
+    calendar = Fulfillment.get_shop_calendar!()
+
+    updates = [
+      {:toggle_date, %{date: date}},
+      {:set_weekday, %{weekday: Edenflowers.Fulfillment.Weekday.from_date(date), direction: :off}},
+      {:set_week, %{week: [date], today: today, direction: :open}},
+      {:update_same_day, %{same_day: true, order_deadline: ~T[12:00:00]}},
+      {:reset_calendar, %{}}
+    ]
+
+    Enum.reduce(updates, calendar, fn {action, params}, calendar ->
+      calendar = Ash.update!(calendar, params, action: action, actor: admin)
+      assert_receive %Phoenix.Socket.Broadcast{topic: "shop_calendar:changed"}
+      calendar
+    end)
+  end
+
+  test "a refused update doesn't broadcast a calendar change" do
+    Phoenix.PubSub.subscribe(Edenflowers.PubSub, "shop_calendar:changed")
+    admin = generate(admin_user())
+
+    assert {:error, _} =
+             Fulfillment.update_same_day(Fulfillment.get_shop_calendar!(), %{same_day: true}, actor: admin)
+
+    refute_receive %Phoenix.Socket.Broadcast{topic: "shop_calendar:changed"}
+  end
+
   test "only an admin changes it" do
     customer = generate(admin_user(admin: false))
 

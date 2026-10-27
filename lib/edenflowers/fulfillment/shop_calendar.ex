@@ -11,7 +11,8 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
     otp_app: :edenflowers,
     domain: Edenflowers.Fulfillment,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
 
   alias Edenflowers.Fulfillment.Changes
   alias Edenflowers.Fulfillment.Weekday
@@ -105,6 +106,12 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
     policy action_type(:update) do
       forbid_if always()
     end
+  end
+
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :update, ["shop_calendar", "changed"]
   end
 
   validations do
