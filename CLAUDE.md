@@ -27,13 +27,10 @@ The domain is modelled in Ash. Put domain logic in the resources, the way the As
 
 ## Translations
 
-- English source lives in code. After changing Gettext strings, run `mix gettext.extract --merge`, review the diff, and commit `.pot`/`.po` updates with the code.
-- Agents may create or improve Finnish/Swedish translations when requested. Edit `.po` files in Git for both translation-only and coordinated code/catalog changes. Before editing, have Weblate commit/push pending work and reconcile `origin/weblate-translations` with your branch; preserve outstanding translator edits. Use Weblate's API only when needed to manage or synchronise Weblate itself.
-- Flow: `main` → webhook → Weblate → `weblate-translations` → manual review/merge → `main`, without PRs. Weblate pulls `main` and pushes `weblate-translations` using `git@github.com:davemccrea/edenflowers_store.git` as its push URL; linked components share Storefront's repository settings. CI checks translation-branch pushes.
-- To land translations, have Weblate commit/push pending work, fetch `origin`, review the translation branch's diff and CI, and integrate its outstanding commits in a temporary worktree. Rebase onto current `main` and land with `wt merge`; preserve translator edits when resolving conflicts. Push `main` so the webhook resyncs Weblate. Keep `weblate-translations` for future Weblate pushes; deployment remains a separate `just deploy`.
-- Add translator comments for ambiguous strings, placeholders, and length limits; follow Weblate's glossary. Review terminology, placeholders, plural forms, and CI for human and agent translations alike. Review route translations as URL changes; follow the email review instructions below for emails.
-- When adding/splitting domains, update Weblate components to match their `.po` files and source `.pot`. Use language filter `^(fi|sv)$` to exclude English `.po` translations. Scan for translation files after configuration changes if import warnings persist.
-- For missed updates, compare Weblate's revision with GitHub `main` and inspect webhook deliveries.
+- English is the technical Gettext source and lives in code. After changing source strings, run `mix gettext.extract --merge`, review the diff, and commit `.pot`/`.po` updates with the code.
+- Agents may create or improve Finnish/Swedish translations when requested. Edit `.po` files in Git and preserve outstanding translator edits. Weblate is retired; translations follow the normal Git workflow.
+- Before changing translations, source copy or translation domains, read `priv/gettext/README.md` for checks, Swedish-led editorial authority, the glossary and review queue. Add translator comments for ambiguous strings, placeholders and length limits. Review route translations as URL changes; follow the email review instructions below for emails.
+- After catalogue changes, run `mix gettext.check` and `mix gettext.stats`. CI enforces mechanical checks and customer-facing coverage; documented exceptions and their review rules live in `priv/gettext/README.md`. Receipt labels are in `receipts.po`; update affected sample fixtures and render receipts after changing them.
 
 ## Agent skills
 

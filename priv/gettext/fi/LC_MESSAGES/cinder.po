@@ -5,67 +5,190 @@ msgstr ""
 "Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "%{total} items"
-msgstr "%{total} riviä"
-
-msgid "An error occurred while loading data"
-msgstr "Tietojen lataamisessa tapahtui virhe"
-
+#: lib/cinder/controls.ex
+#, elixir-autogen
 msgid "Clear all"
 msgstr "Tyhjennä kaikki"
 
+#: lib/cinder/filter_manager.ex
+#, elixir-autogen
 msgid "Clear filter"
 msgstr "Tyhjennä suodatin"
 
-msgid "Clear search"
-msgstr "Tyhjennä haku"
-
-msgid "Filters"
-msgstr "Suodattimet"
-
-msgid "First page"
-msgstr "Ensimmäinen sivu"
-
-msgid "Go to page %{page}"
-msgstr "Siirry sivulle %{page}"
-
-msgid "Last page"
-msgstr "Viimeinen sivu"
-
-msgid "Loading..."
-msgstr "Ladataan..."
-
-msgid "Next"
-msgstr "Seuraava"
-
-msgid "Next page"
-msgstr "Seuraava sivu"
-
-msgid "No results found"
-msgstr "Ei tuloksia"
-
-msgid "Page %{current} of %{total}"
-msgstr "Sivu %{current}/%{total}"
-
-msgid "Prev"
-msgstr "Edellinen"
-
-msgid "Previous page"
-msgstr "Edellinen sivu"
-
-msgid "Search"
-msgstr "Hae"
-
-msgid "Search..."
-msgstr "Hae..."
-
-msgid "Show {selector} per page"
-msgstr "Näytä {selector} sivulla"
-
-msgid "showing %{start}-%{end} of %{total}"
-msgstr "näytetään %{start}–%{end}/%{total}"
-
+#: lib/cinder/controls.ex
+#, elixir-autogen
 msgid "active"
 msgid_plural "active"
 msgstr[0] "aktiivinen"
 msgstr[1] "aktiivista"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen
+msgid "Page %{current} of %{total}"
+msgstr "Sivu %{current}/%{total}"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen
+msgid "showing %{start}-%{end} of %{total}"
+msgstr "näytetään %{start}–%{end}/%{total}"
+
+#: lib/cinder/filters/date_range.ex
+#: lib/cinder/filters/number_range.ex
+#, elixir-autogen
+msgid "to"
+msgstr ""
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen
+msgid "Next page"
+msgstr "Seuraava sivu"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen
+msgid "Previous page"
+msgstr "Edellinen sivu"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen
+msgid "First page"
+msgstr "Ensimmäinen sivu"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen
+msgid "Last page"
+msgstr "Viimeinen sivu"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen
+msgid "Go to page %{page}"
+msgstr "Siirry sivulle %{page}"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen, elixir-format
+msgid "%{total} items"
+msgstr "%{total} riviä"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen, elixir-format
+msgid "Next"
+msgstr "Seuraava"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen, elixir-format
+msgid "Prev"
+msgstr "Edellinen"
+
+#: lib/cinder/collection.ex
+#, elixir-autogen, elixir-format
+msgid "Filters"
+msgstr "Suodattimet"
+
+#: lib/cinder/collection.ex
+#, elixir-autogen, elixir-format
+msgid "Sort by:"
+msgstr ""
+
+#: lib/cinder/filters/text.ex
+#, elixir-autogen, elixir-format
+msgid "Filter %{label}..."
+msgstr ""
+
+#: lib/cinder/filters/date_range.ex
+#, elixir-autogen, elixir-format
+msgid "From"
+msgstr ""
+
+#: lib/cinder/filters/number_range.ex
+#, elixir-autogen, elixir-format
+msgid "Max"
+msgstr ""
+
+#: lib/cinder/filters/number_range.ex
+#, elixir-autogen, elixir-format
+msgid "Min"
+msgstr ""
+
+#: lib/cinder/filters/autocomplete.ex
+#, elixir-autogen, elixir-format
+msgid "Search %{label}..."
+msgstr ""
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen, elixir-format
+msgid "Show {selector} per page"
+msgstr "Näytä {selector} sivulla"
+
+#: lib/cinder/filters/date_range.ex
+#, elixir-autogen, elixir-format
+msgid "To"
+msgstr ""
+
+#: lib/cinder/filter_manager.ex
+#: lib/cinder/filters/select.ex
+#, elixir-autogen, elixir-format
+msgid "All %{label}"
+msgstr ""
+
+#: lib/cinder/collection.ex
+#: lib/cinder/controls.ex
+#, elixir-autogen, elixir-format
+msgid "Search"
+msgstr "Hae"
+
+#: lib/cinder/collection.ex
+#: lib/cinder/controls.ex
+#, elixir-autogen, elixir-format
+msgid "Search..."
+msgstr "Hae..."
+
+#: lib/cinder/filters/multi_select.ex
+#, elixir-autogen, elixir-format
+msgid "Select options..."
+msgstr ""
+
+#: lib/cinder/controls.ex
+#, elixir-autogen, elixir-format
+msgid "Clear search"
+msgstr "Tyhjennä haku"
+
+#: lib/cinder/collection.ex
+#, elixir-autogen, elixir-format
+msgid "Loading..."
+msgstr "Ladataan..."
+
+#: lib/cinder/filters/multi_select.ex
+#: lib/cinder/filters/select.ex
+#, elixir-autogen, elixir-format
+msgid "No options available"
+msgstr ""
+
+#: lib/cinder/collection.ex
+#: lib/cinder/filters/autocomplete.ex
+#, elixir-autogen, elixir-format
+msgid "No results found"
+msgstr "Ei tuloksia"
+
+#: lib/cinder/filters/multi_select.ex
+#, elixir-autogen, elixir-format
+msgid "%{count} selected"
+msgstr ""
+
+#: lib/cinder/filters/boolean.ex
+#, elixir-autogen, elixir-format
+msgid "False"
+msgstr ""
+
+#: lib/cinder/filters/boolean.ex
+#, elixir-autogen, elixir-format
+msgid "True"
+msgstr ""
+
+#: lib/cinder/filters/autocomplete.ex
+#, elixir-autogen, elixir-format
+msgid "Type to search more options..."
+msgstr ""
+
+#: lib/cinder/collection.ex
+#, elixir-autogen, elixir-format
+msgid "An error occurred while loading data"
+msgstr "Tietojen lataamisessa tapahtui virhe"

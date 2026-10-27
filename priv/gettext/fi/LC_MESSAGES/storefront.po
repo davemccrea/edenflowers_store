@@ -2419,7 +2419,7 @@ msgstr "Rekisteröity osoite:"
 #: lib/edenflowers_web/components/section_index.ex:36
 #, elixir-autogen, elixir-format
 msgid "Related information"
-msgstr ""
+msgstr "Lisätietoja"
 
 #: lib/edenflowers_web/components/cart/line_items.ex:145
 #: lib/edenflowers_web/components/cart/line_items.ex:162

@@ -1,0 +1,56 @@
+[
+  {
+    "kind": "placeholders", "locale": "fi", "domain": "emails", "context": "", "form": null,
+    "source": "You might like to let %{recipient} know it's waiting.",
+    "translation": "Voit halutessasi kertoa vastaanottajalle, että kukat odottavat.",
+    "reason": "Audit T18: generic recipient avoids inflecting arbitrary names. Retain pending native review."
+  },
+  {
+    "kind": "placeholders", "locale": "fi", "domain": "storefront", "context": "", "form": null,
+    "source": "%{name}'s address *", "translation": "Vastaanottajan osoite *",
+    "reason": "Audit T17: generic recipient avoids inflecting arbitrary names. Retain pending native review."
+  },
+  {
+    "kind": "placeholders", "locale": "fi", "domain": "storefront", "context": "", "form": null,
+    "source": "%{name}'s phone number *", "translation": "Vastaanottajan puhelinnumero *",
+    "reason": "Audit T17: generic recipient avoids inflecting arbitrary names. Retain pending native review."
+  },
+  {
+    "kind": "placeholders", "locale": "fi", "domain": "storefront", "context": "", "form": null,
+    "source": "I'll only call if I need to reach %{name} about the delivery.",
+    "translation": "Soitan vastaanottajalle vain, jos toimituksesta on kysyttävää.",
+    "reason": "Audit T17: generic recipient avoids inflecting arbitrary names. Retain pending native review."
+  },
+  {
+    "kind": "missing", "locale": "sv", "domain": "routes", "context": "", "form": null,
+    "source": "en", "translation": "", "reason": "Language code intentionally falls back unchanged."
+  },
+  {
+    "kind": "missing", "locale": "sv", "domain": "routes", "context": "", "form": null,
+    "source": "fi", "translation": "", "reason": "Language code intentionally falls back unchanged."
+  },
+  {
+    "kind": "missing", "locale": "sv", "domain": "routes", "context": "", "form": null,
+    "source": "sv", "translation": "", "reason": "Language code intentionally falls back unchanged."
+  },
+  {
+    "kind": "missing", "locale": "fi", "domain": "routes", "context": "", "form": null,
+    "source": "en", "translation": "", "reason": "Language code intentionally falls back unchanged."
+  },
+  {
+    "kind": "missing", "locale": "fi", "domain": "routes", "context": "", "form": null,
+    "source": "fi", "translation": "", "reason": "Language code intentionally falls back unchanged."
+  },
+  {
+    "kind": "missing", "locale": "fi", "domain": "routes", "context": "", "form": null,
+    "source": "sv", "translation": "", "reason": "Language code intentionally falls back unchanged."
+  },
+  {
+    "kind": "missing", "locale": "sv", "domain": "routes", "context": "", "form": null,
+    "source": "privacy", "translation": "", "reason": "Existing URL retained pending a coordinated route and redirect decision."
+  },
+  {
+    "kind": "missing", "locale": "fi", "domain": "routes", "context": "", "form": null,
+    "source": "privacy", "translation": "", "reason": "Existing URL retained pending a coordinated route and redirect decision."
+  }
+]

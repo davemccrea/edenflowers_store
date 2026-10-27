@@ -1496,7 +1496,7 @@ msgstr "Hur vill du köpa"
 #: lib/edenflowers_web/features/courses/courses_live.ex:117
 #, elixir-autogen, elixir-format
 msgid "I also run courses for private groups, for example at a workplace Christmas party, your staff wellbeing day or a hen party. We can meet in the café space at Minimossen or at your own premises. In summer, making flower crowns outdoors in a park works well."
-msgstr "Jag drar även kurser för privata grupper till exempel på arbetsplatsens julfest, er Tyky-dag eller en möhippa. Vi kan hålla till i Minimossens café utrymme eller i era egna lokaler. På sommaren fungerar det bra att binda hårkransar utomhus i en park."
+msgstr "Jag drar även kurser för privata grupper till exempel på arbetsplatsens julfest, er Tyky-dag eller en möhippa. Vi kan hålla till i Minimossens caféutrymme eller i era egna lokaler. På sommaren fungerar det bra att binda hårkransar utomhus i en park."
 
 #: lib/edenflowers_web/features/courses/courses_live.ex:93
 #, elixir-autogen, elixir-format
@@ -2419,7 +2419,7 @@ msgstr "Registrerad adress:"
 #: lib/edenflowers_web/components/section_index.ex:36
 #, elixir-autogen, elixir-format
 msgid "Related information"
-msgstr ""
+msgstr "Relaterad information"
 
 #: lib/edenflowers_web/components/cart/line_items.ex:145
 #: lib/edenflowers_web/components/cart/line_items.ex:162
@@ -3470,7 +3470,7 @@ msgstr "Var uppgifter lagras och vem som får dem"
 #: lib/edenflowers_web/features/marketing/about_live.ex:188
 #, elixir-autogen, elixir-format
 msgid "Whether it's a bouquet for the kitchen table or flowers for your wedding, I'd love to hear from you."
-msgstr "Oavsett om det gäller en bukett till köksbordet eller blommor till ditt bröllop hör jag gärna av dig."
+msgstr "Oavsett om det gäller en bukett till köksbordet eller blommor till ditt bröllop får du gärna höra av dig."
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:360
 #, elixir-autogen, elixir-format
