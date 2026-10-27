@@ -9,7 +9,6 @@ import { cinderDom } from "./cinder_a11y";
 import { onDocumentPatch } from "./admin_transitions";
 import "./unsaved_forms";
 import "./dev_element_picker";
-import { loadStripe } from "./stripe";
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -51,13 +50,6 @@ window.addEventListener("phx:page-loading-start", ({ detail }) => {
 window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
 
 liveSocket.connect();
-
-// After the hero image and LiveView, so Stripe.js never competes with them.
-window.addEventListener("load", () => {
-  const whenIdle =
-    window.requestIdleCallback ?? ((callback) => setTimeout(callback));
-  whenIdle(() => loadStripe().catch(() => {}), { timeout: 2000 });
-});
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()

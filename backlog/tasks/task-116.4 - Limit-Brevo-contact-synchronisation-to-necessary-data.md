@@ -1,10 +1,10 @@
 ---
 id: TASK-116.4
 title: Sync only newsletter subscribers to Brevo
-status: ready-for-agent
+status: ready-for-human
 assignee: []
 created_date: '2026-10-26 18:57'
-updated_date: '2026-10-27 13:58'
+updated_date: '2026-10-27 14:07'
 labels:
   - launch
   - quick
@@ -29,8 +29,27 @@ Decided in launch triage (2026-10-27): Brevo holds newsletter subscribers only.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 brevo_contacts returns only users with newsletter_opt_in, and the sync no longer upserts non-subscribers
-- [ ] #2 Sync tests still cover opt-in, opt-out, blocklist and shared-phone behaviour
+- [x] #1 brevo_contacts returns only users with newsletter_opt_in, and the sync no longer upserts non-subscribers
+- [x] #2 Sync tests still cover opt-in, opt-out, blocklist and shared-phone behaviour
 - [ ] #3 Existing non-subscriber contacts are deleted from Brevo (human step)
-- [ ] #4 The privacy policy describes Brevo as holding newsletter subscribers only
+- [x] #4 The privacy policy describes Brevo as holding newsletter subscribers only
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+brevo_contacts filters on newsletter_opt_in only; SyncNewsletterList dropped upsert_customers. Tests: a phone-number customer who never opted in is not sent; shared-phone test now uses a subscriber. Privacy page Brevo line rewritten (en/sv/fi).
+<!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-10-27 14:07
+
+---
+
+Left for David: in Brevo, delete the existing contacts that are not on the newsletter list (they were synced as phone-number customers), then check AC #3 and set done.
+
+---
+<!-- COMMENTS:END -->
