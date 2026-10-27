@@ -60,6 +60,7 @@ weblate_image: weblate/weblate:2026.10.1.4
 weblate_postgres_image: postgres:18-alpine
 weblate_valkey_image: valkey/valkey:9.1.3
 weblate_network_subnet: 172.30.50.0/24
+weblate_network_dynamic_range: 172.30.50.128/25
 weblate_tunnel_address: 172.30.50.2
 weblate_cloudflared_image: cloudflare/cloudflared:latest
 weblate_cloudflare_tunnel_token: "{{ vault_weblate_cloudflare_tunnel_token }}"
