@@ -59,11 +59,9 @@ defmodule EdenflowersWeb.Auth.AuthController do
   defp put_otp_email(conn, _activity), do: conn
 
   def sign_out(conn, _params) do
-    return_to = get_session(conn, :return_to) || ~q"/#{language}"
-
     conn
     |> clear_session(:edenflowers)
     |> put_flash(:success, ~t"You are now signed out")
-    |> redirect(to: return_to)
+    |> redirect(to: ~q"/#{language}")
   end
 end
