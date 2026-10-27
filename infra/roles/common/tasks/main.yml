@@ -11,5 +11,8 @@
   ansible.builtin.import_tasks: docker.yml
 - name: App
   ansible.builtin.import_tasks: app.yml
+- name: Weblate
+  ansible.builtin.import_tasks: weblate.yml
+  tags: weblate
 - name: Backups
   ansible.builtin.import_tasks: backups.yml
