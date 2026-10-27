@@ -853,10 +853,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     end
   end
 
-  # The form indexes its lines by position; the action takes a list.
+  # The form indexes its lines by position; the action takes a list. Untouched
+  # fields count too: on opening an order, none of its lines have been touched.
   defp price_params(form, card) do
     form
-    |> AshPhoenix.Form.params()
+    |> AshPhoenix.Form.params(only_touched?: false)
     |> Map.update("line_items", [], &lines_in_order/1)
     |> Map.put("card_variant_id", card && card.variant_id)
   end
