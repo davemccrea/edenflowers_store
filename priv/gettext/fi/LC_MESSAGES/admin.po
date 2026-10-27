@@ -1057,7 +1057,7 @@ msgstr "Englanti"
 
 #: lib/edenflowers/payments/changes/cancel.ex:101
 #, elixir-autogen, elixir-format
-msgid "Enter an amount from €0 to %{amount}."
+msgid "Enter an amount from 0 € to %{amount}."
 msgstr "Anna summa, joka on vähintään 0 € ja enintään %{amount}."
 
 #: lib/edenflowers_web/features/admin/components/components.ex:232

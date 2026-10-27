@@ -668,7 +668,7 @@ defmodule Edenflowers.Payments.PayableTest do
 
         for refund <- ["80.01", "-1.00"] do
           assert {:error, error} = cancel(record, %{refund: refund, held: "80.00"})
-          assert Exception.message(error) =~ "Enter an amount from €0 to €80.00."
+          assert Exception.message(error) =~ "Enter an amount from 0 € to 80,00 €."
         end
       end
 

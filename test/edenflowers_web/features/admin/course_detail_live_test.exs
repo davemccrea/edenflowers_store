@@ -119,11 +119,11 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       view |> form("#cancel-form", cancel: %{refund: "50,00", message: "Ill that day"}) |> render_submit()
 
-      assert has_element?(view, "#registration-#{registration.id}", "To refund €50.00")
+      assert has_element?(view, "#registration-#{registration.id}", "To refund 50,00 €")
 
       view |> element("#settle-#{registration.id}", "To refund") |> render_click()
       assert has_element?(view, "#settlement-drawer dl", "Kept")
-      assert has_element?(view, "#settlement-drawer dl", "€35.00")
+      assert has_element?(view, "#settlement-drawer dl", "35,00 €")
       assert has_element?(view, "#settlement-drawer", "Ill that day")
       assert has_element?(view, "#settlement-drawer", "Cancellation emailed to #{registration.email}.")
 
@@ -143,7 +143,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       view |> form("#cancel-form", cancel: %{refund: "90"}) |> render_submit()
 
-      assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from €0 to €85.00.")
+      assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from 0 € to 85,00 €.")
       assert Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false).status == :confirmed
     end
   end
@@ -245,7 +245,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       )
       |> render_submit()
 
-      assert has_element?(view, "#settle-#{booking.id}", "To collect €55.00")
+      assert has_element?(view, "#settle-#{booking.id}", "To collect 55,00 €")
       assert [%{method: :cash}] = Ash.load!(booking, :payments, authorize?: false).payments
     end
 
@@ -548,7 +548,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       |> form("#refund-#{registration.id}-form", refund: %{amount: "20", how: "cash", note: "Ran short of moss"})
       |> render_submit()
 
-      assert has_element?(view, "#registration-#{registration.id}", "Refunded €20.00 · Cash")
+      assert has_element?(view, "#registration-#{registration.id}", "Refunded 20,00 € · Cash")
       assert has_element?(view, "#registration-#{registration.id}", "Ran short of moss")
       refute has_element?(view, "#registration-#{registration.id}", "To collect")
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
@@ -571,7 +571,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       |> form("#refund-#{registration.id}-form", refund: %{amount: "20.00", how: "stripe"})
       |> render_submit()
 
-      assert has_element?(view, "#registration-#{registration.id}", "Refunded €20.00 · Stripe")
+      assert has_element?(view, "#registration-#{registration.id}", "Refunded 20,00 € · Stripe")
       refute has_element?(view, "#registration-#{registration.id}", "To collect")
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
     end

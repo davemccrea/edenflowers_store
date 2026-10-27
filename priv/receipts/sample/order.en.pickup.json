@@ -1,18 +1,18 @@
 {
   "line_items": [
     {
-      "total": "€39.90",
+      "total": "39,90 €",
       "quantity": 1,
       "tax_rate": "25.5%",
-      "unit_price_ex_tax": "€31.79",
+      "unit_price_ex_tax": "31,79 €",
       "product_name": "Spring Posy",
       "variant_size": "Medium"
     },
     {
-      "total": "€8.50",
+      "total": "8,50 €",
       "quantity": 1,
       "tax_rate": "25.5%",
-      "unit_price_ex_tax": "€6.77",
+      "unit_price_ex_tax": "6,77 €",
       "product_name": "Eucalyptus Bunch",
       "variant_size": null
     }
@@ -20,12 +20,12 @@
   "customer_email": "anna.lindqvist@example.fi",
   "order_reference": "1431",
   "fulfillment_date": "Saturday 16/05/2026",
-  "grand_total": "€48.40",
+  "grand_total": "48,40 €",
   "delivery_address": null,
   "fulfillment_fee": null,
   "fulfillment_method": "pickup",
   "discount": null,
-  "items_subtotal": "€48.40",
+  "items_subtotal": "48,40 €",
   "card_message": null,
   "customer_name": "Anna Lindqvist",
   "delivery_instructions": null,
@@ -35,10 +35,10 @@
   "lang": "en",
   "vat_breakdown": [
     {
-      "base": "€38.57",
+      "base": "38,57 €",
       "rate": "25.5%",
-      "tax": "€9.83",
-      "gross": "€48.40"
+      "tax": "9,83 €",
+      "gross": "48,40 €"
     }
   ],
   "venue_name": null,

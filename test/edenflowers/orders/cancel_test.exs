@@ -53,7 +53,7 @@ defmodule Edenflowers.Orders.CancelTest do
 
     email = sent_email()
     assert email.text_body =~ "I'm ill that day."
-    assert email.text_body =~ "€68.50"
+    assert email.text_body =~ "68,50 €"
     assert email.text_body =~ "If you have any questions"
     refute email.text_body =~ "didn't mean to cancel"
   end
@@ -65,7 +65,7 @@ defmodule Edenflowers.Orders.CancelTest do
     assert {:ok, cancelled} = Orders.cancel_order(order, %{}, actor: admin)
 
     assert Decimal.equal?(balance(cancelled), "-20.00")
-    assert sent_email().text_body =~ "I'll pay back €20.00 the same way you paid it."
+    assert sent_email().text_body =~ "I'll pay back 20,00 € the same way you paid it."
   end
 
   test "no address emails nobody", %{admin: admin} do

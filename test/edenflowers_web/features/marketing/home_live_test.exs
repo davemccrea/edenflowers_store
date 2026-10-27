@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/en")
 
-    assert has_element?(view, "h1 + p", "from €42.")
+    assert has_element?(view, "h1 + p", "from 42 €.")
   end
 
   test "delivery and pickup shows the next open day", %{conn: conn} do

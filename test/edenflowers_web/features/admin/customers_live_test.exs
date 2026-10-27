@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
       assert has_element?(view, ~s([data-item-id="#{second.id}"]), "ADA002")
       refute has_element?(view, "[data-item-id]", "ADACART")
       refute has_element?(view, "[data-item-id]", "GRACE01")
-      assert has_element?(view, "#customer-summary", "65.50")
+      assert has_element?(view, "#customer-summary", "65,50")
     end
 
     test "counts only paid orders towards the total spent", %{conn: conn} do
@@ -58,8 +58,8 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/customers/#{ada.id}")
 
-      assert has_element?(view, "#customer-summary", "40.00")
-      refute has_element?(view, "#customer-summary", "139.00")
+      assert has_element?(view, "#customer-summary", "40,00")
+      refute has_element?(view, "#customer-summary", "139,00")
     end
 
     test "does not show cancelled unpaid orders as unpaid", %{conn: conn} do

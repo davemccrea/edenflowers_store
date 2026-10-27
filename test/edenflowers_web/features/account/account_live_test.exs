@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "#cancel-order-#{order.id}", "We'll refund €88.50")
+      assert has_element?(view, "#cancel-order-#{order.id}", "We'll refund 88,50 €")
       refute has_element?(view, "#cancel-order-#{too_late.id}")
 
       view |> element("#cancel-order-#{order.id} button", "Cancel order") |> render_click()
@@ -288,7 +288,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       registration = generate(course_registration(user_id: user.id, status: :confirmed))
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "li", "Amount to pay: €85.00.")
+      assert has_element?(view, "li", "Amount to pay: 85,00 €.")
       assert has_element?(view, "li", "Pay at the course")
       refute has_element?(view, ~s|a[href="/courses/bookings/#{registration.id}/receipt"]|)
       assert conn |> get(~p"/courses/bookings/#{registration.id}/receipt") |> response(404)

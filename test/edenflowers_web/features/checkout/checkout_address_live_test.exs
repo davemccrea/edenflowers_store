@@ -347,7 +347,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
     delivery_cost = view |> element("[data-testid='delivery-cost']") |> render()
     refute delivery_cost =~ "Free"
-    assert delivery_cost =~ "9.30"
+    assert delivery_cost =~ "9,30"
   end
 
   test "the order summary prices a looked-up address before the step is submitted", %{
@@ -359,19 +359,19 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
     select_delivery_option(view, delivery_option.id)
-    refute view |> element("[data-testid='delivery-cost']") |> render() =~ "5.00"
+    refute view |> element("[data-testid='delivery-cost']") |> render() =~ "5,00"
 
     blur_address(view, "Stadsgatan 3, 65300 Vasa")
     render_async(view, 500)
 
-    assert view |> element("[data-testid='delivery-cost']") |> render() =~ "5.00"
-    assert view |> element("[data-testid='total-amount']") |> render() =~ "40.00"
+    assert view |> element("[data-testid='delivery-cost']") |> render() =~ "5,00"
+    assert view |> element("[data-testid='total-amount']") |> render() =~ "40,00"
 
     # 25.5% included in 35.00 of goods (7.11) and 5.00 of delivery (1.02).
-    assert view |> element("[data-testid='vat-line']") |> render() =~ "8.13"
+    assert view |> element("[data-testid='vat-line']") |> render() =~ "8,13"
 
     type_address(view, "Stadsgatan 4")
-    refute view |> element("[data-testid='delivery-cost']") |> render() =~ "5.00"
+    refute view |> element("[data-testid='delivery-cost']") |> render() =~ "5,00"
   end
 
   defp stub_successful_geocode do

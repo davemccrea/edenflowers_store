@@ -144,8 +144,8 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
 
       {foreign_key, topic, remaining} =
         case ctx.kind do
-          :order -> {:order_id, "order:paid:#{record.id}", "58.50"}
-          :course -> {:course_registration_id, "course_registration:paid:#{record.id}", "140.00"}
+          :order -> {:order_id, "order:paid:#{record.id}", "58,50"}
+          :course -> {:course_registration_id, "course_registration:paid:#{record.id}", "140,00"}
         end
 
       add_payments(foreign_key, record.id, [{3000, false}])
@@ -310,7 +310,7 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
       {:ok, view, _html} = live(ctx.conn, PaymentLink.path_for(record))
 
       assert has_element?(view, "[data-testid=pay-paid]")
-      assert has_element?(view, "[data-testid=pay-total]", "0.00")
+      assert has_element?(view, "[data-testid=pay-total]", "0,00")
       refute has_element?(view, "#pay-form")
       refute has_element?(view, "[data-testid=pay-refunded]")
     end

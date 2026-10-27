@@ -255,11 +255,11 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin")
 
       assert has_element?(view, "#attention-payment-overdue summary", "Payment overdue 1")
-      assert has_element?(view, "#attention-payment-overdue summary", "€88.50")
+      assert has_element?(view, "#attention-payment-overdue summary", "88,50 €")
       assert has_element?(view, ~s|#attention-payment-overdue a[href="/admin/orders/#{overdue.id}"]|, "Ada Lovelace")
 
       assert has_element?(view, "#attention-refund summary", "To refund 1")
-      assert has_element?(view, "#attention-refund summary", "€85.00")
+      assert has_element?(view, "#attention-refund summary", "85,00 €")
 
       assert has_element?(
                view,
@@ -268,14 +268,14 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
              )
 
       refute has_element?(view, "#attention", "Grace Hopper")
-      assert has_element?(view, "#still-owed", "€177.00")
+      assert has_element?(view, "#still-owed", "177,00 €")
     end
 
     test "settles an order paid while the Overview is open", %{conn: conn} do
       order = placed_order(payment_intent_id: "pi_link", fulfillment_date: Edenflowers.ShopTime.today())
 
       {:ok, view, _html} = live(conn, ~p"/admin")
-      assert has_element?(view, "#still-owed", "€88.50")
+      assert has_element?(view, "#still-owed", "88,50 €")
 
       {:ok, _order} =
         Edenflowers.Orders.record_link_payment(order, "pi_link", %{amount_paid: order.grand_total},
@@ -300,7 +300,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin")
 
     assert view |> element("#sales dd") |> render() =~ ~r/>\s*2\s*</
-    assert has_element?(view, "#revenue dd", "€90.00")
+    assert has_element?(view, "#revenue dd", "90,00 €")
   end
 
   test "compares with last month up to the same day", %{conn: conn} do
@@ -320,7 +320,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
     to = Edenflowers.Format.day_month(same_day, Edenflowers.Format.locale())
     assert has_element?(view, "#sales-last-month", "2 last month by #{to}")
-    assert has_element?(view, "#revenue-last-month", "€50.00 last month by #{to}")
+    assert has_element?(view, "#revenue-last-month", "50,00 € last month by #{to}")
     assert has_element?(view, "#revenue-pace", "Last month")
   end
 end
