@@ -685,6 +685,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :priority, :boolean, default: false
   attr :crop_type, :string, default: "fill", values: ~w(fit fill auto)
   attr :crop, :string, default: nil
+  # credo:disable-for-next-line Credo.Check.Readability.StrictModuleLayout
   attr :quality, :integer, default: @image_quality
   attr :sources, :list, default: []
   attr :class, :any, default: nil

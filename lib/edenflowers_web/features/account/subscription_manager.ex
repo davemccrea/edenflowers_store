@@ -118,8 +118,9 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   # The outcome shows inside the subscription's drawer, which sits above the
   # page's flash while it's open, in the row whose action caused it. Pause and
-  # resume pass no success message: the status line and button already show it. The subscription is read again so the change
-  # is checked against what's saved, not what the page last showed.
+  # resume pass no success message: the status line and button already show it.
+  # The subscription is read again so the change is checked against what's
+  # saved, not what the page last showed.
   defp change_subscription(socket, row, action, success_message) do
     %{subscription: subscription, current_user: user} = socket.assigns
 
