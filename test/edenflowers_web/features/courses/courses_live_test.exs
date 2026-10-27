@@ -75,6 +75,25 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
   end
 
   describe "/courses/:id" do
+    test "shows course details beside a working booking sidebar without prototype controls", %{conn: conn} do
+      course = generate(course(name: "Autumn Wreaths", description: "Make a seasonal wreath.", price: "85.00"))
+
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}?variant=C")
+
+      assert has_element?(view, "[data-testid=course-details] h1", "Autumn Wreaths")
+      assert has_element?(view, "header [data-testid=course-summary]", course.location_name)
+      assert has_element?(view, ~s|header [data-testid=course-summary] time[datetime="#{course.date}"]|)
+      assert has_element?(view, "header [data-testid=course-summary]", Edenflowers.Format.time(course.start_time, :en))
+      assert has_element?(view, "header [data-testid=course-summary]", Edenflowers.Format.time(course.end_time, :en))
+      assert has_element?(view, "[data-testid=course-details] figure img")
+      assert has_element?(view, "[data-testid=course-details] p", "Make a seasonal wreath.")
+      assert has_element?(view, "[data-testid=course-details] dl", "85")
+      assert has_element?(view, "aside[data-testid=course-booking] #booking-form")
+      assert has_element?(view, "aside[data-testid=course-booking]", "per person")
+      refute has_element?(view, "#booking-form fieldset[disabled]")
+      refute has_element?(view, "#course-prototype-switcher")
+    end
+
     test "books places and shows the payment form", %{conn: conn} do
       course = generate(course(name: "Autumn Wreaths", price: "85.00", total_places: 8))
 

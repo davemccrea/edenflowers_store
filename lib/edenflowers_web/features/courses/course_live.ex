@@ -55,8 +55,8 @@ defmodule EdenflowersWeb.Courses.CourseLive do
       alternates={@alternates}
     >
       <.container>
-        <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.9fr)] lg:items-start lg:gap-12 xl:gap-20">
-          <div class="flex min-w-0 flex-col gap-6">
+        <div class="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:gap-14">
+          <div class="min-w-0" data-testid="course-details">
             <header>
               <.link
                 navigate={~q"/#{language}/courses"}
@@ -65,23 +65,32 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 {~t"Courses"}
               </.link>
               <h1 class="page-title" data-testid="course-name">{@course.name}</h1>
+              <p class="text-base-content/75 mt-4 leading-relaxed" data-testid="course-summary">
+                <time datetime={Date.to_iso8601(@course.date)}>{Format.weekday_date(@course.date, @locale)}</time>,
+                <span class="whitespace-nowrap">{Format.time(@course.start_time, @locale)}–{Format.time(
+                  @course.end_time,
+                  @locale
+                )}</span>
+                <span aria-hidden="true"> · </span>
+                {@course.location_name}
+              </p>
             </header>
 
-            <figure class="bg-cream aspect-[3/2] relative w-full max-w-md overflow-hidden">
+            <figure class="bg-cream aspect-[3/2] relative mt-8 w-full overflow-hidden">
               <.image
                 src={@course.image_slug}
                 alt={@course.name}
-                width={900}
-                height={600}
-                sizes="(min-width: 480px) 448px, calc(100vw - 2rem)"
+                width={1200}
+                height={800}
+                sizes="(min-width: 1024px) calc(100vw - 32.5rem), (min-width: 640px) calc(100vw - 4rem), calc(100vw - 2rem)"
                 priority
                 class="h-full w-full object-cover"
               />
             </figure>
 
-            <p class="max-w-prose leading-relaxed">{@course.description}</p>
+            <p class="my-8 max-w-prose text-lg leading-relaxed">{@course.description}</p>
 
-            <dl class="border-base-content/12 grid-cols-[auto_1fr] grid items-baseline gap-x-6 gap-y-3 border-y py-6">
+            <dl class="border-base-content/12 grid-cols-[auto_minmax(0,1fr)] grid items-baseline gap-x-6 gap-y-3 border-t pt-6">
               <dt class="eyebrow text-base-content/70">{~t"When"}</dt>
               <dd class="tabular-nums">
                 {Format.weekday_date(@course.date, @locale)}, {Format.time(@course.start_time, @locale)}–{Format.time(
@@ -110,7 +119,10 @@ defmodule EdenflowersWeb.Courses.CourseLive do
             </dl>
           </div>
 
-          <div class="border-base-content/12 min-w-0 border-t pt-8 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10 xl:pl-12">
+          <aside
+            class="bg-cream text-cream-content min-w-0 p-7 sm:p-9 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky"
+            data-testid="course-booking"
+          >
             <p :if={@booked_seats > 0} class="mb-6" data-testid="already-booked">
               {~t"You have #{count = @booked_seats} place(s) on this course."N}
               <.link navigate={~p"/account#courses-heading"} class="link-underline-hover">
@@ -125,19 +137,24 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               <.button href="#newsletter" variant="text" class="mt-4">{~t"Sign up for the newsletter"}</.button>
             </section>
 
-            <section :if={@course.booking_open? && (is_nil(@registration) || @editing?)} aria-labelledby="book-heading">
+            <section
+              :if={@course.booking_open? && (is_nil(@registration) || @editing?)}
+              aria-labelledby="book-heading"
+            >
               <%!-- Focused only when returning from "Change booking", whose button has just gone. --%>
-              <h2
-                id="book-heading"
-                tabindex="-1"
-                phx-mounted={@focus_booking? && JS.focus()}
-                class="section-title scroll-anchor-below-header mb-6 focus-visible:outline-none"
-              >
-                {if @booked_seats > 0, do: ~t"Book more places", else: ~t"Book a place"}
-              </h2>
-              <p class="text-base-content/70 mb-6 max-w-prose text-sm leading-relaxed">
-                {~t"No experience needed. Materials and teaching included. Take your arrangement home."}
-              </p>
+              <div class="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+                <h2
+                  id="book-heading"
+                  tabindex="-1"
+                  phx-mounted={@focus_booking? && JS.focus()}
+                  class="section-title scroll-anchor-below-header focus-visible:outline-none"
+                >
+                  {if @booked_seats > 0, do: ~t"Book more places", else: ~t"Book a place"}
+                </h2>
+                <p class="font-serif text-xl tabular-nums">
+                  {~t"#{price = Format.storefront_price(@course.price, @locale)} per person"}
+                </p>
+              </div>
               <.form
                 id="booking-form"
                 for={@form}
@@ -199,7 +216,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 {~t"Pay"} {Format.currency(@registration.amount, @locale)}
               </.stripe_form>
             </section>
-          </div>
+          </aside>
         </div>
       </.container>
     </Layouts.app>
