@@ -35,35 +35,18 @@ const fixture = () => {
   return { root, target, document };
 };
 
-test("copies only the URL, selector, source location, and component tree", () => {
+test("copies a terse element description, URL, selector, source, and component tree", () => {
   globalThis.CSS = { escape: (value) => value };
   const { target, document } = fixture();
   const result = elementReference(target, document);
   assert.equal(
     result,
-    `<context name="current-page">
-<url>
-http://app.localhost/orders
-</url>
-</context>
-
-<references>
-<reference id="0" type="selected_element">
-<selector>
-#orders > button
-</selector>
-<framework-details>
-The element source is at:
-
-lib/components.ex:105
-
-Component rendering tree (from innermost to outermost):
-
-lib/app.ex:20: Components.button
-entrypoint: App.render
-</framework-details>
-</reference>
-</references>`,
+    `Page: http://app.localhost/orders
+Element: button
+Selector: #orders > button
+Source: lib/components.ex:105
+Called from: lib/app.ex:20 (Components.button)
+Entrypoint: App.render`,
   );
 });
 
@@ -89,6 +72,33 @@ test("selectors distinguish repeated tags without IDs and missing annotations st
   const { document } = fixture();
   const result = elementReference(second, document);
   assert.ok(result.includes("div > button:nth-of-type(2)"));
-  assert.ok(!result.includes("framework-details"));
+  assert.ok(!result.includes("Source:"));
   assert.equal(findHeexSource(second), null);
+});
+
+test("unannotated children keep their own selector and identify ancestor source", () => {
+  const { target, document } = fixture();
+  const child = element("span", {
+    "aria-label": "Add item",
+    "phx-click": "add",
+  });
+  child.textContent = "  Add   <item>  ";
+  append(target, child);
+  const result = elementReference(child, document);
+  assert.ok(result.includes("#orders > button > span"));
+  assert.ok(result.includes("nearest annotated ancestor"));
+  assert.ok(result.includes("lib/components.ex:105"));
+  assert.ok(!result.includes(":null"));
+  assert.ok(result.includes('aria-label="Add item" phx-click="add"'));
+  assert.ok(result.includes('Text: "Add <item>"'));
+});
+
+test("descriptions bound text and omit form values", () => {
+  const { document } = fixture();
+  const input = element("input", { type: "password", value: "secret" });
+  input.textContent = "x".repeat(500);
+  const result = elementReference(input, document);
+  assert.ok(!result.includes("secret"));
+  assert.ok(result.includes(`${"x".repeat(117)}...`));
+  assert.ok(!result.includes("x".repeat(121)));
 });

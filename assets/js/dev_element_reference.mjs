@@ -35,16 +35,22 @@ const enclosingComponents = (element) => {
 };
 
 export const findHeexSource = (element) => {
-  const components = enclosingComponents(element);
+  let mappedElement = element;
+  while (mappedElement && !mappedElement.getAttribute("data-phx-loc")) {
+    mappedElement = mappedElement.parentElement;
+  }
+  if (!mappedElement) return null;
+  const components = enclosingComponents(mappedElement);
   const source = components[0];
   if (!source) return null;
   const component = components.find(({ name }) => !name.startsWith(":"));
   return {
     component: component?.name,
+    mappedElement,
     file: source.location.replace(/:\d+$/, ""),
     location: source.location.replace(
       /:\d+$/,
-      `:${element.getAttribute("data-phx-loc")}`,
+      `:${mappedElement.getAttribute("data-phx-loc")}`,
     ),
     components,
   };
@@ -55,19 +61,13 @@ const frameworkDetails = (source) => {
   for (const component of source.components) {
     const isSlot = component.name.startsWith(":");
     const call = caller(component.node);
-    if (call) tree.push(`${call}: ${component.name}`);
+    if (call) tree.push(`Called from: ${call} (${component.name})`);
     else if (!isSlot) {
-      tree.push(`entrypoint: ${component.name}`);
+      tree.push(`Entrypoint: ${component.name}`);
       break;
     }
   }
-  return `The element source is at:
-
-${source.location}
-
-Component rendering tree (from innermost to outermost):
-
-${tree.join("\n")}`;
+  return tree.join("\n");
 };
 
 const selectorFor = (element) => {
@@ -92,13 +92,45 @@ const selectorFor = (element) => {
   return parts.join(" > ");
 };
 
-const block = (name, text) => `<${name}>\n${text}\n</${name}>`;
+const describeElement = (element) => {
+  const attributes = [
+    "id",
+    "class",
+    "role",
+    "aria-label",
+    "name",
+    "type",
+    "phx-click",
+    "phx-change",
+    "phx-hook",
+  ].flatMap((name) => {
+    const value = element.getAttribute(name);
+    return value ? [`${name}=${JSON.stringify(value)}`] : [];
+  });
+  const text = (element.textContent || "").replace(/\s+/g, " ").trim();
+  const excerpt = text.length > 120 ? `${text.slice(0, 117)}...` : text;
+  return [
+    [element.tagName.toLowerCase(), ...attributes].join(" "),
+    excerpt && `Text: ${JSON.stringify(excerpt)}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+};
 
 export const elementReference = (element, document) => {
   const source = findHeexSource(element);
-  const page = block("url", document.location.href);
-  const reference = [block("selector", selectorFor(element))];
-  if (source)
-    reference.push(block("framework-details", frameworkDetails(source)));
-  return `<context name="current-page">\n${page}\n</context>\n\n<references>\n<reference id="0" type="selected_element">\n${reference.join("\n")}\n</reference>\n</references>`;
+  const lines = [
+    `Page: ${document.location.href}`,
+    `Element: ${describeElement(element)}`,
+    `Selector: ${selectorFor(element)}`,
+  ];
+  if (source) {
+    const fallback =
+      source.mappedElement !== element ? " (nearest annotated ancestor)" : "";
+    lines.push(
+      `Source: ${source.location}${fallback}`,
+      frameworkDetails(source),
+    );
+  }
+  return lines.filter(Boolean).join("\n");
 };
