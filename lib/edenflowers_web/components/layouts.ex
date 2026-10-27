@@ -279,7 +279,14 @@ defmodule EdenflowersWeb.Layouts do
           >
             Eden Flowers
           </.link>
-          <div class="justify-self-end">
+          <div class="flex items-center justify-self-end">
+            <.link
+              href={~q"/#{language}"}
+              aria-label={dgettext("admin", "Storefront")}
+              class="touch-target text-base-content/75 flex h-9 w-9 items-center justify-center hover:text-base-content"
+            >
+              <.icon name="hero-building-storefront" class="h-5 w-5" />
+            </.link>
             <.admin_account_menu current_user={@current_user} compact={true} />
           </div>
         </div>
@@ -292,7 +299,16 @@ defmodule EdenflowersWeb.Layouts do
              the user menu to open over a page's sticky header. --%>
         <div class="[view-transition-name:admin-header] border-base-content/12 relative z-30 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
           <.admin_search id="admin-search" class="w-full max-w-md" />
-          <.admin_account_menu current_user={@current_user} />
+          <div class="flex items-center gap-4">
+            <.link
+              href={~q"/#{language}"}
+              class="text-base-content/75 flex items-center gap-2 whitespace-nowrap text-sm hover:text-base-content"
+            >
+              <.icon name="hero-building-storefront" class="h-4 w-4" />
+              {dgettext("admin", "Storefront")}
+            </.link>
+            <.admin_account_menu current_user={@current_user} />
+          </div>
         </div>
 
         <main
@@ -528,12 +544,6 @@ defmodule EdenflowersWeb.Layouts do
           <.link navigate={~p"/admin/account"}>
             <.icon name="hero-user-circle" class="h-4 w-4" />
             {dgettext("admin", "Account")}
-          </.link>
-        </li>
-        <li>
-          <.link href={~q"/#{language}"}>
-            <.icon name="hero-building-storefront" class="h-4 w-4" />
-            {dgettext("admin", "View store")}
           </.link>
         </li>
         <li>

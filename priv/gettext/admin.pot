@@ -89,7 +89,7 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:530
+#: lib/edenflowers_web/components/layouts.ex:546
 #: lib/edenflowers_web/features/admin/account_live.ex:21
 #: lib/edenflowers_web/features/admin/account_live.ex:36
 #, elixir-autogen, elixir-format
@@ -154,7 +154,7 @@ msgstr ""
 msgid "Admin"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:494
+#: lib/edenflowers_web/components/layouts.ex:510
 #, elixir-autogen, elixir-format
 msgid "Admin account menu"
 msgstr ""
@@ -2707,12 +2707,12 @@ msgstr ""
 msgid "Search name…"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:337
+#: lib/edenflowers_web/components/layouts.ex:353
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:347
+#: lib/edenflowers_web/components/layouts.ex:363
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers…"
 msgstr ""
@@ -2833,7 +2833,7 @@ msgstr ""
 msgid "Shown on this device only."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:542
+#: lib/edenflowers_web/components/layouts.ex:552
 #: lib/edenflowers_web/features/admin/account_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "Sign out"
@@ -2987,7 +2987,7 @@ msgstr ""
 msgid "Swedish"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:418
+#: lib/edenflowers_web/components/layouts.ex:434
 #, elixir-autogen, elixir-format
 msgid "System"
 msgstr ""
@@ -3502,9 +3502,10 @@ msgstr ""
 msgid "View receipt"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:536
+#: lib/edenflowers_web/components/layouts.ex:285
+#: lib/edenflowers_web/components/layouts.ex:308
 #, elixir-autogen, elixir-format
-msgid "View store"
+msgid "Storefront"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:402
