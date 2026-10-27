@@ -143,14 +143,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
               <%!-- Outer step chrome (titles, summaries, edit links) lives in Checkout.Fields.
                    The <section>s below are the inner content for the active step. --%>
               <div
-                :if={@selected_date_unavailable?}
-                class="border-error/30 border p-4"
-                role="alert"
-                data-testid="fulfillment-date-unavailable"
+                class={@selected_date_unavailable? && "border-error/30 border p-4"}
+                data-testid={@selected_date_unavailable? && "fulfillment-date-unavailable"}
               >
-                <p class="text-error">{~t"This date is no longer available, please choose another"}</p>
+                <%!-- Mount the live region empty so later text changes are announced without moving focus. --%>
+                <div id="fulfillment-date-status" role="status" aria-live="polite" aria-atomic="true">
+                  <p :if={@selected_date_unavailable?} class="text-error">
+                    {~t"This date is no longer available, please choose another"}
+                  </p>
+                </div>
                 <.button
-                  :if={@order.state == :payment}
+                  :if={@selected_date_unavailable? and @order.state == :payment}
                   type="button"
                   variant="text"
                   size="sm"
