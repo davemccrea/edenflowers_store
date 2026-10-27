@@ -1,4 +1,5 @@
 #!/bin/sh
+# Stop on failure so an incomplete backup never sends a success heartbeat.
 set -eu
 
 backup_dir={{ ('/opt/' ~ project_name ~ '/backups') | quote }}
@@ -8,6 +9,7 @@ database={{ db_name | quote }}
 f="$backup_dir/${database}_$(date +%Y%m%dT%H%M%S).dump"
 pg_dump -Fc "$database" > "$f.tmp"
 mv "$f.tmp" "$f"
+# Local retention also controls the remote dump history via rsync --delete.
 find "$backup_dir" -name '*.dump*' -mtime +30 -delete
 {% if inventory_hostname == 'production' %}
 
@@ -17,8 +19,11 @@ backup_ssh='ssh -p23 -i /var/lib/postgresql/.ssh/backup_ed25519 -o BatchMode=yes
 # Never mirror to the shared parent: --delete would remove the other backup set.
 rsync -a --delete --exclude='*.tmp' -e "$backup_ssh" \
   "$backup_dir/" {{ (vault_backup_storage_user ~ '@' ~ vault_backup_storage_host ~ ':edenflowers/database/') | quote }}
+# This is a live photo mirror, not an atomic snapshot with the database dump.
+# Deleted photos remain recoverable only through independent Storage Box snapshots.
 rsync -a --delete -e "$backup_ssh" \
   "$photos_dir/" {{ (vault_backup_storage_user ~ '@' ~ vault_backup_storage_host ~ ':edenflowers/photos/') | quote }}
+# A missed heartbeat covers failed stages as well as a cron job that never ran.
 curl --fail --silent --show-error --retry 3 --max-time 30 \
   {{ vault_backup_heartbeat_url | quote }} > /dev/null
 {% endif %}

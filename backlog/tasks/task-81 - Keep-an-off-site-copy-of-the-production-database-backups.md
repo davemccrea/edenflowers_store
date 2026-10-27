@@ -4,7 +4,7 @@ title: Keep off-site copies of the production database backups and uploaded phot
 status: in-progress
 assignee: []
 created_date: '2026-10-21 08:32'
-updated_date: '2026-10-27 07:05'
+updated_date: '2026-10-27 08:28'
 labels:
   - spec
   - admin
@@ -17,7 +17,7 @@ ordinal: 163000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Every nightly production database dump and the uploaded photos are copied to the Hetzner Storage Box, with about 30 days of snapshot history that survives a lost or compromised server.
+Every nightly production database dump and the uploaded photos are copied to the Hetzner Storage Box, with roughly 30 days of dated database dumps and 10 daily Storage Box snapshots protecting against a lost or compromised server.
 
 **Why:** The only backups are the nightly pg_dump files in /opt/edenflowers_store/backups/ on the production server itself, so losing that server loses every order, customer and payment record along with its backups.
 
@@ -31,12 +31,14 @@ Decisions:
 Related, already in this repo: `just backup` (dump to tmp/, named after the running release), `just rollback <tag> [dump]`, and the CLAUDE.md rule to back up before touching production.
 
 Photo backups are in scope: mirror the production uploaded-photo directory nightly, alongside the database dumps. Use separate remote destinations `edenflowers/database/` and `edenflowers/photos/`; never run rsync --delete against their shared parent. Local dump pruning controls database mirror retention; Storage Box snapshots retain previous photo versions and deleted photos. Both transfers must succeed before the success heartbeat. Restore verification must cover both a database dump and original uploaded photos. Repository-managed images can be recovered from git and need not be duplicated.
+
+Keep the latest 10 daily Storage Box snapshots (the included allowance), scheduled after the 02:00 backup normally finishes; 04:00 is suggested if sufficient. This provides roughly 10 days of photo/mirror recovery, not 30 days. Dated database dumps remain retained for roughly 30 days.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A dump from the latest night is on the Storage Box
-- [ ] #2 Storage Box snapshots give roughly 30 days of history
+- [x] #1 A dump from the latest night is on the Storage Box
+- [ ] #2 Storage Box automatic snapshots run daily after backups normally finish and retain the latest 10 snapshots (roughly 10 days of mirror recovery)
 - [ ] #3 A missed or failed nightly copy sends an alert
 - [ ] #4 Uploaded production photos are copied nightly to the Storage Box; snapshot recovery of a deleted photo is verified
 <!-- AC:END -->
@@ -44,7 +46,7 @@ Photo backups are in scope: mirror the production uploaded-photo directory night
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Database and uploaded-photo mirror implementation is ready for human provisioning in TASK-81.2. Local checks passed, but live transfers, snapshots, alerts and restores have not been verified.
+Production verification: latest manual dump at 2026-10-27 08:20 UTC and existing nightly dumps are on the Storage Box. Read-only rsync checksum dry-runs matched database and photo mirrors; all 10 uploaded photos are mirrored. Snapshot configuration/recovery and heartbeat delivery/missed-heartbeat alerts remain unverified. Keep the latest 10 daily Storage Box snapshots (the included allowance), scheduled after the 02:00 backup normally finishes; 04:00 is suggested if sufficient. This provides roughly 10 days of photo/mirror recovery, not 30 days. Dated database dumps remain retained for roughly 30 days.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
@@ -74,6 +76,15 @@ created: 2026-10-27 07:00
 ---
 
 David added photo backups to scope. Main Storage Box account remains the current decision. Existing root-level mirror destination must be split before adding photos, to avoid rsync --delete deleting the sibling backup set.
+
+---
+
+author: @claude
+created: 2026-10-27 08:28
+
+---
+
+David chose the 10 included daily snapshots. This supersedes the former 30-day snapshot requirement. Snapshot settings and recovery remain to be verified by the human.
 
 ---
 <!-- COMMENTS:END -->
