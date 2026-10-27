@@ -4,7 +4,7 @@ title: 'Make Jennie''s Swedish the master text for the FAQ, terms and privacy pa
 status: ready-for-human
 assignee: []
 created_date: '2026-10-24 19:28'
-updated_date: '2026-10-26 19:25'
+updated_date: '2026-10-27 08:48'
 labels:
   - spec
   - customers
@@ -45,6 +45,15 @@ created: 2026-10-26 19:25
 ---
 
 FAQ inline-link copy and checker distance/price wording now introduce new/split source strings. Swedish/Finnish translations have not been generated (opt-in); changed fragments fall back to English. Include these phrases in the next language pass and review the complete linked sentences, not just isolated anchor labels. See TASK-115 notes.
+
+---
+
+author: @pi
+created: 2026-10-27 08:48
+
+---
+
+Filled 78 missing Swedish translations and 78 missing Finnish translations for the current Privacy, Terms and FAQ pages, preserving existing non-empty translations. All 53 page tests pass, including translated privacy copy and complete linked FAQ sentences. Current page strings have no missing or fuzzy Swedish/Finnish translations. Jennie still needs to review the Swedish master text; neither acceptance criterion is claimed complete.
 
 ---
 <!-- COMMENTS:END -->
