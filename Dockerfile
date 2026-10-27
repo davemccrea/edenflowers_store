@@ -22,7 +22,7 @@ FROM ${BUILDER_IMAGE} AS builder
 
 # install build dependencies
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential git \
+  && apt-get install -y --no-install-recommends build-essential git brotli \
   && rm -rf /var/lib/apt/lists/*
 
 # prepare build dir
@@ -63,6 +63,10 @@ COPY assets assets
 
 # compile assets
 RUN mix assets.deploy
+
+# Brotli copies beside the digester's .gz ones; the render-blocking CSS is about a
+# fifth smaller than gzip. Plug.Static serves them (endpoint.ex).
+RUN find priv/static -name '*.gz' -exec sh -c 'brotli --best --keep "${1%.gz}"' _ {} \;
 
 # Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/

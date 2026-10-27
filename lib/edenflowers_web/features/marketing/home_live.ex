@@ -195,7 +195,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           alt=""
           width={1920}
           height={1080}
-          sources={[%{media: "(max-width: 767px)", width: 1080, height: 1920}]}
+          sources={[%{media: "(max-width: 767px)", width: 1080, height: 1920, max_width: 960}]}
+          quality={50}
           priority
           class="hero-zoom h-[75dvh] w-full object-cover md:h-dvh"
         />
@@ -313,8 +314,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               </div>
             </div>
             <script :type={Phoenix.LiveView.ColocatedHook} name=".FeaturedCarousel">
-              import EmblaCarousel from "@/vendor/embla-carousel.esm";
-
               /**
                * Carousel for the Featured Blooms section.
                *
@@ -332,6 +331,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                */
               export default {
                 mounted() {
+                  // Fetched here rather than imported so only the home page downloads it.
+                  import("@/vendor/embla-carousel.esm").then(({ default: EmblaCarousel }) => {
+                    if (this.el.isConnected) this.setup(EmblaCarousel);
+                  });
+                },
+
+                setup(EmblaCarousel) {
                   // Buttons live in the section heading (sibling of .embla), so we scope
                   // the lookup to the enclosing <section> rather than .embla itself.
                   const scope = this.el.closest("section") || document;
@@ -550,8 +556,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             </div>
           </div>
           <script :type={Phoenix.LiveView.ColocatedHook} name=".ReviewsEntrance">
-            import EmblaCarousel from "@/vendor/embla-carousel.esm";
-
             // On mobile (<md), Embla drives a single-quote carousel with the same focal-point
             // scale/fade as Favourites. On desktop (>=md), Embla is inactive and the first
             // quotes arrive like a turn the first time the section scrolls into view.
@@ -571,6 +575,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                   "(prefers-reduced-motion: reduce)",
                 ).matches;
 
+                // Fetched here rather than imported so only the home page downloads it.
+                import("@/vendor/embla-carousel.esm").then(({ default: EmblaCarousel }) => {
+                  if (this.el.isConnected) this.setup(EmblaCarousel);
+                });
+              },
+
+              setup(EmblaCarousel) {
                 this.embla = EmblaCarousel(this.el, {
                   slides: "li",
                   align: "start",

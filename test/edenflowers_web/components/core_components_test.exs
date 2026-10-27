@@ -50,6 +50,31 @@ defmodule EdenflowersWeb.CoreComponentsTest do
     end
   end
 
+  test "quality applies to the fallback and every candidate, art-directed ones included" do
+    html = image(quality: 70, sources: [%{media: "(max-width: 767px)", width: 600, height: 600}])
+
+    assert attribute(html, "img", "src") =~ "q:70"
+    refute html =~ "q:80"
+  end
+
+  test "a source's max_width drops larger candidates from that source only" do
+    html =
+      image(
+        width: 1920,
+        height: 1080,
+        sources: [%{media: "(max-width: 767px)", width: 1080, height: 1920, max_width: 960}]
+      )
+
+    source_widths =
+      html
+      |> attribute("source", "srcset")
+      |> String.split(", ")
+      |> Enum.map(&(&1 |> String.split(" ") |> List.last()))
+
+    assert List.last(source_widths) == "960w"
+    assert {_, 3840} = List.last(candidates(html))
+  end
+
   test "small thumbnails only request widths up to twice their declared width" do
     html = image(width: 24, height: 24)
 
