@@ -52,29 +52,6 @@ ansible-lint infra/roles/common/tasks/backups.yml
 ansible-playbook site.yml --syntax-check
 ```
 
-## Weblate
-
-Separate Compose stack and Cloudflare Tunnel at `/opt/weblate`; app deploys leave
-it alone. No host ports are published.
-
-- Vault: add `vault_weblate_db_password` (`openssl rand -hex 32`),
-  `vault_brevo_smtp_user` and `vault_brevo_smtp_password` (Brevo **SMTP** credentials,
-  not the API key).
-- Provision: `just backup`, confirm the dump in `tmp/`, then
-  `just provision --tags weblate`. Check the bridge subnet in `vars.yml` is unused.
-- Create a **dedicated** Cloudflare Tunnel; save its token as
-  `vault_weblate_cloudflare_tunnel_token`. Route `weblate.edenflowers.fi` to
-  `http://weblate:8080` in that tunnel. Remove any old route from the shop's tunnel.
-- Initial admin password: `sudo docker compose --project-directory /opt/weblate logs weblate`
-  on the server. Change it after sign-in; test email before inviting reviewers.
-- Registration is closed. Configure a **private** project, Git access and reviewer
-  permissions in Weblate; use a translation branch, not `main`.
-- Backups: 03:00, 30-day retention in `/opt/weblate/backups`; briefly stops Weblate,
-  not the shop. **Local only; off-server copies still needed.** Restore both the
-  database dump and data archive. Valkey queues are excluded.
-- Upgrades: back up first, change the pinned image in `vars.yml`, provision.
-  PostgreSQL major upgrades need dump/restore. Never `docker compose down -v`.
-
 ## New server
 
 `just bootstrap` runs once, as root, on a fresh server. It creates the user from `vars.yml` with passwordless sudo, authorizes `~/.ssh/id_rsa.pub` and `github_actions_public_key`, and disables root SSH login. Then provision it, deploy, and seed the empty database with the rows the admin can't create:

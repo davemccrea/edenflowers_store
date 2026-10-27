@@ -14,14 +14,6 @@
     name: postgresql
     state: restarted
 
-- name: Recreate Weblate
-  community.docker.docker_compose_v2:
-    project_src: /opt/weblate
-    state: present
-    pull: missing
-    wait: true
-    wait_timeout: 600
-
 - name: Recreate container
   community.docker.docker_compose_v2:
     project_src: "/opt/{{ project_name }}"
