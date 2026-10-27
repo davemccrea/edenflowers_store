@@ -947,6 +947,14 @@ defmodule EdenflowersWeb.Layouts do
 
       <div class="container">
         <div class="flex flex-col items-center gap-3 py-6">
+          <img
+            src="/images/logo-eden-flowers.svg"
+            alt="Eden Flowers"
+            width="112"
+            height="112"
+            loading="lazy"
+            class="mt-8 mb-8 w-28"
+          />
           <.footer_locale_picker current_path={@current_path} alternates={@alternates} current_locale={@current_locale} />
 
           <span class="text-xs">
