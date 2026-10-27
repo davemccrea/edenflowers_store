@@ -42,9 +42,9 @@ defmodule Edenflowers.Email.PreviewsTest do
           into: %{},
           do: {scenario, email.text_body}
 
-    assert bodies["refunded to a card"] =~ "Refund: €64.00 to Visa •••• 4242"
-    assert bodies["refunded to MobilePay"] =~ "Refund: €64.00 to MobilePay"
-    assert bodies["refunded, paid more than one way"] =~ "Refund: €64.00, the way you paid"
+    assert bodies["refunded to a card"] =~ "Refund: 64,00 € to Visa •••• 4242"
+    assert bodies["refunded to MobilePay"] =~ "Refund: 64,00 € to MobilePay"
+    assert bodies["refunded, paid more than one way"] =~ "Refund: 64,00 €, the way you paid"
   end
 
   test "a card refund says how long it takes; cash says it was handed back" do
@@ -54,7 +54,7 @@ defmodule Edenflowers.Email.PreviewsTest do
     assert bodies["to a card through Stripe, with a message from Jennie"] =~
              ~r/ending in 4242\. It can take a few days to show on your statement\.\n\nI'm so sorry/
 
-    assert bodies["handed back in cash"] =~ "I've refunded €20.00 in cash."
+    assert bodies["handed back in cash"] =~ "I've refunded 20,00 € in cash."
     refute bodies["handed back in cash"] =~ "statement"
   end
 
@@ -73,7 +73,7 @@ defmodule Edenflowers.Email.PreviewsTest do
     assert email.subject == "Your flowers for Saturday 14.11."
 
     assert email.text_body =~
-             ~r/^Your card was charged €59\.00 for your delivery scheduled for Saturday 14\.11\.2026 \(.+\)\./
+             ~r/^Your card was charged 59,00 € for your delivery scheduled for Saturday 14\.11\.2026 \(.+\)\./
 
     assert String.ends_with?(email.text_body, "\nEden Flowers\n")
   end

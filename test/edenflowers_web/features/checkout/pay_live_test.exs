@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     assert has_element?(view, "h1", "Pay for your order")
     assert has_element?(view, "hgroup p", "Order #{order.order_reference}")
     assert has_element?(view, "dl", "Funeral spray")
-    assert has_element?(view, "[data-testid=pay-total]", "85.00")
+    assert has_element?(view, "[data-testid=pay-total]", "85,00")
     refute has_element?(view, "[data-testid=pay-balance]")
     refute render(view) =~ "Paid so far"
     assert has_element?(view, ~s|#pay-form[data-amount="8500"]|)
@@ -230,9 +230,9 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
 
-    assert has_element?(view, "[data-testid=pay-total]", "85.00")
+    assert has_element?(view, "[data-testid=pay-total]", "85,00")
     assert has_element?(view, "dt", "Paid so far")
-    assert has_element?(view, "[data-testid=pay-balance]", "55.00")
+    assert has_element?(view, "[data-testid=pay-balance]", "55,00")
     assert has_element?(view, "#pay-form")
     refute has_element?(view, "dt", "Total paid")
   end

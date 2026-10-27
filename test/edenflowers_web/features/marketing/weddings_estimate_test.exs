@@ -20,13 +20,13 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
   test "the estimate sums the lowest prices and goes along with the enquiry", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/weddings")
 
-    assert view |> element("#wedding-estimate") |> render() =~ "€110–€190"
+    assert view |> element("#wedding-estimate") |> render() =~ "110 €–190 €"
 
     view |> element(~s{[phx-value-item="bridesmaid_bouquet"][phx-value-by="1"]}) |> render_click()
     view |> element(~s{[phx-value-item="bridesmaid_bouquet"][phx-value-by="1"]}) |> render_click()
     view |> element(~s{[phx-value-item="cake_flowers"]}) |> render_click()
 
-    assert view |> element("#wedding-estimate") |> render() =~ "€200–€280"
+    assert view |> element("#wedding-estimate") |> render() =~ "200 €–280 €"
     assert has_element?(view, "#estimate-cake-flowers")
 
     view |> form("#enquiry-form", enquiry: @enquiry) |> render_submit()
@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
       args: %{
         name: "Anna Svensson",
         selection: ["1 × Bridal bouquet", "2 × Bridesmaid's bouquet", "Cake flowers"],
-        estimate: "€200–€280"
+        estimate: "200 €–280 €"
       }
     )
   end

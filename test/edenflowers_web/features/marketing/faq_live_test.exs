@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     assert has_element?(
              view,
              "#delivery details",
-             "Within 17 km driving distance of the shop, for €5.00 plus €1.20 per km"
+             "Within 17 km driving distance of the shop, for 5,00 € plus 1,20 € per km"
            )
 
     assert has_element?(view, "#delivery details", "delivered free within 4 km")
@@ -340,7 +340,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       assert has_element?(
                view,
                "#delivery-question-0 > div > p:first-child",
-               "€1.20 per km. Some products, like subscriptions, are delivered free within 4 km."
+               "1,20 € per km. Some products, like subscriptions, are delivered free within 4 km."
              )
 
       assert has_element?(
@@ -379,7 +379,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       view |> element("#address-input-field") |> render_blur(%{"value" => "Stadsgatan 3"})
       render_async(view, 1000)
 
-      assert has_element?(view, "[data-testid=faq-delivery-quote] > p.text-success", "Delivery: €14.60")
+      assert has_element?(view, "[data-testid=faq-delivery-quote] > p.text-success", "Delivery: 14,60 €")
       refute has_element?(view, "[data-testid=address-confirmation]")
       refute has_element?(view, "[data-testid=faq-delivery-quote]", "delivered free to this address")
 
@@ -400,8 +400,8 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       view |> element("#faq-delivery-cost") |> render_submit(%{"delivery_address" => "Stadsgatan 3"})
       render_async(view, 1000)
 
-      assert has_element?(view, "[data-testid=faq-delivery-quote]", "Delivery: €8.60")
-      assert has_element?(view, "[data-testid=faq-delivery-quote] > p:only-child", "Delivery: €8.60")
+      assert has_element?(view, "[data-testid=faq-delivery-quote]", "Delivery: 8,60 €")
+      assert has_element?(view, "[data-testid=faq-delivery-quote] > p:only-child", "Delivery: 8,60 €")
       refute has_element?(view, "[data-testid=faq-delivery-quote]", "Products marked for free delivery")
     end
 
@@ -462,7 +462,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       {:ok, view, _html} = live(conn, ~p"/en/faq")
       view |> element("#faq-delivery-cost") |> render_submit(%{"delivery_address" => "Stadsgatan 3"})
       render_async(view, 1000)
-      assert has_element?(view, "[data-testid=faq-delivery-quote]", "Delivery: €14.60")
+      assert has_element?(view, "[data-testid=faq-delivery-quote]", "Delivery: 14,60 €")
 
       view |> element("#faq-delivery-cost") |> render_submit(%{"delivery_address" => "Unknown address"})
       render_async(view, 1000)

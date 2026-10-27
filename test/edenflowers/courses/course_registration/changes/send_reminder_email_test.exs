@@ -25,7 +25,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
       assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
       assert email.subject =~ ~r/^See you tomorrow at Course \d+$/
       assert email.text_body =~ ~r/A reminder that Course \d+ is tomorrow\./
-      assert email.text_body =~ "Amount to pay: €85.00. Please pay at the course."
+      assert email.text_body =~ "Amount to pay: 85,00 €. Please pay at the course."
       assert email.attachments == []
     end)
 

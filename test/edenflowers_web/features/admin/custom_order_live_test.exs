@@ -603,7 +603,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       view |> element("#form_delivery_address") |> render_blur(%{"value" => "Kyrkvägen 5"})
 
       assert render_async(view, 500) =~ "8.0 km"
-      assert has_element?(view, "#delivery-quote", "13.00")
+      assert has_element?(view, "#delivery-quote", "13,00")
       assert has_element?(view, "#delivery-quote", "Delivering to Kyrkvägen 5, Vasa")
     end
 
@@ -679,11 +679,11 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert has_element?(view, "#order-price", "2 × Spring Bouquet")
       assert has_element?(view, "#order-price", "1 × Wreath")
-      assert has_element?(view, "#order-price", "€183.50")
+      assert has_element?(view, "#order-price", "183,50 €")
 
       view |> form("#order-form", form: %{fulfillment_fee_override: "10"}) |> render_change()
 
-      assert has_element?(view, "#order-price", "€193.50")
+      assert has_element?(view, "#order-price", "193,50 €")
     end
 
     test "keeps quiet about missing items until Jennie tries to save", ctx do
@@ -715,9 +715,9 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
 
       assert has_element?(view, "#order-price", "1 × Funeral spray")
-      assert has_element?(view, "#order-price", "€85.00")
+      assert has_element?(view, "#order-price", "85,00 €")
       assert has_element?(view, "#order-price", "Balance")
-      assert has_element?(view, "#order-price", "€35.00")
+      assert has_element?(view, "#order-price", "35,00 €")
     end
 
     test "offers Order updated unticked, and previews it once ticked", ctx do
@@ -785,7 +785,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
-      assert has_element?(view, "#order-balance", "To collect €10.00")
+      assert has_element?(view, "#order-balance", "To collect 10,00 €")
       assert has_element?(view, ~s|#order-balance-form input[value="10.00"]|)
     end
 
@@ -841,7 +841,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       body =
         URI.encode(
-          "Hi Mrs, you can pay €85.00 for your Eden Flowers order #{order.order_reference} here: " <>
+          "Hi Mrs, you can pay 85,00 € for your Eden Flowers order #{order.order_reference} here: " <>
             EdenflowersWeb.PaymentLink.url_for(order),
           &URI.char_unreserved?/1
         )
@@ -856,7 +856,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
-      assert has_element?(view, "#order-balance", "To collect €85.00")
+      assert has_element?(view, "#order-balance", "To collect 85,00 €")
       view |> element(~s|#order-balance button[phx-value-kind="payment_reminder"]|) |> render_click()
       assert view |> form("#email-form") |> render_submit() =~ "Payment reminder sent."
 
@@ -950,7 +950,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|#cancel-form input[name="cancel[refund]"][value="50.00"]|)
 
       view |> form("#cancel-form", cancel: %{refund: "60", message: "Ill that day"}) |> render_submit()
-      assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from €0 to €50.00.")
+      assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from 0 € to 50,00 €.")
 
       view |> form("#cancel-form", cancel: %{refund: "30,00", message: "Ill that day"}) |> render_submit()
 

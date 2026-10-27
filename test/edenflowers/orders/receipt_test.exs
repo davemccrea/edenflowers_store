@@ -96,10 +96,10 @@ defmodule Edenflowers.Orders.ReceiptTest do
 
       # The real newsletter rate produces fractional cents before each line's discount is rounded:
       # 56.90 goods − (5.99 + 2.55) discount + 9.00 fee = 57.36.
-      assert payload.items_subtotal == "€56.90"
-      assert payload.discount == "€8.54"
-      assert payload.fulfillment_fee == "€9.00"
-      assert payload.grand_total == "€57.36"
+      assert payload.items_subtotal == "56,90 €"
+      assert payload.discount == "8,54 €"
+      assert payload.fulfillment_fee == "9,00 €"
+      assert payload.grand_total == "57,36 €"
     end
 
     test "line item totals sum to the subtotal row above them" do
@@ -123,8 +123,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
       # 14%:   12.00 gross → 10.53 net, 1.47 VAT.  Never gross × rate.
       assert [standard, reduced] = Receipt.build_payload(order).vat_breakdown
 
-      assert standard == %{rate: "25.5%", base: "€38.96", tax: "€9.94", gross: "€48.90"}
-      assert reduced == %{rate: "14.0%", base: "€10.53", tax: "€1.47", gross: "€12.00"}
+      assert standard == %{rate: "25.5%", base: "38,96 €", tax: "9,94 €", gross: "48,90 €"}
+      assert reduced == %{rate: "14.0%", base: "10,53 €", tax: "1,47 €", gross: "12,00 €"}
     end
 
     test "each VAT row's net and tax add up to its gross" do
@@ -156,13 +156,13 @@ defmodule Edenflowers.Orders.ReceiptTest do
         ])
 
       assert Receipt.build_payload(order).vat_breakdown == [
-               %{rate: "14.0%", base: "€10.00", tax: "€1.40", gross: "€11.40"}
+               %{rate: "14.0%", base: "10,00 €", tax: "1,40 €", gross: "11,40 €"}
              ]
     end
 
     test "omits a zero fulfillment fee rather than printing a 0,00 row" do
       assert Receipt.build_payload(build_pickup_order(locale: "en-GB")).fulfillment_fee == nil
-      assert Receipt.build_payload(build_delivery_order(locale: "en-GB")).fulfillment_fee == "€9.00"
+      assert Receipt.build_payload(build_delivery_order(locale: "en-GB")).fulfillment_fee == "9,00 €"
     end
 
     test "uses customer-typed delivery_address, never the geocoded one" do
@@ -180,7 +180,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
       order = build_delivery_order(locale: "en-GB")
       [payload_first | _] = Receipt.build_payload(order).line_items
 
-      assert payload_first.unit_price_ex_tax =~ "31.79"
+      assert payload_first.unit_price_ex_tax =~ "31,79"
     end
   end
 
@@ -198,8 +198,8 @@ defmodule Edenflowers.Orders.ReceiptTest do
         ])
 
       assert [
-               %{method: "card", card_brand: "visa", card_last4: "4242", paid_on: "13.5.2026", amount: "€30.00"},
-               %{method: "cash", card_brand: nil, card_last4: nil, paid_on: "14.5.2026", amount: "€15.00"}
+               %{method: "card", card_brand: "visa", card_last4: "4242", paid_on: "13.5.2026", amount: "30,00 €"},
+               %{method: "cash", card_brand: nil, card_last4: nil, paid_on: "14.5.2026", amount: "15,00 €"}
              ] = Receipt.build_payload(order).payments
     end
 
@@ -242,7 +242,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
         }
       }
 
-      assert [%{method: "card", card_brand: "amex", card_last4: "0005", paid_on: "22.9.2026", amount: "€85.00"}] =
+      assert [%{method: "card", card_brand: "amex", card_last4: "0005", paid_on: "22.9.2026", amount: "85,00 €"}] =
                Receipt.build_payload(registration).payments
 
       assert Receipt.build_payload(%{registration | payments: []}).payments == []

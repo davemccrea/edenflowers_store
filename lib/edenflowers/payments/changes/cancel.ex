@@ -98,7 +98,7 @@ defmodule Edenflowers.Payments.Changes.Cancel do
           Decimal.negative?(refund) or Decimal.gt?(refund, held) ->
             {:error,
              field: :refund,
-             message: ~t"Enter an amount from €0 to #{amount = Format.currency(held, Format.locale())}."a}
+             message: ~t"Enter an amount from 0 € to #{amount = Format.currency(held, Format.locale())}."a}
 
           true ->
             {:ok, Decimal.sub(held, refund)}

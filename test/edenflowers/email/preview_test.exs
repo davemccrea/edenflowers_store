@@ -53,7 +53,7 @@ defmodule Edenflowers.Email.PreviewTest do
     generate(payment(course_registration_id: registration.id, amount: Decimal.new("30.00"), method: :cash))
     preview = Preview.build(:receipt, registration, %{})
 
-    assert preview.text_body =~ "€30.00"
+    assert preview.text_body =~ "30,00 €"
     assert [_receipt] = preview.attachments
   end
 

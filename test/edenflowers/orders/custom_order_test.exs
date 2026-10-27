@@ -581,7 +581,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert edit.title == "Edited"
       assert {"Delivery address", "Kyrkvägen 5"} in edit.details
-      assert {"Fulfillment fee", "€17.00"} in edit.details
+      assert {"Fulfillment fee", "17,00 €"} in edit.details
       refute List.keymember?(edit.details, "Items", 0)
       assert length(OrderLog.entries(versions, [], "en-GB")) == 2
     end

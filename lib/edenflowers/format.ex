@@ -1,7 +1,7 @@
 defmodule Edenflowers.Format do
   @moduledoc """
   Locale-aware formatting helpers shared across the project.
-  All functions return strings formatted via CLDR for the supplied locale.
+  All functions use CLDR. Euro amounts use Finnish formatting in every locale.
   """
 
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "shared"]
@@ -16,7 +16,10 @@ defmodule Edenflowers.Format do
 
   @spec currency(number | nil, Localize.Locale.locale_id()) :: String.t()
   def currency(nil, locale), do: currency(0, locale)
-  def currency(amount, locale), do: Localize.Number.to_string!(amount, locale: locale, currency: :EUR)
+
+  def currency(amount, _locale) do
+    Localize.Number.to_string!(amount, locale: "fi", currency: :EUR)
+  end
 
   @doc """
   A storefront price: whole euros drop the cents ("45 €"), anything else keeps
@@ -28,7 +31,7 @@ defmodule Edenflowers.Format do
 
   def storefront_price(amount, locale) do
     if amount |> Decimal.new() |> Decimal.integer?() do
-      Localize.Number.to_string!(amount, locale: locale, currency: :EUR, fractional_digits: 0)
+      Localize.Number.to_string!(amount, locale: "fi", currency: :EUR, fractional_digits: 0)
     else
       currency(amount, locale)
     end
@@ -46,7 +49,12 @@ defmodule Edenflowers.Format do
 
   def currency_in(value, currency, locale) do
     iso = currency |> to_string() |> String.upcase() |> String.to_existing_atom()
-    Localize.Number.to_string!(value, locale: locale, currency: iso)
+
+    if iso == :EUR do
+      currency(value, locale)
+    else
+      Localize.Number.to_string!(value, locale: locale, currency: iso)
+    end
   end
 
   @doc """

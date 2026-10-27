@@ -81,7 +81,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         record = build(@parent, cancelled: true, payments: [stripe: "58.50", cash: "30.00"])
         {view, panel} = open(conn, @parent, record)
 
-        assert has_element?(view, panel, "To refund €88.50")
+        assert has_element?(view, panel, "To refund 88,50 €")
         assert has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="stripe"]|)
         assert has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="cash"]|)
       end
@@ -130,7 +130,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
         {view, panel} = open(conn, @parent, record)
 
-        assert has_element?(view, panel, "To refund €88.50")
+        assert has_element?(view, panel, "To refund 88,50 €")
         refute has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="cash"]|)
         assert refund(view, @parent, record, %{how: "stripe"}) =~ "Refunded with Stripe."
 
@@ -166,14 +166,14 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         |> form(selector, refund: %{amount: "20", how: "cash", note: "A small apology", email_customer: "true"})
         |> render_change()
 
-        assert has_element?(view, preview, "€20.00 in cash")
+        assert has_element?(view, preview, "20,00 € in cash")
         assert has_element?(view, preview, "A small apology")
 
         render_click(view, "open_settlement", %{"id" => record.id, "mode" => "refund"})
 
         assert has_element?(view, ~s|#{selector} input[name="refund[amount]"][value="20"]|)
         assert has_element?(view, ~s|#{selector} option[value="cash"][selected]|)
-        assert has_element?(view, preview, "€20.00 in cash")
+        assert has_element?(view, preview, "20,00 € in cash")
         assert has_element?(view, preview, "A small apology")
       end
 
@@ -206,7 +206,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     order = build(:order)
     {view, panel} = open(conn, :order, order)
 
-    assert has_element?(view, panel, "To collect €88.50")
+    assert has_element?(view, panel, "To collect 88,50 €")
     assert has_element?(view, ~s|#{panel}-form input[name="payment[amount]"][value="88.50"]|)
 
     view |> form("#{panel}-form", payment: %{payment_method: "cash"}) |> render_submit()
@@ -237,7 +237,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
     assert_email_sent(fn email ->
       refute email.text_body =~ "/pay/"
-      assert email.text_body =~ "50.00. Your receipt is attached."
+      assert email.text_body =~ "50,00 €. Your receipt is attached."
     end)
   end
 

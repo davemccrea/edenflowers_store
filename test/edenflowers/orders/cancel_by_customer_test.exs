@@ -59,7 +59,7 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
       assert {"Eden Flowers", _address} = email.from
       # Only a record copy: Jennie hears about it from the shop notice.
       assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
-      assert email.text_body =~ "Refund: €88.50"
+      assert email.text_body =~ "Refund: 88,50 €"
       assert email.text_body =~ "Refunds usually take 3–5 working days to appear on your statement."
     end)
 

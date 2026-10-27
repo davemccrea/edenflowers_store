@@ -1057,7 +1057,7 @@ msgstr "Engelska"
 
 #: lib/edenflowers/payments/changes/cancel.ex:101
 #, elixir-autogen, elixir-format
-msgid "Enter an amount from €0 to %{amount}."
+msgid "Enter an amount from 0 € to %{amount}."
 msgstr "Ange ett belopp från 0 € till %{amount}."
 
 #: lib/edenflowers_web/features/admin/components/components.ex:232

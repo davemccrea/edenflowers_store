@@ -35,7 +35,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionHeadsUpEmailTe
       assert email.subject =~ ~r/^Your next flowers come on \w+ \d+\.\d+\.$/
       assert email.text_body =~ ~r/Your next Florist's choice delivery is on .+, to Esplanadi 1, Helsinki\./
       assert email.text_body =~ "in your account by #{weekday_date(days_from_today(1))}:"
-      assert email.text_body =~ "Your card will be charged €59.00 on #{weekday_date(days_from_today(2))}."
+      assert email.text_body =~ "Your card will be charged 59,00 € on #{weekday_date(days_from_today(2))}."
     end)
 
     assert Ash.get!(Subscription, subscription.id, authorize?: false).heads_up_emailed_for == days_from_today(4)

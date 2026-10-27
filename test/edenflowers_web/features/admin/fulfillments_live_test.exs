@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      assert render_async(view, 500) =~ "€3.00 · €1.50/km · free within 5 km · up to 20 km"
+      assert render_async(view, 500) =~ "3,00 € · 1,50 €/km · free within 5 km · up to 20 km"
     end
 
     test "an unknown option goes back to the list", %{conn: conn} do

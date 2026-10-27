@@ -1,26 +1,26 @@
 {
   "line_items": [
     {
-      "total": "€39.90",
+      "total": "39,90 €",
       "quantity": 1,
       "tax_rate": "25.5%",
-      "unit_price_ex_tax": "€31.79",
+      "unit_price_ex_tax": "31,79 €",
       "product_name": "Spring Posy",
       "variant_size": "Medium"
     },
     {
-      "total": "€17.00",
+      "total": "17,00 €",
       "quantity": 2,
       "tax_rate": "25.5%",
-      "unit_price_ex_tax": "€6.77",
+      "unit_price_ex_tax": "6,77 €",
       "product_name": "Eucalyptus Bunch",
       "variant_size": null
     },
     {
-      "total": "€4.50",
+      "total": "4,50 €",
       "quantity": 1,
       "tax_rate": "25.5%",
-      "unit_price_ex_tax": "€3.59",
+      "unit_price_ex_tax": "3,59 €",
       "product_name": "Handwritten Card",
       "variant_size": null
     }
@@ -28,12 +28,12 @@
   "customer_email": "anna.lindqvist@example.fi",
   "order_reference": "1428",
   "fulfillment_date": "Saturday 16/05/2026",
-  "grand_total": "€64.26",
+  "grand_total": "64,26 €",
   "delivery_address": "Korsholmsesplanaden 12 A 4, 65100 Vasa",
-  "fulfillment_fee": "€9.00",
+  "fulfillment_fee": "9,00 €",
   "fulfillment_method": "delivery",
-  "discount": "€6.14",
-  "items_subtotal": "€61.40",
+  "discount": "6,14 €",
+  "items_subtotal": "61,40 €",
   "card_message": "Happy birthday, Mum! With love from us all.",
   "customer_name": "Anna Lindqvist",
   "delivery_instructions": "Doorbell to the top floor. If nobody answers, leave it with the neighbour.",
@@ -43,10 +43,10 @@
   "lang": "en",
   "vat_breakdown": [
     {
-      "base": "€51.20",
+      "base": "51,20 €",
       "rate": "25.5%",
-      "tax": "€13.06",
-      "gross": "€64.26"
+      "tax": "13,06 €",
+      "gross": "64,26 €"
     }
   ],
   "venue_name": null,
@@ -57,7 +57,7 @@
       "card_brand": "mastercard",
       "card_last4": "4444",
       "paid_on": "13/05/2026",
-      "amount": "€64.26"
+      "amount": "64,26 €"
     }
   ],
   "labels": {

@@ -38,14 +38,14 @@ defmodule EdenflowersWeb.CardDrawerTest do
   test "a size whose cards share a price shows it once, in the heading" do
     html = render_drawer([card("Aruba", :large, "4.90"), card("Kira", :large, "4.90")])
 
-    assert length(String.split(html, "€4.90")) == 2
+    assert length(String.split(html, "4,90 €")) == 2
   end
 
   test "a size with mixed prices shows each card's own price and none in the heading" do
     html = render_drawer([card("Aruba", :large, "4.90"), card("Kira", :large, "6.00")])
 
-    assert length(String.split(html, "€4.90")) == 2
-    assert length(String.split(html, "€6.00")) == 2
+    assert length(String.split(html, "4,90 €")) == 2
+    assert length(String.split(html, "6,00 €")) == 2
   end
 
   test "a size whose cards share dimensions shows them once, in the heading" do

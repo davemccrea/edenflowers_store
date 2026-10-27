@@ -132,9 +132,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-payment-summary", "€84.00")
-    assert has_element?(view, "#order-payment-summary", "-€16.80")
-    assert has_element?(view, "#order-payment-summary", "€71.70")
+    assert has_element?(view, "#order-payment-summary", "84,00 €")
+    assert has_element?(view, "#order-payment-summary", "−16,80 €")
+    assert has_element?(view, "#order-payment-summary", "71,70 €")
   end
 
   test "marking an order fulfilled flips the status and shows the fulfilled badge", %{conn: conn} do
@@ -449,8 +449,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, "#order-log", "Paid €46.50 · Stripe")
-    assert has_element?(view, "#order-log", "Refunded €10.00 · Cash")
+    assert has_element?(view, "#order-log", "Paid 46,50 € · Stripe")
+    assert has_element?(view, "#order-log", "Refunded 10,00 € · Cash")
   end
 
   test "fetches a refund from Stripe whose webhook never arrived", %{conn: conn} do
@@ -464,7 +464,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click()
-    assert has_element?(view, "#order-log", "Refunded €10.00 · Stripe")
+    assert has_element?(view, "#order-log", "Refunded 10,00 € · Stripe")
 
     assert view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click() =~
              "No new refunds in Stripe."
@@ -573,7 +573,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert log =~ ":card_declined"
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    assert has_element?(view, "#order-log", "Refunded €30.00 · Stripe")
+    assert has_element?(view, "#order-log", "Refunded 30,00 € · Stripe")
   end
 
   test "records a refund Stripe made that we missed before refunding more", %{conn: conn} do
@@ -591,8 +591,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
     refund_from_page(view, %{amount: "20", how: "stripe"})
 
-    assert has_element?(view, "#order-log", "Refunded €10.00 · Stripe")
-    assert has_element?(view, "#order-log", "Refunded €20.00 · Stripe")
+    assert has_element?(view, "#order-log", "Refunded 10,00 € · Stripe")
+    assert has_element?(view, "#order-log", "Refunded 20,00 € · Stripe")
   end
 
   test "offers ready-for-pickup message links in the customer's language", %{conn: conn} do
@@ -726,7 +726,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       refund_from_page(view, %{amount: "20,00", how: "cash", note: "Wilted early"})
 
-      assert has_element?(view, "#order-log", "Refunded €20.00 · Cash")
+      assert has_element?(view, "#order-log", "Refunded 20,00 € · Cash")
       assert has_element?(view, "#order-log", "Wilted early")
       assert has_element?(view, "#order-payments", "Refund · Cash")
       refute render(view) =~ "To collect"
@@ -751,7 +751,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       |> form("#order-refund-form", refund: %{amount: "20.00", how: "stripe", email_customer: "false"})
       |> render_submit()
 
-      assert has_element?(view, "#order-log", "Refunded €20.00 · Stripe")
+      assert has_element?(view, "#order-log", "Refunded 20,00 € · Stripe")
       refute render(view) =~ "To collect"
       refute_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
     end
