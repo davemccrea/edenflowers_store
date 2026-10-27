@@ -63,7 +63,7 @@ it alone. No host ports are published.
 - Provision: `just backup`, confirm the dump in `tmp/`, then
   `just provision --tags weblate`. Check the bridge subnet in `vars.yml` is unused.
 - Create a **dedicated** Cloudflare Tunnel; save its token as
-  `vault_weblate_cloudflare_tunnel_token`. Route `translate.edenflowers.fi` to
+  `vault_weblate_cloudflare_tunnel_token`. Route `weblate.edenflowers.fi` to
   `http://weblate:8080` in that tunnel. Remove any old route from the shop's tunnel.
 - Initial admin password: `sudo docker compose --project-directory /opt/weblate logs weblate`
   on the server. Change it after sign-in; test email before inviting reviewers.

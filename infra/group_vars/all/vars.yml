@@ -55,7 +55,7 @@ papra_webhook_secret: "{{ vault_papra_webhook_secret }}"
 papra_organization_id: "{{ vault_papra_organization_id }}"
 
 # Weblate (separate Compose project and Cloudflare Tunnel)
-weblate_domain: translate.edenflowers.fi
+weblate_domain: weblate.edenflowers.fi
 weblate_image: weblate/weblate:2026.10.1.4
 weblate_postgres_image: postgres:18-alpine
 weblate_valkey_image: valkey/valkey:9.1.3
