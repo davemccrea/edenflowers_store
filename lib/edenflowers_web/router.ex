@@ -32,6 +32,13 @@ defmodule EdenflowersWeb.Router do
     plug EdenflowersWeb.Plugs.Maintenance
   end
 
+  pipeline :browser_json do
+    plug :accepts, ["json"]
+    plug :fetch_session
+    plug :protect_from_forgery
+    plug :load_from_session
+  end
+
   pipeline :store do
     plug EdenflowersWeb.Plugs.InitStore
   end
@@ -135,6 +142,12 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutCurrentPath
       ]
     )
+  end
+
+  scope "/", EdenflowersWeb do
+    pipe_through :browser_json
+
+    post "/review-notes", Review.NoteController, :create
   end
 
   scope "/admin" do
