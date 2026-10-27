@@ -16,6 +16,7 @@ const touch = matchMedia("(hover: none)").matches;
 
 if (dev || reviewer) {
   let activeEl = null;
+  let selection = 0;
   let lastTarget = null;
   let selectionPath = [];
   let copiedTimer = null;
@@ -193,24 +194,17 @@ if (dev || reviewer) {
     el.style.setProperty("anchor-name", [...anchorNames(el), name].join(", "));
   };
 
-  const anchorObserver = new MutationObserver((records) => {
-    for (const { target } of records) {
-      const anchor = anchors.get(target);
-      if (anchor) addAnchorName(target, anchor.name);
-    }
-  });
-
   const anchorTo = (el) => {
     let anchor = anchors.get(el);
     if (!anchor) {
       anchor = {
         name: `--element-picker-${++anchorCount}`,
-        inline: el.style.getPropertyValue("anchor-name"),
+        observer: new MutationObserver(() => addAnchorName(el, anchor.name)),
         users: 0,
       };
       anchors.set(el, anchor);
       addAnchorName(el, anchor.name);
-      anchorObserver.observe(el, {
+      anchor.observer.observe(el, {
         attributes: true,
         attributeFilter: ["style"],
       });
@@ -223,7 +217,14 @@ if (dev || reviewer) {
     const anchor = anchors.get(el);
     if (!anchor || --anchor.users) return;
     anchors.delete(el);
-    el.style.setProperty("anchor-name", anchor.inline);
+    anchor.observer.disconnect();
+    const names = el.style
+      .getPropertyValue("anchor-name")
+      .split(",")
+      .map((name) => name.trim())
+      .filter((name) => name && name !== anchor.name);
+    if (names.length) el.style.setProperty("anchor-name", names.join(", "));
+    else el.style.removeProperty("anchor-name");
   };
 
   const ensureOverlay = () => {
@@ -310,6 +311,7 @@ if (dev || reviewer) {
   };
 
   const closeBox = () => {
+    selection++;
     if (box) releaseAnchor(activeEl);
     box?.remove();
     box = null;
@@ -449,7 +451,10 @@ if (dev || reviewer) {
 
   const showNotes = async () => {
     if (!reviewer) return;
-    const notes = await pageNotes();
+    const path = pagePath();
+    const request = pageNotes();
+    const notes = await request;
+    if (path !== pagePath() || request !== notesRequest) return;
     if ((optionHeld || reviewMode) && !box) renderNotes(notes);
   };
 
@@ -490,6 +495,8 @@ if (dev || reviewer) {
     box?.remove();
     activeEl = el;
     box = popover("form", "ep-box");
+    const thisBox = box;
+    const path = pagePath();
     hideNotes();
     renderHighlight(el);
     box.style.setProperty("position-anchor", anchorTo(el));
@@ -577,7 +584,8 @@ if (dev || reviewer) {
     copy.type = "button";
     copy.textContent = "Copy ref";
     copy.addEventListener("click", async () => {
-      status.textContent = await copyReference(el);
+      const message = await copyReference(el);
+      if (box === thisBox && path === pagePath()) status.textContent = message;
     });
     const remove = document.createElement("button");
     remove.type = "button";
@@ -586,8 +594,9 @@ if (dev || reviewer) {
       if (!confirm("Delete this note?")) return;
       status.textContent = "Deleting…";
       const response = await sendJson(`/review-notes/${note.id}`, {}, "DELETE");
+      if (response?.ok) notesPath = null;
+      if (box !== thisBox || path !== pagePath()) return;
       if (response?.ok) {
-        notesPath = null;
         closeBox();
         flash(el, "✓ Note deleted");
       } else {
@@ -614,6 +623,7 @@ if (dev || reviewer) {
       .catch(() => []);
 
     stringsRequest.then((found) => {
+      if (box !== thisBox || path !== pagePath()) return;
       if (found.length) strings.replaceWith(stringsList(found));
       else strings.textContent = "No translated strings found here";
     });
@@ -642,8 +652,9 @@ if (dev || reviewer) {
             noteFor(el, body, await stringsRequest),
           );
 
+      if (response?.ok) notesPath = null;
+      if (box !== thisBox || path !== pagePath()) return;
       if (response?.ok) {
-        notesPath = null;
         closeBox();
         flash(el, "✓ Note saved");
       } else {
@@ -658,10 +669,16 @@ if (dev || reviewer) {
   };
 
   const pick = async (el) => {
+    const current = ++selection;
+    const path = pagePath();
     const note = reviewer ? await ownNoteOn(el) : null;
+    if (current !== selection || path !== pagePath()) return;
     const heading = note ? `Editing note · ${tagSummary(el)}` : tagSummary(el);
     if (reviewer) openBox(el, heading, note);
-    else flash(el, await copyReference(el));
+    else {
+      const message = await copyReference(el);
+      if (current === selection && path === pagePath()) flash(el, message);
+    }
   };
 
   if (reviewer && touch) {
@@ -690,6 +707,7 @@ if (dev || reviewer) {
       if (!event.altKey) return hideHighlight();
       if (copiedTimer) return;
       if (!changed && activeEl) return;
+      selection++;
       selectionPath = [];
       activeEl = target;
       renderHighlight(activeEl);
@@ -715,6 +733,7 @@ if (dev || reviewer) {
       if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
       event.preventDefault();
       event.stopPropagation();
+      selection++;
       if (event.key === "ArrowUp" && activeEl.parentElement) {
         selectionPath.push(activeEl);
         activeEl = activeEl.parentElement;

@@ -13,11 +13,14 @@ const fixture = ({
   reviewer = false,
   touch = false,
   responses = {},
+  fetchReply = null,
 } = {}) => {
   const listeners = new Map();
   const overlays = [];
   const copied = [];
   const requests = [];
+  const observers = [];
+  const location = { pathname: "/fi/kauppa", search: "" };
   const listen = (name, callback) => {
     const callbacks = listeners.get(name) || [];
     callbacks.push(callback);
@@ -45,6 +48,9 @@ const fixture = ({
       properties: {},
       setProperty(name, value) {
         this.properties[name] = value;
+      },
+      removeProperty(name) {
+        delete this.properties[name];
       },
       getPropertyValue(name) {
         return this.properties[name] ?? "";
@@ -103,13 +109,17 @@ const fixture = ({
     elementReference: (node) => node.tagName,
     selectorFor: () => "",
     NodeFilter: { SHOW_TEXT: 4 },
-    location: { pathname: "/fi/kauppa", search: "" },
+    location,
     fetch: async (url, options = {}) => {
       requests.push({
         url,
         method: options.method,
         body: options.body && JSON.parse(options.body),
       });
+      if (fetchReply) {
+        const reply = fetchReply(url, options);
+        if (reply) return reply;
+      }
       return { ok: true, json: async () => responses[url.split("?")[0]] ?? [] };
     },
     matchMedia: () => ({ matches: touch }),
@@ -118,7 +128,16 @@ const fixture = ({
       getPropertyValue: (name) => node.style.getPropertyValue(name),
     }),
     MutationObserver: class {
-      observe() {}
+      constructor(callback) {
+        this.callback = callback;
+        observers.push(this);
+      }
+      observe(target) {
+        this.target = target;
+      }
+      disconnect() {
+        this.disconnected = true;
+      }
     },
     innerWidth: 1000,
     innerHeight: 800,
@@ -141,7 +160,18 @@ const fixture = ({
     for (const callback of listeners.get(name) || []) await callback(event);
     return event;
   };
-  return { fire, copied, overlays, parent, child, body, listeners, requests };
+  return {
+    fire,
+    copied,
+    overlays,
+    parent,
+    child,
+    body,
+    listeners,
+    requests,
+    observers,
+    location,
+  };
 };
 
 test("copies the exact clicked element, including an unannotated child", async () => {
@@ -372,3 +402,123 @@ test("a click outside the note box cancels it", async () => {
   await fire("pointerdown", { altKey: false });
   assert.ok(removed);
 });
+
+const deferred = () => {
+  let resolve;
+  const promise = new Promise((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+};
+
+const flush = () => new Promise(setImmediate);
+
+test("released anchors disconnect only their observer and preserve patched names", async () => {
+  const { fire, parent, child, observers } = fixture();
+  child.style.setProperty("anchor-name", "--original");
+  await fire("mousemove");
+  const name = child.style.getPropertyValue("anchor-name").split(", ")[1];
+  child.style.setProperty("anchor-name", "--patched");
+  observers[0].callback();
+  assert.equal(
+    child.style.getPropertyValue("anchor-name"),
+    `--patched, ${name}`,
+  );
+  await fire("mousemove", { target: parent });
+  assert.equal(child.style.getPropertyValue("anchor-name"), "--patched");
+  assert.equal(observers[0].disconnected, true);
+  assert.equal(observers[1].disconnected, undefined);
+  await fire("keyup", { key: "Alt" });
+  assert.equal(observers[1].disconnected, true);
+  assert.ok(!Object.hasOwn(parent.style.properties, "anchor-name"));
+});
+
+for (const action of ["save", "delete"]) {
+  test(`a stale ${action} reply leaves the newer box open`, async () => {
+    const reply = deferred();
+    const f = fixture({
+      dev: false,
+      reviewer: true,
+      responses: {
+        "/review-notes": [
+          { id: "n1", body: "Old note", selector: "#noted", "mine?": true },
+        ],
+      },
+      fetchReply: (url) => url === "/review-notes/n1" && reply.promise,
+    });
+    await f.fire("click", { target: f.parent });
+    const first = f.overlays.find((node) => node.tagName === "FORM");
+    const pending =
+      action === "save"
+        ? first.on.submit({ preventDefault() {} })
+        : f.overlays.find((node) => node.textContent === "Delete").on.click();
+    await f.fire("click");
+    const second = f.overlays.filter((node) => node.tagName === "FORM").at(-1);
+    let removed = false;
+    second.remove = () => {
+      removed = true;
+    };
+    reply.resolve({ ok: true });
+    await pending;
+    assert.equal(removed, false);
+    assert.ok(!f.overlays.some((node) => /^✓ Note/.test(node.textContent)));
+  });
+}
+
+test("a submitted note still saves when its box closes before its strings arrive", async () => {
+  const strings = deferred();
+  const f = fixture({
+    dev: false,
+    reviewer: true,
+    fetchReply: (url) => url === "/review-notes/strings" && strings.promise,
+  });
+  await f.fire("click");
+  f.overlays.find((node) => node.tagName === "TEXTAREA").value = "New note";
+  const pending = f.overlays
+    .find((node) => node.tagName === "FORM")
+    .on.submit({ preventDefault() {} });
+  await f.fire("pointerdown", { altKey: false });
+  strings.resolve({ ok: true, json: async () => [] });
+  await pending;
+  assert.ok(f.requests.some((request) => request.url === "/review-notes"));
+});
+
+test("only the latest pending selection opens a box", async () => {
+  const notes = deferred();
+  const f = fixture({
+    dev: false,
+    reviewer: true,
+    fetchReply: (url) => url.startsWith("/review-notes?") && notes.promise,
+  });
+  const first = f.fire("click");
+  const second = f.fire("click", { target: f.parent });
+  notes.resolve({ ok: true, json: async () => [] });
+  await Promise.all([first, second]);
+  assert.equal(f.overlays.filter((node) => node.tagName === "FORM").length, 1);
+  assert.ok(f.overlays.some((node) => node.textContent === "button"));
+});
+
+for (const action of ["notes", "pick"]) {
+  test(`pending ${action} does not render after a page change`, async () => {
+    const notes = deferred();
+    const f = fixture({
+      dev: false,
+      reviewer: true,
+      fetchReply: (url) => url.startsWith("/review-notes?") && notes.promise,
+    });
+    const pending =
+      action === "notes" ? f.fire("keydown", { key: "Alt" }) : f.fire("click");
+    f.location.pathname = "/fi/other";
+    notes.resolve({
+      ok: true,
+      json: async () => [{ body: "Old page", selector: "#noted" }],
+    });
+    await pending;
+    await flush();
+    assert.ok(
+      !f.overlays.some(
+        (node) => node.className === "ep-note" || node.className === "ep-box",
+      ),
+    );
+  });
+}
