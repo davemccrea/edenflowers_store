@@ -42,9 +42,9 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
       alternates={@alternates}
     >
       <.container>
-        <section class="flex flex-col gap-12 md:flex-row md:items-center md:gap-16 lg:gap-24">
-          <div class="flex max-w-2xl flex-col gap-6">
-            <h1 class="page-title mb-4">{~t"Courses"}</h1>
+        <section class="flex flex-col gap-10 md:flex-row md:items-center md:justify-between md:gap-12 lg:gap-16">
+          <div class="flex max-w-xl flex-col gap-6">
+            <h1 class="page-title">{~t"Courses"}</h1>
             <p class="text-base-content/80 text-lg leading-relaxed">
               {~t"Come along and learn to make different kinds of floral arrangements. I show you the technique step by step and help you all the way, and of course you take your arrangement home. Materials and teaching are included, and you don't need any previous experience."}
             </p>
@@ -53,28 +53,25 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
             </div>
           </div>
           <%!-- Hidden on phones so the dates, which are what people came for, sit above the fold. --%>
-          <div class="hidden flex-shrink-0 md:block md:w-80 lg:w-96">
+          <div class="hidden flex-shrink-0 md:block md:w-80 lg:w-96 xl:w-[28rem]">
             <.image
               src="local:///jennie_4.jpg"
               alt=""
-              width={800}
-              height={1200}
-              sizes="(min-width: 1024px) 24rem, 20rem"
-              class="aspect-[2/3] w-full object-cover"
+              width={1000}
+              height={1250}
+              sizes="(min-width: 1280px) 28rem, (min-width: 1024px) 24rem, 20rem"
+              class="aspect-[4/5] object-[50%_35%] w-full object-cover"
             />
           </div>
         </section>
 
         <section
           id="coming-up"
-          class="scroll-anchor-below-header mt-10 sm:mt-12"
+          class="scroll-anchor-below-header mt-12 sm:mt-16"
           aria-labelledby="upcoming-heading"
         >
           <div>
             <h2 id="upcoming-heading" class="section-title">{~t"Coming up"}</h2>
-            <p :if={@courses != []} class="text-base-content/70 mt-3 max-w-prose">
-              {~t"No experience needed. Materials and teaching included. Take your arrangement home."}
-            </p>
 
             <div :if={@courses == []} class="mt-6" data-testid="no-courses">
               <p class="text-base-content/80 max-w-prose">
@@ -137,30 +134,32 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
 
   defp course_row(assigns) do
     ~H"""
-    <div class="grid-cols-[3.5rem_minmax(0,1fr)] relative grid items-start gap-x-4 gap-y-4 py-7 sm:grid-cols-[4rem_6rem_minmax(0,1fr)] sm:gap-x-6 lg:grid-cols-[4rem_8rem_minmax(0,1fr)_auto] lg:gap-x-8">
-      <time
-        datetime={Date.to_iso8601(@course.date)}
-        aria-label={Format.weekday_date(@course.date, @locale)}
-        class="flex flex-col gap-1 pt-1 tabular-nums"
-      >
-        <span class="font-serif text-4xl leading-none">{@course.date.day}</span>
-        <span class="text-base-content/70 text-sm">{Format.short_month(@course.date, @locale)}</span>
-      </time>
+    <div class="grid-cols-[3.5rem_minmax(0,1fr)] relative grid items-start gap-x-4 gap-y-4 py-7 sm:grid-cols-[4rem_6rem_minmax(0,1fr)] sm:gap-x-6 lg:grid-cols-[4rem_8rem_minmax(0,1fr)_11rem] lg:gap-x-8">
+      <div class="flex flex-col gap-4 sm:contents">
+        <time
+          datetime={Date.to_iso8601(@course.date)}
+          aria-label={Format.weekday_date(@course.date, @locale)}
+          class="flex flex-col gap-1 pt-1 tabular-nums"
+        >
+          <span class="font-serif text-4xl leading-none">{@course.date.day}</span>
+          <span class="text-base-content/70 text-sm">{Format.short_month(@course.date, @locale)}</span>
+        </time>
 
-      <.link
-        navigate={~q"/#{language}/courses/#{@course.id}"}
-        aria-label={@course.name}
-        class="hidden sm:block"
-      >
-        <.image
-          src={@course.image_slug}
-          alt=""
-          width={256}
-          height={256}
-          sizes="(min-width: 1024px) 8rem, 6rem"
-          class="bg-cream aspect-square w-full object-cover"
-        />
-      </.link>
+        <.link
+          navigate={~q"/#{language}/courses/#{@course.id}"}
+          aria-label={@course.name}
+          class="block"
+        >
+          <.image
+            src={@course.image_slug}
+            alt=""
+            width={256}
+            height={256}
+            sizes="(min-width: 1024px) 8rem, (min-width: 640px) 6rem, 3.5rem"
+            class="bg-cream aspect-square w-full object-cover"
+          />
+        </.link>
+      </div>
 
       <div class="min-w-0">
         <h3 class={["card-heading text-balance", !@course.booking_open? && "text-base-content/70"]}>
@@ -179,7 +178,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
         <p class="text-base-content/70 mt-1 text-sm">{@course.location_name}</p>
         <p
           :if={@course.description not in [nil, ""]}
-          class="text-base-content/80 line-clamp-2 mt-3 max-w-prose text-sm leading-relaxed"
+          class="text-base-content/80 line-clamp-2 mt-3 max-w-lg text-sm leading-relaxed"
         >
           {@course.description}
         </p>
