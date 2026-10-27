@@ -544,6 +544,16 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       refute has_element?(view, ~s|input[name="form[recipient_phone_number]"]|)
     end
 
+    test "prices the order's own items as soon as it is opened", ctx do
+      # Two of a 42 € item.
+      order = placed_order(origin: :online)
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
+
+      assert has_element?(view, "#order-price", "2 ×")
+      assert has_element?(view, "#order-price", "84,00")
+    end
+
     test "picks the card from the card drawer, not the items", ctx do
       cards = generate(product_category(slug: "cards", visibility: :public))
 
