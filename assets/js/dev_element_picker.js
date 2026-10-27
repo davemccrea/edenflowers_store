@@ -4,9 +4,11 @@ import { elementReference, findHeexSource } from "./dev_element_reference.mjs";
 if (document.querySelector("[data-phx-loc]")) {
   let activeEl = null;
   let lastTarget = null;
+  let selectionPath = [];
   let copiedTimer = null;
   let overlay = null;
   let label = null;
+  let hint = null;
 
   const ensureOverlay = () => {
     if (overlay) return;
@@ -36,29 +38,36 @@ if (document.querySelector("[data-phx-loc]")) {
       borderRadius: "4px",
       boxShadow: "0 2px 8px rgba(0,0,0,0.28)",
       whiteSpace: "nowrap",
+      maxWidth: "calc(100vw - 8px)",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
       display: "none",
     });
+    hint = document.createElement("span");
+    Object.assign(hint.style, { display: "block", opacity: "0.65" });
 
     document.body.append(overlay, label);
   };
 
+  const pickTarget = (el) => el.closest("svg") || el;
+
   const tagSummary = (el) => {
     const tag = el.tagName.toLowerCase();
-    const id = el.id ? `#${el.id}` : "";
-    const cls = [...el.classList]
-      .slice(0, 2)
-      .map((c) => `.${c}`)
-      .join("");
-    return `${tag}${id}${cls}`;
+    if (el.id) return `${tag}#${el.id}`;
+    const text = (el.getAttribute("aria-label") || el.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const excerpt = text.length > 40 ? `${text.slice(0, 37)}...` : text;
+    return excerpt ? `${tag} ${JSON.stringify(excerpt)}` : tag;
   };
 
-  const shortFile = (path) => path?.split("/").slice(-2).join("/") ?? "";
+  const shortFile = (path) => path?.split("/").pop() ?? "";
 
   const renderHighlight = (el, flashText = null) => {
     ensureOverlay();
     // Modal drawers sit in the browser's top layer, above every body z-index.
     // Keep the picker in the same layer as the element being inspected.
-    const host = el.closest("dialog:modal") || document.body;
+    const host = el.closest(":popover-open, dialog:modal") || document.body;
     if (overlay.parentNode !== host) host.append(overlay, label);
 
     const rect = el.getBoundingClientRect();
@@ -74,24 +83,21 @@ if (document.querySelector("[data-phx-loc]")) {
         : "oklch(55% 0.16 155 / 0.08)",
     });
 
-    const loc = el.getAttribute("data-phx-loc");
     const src = findHeexSource(el);
-    const fnName = src?.component?.split(".").pop();
-    label.textContent =
-      flashText ||
-      [
-        tagSummary(el),
-        fnName && `<.${fnName}>`,
-        src ? `${shortFile(src.file)}:${loc}` : `line ${loc}`,
-      ]
-        .filter(Boolean)
-        .join(" · ");
+    const sourceLabel = src
+      ? `${src.mappedElement !== el ? "~" : ""}${shortFile(src.file)}:${src.location.split(":").pop()}`
+      : "no source";
+    label.textContent = `${tagSummary(el)} · ${sourceLabel}`;
+    hint.textContent = flashText || "⌥↑ parent · ⌥↓ child · ⌥click copy";
+    label.append(hint);
+    label.style.display = "block";
 
+    const size = label.getBoundingClientRect();
     const top =
-      rect.top > 28
-        ? rect.top - 24
-        : Math.min(rect.bottom + 4, innerHeight - 24);
-    const left = Math.max(4, Math.min(rect.left, innerWidth - 260));
+      rect.top > size.height + 8
+        ? rect.top - size.height - 4
+        : Math.max(4, Math.min(rect.bottom + 4, innerHeight - size.height - 4));
+    const left = Math.max(4, Math.min(rect.left, innerWidth - size.width - 4));
     Object.assign(label.style, {
       display: "block",
       top: `${top}px`,
@@ -109,41 +115,61 @@ if (document.querySelector("[data-phx-loc]")) {
   document.addEventListener(
     "mousemove",
     (event) => {
-      lastTarget = event.target;
+      const target = pickTarget(event.target);
+      const changed = lastTarget !== target;
+      lastTarget = target;
       if (!event.altKey) return hideHighlight();
       if (copiedTimer) return;
-      const el = event.target.closest?.("[data-phx-loc]");
-      if (!el || el === activeEl) return;
-      activeEl = el;
+      if (!changed && activeEl) return;
+      selectionPath = [];
+      activeEl = target;
       renderHighlight(activeEl);
     },
     { passive: true },
   );
 
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Alt" && !activeEl && !copiedTimer) {
-      const el = lastTarget?.closest?.("[data-phx-loc]");
-      if (el) {
-        activeEl = el;
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (copiedTimer) return;
+      if (event.key === "Alt" && !activeEl && lastTarget) {
+        selectionPath = [];
+        activeEl = lastTarget;
         renderHighlight(activeEl);
       }
-    }
-  });
+      if (!event.altKey || !activeEl) return;
+      if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.key === "ArrowUp" && activeEl.parentElement) {
+        selectionPath.push(activeEl);
+        activeEl = activeEl.parentElement;
+      } else if (event.key === "ArrowDown" && selectionPath.length) {
+        activeEl = selectionPath.pop();
+      }
+      renderHighlight(activeEl);
+    },
+    true,
+  );
 
   document.addEventListener("keyup", (event) => {
     if (event.key === "Alt") hideHighlight();
   });
 
   window.addEventListener("blur", hideHighlight);
-  window.addEventListener(
-    "scroll",
-    () => activeEl && !copiedTimer && renderHighlight(activeEl),
-    { passive: true },
-  );
+  const refreshHighlight = () => {
+    if (!activeEl || copiedTimer) return;
+    if (!activeEl.isConnected) return hideHighlight();
+    renderHighlight(activeEl);
+  };
+  window.addEventListener("scroll", refreshHighlight, {
+    passive: true,
+    capture: true,
+  });
+  window.addEventListener("resize", refreshHighlight);
 
   const stopAltPointer = (event) => {
     if (!event.altKey) return;
-    if (!event.target.closest?.("[data-phx-loc]")) return;
     event.preventDefault();
     event.stopPropagation();
   };
@@ -155,18 +181,17 @@ if (document.querySelector("[data-phx-loc]")) {
     "click",
     async (event) => {
       if (!event.altKey) return;
-      const el = event.target.closest?.("[data-phx-loc]");
-      if (!el) return;
+      const target = pickTarget(event.target);
+      const el =
+        target === lastTarget && activeEl?.isConnected ? activeEl : target;
 
       event.preventDefault();
       event.stopPropagation();
 
-      const loc = el.getAttribute("data-phx-loc");
-      const src = findHeexSource(el);
       let message;
       try {
         await navigator.clipboard.writeText(elementReference(el, document));
-        message = `✓ Copied ${src ? `${shortFile(src.file)}:${loc}` : `line ${loc}`}`;
+        message = "✓ Copied";
       } catch (error) {
         console.error("Could not copy element reference", error);
         message = "Could not copy — check clipboard permissions";
