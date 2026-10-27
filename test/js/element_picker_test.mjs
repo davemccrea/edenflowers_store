@@ -41,7 +41,25 @@ const fixture = ({
     replaceWith() {},
     innerText: "Lisää ostoskoriin",
     outerHTML: "",
-    style: {},
+    style: {
+      properties: {},
+      setProperty(name, value) {
+        this.properties[name] = value;
+      },
+      getPropertyValue(name) {
+        return this.properties[name] ?? "";
+      },
+    },
+    open: false,
+    showPopover() {
+      this.open = true;
+    },
+    hidePopover() {
+      this.open = false;
+    },
+    matches(selector) {
+      return selector === ":popover-open" && this.open;
+    },
     parentElement,
     isConnected: true,
     closest: () => null,
@@ -61,6 +79,7 @@ const fixture = ({
   const child = element("span", parent);
   const document = {
     body,
+    head: element("head"),
     documentElement: { lang: "fi" },
     querySelector: (selector) => {
       if (selector === "[data-phx-loc]") return dev ? parent : null;
@@ -90,6 +109,12 @@ const fixture = ({
       return { ok: true, json: async () => responses[url.split("?")[0]] ?? [] };
     },
     matchMedia: () => ({ matches: touch }),
+    getComputedStyle: (node) => ({
+      getPropertyValue: (name) => node.style.getPropertyValue(name),
+    }),
+    MutationObserver: class {
+      observe() {}
+    },
     innerWidth: 1000,
     innerHeight: 800,
     setTimeout: () => 1,
@@ -126,16 +151,16 @@ test("Option+arrows select ancestors and return along the original child path", 
   const { fire, copied, overlays } = fixture();
   await fire("mousemove");
   await fire("keydown", { key: "ArrowUp" });
-  assert.match(overlays[1].textContent, /^button/);
+  assert.match(overlays[2].textContent, /^button/);
   await fire("mousemove");
-  assert.match(overlays[1].textContent, /^button/);
+  assert.match(overlays[2].textContent, /^button/);
   await fire("keydown", { key: "ArrowDown" });
-  assert.match(overlays[1].textContent, /^span/);
+  assert.match(overlays[2].textContent, /^span/);
   await fire("keydown", { key: "ArrowUp" });
   await fire("click");
   assert.deepEqual(copied, ["BUTTON"]);
-  assert.equal(overlays[2].textContent, "✓ Copied");
-  assert.match(overlays[1].textContent, /^button/);
+  assert.equal(overlays[3].textContent, "✓ Copied");
+  assert.match(overlays[2].textContent, /^button/);
 });
 
 test("popup keeps element identity and controls terse", async () => {
@@ -143,8 +168,8 @@ test("popup keeps element identity and controls terse", async () => {
   child.id = "add-to-cart";
   child.classList = ["unnecessary-class"];
   await fire("mousemove");
-  assert.equal(overlays[1].textContent, "span#add-to-cart · no source");
-  assert.equal(overlays[2].textContent, "⌥↑ parent · ⌥↓ child · ⌥click copy");
+  assert.equal(overlays[2].textContent, "span#add-to-cart · no source");
+  assert.equal(overlays[3].textContent, "⌥↑ parent · ⌥↓ child · ⌥click copy");
 });
 
 test("SVG internals select the SVG itself, including on direct click", async () => {
@@ -153,7 +178,7 @@ test("SVG internals select the SVG itself, including on direct click", async () 
   child.tagName = "path";
   child.closest = (selector) => (selector === "svg" ? parent : null);
   await fire("mousemove");
-  assert.match(overlays[1].textContent, /^svg/);
+  assert.match(overlays[2].textContent, /^svg/);
   await fire("click");
   assert.deepEqual(copied, ["svg"]);
 
@@ -172,14 +197,22 @@ test("normal clicks are not intercepted", async () => {
   assert.deepEqual(copied, []);
 });
 
-test("highlight uses the top-layer host and clears a disconnected selection", async () => {
+test("highlight joins the open modal and anchors to the element", async () => {
   const { fire, overlays, parent, child } = fixture();
   child.closest = (selector) => (selector === "svg" ? null : parent);
   await fire("mousemove");
-  assert.equal(overlays[0].parentNode, parent);
-  child.isConnected = false;
-  await fire("scroll");
-  assert.equal(overlays[0].style.display, "none");
+  const [highlight] = overlays.filter(
+    (node) => node.className === "ep-highlight",
+  );
+  assert.equal(highlight.parentNode, parent);
+  assert.ok(highlight.open);
+  const name = highlight.style.getPropertyValue("position-anchor");
+  assert.match(name, /^--element-picker-/);
+  assert.equal(child.style.getPropertyValue("anchor-name"), name);
+
+  await fire("keyup", { key: "Alt" });
+  assert.ok(!highlight.open);
+  assert.equal(child.style.getPropertyValue("anchor-name"), "");
 });
 
 test("a reviewer on a page without dev annotations gets a note box, not a copy", async () => {
@@ -269,7 +302,8 @@ test("holding Option outlines the page's open notes with their text", async () =
   await new Promise(setImmediate);
   assert.equal(requests[0].url, "/review-notes?path=%2Ffi%2Fkauppa");
   const text = overlays.find((node) => node.textContent === "Use ni here");
-  assert.ok(text.parentNode.style.border.includes("dashed"));
+  assert.equal(text.parentNode.className, "ep-note");
+  assert.ok(text.parentNode.open);
 });
 
 test("Option+Clicking an element with my note opens it for editing", async () => {

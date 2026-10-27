@@ -29,55 +29,223 @@ if (dev || reviewer) {
   let markers = [];
   let reviewMode = false;
   let toggle = null;
+  let highlighted = null;
 
   const picking = (event) => event.altKey || reviewMode;
   const ours = (target) => box?.contains(target) || toggle?.contains(target);
 
   const clickHint = dev ? (reviewer ? "copy + note" : "copy") : "note";
 
+  // The picker's own boxes are manual popovers in the top layer, placed with
+  // CSS anchor positioning against the element they describe.
+  const style = document.createElement("style");
+  style.textContent = `
+    .ep-highlight, .ep-label, .ep-box, .ep-note, .ep-toggle {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      inset: auto;
+      overflow: visible;
+      background: none;
+      color: inherit;
+    }
+    .ep-highlight, .ep-note {
+      pointer-events: none;
+      top: anchor(top);
+      left: anchor(left);
+      width: anchor-size(width);
+      height: anchor-size(height);
+      box-sizing: border-box;
+      border-radius: 4px;
+      position-visibility: anchors-visible;
+    }
+    .ep-highlight {
+      border: 1.5px solid oklch(55% 0.16 155);
+      background: oklch(55% 0.16 155 / 0.08);
+    }
+    .ep-highlight.ep-flash {
+      border-color: oklch(65% 0.2 155);
+      background: oklch(65% 0.2 155 / 0.18);
+    }
+    .ep-label {
+      pointer-events: none;
+      position-area: top span-right;
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+      position-visibility: anchors-visible;
+      margin-block: 4px;
+      max-width: calc(100vw - 8px);
+      padding: 3px 7px;
+      background: oklch(22% 0.03 155);
+      color: oklch(96% 0.01 155);
+      font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.28);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ep-label span {
+      display: block;
+      opacity: 0.65;
+    }
+    .ep-box:popover-open {
+      display: grid;
+    }
+    .ep-box {
+      position-area: bottom span-right;
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline,
+        --ep-viewport-corner;
+      margin-block: 8px;
+      width: 320px;
+      box-sizing: border-box;
+      padding: 10px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+      background: oklch(99% 0.005 155);
+      color: oklch(22% 0.03 155);
+      border: 1px solid oklch(55% 0.16 155);
+      border-radius: 6px;
+      box-shadow: 0 6px 24px rgb(0 0 0 / 0.22);
+      font: 13px/1.4 system-ui, sans-serif;
+    }
+    /* A large element leaves no room beside it, so keep the box on screen. */
+    @position-try --ep-viewport-corner {
+      position-area: none;
+      inset: auto 8px 8px auto;
+      margin: 0;
+    }
+    /* A sheet along the bottom stays above the on-screen keyboard. */
+    @media (hover: none) {
+      .ep-box {
+        position-area: none;
+        position-try-fallbacks: none;
+        inset: auto 8px calc(8px + var(--keyboard, 0px)) 8px;
+        width: auto;
+        margin: 0;
+      }
+    }
+    .ep-note {
+      border: 1.5px dashed oklch(70% 0.16 70);
+    }
+    .ep-note-text {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      max-width: 260px;
+      margin-top: 2px;
+      padding: 2px 6px;
+      background: oklch(92% 0.08 85);
+      color: oklch(25% 0.05 70);
+      font: 11px/1.4 system-ui, sans-serif;
+      border-radius: 4px;
+    }
+    .ep-toggle {
+      left: 16px;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      width: 44px;
+      height: 44px;
+      border: 1.5px solid oklch(55% 0.16 155);
+      border-radius: 50%;
+      background: oklch(99% 0.005 155);
+      color: oklch(22% 0.03 155);
+      font-size: 20px;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.28);
+    }
+    .ep-toggle[aria-pressed="true"] {
+      background: oklch(55% 0.16 155);
+      color: oklch(99% 0.005 155);
+    }
+  `;
+  document.head.append(style);
+
+  const popover = (tag, className) => {
+    const node = document.createElement(tag);
+    node.popover = "manual";
+    node.className = className;
+    return node;
+  };
+
+  const show = (node, host) => {
+    if (node.parentNode !== host) host.append(node);
+    if (!node.matches(":popover-open")) node.showPopover();
+  };
+
+  const hide = (node) => {
+    if (node?.matches(":popover-open")) node.hidePopover();
+  };
+
+  // Anchoring needs an anchor-name on the page's own element. Each element gets
+  // one generated name, added beside any it already has and removed once the
+  // last overlay on it closes. A LiveView patch rewrites the style attribute,
+  // so the observer puts the name back.
+  const anchors = new Map();
+  let anchorCount = 0;
+
+  const anchorNames = (el) =>
+    getComputedStyle(el)
+      .getPropertyValue("anchor-name")
+      .split(",")
+      .map((name) => name.trim())
+      .filter((name) => name.startsWith("--"));
+
+  const addAnchorName = (el, name) => {
+    if (anchorNames(el).includes(name)) return;
+    el.style.setProperty("anchor-name", [...anchorNames(el), name].join(", "));
+  };
+
+  const anchorObserver = new MutationObserver((records) => {
+    for (const { target } of records) {
+      const anchor = anchors.get(target);
+      if (anchor) addAnchorName(target, anchor.name);
+    }
+  });
+
+  const anchorTo = (el) => {
+    let anchor = anchors.get(el);
+    if (!anchor) {
+      anchor = {
+        name: `--element-picker-${++anchorCount}`,
+        inline: el.style.getPropertyValue("anchor-name"),
+        users: 0,
+      };
+      anchors.set(el, anchor);
+      addAnchorName(el, anchor.name);
+      anchorObserver.observe(el, {
+        attributes: true,
+        attributeFilter: ["style"],
+      });
+    }
+    anchor.users++;
+    return anchor.name;
+  };
+
+  const releaseAnchor = (el) => {
+    const anchor = anchors.get(el);
+    if (!anchor || --anchor.users) return;
+    anchors.delete(el);
+    el.style.setProperty("anchor-name", anchor.inline);
+  };
+
   const ensureOverlay = () => {
     if (overlay) return;
-    overlay = document.createElement("div");
-    Object.assign(overlay.style, {
-      position: "fixed",
-      pointerEvents: "none",
-      zIndex: "2147483647",
-      border: "1.5px solid oklch(55% 0.16 155)",
-      background: "oklch(55% 0.16 155 / 0.08)",
-      borderRadius: "4px",
-      transition: "all 60ms ease-out",
-      display: "none",
-    });
-
-    label = document.createElement("div");
-    Object.assign(label.style, {
-      position: "fixed",
-      pointerEvents: "none",
-      zIndex: "2147483647",
-      background: "oklch(22% 0.03 155)",
-      color: "oklch(96% 0.01 155)",
-      fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-      fontSize: "11px",
-      lineHeight: "1.4",
-      padding: "3px 7px",
-      borderRadius: "4px",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.28)",
-      whiteSpace: "nowrap",
-      maxWidth: "calc(100vw - 8px)",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      display: "none",
-    });
+    overlay = popover("div", "ep-highlight");
+    label = popover("div", "ep-label");
     hint = document.createElement("span");
-    Object.assign(hint.style, { display: "block", opacity: "0.65" });
+  };
 
-    document.body.append(overlay, label);
+  const highlightAnchor = (el) => {
+    if (highlighted === el) return;
+    if (highlighted) releaseAnchor(highlighted);
+    highlighted = el;
+    const name = anchorTo(el);
+    for (const node of [overlay, label])
+      node.style.setProperty("position-anchor", name);
   };
 
   const pickTarget = (el) => el.closest("svg") || el;
 
-  // Modal drawers sit in the browser's top layer, above every body z-index.
-  // Keep the picker in the same layer as the element being inspected.
+  // A modal drawer makes everything outside it inert, and a site popover would
+  // light-dismiss on a click in a box outside it, so join the open one.
   const hostFor = (el) =>
     el.closest(":popover-open, dialog:modal") || document.body;
 
@@ -96,26 +264,12 @@ if (dev || reviewer) {
   const renderHighlight = (el, flashText = null) => {
     ensureOverlay();
     const host = hostFor(el);
-    if (overlay.parentNode !== host) host.append(overlay, label);
-
-    const rect = el.getBoundingClientRect();
-    Object.assign(overlay.style, {
-      display: "block",
-      top: `${rect.top}px`,
-      left: `${rect.left}px`,
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
-      borderColor: flashText ? "oklch(65% 0.2 155)" : "oklch(55% 0.16 155)",
-      background: flashText
-        ? "oklch(65% 0.2 155 / 0.18)"
-        : "oklch(55% 0.16 155 / 0.08)",
-    });
+    highlightAnchor(el);
+    overlay.className = flashText ? "ep-highlight ep-flash" : "ep-highlight";
+    show(overlay, host);
 
     // An open box covers the same spot, so the label would only peek out beneath it.
-    if (box) {
-      label.style.display = "none";
-      return;
-    }
+    if (box) return hide(label);
 
     const src = findHeexSource(el);
     const sourceLabel = src
@@ -127,26 +281,16 @@ if (dev || reviewer) {
     hint.textContent =
       flashText || `⌥↑ parent · ⌥↓ child · ⌥click ${clickHint}`;
     label.append(hint);
-    label.style.display = "block";
-
-    const size = label.getBoundingClientRect();
-    const top =
-      rect.top > size.height + 8
-        ? rect.top - size.height - 4
-        : Math.max(4, Math.min(rect.bottom + 4, innerHeight - size.height - 4));
-    const left = Math.max(4, Math.min(rect.left, innerWidth - size.width - 4));
-    Object.assign(label.style, {
-      display: "block",
-      top: `${top}px`,
-      left: `${left}px`,
-    });
+    show(label, host);
   };
 
   const hideHighlight = () => {
     if (copiedTimer || box) return;
     activeEl = null;
-    if (overlay) overlay.style.display = "none";
-    if (label) label.style.display = "none";
+    hide(overlay);
+    hide(label);
+    if (highlighted) releaseAnchor(highlighted);
+    highlighted = null;
   };
 
   const flash = (el, message) => {
@@ -158,37 +302,15 @@ if (dev || reviewer) {
     }, 900);
   };
 
-  const positionBox = () => {
-    // A sheet along the bottom of the visual viewport stays above the on-screen keyboard.
-    if (touch) {
-      const viewport = window.visualViewport;
-      const bottom = viewport
-        ? viewport.offsetTop + viewport.height
-        : innerHeight;
-      Object.assign(box.style, {
-        top: `${bottom - box.offsetHeight - 8}px`,
-        left: "8px",
-      });
-      return;
-    }
-    const rect = activeEl.getBoundingClientRect();
-    const height = box.offsetHeight;
-    const below = rect.bottom + 8;
-    const top =
-      below + height < innerHeight
-        ? below
-        : Math.max(
-            8,
-            Math.min(rect.top - height - 8, innerHeight - height - 8),
-          );
-    const left = Math.max(
-      8,
-      Math.min(rect.left, innerWidth - box.offsetWidth - 8),
-    );
-    Object.assign(box.style, { top: `${top}px`, left: `${left}px` });
+  const keepAboveKeyboard = () => {
+    const viewport = window.visualViewport;
+    if (!box || !viewport) return;
+    const keyboard = innerHeight - viewport.offsetTop - viewport.height;
+    box.style.setProperty("--keyboard", `${Math.max(0, keyboard)}px`);
   };
 
   const closeBox = () => {
+    if (box) releaseAnchor(activeEl);
     box?.remove();
     box = null;
     hideHighlight();
@@ -279,7 +401,10 @@ if (dev || reviewer) {
   };
 
   const hideNotes = () => {
-    for (const marker of markers) marker.remove();
+    for (const { marker, el } of markers) {
+      marker.remove();
+      releaseAnchor(el);
+    }
     markers = [];
   };
 
@@ -297,37 +422,15 @@ if (dev || reviewer) {
       const el = noteElement(note);
       if (!el) continue;
 
-      const rect = el.getBoundingClientRect();
-      const marker = document.createElement("div");
-      Object.assign(marker.style, {
-        position: "fixed",
-        pointerEvents: "none",
-        zIndex: "2147483646",
-        top: `${rect.top}px`,
-        left: `${rect.left}px`,
-        width: `${rect.width}px`,
-        height: `${rect.height}px`,
-        border: "1.5px dashed oklch(70% 0.16 70)",
-        borderRadius: "4px",
-      });
+      const marker = popover("div", "ep-note");
+      marker.style.setProperty("position-anchor", anchorTo(el));
       const text = document.createElement("div");
+      text.className = "ep-note-text";
       text.textContent =
         note.body.length > 80 ? `${note.body.slice(0, 77)}...` : note.body;
-      Object.assign(text.style, {
-        position: "absolute",
-        top: "100%",
-        left: "0",
-        maxWidth: "260px",
-        marginTop: "2px",
-        padding: "2px 6px",
-        background: "oklch(92% 0.08 85)",
-        color: "oklch(25% 0.05 70)",
-        font: "11px/1.4 system-ui, sans-serif",
-        borderRadius: "4px",
-      });
       marker.append(text);
-      hostFor(el).append(marker);
-      markers.push(marker);
+      show(marker, hostFor(el));
+      markers.push({ marker, el });
     }
   };
 
@@ -383,28 +486,13 @@ if (dev || reviewer) {
   };
 
   const openBox = (el, heading, note = null) => {
+    if (box) releaseAnchor(activeEl);
     box?.remove();
     activeEl = el;
-    box = document.createElement("form");
+    box = popover("form", "ep-box");
     hideNotes();
     renderHighlight(el);
-
-    Object.assign(box.style, {
-      position: "fixed",
-      zIndex: "2147483647",
-      width: touch ? "calc(100vw - 16px)" : "320px",
-      boxSizing: "border-box",
-      padding: "10px",
-      display: "grid",
-      gridTemplateColumns: "minmax(0, 1fr)",
-      gap: "8px",
-      background: "oklch(99% 0.005 155)",
-      color: "oklch(22% 0.03 155)",
-      border: "1px solid oklch(55% 0.16 155)",
-      borderRadius: "6px",
-      boxShadow: "0 6px 24px rgba(0,0,0,0.22)",
-      font: "13px/1.4 system-ui, sans-serif",
-    });
+    box.style.setProperty("position-anchor", anchorTo(el));
 
     const title = document.createElement("div");
     title.textContent = heading;
@@ -449,6 +537,7 @@ if (dev || reviewer) {
     textarea.setAttribute("aria-label", "Review note");
     Object.assign(textarea.style, {
       width: "100%",
+      boxSizing: "border-box",
       padding: "6px",
       border: "1px solid oklch(80% 0.02 155)",
       borderRadius: "4px",
@@ -506,7 +595,6 @@ if (dev || reviewer) {
     stringsRequest.then((found) => {
       if (found.length) strings.replaceWith(stringsList(found));
       else strings.textContent = "No translated strings found here";
-      if (box) positionBox();
     });
 
     // Keep the page's own shortcuts, like Escape closing a drawer, out of the box.
@@ -543,8 +631,8 @@ if (dev || reviewer) {
       }
     });
 
-    hostFor(el).append(box);
-    positionBox();
+    show(box, hostFor(el));
+    keepAboveKeyboard();
     textarea.focus();
   };
 
@@ -556,37 +644,19 @@ if (dev || reviewer) {
   };
 
   if (reviewer && touch) {
-    toggle = document.createElement("button");
+    toggle = popover("button", "ep-toggle");
     toggle.type = "button";
     toggle.textContent = "✎";
     toggle.setAttribute("aria-label", "Review mode");
     toggle.setAttribute("aria-pressed", "false");
-    Object.assign(toggle.style, {
-      position: "fixed",
-      zIndex: "2147483646",
-      left: "16px",
-      bottom: "calc(16px + env(safe-area-inset-bottom))",
-      width: "44px",
-      height: "44px",
-      borderRadius: "50%",
-      border: "1.5px solid oklch(55% 0.16 155)",
-      background: "oklch(99% 0.005 155)",
-      color: "oklch(22% 0.03 155)",
-      fontSize: "20px",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.28)",
-    });
     toggle.addEventListener("click", () => {
       reviewMode = !reviewMode;
       toggle.setAttribute("aria-pressed", String(reviewMode));
-      Object.assign(toggle.style, {
-        background: reviewMode ? "oklch(55% 0.16 155)" : "oklch(99% 0.005 155)",
-        color: reviewMode ? "oklch(99% 0.005 155)" : "oklch(22% 0.03 155)",
-      });
       if (reviewMode) return showNotes();
       closeBox();
       hideNotes();
     });
-    document.body.append(toggle);
+    show(toggle, document.body);
   }
 
   document.addEventListener(
@@ -648,20 +718,8 @@ if (dev || reviewer) {
     hideNotes();
     hideHighlight();
   });
-  const refreshHighlight = () => {
-    if (markers.length) showNotes();
-    if (!activeEl || copiedTimer) return;
-    if (!activeEl.isConnected) return hideHighlight();
-    renderHighlight(activeEl);
-    if (box) positionBox();
-  };
-  window.addEventListener("scroll", refreshHighlight, {
-    passive: true,
-    capture: true,
-  });
-  window.addEventListener("resize", refreshHighlight);
-  window.visualViewport?.addEventListener("resize", refreshHighlight);
-  window.visualViewport?.addEventListener("scroll", refreshHighlight);
+  window.visualViewport?.addEventListener("resize", keepAboveKeyboard);
+  window.visualViewport?.addEventListener("scroll", keepAboveKeyboard);
 
   const stopAltPointer = (event) => {
     if (!picking(event) || ours(event.target)) return;
