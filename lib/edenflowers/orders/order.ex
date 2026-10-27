@@ -677,6 +677,21 @@ defmodule Edenflowers.Orders.Order do
                     "or used it. False until checkout's first step assigns the customer."
     end
 
+    calculate :checkout_ready?,
+              :boolean,
+              expr(
+                state == :payment and not is_nil(customer_name) and not is_nil(customer_email) and
+                  not is_nil(fulfillment_option_id) and fulfillment_method in [:pickup, :delivery] and
+                  not is_nil(fulfillment_date) and not is_nil(quoted_fulfillment_fee) and
+                  not is_nil(contact_phone_number) and
+                  (not gift or not is_nil(recipient_name)) and
+                  (fulfillment_method != :delivery or not is_nil(delivery_address))
+              ) do
+      description "Whether checkout reached payment with its required details still present. Another tab may " <>
+                    "have stepped back or cleared them since the payment form was shown. Calendar availability " <>
+                    "and Stock are checked separately when preparing payment."
+    end
+
     calculate :cart_effectively_empty?, :boolean, expr(non_card_line_item_count == 0) do
       description "The cart has nothing but a card, or nothing at all. The cart hides a lone card, so checkout " <>
                     "treats it as empty too."

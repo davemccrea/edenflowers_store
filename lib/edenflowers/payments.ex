@@ -319,7 +319,9 @@ defmodule Edenflowers.Payments do
   @doc """
   Records a refund made in the Stripe dashboard against the order or course
   booking it paid for. Refunds not yet succeeded are left alone; Stripe sends
-  `refund.updated` once a pending refund goes through.
+  `refund.updated` once a pending refund goes through. A succeeded refund for
+  one of our PaymentIntents whose payment hasn't been recorded yet returns an
+  error, so Stripe retries instead of losing an out-of-order refund event.
 
   A cancel's refund says in its metadata that it was owed, so it's recorded
   as that even before the cancellation it pays for commits. One Jennie
@@ -335,13 +337,24 @@ defmodule Edenflowers.Payments do
       Logger.info("Recorded Stripe refund #{refund.id} of #{refund.amount} cents for #{describe(record)}")
       {:ok, :recorded}
     else
-      :not_found -> {:ok, :ignored}
+      :not_found -> refund_before_payment(payment_intent_id)
       true -> {:ok, :already_recorded}
       {:error, error} -> recorded_meanwhile_or_error(refund.id, error)
     end
   end
 
   def record_stripe_refund(_refund), do: {:ok, :ignored}
+
+  # Stripe doesn't guarantee event order. Only acknowledge an unknown payment
+  # after checking that it isn't one of ours still waiting for its success event.
+  defp refund_before_payment(payment_intent_id) do
+    with {:ok, payment_intent} <- StripeAPI.impl().retrieve_payment_intent(%{payment_intent_id: payment_intent_id}) do
+      case find_payable(payment_intent) do
+        {:ok, _ref} -> {:error, {:payment_not_recorded, payment_intent_id}}
+        {:error, :unknown_payable} -> {:ok, :ignored}
+      end
+    end
+  end
 
   defp record_refund_against(payment, refund, amount) do
     metadata = Map.get(refund, :metadata) || %{}

@@ -849,6 +849,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       %{reason: :add_ons_only} ->
         {:noreply, back_to_store(socket)}
 
+      %{reason: :checkout_not_ready} ->
+        review_checkout(
+          socket,
+          :return_to_contact_details,
+          ~t"Your checkout details have changed. Please review them before paying."
+        )
+
+      %{reason: :fulfillment_unavailable} ->
+        review_checkout(socket, :return_to_delivery, ~t"This date is no longer available, please choose another")
+
       _other ->
         Logger.error("Failed to set up PaymentIntent for order #{socket.assigns.order.id}: #{inspect(error)}")
 
@@ -857,6 +867,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
          |> put_flash(:error, ~t"Payment processing error. Please try again.")
          |> push_event("stripe:ready", %{})}
     end
+  end
+
+  defp review_checkout(socket, action, message) do
+    # Another tab may have moved the order again. Remount even if the backward
+    # transition is refused, so the customer sees the current saved step.
+    Ash.update(socket.assigns.order, %{}, action: action, actor: actor(socket))
+
+    {:noreply,
+     socket
+     |> put_flash(:info, message)
+     |> push_navigate(to: ~p"/checkout")}
   end
 
   defp over_stock_message(lines) do
