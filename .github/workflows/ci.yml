@@ -4,8 +4,6 @@ on:
   pull_request:
     branches: [main]
     paths-ignore: ["infra/**"]
-  # PRs opened with GITHUB_TOKEN do not trigger pull_request workflows.
-  # Check Weblate's branch directly so its automated PR still has CI results.
   push:
     branches: [main, weblate-translations]
     paths-ignore: ["infra/**"]
