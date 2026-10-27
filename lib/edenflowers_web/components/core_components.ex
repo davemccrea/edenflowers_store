@@ -293,6 +293,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :id, :any, default: nil
   attr :name, :any
   attr :label, :string, default: nil
+  attr :label_class, :any, default: nil, doc: "extra classes for a checkbox label, e.g. a larger size for an offer"
 
   attr :help, :string,
     default: nil,
@@ -391,7 +392,7 @@ defmodule EdenflowersWeb.CoreComponents do
             aria-invalid={@errors != [] && "true"}
             aria-describedby={describedby(@id, @errors, @help)}
             {@rest}
-          />{@label}
+          /><span class={@label_class}>{@label} {render_slot(@inner_block)}</span>
         </span>
       </label>
       <p :if={@help} id={"#{@id}-help"} class="text-base-content/75 text-sm">{@help}</p>

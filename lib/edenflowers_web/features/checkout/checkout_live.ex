@@ -172,17 +172,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                     <.input
                       :if={not @order.subscription? and !hide_newsletter_offer?(@order, @current_user)}
-                      label={~t"Subscribe to the newsletter to receive 15% off your first order by email."}
+                      label={~t"Subscribe to the newsletter and we'll email you a 15% off code."}
                       field={@form[:newsletter_opt_in]}
                       type="checkbox"
-                      class="checkbox checkbox-sm"
+                      class="checkbox size-[18px] mt-1 self-start"
+                      label_class="text-base"
                       data-testid="newsletter-opt-in-checkbox"
-                    />
-                    <p class="text-base-content/70 text-sm">
-                      <a class="link-underline-static-body" href={~q"/#{language}/privacy"}>
-                        {~t"Privacy policy"}
-                      </a>
-                    </p>
+                    >
+                      <a class="link-underline-static-body" href={~q"/#{language}/privacy"}>{~t"Privacy policy"}</a>
+                    </.input>
 
                     <.button type="submit" variant="primary" size="lg" class="mt-2" data-testid="step-1-next-button">{~t"Next"}</.button>
                   </.form>
