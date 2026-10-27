@@ -184,6 +184,17 @@
   }
 }
 
+/* The home hero animates once a session (the HomeHero hook), then shows its settled state.
+   The rotator's opening and closing endings are the same line, so only the last one stays. */
+:root.hero-seen
+  #home-hero
+  :is(.hero-reveal, .hero-focus, .hero-zoom, .hero-rotator > *) {
+  animation: none;
+}
+:root.hero-seen #home-hero .hero-rotator > :first-child {
+  opacity: 0;
+}
+
 /* Unlike link-underline-hover, the category and size-option underlines snap in.
    LiveView marks a patch link phx-click-loading until the server answers, so
    the underline moves on click without client state that outlives the patch. */

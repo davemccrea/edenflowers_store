@@ -42,6 +42,13 @@
       <link rel="manifest" href="/site.webmanifest?v=20261015" />
     <% end %>
 
+    <%!-- Runs before first paint so a reload doesn't start the home hero's animations it then skips. See the HomeHero hook. --%>
+    <script>
+      try {
+        if (sessionStorage.getItem("hero-seen"))
+          document.documentElement.classList.add("hero-seen");
+      } catch {}
+    </script>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script phx-track-static type="module" src={~p"/assets/js/app.js"}>
     </script>

@@ -189,7 +189,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       current_path={@current_path}
       alternates={@alternates}
     >
-      <section data-header-overlay class="relative overflow-hidden not-last:border-b">
+      <section id="home-hero" phx-hook=".HomeHero" data-header-overlay class="relative overflow-hidden not-last:border-b">
         <%!-- Phones get the photo's own 2:3 portrait so the box crops it only once --%>
         <.image
           src="local:///wedding/daniela_streng_1.jpg"
@@ -253,6 +253,20 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </a>
         </p>
       </section>
+      <script :type={Phoenix.LiveView.ColocatedHook} name=".HomeHero">
+        // The hero animates once a session. The root layout's head script covers reloads,
+        // and leaving marks <html> so live navigation back here doesn't replay it either.
+        export default {
+          mounted() {
+            try {
+              sessionStorage.setItem("hero-seen", "1");
+            } catch {}
+          },
+          destroyed() {
+            document.documentElement.classList.add("hero-seen");
+          },
+        };
+      </script>
 
       <section :if={@products != []} id="store" class="not-last:border-b">
         <div class="container py-16 md:py-24 xl:max-w-[70vw]">
