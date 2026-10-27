@@ -105,10 +105,15 @@ const fixture = ({
     NodeFilter: { SHOW_TEXT: 4 },
     location: { pathname: "/fi/kauppa", search: "" },
     fetch: async (url, options = {}) => {
-      requests.push({ url, body: options.body && JSON.parse(options.body) });
+      requests.push({
+        url,
+        method: options.method,
+        body: options.body && JSON.parse(options.body),
+      });
       return { ok: true, json: async () => responses[url.split("?")[0]] ?? [] };
     },
     matchMedia: () => ({ matches: touch }),
+    confirm: () => true,
     getComputedStyle: (node) => ({
       getPropertyValue: (name) => node.style.getPropertyValue(name),
     }),
@@ -326,8 +331,36 @@ test("Option+Clicking an element with my note opens it for editing", async () =>
     .on.submit({ preventDefault() {} });
   assert.deepEqual(requests.at(-1), {
     url: "/review-notes/n1",
+    method: "PATCH",
     body: { body: "Use ni, not du" },
   });
+});
+
+test("I can delete my own note from its box, and only my own", async () => {
+  const notes = {
+    "/review-notes": [
+      { id: "n1", body: "Use ni here", selector: "#noted", "mine?": true },
+    ],
+  };
+  const mine = fixture({ dev: false, reviewer: true, responses: notes });
+  await mine.fire("click", { target: mine.parent });
+  const remove = mine.overlays.find((node) => node.textContent === "Delete");
+  await remove.on.click();
+  assert.deepEqual(mine.requests.at(-1), {
+    url: "/review-notes/n1",
+    method: "DELETE",
+    body: {},
+  });
+
+  const fresh = fixture({ dev: false, reviewer: true });
+  await fresh.fire("click");
+  const form = fresh.overlays.find((node) => node.tagName === "FORM");
+  assert.ok(
+    !fresh.overlays.some(
+      (node) => node.textContent === "Delete" && node.parentNode,
+    ),
+  );
+  assert.ok(form);
 });
 
 test("a click outside the note box cancels it", async () => {

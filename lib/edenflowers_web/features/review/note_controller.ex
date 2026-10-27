@@ -35,6 +35,15 @@ defmodule EdenflowersWeb.Review.NoteController do
     end
   end
 
+  @doc "Deletes a note, when its author takes it back."
+  def delete(conn, %{"id" => id}) do
+    case Edenflowers.Feedback.delete_note(id, actor: conn.assigns[:current_user]) do
+      :ok -> send_resp(conn, 204, "")
+      {:error, %Ash.Error.Forbidden{}} -> send_resp(conn, 403, "")
+      {:error, _invalid} -> send_resp(conn, 422, "")
+    end
+  end
+
   def create(conn, params) do
     case Edenflowers.Feedback.leave_note(params, actor: conn.assigns[:current_user]) do
       {:ok, _note} -> send_resp(conn, 201, "")

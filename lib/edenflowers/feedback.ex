@@ -22,6 +22,7 @@ defmodule Edenflowers.Feedback do
       define :list_open_notes_on_page, action: :open_on_page, args: [:path]
       define :find_strings, args: [:texts, :locale]
       define :edit_note, action: :edit, get_by: [:id]
+      define :delete_note, action: :delete, get_by: [:id]
       define :resolve_note, action: :resolve, get_by: [:id]
     end
   end

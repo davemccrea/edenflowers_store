@@ -579,7 +579,28 @@ if (dev || reviewer) {
     copy.addEventListener("click", async () => {
       status.textContent = await copyReference(el);
     });
-    actions.append(status, ...(dev ? [copy] : []), cancel, save);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "Delete";
+    remove.addEventListener("click", async () => {
+      if (!confirm("Delete this note?")) return;
+      status.textContent = "Deleting…";
+      const response = await sendJson(`/review-notes/${note.id}`, {}, "DELETE");
+      if (response?.ok) {
+        notesPath = null;
+        closeBox();
+        flash(el, "✓ Note deleted");
+      } else {
+        status.textContent = `Could not delete (${response?.status ?? "offline"}), try again`;
+      }
+    });
+    actions.append(
+      status,
+      ...(note ? [remove] : []),
+      ...(dev ? [copy] : []),
+      cancel,
+      save,
+    );
     const strings = document.createElement("div");
     strings.textContent = "Looking up strings…";
     Object.assign(strings.style, { fontSize: "11px", opacity: "0.7" });

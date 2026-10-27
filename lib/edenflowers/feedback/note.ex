@@ -72,6 +72,11 @@ defmodule Edenflowers.Feedback.Note do
       accept [:body]
     end
 
+    destroy :delete do
+      description "The reviewer takes back their own note, from the box that opens when they Option+Click its " <>
+                    "element again. Unlike `resolve`, it leaves no trace, for notes left by mistake."
+    end
+
     update :resolve do
       description "Marks a note as dealt with, so it drops out of `open`."
       change set_attribute(:resolved_at, &DateTime.utc_now/0)
@@ -93,7 +98,7 @@ defmodule Edenflowers.Feedback.Note do
       authorize_if actor_attribute_equals(:reviewer, true)
     end
 
-    policy action(:edit) do
+    policy action([:edit, :delete]) do
       authorize_if relates_to_actor_via(:author)
     end
   end
