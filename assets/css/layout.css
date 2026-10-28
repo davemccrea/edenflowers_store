@@ -29,8 +29,7 @@ body:has([data-header-overlay])
   border-color: transparent;
 }
 
-/* Without JavaScript nothing would show the header again, so it stays put. */
-:root.js #hotfx-shy-header.shy-header--hidden {
+#hotfx-shy-header.shy-header--hidden {
   transform: translateY(-100%);
   visibility: hidden;
   transition-delay: 0s, 0.2s;
