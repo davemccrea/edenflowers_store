@@ -105,6 +105,13 @@ defmodule EdenflowersWeb.CoreComponentsTest do
     assert CoreComponents.image_url("local:///p.jpg", 6000, 4000) =~ "rs:fill:3840:2560:false"
   end
 
+  test "synced images carry their content hash so a replaced photo gets a new url" do
+    {name, hash} = "priv/image_hashes.json" |> File.read!() |> JSON.decode!() |> Enum.at(0)
+
+    assert CoreComponents.image_url("local:///#{name}", 600, 750) =~ "/cb:#{hash}/"
+    refute CoreComponents.image_url("local:///uploads/unlisted.jpg", 600, 750) =~ "/cb:"
+  end
+
   test "art-directed sources precede the base source and use their own crop" do
     html = image(sources: [%{media: "(min-width: 640px)", width: 600, height: 600}])
 
