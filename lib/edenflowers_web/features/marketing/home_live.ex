@@ -554,8 +554,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <.trusted_by />
-
       <section class="overflow-x-clip not-last:border-b" aria-labelledby="reviews-heading">
         <div class="container py-20 md:py-28">
           <.flower name="flower-30" class="text-base-content/20 -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20" />
@@ -721,6 +719,28 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
+      <section
+        :if={@subscribable_products != []}
+        id="subscription"
+        class="not-last:border-b"
+        aria-labelledby="subscription-heading"
+      >
+        <div class="container py-20 md:py-28">
+          <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
+          <p class="text-base-content/80 mb-12 max-w-prose text-lg leading-relaxed">
+            {~t"Fresh flowers every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
+          </p>
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <.product_card
+              :for={product <- @subscribable_products}
+              product={product}
+              navigate={~q"/#{language}/product/#{product}"}
+              locale={Edenflowers.Format.locale()}
+            />
+          </div>
+        </div>
+      </section>
+
       <section class="bg-cream not-last:border-b" aria-labelledby="location-heading">
         <div class="grid md:grid-cols-[3fr_2fr]">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
@@ -753,27 +773,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <section
-        :if={@subscribable_products != []}
-        id="subscription"
-        class="not-last:border-b"
-        aria-labelledby="subscription-heading"
-      >
-        <div class="container py-20 md:py-28">
-          <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
-          <p class="text-base-content/80 mb-12 max-w-prose text-lg leading-relaxed">
-            {~t"Fresh flowers every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
-          </p>
-          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <.product_card
-              :for={product <- @subscribable_products}
-              product={product}
-              navigate={~q"/#{language}/product/#{product}"}
-              locale={Edenflowers.Format.locale()}
-            />
-          </div>
-        </div>
-      </section>
+      <.trusted_by />
     </Layouts.app>
     """
   end
