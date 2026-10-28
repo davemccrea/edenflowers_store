@@ -1,6 +1,7 @@
 #!/bin/bash
 # Publish a GitHub release for an already-pushed tag, with notes drafted by Claude or Codex
 # from the commits since the previous tag. Rerun it for any tag that lacks a release.
+# --no-edit publishes the draft without opening it in an editor.
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
@@ -8,7 +9,9 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 source scripts/lib/ui.sh
 
 TAG="${1:-}"
-[[ -n "$TAG" ]] || fail "usage: scripts/release.sh <tag>"
+[[ -n "$TAG" ]] || fail "usage: scripts/release.sh <tag> [--no-edit]"
+EDIT=true
+[[ "${2:-}" == "--no-edit" ]] && EDIT=false
 git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null || fail "tag $TAG does not exist"
 
 if gh release view "$TAG" &>/dev/null; then
@@ -51,7 +54,9 @@ if [[ "$DRAFTED" == false ]]; then
 fi
 ok "draft written"
 
-"${VISUAL:-${EDITOR:-vi}}" "$NOTES"
+if [[ "$EDIT" == true ]]; then
+  "${VISUAL:-${EDITOR:-vi}}" "$NOTES"
+fi
 
 if ! grep -q '[^[:space:]]' "$NOTES"; then
   fail "notes are empty, release not published"

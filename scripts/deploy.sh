@@ -88,7 +88,21 @@ PATCH_NEXT="$MAJOR.$MINOR.$((PATCH + 1))"
 MINOR_NEXT="$MAJOR.$((MINOR + 1)).0"
 MAJOR_NEXT="$((MAJOR + 1)).0.0"
 
-VERSION="${1:-}"
+VERSION=""
+ASSUME_YES=false
+for arg in "$@"; do
+  case "$arg" in
+    -y | --yes) ASSUME_YES=true ;;
+    patch) VERSION="$PATCH_NEXT" ;;
+    minor) VERSION="$MINOR_NEXT" ;;
+    major) VERSION="$MAJOR_NEXT" ;;
+    *) fail "unknown argument '$arg', expected patch, minor, major or --yes" ;;
+  esac
+done
+
+if [[ -z "$VERSION" && "$ASSUME_YES" == true ]]; then
+  VERSION="$PATCH_NEXT"
+fi
 
 if [[ -z "$VERSION" ]]; then
   section "Version selection"
@@ -106,10 +120,6 @@ if [[ -z "$VERSION" ]]; then
     3) VERSION="$MAJOR_NEXT" ;;
     *) fail "invalid choice" ;;
   esac
-fi
-
-if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  fail "version must be in semver format (e.g. 0.2.0)"
 fi
 
 TAG="v$VERSION"
@@ -139,7 +149,11 @@ section "Ready to push"
 echo "  main → $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)"
 echo "  tag  → $TAG"
 echo
-read -r -p "  Proceed with push? [y/N] " REPLY
+if [[ "$ASSUME_YES" == true ]]; then
+  REPLY=y
+else
+  read -r -p "  Proceed with push? [y/N] " REPLY
+fi
 if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
   printf '\n  %saborted — cleaning up local commit and tag%s\n' "$DIM" "$RESET"
   git tag -d "$TAG" >/dev/null
@@ -169,6 +183,8 @@ fi
 ok "$TAG deployed to production"
 
 # The deploy has succeeded, so a failed release mustn't look like a failed deploy.
-if ! scripts/release.sh "$TAG"; then
+RELEASE_ARGS=("$TAG")
+[[ "$ASSUME_YES" == true ]] && RELEASE_ARGS+=(--no-edit)
+if ! scripts/release.sh "${RELEASE_ARGS[@]}"; then
   printf '\n  %srelease notes not published, rerun with: scripts/release.sh %s%s\n' "$DIM" "$TAG" "$RESET"
 fi
