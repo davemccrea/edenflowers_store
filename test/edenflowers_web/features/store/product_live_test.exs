@@ -112,6 +112,13 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       %{product: product, variant: generate(product_variant(product_id: product.id))}
     end
 
+    test "starts as a subscription when linked with ?subscribe=1", %{conn: conn, product: product} do
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}?subscribe=1")
+
+      assert has_element?(view, "[data-testid=subscribe-option][checked]")
+      assert has_element?(view, "[data-testid=interval-options]")
+    end
+
     test "starts as a one-time purchase", %{conn: conn, product: product, order: order} do
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 

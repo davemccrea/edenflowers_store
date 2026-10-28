@@ -718,10 +718,51 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       <section
         :if={@subscribable_products != []}
         id="subscription"
-        class="not-last:border-b"
+        class="bg-cream not-last:border-b"
         aria-labelledby="subscription-heading"
       >
-        <div class="container py-20 md:py-28">
+        <div :for={product <- @subscribable_products} :if={length(@subscribable_products) == 1} class="grid md:grid-cols-2">
+          <.link
+            navigate={~q"/#{language}/product/#{product}"}
+            tabindex="-1"
+            aria-hidden="true"
+            class="bg-cream group block overflow-hidden"
+          >
+            <.image
+              src="local:///subscription.jpg"
+              alt=""
+              width={1200}
+              height={1200}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              class="aspect-[4/5] h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03] md:aspect-square"
+            />
+          </.link>
+          <div class="flex flex-col px-4 py-16 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
+            <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
+            <p class="eyebrow text-base-content/70 mb-4">
+              {product.name} · {~t"From"} {Edenflowers.Format.storefront_price(
+                product.cheapest_price,
+                Edenflowers.Format.locale()
+              )}
+            </p>
+            <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
+              {~t"Fresh flowers every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
+            </p>
+            <.button
+              navigate={~q"/#{language}/product/#{product}?subscribe=1"}
+              variant="primary"
+              size="lg"
+              class="group w-fit"
+            >
+              {~t"Start a subscription"}
+              <.icon
+                name="hero-arrow-right-mini"
+                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
+              />
+            </.button>
+          </div>
+        </div>
+        <div :if={length(@subscribable_products) > 1} class="container py-20 md:py-28">
           <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
           <p class="text-base-content/80 mb-12 max-w-prose text-lg leading-relaxed">
             {~t"Fresh flowers every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
@@ -737,8 +778,10 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <section class="bg-cream not-last:border-b" aria-labelledby="location-heading">
-        <div class="grid md:grid-cols-[3fr_2fr]">
+      <.trusted_by />
+
+      <section class="not-last:border-b" aria-labelledby="location-heading">
+        <div class="grid md:grid-cols-2">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
             <.flower name="flower-41" class="text-base-content/20 -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20" />
             <h2 id="location-heading" class="section-title relative mb-8">{~t"Delivery and pickup"}</h2>
@@ -763,13 +806,12 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             alt={~t"Map of Vaasa, Finland with Minimossen pinned"}
             width={1600}
             height={1880}
-            sizes="(min-width: 768px) 40vw, 100vw"
+            sizes="(min-width: 768px) 50vw, 100vw"
+            quality={95}
             class="aspect-[4/3] h-full max-h-80 w-full object-cover md:aspect-auto md:max-h-none"
           />
         </div>
       </section>
-
-      <.trusted_by />
     </Layouts.app>
     """
   end
