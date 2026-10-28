@@ -499,7 +499,7 @@ if ((dev || reviewer) && !admin) {
     viewport: `${innerWidth}x${innerHeight}`,
     selector: selectorFor(el).slice(0, 2000),
     element_text: el.innerText?.trim().replace(/\s+/g, " ").slice(0, 500),
-    element_html: el.outerHTML.slice(0, 2000),
+    element_html: el.cloneNode(false).outerHTML.slice(0, 2000),
     source: findHeexSource(el)?.location,
   });
 

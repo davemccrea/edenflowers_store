@@ -147,7 +147,9 @@ defmodule Edenflowers.Feedback.Note do
     end
 
     attribute :element_html, :string do
-      description "The element's outerHTML, cut to 2000 characters by the picker."
+      description "The element's own tag and attributes, without its children, cut to 2000 characters by the picker. " <>
+                    "It gives classes and ids to grep for when a production note has no `source`."
+
       constraints max_length: 2000
     end
 
