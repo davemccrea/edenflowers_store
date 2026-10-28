@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
        alternates: alternates("/#{language}"),
        page_description:
          ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within 5 km of Minimossen on selected bouquets.",
-       json_ld: EdenflowersWeb.Business.florist(),
+       json_ld: [EdenflowersWeb.Business.website(), EdenflowersWeb.Business.florist()],
        products: products,
        free_dist_km: Fulfillment.free_dist_km(),
        review_pages: @review_pages,
