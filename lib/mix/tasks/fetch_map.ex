@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.FetchMap do
   @moduledoc """
   Fetches the Vaasa location map from Mapbox Static Images API and writes it to
-  `images/home-vaasa-map.png`, the Imgproxy local-storage source.
+  `images/home-vaasa-map-2.png`, the Imgproxy local-storage source.
 
   ## Why a Mix task
 
@@ -34,10 +34,10 @@ defmodule Mix.Tasks.FetchMap do
   @width 1097
   @height 1280
   @style "davemccrea/cmp1rbxej001201r0c0z808jo"
-  # `pin-s` is Mapbox's small built-in pin. Color is hex without `#`.
+  # `pin-m` is Mapbox's medium built-in pin. Color is hex without `#`.
   # Honey approximates --color-link-underline.
   @marker_color "E8B33C"
-  @output_path "images/home-vaasa-map.png"
+  @output_path "images/home-vaasa-map-2.png"
 
   # The custom style only has land and water, so roads are layered on at
   # request time from Mapbox's own street data, tinted to sit quietly on the
@@ -97,7 +97,7 @@ defmodule Mix.Tasks.FetchMap do
     {center_lng, center_lat} = @center
     {shop_lng, shop_lat} = @shop
 
-    marker = "pin-s+#{@marker_color}(#{shop_lng},#{shop_lat})"
+    marker = "pin-m+#{@marker_color}(#{shop_lng},#{shop_lat})"
     coords = "#{center_lng},#{center_lat},#{@zoom}"
     size = "#{@width}x#{@height}@2x"
 

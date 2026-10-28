@@ -759,7 +759,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </div>
 
           <.image
-            src="local:///home-vaasa-map.png"
+            src="local:///home-vaasa-map-2.png"
             alt={~t"Map of Vaasa, Finland with Minimossen pinned"}
             width={1600}
             height={1880}
