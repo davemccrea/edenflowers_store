@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.Review.NoteControllerTest do
 
     assert Feedback.open_notes_markdown() =~ "Make this headline shorter"
 
-    Feedback.resolve_note!(note.id, actor: Actors.system_actor())
+    Feedback.resolve_note!(note.number, actor: Actors.system_actor())
 
     assert open_notes() == []
     assert Feedback.open_notes_markdown() == "No open review notes."
