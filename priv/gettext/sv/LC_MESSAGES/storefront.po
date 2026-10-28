@@ -1386,7 +1386,7 @@ msgstr "Hej, jag heter Jennie"
 #: lib/edenflowers_web/features/marketing/home_live.ex:541
 #, elixir-autogen, elixir-format
 msgid "Hi, I'm Jennie. I make every arrangement myself at my shop in Minimossen, from a bouquet for your kitchen table to flowers for your wedding."
-msgstr "Hej, jag heter Jennie. Jag binder alla blommor själv i min butik i Minimossen, från buketten på ditt köksbord till blommorna på ditt bröllop."
+msgstr "Hej, jag heter Jennie. Alla buketter och blomsterarrangemang här i butiken är mina egna, oavsett om de ska stå på köksbordet eller vara med på ett bröllop."
 
 #: lib/edenflowers_web/features/checkout/components/fields.ex:144
 #, elixir-autogen, elixir-format
