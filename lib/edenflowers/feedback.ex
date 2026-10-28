@@ -39,7 +39,7 @@ defmodule Edenflowers.Feedback do
     """
     ## #{note.id}
 
-    #{note.body}
+    Comment: #{note.body}
 
     - Page: #{note.path} (#{note.locale}, #{note.viewport}, #{note.app_version})
     - By: #{note.author.email}, #{Calendar.strftime(note.inserted_at, "%Y-%m-%d %H:%M")} UTC
