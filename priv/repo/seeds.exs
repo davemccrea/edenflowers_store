@@ -178,6 +178,20 @@ create_product.(
   [{nil, "8"}]
 )
 
+# Left without products so the store's empty collection state can be seen.
+Ash.Changeset.for_create(ProductCategory, :create, %{
+  name: "Wreaths",
+  slug: "wreaths",
+  visibility: :public,
+  product_type: :flowers,
+  description: "Seasonal wreaths for doors and tables.",
+  translations: %{
+    "sv-FI": %{name: "Kransar", description: "Säsongens kransar för dörrar och bord."},
+    fi: %{name: "Seppeleet", description: "Kauden seppeleitä oviin ja pöydille."}
+  }
+})
+|> Ash.create!(authorize?: false)
+
 create_product.(
   %{
     product_category_id: bouquets_category.id,
