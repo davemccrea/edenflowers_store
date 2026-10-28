@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Layouts do
   defp footer_locale_picker(assigns) do
     ~H"""
     <.locale_picker id="locale-picker-footer" current_path={@current_path} alternates={@alternates}>
-      <span class="group inline-flex cursor-pointer items-center gap-1">
+      <span class="group flex cursor-pointer items-center gap-1">
         <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
         <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
           {@current_locale}
