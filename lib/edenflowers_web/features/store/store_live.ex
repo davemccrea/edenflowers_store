@@ -115,21 +115,18 @@ defmodule EdenflowersWeb.Store.StoreLive do
                   {~t"Need flowers before then? Get in touch and I'll gladly help."}
                 <% end %>
               </p>
-              <.button
-                :if={@selected_category && @bouquets && @selected_category.id != @bouquets.id}
-                patch={~q"/#{language}/store/#{@bouquets.slug}"}
-                variant="secondary"
-                class="mt-2"
-              >
-                {~t"Browse bouquets"}
-              </.button>
-              <.button
-                navigate={~q"/#{language}/contact"}
-                variant="secondary"
-                class="mt-2"
-              >
-                {~t"Get in touch"}
-              </.button>
+              <div class="mt-2 flex flex-wrap justify-center gap-3">
+                <.button
+                  :if={@selected_category && @bouquets && @selected_category.id != @bouquets.id}
+                  patch={~q"/#{language}/store/#{@bouquets.slug}"}
+                  variant="primary"
+                >
+                  {~t"Browse bouquets"}
+                </.button>
+                <.button navigate={~q"/#{language}/contact"} variant="secondary">
+                  {~t"Get in touch"}
+                </.button>
+              </div>
             </div>
           <% else %>
             <.free_delivery_note

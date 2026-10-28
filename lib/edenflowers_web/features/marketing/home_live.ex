@@ -509,7 +509,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               };
             </script>
 
-            <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex" />
+            <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex md:hidden" />
           </div>
 
           <div class="mt-10 text-center">
@@ -746,7 +746,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               )}
             </p>
             <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
-              {~t"Fresh flowers every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
+              {~t"Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
             </p>
             <.button
               navigate={~q"/#{language}/product/#{product}?subscribe=1"}
@@ -765,7 +765,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         <div :if={length(@subscribable_products) > 1} class="container py-20 md:py-28">
           <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
           <p class="text-base-content/80 mb-12 max-w-prose text-lg leading-relaxed">
-            {~t"Fresh flowers every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
+            {~t"Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
           </p>
           <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
             <.product_card
@@ -801,15 +801,18 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             </dl>
           </div>
 
-          <.image
-            src="local:///home-vaasa-map-2.png"
-            alt={~t"Map of Vaasa, Finland with Minimossen pinned"}
-            width={1600}
-            height={1880}
-            sizes="(min-width: 768px) 50vw, 100vw"
-            quality={95}
-            class="aspect-[4/3] h-full max-h-80 w-full object-cover md:aspect-auto md:max-h-none"
-          />
+          <%!-- On desktop the map fills the text column's height instead of setting its own --%>
+          <div class="md:relative">
+            <.image
+              src="local:///home-vaasa-map-2.png"
+              alt={~t"Map of Vaasa, Finland with Minimossen pinned"}
+              width={1600}
+              height={1880}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              quality={95}
+              class="aspect-[4/3] max-h-80 w-full object-cover md:aspect-auto md:max-h-none md:absolute md:inset-0 md:h-full"
+            />
+          </div>
         </div>
       </section>
     </Layouts.app>
