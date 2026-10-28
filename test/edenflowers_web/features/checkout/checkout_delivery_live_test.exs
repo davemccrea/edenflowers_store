@@ -58,17 +58,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       }
     end
 
-    test "subscribed to, shows how often and offers pickup too", %{conn: conn, variant: variant} do
-      order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
-      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
-      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      assert has_element?(view, "#checkout-line-items [data-testid=line-item-interval]", "Every 2 weeks")
-      assert has_element?(view, "label", "Fulfillment Option")
-    end
-
     test "subscribed to, says what the card is charged and how often before paying",
          %{conn: conn, variant: variant, delivery_option: delivery_option} do
       first_delivery = Date.add(Edenflowers.ShopTime.today(), 5)
@@ -99,6 +88,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
 
+      assert has_element?(view, "#checkout-line-items [data-testid=line-item-interval]", "Every 2 weeks")
       amount = Edenflowers.Format.currency(Decimal.add(variant.price, "5.00"), "en")
       second_delivery = Edenflowers.Format.weekday_date(Date.add(first_delivery, 14), "en")
 
@@ -118,6 +108,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
+      pickup = Enum.find(Edenflowers.Fulfillment.list_options!(), &(&1.fulfillment_method == :pickup))
+      assert has_element?(view, ~s|#checkout-form-3a input[value="#{pickup.id}"]|)
       assert has_element?(view, "[data-testid='discount-section']")
 
       assert has_element?(
@@ -159,21 +151,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       assert has_element?(view, "[data-testid='discount-section']")
       refute has_element?(view, "[data-testid='first-delivery-discount']")
     end
-
-    test "bought once, can be picked up", %{conn: conn, variant: variant} do
-      order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
-      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
-      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      refute has_element?(view, "#checkout-line-items", "Subscription")
-      assert has_element?(view, "label", "Fulfillment Option")
-    end
   end
 
   describe "live calendar availability" do
-    test "announces a closed selected date through an already mounted live region", %{conn: conn} do
+    test "announces a selected date closing and reopening without losing the customer's input", %{conn: conn} do
       date = Date.add(Edenflowers.ShopTime.today(), 7)
       admin = generate(admin_user())
       {:ok, view, _html} = live(conn, ~p"/checkout")
@@ -182,24 +163,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       assert has_element?(view, region)
       refute has_element?(view, region, message)
-      render_click(view, "select-date", %{"date" => Date.to_string(date)})
-
-      calendar = Edenflowers.Fulfillment.get_shop_calendar!()
-      calendar = Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
-
-      assert has_element?(view, region, message)
-      refute has_element?(view, "[data-testid=fulfillment-date-unavailable][role=alert]")
-
-      Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
-
-      assert has_element?(view, region)
-      refute has_element?(view, region, message)
-    end
-
-    test "flags a selected date that closes without losing the customer's input", %{conn: conn} do
-      date = Date.add(Edenflowers.ShopTime.today(), 7)
-      admin = generate(admin_user())
-      {:ok, view, _html} = live(conn, ~p"/checkout")
       render_click(view, "select-date", %{"date" => Date.to_string(date)})
 
       view
@@ -211,7 +174,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       calendar = Edenflowers.Fulfillment.get_shop_calendar!()
       calendar = Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
 
-      assert has_element?(view, "[data-testid=fulfillment-date-unavailable]", "This date is no longer available")
+      assert has_element?(view, region, message)
+      assert has_element?(view, "[data-testid=fulfillment-date-unavailable]", message)
+      refute has_element?(view, "[data-testid=fulfillment-date-unavailable][role=alert]")
       assert has_element?(view, ~s|input[name="form[fulfillment_date]"][value="#{date}"]|)
       assert has_element?(view, ~s|input[name="form[contact_phone_number]"][value="040 1234567"]|)
 
@@ -222,6 +187,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
 
+      assert has_element?(view, region)
+      refute has_element?(view, region, message)
       refute has_element?(view, "[data-testid=fulfillment-date-unavailable]")
       assert has_element?(view, ~s|input[name="form[fulfillment_date]"][value="#{date}"]|)
     end
@@ -271,25 +238,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
   end
 
   describe "Step 3: Delivery Information" do
-    test "fresh order at step 3 defaults the radio to home delivery", %{
-      conn: conn,
-      step_3_order: step_3_order,
-      delivery_option: delivery_option
-    } do
-      {:ok, _view, html} = live(conn, ~p"/checkout")
-
-      pickup_option =
-        Edenflowers.Fulfillment.list_options!()
-        |> Enum.find(&(&1.fulfillment_method == :pickup))
-
-      assert html =~ ~s(value="#{delivery_option.id}" checked)
-      refute html =~ ~s(value="#{pickup_option.id}" checked)
-
-      reloaded = Orders.get_order_for_checkout!(step_3_order.id, actor: nil)
-      assert reloaded.fulfillment_option_id == delivery_option.id
-      assert reloaded.fulfillment_method == :delivery
-    end
-
     test "existing pickup choice is preserved on revisit", %{
       conn: conn,
       step_3_order: step_3_order,
@@ -321,7 +269,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
 
-      {:ok, view, _html} = live(conn, ~p"/checkout")
+      {:ok, view, html} = live(conn, ~p"/checkout")
+
+      pickup_option =
+        Edenflowers.Fulfillment.list_options!()
+        |> Enum.find(&(&1.fulfillment_method == :pickup))
+
+      assert html =~ ~s(value="#{delivery_option.id}" checked)
+      refute html =~ ~s(value="#{pickup_option.id}" checked)
+      defaulted = Orders.get_order_for_checkout!(step_3_order.id, actor: nil)
+      assert defaulted.fulfillment_option_id == delivery_option.id
+      assert defaulted.fulfillment_method == :delivery
 
       view
       |> element("#address-input-field")

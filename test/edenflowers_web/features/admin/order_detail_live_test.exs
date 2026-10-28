@@ -142,16 +142,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    view
-    |> element(~s|button[phx-click="confirm_fulfillment"]|)
-    |> render_click()
-
+    refute has_element?(view, ~s|button[phx-value-kind="fulfillment"]|)
+    view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+    refute has_element?(view, ~s|#confirm-fulfillment-form input[type="checkbox"]|)
     view |> form("#confirm-fulfillment-form") |> render_submit()
 
     refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
     assert has_element?(view, "#order-status", "Fulfilled")
     assert render(view) =~ "Order marked as collected."
     refute render(view) =~ "Confirmation queued."
+    refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
 
     reloaded = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
     assert reloaded.fulfillment_status == :fulfilled
@@ -186,6 +186,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*Thank you for choosing us\./s)
     assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
     assert has_element?(view, ~s|button[phx-value-kind="fulfillment"]|, "Resend confirmation")
+
+    order |> Ash.reload!(authorize?: false) |> Ash.Seed.update!(%{customer_email: "new@example.com"})
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
+    refute has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*new@example\.com/s)
   end
 
   @tag capture_log: true
@@ -236,20 +242,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-log li", "Receipt failed")
   end
 
-  test "the log keeps the address a confirmation went to after the customer's email changes", %{conn: conn} do
-    order = placed_order(fulfillment_method: :delivery, fulfillment_status: :fulfilled)
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    view |> element(~s|button[phx-value-kind="fulfillment"]|) |> render_click()
-    view |> form("#email-form") |> render_submit()
-    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
-
-    order |> Ash.reload!(authorize?: false) |> Ash.Seed.update!(%{customer_email: "new@example.com"})
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
-    refute has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*new@example\.com/s)
-  end
-
   describe "confirming a delivery" do
     test "reopening after native drawer dismissal forgets the previous photo", %{conn: conn} do
       order = placed_order(fulfillment_method: :delivery)
@@ -290,12 +282,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
 
-    test "nobody was home: names the photo after the time and order reference", %{conn: conn} do
+    test "nobody was home: requires a photo, then names it after the time and order reference", %{conn: conn} do
       order = placed_order(fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
+
+      view |> form("#confirm-fulfillment-form") |> render_submit()
+      assert has_element?(view, "#confirm-fulfillment-dialog [role=alert]", "Take a photo of where you left the order.")
+      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :pending
 
       view
       |> file_input("#confirm-fulfillment-form", "photo_fulfillment[photo]", [
@@ -312,18 +308,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert "local:///uploads/" <> file = reloaded.delivery_photo_slug
       assert file =~ ~r/\A\d{8}-\d{6}_#{reloaded.order_reference}\.jpg\z/
       refute reloaded.email_delivery_photo
-    end
-
-    test "nobody was home: won't confirm without a photo", %{conn: conn} do
-      order = placed_order(fulfillment_method: :delivery)
-
-      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
-      view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
-      view |> form("#confirm-fulfillment-form") |> render_submit()
-
-      assert has_element?(view, "#confirm-fulfillment-dialog [role=alert]", "Take a photo of where you left the order.")
-      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :pending
     end
   end
 
@@ -349,19 +333,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       order = Orders.get_order_for_admin!(order.id, actor: %{admin: true})
       assert order.fulfillment_status == :fulfilled
       refute order.email_delivery_photo
-      refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
-    end
-
-    test "a pickup offers no confirmation and sends none", %{conn: conn} do
-      order = placed_order()
-
-      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-      refute has_element?(view, ~s|button[phx-value-kind="fulfillment"]|)
-      view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
-      refute has_element?(view, ~s|#confirm-fulfillment-form input[type="checkbox"]|)
-      view |> form("#confirm-fulfillment-form") |> render_submit()
-
-      refute has_element?(view, "#flash-info", "Confirmation queued.")
       refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
 
@@ -442,17 +413,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "header", "Grace Hopper")
   end
 
-  test "logs payments and refunds with their amounts", %{conn: conn} do
-    order = placed_order()
-    generate(payment(order_id: order.id, amount: Decimal.new("46.50")))
-    generate(payment(order_id: order.id, amount: Decimal.new("-10.00"), method: :cash))
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert has_element?(view, "#order-log", "Paid 46,50 € · Stripe")
-    assert has_element?(view, "#order-log", "Refunded 10,00 € · Cash")
-  end
-
   test "fetches a refund from Stripe whose webhook never arrived", %{conn: conn} do
     order = placed_order()
     generate(payment(order_id: order.id, amount: Decimal.new("46.50"), payment_intent_id: "pi_missed_refund"))
@@ -463,6 +423,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
+    assert has_element?(view, "#order-log", "Paid 46,50 € · Stripe")
     view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click()
     assert has_element?(view, "#order-log", "Refunded 10,00 € · Stripe")
 
@@ -473,44 +434,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   defp refund_from_page(view, params) do
     view |> element("#order-actions button", "Refund") |> render_click()
     view |> form("#order-refund-form", refund: params) |> render_submit()
-  end
-
-  test "refunds through Stripe, newest payment first, as far as each still covers", %{conn: conn} do
-    order = placed_order()
-
-    generate(
-      payment(
-        order_id: order.id,
-        amount: Decimal.new("200.00"),
-        payment_intent_id: "pi_old",
-        paid_at: ~U[2026-06-01 10:00:00Z]
-      )
-    )
-
-    generate(
-      payment(
-        order_id: order.id,
-        amount: Decimal.new("30.00"),
-        payment_intent_id: "pi_new",
-        paid_at: ~U[2026-06-02 10:00:00Z]
-      )
-    )
-
-    test_pid = self()
-
-    StripeAPI.Mock
-    |> Mox.stub(:list_refunds, fn _payment_intent_id -> {:ok, []} end)
-    |> Mox.expect(:create_refund, 2, fn payment_intent_id, cents, key, _metadata ->
-      assert key == "refund-#{order.id}-2-10000-#{payment_intent_id}"
-      send(test_pid, {:refunded, payment_intent_id, cents})
-      {:ok, %{id: "re_#{payment_intent_id}", payment_intent: payment_intent_id, amount: cents, status: "succeeded"}}
-    end)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    assert refund_from_page(view, %{amount: "100", how: "stripe"}) =~ "Refunded with Stripe."
-
-    assert_received {:refunded, "pi_new", 3000}
-    assert_received {:refunded, "pi_old", 7000}
   end
 
   test "two refund clicks send the same idempotency key" do
@@ -560,10 +483,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     StripeAPI.Mock
     |> Mox.stub(:list_refunds, fn _payment_intent_id -> {:ok, []} end)
-    |> Mox.expect(:create_refund, fn "pi_new", cents, _key, _metadata ->
+    |> Mox.expect(:create_refund, fn "pi_new", cents, key, _metadata ->
+      assert key == "refund-#{order.id}-2-10000-pi_new"
       {:ok, %{id: "re_pi_new", payment_intent: "pi_new", amount: cents, status: "succeeded"}}
     end)
-    |> Mox.expect(:create_refund, fn "pi_old", _cents, _key, _metadata -> {:error, :card_declined} end)
+    |> Mox.expect(:create_refund, fn "pi_old", _cents, key, _metadata ->
+      assert key == "refund-#{order.id}-2-10000-pi_old"
+      {:error, :card_declined}
+    end)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -747,9 +674,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       view |> element("#order-actions button", "Refund") |> render_click()
       assert has_element?(view, ~s|#order-refund-how option[value="stripe"][selected]|)
 
-      view
-      |> form("#order-refund-form", refund: %{amount: "20.00", how: "stripe", email_customer: "false"})
-      |> render_submit()
+      assert view
+             |> form("#order-refund-form", refund: %{amount: "20.00", how: "stripe", email_customer: "false"})
+             |> render_submit() =~ "Refunded with Stripe."
 
       assert has_element?(view, "#order-log", "Refunded 20,00 € · Stripe")
       refute render(view) =~ "To collect"

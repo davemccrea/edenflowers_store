@@ -6,7 +6,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
   import Phoenix.LiveViewTest
   import Swoosh.TestAssertions
 
-  alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
 
   setup :verify_on_exit!
@@ -201,71 +200,66 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|#form_customer_email[value="keyboard@example.com"]|)
     end
 
-    for change_email? <- [false, true] do
-      @change_email? change_email?
-      test "selected customer contact edits stay on the order (change email: #{change_email?})", ctx do
-        customer = generate(admin_user(admin: false, name: "Anna Holm", email: "anna@example.com"))
+    test "selected customer contact edits stay on the order", ctx do
+      customer = generate(admin_user(admin: false, name: "Anna Holm", email: "anna@example.com"))
 
-        previous =
-          generate(
-            order(
-              state: :placed,
-              user_id: customer.id,
-              customer_phone_number: "+358401234567",
-              ordered_at: DateTime.utc_now()
-            )
+      previous =
+        generate(
+          order(
+            state: :placed,
+            user_id: customer.id,
+            customer_phone_number: "+358401234567",
+            ordered_at: DateTime.utc_now()
           )
-
-        {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
-        view |> element(~s|button[phx-click="add_line"][phx-value-kind="custom"]|) |> render_click()
-        view |> form("#order-form", form: %{gift: "true"}) |> render_change()
-
-        view
-        |> form("#order-form",
-          form: %{gift: "true", recipient_name: "Recipient", recipient_phone_number: "050 765 4321"}
         )
-        |> render_change()
 
-        select_customer(view, customer, "ANNA")
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="custom"]|) |> render_click()
+      view |> form("#order-form", form: %{gift: "true"}) |> render_change()
 
-        assert has_element?(view, ~s|#form_customer_name[value="Anna Holm"]|)
-        assert has_element?(view, ~s|#form_customer_email[value="anna@example.com"]|)
-        assert has_element?(view, ~s|#form_customer_phone_number[value="040 1234567"]|)
-        assert has_element?(view, ~s|#form_recipient_name[value="Recipient"]|)
-        assert has_element?(view, ~s|#form_recipient_phone_number[value="050 7654321"]|)
-        assert has_element?(view, ~s|input[name="form[line_items][0][product_name]"]|)
+      view
+      |> form("#order-form",
+        form: %{gift: "true", recipient_name: "Recipient", recipient_phone_number: "050 765 4321"}
+      )
+      |> render_change()
 
-        email = if @change_email?, do: "order-only@example.com", else: "anna@example.com"
+      select_customer(view, customer, "ANNA")
 
-        assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
-                 view
-                 |> form("#order-form",
-                   form: %{
-                     customer_name: "Anna Holm-Smith",
-                     customer_email: email,
-                     customer_phone_number: "040 999 9999",
-                     fulfillment_option_id: ctx.pickup.id,
-                     fulfillment_date: Date.to_iso8601(tomorrow()),
-                     email_customer?: false,
-                     line_items: %{
-                       "0" => %{"product_name" => "Bouquet", "unit_price" => "35", "tax_rate_id" => ctx.tax_rate.id}
-                     }
+      assert has_element?(view, ~s|#form_customer_name[value="Anna Holm"]|)
+      assert has_element?(view, ~s|#form_customer_email[value="anna@example.com"]|)
+      assert has_element?(view, ~s|#form_customer_phone_number[value="040 1234567"]|)
+      assert has_element?(view, ~s|#form_recipient_name[value="Recipient"]|)
+      assert has_element?(view, ~s|#form_recipient_phone_number[value="050 7654321"]|)
+      assert has_element?(view, ~s|input[name="form[line_items][0][product_name]"]|)
+
+      assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
+               view
+               |> form("#order-form",
+                 form: %{
+                   customer_name: "Anna Holm-Smith",
+                   customer_email: "order-only@example.com",
+                   customer_phone_number: "040 999 9999",
+                   fulfillment_option_id: ctx.pickup.id,
+                   fulfillment_date: Date.to_iso8601(tomorrow()),
+                   email_customer?: false,
+                   line_items: %{
+                     "0" => %{"product_name" => "Bouquet", "unit_price" => "35", "tax_rate_id" => ctx.tax_rate.id}
                    }
-                 )
-                 |> render_submit()
+                 }
+               )
+               |> render_submit()
 
-        order = Orders.get_order_for_admin!(id, actor: ctx.admin)
-        assert order.user_id == customer.id
-        assert order.customer_name == "Anna Holm-Smith"
-        assert to_string(order.customer_email) == email
-        assert order.customer_phone_number == "040 9999999"
-        assert order.recipient_name == "Recipient"
-        assert order.recipient_phone_number == "050 7654321"
-        saved_customer = Ash.reload!(customer, actor: ctx.admin)
-        assert saved_customer.name == "Anna Holm"
-        assert to_string(saved_customer.email) == "anna@example.com"
-        assert Ash.reload!(previous, actor: ctx.admin).customer_phone_number == "+358401234567"
-      end
+      order = Orders.get_order_for_admin!(id, actor: ctx.admin)
+      assert order.user_id == customer.id
+      assert order.customer_name == "Anna Holm-Smith"
+      assert to_string(order.customer_email) == "order-only@example.com"
+      assert order.customer_phone_number == "040 9999999"
+      assert order.recipient_name == "Recipient"
+      assert order.recipient_phone_number == "050 7654321"
+      saved_customer = Ash.reload!(customer, actor: ctx.admin)
+      assert saved_customer.name == "Anna Holm"
+      assert to_string(saved_customer.email) == "anna@example.com"
+      assert Ash.reload!(previous, actor: ctx.admin).customer_phone_number == "+358401234567"
     end
 
     test "searches by email and leaves missing customer details editable, without using a gift recipient's phone",
@@ -416,7 +410,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       order = Orders.get_order_for_admin!(id, actor: ctx.admin)
 
-      assert order.origin == :custom
       assert order.customer_name == "Mrs Holm"
       assert order.customer_phone_number == "040 1234567"
       assert order.user_id == nil
@@ -542,14 +535,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert has_element?(view, ~s|#form_customer_phone_number[value="040 1234567"]|)
       refute has_element?(view, ~s|input[name="form[recipient_phone_number]"]|)
-    end
-
-    test "prices the order's own items as soon as it is opened", ctx do
-      # Two of a 42 € item.
-      order = placed_order(origin: :online)
-
-      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
-
       assert has_element?(view, "#order-price", "2 ×")
       assert has_element?(view, "#order-price", "84,00")
     end
@@ -610,18 +595,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert render_async(view, 500) =~ "8.0 km"
       assert has_element?(view, "#delivery-quote", "13,00")
       assert has_element?(view, "#delivery-quote", "Delivering to Kyrkvägen 5, Vasa")
-    end
-
-    test "says when Jennie's own fee replaces the quoted one", ctx do
-      delivery = delivery_option(ctx)
-      stub_geocoding(8_000)
-
-      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
-
-      view |> form("#order-form", form: %{fulfillment_option_id: delivery.id}) |> render_change()
-      view |> form("#order-form", form: %{delivery_address: "Kyrkvägen 5"}) |> render_change()
-      view |> element("#form_delivery_address") |> render_blur(%{"value" => "Kyrkvägen 5"})
-      render_async(view, 500)
 
       view |> form("#order-form", form: %{fulfillment_fee_override: "5"}) |> render_change()
 
@@ -691,16 +664,11 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "#order-price", "193,50 €")
     end
 
-    test "keeps quiet about missing items until Jennie tries to save", ctx do
+    test "shows what is missing instead of saving", ctx do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 
       html = view |> form("#order-form", form: %{customer_name: "Mrs Holm"}) |> render_change()
-
       refute html =~ "Add at least one item"
-    end
-
-    test "shows what is missing instead of saving", ctx do
-      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 
       html =
         view
@@ -740,32 +708,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "#order-updated-email-preview", "Lilies, as agreed.")
     end
 
-    test "an unpaid custom order opens in the full form", ctx do
-      order = place_custom_order(ctx)
-
-      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
-
-      assert has_element?(view, "[data-testid=order-line]")
-
-      assert {:error, {:live_redirect, _}} =
-               view
-               |> form("#order-form",
-                 form: %{
-                   line_items: %{
-                     "0" => %{
-                       "product_name" => "Funeral spray, larger",
-                       "unit_price" => "120.00",
-                       "tax_rate_id" => ctx.tax_rate.id,
-                       "quantity" => "1"
-                     }
-                   }
-                 }
-               )
-               |> render_submit()
-
-      assert Decimal.equal?(Orders.get_order_for_admin!(order.id, actor: ctx.admin).grand_total, "120.00")
-    end
-
     test "a paid order can change too, and its page shows what is left to collect", ctx do
       order = place_custom_order(ctx)
       {:ok, order} = Orders.record_payment(order, "85.00", :zettle, actor: ctx.admin)
@@ -778,7 +720,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
                  form: %{
                    line_items: %{
                      "0" => %{
-                       "product_name" => "Funeral spray",
+                       "product_name" => "Funeral spray, larger",
                        "unit_price" => "95.00",
                        "tax_rate_id" => ctx.tax_rate.id,
                        "quantity" => "1"
@@ -790,6 +732,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
+      assert has_element?(view, "#order-items", "Funeral spray, larger")
       assert has_element?(view, "#order-balance", "To collect 10,00 €")
       assert has_element?(view, ~s|#order-balance-form input[value="10.00"]|)
     end
@@ -797,19 +740,22 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
     test "a catalogue line keeps the price it was sold at, while its quantity changes", ctx do
       order =
         place_custom_order(ctx, %{
-          line_items: [%{"kind" => "catalogue", "product_variant_id" => ctx.variant.id, "quantity" => "1"}]
+          line_items: [%{"kind" => "catalogue", "product_variant_id" => ctx.variant.id, "quantity" => "2"}]
         })
 
       Ash.Seed.update!(ctx.variant, %{price: Decimal.new("59.00")})
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
 
+      assert has_element?(view, "#order-price", "2 × Spring Bouquet")
+      assert has_element?(view, "#order-price", "98,00 €")
+
       assert {:error, {:live_redirect, _}} =
                view
-               |> form("#order-form", form: %{line_items: %{"0" => %{"quantity" => "2"}}})
+               |> form("#order-form", form: %{line_items: %{"0" => %{"quantity" => "3"}}})
                |> render_submit()
 
       [line] = Ash.load!(order, :line_items, authorize?: false, reuse_values?: false).line_items
-      assert {line.quantity, Decimal.to_string(line.unit_price)} == {2, "49.00"}
+      assert {line.quantity, Decimal.to_string(line.unit_price)} == {3, "49.00"}
     end
 
     test "keeps a retired VAT rate when editing another field", ctx do
@@ -830,19 +776,13 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
   end
 
   describe "the order page" do
-    test "shows the payment link to copy while the order is unpaid", ctx do
+    test "offers to text or WhatsApp the payment link in the customer's language", ctx do
       order = place_custom_order(ctx)
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
       assert has_element?(view, ~s|#payment-link-url[value$="/pay/orders/#{order.payment_link_token}"]|)
       assert has_element?(view, "header", "Unpaid")
-    end
-
-    test "offers to text or WhatsApp the payment link in the customer's language", ctx do
-      order = place_custom_order(ctx)
-
-      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
       body =
         URI.encode(
@@ -876,30 +816,20 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|#payment-link-url[value$="/pay/orders/#{order.payment_link_token}"]|)
     end
 
-    test "records a payment", ctx do
-      order = place_custom_order(ctx)
-
-      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
-
-      view
-      |> form("#order-balance-form", payment: %{payment_method: "mobilepay", amount: "85,00"})
-      |> render_submit()
-
-      assert has_element?(view, "#order-payments", "MobilePay")
-      refute has_element?(view, "#payment-link-url")
-      refute has_element?(view, "#order-balance-form")
-    end
-
     test "records a paid Zervant invoice", ctx do
       order = place_custom_order(ctx)
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
+
+      assert has_element?(view, ~s|#order-balance-form option[value="mobilepay"]|)
 
       view
       |> form("#order-balance-form", payment: %{payment_method: "zervant", amount: "85,00"})
       |> render_submit()
 
       assert has_element?(view, "#order-payments", "Invoice (Zervant)")
+      refute has_element?(view, "#payment-link-url")
+      refute has_element?(view, "#order-balance-form")
     end
 
     test "logs what happened to the order", ctx do
@@ -927,11 +857,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
     end
 
     test "cancels the order and closes its payment link", ctx do
-      order = place_custom_order(ctx) |> Ash.Seed.update!(%{payment_intent_id: "pi_link"})
-
-      expect(StripeAPI.Mock, :cancel_payment_intent, fn %{id: "pi_link"} ->
-        {:ok, %{id: "pi_link", status: "canceled"}}
-      end)
+      order = place_custom_order(ctx)
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 

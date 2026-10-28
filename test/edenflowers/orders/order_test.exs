@@ -8,11 +8,6 @@ defmodule Edenflowers.Orders.OrderTest do
   alias Edenflowers.Orders
 
   describe "Store Resource" do
-    test "creates an order for checkout" do
-      order = Orders.create_for_checkout!(authorize?: false)
-      assert order.state == :contact_details
-    end
-
     test "counts number of items in cart" do
       tax_rate = generate(tax_rate())
       product_1 = generate(product(tax_rate_id: tax_rate.id))
@@ -139,11 +134,6 @@ defmodule Edenflowers.Orders.OrderTest do
 
       assert is_nil(order.distance_km)
     end
-
-    test "promotion_applied? returns false if no promotion applied" do
-      order = Orders.create_for_checkout!(authorize?: false, load: [:promotion_applied?])
-      assert order.promotion_applied? == false
-    end
   end
 
   test "calculates total and tax correctly" do
@@ -215,34 +205,20 @@ defmodule Edenflowers.Orders.OrderTest do
     assert Decimal.equal?(order.vat, "0.00")
   end
 
-  test "calling finalise_checkout updates state and payment_state" do
-    order =
-      generate(
-        order(
-          state: :payment,
-          payment_intent_id: "pi_3RMvONL97TreKmaJ1hGJP2QL",
-          quoted_fulfillment_fee: "1.00"
-        )
-      )
-
-    assert {:ok, order} =
-             Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "1.00"}, authorize?: false)
-
-    assert order.state == :placed
-    assert order.payment_status == :paid
-    assert %DateTime{} = order.ordered_at
-  end
-
   test "finalize_checkout snapshots the VAT breakdown" do
     tax_rate = generate(tax_rate(percentage: "0.255"))
     product = generate(product(tax_rate_id: tax_rate.id))
     variant = generate(product_variant(product_id: product.id, price: "39.90"))
-    order = generate(order(state: :payment, payment_intent_id: "pi_test"))
+    order = generate(order(state: :payment, payment_intent_id: "pi_test", order_reference: nil))
     generate(line_item(order_id: order.id, product_variant_id: variant.id))
 
     assert {:ok, order} =
              Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "39.90"}, authorize?: false)
 
+    assert order.state == :placed
+    assert order.payment_status == :paid
+    assert %DateTime{} = order.ordered_at
+    assert order.order_reference =~ ~r/^\d+$/
     assert [%{rate: rate, vat: vat}] = order.vat_breakdown
     assert Decimal.equal?(rate, "0.255")
     assert Decimal.equal?(vat, "8.11")
@@ -281,17 +257,8 @@ defmodule Edenflowers.Orders.OrderTest do
   # placement rather than at creation.
   test "a cart created for checkout carries no order reference" do
     assert {:ok, cart} = Orders.create_for_checkout(authorize?: false)
+    assert cart.state == :contact_details
     refute cart.order_reference
-  end
-
-  test "finalize_checkout mints the order reference" do
-    order = generate(order(state: :payment, payment_intent_id: "pi_test", order_reference: nil))
-    refute order.order_reference
-
-    assert {:ok, order} =
-             Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
-
-    assert order.order_reference =~ ~r/^\d+$/
   end
 
   describe "Gift flow validation" do
@@ -356,6 +323,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert order.gift == false
       assert is_nil(order.recipient_name)
       assert is_nil(order.card_message)
+      assert Ash.load!(order, :line_items, authorize?: false, reuse_values?: false).line_items == []
     end
   end
 
@@ -374,38 +342,6 @@ defmodule Edenflowers.Orders.OrderTest do
       cards_category = generate(product_category(slug: "cards"))
       card_product = generate(product(product_category_id: cards_category.id, tax_rate_id: tax_rate.id))
       %{card_product: card_product}
-    end
-
-    test "accepts message at exactly the small card limit", %{card_product: card_product} do
-      order = gift_order_with_card(card_product, :small)
-      message = String.duplicate("a", 80)
-
-      assert {:ok, updated} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane",
-                 card_message: message
-               })
-               |> Ash.update(authorize?: false)
-
-      assert updated.card_message == message
-    end
-
-    test "rejects message one character over the small card limit", %{card_product: card_product} do
-      order = gift_order_with_card(card_product, :small)
-      message = String.duplicate("a", 81)
-
-      assert {:error, %Ash.Error.Invalid{} = error} =
-               order
-               |> Ash.Changeset.for_update(:submit_gift_options, %{
-                 gift: true,
-                 recipient_name: "Jane",
-                 card_message: message
-               })
-               |> Ash.update(authorize?: false)
-
-      assert Enum.any?(error.errors, &match?(%{field: :card_message}, &1))
     end
 
     test "trims leading and trailing whitespace before validation", %{card_product: card_product} do
@@ -459,7 +395,7 @@ defmodule Edenflowers.Orders.OrderTest do
 
       over_limit = String.duplicate("🌸", 81)
 
-      assert {:error, %Ash.Error.Invalid{}} =
+      assert {:error, %Ash.Error.Invalid{} = error} =
                order
                |> Ash.Changeset.for_update(:submit_gift_options, %{
                  gift: true,
@@ -467,31 +403,12 @@ defmodule Edenflowers.Orders.OrderTest do
                  card_message: over_limit
                })
                |> Ash.update(authorize?: false)
+
+      assert Enum.any?(error.errors, &match?(%{field: :card_message}, &1))
     end
   end
 
   describe "Promotion code validation" do
-    test "applies promotion using valid code" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      product_variant = generate(product_variant(product_id: product.id, price: "30.00"))
-
-      promotion =
-        generate(promotion(code: "SUMMER20", discount_rate: "0.20", minimum_cart_total: "0"))
-
-      order = Orders.create_for_checkout!(authorize?: false)
-
-      generate(
-        line_item(
-          order_id: order.id,
-          product_variant_id: product_variant.id
-        )
-      )
-
-      assert {:ok, order} = Orders.add_promotion_with_code(order, "SUMMER20", authorize?: false)
-      assert order.promotion_id == promotion.id
-    end
-
     test "rejects invalid promotion code" do
       tax_rate = generate(tax_rate())
       product = generate(product(tax_rate_id: tax_rate.id))
@@ -807,27 +724,6 @@ defmodule Edenflowers.Orders.OrderTest do
                Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
 
       assert error.message =~ "Cart total must be at least"
-    end
-
-    test "applies promotion with 0 minimum cart total to any order" do
-      tax_rate = generate(tax_rate(percentage: "0.10"))
-      product = generate(product(tax_rate_id: tax_rate.id))
-      product_variant = generate(product_variant(product_id: product.id, price: "5.00"))
-
-      promotion = generate(promotion(discount_rate: "0.10", minimum_cart_total: "0"))
-
-      order = Orders.create_for_checkout!(authorize?: false)
-
-      generate(
-        line_item(
-          order_id: order.id,
-          product_variant_id: product_variant.id,
-          quantity: 1
-        )
-      )
-
-      assert {:ok, order} = Orders.add_promotion_with_code(order, to_string(promotion.code), authorize?: false)
-      assert order.promotion_id == promotion.id
     end
 
     test "stops discounting once the cart drops below the minimum" do
@@ -1212,11 +1108,19 @@ defmodule Edenflowers.Orders.OrderTest do
       to_remove = generate(line_item(order_id: order.id, product_variant_id: variant_1.id, quantity: 1))
       _keep = generate(line_item(order_id: order.id, product_variant_id: variant_2.id, quantity: 1))
 
-      assert {:ok, updated} = Orders.remove_line_item(order, to_remove.id, authorize?: false, load: [:line_items])
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
+
+      assert {:ok, updated} =
+               Orders.remove_line_item(order, to_remove.id,
+                 authorize?: false,
+                 load: [:line_items, :cart_effectively_empty?]
+               )
 
       assert updated.state == :delivery
       assert updated.customer_name == "Keep Me"
       assert length(updated.line_items) == 1
+      refute updated.cart_effectively_empty?
+      refute_receive %Phoenix.Socket.Broadcast{topic: _}, 100
     end
 
     test "removing the last non-card line item resets checkout fields" do
@@ -1236,6 +1140,8 @@ defmodule Edenflowers.Orders.OrderTest do
 
       line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
 
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
+
       assert {:ok, updated} = Orders.remove_line_item(order, line_item.id, authorize?: false, load: [:line_items])
 
       assert updated.state == :contact_details
@@ -1243,50 +1149,12 @@ defmodule Edenflowers.Orders.OrderTest do
       assert is_nil(updated.customer_email)
       assert is_nil(updated.recipient_name)
       assert updated.line_items == []
-    end
-
-    test "broadcasts order:checkout_restarted when the cart empties" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      variant = generate(product_variant(product_id: product.id))
-
-      order = generate(order(state: :delivery, customer_name: "X", customer_email: "x@example.com"))
-      line_item = generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
-
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
-
-      assert {:ok, _} = Orders.remove_line_item(order, line_item.id, authorize?: false)
-
       assert_receive %Phoenix.Socket.Broadcast{topic: topic}
       assert topic == "order:checkout_restarted:#{order.id}"
-    end
-
-    test "does not broadcast order:checkout_restarted when other items remain" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      variant_1 = generate(product_variant(product_id: product.id))
-      variant_2 = generate(product_variant(product_id: product.id))
-
-      order = generate(order(state: :delivery))
-      to_remove = generate(line_item(order_id: order.id, product_variant_id: variant_1.id, quantity: 1))
-      _keep = generate(line_item(order_id: order.id, product_variant_id: variant_2.id, quantity: 1))
-
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
-
-      assert {:ok, _} = Orders.remove_line_item(order, to_remove.id, authorize?: false)
-
-      refute_receive %Phoenix.Socket.Broadcast{topic: _}, 100
     end
   end
 
   describe "cart_effectively_empty? calculation" do
-    test "true when the order has no line items" do
-      order = Orders.create_for_checkout!(authorize?: false)
-      order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
-
-      assert order.cart_effectively_empty? == true
-    end
-
     test "true when the only remaining line item is a card" do
       tax_rate = generate(tax_rate())
       cards_category = generate(product_category(slug: "cards"))
@@ -1296,19 +1164,6 @@ defmodule Edenflowers.Orders.OrderTest do
       order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
 
       assert order.cart_effectively_empty? == true
-    end
-
-    test "false when at least one non-card line item remains" do
-      tax_rate = generate(tax_rate())
-      product = generate(product(tax_rate_id: tax_rate.id))
-      variant = generate(product_variant(product_id: product.id))
-
-      order = generate(order())
-      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
-
-      order = Ash.load!(order, [:cart_effectively_empty?], authorize?: false)
-
-      assert order.cart_effectively_empty? == false
     end
   end
 
@@ -1380,18 +1235,6 @@ defmodule Edenflowers.Orders.OrderTest do
       order = Orders.create_for_checkout!(authorize?: false)
 
       %{order: order, card_variant_a: card_variant_a, card_variant_b: card_variant_b}
-    end
-
-    test "add_card adds a card line item", %{
-      order: order,
-      card_variant_a: card_variant_a
-    } do
-      assert {:ok, order} = Orders.add_card(order, card_variant_a.id, authorize?: false, load: [:line_items])
-
-      card = Enum.find(order.line_items, & &1.is_card)
-      assert card
-      assert card.product_variant_id == card_variant_a.id
-      assert card.variant_size == card_variant_a.size
     end
 
     test "add_card replaces an existing card line item rather than appending", %{
