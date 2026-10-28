@@ -415,7 +415,7 @@ msgstr "Se de andra kollektionerna eller hör av dig så hjälper jag dig med bl
 #: lib/edenflowers_web/features/store/store_live.ex:124
 #, elixir-autogen, elixir-format
 msgid "Browse bouquets"
-msgstr "Se våra buketter"
+msgstr "Se buketterna"
 
 #: lib/edenflowers_web/components/cart/drawer.ex:49
 #: lib/edenflowers_web/components/cart/line_items.ex:175
