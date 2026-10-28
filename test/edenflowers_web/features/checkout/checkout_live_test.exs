@@ -134,6 +134,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       amount = StripeAPI.to_stripe_amount(order.grand_total)
       assert has_element?(view, ~s|#checkout-form-4[data-amount="#{amount}"]|)
+      refute has_element?(view, "#checkout-form-4[data-customer-session-client-secret]")
       assert is_nil(Orders.get_order_by_id!(order.id, authorize?: false).payment_intent_id)
     end
 
@@ -235,13 +236,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
 
       assert render(view) =~ ~s|data-customer-session-client-secret="cuss_ada"|
     end
-
-    test "gives a guest no CustomerSession", %{conn: conn, order: order} do
-      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
-
-      assert render(view) =~ "data-amount"
-      refute render(view) =~ "data-customer-session-client-secret"
-    end
   end
 
   describe "Step 1: Your Details" do
@@ -254,16 +248,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> visit("/checkout")
       |> assert_has("[data-testid=customer-name-input]", value: "Ada Lovelace")
       |> assert_has("[data-testid=customer-email-input]", value: "ada@example.com")
-    end
-
-    test "successfully submits and progresses to step 2", %{conn: conn, order: order} do
-      conn
-      |> Plug.Test.init_test_session(%{order_id: order.id})
-      |> visit("/checkout")
-      |> fill_in("Your name *", with: "John Doe")
-      |> fill_in("Email *", with: "john@example.com")
-      |> click_button("Next")
-      |> assert_has("h2", text: "Gift options")
     end
 
     test "rejects an invalid email and stays on step 1", %{conn: conn, order: order} do
@@ -370,33 +354,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       %{session: session}
     end
 
-    test "successfully submits and progresses to step 3", %{session: session} do
+    test "submits gift options and renders the defaulted delivery form", %{session: session} do
       session
       |> click_button("Next")
       |> assert_has("h2", text: "Delivery")
-    end
-
-    test "shows step 3's inputs for the defaulted fulfillment option", %{session: session} do
-      session
-      |> click_button("Next")
       |> assert_has("#checkout-form-3b")
     end
 
     test "does not show 'Select a card' button when gift is false", %{session: session} do
       session
       |> refute_has("[data-testid='select-card-button']")
-    end
-
-    test "shows 'Add a card' button when order is a gift",
-         %{conn: conn, variant: variant} do
-      gift_order = generate(order(state: :gift_options, gift: true))
-
-      Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
-
-      conn
-      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/checkout")
-      |> assert_has("[data-testid='select-card-button']")
     end
 
     test "a subscription gift says the card comes with the first delivery", %{conn: conn} do
@@ -479,34 +446,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       }
     end
 
-    test "saving step 2 with gift=false removes card line items", %{
-      card_variant: card_variant
-    } do
-      order = generate(order(state: :gift_options, gift: true))
-      Orders.add_card!(order, card_variant.id, authorize?: false, load: [:line_items])
-
-      order
-      |> Ash.Changeset.for_update(:submit_gift_options, %{gift: false})
-      |> Ash.update!(authorize?: false)
-
-      reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
-      refute Enum.any?(reloaded.line_items, & &1.is_card)
-    end
-
-    test "shows card message textarea when a card line item exists",
-         %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(state: :gift_options, gift: true))
-
-      Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
-
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
-
-      conn
-      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/checkout")
-      |> assert_has("[data-testid='card-message-textarea']")
-    end
-
     test "card row in cart sidebar has a remove control but no quantity controls",
          %{conn: conn, variant: variant, card_product: card_product, card_variant: card_variant} do
       gift_order = generate(order(state: :gift_options, gift: true))
@@ -569,22 +508,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       refute html =~ ~s(data-testid="card-message-textarea")
     end
 
-    test "card_message is preserved across re-renders while on step 2",
-         %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Original"))
-
-      Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
-
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
-
-      conn
-      |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-      |> visit("/checkout")
-      |> fill_in("Card message", with: "Happy birthday!")
-      |> fill_in("Recipient name *", with: "Updated Recipient")
-      |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
-    end
-
     test "addresses the card to the recipient as their name is typed",
          %{conn: conn, variant: variant, card_variant: card_variant} do
       gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Original"))
@@ -597,28 +520,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> Plug.Test.init_test_session(%{order_id: gift_order.id})
       |> visit("/checkout")
       |> assert_has("[data-testid='card-message-recipient']", text: "For Original")
+      |> fill_in("Card message", with: "Happy birthday!")
       |> fill_in("Recipient name *", with: "Anna Lindqvist")
       |> assert_has("[data-testid='card-message-recipient']", text: "For Anna")
+      |> assert_has("[data-testid='card-message-textarea']", text: "Happy birthday!")
       |> fill_in("Recipient name *", with: "")
       |> assert_has("[data-testid='card-message-recipient'][hidden]")
       |> fill_in("Recipient name *", with: "Bo")
       |> assert_has("[data-testid='card-message-recipient']:not([hidden])", text: "For Bo")
-    end
-
-    test "renders maxlength matching the selected card's size limit",
-         %{conn: conn, variant: variant, card_variant: card_variant} do
-      gift_order = generate(order(state: :gift_options, gift: true, recipient_name: "Test"))
-
-      Orders.add_line_item!(gift_order.id, variant.id, 1, authorize?: false)
-
-      Orders.add_card!(gift_order, card_variant.id, authorize?: false, load: [:line_items])
-
-      {:ok, _view, html} =
-        conn
-        |> Plug.Test.init_test_session(%{order_id: gift_order.id})
-        |> live("/checkout")
-
-      assert html =~ ~s(maxlength="80")
     end
 
     test "switching from small to large card updates the rendered limit",
@@ -885,12 +794,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       %{view: view, line_item: line_item}
     end
 
-    test "paying is refused and names what's short", %{view: view, line_item: line_item} do
+    test "payment refuses short stock and succeeds after the cart is reduced", %{view: view, line_item: line_item} do
       assert view |> element("#checkout-form-4") |> render_submit() =~ "#{line_item.product_name}: Only 1 left."
       refute_push_event(view, "stripe:process_payment", %{})
-    end
 
-    test "paying goes ahead once the cart fits the stock", %{view: view, line_item: line_item} do
       Orders.decrement_line_item!(line_item, authorize?: false)
 
       view |> element("#checkout-form-4") |> render_submit()

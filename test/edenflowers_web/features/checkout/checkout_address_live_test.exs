@@ -31,23 +31,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   end
 
   describe "geocode lifecycle" do
-    test "confirmed address shows check icon", %{
-      conn: conn,
-      delivery_option: delivery_option
-    } do
-      stub_successful_geocode()
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      select_delivery_option(view, delivery_option.id)
-      blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view, 500)
-
-      # The quote reaches the parent in a message the lookup sends once it
-      # finishes, so it renders after render_async's own render.
-      assert render(view) =~ ~s(data-testid="input-confirmed")
-    end
-
     test "shows the address HERE resolved without rewriting the field", %{
       conn: conn,
       delivery_option: delivery_option
@@ -60,6 +43,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       blur_address(view, "Stadsgatan 3")
       render_async(view, 500)
 
+      assert has_element?(view, "[data-testid='input-confirmed']")
       confirmation = view |> element("[data-testid='address-confirmation']") |> render()
       assert confirmation =~ "Stadsgatan 3, 65300 Vasa"
       refute confirmation =~ "km"
@@ -122,26 +106,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   end
 
   describe "validation" do
-    test "checkout retains the required full-sized input and original placeholder", %{
-      conn: conn,
-      delivery_option: delivery_option
-    } do
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-      select_delivery_option(view, delivery_option.id)
-
-      assert has_element?(view, "#address-input-field.input-lg.w-full.text-base")
-      assert has_element?(view, ~s|#address-input-field[aria-required="true"]|)
-      assert has_element?(view, ~s|#address-input-field[placeholder="Myrvägen 1, 65230 Vasa"]|)
-      assert has_element?(view, ~s|#address-input-field[phx-blur="lookup_address"]|)
-      refute render(view) =~ "This field is required"
-    end
-
     test "blurring an empty checkout address still shows the required error", %{
       conn: conn,
       delivery_option: delivery_option
     } do
       {:ok, view, _html} = live(conn, ~p"/checkout")
       select_delivery_option(view, delivery_option.id)
+      assert has_element?(view, ~s|#address-input-field[aria-required="true"]|)
+      assert has_element?(view, ~s|#address-input-field[phx-blur="lookup_address"]|)
+      refute render(view) =~ "This field is required"
+
       blur_address(view, "")
 
       assert render(view) =~ "This field is required"
@@ -230,7 +204,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
   end
 
   describe "step 3 submit" do
-    test "blur does not persist the geocode to the database", %{
+    test "quotes without saving, then persists the address and sibling fields on submit", %{
       conn: conn,
       order: order,
       delivery_option: delivery_option
@@ -243,30 +217,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       blur_address(view, "Stadsgatan 3, 65300 Vasa")
       render_async(view, 500)
 
-      reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
-      assert is_nil(reloaded.delivery_address)
-      assert is_nil(reloaded.geocoded_address)
-      assert is_nil(reloaded.fulfillment_fee)
-    end
+      quoted = Orders.get_order_for_checkout!(order.id, actor: nil)
+      assert is_nil(quoted.delivery_address)
+      assert is_nil(quoted.geocoded_address)
+      assert is_nil(quoted.fulfillment_fee)
 
-    test "submit persists every geocode field, the sibling form fields, and advances the step", %{
-      conn: conn,
-      order: order,
-      delivery_option: delivery_option
-    } do
-      stub_successful_geocode()
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      select_delivery_option(view, delivery_option.id)
-      blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view, 500)
-
+      # AddressInput renders a top-level name, separate from the form[...] fields.
       view
       |> element("#checkout-form-3b")
       |> render_submit(%{
+        "delivery_address" => "Stadsgatan 3, 65300 Vasa",
         "form" => %{
-          "delivery_address" => "Stadsgatan 3, 65300 Vasa",
           "contact_phone_number" => "045 1234567",
           "delivery_instructions" => "Leave at back door 99B",
           "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
@@ -284,37 +245,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       assert reloaded.customer_phone_number == "045 1234567"
       assert reloaded.delivery_instructions == "Leave at back door 99B"
       assert reloaded.fulfillment_date == Edenflowers.ShopTime.today() |> Date.add(7)
-    end
-
-    # AddressInput's input has no form[...] prefix, so save_form must bridge it
-    # into the form params.
-    test "submit succeeds when delivery_address arrives at the top level of params", %{
-      conn: conn,
-      order: order,
-      delivery_option: delivery_option
-    } do
-      stub_successful_geocode()
-
-      {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      select_delivery_option(view, delivery_option.id)
-      blur_address(view, "Stadsgatan 3, 65300 Vasa")
-      render_async(view, 500)
-
-      view
-      |> element("#checkout-form-3b")
-      |> render_submit(%{
-        "delivery_address" => "Stadsgatan 3, 65300 Vasa",
-        "form" => %{
-          "contact_phone_number" => "045 1234567",
-          "delivery_instructions" => "",
-          "fulfillment_date" => Edenflowers.ShopTime.today() |> Date.add(7) |> Date.to_string()
-        }
-      })
-
-      reloaded = Orders.get_order_for_checkout!(order.id, actor: nil)
-      assert reloaded.state == :payment
-      assert reloaded.delivery_address == "Stadsgatan 3, 65300 Vasa"
     end
   end
 

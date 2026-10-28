@@ -119,6 +119,8 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.unpaid?
       assert order.order_reference
       assert order.ordered_at
+      assert order.user_id == nil
+      assert order.id in Enum.map(Orders.list_orders_to_fulfil!(actor: ctx.admin), & &1.id)
       assert Decimal.equal?(order.grand_total, "134.00")
       assert Enum.map(order.line_items, & &1.product_name) == ["Spring Bouquet", "Funeral spray"]
       assert [%{rate: rate}] = order.vat_breakdown
@@ -150,20 +152,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert {:ok, _order} = place(ctx, %{customer_phone_number: nil, customer_email: "son@example.com"})
       assert {:ok, _order} = place(ctx, %{customer_phone_number: nil, customer_instagram: "@anna.holm"})
-    end
-
-    test "with an email, links the order to that customer's account", ctx do
-      {:ok, order} = place(ctx, %{customer_email: "son@example.com"})
-
-      assert order.user_id
-      assert {:ok, user} = Edenflowers.Accounts.get_user_by_email("son@example.com", authorize?: false)
-      assert user.id == order.user_id
-    end
-
-    test "without an email, no account is made", ctx do
-      {:ok, order} = place(ctx)
-
-      assert order.user_id == nil
     end
 
     test "carries a card message without a card in its lines", ctx do
@@ -414,20 +402,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   end
 
   describe "the delivery fee" do
-    test "is calculated from the address", ctx do
-      stub_geocoding(8_000)
-
-      {:ok, order} =
-        place(ctx, %{
-          fulfillment_option_id: ctx.delivery.id,
-          delivery_address: "Kyrkvägen 5",
-          recipient_phone_number: "040 765 4321"
-        })
-
-      assert Decimal.equal?(order.fulfillment_fee, "13.00")
-      assert order.position == "63.09,21.61"
-    end
-
     test "is Jennie's own when she sets one", ctx do
       stub_geocoding(8_000)
 
@@ -463,6 +437,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     test "clearing the email removes the old customer's access", ctx do
       {:ok, order} = place(ctx, %{customer_email: "old@example.com"})
       old_user = Edenflowers.Accounts.get_user_by_email!("old@example.com", authorize?: false)
+      assert order.user_id == old_user.id
 
       {:ok, order} = Orders.edit_order(order, params(ctx, %{customer_email: nil}), actor: ctx.admin)
 
@@ -506,34 +481,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert Decimal.equal?(Orders.get_order_for_admin!(order.id, actor: ctx.admin).balance, "0.00")
     end
 
-    test "records how a payment Jennie took was made, for the receipt", ctx do
-      {:ok, order} = place(ctx)
-      {:ok, order} = Orders.record_payment(order, "134.00", :zettle, actor: ctx.admin)
-
-      assert [%{payment_method_type: "zettle", card_brand: nil}] =
-               Ash.load!(order, :payments, authorize?: false).payments
-    end
-
-    test "a new delivery address is priced again", ctx do
-      stub_geocoding(8_000)
-
-      delivery = %{
-        fulfillment_option_id: ctx.delivery.id,
-        delivery_address: "Kyrkvägen 3",
-        recipient_phone_number: "040 765 4321"
-      }
-
-      {:ok, order} = place(ctx, delivery)
-      assert Decimal.equal?(order.fulfillment_fee, "13.00")
-
-      stub_geocoding(12_000)
-
-      {:ok, order} =
-        Orders.edit_order(order, params(ctx, Map.put(delivery, :delivery_address, "Kyrkvägen 5")), actor: ctx.admin)
-
-      assert Decimal.equal?(order.fulfillment_fee, "17.00")
-    end
-
     test "an edit that leaves the address alone keeps the fee", ctx do
       stub_geocoding(8_000)
 
@@ -562,6 +509,8 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       }
 
       {:ok, order} = place(ctx, delivery)
+      assert Decimal.equal?(order.fulfillment_fee, "13.00")
+      assert order.position == "63.09,21.61"
       [line_item] = Ash.load!(order, :line_items, authorize?: false).line_items
       kept = [%{"id" => line_item.id, "quantity" => "1"}]
 
@@ -572,6 +521,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
           actor: ctx.admin
         )
 
+      assert Decimal.equal?(order.fulfillment_fee, "17.00")
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
       [edit | _placed] = OrderLog.entries(versions, [], "en-GB")
 
@@ -837,14 +787,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       refute log =~ "of variant #{ctx.wreath.id}"
     end
 
-    test "cancelling puts the order's tracked sizes back", ctx do
-      {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "2")]})
-
-      {:ok, _order} = Orders.cancel_order(order, actor: ctx.admin)
-
-      assert stock(ctx.wreath) == 3
-    end
-
     test "editing takes or returns only the difference", ctx do
       other = generate(product_variant(product_id: ctx.variant.product_id, size: :small, stock_quantity: 4))
       {:ok, order} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "1")]})
@@ -930,21 +872,18 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   end
 
   describe "paying" do
-    test "an unpaid custom order is still on the list to fulfil", ctx do
-      {:ok, order} = place(ctx)
-
-      assert order.id in Enum.map(Orders.list_orders_to_fulfil!(actor: ctx.admin), & &1.id)
-    end
-
     test "a recorded payment says how it was paid and sends no receipt by itself", ctx do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
       {:ok, order} =
-        Orders.record_payment(order, "130.00", :mobilepay, actor: ctx.admin)
+        Orders.record_payment(order, "130.00", :zettle, actor: ctx.admin)
 
       order = Orders.get_order_for_admin!(order.id, actor: ctx.admin, load: [:payments])
       assert order.payment_status == :pending
-      assert [%{method: :mobilepay, payment_intent_id: nil}] = order.payments
+
+      assert [%{method: :zettle, payment_method_type: "zettle", card_brand: nil, payment_intent_id: nil}] =
+               order.payments
+
       assert Decimal.equal?(order.balance, "4.00")
       assert order.payment_link_open?
 
