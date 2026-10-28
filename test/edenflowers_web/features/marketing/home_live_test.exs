@@ -88,8 +88,14 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
   test "states the shop's details to search engines, matching the footer", %{conn: conn} do
     html = conn |> get(~p"/en") |> html_response(200)
 
-    assert %{"@type" => "Florist", "telephone" => "+358402209494", "openingHoursSpecification" => [weekdays, saturday]} =
-             json_ld(html)
+    assert [
+             %{"@type" => "WebSite", "name" => "Eden Flowers"},
+             %{
+               "@type" => "Florist",
+               "telephone" => "+358402209494",
+               "openingHoursSpecification" => [weekdays, saturday]
+             }
+           ] = json_ld(html)
 
     assert %{"opens" => "10:00", "closes" => "18:00"} = weekdays
     assert %{"dayOfWeek" => ["Saturday"], "closes" => "15:00"} = saturday

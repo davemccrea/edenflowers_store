@@ -26,6 +26,20 @@ defmodule EdenflowersWeb.Business do
     [~t"Mon–Fri: #{weekdays}", ~t"Sat: #{saturday}", ~t"Sun: closed"]
   end
 
+  @doc """
+  schema.org `WebSite` for the home page. Google takes the site name in search
+  results from it; without it, Google shows the domain as "Edenflowers".
+  """
+  def website do
+    %{
+      "@context" => "https://schema.org",
+      "@type" => "WebSite",
+      "name" => "Eden Flowers",
+      "alternateName" => "edenflowers.fi",
+      "url" => EdenflowersWeb.Endpoint.url() <> "/"
+    }
+  end
+
   @doc "schema.org `Florist` facts, for the home and contact pages."
   def florist do
     %{
