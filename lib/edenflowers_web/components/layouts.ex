@@ -955,9 +955,20 @@ defmodule EdenflowersWeb.Layouts do
               </ul>
             </div>
 
-            <div class="footer-grid__socials space-y-2">
-              <h3 class="eyebrow text-base-content/70">{~t"Socials"}</h3>
-              <.social_media_links />
+            <div class="footer-grid__socials space-y-8">
+              <div class="space-y-2">
+                <h3 class="eyebrow text-base-content/70">{~t"Language"}</h3>
+                <.footer_locale_picker
+                  current_path={@current_path}
+                  alternates={@alternates}
+                  current_locale={@current_locale}
+                />
+              </div>
+
+              <div class="space-y-2">
+                <h3 class="eyebrow text-base-content/70">{~t"Socials"}</h3>
+                <.social_media_links />
+              </div>
             </div>
           </div>
         </div>
@@ -974,8 +985,6 @@ defmodule EdenflowersWeb.Layouts do
             class="mt-8 mb-8 w-28"
           />
           <div class="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
-            <.footer_locale_picker current_path={@current_path} alternates={@alternates} current_locale={@current_locale} />
-
             <span class="text-xs">
               © Eden Flowers {Edenflowers.ShopTime.now() |> Map.get(:year)} • {~t"Business ID:"}
               <a
