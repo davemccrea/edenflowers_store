@@ -433,7 +433,7 @@ msgstr ""
 msgid "Browser settings do not replace required consent."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:980
+#: lib/edenflowers_web/components/layouts.ex:989
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:64
 #: lib/edenflowers_web/features/marketing/terms_live.ex:205
 #, elixir-autogen, elixir-format
@@ -1688,6 +1688,7 @@ msgstr ""
 msgid "Kind words"
 msgstr ""
 
+#: lib/edenflowers_web/components/layouts.ex:960
 #: lib/edenflowers_web/features/courses/course_live.ex:108
 #, elixir-autogen, elixir-format
 msgid "Language"
@@ -2717,7 +2718,7 @@ msgstr ""
 msgid "So in January 2019 I started Eden Flowers. Ordering should be easy. You don't need to choose between a million styles and flowers: just trust my taste, and I'll take care of the rest."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:959
+#: lib/edenflowers_web/components/layouts.ex:969
 #, elixir-autogen, elixir-format
 msgid "Socials"
 msgstr ""
