@@ -42,7 +42,7 @@ if ((dev || reviewer) && !admin) {
   // CSS anchor positioning against the element they describe.
   const style = document.createElement("style");
   style.textContent = `
-    .ep-highlight, .ep-label, .ep-box, .ep-note, .ep-toggle {
+    .ep-highlight, .ep-label, .ep-box, .ep-note, .ep-toggle, .ep-intro {
       margin: 0;
       padding: 0;
       border: 0;
@@ -157,6 +157,22 @@ if ((dev || reviewer) && !admin) {
     .ep-toggle[aria-pressed="true"] {
       background: oklch(55% 0.16 155);
       color: oklch(99% 0.005 155);
+    }
+    .ep-intro:popover-open {
+      display: flex;
+    }
+    .ep-intro {
+      left: 16px;
+      bottom: 16px;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 4px 6px 12px;
+      border: 1px solid oklch(55% 0.16 155);
+      border-radius: 6px;
+      background: oklch(99% 0.005 155);
+      color: oklch(22% 0.03 155);
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.28);
+      font: 13px/1.4 system-ui, sans-serif;
     }
   `;
   document.head.append(style);
@@ -723,6 +739,32 @@ if ((dev || reviewer) && !admin) {
     show(toggle, document.body);
   }
 
+  // Desktop reviewers see the shortcut once per session, until they close it or press Option.
+  let intro = null;
+  const dismissIntro = () => {
+    if (!intro) return;
+    intro.remove();
+    intro = null;
+    try {
+      sessionStorage.setItem("review-intro-seen", "1");
+    } catch {}
+  };
+  let introSeen = true;
+  try {
+    introSeen = !!sessionStorage.getItem("review-intro-seen");
+  } catch {}
+  if (reviewer && !touch && !introSeen) {
+    intro = popover("div", "ep-intro");
+    const name = document.body.dataset.reviewerName;
+    intro.append(
+      `${name ? `Hi ${name}! ` : ""}Hold Option (⌥) and click anything to leave a comment`,
+    );
+    const close = iconButton("Close", "M18 6 6 18 M6 6l12 12");
+    close.addEventListener("click", dismissIntro);
+    intro.append(close);
+    show(intro, document.body);
+  }
+
   document.addEventListener(
     "mousemove",
     (event) => {
@@ -748,6 +790,7 @@ if ((dev || reviewer) && !admin) {
       if (copiedTimer || box) return;
       if (event.key === "Alt" && !optionHeld) {
         optionHeld = true;
+        dismissIntro();
         showNotes();
       }
       if (event.key === "Alt" && !activeEl && lastTarget) {

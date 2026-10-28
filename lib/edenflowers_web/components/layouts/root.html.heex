@@ -58,6 +58,7 @@
   <body
     class="bg-base-100 flex min-h-screen flex-col antialiased"
     data-reviewer={reviewer?(@conn.assigns[:current_user])}
+    data-reviewer-name={reviewer_name(@conn.assigns[:current_user])}
   >
     <a href="#main-content" class="skip-link">{~t"Skip to main content"}</a>
     {@inner_content}
