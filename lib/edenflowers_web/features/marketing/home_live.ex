@@ -225,9 +225,9 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               {~t"Flowers for"}
               <span class="hero-rotator">
                 <span style="--i: 0;">{~t"every stage of life"}</span>
-                <span style="--i: 1;">{~t"everyday moments"}</span>
-                <span style="--i: 2;">{~t"a new arrival"}</span>
-                <span style="--i: 3;">{~t"your wedding day"}</span>
+                <span style="--i: 1;">{~t"a new arrival"}</span>
+                <span style="--i: 2;">{~t"your wedding day"}</span>
+                <span style="--i: 3;">{~t"the weekend"}</span>
                 <span style="--i: 4;">{~t"every stage of life"}</span>
               </span>
             </span>
