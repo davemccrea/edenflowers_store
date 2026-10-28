@@ -23,7 +23,7 @@ defmodule Edenflowers.Feedback do
       define :find_strings, args: [:texts, :locale]
       define :edit_note, action: :edit, get_by: [:id]
       define :delete_note, action: :delete, get_by: [:id]
-      define :resolve_note, action: :resolve, get_by: [:id]
+      define :resolve_note, action: :resolve, get_by: [:number]
     end
   end
 
@@ -37,7 +37,7 @@ defmodule Edenflowers.Feedback do
 
   defp note_markdown(note) do
     """
-    ## #{note.id}
+    ## ##{note.number}
 
     Comment: #{note.body}
 

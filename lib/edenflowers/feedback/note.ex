@@ -106,6 +106,14 @@ defmodule Edenflowers.Feedback.Note do
   attributes do
     uuid_primary_key :id
 
+    attribute :number, :integer do
+      description "A short, stable number for the note, so you can tell an agent to work on comment 12 and " <>
+                    "run `just resolve-review-comment 12`. Postgres assigns it from a sequence."
+
+      generated? true
+      writable? false
+    end
+
     attribute :body, :string do
       description "What the reviewer wrote."
       allow_nil? false
@@ -179,6 +187,10 @@ defmodule Edenflowers.Feedback.Note do
     calculate :mine?, :boolean, expr(author_id == ^actor(:id)) do
       description "Whether the actor wrote the note, so Option+Clicking its element opens it for editing."
     end
+  end
+
+  identities do
+    identity :unique_number, [:number]
   end
 
   def app_version, do: "v#{Application.spec(:edenflowers, :vsn)}"
