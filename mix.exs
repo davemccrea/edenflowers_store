@@ -125,6 +125,7 @@ defmodule Edenflowers.MixProject do
       {:elixlsx, "~> 0.6"},
       {:req, "~> 0.5"},
       {:tz, "~> 0.28"},
+      {:mdex, "~> 0.14"},
       # Dev & build tooling
       {:igniter, "~> 0.4"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},

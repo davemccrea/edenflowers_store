@@ -89,7 +89,7 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:556
+#: lib/edenflowers_web/components/layouts.ex:554
 #: lib/edenflowers_web/features/admin/account_live.ex:21
 #: lib/edenflowers_web/features/admin/account_live.ex:36
 #, elixir-autogen, elixir-format
@@ -154,13 +154,13 @@ msgstr ""
 msgid "Admin"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:520
+#: lib/edenflowers_web/components/layouts.ex:518
 #, elixir-autogen, elixir-format
 msgid "Admin account menu"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:246
-#: lib/edenflowers_web/components/layouts.ex:259
+#: lib/edenflowers_web/components/layouts.ex:244
+#: lib/edenflowers_web/components/layouts.ex:257
 #, elixir-autogen, elixir-format
 msgid "Admin navigation"
 msgstr ""
@@ -1072,11 +1072,6 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/components/components.ex:240
 #, elixir-autogen, elixir-format
 msgid "Equipment"
-msgstr ""
-
-#: lib/edenflowers_web/components/layouts.ex:224
-#, elixir-autogen, elixir-format
-msgid "Errors"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:212
@@ -2707,12 +2702,12 @@ msgstr ""
 msgid "Search name…"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:363
+#: lib/edenflowers_web/components/layouts.ex:361
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:373
+#: lib/edenflowers_web/components/layouts.ex:371
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers…"
 msgstr ""
@@ -2833,7 +2828,7 @@ msgstr ""
 msgid "Shown on this device only."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:562
+#: lib/edenflowers_web/components/layouts.ex:560
 #: lib/edenflowers_web/features/admin/account_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "Sign out"
@@ -2987,7 +2982,7 @@ msgstr ""
 msgid "Swedish"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:444
+#: lib/edenflowers_web/components/layouts.ex:442
 #, elixir-autogen, elixir-format
 msgid "System"
 msgstr ""
@@ -3502,8 +3497,8 @@ msgstr ""
 msgid "View receipt"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:287
-#: lib/edenflowers_web/components/layouts.ex:318
+#: lib/edenflowers_web/components/layouts.ex:285
+#: lib/edenflowers_web/components/layouts.ex:316
 #, elixir-autogen, elixir-format
 msgid "Storefront"
 msgstr ""
@@ -3870,4 +3865,11 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/overview_live.ex:485
 #, elixir-autogen, elixir-format
 msgid "Online customers"
+msgstr ""
+
+#: lib/edenflowers_web/components/layouts.ex:224
+#: lib/edenflowers_web/features/admin/links_live.ex:20
+#: lib/edenflowers_web/features/admin/links_live.ex:30
+#, elixir-autogen, elixir-format
+msgid "Links"
 msgstr ""
