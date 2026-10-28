@@ -31,7 +31,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
        page_title: ~t"Wedding Flowers in Vaasa",
        alternates: alternates("/#{language}/weddings"),
        page_description:
-         ~t"Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers. Prices and past weddings.",
+         ~t"Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers.",
        og_image: image_url("local:///wedding/daniela_streng_3.jpg", 1200, 630)
      )
      |> assign(gallery: gallery())
@@ -174,7 +174,10 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
       <section class="not-last:border-b" aria-labelledby="process-heading">
         <div class="container py-24">
-          <h2 id="process-heading" class="section-title mb-12">{~t"How it works"}</h2>
+          <h2 id="process-heading" class="section-title mb-6">{~t"How it works"}</h2>
+          <p class="text-base-content/80 mb-12 max-w-prose text-lg leading-relaxed">
+            {~t"Saturdays in particular fill up quickly, as I can only take on a limited number of weddings each Saturday. Most couples book 9–12 months ahead."}
+          </p>
           <ol class="border-base-content/12 border-t">
             <li
               :for={{{title, body}, index} <- Enum.with_index(@steps, 1)}
@@ -208,6 +211,9 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             <h2 id="enquire-heading" class="section-title text-forest-content">{~t"Planning a wedding?"}</h2>
             <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
               {~t"I'm Jennie, and I design every wedding myself, from our first conversation to the flowers on the day. Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."}
+            </p>
+            <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
+              {~t"I also provide wedding flowers outside Vaasa. Travel is quoted separately."}
             </p>
             <.button phx-click={open_enquiry()} variant="inverse">{~t"Request a quote"}</.button>
             <p class="text-forest-content/85">
