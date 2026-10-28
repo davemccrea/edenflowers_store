@@ -221,9 +221,7 @@ defmodule EdenflowersWeb.Layouts do
     ]
 
     system_nav = [
-      {"/admin/errors", dgettext("admin", "Errors"), false, "hero-exclamation-triangle"},
-      {"/admin/oban", "Oban", false, "hero-cpu-chip"},
-      {"/admin/ash", "AshAdmin", false, "hero-circle-stack"}
+      {~p"/admin/links", dgettext("admin", "Links"), true, "hero-link"}
     ]
 
     assigns =
