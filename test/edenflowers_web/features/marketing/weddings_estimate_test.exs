@@ -20,6 +20,38 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
     assert_enqueued(worker: SendEmails, args: %{name: "Anna Svensson", selection: []})
   end
 
+  test "localized metadata describes the service without promising hidden prices", %{conn: conn} do
+    for {path, expected} <- [
+          {"/en/weddings",
+           "Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers."},
+          {"/sv/brollop",
+           "Bröllopsblommor i Vasa och Korsholm: brudbuketter, dekoration och blomsterbågar som Jennie på Eden Flowers formger."},
+          {"/fi/haat",
+           "Hääkukat Vaasassa ja Mustasaaressa: hääkimput, koristelu ja kukkakaaret, jotka Jennie suunnittelee Eden Flowersissa."}
+        ] do
+      document = conn |> get(path) |> html_response(200) |> LazyHTML.from_document()
+
+      assert document |> LazyHTML.query(~s(meta[name="description"])) |> LazyHTML.attribute("content") == [expected]
+      assert document |> LazyHTML.query("#wedding-estimate") |> Enum.empty?()
+    end
+  end
+
+  test "booking lead time and separately quoted travel are visible in every language", %{conn: conn} do
+    for {path, lead_time, travel} <- [
+          {"/en/weddings", "Most couples book 9–12 months ahead.",
+           "I also provide wedding flowers outside Vaasa. Travel is quoted separately."},
+          {"/sv/brollop", "De flesta par bokar 9–12 månader i förväg.",
+           "Jag gör också bröllopsblommor utanför Vasa. Resan offereras separat."},
+          {"/fi/haat", "Useimmat parit varaavat 9–12 kuukautta etukäteen.",
+           "Teen hääkukkia myös Vaasan ulkopuolelle. Matkat hinnoittelen erikseen."}
+        ] do
+      {:ok, view, _html} = live(conn, path)
+
+      assert has_element?(view, ~s(section[aria-labelledby="process-heading"]), lead_time)
+      assert has_element?(view, "#enquire", travel)
+    end
+  end
+
   @tag skip: "prices are hidden; unskip when @show_prices? is true again"
   test "the estimate sums the lowest prices and goes along with the enquiry", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/weddings")

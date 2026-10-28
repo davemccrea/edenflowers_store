@@ -54,6 +54,27 @@ Optional suggestions may be rejected without changing usable copy.
 | R03 | fi | Accountant + native editor: VAT terminology. |
 | R04 | fi | Developer + native editor: general versus home-only delivery labels. |
 
+## AI SEO copy follow-up — 28 October 2026
+
+AI-reviewed by the coding assistant on 2026-10-28; native review and Jennie's
+editorial approval remain outstanding. These edits preserve the existing service
+and pricing policy, not new delivery or wedding commitments. Domain: `storefront`;
+context: empty.
+
+- Source: `I also provide wedding flowers outside Vaasa. Travel is quoted separately.`
+  - Swedish: `Jag gör också bröllopsblommor utanför Vasa. Resan offereras separat.`
+  - Finnish: `Teen hääkukkia myös Vaasan ulkopuolelle. Matkat hinnoittelen erikseen.`
+- Source: `Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within %{km} km of Minimossen on selected bouquets.`
+  - Existing Swedish/Finnish descriptions retained, replacing literal `5` with
+    `%{km}`. The new source ending at `funeral flowers.` uses the same translated
+    introduction without the free-delivery sentence when no free radius exists.
+    Review preserves the selected-bouquet restriction; terminology T14 is unchanged.
+- Source: `Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers.`
+  - Existing translations retained without `Priser och tidigare bröllop.` /
+    `Hinnat ja aiemmat häät.` because the public price list remains hidden.
+- The existing `Saturdays in particular fill up quickly, as I can only take on a limited number of weddings each Saturday. Most couples book 9–12 months ahead.`
+  entry and translations are reused unchanged on the wedding page.
+
 ## Remaining coverage
 
 - Cinder dependency alignment added 15 untranslated admin-only entries per

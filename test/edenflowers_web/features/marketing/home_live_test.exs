@@ -4,6 +4,51 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
+  test "delivery metadata uses the configured free radius in every language", %{conn: conn} do
+    generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :dynamic, free_dist_km: 8))
+
+    for path <- ["/en", "/sv", "/fi"] do
+      html = conn |> get(path) |> html_response(200)
+      description = page_description(html)
+
+      assert description =~ "8 km"
+      assert description =~ "Minimossen"
+      refute description =~ "5 km"
+    end
+
+    {:ok, view, _html} = live(conn, ~p"/en")
+    assert has_element?(view, "#location-heading + dl", "Free within 8 km for chosen bouquets")
+    assert page_description(conn |> get(~p"/en") |> html_response(200)) =~ "on selected bouquets."
+  end
+
+  test "delivery metadata makes no free-delivery claim when the radius is zero", %{conn: conn} do
+    generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :dynamic, free_dist_km: 0))
+
+    assert_no_free_delivery_metadata(conn)
+  end
+
+  test "delivery metadata makes no free-delivery claim without a distance-priced option", %{conn: conn} do
+    assert_no_free_delivery_metadata(conn)
+  end
+
+  defp assert_no_free_delivery_metadata(conn) do
+    for path <- ["/en", "/sv", "/fi"] do
+      description = page_description(conn |> get(path) |> html_response(200))
+
+      assert description =~ "Eden Flowers"
+      refute description =~ "Minimossen"
+      refute description =~ "km"
+    end
+  end
+
+  defp page_description(html) do
+    html
+    |> LazyHTML.from_document()
+    |> LazyHTML.query(~s(meta[name="description"]))
+    |> LazyHTML.attribute("content")
+    |> List.first()
+  end
+
   test "the hero quotes the cheapest bouquet, not a cheaper product in another category", %{conn: conn} do
     bouquets = generate(product_category(slug: "bouquets", visibility: :public))
     plants = generate(product_category(visibility: :public))

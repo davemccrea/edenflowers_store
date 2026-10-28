@@ -36,7 +36,7 @@ msgstr ""
 msgid "Cart, empty"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:137
+#: lib/edenflowers_web/components/layouts.ex:142
 #, elixir-autogen, elixir-format
 msgid "Connection lost"
 msgstr ""
@@ -111,7 +111,7 @@ msgstr ""
 msgid "Previous month"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:142
+#: lib/edenflowers_web/components/layouts.ex:147
 #, elixir-autogen, elixir-format
 msgid "Reconnecting…"
 msgstr ""
@@ -171,14 +171,14 @@ msgstr ""
 msgid "This field is required"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:417
-#: lib/edenflowers_web/components/layouts.ex:633
+#: lib/edenflowers_web/components/layouts.ex:422
+#: lib/edenflowers_web/components/layouts.ex:638
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:276
-#: lib/edenflowers_web/components/layouts.ex:697
+#: lib/edenflowers_web/components/layouts.ex:281
+#: lib/edenflowers_web/components/layouts.ex:702
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr ""

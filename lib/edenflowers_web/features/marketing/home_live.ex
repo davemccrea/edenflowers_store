@@ -107,16 +107,16 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   def mount(_params, _session, socket) do
     products = Catalog.list_featured_products!() |> Translations.translate()
     locale = Format.locale()
+    free_dist_km = Fulfillment.free_dist_km()
 
     {:ok,
      assign(socket,
        page_title: ~t"Florist in Vaasa",
        alternates: alternates("/#{language}"),
-       page_description:
-         ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within 5 km of Minimossen on selected bouquets.",
+       page_description: page_description(free_dist_km),
        json_ld: [EdenflowersWeb.Business.website(), EdenflowersWeb.Business.florist()],
        products: products,
-       free_dist_km: Fulfillment.free_dist_km(),
+       free_dist_km: free_dist_km,
        review_pages: @review_pages,
        review_page: 0,
        review_leaving: nil,
@@ -164,6 +164,16 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           do: ~t"Today, if you order by #{time = Format.time(calendar.order_deadline, locale)}",
           else: date |> Format.weekday_day_month(locale) |> String.capitalize()
     end
+  end
+
+  defp page_description(nil) do
+    ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers."
+  end
+
+  defp page_description(km) do
+    gettext_comment("%{km} is the configured free-delivery distance in kilometres; only selected bouquets qualify.")
+
+    ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within #{km = km} km of Minimossen on selected bouquets."
   end
 
   defp delivery_fee(locale) do
