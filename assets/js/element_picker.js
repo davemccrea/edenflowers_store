@@ -104,7 +104,7 @@ if ((dev || reviewer) && !admin) {
       padding: 10px;
       grid-template-columns: minmax(0, 1fr);
       gap: 8px;
-      background: oklch(99% 0.005 155);
+      background: white;
       color: oklch(22% 0.03 155);
       border: 1px solid oklch(55% 0.16 155);
       border-radius: 6px;
