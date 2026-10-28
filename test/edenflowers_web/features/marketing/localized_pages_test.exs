@@ -29,6 +29,12 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     assert html =~ ~s(<link rel="alternate" hreflang="en" href="http://localhost:4002/en/store/bouquets")
     assert html =~ ~s(<link rel="alternate" hreflang="fi" href="http://localhost:4002/fi/kauppa/bouquets")
     assert html =~ ~s(<link rel="alternate" hreflang="sv" href="http://localhost:4002/sv/butik/bouquets")
+    assert html =~ ~s(<link rel="alternate" hreflang="x-default" href="http://localhost:4002/sv/butik/bouquets")
+  end
+
+  test "the home page's fallback language link picks a language from the browser", %{conn: conn} do
+    html = conn |> get("/fi") |> html_response(200)
+
     assert html =~ ~s(<link rel="alternate" hreflang="x-default" href="http://localhost:4002/")
   end
 

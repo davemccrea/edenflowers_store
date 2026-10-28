@@ -15,6 +15,16 @@ defmodule EdenflowersWeb.Layouts do
   attr :alternates, :map, required: true
 
   def hreflang_links(assigns) do
+    # x-default is for visitors none of the languages fits. The home page's is bare /,
+    # which picks a language from the browser; any other page's is itself in the default
+    # language, so the fallback is still the page that was searched for.
+    x_default =
+      if assigns.alternates == alternates("/#{language}"),
+        do: ~p"/",
+        else: Map.fetch!(assigns.alternates, Edenflowers.Locales.default())
+
+    assigns = assign(assigns, :x_default, x_default)
+
     ~H"""
     <link
       :for={{code, path} <- @alternates}
@@ -22,7 +32,7 @@ defmodule EdenflowersWeb.Layouts do
       hreflang={code |> String.split("-") |> hd()}
       href={Phoenix.VerifiedRoutes.unverified_url(@conn, path)}
     />
-    <link rel="alternate" hreflang="x-default" href={url(~p"/")} />
+    <link rel="alternate" hreflang="x-default" href={Phoenix.VerifiedRoutes.unverified_url(@conn, @x_default)} />
     """
   end
 
