@@ -105,7 +105,11 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    products = Catalog.list_featured_products!() |> Translations.translate()
+    products =
+      Catalog.list_featured_products!()
+      |> Translations.translate()
+      |> Translations.translate_assoc(:product_category)
+
     locale = Format.locale()
     free_dist_km = Fulfillment.free_dist_km()
 
@@ -282,7 +286,11 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         <div class="container py-16 md:py-24 xl:max-w-[70vw]">
           <div class="mb-4 flex items-end justify-between gap-4 px-2">
             <div>
-              <h2 class="section-title">{~t"Favourites"}</h2>
+              <h2 class="section-title">
+                {if Enum.all?(@products, &(&1.product_category.slug == "bouquets")),
+                  do: ~t"Favourite bouquets",
+                  else: ~t"Favourites"}
+              </h2>
               <.free_delivery_note
                 :if={@free_dist_km && Enum.any?(@products, & &1.free_delivery)}
                 free_dist_km={@free_dist_km}
@@ -333,6 +341,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 >
                   <.product_card
                     product={product}
+                    category={product.product_category.name}
                     navigate={~q"/#{language}/product/#{product}"}
                     locale={Edenflowers.Format.locale()}
                     free_dist_km={@free_dist_km}

@@ -49,7 +49,7 @@ defmodule Edenflowers.Catalog.Product do
 
       filter expr(featured == true)
       prepare Preparations.VisibleInStore
-      prepare build(sort: [position: :asc_nils_last, name: :asc])
+      prepare build(sort: [position: :asc_nils_last, name: :asc], load: [:product_category])
     end
 
     # Categories are data, so the bouquet category is found by its English slug.

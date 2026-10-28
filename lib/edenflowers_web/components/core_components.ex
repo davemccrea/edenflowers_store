@@ -958,6 +958,8 @@ defmodule EdenflowersWeb.CoreComponents do
     default: nil,
     doc: "the free delivery distance; the Free delivery tag shows only when set, beside a `free_delivery_note`"
 
+  attr :category, :string, default: nil, doc: "the product's category name, shown above the name"
+
   def product_card(assigns) do
     ~H"""
     <.link
@@ -983,6 +985,7 @@ defmodule EdenflowersWeb.CoreComponents do
       </figure>
 
       <div class="text-base-content flex flex-col gap-1">
+        <p :if={@category} class="text-base-content/65 text-xs uppercase tracking-wide">{@category}</p>
         <.dynamic_tag tag_name={@heading} class="card-heading link-underline-group-hover">
           {@product.name}
         </.dynamic_tag>

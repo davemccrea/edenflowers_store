@@ -65,6 +65,27 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     assert has_element?(view, "h1 + p", "from 42 €.")
   end
 
+  test "favourites name each product's category, and the heading says bouquets only when all of them are",
+       %{conn: conn} do
+    bouquets = generate(product_category(slug: "bouquets", name: "Bouquets", visibility: :public))
+    bouquet = generate(product(product_category_id: bouquets.id, featured: true, draft: false))
+    generate(product_variant(product_id: bouquet.id, draft: false))
+
+    {:ok, view, _html} = live(conn, ~p"/en")
+
+    assert has_element?(view, "#store h2", "Favourite bouquets")
+    assert has_element?(view, "#store p", "Bouquets")
+
+    plants = generate(product_category(name: "Plants", visibility: :public))
+    plant = generate(product(product_category_id: plants.id, featured: true, draft: false))
+    generate(product_variant(product_id: plant.id, draft: false))
+
+    {:ok, view, _html} = live(conn, ~p"/en")
+
+    assert has_element?(view, "#store h2", ~r/^\s*Favourites\s*$/)
+    assert has_element?(view, "#store p", "Plants")
+  end
+
   test "delivery and pickup shows the next open day", %{conn: conn} do
     shop_calendar(same_day: false)
     tomorrow = Date.add(Edenflowers.ShopTime.today(), 1)
