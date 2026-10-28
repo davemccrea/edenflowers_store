@@ -165,7 +165,41 @@ defmodule EdenflowersWeb.Store.ProductLive do
               <fieldset :if={not one_size?(@product_variants)} class="flex flex-col gap-3">
                 <legend class="eyebrow text-base-content/70 mb-1">{~t"Size"}</legend>
                 <input type="hidden" name="product_variant_id" value="" />
-                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                <div
+                  :if={@product_category.product_type == :flowers}
+                  class="grid max-w-sm grid-cols-3 gap-3"
+                >
+                  <label
+                    :for={variant <- @product_variants}
+                    class="size-card"
+                    data-active={(@selected_variant.id == variant.id && "true") || nil}
+                  >
+                    <input
+                      type="radio"
+                      name="product_variant_id"
+                      value={variant.id}
+                      checked={@selected_variant.id == variant.id}
+                      disabled={sold_out?(variant)}
+                      class="sr-only"
+                      data-testid={"variant-option-#{variant.size}"}
+                    />
+                    <span class="flex h-11 items-end">
+                      <.flower
+                        name={bouquet_drawing(variant.size)}
+                        class={["text-primary", bouquet_drawing_size(variant.size)]}
+                      />
+                    </span>
+                    <span class="font-serif text-lg leading-tight">{variant_size_label(variant.size)}</span>
+                    <span class="text-base-content/80 font-serif leading-tight">
+                      <%= if sold_out?(variant) do %>
+                        {~t"Sold out"}
+                      <% else %>
+                        {Edenflowers.Format.storefront_price(variant.price, Edenflowers.Format.locale())}
+                      <% end %>
+                    </span>
+                  </label>
+                </div>
+                <div :if={@product_category.product_type != :flowers} class="flex flex-wrap gap-x-6 gap-y-2">
                   <label
                     :for={variant <- @product_variants}
                     class="size-option touch-target"
@@ -204,8 +238,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
               <fieldset :if={@product.subscribable} class="flex flex-col gap-3">
                 <legend class="eyebrow text-base-content/70 mb-1">{~t"How to buy"}</legend>
-                <div class="flex flex-wrap gap-x-6 gap-y-2">
-                  <label class="size-option touch-target" data-active={(not @subscribe? && "true") || nil}>
+                <div class="grid max-w-sm grid-cols-2 gap-3">
+                  <label class="size-card" data-active={(not @subscribe? && "true") || nil}>
                     <input
                       type="radio"
                       name="subscribe"
@@ -214,9 +248,12 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       class="sr-only"
                       data-testid="buy-once-option"
                     />
-                    <span class="size-option__label font-serif text-xl">{~t"Buy once"}</span>
+                    <span class="font-serif text-lg leading-tight">{~t"Buy once"}</span>
+                    <span class="text-base-content/80 font-serif leading-tight">
+                      {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
+                    </span>
                   </label>
-                  <label class="size-option touch-target" data-active={(@subscribe? && "true") || nil}>
+                  <label class="size-card" data-active={(@subscribe? && "true") || nil}>
                     <input
                       type="radio"
                       name="subscribe"
@@ -225,7 +262,11 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       class="sr-only"
                       data-testid="subscribe-option"
                     />
-                    <span class="size-option__label font-serif text-xl">{~t"Subscription"}</span>
+                    <span class="font-serif text-lg leading-tight">{~t"Subscription"}</span>
+                    <span class="text-base-content/80 font-serif leading-tight">
+                      {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
+                      {~t"per delivery"}
+                    </span>
                   </label>
                 </div>
               </fieldset>
@@ -407,6 +448,15 @@ defmodule EdenflowersWeb.Store.ProductLive do
   defp sold_out?(variant), do: variant.stock_quantity == 0
 
   defp details(category, variant), do: ProductType.describe(category.product_type, variant)
+
+  defp bouquet_drawing(:small), do: "flower-bouquet-small"
+  defp bouquet_drawing(:medium), do: "flower-bouquet-medium"
+  defp bouquet_drawing(:large), do: "flower-bouquet-large"
+
+  # The drawings grow with the size, so the difference shows before the labels are read.
+  defp bouquet_drawing_size(:small), do: "h-9 w-9"
+  defp bouquet_drawing_size(:medium), do: "h-10 w-10"
+  defp bouquet_drawing_size(:large), do: "h-11 w-11"
 
   # Sold-out sizes can't be picked, unless every size is sold out.
   defp selectable_variants(variants) do
