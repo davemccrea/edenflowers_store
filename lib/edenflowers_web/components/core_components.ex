@@ -18,9 +18,6 @@ defmodule EdenflowersWeb.CoreComponents do
   @image_widths [320, 480, 640, 960, 1280, 1920, 2560, 3840]
   @max_image_dimension 3840
   @gallery_thumb_width 480
-  @image_hashes_path Path.join(File.cwd!(), "priv/image_hashes.json")
-  @external_resource @image_hashes_path
-  @image_hashes @image_hashes_path |> File.read!() |> JSON.decode!()
 
   @button_variants %{
     "primary" => "btn-primary",
@@ -810,29 +807,18 @@ defmodule EdenflowersWeb.CoreComponents do
         src
 
       svg_src?(src) ->
-        src |> Imgproxy.new() |> maybe_cache_bust(src) |> to_string()
+        src |> Imgproxy.new() |> to_string()
 
       true ->
         {width, height} = capped_dimensions(width, height)
 
         src
         |> Imgproxy.new()
-        |> maybe_cache_bust(src)
         |> maybe_crop(crop)
         |> Imgproxy.resize(width, height, type: crop_type)
         |> Imgproxy.add_option(:q, [quality])
         |> Imgproxy.set_extension("webp")
         |> to_string()
-    end
-  end
-
-  # Imgproxy responses are cached for a year, so a photo replaced under its old
-  # name needs a new URL. `just sync-images` records each file's hash; admin
-  # uploads aren't listed because every upload gets a fresh name.
-  defp maybe_cache_bust(img, "local:///" <> path) do
-    case Map.fetch(@image_hashes, URI.parse(path).path) do
-      {:ok, hash} -> Imgproxy.add_option(img, :cb, [hash])
-      :error -> img
     end
   end
 
