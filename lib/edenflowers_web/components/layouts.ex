@@ -685,7 +685,6 @@ defmodule EdenflowersWeb.Layouts do
     <div
       id="hotfx-shy-header"
       phx-hook=".HotFxShyHeader"
-      class="shy-header--hidden"
       data-hide={JS.add_class("shy-header--hidden")}
       data-show={JS.remove_class("shy-header--hidden")}
       data-solid={JS.add_class("shy-header--solid")}
@@ -822,33 +821,19 @@ defmodule EdenflowersWeb.Layouts do
           this.solidJS = this.el.getAttribute("data-solid");
           this.overlayJS = this.el.getAttribute("data-overlay");
 
-          // The header renders hidden because only the browser knows where a reload or anchor link landed.
-          this.lastScroll = window.scrollY;
-          this.lastMaxScroll = window.scrollY;
+          this.lastScroll = 0;
+          this.lastMaxScroll = 0;
 
           this.boundHandleScroll = this.handleScroll.bind(this);
 
           document.addEventListener("scroll", this.boundHandleScroll);
-          const shown = window.scrollY <= 150;
-          if (shown) this.showWithoutSliding();
-          this.setOffset(shown);
+          this.setOffset(true);
           this.setSolid();
         },
 
         destroyed() {
           document.removeEventListener("scroll", this.boundHandleScroll);
           document.documentElement.style.removeProperty("--shy-header-offset");
-        },
-
-        // LiveView removes the class on the next animation frame, so the transition comes back one frame later,
-        // once the shown position has been laid out.
-        showWithoutSliding() {
-          this.el.style.transition = "none";
-          this.liveSocket.execJS(this.el, this.showJS);
-          requestAnimationFrame(() => {
-            this.el.offsetHeight;
-            this.el.style.removeProperty("transition");
-          });
         },
 
         // Lets sticky elements, like the FAQ's section links, sit below the header while it shows.
@@ -872,10 +857,7 @@ defmodule EdenflowersWeb.Layouts do
           if (window.scrollY > Math.max(150, this.lastScroll)) {
             this.liveSocket.execJS(this.el, this.hideJS);
             this.setOffset(false);
-          } else if (
-            window.scrollY <= 150 ||
-            window.scrollY < this.lastMaxScroll - 150
-          ) {
+          } else if (window.scrollY < this.lastMaxScroll - 150) {
             this.liveSocket.execJS(this.el, this.showJS);
             this.setOffset(true);
             this.lastMaxScroll = window.scrollY;

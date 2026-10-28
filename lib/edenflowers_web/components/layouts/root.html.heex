@@ -42,10 +42,8 @@
       <link rel="manifest" href="/site.webmanifest?v=20261015" />
     <% end %>
 
-    <%!-- Runs before first paint. "js" lets the shy header start hidden only when its hook can show it,
-         and "hero-seen" keeps a reload from starting the home hero's animations it then skips (see the HomeHero hook). --%>
+    <%!-- Runs before first paint so a reload doesn't start the home hero's animations it then skips. See the HomeHero hook. --%>
     <script>
-      document.documentElement.classList.add("js");
       try {
         if (sessionStorage.getItem("hero-seen"))
           document.documentElement.classList.add("hero-seen");
