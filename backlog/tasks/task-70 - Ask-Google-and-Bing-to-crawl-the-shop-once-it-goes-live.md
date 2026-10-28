@@ -1,14 +1,13 @@
 ---
 id: TASK-70
 title: Ask Google and Bing to crawl the shop once it goes live
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-20 10:12'
-updated_date: '2026-10-20 10:26'
+updated_date: '2026-10-28 08:11'
 labels:
   - spec
   - customers
-  - quick
 dependencies: []
 priority: high
 type: chore
@@ -34,10 +33,10 @@ Once production leaves maintenance mode, register the site with Google Search Co
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The Search Console property is verified and the sitemap reads Success
-- [ ] #2 Indexing was requested for the key pages
-- [ ] #3 Bing Webmaster Tools has the site and sitemap
-- [ ] #4 Before requesting crawls, on production: http redirects to https, canonicals and hreflang point at production URLs, /sitemap.xml returns 200, and public pages carry no noindex
+- [x] #1 The Search Console property is verified and the sitemap reads Success
+- [x] #2 Indexing was requested for the key pages
+- [x] #3 Bing Webmaster Tools has the site and sitemap
+- [x] #4 Before requesting crawls, on production: http redirects to https, canonicals and hreflang point at production URLs, /sitemap.xml returns 200, and public pages carry no noindex
 <!-- AC:END -->
 
 ## Comments
@@ -49,6 +48,15 @@ created: 2026-10-20 10:26
 ---
 
 From docs/reviews/seo-audit.md: verify the deployed site before asking Google to crawl it.
+
+---
+
+author: @pi
+created: 2026-10-28 08:11
+
+---
+
+User confirmed Google/Bing setup complete. Indexing requested for /sv, /fi and /en; sitemap supplies remaining public URLs. Live checks after maintenance was disabled: all 57 sitemap URLs returned 200, self-canonicals and language alternates pointed to production, no noindex meta/header found; robots.txt permits Google/Bing and advertises the sitemap. HTTP redirects to HTTPS; / and /back-soon resolve to the Swedish storefront. Check Search Console and Bing indexing reports in about a week; indexing itself is not guaranteed by submission.
 
 ---
 <!-- COMMENTS:END -->
