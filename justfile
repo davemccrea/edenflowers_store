@@ -173,9 +173,9 @@ tail-logs:
 open-console:
     ssh -t edenflowers-production 'cd /opt/edenflowers_store && docker compose exec app /app/bin/edenflowers remote'
 
-# Print the open review notes left with Option+Click (`just review-comments local` reads the dev database)
+# Print the open review notes left with Option+Click (`just feedback local` reads the dev database)
 [group('production')]
-review-comments where="production":
+feedback where="production":
     #!/usr/bin/env bash
     set -euo pipefail
     if [ "{{ where }}" = local ]; then
@@ -186,5 +186,5 @@ review-comments where="production":
 
 # Mark review notes as dealt with in production. No backup first: it only sets their resolved_at
 [group('production')]
-resolve-review-comment +ids:
-    ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'for id <- ~w({{ ids }}), do: IO.puts(\"Resolved #{Edenflowers.Feedback.resolve_note!(id, actor: Edenflowers.Actors.system_actor()).id}\")'"
+resolve-feedback +numbers:
+    ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'for number <- ~w({{ numbers }}), do: IO.puts(\"Resolved ##{Edenflowers.Feedback.resolve_note!(number, actor: Edenflowers.Actors.system_actor()).number}\")'"

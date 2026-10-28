@@ -1,7 +1,7 @@
 defmodule Edenflowers.Feedback do
   @moduledoc """
   Entry point for review notes: comments reviewers leave on any element of the
-  site with Option+Click. There is no admin page for them; `just review-comments`
+  site with Option+Click. There is no admin page for them; `just feedback`
   prints the open ones from production and agents resolve them as they fix each.
   """
 
@@ -27,7 +27,7 @@ defmodule Edenflowers.Feedback do
     end
   end
 
-  @doc "The open notes as Markdown, oldest first, for `just review-comments`."
+  @doc "The open notes as Markdown, oldest first, for `just feedback`."
   def open_notes_markdown do
     case list_open_notes!(actor: Actors.system_actor(), load: [:author]) do
       [] -> "No open review notes."

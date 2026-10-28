@@ -28,7 +28,7 @@ defmodule Edenflowers.Feedback.Note do
     end
 
     read :open do
-      description "Notes nobody has resolved yet, oldest first, for `just review-comments`."
+      description "Notes nobody has resolved yet, oldest first, for `just feedback`."
       filter expr(is_nil(resolved_at))
       prepare build(sort: [inserted_at: :asc])
     end
@@ -108,7 +108,7 @@ defmodule Edenflowers.Feedback.Note do
 
     attribute :number, :integer do
       description "A short, stable number for the note, so you can tell an agent to work on comment 12 and " <>
-                    "run `just resolve-review-comment 12`. Postgres assigns it from a sequence."
+                    "run `just resolve-feedback 12`. Postgres assigns it from a sequence."
 
       generated? true
       writable? false
