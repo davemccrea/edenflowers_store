@@ -21,6 +21,7 @@ The domain is modelled in Ash. Put domain logic in the resources, the way the As
 
 ## Coding Standards
 
+- Before adding, changing or removing tests, read `docs/agents/testing.md`.
 - Only comment when the intent is non-obvious or complex. Never restate what the code does.
 - Do not leave dead code or commented-out blocks.
 - Optimise for readability and maintainability over DRY. More lines are fine if future-me understands them more easily.

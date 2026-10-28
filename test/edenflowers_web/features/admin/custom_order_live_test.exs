@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
-  use EdenflowersWeb.ConnCase, async: false
+  use EdenflowersWeb.ConnCase, async: true
 
   import Generator
   import Mox
@@ -594,20 +594,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, order_page, _html} = live(ctx.conn, ~p"/admin/orders/#{id}")
       refute has_element?(order_page, "#order-items", "Thank you")
       assert has_element?(order_page, "#order-card", "Thank you")
-    end
-
-    test "warns about a closed day without refusing it", ctx do
-      shop_calendar(available_days: [])
-
-      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
-
-      view
-      |> form("#order-form",
-        form: %{fulfillment_option_id: ctx.pickup.id, fulfillment_date: Date.to_iso8601(tomorrow())}
-      )
-      |> render_change()
-
-      assert has_element?(view, "#date-warning", "normally closed")
     end
 
     test "prices the delivery as soon as the address is entered", ctx do

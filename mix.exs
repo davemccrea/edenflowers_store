@@ -155,10 +155,12 @@ defmodule Edenflowers.MixProject do
       precommit: [
         &check_critical_advisories/1,
         "compile --warnings-as-errors",
+        "gettext.check",
         "ash.codegen --check",
         "deps.unlock --check-unused",
         "format --check-formatted",
         "credo --strict",
+        "cmd node --test test/js/*_test.mjs",
         "test"
       ]
     ]

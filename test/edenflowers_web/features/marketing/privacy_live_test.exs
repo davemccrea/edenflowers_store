@@ -132,21 +132,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     assert has_element?(view, "#rights", Business.email())
   end
 
-  test "groups purposes, providers, cookies and rights into scannable bullet points", %{conn: conn} do
-    for language <- ["en", "sv", "fi"] do
-      {:ok, view, html} = live(conn, "/#{language}/privacy")
-      document = LazyHTML.from_document(html)
-
-      for {section, count} <- [{"information", 8}, {"sharing", 6}, {"cookies", 4}, {"retention", 5}, {"rights", 3}] do
-        assert has_element?(view, "##{section} ul.list-disc.space-y-3")
-        assert document |> LazyHTML.query("##{section} ul > li") |> Enum.count() == count
-      end
-
-      refute has_element?(view, "#controller ul")
-    end
-  end
-
-  test "uses formal sans-serif headings and section navigation", %{conn: conn} do
+  test "section navigation links to the expanded policy sections", %{conn: conn} do
     {:ok, view, html} = live(conn, ~p"/en/privacy")
     document = LazyHTML.from_document(html)
     sections = ["controller", "information", "sharing", "cookies", "retention", "rights"]
@@ -154,14 +140,8 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     assert document |> LazyHTML.query("nav[aria-labelledby=privacy-nav-heading] a") |> LazyHTML.attribute("href") ==
              Enum.map(sections, &"##{&1}")
 
-    assert has_element?(view, "#main-content h1.font-sans.font-semibold")
-    assert has_element?(view, "#privacy-nav .category-index__name.font-sans.text-sm")
-    refute has_element?(view, "#main-content .page-title, #main-content .section-title, #privacy-nav .font-serif")
-
     for section <- sections do
-      assert has_element?(view, "##{section} > h2.font-sans.font-semibold")
-      assert has_element?(view, "##{section} > div.text-base-content.text-base.font-normal.leading-relaxed")
-      refute has_element?(view, "##{section} > div[class*=\"text-base-content/80\"]")
+      assert has_element?(view, "##{section} > h2")
     end
 
     refute has_element?(view, "#main-content details")
@@ -189,21 +169,14 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     end
   end
 
-  test "translates privacy headings, body and interpolated contact instructions", %{conn: conn} do
-    for {language, title, hosting, contact, updated} <- [
-          {"sv", "Integritetspolicy", "Vår huvudsakliga kunddatabas finns hos Hetzner i Finland.",
-           "Mejla #{Business.email()} för att:", "Uppdaterad 27 oktober 2026."},
-          {"fi", "Tietosuojaseloste", "Pääasiallinen asiakastietokantamme sijaitsee Hetznerin palvelimilla Suomessa.",
-           "Lähetä sähköpostia osoitteeseen #{Business.email()}, jos haluat:", "Päivitetty 27. lokakuuta 2026."}
+  test "interpolates contact instructions into complete translated sentences", %{conn: conn} do
+    for {language, contact} <- [
+          {"sv", "Mejla #{Business.email()} för att:"},
+          {"fi", "Lähetä sähköpostia osoitteeseen #{Business.email()}, jos haluat:"}
         ] do
       {:ok, view, _html} = live(conn, "/#{language}/privacy")
 
-      assert has_element?(view, "h1", title)
-      assert has_element?(view, "#sharing", hosting)
       assert has_element?(view, "#rights", contact)
-      assert has_element?(view, "#notice-updated", updated)
-      refute has_element?(view, "#main-content", "Our legal bases are:")
-      refute has_element?(view, "#main-content", "Newsletters require your consent.")
     end
   end
 

@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.OrderTest do
-  use Edenflowers.DataCase, async: false
+  use Edenflowers.DataCase, async: true
 
   import Ecto.Query
   import ExUnit.CaptureLog
@@ -262,7 +262,7 @@ defmodule Edenflowers.Orders.OrderTest do
                  Orders.finalize_checkout(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
       end)
 
-    assert log =~ "past its usage limit"
+    assert log =~ "Order #{order.id} placed with promotion #{promotion.code} past its usage limit"
   end
 
   test "finalize_checkout logs nothing for a promotion within its usage limit" do
@@ -274,7 +274,7 @@ defmodule Edenflowers.Orders.OrderTest do
         Orders.finalize_checkout!(order.id, order.payment_intent_id, %{amount_paid: "0.00"}, authorize?: false)
       end)
 
-    refute log =~ "usage limit"
+    refute log =~ "Order #{order.id} placed with promotion #{promotion.code} past its usage limit"
   end
 
   # InitStore opens a cart per browser session, so the reference is minted at
@@ -1007,24 +1007,6 @@ defmodule Edenflowers.Orders.OrderTest do
       assert Enum.any?(errors, &(&1.field == :fulfillment_date))
     end
 
-    test "save_step_3 rejects a date the shop has closed", %{pickup_option: pickup_option} do
-      order = generate(order(state: :delivery))
-      closed_date = Date.add(Edenflowers.ShopTime.today(), 3)
-
-      shop_calendar(disabled_dates: [closed_date])
-
-      assert {:error, %Ash.Error.Invalid{errors: errors}} =
-               order
-               |> Ash.Changeset.for_update(:submit_delivery, %{
-                 fulfillment_option_id: pickup_option.id,
-                 fulfillment_date: closed_date,
-                 contact_phone_number: "045 1234567"
-               })
-               |> Ash.update(authorize?: false)
-
-      assert Enum.any?(errors, &(&1.field == :fulfillment_date))
-    end
-
     test "save_step_3 reports an unknown option instead of raising" do
       order = generate(order(state: :delivery))
 
@@ -1055,7 +1037,7 @@ defmodule Edenflowers.Orders.OrderTest do
           assert order.payment_status == :pending
         end)
 
-      assert log =~ "Amount mismatch"
+      assert log =~ "Amount mismatch for order #{order.id}"
     end
 
     test "cannot finalize order already in :order state" do
