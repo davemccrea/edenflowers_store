@@ -130,10 +130,10 @@ provision *args:
 lint-infra:
     ansible-lint
 
-# Tag a release from main and deploy it (prompts for the version if not given)
+# Tag a release from main and deploy it: `just deploy [patch|minor|major] [--yes]` (--yes skips all prompts, defaults to patch)
 [group('production')]
-deploy version="":
-    ./scripts/deploy.sh {{ version }}
+deploy *args:
+    ./scripts/deploy.sh {{ args }}
 
 # Follow the latest deploy until it finishes
 [group('production')]
