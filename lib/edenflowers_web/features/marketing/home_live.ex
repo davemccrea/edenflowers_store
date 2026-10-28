@@ -214,10 +214,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           priority
           class="hero-zoom h-[90svh] w-full object-cover md:h-dvh"
         />
-        <%!-- On phones the headline lands on the pale clouds and bouquet, so a faint shade keeps the white text legible --%>
-        <div class="from-black/20 bg-linear-to-t pointer-events-none absolute inset-x-0 bottom-0 h-2/3 to-transparent md:hidden">
-        </div>
-
         <div class="container absolute inset-0 flex flex-col justify-end pb-16 sm:pb-28 md:pb-20">
           <h1 class="hero-display hero-focus max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
             <span class="sr-only">{~t"Flowers for every stage of life"}</span>
