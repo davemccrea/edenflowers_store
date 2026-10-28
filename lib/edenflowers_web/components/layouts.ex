@@ -975,19 +975,21 @@ defmodule EdenflowersWeb.Layouts do
             loading="lazy"
             class="mt-8 mb-8 w-28"
           />
-          <.footer_locale_picker current_path={@current_path} alternates={@alternates} current_locale={@current_locale} />
+          <div class="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
+            <.footer_locale_picker current_path={@current_path} alternates={@alternates} current_locale={@current_locale} />
 
-          <span class="text-xs">
-            © Eden Flowers {Edenflowers.ShopTime.now() |> Map.get(:year)} • {~t"Business ID:"}
-            <a
-              class="text-base-content link-underline-hover whitespace-nowrap"
-              href={"https://tietopalvelu.ytj.fi/yritys/#{Business.business_id()}"}
-              target="_blank"
-              rel="noopener"
-            >
-              {Business.business_id()}
-            </a>
-          </span>
+            <span class="text-xs">
+              © Eden Flowers {Edenflowers.ShopTime.now() |> Map.get(:year)} • {~t"Business ID:"}
+              <a
+                class="text-base-content link-underline-hover whitespace-nowrap"
+                href={"https://tietopalvelu.ytj.fi/yritys/#{Business.business_id()}"}
+                target="_blank"
+                rel="noopener"
+              >
+                {Business.business_id()}
+              </a>
+            </span>
+          </div>
         </div>
       </div>
     </footer>

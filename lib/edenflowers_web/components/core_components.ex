@@ -25,7 +25,8 @@ defmodule EdenflowersWeb.CoreComponents do
     "ghost" => "btn-ghost",
     "inverse" =>
       "btn-outline border-white/80 text-white [--focus-color:white] hover:border-white hover:bg-white hover:text-base-content focus-visible:border-white focus-visible:bg-white focus-visible:text-base-content",
-    "light" => "border-white bg-white text-base-content [--focus-color:white] hover:border-white/90 hover:bg-white/90",
+    "light" =>
+      "border-white/0 bg-white/90 text-base-content backdrop-blur-sm [--focus-color:white] hover:border-white hover:bg-white",
     "destructive" => "btn-error btn-outline"
   }
 
