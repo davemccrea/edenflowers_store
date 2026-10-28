@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
-  def mount(%{"id" => id}, %{"order_id" => order_id}, socket) do
+  def mount(%{"id" => id} = params, %{"order_id" => order_id}, socket) do
     product = get_product!(id)
 
     if connected?(socket),
@@ -51,7 +51,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)
      |> assign(photo_slug: selected_variant.photo_slug)
-     |> assign(subscribe?: if(cart_line, do: cart_line.interval_weeks != nil, else: false))
+     |> assign(
+       subscribe?:
+         if(cart_line,
+           do: cart_line.interval_weeks != nil,
+           else: product.subscribable and params["subscribe"] == "1"
+         )
+     )
      |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 1))
      |> assign(has_subscription?: has_subscription?(socket.assigns.current_user))
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
