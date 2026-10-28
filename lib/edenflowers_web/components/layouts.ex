@@ -112,6 +112,11 @@ defmodule EdenflowersWeb.Layouts do
   defp reviewer?(nil), do: false
   defp reviewer?(user), do: Edenflowers.Accounts.can_review?(user)
 
+  # Greets reviewers by name in the picker's one-time Option+Click hint.
+  defp reviewer_name(user) do
+    if reviewer?(user), do: Edenflowers.Accounts.first_name!(user)
+  end
+
   @doc """
   Renders the page's flash notices plus the connection-lost toasts, which
   LiveView reveals on disconnect and hides again on reconnect.
