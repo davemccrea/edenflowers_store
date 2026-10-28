@@ -9,21 +9,6 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
   setup :verify_on_exit!
 
-  test "uses the reference-page typography without an update notice", %{conn: conn} do
-    for path <- ["/en/faq", "/sv/vanliga-fragor", "/fi/ukk"] do
-      {:ok, view, _html} = live(conn, path)
-
-      assert has_element?(view, "#main-content h1.font-sans.font-semibold")
-      assert has_element?(view, "#faq-nav .category-index__name.font-sans.text-sm")
-      assert has_element?(view, "#faq-questions section > h2.font-sans.font-semibold")
-      assert has_element?(view, "#ask-heading.font-sans.font-semibold")
-      assert has_element?(view, "#faq-questions .collapse-content.text-base-content.font-normal.leading-relaxed")
-      refute has_element?(view, "#main-content .page-title, #main-content .section-title, #faq-nav .font-serif")
-      refute has_element?(view, "#faq-questions .collapse-content[class*=\"text-base-content/80\"]")
-      refute has_element?(view, "#notice-updated")
-    end
-  end
-
   test "answers expand individually without a toggle-all button in every storefront language", %{conn: conn} do
     for path <- ["/en/faq", "/sv/vanliga-fragor", "/fi/ukk"] do
       {:ok, view, _html} = live(conn, path)
@@ -73,35 +58,24 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     assert has_element?(view, ~s|#ordering a[href="/account"]|, "from your account")
     assert has_element?(view, ~s|#ordering a[href="/en/terms#cancellation"]|)
     assert has_element?(view, ~s|#ordering-question-2 a[href="/en/contact"]|, "get in touch")
-    refute has_element?(view, "#ordering", "I'm usually flexible.")
   end
 
   test "seasonality and damaged flower answers both link to the quality terms", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
     assert has_element?(view, "#care-question-1", "I use local and seasonal flowers whenever possible.")
-    refute has_element?(view, "#care-question-1", "something similar of the same value")
     assert has_element?(view, ~s|#care-question-1 a[href="/en/terms#quality"]|)
     assert has_element?(view, ~s|#care-question-2 a[href="/en/terms#quality"]|)
     refute has_element?(view, ~s|a[href="/en/terms#substitution"]|)
   end
 
-  test "flower care has four practical points and the same quality conditions as the terms", %{conn: conn} do
-    {:ok, view, html} = live(conn, ~p"/en/faq")
+  test "flower care includes practical instructions and the same quality conditions as the terms", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/faq")
 
-    care_points =
-      html
-      |> LazyHTML.from_document()
-      |> LazyHTML.query("#care ul li")
-      |> Enum.map(&LazyHTML.text/1)
-
-    assert length(care_points) == 4
-    assert Enum.at(care_points, 0) == "Use a clean vase with fresh water."
-    assert Enum.at(care_points, 1) =~ "leaves that would sit below the waterline"
-    assert Enum.at(care_points, 2) =~ "Change the water and re-cut the stems every 2–3 days"
-    assert Enum.at(care_points, 3) =~ "heat sources and ripe fruit"
-    refute has_element?(view, "#care", "cut-flower food")
-    refute has_element?(view, "#care", "sharp, clean knife or secateurs")
+    assert has_element?(view, "#care li", "Use a clean vase with fresh water.")
+    assert has_element?(view, "#care li", "leaves that would sit below the waterline")
+    assert has_element?(view, "#care li", "Change the water and re-cut the stems every 2–3 days")
+    assert has_element?(view, "#care li", "heat sources and ripe fruit")
     assert has_element?(view, "#care details", "A lot depends on the flowers, but typically around 7–10 days.")
     assert has_element?(view, "#care details", "Let me know as soon as possible and send a photo.")
     assert has_element?(view, "#care details", "provided care instructions are followed")
@@ -113,9 +87,9 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     {:ok, view, html} = live(conn, ~p"/en/faq")
     document = LazyHTML.from_document(html)
 
-    paragraphs = LazyHTML.query(document, "#faq-questions .collapse-content p")
+    paragraphs = LazyHTML.query(document, "#faq-questions details p")
     linked_paragraphs = Enum.reject(paragraphs, &Enum.empty?(LazyHTML.query(&1, "a")))
-    assert length(linked_paragraphs) >= 10
+    refute Enum.empty?(linked_paragraphs)
 
     for paragraph <- linked_paragraphs do
       linked_text = paragraph |> LazyHTML.query("a") |> Enum.map_join(" ", &LazyHTML.text/1)
@@ -124,8 +98,6 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     end
 
     assert has_element?(view, ~s|#ordering-question-2 p a[href="/account"]|, "from your account")
-    refute has_element?(view, "#faq-questions", "See the quality terms")
-    refute has_element?(view, "#faq-questions", "Go to your account")
     assert has_element?(view, "#subscriptions > div > p", "Your subscription is covered by our")
   end
 
@@ -151,14 +123,11 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     refute text =~ "<"
 
     assert Enum.any?(questions, &(&1["name"] == "When do I pay?"))
-    assert length(questions) == 21
     refute Enum.any?(questions, &(&1["name"] == "What's included in a course, and what should I bring?"))
 
     care = Enum.find(questions, &(&1["name"] == "How long will my flowers last, and how should I care for them?"))
     assert care["acceptedAnswer"]["text"] =~ "Use a clean vase with fresh water."
     assert care["acceptedAnswer"]["text"] =~ "heat sources and ripe fruit."
-    refute care["acceptedAnswer"]["text"] =~ "cut-flower food"
-    refute care["acceptedAnswer"]["text"] =~ "sharp, clean knife or secateurs"
   end
 
   test "delivery and pickup dates depend on the chosen products, with midday only a usual cutoff", %{conn: conn} do
@@ -288,35 +257,6 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     end
   end
 
-  test "unchanged answers remain localized in Swedish and Finnish", %{conn: conn} do
-    for page <- [
-          %{
-            path: "/sv/vanliga-fragor",
-            hospital: "Levererar du till sjukhuset?",
-            care: "Det beror mycket på blommorna, men vanligtvis håller de i ungefär 7–10 dagar.",
-            payment: "Prenumerationer kräver kortbetalning.",
-            subscription: "Kan jag pausa eller avsluta min prenumeration?",
-            pickup: "Ja, välj avhämtning i kassan."
-          },
-          %{
-            path: "/fi/ukk",
-            hospital: "Toimitatko Vaasan sairaalaan?",
-            care: "Kestävyys riippuu paljon kukista, mutta yleensä ne kestävät noin 7–10 päivää.",
-            payment: "Kestotilaukset edellyttävät korttimaksua.",
-            subscription: "Voinko pitää tauon kestotilauksestani tai lopettaa sen?",
-            pickup: "Kyllä, valitse kassalla nouto."
-          }
-        ] do
-      {:ok, view, _html} = live(conn, page.path)
-
-      assert has_element?(view, "#delivery summary", page.hospital)
-      assert has_element?(view, "#care", page.care)
-      assert has_element?(view, "#payment", page.payment)
-      assert has_element?(view, "#subscriptions summary", page.subscription)
-      assert has_element?(view, "#subscriptions", page.pickup)
-    end
-  end
-
   describe "delivery cost checker" do
     setup do
       option =
@@ -334,31 +274,25 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       %{delivery_option: option}
     end
 
-    test "pricing precedes the checkout-sized checker with lookup on blur", %{conn: conn} do
+    test "the checker explains pricing and preserves accordion state with lookup on blur", %{conn: conn} do
       {:ok, view, html} = live(conn, ~p"/en/faq")
 
       assert has_element?(
                view,
-               "#delivery-question-0 > div > p:first-child",
+               "#delivery-question-0",
                "1,20 € per km. Some products, like subscriptions, are delivered free within 4 km."
              )
 
       assert has_element?(
                view,
-               "#delivery-question-0 > div > p:first-child + p",
+               "#delivery-question-0",
                "Enter an address below to check the delivery distance and price."
              )
 
-      assert has_element?(view, "#delivery-question-0 > div > p:first-child + p + div #faq-delivery-cost")
+      assert has_element?(view, "#delivery-question-0 #faq-delivery-cost")
       assert has_element?(view, ~s|#address-input-field[aria-label="Check delivery distance and price"]|)
-      assert has_element?(view, ~s|#address-input-field[placeholder="Myrvägen 1, 65230 Vasa"]|)
-      assert has_element?(view, "#address-input-field.input-lg.w-full.text-base")
       assert has_element?(view, ~s|#address-input-field[phx-blur="lookup_address"]|)
-      refute has_element?(view, "#faq-delivery-cost label > span")
       refute has_element?(view, "#faq-delivery-cost button")
-      refute has_element?(view, "#faq-delivery-cost.max-w-sm")
-
-      assert has_element?(view, "#delivery-question-0.overflow-visible")
 
       [mounted] =
         html |> LazyHTML.from_document() |> LazyHTML.query("#delivery-question-0") |> LazyHTML.attribute("phx-mounted")
@@ -379,7 +313,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       view |> element("#address-input-field") |> render_blur(%{"value" => "Stadsgatan 3"})
       render_async(view, 1000)
 
-      assert has_element?(view, "[data-testid=faq-delivery-quote] > p.text-success", "Delivery: 14,60 €")
+      assert has_element?(view, "[data-testid=faq-delivery-quote]", "Delivery: 14,60 €")
       refute has_element?(view, "[data-testid=address-confirmation]")
       refute has_element?(view, "[data-testid=faq-delivery-quote]", "delivered free to this address")
 

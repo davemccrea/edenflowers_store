@@ -44,6 +44,10 @@ const fixture = ({
     replaceWith() {},
     innerText: "Lisää ostoskoriin",
     outerHTML: "",
+    cloneNode(deep) {
+      assert.equal(deep, false);
+      return { outerHTML: `<${tag}></${tag}>` };
+    },
     style: {
       properties: {},
       setProperty(name, value) {
@@ -418,6 +422,29 @@ test("a reviewer's box looks up the element's strings and saves them with the no
   assert.deepEqual(request("/review-notes").body.strings, [
     { domain: "storefront", msgctxt: null, msgid: "Add to cart" },
   ]);
+});
+
+test("a saved note includes the picked tag without its child markup", async () => {
+  const { fire, overlays, requests, child } = fixture({
+    dev: false,
+    reviewer: true,
+  });
+  const ownTag = '<span id="order-summary" class="summary"></span>';
+  child.outerHTML =
+    '<span id="order-summary" class="summary"><strong>Customer details</strong></span>';
+  child.cloneNode = (deep) => {
+    assert.equal(deep, false);
+    return { outerHTML: ownTag };
+  };
+
+  await fire("click");
+  overlays.find((node) => node.tagName === "TEXTAREA").value = "Adjust this";
+  await overlays
+    .find((node) => node.tagName === "FORM")
+    .on.submit({ preventDefault() {} });
+
+  const saved = requests.find((request) => request.url === "/review-notes");
+  assert.equal(saved.body.element_html, ownTag);
 });
 
 test("holding Option outlines the page's open notes with their text", async () => {

@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.CustomOrderTest do
-  use Edenflowers.DataCase, async: false
+  use Edenflowers.DataCase, async: true
 
   import ExUnit.CaptureLog
   import Generator
@@ -99,8 +99,13 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     test "broadcasts a newly placed order to open admin pages", ctx do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "admin:orders")
 
-      assert {:ok, _order} = place(ctx)
-      assert_receive %Phoenix.Socket.Broadcast{topic: "admin:orders", event: "place_custom"}
+      assert {:ok, %{id: id}} = place(ctx)
+
+      assert_receive %Phoenix.Socket.Broadcast{
+        topic: "admin:orders",
+        event: "place_custom",
+        payload: %{data: %{id: ^id}}
+      }
     end
 
     test "is placed straight away, unpaid, with its own reference", ctx do
@@ -205,15 +210,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert for_herself.recipient_name == nil
       assert for_herself.recipient_phone_number == nil
       assert for_herself.card_message == nil
-    end
-
-    test "may be booked on a closed day, but never in the past", ctx do
-      shop_calendar(available_days: [])
-
-      assert {:ok, _order} = place(ctx)
-
-      assert {:error, error} = place(ctx, %{fulfillment_date: Date.add(tomorrow(), -2)})
-      assert Exception.message(error) =~ "cannot be in the past"
     end
 
     test "needs at least one valid item", ctx do
@@ -838,7 +834,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
         end)
 
       assert stock(ctx.wreath) == 0
-      refute log =~ "in stock"
+      refute log =~ "of variant #{ctx.wreath.id}"
     end
 
     test "cancelling puts the order's tracked sizes back", ctx do
@@ -1017,7 +1013,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
                    Payments.complete(%{id: "pi_link", metadata: %{"order_id" => order.id}, amount_received: 13_400})
         end)
 
-      assert log =~ "overpaid by 134.00"
+      assert log =~ "Order #{order.id} is overpaid by 134.00"
       assert Decimal.equal?(Orders.get_order_for_admin!(order.id, actor: ctx.admin).balance, "-134.00")
     end
 

@@ -21,10 +21,16 @@ dev: check-typst start-imgproxy
     # Photo URLs use the Tailscale IP so they load on other devices too; localhost when Tailscale is down
     PORT={{ port }} IMGPROXY_PREFIX=http://$(tailscale ip -4 2>/dev/null || echo localhost):{{ imgproxy_port }} $([ -t 0 ] && echo iex -S) mix phx.server
 
-# Run the test suite (extra args go to mix test)
+# Run both suites with no args; extra args run only the focused Elixir suite
 [group('development')]
 test *args: check-typst
+    {{ if args == "" { "just test-js" } else { "true" } }}
     mix test {{ args }}
+
+# Run the JavaScript contracts without Mix or database setup
+[group('development')]
+test-js:
+    node --test test/js/*_test.mjs
 
 # Write tmp/emails.md: Claude's map of when each email is sent, then every email in every language
 [group('development')]

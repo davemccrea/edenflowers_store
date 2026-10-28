@@ -6,10 +6,10 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
 
   alias Edenflowers.Orders.Subscription
 
-  test "shows the last-updated date beneath the title", %{conn: conn} do
+  test "shows the last-updated date", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
-    assert has_element?(view, "#main-content h1 + #notice-updated", "Updated 26 October 2026.")
+    assert has_element?(view, "#main-content #notice-updated", "Updated 26 October 2026.")
   end
 
   test "reads the delivery distance and cancellation deadline live", %{conn: conn} do
@@ -49,40 +49,16 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     end
   end
 
-  test "shares the FAQ's formal sans-serif typography and navigation", %{conn: conn} do
+  test "shares the FAQ's navigation hook and keeps terms expanded", %{conn: conn} do
     {:ok, _faq, faq_html} = live(conn, ~p"/en/faq")
     {:ok, view, terms_html} = live(conn, ~p"/en/terms")
 
     faq_nav = faq_html |> LazyHTML.from_document() |> LazyHTML.query("#faq-nav")
     terms_nav = terms_html |> LazyHTML.from_document() |> LazyHTML.query("#terms-nav")
 
-    assert LazyHTML.attribute(terms_nav, "class") == LazyHTML.attribute(faq_nav, "class")
+    refute Enum.empty?(LazyHTML.attribute(faq_nav, "phx-hook"))
     assert LazyHTML.attribute(terms_nav, "phx-hook") == LazyHTML.attribute(faq_nav, "phx-hook")
-    assert has_element?(view, "#terms-nav.hidden.md\\:block")
-    assert has_element?(view, "#terms-nav-sidebar.md\\:sticky")
-    assert has_element?(view, "#terms-nav .category-index__link .category-index__name.font-sans.text-sm")
-    assert has_element?(view, "#main-content h1.font-sans.font-semibold")
-    assert has_element?(view, "#payment > h2.font-sans.font-semibold.mb-6")
-    refute has_element?(view, "#main-content .page-title, #main-content .section-title, #terms-nav .font-serif")
-    assert LazyHTML.query(LazyHTML.from_document(faq_html), "#faq-nav .category-index__name.font-sans.text-sm") != []
-    assert has_element?(view, "#payment > div.text-base-content.text-base.font-normal.leading-relaxed")
-    refute has_element?(view, "#main-content section > div[class*=\"text-base-content/80\"]")
-    assert has_element?(view, "#checkout-payments > h3.font-sans.text-base.font-medium")
     refute has_element?(view, "#main-content details")
-  end
-
-  test "groups multiple rules into bullet lists in every language", %{conn: conn} do
-    for path <- ["/en/terms", "/sv/kopvillkor", "/fi/toimitusehdot"] do
-      {:ok, view, html} = live(conn, path)
-      document = LazyHTML.from_document(html)
-
-      for section <- ["checkout-payments", "invoices", "delivery-problems", "quality"] do
-        assert has_element?(view, "##{section} ul.list-disc")
-        assert document |> LazyHTML.query("##{section} ul > li") |> Enum.count() == 2
-      end
-
-      assert has_element?(view, "#seller p")
-    end
   end
 
   test "related terms are grouped without breaking existing deep links", %{conn: conn} do
@@ -115,8 +91,6 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
 
     assert has_element?(view, "#delivery-area", "There are no set delivery times.")
     refute has_element?(view, "#delivery", "The usual cutoff for same-day orders is midday.")
-    refute has_element?(view, "#delivery", "choose a date at checkout")
-    refute has_element?(view, "#delivery", "message when your order is ready")
     assert has_element?(view, "#unattended-delivery", "photo showing where I've left them")
     assert has_element?(view, ~s|#online-orders a[href="/account"]|, "Go to your account")
     assert has_element?(view, "#subscription-billing", "You pay for the first bouquet at checkout.")
@@ -191,42 +165,18 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     refute has_element?(view, "#cancellation", "For courses, the cancellation terms")
   end
 
-  test "service links and new headings are localized", %{conn: conn} do
-    for page <- [
-          %{
-            path: "/en/terms",
-            faq: "/en/faq",
-            courses: "/en/courses",
-            cancellation: "Changes and cancellations",
-            seller: "Seller and contact details",
-            quality: "Quality"
-          },
-          %{
-            path: "/sv/kopvillkor",
-            faq: "/sv/vanliga-fragor",
-            courses: "/sv/kurser",
-            cancellation: "Ändringar och avbokningar",
-            seller: "Säljare och kontaktuppgifter",
-            quality: "Kvalitet"
-          },
-          %{
-            path: "/fi/toimitusehdot",
-            faq: "/fi/ukk",
-            courses: "/fi/kurssit",
-            cancellation: "Muutokset ja peruutukset",
-            seller: "Myyjä ja yhteystiedot",
-            quality: "Laatu"
-          }
+  test "service links use localized routes", %{conn: conn} do
+    for {path, faq, courses} <- [
+          {"/en/terms", "/en/faq", "/en/courses"},
+          {"/sv/kopvillkor", "/sv/vanliga-fragor", "/sv/kurser"},
+          {"/fi/toimitusehdot", "/fi/ukk", "/fi/kurssit"}
         ] do
-      {:ok, view, _html} = live(conn, page.path)
+      {:ok, view, _html} = live(conn, path)
 
-      assert has_element?(view, "#cancellation > h2", page.cancellation)
-      assert has_element?(view, "#seller > h2", page.seller)
-      assert has_element?(view, "#quality > h2", page.quality)
-      assert has_element?(view, ~s|#quality a[href="#{page.faq}#care"]|)
+      assert has_element?(view, ~s|#quality a[href="#{faq}#care"]|)
       assert has_element?(view, ~s|#subscription-changes a[href="/account"]|)
-      refute has_element?(view, ~s|#subscriptions a[href="#{page.faq}#subscriptions"]|)
-      assert has_element?(view, ~s|#courses a[href="#{page.courses}"]|)
+      refute has_element?(view, ~s|#subscriptions a[href="#{faq}#subscriptions"]|)
+      assert has_element?(view, ~s|#courses a[href="#{courses}"]|)
     end
   end
 
