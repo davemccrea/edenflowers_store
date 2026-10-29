@@ -22,12 +22,12 @@ msgstr "%{count} stjälkar"
 msgid "%{name} card"
 msgstr "%{name}-kort"
 
-#: lib/edenflowers_web/components/core_components.ex:938
+#: lib/edenflowers_web/components/core_components.ex:943
 #, elixir-autogen, elixir-format
 msgid "(opens a larger view)"
 msgstr "(öppnas i större format)"
 
-#: lib/edenflowers_web/components/core_components.ex:1096
+#: lib/edenflowers_web/components/core_components.ex:1101
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr "Varukorgen, tom"
@@ -42,22 +42,22 @@ msgstr "Anslutningen bröts"
 msgid "Dimensions (cm)"
 msgstr "Mått (cm)"
 
-#: lib/edenflowers_web/components/core_components.ex:1026
+#: lib/edenflowers_web/components/core_components.ex:1031
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Facebook"
 msgstr "Eden Flowers på Facebook"
 
-#: lib/edenflowers_web/components/core_components.ex:1035
+#: lib/edenflowers_web/components/core_components.ex:1040
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Instagram"
 msgstr "Eden Flowers på Instagram"
 
-#: lib/edenflowers_web/components/core_components.ex:984
+#: lib/edenflowers_web/components/core_components.ex:989
 #, elixir-autogen, elixir-format
 msgid "Free delivery"
 msgstr "Gratis leverans"
 
-#: lib/edenflowers_web/components/core_components.ex:994
+#: lib/edenflowers_web/components/core_components.ex:999
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr "Från"
@@ -72,12 +72,12 @@ msgstr "Höjd (cm)"
 msgid "Language"
 msgstr "Språk"
 
-#: lib/edenflowers_web/components/core_components.ex:1295
+#: lib/edenflowers_web/components/core_components.ex:1300
 #, elixir-autogen, elixir-format
 msgid "Large"
 msgstr "Stor"
 
-#: lib/edenflowers_web/components/core_components.ex:1294
+#: lib/edenflowers_web/components/core_components.ex:1299
 #, elixir-autogen, elixir-format
 msgid "Medium"
 msgstr "Medel"
@@ -112,12 +112,12 @@ msgstr "Föregående månad"
 msgid "Reconnecting…"
 msgstr "Återansluter…"
 
-#: lib/edenflowers_web/components/core_components.ex:1293
+#: lib/edenflowers_web/components/core_components.ex:1298
 #, elixir-autogen, elixir-format
 msgid "Small"
 msgstr "Liten"
 
-#: lib/edenflowers_web/components/core_components.ex:997
+#: lib/edenflowers_web/components/core_components.ex:1002
 #, elixir-autogen, elixir-format
 msgid "Sold out"
 msgstr "Slutsåld"
@@ -137,7 +137,7 @@ msgstr "Vikt (g)"
 msgid "at %{time}"
 msgstr "kl. %{time}"
 
-#: lib/edenflowers_web/components/core_components.ex:125
+#: lib/edenflowers_web/components/core_components.ex:130
 #, elixir-autogen, elixir-format
 msgid "close"
 msgstr "stäng"
@@ -179,7 +179,7 @@ msgstr "Stäng navigeringsmenyn"
 msgid "Open navigation menu"
 msgstr "Öppna navigeringsmeny"
 
-#: lib/edenflowers_web/components/core_components.ex:1014
+#: lib/edenflowers_web/components/core_components.ex:1019
 #, elixir-autogen, elixir-format
 msgid "Free delivery within %{km} km of Minimossen on marked bouquets."
 msgstr "Gratis leverans inom %{km} km från Minimossen för märkta buketter."

@@ -3927,7 +3927,7 @@ msgstr "sinun@sahkoposti.fi"
 msgid "•••• %{last4}, expires %{expiry}"
 msgstr "•••• %{last4}, voimassa %{expiry}"
 
-#: lib/edenflowers_web/components/core_components.ex:1092
+#: lib/edenflowers_web/components/core_components.ex:1097
 #, elixir-autogen, elixir-format
 msgid "Cart, %{count} item"
 msgid_plural "Cart, %{count} items"
@@ -4025,11 +4025,6 @@ msgstr "Hääkukat Vaasassa ja Mustasaaressa: hääkimput, koristelu ja kukkakaa
 msgid "Favourite bouquets"
 msgstr "Suosikkikimput"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:210
-#, elixir-autogen, elixir-format
-msgid "the weekend"
-msgstr "viikonloppuun"
-
 #: lib/edenflowers_web/features/marketing/home_live.ex:727
 #, elixir-autogen, elixir-format
 msgid "From"
@@ -4062,3 +4057,8 @@ msgstr "Seuraava toimitus tai nouto on huomenna"
 #, elixir-autogen, elixir-format
 msgid "Order by %{time} for delivery or pickup today"
 msgstr "Tilaa klo %{time} mennessä, niin toimitus tai nouto onnistuu tänään"
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:210
+#, elixir-autogen, elixir-format
+msgid "a cosy weekend"
+msgstr "kodikkaaseen viikonloppuun"

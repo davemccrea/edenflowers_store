@@ -3927,7 +3927,7 @@ msgstr ""
 msgid "•••• %{last4}, expires %{expiry}"
 msgstr ""
 
-#: lib/edenflowers_web/components/core_components.ex:1092
+#: lib/edenflowers_web/components/core_components.ex:1097
 #, elixir-autogen, elixir-format
 msgid "Cart, %{count} item"
 msgid_plural "Cart, %{count} items"
@@ -4025,11 +4025,6 @@ msgstr ""
 msgid "Favourite bouquets"
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:210
-#, elixir-autogen, elixir-format
-msgid "the weekend"
-msgstr ""
-
 #: lib/edenflowers_web/features/marketing/home_live.ex:727
 #, elixir-autogen, elixir-format
 msgid "From"
@@ -4061,4 +4056,9 @@ msgstr ""
 #: lib/edenflowers_web/hooks/put_notice_bar.ex:47
 #, elixir-autogen, elixir-format
 msgid "Order by %{time} for delivery or pickup today"
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/home_live.ex:210
+#, elixir-autogen, elixir-format
+msgid "a cosy weekend"
 msgstr ""
