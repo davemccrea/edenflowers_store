@@ -591,7 +591,7 @@ defmodule EdenflowersWeb.Layouts do
 
   attr :current_user, :map, required: true
   attr :flash, :map, required: true
-  attr :order, :map, required: true
+  attr :order, :any, required: true, doc: "the browser's cart, nil until its first add"
   attr :current_path, :string, required: true
   attr :alternates, :map, default: %{}
   attr :notice_bar, :string, default: nil
@@ -602,6 +602,7 @@ defmodule EdenflowersWeb.Layouts do
 
     assigns =
       assigns
+      |> assign(cart_count: if(assigns.order, do: assigns.order.total_items_in_cart, else: 0))
       |> assign(
         nav: [
           {~q"/#{language}/store", ~t"Store"},
@@ -786,17 +787,17 @@ defmodule EdenflowersWeb.Layouts do
               </.locale_picker>
 
               <.cart_count_badge
-                count={@order.total_items_in_cart}
+                count={@cart_count}
                 phx-click={JS.exec("phx-show", to: "#cart-drawer")}
               >
                 <.icon
                   class="text-base-content h-5 w-5 group-hover:text-base-content/60"
                   name="hero-shopping-bag"
                 />
-                <%= if @order.total_items_in_cart > 0 do %>
+                <%= if @cart_count > 0 do %>
                   <span class="absolute top-0 right-0 lg:hidden" aria-hidden="true">
                     <div class="bg-primary text-primary-content border-base-100 text-[10px] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 font-semibold leading-none">
-                      {@order.total_items_in_cart}
+                      {@cart_count}
                     </div>
                   </span>
                 <% end %>
@@ -804,8 +805,8 @@ defmodule EdenflowersWeb.Layouts do
                   class="text-base-content hidden text-sm group-hover:text-base-content/60 lg:inline-flex"
                   aria-hidden="true"
                 >
-                  <%= if @order.total_items_in_cart > 0 do %>
-                    {~t"Cart"} ({@order.total_items_in_cart})
+                  <%= if @cart_count > 0 do %>
+                    {~t"Cart"} ({@cart_count})
                   <% else %>
                     {~t"Cart"}
                   <% end %>

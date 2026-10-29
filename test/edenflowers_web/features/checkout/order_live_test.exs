@@ -157,9 +157,9 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     test "sees their order when the webhook placed it before Stripe's redirect", %{conn: conn} do
       order = placed_order(paid: true)
 
-      conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
+      conn = conn |> with_cart(order) |> get(~p"/checkout/complete/#{order.id}")
       assert redirected_to(conn) == ~p"/order/#{order.id}"
-      refute get_session(conn, :order_id) == order.id
+      assert browser_cart(conn) == nil
 
       {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
       assert has_element?(view, "h1", "Thank you")
@@ -168,8 +168,8 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     test "waits for the webhook when Stripe's redirect arrives first", %{conn: conn} do
       order = placed_order(state: :payment, ordered_at: nil)
 
-      conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/checkout/complete/#{order.id}")
-      refute get_session(conn, :order_id) == order.id
+      conn = conn |> with_cart(order) |> get(~p"/checkout/complete/#{order.id}")
+      assert browser_cart(conn) == nil
 
       {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
       assert has_element?(view, "h1", "Thank you")
@@ -187,12 +187,12 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
 
       conn =
         conn
-        |> Plug.Test.init_test_session(%{order_id: order.id})
+        |> with_cart(order)
         |> get(~p"/checkout/complete/#{order.id}?redirect_status=failed")
 
       assert redirected_to(conn) == ~p"/checkout"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "didn't go through"
-      assert get_session(conn, :order_id) == order.id
+      assert browser_cart(conn).id == order.id
       assert Ash.reload!(order, authorize?: false).state == :payment
     end
 
@@ -200,12 +200,14 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       order = placed_order(paid: true)
       cart = generate(order())
 
-      conn = conn |> Plug.Test.init_test_session(%{order_id: cart.id}) |> get(~p"/checkout/complete/#{order.id}")
-      assert get_session(conn, :order_id) == cart.id
+      conn = conn |> with_cart(cart) |> get(~p"/checkout/complete/#{order.id}")
+      assert browser_cart(conn).id == cart.id
 
       assert {:error, {:redirect, %{to: to}}} = live(conn, ~p"/order/#{order.id}")
       assert to =~ "/sign-in?return_to="
       assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
     end
   end
+
+  defp browser_cart(conn), do: Orders.get_storefront_cart!(get_session(conn, :visitor_id), authorize?: false)
 end

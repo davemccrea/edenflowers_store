@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
       {:ok, %{id: "pi_test", client_secret: "pi_test_secret"}}
     end)
 
-    conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+    conn = with_cart(conn, order)
 
     %{conn: conn, order: order, delivery_option: delivery_option}
   end
@@ -195,7 +195,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutAddressLiveTest do
 
       seed_confirmed_address(order, delivery_option)
 
-      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      conn = with_cart(conn, order)
       {:ok, _view, html} = live(conn, ~p"/checkout")
 
       assert html =~ ~s(data-testid="input-confirmed")

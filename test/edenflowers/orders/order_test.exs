@@ -237,12 +237,44 @@ defmodule Edenflowers.Orders.OrderTest do
     refute log =~ "Order #{order.id} placed with promotion #{promotion.code} past its usage limit"
   end
 
-  # InitStore opens a cart per browser session, so the reference is minted at
-  # placement rather than at creation.
+  # Most carts are never placed, so the reference is minted at placement
+  # rather than at creation.
   test "a cart created for checkout carries no order reference" do
     assert {:ok, cart} = Orders.create_for_checkout(authorize?: false)
     assert cart.state == :contact_details
     refute cart.order_reference
+  end
+
+  describe "a browser's cart" do
+    test "two tabs adding at once share one cart" do
+      visitor_id = Ecto.UUID.generate()
+
+      first = Orders.create_for_checkout!(%{visitor_id: visitor_id}, authorize?: false)
+      second = Orders.create_for_checkout!(%{visitor_id: visitor_id}, authorize?: false)
+
+      assert second.id == first.id
+      assert Orders.get_storefront_cart!(visitor_id, authorize?: false).id == first.id
+    end
+
+    test "once placed, the next add opens a new cart" do
+      visitor_id = Ecto.UUID.generate()
+      placed = Orders.create_for_checkout!(%{visitor_id: visitor_id}, authorize?: false)
+      Ash.Seed.update!(placed, %{state: :placed})
+
+      assert Orders.get_storefront_cart!(visitor_id, authorize?: false) == nil
+      refute Orders.create_for_checkout!(%{visitor_id: visitor_id}, authorize?: false).id == placed.id
+    end
+
+    test "only the browser whose cart it is can release it" do
+      visitor_id = Ecto.UUID.generate()
+      cart = Orders.create_for_checkout!(%{visitor_id: visitor_id}, authorize?: false)
+
+      assert {:error, _} = Orders.release_cart(cart.id, Ecto.UUID.generate(), authorize?: false)
+      assert Orders.get_storefront_cart!(visitor_id, authorize?: false).id == cart.id
+
+      assert {:ok, _} = Orders.release_cart(cart.id, visitor_id, authorize?: false)
+      assert Orders.get_storefront_cart!(visitor_id, authorize?: false) == nil
+    end
   end
 
   describe "Gift flow validation" do

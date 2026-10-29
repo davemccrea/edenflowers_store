@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <%= if Enum.any?(@order.line_items) do %>
+      <%= if @order != nil and Enum.any?(@order.line_items) do %>
         <ul class="flex flex-col gap-5">
           <li :for={line_item <- @order.line_items} class="flex flex-row gap-3 text-base sm:gap-4">
             <%= if not line_item.is_card do %>

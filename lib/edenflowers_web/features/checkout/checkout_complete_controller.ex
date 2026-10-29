@@ -5,14 +5,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutCompleteController do
 
   use EdenflowersWeb, :controller
 
+  alias Edenflowers.Orders
+
   # Stripe redirects the customer here from `confirmPayment` once the payment
   # method is processed. The webhook is the source of truth for payment status,
   # so this action only forwards to the order page — which enforces its own
   # access policy on placed orders.
   #
   # A guest's access to their order comes from the cart in their session. If the
-  # webhook has already placed the order, `InitStore` granted it on this request;
-  # otherwise the cart is still here, and is claimed below.
+  # webhook has already placed the order, it is no longer the cart and the order
+  # page grants it by its visitor_id; otherwise the cart is released below.
   #
   # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
   # when the customer cancels or is declined in the app. The PaymentIntent is
@@ -29,14 +31,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutCompleteController do
     |> redirect(to: ~p"/order/#{order_id}")
   end
 
-  # Only the cart being completed: a cross-site link here must not empty someone's cart.
+  # release_cart refuses an order that isn't this browser's cart, so a
+  # cross-site link here can't empty someone's cart.
   defp claim_cart(conn, order_id) do
-    if get_session(conn, :order_id) == order_id do
-      conn
-      |> delete_session(:order_id)
-      |> put_session(:guest_order_id, order_id)
-    else
-      conn
+    case Orders.release_cart(order_id, get_session(conn, :visitor_id), actor: conn.assigns[:current_user]) do
+      {:ok, _order} -> put_session(conn, :guest_order_id, order_id)
+      {:error, _error} -> conn
     end
   end
 end

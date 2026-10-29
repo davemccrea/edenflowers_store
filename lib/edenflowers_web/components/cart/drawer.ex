@@ -1,6 +1,7 @@
 defmodule EdenflowersWeb.Cart.Drawer do
   @moduledoc """
-  The cart drawer shown across the storefront, with the current order lines and checkout entry point.
+  The cart drawer shown across the storefront, with the current order lines and checkout entry point. `order` is
+  nil until the browser's first add to cart, and the drawer then shows an empty cart.
   """
 
   use EdenflowersWeb, :live_component
@@ -22,7 +23,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
       >
         <header class="flex flex-row items-center justify-between gap-4 pt-6 pr-4 pl-4 sm:pt-8 sm:pl-8">
           <h2 class="section-title">
-            <%= if @order.total_items_in_cart > 0 do %>
+            <%= if @order != nil and @order.total_items_in_cart > 0 do %>
               {~t"Cart"} ({@order.total_items_in_cart})
             <% else %>
               {~t"Cart"}
@@ -41,7 +42,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
             order={@order}
           />
 
-          <div :if={@order.add_ons_only?} class="flex flex-col gap-3">
+          <div :if={@order != nil and @order.add_ons_only?} class="flex flex-col gap-3">
             <p class="text-base-content/70 text-sm">
               {~t"Add-ons are sold with flowers. Add a bouquet to check out."}
             </p>
@@ -51,7 +52,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
           </div>
 
           <.button
-            :if={Enum.any?(@order.line_items) and not @order.add_ons_only?}
+            :if={@order != nil and Enum.any?(@order.line_items) and not @order.add_ons_only?}
             navigate={~p"/checkout"}
             variant="primary"
             phx-click={JS.exec("phx-hide", to: "#cart-drawer")}
@@ -60,7 +61,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
           </.button>
 
           <.live_component
-            :if={Enum.any?(@order.line_items)}
+            :if={@order != nil and Enum.any?(@order.line_items)}
             id="cart-drawer-promo"
             module={EdenflowersWeb.Cart.PromoCode}
             order={@order}

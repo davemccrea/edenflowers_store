@@ -8,7 +8,7 @@ defmodule EdenflowersWeb.Checkout.PickupCalendarController do
   alias EdenflowersWeb.Checkout.OrderLive
 
   def show(conn, %{"id" => id}) do
-    case OrderLive.get_order(id, get_session(conn, :guest_order_id), conn.assigns[:current_user]) do
+    case OrderLive.get_order(id, get_session(conn), conn.assigns[:current_user]) do
       {:ok, %{state: :placed, fulfillment_method: :pickup} = order} ->
         send_download(conn, {:binary, ics(order)},
           filename: "eden-flowers-pickup.ics",

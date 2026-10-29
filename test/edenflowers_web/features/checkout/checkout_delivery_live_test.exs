@@ -46,7 +46,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       {:ok, mock_payment_intent}
     end)
 
-    conn = Plug.Test.init_test_session(conn, %{order_id: step_3_order.id})
+    conn = with_cart(conn, step_3_order)
 
     %{conn: conn, step_3_order: step_3_order, delivery_option: delivery_option}
   end
@@ -86,7 +86,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
         {:ok, %{id: "pi_sub", client_secret: "pi_sub_secret", setup_future_usage: "off_session"}}
       end)
 
-      {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+      {:ok, view, _html} = live(with_cart(conn, order), ~p"/checkout")
 
       assert has_element?(view, "#checkout-line-items [data-testid=line-item-interval]", "Every 2 weeks")
       amount = Edenflowers.Format.currency(Decimal.add(variant.price, "5.00"), "en")
@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
       Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
       Orders.add_promotion_with_code!(order, generate(promotion()).code, authorize?: false)
-      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      conn = with_cart(conn, order)
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
@@ -133,7 +133,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
         )
 
       Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
-      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      conn = with_cart(conn, order)
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
@@ -144,7 +144,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
       Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
       Orders.add_promotion_with_code!(order, generate(promotion()).code, authorize?: false)
-      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      conn = with_cart(conn, order)
 
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
@@ -197,7 +197,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       date = Date.add(Edenflowers.ShopTime.today(), 7)
       order = order_in_payment(fulfillment_method: :pickup, fulfillment_date: date)
       admin = generate(admin_user())
-      conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+      conn = with_cart(conn, order)
       {:ok, view, _html} = live(conn, ~p"/checkout")
 
       calendar = Edenflowers.Fulfillment.get_shop_calendar!()

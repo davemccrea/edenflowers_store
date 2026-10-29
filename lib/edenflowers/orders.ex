@@ -19,7 +19,7 @@ defmodule Edenflowers.Orders do
       # Lookups
       define :get_order_by_id, action: :read, get_by: [:id]
       define :get_order_for_checkout, action: :for_checkout, get_by: [:id]
-      define :get_order_for_storefront, action: :for_storefront, get_by: [:id]
+      define :get_storefront_cart, action: :for_storefront, args: [:visitor_id], not_found_error?: false
       define :get_order_for_admin, action: :admin_show, get_by: [:id]
       define :search_orders, action: :search, args: [:term]
       define :get_last_order_with_customer_phone, action: :last_with_customer_phone, args: [:customer_id]
@@ -31,6 +31,7 @@ defmodule Edenflowers.Orders do
 
       # Checkout
       define :create_for_checkout, action: :create_for_checkout
+      define :release_cart, action: :release_cart, get_by: [:id], args: [:visitor_id]
       define :submit_contact_details, action: :submit_contact_details
       define :submit_gift_options, action: :submit_gift_options
       define :submit_delivery, action: :submit_delivery
