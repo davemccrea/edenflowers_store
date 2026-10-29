@@ -136,7 +136,7 @@ provision *args:
 lint-infra:
     ansible-lint
 
-# Tag a release from main and deploy it: `just deploy [patch|minor|major] [--yes]` (--yes skips all prompts, defaults to patch)
+# Tag a release from main and deploy it: `just deploy [patch|minor|major] [--yes]` (--yes defaults to patch and skips the release notes edit)
 [group('production')]
 deploy *args:
     ./scripts/deploy.sh {{ args }}
