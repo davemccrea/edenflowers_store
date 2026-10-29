@@ -1,10 +1,10 @@
 defmodule EdenflowersWeb.Hooks.PutOrderTest do
   use EdenflowersWeb.ConnCase, async: true
 
+  require Ash.Query
+
   import Generator
   import Phoenix.LiveViewTest
-
-  require Ash.Query
 
   test "a visit opens no cart before the first add to cart", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/about")

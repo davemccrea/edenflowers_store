@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert [%LineItem{variant_size: nil}] = line_items(order)
   end
 
-  test "the first add to cart opens the browser's cart", %{conn: conn} do
+  test "the first add to cart opens the browser's cart" do
     product = generate(product(draft: false))
     generate(product_variant(product_id: product.id, size: nil, price: "6.00"))
     conn = Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{})
