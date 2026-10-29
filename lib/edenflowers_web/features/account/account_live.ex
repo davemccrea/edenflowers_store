@@ -394,7 +394,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
         </.button>
       </p>
       <section id={"cancel-order-#{@order.id}"} class="hidden" aria-labelledby={"cancel-order-#{@order.id}-title"}>
-        <h4 id={"cancel-order-#{@order.id}-title"} tabindex="-1" class="font-medium outline-hidden">
+        <h4 id={"cancel-order-#{@order.id}-title"} tabindex="-1" class="font-semibold outline-hidden">
           {~t"Cancel this order?"}
         </h4>
         <p class="mt-1">

@@ -205,7 +205,7 @@ defmodule EdenflowersWeb.CoreComponents do
         ]
       else
         [
-          "btn gap-2 font-sans font-medium normal-case tracking-normal shadow-none",
+          "btn gap-2 font-sans font-semibold normal-case tracking-normal shadow-none",
           @button_variants[assigns.variant],
           @button_sizes[assigns.size],
           assigns[:class]
@@ -850,8 +850,6 @@ defmodule EdenflowersWeb.CoreComponents do
       {render_slot(@inner_block)}
     </div>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".PhotoGallery">
-      import PhotoSwipeLightbox from "@/vendor/photoswipe-lightbox.esm";
-
       /**
        * Click-to-zoom photo gallery (PhotoSwipe 5).
        *
@@ -861,9 +859,12 @@ defmodule EdenflowersWeb.CoreComponents do
        * the page builds both URL and attributes from the same numbers.
        */
       export default {
-        mounted() {
-          // The core is fetched on the first click, alongside the first photo,
-          // so it stays out of the bundle every page downloads before painting.
+        async mounted() {
+          // Only gallery pages fetch the lightbox, and the core waits for the
+          // first click, so neither is in the bundle every page downloads.
+          const { default: PhotoSwipeLightbox } = await import(
+            "@/vendor/photoswipe-lightbox.esm"
+          );
           this.lightbox = new PhotoSwipeLightbox({
             gallery: this.el,
             children: "a[data-pswp-width]",
@@ -902,7 +903,7 @@ defmodule EdenflowersWeb.CoreComponents do
         },
 
         destroyed() {
-          this.lightbox.destroy();
+          this.lightbox?.destroy();
         },
       };
     </script>
@@ -999,7 +1000,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <p class="text-base-content/65 text-sm">
           {~t"From"} {Edenflowers.Format.storefront_price(@product.cheapest_price, @locale)}
         </p>
-        <p :if={@product.sold_out?} class="text-base-content/80 text-sm font-bold" data-testid="sold-out">
+        <p :if={@product.sold_out?} class="text-base-content/80 text-sm font-semibold" data-testid="sold-out">
           {~t"Sold out"}
         </p>
       </div>

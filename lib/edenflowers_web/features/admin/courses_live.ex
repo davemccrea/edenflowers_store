@@ -66,7 +66,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           <:col :let={course} field="name" label={~t"Name"}>
             <.link
               navigate={~p"/admin/courses/#{course.id}"}
-              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+              class="max-w-28 inline-block truncate align-middle font-semibold hover:underline sm:max-w-none"
             >
               {Translations.translate(course).name}
             </.link>

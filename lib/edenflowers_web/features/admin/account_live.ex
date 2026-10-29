@@ -192,7 +192,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
       <h2 class="text-base-content mb-4 text-base font-semibold">{~t"This device"}</h2>
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
-          <label for="push-toggle" class="text-base-content text-sm font-medium">
+          <label for="push-toggle" class="text-base-content text-sm font-semibold">
             {~t"New order notifications"}
           </label>
           <p id="push-toggle-help" class="mt-0.5 text-sm" aria-live="polite">

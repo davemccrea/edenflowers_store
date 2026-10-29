@@ -377,7 +377,7 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
         />
       </form>
       <div aria-live="polite" aria-atomic="true" data-testid="faq-delivery-quote">
-        <p :if={@delivery_quote} class="text-success font-medium">
+        <p :if={@delivery_quote} class="text-success font-semibold">
           {~t"Delivery: #{price = Format.currency(@delivery_quote.fulfillment_fee, Format.locale())}"}
         </p>
       </div>

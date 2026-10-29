@@ -156,7 +156,7 @@ defmodule EdenflowersWeb.Admin.PhotoUpload do
             <span class="bg-base-100 size-9 grid place-items-center rounded-full">
               <.icon name="hero-plus" class="size-4" />
             </span>
-            <span class="text-sm font-medium">{~t"Add photo"}</span>
+            <span class="text-sm font-semibold">{~t"Add photo"}</span>
           </span>
           <span
             :if={@photo || @upload.entries != []}

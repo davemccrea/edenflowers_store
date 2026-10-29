@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           <:col :let={expense} field="vendor_name" search sort label={~t"Vendor"}>
             <.link
               navigate={~p"/admin/expenses/#{expense.id}"}
-              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+              class="max-w-28 inline-block truncate align-middle font-semibold hover:underline sm:max-w-none"
             >
               {expense.vendor_name || ~t"Unknown vendor"}
             </.link>

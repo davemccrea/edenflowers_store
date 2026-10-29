@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Auth.SignOutLive do
           <div class="space-y-2 text-center">
             <h1 class="text-xl font-semibold">{~t"Sign out"}</h1>
             <p class="text-base-content/70 text-sm">
-              {~t"You're signed in as"} <span class="text-base-content break-all font-medium">{@current_user.email}</span>.
+              {~t"You're signed in as"} <span class="text-base-content break-all font-semibold">{@current_user.email}</span>.
             </p>
           </div>
 

@@ -43,7 +43,7 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
 
   set :filter_input_wrapper_class, "form-control min-w-0"
 
-  set :filter_label_class, "label-text mb-1 block text-xs font-medium text-base-content/75"
+  set :filter_label_class, "label-text mb-1 block text-xs font-semibold text-base-content/75"
 
   set :filter_text_input_class, "input input-sm w-full"
   set :filter_date_input_class, "input input-sm w-full sm:w-40"

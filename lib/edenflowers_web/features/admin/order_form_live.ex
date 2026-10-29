@@ -338,7 +338,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                       class="h-16 w-16 shrink-0 object-contain"
                     />
                     <div class="min-w-0 flex-1">
-                      <p class="font-medium">{@card.name}</p>
+                      <p class="font-semibold">{@card.name}</p>
                       <p class="text-base-content/75 text-sm">{variant_size_label(@card.size)}</p>
                     </div>
                     <.button
@@ -964,7 +964,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     <.line_row line={@line}>
       <div class="flex min-w-0 flex-1 basis-64 flex-col">
         <span class="mb-1">{~t"Product"}</span>
-        <p class="flex h-10 items-center text-base font-medium">{existing_line_name(@line.data)}</p>
+        <p class="flex h-10 items-center text-base font-semibold">{existing_line_name(@line.data)}</p>
       </div>
       <div class="w-20">
         <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} class="input w-full tabular-nums" />

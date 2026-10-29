@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.FaqComponents do
       phx-mounted={JS.ignore_attributes(["open"])}
       class="collapse-arrow border-base-content/12 collapse group overflow-visible rounded-none border-b has-[summary:focus-visible]:outline-primary has-[summary:focus-visible]:outline-2 has-[summary:focus-visible]:outline-offset-2 first-of-type:border-t"
     >
-      <summary class={["collapse-title text-balance pr-10 pl-0 leading-snug group-open:min-h-0 group-open:pb-2", @variant == "default" && "font-sans text-base font-medium", @variant == "product" && "font-serif text-xl"]}>
+      <summary class={["collapse-title text-balance pr-10 pl-0 leading-snug group-open:min-h-0 group-open:pb-2", @variant == "default" && "font-sans text-base font-semibold", @variant == "product" && "font-serif text-xl"]}>
         {@question}
       </summary>
       <div class={["collapse-content max-w-[60ch] space-y-3 px-0 font-normal leading-relaxed", @variant == "default" && "font-sans text-base-content text-base", @variant == "product" && "text-base-content/80 text-[1.0625rem]"]}>

@@ -371,7 +371,7 @@ defmodule EdenflowersWeb.Admin.Components do
   def person_block(assigns) do
     ~H"""
     <div class="space-y-1.5">
-      <p :if={@name} class="text-base-content text-base font-medium">{@name}</p>
+      <p :if={@name} class="text-base-content text-base font-semibold">{@name}</p>
       <div :for={contact <- @contact} class="text-sm">{render_slot(contact)}</div>
     </div>
     """
@@ -489,7 +489,7 @@ defmodule EdenflowersWeb.Admin.Components do
     ~H"""
     <div class={@class}>
       <p class="eyebrow text-base-content/75 mb-1.5">{@label}</p>
-      <div class="text-base-content text-base font-medium leading-relaxed">{render_slot(@inner_block)}</div>
+      <div class="text-base-content text-base font-semibold leading-relaxed">{render_slot(@inner_block)}</div>
     </div>
     """
   end
@@ -561,7 +561,7 @@ defmodule EdenflowersWeb.Admin.Components do
   defp history_heading(assigns) do
     ~H"""
     <div class="flex items-baseline justify-between gap-4">
-      <p class="text-base-content flex items-center gap-1 font-medium">
+      <p class="text-base-content flex items-center gap-1 font-semibold">
         {@title}
         <.icon
           :if={@expandable}
@@ -599,7 +599,7 @@ defmodule EdenflowersWeb.Admin.Components do
       <.link
         :if={@back}
         navigate={elem(@back, 1)}
-        class="text-base-content/70 -m-2 inline-flex shrink-0 items-center gap-1.5 p-2 text-sm font-medium transition-colors hover:text-base-content"
+        class="text-base-content/70 -m-2 inline-flex shrink-0 items-center gap-1.5 p-2 text-sm font-semibold transition-colors hover:text-base-content"
       >
         <.icon name="hero-arrow-left" class="h-4 w-4" />
         <span class="sr-only">{elem(@back, 0)}</span>
@@ -619,7 +619,7 @@ defmodule EdenflowersWeb.Admin.Components do
         <.link
           :if={@back}
           navigate={elem(@back, 1)}
-          class="text-base-content/70 -my-2 inline-flex min-w-0 items-center gap-1.5 py-2 text-sm font-medium transition-colors pointer-coarse:-my-3 pointer-coarse:py-3 hover:text-base-content"
+          class="text-base-content/70 -my-2 inline-flex min-w-0 items-center gap-1.5 py-2 text-sm font-semibold transition-colors pointer-coarse:-my-3 pointer-coarse:py-3 hover:text-base-content"
         >
           <.icon name="hero-arrow-left" class="h-4 w-4 shrink-0" />
           <span class="max-w-[14rem] truncate">{elem(@back, 0)}</span>

@@ -141,7 +141,7 @@ defmodule EdenflowersWeb.AdminCalendar do
   defp state_label(:past), do: ~t"past"
 
   defp cell_class(state, today?, override?) do
-    base = "relative aspect-square text-sm font-medium leading-none flex items-center justify-center"
+    base = "relative aspect-square text-sm font-semibold leading-none flex items-center justify-center"
 
     closed_class =
       "cursor-pointer bg-base-content/10 text-base-content/75 hover:bg-primary/10 calendar-strike-after hover:after:bg-error"

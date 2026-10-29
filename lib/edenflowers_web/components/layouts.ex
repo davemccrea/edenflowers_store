@@ -481,7 +481,7 @@ defmodule EdenflowersWeb.Layouts do
       {if @external, do: [target: "_blank", rel: "noopener"], else: []}
       aria-current={@active && "page"}
       class={["flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
-    do: "text-base-content bg-base-300/50 font-medium",
+    do: "text-base-content bg-base-300/50 font-semibold",
     else: "text-base-content/75 hover:bg-base-300/40 hover:text-base-content")]}
     >
       <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/60")]} />
@@ -528,7 +528,7 @@ defmodule EdenflowersWeb.Layouts do
           {@initials}
         </span>
         <span :if={!@compact} class="min-w-0 text-left">
-          <span class="text-base-content max-w-44 block truncate text-sm font-medium">{@display_name}</span>
+          <span class="text-base-content max-w-44 block truncate text-sm font-semibold">{@display_name}</span>
           <span class="text-base-content/75 max-w-44 block truncate text-xs">{@email}</span>
         </span>
         <.icon :if={!@compact} name="hero-chevron-down" class="text-base-content/60 h-4 w-4 shrink-0" />
@@ -540,7 +540,7 @@ defmodule EdenflowersWeb.Layouts do
       >
         <li :if={@compact} class="px-3 py-2">
           <span class="block p-0 hover:bg-transparent">
-            <span class="text-base-content block truncate text-sm font-medium">{@display_name}</span>
+            <span class="text-base-content block truncate text-sm font-semibold">{@display_name}</span>
             <span class="text-base-content/75 block truncate text-xs">{@email}</span>
           </span>
         </li>
@@ -983,7 +983,7 @@ defmodule EdenflowersWeb.Layouts do
       <div class="container">
         <div class="flex flex-col items-center gap-3 py-6">
           <img
-            src="/images/logo-eden-flowers.svg"
+            src={~p"/images/logo-eden-flowers.svg"}
             alt="Eden Flowers"
             width="112"
             height="112"
