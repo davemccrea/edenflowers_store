@@ -191,6 +191,7 @@ defmodule Edenflowers.Orders.Subscription do
                   :changes_reopen_on,
                   :resume_date,
                   :next_delivery_date,
+                  :fulfilled_count,
                   booked_occurrence: [:changes_open?],
                   unpaid_occurrence: [:grand_total],
                   product_variant: :product
@@ -536,6 +537,13 @@ defmodule Edenflowers.Orders.Subscription do
   end
 
   aggregates do
+    count :fulfilled_count, :orders do
+      description "How many of its orders Jennie has delivered or had collected, counting the first. The " <>
+                    "account page shows it as a quiet thank-you for staying."
+
+      filter expr(state == :placed and fulfillment_status == :fulfilled)
+    end
+
     max :last_delivery_date, :orders, :fulfillment_date do
       description "The latest delivery date of its placed, uncancelled orders, booked or done. The schedule " <>
                     "runs on from it when the interval or delivery day changes."
