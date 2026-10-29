@@ -1,5 +1,7 @@
-main p {
-  text-wrap: pretty;
+@layer base {
+  main p {
+    text-wrap: pretty;
+  }
 }
 
 @utility hero-display {

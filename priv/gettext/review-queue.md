@@ -52,6 +52,7 @@ Optional suggestions may be rejected without changing usable copy.
 | R02 | sv | Accountant + native editor: gross/net labels. |
 | R03 | fi | Accountant + native editor: VAT terminology. |
 | R04 | fi | Developer + native editor: general versus home-only delivery labels. |
+| T19 | sv, fi | Home hero subtitle `Bouquets made fresh on delivery day[, from %{price}].` (storefront, no context): AI-drafted `Färska buketter gjorda på leveransdagen` / `Tuoreet kimput tehtyinä toimituspäivänä`, 29 Oct 2026; Jennie (sv meaning) and native fi review remain. |
 
 ## AI SEO copy follow-up — 28 October 2026
 

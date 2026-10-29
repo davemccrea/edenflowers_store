@@ -212,11 +212,14 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               </span>
             </span>
           </h1>
-          <p class="hero-reveal mt-6 max-w-md text-lg leading-relaxed text-white" style="--reveal-delay: 600ms;">
+          <p
+            class="hero-reveal text-balance mt-6 max-w-md text-lg leading-relaxed text-white"
+            style="--reveal-delay: 600ms;"
+          >
             <%= if @price_from do %>
-              {~t"Bouquets made by hand the day they're delivered, from #{price = @price_from}."}
+              {~t"Bouquets made fresh on delivery day, from #{price = @price_from}."}
             <% else %>
-              {~t"Bouquets made by hand the day they're delivered."}
+              {~t"Bouquets made fresh on delivery day."}
             <% end %>
           </p>
           <div class="hero-reveal mt-10" style="--reveal-delay: 750ms;">
