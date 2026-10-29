@@ -152,9 +152,9 @@ Paper at hue ~75 and forest at hue ~150, with one amber accent reserved for inte
 ## Typography
 
 **Display Font:** Newsreader (with `serif` fallback), self-hosted, 400 only in upright and italic, with a variable optical size.
-**Body Font:** Open Sans (with `sans-serif` fallback), self-hosted variable font, 400–600.
+**Body Font:** Open Sans (with `sans-serif` fallback), self-hosted variable font, 400–700.
 
-**The Two-Weight Rule.** The serif is always 400; hierarchy comes from size and italic. The sans is 400 for reading and 600 for everything that labels, heads or acts. The font files contain only these weights, so any other weight renders as the nearest one.
+**The Two-Weight Rule.** The serif is always 400; hierarchy comes from size and italic. The sans is 400 for reading and 600 for everything that labels, heads or acts. The one exception is the wordmark at 700. The font files contain only this range, so any other weight renders as the nearest one.
 
 **Character:** Newsreader is an editorial serif with a real italic, and it does the talking on the storefront. Open Sans labels; it speaks only where a page is a tool or a document. The pairing reads like a printed catalogue whose captions happen to be interactive.
 
@@ -167,7 +167,7 @@ Paper at hue ~75 and forest at hue ~150, with one amber accent reserved for inte
 - **Footer line** (`footer-line`: serif, 1.125rem): addresses, hours, the footer's facts.
 - **Body** (sans, 400, 1rem/1.5): default. Prose pages step up to 1.125rem, relaxed leading, `max-w-2xl`.
 - **Label** (`eyebrow`: sans, 600, 0.75rem, uppercase, 0.18em): category labels, footer headings, the "From" before a price.
-- **Wordmark** (`logo-wordmark`: sans, 600, uppercase, wide tracking): the header lockup in primary green. The only large uppercase sans.
+- **Wordmark** (`logo-wordmark`: sans, 700, uppercase, wide tracking): the header lockup in primary green. The only large uppercase sans.
 - **Reference and admin headings** (sans, 600, tracking-tight): headings on FAQ, terms and privacy, and every admin heading.
 
 ### Named Rules
