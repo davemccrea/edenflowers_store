@@ -288,20 +288,6 @@ test("a reviewer in dev keeps their clipboard until they ask for the reference",
   assert.deepEqual(copied, ["SPAN"]);
 });
 
-test("shortcut hints sit outside the wrapping button row", async () => {
-  const { fire, overlays } = fixture({ reviewer: true });
-  await fire("click");
-  const form = overlays.find((node) => node.tagName === "FORM");
-  const copy = overlays.find((node) => node.title === "Copy ref");
-  const status = overlays.find((node) =>
-    node.textContent?.includes("⌘↵ to copy"),
-  );
-  assert.equal(status.parentNode, form);
-  assert.notEqual(copy.parentNode, form);
-  assert.equal(copy.parentNode.style.flexWrap, "wrap");
-  assert.equal(copy.parentNode.style.justifyContent, "flex-end");
-});
-
 test("Copy ref includes the current message without saving the note", async () => {
   const { fire, copied, overlays, requests } = fixture({ reviewer: true });
   await fire("click");

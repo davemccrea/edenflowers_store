@@ -16,9 +16,27 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
     %{name: :goodwill_refund, payments: [{8850, false}, {-2000, true}], state: :paid, held: 6850, refund_due: 0}
   ]
 
-  for method <- [:pickup, :delivery], fulfillment <- [:pending, :fulfilled, :cancelled], money <- @order_money do
-    @tag method: method, fulfillment: fulfillment, money: money
-    test "order #{method}, #{fulfillment}, #{money.name} has truthful copy and payment actions", ctx do
+  # Money states are independent of delivery method; retain the intersections
+  # where fulfillment copy or cancellation changes what the customer is told.
+  for {method, fulfillment, money_name} <- [
+        {:pickup, :pending, :unpaid},
+        {:pickup, :pending, :partial},
+        {:pickup, :pending, :paid},
+        {:pickup, :pending, :overpaid},
+        {:pickup, :pending, :refunded},
+        {:pickup, :pending, :goodwill_refund},
+        {:delivery, :pending, :partial},
+        {:pickup, :fulfilled, :paid},
+        {:delivery, :fulfilled, :paid},
+        {:pickup, :fulfilled, :unpaid},
+        {:delivery, :fulfilled, :unpaid},
+        {:pickup, :cancelled, :unpaid},
+        {:pickup, :cancelled, :refunded},
+        {:delivery, :cancelled, :overpaid},
+        {:delivery, :cancelled, :goodwill_refund}
+      ] do
+    @tag method: method, fulfillment: fulfillment, money: Enum.find(@order_money, &(&1.name == money_name))
+    test "order #{method}, #{fulfillment}, #{money_name} has truthful copy and payment actions", ctx do
       order =
         placed_order(
           fulfillment_method: ctx.method,
@@ -53,6 +71,20 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
         end
 
       assert page_title(view) =~ expected_title
+      assert has_element?(view, "hgroup p", "Order #{order.order_reference}")
+
+      if paid? and ctx.fulfillment == :fulfilled do
+        assert has_element?(view, "p[data-testid=pay-thanks]", "I hope you're happy with it.")
+        refute has_element?(view, "[data-testid=pay-fulfillment]")
+      end
+
+      if ctx.money.name == :partial and not cancelled? do
+        assert has_element?(view, "[data-testid=pay-total]", "88,50")
+        assert has_element?(view, "dt", "Paid so far")
+        assert has_element?(view, "[data-testid=pay-balance]", "58,50")
+        assert has_element?(view, ~s|#pay-form[data-amount="5850"]|)
+        refute has_element?(view, "dt", "Total paid")
+      end
 
       if payable? and ctx.fulfillment == :fulfilled do
         verb = if ctx.method == :pickup, do: "collected", else: "delivered"
@@ -84,9 +116,22 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
     %{name: :goodwill_refund, payments: [{17_000, false}, {-3000, true}], state: :paid, held: 14_000, refund_due: 0}
   ]
 
-  for period <- [:future, :past], status <- [:confirmed, :cancelled], money <- @booking_money do
-    @tag period: period, status: status, money: money
-    test "#{period} course, #{status}, #{money.name} has truthful copy and payment actions", ctx do
+  for {period, status, money_name} <- [
+        {:future, :confirmed, :unpaid},
+        {:future, :confirmed, :partial},
+        {:future, :confirmed, :paid},
+        {:future, :confirmed, :overpaid},
+        {:future, :confirmed, :refunded},
+        {:future, :confirmed, :goodwill_refund},
+        {:past, :confirmed, :unpaid},
+        {:past, :confirmed, :paid},
+        {:future, :cancelled, :unpaid},
+        {:future, :cancelled, :paid},
+        {:future, :cancelled, :refunded},
+        {:future, :cancelled, :goodwill_refund}
+      ] do
+    @tag period: period, status: status, money: Enum.find(@booking_money, &(&1.name == money_name))
+    test "#{period} course, #{status}, #{money_name} has truthful copy and payment actions", ctx do
       course = generate(course(date: Date.add(ShopTime.today(), if(ctx.period == :past, do: -1, else: 1))))
 
       registration =
@@ -115,6 +160,12 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
       assert has_element?(view, ".flower-bloom") == paid?
       assert has_element?(view, "[data-testid=pay-booked]") == (paid? and ctx.period == :future)
       refute has_element?(view, "[data-testid=pay-confirming]")
+
+      if ctx.money.name == :unpaid and not cancelled? do
+        assert has_element?(view, "[data-testid=pay-total]", "170,00")
+        refute has_element?(view, "[data-testid=pay-balance]")
+        refute render(view) =~ "Paid so far"
+      end
 
       if paid? do
         assert has_element?(view, "[data-testid=pay-total]", currency(ctx.money.held))

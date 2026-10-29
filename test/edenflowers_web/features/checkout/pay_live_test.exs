@@ -188,66 +188,6 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     refute has_element?(view, "#pay-form")
   end
 
-  for method <- [:pickup, :delivery] do
-    @tag fulfillment_method: method
-    test "thanks the customer for a paid, fulfilled #{method} order", %{
-      conn: conn,
-      order: order,
-      fulfillment_method: method
-    } do
-      Ash.Seed.update!(order, %{fulfillment_status: :fulfilled, fulfillment_method: method})
-      generate(payment(order_id: order.id, amount: "85.00"))
-
-      {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
-
-      assert has_element?(view, "[data-testid=pay-paid]")
-      assert has_element?(view, "p[data-testid=pay-thanks]", "I hope you're happy with it.")
-      refute has_element?(view, "[data-testid=pay-thanks].font-serif")
-      refute render(view) =~ "is paid."
-      refute has_element?(view, "[data-testid=pay-fulfillment]")
-      assert has_element?(view, "hgroup p", "Order #{order.order_reference}")
-      refute has_element?(view, "#pay-form")
-    end
-  end
-
-  test "says the order was collected once it's fulfilled", %{conn: conn, order: order} do
-    Ash.Seed.update!(order, %{fulfillment_status: :fulfilled})
-
-    {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
-
-    assert has_element?(
-             view,
-             "[data-testid=pay-fulfillment]",
-             "Your order has been collected. I hope you're happy with it."
-           )
-
-    refute has_element?(view, "[data-testid=pay-fulfillment]", "Ready to collect")
-  end
-
-  test "keeps the total, paid so far and balance for partial payments", %{conn: conn, order: order} do
-    generate(payment(order_id: order.id, amount: "30.00"))
-
-    {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
-
-    assert has_element?(view, "[data-testid=pay-total]", "85,00")
-    assert has_element?(view, "dt", "Paid so far")
-    assert has_element?(view, "[data-testid=pay-balance]", "55,00")
-    assert has_element?(view, "#pay-form")
-    refute has_element?(view, "dt", "Total paid")
-  end
-
-  test "says so once the order is refunded", %{conn: conn, order: order} do
-    generate(payment(order_id: order.id, amount: "85.00"))
-    generate(payment(order_id: order.id, amount: "-85.00"))
-
-    {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
-
-    assert has_element?(view, "[data-testid=pay-refunded]")
-    refute has_element?(view, "[data-testid=pay-fulfillment]")
-    refute has_element?(view, "[data-testid=pay-paid]")
-    refute has_element?(view, "#pay-form")
-  end
-
   test "says so once the order is cancelled", %{conn: conn, admin: admin, order: order} do
     {:ok, _order} = Orders.cancel_order(order, actor: admin)
 

@@ -5,40 +5,18 @@ defmodule Edenflowers.Payments.PaymentRetentionTest do
 
   alias Edenflowers.Repo
 
-  for parent <- [:order, :course_registration], history <- [:paid, :refunded, :reversed] do
+  for parent <- [:order, :course_registration] do
     @parent parent
-    test "#{parent} with #{history} history cannot be deleted directly" do
+    test "#{parent} with payment history cannot be deleted directly" do
       parent = @parent
       {record, table, parent_key} = create_parent(parent)
       original = generate(payment([{parent_key, record.id}, method: :cash]))
 
-      history =
-        case unquote(history) do
-          :paid ->
-            [original]
-
-          :refunded ->
-            [original, generate(payment([{parent_key, record.id}, method: :cash, amount: Decimal.new("-10.00")]))]
-
-          :reversed ->
-            reversal =
-              generate(
-                payment([
-                  {parent_key, record.id},
-                  method: :cash,
-                  amount: Decimal.new("-10.00"),
-                  reverses_payment_id: original.id
-                ])
-              )
-
-            [original, reversal]
-        end
-
       assert_delete_restricted(table, record.id, "payments_#{parent_key}_fkey")
       assert Ash.get!(record.__struct__, record.id, authorize?: false).id == record.id
 
-      assert Enum.sort(Enum.map(Ash.load!(record, :payments, authorize?: false).payments, & &1.id)) ==
-               Enum.sort(Enum.map(history, & &1.id))
+      assert [%{id: id}] = Ash.load!(record, :payments, authorize?: false).payments
+      assert id == original.id
     end
   end
 

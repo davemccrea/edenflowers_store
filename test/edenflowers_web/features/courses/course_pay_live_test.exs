@@ -40,16 +40,6 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     refute render(view) =~ "else@example.com"
   end
 
-  test "says so once the booking is refunded", %{conn: conn, registration: registration} do
-    generate(payment(course_registration_id: registration.id, amount: "-50.00"))
-
-    {:ok, view, _html} = live(conn, ~p"/pay/courses/#{registration.payment_link_token}")
-
-    assert has_element?(view, "[data-testid=pay-refunded]")
-    refute has_element?(view, "[data-testid=pay-booked]")
-    refute has_element?(view, "#pay-form")
-  end
-
   test "a booking cannot be created without a valid email", %{admin: admin, registration: registration} do
     for email <- [nil, "", "not-an-email"] do
       assert {:error, %Ash.Error.Invalid{}} =
@@ -74,17 +64,6 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     view |> element("#pay-form") |> render_submit()
 
     assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_link_secret"})
-  end
-
-  test "shows only the amount due while nothing is paid", %{conn: conn, admin: admin} do
-    registration = generate(course_registration(status: :confirmed, amount: Decimal.new("85.00")))
-    {:ok, registration} = Courses.open_registration_payment_link(registration, actor: admin)
-
-    {:ok, view, _html} = live(conn, ~p"/pay/courses/#{registration.payment_link_token}")
-
-    assert has_element?(view, "[data-testid=pay-total]", "85,00")
-    refute has_element?(view, "[data-testid=pay-balance]")
-    refute render(view) =~ "Paid so far"
   end
 
   test "reloads instead of charging a balance changed since the page was shown", %{
@@ -130,15 +109,6 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     assert has_element?(view, "[data-testid=pay-total]", "170,00")
     refute render(view) =~ "Paid so far"
     refute has_element?(view, "[data-testid=pay-balance]")
-    refute has_element?(view, "#pay-form")
-  end
-
-  test "a cancelled booking does not promise places or request payment", %{conn: conn, registration: registration} do
-    Ash.Seed.update!(registration, %{status: :cancelled})
-    {:ok, view, _html} = live(conn, ~p"/pay/courses/#{registration.payment_link_token}")
-
-    assert has_element?(view, "[data-testid=pay-cancelled]")
-    refute has_element?(view, "[data-testid=pay-booked]")
     refute has_element?(view, "#pay-form")
   end
 
