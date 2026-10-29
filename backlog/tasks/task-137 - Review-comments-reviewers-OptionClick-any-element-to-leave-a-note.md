@@ -1,10 +1,10 @@
 ---
 id: TASK-137
 title: 'Review comments: reviewers Option+Click any element to leave a note'
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-27 20:40'
-updated_date: '2026-10-27 21:05'
+updated_date: '2026-10-29 07:28'
 labels:
   - admin
   - developers
@@ -37,7 +37,7 @@ Decisions (grilled 2026-10-27):
 - [x] #1 A reviewer can Option+Click any element in prod and save a note with its context
 - [x] #2 In dev, Option+Click still copies the source reference for everyone
 - [x] #3 Non-reviewers in prod see no picker
-- [ ] #4 `just review-comments` prints open notes and `just resolve-review-comment` resolves them
+- [x] #4 `just feedback` prints open notes and `just resolve-feedback` resolves them
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -55,6 +55,15 @@ created: 2026-10-27 21:05
 ---
 
 Built, rebased on the improved dev picker, and checked in dev. Left for David: deploy, set reviewer = true on reviewers in prod (after just backup), Option+Click a page in prod, then check just review-comments and just resolve-review-comment, and AC 4.
+
+---
+
+author: @claude
+created: 2026-10-29 07:28
+
+---
+
+David ran just feedback and just resolve-feedback against production; both work. AC 4 reworded for the renamed recipes.
 
 ---
 <!-- COMMENTS:END -->
