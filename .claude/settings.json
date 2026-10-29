@@ -2,5 +2,17 @@
   "statusLine": {
     "type": "command",
     "command": "\"$(git rev-parse --show-toplevel)\"/.claude/statusline.sh"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git fetch --quiet && git pull --ff-only --quiet 2>&1; git status -sb | head -1"
+          }
+        ]
+      }
+    ]
   }
 }
