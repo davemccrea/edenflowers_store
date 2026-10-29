@@ -192,3 +192,8 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "An error occurred while loading data"
 msgstr "Tietojen lataamisessa tapahtui virhe"
+
+#: lib/cinder/renderers/pagination.ex
+#, elixir-autogen, elixir-format
+msgid "Page %{current}"
+msgstr ""
