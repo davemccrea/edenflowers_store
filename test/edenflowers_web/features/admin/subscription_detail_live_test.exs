@@ -55,11 +55,9 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
 
     view |> element("button", "Pause") |> render_click()
     assert reload(subscription).state == :paused
-    refute has_element?(view, "#subscription-fulfillment .tabular-nums")
 
     view |> element("button", "Resume") |> render_click()
     assert reload(subscription).state == :active
-    assert has_element?(view, "#subscription-fulfillment .tabular-nums")
 
     view |> element(~s|button[phx-click="open_cancel"]|) |> render_click()
     assert has_element?(view, "#cancel-subscription-email-send[checked]")

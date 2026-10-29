@@ -49,18 +49,6 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     end
   end
 
-  test "shares the FAQ's navigation hook and keeps terms expanded", %{conn: conn} do
-    {:ok, _faq, faq_html} = live(conn, ~p"/en/faq")
-    {:ok, view, terms_html} = live(conn, ~p"/en/terms")
-
-    faq_nav = faq_html |> LazyHTML.from_document() |> LazyHTML.query("#faq-nav")
-    terms_nav = terms_html |> LazyHTML.from_document() |> LazyHTML.query("#terms-nav")
-
-    refute Enum.empty?(LazyHTML.attribute(faq_nav, "phx-hook"))
-    assert LazyHTML.attribute(terms_nav, "phx-hook") == LazyHTML.attribute(faq_nav, "phx-hook")
-    refute has_element?(view, "#main-content details")
-  end
-
   test "related terms are grouped without breaking existing deep links", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 

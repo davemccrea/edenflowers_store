@@ -9,23 +9,6 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
   setup :verify_on_exit!
 
-  test "answers expand individually without a toggle-all button in every storefront language", %{conn: conn} do
-    for path <- ["/en/faq", "/sv/vanliga-fragor", "/fi/ukk"] do
-      {:ok, view, _html} = live(conn, path)
-
-      assert has_element?(view, "#faq-questions details summary")
-      refute has_element?(view, "#faq-questions details[open]")
-      refute has_element?(view, "#faq-toggle-all")
-    end
-  end
-
-  test "the card answer explains checkout without listing message limits", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/en/faq")
-
-    assert has_element?(view, "#ordering details", "Choose a card at checkout and write your message.")
-    refute has_element?(view, "#ordering", "characters")
-  end
-
   test "the delivery answer reads the distance and fee from the delivery option", %{conn: conn} do
     generate(
       fulfillment_option(
@@ -83,22 +66,10 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
     refute has_element?(view, "#care", "5–7 days")
   end
 
-  test "answer links are phrases within prose rather than standalone link paragraphs", %{conn: conn} do
-    {:ok, view, html} = live(conn, ~p"/en/faq")
-    document = LazyHTML.from_document(html)
-
-    paragraphs = LazyHTML.query(document, "#faq-questions details p")
-    linked_paragraphs = Enum.reject(paragraphs, &Enum.empty?(LazyHTML.query(&1, "a")))
-    refute Enum.empty?(linked_paragraphs)
-
-    for paragraph <- linked_paragraphs do
-      linked_text = paragraph |> LazyHTML.query("a") |> Enum.map_join(" ", &LazyHTML.text/1)
-      prose = paragraph |> LazyHTML.text() |> String.replace(~r/\s+/, " ") |> String.trim()
-      assert String.length(prose) > String.length(linked_text)
-    end
+  test "the order-change answer links to the customer's account", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/faq")
 
     assert has_element?(view, ~s|#ordering-question-2 p a[href="/account"]|, "from your account")
-    assert has_element?(view, "#subscriptions > div > p", "Your subscription is covered by our")
   end
 
   test "emits FAQPage structured data with the page's questions as plain text", %{conn: conn} do

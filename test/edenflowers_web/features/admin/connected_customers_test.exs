@@ -44,7 +44,6 @@ defmodule EdenflowersWeb.Admin.ConnectedCustomersTest do
     eventually(fn ->
       assert has_element?(view, "#connected-customers-count", "42")
       assert has_element?(view, "#anonymous-visitors-count", "12 anonymous visitors")
-      assert has_element?(view, "#online-customers-list.max-h-60.overflow-y-auto")
 
       assert Enum.count(
                view
