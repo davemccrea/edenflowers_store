@@ -43,6 +43,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
         <p class="text-base-content/70 mt-1 text-sm">{plan_label(@subscription)}</p>
         <p class="text-base-content/70 text-right text-sm">{~t"per delivery"}</p>
       </div>
+      <.bouquets_so_far count={@subscription.fulfilled_count} />
 
       <div class="mt-5 flex items-end justify-between gap-4">
         <div data-testid="subscription-status">
@@ -289,6 +290,22 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   defp plan_label(%{product_variant: variant, interval_weeks: weeks}) do
     "#{variant_size_label(variant.size)} · #{Fields.interval_label(weeks)}"
+  end
+
+  # A small thank-you for staying.
+  attr :count, :integer, required: true
+
+  defp bouquets_so_far(assigns) do
+    ~H"""
+    <p
+      :if={@count > 0}
+      class="text-base-content/70 mt-3 flex items-center gap-2 text-sm"
+      data-testid="subscription-bouquets"
+    >
+      <.flower name="flower-30" class="text-primary/70 h-4 w-4" />
+      {~t"#{count = @count} bouquet(s) so far"N}
+    </p>
+    """
   end
 
   defp final_delivery?(nil), do: false

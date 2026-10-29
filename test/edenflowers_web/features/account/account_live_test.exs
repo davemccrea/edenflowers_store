@@ -401,6 +401,26 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
              )
     end
 
+    test "counts the bouquets delivered so far, leaving out booked and cancelled ones", %{conn: conn, user: user} do
+      subscription = generate(subscription(user_id: user.id))
+
+      for days <- [-14, -7] do
+        placed_order(
+          user_id: user.id,
+          subscription_id: subscription.id,
+          fulfillment_date: days_from_today(days),
+          fulfillment_status: :fulfilled,
+          paid: true
+        )
+      end
+
+      placed_order(user_id: user.id, subscription_id: subscription.id, fulfillment_status: :cancelled)
+      placed_order(user_id: user.id, subscription_id: subscription.id, fulfillment_date: days_from_today(2), paid: true)
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, "#{row(subscription)} [data-testid=subscription-bouquets]", "2 bouquets so far")
+    end
+
     test "lists a cancelled subscription last while its final delivery is on its way", %{conn: conn, user: user} do
       finishing = generate(subscription(user_id: user.id, state: :cancelled))
       active = generate(subscription(user_id: user.id))
