@@ -1,5 +1,7 @@
 /* Both are variable (Newsreader also has an optical-size axis, applied
-   automatically). SIL OFL 1.1, see priv/static/fonts/OFL.txt. */
+   automatically). Newsreader starts at 400 so font-light headings render at
+   400, as they did with Crimson Text, which had no light weight.
+   SIL OFL 1.1, see priv/static/fonts/OFL.txt. */
 @font-face {
   font-family: "Open Sans";
   font-style: normal;
@@ -17,14 +19,14 @@
 @font-face {
   font-family: "Newsreader";
   font-style: normal;
-  font-weight: 200 800;
+  font-weight: 400 800;
   font-display: swap;
   src: url("/fonts/Newsreader-Variable.woff2") format("woff2");
 }
 @font-face {
   font-family: "Newsreader";
   font-style: italic;
-  font-weight: 200 800;
+  font-weight: 400 800;
   font-display: swap;
   src: url("/fonts/Newsreader-VariableItalic.woff2") format("woff2");
 }
