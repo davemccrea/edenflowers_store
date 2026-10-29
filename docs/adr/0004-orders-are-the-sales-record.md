@@ -2,28 +2,16 @@
 
 Sales reach the shop through Stripe, Zettle, Zervant invoices, MobilePay and cash, and Zettle and Zervant each keep their own sales records with VAT. Booking from each service would mean several sources the accountant must combine without counting any sale twice, and MobilePay and cash have no record with VAT at all. So every sale, over-the-counter ones included, is entered as an order, and the orders are the only record the shop's sales are booked from. The payment services are only ways of getting paid: what the accountant takes from them is fees and payouts, to match the bank.
 
+Because they're the sales record, placed orders and course bookings are never deleted. A mistake is cancelled and settled, and working lists filter cancelled records out.
+
 ## Considered Options
 
 - **Each service is the record of its own sales.** Rejected: payments recorded on orders would have to be left out wherever another service also holds them, and that boundary moves whenever the accountant's setup does.
 - **Pull Zettle's purchases into the monthly report.** Rejected: Zettle purchases don't link to orders, so telling a walk-in sale from a Zettle payment already on an order would rest on fragile matching.
+- **Delete mistaken Custom Orders, or archive old ones.** Rejected: either would lose sales, VAT and payment history the accounts depend on. Filtering does the same job for Jennie's lists.
 
 ## Consequences
 
 - The accountant books sales only from the monthly report, never also from Zettle's or Zervant's own reports.
 - A Zettle sale with no order is missing from the VAT return. Comparing Zettle's own sales total with the Zettle payments recorded on orders would catch a forgotten order; that check is planned for the monthly report but not built yet.
-
-## Amendment: cancellation and filtering, never deletion (TASK-133)
-
-TASK-42's deletion of mistaken Custom Orders is superseded by ordinary cancellation
-and settlement. Placed orders retain their reference, lines, VAT snapshots,
-Payments/refunds/reversals and PaperTrail history. The existing Cinder Still to do
-default excludes cancelled orders; All orders, search and direct links still find
-them. There is no archive action, timestamp, eligibility rule or Archived view.
-Working-list visibility is not financial finality: a cancelled order's late money
-still appears in Overview and the existing settlement controls. Accounting and
-revenue continue reading the same retained sales and actual Payment records.
-
-Course bookings share that ledger and may be accepted before they are paid, with
-payment taken at the course or collected explicitly online. See ADR-0002 and
-[the rollout instructions](../purchase-retention-rollout.md). These choices do not
-approve a privacy-retention period or authorize production data changes.
+- Keeping purchases is an accounting need, not a privacy retention period. That's decided separately.
