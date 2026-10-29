@@ -405,6 +405,18 @@
   }
 }
 
+/* Easter egg: decorative flowers turn slightly when hovered. Large flowers set
+   a smaller --flower-spin-turn so their edges don't swing too far. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .flower-spin {
+    transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .flower-spin:hover {
+    transform: rotate(var(--flower-spin-turn, 6deg)) scale(1.03);
+  }
+}
+
 /* Checkout: the chosen card tucks into the message paper. The easing curve
    supplies the overshoot. */
 @keyframes card-tuck {
