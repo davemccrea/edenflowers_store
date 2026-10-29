@@ -84,7 +84,7 @@
   }
 }
 
-/* Below md, Embla drives all 9 quotes with the same focal-point scale/fade as Favourites.
+/* Below md, Embla drives all 9 quotes with the same focal-point scale as Favourites.
    From md up, the 3 sets share one grid cell so the section is sized for the tallest
    and never jumps; on a turn the leaving quotes drift away from the arrow pressed and
    the next ones drift in behind them, column by column. */
@@ -103,20 +103,18 @@
     --embla-progress: 1;
     transform-origin: left top;
     transform: scale(calc(1 - var(--embla-progress) * 0.08));
-    opacity: calc(1 - var(--embla-progress) * 0.45);
   }
   .review-pages__track > ul:first-child > li:first-child {
     --embla-progress: 0;
   }
   @media (prefers-reduced-motion: no-preference) {
     .review-pages__track > ul > li {
-      will-change: transform, opacity;
+      will-change: transform;
     }
   }
   @media (prefers-reduced-motion: reduce) {
     .review-pages__track > ul > li {
       transform: none;
-      opacity: 1;
     }
   }
 }
@@ -300,11 +298,14 @@
   min-width: 0;
   --embla-progress: 0;
   transform: scale(calc(1 - var(--embla-progress) * 0.08));
+}
+/* Only the photo fades: faded caption text would fail contrast. */
+.embla__slide img {
   opacity: calc(1 - var(--embla-progress) * 0.45);
 }
 @media (width < theme(--breakpoint-sm)) and (prefers-reduced-motion: no-preference) {
   .embla__slide {
-    will-change: transform, opacity;
+    will-change: transform;
   }
 }
 @media (width >= 480px) {
