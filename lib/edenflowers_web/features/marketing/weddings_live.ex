@@ -111,9 +111,16 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       <section
         id="prices"
         class="scroll-anchor-below-header not-last:border-b"
-        aria-labelledby={@show_prices? && "prices-heading"}
+        aria-labelledby={if @show_prices?, do: "prices-heading", else: "decoration-heading"}
       >
         <div class="container py-24">
+          <div :if={!@show_prices?} class="mb-10">
+            <h2 id="decoration-heading" class="section-title mb-4">{~t"Decoration"}</h2>
+            <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
+              {~t"Arches and gates for the ceremony, and arrangements and garlands to dress the venue."}
+            </p>
+          </div>
+
           <div
             :if={@show_prices?}
             class="grid items-start gap-10 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-16 lg:grid-cols-[minmax(0,1fr)_22rem]"
