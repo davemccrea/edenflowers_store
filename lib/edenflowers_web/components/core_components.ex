@@ -59,6 +59,11 @@ defmodule EdenflowersWeb.CoreComponents do
 
   for path <- @flower_paths, do: @external_resource(path)
 
+  # @external_resource only notices edits to known files, so recompile when a drawing is added or removed.
+  def __mix_recompile__? do
+    Path.wildcard(Path.join(File.cwd!(), "priv/svg/flower-*.svg")) |> Enum.sort() != @flower_paths
+  end
+
   @doc """
   Renders the standard page wrapper: a width-bounded container with the
   default top/bottom rhythm. Use for every page that doesn't need
