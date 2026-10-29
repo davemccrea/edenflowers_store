@@ -195,6 +195,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           width={1920}
           height={1080}
           sources={[%{media: "(max-width: 767px)", width: 960, height: 1440, max_width: 960}]}
+          quality={60}
           priority
           class="hero-zoom h-[90svh] w-full object-cover md:h-dvh"
         />
@@ -609,7 +610,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </div>
           <script :type={Phoenix.LiveView.ColocatedHook} name=".ReviewsEntrance">
             // On mobile (<md), Embla drives a single-quote carousel with the same focal-point
-            // scale/fade as Favourites. On desktop (>=md), Embla is inactive and the first
+            // scale as Favourites. On desktop (>=md), Embla is inactive and the first
             // quotes arrive like a turn the first time the section scrolls into view.
             export default {
               mounted() {
