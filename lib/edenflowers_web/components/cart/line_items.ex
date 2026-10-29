@@ -192,10 +192,11 @@ defmodule EdenflowersWeb.Cart.LineItems do
     <.image
       src={@line_item.product_image_slug}
       alt={"Image of #{@line_item.product_name}"}
-      width={80}
-      height={80}
+      width={120}
+      height={120}
       sizes="80px"
       crop_type="fit"
+      quality={90}
       loading="eager"
       class="h-16 w-16 object-contain sm:h-20 sm:w-20"
     />
