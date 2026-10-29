@@ -968,6 +968,10 @@ defmodule EdenflowersWeb.CoreComponents do
 
   attr :category, :string, default: nil, doc: "the product's category name, shown above the name"
 
+  attr :priority, :boolean,
+    default: false,
+    doc: "loads the photo straight away, for the first card on screen, whose photo is the page's largest paint"
+
   def product_card(assigns) do
     ~H"""
     <.link
@@ -982,6 +986,7 @@ defmodule EdenflowersWeb.CoreComponents do
           height={750}
           sources={[%{media: "(min-width: 640px)", width: 600, height: 600}]}
           sizes="(min-width: 640px) 25vw, 50vw"
+          priority={@priority}
           class={["h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]", @product.sold_out? && "opacity-50"]}
         />
         <span

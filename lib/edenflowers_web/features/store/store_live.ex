@@ -139,9 +139,10 @@ defmodule EdenflowersWeb.Store.StoreLive do
               class="grid gap-x-6 gap-y-16 md:grid-cols-2 md:gap-y-20 xl:grid-cols-3 xl:gap-x-8"
               role="list"
             >
-              <li :for={product <- @products}>
+              <li :for={{product, index} <- Enum.with_index(@products)}>
                 <.product_card
                   product={product}
+                  priority={index == 0}
                   navigate={~q"/#{language}/product/#{product}"}
                   locale={Edenflowers.Format.locale()}
                   heading="h2"
