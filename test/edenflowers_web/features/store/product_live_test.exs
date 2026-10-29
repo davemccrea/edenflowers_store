@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
   setup %{conn: conn} do
     order = generate(order())
-    %{conn: Plug.Test.init_test_session(conn, %{order_id: order.id}), order: order}
+    %{conn: with_cart(conn, order), order: order}
   end
 
   test "a one-size product has no size to choose, and still adds to the cart", %{conn: conn, order: order} do
@@ -24,6 +24,19 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     view |> form("[data-testid=product-form]") |> render_submit()
 
     assert [%LineItem{variant_size: nil}] = line_items(order)
+  end
+
+  test "the first add to cart opens the browser's cart", %{conn: conn} do
+    product = generate(product(draft: false))
+    generate(product_variant(product_id: product.id, size: nil, price: "6.00"))
+    conn = Plug.Test.init_test_session(Phoenix.ConnTest.build_conn(), %{})
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+    assert has_element?(view, ~s|button[aria-label="Cart, empty"]|)
+
+    view |> form("[data-testid=product-form]") |> render_submit()
+
+    assert has_element?(view, ~s|button[aria-label="Cart, 1 item"]|)
   end
 
   test "a sold-out size can't be picked, and isn't picked to start with", %{conn: conn} do

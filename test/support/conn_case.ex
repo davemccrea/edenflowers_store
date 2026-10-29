@@ -38,8 +38,18 @@ defmodule EdenflowersWeb.ConnCase do
   end
 
   @doc """
+  Makes `order` this browser's cart, as its first add to cart would: stamps it
+  with a visitor_id and puts that visitor_id in the session.
+  """
+  def with_cart(conn, order) do
+    visitor_id = order.visitor_id || Ecto.UUID.generate()
+    Ash.Seed.update!(order, %{visitor_id: visitor_id})
+    Plug.Test.init_test_session(conn, %{visitor_id: visitor_id})
+  end
+
+  @doc """
   Signs `user` into the connection. `session` is for whatever else the page
-  reads from it, like a checkout's order.
+  reads from it.
   """
   def log_in(conn, user, session \\ %{}) do
     conn

@@ -118,7 +118,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     order = generate(order())
     Edenflowers.Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
 
-    conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+    conn = with_cart(conn, order)
     {:ok, view, _html} = live(conn, ~p"/checkout")
 
     assert has_element?(view, ~s|[data-testid="newsletter-opt-in-checkbox"]|)

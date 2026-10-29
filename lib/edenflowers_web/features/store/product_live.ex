@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   alias Edenflowers.Orders.Subscription
   alias EdenflowersWeb.Checkout.Fields
   alias EdenflowersWeb.FaqComponents
+  alias EdenflowersWeb.Hooks.HandleLineItemChanged
 
   alias Edenflowers.Catalog
   alias Edenflowers.Catalog.ProductType
@@ -19,7 +20,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
-  def mount(%{"id" => id} = params, %{"order_id" => order_id}, socket) do
+  def mount(%{"id" => id} = params, _session, socket) do
     product = get_product!(id)
 
     if connected?(socket),
@@ -37,7 +38,6 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     {:ok,
      socket
-     |> assign(order_id: order_id)
      |> assign(product: product)
      |> assign(gallery: product.photo_slugs -- product.hidden_photo_slugs)
      |> assign(
@@ -66,8 +66,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
   @impl true
   def render(assigns) do
     %{order: order, product: product, subscribe?: subscribe?} = assigns
-    lines = Enum.reject(order.line_items, & &1.is_card)
-    replaces_cart? = KeepSubscriptionAlone.replaces?(order.line_items, product.id, subscribe?)
+    lines = Enum.reject(cart_lines(order), & &1.is_card)
+    replaces_cart? = KeepSubscriptionAlone.replaces?(cart_lines(order), product.id, subscribe?)
 
     assigns =
       assign(assigns,
@@ -418,6 +418,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
   def handle_event("submit", _params, socket) do
     subscription = if socket.assigns.subscribe?, do: %{interval_weeks: socket.assigns.interval_weeks}, else: %{}
 
+    socket = open_cart(socket)
+
     case Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1, subscription) do
       {:ok, _line_item} ->
         {:noreply, push_event(socket, "js-exec", %{to: "#cart-drawer", attr: "phx-show"})}
@@ -505,12 +507,27 @@ defmodule EdenflowersWeb.Store.ProductLive do
   defp one_size?([%{size: nil}]), do: true
   defp one_size?(_variants), do: false
 
-  defp cart_line(order, product_id), do: Enum.find(order.line_items, &(not &1.is_card and &1.product_id == product_id))
+  # A browser's cart is opened on its first add, not when it arrives.
+  defp open_cart(%{assigns: %{order: nil}} = socket) do
+    %{visitor_id: visitor_id, current_user: actor} = socket.assigns
+    Orders.create_for_checkout!(%{visitor_id: visitor_id}, actor: actor)
+    order = Orders.get_storefront_cart!(visitor_id, actor: actor)
+    if connected?(socket), do: HandleLineItemChanged.subscribe(order)
+    assign(socket, :order, order)
+  end
+
+  defp open_cart(socket), do: socket
+
+  defp cart_lines(nil), do: []
+  defp cart_lines(order), do: order.line_items
+
+  defp cart_line(order, product_id),
+    do: Enum.find(cart_lines(order), &(not &1.is_card and &1.product_id == product_id))
 
   defp in_cart?(%{order: order, product: product, selected_variant: variant} = assigns) do
     interval = if assigns.subscribe?, do: String.to_integer(assigns.interval_weeks)
 
-    case Enum.reject(order.line_items, & &1.is_card) do
+    case Enum.reject(cart_lines(order), & &1.is_card) do
       [%{product_id: product_id, product_variant_id: variant_id, quantity: 1, interval_weeks: ^interval}] ->
         product_id == product.id and variant_id == variant.id
 

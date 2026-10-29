@@ -14,9 +14,8 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   @impl true
   def mount(%{"id" => id}, session, socket) do
     user = socket.assigns.current_user
-    guest_order_id = session["guest_order_id"]
 
-    case get_order(id, guest_order_id, user) do
+    case get_order(id, session, user) do
       {:ok, %{state: :placed} = order} ->
         {:ok, assign_order(socket, order)}
 
@@ -24,23 +23,28 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
       # order already carries everything this page shows, so it renders straight
       # away and only the payment line waits. Anyone can read an order still in
       # checkout, so only its owner may wait for it.
-      {:ok, %{state: :payment} = order}
-      when id == guest_order_id or (not is_nil(user) and order.user_id == user.id) ->
-        if connected?(socket) do
-          Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:placed:#{order.id}")
-        end
-
-        {:ok, assign_order(socket, order)}
-
-      _ when is_nil(user) ->
-        {:ok, redirect(socket, to: ~p"/sign-in?return_to=/order/#{id}")}
+      {:ok, %{state: :payment} = order} ->
+        if owner?(order, session, user),
+          do: {:ok, wait_for_placement(socket, order)},
+          else: not_found(socket, id, user)
 
       _ ->
-        {:ok,
-         socket
-         |> put_flash(:error, ~t"Order not found.")
-         |> push_navigate(to: ~q"/#{language}")}
+        not_found(socket, id, user)
     end
+  end
+
+  defp wait_for_placement(socket, order) do
+    if connected?(socket), do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:placed:#{order.id}")
+    assign_order(socket, order)
+  end
+
+  defp not_found(socket, id, nil), do: {:ok, redirect(socket, to: ~p"/sign-in?return_to=/order/#{id}")}
+
+  defp not_found(socket, _id, _user) do
+    {:ok,
+     socket
+     |> put_flash(:error, ~t"Order not found.")
+     |> push_navigate(to: ~q"/#{language}")}
   end
 
   @impl true
@@ -156,13 +160,26 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     {:noreply, assign_order(socket, order)}
   end
 
-  # A guest is granted the order their session's cart became (see `InitStore` and
-  # `CheckoutCompleteController`); everyone else goes through the order's read policy.
-  def get_order(id, guest_order_id, _user) when id == guest_order_id,
-    do: Orders.get_order_by_id(id, authorize?: false, load: [:receipt_available?, :committed?])
+  # A guest is granted the order their browser's cart became: by guest_order_id once
+  # `CheckoutCompleteController` released it, or by visitor_id when the webhook placed
+  # it first. Everyone else goes through the order's read policy.
+  def get_order(id, session, user) do
+    load = [:receipt_available?, :committed?]
 
-  def get_order(id, _guest_order_id, user),
-    do: Orders.get_order_by_id(id, actor: user, load: [:receipt_available?, :committed?])
+    case Orders.get_order_by_id(id, authorize?: false, load: load) do
+      {:ok, order} ->
+        if guest_order?(order, session), do: {:ok, order}, else: Orders.get_order_by_id(id, actor: user, load: load)
+
+      error ->
+        error
+    end
+  end
+
+  defp owner?(order, session, user), do: guest_order?(order, session) or (user != nil and order.user_id == user.id)
+
+  defp guest_order?(order, session) do
+    order.id == session["guest_order_id"] or (order.visitor_id != nil and order.visitor_id == session["visitor_id"])
+  end
 
   defp assign_order(socket, order) do
     {:ok, order} = Ash.load(order, [:customer_first_name, :line_items, :fulfillment_fee], authorize?: false)

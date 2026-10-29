@@ -4,33 +4,34 @@ defmodule EdenflowersWeb.Hooks.PutOrderTest do
   import Generator
   import Phoenix.LiveViewTest
 
-  # The first request runs InitStore with the cart still readable, so the
-  # later live/2 only does the connected mount, like a reconnecting tab.
-  setup %{conn: conn} do
+  require Ash.Query
+
+  test "a visit opens no cart before the first add to cart", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/about")
+
+    assert has_element?(view, ~s|button[aria-label="Cart, empty"]|)
+    refute Edenflowers.Orders.Order |> Ash.Query.filter(not is_nil(visitor_id)) |> Ash.exists?(authorize?: false)
+  end
+
+  test "mounts with the browser's cart", %{conn: conn} do
     order = generate(order())
-    conn = conn |> Plug.Test.init_test_session(%{order_id: order.id}) |> get(~p"/en/about")
-    %{conn: conn, order: order}
-  end
-
-  test "redirects to the same page when the session cart has been purged", %{conn: conn, order: order} do
-    order = Ash.Seed.update!(order, %{updated_at: DateTime.add(DateTime.utc_now(), -2, :day)})
-    Ash.destroy!(order, action: :purge_abandoned_cart, authorize?: false)
-
-    assert {:error, {:redirect, %{to: "/en/about"}}} = live(conn)
-  end
-
-  test "redirects when a guest's session order has been placed", %{conn: conn, order: order} do
-    Ash.Seed.update!(order, %{state: :placed})
-
-    assert {:error, {:redirect, %{to: "/en/about"}}} = live(conn)
-  end
-
-  test "mounts with a valid cart", %{conn: conn, order: order} do
     variant = generate(product_variant(product_id: generate(product()).id))
     generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
 
-    {:ok, view, _html} = live(conn)
+    {:ok, view, _html} = conn |> with_cart(order) |> live(~p"/en/about")
 
     assert has_element?(view, ~s|button[aria-label="Cart, 1 item"]|)
+  end
+
+  test "a placed order is no longer the browser's cart", %{conn: conn} do
+    order = generate(order())
+    variant = generate(product_variant(product_id: generate(product()).id))
+    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+    conn = with_cart(conn, order)
+    Ash.Seed.update!(order, %{state: :placed})
+
+    {:ok, view, _html} = live(conn, ~p"/en/about")
+
+    assert has_element?(view, ~s|button[aria-label="Cart, empty"]|)
   end
 end

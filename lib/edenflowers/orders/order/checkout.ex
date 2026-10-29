@@ -43,7 +43,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
   oban do
     triggers do
-      # InitStore opens a cart for every new browser session, crawlers included.
+      # Removing a cart's last line leaves it empty.
       trigger :purge_abandoned_cart do
         action :purge_abandoned_cart
         queue :default
@@ -81,16 +81,48 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     read :for_storefront do
-      description "Reads a cart with just what every storefront page shows: the header count and the cart " <>
-                    "drawer's lines and promotion code. Several times quicker than :for_checkout, whose " <>
-                    "totals and VAT only the checkout page needs, and it runs on every page view."
+      description "Reads a browser's cart, if it has one yet, with just what every storefront page shows: " <>
+                    "the header count and the cart drawer's lines and promotion code. Several times quicker " <>
+                    "than :for_checkout, whose totals and VAT only the checkout page needs, and it runs on " <>
+                    "every page view."
 
+      argument :visitor_id, :uuid do
+        allow_nil? false
+        description "The visitor_id from the browser's signed session."
+      end
+
+      get? true
+      filter expr(visitor_id == ^arg(:visitor_id) and state != :placed)
       prepare build(load: @storefront_load)
     end
 
     create :create_for_checkout do
-      description "Opens an empty cart at contact details for a new browser session, guest or signed in. " <>
-                    "Carts left empty for a day are purged nightly."
+      description "Opens a browser's cart at contact details on its first add to cart, guest or signed in, " <>
+                    "or returns the cart it already has, so two tabs adding at once share one. Without a " <>
+                    "visitor_id it always opens a new cart. Carts left empty for a day are purged nightly."
+
+      argument :visitor_id, :uuid do
+        description "The visitor_id from the browser's signed session."
+      end
+
+      change set_attribute(:visitor_id, arg(:visitor_id))
+      upsert? true
+      upsert_identity :unique_cart_per_visitor
+      upsert_fields [:visitor_id]
+    end
+
+    update :release_cart do
+      description "Detaches a cart from its browser when Stripe sends the customer back from paying, so their " <>
+                    "next add to cart opens a new one while the webhook places this order. Only the browser " <>
+                    "whose cart it is can release it, so a cross-site link can't empty someone's cart."
+
+      argument :visitor_id, :uuid do
+        allow_nil? false
+        description "The visitor_id from the browser's signed session."
+      end
+
+      change filter expr(visitor_id == ^arg(:visitor_id))
+      change set_attribute(:visitor_id, nil)
     end
 
     # Forward checkout transitions

@@ -47,7 +47,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutHappyPathTest do
       {:ok, payment_intent}
     end)
 
-    conn = Plug.Test.init_test_session(conn, %{order_id: order.id})
+    conn = with_cart(conn, order)
 
     %{conn: conn, order: order, fulfillment_option: fulfillment_option}
   end

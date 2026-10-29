@@ -46,6 +46,7 @@ defmodule Edenflowers.Orders.Order do
     repo Edenflowers.Repo
     table "orders"
     migration_types quoted_fulfillment_fee: :decimal, fulfillment_fee_override: :decimal, kept_amount: :decimal
+    identity_wheres_to_sql unique_cart_per_visitor: "state != 'placed'"
 
     check_constraints do
       check_constraint :quoted_fulfillment_fee, "orders_valid_quoted_fulfillment_fee",
@@ -333,6 +334,10 @@ defmodule Edenflowers.Orders.Order do
     attribute :promotion_minimum_cart_total, :decimal
 
     attribute :locale, :string, allow_nil?: false, default: "sv-FI"
+
+    # The browser whose cart this is, from the visitor_id in its signed session.
+    # Cleared when Stripe hands the customer back, so their next add opens a new cart.
+    attribute :visitor_id, :uuid
 
     attribute :receipt_emailed_at, :utc_datetime
     attribute :shop_reminded_at, :utc_datetime
@@ -761,5 +766,7 @@ defmodule Edenflowers.Orders.Order do
     identity :unique_payment_link_token, [:payment_link_token]
     # One Occurrence per subscription date, however often its job runs.
     identity :unique_occurrence, [:subscription_id, :subscription_date]
+    # A browser has one cart, so two tabs adding to it at once share it.
+    identity :unique_cart_per_visitor, [:visitor_id], where: expr(state != :placed)
   end
 end

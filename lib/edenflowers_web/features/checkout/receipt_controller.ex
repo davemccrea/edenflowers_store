@@ -10,7 +10,7 @@ defmodule EdenflowersWeb.Checkout.ReceiptController do
 
   def show(conn, %{"id" => id}) do
     with {:ok, %{receipt_available?: true} = order} <-
-           OrderLive.get_order(id, get_session(conn, :guest_order_id), conn.assigns[:current_user]),
+           OrderLive.get_order(id, get_session(conn), conn.assigns[:current_user]),
          {:ok, order} <- Receipt.load_for_receipt(order),
          {:ok, pdf} <- Receipt.generate(order) do
       send_download(conn, {:binary, pdf},
