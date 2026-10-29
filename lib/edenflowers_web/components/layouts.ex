@@ -88,9 +88,9 @@ defmodule EdenflowersWeb.Layouts do
   defp footer_locale_picker(assigns) do
     ~H"""
     <.locale_picker id="locale-picker-footer" current_path={@current_path} alternates={@alternates}>
-      <span class="group flex cursor-pointer items-center gap-1">
-        <.icon name="hero-globe-alt" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
-        <span class="text-base-content inline-flex text-sm group-hover:text-base-content/60">
+      <span class="flex cursor-pointer items-center gap-1 hover:opacity-60">
+        <.icon name="hero-globe-alt" class="h-5 w-5" />
+        <span class="inline-flex text-sm">
           {@current_locale}
         </span>
       </span>
@@ -883,10 +883,10 @@ defmodule EdenflowersWeb.Layouts do
     </main>
 
     <footer>
-      <div class="bg-cream relative overflow-hidden border-t border-b">
+      <div class="footer-sky text-dusk-content relative overflow-hidden border-t border-b">
         <.flower
           name="flower-41"
-          class="text-base-content/15 pointer-events-none absolute top-6 right-6 h-20 w-20 md:top-10 md:right-10 md:h-28 md:w-28"
+          class="text-dusk-content/25 pointer-events-none absolute top-6 right-6 h-20 w-20 md:top-10 md:right-10 md:h-28 md:w-28"
         />
         <div class="container relative py-20 md:py-36">
           <div class="footer-grid">
@@ -895,7 +895,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__location space-y-2">
-              <h3 class="eyebrow text-base-content/70">{~t"Address"}</h3>
+              <h3 class="eyebrow text-link-underline">{~t"Address"}</h3>
               <a
                 href={Business.maps_url()}
                 target="_blank"
@@ -909,7 +909,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__hours space-y-2">
-              <h3 class="eyebrow text-base-content/70">
+              <h3 class="eyebrow text-link-underline">
                 {~t"Opening hours"}
               </h3>
               <div class="space-y-1">
@@ -918,7 +918,7 @@ defmodule EdenflowersWeb.Layouts do
             </div>
 
             <div class="footer-grid__help space-y-2">
-              <h3 class="eyebrow text-base-content/70">{~t"Help"}</h3>
+              <h3 class="eyebrow text-link-underline">{~t"Help"}</h3>
               <ul class="space-y-1">
                 <li>
                   <.link
@@ -965,7 +965,7 @@ defmodule EdenflowersWeb.Layouts do
 
             <div class="footer-grid__socials space-y-8">
               <div class="space-y-2">
-                <h3 class="eyebrow text-base-content/70">{~t"Language"}</h3>
+                <h3 class="eyebrow text-link-underline">{~t"Language"}</h3>
                 <.footer_locale_picker
                   current_path={@current_path}
                   alternates={@alternates}
@@ -974,7 +974,7 @@ defmodule EdenflowersWeb.Layouts do
               </div>
 
               <div class="space-y-2">
-                <h3 class="eyebrow text-base-content/70">{~t"Socials"}</h3>
+                <h3 class="eyebrow text-link-underline">{~t"Socials"}</h3>
                 <.social_media_links />
               </div>
             </div>

@@ -45,14 +45,17 @@
 }
 
 /* Brand surfaces beyond daisyUI's semantic colours. Cream is the warm light
-   surface (footer, callouts, banners); forest is for dark reverse-out sections.
-   Each -content shares its surface's hue and chroma. */
+   surface (callouts, banners); forest is for dark reverse-out sections; dusk is
+   the footer, the slate blue of the home hero's sky. */
 @theme {
   --color-cream: oklch(95% 0.025 75);
   --color-cream-content: oklch(30% 0.05 60);
 
   --color-forest: oklch(26% 0.05 152);
   --color-forest-content: oklch(94% 0.02 80);
+
+  --color-dusk: oklch(41% 0.058 247);
+  --color-dusk-content: oklch(96% 0.015 80);
 
   --color-link-underline: oklch(81% 0.15 93);
 }
