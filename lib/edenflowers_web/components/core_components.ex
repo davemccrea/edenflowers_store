@@ -661,7 +661,9 @@ defmodule EdenflowersWeb.CoreComponents do
   `<picture>` only when `sources` supplies breakpoint-specific crops.
   When `priority` is set the image becomes a LCP candidate
   (`loading="eager"`, `fetchpriority="high"`). Default for non-priority is
-  `loading="lazy"` + `decoding="async"`.
+  `loading="lazy"` + `decoding="async"`. Set `loading="eager"` for an image
+  that is hidden now but likely shown soon, such as one in a closed drawer:
+  a lazy image never loads while hidden.
 
   SVGs and external URLs (anything without a `local:///` prefix, such as the
   seed placeholders) skip the `<picture>` machinery and render a plain `<img>`.
@@ -692,6 +694,7 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :height, :integer, required: true
   attr :sizes, :string, default: "100vw"
   attr :priority, :boolean, default: false
+  attr :loading, :string, default: nil, values: [nil, "eager", "lazy"]
   attr :crop_type, :string, default: "fill", values: ~w(fit fill auto)
   attr :crop, :string, default: nil
   # credo:disable-for-next-line Credo.Check.Readability.StrictModuleLayout
@@ -769,7 +772,7 @@ defmodule EdenflowersWeb.CoreComponents do
       alt={@alt}
       width={@width}
       height={@height}
-      loading={if @priority, do: "eager", else: "lazy"}
+      loading={@loading || if(@priority, do: "eager", else: "lazy")}
       decoding="async"
       fetchpriority={if @priority, do: "high"}
       class={@class}

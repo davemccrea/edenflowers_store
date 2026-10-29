@@ -651,25 +651,19 @@ defmodule EdenflowersWeb.Layouts do
                 {name}
               </.link>
             </li>
+            <li class="border-base-content/12 border-t pt-4">
+              <.link
+                class="font-serif text-base-content link-underline-hover text-3xl"
+                phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
+                navigate={if @current_user, do: ~p"/account"}
+                href={unless @current_user, do: sign_in_href(@current_path)}
+              >
+                {if @current_user, do: ~t"Account", else: ~t"Sign In"}
+              </.link>
+            </li>
           </ul>
         </nav>
       </div>
-
-      <footer class="bg-base-300 flex flex-col gap-6 px-8 py-8">
-        <.link
-          class="text-base-content group flex w-fit items-center gap-2 text-base tracking-wide"
-          phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
-          navigate={if @current_user, do: ~p"/account"}
-          href={unless @current_user, do: sign_in_href(@current_path)}
-        >
-          <.icon name="hero-user-circle" class="h-5 w-5" />
-          <span class="link-underline-hover">
-            {if @current_user, do: ~t"Account", else: ~t"Sign In"}
-          </span>
-        </.link>
-
-        <.social_media_links />
-      </footer>
     </.drawer>
 
     <.live_component

@@ -97,10 +97,12 @@ defmodule EdenflowersWeb.CardDrawer do
           <.image
             src={variant.photo_slug}
             alt=""
-            width={240}
-            height={240}
-            sizes="(min-width: 1024px) 10rem, 40vw"
+            width={160}
+            height={160}
+            sizes="8rem"
             crop_type="fit"
+            quality={70}
+            loading="eager"
             class="aspect-square w-full object-contain p-2"
           />
           <%!-- Card names run to 16 characters, wider than a two-column tile on a phone. --%>
