@@ -94,6 +94,7 @@ defmodule EdenflowersWeb.CardDrawer do
           >
             <.icon name="hero-check-mini" class="h-3.5 w-3.5" />
           </span>
+          <%!-- Card artwork is fine line work, which looks soft at the default WebP quality. --%>
           <.image
             src={variant.photo_slug}
             alt=""
@@ -101,7 +102,7 @@ defmodule EdenflowersWeb.CardDrawer do
             height={160}
             sizes="8rem"
             crop_type="fit"
-            quality={70}
+            quality={90}
             loading="eager"
             class="aspect-square w-full object-contain p-2"
           />

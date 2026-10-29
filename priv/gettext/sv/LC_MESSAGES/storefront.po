@@ -2435,17 +2435,17 @@ msgstr "Återuppta nu för en leverans %{date}."
 msgid "Right of withdrawal"
 msgstr "Ångerrätt"
 
-#: lib/edenflowers_web/components/card_drawer.ex:143
+#: lib/edenflowers_web/components/card_drawer.ex:144
 #, elixir-autogen, elixir-format
 msgid "Room for a few lines"
 msgstr "Plats för några rader"
 
-#: lib/edenflowers_web/components/card_drawer.ex:144
+#: lib/edenflowers_web/components/card_drawer.ex:145
 #, elixir-autogen, elixir-format
 msgid "Room for a longer message"
 msgstr "Plats för en längre hälsning"
 
-#: lib/edenflowers_web/components/card_drawer.ex:142
+#: lib/edenflowers_web/components/card_drawer.ex:143
 #, elixir-autogen, elixir-format
 msgid "Room for a short note"
 msgstr "Plats för en kort hälsning"

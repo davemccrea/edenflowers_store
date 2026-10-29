@@ -2435,17 +2435,17 @@ msgstr ""
 msgid "Right of withdrawal"
 msgstr "Right of withdrawal"
 
-#: lib/edenflowers_web/components/card_drawer.ex:143
+#: lib/edenflowers_web/components/card_drawer.ex:144
 #, elixir-autogen, elixir-format
 msgid "Room for a few lines"
 msgstr "Room for a few lines"
 
-#: lib/edenflowers_web/components/card_drawer.ex:144
+#: lib/edenflowers_web/components/card_drawer.ex:145
 #, elixir-autogen, elixir-format
 msgid "Room for a longer message"
 msgstr "Room for a longer message"
 
-#: lib/edenflowers_web/components/card_drawer.ex:142
+#: lib/edenflowers_web/components/card_drawer.ex:143
 #, elixir-autogen, elixir-format
 msgid "Room for a short note"
 msgstr "Room for a short note"

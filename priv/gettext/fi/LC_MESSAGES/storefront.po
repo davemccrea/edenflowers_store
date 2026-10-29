@@ -2435,17 +2435,17 @@ msgstr "Jatka nyt, niin seuraava toimitus on %{date}."
 msgid "Right of withdrawal"
 msgstr "Peruuttamisoikeus"
 
-#: lib/edenflowers_web/components/card_drawer.ex:143
+#: lib/edenflowers_web/components/card_drawer.ex:144
 #, elixir-autogen, elixir-format
 msgid "Room for a few lines"
 msgstr "Tilaa muutamalle riville"
 
-#: lib/edenflowers_web/components/card_drawer.ex:144
+#: lib/edenflowers_web/components/card_drawer.ex:145
 #, elixir-autogen, elixir-format
 msgid "Room for a longer message"
 msgstr "Tilaa pidemmälle viestille"
 
-#: lib/edenflowers_web/components/card_drawer.ex:142
+#: lib/edenflowers_web/components/card_drawer.ex:143
 #, elixir-autogen, elixir-format
 msgid "Room for a short note"
 msgstr "Tilaa lyhyelle viestille"
