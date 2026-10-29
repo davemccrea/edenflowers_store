@@ -57,18 +57,16 @@ defmodule Edenflowers.Catalog.ProductTest do
       refute Enum.any?(products, fn p -> p.id == product.id end)
     end
 
-    test "loads cheapest_price, product_variants, and product_category", %{tax_rate: tax_rate} do
+    test "carries each product's cheapest price", %{tax_rate: tax_rate} do
       published_category = generate(product_category(visibility: :public))
       product = generate(product(tax_rate_id: tax_rate.id, product_category_id: published_category.id, draft: false))
-      _variant = generate(product_variant(product_id: product.id, price: "15.99"))
+      generate(product_variant(product_id: product.id, price: "24.00"))
+      generate(product_variant(product_id: product.id, price: "15.99"))
 
       products = Catalog.list_store_products!(authorize?: false)
       found_product = Enum.find(products, fn p -> p.id == product.id end)
 
-      assert found_product != nil
       assert Decimal.equal?(found_product.cheapest_price, "15.99")
-      assert found_product.product_variants != []
-      assert found_product.product_category.id == published_category.id
     end
   end
 

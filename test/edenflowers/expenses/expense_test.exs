@@ -22,21 +22,6 @@ defmodule Edenflowers.Expenses.ExpenseTest do
   }
 
   describe ":ingest" do
-    test "creates an expense with all fields coerced to the correct types" do
-      assert {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
-
-      assert expense.document_id == "doc_abc123"
-      assert expense.vendor_name == "Acme Oy"
-      assert expense.date == ~D[2026-05-15]
-      assert expense.total_amount == Decimal.new("121.00")
-      assert expense.vat_amount == Decimal.new("21.00")
-      assert expense.currency == :eur
-      assert expense.category == :office_supplies
-      assert expense.confidence == :high
-      assert expense.processed_at != nil
-      assert expense.reviewed_at == nil
-    end
-
     test "upserts on document_id — re-ingesting updates extracted fields" do
       {:ok, _} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
 

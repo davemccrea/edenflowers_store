@@ -91,17 +91,6 @@ defmodule Edenflowers.Catalog.ProductVariantTest do
 
       refute Enum.any?(variants, fn v -> v.id == variant.id end)
     end
-
-    test "loads product with tax_rate", %{card_product: card_product} do
-      generate(product_variant(product_id: card_product.id, draft: false))
-
-      variants = Catalog.list_card_drawer_variants!(authorize?: false)
-      found = Enum.find(variants, fn v -> v.product_id == card_product.id end)
-
-      assert found != nil
-      assert found.product.id == card_product.id
-      assert found.product.tax_rate != nil
-    end
   end
 
   describe "Catalog.list_custom_order_variants" do

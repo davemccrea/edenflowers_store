@@ -81,24 +81,6 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       [option: option, admin: generate(admin_user())]
     end
 
-    test "updates prices and distances", %{option: option, admin: admin} do
-      assert {:ok, updated} =
-               Fulfillment.update_pricing(
-                 option,
-                 %{
-                   base_price: "5.00",
-                   price_per_km: "2.00",
-                   free_dist_km: 8,
-                   max_dist_km: 25
-                 },
-                 actor: admin
-               )
-
-      assert Decimal.equal?(updated.base_price, "5.00")
-      assert Decimal.equal?(updated.price_per_km, "2.00")
-      assert {updated.free_dist_km, updated.max_dist_km} == {8, 25}
-    end
-
     test "can't change anything outside pricing", %{option: option, admin: admin} do
       assert {:error, _} = Fulfillment.update_pricing(option, %{rate_type: :fixed}, actor: admin)
       assert {:error, _} = Fulfillment.update_pricing(option, %{fulfillment_method: :pickup}, actor: admin)

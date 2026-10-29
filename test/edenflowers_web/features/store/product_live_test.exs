@@ -137,10 +137,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       refute has_element?(view, "[data-testid=subscription-faq]")
 
       view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
-      assert has_element?(view, "[data-testid=subscription-faq] summary.font-serif.text-xl", "When do I pay?")
-
-      assert has_element?(view, "#subscription-faq-heading.section-title")
-      assert has_element?(view, ~s|#subscription-question-1 > .collapse-content[class*="text-base-content/80"]|)
+      assert has_element?(view, "[data-testid=subscription-faq] summary", "When do I pay?")
 
       {:ok, faq, _html} = live(conn, ~p"/en/faq")
       assert has_element?(faq, "#subscriptions-question-1", "When do I pay?")

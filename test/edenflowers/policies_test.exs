@@ -44,11 +44,6 @@ defmodule Edenflowers.PoliciesTest do
       assert %Ash.Error.Forbidden{} = error
     end
 
-    test "destroy is forbidden for unauthenticated actor", %{promotion: promotion} do
-      assert {:error, error} = Ash.destroy(promotion, actor: nil)
-      assert %Ash.Error.Forbidden{} = error
-    end
-
     test "create is forbidden for a signed-in customer", %{customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} =
                Promotion
@@ -66,10 +61,6 @@ defmodule Edenflowers.PoliciesTest do
                promotion
                |> Ash.Changeset.for_update(:update, %{discount_rate: "1.00"})
                |> Ash.update(actor: customer)
-    end
-
-    test "destroy is forbidden for a signed-in customer", %{promotion: promotion, customer: customer} do
-      assert {:error, %Ash.Error.Forbidden{}} = Ash.destroy(promotion, actor: customer)
     end
 
     test "system actor cannot create a promotion" do
@@ -115,11 +106,6 @@ defmodule Edenflowers.PoliciesTest do
       assert %Ash.Error.Forbidden{} = error
     end
 
-    test "destroy is forbidden for unauthenticated actor", %{product: product} do
-      assert {:error, error} = Ash.destroy(product, actor: nil)
-      assert %Ash.Error.Forbidden{} = error
-    end
-
     test "create is forbidden for a signed-in customer", %{tax_rate: tax_rate, product_category: pc, customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} =
                Product
@@ -138,10 +124,6 @@ defmodule Edenflowers.PoliciesTest do
                product
                |> Ash.Changeset.for_update(:update, %{name: "Renamed"})
                |> Ash.update(actor: customer)
-    end
-
-    test "destroy is forbidden for a signed-in customer", %{product: product, customer: customer} do
-      assert {:error, %Ash.Error.Forbidden{}} = Ash.destroy(product, actor: customer)
     end
   end
 
@@ -174,11 +156,6 @@ defmodule Edenflowers.PoliciesTest do
       assert %Ash.Error.Forbidden{} = error
     end
 
-    test "destroy is forbidden for unauthenticated actor", %{variant: variant} do
-      assert {:error, error} = Ash.destroy(variant, actor: nil)
-      assert %Ash.Error.Forbidden{} = error
-    end
-
     test "create is forbidden for a signed-in customer", %{product: product, customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} =
                ProductVariant
@@ -195,10 +172,6 @@ defmodule Edenflowers.PoliciesTest do
                variant
                |> Ash.Changeset.for_update(:update, %{price: "0.01"})
                |> Ash.update(actor: customer)
-    end
-
-    test "destroy is forbidden for a signed-in customer", %{variant: variant, customer: customer} do
-      assert {:error, %Ash.Error.Forbidden{}} = Ash.destroy(variant, actor: customer)
     end
   end
 
@@ -225,11 +198,6 @@ defmodule Edenflowers.PoliciesTest do
       assert %Ash.Error.Forbidden{} = error
     end
 
-    test "destroy is forbidden for unauthenticated actor", %{category: category} do
-      assert {:error, error} = Ash.destroy(category, actor: nil)
-      assert %Ash.Error.Forbidden{} = error
-    end
-
     test "create is forbidden for a signed-in customer", %{customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} =
                ProductCategory
@@ -242,10 +210,6 @@ defmodule Edenflowers.PoliciesTest do
                category
                |> Ash.Changeset.for_update(:update, %{name: "Renamed"})
                |> Ash.update(actor: customer)
-    end
-
-    test "destroy is forbidden for a signed-in customer", %{category: category, customer: customer} do
-      assert {:error, %Ash.Error.Forbidden{}} = Ash.destroy(category, actor: customer)
     end
   end
 
@@ -263,11 +227,6 @@ defmodule Edenflowers.PoliciesTest do
       assert %Ash.Error.Forbidden{} = error
     end
 
-    test "destroy is forbidden for unauthenticated actor", %{tax_rate: tax_rate} do
-      assert {:error, error} = Ash.destroy(tax_rate, actor: nil)
-      assert %Ash.Error.Forbidden{} = error
-    end
-
     test "create is forbidden for a signed-in customer", %{customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} =
                TaxRate
@@ -280,10 +239,6 @@ defmodule Edenflowers.PoliciesTest do
                tax_rate
                |> Ash.Changeset.for_update(:update, %{percentage: "0"})
                |> Ash.update(actor: customer)
-    end
-
-    test "destroy is forbidden for a signed-in customer", %{tax_rate: tax_rate, customer: customer} do
-      assert {:error, %Ash.Error.Forbidden{}} = Ash.destroy(tax_rate, actor: customer)
     end
   end
 
@@ -318,11 +273,6 @@ defmodule Edenflowers.PoliciesTest do
       assert %Ash.Error.Forbidden{} = error
     end
 
-    test "destroy is forbidden for unauthenticated actor", %{option: option} do
-      assert {:error, error} = Ash.destroy(option, actor: nil)
-      assert %Ash.Error.Forbidden{} = error
-    end
-
     test "create is forbidden for a signed-in customer", %{tax_rate: tax_rate, customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} =
                FulfillmentOption
@@ -341,10 +291,6 @@ defmodule Edenflowers.PoliciesTest do
                option
                |> Ash.Changeset.for_update(:update, %{base_price: "0.00"})
                |> Ash.update(actor: customer)
-    end
-
-    test "destroy is forbidden for a signed-in customer", %{option: option, customer: customer} do
-      assert {:error, %Ash.Error.Forbidden{}} = Ash.destroy(option, actor: customer)
     end
   end
 
@@ -367,11 +313,6 @@ defmodule Edenflowers.PoliciesTest do
       assert %Ash.Error.Forbidden{} = error
     end
 
-    test "destroy is forbidden for unauthenticated actor", %{course: course} do
-      assert {:error, error} = Ash.destroy(course, actor: nil)
-      assert %Ash.Error.Forbidden{} = error
-    end
-
     test "create is forbidden for a signed-in customer", %{customer: customer} do
       assert {:error, %Ash.Error.Forbidden{}} =
                Course
@@ -385,9 +326,26 @@ defmodule Edenflowers.PoliciesTest do
                |> Ash.Changeset.for_update(:update, %{price: "0.00"})
                |> Ash.update(actor: customer)
     end
+  end
 
-    test "destroy is forbidden for a signed-in customer", %{course: course, customer: customer} do
-      assert {:error, %Ash.Error.Forbidden{}} = Ash.destroy(course, actor: customer)
+  test "guests and customers can't destroy promotions, catalogue, tax rates, fulfillment options or courses", %{
+    customer: customer
+  } do
+    tax_rate = generate(tax_rate())
+
+    records = [
+      generate(promotion()),
+      generate(product()),
+      generate(product_variant(product_id: generate(product()).id)),
+      generate(product_category()),
+      tax_rate,
+      generate(fulfillment_option(tax_rate_id: tax_rate.id)),
+      Course |> Ash.Changeset.for_create(:create, course_attrs()) |> Ash.create!(authorize?: false)
+    ]
+
+    for record <- records, actor <- [nil, customer] do
+      assert match?({:error, %Ash.Error.Forbidden{}}, Ash.destroy(record, actor: actor)),
+             "#{inspect(record.__struct__)} destroyed by #{if actor, do: "a customer", else: "a guest"}"
     end
   end
 

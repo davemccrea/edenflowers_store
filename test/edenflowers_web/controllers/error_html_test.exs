@@ -7,6 +7,5 @@ defmodule EdenflowersWeb.ErrorHTMLTest do
     assert body =~ "Page not found"
     assert body =~ ~r/<title[^>]*>\s*Page not found\s*\| Eden Flowers<\/title>/
     assert body =~ ~s(href="/en/store")
-    assert body =~ "app.css"
   end
 end

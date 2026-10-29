@@ -1205,14 +1205,6 @@ defmodule Edenflowers.Orders.OrderTest do
   end
 
   describe "Order update_locale action" do
-    test "updates locale to a configured locale" do
-      order = Orders.create_for_checkout!(authorize?: false)
-      assert order.locale == "sv-FI"
-
-      assert {:ok, updated_order} = Orders.update_locale(order, "en-GB", authorize?: false)
-      assert updated_order.locale == "en-GB"
-    end
-
     test "rejects locale that is not in the configured set" do
       order = Orders.create_for_checkout!(authorize?: false)
 

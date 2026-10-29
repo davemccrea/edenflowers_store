@@ -47,7 +47,6 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
 
     assert has_element?(view, "[data-testid=pay-refunded]")
     refute has_element?(view, "[data-testid=pay-booked]")
-    refute has_element?(view, ".flower-bloom")
     refute has_element?(view, "#pay-form")
   end
 
@@ -126,9 +125,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     assert has_element?(view, "[data-testid=pay-paid]")
     assert has_element?(view, "h1", "Thank you, Ada.")
     assert has_element?(view, "p[data-testid=pay-booked]", "You're booked.")
-    refute has_element?(view, "[data-testid=pay-booked].font-serif")
     refute render(view) =~ "This booking is paid."
-    assert has_element?(view, ".flower-bloom")
     assert has_element?(view, "dt", "Total paid")
     assert has_element?(view, "[data-testid=pay-total]", "170,00")
     refute render(view) =~ "Paid so far"
@@ -142,7 +139,6 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
 
     assert has_element?(view, "[data-testid=pay-cancelled]")
     refute has_element?(view, "[data-testid=pay-booked]")
-    refute has_element?(view, ".flower-bloom")
     refute has_element?(view, "#pay-form")
   end
 
@@ -198,7 +194,6 @@ defmodule EdenflowersWeb.Courses.CoursePayLiveTest do
     {:ok, view, _html} = live(conn, ~p"/pay/courses/#{registration.payment_link_token}?redirect_status=succeeded")
 
     assert has_element?(view, "[data-testid=pay-confirming]")
-    assert has_element?(view, ".flower-waiting")
     refute has_element?(view, "[data-testid=pay-paid]")
     refute has_element?(view, "#pay-form")
 

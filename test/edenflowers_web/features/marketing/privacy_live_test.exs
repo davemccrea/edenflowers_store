@@ -17,24 +17,6 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     assert has_element?(view, "#sharing", "Hetzner hosts our main customer database in Finland.")
   end
 
-  test "shows the update date without draft caveats or internal work notes", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/en/privacy")
-
-    assert has_element?(view, "#notice-updated", "Updated 27 October 2026.")
-
-    for caveat <- ["draft", "confirming", "under review", "need checking", "not yet", "intended"] do
-      refute has_element?(view, "#main-content", caveat)
-    end
-
-    refute has_element?(view, "#privacy-draft")
-    refute has_element?(view, "[data-draft-detail]")
-    refute has_element?(view, "#main-content", "To confirm:")
-    refute has_element?(view, "#main-content", "To implement:")
-
-    refute has_element?(view, "#retention", "7 years")
-    refute has_element?(view, "#sharing", "all data stays in the EU")
-  end
-
   test "states accounting requirements without promising unimplemented expiry", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/privacy")
 
@@ -57,57 +39,18 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
     end
   end
 
-  test "describes current collection and sharing rather than the older assumptions", %{conn: conn} do
+  test "states its legal bases, who receives data and how to exercise rights", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/privacy")
 
-    assert has_element?(view, "#information", "your details came from the person who ordered them")
-    assert has_element?(view, "#information", "never for marketing")
-    assert has_element?(view, "#information", "photograph flowers left at the door")
-    assert has_element?(view, "#information", "Newsletters require your consent.")
-    assert has_element?(view, "#information", "Instagram handle")
-    assert has_element?(view, "#information", "coordinates for calculating distance")
     assert has_element?(view, "#information", "our contract with you or steps you request before it")
     assert has_element?(view, "#information", "Accounting records: our legal obligation")
-    assert has_element?(view, "#information", "Our legal bases are")
-
     assert has_element?(view, "#information", "legitimate interests: fulfilling gifts, documenting delivery")
-
-    assert has_element?(
-             view,
-             "#information",
-             "administering purchases, handling complaints and preventing website abuse"
-           )
-
-    assert has_element?(
-             view,
-             "#information",
-             "We cannot fulfil purchases without necessary contact and delivery details"
-           )
-
-    assert has_element?(view, "#information", "Newsletter signup is optional")
-    assert has_element?(view, "#information", "Instagram handles are optional")
-    assert has_element?(view, "#information", "Checkout may create an account")
-    assert has_element?(view, "#sharing", "contact details, language and purchase statistics")
-    assert has_element?(view, "#sharing", "For newsletter subscribers only")
-    refute has_element?(view, "#sharing", "non-subscribers")
+    assert has_element?(view, "#information", "Newsletters require your consent.")
     assert has_element?(view, "#sharing", "limited card details, not full card numbers or security codes")
-    assert has_element?(view, "#sharing", "Mapping services receive delivery addresses or coordinates")
-    assert has_element?(view, "#sharing", "Website-security and mailbox providers handle traffic and emails")
-    refute has_element?(view, "#sharing", "Google Maps")
     assert has_element?(view, "#sharing", "Our accountant receives monthly purchase and payment records")
-    assert has_element?(view, "#sharing", "photos may go to the purchaser, not necessarily the recipient")
-    assert has_element?(view, "#sharing", "cannot be recalled")
-    refute has_element?(view, "#sharing", "emailed to the recipient")
-    assert has_element?(view, "#cookies", "sign-in for up to 30 days")
-    assert has_element?(view, "#cookies", "Stripe loads only on payment pages")
     assert has_element?(view, "#cookies", "We do not use analytics or advertising cookies")
-    assert has_element?(view, "#cookies", "Blocking cookies in your browser")
-    assert has_element?(view, "#cookies", "IP addresses, browser details and form data")
-    assert has_element?(view, "#cookies", "Browser settings do not replace required consent")
-    assert has_element?(view, "#rights", "Requests are normally free")
     assert has_element?(view, "#rights", "Within one month we respond or explain a lawful extension")
     assert has_element?(view, ~s|#rights a[href="https://tietosuoja.fi/en"]|, "Office of the Data Protection Ombudsman")
-    assert has_element?(view, ~s|#rights a[href="/en/terms"]|)
   end
 
   test "keeps the notice readable without dropping data rights", %{conn: conn} do

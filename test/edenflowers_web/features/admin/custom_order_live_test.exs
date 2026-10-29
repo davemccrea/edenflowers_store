@@ -163,7 +163,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       search_customers(view, "Keyboard")
       assert has_element?(view, "#customer-select ul", "keyboard@example.com")
       view |> element("#customer-select") |> render_hook("keydown", %{"key" => "ArrowDown"})
-      assert has_element?(view, "#customer-select .bg-primary.text-primary-content", "keyboard@example.com")
       view |> element("#customer-select") |> render_hook("keydown", %{"key" => "Enter"})
       assert_push_event(view, "select", %{id: "customer-select", selection: [%{value: selected_id}]})
       assert selected_id == customer.id

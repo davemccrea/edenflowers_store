@@ -120,7 +120,7 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
 
   test "customer quotes keep original wording and read as complete excerpts", %{conn: conn} do
     originals =
-      Regex.scan(~r/”([^”]+)”/u, File.read!("feedback.md"), capture: :all_but_first)
+      Regex.scan(~r/”([^”]+)”/u, File.read!("docs/feedback.md"), capture: :all_but_first)
       |> List.flatten()
 
     for locale <- ["en", "sv", "fi"] do

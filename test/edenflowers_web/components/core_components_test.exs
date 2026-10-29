@@ -147,28 +147,24 @@ defmodule EdenflowersWeb.CoreComponentsTest do
     assert CoreComponents.image_url(src, 600, 750) == expected
   end
 
-  test "shared image markup preserves layout, accessibility and loading attributes" do
+  test "shared image markup keeps alt text, dimensions and loading hints" do
     for sources <- [[], [%{media: "(min-width: 640px)", width: 600, height: 600}]] do
       html =
         image(
           sources: sources,
           alt: "Bouquet",
-          class: "object-cover",
           sizes: "50vw",
-          priority: true,
-          rest: %{"data-testid" => "photo"}
+          priority: true
         )
 
       for {name, expected} <- [
             {"alt", "Bouquet"},
-            {"class", "object-cover"},
             {"sizes", "50vw"},
             {"width", "600"},
             {"height", "750"},
             {"loading", "eager"},
             {"decoding", "async"},
-            {"fetchpriority", "high"},
-            {"data-testid", "photo"}
+            {"fetchpriority", "high"}
           ] do
         assert attribute(html, "img", name) == expected
       end

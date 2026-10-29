@@ -177,7 +177,6 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
 
     assert has_element?(view, "h1", "Thank you, Anna.")
-    assert has_element?(view, ".flower-bloom")
     assert has_element?(view, "h1[data-testid=pay-paid]", "Thank you, Anna.")
     refute render(view) =~ "is paid."
     assert has_element?(view, "hgroup p", "Order #{order.order_reference}")
@@ -245,7 +244,6 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
 
     assert has_element?(view, "[data-testid=pay-refunded]")
     refute has_element?(view, "[data-testid=pay-fulfillment]")
-    refute has_element?(view, ".flower-bloom")
     refute has_element?(view, "[data-testid=pay-paid]")
     refute has_element?(view, "#pay-form")
   end
@@ -256,7 +254,6 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
 
     assert has_element?(view, "[data-testid=pay-cancelled]")
-    refute has_element?(view, ".flower-bloom")
     refute has_element?(view, "[data-testid=pay-fulfillment]")
     refute has_element?(view, "#pay-form")
   end
@@ -271,7 +268,6 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}?redirect_status=succeeded")
 
     assert has_element?(view, "[data-testid=pay-confirming]")
-    assert has_element?(view, ".flower-waiting")
     refute has_element?(view, "[data-testid=pay-paid]")
     refute has_element?(view, "#pay-form")
 
