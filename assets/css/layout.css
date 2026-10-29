@@ -207,11 +207,12 @@ html:has(dialog.slide-drawer:modal) {
   }
 }
 
-/* Echoes the home hero's sky: a hazy glow in the corner and speckled grain.
+/* Echoes the home hero's sky: hazy glows in two corners and speckled grain.
    The grain is grey noise under soft-light; the -1.3 offset centres it on
    mid-grey so it averages out and keeps the text contrast of plain dusk. Retune
-   the offset if the frequency or 1.2 gain changes. The glow has a fixed size,
-   smaller on phones, so it stays clear of the text above it. */
+   the offset if the frequency or 1.2 gain changes. The glows have a fixed
+   size, smaller on phones, so they stay clear of the text; the top-left one is
+   fainter so the bottom-right stays the main light. */
 .footer-sky {
   --footer-sky-glow: 14rem 7rem;
   background-color: var(--color-dusk);
@@ -220,8 +221,13 @@ html:has(dialog.slide-drawer:modal) {
       ellipse var(--footer-sky-glow) at 100% 100%,
       oklch(100% 0 0 / 0.3),
       transparent
+    ),
+    radial-gradient(
+      ellipse var(--footer-sky-glow) at 0% 0%,
+      oklch(100% 0 0 / 0.2),
+      transparent
     );
-  background-blend-mode: soft-light, normal;
+  background-blend-mode: soft-light, normal, normal;
 
   @media (width >= theme(--breakpoint-md)) {
     --footer-sky-glow: 36rem 18rem;
