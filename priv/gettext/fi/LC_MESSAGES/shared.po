@@ -22,17 +22,17 @@ msgstr "%{count} vartta"
 msgid "%{name} card"
 msgstr "%{name}-kortti"
 
-#: lib/edenflowers_web/components/core_components.ex:944
+#: lib/edenflowers_web/components/core_components.ex:948
 #, elixir-autogen, elixir-format
 msgid "(opens a larger view)"
 msgstr "(avautuu suurempana)"
 
-#: lib/edenflowers_web/components/core_components.ex:1102
+#: lib/edenflowers_web/components/core_components.ex:1111
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr "Ostoskori, tyhjä"
 
-#: lib/edenflowers_web/components/layouts.ex:142
+#: lib/edenflowers_web/components/layouts.ex:139
 #, elixir-autogen, elixir-format
 msgid "Connection lost"
 msgstr "Yhteys katkesi"
@@ -42,22 +42,22 @@ msgstr "Yhteys katkesi"
 msgid "Dimensions (cm)"
 msgstr "Mitat (cm)"
 
-#: lib/edenflowers_web/components/core_components.ex:1032
+#: lib/edenflowers_web/components/core_components.ex:1041
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Facebook"
 msgstr "Eden Flowers Facebookissa"
 
-#: lib/edenflowers_web/components/core_components.ex:1041
+#: lib/edenflowers_web/components/core_components.ex:1050
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Instagram"
 msgstr "Eden Flowers Instagramissa"
 
-#: lib/edenflowers_web/components/core_components.ex:990
+#: lib/edenflowers_web/components/core_components.ex:999
 #, elixir-autogen, elixir-format
 msgid "Free delivery"
 msgstr "Ilmainen toimitus"
 
-#: lib/edenflowers_web/components/core_components.ex:1000
+#: lib/edenflowers_web/components/core_components.ex:1009
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr "Alkaen"
@@ -72,12 +72,12 @@ msgstr "Korkeus (cm)"
 msgid "Language"
 msgstr "Kieli"
 
-#: lib/edenflowers_web/components/core_components.ex:1301
+#: lib/edenflowers_web/components/core_components.ex:1310
 #, elixir-autogen, elixir-format
 msgid "Large"
 msgstr "Suuri"
 
-#: lib/edenflowers_web/components/core_components.ex:1300
+#: lib/edenflowers_web/components/core_components.ex:1309
 #, elixir-autogen, elixir-format
 msgid "Medium"
 msgstr "Keskikokoinen"
@@ -107,17 +107,17 @@ msgstr "Ruukku (cm)"
 msgid "Previous month"
 msgstr "Edellinen kuukausi"
 
-#: lib/edenflowers_web/components/layouts.ex:147
+#: lib/edenflowers_web/components/layouts.ex:144
 #, elixir-autogen, elixir-format
 msgid "Reconnecting…"
 msgstr "Yhdistetään uudelleen…"
 
-#: lib/edenflowers_web/components/core_components.ex:1299
+#: lib/edenflowers_web/components/core_components.ex:1308
 #, elixir-autogen, elixir-format
 msgid "Small"
 msgstr "Pieni"
 
-#: lib/edenflowers_web/components/core_components.ex:1003
+#: lib/edenflowers_web/components/core_components.ex:1012
 #, elixir-autogen, elixir-format
 msgid "Sold out"
 msgstr "Loppuunmyyty"
@@ -167,19 +167,19 @@ msgstr "Toimituskulujen laskemisessa tapahtui virhe, yritä myöhemmin uudelleen
 msgid "This field is required"
 msgstr "Tämä kenttä on pakollinen"
 
-#: lib/edenflowers_web/components/layouts.ex:420
-#: lib/edenflowers_web/components/layouts.ex:637
+#: lib/edenflowers_web/components/layouts.ex:417
+#: lib/edenflowers_web/components/layouts.ex:635
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr "Sulje navigointivalikko"
 
-#: lib/edenflowers_web/components/layouts.ex:279
-#: lib/edenflowers_web/components/layouts.ex:707
+#: lib/edenflowers_web/components/layouts.ex:276
+#: lib/edenflowers_web/components/layouts.ex:699
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr "Avaa navigointivalikko"
 
-#: lib/edenflowers_web/components/core_components.ex:1020
+#: lib/edenflowers_web/components/core_components.ex:1029
 #, elixir-autogen, elixir-format
 msgid "Free delivery within %{km} km of Minimossen on marked bouquets."
 msgstr "Ilmainen toimitus %{km} km:n säteellä Minimossenista merkityille kimpuille."

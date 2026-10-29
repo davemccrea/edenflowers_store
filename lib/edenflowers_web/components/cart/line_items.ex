@@ -34,6 +34,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   width={80}
                   height={80}
                   sizes="80px"
+                  loading="eager"
                   class="h-16 w-16 object-cover sm:h-20 sm:w-20"
                 />
               </.link>
@@ -195,6 +196,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
       height={80}
       sizes="80px"
       crop_type="fit"
+      loading="eager"
       class="h-16 w-16 object-contain sm:h-20 sm:w-20"
     />
     """
