@@ -85,7 +85,7 @@ Repo.transaction(fn ->
       translations: %{
         "sv-FI": %{
           name: "Buketter",
-          description: "Blommorna skiftar med årstiderna, men stilen är min."
+          description: "Blommorna skiftar med årstiderna, men stilen är min egen."
         },
         fi: %{
           name: "Kukkakimput",
