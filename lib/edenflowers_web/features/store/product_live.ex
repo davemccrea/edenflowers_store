@@ -32,9 +32,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     cart_line = cart_line(socket.assigns.order, product.id)
 
-    selected_variant =
-      (cart_line && Enum.find(product_variants, &(&1.id == cart_line.product_variant_id))) ||
-        default_variant(selectable_variants(product_variants))
+    selected_variant = initial_variant(product_variants, cart_line)
 
     {:ok,
      socket
@@ -51,18 +49,22 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)
      |> assign(photo_slug: selected_variant.photo_slug)
-     |> assign(
-       subscribe?:
-         cond do
-           params["subscribe"] == "1" -> product.subscribable
-           cart_line -> cart_line.interval_weeks != nil
-           true -> false
-         end
-     )
+     |> assign(subscribe?: initial_subscribe?(params, product, cart_line))
      |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 1))
      |> assign(has_subscription?: has_subscription?(socket.assigns.current_user))
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
   end
+
+  defp initial_variant(product_variants, nil), do: default_variant(selectable_variants(product_variants))
+
+  defp initial_variant(product_variants, cart_line) do
+    Enum.find(product_variants, &(&1.id == cart_line.product_variant_id)) ||
+      initial_variant(product_variants, nil)
+  end
+
+  defp initial_subscribe?(%{"subscribe" => "1"}, product, _cart_line), do: product.subscribable
+  defp initial_subscribe?(_params, _product, nil), do: false
+  defp initial_subscribe?(_params, _product, cart_line), do: cart_line.interval_weeks != nil
 
   @impl true
   def render(assigns) do
