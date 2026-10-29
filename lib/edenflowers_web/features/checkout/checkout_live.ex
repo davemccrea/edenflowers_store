@@ -46,7 +46,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
-  def mount(_params, _session, %{assigns: %{order: order}} = socket) do
+  def mount(_params, _session, %{assigns: %{order: %{id: order_id}}} = socket) do
+    order = Orders.get_order_for_checkout!(order_id, actor: actor(socket))
+
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
       Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
