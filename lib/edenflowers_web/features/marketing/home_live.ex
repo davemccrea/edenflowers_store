@@ -789,7 +789,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <%!-- On desktop the map fills the text column's height instead of setting its own --%>
           <div class="md:relative">
             <.image
-              src="local:///home-vaasa-map-2.png"
+              src="local:///home-vaasa-map-3.png"
               alt={~t"Map of Vaasa, Finland with Minimossen pinned"}
               width={1600}
               height={1880}
