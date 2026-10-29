@@ -597,6 +597,7 @@ defmodule EdenflowersWeb.Layouts do
   attr :order, :map, required: true
   attr :current_path, :string, required: true
   attr :alternates, :map, default: %{}
+  attr :notice_bar, :string, default: nil
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -688,6 +689,13 @@ defmodule EdenflowersWeb.Layouts do
       data-solid={JS.add_class("shy-header--solid")}
       data-overlay={JS.remove_class("shy-header--solid")}
     >
+      <.link :if={@notice_bar} id="notice-bar" navigate={~q"/#{language}/store"} class="notice-bar group">
+        {@notice_bar}
+        <.icon
+          name="hero-arrow-right-mini"
+          class="h-4 w-4 shrink-0 transition-transform duration-300 ease-out group-hover:translate-x-1"
+        />
+      </.link>
       <header class="w-full">
         <section class="bg-base-100 border-b px-3 py-2 sm:px-6 sm:py-4">
           <div class="grid-cols-[1fr_auto_1fr] grid items-center xl:gap-x-8">

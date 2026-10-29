@@ -1,5 +1,6 @@
 #hotfx-shy-header {
   display: flex;
+  flex-direction: column;
   position: fixed;
   top: 0;
   inset-inline: 0;
@@ -27,6 +28,35 @@ body:has([data-header-overlay])
   #hotfx-shy-header:not(.shy-header--solid)
   section {
   border-color: transparent;
+}
+
+/* The notice bar sits inside the fixed header, so the page moves down by its height
+   and each page's own clearance under the header still holds. */
+.notice-bar {
+  height: var(--notice-bar-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) * 1);
+  padding-inline: calc(var(--spacing) * 4);
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--color-base-content) 12%, transparent);
+  color: var(--color-base-content);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+body:has(#notice-bar):not(:has([data-header-overlay])) main {
+  padding-top: var(--notice-bar-height);
+}
+/* Over the opening photo the header's theme turns the bar see-through and white with it,
+   and the photo runs up behind; the shadow keeps the small text readable on bright petals. */
+body:has([data-header-overlay])
+  #hotfx-shy-header:not(.shy-header--solid)
+  .notice-bar {
+  color: white;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
 }
 
 #hotfx-shy-header.shy-header--hidden {

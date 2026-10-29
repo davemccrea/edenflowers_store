@@ -53,6 +53,7 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath,
         EdenflowersWeb.Hooks.PutOrder,
+        EdenflowersWeb.Hooks.PutNoticeBar,
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
       localize do

@@ -48,7 +48,13 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      notice_bar={@notice_bar}
+    >
       <.container>
         <div class="max-w-xl">
           <.flower name="flower-30" class="text-primary/70 mb-8 h-16 w-16" />

@@ -40,6 +40,7 @@
   --font-sans: "Open Sans", sans-serif;
   --font-serif: "Crimson Text", serif;
   --header-height: 8rem;
+  --notice-bar-height: 2.25rem;
   /* Space under the fixed header for a page's first block. */
   --header-clearance: calc(var(--header-height) + var(--spacing) * 12);
   --drawer-duration: 250ms;

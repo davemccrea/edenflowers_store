@@ -31,6 +31,7 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
       order={@order}
       flash={@flash}
       current_path={@current_path}
+      notice_bar={@notice_bar}
       alternates={@alternates}
     >
       <section class="flex items-center not-last:border-b md:min-h-dvh">

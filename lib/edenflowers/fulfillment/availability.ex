@@ -58,6 +58,23 @@ defmodule Edenflowers.Fulfillment.Availability do
   end
 
   @doc """
+  What the storefront bar tells a customer ordering at `now`: `{:order_today, deadline}`
+  while an order can still go out today, otherwise `{:next_open, date}`, or nil when
+  nothing opens in the next 60 days. A holiday reads as a later next date, not as
+  "closed": customers can still order then, for when Jennie is back.
+  """
+  @spec order_status(ShopCalendar.t(), DateTime.t()) :: {:order_today, Time.t()} | {:next_open, Date.t()} | nil
+  def order_status(%ShopCalendar{} = calendar, %DateTime{} = now) do
+    today = DateTime.to_date(now)
+
+    case next_open_date(calendar, now) do
+      nil -> nil
+      ^today -> {:order_today, calendar.order_deadline}
+      date -> {:next_open, date}
+    end
+  end
+
+  @doc """
   Cell state for the customer checkout calendar. A customer can't act on *why*
   a date is unavailable, so every blocked weekday or date reads as `:closed`,
   and a today that's past its deadline collapses to `:past`.

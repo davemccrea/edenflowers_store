@@ -132,7 +132,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     assigns = assign(assigns, :selected_date_unavailable?, selected_date_unavailable?(assigns))
 
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      notice_bar={@notice_bar}
+    >
       <.container>
         <div class="max-w-[58rem] mx-auto w-full">
           <h1 class="page-title mb-10 md:mb-12">{~t"Checkout"}</h1>
