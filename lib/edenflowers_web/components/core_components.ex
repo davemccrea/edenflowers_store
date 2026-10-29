@@ -1031,7 +1031,7 @@ defmodule EdenflowersWeb.CoreComponents do
         aria-label={~t"Eden Flowers on Facebook"}
         class="touch-target inline-block transition duration-300 hover:opacity-60"
       >
-        <img src="/images/icon-facebook.png" alt="" width="24" height="24" loading="lazy" decoding="async" class="h-6 w-6" />
+        <span class="mask-[url(/images/icon-facebook.png)] mask-contain mask-center mask-no-repeat block h-6 w-6 bg-current"></span>
       </a>
       <a
         href="https://www.instagram.com/edenflowers.fi/"
@@ -1040,7 +1040,7 @@ defmodule EdenflowersWeb.CoreComponents do
         aria-label={~t"Eden Flowers on Instagram"}
         class="touch-target inline-block transition duration-300 hover:opacity-60"
       >
-        <img src="/images/icon-instagram.png" alt="" width="24" height="24" loading="lazy" decoding="async" class="h-6 w-6" />
+        <span class="mask-[url(/images/icon-instagram.png)] mask-contain mask-center mask-no-repeat block h-6 w-6 bg-current"></span>
       </a>
     </div>
     """

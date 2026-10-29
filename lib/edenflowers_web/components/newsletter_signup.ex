@@ -15,7 +15,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
   def render(assigns) do
     ~H"""
     <section class="max-w-md space-y-5">
-      <h2 class="eyebrow text-base-content/70">{~t"Newsletter"}</h2>
+      <h2 class="eyebrow text-link-underline">{~t"Newsletter"}</h2>
 
       <p class="font-serif text-2xl leading-snug tracking-tight md:text-3xl">
         {~t"Get 15% off your first order."}
@@ -23,7 +23,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
 
       <%= if @submitted do %>
         <%!-- hero-reveal replays here because the element enters the DOM on submit. --%>
-        <p class="text-base-content/80 hero-reveal">
+        <p class="hero-reveal opacity-80">
           {~t"Thanks! Your 15% off code is on its way to your inbox."}
         </p>
       <% else %>
@@ -35,13 +35,13 @@ defmodule EdenflowersWeb.NewsletterSignup do
                 ring around a borderless field would cut across the underline
                 and the Subscribe button. The shadow fakes the second pixel so
                 nothing below shifts. --%>
-          <div class="border-base-content/30 flex items-center gap-2 border-b pb-1 transition-colors has-[:focus-visible]:shadow-[0_1px_0_0_var(--color-base-content)] focus-within:border-base-content">
+          <div class="border-current/30 flex items-center gap-2 border-b pb-1 transition-colors has-[:focus-visible]:shadow-[0_1px_0_0_currentColor] focus-within:border-current">
             <input
               type="email"
               name="email_address"
               id="newsletter-form_email_address"
               value={Phoenix.HTML.Form.input_value(@form, :email_address)}
-              class="flex-1 border-0 bg-transparent px-0 py-2 text-base pointer-coarse:py-2.5 placeholder:text-base-content/40 focus-visible:outline-hidden"
+              class="flex-1 border-0 bg-transparent px-0 py-2 text-base pointer-coarse:py-2.5 placeholder:text-current/70 focus-visible:outline-hidden"
               placeholder={~t"your@email.com"}
               autocomplete="email"
               required
@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
             <button
               type="submit"
               aria-label={~t"Subscribe"}
-              class="text-base-content/70 touch-target group flex flex-none p-1 transition-colors hover:text-base-content"
+              class="touch-target group flex flex-none p-1 opacity-70 transition-opacity hover:opacity-100"
             >
               <.icon
                 name="hero-arrow-right"
@@ -59,13 +59,13 @@ defmodule EdenflowersWeb.NewsletterSignup do
           </div>
           <%!-- Inline rather than a flash: a component's flash only reaches the
                 page on navigation, so it would never show here. --%>
-          <p :if={@error == :invalid_email} role="alert" class="text-error text-sm">
+          <p :if={@error == :invalid_email} role="alert" class="text-link-underline text-sm">
             {~t"Enter a valid email address."}
           </p>
-          <p :if={@error == :failed} role="alert" class="text-error text-sm">
+          <p :if={@error == :failed} role="alert" class="text-link-underline text-sm">
             {~t"There was an error subscribing to the newsletter."}
           </p>
-          <p class="text-base-content/70 text-xs leading-relaxed">
+          <p class="text-xs leading-relaxed opacity-80">
             {~t"Only occasional emails. Unsubscribe at any time."}
             <a class="link-underline-static-body" href={~q"/#{language}/privacy"}>
               {~t"Privacy policy"}
