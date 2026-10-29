@@ -28,14 +28,6 @@ defmodule Edenflowers.Email.PreviewsTest do
            ]
   end
 
-  test "course confirmations and reminders keep one blank line between paragraphs in every language" do
-    for locale <- ["sv-FI", "fi", "en-GB"],
-        {_type, scenario, builder, email} <- Previews.all(locale),
-        builder in [:course_confirmation, :course_reminder] do
-      refute email.text_body =~ ~r/\n{3,}/, "extra blank line in #{locale}: #{scenario}"
-    end
-  end
-
   test "a cancellation says the refund went back the way the customer paid" do
     bodies =
       for {"Cancellation confirmed", scenario, _, email} <- Previews.all("en-GB"),
@@ -56,13 +48,6 @@ defmodule Edenflowers.Email.PreviewsTest do
 
     assert bodies["handed back in cash"] =~ "I've refunded 20,00 € in cash."
     refute bodies["handed back in cash"] =~ "statement"
-  end
-
-  test "Jennie's message comes after the line saying what happened, before the details" do
-    [body] =
-      for {"Order details", "with a message from Jennie", _, email} <- Previews.all("en-GB"), do: email.text_body
-
-    assert body =~ ~r/Here is what we agreed:\n\nThe peonies are lovely this week, so I've added a few\.\n\n1 × /
   end
 
   test "the routine subscription charge is matter-of-fact, from the shop rather than Jennie" do

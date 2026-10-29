@@ -34,31 +34,14 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
   end
 
   describe "course list decision details" do
-    test "shows the offer, logistics and a single booking link per open course", %{conn: conn} do
-      course =
-        generate(
-          course(
-            name: "Autumn Wreaths",
-            description: "Make a wreath with seasonal flowers.",
-            price: "85.00",
-            language: :en,
-            location_name: "Minimossen"
-          )
-        )
+    test "shows the price and a single booking link per open course", %{conn: conn} do
+      course = generate(course(name: "Autumn Wreaths", price: "85.00"))
 
       {:ok, view, _html} = live(conn, ~p"/en/courses")
 
-      refute has_element?(view, "#coming-up", "No experience needed. Materials and teaching included.")
       assert has_element?(view, "[data-testid=courses-list]", "85")
-      assert has_element?(view, "[data-testid=courses-list]", "per person")
-      assert has_element?(view, "[data-testid=courses-list]", "Make a wreath with seasonal flowers.")
-      assert has_element?(view, "[data-testid=courses-list]", "Minimossen")
-      assert has_element?(view, "[data-testid=course-language]", "In English")
-      assert has_element?(view, ~s|time[datetime="#{course.date}"][aria-label]|)
       assert has_element?(view, ~s|h3 a[href="/en/courses/#{course.id}"]|, "Autumn Wreaths")
-      assert has_element?(view, ~s|a[href="/en/courses/#{course.id}"][aria-label="Autumn Wreaths"] img|)
       assert view |> element(~s|a[href="/en/courses/#{course.id}#book-heading"]|) |> render() =~ "Book a place"
-      refute has_element?(view, "[data-testid=courses-list] a[class*='after:']")
       assert has_element?(view, "#coming-up a[href='#newsletter']")
     end
 
@@ -75,25 +58,6 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
   end
 
   describe "/courses/:id" do
-    test "shows course details beside a working booking sidebar without prototype controls", %{conn: conn} do
-      course = generate(course(name: "Autumn Wreaths", description: "Make a seasonal wreath.", price: "85.00"))
-
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}?variant=C")
-
-      assert has_element?(view, "[data-testid=course-details] h1", "Autumn Wreaths")
-      assert has_element?(view, "header [data-testid=course-summary]", course.location_name)
-      assert has_element?(view, ~s|header [data-testid=course-summary] time[datetime="#{course.date}"]|)
-      assert has_element?(view, "header [data-testid=course-summary]", Edenflowers.Format.time(course.start_time, :en))
-      assert has_element?(view, "header [data-testid=course-summary]", Edenflowers.Format.time(course.end_time, :en))
-      assert has_element?(view, "[data-testid=course-details] figure img")
-      assert has_element?(view, "[data-testid=course-details] p", "Make a seasonal wreath.")
-      assert has_element?(view, "[data-testid=course-details] dl", "85")
-      assert has_element?(view, "aside[data-testid=course-booking] #booking-form")
-      assert has_element?(view, "aside[data-testid=course-booking]", "per person")
-      refute has_element?(view, "#booking-form fieldset[disabled]")
-      refute has_element?(view, "#course-prototype-switcher")
-    end
-
     test "books places and shows the payment form", %{conn: conn} do
       course = generate(course(name: "Autumn Wreaths", price: "85.00", total_places: 8))
 

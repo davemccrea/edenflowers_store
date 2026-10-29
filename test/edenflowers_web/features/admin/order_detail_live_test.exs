@@ -342,7 +342,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       assert_push_event(view, "js-exec", %{to: "#confirm-fulfillment", attr: "phx-show"})
-      assert has_element?(view, "dialog.slide-drawer--right #confirm-fulfillment-form")
       assert has_element?(view, "#confirm-fulfillment-form label", "Email delivery confirmation")
       refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
 

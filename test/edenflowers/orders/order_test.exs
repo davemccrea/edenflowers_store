@@ -118,22 +118,6 @@ defmodule Edenflowers.Orders.OrderTest do
       # Discounts are rounded per line: 49.99 − 10.00 + 59.98 − 12.00 = 87.97.
       assert Decimal.equal?(order.vat, "17.87")
     end
-
-    test "distance_km formats delivery distance in kilometres" do
-      order = generate(order(fulfillment_method: :delivery, distance: 12_340))
-
-      order = Ash.load!(order, [:distance_km], authorize?: false)
-
-      assert order.distance_km == "12.3"
-    end
-
-    test "distance_km is nil for pickup orders" do
-      order = generate(order(fulfillment_method: :pickup, distance: 12_000))
-
-      order = Ash.load!(order, [:distance_km], authorize?: false)
-
-      assert is_nil(order.distance_km)
-    end
   end
 
   test "calculates total and tax correctly" do

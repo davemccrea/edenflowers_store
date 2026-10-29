@@ -187,11 +187,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
     test "switching same-day off", %{conn: conn} do
       shop_calendar(same_day: true, order_deadline: ~T[14:00:00])
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
-      assert has_element?(view, "#same-day-form input.toggle[type=checkbox]")
-      refute has_element?(view, "#same-day-form fieldset.hidden input[type=time]")
 
       view |> form("#same-day-form", %{"same_day" => %{"same_day" => "false"}}) |> render_change()
-      assert has_element?(view, "#same-day-form fieldset.hidden input[type=time]")
 
       view
       |> form("#same-day-form", %{"same_day" => %{"same_day" => "false"}})

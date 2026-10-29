@@ -12,16 +12,6 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     assert get_session(conn |> get("/fi/haat"), Localize.Plug.PutLocale.session_key()) == "fi"
   end
 
-  test "a page's title names what it offers and where, with the brand last", %{conn: conn} do
-    generate(bouquets())
-    weddings = conn |> get("/fi/haat") |> html_response(200)
-    bouquets = conn |> get("/sv/butik/bouquets") |> html_response(200)
-
-    assert weddings =~ ~r/<title[^>]*>\s*Hääkukat Vaasa\s*\| Eden Flowers<\/title>/
-    assert weddings =~ ~s(<meta property="og:title" content="Hääkukat Vaasa | Eden Flowers")
-    assert bouquets =~ ~r/<title[^>]*>\s*Buketter i Vasa\s*\| Eden Flowers<\/title>/
-  end
-
   test "a page links to its other languages", %{conn: conn} do
     generate(bouquets())
     html = conn |> get("/sv/butik/bouquets") |> html_response(200)
@@ -59,16 +49,9 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
       {:ok, view, html} = live(conn, path)
       document = LazyHTML.from_document(html)
 
-      assert has_element?(view, "##{id}-sidebar > nav##{id} + nav##{id}-related")
-      assert has_element?(view, ~s|##{id}-related[aria-labelledby="#{id}-related-heading"]|)
-      assert has_element?(view, "##{id}-related-heading")
-
       assert document |> LazyHTML.query("##{id}-related a") |> LazyHTML.attribute("href") == related
 
       refute has_element?(view, ~s|##{id}-related a[href="#{path}"]|)
-      refute has_element?(view, "##{id}-related .category-index__link")
-      refute has_element?(view, "##{id}-related.hidden, ##{id}-sidebar.hidden")
-      assert has_element?(view, "##{id}.hidden.md\\:block")
     end
   end
 

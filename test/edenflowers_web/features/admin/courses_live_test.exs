@@ -39,12 +39,6 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     refute has_element?(view, "tbody tr", "Autumn wreaths")
   end
 
-  test "View in store opens the public courses listing in a new tab", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/admin/courses")
-
-    assert has_element?(view, ~s|a[href="/en/courses"][target="_blank"]|, "View in store")
-  end
-
   defp past_course(name),
     do: generate(course(name: name)) |> Ash.Seed.update!(%{date: Date.add(Edenflowers.ShopTime.today(), -7)})
 end

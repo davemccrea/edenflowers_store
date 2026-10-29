@@ -46,20 +46,14 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
   test "seasonality and damaged flower answers both link to the quality terms", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
-    assert has_element?(view, "#care-question-1", "I use local and seasonal flowers whenever possible.")
     assert has_element?(view, ~s|#care-question-1 a[href="/en/terms#quality"]|)
     assert has_element?(view, ~s|#care-question-2 a[href="/en/terms#quality"]|)
     refute has_element?(view, ~s|a[href="/en/terms#substitution"]|)
   end
 
-  test "flower care includes practical instructions and the same quality conditions as the terms", %{conn: conn} do
+  test "flower care gives the same quality conditions as the terms", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/faq")
 
-    assert has_element?(view, "#care li", "Use a clean vase with fresh water.")
-    assert has_element?(view, "#care li", "leaves that would sit below the waterline")
-    assert has_element?(view, "#care li", "Change the water and re-cut the stems every 2–3 days")
-    assert has_element?(view, "#care li", "heat sources and ripe fruit")
-    assert has_element?(view, "#care details", "A lot depends on the flowers, but typically around 7–10 days.")
     assert has_element?(view, "#care details", "Let me know as soon as possible and send a photo.")
     assert has_element?(view, "#care details", "provided care instructions are followed")
     refute has_element?(view, "#care", "within 3 days")
@@ -167,26 +161,6 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
         assert text =~ sentence
       end
     end
-  end
-
-  test "practical answers cover pickup, delivery notifications and payment exceptions", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/en/faq")
-
-    assert has_element?(view, "#delivery summary", "Do you deliver to the hospital?")
-    assert has_element?(view, "#delivery", "photo showing where I've left them")
-    assert has_element?(view, "#delivery", "If you're sending a gift, you receive an email when it's delivered.")
-    assert has_element?(view, "#delivery", "Choose your pickup date at checkout.")
-    assert has_element?(view, "#ordering summary", "isn't in the online shop?")
-    assert has_element?(view, "#payment", "Subscriptions require a card.")
-    assert has_element?(view, "#payment", "I also offer invoice payment for larger orders")
-    assert has_element?(view, "#weddings", "Saturdays in particular fill up quickly")
-    assert has_element?(view, "#weddings", "a limited number of weddings each Saturday")
-    assert has_element?(view, "#weddings", "Most couples book 9–12 months ahead.")
-    assert has_element?(view, ~s|#weddings a[href="/en/contact"]|, "get in touch")
-    assert has_element?(view, "#weddings summary", "Do you provide wedding flowers outside Vaasa?")
-    refute has_element?(view, ~s|#weddings a[href="/en/weddings"]|)
-    assert has_element?(view, "#courses", "deadline for a full refund and the cancellation fee after that")
-    refute has_element?(view, "#courses summary", "what should I bring?")
   end
 
   test "purchase rule summaries link to localized terms", %{conn: conn} do

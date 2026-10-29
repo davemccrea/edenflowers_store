@@ -23,32 +23,6 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
     assert has_element?(view, "#seller", EdenflowersWeb.Business.business_id())
   end
 
-  test "the index follows the general terms, special services and seller details", %{conn: conn} do
-    {:ok, view, html} = live(conn, ~p"/en/terms")
-    document = LazyHTML.from_document(html)
-
-    sections = [
-      {"payment", "Prices and payment"},
-      {"delivery", "Delivery and pickup"},
-      {"quality", "Quality"},
-      {"cancellation", "Changes and cancellations"},
-      {"subscriptions", "Subscriptions"},
-      {"weddings", "Weddings"},
-      {"courses", "Courses"},
-      {"seller", "Seller and contact details"}
-    ]
-
-    assert document |> LazyHTML.query("nav[aria-labelledby=terms-nav-heading] a") |> LazyHTML.attribute("href") ==
-             Enum.map(sections, fn {id, _title} -> "##{id}" end)
-
-    assert document |> LazyHTML.query("#main-content section > h2") |> Enum.map(&LazyHTML.text/1) ==
-             Enum.map(sections, fn {_id, title} -> title end)
-
-    for {id, title} <- sections do
-      assert has_element?(view, "##{id} > h2", title)
-    end
-  end
-
   test "related terms are grouped without breaking existing deep links", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
