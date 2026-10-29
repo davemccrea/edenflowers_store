@@ -53,10 +53,11 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(photo_slug: selected_variant.photo_slug)
      |> assign(
        subscribe?:
-         if(cart_line,
-           do: cart_line.interval_weeks != nil,
-           else: product.subscribable and params["subscribe"] == "1"
-         )
+         cond do
+           params["subscribe"] == "1" -> product.subscribable
+           cart_line -> cart_line.interval_weeks != nil
+           true -> false
+         end
      )
      |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 1))
      |> assign(has_subscription?: has_subscription?(socket.assigns.current_user))

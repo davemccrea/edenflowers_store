@@ -132,6 +132,19 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       assert has_element?(view, "[data-testid=interval-options]")
     end
 
+    test "?subscribe=1 starts as a subscription even with the bouquet already in the cart", %{
+      conn: conn,
+      product: product,
+      variant: variant,
+      order: order
+    } do
+      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}?subscribe=1")
+
+      assert has_element?(view, "[data-testid=subscribe-option][checked]")
+      assert has_element?(view, "[data-testid=add-to-cart-button]", "Update cart")
+    end
+
     test "starts as a one-time purchase", %{conn: conn, product: product, order: order} do
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
 
