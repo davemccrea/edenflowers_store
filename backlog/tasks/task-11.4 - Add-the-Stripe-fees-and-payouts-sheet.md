@@ -1,10 +1,10 @@
 ---
 id: TASK-11.4
 title: Add the Stripe fees and payouts sheet
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-17 07:07'
-updated_date: '2026-10-19 13:54'
+updated_date: '2026-10-29 07:26'
 labels: []
 dependencies:
   - TASK-11.2
@@ -63,6 +63,15 @@ created: 2026-10-19 13:52
 ---
 
 Not yet verifiable on 2026-10-19: staging's seed data is too thin to compare the Stripe sheet's fees and payout totals with Stripe's balance report in a meaningful way. Check against the first real month's report from production instead.
+
+---
+
+author: @claude
+created: 2026-10-29 07:26
+
+---
+
+David checked the Stripe sheet against Stripe's balance report; it matches.
 
 ---
 <!-- COMMENTS:END -->
