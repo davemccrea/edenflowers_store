@@ -204,21 +204,21 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         class="bg-forest scroll-anchor-below-header not-last:border-b"
         aria-labelledby="enquire-heading"
       >
-        <div class="grid md:grid-cols-2">
+        <div class="grid lg:grid-cols-[minmax(0,32rem)_1fr]">
           <.image
             src="local:///jennie_99.jpg"
             alt="Jennie"
             width={1080}
             height={1350}
-            sizes="(min-width: 768px) 50vw, 100vw"
-            class="aspect-[4/5] max-h-[640px] h-full w-full object-cover object-top md:aspect-auto"
+            sizes="(min-width: 1024px) 32rem, 100vw"
+            class="aspect-[4/5] h-full w-full object-cover"
           />
 
-          <div class="flex flex-col items-start gap-8 px-4 py-20 sm:px-8 md:justify-center md:px-12 lg:px-20">
+          <div class="flex flex-col items-start gap-8 px-4 py-20 sm:px-8 md:px-12 lg:justify-center lg:px-20">
             <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
             <h2 id="enquire-heading" class="section-title text-forest-content">{~t"Planning a wedding?"}</h2>
             <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
-              {~t"I'm Jennie, and I design every wedding myself, from our first conversation to the flowers on the day. Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."}
+              {~t"Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."}
             </p>
             <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
               {~t"I also provide wedding flowers outside Vaasa. Travel is quoted separately."}

@@ -1095,7 +1095,7 @@ msgstr "Floristiikkakurssit Vaasa"
 msgid "Floristry courses with Jennie at Eden Flowers in Vaasa. See upcoming dates and book your seat."
 msgstr "Floristiikkakursseja Jennien kanssa Eden Flowersissa Vaasassa. Katso tulevat päivät ja varaa paikkasi."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:445
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:452
 #, elixir-autogen, elixir-format
 msgid "Flower arch"
 msgstr "Kukkakaari"
@@ -1370,7 +1370,7 @@ msgstr "Hei, %{current_user_first_name}"
 msgid "Hi, I'm Jennie"
 msgstr "Hei, olen Jennie"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:524
+#: lib/edenflowers_web/features/marketing/home_live.ex:523
 #, elixir-autogen, elixir-format
 msgid "Hi, I'm Jennie. I make every arrangement myself at my shop in Minimossen, from a bouquet for your kitchen table to flowers for your wedding."
 msgstr "Hei, olen Jennie. Sidon kaikki kukat itse liikkeessäni Minimossenissa, keittiön pöydän kimpusta hääkukkiin."
@@ -1532,11 +1532,6 @@ msgstr "Ilmoitan tekstiviestillä, kun tilaus on valmis."
 #, elixir-autogen, elixir-format
 msgid "I'll send you my quote, and you can come back to me with any questions and confirm your booking."
 msgstr "Lähetän teille tarjoukseni, ja voitte palata asiaan mahdollisten kysymysten kanssa ja vahvistaa varauksen."
-
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:214
-#, elixir-autogen, elixir-format
-msgid "I'm Jennie, and I design every wedding myself, from our first conversation to the flowers on the day. Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."
-msgstr "Olen Jennie, ja suunnittelen jokaiset häät itse ensimmäisestä keskustelustamme hääpäivän kukkiin. Kertokaa minulle päivämäärä, hääpaikka ja arvio vierasmäärästä. Jos täältä löytyy kuvia, joista pidätte, mainitkaa nekin."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:131
 #, elixir-autogen, elixir-format
@@ -4001,7 +3996,7 @@ msgstr "Tuoreita kukkia Jennieltä Eden Flowersista Vaasasta: kimput, kukkatilau
 msgid "Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within %{km} km of Minimossen on selected bouquets."
 msgstr "Tuoreita kukkia Jennieltä Eden Flowersista Vaasasta: kimput, kukkatilaukset, hää- ja hautajaiskukat. Valituille kimpuille ilmainen toimitus %{km} km:n säteellä Minimossenista."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:217
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:224
 #, elixir-autogen, elixir-format
 msgid "I also provide wedding flowers outside Vaasa. Travel is quoted separately."
 msgstr "Teen hääkukkia myös Vaasan ulkopuolelle. Matkat hinnoittelen erikseen."
@@ -4068,3 +4063,8 @@ msgstr "Tuoreet kimput tehtyinä toimituspäivänä."
 #, elixir-autogen, elixir-format
 msgid "Arches and gates for the ceremony, and arrangements and garlands to dress the venue."
 msgstr "Kaaria ja portteja vihkimiseen sekä asetelmia ja köynnöksiä juhlapaikan koristeeksi."
+
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:221
+#, elixir-autogen, elixir-format
+msgid "Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."
+msgstr "Kertokaa minulle päivämäärä, hääpaikka ja arvio vierasmäärästä. Jos täältä löytyy kuvia, joista pidätte, mainitkaa nekin."

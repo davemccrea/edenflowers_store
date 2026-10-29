@@ -1537,11 +1537,6 @@ msgstr ""
 msgid "I'll send you my quote, and you can come back to me with any questions and confirm your booking."
 msgstr ""
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:214
-#, elixir-autogen, elixir-format
-msgid "I'm Jennie, and I design every wedding myself, from our first conversation to the flowers on the day. Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."
-msgstr ""
-
 #: lib/edenflowers_web/features/marketing/faq_live.ex:131
 #, elixir-autogen, elixir-format
 msgid "If I can't get in, the"
@@ -4071,4 +4066,9 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:120
 #, elixir-autogen, elixir-format
 msgid "Arches and gates for the ceremony, and arrangements and garlands to dress the venue."
+msgstr ""
+
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:221
+#, elixir-autogen, elixir-format
+msgid "Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."
 msgstr ""
