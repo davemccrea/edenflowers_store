@@ -881,7 +881,7 @@ defmodule EdenflowersWeb.Layouts do
     </main>
 
     <footer>
-      <div class="footer-sky text-dusk-content relative overflow-hidden border-t border-b">
+      <div class="footer-sky text-dusk-content relative overflow-hidden border-b">
         <div class="container relative py-20 md:py-36">
           <div class="footer-grid">
             <div id="newsletter" class="footer-grid__newsletter space-y-4">
@@ -982,7 +982,7 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <div class="container">
-        <div class="flex flex-col items-center gap-3 py-6">
+        <div class="flex flex-col items-center gap-3 pt-6 pb-12">
           <img
             src={~p"/images/logo-eden-flowers.svg"}
             alt="Eden Flowers"

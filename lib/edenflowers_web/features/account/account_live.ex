@@ -59,7 +59,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
       notice_bar={@notice_bar}
     >
       <.container class="max-w-3xl">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 class="page-title">
             {if @current_user.first_name, do: ~t"Hi, #{@current_user.first_name}!", else: ~t"Account"}
           </h1>

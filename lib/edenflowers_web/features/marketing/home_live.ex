@@ -514,6 +514,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             alt="Jennie"
             width={1500}
             height={1500}
+            quality={70}
             sizes="(min-width: 768px) 50vw, 100vw"
             class="aspect-[4/5] max-h-[640px] h-full w-full object-cover md:aspect-auto md:h-[640px]"
           />
@@ -772,7 +773,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               class="text-base-content/20 [--flower-spin-turn:4deg] -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20"
             />
             <h2 id="location-heading" class="section-title relative mb-8">{~t"Delivery and pickup"}</h2>
-            <p :if={@notice_bar} id="location-order-status" class="mb-6 max-w-prose text-lg font-bold leading-relaxed">
+            <p :if={@notice_bar} id="location-order-status" class="mb-6 max-w-prose text-lg font-semibold leading-relaxed">
               {@notice_bar}
             </p>
             <dl class="grid max-w-prose gap-6 text-lg leading-relaxed">
