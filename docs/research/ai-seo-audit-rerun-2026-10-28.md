@@ -2,7 +2,7 @@
 
 Audited: **2026-10-28, approximately 10:52–10:56 UTC**. Target: https://edenflowers.fi. Repository: `d7ee7f76`.
 
-Baseline: [earlier audit](ai-seo-audit.md), also dated 2026-10-28. This is a later same-day recheck, not evidence of a longer-term visibility trend. The original report is preserved.
+Baseline: an earlier audit from the same day (removed; see git history). This is a later same-day recheck, not evidence of a longer-term visibility trend.
 
 ## Executive summary
 
