@@ -180,7 +180,7 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
             height={1250}
             crop="3200:4000:fp:0.45:0.5"
             sizes="(min-width: 768px) 50vw, 100vw"
-            class="aspect-[4/5] max-h-[640px] h-full w-full object-cover md:aspect-auto md:h-[640px] md:order-last"
+            class="aspect-[4/5] max-h-[640px] order-last h-full w-full object-cover md:aspect-auto md:h-[640px]"
           />
 
           <div class="flex flex-col items-start gap-8 px-4 py-20 sm:px-8 md:justify-center md:px-12 lg:px-20">

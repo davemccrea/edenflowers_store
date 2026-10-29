@@ -766,13 +766,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="not-last:border-b" aria-labelledby="location-heading">
         <div class="grid md:grid-cols-2">
-          <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-32 lg:px-20">
+          <div class="flex flex-col px-4 pt-8 pb-16 sm:px-8 md:justify-center md:px-12 md:py-32 lg:px-20">
             <.flower
               name="flower-41"
               class="text-base-content/20 [--flower-spin-turn:4deg] -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20"
             />
             <h2 id="location-heading" class="section-title relative mb-8">{~t"Delivery and pickup"}</h2>
-            <p :if={@notice_bar} id="location-order-status" class="mb-6 max-w-prose text-lg font-semibold leading-relaxed">
+            <p :if={@notice_bar} id="location-order-status" class="mb-6 max-w-prose text-lg font-bold leading-relaxed">
               {@notice_bar}
             </p>
             <dl class="grid max-w-prose gap-6 text-lg leading-relaxed">
@@ -788,7 +788,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </div>
 
           <%!-- On desktop the map fills the text column's height instead of setting its own --%>
-          <div class="md:relative">
+          <div class="order-first md:relative md:order-none">
             <.image
               src="local:///home-vaasa-map-3.png"
               alt={~t"Map of Vaasa, Finland with Minimossen pinned"}
