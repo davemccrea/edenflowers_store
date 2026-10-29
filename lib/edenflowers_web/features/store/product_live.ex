@@ -187,6 +187,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                     <span class="flex h-11 items-end">
                       <.flower
                         name={bouquet_drawing(variant.size)}
+                        spin={false}
                         class={["text-primary", bouquet_drawing_size(variant.size)]}
                       />
                     </span>

@@ -538,7 +538,10 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <section class="overflow-x-clip not-last:border-b" aria-labelledby="reviews-heading">
         <div class="container py-20 md:py-28">
-          <.flower name="flower-30" class="text-base-content/20 -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20" />
+          <.flower
+            name="flower-30"
+            class="text-base-content/20 [--flower-spin-turn:4deg] -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20"
+          />
           <div class="relative mb-12 flex items-baseline justify-between gap-4 md:items-center">
             <h2 id="reviews-heading" class="section-title">{~t"What customers say"}</h2>
 
@@ -763,7 +766,10 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       <section class="not-last:border-b" aria-labelledby="location-heading">
         <div class="grid md:grid-cols-2">
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-32 lg:px-20">
-            <.flower name="flower-41" class="text-base-content/20 -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20" />
+            <.flower
+              name="flower-41"
+              class="text-base-content/20 [--flower-spin-turn:4deg] -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20"
+            />
             <h2 id="location-heading" class="section-title relative mb-8">{~t"Delivery and pickup"}</h2>
             <p :if={@notice_bar} id="location-order-status" class="mb-6 max-w-prose text-lg font-semibold leading-relaxed">
               {@notice_bar}

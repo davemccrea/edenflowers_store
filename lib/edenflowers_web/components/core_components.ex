@@ -630,6 +630,7 @@ defmodule EdenflowersWeb.CoreComponents do
   # credo:disable-for-next-line Credo.Check.Readability.StrictModuleLayout
   attr :name, :string, required: true, values: Map.keys(@flowers)
   attr :class, :any, default: "h-6 w-6"
+  attr :spin, :boolean, default: true, doc: "Turn the drawing slightly on hover, a small easter egg."
 
   def flower(assigns) do
     %{viewbox: viewbox, body: body} = Map.fetch!(@flowers, assigns.name)
@@ -638,7 +639,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <svg
       viewBox={@viewbox}
-      class={@class}
+      class={[@spin && "flower-spin", @class]}
       aria-hidden="true"
       focusable="false"
       xmlns="http://www.w3.org/2000/svg"

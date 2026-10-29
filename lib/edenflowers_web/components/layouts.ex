@@ -881,10 +881,6 @@ defmodule EdenflowersWeb.Layouts do
 
     <footer>
       <div class="footer-sky text-dusk-content relative overflow-hidden border-t border-b">
-        <.flower
-          name="flower-41"
-          class="text-dusk-content/25 pointer-events-none absolute top-6 right-6 h-20 w-20 md:top-10 md:right-10 md:h-28 md:w-28"
-        />
         <div class="container relative py-20 md:py-36">
           <div class="footer-grid">
             <div id="newsletter" class="footer-grid__newsletter space-y-4">
@@ -977,6 +973,11 @@ defmodule EdenflowersWeb.Layouts do
             </div>
           </div>
         </div>
+        <%!-- After the container so it paints on top and can be hovered. --%>
+        <.flower
+          name="flower-41"
+          class="text-dusk-content/25 [--flower-spin-turn:3deg] absolute top-6 right-6 h-20 w-20 md:top-10 md:right-10 md:h-28 md:w-28"
+        />
       </div>
 
       <div class="container">
