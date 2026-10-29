@@ -106,6 +106,12 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     assert has_element?(view, "#subscription", "Florist's choice")
   end
 
+  test "signing in from the shop lands on the account page", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en")
+
+    assert has_element?(view, ~s|a[href="/sign-in?return_to=/account"]|)
+  end
+
   test "customer quotes keep original wording and read as complete excerpts", %{conn: conn} do
     originals =
       Regex.scan(~r/”([^”]+)”/u, File.read!("docs/feedback.md"), capture: :all_but_first)

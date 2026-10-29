@@ -238,6 +238,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     end
   end
 
+  test "signing in from checkout returns to checkout", %{conn: conn, order: order} do
+    {:ok, view, _html} = live(Plug.Test.init_test_session(conn, %{order_id: order.id}), ~p"/checkout")
+
+    assert has_element?(view, ~s|a[href="/sign-in?return_to=/checkout"]|)
+  end
+
   describe "Step 1: Your Details" do
     test "prefills the name and email of a signed-in customer", %{conn: conn, order: order} do
       user = generate(admin_user(admin: false, name: "Ada Lovelace", email: "ada@example.com"))

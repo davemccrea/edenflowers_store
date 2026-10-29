@@ -98,13 +98,10 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
-  defp sign_in_href(current_path) do
-    case EdenflowersWeb.Auth.ReturnTo.safe_path(current_path) do
-      nil -> ~p"/sign-in"
-      "/" -> ~p"/sign-in"
-      path -> ~p"/sign-in?return_to=#{path}"
-    end
-  end
+  # Signing in mid-checkout is part of buying, so it returns to the order.
+  # Anywhere else the customer wants their account.
+  defp sign_in_href("/checkout"), do: ~p"/sign-in?return_to=/checkout"
+  defp sign_in_href(_current_path), do: ~p"/sign-in?return_to=/account"
 
   defp admin_path?(path), do: path == "/admin" or String.starts_with?(path, "/admin/")
 
