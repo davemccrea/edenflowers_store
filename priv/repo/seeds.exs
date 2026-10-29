@@ -85,7 +85,8 @@ reduced_tax_rate = Ash.get!(TaxRate, %{name: "Reduced 13.5%"}, authorize?: false
 category = fn slug -> Ash.get!(ProductCategory, %{slug: slug}, authorize?: false) end
 bouquets_category = category.("bouquets")
 
-create_product = fn attrs, prices ->
+# `details` maps a size to the details its category's product type shows.
+create_product = fn attrs, prices, details ->
   product =
     Ash.Changeset.for_create(
       Product,
@@ -104,12 +105,11 @@ create_product = fn attrs, prices ->
     |> Ash.create!(authorize?: false)
 
   for {size, price} <- prices do
-    Ash.Changeset.for_create(ProductVariant, :create, %{
-      product_id: product.id,
-      price: price,
-      size: size,
-      draft: false
-    })
+    Ash.Changeset.for_create(
+      ProductVariant,
+      :create,
+      Map.merge(%{product_id: product.id, price: price, size: size, draft: false}, Map.get(details, size, %{}))
+    )
     |> Ash.create!(authorize?: false)
   end
 
@@ -118,32 +118,44 @@ end
 
 bouquet_prices = [small: "40", medium: "50", large: "60"]
 
-create_product.(
-  %{product_category_id: bouquets_category.id, name: "Bouquet 1", featured: true, free_delivery: true},
-  bouquet_prices
-)
-
-bouquet_2 =
-  create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 2", featured: true}, bouquet_prices)
-
-# Height and stems for every size, and one size with only a height.
-details = %{
+bouquet_details = %{
   small: %{height_cm: "30–40", stem_count: "10–12"},
   medium: %{height_cm: "40–50", stem_count: "15–20"},
-  large: %{height_cm: "50–60"}
+  large: %{height_cm: "50–60", stem_count: "25–30"}
 }
 
-ProductVariant
-|> Ash.Query.filter(product_id == ^bouquet_2.id)
-|> Ash.read!(authorize?: false)
-|> Enum.each(&Ash.Seed.update!(&1, details[&1.size]))
+create_product.(
+  %{product_category_id: bouquets_category.id, name: "Bouquet 1", featured: true, free_delivery: true},
+  bouquet_prices,
+  bouquet_details
+)
 
-create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 3"}, bouquet_prices)
-create_product.(%{product_category_id: category.("plants").id, name: "Plant"}, small: "18", medium: "32", large: "55")
+# One size with only a height, as the florist sometimes leaves stems blank.
+create_product.(
+  %{product_category_id: bouquets_category.id, name: "Bouquet 2", featured: true},
+  bouquet_prices,
+  %{bouquet_details | large: %{height_cm: "50–60"}}
+)
+
+create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 3"}, bouquet_prices, bouquet_details)
+
+create_product.(
+  %{product_category_id: category.("plants").id, name: "Plant"},
+  [small: "18", medium: "32", large: "55"],
+  %{
+    small: %{height_cm: "20–25", pot_cm: "12"},
+    medium: %{height_cm: "40–50", pot_cm: "17"},
+    large: %{height_cm: "80–90", pot_cm: "24"}
+  }
+)
 
 # One of a kind, and the small one has sold, so the Overview flags it as sold out.
 pre_loved =
-  create_product.(%{product_category_id: category.("pre-loved").id, name: "Pre-Loved Item"}, small: "15", medium: "25")
+  create_product.(
+    %{product_category_id: category.("pre-loved").id, name: "Pre-Loved Item"},
+    [small: "15", medium: "25"],
+    %{}
+  )
 
 ProductVariant
 |> Ash.Query.filter(product_id == ^pre_loved.id)
@@ -175,7 +187,8 @@ create_product.(
     name: "Dark Chocolate Truffles",
     description: "A box of handmade chocolates, sold with a bouquet."
   },
-  [{nil, "8"}]
+  [{nil, "8"}],
+  %{nil => %{weight_g: "120", pieces: "9"}}
 )
 
 # Left without products so the store's empty collection state can be seen.
@@ -215,9 +228,8 @@ create_product.(
     free_delivery: true,
     subscribable: true
   },
-  small: "45",
-  medium: "60",
-  large: "75"
+  [small: "45", medium: "60", large: "75"],
+  bouquet_details
 )
 
 # One promotion per state the admin list tells apart: running, ended, not
@@ -287,7 +299,8 @@ end
 
 # Dates are relative to today so a fresh seed always has courses open for
 # booking, plus one that has already happened.
-today = Date.utc_today()
+now = DateTime.now!("Europe/Helsinki")
+today = DateTime.to_date(now)
 
 [autumn_wreath, _table_arrangement, midsummer_crown] =
   [
@@ -357,24 +370,22 @@ today = Date.utc_today()
     |> Ash.create!(authorize?: false)
   end)
 
-# Course bookings. Ash.Seed for the same reason as orders below: a booking is
-# confirmed by a Stripe payment or by Jennie. Like a placed order, a booking paid
-# online keeps its PaymentIntent only on its Stripe payment. Emma and Kristina
-# were added by Jennie and pay at the course; Kristina already has. Johan
-# cancelled and is still owed his money; Elin cancelled and was refunded. The
-# Christmas course is left empty on purpose, and the past one has its history.
+jennie = Ash.get!(User, %{email: "info@edenflowers.fi"}, authorize?: false)
+
+# Online course bookings. Ash.Seed for the same reason as orders below: checkout
+# confirms a booking only once Stripe has taken the money, and like a placed
+# order it keeps its PaymentIntent only on its Stripe payment. Elin cancelled
+# and was refunded. The Christmas course is left empty on purpose, and the past
+# one has its history.
 [
-  {autumn_wreath, "Anna Svensson", "anna.svensson@example.com", 3, :confirmed, "sv-FI", :stripe},
-  {autumn_wreath, "Emma Nyström", "emma.nystrom@example.com", 1, :confirmed, "sv-FI", :direct},
-  {autumn_wreath, "Kristina Ahlroos", "kristina.ahlroos@example.com", 2, :confirmed, "sv-FI", :direct_paid},
-  {autumn_wreath, "Johan Lindqvist", "johan.lindqvist@example.com", 1, :cancelled, "en-GB", :stripe},
-  {autumn_wreath, "Elin Sjöberg", "elin.sjoberg@example.com", 1, :cancelled, "sv-FI", :stripe},
+  {autumn_wreath, "Anna Svensson", "anna.svensson@example.com", 3, :confirmed, "sv-FI"},
+  {autumn_wreath, "Elin Sjöberg", "elin.sjoberg@example.com", 1, :cancelled, "sv-FI"},
   # No PaymentIntent: a fake one makes the ReconcilePayment cron fail against
   # Stripe, so it stays an abandoned checkout instead.
-  {autumn_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", 1, :pending, "fi", :stripe},
-  {midsummer_crown, "Ida Westerlund", "ida.westerlund@example.com", 2, :confirmed, "sv-FI", :stripe}
+  {autumn_wreath, "Pekka Mäkinen", "pekka.makinen@example.com", 1, :pending, "fi"},
+  {midsummer_crown, "Ida Westerlund", "ida.westerlund@example.com", 2, :confirmed, "sv-FI"}
 ]
-|> Enum.each(fn {course, name, email, seats, status, locale, paid_via} ->
+|> Enum.each(fn {course, name, email, seats, status, locale} ->
   registration =
     Ash.Seed.seed!(CourseRegistration, %{
       course_id: course.id,
@@ -387,41 +398,28 @@ today = Date.utc_today()
       tax_rate: tax_rate.percentage,
       amount: Decimal.mult(course.price, seats),
       confirmed_at: if(status != :pending, do: DateTime.utc_now()),
-      # Already emailed, otherwise the SendConfirmationEmail trigger emails every
-      # seeded booking.
-      confirmation_emailed_at: if(status != :pending, do: DateTime.utc_now())
+      confirmation_emailed_at: if(status != :pending, do: DateTime.utc_now()),
+      cancelled_at: if(status == :cancelled, do: DateTime.utc_now())
     })
 
-  if paid_via == :stripe and status != :pending do
-    Ash.Seed.seed!(Payment, %{
-      course_registration_id: registration.id,
-      amount: registration.amount,
-      method: :stripe,
-      payment_intent_id: seed_payment_intent.(registration.amount, "mastercard", %{}).id,
-      paid_at: registration.confirmed_at,
-      payment_method_type: "card",
-      card_brand: "mastercard",
-      card_last4: "4444"
-    })
-  end
+  if status != :pending do
+    payment =
+      Ash.Seed.seed!(Payment, %{
+        course_registration_id: registration.id,
+        amount: registration.amount,
+        method: :stripe,
+        payment_intent_id: seed_payment_intent.(registration.amount, "mastercard", %{}).id,
+        paid_at: registration.confirmed_at,
+        payment_method_type: "card",
+        card_brand: "mastercard",
+        card_last4: "4444"
+      })
 
-  if paid_via == :direct_paid do
-    Ash.Seed.seed!(Payment, %{
-      course_registration_id: registration.id,
-      amount: registration.amount,
-      method: :cash,
-      payment_method_type: "cash"
-    })
+    # Cancelling refunds through Stripe, which refuses the made-up payments, so
+    # the refund is recorded as the webhook would.
+    if status == :cancelled, do: seed_refund.(payment, "re_seed_#{registration.reference}")
   end
 end)
-
-# Elin's refund, made in the Stripe dashboard and recorded as the webhook would.
-elin_payment =
-  Payment
-  |> Ash.Query.filter(course_registration.email == "elin.sjoberg@example.com")
-  |> Ash.read_one!(authorize?: false)
-
-seed_refund.(elin_payment, "re_seed_elin")
 
 # One of Anna's group of three dropped out, and is still owed a refund.
 CourseRegistration
@@ -429,24 +427,30 @@ CourseRegistration
 |> Ash.read_one!(authorize?: false)
 |> Edenflowers.Courses.remove_registration_seat!(authorize?: false)
 
-# A manual booking payable at the course: places committed, no money received yet.
-Ash.Seed.seed!(CourseRegistration, %{
-  course_id: autumn_wreath.id,
-  name: "Maria Nyberg",
-  email: "maria.nyberg@example.com",
-  seats: 2,
-  status: :confirmed,
-  locale: "sv-FI",
-  reference: next_reference.(),
-  tax_rate: tax_rate.percentage,
-  amount: Decimal.mult(autumn_wreath.price, 2),
-  confirmed_at: DateTime.utc_now()
-})
+# Manual bookings, one per way Jennie is paid: at the course, already in cash,
+# and by Payment Link.
+for {name, email, seats, attrs} <- [
+      {"Emma Nyström", "emma.nystrom@example.com", 1, %{payment_terms: :on_fulfillment}},
+      {"Kristina Ahlroos", "kristina.ahlroos@example.com", 2,
+       %{payment_terms: :on_fulfillment, amount: Decimal.mult(autumn_wreath.price, 2), payment_method: :cash}},
+      {"Maria Nyberg", "maria.nyberg@example.com", 2, %{payment_terms: :payment_link}}
+    ] do
+  attrs
+  |> Map.merge(%{
+    course_id: autumn_wreath.id,
+    name: name,
+    email: email,
+    seats: seats,
+    locale: "sv-FI",
+    email_customer?: false
+  })
+  |> Edenflowers.Courses.add_registration_manually!(actor: jennie)
+end
 
 # Placed orders. Checkout drives orders through a state machine and seals them
 # once placed, so normal Ash actions can't construct a finished order. Ash.Seed
 # writes attributes directly, bypassing transitions and policies: the right
-# escape hatch for fixtures, the same as the admin user above.
+# escape hatch for fixtures.
 home_delivery =
   FulfillmentOption
   |> Ash.Query.filter(fulfillment_method == :delivery)
@@ -585,9 +589,6 @@ end
 # Fulfillment dates are relative to whenever the seed runs. Future dates are
 # resolved through the same availability rules as checkout, so running seeds on
 # a Monday or after a same-day deadline cannot create an impossible order.
-now = DateTime.now!("Europe/Helsinki")
-today = DateTime.to_date(now)
-
 shop_calendar = Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
 
 fulfillment_date_for = fn days_out ->
@@ -734,24 +735,6 @@ for {attrs, index} <- Enum.with_index(orders) do
     })
   )
 end
-
-# Delivered three weeks ago and still unpaid, so the Overview flags the payment as overdue.
-sven = Accounts.upsert_user!("sven.dahl@example.fi", "Sven Dahl", actor: Actors.system_actor())
-
-seed_placed_order.(
-  Map.merge(nearby_address, %{
-    customer_name: "Sven Dahl",
-    customer_email: "sven.dahl@example.fi",
-    user_id: sven.id,
-    fulfillment_option: home_delivery,
-    ordered_at: DateTime.add(DateTime.utc_now(), -24, :day),
-    fulfillment_date: fulfillment_date_for.(-21),
-    recipient_name: "Sven Dahl",
-    customer_phone_number: "050 4443322",
-    fulfillment_status: :fulfilled,
-    items: [line_item.("Bouquet 1", :large, 1)]
-  })
-)
 
 # Subscriptions, one per state the admin list and account page show, each with
 # the order that started it and some with later deliveries (Occurrences).
@@ -922,11 +905,6 @@ end
 alias Edenflowers.Orders
 alias Edenflowers.Payments
 
-jennie =
-  User
-  |> Ash.Query.filter(email == "info@edenflowers.fi")
-  |> Ash.read_one!(authorize?: false)
-
 custom_line = fn description, unit_price ->
   %{
     "kind" => "custom",
@@ -971,7 +949,9 @@ place_custom.(%{
   ]
 })
 
-# Delivered to a phone-only customer who promised to pay next week.
+# Collected three weeks ago by a phone-only customer who promised to pay, so the
+# Overview flags the payment as overdue. Placed today and then backdated, as
+# Jennie can't place an order in the past.
 fulfilled_unpaid =
   place_custom.(%{
     customer_name: "Bertil Ek",
@@ -979,8 +959,12 @@ fulfilled_unpaid =
     days_out: 0,
     line_items: [catalogue_line.("Bouquet 1", :small, 1)]
   })
+  |> Orders.mark_order_fulfilled!(actor: jennie)
 
-Orders.mark_order_fulfilled!(fulfilled_unpaid, actor: jennie)
+Ash.Seed.update!(fulfilled_unpaid, %{
+  ordered_at: DateTime.add(DateTime.utc_now(), -24, :day),
+  fulfillment_date: fulfillment_date_for.(-21)
+})
 
 # Called off before it was paid.
 cancelled =
@@ -994,13 +978,16 @@ cancelled =
 
 Orders.cancel_order!(cancelled, actor: jennie)
 
+online_order = fn customer_name ->
+  Order
+  |> Ash.Query.filter(customer_name == ^customer_name)
+  |> Ash.Query.load([:line_items, :payments])
+  |> Ash.read_one!(authorize?: false)
+end
+
 # An online order the customer asked to add to by email after paying: it now
 # has a balance to collect and a payment link for just that.
-erik =
-  Order
-  |> Ash.Query.filter(customer_name == "Erik Sundström")
-  |> Ash.Query.load(:line_items)
-  |> Ash.read_one!(authorize?: false)
+erik = online_order.("Erik Sundström")
 
 kept_lines = Enum.map(erik.line_items, &%{"id" => &1.id, "quantity" => to_string(&1.quantity)})
 
@@ -1048,13 +1035,6 @@ Orders.edit_order!(
   },
   actor: jennie
 )
-
-online_order = fn customer_name ->
-  Order
-  |> Ash.Query.filter(customer_name == ^customer_name)
-  |> Ash.Query.load([:line_items, :payments])
-  |> Ash.read_one!(authorize?: false)
-end
 
 # Called off and refunded in full. Ash.Seed because cancelling refunds through
 # Stripe, which refuses the made-up payments; seed_refund records it instead.
