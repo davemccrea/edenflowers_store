@@ -737,7 +737,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <.button
               navigate={~q"/#{language}/product/#{product}?subscribe=1"}
               variant="primary"
-              size="lg"
               class="group w-fit"
             >
               {~t"Start a subscription"}
