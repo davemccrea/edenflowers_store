@@ -708,21 +708,16 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         aria-labelledby="subscription-heading"
       >
         <div :for={product <- @subscribable_products} :if={length(@subscribable_products) == 1} class="grid md:grid-cols-2">
-          <.link
-            navigate={~q"/#{language}/product/#{product}"}
-            tabindex="-1"
-            aria-hidden="true"
-            class="bg-cream group block overflow-hidden"
-          >
+          <div class="bg-cream">
             <.image
               src="local:///subscription.jpg"
               alt=""
               width={1200}
               height={1200}
               sizes="(min-width: 768px) 50vw, 100vw"
-              class="aspect-[4/5] h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03] md:aspect-square"
+              class="aspect-[4/5] h-full w-full object-cover md:aspect-square"
             />
-          </.link>
+          </div>
           <div class="flex flex-col px-4 py-16 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
             <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
             <p class="eyebrow text-base-content/70 mb-4">
