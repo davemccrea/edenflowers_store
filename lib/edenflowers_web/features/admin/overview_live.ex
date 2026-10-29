@@ -432,7 +432,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         class="border-base-content/12 text-base-content/75 mt-4 flex items-baseline justify-between gap-4 border-t pt-3 text-sm"
       >
         {~t"Still to come in"}
-        <span class="text-base-content font-medium tabular-nums">{Format.currency(@owed, @locale)}</span>
+        <span class="text-base-content font-semibold tabular-nums">{Format.currency(@owed, @locale)}</span>
       </p>
     </.widget>
     """
@@ -594,7 +594,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         class="-mx-2 flex items-baseline justify-between gap-4 px-2 py-2 transition-colors hover:bg-amber-900/5"
       >
         <span class="min-w-0">
-          <span class="text-base-content block truncate font-medium">{@row.who}</span>
+          <span class="text-base-content block truncate font-semibold">{@row.who}</span>
           <span :if={@row.what} class="text-base-content/75 block truncate text-sm">{@row.what}</span>
         </span>
         <span :if={@row[:amount]} class="text-base-content shrink-0 tabular-nums">
@@ -753,7 +753,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       <span class={["text-xs", !@selected? && !@closed? && "text-base-content/75"]}>
         {Localize.Date.to_string!(@date, locale: @locale, format: "ccc")}
       </span>
-      <span class={["text-sm font-medium tabular-nums", @today? && ["underline underline-offset-4", if(@selected?, do: "decoration-primary-content/50", else: "decoration-base-content/30")]]}>
+      <span class={["text-sm font-semibold tabular-nums", @today? && ["underline underline-offset-4", if(@selected?, do: "decoration-primary-content/50", else: "decoration-base-content/30")]]}>
         {@date.day}
       </span>
       <span class="flex h-5 items-center">
@@ -816,7 +816,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <ul :if={@items != []} class="text-base-content mt-1 space-y-0.5 text-sm">
             <li :for={item <- @items} class="break-words" phx-no-format>
               <span class="font-semibold tabular-nums">{item.quantity} ×</span>
-              <span class="font-medium">{item.product_name}</span><span :if={item.variant_size} class="text-base-content/75">, {variant_size_label(item.variant_size)}</span>
+              <span class="font-semibold">{item.product_name}</span><span :if={item.variant_size} class="text-base-content/75">, {variant_size_label(item.variant_size)}</span>
             </li>
           </ul>
 
@@ -849,7 +849,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <div class="flex shrink-0 flex-col items-end gap-0.5 pt-0.5 text-right">
           <span
             :if={Format.fulfillment_time_range(@order, Format.locale())}
-            class="text-base-content flex items-center gap-1 whitespace-nowrap text-xs font-medium tabular-nums sm:text-sm"
+            class="text-base-content flex items-center gap-1 whitespace-nowrap text-xs font-semibold tabular-nums sm:text-sm"
             data-testid="fulfillment-time"
           >
             <.icon name="hero-clock" class="text-base-content/50 h-3.5 w-3.5" />

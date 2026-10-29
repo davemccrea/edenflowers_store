@@ -68,7 +68,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
           <:col :let={product} field="name" search sort={[cycle: [:asc, :desc]]} label={~t"Name"}>
             <.link
               navigate={~p"/admin/products/#{product.id}"}
-              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+              class="max-w-28 inline-block truncate align-middle font-semibold hover:underline sm:max-w-none"
             >
               {Translations.translate(product).name}
             </.link>

@@ -17,7 +17,7 @@ typography:
   display:
     fontFamily: "Newsreader, serif"
     fontSize: "3rem"
-    fontWeight: 300
+    fontWeight: 400
     lineHeight: 1.08
     letterSpacing: "-0.025em"
   headline:
@@ -47,7 +47,7 @@ typography:
   label:
     fontFamily: "Open Sans, sans-serif"
     fontSize: "0.75rem"
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1
     letterSpacing: "0.18em"
 rounded:
@@ -151,21 +151,23 @@ Paper at hue ~75 and forest at hue ~150, with one amber accent reserved for inte
 
 ## Typography
 
-**Display Font:** Newsreader (with `serif` fallback), self-hosted, variable weight and optical size, plus italic.
-**Body Font:** Open Sans (with `sans-serif` fallback), self-hosted variable font, 300–800.
+**Display Font:** Newsreader (with `serif` fallback), self-hosted, 400 only in upright and italic, with a variable optical size.
+**Body Font:** Open Sans (with `sans-serif` fallback), self-hosted variable font, 400–600.
+
+**The Two-Weight Rule.** The serif is always 400; hierarchy comes from size and italic. The sans is 400 for reading and 600 for everything that labels, heads or acts. The font files contain only these weights, so any other weight renders as the nearest one.
 
 **Character:** Newsreader is an editorial serif with a real italic, and it does the talking on the storefront. Open Sans labels; it speaks only where a page is a tool or a document. The pairing reads like a printed catalogue whose captions happen to be interactive.
 
 ### Hierarchy
-- **Display** (`hero-display`: serif, 300, 3rem → 5.5rem): full-viewport hero headlines only; italic on the home hero.
+- **Display** (`hero-display`: serif, 400, 3rem → 5.5rem): full-viewport hero headlines only; italic on the home hero.
 - **Headline** (`page-title`: serif, 400, 2.5rem → 3rem): an ordinary page's `h1`.
 - **Section** (`section-title`: serif, 400, 1.875rem → 2.25rem): section `h2`s.
-- **Pull quote** (`pull-quote`: serif, 300, 1.875rem → 2.25rem): standalone editorial statements.
+- **Pull quote** (`pull-quote`: serif, 400, 1.875rem → 2.25rem): standalone editorial statements.
 - **Title** (`card-title` / `tile-title`: serif, 400, 1.5rem): product names and tile labels.
 - **Footer line** (`footer-line`: serif, 1.125rem): addresses, hours, the footer's facts.
 - **Body** (sans, 400, 1rem/1.5): default. Prose pages step up to 1.125rem, relaxed leading, `max-w-2xl`.
-- **Label** (`eyebrow`: sans, 700, 0.75rem, uppercase, 0.18em): category labels, footer headings, the "From" before a price.
-- **Wordmark** (`logo-wordmark`: sans, 700, uppercase, wide tracking): the header lockup in primary green. The only large uppercase sans.
+- **Label** (`eyebrow`: sans, 600, 0.75rem, uppercase, 0.18em): category labels, footer headings, the "From" before a price.
+- **Wordmark** (`logo-wordmark`: sans, 600, uppercase, wide tracking): the header lockup in primary green. The only large uppercase sans.
 - **Reference and admin headings** (sans, 600, tracking-tight): headings on FAQ, terms and privacy, and every admin heading.
 
 ### Named Rules
@@ -223,7 +225,7 @@ Square is the system: a rectangle and a hairline. Line-drawn flower SVGs, at low
 **Character: quiet, precise, physical.** Nothing shouts, edges are exact, and the press is the one unmistakably tactile moment.
 
 ### Buttons
-- **Shape:** square, no shadow, sans 500, normal case.
+- **Shape:** square, no shadow, sans 600, normal case.
 - **Primary:** green fill, near-white text.
 - **Secondary:** green outline on the storefront; a `base-200` fill with a `base-300` edge in the admin.
 - **Inverse:** a white outline over photography that fills white on hover, with a white focus ring via `--focus-color`.

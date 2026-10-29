@@ -191,7 +191,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
               :for={{{title, body}, index} <- Enum.with_index(@steps, 1)}
               class="border-base-content/12 grid-cols-[3rem_1fr] grid gap-x-4 border-b py-8 md:grid-cols-[4rem_16rem_1fr] md:gap-x-8"
             >
-              <p class="text-primary font-serif text-4xl font-light leading-none">{index}</p>
+              <p class="text-primary font-serif text-4xl leading-none">{index}</p>
               <h3 class="card-heading">{title}</h3>
               <p class="text-base-content/80 col-start-2 mt-2 max-w-prose leading-relaxed md:col-start-3 md:mt-0">{body}</p>
             </li>

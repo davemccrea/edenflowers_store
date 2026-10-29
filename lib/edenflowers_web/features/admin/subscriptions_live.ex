@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
           <:col :let={subscription} field="user.name" search sort label={~t"Customer"}>
             <.link
               navigate={~p"/admin/subscriptions/#{subscription.id}"}
-              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+              class="max-w-28 inline-block truncate align-middle font-semibold hover:underline sm:max-w-none"
             >
               {subscription.user.name || ~t"Unnamed customer"}
             </.link>

@@ -71,7 +71,7 @@ defmodule EdenflowersWeb.Admin.LinksLive do
                   class="group min-h-12 flex items-center gap-3 px-4 py-2 hover:bg-base-200"
                 >
                   <span class="min-w-0 flex-1">
-                    <span class="block font-medium">{label}</span>
+                    <span class="block font-semibold">{label}</span>
                     <span :if={host} class="text-base-content/50 block truncate text-xs">{host}</span>
                   </span>
                   <.icon

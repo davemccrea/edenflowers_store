@@ -43,16 +43,16 @@ defmodule EdenflowersWeb.Marketing.TrustedBy do
       %{
         name: "Dermosil",
         url: "https://www.dermosil.com/",
-        logo: "/images/logo-dermosil.svg",
+        logo: ~p"/images/logo-dermosil.svg",
         width: 230,
         height: 33,
         class: "h-7"
       },
-      %{name: "SFP RKP", url: "https://sfp.fi/", logo: "/images/logo-sfp.svg", width: 182, height: 40, class: "h-8"},
+      %{name: "SFP RKP", url: "https://sfp.fi/", logo: ~p"/images/logo-sfp.svg", width: 182, height: 40, class: "h-8"},
       %{
         name: ~t"Evangelical Lutheran Church of Finland",
         url: "https://evl.fi/en/",
-        logo: "/images/logo-evl.svg",
+        logo: ~p"/images/logo-evl.svg",
         width: 363,
         height: 81,
         class: "h-8"
@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Marketing.TrustedBy do
       %{
         name: "Bonnier News Finland",
         url: "https://bnf.fi/",
-        logo: "/images/logo-bonnier-news.png",
+        logo: ~p"/images/logo-bonnier-news.png",
         width: 104,
         height: 32,
         class: "h-8"

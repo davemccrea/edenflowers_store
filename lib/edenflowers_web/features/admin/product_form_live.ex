@@ -292,7 +292,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               <span class="bg-base-100 size-9 grid place-items-center rounded-full">
                 <.icon name="hero-plus" class="size-4" />
               </span>
-              <span class="text-sm font-medium">{~t"Add photos"}</span>
+              <span class="text-sm font-semibold">{~t"Add photos"}</span>
             </span>
             <.live_file_input upload={@upload} class="sr-only" />
           </label>

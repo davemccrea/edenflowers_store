@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
           <:col :let={customer} field="name" search sort label={~t"Customer"}>
             <.link
               navigate={~p"/admin/customers/#{customer.id}"}
-              class="max-w-28 inline-block truncate align-middle font-medium hover:underline sm:max-w-none"
+              class="max-w-28 inline-block truncate align-middle font-semibold hover:underline sm:max-w-none"
             >
               {customer.name || ~t"Unnamed customer"}
             </.link>

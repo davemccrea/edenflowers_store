@@ -91,7 +91,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
           click={fn subscription -> JS.navigate(~p"/admin/subscriptions/#{subscription.id}") end}
         >
           <:col :let={subscription} field="product_variant.size" sort label={~t"Size"}>
-            <.link navigate={~p"/admin/subscriptions/#{subscription.id}"} class="touch-target font-medium hover:underline">
+            <.link navigate={~p"/admin/subscriptions/#{subscription.id}"} class="touch-target font-semibold hover:underline">
               {variant_size_label(subscription.product_variant.size)}
             </.link>
           </:col>
@@ -124,7 +124,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
           <:col :let={order} field="ordered_at" sort={[cycle: [:desc, :asc]]} label={~t"Ordered"}>
             <.link
               navigate={~p"/admin/orders/#{order.id}"}
-              class="touch-target whitespace-nowrap font-medium tabular-nums hover:underline"
+              class="touch-target whitespace-nowrap font-semibold tabular-nums hover:underline"
             >
               {Format.date(order.ordered_at, @locale)}
             </.link>

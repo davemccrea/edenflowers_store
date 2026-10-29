@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   href={Edenflowers.External.PapraAPI.document_url(@expense.document_id)}
                   target="_blank"
                   rel="noopener"
-                  class="link link-primary inline-flex items-center gap-1 font-medium"
+                  class="link link-primary inline-flex items-center gap-1 font-semibold"
                 >
                   {~t"Open receipt in Papra"}
                   <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />

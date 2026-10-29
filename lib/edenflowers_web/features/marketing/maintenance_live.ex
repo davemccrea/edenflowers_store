@@ -15,9 +15,9 @@ defmodule EdenflowersWeb.Marketing.MaintenanceLive do
     ~H"""
     <div class="bg-base-200 flex min-h-screen flex-col">
       <header class="flex justify-center py-8">
-        <img src="/images/logo-eden-flowers.svg" alt="Eden Flowers" width="160" height="80" class="w-40 md:hidden" />
+        <img src={~p"/images/logo-eden-flowers.svg"} alt="Eden Flowers" width="160" height="80" class="w-40 md:hidden" />
         <img
-          src="/images/logo-eden-flowers-wide.svg"
+          src={~p"/images/logo-eden-flowers-wide.svg"}
           alt="Eden Flowers"
           width="256"
           height="80"

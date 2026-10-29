@@ -1,32 +1,32 @@
-/* Both are variable (Newsreader also has an optical-size axis, applied
-   automatically). Newsreader starts at 400 so font-light headings render at
-   400, as they did with Crimson Text, which had no light weight.
+/* Open Sans is variable across the two weights the site uses, 400 and 600.
+   Newsreader is 400 only, varying just its optical-size axis, which the
+   browser applies automatically. Both are subset to Latin.
    SIL OFL 1.1, see priv/static/fonts/OFL.txt. */
 @font-face {
   font-family: "Open Sans";
   font-style: normal;
-  font-weight: 300 800;
+  font-weight: 400 600;
   font-display: swap;
   src: url("/fonts/OpenSans-Variable.woff2") format("woff2");
 }
 @font-face {
   font-family: "Open Sans";
   font-style: italic;
-  font-weight: 300 800;
+  font-weight: 400 600;
   font-display: swap;
   src: url("/fonts/OpenSans-VariableItalic.woff2") format("woff2");
 }
 @font-face {
   font-family: "Newsreader";
   font-style: normal;
-  font-weight: 400 800;
+  font-weight: 400;
   font-display: swap;
   src: url("/fonts/Newsreader-Variable.woff2") format("woff2");
 }
 @font-face {
   font-family: "Newsreader";
   font-style: italic;
-  font-weight: 400 800;
+  font-weight: 400;
   font-display: swap;
   src: url("/fonts/Newsreader-VariableItalic.woff2") format("woff2");
 }

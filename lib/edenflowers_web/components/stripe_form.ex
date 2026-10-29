@@ -131,7 +131,7 @@ defmodule EdenflowersWeb.StripeForm do
                 {
                   family: "Open Sans",
                   src: `url(${new URL("/fonts/OpenSans-Variable.woff2", window.location.origin)}) format("woff2")`,
-                  weight: "300 800",
+                  weight: "400 600",
                 },
               ],
             }));

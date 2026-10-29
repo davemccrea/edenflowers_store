@@ -104,7 +104,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               class={["grid-cols-subgrid col-span-full grid items-center gap-y-3 py-4", registration.id == @highlighted_booking_id && highlighted_row_class()]}
             >
               <div class="col-start-1 row-start-1 min-w-0">
-                <p class="text-base-content flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
+                <p class="text-base-content flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold">
                   <span class="min-w-0 break-words">{registration.name}</span>
                   <span :if={registration.seats_held > 1} class="text-base-content/75 tabular-nums">
                     +{registration.seats_held - 1}

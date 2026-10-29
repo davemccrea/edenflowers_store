@@ -153,7 +153,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                 <:col :let={order} field="fulfillment_date" sort={[cycle: [:desc, :asc]]} label={~t"Fulfillment date"}>
                   <.link
                     navigate={~p"/admin/orders/#{order.id}"}
-                    class="touch-target whitespace-nowrap font-medium tabular-nums hover:underline"
+                    class="touch-target whitespace-nowrap font-semibold tabular-nums hover:underline"
                   >
                     {Format.date(order.fulfillment_date, @locale)}
                   </.link>

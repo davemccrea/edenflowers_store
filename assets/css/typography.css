@@ -5,7 +5,7 @@
 }
 
 @utility hero-display {
-  @apply font-serif font-light text-5xl leading-[1.08] tracking-tight text-balance sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
+  @apply font-serif text-5xl leading-[1.08] tracking-tight text-balance sm:text-6xl sm:leading-[1.04] md:text-[4.5rem] md:leading-[1.02] md:tracking-[-0.01em] lg:text-[5.5rem];
 }
 
 @utility page-title {
@@ -17,15 +17,15 @@
 }
 
 @utility tile-title {
-  @apply font-serif text-2xl font-medium leading-snug tracking-normal sm:tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-normal sm:tracking-wide;
 }
 
 @utility card-heading {
-  @apply font-serif text-2xl font-medium leading-snug tracking-normal text-balance sm:text-xl sm:tracking-wide;
+  @apply font-serif text-2xl leading-snug tracking-normal text-balance sm:text-xl sm:tracking-wide;
 }
 
 @utility pull-quote {
-  @apply font-serif text-3xl font-light leading-[1.25] tracking-tight text-balance md:text-4xl md:leading-[1.2];
+  @apply font-serif text-3xl leading-[1.25] tracking-tight text-balance md:text-4xl md:leading-[1.2];
 }
 
 @utility footer-line {
@@ -33,11 +33,11 @@
 }
 
 @utility eyebrow {
-  @apply font-sans text-xs font-bold uppercase tracking-[0.18em];
+  @apply font-sans text-xs font-semibold uppercase tracking-[0.18em];
 }
 
 @utility logo-wordmark {
-  @apply font-sans font-bold uppercase tracking-[0.18em];
+  @apply font-sans font-semibold uppercase tracking-[0.18em];
 }
 
 /* Hover underlines are always present and fade only their colour, so the

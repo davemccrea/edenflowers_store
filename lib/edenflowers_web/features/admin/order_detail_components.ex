@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     <.admin_drawer id="settlement-drawer" title={settlement_title(@order, @mode)}>
       <.drawer_body>
         <div class="space-y-1">
-          <p :if={@order.customer_name} class="text-base-content font-medium">{@order.customer_name}</p>
+          <p :if={@order.customer_name} class="text-base-content font-semibold">{@order.customer_name}</p>
           <p class="text-base-content/75 text-sm tabular-nums">{@order.order_reference}</p>
         </div>
         <dl class="divide-base-content/12 border-base-content/12 divide-y border-y text-sm tabular-nums">
@@ -285,7 +285,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           class="h-16 w-16 shrink-0 object-cover"
         />
         <div class="min-w-0 flex-1">
-          <p class="text-base-content text-base font-medium">
+          <p class="text-base-content text-base font-semibold">
             <span class="tabular-nums">{line_item.quantity} ×</span> {line_item.product_name}
           </p>
           <p :if={line_item.variant_size} class="text-base-content/85 mt-0.5 text-sm">

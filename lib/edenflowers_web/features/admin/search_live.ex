@@ -64,7 +64,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
                   class="flex items-center justify-between gap-4 py-2.5 hover:underline"
                 >
                   <span class="min-w-0">
-                    <span class="text-base-content block truncate font-medium">{order.customer_name}</span>
+                    <span class="text-base-content block truncate font-semibold">{order.customer_name}</span>
                     <span class="text-base-content/75 text-sm tabular-nums">
                       {order.order_reference} · {Format.date(order.fulfillment_date, @locale)}
                     </span>
@@ -87,7 +87,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
             <ul :if={@customers != []} class="divide-base-content/12 -my-2 divide-y">
               <li :for={customer <- @customers}>
                 <.link navigate={~p"/admin/customers/#{customer.id}"} class="block py-2.5 hover:underline">
-                  <span class="text-base-content block truncate font-medium">{customer.name || customer.email}</span>
+                  <span class="text-base-content block truncate font-semibold">{customer.name || customer.email}</span>
                   <span :if={customer.name} class="text-base-content/75 text-sm">{customer.email}</span>
                 </.link>
               </li>

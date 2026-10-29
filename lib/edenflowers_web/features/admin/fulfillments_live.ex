@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             click={fn option -> JS.navigate(~p"/admin/fulfillments/#{option.id}") end}
           >
             <:col :let={option} field="name" label={~t"Name"}>
-              <.link navigate={~p"/admin/fulfillments/#{option.id}"} class="font-medium hover:underline">
+              <.link navigate={~p"/admin/fulfillments/#{option.id}"} class="font-semibold hover:underline">
                 {Translations.translate(option).name}
               </.link>
             </:col>
@@ -318,7 +318,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         <% end %>
       </div>
       <div :if={@rate_type == :dynamic} class="space-y-4 pt-4">
-        <h3 class="font-medium">{~t"Car costs"}</h3>
+        <h3 class="font-semibold">{~t"Car costs"}</h3>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
           <.input
             field={@form[:mileage_rate]}
@@ -402,11 +402,11 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
       <dl aria-live="polite" class="mb-4 grid grid-cols-2 gap-x-6 gap-y-3 tabular-nums sm:grid-cols-4">
         <div>
           <dt class="text-base-content/75 text-xs">{~t"Distance"}</dt>
-          <dd class="text-lg font-medium" data-value="km"></dd>
+          <dd class="text-lg font-semibold" data-value="km"></dd>
         </div>
         <div>
           <dt class="text-base-content/75 text-xs">{if @changed?, do: ~t"After saving", else: ~t"Fee"}</dt>
-          <dd class="text-lg font-medium" data-value="fee"></dd>
+          <dd class="text-lg font-semibold" data-value="fee"></dd>
         </div>
         <div :if={@changed?}>
           <dt class="text-base-content/75 text-xs">{~t"Now"}</dt>

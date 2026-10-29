@@ -263,7 +263,7 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
   defp terms_subsection(assigns) do
     ~H"""
     <section aria-labelledby={"#{@id}-heading"} class="scroll-mt-8" id={@id}>
-      <h3 id={"#{@id}-heading"} class="text-base-content font-sans mb-2 text-base font-medium leading-snug">{@title}</h3>
+      <h3 id={"#{@id}-heading"} class="text-base-content font-sans mb-2 text-base font-semibold leading-snug">{@title}</h3>
       <div class="space-y-3">{render_slot(@inner_block)}</div>
     </section>
     """

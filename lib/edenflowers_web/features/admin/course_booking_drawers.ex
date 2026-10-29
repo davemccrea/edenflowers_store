@@ -78,7 +78,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   defp settlement_details(assigns) do
     ~H"""
     <div class="space-y-1">
-      <p class="text-base-content font-medium">
+      <p class="text-base-content font-semibold">
         {@registration.name}
         <span :if={@registration.seats_held > 1} class="text-base-content/75 tabular-nums">
           +{@registration.seats_held - 1}
@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
     </div>
     <dl class="divide-base-content/12 border-base-content/12 divide-y border-y text-sm tabular-nums">
       <div :if={@registration.to_collect?} class="flex items-baseline justify-between gap-4 py-3">
-        <dt class="font-medium">{~t"Amount due"}</dt>
+        <dt class="font-semibold">{~t"Amount due"}</dt>
         <dd class="text-lg font-semibold">{Format.currency(@registration.balance, @locale)}</dd>
       </div>
       <div class="flex justify-between gap-4 py-2">

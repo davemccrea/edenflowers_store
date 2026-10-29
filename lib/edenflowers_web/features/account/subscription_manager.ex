@@ -251,7 +251,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     ~H"""
     <div :if={@held? or @unpaid} class="flex flex-col gap-3" data-testid="subscription-payment">
       <div>
-        <p class="font-medium">
+        <p class="font-semibold">
           <%= cond do %>
             <% @held? and @unpaid -> %>
               {~t"We couldn't charge your card for #{date = Format.weekday_date(@unpaid.fulfillment_date, @locale)} (#{amount = Format.currency(@unpaid.grand_total, @locale)})."}
@@ -336,7 +336,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     assigns = assign(assigns, unpaid: assigns.subscription.unpaid_occurrence)
 
     ~H"""
-    <span class="text-error font-medium">{~t"Payment failed"}</span>
+    <span class="text-error font-semibold">{~t"Payment failed"}</span>
     <span class="block text-sm">
       <.link
         :if={@unpaid}
@@ -375,7 +375,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     assigns = assign(assigns, booked: assigns.subscription.booked_occurrence)
 
     ~H"""
-    <span class="font-medium tabular-nums">{Format.weekday_day_month(@booked.fulfillment_date, @locale)}</span>
+    <span class="font-semibold tabular-nums">{Format.weekday_day_month(@booked.fulfillment_date, @locale)}</span>
     <span class="text-base-content/70 block text-sm">{~t"One final delivery remains"}</span>
     """
   end

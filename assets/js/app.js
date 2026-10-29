@@ -9,7 +9,14 @@ import { customerLiveSelect } from "./customer_select";
 import { cinderDom } from "./cinder_a11y";
 import { onDocumentPatch } from "./admin_transitions";
 import "./unsaved_forms";
-import "./element_picker";
+
+// Customers never use the picker, so only dev and reviewer pages fetch it.
+if (
+  document.querySelector("[data-phx-loc]") ||
+  document.body.hasAttribute("data-reviewer")
+) {
+  import("./element_picker");
+}
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
