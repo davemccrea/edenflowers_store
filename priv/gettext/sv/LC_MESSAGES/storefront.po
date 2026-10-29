@@ -4073,5 +4073,5 @@ msgstr[1] "%{count} buketter hittills"
 
 #: lib/edenflowers_web/features/account/account_live.ex:64
 #, elixir-autogen, elixir-format
-msgid "Hi, %{current_user_first_name}"
-msgstr "Hej, %{current_user_first_name}"
+msgid "Hi, %{current_user_first_name}!"
+msgstr "Hej, %{current_user_first_name}!"

@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
       <.container class="max-w-3xl">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
           <h1 class="page-title">
-            {if @current_user.first_name, do: ~t"Hi, #{@current_user.first_name}", else: ~t"Account"}
+            {if @current_user.first_name, do: ~t"Hi, #{@current_user.first_name}!", else: ~t"Account"}
           </h1>
           <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm" class="w-fit">
             {~t"Sign out"}

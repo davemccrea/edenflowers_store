@@ -4073,5 +4073,5 @@ msgstr[1] "%{count} kimppua tähän mennessä"
 
 #: lib/edenflowers_web/features/account/account_live.ex:64
 #, elixir-autogen, elixir-format
-msgid "Hi, %{current_user_first_name}"
-msgstr "Hei, %{current_user_first_name}"
+msgid "Hi, %{current_user_first_name}!"
+msgstr "Hei, %{current_user_first_name}!"
