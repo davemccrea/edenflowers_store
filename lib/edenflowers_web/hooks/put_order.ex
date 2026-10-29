@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.Hooks.PutOrder do
     locale = to_string(Edenflowers.Format.locale())
     actor = socket.assigns[:current_user]
 
-    case Orders.get_order_for_checkout(order_id, actor: actor) do
+    case Orders.get_order_for_storefront(order_id, actor: actor) do
       {:ok, order} ->
         {:cont, assign(socket, order: put_locale(order, locale, actor))}
 

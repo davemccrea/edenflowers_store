@@ -19,6 +19,7 @@ defmodule Edenflowers.Orders do
       # Lookups
       define :get_order_by_id, action: :read, get_by: [:id]
       define :get_order_for_checkout, action: :for_checkout, get_by: [:id]
+      define :get_order_for_storefront, action: :for_storefront, get_by: [:id]
       define :get_order_for_admin, action: :admin_show, get_by: [:id]
       define :search_orders, action: :search, args: [:term]
       define :get_last_order_with_customer_phone, action: :last_with_customer_phone, args: [:customer_id]

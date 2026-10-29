@@ -39,6 +39,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
     line_items: [:total]
   ]
 
+  @storefront_load [:total_items_in_cart, :add_ons_only?, :promotion_applied?, :line_items]
+
   oban do
     triggers do
       # InitStore opens a cart for every new browser session, crawlers included.
@@ -76,6 +78,14 @@ defmodule Edenflowers.Orders.Order.Checkout do
                     "promotion and fulfillment option."
 
       prepare build(load: @checkout_load)
+    end
+
+    read :for_storefront do
+      description "Reads a cart with just what every storefront page shows: the header count and the cart " <>
+                    "drawer's lines and promotion code. Several times quicker than :for_checkout, whose " <>
+                    "totals and VAT only the checkout page needs, and it runs on every page view."
+
+      prepare build(load: @storefront_load)
     end
 
     create :create_for_checkout do

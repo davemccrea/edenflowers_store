@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
 
   defp handle_line_item_changed(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> order_id}, socket) do
     actor = socket.assigns[:current_user]
-    order = Orders.get_order_for_checkout!(order_id, actor: actor)
+    order = Orders.get_order_for_storefront!(order_id, actor: actor)
     {:halt, assign(socket, order: order)}
   end
 
