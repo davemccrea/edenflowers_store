@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.FetchMap do
   @moduledoc """
   Fetches the Vaasa location map from Mapbox Static Images API and writes it to
-  `images/home-vaasa-map-2.png`, the Imgproxy local-storage source.
+  `images/home-vaasa-map-3.png`, the Imgproxy local-storage source.
 
   ## Why a Mix task
 
@@ -25,19 +25,19 @@ defmodule Mix.Tasks.FetchMap do
   # Composition spec. Dimensions are the Mapbox source; the render aspect is
   # preserved (1097:1280 ≈ 800:940) so Imgproxy can pure-downscale to any DPR
   # without re-cropping.
-  # Centred halfway between the shop and Vaasa's market square. On desktop the
+  # Centred between the shop and Vaasa's market square, nearer the shop. On desktop the
   # page crops up to ~27% off the top and bottom, which would hide the pin if
   # the frame were centred on the market square itself.
-  @center {21.6083, 63.1097}
+  @center {21.6083, 63.1120}
   @shop {21.6000, 63.1243}
-  @zoom 12
+  @zoom 12.5
   @width 1097
   @height 1280
   @style "davemccrea/cmp1rbxej001201r0c0z808jo"
   # `pin-m` is Mapbox's medium built-in pin. Color is hex without `#`.
   # Honey approximates --color-link-underline.
   @marker_color "E8B33C"
-  @output_path "images/home-vaasa-map-2.png"
+  @output_path "images/home-vaasa-map-3.png"
 
   # The custom style only has land and water, so roads are layered on at
   # request time from Mapbox's own street data, tinted to sit quietly on the
