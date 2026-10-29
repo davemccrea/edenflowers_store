@@ -3,6 +3,7 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 import { hooks as colocatedHooks } from "phoenix-colocated/edenflowers";
+import { hooks as cinderHooks } from "phoenix-colocated/cinder";
 import liveSelect from "live_select";
 import { customerLiveSelect } from "./customer_select";
 import { cinderDom } from "./cinder_a11y";
@@ -20,6 +21,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
   disconnectedTimeout: 3000,
   params: { _csrf_token: csrfToken },
   hooks: {
+    ...cinderHooks,
     ...colocatedHooks,
     ...liveSelect,
     LiveSelect: customerLiveSelect,
