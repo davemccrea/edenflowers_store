@@ -1,10 +1,10 @@
 ---
 id: TASK-116
 title: Publish a privacy policy
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-24 19:28'
-updated_date: '2026-10-27 14:12'
+updated_date: '2026-10-29 07:25'
 labels:
   - spec
   - customers
@@ -94,6 +94,15 @@ created: 2026-10-27 14:12
 ---
 
 Left before launch: the Brevo cleanup on TASK-116.4 and Jennie's Swedish review (TASK-117). TASK-116.2 is after launch, so this parent stays open until it lands.
+
+---
+
+author: @claude
+created: 2026-10-29 07:25
+
+---
+
+Privacy policy is published and every subtask is done.
 
 ---
 <!-- COMMENTS:END -->
