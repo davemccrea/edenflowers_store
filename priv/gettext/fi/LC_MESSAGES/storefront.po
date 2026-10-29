@@ -852,13 +852,13 @@ msgstr "Toimitusosoite"
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:940
 #: lib/edenflowers_web/features/checkout/components/fields.ex:131
 #: lib/edenflowers_web/features/checkout/pay_live.ex:133
-#: lib/edenflowers_web/features/marketing/home_live.ex:784
+#: lib/edenflowers_web/features/marketing/home_live.ex:779
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr "Toimitus"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:119
-#: lib/edenflowers_web/features/marketing/home_live.ex:778
+#: lib/edenflowers_web/features/marketing/home_live.ex:773
 #: lib/edenflowers_web/features/marketing/terms_live.ex:22
 #: lib/edenflowers_web/features/marketing/terms_live.ex:90
 #, elixir-autogen, elixir-format
@@ -1115,8 +1115,8 @@ msgstr "Kukkaportti"
 msgid "Flower girl or toss bouquet"
 msgstr "Kukkaistytön kimppu tai heittokimppu"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:730
-#: lib/edenflowers_web/features/marketing/home_live.ex:754
+#: lib/edenflowers_web/features/marketing/home_live.ex:725
+#: lib/edenflowers_web/features/marketing/home_live.ex:749
 #, elixir-autogen, elixir-format
 msgid "Flower subscription"
 msgstr "Kukkatilaus"
@@ -1212,7 +1212,7 @@ msgstr "Lopulliset hinnat riippuvat valituista kukista ja tekniikasta. Toimitusk
 msgid "Free"
 msgstr "Ilmainen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:789
+#: lib/edenflowers_web/features/marketing/home_live.ex:784
 #, elixir-autogen, elixir-format
 msgid "Free from Minimossen."
 msgstr "Ilmaiseksi Minimossenista."
@@ -1707,7 +1707,7 @@ msgstr "Hallinnoi sitä tililtäsi."
 msgid "Manage subscription"
 msgstr "Hallinnoi kestotilausta"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:798
+#: lib/edenflowers_web/features/marketing/home_live.ex:793
 #, elixir-autogen, elixir-format
 msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr "Vaasan kartta, johon Minimossen on merkitty"
@@ -2188,7 +2188,7 @@ msgstr "Kuvat"
 msgid "Pick up your flowers from Eden Flowers"
 msgstr "Hae kukkasi Eden Flowersista"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:788
+#: lib/edenflowers_web/features/marketing/home_live.ex:783
 #: lib/edenflowers_web/features/marketing/terms_live.ex:94
 #, elixir-autogen, elixir-format
 msgid "Pickup"
@@ -4006,18 +4006,18 @@ msgstr "Hääkukat Vaasassa ja Mustasaaressa: hääkimput, koristelu ja kukkakaa
 msgid "Favourite bouquets"
 msgstr "Suosikkikimput"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:732
+#: lib/edenflowers_web/features/marketing/home_live.ex:727
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr "Alkaen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:745
+#: lib/edenflowers_web/features/marketing/home_live.ex:740
 #, elixir-autogen, elixir-format
 msgid "Start a subscription"
 msgstr "Aloita kestotilaus"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:738
-#: lib/edenflowers_web/features/marketing/home_live.ex:756
+#: lib/edenflowers_web/features/marketing/home_live.ex:733
+#: lib/edenflowers_web/features/marketing/home_live.ex:751
 #, elixir-autogen, elixir-format
 msgid "Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to %{days} days before a bouquet."
 msgstr "Kukkia sinulle tai jollekulle toiselle joka viikko, joka toinen viikko tai joka neljäs viikko, toimitettuna tai noudettavaksi. Keskeytä, muuta tai lopeta tililtäsi viimeistään %{days} päivää ennen kimppua."
