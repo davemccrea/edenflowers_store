@@ -113,6 +113,8 @@ defmodule EdenflowersWeb.Router do
     get "/health", HealthController, :show
     get "/pay/:token", PaymentLinkRedirectController, :order
     get "/courses/pay/:token", PaymentLinkRedirectController, :course
+    get "/valkommen", Marketing.LegacyRedirectController, :swedish
+    get "/tervetuloa", Marketing.LegacyRedirectController, :finnish
   end
 
   scope "/", EdenflowersWeb do
