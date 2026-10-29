@@ -226,7 +226,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <.button
               navigate={~q"/#{language}/store"}
               variant="light"
-              size="lg"
               class="group w-fit"
             >
               {~t"Choose bouquet"}
