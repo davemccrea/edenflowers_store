@@ -160,7 +160,7 @@ defmodule Edenflowers.MixProject do
         "deps.unlock --check-unused",
         "format --check-formatted",
         "credo --strict",
-        "cmd node --test test/js/*_test.mjs",
+        "cmd node --test --test-reporter=dot test/js/*_test.mjs",
         "test"
       ]
     ]

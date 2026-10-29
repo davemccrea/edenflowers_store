@@ -30,7 +30,7 @@ test *args: check-typst
 # Run the JavaScript contracts without Mix or database setup
 [group('development')]
 test-js:
-    node --test test/js/*_test.mjs
+    node --test --test-reporter=dot test/js/*_test.mjs
 
 # Write tmp/emails.md: Claude's map of when each email is sent, then every email in every language
 [group('development')]
