@@ -51,7 +51,13 @@ defmodule EdenflowersWeb.Account.AccountLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      notice_bar={@notice_bar}
+    >
       <.container class="max-w-3xl">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
           <h1 class="page-title">

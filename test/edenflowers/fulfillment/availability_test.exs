@@ -185,4 +185,25 @@ defmodule Edenflowers.Fulfillment.AvailabilityTest do
       assert nil == Availability.next_open_date(calendar, now)
     end
   end
+
+  describe "order_status/2" do
+    # Thursday 2023-06-01.
+    @now DateTime.from_naive!(~N[2023-06-01 10:00:00], "Europe/Helsinki")
+
+    test "the deadline while an order can still go out today" do
+      calendar = struct!(ShopCalendar, same_day: true, order_deadline: ~T[14:00:00])
+
+      assert {:order_today, ~T[14:00:00]} == Availability.order_status(calendar, @now)
+    end
+
+    test "the next open day when today is closed" do
+      calendar = struct!(ShopCalendar, disabled_dates: [~D[2023-06-01], ~D[2023-06-02]])
+
+      assert {:next_open, ~D[2023-06-03]} == Availability.order_status(calendar, @now)
+    end
+
+    test "nil when the shop is closed every day" do
+      assert nil == Availability.order_status(struct!(ShopCalendar, available_days: []), @now)
+    end
+  end
 end

@@ -11,7 +11,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   alias Edenflowers.Catalog
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
-  alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Translations
 
   # Complete-sentence excerpts from feedback.md, preserving the customer's wording and emojis.
@@ -127,7 +126,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
        review_direction: nil,
        subscribable_products: Catalog.list_subscribable_products!() |> Translations.translate(),
        price_from: price_from(Catalog.list_bouquets!(), locale),
-       next_fulfillment: next_fulfillment(locale),
        delivery_fee: delivery_fee(locale)
      )}
   end
@@ -152,21 +150,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
     case products |> Enum.map(& &1.cheapest_price) |> Enum.reject(&is_nil/1) do
       [] -> nil
       prices -> Format.storefront_price(Enum.min(prices, Decimal), locale)
-    end
-  end
-
-  defp next_fulfillment(locale) do
-    calendar = Fulfillment.get_shop_calendar!()
-    now = Edenflowers.ShopTime.now()
-
-    case Availability.next_open_date(calendar, now) do
-      nil ->
-        nil
-
-      date ->
-        if date == DateTime.to_date(now),
-          do: ~t"Today, if you order by #{time = Format.time(calendar.order_deadline, locale)}",
-          else: date |> Format.weekday_day_month(locale) |> String.capitalize()
     end
   end
 
@@ -201,6 +184,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       order={@order}
       flash={@flash}
       current_path={@current_path}
+      notice_bar={@notice_bar}
       alternates={@alternates}
     >
       <section id="home-hero" phx-hook=".HomeHero" data-header-overlay class="relative overflow-hidden not-last:border-b">
@@ -785,11 +769,10 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <div class="flex flex-col px-4 pt-16 pb-8 sm:px-8 md:justify-center md:px-12 md:py-32 lg:px-20">
             <.flower name="flower-41" class="text-base-content/20 -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20" />
             <h2 id="location-heading" class="section-title relative mb-8">{~t"Delivery and pickup"}</h2>
+            <p :if={@notice_bar} id="location-order-status" class="mb-6 max-w-prose text-lg font-semibold leading-relaxed">
+              {@notice_bar}
+            </p>
             <dl class="grid max-w-prose gap-6 text-lg leading-relaxed">
-              <div :if={@next_fulfillment}>
-                <dt class="eyebrow text-base-content/70 mb-1">{~t"Next available day"}</dt>
-                <dd>{@next_fulfillment}</dd>
-              </div>
               <div :if={@delivery_fee}>
                 <dt class="eyebrow text-base-content/70 mb-1">{~t"Delivery"}</dt>
                 <dd>{@delivery_fee}</dd>

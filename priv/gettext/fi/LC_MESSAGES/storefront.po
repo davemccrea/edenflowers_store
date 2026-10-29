@@ -7,12 +7,12 @@ msgstr ""
 "Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:85
+#: lib/edenflowers_web/features/checkout/order_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "%{amount} on %{date}"
 msgstr "%{amount}, veloitus %{date}"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:192
+#: lib/edenflowers_web/features/marketing/home_live.ex:175
 #, elixir-autogen, elixir-format
 msgid "%{base} plus %{per_km} per km."
 msgstr "%{base} sekä %{per_km} kilometriltä."
@@ -27,34 +27,34 @@ msgstr "%{brand} •••• %{last4}, voimassa %{expiry}"
 msgid "%{category} in Vaasa"
 msgstr "%{category} Vaasa"
 
-#: lib/edenflowers_web/features/account/account_live.ex:440
+#: lib/edenflowers_web/features/account/account_live.ex:446
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s)"
 msgid_plural "%{count} place(s)"
 msgstr[0] "%{count} paikka"
 msgstr[1] "%{count} paikkaa"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:199
+#: lib/edenflowers_web/features/courses/course_live.ex:200
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) for %{name}"
 msgid_plural "%{count} place(s) for %{name}"
 msgstr[0] "%{count} paikka, varaaja %{name}"
 msgstr[1] "%{count} paikkaa, varaaja %{name}"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:414
-#: lib/edenflowers_web/features/courses/courses_live.ex:213
+#: lib/edenflowers_web/features/courses/course_live.ex:415
+#: lib/edenflowers_web/features/courses/courses_live.ex:214
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) left"
 msgid_plural "%{count} place(s) left"
 msgstr[0] "%{count} paikka jäljellä"
 msgstr[1] "%{count} paikkaa jäljellä"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:998
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1004
 #, elixir-autogen, elixir-format
 msgid "%{name}'s address *"
 msgstr "Vastaanottajan osoite *"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:999
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1005
 #, elixir-autogen, elixir-format
 msgid "%{name}'s phone number *"
 msgstr "Vastaanottajan puhelinnumero *"
@@ -64,25 +64,25 @@ msgstr "Vastaanottajan puhelinnumero *"
 msgid "%{price} per delivery"
 msgstr "%{price} per toimitus"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:112
-#: lib/edenflowers_web/features/courses/course_live.ex:155
-#: lib/edenflowers_web/features/courses/courses_live.ex:189
+#: lib/edenflowers_web/features/courses/course_live.ex:113
+#: lib/edenflowers_web/features/courses/course_live.ex:156
+#: lib/edenflowers_web/features/courses/courses_live.ex:190
 #, elixir-autogen, elixir-format
 msgid "%{price} per person"
 msgstr "%{price} / henkilö"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:918
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:924
 #, elixir-autogen, elixir-format
 msgid "%{product}: %{stock}."
 msgstr "%{product}: %{stock}."
 
-#: lib/edenflowers_web/features/courses/course_live.ex:426
-#: lib/edenflowers_web/features/marketing/contact_live.ex:86
+#: lib/edenflowers_web/features/courses/course_live.ex:427
+#: lib/edenflowers_web/features/marketing/contact_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "(opens a map in a new tab)"
 msgstr "(avaa kartan uuteen välilehteen)"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:141
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "+ cake flowers on request"
 msgstr "+ kakkukukat tarjouksen mukaan"
@@ -97,12 +97,12 @@ msgstr "65230 Vaasa"
 msgid "A 6-digit code was sent to"
 msgstr "6-numeroinen koodi lähetettiin osoitteeseen"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:112
+#: lib/edenflowers_web/features/marketing/about_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "A bouquet of white, peach and rust flowers held against dry autumn grass"
 msgstr "Valkoisten, persikanväristen ja ruosteenruskeiden kukkien kimppu kuivaa syysheinää vasten"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:177
+#: lib/edenflowers_web/features/marketing/faq_live.ex:178
 #, elixir-autogen, elixir-format
 msgid "A lot depends on the flowers, but typically around 7–10 days."
 msgstr "Kestävyys riippuu paljon kukista, mutta yleensä ne kestävät noin 7–10 päivää."
@@ -113,13 +113,13 @@ msgid "A new card doesn't pay for this delivery, so pay for it separately."
 msgstr "Uusi kortti ei maksa tätä toimitusta, joten maksa se erikseen."
 
 #: lib/edenflowers/orders/line_item/changes/keep_subscription_alone.ex:59
-#: lib/edenflowers_web/features/store/product_live.ex:281
+#: lib/edenflowers_web/features/store/product_live.ex:323
 #, elixir-autogen, elixir-format
 msgid "A subscription is checked out on its own. Empty your cart to add this."
 msgstr "Kestotilaus tilataan erikseen. Tyhjennä ostoskori lisätäksesi sen."
 
-#: lib/edenflowers_web/components/layouts.ex:613
-#: lib/edenflowers_web/components/layouts.ex:952
+#: lib/edenflowers_web/components/layouts.ex:614
+#: lib/edenflowers_web/components/layouts.ex:960
 #, elixir-autogen, elixir-format
 msgid "About"
 msgstr "Tietoa minusta"
@@ -129,67 +129,67 @@ msgstr "Tietoa minusta"
 msgid "About me"
 msgstr "Tietoa minusta"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:103
+#: lib/edenflowers_web/features/marketing/terms_live.ex:104
 #, elixir-autogen, elixir-format
 msgid "Access problems or incorrect details"
 msgstr "Esteet sisäänpääsyssä tai virheelliset tiedot"
 
-#: lib/edenflowers_web/components/layouts.ex:668
-#: lib/edenflowers_web/components/layouts.ex:762
+#: lib/edenflowers_web/components/layouts.ex:669
+#: lib/edenflowers_web/components/layouts.ex:770
 #: lib/edenflowers_web/features/account/account_live.ex:32
-#: lib/edenflowers_web/features/account/account_live.ex:58
+#: lib/edenflowers_web/features/account/account_live.ex:64
 #, elixir-autogen, elixir-format
 msgid "Account"
 msgstr "Tili"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:96
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:97
 #, elixir-autogen, elixir-format
 msgid "Accounting records: our legal obligation."
 msgstr "Kirjanpitoaineisto: lakisääteinen velvoitteemme."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:145
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:146
 #, elixir-autogen, elixir-format
 msgid "Accounting: generally at least six years for vouchers and business correspondence, from the end of the calendar year in which the financial year ended. Certain records require ten years from the financial-year end."
 msgstr "Kirjanpito: tositteet ja liiketapahtumia koskeva kirjeenvaihto säilytetään yleensä vähintään kuusi vuotta sen kalenterivuoden lopusta, jonka aikana tilikausi päättyi. Tietyt asiakirjat on säilytettävä kymmenen vuotta tilikauden päättymisestä."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:802
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:808
 #, elixir-autogen, elixir-format
 msgid "Add a card"
 msgstr "Lisää kortti"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:605
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:606
 #, elixir-autogen, elixir-format
 msgid "Add one: %{item_label}"
 msgstr "Yksi lisää: %{item_label}"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:136
+#: lib/edenflowers_web/features/checkout/order_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "Add to calendar"
 msgstr "Lisää kalenteriin"
 
-#: lib/edenflowers_web/features/store/product_live.ex:316
+#: lib/edenflowers_web/features/store/product_live.ex:358
 #, elixir-autogen, elixir-format
 msgid "Add to cart"
 msgstr "Lisää ostoskoriin"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:580
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:581
 #, elixir-autogen, elixir-format
 msgid "Add to the estimate: %{item_label}"
 msgstr "Lisää arvioon: %{item_label}"
 
 #: lib/edenflowers_web/components/cart/drawer.ex:46
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:671
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:677
 #, elixir-autogen, elixir-format
 msgid "Add-ons are sold with flowers. Add a bouquet to check out."
 msgstr "Lisätuotteita myydään vain kukkien kanssa. Lisää kimppu ostoskoriin jatkaaksesi kassalle."
 
-#: lib/edenflowers_web/components/layouts.ex:890
-#: lib/edenflowers_web/features/marketing/contact_live.ex:75
+#: lib/edenflowers_web/components/layouts.ex:898
+#: lib/edenflowers_web/features/marketing/contact_live.ex:76
 #, elixir-autogen, elixir-format
 msgid "Address"
 msgstr "Osoite"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1005
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1011
 #, elixir-autogen, elixir-format
 msgid "Address *"
 msgstr "Osoite *"
@@ -209,12 +209,12 @@ msgstr "Sen jälkeen hinnasta pidätetään %{fee} %."
 msgid "After that, the booking can't be refunded."
 msgstr "Sen jälkeen varausta ei voi hyvittää."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:70
+#: lib/edenflowers_web/features/marketing/terms_live.ex:71
 #, elixir-autogen, elixir-format
 msgid "All payments on this website are processed by Stripe."
 msgstr "Stripe käsittelee kaikki tämän verkkosivuston kautta tehtävät maksut."
 
-#: lib/edenflowers_web/features/account/account_live.ex:443
+#: lib/edenflowers_web/features/account/account_live.ex:449
 #, elixir-autogen, elixir-format
 msgid "Amount to pay: %{amount}."
 msgstr "Maksettavaa: %{amount}."
@@ -224,7 +224,7 @@ msgstr "Maksettavaa: %{amount}."
 msgid "Answers about ordering, delivery, pickup, flower care, payment, subscriptions, weddings and courses at Eden Flowers in Vaasa."
 msgstr "Vastauksia tilaamisesta, toimituksesta, noudosta, kukkien hoidosta, maksamisesta, kestotilauksista, häistä ja kursseista Eden Flowersilla Vaasassa."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:191
+#: lib/edenflowers_web/features/marketing/faq_live.ex:192
 #, elixir-autogen, elixir-format
 msgid "Any substitutions follow the"
 msgstr "Mahdollisiin korvaaviin kukkiin sovelletaan"
@@ -234,33 +234,33 @@ msgstr "Mahdollisiin korvaaviin kukkiin sovelletaan"
 msgid "Apply"
 msgstr "Käytä"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:186
+#: lib/edenflowers_web/features/marketing/faq_live.ex:187
 #, elixir-autogen, elixir-format
 msgid "Are your flowers local and seasonal?"
 msgstr "Ovatko kukkasi paikallisia ja sesongin kukkia?"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:433
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:459
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:434
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:460
 #, elixir-autogen, elixir-format
 msgid "Arrangement in an urn or on a pedestal"
 msgstr "Asetelma ruukussa tai jalustalla"
 
-#: lib/edenflowers_web/features/account/account_live.ex:616
+#: lib/edenflowers_web/features/account/account_live.ex:622
 #, elixir-autogen, elixir-format
 msgid "Arriving"
 msgstr "Toimitetaan"
 
-#: lib/edenflowers_web/features/account/account_live.ex:614
+#: lib/edenflowers_web/features/account/account_live.ex:620
 #, elixir-autogen, elixir-format
 msgid "Arriving today"
 msgstr "Saapuu tänään"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:139
+#: lib/edenflowers_web/features/marketing/faq_live.ex:140
 #, elixir-autogen, elixir-format
 msgid "At Minimossen, %{address}, %{town}. Choose your pickup date at checkout. I'll message you when your order is ready. Collect it during opening hours."
 msgstr "Minimossenilla, %{address}, %{town}. Valitse noutopäivä kassalla. Lähetän viestin, kun tilauksesi on valmis. Nouda se aukioloaikoina."
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:42
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:43
 #, elixir-autogen, elixir-format
 msgid "At a final farewell, let the flowers be a place for your eyes to rest. I create both traditional and personal funeral arrangements, and deliver to churches and chapels in Vaasa and Korsholm for a small fee."
 msgstr "Kukilla voit sanoa viimeiset jäähyväiset. Sidon perinteisiä suruvihkoja sekä persoonallisia sidontoja ja toimitan kirkkoihin ja kappeleihin Vaasassa ja Mustasaaressa pientä korvausta vastaan."
@@ -271,57 +271,57 @@ msgid "Back to courses"
 msgstr "Takaisin kursseihin"
 
 #: lib/edenflowers_web/features/auth/sign_out_live.ex:48
-#: lib/edenflowers_web/features/checkout/order_live.ex:138
+#: lib/edenflowers_web/features/checkout/order_live.ex:144
 #: lib/edenflowers_web/features/checkout/pay_live.ex:172
 #, elixir-autogen, elixir-format
 msgid "Back to the shop"
 msgstr "Takaisin kauppaan"
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:85
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "Back to your account"
 msgstr "Takaisin tilillesi"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:157
+#: lib/edenflowers_web/features/marketing/terms_live.ex:158
 #, elixir-autogen, elixir-format
 msgid "Billing"
 msgstr "Maksaminen"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:131
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:132
 #, elixir-autogen, elixir-format
 msgid "Blocking cookies in your browser may stop the cart and sign-in working."
 msgstr "Evästeiden estäminen selaimessa voi estää ostoskorin ja kirjautumisen toiminnan."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:412
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:413
 #, elixir-autogen, elixir-format
 msgid "Blue hydrangea in a glass vase beside bridal shoes"
 msgstr "Sininen hortensia lasimaljakossa morsiamen kenkien vieressä"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:152
-#: lib/edenflowers_web/features/courses/courses_live.ex:198
-#: lib/edenflowers_web/features/courses/courses_live.ex:200
+#: lib/edenflowers_web/features/courses/course_live.ex:153
+#: lib/edenflowers_web/features/courses/courses_live.ex:199
+#: lib/edenflowers_web/features/courses/courses_live.ex:201
 #, elixir-autogen, elixir-format
 msgid "Book a place"
 msgstr "Varaa paikka"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:117
+#: lib/edenflowers_web/features/courses/course_live.ex:118
 #, elixir-autogen, elixir-format
 msgid "Book by"
 msgstr "Varaa viimeistään"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:152
+#: lib/edenflowers_web/features/courses/course_live.ex:153
 #, elixir-autogen, elixir-format
 msgid "Book more places"
 msgstr "Varaa lisää paikkoja"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:57
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:63
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:59
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:171
 #, elixir-autogen, elixir-format
 msgid "Booking cancelled"
 msgstr "Varaus peruttu"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:212
+#: lib/edenflowers_web/features/courses/courses_live.ex:213
 #, elixir-autogen, elixir-format
 msgid "Booking closed"
 msgstr "Varaukset suljettu"
@@ -337,82 +337,82 @@ msgstr "Varausta ei löytynyt."
 msgid "Booking refunded"
 msgstr "Varaus hyvitetty"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:391
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:392
 #, elixir-autogen, elixir-format
 msgid "Bouquet held up against a blue summer sky"
 msgstr "Kimppu kohotettuna sinistä kesätaivasta vasten"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:314
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:315
 #, elixir-autogen, elixir-format
 msgid "Bouquet of burgundy protea, pink roses and dahlias"
 msgstr "Kimppu, jossa on viininpunaista proteaa, vaaleanpunaisia ruusuja ja daalioita"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:398
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:399
 #, elixir-autogen, elixir-format
 msgid "Bouquet of roses and greenery on a wooden jetty"
 msgstr "Kimppu ruusuja ja vihreää puisella laiturilla"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:125
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "Bouquets and accessories"
 msgstr "Kimput ja asusteet"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:233
+#: lib/edenflowers_web/features/marketing/home_live.ex:217
 #, elixir-autogen, elixir-format
 msgid "Bouquets made by hand the day they're delivered, from %{price}."
 msgstr "Kimput käsin tehtyinä toimituspäivänä, alkaen %{price}."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:235
+#: lib/edenflowers_web/features/marketing/home_live.ex:219
 #, elixir-autogen, elixir-format
 msgid "Bouquets made by hand the day they're delivered."
 msgstr "Kimput käsin tehtyinä toimituspäivänä."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:420
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:421
 #, elixir-autogen, elixir-format
 msgid "Bridal bouquet"
 msgstr "Hääkimppu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:328
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:329
 #, elixir-autogen, elixir-format
 msgid "Bride and two bridesmaids holding white bouquets"
 msgstr "Morsian ja kaksi morsiusneitoa valkoisten kimppujen kanssa"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:342
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:343
 #, elixir-autogen, elixir-format
 msgid "Bride holding a white and green bouquet"
 msgstr "Morsian ja valkovihreä kimppu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:356
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:357
 #, elixir-autogen, elixir-format
 msgid "Bride in a forest clearing with a pastel bouquet"
 msgstr "Morsian metsäaukealla pastellisävyisen kimpun kanssa"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:335
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:336
 #, elixir-autogen, elixir-format
 msgid "Bride outdoors with a bright blue and red bouquet"
 msgstr "Morsian ulkona kirkkaansinisen ja punaisen kimpun kanssa"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:321
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:322
 #, elixir-autogen, elixir-format
 msgid "Bride seen from behind, holding a meadow bouquet"
 msgstr "Morsian takaapäin, niittykimppu kädessään"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:77
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:78
 #, elixir-autogen, elixir-format
 msgid "Bride smiling with a colourful bridal bouquet"
 msgstr "Hymyilevä morsian värikkään hääkimpun kanssa"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:421
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:422
 #, elixir-autogen, elixir-format
 msgid "Bridesmaid's bouquet"
 msgstr "Morsiusneidon kimppu"
 
-#: lib/edenflowers_web/features/store/store_live.ex:113
+#: lib/edenflowers_web/features/store/store_live.ex:114
 #, elixir-autogen, elixir-format
 msgid "Browse another collection, or get in touch to ask about flowers for your occasion."
 msgstr "Tutustu muihin valikoimiin tai ota yhteyttä, niin autan sinua löytämään kukat tilaisuuteesi."
 
-#: lib/edenflowers_web/features/store/store_live.ex:124
+#: lib/edenflowers_web/features/store/store_live.ex:125
 #, elixir-autogen, elixir-format
 msgid "Browse bouquets"
 msgstr "Selaa kimppuja"
@@ -424,44 +424,44 @@ msgstr "Selaa kimppuja"
 msgid "Browse the store"
 msgstr "Siirry kauppaan"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:135
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Browser settings do not replace required consent."
 msgstr "Selaimen asetukset eivät korvaa vaadittavaa suostumusta."
 
-#: lib/edenflowers_web/components/layouts.ex:989
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:64
-#: lib/edenflowers_web/features/marketing/terms_live.ex:205
+#: lib/edenflowers_web/components/layouts.ex:997
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:65
+#: lib/edenflowers_web/features/marketing/terms_live.ex:206
 #, elixir-autogen, elixir-format
 msgid "Business ID:"
 msgstr "Y-tunnus:"
 
-#: lib/edenflowers_web/features/store/product_live.ex:217
+#: lib/edenflowers_web/features/store/product_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "Buy once"
 msgstr "Osta kerran"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:355
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:361
 #, elixir-autogen, elixir-format
 msgid "By placing your order you accept the"
 msgstr "Tekemällä tilauksen hyväksyt"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:425
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:426
 #, elixir-autogen, elixir-format
 msgid "Cake flowers"
 msgstr "Kakkukukat"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:158
+#: lib/edenflowers_web/features/marketing/faq_live.ex:159
 #, elixir-autogen, elixir-format
 msgid "Can I add a card with a message?"
 msgstr "Voinko lisätä kortin, jossa on viesti?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:252
+#: lib/edenflowers_web/features/marketing/faq_live.ex:253
 #, elixir-autogen, elixir-format
 msgid "Can I book a private course for my group?"
 msgstr "Voinko varata yksityisen kurssin ryhmälleni?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:160
+#: lib/edenflowers_web/features/marketing/faq_live.ex:161
 #, elixir-autogen, elixir-format
 msgid "Can I cancel an order I made online?"
 msgstr "Voinko perua verkossa tekemäni tilauksen?"
@@ -471,7 +471,7 @@ msgstr "Voinko perua verkossa tekemäni tilauksen?"
 msgid "Can I collect my subscription bouquets?"
 msgstr "Voinko noutaa kestotilaukseni kimput?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:149
+#: lib/edenflowers_web/features/marketing/faq_live.ex:150
 #, elixir-autogen, elixir-format
 msgid "Can I order something that isn't in the online shop?"
 msgstr "Voinko tilata jotain, mitä verkkokaupassa ei ole?"
@@ -481,12 +481,12 @@ msgstr "Voinko tilata jotain, mitä verkkokaupassa ei ole?"
 msgid "Can I pause or cancel my subscription?"
 msgstr "Voinko pitää tauon kestotilauksestani tai lopettaa sen?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:212
+#: lib/edenflowers_web/features/marketing/faq_live.ex:213
 #, elixir-autogen, elixir-format
 msgid "Can businesses pay by invoice?"
 msgstr "Voivatko yritykset maksaa laskulla?"
 
-#: lib/edenflowers_web/features/account/account_live.ex:161
+#: lib/edenflowers_web/features/account/account_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "Cancel"
 msgstr "Peruuta"
@@ -496,8 +496,8 @@ msgstr "Peruuta"
 msgid "Cancel at least %{days} days before the course for a full refund."
 msgstr "Peru vähintään %{days} päivää ennen kurssia, niin saat koko summan takaisin."
 
-#: lib/edenflowers_web/features/account/account_live.ex:387
-#: lib/edenflowers_web/features/account/account_live.ex:407
+#: lib/edenflowers_web/features/account/account_live.ex:393
+#: lib/edenflowers_web/features/account/account_live.ex:413
 #, elixir-autogen, elixir-format
 msgid "Cancel order"
 msgstr "Peru tilaus"
@@ -507,37 +507,37 @@ msgstr "Peru tilaus"
 msgid "Cancel subscription"
 msgstr "Peru kestotilaus"
 
-#: lib/edenflowers_web/features/account/account_live.ex:392
+#: lib/edenflowers_web/features/account/account_live.ex:398
 #, elixir-autogen, elixir-format
 msgid "Cancel this order?"
 msgstr "Perutaanko tämä tilaus?"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:188
+#: lib/edenflowers_web/features/marketing/terms_live.ex:189
 #, elixir-autogen, elixir-format
 msgid "Cancellation and booking fee"
 msgstr "Peruutus ja varausmaksu"
 
-#: lib/edenflowers_web/features/account/account_live.ex:609
+#: lib/edenflowers_web/features/account/account_live.ex:615
 #, elixir-autogen, elixir-format
 msgid "Cancelled"
 msgstr "Peruttu"
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:64
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:70
 #: lib/edenflowers_web/features/account/subscription_manager.ex:564
 #, elixir-autogen, elixir-format
 msgid "Card"
 msgstr "Kortti"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:739
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:745
 #, elixir-autogen, elixir-format
 msgid "Card message"
 msgstr "Korttiviesti"
 
 #: lib/edenflowers_web/components/cart/drawer.ex:26
 #: lib/edenflowers_web/components/cart/drawer.ex:28
-#: lib/edenflowers_web/components/layouts.ex:803
-#: lib/edenflowers_web/components/layouts.ex:805
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:433
+#: lib/edenflowers_web/components/layouts.ex:811
+#: lib/edenflowers_web/components/layouts.ex:813
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:439
 #, elixir-autogen, elixir-format
 msgid "Cart"
 msgstr "Ostoskori"
@@ -552,17 +552,17 @@ msgstr "Ostoskori on tyhjä"
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr "Ostoskorin summan on oltava vähintään %{edenflowers_format_currency}, jotta kampanjaa voi käyttää"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:125
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "Casket spray of meadow flowers and palm leaves on a white coffin"
 msgstr "Arkkulaite niittykukista ja palmunlehdistä valkoisella arkulla"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:110
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Casket spray of pink carnations and roses on a wooden coffin"
 msgstr "Arkkulaite vaaleanpunaisista neilikoista ja ruusuista puisella arkulla"
 
-#: lib/edenflowers_web/features/store/store_live.ex:92
+#: lib/edenflowers_web/features/store/store_live.ex:93
 #, elixir-autogen, elixir-format
 msgid "Categories"
 msgstr "Kategoriat"
@@ -572,35 +572,35 @@ msgstr "Kategoriat"
 msgid "Change"
 msgstr "Muuta"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:205
+#: lib/edenflowers_web/features/courses/course_live.ex:206
 #, elixir-autogen, elixir-format
 msgid "Change booking"
 msgstr "Muuta varausta"
 
 #: lib/edenflowers_web/components/cart/line_items.ex:75
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:771
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:782
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:777
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:788
 #, elixir-autogen, elixir-format
 msgid "Change card"
 msgstr "Vaihda kortti"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:921
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:927
 #, elixir-autogen, elixir-format
 msgid "Change your cart to continue."
 msgstr "Muuta ostoskoriasi jatkaaksesi."
 
 #: lib/edenflowers_web/features/marketing/terms_live.ex:24
-#: lib/edenflowers_web/features/marketing/terms_live.ex:130
+#: lib/edenflowers_web/features/marketing/terms_live.ex:131
 #, elixir-autogen, elixir-format
 msgid "Changes and cancellations"
 msgstr "Muutokset ja peruutukset"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:167
+#: lib/edenflowers_web/features/marketing/terms_live.ex:168
 #, elixir-autogen, elixir-format
 msgid "Changing or stopping a subscription"
 msgstr "Kestotilauksen muuttaminen tai lopettaminen"
 
-#: lib/edenflowers_web/features/account/account_live.ex:475
+#: lib/edenflowers_web/features/account/account_live.ex:481
 #: lib/edenflowers_web/features/account/subscription_manager.ex:388
 #, elixir-autogen, elixir-format
 msgid "Charged %{date}"
@@ -611,12 +611,12 @@ msgstr "Veloitus %{date}"
 msgid "Charged to your card on %{date}."
 msgstr "Korttiasi veloitetaan %{date}."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:371
+#: lib/edenflowers_web/features/marketing/faq_live.ex:372
 #, elixir-autogen, elixir-format
 msgid "Check delivery distance and price"
 msgstr "Tarkista toimitusmatka ja hinta"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:182
+#: lib/edenflowers_web/features/marketing/faq_live.ex:183
 #, elixir-autogen, elixir-format
 msgid "Check the water level regularly and top up as needed. Change the water and re-cut the stems every 2–3 days."
 msgstr "Tarkista veden määrä säännöllisesti ja lisää vettä tarvittaessa. Vaihda vesi ja leikkaa varsiin uudet imupinnat 2–3 päivän välein."
@@ -628,22 +628,22 @@ msgstr "Tarkista sähköpostisi"
 
 #: lib/edenflowers_web/components/cart/drawer.ex:76
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:67
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:138
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:144
 #, elixir-autogen, elixir-format
 msgid "Checkout"
 msgstr "Kassa"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:64
+#: lib/edenflowers_web/features/marketing/terms_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "Checkout payments"
 msgstr "Maksaminen kassalla"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:287
+#: lib/edenflowers_web/features/marketing/faq_live.ex:288
 #, elixir-autogen, elixir-format
 msgid "Checkout shows the available delivery and pickup dates for the products you choose. The usual cutoff for same-day orders is midday."
 msgstr "Kassalla näet valitsemillesi tuotteille saatavilla olevat toimitus- ja noutopäivät. Saman päivän toimitusta varten tilaus pitää yleensä tehdä viimeistään klo 12."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:245
+#: lib/edenflowers_web/features/marketing/home_live.ex:229
 #, elixir-autogen, elixir-format
 msgid "Choose bouquet"
 msgstr "Valitse kimppu"
@@ -659,7 +659,7 @@ msgid "Choose one of the sizes on offer."
 msgstr "Valitse jokin tarjolla olevista koista."
 
 #: lib/edenflowers_web/features/marketing/about_live.ex:56
-#: lib/edenflowers_web/features/marketing/home_live.ex:149
+#: lib/edenflowers_web/features/marketing/home_live.ex:147
 #, elixir-autogen, elixir-format
 msgid "Christening"
 msgstr "Ristiäiset"
@@ -667,7 +667,7 @@ msgstr "Ristiäiset"
 #: lib/edenflowers_web/components/card_drawer.ex:40
 #: lib/edenflowers_web/features/account/subscription_manager.ex:421
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:30
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:235
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:236
 #, elixir-autogen, elixir-format
 msgid "Close"
 msgstr "Sulje"
@@ -677,38 +677,38 @@ msgstr "Sulje"
 msgid "Close cart"
 msgstr "Sulje ostoskori"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:363
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:364
 #, elixir-autogen, elixir-format
 msgid "Close-up of a bouquet with white cosmos"
 msgstr "Lähikuva kimpusta, jossa on valkoisia kosmoskukkia"
 
-#: lib/edenflowers_web/features/account/account_live.ex:154
+#: lib/edenflowers_web/features/account/account_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "Code"
 msgstr "Koodi"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:95
+#: lib/edenflowers_web/features/marketing/terms_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "Collect your order during opening hours, unless we've agreed on another time."
 msgstr "Nouda tilauksesi aukioloaikoina, ellei toisesta ajasta ole sovittu."
 
-#: lib/edenflowers_web/features/account/account_live.ex:611
+#: lib/edenflowers_web/features/account/account_live.ex:617
 #, elixir-autogen, elixir-format
 msgid "Collected"
 msgstr "Noudettu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:537
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:538
 #, elixir-autogen, elixir-format
 msgid "Colours, flowers and anything else"
 msgstr "Värit, kukat ja muut toiveet"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:49
+#: lib/edenflowers_web/features/courses/courses_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "Come along and learn to make different kinds of floral arrangements. I show you the technique step by step and help you all the way, and of course you take your arrangement home. Materials and teaching are included, and you don't need any previous experience."
 msgstr "Tule mukaan oppimaan erilaisia sidontoja. Näytän tekniikan vaihe vaiheelta ja autan koko ajan, ja sidonnan saat tietysti viedä kotiin. Materiaalit ja opetus sisältyvät hintaan, eikä aiempaa kokemusta tarvita."
 
-#: lib/edenflowers_web/features/account/account_live.ex:85
-#: lib/edenflowers_web/features/courses/courses_live.ex:74
+#: lib/edenflowers_web/features/account/account_live.ex:91
+#: lib/edenflowers_web/features/courses/courses_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "Coming up"
 msgstr "Tulossa"
@@ -718,38 +718,38 @@ msgstr "Tulossa"
 msgid "Completed"
 msgstr "Valmis"
 
-#: lib/edenflowers_web/components/layouts.ex:612
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:40
+#: lib/edenflowers_web/components/layouts.ex:613
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:41
 #, elixir-autogen, elixir-format
 msgid "Condolences"
 msgstr "Hautajaiset"
 
-#: lib/edenflowers_web/features/account/account_live.ex:160
+#: lib/edenflowers_web/features/account/account_live.ex:166
 #, elixir-autogen, elixir-format
 msgid "Confirm"
 msgstr "Vahvista"
 
-#: lib/edenflowers_web/features/account/account_live.ex:610
+#: lib/edenflowers_web/features/account/account_live.ex:616
 #, elixir-autogen, elixir-format
 msgid "Confirmed"
 msgstr "Vahvistettu"
 
 #: lib/edenflowers_web/features/checkout/pay_live.ex:81
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:64
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:70
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:82
 #, elixir-autogen, elixir-format
 msgid "Confirming your payment… You'll get a receipt by email once it's done."
 msgstr "Vahvistetaan maksuasi… Saat kuitin sähköpostiin, kun se on valmis."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:470
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:471
 #, elixir-autogen, elixir-format
 msgid "Consultation"
 msgstr "Tapaaminen"
 
-#: lib/edenflowers_web/components/layouts.ex:614
-#: lib/edenflowers_web/components/layouts.ex:944
+#: lib/edenflowers_web/components/layouts.ex:615
+#: lib/edenflowers_web/components/layouts.ex:952
 #: lib/edenflowers_web/features/marketing/contact_live.ex:17
-#: lib/edenflowers_web/features/marketing/contact_live.ex:52
+#: lib/edenflowers_web/features/marketing/contact_live.ex:53
 #, elixir-autogen, elixir-format
 msgid "Contact"
 msgstr "Yhteystiedot"
@@ -764,56 +764,56 @@ msgstr "Ota yhteyttä, niin vaihdamme osoitteen."
 msgid "Continue checkout"
 msgstr "Jatka kassalle"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:180
+#: lib/edenflowers_web/features/courses/course_live.ex:181
 #, elixir-autogen, elixir-format
 msgid "Continue to payment"
 msgstr "Jatka maksamaan"
 
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:24
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:123
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:124
 #, elixir-autogen, elixir-format
 msgid "Cookies and fraud prevention"
 msgstr "Evästeet ja petosten torjunta"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:423
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:424
 #, elixir-autogen, elixir-format
 msgid "Corsage or pocket square"
 msgstr "Korsaasi tai taskukukka"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:307
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:308
 #, elixir-autogen, elixir-format
 msgid "Couple embracing, the bride holding a white bouquet"
 msgstr "Hääpari halaa, morsiamella on valkoinen kimppu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:370
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:371
 #, elixir-autogen, elixir-format
 msgid "Couple kissing beside a trailing white bouquet"
 msgstr "Hääpari suutelee valuvan valkoisen kimpun vieressä"
 
-#: lib/edenflowers_web/features/account/account_live.ex:440
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:71
+#: lib/edenflowers_web/features/account/account_live.ex:446
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:77
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "Course"
 msgstr "Kurssi"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:338
+#: lib/edenflowers_web/features/courses/course_live.ex:339
 #, elixir-autogen, elixir-format
 msgid "Course not found."
 msgstr "Kurssia ei löytynyt."
 
-#: lib/edenflowers_web/components/layouts.ex:610
-#: lib/edenflowers_web/features/courses/course_live.ex:65
-#: lib/edenflowers_web/features/courses/courses_live.ex:47
-#: lib/edenflowers_web/features/marketing/faq_live.ex:246
+#: lib/edenflowers_web/components/layouts.ex:611
+#: lib/edenflowers_web/features/courses/course_live.ex:66
+#: lib/edenflowers_web/features/courses/courses_live.ex:48
+#: lib/edenflowers_web/features/marketing/faq_live.ex:247
 #: lib/edenflowers_web/features/marketing/terms_live.ex:27
-#: lib/edenflowers_web/features/marketing/terms_live.ex:152
-#: lib/edenflowers_web/features/marketing/terms_live.ex:195
+#: lib/edenflowers_web/features/marketing/terms_live.ex:153
+#: lib/edenflowers_web/features/marketing/terms_live.ex:196
 #, elixir-autogen, elixir-format
 msgid "Courses"
 msgstr "Kurssit"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:112
+#: lib/edenflowers_web/features/courses/courses_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "Courses for private groups"
 msgstr "Kurssi yksityisille ryhmille"
@@ -823,7 +823,7 @@ msgstr "Kurssi yksityisille ryhmille"
 msgid "Current step"
 msgstr "Nykyinen vaihe"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:127
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:128
 #, elixir-autogen, elixir-format
 msgid "Decoration"
 msgstr "Koristelu"
@@ -833,12 +833,12 @@ msgstr "Koristelu"
 msgid "Decrement"
 msgstr "Vähennä"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:349
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:350
 #, elixir-autogen, elixir-format
 msgid "Deep red and blush bouquet against a white dress"
 msgstr "Tummanpunainen ja vaaleanpunainen kimppu valkoista pukua vasten"
 
-#: lib/edenflowers_web/features/account/account_live.ex:612
+#: lib/edenflowers_web/features/account/account_live.ex:618
 #, elixir-autogen, elixir-format
 msgid "Delivered"
 msgstr "Toimitettu"
@@ -858,28 +858,28 @@ msgstr "Toimitetaan osoitteeseen %{address}"
 msgid "Delivers to"
 msgstr "Toimitusosoite"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:934
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:940
 #: lib/edenflowers_web/features/checkout/components/fields.ex:131
 #: lib/edenflowers_web/features/checkout/pay_live.ex:133
-#: lib/edenflowers_web/features/marketing/home_live.ex:794
+#: lib/edenflowers_web/features/marketing/home_live.ex:777
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr "Toimitus"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:118
-#: lib/edenflowers_web/features/marketing/home_live.ex:787
+#: lib/edenflowers_web/features/marketing/faq_live.ex:119
+#: lib/edenflowers_web/features/marketing/home_live.ex:771
 #: lib/edenflowers_web/features/marketing/terms_live.ex:22
-#: lib/edenflowers_web/features/marketing/terms_live.ex:89
+#: lib/edenflowers_web/features/marketing/terms_live.ex:90
 #, elixir-autogen, elixir-format
 msgid "Delivery and pickup"
 msgstr "Toimitus ja nouto"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:90
+#: lib/edenflowers_web/features/marketing/terms_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "Delivery area and timing"
 msgstr "Toimitusalue ja -ajat"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:312
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:318
 #, elixir-autogen, elixir-format
 msgid "Delivery date *"
 msgstr "Toimituspäivä *"
@@ -889,12 +889,12 @@ msgstr "Toimituspäivä *"
 msgid "Delivery day"
 msgstr "Toimituspäivä"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:291
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:297
 #, elixir-autogen, elixir-format
 msgid "Delivery instructions"
 msgstr "Toimitus­ohjeet"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:264
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:270
 #, elixir-autogen, elixir-format
 msgid "Delivery method *"
 msgstr "Toimitustapa *"
@@ -904,32 +904,32 @@ msgstr "Toimitustapa *"
 msgid "Delivery on %{date} to %{address}"
 msgstr "Toimitus %{date} osoitteeseen %{address}"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:118
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:119
 #, elixir-autogen, elixir-format
 msgid "Delivery photos may go to the purchaser, not necessarily the recipient. Emailed copies cannot be recalled."
 msgstr "Toimituskuvat voidaan lähettää ostajalle, ei välttämättä vastaanottajalle. Sähköpostitse lähetettyjä kopioita ei voi perua."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:380
+#: lib/edenflowers_web/features/marketing/faq_live.ex:381
 #, elixir-autogen, elixir-format
 msgid "Delivery: %{price}"
 msgstr "Toimitus: %{price}"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:92
+#: lib/edenflowers_web/features/marketing/faq_live.ex:93
 #, elixir-autogen, elixir-format
 msgid "Didn't find your answer?"
 msgstr "Etkö löytänyt vastausta?"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:466
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:472
 #, elixir-autogen, elixir-format
 msgid "Discount"
 msgstr "Alennus"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:121
+#: lib/edenflowers_web/features/marketing/faq_live.ex:122
 #, elixir-autogen, elixir-format
 msgid "Do you deliver to the hospital?"
 msgstr "Toimitatko Vaasan sairaalaan?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:235
+#: lib/edenflowers_web/features/marketing/faq_live.ex:236
 #, elixir-autogen, elixir-format
 msgid "Do you provide wedding flowers outside Vaasa?"
 msgstr "Teetkö hääkukkia Vaasan ulkopuolella?"
@@ -944,28 +944,28 @@ msgstr "Aukioloaikoina vastaan yleensä 4 tunnin sisällä."
 msgid "Eden Flowers' terms for payment, delivery and pickup, cancellation, quality and invoices."
 msgstr "Eden Flowersin ehdot maksamisesta, toimituksesta ja noudosta, peruutuksista, laadusta ja laskuista."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:164
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:170
 #: lib/edenflowers_web/features/checkout/components/fields.ex:83
 #, elixir-autogen, elixir-format
 msgid "Edit"
 msgstr "Muokkaa"
 
-#: lib/edenflowers_web/features/account/account_live.ex:134
+#: lib/edenflowers_web/features/account/account_live.ex:140
 #: lib/edenflowers_web/features/auth/otp_sign_in_live.ex:121
-#: lib/edenflowers_web/features/marketing/contact_live.ex:67
+#: lib/edenflowers_web/features/marketing/contact_live.ex:68
 #, elixir-autogen, elixir-format
 msgid "Email"
 msgstr "Sähköposti"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:162
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "Email %{email} to:"
 msgstr "Lähetä sähköpostia osoitteeseen %{email}, jos haluat:"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:186
-#: lib/edenflowers_web/features/courses/course_live.ex:167
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:192
+#: lib/edenflowers_web/features/courses/course_live.ex:168
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:49
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:532
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:533
 #, elixir-autogen, elixir-format
 msgid "Email *"
 msgstr "Sähköposti *"
@@ -980,13 +980,13 @@ msgstr "Sähköpostiosoite"
 msgid "Email for your receipt"
 msgstr "Sähköposti kuittia varten"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:411
+#: lib/edenflowers_web/features/courses/course_live.ex:412
 #, elixir-autogen, elixir-format
 msgid "English"
 msgstr "Englanti"
 
 #: lib/edenflowers_web/components/newsletter_signup.ex:63
-#: lib/edenflowers_web/features/account/account_live.ex:535
+#: lib/edenflowers_web/features/account/account_live.ex:541
 #, elixir-autogen, elixir-format
 msgid "Enter a valid email address."
 msgstr "Anna kelvollinen sähköpostiosoite."
@@ -996,12 +996,12 @@ msgstr "Anna kelvollinen sähköpostiosoite."
 msgid "Enter a valid phone number. For non-Finnish numbers, start with the country code, e.g. +44."
 msgstr "Anna kelvollinen puhelinnumero. Aloita ulkomainen numero maatunnuksella, esim. +44."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:290
+#: lib/edenflowers_web/features/marketing/faq_live.ex:291
 #, elixir-autogen, elixir-format
 msgid "Enter an address below to check the delivery distance and price."
 msgstr "Syötä osoite alle tarkistaaksesi toimitusmatkan ja hinnan."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:279
+#: lib/edenflowers_web/features/marketing/faq_live.ex:280
 #, elixir-autogen, elixir-format
 msgid "Enter the address at checkout to see whether I deliver there and what it costs."
 msgstr "Syötä osoite kassalla, niin näet, toimitanko sinne ja mitä se maksaa."
@@ -1011,17 +1011,17 @@ msgstr "Syötä osoite kassalla, niin näet, toimitanko sinne ja mitä se maksaa
 msgid "Error loading checkout"
 msgstr "Kassan lataaminen epäonnistui"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:151
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:152
 #, elixir-autogen, elixir-format
 msgid "Error reports: 90 days."
 msgstr "Virheraportit: 90 päivää."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:136
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:137
 #, elixir-autogen, elixir-format
 msgid "Estimate"
 msgstr "Hinta-arvio"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:69
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:70
 #, elixir-autogen, elixir-format
 msgid "Estimate your price"
 msgstr "Arvioi hintasi"
@@ -1041,7 +1041,7 @@ msgstr "Joka toinen viikko"
 msgid "Every 4 weeks"
 msgstr "Joka neljäs viikko"
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:52
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "Every delivery from now on is charged to the card you save here."
 msgstr "Kaikki tästä eteenpäin tulevat toimitukset veloitetaan tähän tallentamaltasi kortilta."
@@ -1051,14 +1051,14 @@ msgstr "Kaikki tästä eteenpäin tulevat toimitukset veloitetaan tähän tallen
 msgid "Every week"
 msgstr "Joka viikko"
 
-#: lib/edenflowers_web/components/layouts.ex:920
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:55
-#: lib/edenflowers_web/features/marketing/terms_live.ex:57
+#: lib/edenflowers_web/components/layouts.ex:928
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:56
+#: lib/edenflowers_web/features/marketing/terms_live.ex:58
 #, elixir-autogen, elixir-format
 msgid "FAQ"
 msgstr "UKK"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:162
+#: lib/edenflowers_web/features/marketing/terms_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "Failed payments"
 msgstr "Epäonnistuneet maksut"
@@ -1068,28 +1068,28 @@ msgstr "Epäonnistuneet maksut"
 msgid "Father's Day"
 msgstr "Isänpäivä"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:288
-#: lib/edenflowers_web/features/marketing/home_live.ex:321
+#: lib/edenflowers_web/features/marketing/home_live.ex:272
+#: lib/edenflowers_web/features/marketing/home_live.ex:305
 #, elixir-autogen, elixir-format
 msgid "Favourites"
 msgstr "Suosikit"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:151
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:152
 #, elixir-autogen, elixir-format
 msgid "Final prices depend on the flowers and techniques you choose. Delivery outside Vaasa is quoted separately."
 msgstr "Lopulliset hinnat riippuvat valituista kukista ja tekniikasta. Toimitus Vaasan ulkopuolelle hinnoitellaan erikseen."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:65
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:66
 #, elixir-autogen, elixir-format
 msgid "Finland"
 msgstr "Suomi"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:410
+#: lib/edenflowers_web/features/courses/course_live.ex:411
 #, elixir-autogen, elixir-format
 msgid "Finnish"
 msgstr "Suomi"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:118
+#: lib/edenflowers_web/features/marketing/home_live.ex:117
 #, elixir-autogen, elixir-format
 msgid "Florist in Vaasa"
 msgstr "Kukkakauppa Vaasassa"
@@ -1104,63 +1104,63 @@ msgstr "Floristiikkakurssit Vaasa"
 msgid "Floristry courses with Jennie at Eden Flowers in Vaasa. See upcoming dates and book your seat."
 msgstr "Floristiikkakursseja Jennien kanssa Eden Flowersissa Vaasassa. Katso tulevat päivät ja varaa paikkasi."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:444
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:445
 #, elixir-autogen, elixir-format
 msgid "Flower arch"
 msgstr "Kukkakaari"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:432
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:433
 #, elixir-autogen, elixir-format
 msgid "Flower arch or flower gate"
 msgstr "Kukkakaari tai kukkaportti"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:449
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:450
 #, elixir-autogen, elixir-format
 msgid "Flower gate"
 msgstr "Kukkaportti"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:422
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:423
 #, elixir-autogen, elixir-format
 msgid "Flower girl or toss bouquet"
 msgstr "Kukkaistytön kimppu tai heittokimppu"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:741
-#: lib/edenflowers_web/features/marketing/home_live.ex:766
+#: lib/edenflowers_web/features/marketing/home_live.ex:725
+#: lib/edenflowers_web/features/marketing/home_live.ex:750
 #, elixir-autogen, elixir-format
 msgid "Flower subscription"
 msgstr "Kukkatilaus"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:173
+#: lib/edenflowers_web/features/marketing/faq_live.ex:174
 #, elixir-autogen, elixir-format
 msgid "Flowers and care"
 msgstr "Kukat ja hoito"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:144
+#: lib/edenflowers_web/features/marketing/terms_live.ex:145
 #, elixir-autogen, elixir-format
 msgid "Flowers are made to order and perishable, so the 14-day right of withdrawal doesn't apply."
 msgstr "Kukat tehdään tilauksesta ja ne ovat pilaantuvia, joten 14 päivän peruuttamisoikeus ei koske niitä."
 
-#: lib/edenflowers_web/features/account/account_live.ex:117
+#: lib/edenflowers_web/features/account/account_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Flowers every 1, 2 or 4 weeks. Pause or cancel anytime."
 msgstr "Kukkia 1, 2 tai 4 viikon välein. Keskeytä tai peru milloin tahansa."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:221
+#: lib/edenflowers_web/features/marketing/home_live.ex:205
 #, elixir-autogen, elixir-format
 msgid "Flowers for"
 msgstr "Kukkia"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:219
+#: lib/edenflowers_web/features/marketing/home_live.ex:203
 #, elixir-autogen, elixir-format
 msgid "Flowers for every stage of life"
 msgstr "Kukkia elämän kaikkiin vaiheisiin"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:65
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:66
 #, elixir-autogen, elixir-format
 msgid "Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."
 msgstr "Häissä kukat ovat tärkeä osa kokonaisuutta. Autan teitä löytämään kukat, jotka parhaiten vastaavat toiveitanne ja heijastavat teitä parina."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:523
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:524
 #, elixir-autogen, elixir-format
 msgid "Flowers you're interested in"
 msgstr "Kukat, joista olette kiinnostuneita"
@@ -1170,7 +1170,7 @@ msgstr "Kukat, joista olette kiinnostuneita"
 msgid "For %{name}"
 msgstr "Vastaanottaja: %{name}"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:751
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:757
 #, elixir-autogen, elixir-format
 msgid "For %{recipient_first_name}"
 msgstr "Vastaanottaja: %{recipient_first_name}"
@@ -1180,28 +1180,28 @@ msgstr "Vastaanottaja: %{recipient_first_name}"
 msgid "For %{recipient}"
 msgstr "Vastaanottaja: %{recipient}"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:103
+#: lib/edenflowers_web/features/checkout/order_live.ex:109
 #, elixir-autogen, elixir-format
 msgid "For %{shown_order_recipient_name}"
 msgstr "Vastaanottaja: %{shown_order_recipient_name}"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:196
+#: lib/edenflowers_web/features/marketing/terms_live.ex:197
 #, elixir-autogen, elixir-format
 msgid "For courses, the cancellation terms on each course's page apply."
 msgstr "Kursseihin sovelletaan kunkin kurssin sivulla kerrottuja peruutusehtoja."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:231
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:237
 #: lib/edenflowers_web/features/checkout/components/fields.ex:138
 #, elixir-autogen, elixir-format
 msgid "For me"
 msgstr "Itselleni"
 
-#: lib/edenflowers_web/features/account/account_live.ex:615
+#: lib/edenflowers_web/features/account/account_live.ex:621
 #, elixir-autogen, elixir-format
 msgid "For pickup"
 msgstr "Noudettavana"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:231
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:237
 #, elixir-autogen, elixir-format
 msgid "For somebody else"
 msgstr "Jollekin toiselle"
@@ -1211,33 +1211,33 @@ msgstr "Jollekin toiselle"
 msgid "For the first bouquet, at checkout. After that, your card is charged %{days} days before each delivery or pickup."
 msgstr "Ensimmäisestä kimpusta kassalla. Sen jälkeen korttiasi veloitetaan %{days} päivää ennen jokaista toimitusta tai noutoa."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:180
+#: lib/edenflowers_web/features/marketing/terms_live.ex:181
 #, elixir-autogen, elixir-format
 msgid "For weddings, final prices depend on the flowers and technique you choose. Delivery costs are added for deliveries outside Vaasa."
 msgstr "Lopulliset hinnat riippuvat valituista kukista ja tekniikasta. Toimituskulut lisätään Vaasan ulkopuolisille toimituksille."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:943
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:949
 #, elixir-autogen, elixir-format
 msgid "Free"
 msgstr "Ilmainen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:799
+#: lib/edenflowers_web/features/marketing/home_live.ex:782
 #, elixir-autogen, elixir-format
 msgid "Free from Minimossen."
 msgstr "Ilmaiseksi Minimossenista."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:189
+#: lib/edenflowers_web/features/marketing/home_live.ex:172
 #, elixir-autogen, elixir-format
 msgid "Free within %{km} km for chosen bouquets, otherwise %{base} plus %{per_km} per km."
 msgstr "Ilmainen %{km} km:n säteellä valituille kimpuille, muuten %{base} sekä %{per_km} kilometriltä."
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:23
-#: lib/edenflowers_web/features/marketing/faq_live.ex:45
+#: lib/edenflowers_web/features/marketing/faq_live.ex:46
 #, elixir-autogen, elixir-format
 msgid "Frequently Asked Questions"
 msgstr "Usein kysytyt kysymykset"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:804
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:810
 #, elixir-autogen, elixir-format
 msgid "From %{card_from_price}, with your personal message"
 msgstr "Alkaen %{card_from_price}, omalla viestilläsi"
@@ -1253,8 +1253,8 @@ msgstr "Muutokset voimaan %{date}: %{size}, %{interval}, %{price} per toimitus."
 msgid "Fulfillment date cannot be in the past"
 msgstr "Toimituspäivä ei voi olla menneisyydessä"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:413
-#: lib/edenflowers_web/features/courses/courses_live.ex:211
+#: lib/edenflowers_web/features/courses/course_live.ex:414
+#: lib/edenflowers_web/features/courses/courses_live.ex:212
 #, elixir-autogen, elixir-format
 msgid "Fully booked"
 msgstr "Täynnä"
@@ -1274,24 +1274,24 @@ msgstr "Surukukat Vaasassa ja Mustasaaressa: surulaitteet, sydämet, seppeleet j
 msgid "Get 15% off your first order."
 msgstr "Saat 15 % alennuksen ensimmäisestä tilauksestasi."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:217
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:467
-#: lib/edenflowers_web/features/store/store_live.ex:127
+#: lib/edenflowers_web/features/marketing/faq_live.ex:218
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:468
+#: lib/edenflowers_web/features/store/store_live.ex:128
 #, elixir-autogen, elixir-format
 msgid "Get in touch"
 msgstr "Ota yhteyttä"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:135
+#: lib/edenflowers_web/features/marketing/terms_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Get in touch after that."
 msgstr "Sen jälkeen ota yhteyttä."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:468
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:469
 #, elixir-autogen, elixir-format
 msgid "Get in touch and tell me your date and a little about what you're looking for. It's best to reach out well in advance."
 msgstr "Ottakaa yhteyttä ja kertokaa päivämääränne ja vähän siitä, mitä toivotte. Olkaa yhteydessä hyvissä ajoin."
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:116
+#: lib/edenflowers_web/features/courses/courses_live.ex:117
 #, elixir-autogen, elixir-format
 msgid "Get in touch and we'll find a course and a day that suit your group."
 msgstr "Ota yhteyttä, niin löydetään juuri teidän ryhmällenne sopiva kurssi ja päivä."
@@ -1306,7 +1306,7 @@ msgstr "Ota yhteyttä Eden Flowersiin Vaasassa tilauksesta, häistä tai hautaja
 msgid "Gift options"
 msgstr "Lahjavalinnat"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:328
+#: lib/edenflowers_web/features/marketing/home_live.ex:312
 #, elixir-autogen, elixir-format
 msgid "Go to slide __N__"
 msgstr "Siirry kuvaan __N__"
@@ -1316,29 +1316,29 @@ msgstr "Siirry kuvaan __N__"
 msgid "Go to the home page"
 msgstr "Siirry etusivulle"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:139
-#: lib/edenflowers_web/features/marketing/terms_live.ex:172
+#: lib/edenflowers_web/features/marketing/terms_live.ex:140
+#: lib/edenflowers_web/features/marketing/terms_live.ex:173
 #, elixir-autogen, elixir-format
 msgid "Go to your account"
 msgstr "Siirry tilillesi"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:424
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:425
 #, elixir-autogen, elixir-format
 msgid "Hair and wrist flowers (crown, clip, tiara, bracelet)"
 msgstr "Hius- ja rannekukat (seppele, solki, tiara, rannekoru)"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:473
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:474
 #, elixir-autogen, elixir-format
 msgid "Half is invoiced as a booking fee about 4 weeks before the wedding, and the rest afterwards. The booking fee isn't refunded if you cancel later than four weeks before the wedding."
 msgstr "Puolet laskutetaan varausmaksuna noin 4 viikkoa ennen häitä, loput jälkikäteen. Varausmaksua ei palauteta, jos varaus perutaan myöhemmin kuin neljä viikkoa ennen häitä."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:240
-#: lib/edenflowers_web/features/marketing/terms_live.ex:185
+#: lib/edenflowers_web/features/marketing/faq_live.ex:241
+#: lib/edenflowers_web/features/marketing/terms_live.ex:186
 #, elixir-autogen, elixir-format
 msgid "Half is invoiced as a booking fee about 4 weeks before the wedding, the rest afterwards."
 msgstr "Puolet laskutetaan varausmaksuna noin 4 viikkoa ennen häitä, loput jälkikäteen."
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:113
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:114
 #, elixir-autogen, elixir-format
 msgid "Hand-tied bouquet of red roses tied with a hessian bow"
 msgstr "Käsin sidottu punaisten ruusujen kimppu juuttirusetilla"
@@ -1348,38 +1348,38 @@ msgstr "Käsin sidottu punaisten ruusujen kimppu juuttirusetilla"
 msgid "Have a promo code?"
 msgstr "Onko sinulla tarjouskoodi?"
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:57
-#: lib/edenflowers_web/features/store/product_live.ex:322
+#: lib/edenflowers_web/features/marketing/contact_live.ex:58
+#: lib/edenflowers_web/features/store/product_live.ex:364
 #, elixir-autogen, elixir-format
 msgid "Have a question?"
 msgstr "Onko sinulla kysyttävää?"
 
-#: lib/edenflowers_web/components/layouts.ex:913
+#: lib/edenflowers_web/components/layouts.ex:921
 #, elixir-autogen, elixir-format
 msgid "Help"
 msgstr "Asiakaspalvelu"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:89
+#: lib/edenflowers_web/features/marketing/about_live.ex:90
 #, elixir-autogen, elixir-format
 msgid "Here's a little about me, how it all started and how I work with flowers."
 msgstr "Kerron täällä vähän itsestäni, siitä miten kaikki alkoi ja miten työskentelen kukkien kanssa."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:106
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:107
 #, elixir-autogen, elixir-format
 msgid "Hetzner hosts our main customer database in Finland."
 msgstr "Pääasiallinen asiakastietokantamme sijaitsee Hetznerin palvelimilla Suomessa."
 
-#: lib/edenflowers_web/features/account/account_live.ex:58
+#: lib/edenflowers_web/features/account/account_live.ex:64
 #, elixir-autogen, elixir-format
 msgid "Hi, %{current_user_first_name}"
 msgstr "Hei, %{current_user_first_name}"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:87
+#: lib/edenflowers_web/features/marketing/about_live.ex:88
 #, elixir-autogen, elixir-format
 msgid "Hi, I'm Jennie"
 msgstr "Hei, olen Jennie"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:537
+#: lib/edenflowers_web/features/marketing/home_live.ex:521
 #, elixir-autogen, elixir-format
 msgid "Hi, I'm Jennie. I make every arrangement myself at my shop in Minimossen, from a bouquet for your kitchen table to flowers for your wedding."
 msgstr "Hei, olen Jennie. Sidon kaikki kukat itse liikkeessäni Minimossenissa, keittiön pöydän kimpusta hääkukkiin."
@@ -1394,84 +1394,84 @@ msgstr "Kotiinkuljetus"
 msgid "How Eden Flowers handles personal data."
 msgstr "Näin Eden Flowers käsittelee henkilötietoja."
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:145
+#: lib/edenflowers_web/features/marketing/about_live.ex:146
 #, elixir-autogen, elixir-format
 msgid "How I work"
 msgstr "Näin työskentelen"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:210
+#: lib/edenflowers_web/features/marketing/faq_live.ex:211
 #, elixir-autogen, elixir-format
 msgid "How can I pay?"
 msgstr "Miten voin maksaa?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:248
+#: lib/edenflowers_web/features/marketing/faq_live.ex:249
 #, elixir-autogen, elixir-format
 msgid "How do I cancel a course booking?"
 msgstr "Miten peruun kurssivaraukseni?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:236
+#: lib/edenflowers_web/features/marketing/faq_live.ex:237
 #, elixir-autogen, elixir-format
 msgid "How does payment for a wedding work?"
 msgstr "Miten häiden maksaminen toimii?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:225
+#: lib/edenflowers_web/features/marketing/faq_live.ex:226
 #, elixir-autogen, elixir-format
 msgid "How far ahead should I book wedding flowers?"
 msgstr "Kuinka hyvissä ajoin hääkukat kannattaa varata?"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:95
+#: lib/edenflowers_web/features/marketing/about_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "How it started"
 msgstr "Miten kaikki alkoi"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:177
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:178
 #, elixir-autogen, elixir-format
 msgid "How it works"
 msgstr "Näin se toimii"
 
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:25
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:142
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:143
 #, elixir-autogen, elixir-format
 msgid "How long we keep information"
 msgstr "Kuinka kauan säilytämme tietoja"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:175
+#: lib/edenflowers_web/features/marketing/faq_live.ex:176
 #, elixir-autogen, elixir-format
 msgid "How long will my flowers last, and how should I care for them?"
 msgstr "Kuinka kauan kukkani kestävät, ja miten niitä hoidetaan?"
 
 #: lib/edenflowers_web/features/account/subscription_manager.ex:528
-#: lib/edenflowers_web/features/store/product_live.ex:238
+#: lib/edenflowers_web/features/store/product_live.ex:280
 #, elixir-autogen, elixir-format
 msgid "How often"
 msgstr "Kuinka usein"
 
-#: lib/edenflowers_web/features/store/product_live.ex:337
+#: lib/edenflowers_web/features/store/product_live.ex:379
 #, elixir-autogen, elixir-format
 msgid "How subscriptions work"
 msgstr "Näin kestotilaus toimii"
 
-#: lib/edenflowers_web/features/store/product_live.ex:206
+#: lib/edenflowers_web/features/store/product_live.ex:241
 #, elixir-autogen, elixir-format
 msgid "How to buy"
 msgstr "Miten haluat ostaa"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:114
+#: lib/edenflowers_web/features/courses/courses_live.ex:115
 #, elixir-autogen, elixir-format
 msgid "I also run courses for private groups, for example at a workplace Christmas party, your staff wellbeing day or a hen party. We can meet in the café space at Minimossen or at your own premises. In summer, making flower crowns outdoors in a park works well."
 msgstr "Pidän myös kursseja yksityisille ryhmille, esimerkiksi työpaikan pikkujouluissa, tyky-päivänänne tai polttareissa. Voimme kokoontua Minimossenin kahvilatilassa tai omissa tiloissanne. Kesällä hiusseppeleiden sitominen ulkona puistossa toimii hyvin."
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:90
+#: lib/edenflowers_web/features/courses/courses_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "I announce new dates in the newsletter first."
 msgstr "Kerron uusista päivistä ensimmäisenä uutiskirjeessä."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:239
+#: lib/edenflowers_web/features/marketing/terms_live.ex:240
 #, elixir-autogen, elixir-format
 msgid "I deliver on the day you choose at checkout. There are no set delivery times."
 msgstr "Toimitan sinä päivänä, jonka valitset kassalla. Toimitusaikoja ei ole sovittu tarkemmin."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:236
+#: lib/edenflowers_web/features/marketing/terms_live.ex:237
 #, elixir-autogen, elixir-format
 msgid "I deliver within %{km} km driving distance of the shop, on the day you choose at checkout. There are no set delivery times."
 msgstr "Toimitan enintään %{km} km:n ajomatkan päähän kaupasta kassalla valitsemanasi päivänä. Tarkkoja toimitusaikoja ei ole."
@@ -1481,128 +1481,128 @@ msgstr "Toimitan enintään %{km} km:n ajomatkan päähän kaupasta kassalla val
 msgid "I hope you're happy with it."
 msgstr "Toivottavasti olet siihen tyytyväinen."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:129
+#: lib/edenflowers_web/features/marketing/faq_live.ex:130
 #, elixir-autogen, elixir-format
 msgid "I leave the flowers at the door and email you a photo showing where I've left them. If you're sending a gift, you receive an email when it's delivered. Add any door code to the delivery instructions."
 msgstr "Jätän kukat ovelle ja lähetän sinulle sähköpostilla kuvan, josta näet, mihin jätin ne. Jos lähetät lahjan, saat sähköpostin, kun se on toimitettu. Lisää mahdollinen ovikoodi toimitusohjeisiin."
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:138
+#: lib/edenflowers_web/features/marketing/about_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "I love using flowers that are in season, because in a little while they'll be gone again."
 msgstr "Käytän mielelläni sesongin kukkia, koska hetken päästä ne ovat taas poissa."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:80
+#: lib/edenflowers_web/features/marketing/terms_live.ex:81
 #, elixir-autogen, elixir-format
 msgid "I offer invoices to businesses and for larger orders such as weddings. Payment is due as stated on the invoice."
 msgstr "Tarjoan laskun yrityksille ja suurempiin tilauksiin, kuten häihin. Maksu erääntyy laskussa mainittuna päivänä."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:190
+#: lib/edenflowers_web/features/marketing/faq_live.ex:191
 #, elixir-autogen, elixir-format
 msgid "I use local and seasonal flowers whenever possible."
 msgstr "Käytän paikallisia ja sesongin kukkia aina kun mahdollista."
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:97
+#: lib/edenflowers_web/features/marketing/about_live.ex:98
 #, elixir-autogen, elixir-format
 msgid "I was born and raised in Vaasa. I took a couple of florist courses while I was living in Stockholm, and I wanted to try something new. When my studies were finished, I felt something was missing in Vaasa when it came to flowers."
 msgstr "Olen syntynyt ja kasvanut Vaasassa. Kävin pari floristikurssia asuessani Tukholmassa ja halusin kokeilla jotain uutta. Kun opintoni olivat ohi, tunsin, että Vaasasta puuttui jotain kukkien osalta."
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:62
+#: lib/edenflowers_web/features/checkout/order_live.ex:68
 #, elixir-autogen, elixir-format
 msgid "I'll deliver your order on %{date}."
 msgstr "Toimitan tilauksesi %{date}."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1015
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1021
 #, elixir-autogen, elixir-format
 msgid "I'll only call if I need to reach %{name} about the delivery."
 msgstr "Soitan vastaanottajalle vain, jos toimituksesta on kysyttävää."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1017
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1023
 #, elixir-autogen, elixir-format
 msgid "I'll only call if I need to reach you about the delivery."
 msgstr "Soitan vain, jos toimituksesta on kysyttävää."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:201
-#: lib/edenflowers_web/features/marketing/terms_live.ex:120
+#: lib/edenflowers_web/features/marketing/faq_live.ex:202
+#: lib/edenflowers_web/features/marketing/terms_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "I'll replace them or refund you, provided care instructions are followed."
 msgstr "Vaihdan kukat tai palautan rahat, edellyttäen että hoito-ohjeita on noudatettu."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1011
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1017
 #, elixir-autogen, elixir-format
 msgid "I'll send a message when your order is ready for pick up."
 msgstr "Lähetän viestin, kun tilauksesi on noudettavissa."
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:71
+#: lib/edenflowers_web/features/checkout/order_live.ex:77
 #, elixir-autogen, elixir-format
 msgid "I'll send a text message when it's ready."
 msgstr "Ilmoitan tekstiviestillä, kun tilaus on valmis."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:469
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:470
 #, elixir-autogen, elixir-format
 msgid "I'll send you my quote, and you can come back to me with any questions and confirm your booking."
 msgstr "Lähetän teille tarjoukseni, ja voitte palata asiaan mahdollisten kysymysten kanssa ja vahvistaa varauksen."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:213
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:214
 #, elixir-autogen, elixir-format
 msgid "I'm Jennie, and I design every wedding myself, from our first conversation to the flowers on the day. Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."
 msgstr "Olen Jennie, ja suunnittelen jokaiset häät itse ensimmäisestä keskustelustamme hääpäivän kukkiin. Kertokaa minulle päivämäärä, hääpaikka ja arvio vierasmäärästä. Jos täältä löytyy kuvia, joista pidätte, mainitkaa nekin."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:130
+#: lib/edenflowers_web/features/marketing/faq_live.ex:131
 #, elixir-autogen, elixir-format
 msgid "If I can't get in, the"
 msgstr "Jos en pääse sisään,"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:106
+#: lib/edenflowers_web/features/marketing/terms_live.ex:107
 #, elixir-autogen, elixir-format
 msgid "If I can't reach the door, for example a locked stairwell, your order goes back to the shop for you to pick up, or you can pay for another delivery. Add any door code to the delivery instructions."
 msgstr "Jos en pääse ovelle asti, esimerkiksi lukitun rappukäytävän takia, tilaus palaa liikkeeseen noudettavaksi, tai voit maksaa uudesta toimituksesta. Lisää mahdollinen ovikoodi toimitusohjeisiin."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:164
+#: lib/edenflowers_web/features/marketing/terms_live.ex:165
 #, elixir-autogen, elixir-format
 msgid "If a charge doesn't go through, the bouquet still comes and I'll get in touch with payment instructions."
 msgstr "Jos maksu ei mene läpi, kimppu tulee silti ja otan sinuun yhteyttä maksuohjeiden kanssa."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:116
+#: lib/edenflowers_web/features/marketing/terms_live.ex:117
 #, elixir-autogen, elixir-format
 msgid "If a flower is out of season or unavailable, I use something similar of the same value."
 msgstr "Jos kukka ei ole sesongissa tai sitä ei saa, käytän jotain samankaltaista ja samanarvoista."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:98
+#: lib/edenflowers_web/features/marketing/terms_live.ex:99
 #, elixir-autogen, elixir-format
 msgid "If nobody is home"
 msgstr "Jos kukaan ei ole kotona"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:100
+#: lib/edenflowers_web/features/marketing/terms_live.ex:101
 #, elixir-autogen, elixir-format
 msgid "If nobody's home, I'll leave the flowers at the door and email you a photo showing where I've left them."
 msgstr "Jos kukaan ei ole kotona, jätän kukat ovelle ja lähetän sinulle sähköpostilla kuvan, josta näet, mihin jätin ne."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:108
+#: lib/edenflowers_web/features/marketing/terms_live.ex:109
 #, elixir-autogen, elixir-format
 msgid "If the address or recipient details given at checkout are wrong, I can't refund the order."
 msgstr "Jos kassalla annettu osoite tai vastaanottajan tiedot ovat väärin, en voi hyvittää tilausta."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:471
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:472
 #, elixir-autogen, elixir-format
 msgid "If you'd like, we meet 1–2 months before the wedding to go through what you need. I want you to feel completely confident that the flowers will turn out exactly as you imagined."
 msgstr "Halutessanne tapaamme 1–2 kuukautta ennen häitä ja käymme tarpeenne läpi. Haluan, että voitte luottaa täysin siihen, että kukista tulee juuri sellaiset kuin olette ajatelleet."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:222
+#: lib/edenflowers_web/features/marketing/terms_live.ex:223
 #, elixir-autogen, elixir-format
 msgid "If your flowers arrive damaged or wilt early, %{contact} as soon as possible and send a photo."
 msgstr "Jos kukkasi saapuvat vahingoittuneina tai kuihtuvat ennenaikaisesti, %{contact} mahdollisimman pian ja lähetä kuva."
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:209
+#: lib/edenflowers_web/features/courses/courses_live.ex:210
 #, elixir-autogen, elixir-format
 msgid "In English"
 msgstr "Englanniksi"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:208
+#: lib/edenflowers_web/features/courses/courses_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "In Finnish"
 msgstr "Suomeksi"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:207
+#: lib/edenflowers_web/features/courses/courses_live.ex:208
 #, elixir-autogen, elixir-format
 msgid "In Swedish"
 msgstr "Ruotsiksi"
@@ -1612,7 +1612,7 @@ msgstr "Ruotsiksi"
 msgid "In-store pickup"
 msgstr "Nouto myymälästä"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:497
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:503
 #, elixir-autogen, elixir-format
 msgid "Includes VAT"
 msgstr "Sisältää ALV:n"
@@ -1627,7 +1627,7 @@ msgstr "Lisää"
 msgid "Invalid code"
 msgstr "Virheellinen koodi"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:77
+#: lib/edenflowers_web/features/marketing/terms_live.ex:78
 #, elixir-autogen, elixir-format
 msgid "Invoices"
 msgstr "Laskut"
@@ -1648,49 +1648,49 @@ msgstr "Koodi on voimassa 10 minuuttia."
 msgid "It's too late to change your next delivery."
 msgstr "Seuraavaa toimitusta ei voi enää muuttaa."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:63
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:64
 #, elixir-autogen, elixir-format
 msgid "Jennie McCrea, trading as Eden Flowers"
 msgstr "Jennie McCrea, joka harjoittaa liiketoimintaa nimellä Eden Flowers"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:75
+#: lib/edenflowers_web/features/marketing/about_live.ex:76
 #, elixir-autogen, elixir-format
 msgid "Jennie holding a bouquet in front of an old blue door"
 msgstr "Jennie kukkakimpun kanssa vanhan sinisen oven edessä"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:177
+#: lib/edenflowers_web/features/marketing/about_live.ex:178
 #, elixir-autogen, elixir-format
 msgid "Jennie smiling down at a bouquet of dahlias and eucalyptus"
 msgstr "Jennie hymyilee daalioista ja eukalyptuksesta tehdylle kimpulle"
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:40
+#: lib/edenflowers_web/features/marketing/contact_live.ex:41
 #, elixir-autogen, elixir-format
 msgid "Jennie, owner of Eden Flowers"
 msgstr "Jennie, Eden Flowersin omistaja"
 
-#: lib/edenflowers_web/features/account/account_live.ex:399
+#: lib/edenflowers_web/features/account/account_live.ex:405
 #: lib/edenflowers_web/features/account/subscription_manager.ex:218
 #, elixir-autogen, elixir-format
 msgid "Keep it"
 msgstr "Pidä voimassa"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:183
+#: lib/edenflowers_web/features/marketing/faq_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "Keep the flowers in a cool spot, away from radiators, other heat sources and ripe fruit."
 msgstr "Pidä kukat viileässä paikassa, kaukana lämpöpattereista, muista lämmönlähteistä ja kypsistä hedelmistä."
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:156
+#: lib/edenflowers_web/features/marketing/about_live.ex:157
 #, elixir-autogen, elixir-format
 msgid "Kind words"
 msgstr "Kauniita sanoja"
 
-#: lib/edenflowers_web/components/layouts.ex:960
-#: lib/edenflowers_web/features/courses/course_live.ex:108
+#: lib/edenflowers_web/components/layouts.ex:968
+#: lib/edenflowers_web/features/courses/course_live.ex:109
 #, elixir-autogen, elixir-format
 msgid "Language"
 msgstr "Kieli"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:83
+#: lib/edenflowers_web/features/marketing/terms_live.ex:84
 #, elixir-autogen, elixir-format
 msgid "Late payment adds interest under the Interest Act, plus %{fee} for each reminder."
 msgstr "Myöhästyneestä maksusta peritään viivästyskorko korkolain mukaan sekä %{fee} jokaisesta maksumuistutuksesta."
@@ -1701,7 +1701,7 @@ msgstr "Myöhästyneestä maksusta peritään viivästyskorko korkolain mukaan s
 msgid "Left to pay"
 msgstr "Maksettavaa jäljellä"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:199
+#: lib/edenflowers_web/features/marketing/faq_live.ex:200
 #, elixir-autogen, elixir-format
 msgid "Let me know"
 msgstr "Ota yhteyttä"
@@ -1716,27 +1716,27 @@ msgstr "Hallinnoi"
 msgid "Manage %{name}"
 msgstr "Hallinnoi: %{name}"
 
-#: lib/edenflowers_web/features/store/product_live.ex:261
+#: lib/edenflowers_web/features/store/product_live.ex:303
 #, elixir-autogen, elixir-format
 msgid "Manage it from your account."
 msgstr "Hallinnoi sitä tililtäsi."
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:126
+#: lib/edenflowers_web/features/checkout/order_live.ex:132
 #, elixir-autogen, elixir-format
 msgid "Manage subscription"
 msgstr "Hallinnoi kestotilausta"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:808
+#: lib/edenflowers_web/features/marketing/home_live.ex:791
 #, elixir-autogen, elixir-format
 msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr "Vaasan kartta, johon Minimossen on merkitty"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:114
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:115
 #, elixir-autogen, elixir-format
 msgid "Mapping services receive delivery addresses or coordinates. Website-security and mailbox providers handle traffic and emails."
 msgstr "Karttapalvelut saavat toimitusosoitteita tai koordinaatteja. Verkkosivuston tietoturva- ja sähköpostipalvelujen tarjoajat käsittelevät liikennettä ja sähköposteja."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:543
+#: lib/edenflowers_web/features/marketing/home_live.ex:527
 #, elixir-autogen, elixir-format
 msgid "Meet Jennie"
 msgstr "Tutustu Jennieen"
@@ -1751,7 +1751,7 @@ msgstr "Tutustu Jennieen, Eden Flowersin floristiin Vaasassa: lämpimiä, luonno
 msgid "Message *"
 msgstr "Viesti *"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:211
+#: lib/edenflowers_web/features/marketing/faq_live.ex:212
 #, elixir-autogen, elixir-format
 msgid "MobilePay, card, Apple Pay or Google Pay. Subscriptions require a card. Prices include VAT."
 msgstr "MobilePay, kortti, Apple Pay tai Google Pay. Kestotilaukset edellyttävät korttimaksua. Hinnat sisältävät arvonlisäveron."
@@ -1771,23 +1771,23 @@ msgstr "Äitienpäivä"
 msgid "Must be at most %{max} characters"
 msgstr "Saa olla enintään %{max} merkkiä"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:135
+#: lib/edenflowers_web/features/marketing/about_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "My bouquets are mostly warm, neutral colours with some greenery. I choose flowers I know will last a long time, so you can enjoy them for longer."
 msgstr "Kimppuni ovat enimmäkseen lämpimiä ja neutraaleja sävyjä, joissa on vähän vihreää. Valitsen kukkia, joiden tiedän kestävän pitkään, jotta voit nauttia niistä kauemmin."
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:150
+#: lib/edenflowers_web/features/marketing/about_live.ex:151
 #, elixir-autogen, elixir-format
 msgid "My shop is in Minimossen, the recycling mall at Myrvägen 1. Come by for a bouquet, a houseplant or a second-hand vase to put your flowers in."
 msgstr "Liikkeeni on Minimossenissa, kierrätyskauppakeskuksessa osoitteessa Myrvägen 1. Tule hakemaan kimppu, viherkasvi tai käytetty maljakko kukillesi."
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:132
+#: lib/edenflowers_web/features/marketing/about_live.ex:133
 #, elixir-autogen, elixir-format
 msgid "My style"
 msgstr "Tyylini"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:68
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:92
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:69
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:93
 #, elixir-autogen, elixir-format
 msgid "My work"
 msgstr "Töitäni"
@@ -1797,17 +1797,17 @@ msgstr "Töitäni"
 msgid "Myrvägen 1"
 msgstr "Muurahaistie 1"
 
-#: lib/edenflowers_web/features/account/account_live.ex:133
+#: lib/edenflowers_web/features/account/account_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "Name"
 msgstr "Nimi"
 
-#: lib/edenflowers_web/components/layouts.ex:624
+#: lib/edenflowers_web/components/layouts.ex:625
 #, elixir-autogen, elixir-format
 msgid "Navigation menu"
 msgstr "Navigointivalikko"
 
-#: lib/edenflowers_web/features/store/store_live.ex:115
+#: lib/edenflowers_web/features/store/store_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Need flowers before then? Get in touch and I'll gladly help."
 msgstr "Tarvitsetko kukkia jo sitä ennen? Ota yhteyttä, autan mielelläni."
@@ -1818,42 +1818,37 @@ msgid "Need to change this one? Contact us."
 msgstr "Pitääkö tätä muuttaa? Ota yhteyttä."
 
 #: lib/edenflowers_web/components/newsletter_signup.ex:18
-#: lib/edenflowers_web/features/account/account_live.ex:166
+#: lib/edenflowers_web/features/account/account_live.ex:172
 #, elixir-autogen, elixir-format
 msgid "Newsletter"
 msgstr "Uutiskirje"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:100
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:101
 #, elixir-autogen, elixir-format
 msgid "Newsletters require your consent."
 msgstr "Uutiskirjeet edellyttävät suostumustasi."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:148
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:149
 #, elixir-autogen, elixir-format
 msgid "Newsletters: until withdrawal or unsubscribe. Limited opt-out records prevent further marketing; consent evidence may remain where necessary."
 msgstr "Uutiskirjeet: kunnes suostumus perutaan tai tilaus lopetetaan. Rajattuja tietoja markkinointikiellosta säilytetään markkinoinnin estämiseksi. Todiste suostumuksesta voidaan säilyttää tarvittaessa."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:213
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:249
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:333
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:219
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:255
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:339
 #, elixir-autogen, elixir-format
 msgid "Next"
 msgstr "Seuraava"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:790
-#, elixir-autogen, elixir-format
-msgid "Next available day"
-msgstr "Seuraava vapaa päivä"
-
 #: lib/edenflowers_web/features/account/subscription_manager.ex:50
 #: lib/edenflowers_web/features/account/subscription_manager.ex:432
-#: lib/edenflowers_web/features/checkout/order_live.ex:80
+#: lib/edenflowers_web/features/checkout/order_live.ex:86
 #, elixir-autogen, elixir-format
 msgid "Next delivery"
 msgstr "Seuraava toimitus"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:309
-#: lib/edenflowers_web/features/marketing/home_live.ex:585
+#: lib/edenflowers_web/features/marketing/home_live.ex:293
+#: lib/edenflowers_web/features/marketing/home_live.ex:569
 #, elixir-autogen, elixir-format
 msgid "Next slide"
 msgstr "Seuraava kuva"
@@ -1868,32 +1863,32 @@ msgstr "Ei toimituksia eikä veloituksia"
 msgid "No deliveries until the unpaid one is paid or your card is updated."
 msgstr "Ei toimituksia ennen kuin maksamaton toimitus on maksettu tai vaihdat kortin."
 
-#: lib/edenflowers_web/features/account/account_live.ex:115
+#: lib/edenflowers_web/features/account/account_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "No subscriptions yet."
 msgstr "Ei vielä kestotilauksia."
 
-#: lib/edenflowers_web/features/store/store_live.ex:110
+#: lib/edenflowers_web/features/store/store_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Nothing listed here just now"
 msgstr "Täällä ei ole juuri nyt mitään"
 
-#: lib/edenflowers_web/features/account/account_live.ex:87
+#: lib/edenflowers_web/features/account/account_live.ex:93
 #, elixir-autogen, elixir-format
 msgid "Nothing on its way."
 msgstr "Mitään ei ole tulossa."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:534
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:535
 #, elixir-autogen, elixir-format
 msgid "Number of guests"
 msgstr "Vieraiden määrä"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:166
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "Object to legitimate-interest processing or direct marketing."
 msgstr "Vastustaa oikeutettuun etuun perustuvaa käsittelyä tai suoramarkkinointia."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:177
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:178
 #, elixir-autogen, elixir-format
 msgid "Office of the Data Protection Ombudsman"
 msgstr "Tietosuojavaltuutetun toimistolle"
@@ -1903,7 +1898,7 @@ msgstr "Tietosuojavaltuutetun toimistolle"
 msgid "On hold"
 msgstr "Pysäytetty"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:613
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:614
 #, elixir-autogen, elixir-format
 msgid "On request"
 msgstr "Tarjouksen mukaan"
@@ -1919,7 +1914,7 @@ msgstr "Tällä sivulla"
 msgid "One final delivery remains"
 msgstr "Yksi viimeinen toimitus on vielä tulossa"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:131
+#: lib/edenflowers_web/features/marketing/terms_live.ex:132
 #, elixir-autogen, elixir-format
 msgid "Online flower orders"
 msgstr "Kukkien verkkotilaukset"
@@ -1930,41 +1925,41 @@ msgid "Only %{stock} left"
 msgstr "Vain %{stock} jäljellä"
 
 #: lib/edenflowers_web/components/newsletter_signup.ex:69
-#: lib/edenflowers_web/features/account/account_live.ex:180
+#: lib/edenflowers_web/features/account/account_live.ex:186
 #, elixir-autogen, elixir-format
 msgid "Only occasional emails. Unsubscribe at any time."
 msgstr "Vain satunnaisia viestejä. Voit peruuttaa tilauksen milloin tahansa."
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:112
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "Open heart of red roses"
 msgstr "Avoin sydän punaisista ruusuista"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:115
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Open heart of white roses and lilac carnations"
 msgstr "Avoin sydän valkoisista ruusuista ja liloista neilikoista"
 
-#: lib/edenflowers_web/components/layouts.ex:905
-#: lib/edenflowers_web/features/marketing/contact_live.ex:91
+#: lib/edenflowers_web/components/layouts.ex:913
+#: lib/edenflowers_web/features/marketing/contact_live.ex:92
 #, elixir-autogen, elixir-format
 msgid "Opening hours"
 msgstr "Aukioloajat"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:86
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:220
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:87
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:221
 #, elixir-autogen, elixir-format
 msgid "Or call me on"
 msgstr "Tai soittakaa minulle numeroon"
 
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:58
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:543
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:544
 #, elixir-autogen, elixir-format
 msgid "Or email me directly at"
 msgstr "Tai lähettäkää sähköpostia suoraan osoitteeseen"
 
-#: lib/edenflowers_web/features/account/account_live.ex:360
-#: lib/edenflowers_web/features/account/account_live.ex:482
+#: lib/edenflowers_web/features/account/account_live.ex:366
+#: lib/edenflowers_web/features/account/account_live.ex:488
 #, elixir-autogen, elixir-format
 msgid "Order"
 msgstr "Tilaus"
@@ -1986,12 +1981,12 @@ msgstr "Tilaus %{reference}"
 msgid "Order cancelled"
 msgstr "Tilaus peruttu"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:78
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:79
 #, elixir-autogen, elixir-format
 msgid "Order for a funeral"
 msgstr "Tilaa hautajaisiin"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:45
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:46
 #, elixir-autogen, elixir-format
 msgid "Order funeral flowers"
 msgstr "Tilaa surukukat"
@@ -2007,37 +2002,37 @@ msgstr "Tilausta ei löytynyt."
 msgid "Order refunded"
 msgstr "Tilaus hyvitetty"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:147
+#: lib/edenflowers_web/features/marketing/faq_live.ex:148
 #, elixir-autogen, elixir-format
 msgid "Ordering"
 msgstr "Tilaaminen"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:202
+#: lib/edenflowers_web/features/marketing/faq_live.ex:203
 #, elixir-autogen, elixir-format
 msgid "Our"
 msgstr "Meidän"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:116
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:117
 #, elixir-autogen, elixir-format
 msgid "Our accountant receives monthly purchase and payment records."
 msgstr "Kirjanpitäjämme saa osto- ja maksutiedot kuukausittain."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:138
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:139
 #, elixir-autogen, elixir-format
 msgid "Our database stores error reports, which may include IP addresses, browser details and form data."
 msgstr "Tietokantaamme tallennetaan virheraportteja, jotka voivat sisältää IP-osoitteita, selaintietoja ja lomaketietoja."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:91
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:92
 #, elixir-autogen, elixir-format
 msgid "Our legal bases are:"
 msgstr "Käsittelyn oikeusperusteet ovat:"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:98
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:99
 #, elixir-autogen, elixir-format
 msgid "Our legitimate interests: fulfilling gifts, documenting delivery, administering purchases, handling complaints and preventing website abuse."
 msgstr "Oikeutetut etumme: lahjatilausten toteuttaminen, toimitusten dokumentointi, ostojen hallinnointi, reklamaatioiden käsittely ja verkkosivuston väärinkäytön estäminen."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:125
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "Our session cookie keeps your cart, language and sign-in for up to 30 days."
 msgstr "Istuntoevästeemme säilyttää ostoskorisi, kielivalintasi ja kirjautumisesi enintään 30 päivää."
@@ -2054,7 +2049,7 @@ msgstr "Sivua ei löytynyt"
 msgid "Paid so far"
 msgstr "Maksettu tähän mennessä"
 
-#: lib/edenflowers_web/features/account/account_live.ex:99
+#: lib/edenflowers_web/features/account/account_live.ex:105
 #, elixir-autogen, elixir-format
 msgid "Past"
 msgstr "Aiemmat"
@@ -2069,7 +2064,7 @@ msgstr "Keskeytä"
 msgid "Pause it"
 msgstr "Keskeytä se"
 
-#: lib/edenflowers_web/features/store/product_live.ex:257
+#: lib/edenflowers_web/features/store/product_live.ex:299
 #, elixir-autogen, elixir-format
 msgid "Pause or cancel anytime."
 msgstr "Keskeytä tai peru milloin tahansa."
@@ -2080,8 +2075,8 @@ msgstr "Keskeytä tai peru milloin tahansa."
 msgid "Paused"
 msgstr "Keskeytetty"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:359
-#: lib/edenflowers_web/features/courses/course_live.ex:216
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:365
+#: lib/edenflowers_web/features/courses/course_live.ex:217
 #: lib/edenflowers_web/payment_link.ex:133
 #, elixir-autogen, elixir-format
 msgid "Pay"
@@ -2093,18 +2088,18 @@ msgstr "Maksa"
 msgid "Pay %{amount} now"
 msgstr "Maksa %{amount} nyt"
 
-#: lib/edenflowers_web/features/account/account_live.ex:604
+#: lib/edenflowers_web/features/account/account_live.ex:610
 #, elixir-autogen, elixir-format
 msgid "Pay at collection"
 msgstr "Maksetaan noudettaessa"
 
-#: lib/edenflowers_web/features/account/account_live.ex:452
+#: lib/edenflowers_web/features/account/account_live.ex:458
 #, elixir-autogen, elixir-format
 msgid "Pay at the course"
 msgstr "Maksa kurssilla"
 
-#: lib/edenflowers_web/features/account/account_live.ex:446
-#: lib/edenflowers_web/features/account/account_live.ex:599
+#: lib/edenflowers_web/features/account/account_live.ex:452
+#: lib/edenflowers_web/features/account/account_live.ex:605
 #, elixir-autogen, elixir-format
 msgid "Pay by invoice"
 msgstr "Maksetaan laskulla"
@@ -2121,24 +2116,24 @@ msgstr "Maksa varauksesi"
 msgid "Pay for your order"
 msgstr "Maksa tilauksesi"
 
-#: lib/edenflowers_web/features/account/account_live.ex:449
-#: lib/edenflowers_web/features/account/account_live.ex:588
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:60
+#: lib/edenflowers_web/features/account/account_live.ex:455
+#: lib/edenflowers_web/features/account/account_live.ex:594
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:66
 #: lib/edenflowers_web/features/account/subscription_manager.ex:384
 #, elixir-autogen, elixir-format
 msgid "Pay now"
 msgstr "Maksa nyt"
 
-#: lib/edenflowers_web/features/account/account_live.ex:602
+#: lib/edenflowers_web/features/account/account_live.ex:608
 #, elixir-autogen, elixir-format
 msgid "Pay on delivery"
 msgstr "Maksetaan toimituksen yhteydessä"
 
 #: lib/edenflowers_web/features/checkout/components/fields.ex:132
-#: lib/edenflowers_web/features/checkout/order_live.ex:83
-#: lib/edenflowers_web/features/courses/course_live.ex:197
-#: lib/edenflowers_web/features/marketing/faq_live.ex:208
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:472
+#: lib/edenflowers_web/features/checkout/order_live.ex:89
+#: lib/edenflowers_web/features/courses/course_live.ex:198
+#: lib/edenflowers_web/features/marketing/faq_live.ex:209
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:473
 #: lib/edenflowers_web/payment_link.ex:112
 #, elixir-autogen, elixir-format
 msgid "Payment"
@@ -2149,60 +2144,60 @@ msgstr "Maksu"
 msgid "Payment failed"
 msgstr "Maksu epäonnistui"
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:112
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:626
-#: lib/edenflowers_web/features/courses/course_live.ex:265
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:118
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:632
+#: lib/edenflowers_web/features/courses/course_live.ex:266
 #: lib/edenflowers_web/payment_link.ex:90
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please refresh the page and try again."
 msgstr "Maksaminen ei ole juuri nyt käytettävissä. Päivitä sivu ja yritä uudelleen."
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:77
-#: lib/edenflowers_web/features/courses/course_live.ex:282
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:83
+#: lib/edenflowers_web/features/courses/course_live.ex:283
 #: lib/edenflowers_web/payment_link.ex:73
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please try again in a moment."
 msgstr "Maksaminen ei ole juuri nyt käytettävissä. Yritä hetken kuluttua uudelleen."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:897
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:903
 #, elixir-autogen, elixir-format
 msgid "Payment processing error. Please try again."
 msgstr "Maksun käsittelyssä tapahtui virhe. Yritä uudelleen."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:183
+#: lib/edenflowers_web/features/marketing/terms_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "Payment schedule"
 msgstr "Maksuaikataulu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:377
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:378
 #, elixir-autogen, elixir-format
 msgid "Peach, orange and white bouquet against a lace dress"
 msgstr "Persikanvärinen, oranssi ja valkoinen kimppu pitsipukua vasten"
 
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:51
-#: lib/edenflowers_web/features/marketing/contact_live.ex:71
+#: lib/edenflowers_web/features/marketing/contact_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Phone"
 msgstr "Puhelinnumero"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1006
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1012
 #, elixir-autogen, elixir-format
 msgid "Phone number *"
 msgstr "Puhelinnumero *"
 
-#: lib/edenflowers_web/features/store/product_live.ex:136
+#: lib/edenflowers_web/features/store/product_live.ex:137
 #, elixir-autogen, elixir-format
 msgid "Photo %{index}"
 msgstr "Kuva %{index}"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:119
-#: lib/edenflowers_web/features/marketing/home_live.ex:255
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:633
+#: lib/edenflowers_web/features/marketing/about_live.ex:120
+#: lib/edenflowers_web/features/marketing/home_live.ex:239
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:634
 #, elixir-autogen, elixir-format
 msgid "Photo:"
 msgstr "Kuva:"
 
-#: lib/edenflowers_web/features/store/product_live.ex:124
+#: lib/edenflowers_web/features/store/product_live.ex:125
 #, elixir-autogen, elixir-format
 msgid "Photos"
 msgstr "Kuvat"
@@ -2212,20 +2207,20 @@ msgstr "Kuvat"
 msgid "Pick up your flowers from Eden Flowers"
 msgstr "Hae kukkasi Eden Flowersista"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:798
-#: lib/edenflowers_web/features/marketing/terms_live.ex:93
+#: lib/edenflowers_web/features/marketing/home_live.ex:781
+#: lib/edenflowers_web/features/marketing/terms_live.ex:94
 #, elixir-autogen, elixir-format
 msgid "Pickup"
 msgstr "Nouto"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:314
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:320
 #, elixir-autogen, elixir-format
 msgid "Pickup date *"
 msgstr "Noutopäivä *"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:88
-#: lib/edenflowers_web/features/courses/course_live.ex:114
-#: lib/edenflowers_web/features/courses/course_live.ex:169
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:94
+#: lib/edenflowers_web/features/courses/course_live.ex:115
+#: lib/edenflowers_web/features/courses/course_live.ex:170
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Places"
@@ -2236,57 +2231,57 @@ msgstr "Paikat"
 msgid "Plan"
 msgstr "Tilaus"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:211
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:212
 #, elixir-autogen, elixir-format
 msgid "Planning a wedding?"
 msgstr "Suunnitteletteko häitä?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:140
-#: lib/edenflowers_web/features/marketing/faq_live.ex:230
+#: lib/edenflowers_web/features/marketing/faq_live.ex:141
+#: lib/edenflowers_web/features/marketing/faq_live.ex:231
 #, elixir-autogen, elixir-format
 msgid "Please"
 msgstr "Otathan"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:301
-#: lib/edenflowers_web/features/marketing/home_live.ex:566
+#: lib/edenflowers_web/features/marketing/home_live.ex:285
+#: lib/edenflowers_web/features/marketing/home_live.ex:550
 #, elixir-autogen, elixir-format
 msgid "Previous slide"
 msgstr "Edellinen kuva"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:111
+#: lib/edenflowers_web/features/courses/course_live.ex:112
 #, elixir-autogen, elixir-format
 msgid "Price"
 msgstr "Hinta"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:121
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:122
 #, elixir-autogen, elixir-format
 msgid "Prices"
 msgstr "Hinnat"
 
 #: lib/edenflowers_web/features/marketing/terms_live.ex:21
-#: lib/edenflowers_web/features/marketing/terms_live.ex:63
+#: lib/edenflowers_web/features/marketing/terms_live.ex:64
 #, elixir-autogen, elixir-format
 msgid "Prices and payment"
 msgstr "Hinnat ja maksaminen"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:67
+#: lib/edenflowers_web/features/marketing/terms_live.ex:68
 #, elixir-autogen, elixir-format
 msgid "Prices include VAT. At checkout you can pay with MobilePay, card, Apple Pay or Google Pay. Subscriptions require a card."
 msgstr "Hinnat sisältävät arvonlisäveron. Kassalla voit maksaa MobilePaylla, kortilla, Apple Paylla tai Google Paylla. Kestotilaukset edellyttävät korttimaksua."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:178
+#: lib/edenflowers_web/features/marketing/terms_live.ex:179
 #, elixir-autogen, elixir-format
 msgid "Pricing and delivery"
 msgstr "Hinnat ja toimitus"
 
-#: lib/edenflowers_web/components/layouts.ex:936
+#: lib/edenflowers_web/components/layouts.ex:944
 #: lib/edenflowers_web/components/newsletter_signup.ex:71
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:210
-#: lib/edenflowers_web/features/marketing/faq_live.ex:55
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:216
+#: lib/edenflowers_web/features/marketing/faq_live.ex:56
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:17
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:43
-#: lib/edenflowers_web/features/marketing/terms_live.ex:58
-#: lib/edenflowers_web/features/marketing/terms_live.ex:72
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:44
+#: lib/edenflowers_web/features/marketing/terms_live.ex:59
+#: lib/edenflowers_web/features/marketing/terms_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "Privacy policy"
 msgstr "Tietosuojaseloste"
@@ -2297,33 +2292,33 @@ msgstr "Tietosuojaseloste"
 msgid "Promo code"
 msgstr "Tarjouskoodi"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:94
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Purchases and purchase enquiries: our contract with you or steps you request before it."
 msgstr "Ostot ja niitä koskevat tiedustelut: kanssasi tehty sopimus tai pyytämäsi toimet ennen sopimuksen tekemistä."
 
 #: lib/edenflowers_web/features/marketing/terms_live.ex:23
-#: lib/edenflowers_web/features/marketing/terms_live.ex:113
+#: lib/edenflowers_web/features/marketing/terms_live.ex:114
 #, elixir-autogen, elixir-format
 msgid "Quality"
 msgstr "Laatu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:599
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:600
 #, elixir-autogen, elixir-format
 msgid "Quantity"
 msgstr "Määrä"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:469
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:470
 #, elixir-autogen, elixir-format
 msgid "Quote"
 msgstr "Tarjous"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:181
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:182
 #, elixir-autogen, elixir-format
 msgid "Read also our"
 msgstr "Lue myös"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:125
+#: lib/edenflowers_web/features/marketing/terms_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "Read the care instructions"
 msgstr "Lue hoito-ohjeet"
@@ -2333,43 +2328,43 @@ msgstr "Lue hoito-ohjeet"
 msgid "Ready to collect at the shop on %{date}"
 msgstr "Noudettavissa liikkeestä %{date}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:613
+#: lib/edenflowers_web/features/account/account_live.ex:619
 #, elixir-autogen, elixir-format
 msgid "Ready to collect today"
 msgstr "Noudettavissa tänään"
 
-#: lib/edenflowers_web/features/account/account_live.ex:314
+#: lib/edenflowers_web/features/account/account_live.ex:320
 #, elixir-autogen, elixir-format
 msgid "Receipt"
 msgstr "Kuitti"
 
-#: lib/edenflowers_web/features/account/account_live.ex:311
+#: lib/edenflowers_web/features/account/account_live.ex:317
 #, elixir-autogen, elixir-format
 msgid "Receipt (opens in a new tab)"
 msgstr "Kuitti (avautuu uuteen välilehteen)"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:229
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:235
 #, elixir-autogen, elixir-format
 msgid "Recipient *"
 msgstr "Vastaanottaja *"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:240
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:246
 #, elixir-autogen, elixir-format
 msgid "Recipient name *"
 msgstr "Vastaanottajan nimi *"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:91
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:97
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:108
 #, elixir-autogen, elixir-format
 msgid "Reference"
 msgstr "Viite"
 
-#: lib/edenflowers_web/features/account/account_live.ex:608
+#: lib/edenflowers_web/features/account/account_live.ex:614
 #, elixir-autogen, elixir-format
 msgid "Refunded"
 msgstr "Hyvitetty"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:65
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:66
 #, elixir-autogen, elixir-format
 msgid "Registered address:"
 msgstr "Rekisteröity osoite:"
@@ -2385,12 +2380,12 @@ msgstr "Lisätietoja"
 msgid "Remove"
 msgstr "Poista"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:181
+#: lib/edenflowers_web/features/marketing/faq_live.ex:182
 #, elixir-autogen, elixir-format
 msgid "Remove any leaves that would sit below the waterline."
 msgstr "Poista kaikki vedenpinnan alle jäävät lehdet."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:595
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:596
 #, elixir-autogen, elixir-format
 msgid "Remove one: %{item_label}"
 msgstr "Yksi vähemmän: %{item_label}"
@@ -2400,35 +2395,35 @@ msgstr "Yksi vähemmän: %{item_label}"
 msgid "Removing this empties your cart and clears the checkout details you've entered. Continue?"
 msgstr "Tämän poistaminen tyhjentää ostoskorisi ja poistaa syöttämäsi kassatiedot. Jatketaanko?"
 
-#: lib/edenflowers_web/features/store/product_live.ex:478
+#: lib/edenflowers_web/features/store/product_live.ex:529
 #, elixir-autogen, elixir-format
 msgid "Replaces the %{count} bouquets (%{amount}) in your cart."
 msgstr "Korvaa ostoskorisi %{count} kimppua (%{amount})."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:250
+#: lib/edenflowers_web/features/marketing/faq_live.ex:251
 #, elixir-autogen, elixir-format
 msgid "Reply to your confirmation email. Each course page lists the deadline for a full refund and the cancellation fee after that."
 msgstr "Vastaa vahvistussähköpostiisi. Kunkin kurssin sivulla kerrotaan viimeinen peruutuspäivä, jolloin saat rahat kokonaan takaisin, sekä sen jälkeinen peruutusmaksu."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:154
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:218
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:230
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:234
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:155
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:219
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:231
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:235
 #, elixir-autogen, elixir-format
 msgid "Request a quote"
 msgstr "Pyydä tarjous"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:164
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:165
 #, elixir-autogen, elixir-format
 msgid "Request access to or correction of your data."
 msgstr "Saada pääsyn tietoihisi tai pyytää niiden oikaisua."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:165
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:166
 #, elixir-autogen, elixir-format
 msgid "Request deletion, restriction or portability."
 msgstr "Pyytää tietojen poistamista, käsittelyn rajoittamista tai tietojen siirtämistä."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:169
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:170
 #, elixir-autogen, elixir-format
 msgid "Requests are normally free. We may verify your identity. Within one month we respond or explain a lawful extension. Legal conditions apply; accounting records may need keeping."
 msgstr "Pyynnöt ovat yleensä maksuttomia. Voimme varmistaa henkilöllisyytesi. Vastaamme kuukauden kuluessa tai kerromme lainmukaisesta määräajan pidennyksestä. Oikeuksiin sovelletaan laissa säädettyjä ehtoja, ja kirjanpitoaineistoa voidaan joutua säilyttämään."
@@ -2453,7 +2448,7 @@ msgstr "Jatka"
 msgid "Resume now for a delivery on %{date}."
 msgstr "Jatka nyt, niin seuraava toimitus on %{date}."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:142
+#: lib/edenflowers_web/features/marketing/terms_live.ex:143
 #, elixir-autogen, elixir-format
 msgid "Right of withdrawal"
 msgstr "Peruuttamisoikeus"
@@ -2473,12 +2468,12 @@ msgstr "Tilaa pidemmälle viestille"
 msgid "Room for a short note"
 msgstr "Tilaa lyhyelle viestille"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:445
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:446
 #, elixir-autogen, elixir-format
 msgid "Round gold flower arch with white and peach roses"
 msgstr "Pyöreä kultainen kukkakaari valkoisin ja persikanvärisin ruusuin"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:153
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:154
 #, elixir-autogen, elixir-format
 msgid "Routine database backups: about 30 days."
 msgstr "Tietokannan tavanomaiset varmuuskopiot: noin 30 päivää."
@@ -2493,18 +2488,18 @@ msgstr "Toimitus samana päivänä ei ole mahdollista"
 msgid "Sat: %{saturday}"
 msgstr "La: %{saturday}"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:229
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:179
+#: lib/edenflowers_web/features/marketing/faq_live.ex:230
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:180
 #, elixir-autogen, elixir-format
 msgid "Saturdays in particular fill up quickly, as I can only take on a limited number of weddings each Saturday. Most couples book 9–12 months ahead."
 msgstr "Erityisesti lauantait varataan nopeasti täyteen, sillä voin ottaa hoitaakseni vain rajallisen määrän häitä kullekin lauantaille. Useimmat parit varaavat 9–12 kuukautta etukäteen."
 
-#: lib/edenflowers_web/features/account/account_live.ex:136
+#: lib/edenflowers_web/features/account/account_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "Save"
 msgstr "Tallenna"
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:73
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:79
 #, elixir-autogen, elixir-format
 msgid "Save card"
 msgstr "Tallenna kortti"
@@ -2514,8 +2509,8 @@ msgstr "Tallenna kortti"
 msgid "Save changes"
 msgstr "Tallenna muutokset"
 
-#: lib/edenflowers_web/features/account/account_live.ex:138
-#: lib/edenflowers_web/features/account/account_live.ex:188
+#: lib/edenflowers_web/features/account/account_live.ex:144
+#: lib/edenflowers_web/features/account/account_live.ex:194
 #, elixir-autogen, elixir-format
 msgid "Saved"
 msgstr "Tallennettu"
@@ -2525,49 +2520,49 @@ msgstr "Tallennettu"
 msgid "Saved card"
 msgstr "Tallennettu kortti"
 
-#: lib/edenflowers_web/features/account/account_live.ex:618
+#: lib/edenflowers_web/features/account/account_live.ex:624
 #, elixir-autogen, elixir-format
 msgid "Scheduled delivery"
 msgstr "Sovittu toimitus"
 
-#: lib/edenflowers_web/features/account/account_live.ex:617
+#: lib/edenflowers_web/features/account/account_live.ex:623
 #, elixir-autogen, elixir-format
 msgid "Scheduled pickup"
 msgstr "Sovittu nouto"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:46
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:68
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:47
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:69
 #, elixir-autogen, elixir-format
 msgid "See my work"
 msgstr "Katso töitäni"
 
-#: lib/edenflowers_web/features/account/account_live.ex:120
+#: lib/edenflowers_web/features/account/account_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "See subscriptions"
 msgstr "Katso kestotilaukset"
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:59
-#: lib/edenflowers_web/features/store/product_live.ex:324
+#: lib/edenflowers_web/features/marketing/contact_live.ex:60
+#: lib/edenflowers_web/features/store/product_live.ex:366
 #, elixir-autogen, elixir-format
 msgid "See the FAQ"
 msgstr "Lue usein kysytyt kysymykset"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:198
+#: lib/edenflowers_web/features/marketing/terms_live.ex:199
 #, elixir-autogen, elixir-format
 msgid "See the courses"
 msgstr "Katso kurssit"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:52
+#: lib/edenflowers_web/features/courses/courses_live.ex:53
 #, elixir-autogen, elixir-format
 msgid "See upcoming courses"
 msgstr "Katso tulevat kurssit"
 
-#: lib/edenflowers_web/features/account/account_live.ex:90
+#: lib/edenflowers_web/features/account/account_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "See what's coming up"
 msgstr "Katso tulevat kurssit"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:129
+#: lib/edenflowers_web/features/courses/course_live.ex:130
 #, elixir-autogen, elixir-format
 msgid "See your bookings"
 msgstr "Katso varauksesi"
@@ -2585,38 +2580,38 @@ msgid "Select a card before writing a message"
 msgstr "Valitse kortti ennen viestin kirjoittamista"
 
 #: lib/edenflowers_web/features/marketing/terms_live.ex:28
-#: lib/edenflowers_web/features/marketing/terms_live.ex:202
+#: lib/edenflowers_web/features/marketing/terms_live.ex:203
 #, elixir-autogen, elixir-format
 msgid "Seller and contact details"
 msgstr "Myyjä ja yhteystiedot"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:541
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:542
 #, elixir-autogen, elixir-format
 msgid "Send enquiry"
 msgstr "Lähetä tiedustelu"
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:118
-#: lib/edenflowers_web/features/marketing/about_live.ex:190
+#: lib/edenflowers_web/features/courses/courses_live.ex:119
+#: lib/edenflowers_web/features/marketing/about_live.ex:191
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:25
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:29
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:83
-#: lib/edenflowers_web/features/marketing/contact_live.ex:63
-#: lib/edenflowers_web/features/marketing/faq_live.ex:95
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:84
+#: lib/edenflowers_web/features/marketing/contact_live.ex:64
+#: lib/edenflowers_web/features/marketing/faq_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "Send me a message"
 msgstr "Lähetä minulle viesti"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:80
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:81
 #, elixir-autogen, elixir-format
 msgid "Send me a message or call me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."
 msgstr "Lähetä minulle viesti tai soita, niin valitaan kukat yhdessä. Jos haluat kukat toimitettuina, kerro hautajaisten päivä, kellonaika ja osoite, vainajan nimi sekä mitä haluat korttiin kirjoitettavan."
 
-#: lib/edenflowers_web/features/marketing/contact_live.ex:54
+#: lib/edenflowers_web/features/marketing/contact_live.ex:55
 #, elixir-autogen, elixir-format
 msgid "Send me a message or give me a call and I'll gladly help."
 msgstr "Lähetä viesti tai soita, niin autan mielelläni."
 
-#: lib/edenflowers_web/features/account/account_live.ex:178
+#: lib/edenflowers_web/features/account/account_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "Send me occasional emails about what's in the shop."
 msgstr "Lähetä minulle silloin tällöin sähköpostia siitä, mitä myymälässä on."
@@ -2631,7 +2626,7 @@ msgstr "Lähetä viesti"
 msgid "Send sign-in code"
 msgstr "Lähetä kirjautumiskoodi"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:517
+#: lib/edenflowers_web/features/marketing/home_live.ex:501
 #, elixir-autogen, elixir-format
 msgid "Shop all flowers"
 msgstr "Katso kaikki kukat"
@@ -2641,18 +2636,18 @@ msgstr "Katso kaikki kukat"
 msgid "Shopping cart"
 msgstr "Ostoskori"
 
-#: lib/edenflowers_web/features/account/account_live.ex:105
+#: lib/edenflowers_web/features/account/account_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Show %{count} more"
 msgstr "Näytä %{count} lisää"
 
-#: lib/edenflowers_web/features/store/product_live.ex:277
+#: lib/edenflowers_web/features/store/product_live.ex:319
 #, elixir-autogen, elixir-format
 msgid "Show cart"
 msgstr "Näytä ostoskori"
 
-#: lib/edenflowers_web/components/layouts.ex:668
-#: lib/edenflowers_web/components/layouts.ex:763
+#: lib/edenflowers_web/components/layouts.ex:669
+#: lib/edenflowers_web/components/layouts.ex:771
 #, elixir-autogen, elixir-format
 msgid "Sign In"
 msgstr "Kirjaudu sisään"
@@ -2663,21 +2658,21 @@ msgstr "Kirjaudu sisään"
 msgid "Sign in"
 msgstr "Kirjaudu sisään"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:91
+#: lib/edenflowers_web/features/checkout/order_live.ex:97
 #, elixir-autogen, elixir-format
 msgid "Sign in with %{email}"
 msgstr "Kirjaudu sisään osoitteella %{email}"
 
-#: lib/edenflowers_web/features/account/account_live.ex:61
+#: lib/edenflowers_web/features/account/account_live.ex:67
 #: lib/edenflowers_web/features/auth/sign_out_live.ex:21
 #: lib/edenflowers_web/features/auth/sign_out_live.ex:29
 #, elixir-autogen, elixir-format
 msgid "Sign out"
 msgstr "Kirjaudu ulos"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:137
-#: lib/edenflowers_web/features/courses/courses_live.ex:80
-#: lib/edenflowers_web/features/courses/courses_live.ex:91
+#: lib/edenflowers_web/features/courses/course_live.ex:138
+#: lib/edenflowers_web/features/courses/courses_live.ex:81
+#: lib/edenflowers_web/features/courses/courses_live.ex:92
 #, elixir-autogen, elixir-format
 msgid "Sign up for the newsletter"
 msgstr "Tilaa uutiskirje"
@@ -2687,19 +2682,19 @@ msgstr "Tilaa uutiskirje"
 msgid "Sign-in code"
 msgstr "Kirjautumiskoodi"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:455
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:456
 #, elixir-autogen, elixir-format
 msgid "Silk flower garland cascading down a cake table"
 msgstr "Silkkikukkaköynnös valuu alas kakkupöydältä"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:431
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:454
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:432
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:455
 #, elixir-autogen, elixir-format
 msgid "Silk flower garland, to rent"
 msgstr "Silkkikukkaköynnös, vuokrattava"
 
 #: lib/edenflowers_web/features/account/subscription_manager.ex:520
-#: lib/edenflowers_web/features/store/product_live.ex:166
+#: lib/edenflowers_web/features/store/product_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "Size"
 msgstr "Koko"
@@ -2709,30 +2704,31 @@ msgstr "Koko"
 msgid "Skip to main content"
 msgstr "Siirry pääsisältöön"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:100
+#: lib/edenflowers_web/features/marketing/about_live.ex:101
 #, elixir-autogen, elixir-format
 msgid "So in January 2019 I started Eden Flowers. Ordering should be easy. You don't need to choose between a million styles and flowers: just trust my taste, and I'll take care of the rest."
 msgstr "Niinpä perustin Eden Flowersin tammikuussa 2019. Tilaamisen pitää olla helppoa. Sinun ei tarvitse valita miljoonan tyylin ja kukan väliltä: luota vain makuuni, niin minä hoidan loput."
 
-#: lib/edenflowers_web/components/layouts.ex:969
+#: lib/edenflowers_web/components/layouts.ex:977
 #, elixir-autogen, elixir-format
 msgid "Socials"
 msgstr "Sosiaalinen media"
 
 #: lib/edenflowers/orders/line_item/validations/within_stock.ex:30
-#: lib/edenflowers_web/features/store/product_live.ex:188
-#: lib/edenflowers_web/features/store/product_live.ex:306
+#: lib/edenflowers_web/features/store/product_live.ex:196
+#: lib/edenflowers_web/features/store/product_live.ex:223
+#: lib/edenflowers_web/features/store/product_live.ex:348
 #, elixir-autogen, elixir-format
 msgid "Sold out"
 msgstr "Loppuunmyyty"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:54
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:103
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:55
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:104
 #, elixir-autogen, elixir-format
 msgid "Solid heart of red roses and white carnations"
 msgstr "Umpinainen sydän punaisista ruusuista ja valkoisista neilikoista"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:284
+#: lib/edenflowers_web/features/marketing/faq_live.ex:285
 #, elixir-autogen, elixir-format
 msgid "Some products, like subscriptions, are delivered free within %{km} km."
 msgstr "Jotkin tuotteet, kuten kestotilaukset, toimitetaan ilmaiseksi enintään %{km} km:n ajomatkan päähän kaupasta."
@@ -2742,42 +2738,42 @@ msgstr "Jotkin tuotteet, kuten kestotilaukset, toimitetaan ilmaiseksi enintään
 msgid "Spend at least %{edenflowers_format_currency} to use this code."
 msgstr "Koodin käyttö edellyttää vähintään %{edenflowers_format_currency} ostoksia."
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:127
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:128
 #, elixir-autogen, elixir-format
 msgid "Spray of peach roses and blue irises"
 msgstr "Surulaite persikanvärisistä ruusuista ja sinisistä kurjenmiekoista"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:120
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "Spray of red carnations, purple lisianthus and gypsophila"
 msgstr "Surulaite punaisista neilikoista, violeteista eustomista ja harsokukasta"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:117
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:118
 #, elixir-autogen, elixir-format
 msgid "Spray of red roses and protea"
 msgstr "Surulaite punaisista ruusuista ja proteasta"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:105
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:106
 #, elixir-autogen, elixir-format
 msgid "Spray of white lilies and chrysanthemums"
 msgstr "Surulaite valkoisista liljoista ja krysanteemeista"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:114
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:115
 #, elixir-autogen, elixir-format
 msgid "Spray of white roses and blue delphiniums"
 msgstr "Surulaite valkoisista ruusuista ja sinisistä ritarinkannuksista"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:119
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:120
 #, elixir-autogen, elixir-format
 msgid "Spray of white roses and blue irises"
 msgstr "Surulaite valkoisista ruusuista ja sinisistä kurjenmiekoista"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:116
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:117
 #, elixir-autogen, elixir-format
 msgid "Spray of yellow roses and chrysanthemums"
 msgstr "Surulaite keltaisista ruusuista ja krysanteemeista"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:118
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:119
 #, elixir-autogen, elixir-format
 msgid "Spray of yellow roses and white carnations"
 msgstr "Surulaite keltaisista ruusuista ja valkoisista neilikoista"
@@ -2787,7 +2783,7 @@ msgstr "Surulaite keltaisista ruusuista ja valkoisista neilikoista"
 msgid "Stadsgatan 3, 65300 Vasa"
 msgstr "Kaupunginkatu 3, 65300 Vaasa"
 
-#: lib/edenflowers_web/features/account/account_live.ex:463
+#: lib/edenflowers_web/features/account/account_live.ex:469
 #, elixir-autogen, elixir-format
 msgid "Starts %{time}"
 msgstr "Alkaa klo %{time}"
@@ -2813,14 +2809,14 @@ msgstr "Lopeta kestotilaus"
 msgid "Stop your subscription?"
 msgstr "Lopetetaanko kestotilaus?"
 
-#: lib/edenflowers_web/components/layouts.ex:609
+#: lib/edenflowers_web/components/layouts.ex:610
 #: lib/edenflowers_web/features/store/store_live.ex:57
-#: lib/edenflowers_web/features/store/store_live.ex:83
+#: lib/edenflowers_web/features/store/store_live.ex:84
 #, elixir-autogen, elixir-format
 msgid "Store"
 msgstr "Kauppa"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:108
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:109
 #, elixir-autogen, elixir-format
 msgid "Stripe handles payments and saved cards. We keep payment references and limited card details, not full card numbers or security codes."
 msgstr "Stripe käsittelee maksut ja tallennetut kortit. Säilytämme maksuviitteet ja rajatut korttitiedot, emme kokonaisia korttinumeroita tai turvakoodeja."
@@ -2830,9 +2826,9 @@ msgstr "Stripe käsittelee maksut ja tallennetut kortit. Säilytämme maksuviitt
 msgid "Subscribe"
 msgstr "Tilaa"
 
-#: lib/edenflowers_web/features/account/account_live.ex:475
-#: lib/edenflowers_web/features/checkout/order_live.ex:77
-#: lib/edenflowers_web/features/store/product_live.ex:228
+#: lib/edenflowers_web/features/account/account_live.ex:481
+#: lib/edenflowers_web/features/checkout/order_live.ex:83
+#: lib/edenflowers_web/features/store/product_live.ex:266
 #, elixir-autogen, elixir-format
 msgid "Subscription"
 msgstr "Kestotilaus"
@@ -2842,16 +2838,16 @@ msgstr "Kestotilaus"
 msgid "Subscription cancelled"
 msgstr "Kestotilaus peruttu"
 
-#: lib/edenflowers_web/features/account/account_live.ex:359
+#: lib/edenflowers_web/features/account/account_live.ex:365
 #, elixir-autogen, elixir-format
 msgid "Subscription order"
 msgstr "Kestotilauksen toimitus"
 
-#: lib/edenflowers_web/features/account/account_live.ex:69
-#: lib/edenflowers_web/features/account/account_live.ex:113
-#: lib/edenflowers_web/features/marketing/faq_live.ex:222
+#: lib/edenflowers_web/features/account/account_live.ex:75
+#: lib/edenflowers_web/features/account/account_live.ex:119
+#: lib/edenflowers_web/features/marketing/faq_live.ex:223
 #: lib/edenflowers_web/features/marketing/terms_live.ex:25
-#: lib/edenflowers_web/features/marketing/terms_live.ex:156
+#: lib/edenflowers_web/features/marketing/terms_live.ex:157
 #, elixir-autogen, elixir-format
 msgid "Subscriptions"
 msgstr "Kestotilaukset"
@@ -2861,26 +2857,26 @@ msgstr "Kestotilaukset"
 msgid "Sun: closed"
 msgstr "Su: suljettu"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:409
+#: lib/edenflowers_web/features/courses/course_live.ex:410
 #, elixir-autogen, elixir-format
 msgid "Swedish"
 msgstr "Ruotsi"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:241
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:242
 #, elixir-autogen, elixir-format
 msgid "Tell me about your wedding and I'll send you a quote."
 msgstr "Kertokaa häistänne, niin lähetän teille tarjouksen."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:154
+#: lib/edenflowers_web/features/marketing/faq_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "Tell me what you have in mind"
 msgstr "Kerro, mitä sinulla on mielessäsi,"
 
-#: lib/edenflowers_web/components/layouts.ex:928
-#: lib/edenflowers_web/features/marketing/faq_live.ex:54
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:56
+#: lib/edenflowers_web/components/layouts.ex:936
+#: lib/edenflowers_web/features/marketing/faq_live.ex:55
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:57
 #: lib/edenflowers_web/features/marketing/terms_live.ex:17
-#: lib/edenflowers_web/features/marketing/terms_live.ex:45
+#: lib/edenflowers_web/features/marketing/terms_live.ex:46
 #, elixir-autogen, elixir-format
 msgid "Terms of sale"
 msgstr "Toimitusehdot"
@@ -2894,19 +2890,19 @@ msgstr "Toimitusehdot"
 msgid "Thank you"
 msgstr "Kiitos"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:58
-#: lib/edenflowers_web/features/checkout/order_live.ex:166
+#: lib/edenflowers_web/features/checkout/order_live.ex:64
+#: lib/edenflowers_web/features/checkout/order_live.ex:172
 #: lib/edenflowers_web/features/checkout/pay_live.ex:221
 #, elixir-autogen, elixir-format
 msgid "Thank you for your order"
 msgstr "Kiitos tilauksestasi"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:234
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:235
 #, elixir-autogen, elixir-format
 msgid "Thank you!"
 msgstr "Kiitos!"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:57
+#: lib/edenflowers_web/features/checkout/order_live.ex:63
 #: lib/edenflowers_web/features/checkout/pay_live.ex:72
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:70
 #, elixir-autogen, elixir-format
@@ -2933,7 +2929,7 @@ msgstr "Koodi on vanhentunut. Yritä uudelleen."
 msgid "That code isn't right."
 msgstr "Koodi ei ole oikein."
 
-#: lib/edenflowers_web/features/account/account_live.ex:546
+#: lib/edenflowers_web/features/account/account_live.ex:552
 #, elixir-autogen, elixir-format
 msgid "That email can't be used. It may already belong to another account."
 msgstr "Tätä sähköpostiosoitetta ei voi käyttää. Se voi jo kuulua toiselle tilille."
@@ -2948,17 +2944,17 @@ msgstr "Tämä on jo sähköpostiosoitteesi."
 msgid "The booking changed. Please try again."
 msgstr "Varaus on muuttunut. Yritä uudelleen."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:811
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:817
 #, elixir-autogen, elixir-format
 msgid "The card comes with your first delivery."
 msgstr "Kortti tulee ensimmäisen toimituksesi mukana."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:479
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:485
 #, elixir-autogen, elixir-format
 msgid "The discount applies to your first delivery."
 msgstr "Alennus koskee ensimmäistä toimitustasi."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:190
+#: lib/edenflowers_web/features/marketing/terms_live.ex:191
 #, elixir-autogen, elixir-format
 msgid "The first instalment is a booking fee and is not refunded if you cancel later than four weeks before the wedding."
 msgstr "Ensimmäinen erä toimii varausmaksuna, eikä sitä palauteta, jos varaus perutaan myöhemmin kuin neljä viikkoa ennen häitä."
@@ -2983,22 +2979,22 @@ msgstr "Tämän päivän tilausaika on päättynyt"
 msgid "The page you're looking for doesn't exist or has moved."
 msgstr "Etsimääsi sivua ei ole olemassa tai se on siirretty."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:474
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:475
 #, elixir-autogen, elixir-format
 msgid "The wedding day"
 msgstr "Hääpäivä"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:837
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:843
 #, elixir-autogen, elixir-format
 msgid "Then %{amount} %{interval} from %{date}, charged %{days} days before each delivery. Pause or cancel anytime."
 msgstr "Sen jälkeen %{amount} %{interval}, ensimmäisen kerran %{date}. Veloitetaan %{days} päivää ennen jokaista toimitusta. Voit keskeyttää tai perua milloin tahansa."
 
-#: lib/edenflowers_web/features/courses/courses_live.ex:78
+#: lib/edenflowers_web/features/courses/courses_live.ex:79
 #, elixir-autogen, elixir-format
 msgid "There are no courses on the calendar right now. I announce new dates in the newsletter first."
 msgstr "Kalenterissa ei ole juuri nyt kursseja. Kerron uusista päivistä ensimmäisenä uutiskirjeessä."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:293
+#: lib/edenflowers_web/features/marketing/faq_live.ex:294
 #, elixir-autogen, elixir-format
 msgid "There are no set delivery times."
 msgstr "Tarkkoja toimitusaikoja ei ole."
@@ -3023,7 +3019,7 @@ msgstr "Tällä laitteella ei ole kirjautunutta tiliä."
 msgid "This booking has been cancelled, so there is nothing to pay. If you have any questions, just get in touch."
 msgstr "Varaus on peruttu, joten maksettavaa ei ole. Jos sinulla on kysyttävää, ota yhteyttä."
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:59
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "This booking has been cancelled. If you have any questions, just get in touch."
 msgstr "Tämä varaus on peruttu. Jos sinulla on kysyttävää, ota yhteyttä."
@@ -3033,19 +3029,19 @@ msgstr "Tämä varaus on peruttu. Jos sinulla on kysyttävää, ota yhteyttä."
 msgid "This booking has been refunded, so there is nothing to pay. If you have any questions, just get in touch."
 msgstr "Varauksen maksu on palautettu, joten maksettavaa ei ole. Jos sinulla on kysyttävää, ota yhteyttä."
 
-#: lib/edenflowers_web/features/store/product_live.ex:490
+#: lib/edenflowers_web/features/store/product_live.ex:541
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr "Tätä ei voitu lisätä ostoskoriin."
 
-#: lib/edenflowers_web/features/courses/course_live.ex:135
+#: lib/edenflowers_web/features/courses/course_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "This course is no longer taking bookings. I announce new dates in the newsletter first."
 msgstr "Tälle kurssille ei voi enää varata paikkaa. Kerron uusista päivistä ensimmäisenä uutiskirjeessä."
 
 #: lib/edenflowers/orders/order/validations/fulfillment_date.ex:32
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:152
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:890
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:158
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:896
 #, elixir-autogen, elixir-format
 msgid "This date is no longer available, please choose another"
 msgstr "Tämä päivä ei ole enää saatavilla, valitse toinen"
@@ -3056,7 +3052,7 @@ msgstr "Tämä päivä ei ole enää saatavilla, valitse toinen"
 msgid "This order can no longer be cancelled online. Please contact us."
 msgstr "Tätä tilausta ei voi enää perua verkossa. Ota meihin yhteyttä."
 
-#: lib/edenflowers_web/features/account/account_live.ex:511
+#: lib/edenflowers_web/features/account/account_live.ex:517
 #, elixir-autogen, elixir-format
 msgid "This order couldn't be cancelled. Please contact us."
 msgstr "Tilausta ei voitu perua. Ota meihin yhteyttä."
@@ -3092,22 +3088,17 @@ msgstr "Tätä tuotetta ei voi tilata kestotilauksena"
 msgid "To be refunded"
 msgstr "Palautetaan"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:99
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:105
 #, elixir-autogen, elixir-format
 msgid "To cancel, reply to your confirmation email."
 msgstr "Jos haluat perua, vastaa vahvistusviestiisi."
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:103
+#: lib/edenflowers_web/features/marketing/about_live.ex:104
 #, elixir-autogen, elixir-format
 msgid "Today I live in Vaasa with my little family: my husband, our son and our dog."
 msgstr "Nykyään asun Vaasassa pienen perheeni kanssa: mieheni, poikamme ja koiramme."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:168
-#, elixir-autogen, elixir-format
-msgid "Today, if you order by %{time}"
-msgstr "Tänään, kun tilaat viimeistään klo %{time}"
-
-#: lib/edenflowers_web/features/account/account_live.ex:530
+#: lib/edenflowers_web/features/account/account_live.ex:536
 #, elixir-autogen, elixir-format
 msgid "Too many attempts. Please try again later."
 msgstr "Liian monta yritystä. Yritä myöhemmin uudelleen."
@@ -3117,17 +3108,17 @@ msgstr "Liian monta yritystä. Yritä myöhemmin uudelleen."
 msgid "Too many requests. Please wait a few minutes and try again."
 msgstr "Liian monta yritystä. Odota muutama minuutti ja yritä uudelleen."
 
-#: lib/edenflowers_web/features/account/account_live.ex:541
+#: lib/edenflowers_web/features/account/account_live.ex:547
 #, elixir-autogen, elixir-format
 msgid "Too many wrong codes. Please try again."
 msgstr "Liian monta väärää koodia. Yritä uudelleen."
 
-#: lib/edenflowers_web/features/account/account_live.ex:465
+#: lib/edenflowers_web/features/account/account_live.ex:471
 #, elixir-autogen, elixir-format
 msgid "Took place"
 msgstr "Pidetty"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:486
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:492
 #: lib/edenflowers_web/features/checkout/pay_live.ex:137
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:114
 #, elixir-autogen, elixir-format
@@ -3145,18 +3136,18 @@ msgstr "Maksettu yhteensä"
 msgid "Trusted by"
 msgstr "Asiakkaitani"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:460
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:461
 #, elixir-autogen, elixir-format
 msgid "Two urn arrangements of coral roses and delphiniums"
 msgstr "Kaksi ruukkuasetelmaa korallinvärisistä ruusuista ja ritarinkannuksista"
 
-#: lib/edenflowers_web/features/account/account_live.ex:585
+#: lib/edenflowers_web/features/account/account_live.ex:591
 #: lib/edenflowers_web/features/account/subscription_manager.ex:381
 #, elixir-autogen, elixir-format
 msgid "Unpaid"
 msgstr "Maksamatta"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:172
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:173
 #, elixir-autogen, elixir-format
 msgid "Unsubscribe or contact us to withdraw newsletter consent anytime. Earlier lawful processing is unaffected."
 msgstr "Voit milloin tahansa lopettaa uutiskirjeen tilauksen tai perua suostumuksesi ottamalla meihin yhteyttä. Tämä ei vaikuta aiemman käsittelyn lainmukaisuuteen."
@@ -3173,13 +3164,13 @@ msgstr "Tulossa"
 msgid "Update card"
 msgstr "Vaihda kortti"
 
-#: lib/edenflowers_web/features/store/product_live.ex:316
+#: lib/edenflowers_web/features/store/product_live.ex:358
 #, elixir-autogen, elixir-format
 msgid "Update cart"
 msgstr "Päivitä ostoskori"
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:30
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:50
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:56
 #: lib/edenflowers_web/features/checkout/pay_live.ex:92
 #, elixir-autogen, elixir-format
 msgid "Update your card"
@@ -3190,12 +3181,12 @@ msgstr "Vaihda korttisi"
 msgid "Update your card to restart your subscription."
 msgstr "Vaihda korttisi, niin kestotilauksesi jatkuu."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:49
+#: lib/edenflowers_web/features/marketing/terms_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "Updated 26 October 2026."
 msgstr "Päivitetty 26. lokakuuta 2026."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:180
+#: lib/edenflowers_web/features/marketing/faq_live.ex:181
 #, elixir-autogen, elixir-format
 msgid "Use a clean vase with fresh water."
 msgstr "Käytä puhdasta maljakkoa ja raikasta vettä."
@@ -3205,7 +3196,7 @@ msgstr "Käytä puhdasta maljakkoa ja raikasta vettä."
 msgid "Use a different email"
 msgstr "Käytä toista sähköpostiosoitetta"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:147
+#: lib/edenflowers_web/features/marketing/about_live.ex:148
 #, elixir-autogen, elixir-format
 msgid "Usually it's just me, from your first message to the finished flowers. At busy times my family helps out with deliveries."
 msgstr "Yleensä se olen vain minä, ensimmäisestä viestistäsi valmiisiin kukkiin. Kiireisinä aikoina perheeni auttaa toimituksissa."
@@ -3215,22 +3206,22 @@ msgstr "Yleensä se olen vain minä, ensimmäisestä viestistäsi valmiisiin kuk
 msgid "Valentine's Day"
 msgstr "Ystävänpäivä"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:536
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:537
 #, elixir-autogen, elixir-format
 msgid "Venue"
 msgstr "Paikka"
 
-#: lib/edenflowers_web/features/store/product_live.ex:291
+#: lib/edenflowers_web/features/store/product_live.ex:333
 #, elixir-autogen, elixir-format
 msgid "View cart"
 msgstr "Näytä ostoskori"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:117
+#: lib/edenflowers_web/features/checkout/order_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "View receipt"
 msgstr "Näytä kuitti"
 
-#: lib/edenflowers_web/features/account/account_live.ex:89
+#: lib/edenflowers_web/features/account/account_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Visit the shop"
 msgstr "Siirry kauppaan"
@@ -3240,7 +3231,7 @@ msgstr "Siirry kauppaan"
 msgid "Want a break instead?"
 msgstr "Haluatko mieluummin tauon?"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:89
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:90
 #, elixir-autogen, elixir-format
 msgid "We cannot fulfil purchases without necessary contact and delivery details. Newsletter signup is optional."
 msgstr "Emme voi toteuttaa ostoja ilman tarvittavia yhteys- ja toimitustietoja. Uutiskirjeen tilaaminen on vapaaehtoista."
@@ -3265,17 +3256,17 @@ msgstr "Kirjautumiskoodin lähettäminen ei onnistunut. Yritä hetken kuluttua u
 msgid "We couldn't sign you in. Please try again."
 msgstr "Kirjautuminen ei onnistunut. Yritä uudelleen."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:129
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:130
 #, elixir-autogen, elixir-format
 msgid "We do not use analytics or advertising cookies."
 msgstr "Emme käytä analytiikka- tai mainosevästeitä."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:85
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:86
 #, elixir-autogen, elixir-format
 msgid "We may photograph flowers left at the door as delivery evidence."
 msgstr "Voimme kuvata ovelle jätetyt kukat todisteeksi toimituksesta."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:76
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:77
 #, elixir-autogen, elixir-format
 msgid "We use names, email, phone and purchase details for orders, subscriptions, courses and enquiries. Checkout may create an account. Instagram handles are optional."
 msgstr "Käytämme nimiä, sähköpostiosoitteita, puhelinnumeroita ja ostotietoja tilausten, kukkatilausten, kurssien ja tiedustelujen käsittelyyn. Kassalla voidaan luoda käyttäjätili. Instagram-käyttäjänimi on vapaaehtoinen."
@@ -3285,17 +3276,17 @@ msgstr "Käytämme nimiä, sähköpostiosoitteita, puhelinnumeroita ja ostotieto
 msgid "We'll email you a sign-in code."
 msgstr "Lähetämme sinulle kirjautumiskoodin sähköpostiin."
 
-#: lib/edenflowers_web/features/account/account_live.ex:395
+#: lib/edenflowers_web/features/account/account_live.ex:401
 #, elixir-autogen, elixir-format
 msgid "We'll refund %{amount} to your card. It can take 5–10 days to arrive."
 msgstr "Palautamme %{amount} kortillesi. Palautus voi kestää 5–10 päivää."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:198
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:204
 #, elixir-autogen, elixir-format
 msgid "We'll set up an account with this email so you can pause or cancel."
 msgstr "Luomme tilin tällä sähköpostiosoitteella, jotta voit keskeyttää tai perua tilauksen."
 
-#: lib/edenflowers_web/features/account/account_live.ex:150
+#: lib/edenflowers_web/features/account/account_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "We've sent a code to %{email}. Enter it to confirm your new email."
 msgstr "Lähetimme koodin osoitteeseen %{email}. Vahvista uusi sähköpostiosoitteesi syöttämällä se."
@@ -3306,7 +3297,7 @@ msgid "We've sent you a new code."
 msgstr "Lähetimme sinulle uuden koodin."
 
 #: lib/edenflowers_web/features/marketing/about_live.ex:47
-#: lib/edenflowers_web/features/marketing/home_live.ex:148
+#: lib/edenflowers_web/features/marketing/home_live.ex:146
 #, elixir-autogen, elixir-format
 msgid "Wedding"
 msgstr "Häät"
@@ -3316,32 +3307,32 @@ msgstr "Häät"
 msgid "Wedding Flowers in Vaasa"
 msgstr "Hääkukat Vaasa"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:148
+#: lib/edenflowers_web/features/marketing/terms_live.ex:149
 #, elixir-autogen, elixir-format
 msgid "Wedding and course bookings have separate cancellation terms:"
 msgstr "Hää- ja kurssivarauksilla on omat peruutusehtonsa:"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:533
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:534
 #, elixir-autogen, elixir-format
 msgid "Wedding date *"
 msgstr "Hääpäivä *"
 
-#: lib/edenflowers_web/components/layouts.ex:611
-#: lib/edenflowers_web/features/marketing/faq_live.ex:223
+#: lib/edenflowers_web/components/layouts.ex:612
+#: lib/edenflowers_web/features/marketing/faq_live.ex:224
 #: lib/edenflowers_web/features/marketing/terms_live.ex:26
-#: lib/edenflowers_web/features/marketing/terms_live.ex:149
-#: lib/edenflowers_web/features/marketing/terms_live.ex:177
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:63
+#: lib/edenflowers_web/features/marketing/terms_live.ex:150
+#: lib/edenflowers_web/features/marketing/terms_live.ex:178
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:64
 #, elixir-autogen, elixir-format
 msgid "Weddings"
 msgstr "Häät"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:434
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:435
 #, elixir-autogen, elixir-format
 msgid "Welcome sign arrangement"
 msgstr "Asetelma tervetulotauluun"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:557
+#: lib/edenflowers_web/features/marketing/home_live.ex:541
 #, elixir-autogen, elixir-format
 msgid "What customers say"
 msgstr "Asiakkaiden sanoin"
@@ -3351,24 +3342,24 @@ msgstr "Asiakkaiden sanoin"
 msgid "What if my card doesn't go through?"
 msgstr "Entä jos korttimaksu ei mene läpi?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:195
+#: lib/edenflowers_web/features/marketing/faq_live.ex:196
 #, elixir-autogen, elixir-format
 msgid "What if my flowers arrive damaged or wilt early?"
 msgstr "Entä jos kukkani saapuvat vahingoittuneina tai kuihtuvat ennenaikaisesti?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:125
+#: lib/edenflowers_web/features/marketing/faq_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "What if nobody's home?"
 msgstr "Entä jos kukaan ei ole kotona?"
 
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:22
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:73
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:74
 #, elixir-autogen, elixir-format
 msgid "What information we use and why"
 msgstr "Mitä tietoja käytämme ja miksi"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:74
-#: lib/edenflowers_web/features/courses/course_live.ex:94
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:80
+#: lib/edenflowers_web/features/courses/course_live.ex:95
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:94
 #, elixir-autogen, elixir-format
 msgid "When"
@@ -3379,46 +3370,46 @@ msgstr "Milloin"
 msgid "When do I pay?"
 msgstr "Milloin maksan?"
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:82
-#: lib/edenflowers_web/features/courses/course_live.ex:102
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:88
+#: lib/edenflowers_web/features/courses/course_live.ex:103
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:102
 #, elixir-autogen, elixir-format
 msgid "Where"
 msgstr "Missä"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:135
+#: lib/edenflowers_web/features/marketing/faq_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Where and when can I pick up my order?"
 msgstr "Missä ja milloin voin noutaa tilaukseni?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:120
+#: lib/edenflowers_web/features/marketing/faq_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "Where and when do you deliver?"
 msgstr "Minne ja milloin toimitat?"
 
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:23
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:104
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:105
 #, elixir-autogen, elixir-format
 msgid "Where information is stored and who receives it"
 msgstr "Missä tietoja säilytetään ja kenelle niitä luovutetaan"
 
-#: lib/edenflowers_web/features/marketing/about_live.ex:188
+#: lib/edenflowers_web/features/marketing/about_live.ex:189
 #, elixir-autogen, elixir-format
 msgid "Whether it's a bouquet for the kitchen table or flowers for your wedding, I'd love to hear from you."
 msgstr "Olipa kyseessä kimppu keittiön pöydälle tai kukat häihisi, kuulen sinusta mielelläni."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:384
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:385
 #, elixir-autogen, elixir-format
 msgid "White and rust bouquet held low at the bride's side"
 msgstr "Valkoinen ja ruosteenvärinen kimppu alhaalla morsiamen vierellä"
 
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:21
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:61
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:62
 #, elixir-autogen, elixir-format
 msgid "Who is responsible?"
 msgstr "Kuka on vastuussa?"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:276
+#: lib/edenflowers_web/features/marketing/faq_live.ex:277
 #, elixir-autogen, elixir-format
 msgid "Within %{km} km driving distance of the shop, for %{base} plus %{per_km} per km."
 msgstr "Enintään %{km} km:n ajomatkan päähän kaupasta, hintaan %{base} sekä %{per_km} kilometriltä."
@@ -3428,32 +3419,32 @@ msgstr "Enintään %{km} km:n ajomatkan päähän kaupasta, hintaan %{base} sek�
 msgid "Women's Day"
 msgstr "Naistenpäivä"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:450
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:451
 #, elixir-autogen, elixir-format
 msgid "Wooden flower gate with white drapes and summer flowers"
 msgstr "Puinen kukkaportti valkoisin verhoin ja kesäkukin"
 
-#: lib/edenflowers_web/features/marketing/condolences_live.ex:104
+#: lib/edenflowers_web/features/marketing/condolences_live.ex:105
 #, elixir-autogen, elixir-format
 msgid "Wreath of yellow roses, anemones and peach carnations"
 msgstr "Seppele keltaisista ruusuista, vuokoista ja persikanvärisistä neilikoista"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:405
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:406
 #, elixir-autogen, elixir-format
 msgid "Wrist corsages of peach roses"
 msgstr "Rannekorsaasit persikanvärisistä ruusuista"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:759
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:765
 #, elixir-autogen, elixir-format
 msgid "Write your message…"
 msgstr "Kirjoita viestisi…"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:256
+#: lib/edenflowers_web/features/marketing/faq_live.ex:257
 #, elixir-autogen, elixir-format
 msgid "Yes, I offer"
 msgstr "Kyllä, järjestän"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:164
+#: lib/edenflowers_web/features/marketing/faq_live.ex:165
 #, elixir-autogen, elixir-format
 msgid "Yes, cancel"
 msgstr "Kyllä, voit perua tilauksesi"
@@ -3468,32 +3459,32 @@ msgstr "Kyllä, valitse kassalla nouto. Nouto on aina ilmainen."
 msgid "Yes, from your account. You can also change the size, frequency or delivery day. Make changes at least %{close} days before delivery or pickup. Cancelling after that stops future bouquets, but the booked bouquet still comes."
 msgstr "Kyllä, tililtäsi. Voit myös muuttaa kokoa, toimitusväliä tai toimituspäivää. Tee muutokset viimeistään %{close} päivää ennen toimitusta tai noutoa. Jos lopetat kestotilauksen sen jälkeen, tulevat kimput peruuntuvat, mutta jo tilattu kimppu tulee silti."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:235
+#: lib/edenflowers_web/features/marketing/faq_live.ex:236
 #, elixir-autogen, elixir-format
 msgid "Yes, gladly. Travel is quoted separately."
 msgstr "Kyllä, mielelläni. Matkat hinnoittelen erikseen."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:159
+#: lib/edenflowers_web/features/marketing/faq_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "Yes, if you're sending flowers as a gift. Choose a card at checkout and write your message."
 msgstr "Kyllä, jos lähetät kukkia lahjaksi. Valitse kortti kassalla ja kirjoita tervehdyksesi."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:123
+#: lib/edenflowers_web/features/marketing/faq_live.ex:124
 #, elixir-autogen, elixir-format
 msgid "Yes, to the ward, if it allows flowers. Please check with the ward first, and put the patient's name and ward in the delivery instructions."
 msgstr "Kyllä, osastolle, jos siellä saa olla kukkia. Tarkista asia ensin osastolta ja kirjoita potilaan nimi ja osasto toimitusohjeisiin."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:153
+#: lib/edenflowers_web/features/marketing/faq_live.ex:154
 #, elixir-autogen, elixir-format
 msgid "Yes."
 msgstr "Kyllä."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:216
+#: lib/edenflowers_web/features/marketing/faq_live.ex:217
 #, elixir-autogen, elixir-format
 msgid "Yes. I also offer invoice payment for larger orders, such as weddings."
 msgstr "Kyllä. Tarjoan laskumaksua myös suurempiin tilauksiin, kuten häihin."
 
-#: lib/edenflowers_web/features/store/product_live.ex:259
+#: lib/edenflowers_web/features/store/product_live.ex:301
 #, elixir-autogen, elixir-format
 msgid "You already have a subscription."
 msgstr "Sinulla on jo kestotilaus."
@@ -3508,27 +3499,27 @@ msgstr "Olet nyt kirjautunut sisään"
 msgid "You are now signed out"
 msgstr "Olet nyt kirjautunut ulos"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:133
+#: lib/edenflowers_web/features/marketing/terms_live.ex:134
 #, elixir-autogen, elixir-format
 msgid "You can cancel or change an online order from your account until %{days} days before delivery or pickup, for a full refund."
 msgstr "Voit perua tai muuttaa verkkotilauksen tililtäsi viimeistään %{days} päivää ennen toimitusta tai noutoa ja saada rahat kokonaan takaisin."
 
-#: lib/edenflowers_web/features/account/account_live.ex:380
+#: lib/edenflowers_web/features/account/account_live.ex:386
 #, elixir-autogen, elixir-format
 msgid "You can cancel until %{date}"
 msgstr "Voit perua %{date} asti"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:175
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:176
 #, elixir-autogen, elixir-format
 msgid "You can complain to Finland's"
 msgstr "Voit tehdä valituksen Suomen"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:169
+#: lib/edenflowers_web/features/marketing/terms_live.ex:170
 #, elixir-autogen, elixir-format
 msgid "You can pause, cancel or change your subscription from your account. Make changes at least %{close} days before delivery or pickup. Cancelling after that stops future bouquets, but the booked bouquet still comes."
 msgstr "Voit pitää tauon kestotilauksestasi, lopettaa sen tai tehdä siihen muutoksia tililtäsi. Tee muutokset viimeistään %{close} päivää ennen toimitusta tai noutoa. Jos lopetat kestotilauksen sen jälkeen, tulevat kimput peruuntuvat, mutta jo tilattu kimppu tulee silti."
 
-#: lib/edenflowers_web/features/courses/course_live.ex:127
+#: lib/edenflowers_web/features/courses/course_live.ex:128
 #, elixir-autogen, elixir-format
 msgid "You have %{count} place(s) on this course."
 msgid_plural "You have %{count} place(s) on this course."
@@ -3545,12 +3536,12 @@ msgstr "Olet jo kirjautunut sisään toisella tavalla, mutta et ole vahvistanut 
 msgid "You must sign in to access this page."
 msgstr "Sinun täytyy kirjautua sisään päästäksesi tälle sivulle."
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:159
+#: lib/edenflowers_web/features/marketing/terms_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "You pay for the first bouquet at checkout. After that, your saved card is charged %{days} days before each delivery or pickup."
 msgstr "Maksat ensimmäisen kimpun kassalla. Sen jälkeen tallennettua korttiasi veloitetaan %{days} päivää ennen jokaista toimitusta tai noutoa."
 
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:67
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:73
 #, elixir-autogen, elixir-format
 msgid "You're booked"
 msgstr "Paikkasi on varattu"
@@ -3571,14 +3562,14 @@ msgid "You're signed out"
 msgstr "Olet kirjautunut ulos"
 
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:38
-#: lib/edenflowers_web/features/courses/course_booking_live.ex:62
+#: lib/edenflowers_web/features/courses/course_booking_live.ex:68
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:87
 #: lib/edenflowers_web/features/courses/course_pay_live.ex:177
 #, elixir-autogen, elixir-format
 msgid "Your booking"
 msgstr "Varauksesi"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:241
+#: lib/edenflowers_web/features/marketing/faq_live.ex:242
 #, elixir-autogen, elixir-format
 msgid "Your booking follows the"
 msgstr "Varaukseesi sovelletaan"
@@ -3588,13 +3579,13 @@ msgstr "Varaukseesi sovelletaan"
 msgid "Your bouquet still comes, and I'll get in touch with payment instructions."
 msgstr "Kimppu tulee silti, ja otan sinuun yhteyttä maksuohjeiden kanssa."
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:120
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:138
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:126
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:144
 #, elixir-autogen, elixir-format
 msgid "Your card couldn't be saved. Please try again or use another card."
 msgstr "Korttia ei voitu tallentaa. Yritä uudelleen tai käytä toista korttia."
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:131
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:137
 #, elixir-autogen, elixir-format
 msgid "Your card has been updated."
 msgstr "Korttisi on päivitetty."
@@ -3604,12 +3595,12 @@ msgstr "Korttisi on päivitetty."
 msgid "Your cart is empty."
 msgstr "Ostoskorisi on tyhjä."
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:79
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:85
 #, elixir-autogen, elixir-format
 msgid "Your current card stays in place until you save a new one. If this keeps happening,"
 msgstr "Nykyinen korttisi pysyy käytössä, kunnes tallennat uuden. Jos ongelma toistuu,"
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:55
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:61
 #, elixir-autogen, elixir-format
 msgid "Your deliveries are charged to %{card} at the moment."
 msgstr "Toimitukset veloitetaan tällä hetkellä kortilta %{card}."
@@ -3624,7 +3615,7 @@ msgstr "Toimituksesi %{date} (%{amount}) on vielä maksamatta."
 msgid "Your delivery on %{date} is already being prepared and will be your final delivery. There will be no deliveries or charges after that."
 msgstr "Toimitustasi %{date} valmistellaan jo, ja se on viimeinen toimituksesi. Sen jälkeen ei tule enää toimituksia eikä veloituksia."
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:58
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:64
 #, elixir-autogen, elixir-format
 msgid "Your delivery on %{date} is still unpaid, and a new card doesn't pay it."
 msgstr "Toimituksesi %{date} on vielä maksamatta, eikä uusi kortti maksa sitä."
@@ -3639,13 +3630,13 @@ msgstr "Toimitustasi %{date} valmisteltiin jo, kun peruit tilauksen. Sen jälkee
 msgid "Your delivery on %{date} will still arrive."
 msgstr "Toimituksesi %{date} tulee silti."
 
-#: lib/edenflowers_web/features/account/account_live.ex:125
+#: lib/edenflowers_web/features/account/account_live.ex:131
 #: lib/edenflowers_web/features/checkout/components/fields.ex:129
 #, elixir-autogen, elixir-format
 msgid "Your details"
 msgstr "Tietosi"
 
-#: lib/edenflowers_web/features/account/account_live.ex:209
+#: lib/edenflowers_web/features/account/account_live.ex:215
 #, elixir-autogen, elixir-format
 msgid "Your details couldn't be saved."
 msgstr "Tietojasi ei voitu tallentaa."
@@ -3655,17 +3646,17 @@ msgstr "Tietojasi ei voitu tallentaa."
 msgid "Your email address has now been confirmed"
 msgstr "Sähköpostiosoitteesi on nyt vahvistettu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:280
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:281
 #, elixir-autogen, elixir-format
 msgid "Your enquiry couldn't be sent. Please try again, or email me directly."
 msgstr "Tiedustelua ei voitu lähettää. Yrittäkää uudelleen tai lähettäkää minulle sähköpostia suoraan."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:251
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "Your enquiry is on its way, and a copy is in your inbox. I'll get back to you with a quote as soon as I can. Nothing is booked until you confirm it."
 msgstr "Tiedustelunne on lähetetty, ja kopio on sähköpostissanne. Lähetän teille tarjouksen mahdollisimman pian. Mitään ei ole varattu ennen kuin vahvistatte sen."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:475
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:476
 #, elixir-autogen, elixir-format
 msgid "Your flowers are collected or delivered, whichever you prefer. If you've chosen decoration, I come to your venue and decorate it with the flowers we've agreed on."
 msgstr "Kukat noudetaan tai toimitetaan toiveidenne mukaan. Jos olette valinneet koristelun, tulen juhlapaikalle ja koristelen sen sovituilla kukilla."
@@ -3680,15 +3671,15 @@ msgstr "Viestiä ei voitu lähettää. Yritä uudelleen tai lähetä minulle sä
 msgid "Your message is on its way, and a copy is in your inbox. I'll get back to you as soon as I can."
 msgstr "Viestisi on matkalla, ja kopio on sähköpostissasi. Palaan asiaan niin pian kuin voin."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:178
-#: lib/edenflowers_web/features/courses/course_live.ex:166
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:184
+#: lib/edenflowers_web/features/courses/course_live.ex:167
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:48
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:531
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:532
 #, elixir-autogen, elixir-format
 msgid "Your name *"
 msgstr "Nimesi *"
 
-#: lib/edenflowers_web/features/account/account_live.ex:268
+#: lib/edenflowers_web/features/account/account_live.ex:274
 #, elixir-autogen, elixir-format
 msgid "Your newsletter preference couldn't be saved."
 msgstr "Uutiskirjeasetustasi ei voitu tallentaa."
@@ -3708,12 +3699,12 @@ msgstr "Tilauksesi on noudettu. Toivon, että olet tyytyväinen siihen."
 msgid "Your order has been delivered. I hope you're happy with it."
 msgstr "Tilauksesi on toimitettu. Toivon, että olet tyytyväinen siihen."
 
-#: lib/edenflowers_web/features/account/account_live.ex:239
+#: lib/edenflowers_web/features/account/account_live.ex:245
 #, elixir-autogen, elixir-format
 msgid "Your order is cancelled. A confirmation is on its way to your email."
 msgstr "Tilauksesi on peruttu. Vahvistus on matkalla sähköpostiisi."
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:64
+#: lib/edenflowers_web/features/checkout/order_live.ex:70
 #, elixir-autogen, elixir-format
 msgid "Your order will be ready at the shop on %{date}."
 msgstr "Tilauksesi on noudettavissa liikkeestä %{date}."
@@ -3731,7 +3722,7 @@ msgid "Your payment didn't go through. Please try again or choose another paymen
 msgstr "Maksu ei mennyt läpi. Yritä uudelleen tai valitse toinen maksutapa."
 
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:26
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:161
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:162
 #, elixir-autogen, elixir-format
 msgid "Your rights"
 msgstr "Oikeutesi"
@@ -3743,7 +3734,7 @@ msgstr "Oikeutesi"
 msgid "Your subscription couldn't be changed."
 msgstr "Kestotilaustasi ei voitu muuttaa."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:79
+#: lib/edenflowers_web/features/marketing/faq_live.ex:80
 #, elixir-autogen, elixir-format
 msgid "Your subscription is covered by our"
 msgstr "Kukkatilaukseesi sovelletaan"
@@ -3753,85 +3744,85 @@ msgstr "Kukkatilaukseesi sovelletaan"
 msgid "Your subscription is on hold because a payment didn't go through."
 msgstr "Kestotilauksesi on pysäytetty, koska maksu ei mennyt läpi."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:224
+#: lib/edenflowers_web/features/marketing/home_live.ex:208
 #, elixir-autogen, elixir-format
 msgid "a new arrival"
 msgstr "uudelle tulokkaalle"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:155
+#: lib/edenflowers_web/features/marketing/faq_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "and I'll make it to order."
 msgstr "niin teen sen tilauksesta."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:200
+#: lib/edenflowers_web/features/marketing/faq_live.ex:201
 #, elixir-autogen, elixir-format
 msgid "as soon as possible and send a photo."
 msgstr "mahdollisimman pian ja lähetä kuva."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:258
+#: lib/edenflowers_web/features/marketing/faq_live.ex:259
 #, elixir-autogen, elixir-format
 msgid "at Minimossen or at your own premises."
 msgstr "Minimossenissa tai omissa tiloissanne."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:169
+#: lib/edenflowers_web/features/marketing/faq_live.ex:170
 #, elixir-autogen, elixir-format
 msgid "cancellation terms."
 msgstr "peruutusehdoista."
 
-#: lib/edenflowers_web/features/account/subscription_card_live.ex:80
+#: lib/edenflowers_web/features/account/subscription_card_live.ex:86
 #, elixir-autogen, elixir-format
 msgid "contact us"
 msgstr "ota yhteyttä"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:257
+#: lib/edenflowers_web/features/marketing/faq_live.ex:258
 #, elixir-autogen, elixir-format
 msgid "courses for private groups"
 msgstr "yksityiskursseja ryhmille"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:131
+#: lib/edenflowers_web/features/marketing/faq_live.ex:132
 #, elixir-autogen, elixir-format
 msgid "delivery terms"
 msgstr "toimitusehdoissa"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:294
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:300
 #, elixir-autogen, elixir-format
 msgid "e.g. Door code 1234, leave at the front door"
 msgstr "esim. Ovikoodi 1234, jätä ulko-oven eteen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:223
-#: lib/edenflowers_web/features/marketing/home_live.ex:227
+#: lib/edenflowers_web/features/marketing/home_live.ex:207
+#: lib/edenflowers_web/features/marketing/home_live.ex:211
 #, elixir-autogen, elixir-format
 msgid "every stage of life"
 msgstr "elämän kaikkiin vaiheisiin"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:204
+#: lib/edenflowers_web/features/marketing/faq_live.ex:205
 #, elixir-autogen, elixir-format
 msgid "explain the conditions."
 msgstr "kertovat tarkemmat ehdot."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:132
+#: lib/edenflowers_web/features/marketing/faq_live.ex:133
 #, elixir-autogen, elixir-format
 msgid "explain what happens next."
 msgstr "kerrotaan, mitä seuraavaksi tapahtuu."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:619
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:620
 #, elixir-autogen, elixir-format
 msgid "from %{amount}"
 msgstr "alk. %{amount}"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:165
+#: lib/edenflowers_web/features/marketing/faq_live.ex:166
 #, elixir-autogen, elixir-format
 msgid "from your account"
 msgstr "omalla tililläsi"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:141
-#: lib/edenflowers_web/features/marketing/faq_live.ex:167
-#: lib/edenflowers_web/features/marketing/faq_live.ex:231
+#: lib/edenflowers_web/features/marketing/faq_live.ex:142
+#: lib/edenflowers_web/features/marketing/faq_live.ex:168
+#: lib/edenflowers_web/features/marketing/faq_live.ex:232
 #, elixir-autogen, elixir-format
 msgid "get in touch"
 msgstr "yhteyttä"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:142
+#: lib/edenflowers_web/features/marketing/faq_live.ex:143
 #, elixir-autogen, elixir-format
 msgid "if you need another time."
 msgstr "jos tarvitset toisen ajan."
@@ -3841,7 +3832,7 @@ msgstr "jos tarvitset toisen ajan."
 msgid "is invalid"
 msgstr "on virheellinen"
 
-#: lib/edenflowers_web/features/marketing/terms_live.ex:229
+#: lib/edenflowers_web/features/marketing/terms_live.ex:230
 #, elixir-autogen, elixir-format
 msgid "let me know"
 msgstr "ilmoita minulle"
@@ -3853,17 +3844,18 @@ msgstr "ei saatavilla"
 
 #: lib/edenflowers_web/components/cart/line_items.ex:90
 #: lib/edenflowers_web/features/account/subscription_manager.ex:44
-#: lib/edenflowers_web/features/store/product_live.ex:103
+#: lib/edenflowers_web/features/store/product_live.ex:104
+#: lib/edenflowers_web/features/store/product_live.ex:269
 #, elixir-autogen, elixir-format
 msgid "per delivery"
 msgstr "per toimitus"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:203
+#: lib/edenflowers_web/features/marketing/faq_live.ex:204
 #, elixir-autogen, elixir-format
 msgid "quality terms"
 msgstr "laatuehtomme"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:192
+#: lib/edenflowers_web/features/marketing/faq_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "quality terms."
 msgstr "laatuehtoja."
@@ -3874,28 +3866,28 @@ msgstr "laatuehtoja."
 msgid "selected"
 msgstr "valittu"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:81
+#: lib/edenflowers_web/features/marketing/faq_live.ex:82
 #, elixir-autogen, elixir-format
 msgid "subscription terms"
 msgstr "jatkuvan kukkatilauksen ehtoja"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:356
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:183
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:362
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "terms of sale"
 msgstr "toimitusehdot"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:218
+#: lib/edenflowers_web/features/marketing/faq_live.ex:219
 #, elixir-autogen, elixir-format
 msgid "to arrange it."
 msgstr "sopiaksesi asiasta."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:168
+#: lib/edenflowers_web/features/marketing/faq_live.ex:169
 #, elixir-autogen, elixir-format
 msgid "to discuss the options in the"
 msgstr "niin keskustellaan vaihtoehdoista, joista kerrotaan"
 
-#: lib/edenflowers_web/features/checkout/order_live.ex:93
+#: lib/edenflowers_web/features/checkout/order_live.ex:99
 #, elixir-autogen, elixir-format
 msgid "to pause or cancel."
 msgstr "keskeyttääksesi tai peruaksesi."
@@ -3905,22 +3897,22 @@ msgstr "keskeyttääksesi tai peruaksesi."
 msgid "today"
 msgstr "tänään"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:166
+#: lib/edenflowers_web/features/marketing/faq_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "until %{days} days before delivery or pickup, for a full refund. After that,"
 msgstr "viimeistään %{days} päivää ennen toimitusta tai noutoa ja saada täyden hyvityksen. Sen jälkeen voit ottaa"
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:242
+#: lib/edenflowers_web/features/marketing/faq_live.ex:243
 #, elixir-autogen, elixir-format
 msgid "wedding terms."
 msgstr "hääkukkien ehtoja."
 
-#: lib/edenflowers_web/features/marketing/faq_live.ex:232
+#: lib/edenflowers_web/features/marketing/faq_live.ex:233
 #, elixir-autogen, elixir-format
 msgid "well in advance."
 msgstr "hyvissä ajoin."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:225
+#: lib/edenflowers_web/features/marketing/home_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "your wedding day"
 msgstr "hääpäiväänne"
@@ -3942,83 +3934,83 @@ msgid_plural "Cart, %{count} items"
 msgstr[0] "Ostoskori, %{count} tuote"
 msgstr[1] "Ostoskori, %{count} tuotetta"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:111
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:112
 #, elixir-autogen, elixir-format
 msgid "Brevo handles emails. For newsletter subscribers only, it also stores contact details, language and purchase statistics."
 msgstr "Brevo käsittelee sähköpostit. Vain uutiskirjeen tilaajista se tallentaa myös yhteystiedot, kielen ja ostotilastot."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:127
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:128
 #, elixir-autogen, elixir-format
 msgid "Stripe loads only on payment pages, for fraud prevention, and may use cookies and device/activity data there."
 msgstr "Stripe latautuu vain maksusivuilla petosten torjumiseksi ja voi niillä käyttää evästeitä sekä laite- ja toimintatietoja."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:79
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:80
 #, elixir-autogen, elixir-format
 msgid "Delivery details include recipient names, addresses, instructions, card messages and coordinates for calculating distance."
 msgstr "Toimitustiedot sisältävät vastaanottajien nimet, osoitteet, ohjeet, korttiviestit ja koordinaatit etäisyyden laskemista varten."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:150
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:151
 #, elixir-autogen, elixir-format
 msgid "Delivery photos: kept with the order until you ask us to delete them."
 msgstr "Toimituskuvat: säilytetään tilauksen yhteydessä, kunnes pyydät meitä poistamaan ne."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:157
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:158
 #, elixir-autogen, elixir-format
 msgid "Everything else, such as your account, delivery details and enquiries, we keep until you ask us to delete it, except what accounting law requires us to keep."
 msgstr "Kaiken muun, kuten tilisi, toimitustiedot ja yhteydenotot, säilytämme, kunnes pyydät meitä poistamaan ne, paitsi sen, mitä kirjanpitolaki velvoittaa meidät säilyttämään."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:82
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:83
 #, elixir-autogen, elixir-format
 msgid "If you received flowers from us, your details came from the person who ordered them. We use them only to deliver, and never for marketing."
 msgstr "Jos olet saanut meiltä kukkia, tietosi ovat peräisin tilaajalta. Käytämme niitä vain toimitukseen emmekä koskaan markkinointiin."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:47
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:48
 #, elixir-autogen, elixir-format
 msgid "Updated 27 October 2026."
 msgstr "Päivitetty 27. lokakuuta 2026."
 
-#: lib/edenflowers_web/features/store/product_live.ex:154
+#: lib/edenflowers_web/features/store/product_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "Free delivery within %{km} km of Minimossen"
 msgstr "Ilmainen toimitus %{km} km:n säteellä Minimossenista"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:203
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "Subscribe to the newsletter and a 15% off code will be emailed to you."
 msgstr "Tilaa uutiskirje, niin lähetämme sinulle 15 %:n alennuskoodin sähköpostiin."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:148
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:149
 #, elixir-autogen, elixir-format
 msgid "+ church and venue decoration on request"
 msgstr "+ kirkon ja juhlapaikan koristelu tarjouksen mukaan"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:435
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:436
 #, elixir-autogen, elixir-format
 msgid "Decorating the church and/or venue"
 msgstr "Kirkon ja/tai juhlapaikan koristelu"
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:123
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:124
 #, elixir-autogen, elixir-format
 msgid "Every wedding is different, so you'll get a more accurate quote once we've talked through what you need and which flowers you'd like."
 msgstr "Jokaiset häät ovat erilaiset, joten saatte tarkemman tarjouksen, kun olemme käyneet läpi tarpeenne ja kukkatoiveenne."
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:886
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:892
 #, elixir-autogen, elixir-format
 msgid "Your checkout details have changed. Please review them before paying."
 msgstr "Kassalla antamasi tiedot ovat muuttuneet. Tarkista ne ennen maksamista."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:174
+#: lib/edenflowers_web/features/marketing/home_live.ex:157
 #, elixir-autogen, elixir-format
 msgid "Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers."
 msgstr "Tuoreita kukkia Jennieltä Eden Flowersista Vaasasta: kimput, kukkatilaukset, hää- ja hautajaiskukat."
 
 #. %{km} is the configured free-delivery distance in kilometres; only selected bouquets qualify.
-#: lib/edenflowers_web/features/marketing/home_live.ex:180
+#: lib/edenflowers_web/features/marketing/home_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within %{km} km of Minimossen on selected bouquets."
 msgstr "Tuoreita kukkia Jennieltä Eden Flowersista Vaasasta: kimput, kukkatilaukset, hää- ja hautajaiskukat. Valituille kimpuille ilmainen toimitus %{km} km:n säteellä Minimossenista."
 
-#: lib/edenflowers_web/features/marketing/weddings_live.ex:216
+#: lib/edenflowers_web/features/marketing/weddings_live.ex:217
 #, elixir-autogen, elixir-format
 msgid "I also provide wedding flowers outside Vaasa. Travel is quoted separately."
 msgstr "Teen hääkukkia myös Vaasan ulkopuolelle. Matkat hinnoittelen erikseen."
@@ -4028,28 +4020,45 @@ msgstr "Teen hääkukkia myös Vaasan ulkopuolelle. Matkat hinnoittelen erikseen
 msgid "Wedding flowers in Vaasa and Korsholm: bridal bouquets, decoration and flower arches designed by Jennie at Eden Flowers."
 msgstr "Hääkukat Vaasassa ja Mustasaaressa: hääkimput, koristelu ja kukkakaaret, jotka Jennie suunnittelee Eden Flowersissa."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:287
+#: lib/edenflowers_web/features/marketing/home_live.ex:271
 #, elixir-autogen, elixir-format
 msgid "Favourite bouquets"
 msgstr "Suosikkikimput"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:226
+#: lib/edenflowers_web/features/marketing/home_live.ex:210
 #, elixir-autogen, elixir-format
 msgid "the weekend"
 msgstr "viikonloppuun"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:743
+#: lib/edenflowers_web/features/marketing/home_live.ex:727
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr "Alkaen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:757
+#: lib/edenflowers_web/features/marketing/home_live.ex:741
 #, elixir-autogen, elixir-format
 msgid "Start a subscription"
 msgstr "Aloita kestotilaus"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:749
-#: lib/edenflowers_web/features/marketing/home_live.ex:768
+#: lib/edenflowers_web/features/marketing/home_live.ex:733
+#: lib/edenflowers_web/features/marketing/home_live.ex:752
 #, elixir-autogen, elixir-format
 msgid "Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to %{days} days before a bouquet."
 msgstr "Kukkia sinulle tai jollekulle toiselle joka viikko, joka toinen viikko tai joka neljäs viikko, toimitettuna tai noudettavaksi. Keskeytä, muuta tai lopeta tililtäsi viimeistään %{days} päivää ennen kimppua."
+
+#. Storefront bar above the header. %{date} is a weekday and date, e.g. Thursday 29.10.
+#: lib/edenflowers_web/hooks/put_notice_bar.ex:54
+#, elixir-autogen, elixir-format
+msgid "Next delivery or pickup is %{date}"
+msgstr "Seuraava toimitus tai nouto: %{date}"
+
+#: lib/edenflowers_web/hooks/put_notice_bar.ex:51
+#, elixir-autogen, elixir-format
+msgid "Next delivery or pickup is tomorrow"
+msgstr "Seuraava toimitus tai nouto on huomenna"
+
+#. Storefront bar above the header. %{time} is today's order deadline, e.g. 14:00.
+#: lib/edenflowers_web/hooks/put_notice_bar.ex:47
+#, elixir-autogen, elixir-format
+msgid "Order by %{time} for delivery or pickup today"
+msgstr "Tilaa klo %{time} mennessä, niin toimitus tai nouto onnistuu tänään"

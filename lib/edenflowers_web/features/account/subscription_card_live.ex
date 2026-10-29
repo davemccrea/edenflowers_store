@@ -45,7 +45,13 @@ defmodule EdenflowersWeb.Account.SubscriptionCardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app current_user={@current_user} order={@order} flash={@flash} current_path={@current_path}>
+    <Layouts.app
+      current_user={@current_user}
+      order={@order}
+      flash={@flash}
+      current_path={@current_path}
+      notice_bar={@notice_bar}
+    >
       <.container class="max-w-xl">
         <h1 class="page-title mb-6">{~t"Update your card"}</h1>
         <p class="leading-relaxed">

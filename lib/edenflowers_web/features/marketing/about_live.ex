@@ -66,6 +66,7 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
       order={@order}
       flash={@flash}
       current_path={@current_path}
+      notice_bar={@notice_bar}
       alternates={@alternates}
     >
       <section class="not-last:border-b">

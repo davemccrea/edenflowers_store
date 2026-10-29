@@ -17,8 +17,36 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     end
 
     {:ok, view, _html} = live(conn, ~p"/en")
-    assert has_element?(view, "#location-heading + dl", "Free within 8 km for chosen bouquets")
+    assert has_element?(view, "#location-heading ~ dl", "Free within 8 km for chosen bouquets")
     assert page_description(conn |> get(~p"/en") |> html_response(200)) =~ "on selected bouquets."
+  end
+
+  test "the notice bar says when the next delivery or pickup is, and keeps up with the calendar", %{conn: conn} do
+    today = Edenflowers.ShopTime.today()
+    in_three_days = Date.add(today, 3)
+
+    shop_calendar(available_days: [], enabled_dates: [in_three_days], same_day: true, order_deadline: ~T[23:59:59])
+    {:ok, view, _html} = live(conn, ~p"/en")
+
+    assert has_element?(
+             view,
+             ~s(a#notice-bar[href="/en/store"]),
+             "Next delivery or pickup is #{Edenflowers.Format.weekday_day_month(in_three_days, :en)}"
+           )
+
+    # Each minute's refresh picks up calendar changes.
+    shop_calendar(enabled_dates: [Date.add(today, 1)])
+    send(view.pid, :refresh_notice_bar)
+    assert has_element?(view, "#notice-bar", "Next delivery or pickup is tomorrow")
+    assert has_element?(view, "#location-order-status", "Next delivery or pickup is tomorrow")
+
+    shop_calendar(enabled_dates: [today])
+    send(view.pid, :refresh_notice_bar)
+    assert has_element?(view, "#notice-bar", "for delivery or pickup today")
+
+    shop_calendar(enabled_dates: [])
+    send(view.pid, :refresh_notice_bar)
+    refute has_element?(view, "#notice-bar")
   end
 
   test "delivery metadata makes no free-delivery claim when the radius is zero", %{conn: conn} do
@@ -84,15 +112,6 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
 
     assert has_element?(view, "#store h2", ~r/^\s*Favourites\s*$/)
     assert has_element?(view, "#store p", "Plants")
-  end
-
-  test "delivery and pickup shows the next open day", %{conn: conn} do
-    shop_calendar(same_day: false)
-    tomorrow = Date.add(Edenflowers.ShopTime.today(), 1)
-
-    {:ok, view, _html} = live(conn, ~p"/en")
-
-    assert has_element?(view, "#location-heading + dl dd", "#{tomorrow.day}.#{tomorrow.month}.")
   end
 
   test "the subscription section lists subscribable products", %{conn: conn} do

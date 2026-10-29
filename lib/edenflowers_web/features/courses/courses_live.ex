@@ -39,6 +39,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
       order={@order}
       flash={@flash}
       current_path={@current_path}
+      notice_bar={@notice_bar}
       alternates={@alternates}
     >
       <.container>
