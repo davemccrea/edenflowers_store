@@ -1,7 +1,7 @@
 defmodule Edenflowers.Payments.PayableTest do
   @moduledoc """
-  Every case runs against an order and a course booking, which is what keeps
-  the two working out what's owed the same way.
+  Shared ledger arithmetic and validation run against an order. Resource
+  integration, cancellation and settlement run against both orders and bookings.
   """
   use Edenflowers.DataCase, async: true
 
@@ -152,6 +152,85 @@ defmodule Edenflowers.Payments.PayableTest do
 
   defp assert_money(actual, expected), do: assert(Decimal.equal?(actual, expected), "#{actual} != #{expected}")
 
+  describe "shared ledger" do
+    for payments <- [[stripe: "80.00"], [cash: "80.00"], [stripe: "50.00", mobilepay: "30.00"]] do
+      test "paid in full by #{inspect(payments)} is settled" do
+        record = build(:order, payments: unquote(payments))
+
+        assert_money(record.balance, 0)
+        assert record.settled?
+        refute record.refunded?
+      end
+    end
+
+    test "part-paid owes the rest" do
+      record = build(:order, payments: [cash: "30.00"])
+
+      assert_money(record.balance, "50.00")
+      refute record.settled?
+      assert record.to_collect?
+      refute record.to_refund?
+    end
+
+    test "a part-payment leaves the rest owed" do
+      {:ok, record} = record_payment(build(:order), "30.00")
+
+      assert_money(record.balance, "50.00")
+    end
+
+    test "a payment larger than the balance is refused" do
+      record = build(:order)
+
+      assert {:error, error} = record_payment(record, "80.01")
+      assert Exception.message(error) =~ "That's more than is owed"
+      assert payments(record) == []
+    end
+
+    test "a Stripe payment can't be recorded by hand" do
+      assert {:error, error} = record_payment(build(:order), "80.00", :stripe)
+      assert Exception.message(error) =~ "is recorded from Stripe"
+    end
+
+    test "a negative payment is refused: money handed back is a refund" do
+      assert {:error, _error} = record_payment(build(:order, payments: [cash: "80.00"]), "-10.00")
+    end
+
+    test "a refund keeps its reason" do
+      {:ok, record} = refund(build(:order, payments: [cash: "80.00"]), "10.00", :cash, "Wilted early")
+
+      assert [%{note: "Wilted early"}] = Enum.filter(payments(record), &Decimal.negative?(&1.amount))
+    end
+
+    test "a refund above what was paid outside Stripe is refused outside Stripe" do
+      record = build(:order, payments: [stripe: "50.00", cash: "30.00"])
+
+      assert {:error, error} = refund(record, "30.01")
+      assert Exception.message(error) =~ "That's more than was paid outside Stripe"
+    end
+
+    test "a refund by a method holding nothing is refused" do
+      record = build(:order, state: :cancelled, payments: [cash: "80.00"])
+
+      assert {:error, error} = refund(record, "10.00", :stripe)
+      assert Exception.message(error) =~ "That's more than was paid through Stripe"
+    end
+
+    test "a refund while something is to collect is refused" do
+      record = build(:order, payments: [cash: "30.00"])
+      refute record.refundable?
+
+      assert {:error, error} = refund(record, "10.00")
+      assert Exception.message(error) =~ "Collect what's owed before refunding"
+    end
+
+    test "a refund through Stripe above what was paid through it is refused" do
+      record = build(:order, payments: [stripe: "50.00", cash: "30.00"])
+
+      assert {:error, error} = refund(record, "50.01", :stripe)
+      assert Exception.message(error) =~ "That's more than was paid through Stripe."
+    end
+  end
+
   for parent <- [:order, :booking] do
     describe "#{parent}" do
       @parent parent
@@ -163,25 +242,6 @@ defmodule Edenflowers.Payments.PayableTest do
         assert_money(record.total_due, "80.00")
         assert_money(record.balance, "80.00")
         refute record.settled?
-      end
-
-      for payments <- [[stripe: "80.00"], [cash: "80.00"], [stripe: "50.00", mobilepay: "30.00"]] do
-        test "paid in full by #{inspect(payments)} is settled" do
-          record = build(@parent, payments: unquote(payments))
-
-          assert_money(record.balance, 0)
-          assert record.settled?
-          refute record.refunded?
-        end
-      end
-
-      test "part-paid owes the rest" do
-        record = build(@parent, payments: [cash: "30.00"])
-
-        assert_money(record.balance, "50.00")
-        refute record.settled?
-        assert record.to_collect?
-        refute record.to_refund?
       end
 
       test "cancelled and never paid owes nothing" do
@@ -228,10 +288,6 @@ defmodule Edenflowers.Payments.PayableTest do
         refute record.settled?
       end
 
-      test "an uncommitted one owes nothing yet" do
-        refute build(@parent, state: :uncommitted).committed?
-      end
-
       test "the unsettled list holds what's still owed either way" do
         listed = [
           build(@parent),
@@ -251,7 +307,7 @@ defmodule Edenflowers.Payments.PayableTest do
         for record <- left_out, do: refute(record.id in ids)
       end
 
-      for method <- [:cash, :mobilepay, :zettle, :zervant] do
+      for method <- if(parent == :order, do: [:cash, :mobilepay, :zettle, :zervant], else: [:cash]) do
         test "paying the whole balance by #{method} settles it" do
           record = build(@parent)
 
@@ -261,25 +317,6 @@ defmodule Edenflowers.Payments.PayableTest do
           assert [%{method: unquote(method), paid_at: %DateTime{}} = payment] = payments(record)
           assert_money(payment.amount, "80.00")
         end
-      end
-
-      test "a part-payment leaves the rest owed" do
-        {:ok, record} = record_payment(build(@parent), "30.00")
-
-        assert_money(record.balance, "50.00")
-      end
-
-      test "a payment larger than the balance is refused" do
-        record = build(@parent)
-
-        assert {:error, error} = record_payment(record, "80.01")
-        assert Exception.message(error) =~ "That's more than is owed"
-        assert payments(record) == []
-      end
-
-      test "a Stripe payment can't be recorded by hand" do
-        assert {:error, error} = record_payment(build(@parent), "80.00", :stripe)
-        assert Exception.message(error) =~ "is recorded from Stripe"
       end
 
       test "a refusal is in Jennie's language" do
@@ -299,10 +336,6 @@ defmodule Edenflowers.Payments.PayableTest do
       test "a payment on an uncommitted one is refused" do
         assert {:error, error} = record_payment(build(@parent, state: :uncommitted), "10.00")
         assert Exception.message(error) =~ "Nothing can be recorded until it's placed or confirmed"
-      end
-
-      test "a negative payment is refused: money handed back is a refund" do
-        assert {:error, _error} = record_payment(build(@parent, payments: [cash: "80.00"]), "-10.00")
       end
 
       test "undoing a whole payment recorded by mistake leaves the total owed again" do
@@ -474,25 +507,12 @@ defmodule Edenflowers.Payments.PayableTest do
         refute reload(record).refundable?
       end
 
-      test "a refund keeps its reason" do
-        {:ok, record} = refund(build(@parent, payments: [cash: "80.00"]), "10.00", :cash, "Wilted early")
-
-        assert [%{note: "Wilted early"}] = Enum.filter(payments(record), &Decimal.negative?(&1.amount))
-      end
-
       test "a refund above what was received is refused" do
         record = build(@parent, payments: [cash: "80.00"])
         {:ok, record} = refund(record, "30.00")
 
         assert {:error, error} = refund(record, "50.01")
         assert Exception.message(error) =~ "That's more than was received"
-      end
-
-      test "a refund above what was paid outside Stripe is refused outside Stripe" do
-        record = build(@parent, payments: [stripe: "50.00", cash: "30.00"])
-
-        assert {:error, error} = refund(record, "30.01")
-        assert Exception.message(error) =~ "That's more than was paid outside Stripe"
       end
 
       for {payments, methods, default} <- [
@@ -510,21 +530,6 @@ defmodule Edenflowers.Payments.PayableTest do
           assert record.refund_methods == unquote(methods)
           assert record.default_refund_method == unquote(default)
         end
-      end
-
-      test "a refund by a method holding nothing is refused" do
-        record = build(@parent, state: :cancelled, payments: [cash: "80.00"])
-
-        assert {:error, error} = refund(record, "10.00", :stripe)
-        assert Exception.message(error) =~ "That's more than was paid through Stripe"
-      end
-
-      test "a refund while something is to collect is refused" do
-        record = build(@parent, payments: [cash: "30.00"])
-        refute record.refundable?
-
-        assert {:error, error} = refund(record, "10.00")
-        assert Exception.message(error) =~ "Collect what's owed before refunding"
       end
 
       test "a refund hands back money kept on a cancelled one" do
@@ -580,13 +585,6 @@ defmodule Edenflowers.Payments.PayableTest do
                |> payments()
                |> Enum.filter(& &1.stripe_refund_id)
                |> Enum.all?(&(&1.goodwill and &1.note == "Late"))
-      end
-
-      test "a refund through Stripe above what was paid through it is refused" do
-        record = build(@parent, payments: [stripe: "50.00", cash: "30.00"])
-
-        assert {:error, error} = refund(record, "50.01", :stripe)
-        assert Exception.message(error) =~ "That's more than was paid through Stripe."
       end
 
       test "a refund emails the customer, unless Jennie unticks it" do

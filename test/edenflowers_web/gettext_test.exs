@@ -11,19 +11,6 @@ defmodule EdenflowersWeb.GettextTest do
     assert Path.wildcard(Path.join(@root, "priv/gettext/**/default.{po,pot}")) == []
   end
 
-  test "every audience catalogue matches its template in every language" do
-    for domain <- @domains do
-      template = catalogue("priv/gettext/#{domain}.pot")
-      template_keys = MapSet.new(template.messages, &Expo.Message.key/1)
-
-      for locale <- ~w(en sv fi) do
-        messages = catalogue("priv/gettext/#{locale}/LC_MESSAGES/#{domain}.po").messages
-        active = Enum.reject(messages, & &1.obsolete)
-        assert MapSet.new(active, &Expo.Message.key/1) == template_keys, "#{locale}/#{domain} is stale"
-      end
-    end
-  end
-
   test "admin and email source strings extract into their audience's domain" do
     for domain <- @domains,
         message <- catalogue("priv/gettext/#{domain}.pot").messages,

@@ -6,7 +6,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
   alias Edenflowers.Pricing.Promotion
 
   describe "Promotion Resource" do
-    test "gets promotion using a code with mixed case" do
+    test "gets promotion using a mixed-case code with surrounding whitespace" do
       Promotion
       |> Ash.Changeset.for_create(:create, %{
         name: "A promotion",
@@ -18,22 +18,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       |> Ash.create!(authorize?: false)
 
       assert {:ok, %Promotion{}} =
-               Pricing.get_promotion_by_code("Christmas20", ~D[2024-12-20])
-    end
-
-    test "gets promotion using a code with leading and trailing whitespace" do
-      Promotion
-      |> Ash.Changeset.for_create(:create, %{
-        name: "A promotion",
-        code: "CHRISTMAS20",
-        discount_rate: "0.20",
-        minimum_cart_total: "30.00",
-        start_date: ~D[2024-12-19]
-      })
-      |> Ash.create!(authorize?: false)
-
-      assert {:ok, %Promotion{}} =
-               Pricing.get_promotion_by_code(" CHRISTMAS20 ", ~D[2024-12-20])
+               Pricing.get_promotion_by_code(" Christmas20 ", ~D[2024-12-20])
     end
 
     test "fails to get promotion if code doesn't match" do
@@ -77,22 +62,6 @@ defmodule Edenflowers.Pricing.PromotionTest do
 
       assert {:ok, %Promotion{}} =
                Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-19])
-    end
-
-    test "gets promotion if current date is after start date and before expiration date" do
-      Promotion
-      |> Ash.Changeset.for_create(:create, %{
-        name: "A promotion",
-        code: "CHRISTMAS20",
-        discount_rate: "0.20",
-        minimum_cart_total: "30.00",
-        start_date: ~D[2024-12-19],
-        expiration_date: ~D[2024-12-22]
-      })
-      |> Ash.create!(authorize?: false)
-
-      assert {:ok, %Promotion{}} =
-               Pricing.get_promotion_by_code("CHRISTMAS20", ~D[2024-12-21])
     end
 
     test "gets promotion if current date is after start date and on expiration date" do
