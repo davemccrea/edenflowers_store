@@ -22,7 +22,12 @@ defmodule EdenflowersWeb.KeyDateIcon do
 
   def key_date_icon(assigns) do
     ~H"""
-    <span :if={KeyDates.key_date?(@date)} class="pointer-events-none absolute inset-1.5" aria-hidden="true">
+    <%!-- Picking a key date blooms its flower, a quiet nod to good timing. --%>
+    <span
+      :if={KeyDates.key_date?(@date)}
+      class={["pointer-events-none absolute inset-1.5", @selected? && "flower-bloom"]}
+      aria-hidden="true"
+    >
       <.flower
         name="flower-30"
         class={["h-full w-full", if(@selected?, do: "text-primary-content/35", else: "text-primary/25"), @muted? && "opacity-50"]}
