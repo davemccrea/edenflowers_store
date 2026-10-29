@@ -1,5 +1,5 @@
-/* Open Sans is variable; Crimson Text ships static weights.
-   Both are SIL OFL 1.1, see assets/fonts/OFL.txt. */
+/* Both are variable (Newsreader also has an optical-size axis, applied
+   automatically). SIL OFL 1.1, see priv/static/fonts/OFL.txt. */
 @font-face {
   font-family: "Open Sans";
   font-style: normal;
@@ -15,30 +15,23 @@
   src: url("/fonts/OpenSans-VariableItalic.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Crimson Text";
+  font-family: "Newsreader";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 200 800;
   font-display: swap;
-  src: url("/fonts/CrimsonText-400.woff2") format("woff2");
+  src: url("/fonts/Newsreader-Variable.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Crimson Text";
+  font-family: "Newsreader";
   font-style: italic;
-  font-weight: 400;
+  font-weight: 200 800;
   font-display: swap;
-  src: url("/fonts/CrimsonText-400italic.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Crimson Text";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/fonts/CrimsonText-600.woff2") format("woff2");
+  src: url("/fonts/Newsreader-VariableItalic.woff2") format("woff2");
 }
 
 @theme {
   --font-sans: "Open Sans", sans-serif;
-  --font-serif: "Crimson Text", serif;
+  --font-serif: "Newsreader", serif;
   --header-height: 8rem;
   --notice-bar-height: 2.25rem;
   /* Space under the fixed header for a page's first block. */

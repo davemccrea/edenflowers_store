@@ -1,5 +1,5 @@
 Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)
-Copyright 2010 The Crimson Text Project Authors (https://github.com/googlefonts/Crimson)
+Copyright 2020 The Newsreader Project Authors (https://github.com/productiontype/Newsreader)
 
 Both fonts in this directory are licensed under the SIL Open Font License,
 Version 1.1. The license is copied below and is also available with a FAQ at:
