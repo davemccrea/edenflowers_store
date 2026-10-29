@@ -1,14 +1,13 @@
 # Translation review queue
 
-Working follow-up to the [27 October audit](../../docs/research/translation-audit-2026-10-27.md).
-The audit is a historical snapshot; its Weblate handoff is superseded by the
+Working follow-up to the 27 October audit. The audit report was a historical
+snapshot and has been removed; its Weblate handoff is superseded by the
 [Git workflow](README.md#editorial-review-in-git).
 
 ## Entry identity and review evidence
 
-For T/S findings, the audit's [coverage ledger](../../docs/research/translation-audit-2026-10-27-coverage.csv)
-contains each affected language, domain, context and exact English source under
-`finding_ids`. Use that tuple to find the current entry; line numbers and entry
+For T/S findings, find the current entry by language, domain, context and exact
+English source; line numbers and entry
 ordinals are not identifiers. Recheck current text before acting.
 
 Receipt findings now refer to `receipts.po`, with empty context:
