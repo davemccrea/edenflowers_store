@@ -1,10 +1,10 @@
 ---
 id: TASK-116.4
 title: Sync only newsletter subscribers to Brevo
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-26 18:57'
-updated_date: '2026-10-27 14:07'
+updated_date: '2026-10-29 07:25'
 labels:
   - launch
   - quick
@@ -31,7 +31,7 @@ Decided in launch triage (2026-10-27): Brevo holds newsletter subscribers only.
 <!-- AC:BEGIN -->
 - [x] #1 brevo_contacts returns only users with newsletter_opt_in, and the sync no longer upserts non-subscribers
 - [x] #2 Sync tests still cover opt-in, opt-out, blocklist and shared-phone behaviour
-- [ ] #3 Existing non-subscriber contacts are deleted from Brevo (human step)
+- [x] #3 Existing non-subscriber contacts are deleted from Brevo (human step)
 - [x] #4 The privacy policy describes Brevo as holding newsletter subscribers only
 <!-- AC:END -->
 
@@ -50,6 +50,15 @@ created: 2026-10-27 14:07
 ---
 
 Left for David: in Brevo, delete the existing contacts that are not on the newsletter list (they were synced as phone-number customers), then check AC #3 and set done.
+
+---
+
+author: @claude
+created: 2026-10-29 07:25
+
+---
+
+David removed the non-subscriber contacts from Brevo.
 
 ---
 <!-- COMMENTS:END -->
