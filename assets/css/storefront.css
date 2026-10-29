@@ -403,6 +403,18 @@
   .flower-bloom {
     animation: flower-bloom 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
+
+  .flower-bloom-soft {
+    animation: flower-bloom-soft 800ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  }
+}
+
+/* Empty cart: a quieter bloom than the thank-you page's, since it's no celebration. */
+@keyframes flower-bloom-soft {
+  from {
+    transform: rotate(-8deg) scale(0.9);
+    opacity: 0;
+  }
 }
 
 /* Easter egg: decorative flowers turn slightly when hovered. Large flowers set
