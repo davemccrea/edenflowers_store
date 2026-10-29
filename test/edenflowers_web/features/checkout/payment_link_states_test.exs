@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
       assert has_element?(view, "[data-testid=pay-refunded]") == refunded?
       assert has_element?(view, "[data-testid=pay-paid]") == paid?
       assert has_element?(view, "#pay-form") == payable?
-      assert has_element?(view, ".flower-bloom") == paid?
+      assert has_element?(view, "#main-content .flower-bloom") == paid?
       refute has_element?(view, "[data-testid=pay-confirming]")
       assert has_element?(view, "[data-testid=pay-thanks]") == (paid? and ctx.fulfillment == :fulfilled)
 
@@ -157,7 +157,7 @@ defmodule EdenflowersWeb.PaymentLinkStatesTest do
       assert has_element?(view, "[data-testid=pay-refunded]") == refunded?
       assert has_element?(view, "[data-testid=pay-paid]") == paid?
       assert has_element?(view, "#pay-form") == payable?
-      assert has_element?(view, ".flower-bloom") == paid?
+      assert has_element?(view, "#main-content .flower-bloom") == paid?
       assert has_element?(view, "[data-testid=pay-booked]") == (paid? and ctx.period == :future)
       refute has_element?(view, "[data-testid=pay-confirming]")
 

@@ -169,7 +169,11 @@ defmodule EdenflowersWeb.Cart.LineItems do
         </ul>
       <% else %>
         <div class="flex flex-col items-center gap-5 py-10 text-center">
-          <.flower name="flower-30" class="text-primary/70 h-20 w-20" />
+          <%!-- The closed dialog isn't rendered, so the bloom replays each time the drawer opens.
+               It wraps the flower so the bloom's fill doesn't freeze the hover turn. --%>
+          <span class="flower-bloom-soft [animation-delay:250ms]">
+            <.flower name="flower-30" class="text-primary/70 h-20 w-20" />
+          </span>
           <p class="font-serif text-lg">{~t"Your cart is empty."}</p>
           <.button navigate={~q"/#{language}/store"} phx-click={JS.exec("phx-hide", to: "#cart-drawer")}>
             {~t"Browse the store"}
