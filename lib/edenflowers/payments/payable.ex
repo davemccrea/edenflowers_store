@@ -16,7 +16,7 @@ defmodule Edenflowers.Payments.Payable do
     * `calculate :total_due`: what it's still to be paid for. Once cancelled,
       that's `kept_amount`.
     * `calculate :committed?`: whether money is owed on it at all, so not an
-      unplaced cart or a booking still holding its seats while the customer pays.
+      unplaced cart or a website course checkout still waiting for its payment.
     * `calculate :cancelled?`
     * `calculate :cancellable?`: whether it can be cancelled now
     * `calculate :refund_on_cancelling`: what cancelling it now refunds unless
