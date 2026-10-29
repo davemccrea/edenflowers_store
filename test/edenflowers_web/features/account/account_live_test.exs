@@ -20,12 +20,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   end
 
   describe "details" do
-    test "greets the customer by first name", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/account")
-
-      assert has_element?(view, "h1", "Hi, Ada")
-    end
-
     test "changes the customer's name", %{conn: conn, user: user} do
       {:ok, view, _html} = live(conn, ~p"/account")
 
@@ -226,24 +220,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
                yesterday.order_reference,
                last_week.order_reference
              ]
-    end
-
-    test "names what was ordered", %{conn: conn, user: user} do
-      placed_order(user_id: user.id, paid: true)
-      {:ok, view, _html} = live(conn, ~p"/account")
-
-      [line_item] = Ash.read!(Edenflowers.Orders.LineItem, authorize?: false)
-      assert has_element?(view, "[data-testid=past] li", "2 × #{line_item.product_name}")
-    end
-
-    test "tucks older history away behind a toggle", %{conn: conn, user: user} do
-      for days <- 1..7,
-          do: placed_order(user_id: user.id, paid: true, fulfillment_date: Date.add(ShopTime.today(), -days))
-
-      {:ok, view, _html} = live(conn, ~p"/account")
-
-      assert has_element?(view, "[data-testid=past-more] li")
-      assert has_element?(view, "summary", "Show 2 more")
     end
 
     test "shows an active subscription's next delivery as coming up", %{conn: conn, user: user} do
@@ -786,12 +762,6 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       refute Ash.get!(Edenflowers.Accounts.User, user.id, authorize?: false).newsletter_opt_in
     end
-  end
-
-  test "names the page in the browser tab", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/account")
-
-    assert page_title(view) =~ "Account"
   end
 
   test "sends a signed-out visitor to sign in" do

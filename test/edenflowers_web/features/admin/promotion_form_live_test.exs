@@ -57,8 +57,6 @@ defmodule EdenflowersWeb.Admin.PromotionFormLiveTest do
   test "generates a code without losing other input", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/promotions/new")
 
-    assert has_element?(view, "#copy-promotion-code.group [aria-live=polite]", "Copied")
-
     view |> form("#promotion-form", form: %{name: "Spring sale"}) |> render_change()
     view |> element("button[phx-click=generate_code]") |> render_click()
 

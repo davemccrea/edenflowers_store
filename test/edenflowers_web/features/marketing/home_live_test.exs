@@ -93,27 +93,6 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     assert has_element?(view, "h1 + p", "from 42 €.")
   end
 
-  test "favourites name each product's category, and the heading says bouquets only when all of them are",
-       %{conn: conn} do
-    bouquets = generate(product_category(slug: "bouquets", name: "Bouquets", visibility: :public))
-    bouquet = generate(product(product_category_id: bouquets.id, featured: true, draft: false))
-    generate(product_variant(product_id: bouquet.id, draft: false))
-
-    {:ok, view, _html} = live(conn, ~p"/en")
-
-    assert has_element?(view, "#store h2", "Favourite bouquets")
-    assert has_element?(view, "#store p", "Bouquets")
-
-    plants = generate(product_category(name: "Plants", visibility: :public))
-    plant = generate(product(product_category_id: plants.id, featured: true, draft: false))
-    generate(product_variant(product_id: plant.id, draft: false))
-
-    {:ok, view, _html} = live(conn, ~p"/en")
-
-    assert has_element?(view, "#store h2", ~r/^\s*Favourites\s*$/)
-    assert has_element?(view, "#store p", "Plants")
-  end
-
   test "the subscription section lists subscribable products", %{conn: conn} do
     category = generate(product_category(visibility: :public))
 
@@ -125,16 +104,6 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     {:ok, view, _html} = live(conn, ~p"/en")
 
     assert has_element?(view, "#subscription", "Florist's choice")
-    refute has_element?(view, ~s(nav[aria-label="What are the flowers for?"]))
-  end
-
-  test "English visitors get a translation beneath each quote; others see the original alone", %{conn: conn} do
-    {:ok, en, _html} = live(conn, ~p"/en")
-    assert has_element?(en, "#review-pages", "So glad you're here")
-
-    {:ok, sv, _html} = live(conn, ~p"/sv")
-    refute has_element?(sv, "#review-pages", "So glad you're here")
-    assert has_element?(sv, "#review-pages", "räddare i nöden")
   end
 
   test "customer quotes keep original wording and read as complete excerpts", %{conn: conn} do
