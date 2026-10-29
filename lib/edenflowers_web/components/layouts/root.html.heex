@@ -50,6 +50,8 @@
           document.documentElement.classList.add("hero-seen");
       } catch {}
     </script>
+    <%!-- Photos come from imgproxy on another host; opening that connection now saves a first visit's LCP photo the wait. --%>
+    <link rel="preconnect" href={Application.get_env(:imgproxy, :prefix)} />
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script phx-track-static type="module" src={~p"/assets/js/app.js"}>
     </script>
