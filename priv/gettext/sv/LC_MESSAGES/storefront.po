@@ -852,13 +852,13 @@ msgstr "Levereras till"
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:940
 #: lib/edenflowers_web/features/checkout/components/fields.ex:131
 #: lib/edenflowers_web/features/checkout/pay_live.ex:133
-#: lib/edenflowers_web/features/marketing/home_live.ex:784
+#: lib/edenflowers_web/features/marketing/home_live.ex:779
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr "Leverans"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:119
-#: lib/edenflowers_web/features/marketing/home_live.ex:778
+#: lib/edenflowers_web/features/marketing/home_live.ex:773
 #: lib/edenflowers_web/features/marketing/terms_live.ex:22
 #: lib/edenflowers_web/features/marketing/terms_live.ex:90
 #, elixir-autogen, elixir-format
@@ -1115,8 +1115,8 @@ msgstr "Blomsterport"
 msgid "Flower girl or toss bouquet"
 msgstr "Brudnäbbsbukett eller kastbukett"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:730
-#: lib/edenflowers_web/features/marketing/home_live.ex:754
+#: lib/edenflowers_web/features/marketing/home_live.ex:725
+#: lib/edenflowers_web/features/marketing/home_live.ex:749
 #, elixir-autogen, elixir-format
 msgid "Flower subscription"
 msgstr "Blomsterprenumeration"
@@ -1212,7 +1212,7 @@ msgstr "Slutgiltiga priser beror på önskade blommor och teknik. Fraktkostnader
 msgid "Free"
 msgstr "Gratis"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:789
+#: lib/edenflowers_web/features/marketing/home_live.ex:784
 #, elixir-autogen, elixir-format
 msgid "Free from Minimossen."
 msgstr "Gratis från Minimossen."
@@ -1707,7 +1707,7 @@ msgstr "Hantera den från ditt konto."
 msgid "Manage subscription"
 msgstr "Hantera prenumerationen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:798
+#: lib/edenflowers_web/features/marketing/home_live.ex:793
 #, elixir-autogen, elixir-format
 msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr "Karta över Vasa med Minimossen utmärkt"
@@ -2188,7 +2188,7 @@ msgstr "Bilder"
 msgid "Pick up your flowers from Eden Flowers"
 msgstr "Hämta dina blommor från Eden Flowers"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:788
+#: lib/edenflowers_web/features/marketing/home_live.ex:783
 #: lib/edenflowers_web/features/marketing/terms_live.ex:94
 #, elixir-autogen, elixir-format
 msgid "Pickup"
@@ -4006,18 +4006,18 @@ msgstr "Bröllopsblommor i Vasa och Korsholm: brudbuketter, dekoration och bloms
 msgid "Favourite bouquets"
 msgstr "Favoritbuketter"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:732
+#: lib/edenflowers_web/features/marketing/home_live.ex:727
 #, elixir-autogen, elixir-format
 msgid "From"
 msgstr "Från"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:745
+#: lib/edenflowers_web/features/marketing/home_live.ex:740
 #, elixir-autogen, elixir-format
 msgid "Start a subscription"
 msgstr "Börja prenumerera"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:738
-#: lib/edenflowers_web/features/marketing/home_live.ex:756
+#: lib/edenflowers_web/features/marketing/home_live.ex:733
+#: lib/edenflowers_web/features/marketing/home_live.ex:751
 #, elixir-autogen, elixir-format
 msgid "Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to %{days} days before a bouquet."
 msgstr "Blommor till dig själv eller någon annan varje vecka, varannan vecka eller var fjärde vecka, levererade eller klara att hämta. Pausa, ändra eller avsluta från ditt konto senast %{days} dagar före en bukett."
