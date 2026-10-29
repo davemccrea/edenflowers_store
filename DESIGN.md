@@ -15,25 +15,25 @@ colors:
   link-underline: "oklch(81% 0.15 93)"
 typography:
   display:
-    fontFamily: "Crimson Text, serif"
+    fontFamily: "Newsreader, serif"
     fontSize: "3rem"
     fontWeight: 300
     lineHeight: 1.08
     letterSpacing: "-0.025em"
   headline:
-    fontFamily: "Crimson Text, serif"
+    fontFamily: "Newsreader, serif"
     fontSize: "2.5rem"
     fontWeight: 400
     lineHeight: 1.15
     letterSpacing: "-0.025em"
   section:
-    fontFamily: "Crimson Text, serif"
+    fontFamily: "Newsreader, serif"
     fontSize: "1.875rem"
     fontWeight: 400
     lineHeight: 1.25
     letterSpacing: "-0.025em"
   title:
-    fontFamily: "Crimson Text, serif"
+    fontFamily: "Newsreader, serif"
     fontSize: "1.5rem"
     fontWeight: 400
     lineHeight: 1.375
@@ -99,7 +99,7 @@ components:
 
 **Creative North Star: "The Paper Florist"**
 
-Everything sits on warm oat paper. A single serif, Crimson Text, carries the shop's voice, and its italic is the closest thing the system has to handwriting. Sections are separated by a one-pixel rule, never by a card, a shadow, or a change of background that doesn't mean something. Photographs run to the edge of the container or past it, and the interface never frames them. The page is paper; the flowers are the ink.
+Everything sits on warm oat paper. A single serif, Newsreader, carries the shop's voice, and its italic is the closest thing the system has to handwriting. Sections are separated by a one-pixel rule, never by a card, a shadow, or a change of background that doesn't mean something. Photographs run to the edge of the container or past it, and the interface never frames them. The page is paper; the flowers are the ink.
 
 The palette is one warm family. Every neutral sits at hue ~75 (oat, cream, near-black), so nothing reads as cold grey. Forest green appears only where a section reverses out entirely, and the deep green primary only on things that act. One amber-honey stroke does all the interactive work: a 2px underline, and nothing else.
 
@@ -151,10 +151,10 @@ Paper at hue ~75 and forest at hue ~150, with one amber accent reserved for inte
 
 ## Typography
 
-**Display Font:** Crimson Text (with `serif` fallback), self-hosted, 400/600/700 plus italics.
+**Display Font:** Newsreader (with `serif` fallback), self-hosted, variable weight and optical size, plus italic.
 **Body Font:** Open Sans (with `sans-serif` fallback), self-hosted variable font, 300–800.
 
-**Character:** Crimson Text is a book serif with a real italic, and it does the talking on the storefront. Open Sans labels; it speaks only where a page is a tool or a document. The pairing reads like a printed catalogue whose captions happen to be interactive.
+**Character:** Newsreader is an editorial serif with a real italic, and it does the talking on the storefront. Open Sans labels; it speaks only where a page is a tool or a document. The pairing reads like a printed catalogue whose captions happen to be interactive.
 
 ### Hierarchy
 - **Display** (`hero-display`: serif, 300, 3rem → 5.5rem): full-viewport hero headlines only; italic on the home hero.
@@ -274,7 +274,7 @@ The admin groups its forms and tables in `admin-card`, a `base-100` panel with a
 ## Do's and Don'ts
 
 ### Do:
-- **Do** set every new storefront heading in Crimson Text, and every label, button and nav item in Open Sans.
+- **Do** set every new storefront heading in Newsreader, and every label, button and nav item in Open Sans.
 - **Do** separate sections with a rule, and reach for `cream` or `forest` only when a section is genuinely different.
 - **Do** let the radius tokens carry squareness.
 - **Do** express secondary text and decoration as an existing opacity step on `base-content`.
