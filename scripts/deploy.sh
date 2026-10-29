@@ -77,6 +77,7 @@ if [[ "$REMOTE" != "$BASE" ]]; then
   fi
 fi
 ok "local main is up to date with or ahead of origin"
+printf '  %sdeploying %s  %s%s\n' "$DIM" "$(git rev-parse --short HEAD)" "$(git log -1 --pretty=%s)" "$RESET"
 
 CURRENT="$(grep -E 'version: "[0-9]+\.[0-9]+\.[0-9]+"' mix.exs | head -1 | sed -E 's/.*version: "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')"
 if [[ -z "$CURRENT" ]]; then
@@ -144,22 +145,6 @@ git commit --quiet -m "Bump version to $TAG"
 ok "commit created"
 git tag "$TAG"
 ok "tag $TAG created"
-
-section "Ready to push"
-echo "  main → $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)"
-echo "  tag  → $TAG"
-echo
-if [[ "$ASSUME_YES" == true ]]; then
-  REPLY=y
-else
-  read -r -p "  Proceed with push? [y/N] " REPLY
-fi
-if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
-  printf '\n  %saborted — cleaning up local commit and tag%s\n' "$DIM" "$RESET"
-  git tag -d "$TAG" >/dev/null
-  git reset --hard --quiet HEAD~1
-  exit 1
-fi
 
 # Taken last, so the backup is as close as possible to the migrations it guards against.
 section "Backing up production database"
