@@ -64,7 +64,7 @@ A privacy policy at `/{lang}/privacy` tells customers what the shop keeps about 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Policy finished for launch (2026-10-27): gift recipients told their details come from the person who ordered and are used only to deliver; delivery photos kept with the order until deletion is requested (TASK-116.2 will shorten this); everything else kept until a deletion request, except what accounting law requires. noindex removed and /{lang}/privacy added to the sitemap with alternates. Date bumped to 27 October 2026.
+Policy finished for launch (2026-10-27): gift recipients told their details come from the person who ordered and are used only to deliver; delivery photos kept with the order until deletion is requested; everything else kept until a deletion request, except what accounting law requires. noindex removed and /{lang}/privacy added to the sitemap with alternates. Date bumped to 27 October 2026.
 <!-- SECTION:NOTES:END -->
 
 ## Comments

@@ -1,11 +1,12 @@
 ---
 id: TASK-116.2
 title: Delete delivery photos after two weeks with an Oban job
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-26 17:13'
-updated_date: '2026-10-27 13:58'
-labels: []
+updated_date: '2026-10-29 07:24'
+labels:
+  - wontfix
 dependencies: []
 parent_task_id: TASK-116
 type: task
@@ -58,6 +59,15 @@ created: 2026-10-27 13:58
 ---
 
 Launch triage 2026-10-27 with David: after launch, not a blocker. Until it lands the policy says delivery photos are kept with the order.
+
+---
+
+author: @claude
+created: 2026-10-29 07:24
+
+---
+
+Won't do: David decided to keep delivery photos with the order. The privacy page already says they're kept until the customer asks for deletion.
 
 ---
 <!-- COMMENTS:END -->
