@@ -41,7 +41,11 @@ window.addEventListener("phx:js-exec", ({ detail }) => {
 });
 
 topbar.config({
-  barColors: { 0: "oklch(36.84% 0.0478 156.76)" },
+  barColors: {
+    0: getComputedStyle(document.documentElement).getPropertyValue(
+      "--color-primary",
+    ),
+  },
   shadowColor: "rgba(0, 0, 0, .3)",
 });
 
