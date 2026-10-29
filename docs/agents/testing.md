@@ -6,6 +6,9 @@
   (`Edenflowers.DataCase` and existing generators). Cover the domain matrix here:
   money and rounding, authorisation, state transitions, idempotency, jobs and emails.
   Mock external adapters at their interfaces, not Ash or the database.
+- Don't test the framework: skip assertions that Ash persisted an attribute, a
+  relationship loads, or a calculation mirrors its own expression. Test the rule
+  the resource encodes.
 - Use pure tests for standalone calculations with meaningful inputs and edge cases.
   Resource calculations that depend on persisted data still need the Ash interface.
 - Use LiveView tests for wiring, interactions, validation errors and distinct UI
