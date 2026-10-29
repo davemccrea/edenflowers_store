@@ -1,18 +1,19 @@
-/* Open Sans is variable across the two weights the site uses, 400 and 600.
+/* Open Sans is variable across the two weights the site uses, 400 and 600,
+   plus 700 for the wordmark alone.
    Newsreader is 400 only, varying just its optical-size axis, which the
    browser applies automatically. Both are subset to Latin.
    SIL OFL 1.1, see priv/static/fonts/OFL.txt. */
 @font-face {
   font-family: "Open Sans";
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 400 700;
   font-display: swap;
   src: url("/fonts/OpenSans-Variable.woff2") format("woff2");
 }
 @font-face {
   font-family: "Open Sans";
   font-style: italic;
-  font-weight: 400 600;
+  font-weight: 400 700;
   font-display: swap;
   src: url("/fonts/OpenSans-VariableItalic.woff2") format("woff2");
 }

@@ -37,7 +37,7 @@
 }
 
 @utility logo-wordmark {
-  @apply font-sans font-semibold uppercase tracking-[0.18em];
+  @apply font-sans font-bold uppercase tracking-[0.18em];
 }
 
 /* Hover underlines are always present and fade only their colour, so the
