@@ -3864,16 +3864,16 @@ msgid "due %{date}"
 msgstr "förfaller %{date}"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:470
-#, elixir-autogen, elixir-format, fuzzy
+#, elixir-autogen, elixir-format
 msgid "Shows in the card fan on the store page once %{min} are ticked (%{count} so far)."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:474
-#, elixir-autogen, elixir-format, fuzzy
+#, elixir-autogen, elixir-format
 msgid "Shows in the card fan on the store page, which holds the first %{max} in store order."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:477
-#, elixir-autogen, elixir-format, fuzzy
+#, elixir-autogen, elixir-format
 msgid "Shows in the card fan on the store page."
 msgstr ""

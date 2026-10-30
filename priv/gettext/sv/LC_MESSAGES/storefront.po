@@ -4094,27 +4094,27 @@ msgstr "Dina ord, skrivna för hand"
 #: lib/edenflowers_web/features/marketing/home_live.ex:770
 #, elixir-autogen, elixir-format
 msgid "Wedding flowers"
-msgstr ""
+msgstr "Bröllopsblommor"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:791
 #, elixir-autogen, elixir-format
 msgid "Bride in a flower crown holding her bouquet, looking into the distance"
-msgstr ""
+msgstr "Brud med hårkrans och bukett, blicken mot fjärran"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:767
 #, elixir-autogen, elixir-format
 msgid "I'd love to hear about your wedding. Tell me about the day and your style, and I'll design bouquets, crowns and decoration that feel like the two of you."
-msgstr ""
+msgstr "Jag vill gärna höra om ert bröllop. Berätta om dagen och er stil, så formger jag buketter, hårkransar och dekorationer som känns som just ni två."
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:762
 #, elixir-autogen, elixir-format
 msgid "Your day."
-msgstr ""
+msgstr "Er dag."
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:764
 #, elixir-autogen, elixir-format
 msgid "Your flowers."
-msgstr ""
+msgstr "Era blommor."
 
 #: lib/edenflowers_web/features/store/store_live.ex:344
 #, elixir-autogen, elixir-format
