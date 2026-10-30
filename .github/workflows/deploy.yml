@@ -91,6 +91,9 @@ jobs:
             # Restart app with new image
             docker compose up -d --remove-orphans
 
+            # Each deploy leaves the previous image behind; rollback re-pulls it from the registry
+            docker image prune -af
+
       # `up -d` returns before the new container is serving, so resuming
       # straight away catches the app mid-boot.
       - name: Wait for app to boot

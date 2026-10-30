@@ -50,3 +50,12 @@
     registry_url: ghcr.io
     username: "{{ github_username }}"
     password: "{{ github_token }}"
+
+- name: Prune unused Docker images weekly
+  ansible.builtin.cron:
+    name: "Prune unused Docker images"
+    weekday: "0"
+    hour: "3"
+    minute: "0"
+    job: "docker image prune -af >/dev/null"
+    user: root
