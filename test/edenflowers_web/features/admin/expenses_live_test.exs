@@ -41,31 +41,35 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert newer_position < older_position
   end
 
-  test "lists unreviewed expenses above reviewed ones", %{conn: conn} do
-    create_expense("older-unreviewed", "Unreviewed Vendor", "Pending", date: ~D[2026-01-05])
-
-    "newer-reviewed"
-    |> create_expense("Reviewed Vendor", "Done", date: ~D[2026-03-10])
-    |> Expenses.mark_expense_reviewed!(authorize?: false)
+  test "lists unpaid expenses first, then ones needing review", %{conn: conn} do
+    create_expense("paid", "Paid Vendor", "Done", date: ~D[2026-03-10], paid_on: ~D[2026-03-10])
+    create_expense("unsure", "Unsure Vendor", "Check", date: ~D[2026-01-05], paid_on: ~D[2026-01-05], confidence: :low)
+    create_expense("unpaid", "Unpaid Vendor", "Pending", date: ~D[2026-01-01])
 
     {:ok, _view, html} = live(conn, ~p"/admin/expenses")
 
-    {unreviewed_position, _} = :binary.match(html, "Unreviewed Vendor")
-    {reviewed_position, _} = :binary.match(html, "Reviewed Vendor")
-    assert unreviewed_position < reviewed_position
+    positions = Enum.map(["Unpaid Vendor", "Unsure Vendor", "Paid Vendor"], &elem(:binary.match(html, &1), 0))
+    assert positions == Enum.sort(positions)
   end
 
-  test "filters to expenses that have not been reviewed", %{conn: conn} do
-    create_expense("unreviewed", "Unreviewed Vendor", "Pending")
+  test "filters to expenses that need review", %{conn: conn} do
+    create_expense("unsure", "Unsure Vendor", "Check", confidence: :medium)
+    create_expense("sure", "Sure Vendor", "Fine")
 
-    "reviewed"
-    |> create_expense("Reviewed Vendor", "Done")
-    |> Expenses.mark_expense_reviewed!(authorize?: false)
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses?needs_review=true")
 
-    {:ok, view, _html} = live(conn, ~p"/admin/expenses?reviewed=false")
+    assert has_element?(view, "[data-item-id]", "Unsure Vendor")
+    refute has_element?(view, "[data-item-id]", "Sure Vendor")
+  end
 
-    assert has_element?(view, "[data-item-id]", "Unreviewed Vendor")
-    refute has_element?(view, "[data-item-id]", "Reviewed Vendor")
+  test "filters to unpaid expenses", %{conn: conn} do
+    create_expense("unpaid", "Unpaid Vendor", "Pending")
+    create_expense("paid", "Paid Vendor", "Done", paid_on: ~D[2026-06-01])
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses?paid=false")
+
+    assert has_element?(view, "[data-item-id]", "Unpaid Vendor")
+    refute has_element?(view, "[data-item-id]", "Paid Vendor")
   end
 
   test "translates the table controls", %{conn: conn} do
@@ -76,36 +80,22 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert html =~ "Suodattimet"
   end
 
-  test "saving and marking reviewed keeps the corrections", %{conn: conn} do
-    expense = create_expense("save-review", "Typo Vendr", "Flowers")
+  test "marking paid today keeps the corrections", %{conn: conn} do
+    expense = create_expense("pay-today", "Typo Vendr", "Flowers", confidence: :low)
 
     {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
 
     view
     |> form("#expense-form", form: %{vendor_name: "Typo Vendor"})
-    |> render_submit(%{review: "true"})
+    |> render_submit(%{paid_today: "true"})
 
     assert_push_event(view, "admin-form-saved", %{id: "expense-form"})
 
-    reviewed = Ash.get!(Expenses.Expense, expense.id, authorize?: false)
-    assert reviewed.vendor_name == "Typo Vendor"
-    assert reviewed.reviewed_at
-  end
-
-  test "saving corrections alone leaves the expense unreviewed", %{conn: conn} do
-    expense = create_expense("save-only", "Typo Vendr", "Flowers")
-
-    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
-
-    view
-    |> form("#expense-form", form: %{vendor_name: "Typo Vendor"})
-    |> render_submit()
-
-    assert_push_event(view, "admin-form-saved", %{id: "expense-form"})
-
-    saved = Ash.get!(Expenses.Expense, expense.id, authorize?: false)
+    saved = Ash.get!(Expenses.Expense, expense.id, authorize?: false, load: :needs_review)
     assert saved.vendor_name == "Typo Vendor"
-    refute saved.reviewed_at
+    assert saved.paid_on == Edenflowers.ShopTime.today()
+    refute saved.needs_review
+    refute has_element?(view, "button[name=paid_today]")
   end
 
   test "sets and clears the paid date", %{conn: conn} do

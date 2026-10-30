@@ -56,7 +56,10 @@ defmodule Edenflowers.Expenses.Expense do
   @moduledoc """
   A receipt or invoice imported from Papra and classified for accounting.
 
-  The extracted fields can be corrected in admin. Deleting an expense leaves its
+  The extracted fields can be corrected in admin. An empty `paid_on` means it
+  is still unpaid, so it stays out of the monthly report until Jennie marks it
+  paid. Claude fills `paid_on` when the document shows it was already paid,
+  such as a till receipt. Deleting an expense leaves its
   Papra document alone. To import it again, delete the document in Papra and
   upload the PDF again.
   """
@@ -89,9 +92,18 @@ defmodule Edenflowers.Expenses.Expense do
     defaults [:read, :destroy]
 
     read :admin_list do
-      description "The admin Expenses table: unreviewed first, then newest receipt date, undated ones at the top."
+      description "The admin Expenses table: unpaid first, soonest due, then ones needing review, then newest receipt date."
       pagination offset?: true, keyset?: true, countable: true, required?: false
-      prepare build(sort: [reviewed: :asc, date: :desc_nils_first, processed_at: :desc])
+
+      prepare build(
+                sort: [
+                  paid: :asc,
+                  due_on: :asc_nils_last,
+                  needs_review: :desc,
+                  date: :desc_nils_first,
+                  processed_at: :desc
+                ]
+              )
     end
 
     create :ingest do
@@ -103,6 +115,7 @@ defmodule Edenflowers.Expenses.Expense do
         :vendor_name,
         :vendor_vat_number,
         :date,
+        :due_on,
         :total_amount,
         :vat_amount,
         :currency,
@@ -117,6 +130,8 @@ defmodule Edenflowers.Expenses.Expense do
         :vendor_name,
         :vendor_vat_number,
         :date,
+        :paid_on,
+        :due_on,
         :total_amount,
         :vat_amount,
         :currency,
@@ -126,22 +141,20 @@ defmodule Edenflowers.Expenses.Expense do
       ]
 
       change set_attribute(:processed_at, &DateTime.utc_now/0)
+      # Re-processing only fills an empty paid date, so Jennie's stays.
+      change atomic_update(:paid_on, expr(paid_on || upsert_conflict(:paid_on)))
       change Changes.RenamePapraDocument
     end
 
-    update :mark_reviewed do
-      description "Records when an admin has reviewed this expense."
-      change set_attribute(:reviewed_at, &DateTime.utc_now/0)
-    end
-
     update :correct do
-      description "Corrects fields that were mis-extracted by the LLM."
+      description "Jennie checks Claude's extraction, corrects what it got wrong, and can mark it paid today."
 
       accept [
         :vendor_name,
         :vendor_vat_number,
         :date,
         :paid_on,
+        :due_on,
         :total_amount,
         :vat_amount,
         :currency,
@@ -149,7 +162,19 @@ defmodule Edenflowers.Expenses.Expense do
         :description
       ]
 
+      argument :paid_today, :boolean, default: false
+
       require_atomic? false
+      change set_attribute(:reviewed_at, &DateTime.utc_now/0)
+
+      change fn changeset, _context ->
+        if Ash.Changeset.get_argument(changeset, :paid_today) do
+          Ash.Changeset.force_change_attribute(changeset, :paid_on, Edenflowers.ShopTime.today())
+        else
+          changeset
+        end
+      end
+
       change Changes.RenamePapraDocument
     end
   end
@@ -197,7 +222,11 @@ defmodule Edenflowers.Expenses.Expense do
     attribute :date, :date
 
     attribute :paid_on, :date do
-      description "Set by an admin only; ingest leaves it alone so re-processing keeps it."
+      description "Empty while unpaid. Claude sets it from a document that shows it was already paid."
+    end
+
+    attribute :due_on, :date do
+      description "When an unpaid invoice falls due, if the document says."
     end
 
     attribute :total_amount, :decimal do
@@ -221,8 +250,18 @@ defmodule Edenflowers.Expenses.Expense do
   end
 
   calculations do
-    calculate :reviewed, :boolean, expr(not is_nil(reviewed_at)) do
-      description "Jennie has checked Claude's extraction, via `mark_reviewed`."
+    calculate :paid, :boolean, expr(not is_nil(paid_on))
+
+    calculate :overdue, :boolean, expr(is_nil(paid_on) and due_on < helsinki_today())
+
+    calculate :needs_review,
+              :boolean,
+              expr(
+                is_nil(reviewed_at) and
+                  (confidence != :high or is_nil(date) or is_nil(vendor_name) or is_nil(total_amount) or
+                     is_nil(currency))
+              ) do
+      description "Claude was unsure or left a required field empty, and Jennie hasn't saved it since."
     end
   end
 

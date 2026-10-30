@@ -54,6 +54,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           resource={Expense}
           action={:admin_list}
           actor={@current_user}
+          query_opts={[load: [:overdue, :needs_review]]}
           search={[
             label: ~t"Search",
             placeholder: ~t"Search vendor or description…",
@@ -65,6 +66,13 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           theme={EdenflowersWeb.Admin.CinderTheme}
           click={fn expense -> JS.navigate(~p"/admin/expenses/#{expense.id}") end}
         >
+          <:filter
+            field="needs_review"
+            type={:select}
+            label={~t"Review"}
+            prompt={~t"All"}
+            options={[{~t"Needs review", true}, {~t"Reviewed", false}]}
+          />
           <:col :let={expense} field="vendor_name" search sort label={~t"Vendor"}>
             <.link
               navigate={~p"/admin/expenses/#{expense.id}"}
@@ -72,6 +80,9 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             >
               {expense.vendor_name || ~t"Unknown vendor"}
             </.link>
+            <.badge :if={expense.needs_review} tone={:attention} class="ml-1 align-middle">
+              {~t"Needs review"}
+            </.badge>
           </:col>
           <:col :let={expense} field="date" sort={[cycle: [nil, :desc, :asc]]} label={~t"Date"} class="max-sm:hidden">
             <span :if={expense.date} class="whitespace-nowrap tabular-nums">
@@ -87,31 +98,17 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           </:col>
           <:col
             :let={expense}
-            field="confidence"
-            sort
-            filter={[type: :select, label: ~t"Scan confidence", prompt: ~t"All", options: confidence_options()]}
-            label={~t"Confidence"}
-            class="max-sm:hidden"
-          >
-            <.confidence_badge confidence={expense.confidence} />
-          </:col>
-          <:col
-            :let={expense}
-            field="reviewed"
+            field="paid"
             sort
             filter={[
               type: :select,
-              label: ~t"Review",
+              label: ~t"Payment",
               prompt: ~t"All",
-              options: [{~t"Reviewed", true}, {~t"Not reviewed", false}]
+              options: [{~t"Paid", true}, {~t"Unpaid", false}]
             ]}
-            label={~t"Reviewed"}
+            label={~t"Paid"}
           >
-            <span :if={expense.reviewed_at}>
-              <.icon name="hero-check" class="h-4 w-4" />
-              <span class="sr-only">{~t"Reviewed"}</span>
-            </span>
-            <.blank :if={is_nil(expense.reviewed_at)} />
+            <.expense_payment_status expense={expense} locale={@locale} />
           </:col>
           <:col
             :let={expense}

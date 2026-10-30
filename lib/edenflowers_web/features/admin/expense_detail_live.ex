@@ -1,24 +1,23 @@
 defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   @moduledoc """
-  Admin page for reviewing, correcting, or deleting an imported expense.
+  Admin page for reviewing, correcting, marking paid or deleting an imported expense.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
-  require Logger
-
   import EdenflowersWeb.Admin.Components
 
-  alias Edenflowers.Expenses
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.Format
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
+  @loads [:overdue, :needs_review]
+
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    case Ash.get(Expense, id, actor: socket.assigns.current_user) do
+    case Ash.get(Expense, id, load: @loads, actor: socket.assigns.current_user) do
       {:ok, expense} ->
         {:ok,
          socket
@@ -44,8 +43,14 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
           title={@expense.vendor_name || ~t"Unknown vendor"}
           back={{~t"Expenses", ~p"/admin/expenses"}}
         >
-          <:subtitle :if={@expense.reviewed_at}>
-            <.badge tone={:success} icon="hero-check">{~t"Reviewed"}</.badge>
+          <:subtitle>
+            <span class="inline-flex flex-wrap items-center gap-2">
+              <.expense_payment_status :if={is_nil(@expense.paid_on)} expense={@expense} locale={@locale} />
+              <.badge :if={@expense.paid_on} tone={:success} icon="hero-check">
+                {~t"Paid #{date = Format.date(@expense.paid_on, @locale)}"}
+              </.badge>
+              <.badge :if={@expense.needs_review} tone={:attention}>{~t"Needs review"}</.badge>
+            </span>
           </:subtitle>
           <:menu>
             <.actions_menu id="expense-actions">
@@ -78,9 +83,10 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   field={@form[:paid_on]}
                   type="date"
                   label={~t"Paid on"}
-                  help={~t"Only needed when it was paid on a different day from its date."}
+                  help={~t"Leave empty while it's unpaid."}
                   class="input w-full"
                 />
+                <.input field={@form[:due_on]} type="date" label={~t"Due date"} class="input w-full" />
                 <.input
                   field={@form[:currency]}
                   type="select"
@@ -115,23 +121,19 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               </div>
             </.form_section>
             <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-              <%!-- First in source order so Enter in a field saves without marking the expense reviewed. --%>
-              <.button
-                type="submit"
-                variant={if is_nil(@expense.reviewed_at), do: "secondary", else: "primary"}
-                class="w-full sm:w-auto"
-              >
-                {~t"Save corrections"}
+              <%!-- First in source order so Enter in a field saves without marking the expense paid. --%>
+              <.button type="submit" variant="primary" class="w-full sm:w-auto">
+                {~t"Save"}
               </.button>
               <.button
-                :if={is_nil(@expense.reviewed_at)}
+                :if={is_nil(@expense.paid_on)}
                 type="submit"
-                name="review"
+                name="paid_today"
                 value="true"
-                variant="primary"
+                variant="secondary"
                 class="w-full sm:w-auto"
               >
-                {~t"Save and mark reviewed"}
+                {~t"Save and mark paid today"}
               </.button>
             </div>
           </.form>
@@ -147,7 +149,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   {~t"No amount"}
                 </span>
               </p>
-              <p class="text-base-content/75 mt-3 flex items-center gap-2 text-sm">
+              <p :if={@expense.confidence != :high} class="text-base-content/75 mt-3 flex items-center gap-2 text-sm">
                 {~t"Confidence"} <.confidence_badge confidence={@expense.confidence} />
               </p>
             </.widget>
@@ -185,10 +187,9 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   end
 
   def handle_event("correct", %{"form" => params} = submit_params, socket) do
-    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, updated} when is_map_key(submit_params, "review") ->
-        mark_reviewed(socket, updated)
+    params = Map.put(params, "paid_today", Map.get(submit_params, "paid_today", "false"))
 
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params, action_opts: [load: @loads]) do
       {:ok, updated} ->
         {:noreply,
          socket
@@ -211,26 +212,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
      socket
      |> put_flash(:success, ~t"Expense deleted.")
      |> push_navigate(to: ~p"/admin/expenses")}
-  end
-
-  defp mark_reviewed(socket, expense) do
-    case Expenses.mark_expense_reviewed(expense, actor: socket.assigns.current_user) do
-      {:ok, reviewed} ->
-        {:noreply,
-         socket
-         |> assign_expense(reviewed)
-         |> push_event("admin-form-saved", %{id: "expense-form"})
-         |> put_flash(:success, ~t"Expense saved and marked as reviewed.")}
-
-      {:error, error} ->
-        Logger.error("Expense #{expense.id} not marked reviewed: #{inspect(error)}")
-
-        {:noreply,
-         socket
-         |> assign_expense(expense)
-         |> push_event("admin-form-saved", %{id: "expense-form"})
-         |> put_flash(:error, ~t"Corrections saved, but the expense could not be marked as reviewed.")}
-    end
   end
 
   defp assign_expense(socket, expense) do

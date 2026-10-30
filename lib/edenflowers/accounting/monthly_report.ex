@@ -5,8 +5,8 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   behind the expenses, in Swedish.
 
   VAT is reported on a cash basis, so a payment counts in the month of its
-  `paid_at` (Helsinki time), and an expense in the month it was paid: its
-  `paid_on`, or its `date` when that's empty. The sales sheet is the shop's only
+  `paid_at` (Helsinki time), and an expense in the month of its `paid_on`;
+  unpaid ones wait until Jennie marks them paid. The sales sheet is the shop's only
   sales record (ADR 0004), so every payment method counts.
 
   A receipt Papra can't serve doesn't stop the report: its row says so.
@@ -177,17 +177,15 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   defp paid_expenses(first, last) do
     with {:ok, expenses} <-
            Expense
-           |> Ash.Query.filter((paid_on || date) >= ^first and (paid_on || date) <= ^last)
+           |> Ash.Query.filter(paid_on >= ^first and paid_on <= ^last)
            |> Ash.read(authorize?: false) do
-      {:ok, Enum.sort_by(expenses, &{Date.to_iso8601(paid_date(&1)), &1.vendor_name || ""})}
+      {:ok, Enum.sort_by(expenses, &{Date.to_iso8601(&1.paid_on), &1.vendor_name || ""})}
     end
   end
 
-  defp paid_date(expense), do: expense.paid_on || expense.date
-
   defp receipt_name(n, expense) do
     number = n |> Integer.to_string() |> String.pad_leading(3, "0")
-    "#{number}_#{Date.to_iso8601(paid_date(expense))}_#{ascii_vendor(expense.vendor_name)}.pdf"
+    "#{number}_#{Date.to_iso8601(expense.paid_on)}_#{ascii_vendor(expense.vendor_name)}.pdf"
   end
 
   defp ascii_vendor(nil), do: ""
@@ -225,7 +223,6 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       ~t"Total",
       ~t"VAT",
       ~t"Net",
-      ~t"Reviewed",
       ~t"Receipt file"
     ]
 
@@ -238,7 +235,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   defp expense_row({n, expense, receipt, _body}) do
     [
       n,
-      date_cell(paid_date(expense)),
+      date_cell(expense.paid_on),
       date_cell(expense.date),
       expense.vendor_name,
       expense.vendor_vat_number,
@@ -248,7 +245,6 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       amount_cell(expense.total_amount),
       amount_cell(expense.vat_amount),
       amount_cell(net(expense)),
-      if(expense.reviewed_at, do: ~t"yes", else: ~t"no"),
       receipt || ~t"Missing: couldn't be fetched from Papra"
     ]
   end

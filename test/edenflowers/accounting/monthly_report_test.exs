@@ -138,9 +138,8 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
   test "zips the month's expense sheet with every receipt it names" do
     create_expense("doc-adobe", "Adobe", ~D[2026-09-11], "SEK", "120.00", "24.00")
 
-    "doc-kukka"
-    |> create_expense("Kukkatukku Oy", ~D[2026-09-03], "EUR", "125.50", "25.50")
-    |> Expenses.mark_expense_reviewed!(authorize?: false)
+    create_expense("doc-kukka", "Kukkatukku Oy", ~D[2026-09-03], "EUR", "125.50", "25.50")
+    create_expense("doc-unpaid", "Unpaid Oy", ~D[2026-09-04], "EUR", "9.00", "1.00", paid_on: nil)
 
     create_expense("doc-tools", "Työkalu Åb", ~D[2026-09-20], "EUR", "10.00", "2.00")
     create_expense("doc-august", "August Oy", ~D[2026-08-31], "EUR", "1.00", "0.20")
@@ -175,7 +174,6 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              "Totalt",
              "Moms",
              "Exkl. moms",
-             "Granskad",
              "Kvittofil"
            ]
 
@@ -192,7 +190,6 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
                "125.5",
                "25.5",
                "100.0",
-               "ja",
                "001_2026-09-03_Kukkatukku-Oy.pdf"
              ],
              ["2" | _] = adobe,
@@ -205,13 +202,10 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     assert paid == excel_date(~D[2026-09-03])
     assert invoiced == paid
     assert List.last(adobe) == "002_2026-09-11_Adobe.pdf"
-    assert Enum.at(adobe, 11) == "nej"
   end
 
   test "counts an invoice in the month it was paid" do
-    "doc-late"
-    |> create_expense("Late Oy", ~D[2026-08-25], "EUR", "50.00", "10.00")
-    |> Expenses.correct_expense!(%{paid_on: ~D[2026-09-02]}, authorize?: false)
+    create_expense("doc-late", "Late Oy", ~D[2026-08-25], "EUR", "50.00", "10.00", paid_on: ~D[2026-09-02])
 
     stub(PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, %{body: "%PDF", content_type: "application/pdf"}} end)
 
@@ -224,7 +218,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
   end
 
   test "leaves out expenses with no date" do
-    create_expense("doc-undated", "Undated Oy", nil, "EUR", "5.00", "1.00")
+    create_expense("doc-undated", "Undated Oy", nil, "EUR", "5.00", "1.00", paid_on: nil)
 
     assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
     assert Map.keys(unzip(zip)) == ["rapport-2026-09.xlsx"]
@@ -326,9 +320,10 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     generate(order([state: :placed, order_reference: reference, vat_breakdown: @two_rates] ++ attrs))
   end
 
-  defp create_expense(document_id, vendor, date, currency, total, vat) do
+  defp create_expense(document_id, vendor, date, currency, total, vat, opts \\ []) do
     Expenses.ingest_expense!(
       %{
+        paid_on: Keyword.get(opts, :paid_on, date),
         document_id: document_id,
         vendor_name: vendor,
         vendor_vat_number: "FI12345678",

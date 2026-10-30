@@ -33,6 +33,12 @@ defmodule Edenflowers.External.ClaudeAPI do
     vendor_name: [type: :string, doc: "Name of the vendor or supplier."],
     vendor_vat_number: [type: :string, doc: "The vendor's VAT/tax number, if present."],
     date: [type: :string, doc: "Invoice/receipt date in ISO 8601 format (YYYY-MM-DD)."],
+    paid_on: [
+      type: :string,
+      doc:
+        "Only if the document shows it has already been paid (a till or card receipt, an order confirmation charged to a card, an invoice marked paid): the payment date in ISO 8601 format. Omit for an invoice still to be paid."
+    ],
+    due_on: [type: :string, doc: "For an invoice still to be paid, its due date in ISO 8601 format, if shown."],
     total_amount: [type: :string, doc: "Total amount including VAT as a decimal string, e.g. 121.00."],
     vat_amount: [type: :string, doc: "VAT/tax amount as a decimal string, e.g. 25.50, if shown separately."],
     currency: [type: :string, doc: "ISO 4217 currency code, lowercase (e.g. eur, sek)."],
@@ -54,6 +60,7 @@ defmodule Edenflowers.External.ClaudeAPI do
   Extract the expense details from this receipt or invoice.
   Use a lowercase ISO 4217 code for the currency.
   Write the description in Finland Swedish, whatever the language of the document.
+  Decide whether the document shows it has already been paid, or is an invoice still to be paid.
   Omit any field you cannot determine with reasonable confidence.
   Set confidence to reflect your overall certainty across all fields.
   """
