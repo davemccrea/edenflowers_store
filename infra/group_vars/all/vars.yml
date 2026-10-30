@@ -6,7 +6,7 @@ user: david
 
 # App
 project_url: edenflowers.fi
-maintenance_mode: true
+maintenance_mode: false
 image_tag: latest
 app_port: 4000
 secret_key_base: "{{ vault_secret_key_base }}"
