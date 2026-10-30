@@ -452,7 +452,7 @@
 /* Home page cards, stacked in one grid cell and fanned like a hand of playing cards.
    The fan opens with `rotate` and `transform` and hover uses `translate`, so
    each keeps its own transition. The CardFan hook opens the fan once it scrolls into
-   view, from the middle outwards, and marks the hovered card `data-hover`. */
+   view, from the middle outwards, and brings a clicked card to the front. */
 .card-fan {
   display: grid;
   place-items: end center;
@@ -490,7 +490,83 @@
     width: 13rem;
   }
 }
-.card-fan > li[data-hover] {
-  translate: 0 -1.5%;
+.card-fan > li:not(:last-child) {
+  cursor: pointer;
+}
+.card-fan > li[data-selected] {
   z-index: 1;
+}
+/* The other cards part to either side of the selected one. */
+.card-fan > li {
+  translate: var(--part, 0) var(--lift, 0);
+}
+.card-fan > li[data-selected] ~ li {
+  --part: 0.75rem;
+}
+.card-fan > li:has(~ li[data-selected]) {
+  --part: -0.75rem;
+}
+/* A selected card springs up out of the fan, crosses over its neighbours at the top and
+   drops into place in front, and goes back the same way. It fades slightly as it
+   crosses, to soften the moment it changes places. The keyframes end on the card's
+   own `transform` and `z-index`, so it settles wherever the rules above put it. */
+@media (prefers-reduced-motion: no-preference) {
+  .card-fan > li[data-selected] {
+    animation: card-to-front 450ms both;
+  }
+  .card-fan > li[data-put-back] {
+    animation: card-to-back 450ms both;
+  }
+  .card-fan > li[data-put-back="swap"] {
+    animation: card-swapped-out 450ms both;
+  }
+}
+@keyframes card-to-front {
+  0%,
+  40% {
+    z-index: 0;
+  }
+  0% {
+    animation-timing-function: cubic-bezier(0.3, 0, 0.4, 1);
+  }
+  40% {
+    transform: translateY(-16%);
+    opacity: 0.9;
+    animation-timing-function: cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+  41% {
+    z-index: 1;
+  }
+}
+@keyframes card-to-back {
+  0%,
+  40% {
+    z-index: 1;
+  }
+  0% {
+    animation-timing-function: cubic-bezier(0.3, 0, 0.4, 1);
+  }
+  40% {
+    transform: translateY(-16%);
+    opacity: 0.9;
+    animation-timing-function: cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+  41% {
+    z-index: 0;
+  }
+}
+/* Swapped for another card, it stays in front until the new card crosses over it. */
+@keyframes card-swapped-out {
+  0%,
+  40% {
+    z-index: 1;
+  }
+  41% {
+    z-index: 0;
+  }
+}
+@media (hover: hover) {
+  .card-fan > li:hover {
+    --lift: -1.5%;
+  }
 }

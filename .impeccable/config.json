@@ -14,6 +14,12 @@
         "value": "sfmono-regular",
         "createdAt": "2026-10-26T08:43:33.527Z",
         "reason": "Codex: existing developer element picker displays source references in a system monospace font, outside the product typography."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.2, 0.64, 1)",
+        "createdAt": "2026-10-30T03:25:54.518Z",
+        "reason": "user requested a springy card fan animation ('Some springy. It is very mechanical right now.'); matches existing overshoot easings in the fan and card-tuck"
       }
     ]
   }
