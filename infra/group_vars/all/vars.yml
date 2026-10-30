@@ -77,3 +77,6 @@ shop_notice_email: info@edenflowers.fi
 # Web Push for admin order notifications
 vapid_public_key: "BN4aYz2NjwKIBK5pDPWGMPlW3QWeWTP2eBTJaFnra0IBZ0EW4A16OeSrEjdnRUescacckmA3CW5amnYsj4aJZbM"
 vapid_private_key: "{{ vault_vapid_private_key }}"
+
+# Umami
+umami_website_id: 9d158c42-7d9b-4ad0-bab2-996067d2a941
