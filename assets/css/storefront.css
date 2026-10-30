@@ -544,6 +544,11 @@
     animation: hero-focus 700ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
+/* The front card has no neighbours to cross, so it doesn't hop. */
+.card-fan > li:last-child {
+  --hop-to-front: 0%;
+  --hop-to-back: 0%;
+}
 /* A selected card springs up out of the fan, crosses over its neighbours at the top and
    drops into place in front, and goes back the same way. It fades slightly as it
    crosses, to soften the moment it changes places. The keyframes end on the card's
@@ -565,7 +570,7 @@
     animation-timing-function: cubic-bezier(0.3, 0, 0.4, 1);
   }
   40% {
-    transform: translateY(-12%);
+    transform: translateY(var(--hop-to-front, -12%));
     opacity: 0.9;
     animation-timing-function: cubic-bezier(0.34, 1.2, 0.64, 1);
   }
@@ -582,7 +587,7 @@
     animation-timing-function: cubic-bezier(0.3, 0, 0.4, 1);
   }
   40% {
-    transform: translateY(-6%);
+    transform: translateY(var(--hop-to-back, -6%));
     opacity: 0.9;
     animation-timing-function: cubic-bezier(0.34, 1.2, 0.64, 1);
   }

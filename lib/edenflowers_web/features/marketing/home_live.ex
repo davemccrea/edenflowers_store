@@ -898,8 +898,11 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 }
               },
 
+              // A card swapped out drops straight back without its own hop, so the only card
+              // that moves is the one coming to the front.
               bringToFront(card) {
-                if (this.selected()) this.putBack();
+                if (this.selected())
+                  this.js().removeAttribute(this.selected(), "data-selected");
                 this.js().removeAttribute(card, "data-put-back");
                 this.js().setAttribute(card, "data-selected", "");
                 this.name();
