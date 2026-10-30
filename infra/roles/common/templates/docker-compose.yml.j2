@@ -85,9 +85,6 @@ services:
       APP_SECRET: "{{ umami_app_secret }}"
       # Only cloudflared, on this host, reaches it.
       HOSTNAME: 127.0.0.1
-      # Neutral names so ad blockers' lists of analytics scripts don't match.
-      TRACKER_SCRIPT_NAME: /e.js
-      COLLECT_API_ENDPOINT: /api/e
       DISABLE_TELEMETRY: 1
 
   cloudflared:

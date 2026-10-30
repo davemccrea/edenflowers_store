@@ -4,7 +4,7 @@ title: Self-host Umami for cookieless site analytics
 status: in-progress
 assignee: []
 created_date: '2026-10-30 09:38'
-updated_date: '2026-10-30 17:41'
+updated_date: '2026-10-30 21:16'
 labels:
   - spec
   - admin
@@ -34,3 +34,9 @@ Rollout: provision Umami, add the tunnel hostname, create the website in Umami, 
 
 Open: confirm the server RAM fits Umami (~200-300 MB) alongside app, imgproxy and Papra.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Renamed tracker paths dropped 2026-10-30: Umami's TRACKER_SCRIPT_NAME/COLLECT_API_ENDPOINT rewrite to https://localhost:3000 behind the Cloudflare tunnel and return 500. The shop uses the default /script.js and /api/send.
+<!-- SECTION:NOTES:END -->
