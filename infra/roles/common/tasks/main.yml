@@ -1,6 +1,8 @@
 ---
 - name: Update packages
   ansible.builtin.import_tasks: update-packages.yml
+- name: Swap
+  ansible.builtin.import_tasks: swap.yml
 - name: Harden
   ansible.builtin.import_tasks: harden.yml
 - name: Tailscale

@@ -1,0 +1,20 @@
+---
+- name: Create swap file
+  ansible.builtin.command: fallocate -l 2G /swapfile
+  args:
+    creates: /swapfile
+  register: common_swapfile
+
+- name: Restrict swap file permissions
+  ansible.builtin.file:
+    path: /swapfile
+    mode: "0600"
+
+- name: Format and enable swap file
+  ansible.builtin.shell: mkswap /swapfile && swapon /swapfile
+  when: common_swapfile.changed
+
+- name: Enable swap on boot
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    line: /swapfile none swap sw 0 0
