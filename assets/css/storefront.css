@@ -450,9 +450,9 @@
 }
 
 /* Home page cards, stacked in one grid cell and fanned like a hand of playing cards.
-   The fan opens with `rotate` and `transform` and hover uses `translate`/`scale`, so
+   The fan opens with `rotate` and `transform` and hover uses `translate`, so
    each keeps its own transition. The CardFan hook opens the fan once it scrolls into
-   view, from the middle outwards. */
+   view, from the middle outwards, and marks the hovered card `data-hover`. */
 .card-fan {
   display: grid;
   place-items: end center;
@@ -470,8 +470,7 @@
   transition:
     rotate 1100ms cubic-bezier(0.3, 1.15, 0.5, 1) var(--open-delay),
     transform 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--open-delay),
-    translate 400ms cubic-bezier(0.22, 1, 0.36, 1),
-    scale 400ms cubic-bezier(0.22, 1, 0.36, 1);
+    translate 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* A slight, uneven tilt, so the fan looks held rather than drawn. */
 .card-fan > li:nth-child(3n + 1) {
@@ -491,9 +490,7 @@
     width: 13rem;
   }
 }
-@media (hover: hover) {
-  .card-fan > li:hover {
-    translate: 0 -4%;
-    scale: 1.05;
-  }
+.card-fan > li[data-hover] {
+  translate: 0 -1.5%;
+  z-index: 1;
 }
