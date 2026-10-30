@@ -17,7 +17,7 @@ deps = "bash -c 'source .env && mix deps.get && mix deps.compile'"
 
 # Tailwind's downloaded binary has an invalid signature; macOS SIGKILLs it unless re-signed
 [[pre-start]]
-tailwind = "bash -c 'source .env && mix tailwind.install --if-missing && codesign --force --sign - _build/tailwind-macos-arm64-*'"
+tailwind = "bash -c 'source .env && mix tailwind.install --if-missing && if [ \"$(uname)\" = Darwin ]; then codesign --force --sign - _build/tailwind-macos-arm64-*; fi'"
 
 # Download translation locales
 [[pre-start]]
