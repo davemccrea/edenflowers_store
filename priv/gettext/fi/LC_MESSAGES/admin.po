@@ -3826,16 +3826,6 @@ msgstr "Sähköposti ja markkinointi"
 msgid "Hosting"
 msgstr "Ylläpito"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:470
-#, elixir-autogen, elixir-format
-msgid "Shows in the card fan on the home page once %{min} are ticked (%{count} so far)."
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/product_form_live.ex:477
-#, elixir-autogen, elixir-format
-msgid "Shows in the card fan on the home page."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/product_form_live.ex:480
 #, elixir-autogen, elixir-format
 msgid "Shows under Favourites on the home page."
@@ -3873,7 +3863,17 @@ msgstr "Tallenna ja merkitse maksetuksi tänään"
 msgid "due %{date}"
 msgstr "erääntyy %{date}"
 
+#: lib/edenflowers_web/features/admin/product_form_live.ex:470
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Shows in the card fan on the store page once %{min} are ticked (%{count} so far)."
+msgstr ""
+
 #: lib/edenflowers_web/features/admin/product_form_live.ex:474
-#, elixir-autogen, elixir-format
-msgid "Shows in the card fan on the home page, which holds the first %{max} in store order."
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Shows in the card fan on the store page, which holds the first %{max} in store order."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/product_form_live.ex:477
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Shows in the card fan on the store page."
 msgstr ""

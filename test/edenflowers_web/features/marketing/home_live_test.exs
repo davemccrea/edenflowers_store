@@ -16,8 +16,6 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
       refute description =~ "5 km"
     end
 
-    {:ok, view, _html} = live(conn, ~p"/en")
-    assert has_element?(view, "#location-heading ~ dl", "Free within 8 km for chosen bouquets")
     assert page_description(conn |> get(~p"/en") |> html_response(200)) =~ "on selected bouquets."
   end
 
@@ -38,7 +36,6 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     shop_calendar(enabled_dates: [Date.add(today, 1)])
     send(view.pid, :refresh_notice_bar)
     assert has_element?(view, "#notice-bar", "Next delivery or pickup is tomorrow")
-    assert has_element?(view, "#location-order-status", "Next delivery or pickup is tomorrow")
 
     shop_calendar(enabled_dates: [today])
     send(view.pid, :refresh_notice_bar)
@@ -208,23 +205,5 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
       {:ok, matched} = Edenflowers.Accounts.get_user_by_email("FOOTER@example.com", authorize?: false)
       assert matched.id == user.id
     end
-  end
-
-  test "Send a gift opens the browser's cart as a gift and goes to the store", %{conn: conn} do
-    cards = generate(product_category(slug: "cards", visibility: :hidden))
-
-    for _ <- 1..EdenflowersWeb.Marketing.HomeLive.min_fan_cards() do
-      card = generate(product(product_category_id: cards.id, draft: false, featured: true))
-      generate(product_variant(product_id: card.id, draft: false))
-    end
-
-    conn = get(conn, ~p"/en")
-    visitor_id = get_session(conn, :visitor_id)
-    {:ok, view, _html} = live(conn, ~p"/en")
-
-    view |> element("button", "Send a gift") |> render_click()
-
-    assert_redirect(view, "/en/store")
-    assert Edenflowers.Orders.get_storefront_cart!(visitor_id, authorize?: false).gift
   end
 end

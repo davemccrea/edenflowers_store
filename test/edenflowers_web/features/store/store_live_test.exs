@@ -37,4 +37,25 @@ defmodule EdenflowersWeb.Store.StoreLiveTest do
   test "an unknown category is a 404", %{conn: conn} do
     assert_error_sent 404, fn -> get(conn, ~p"/en/store/no-such-category") end
   end
+
+  test "the card fan waits until enough cards are favourites", %{conn: conn} do
+    cards = generate(product_category(slug: "cards", visibility: :hidden))
+    min = EdenflowersWeb.Store.StoreLive.min_fan_cards()
+
+    for n <- 1..min do
+      card = generate(product(product_category_id: cards.id, draft: false, featured: true))
+      generate(product_variant(product_id: card.id, draft: false))
+
+      {:ok, view, _html} = live(conn, ~p"/en/store")
+      assert has_element?(view, "#card-fan") == (n == min)
+    end
+  end
+
+  test "states the delivery fee from the configured free radius", %{conn: conn} do
+    generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :dynamic, free_dist_km: 8))
+
+    {:ok, view, _html} = live(conn, ~p"/en/store")
+
+    assert has_element?(view, "#location-heading ~ dl", "Free within 8 km for chosen bouquets")
+  end
 end

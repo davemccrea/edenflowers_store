@@ -6,18 +6,50 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   use EdenflowersWeb, :live_view
 
   import EdenflowersWeb.Marketing.CustomerQuote
-  import EdenflowersWeb.Marketing.TrustedBy
 
   alias Edenflowers.Catalog
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
-  alias Edenflowers.Orders
   alias Edenflowers.Translations
 
   # Complete-sentence excerpts from feedback.md, preserving the customer's wording and emojis.
   # `en` is shown beneath the original on /en only. `occasion` is set only where the message names it.
+  # Everyday bouquets come first, so the opening quotes speak to most visitors.
   @review_pages [
     [
+      %{
+        quote:
+          "Ville bara berätta hur prisvärda och fina dina buketter är jämfört med konkurrenterna. Dina är ju superfina och unika och enligt mamma och pappa så håller dom jättebra!",
+        en:
+          "Just wanted to say how good value and lovely your bouquets are compared to the competition. Yours are so beautiful and unique, and mum and dad say they last really well!",
+        name: "Minéa",
+        lang: "sv"
+      },
+      %{
+        quote: "Så fint att du finns - du är en riktig räddare i nöden👍",
+        en: "So glad you're here - you're a real lifesaver👍",
+        name: "Elinor",
+        lang: "sv"
+      },
+      %{
+        quote:
+          "Tack till dej för underbara buketter! Vi var verkligen så nöjda! Och gästerna frågade också varifrån de var! 😉😘 Tack!",
+        en:
+          "Thank you for the wonderful bouquets! We were so happy! And the guests also asked where they were from! 😉😘 Thank you!",
+        name: "Anna",
+        lang: "sv"
+      }
+    ],
+    [
+      %{
+        quote:
+          "Kiitos vielä ristiäisten kukista, ne olivat todella kauniit! 😍 Teit meille kukat häihimme pari vuotta sitten, joten oli ihana saada kukat sinulta myös tyttäremme ensimmäiseen suureen juhlaan. Ja miten upeat kukat jälleen saimmekaan. Kiitos paljon.",
+        en:
+          "Thank you again for the christening flowers, they were really beautiful! 😍 You did the flowers for our wedding a couple of years ago, so it was lovely to have your flowers for our daughter's first big celebration too. And what gorgeous flowers we received once again. Thank you so much.",
+        name: "Aino",
+        occasion: :christening,
+        lang: "fi"
+      },
       %{
         quote:
           "Vi var såååå nöjda med både arrangemangen och speciellt av allt brudbuketten! Också kostymblommorna, hårbanden o tärnbuketterna var fantstiska! 💐😍 Buketten lyfte liksom bilderna, och det blev bättre än vad vi hade hoppats på!",
@@ -35,14 +67,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         name: "Aino",
         occasion: :wedding,
         lang: "fi"
-      },
-      %{
-        quote:
-          "Ville bara berätta hur prisvärda och fina dina buketter är jämfört med konkurrenterna. Dina är ju superfina och unika och enligt mamma och pappa så håller dom jättebra!",
-        en:
-          "Just wanted to say how good value and lovely your bouquets are compared to the competition. Yours are so beautiful and unique, and mum and dad say they last really well!",
-        name: "Minéa",
-        lang: "sv"
       }
     ],
     [
@@ -55,23 +79,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         occasion: :wedding,
         lang: "sv"
       },
-      %{
-        quote:
-          "Kiitos vielä ristiäisten kukista, ne olivat todella kauniit! 😍 Teit meille kukat häihimme pari vuotta sitten, joten oli ihana saada kukat sinulta myös tyttäremme ensimmäiseen suureen juhlaan. Ja miten upeat kukat jälleen saimmekaan. Kiitos paljon.",
-        en:
-          "Thank you again for the christening flowers, they were really beautiful! 😍 You did the flowers for our wedding a couple of years ago, so it was lovely to have your flowers for our daughter's first big celebration too. And what gorgeous flowers we received once again. Thank you so much.",
-        name: "Aino",
-        occasion: :christening,
-        lang: "fi"
-      },
-      %{
-        quote: "Så fint att du finns - du är en riktig räddare i nöden👍",
-        en: "So glad you're here - you're a real lifesaver👍",
-        name: "Elinor",
-        lang: "sv"
-      }
-    ],
-    [
       %{
         quote:
           "Så tusen tusen tack att du fick det fixat exakt som jag hade tänkt! Det blev både elegant, vackert och romantiskt! Så tack❤️",
@@ -89,20 +96,9 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         name: "Katariina",
         occasion: :wedding,
         lang: "sv"
-      },
-      %{
-        quote:
-          "Tack till dej för underbara buketter! Vi var verkligen så nöjda! Och gästerna frågade också varifrån de var! 😉😘 Tack!",
-        en:
-          "Thank you for the wonderful bouquets! We were so happy! And the guests also asked where they were from! 😉😘 Thank you!",
-        name: "Anna",
-        lang: "sv"
       }
     ]
   ]
-
-  # Fewer cards than this make a sparse fan, so the section waits until Jennie ticks enough.
-  @min_fan_cards 5
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -129,10 +125,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
        review_leaving: nil,
        review_direction: nil,
        subscribable_products: Catalog.list_subscribable_products!() |> Translations.translate(),
-       price_from: price_from(Catalog.list_bouquets!(), locale),
-       cards: Catalog.list_featured_cards!() |> Translations.translate(),
-       card_price_from: card_price_from(Catalog.list_card_drawer_variants!(), locale),
-       delivery_fee: delivery_fee(locale)
+       price_from: price_from(Catalog.list_bouquets!(), locale)
      )}
   end
 
@@ -149,18 +142,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
      )}
   end
 
-  # Opens the browser's cart already marked as a gift, so checkout starts on the gift
-  # side rather than For me.
-  def handle_event("send_gift", _params, socket) do
-    %{visitor_id: visitor_id, current_user: actor} = socket.assigns
-
-    %{visitor_id: visitor_id}
-    |> Orders.create_for_checkout!(actor: actor)
-    |> Orders.set_gift!(true, actor: actor)
-
-    {:noreply, push_navigate(socket, to: ~q"/#{language}/store")}
-  end
-
   defp occasion_label(:wedding), do: ~t"Wedding"
   defp occasion_label(:christening), do: ~t"Christening"
 
@@ -171,16 +152,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
     end
   end
 
-  def min_fan_cards, do: @min_fan_cards
-
-  defp show_card_fan?(cards), do: length(cards) >= @min_fan_cards
-
-  defp card_price_from([], _locale), do: nil
-
-  defp card_price_from(variants, locale) do
-    variants |> Enum.map(& &1.price) |> Enum.min(Decimal) |> Format.storefront_price(locale)
-  end
-
   defp page_description(nil) do
     ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers."
   end
@@ -189,19 +160,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
     gettext_comment("%{km} is the configured free-delivery distance in kilometres; only selected bouquets qualify.")
 
     ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within #{km = km} km of Minimossen on selected bouquets."
-  end
-
-  defp delivery_fee(locale) do
-    case Fulfillment.distance_priced_delivery() do
-      nil ->
-        nil
-
-      %{free_dist_km: km, base_price: base, price_per_km: per_km} when is_integer(km) and km > 0 ->
-        ~t"Free within #{km = km} km for chosen bouquets, otherwise #{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km."
-
-      %{base_price: base, price_per_km: per_km} ->
-        ~t"#{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km."
-    end
   end
 
   @impl true
@@ -697,8 +655,13 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               },
 
               onSelect() {
+                const active = this.embla.internalEngine().options.active;
+                const slide = this.embla.slideNodes()[this.embla.selectedScrollSnap()];
+                this.embla.containerNode().style.height = active
+                  ? `${slide.offsetHeight}px`
+                  : "";
                 if (!this.counterNode) return;
-                if (this.embla.internalEngine().options.active) {
+                if (active) {
                   this.counterNode.textContent = `${this.embla.selectedScrollSnap() + 1} / ${this.embla.scrollSnapList().length}`;
                 } else {
                   this.counterNode.textContent = this.counterNode.dataset.desktopCounter;
@@ -734,8 +697,62 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </script>
         </div>
       </section>
-
-      <.trusted_by />
+      <section
+        :if={@subscribable_products != []}
+        id="subscription"
+        class="bg-cream not-last:border-b"
+        aria-labelledby="subscription-heading"
+      >
+        <div :for={product <- @subscribable_products} :if={length(@subscribable_products) == 1} class="grid md:grid-cols-2">
+          <div class="bg-cream">
+            <.image
+              src="local:///subscription.jpg"
+              alt=""
+              width={1200}
+              height={1200}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              class="aspect-[4/5] h-full w-full object-cover md:aspect-square"
+            />
+          </div>
+          <div class="flex flex-col px-4 py-16 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
+            <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
+            <p class="eyebrow text-base-content/70 mb-4">
+              {product.name} · {~t"From"} {Edenflowers.Format.storefront_price(
+                product.cheapest_price,
+                Edenflowers.Format.locale()
+              )}
+            </p>
+            <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
+              {~t"Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
+            </p>
+            <.button
+              navigate={~q"/#{language}/product/#{product}?subscribe=1"}
+              variant="primary"
+              class="group w-fit"
+            >
+              {~t"Start a subscription"}
+              <.icon
+                name="hero-arrow-right-mini"
+                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
+              />
+            </.button>
+          </div>
+        </div>
+        <div :if={length(@subscribable_products) > 1} class="container py-20 md:py-28">
+          <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
+          <p class="text-base-content/80 mb-12 max-w-prose text-lg leading-relaxed">
+            {~t"Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
+          </p>
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <.product_card
+              :for={product <- @subscribable_products}
+              product={product}
+              navigate={~q"/#{language}/product/#{product}"}
+              locale={Edenflowers.Format.locale()}
+            />
+          </div>
+        </div>
+      </section>
 
       <section id="weddings" class="bg-night text-night-content not-last:border-b" aria-labelledby="weddings-heading">
         <div class="grid md:grid-cols-2 md:items-center">
@@ -819,249 +836,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           },
         };
       </script>
-
-      <section
-        :if={@subscribable_products != []}
-        id="subscription"
-        class="bg-cream not-last:border-b"
-        aria-labelledby="subscription-heading"
-      >
-        <div :for={product <- @subscribable_products} :if={length(@subscribable_products) == 1} class="grid md:grid-cols-2">
-          <div class="bg-cream">
-            <.image
-              src="local:///subscription.jpg"
-              alt=""
-              width={1200}
-              height={1200}
-              sizes="(min-width: 768px) 50vw, 100vw"
-              class="aspect-[4/5] h-full w-full object-cover md:aspect-square"
-            />
-          </div>
-          <div class="flex flex-col px-4 py-16 sm:px-8 md:justify-center md:px-12 md:py-20 lg:px-20">
-            <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
-            <p class="eyebrow text-base-content/70 mb-4">
-              {product.name} · {~t"From"} {Edenflowers.Format.storefront_price(
-                product.cheapest_price,
-                Edenflowers.Format.locale()
-              )}
-            </p>
-            <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
-              {~t"Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
-            </p>
-            <.button
-              navigate={~q"/#{language}/product/#{product}?subscribe=1"}
-              variant="primary"
-              class="group w-fit"
-            >
-              {~t"Start a subscription"}
-              <.icon
-                name="hero-arrow-right-mini"
-                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
-              />
-            </.button>
-          </div>
-        </div>
-        <div :if={length(@subscribable_products) > 1} class="container py-20 md:py-28">
-          <h2 id="subscription-heading" class="section-title mb-6">{~t"Flower subscription"}</h2>
-          <p class="text-base-content/80 mb-12 max-w-prose text-lg leading-relaxed">
-            {~t"Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
-          </p>
-          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <.product_card
-              :for={product <- @subscribable_products}
-              product={product}
-              navigate={~q"/#{language}/product/#{product}"}
-              locale={Edenflowers.Format.locale()}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section
-        :if={show_card_fan?(@cards)}
-        id="cards"
-        class="overflow-x-clip not-last:border-b"
-        aria-labelledby="cards-heading"
-      >
-        <div class="container grid items-center gap-12 py-20 md:py-28 lg:grid-cols-2">
-          <div class="lg:order-last">
-            <ul
-              id="card-fan"
-              phx-hook=".CardFan"
-              class="card-fan"
-              style={"--n: #{length(@cards)};"}
-              aria-label={~t"Cards"}
-            >
-              <li :for={{card, i} <- Enum.with_index(@cards)} style={"--i: #{i};"}>
-                <button type="button">
-                  <%!-- Card artwork is fine line work, which looks soft at the default WebP quality. --%>
-                  <.image
-                    src={card.main_photo_slug}
-                    alt={card.name}
-                    width={487}
-                    height={611}
-                    crop_type="fit"
-                    quality={90}
-                    sizes="(min-width: 768px) 13rem, 9.5rem"
-                  />
-                </button>
-              </li>
-            </ul>
-            <%!-- Names the card that is picked up, or pointed at or focused. --%>
-            <p
-              id="card-fan-caption"
-              phx-update="ignore"
-              class="card-fan-caption text-base-content/80 font-serif text-xl italic"
-              aria-live="polite"
-            >
-            </p>
-          </div>
-          <script :type={Phoenix.LiveView.ColocatedHook} name=".CardFan">
-            export default {
-              mounted() {
-                this.observer = new IntersectionObserver(
-                  ([entry]) => {
-                    if (entry.isIntersecting) {
-                      this.js().setAttribute(this.el, "data-open", "");
-                      this.observer.disconnect();
-                    }
-                  },
-                  { threshold: 0.6 },
-                );
-                this.observer.observe(this.el);
-
-                this.caption = document.getElementById("card-fan-caption");
-
-                // Clicking a card brings it to the front, swapping out any card already there.
-                // Clicking it again, Escape or a click on the page puts it back. Clicks on other
-                // links and buttons leave it out, since they have their own job to do.
-                this.click = (event) => {
-                  const card = this.el.contains(event.target) && event.target.closest("li");
-                  if (card)
-                    return card === this.selected()
-                      ? this.putBack()
-                      : this.bringToFront(card);
-                  if (this.selected() && !event.target.closest("a, button")) this.putBack();
-                };
-                this.escape = (event) => {
-                  if (event.key === "Escape" && this.selected()) this.putBack();
-                };
-                document.addEventListener("click", this.click);
-                document.addEventListener("keydown", this.escape);
-
-                // Pointing at or focusing a card names it while no card is picked up. Touch has
-                // no hover, so a tap names the card by picking it up.
-                const point = (card) => {
-                  this.pointed = card;
-                  this.name();
-                };
-                this.el.addEventListener("pointerover", (event) => {
-                  if (event.pointerType === "mouse") point(event.target.closest("li"));
-                });
-                this.el.addEventListener("pointerleave", () => point(null));
-                this.el.addEventListener("focusin", (event) =>
-                  point(event.target.closest("li")),
-                );
-                this.el.addEventListener("focusout", () => point(null));
-              },
-
-              selected() {
-                return this.el.querySelector("li[data-selected]");
-              },
-
-              // Names the card picked up, or else the one pointed at or focused. A picked-up card
-              // moves out from under the pointer, so pointing must not take the name from it.
-              name() {
-                const named = this.selected() || this.pointed;
-                if (named) {
-                  this.caption.textContent = named.querySelector("img").alt;
-                  this.js().setAttribute(this.caption, "data-shown", "");
-                } else {
-                  this.js().removeAttribute(this.caption, "data-shown");
-                }
-              },
-
-              // A card swapped out drops straight back without its own hop, so the only card
-              // that moves is the one coming to the front.
-              bringToFront(card) {
-                if (this.selected())
-                  this.js().removeAttribute(this.selected(), "data-selected");
-                this.js().removeAttribute(card, "data-put-back");
-                this.js().setAttribute(card, "data-selected", "");
-                this.name();
-              },
-
-              putBack() {
-                const card = this.selected();
-                this.js().removeAttribute(card, "data-selected");
-                this.js().setAttribute(card, "data-put-back", "");
-                this.name();
-              },
-
-              destroyed() {
-                this.observer.disconnect();
-                document.removeEventListener("click", this.click);
-                document.removeEventListener("keydown", this.escape);
-              },
-            };
-          </script>
-
-          <div class="flex flex-col items-start">
-            <h2 id="cards-heading" class="section-title mb-6">{~t"Your words, written by hand"}</h2>
-            <p :if={@card_price_from} class="eyebrow text-base-content/70 mb-4">
-              {~t"Cards from #{price = @card_price_from}"}
-            </p>
-            <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
-              {~t"Choose a card at checkout and add your message. Jennie writes it out and tucks it in with the flowers."}
-            </p>
-            <.button phx-click="send_gift" variant="primary" class="group w-fit">
-              {~t"Send a gift"}
-              <.icon
-                name="hero-arrow-right-mini"
-                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
-              />
-            </.button>
-          </div>
-        </div>
-      </section>
-
-      <section class="not-last:border-b" aria-labelledby="location-heading">
-        <div class="grid md:grid-cols-2">
-          <div class="flex flex-col px-4 pt-8 pb-16 sm:px-8 md:justify-center md:px-12 md:py-32 lg:px-20">
-            <.flower
-              name="flower-41"
-              class="text-base-content/20 [--flower-spin-turn:4deg] -mb-4 -ml-4 h-16 w-16 md:-mb-5 md:h-20 md:w-20"
-            />
-            <h2 id="location-heading" class="section-title relative mb-8">{~t"Delivery and pickup"}</h2>
-            <p :if={@notice_bar} id="location-order-status" class="mb-6 max-w-prose text-lg font-semibold leading-relaxed">
-              {@notice_bar}
-            </p>
-            <dl class="grid max-w-prose gap-6 text-lg leading-relaxed">
-              <div :if={@delivery_fee}>
-                <dt class="eyebrow text-base-content/70 mb-1">{~t"Delivery"}</dt>
-                <dd>{@delivery_fee}</dd>
-              </div>
-              <div>
-                <dt class="eyebrow text-base-content/70 mb-1">{~t"Pickup"}</dt>
-                <dd>{~t"Free from Minimossen."}</dd>
-              </div>
-            </dl>
-          </div>
-
-          <%!-- On desktop the map fills the text column's height instead of setting its own --%>
-          <div class="order-first md:relative md:order-none">
-            <.image
-              src="local:///home-vaasa-map-3.png"
-              alt={~t"Map of Vaasa, Finland with Minimossen pinned"}
-              width={1600}
-              height={1880}
-              sizes="(min-width: 768px) 50vw, 100vw"
-              quality={95}
-              class="aspect-[4/3] max-h-80 w-full object-cover md:aspect-auto md:max-h-none md:absolute md:inset-0 md:h-full"
-            />
-          </div>
-        </div>
-      </section>
     </Layouts.app>
     """
   end

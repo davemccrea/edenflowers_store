@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
-  alias EdenflowersWeb.Marketing.HomeLive
+  alias EdenflowersWeb.Store.StoreLive
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -462,19 +462,19 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
   # Follows the category select like attribute_keys. The count is of saved cards, as saving reloads the page.
   defp favourite_help(form, categories, fan_card_count) do
-    min = HomeLive.min_fan_cards()
+    min = StoreLive.min_fan_cards()
     max = Product.max_fan_cards()
 
     case Enum.find(categories, &(&1.id == form[:product_category_id].value)) do
       %{product_type: :card} when fan_card_count < min ->
-        ~t"Shows in the card fan on the home page once #{min = min} are ticked (#{count = fan_card_count} so far)."
+        ~t"Shows in the card fan on the store page once #{min = min} are ticked (#{count = fan_card_count} so far)."
 
       # The count stops at max, so reaching it may mean more are ticked than the fan holds.
       %{product_type: :card} when fan_card_count >= max ->
-        ~t"Shows in the card fan on the home page, which holds the first #{max = max} in store order."
+        ~t"Shows in the card fan on the store page, which holds the first #{max = max} in store order."
 
       %{product_type: :card} ->
-        ~t"Shows in the card fan on the home page."
+        ~t"Shows in the card fan on the store page."
 
       _ ->
         ~t"Shows under Favourites on the home page."

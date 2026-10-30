@@ -169,8 +169,6 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
         </div>
       </section>
 
-      <.trusted_by />
-
       <section class="bg-forest not-last:border-b" aria-labelledby="message-heading">
         <div class="grid md:grid-cols-2">
           <.image
@@ -192,6 +190,8 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
           </div>
         </div>
       </section>
+
+      <.trusted_by />
 
       <.live_component module={ContactDrawer} id="contact-drawer" />
     </Layouts.app>
