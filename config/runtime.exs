@@ -82,6 +82,11 @@ if config_env() == :prod do
          :uploads_dir,
          System.get_env("UPLOADS_DIR") || raise("environment variable UPLOADS_DIR is missing.")
 
+  # Production only: dev and worktrees use production Papra and must never poll the mailbox.
+  if fastmail_api_token = System.get_env("FASTMAIL_API_TOKEN") do
+    config :edenflowers, :fastmail_api_token, fastmail_api_token
+  end
+
   # Set on the production server only.
   if error_alert_email = System.get_env("ERROR_ALERT_EMAIL") do
     config :edenflowers, :error_alert_email, error_alert_email

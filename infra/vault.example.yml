@@ -42,11 +42,17 @@ vault_imgproxy_salt: "hex-encoded salt"
 # Cloudflare Tunnel (token from Cloudflare Zero Trust dashboard)
 vault_cloudflare_tunnel_token: "eyJ..."
 
-# Papra (generate with: openssl rand -base64 32)
+# Papra
+# Papra's own session signing key (its AUTH_SECRET); changing it logs everyone out of Papra.
+# Generate with: openssl rand -base64 32
 vault_papra_auth_secret: "your_papra_auth_secret"
+# App's API key for Papra; needs documents:create, documents:read, documents:update, tags:read
 vault_papra_api_key: "ppapi_..."
+# Signing secret of the /webhook/papra webhook; must match the webhook's secret in Papra
 vault_papra_webhook_secret: "your_papra_webhook_secret"
-vault_papra_organization_id: "your_papra_organization_id"
+
+# Fastmail API token with mail write access, for importing invoice emails
+vault_fastmail_api_token: "fmu1-..."
 
 # Anthropic (https://console.anthropic.com/settings/keys)
 vault_anthropic_api_key: "sk-ant-..."

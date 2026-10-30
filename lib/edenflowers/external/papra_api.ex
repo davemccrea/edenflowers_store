@@ -12,6 +12,11 @@ defmodule Edenflowers.External.PapraAPI.Behaviour do
   @callback remove_document_tag(document_id :: String.t(), tag_name :: String.t()) :: :ok | {:error, term()}
 
   @callback rename_document(document_id :: String.t(), name :: String.t()) :: :ok | {:error, term()}
+
+  @callback upload_document(filename :: String.t(), body :: binary()) ::
+              {:ok, %{document_id: String.t(), organization_id: String.t()}}
+              | {:error, :already_exists}
+              | {:error, term()}
 end
 
 defmodule Edenflowers.External.PapraAPI do
@@ -77,6 +82,27 @@ defmodule Edenflowers.External.PapraAPI do
       {:ok, %Req.Response{status: status}} when status in 200..299 -> :ok
       {:ok, %Req.Response{status: status}} -> {:error, {:papra_http_error, status}}
       {:error, reason} -> {:error, {:papra_request_failed, reason}}
+    end
+  end
+
+  # Papra rejects a file whose bytes are already in the organization, without saying which document has them.
+  @impl true
+  def upload_document(filename, body) do
+    file = {body, filename: filename, content_type: "application/pdf"}
+    request = [url: "#{organization_api_url()}/documents", form_multipart: [file: file], auth: {:bearer, api_key()}]
+
+    case Req.post(request ++ req_options()) do
+      {:ok, %Req.Response{status: status, body: %{"document" => %{"id" => id}}}} when status in 200..299 ->
+        {:ok, %{document_id: id, organization_id: Application.get_env(:edenflowers, :papra_organization_id)}}
+
+      {:ok, %Req.Response{status: 409}} ->
+        {:error, :already_exists}
+
+      {:ok, %Req.Response{status: status}} ->
+        {:error, {:papra_http_error, status}}
+
+      {:error, reason} ->
+        {:error, {:papra_request_failed, reason}}
     end
   end
 

@@ -64,7 +64,9 @@ Adding a language means adding it in three places, whose defaults differ on purp
 
 ### Papra expense capture
 
-Tag a document `receipt` in [Papra](https://papra.app). Its webhook hits `/webhook/papra`, the app sends the document to Claude to extract the expense, then tags it `processed` and renames it after the receipt date and vendor (`2026-10-23 Kukkatukku Oy.pdf`). Correcting the date or vendor in admin renames it again. Deleting the expense in admin removes both tags. The `processed` tag must already exist, and the API key needs `documents:read`, `documents:update` and `tags:read`.
+Tag a document `receipt` in [Papra](https://papra.app). Its webhook hits `/webhook/papra`, the app sends the document to Claude to extract the expense, then tags it `processed` and renames it after the receipt date and vendor (`2026-10-23 Kukkatukku Oy.pdf`). Correcting the date or vendor in admin renames it again. Deleting the expense in admin removes both tags. The `processed` tag must already exist, and the API key needs `documents:create`, `documents:read`, `documents:update` and `tags:read`.
+
+Invoice emails import themselves. A Fastmail filter (Settings → Filters & Rules) moves invoice emails, such as Hetzner's, into the folder `Fakturor`, and any invoice email can be dragged there by hand. Every 15 minutes production uploads each PDF attachment to Papra for extraction and moves the email to `Fakturor/Importerade`. Emails without a PDF stay in `Fakturor` to handle by hand. Both folders must exist. Production reads the mailbox with `FASTMAIL_API_TOKEN` (Settings → Privacy & Security → API tokens, with mail write access, since emails are moved). Dev and worktrees have no token, so they never touch the mailbox.
 
 ### Worktrees
 
