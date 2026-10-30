@@ -100,6 +100,9 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
     ]
   ]
 
+  # Fewer cards than this make a sparse fan, so the section waits until Jennie ticks enough.
+  @min_fan_cards 5
+
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
@@ -126,7 +129,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
        review_direction: nil,
        subscribable_products: Catalog.list_subscribable_products!() |> Translations.translate(),
        price_from: price_from(Catalog.list_bouquets!(), locale),
-       cards: Catalog.list_large_cards!() |> Translations.translate(),
+       cards: Catalog.list_featured_cards!() |> Translations.translate(),
        card_price_from: card_price_from(Catalog.list_card_drawer_variants!(), locale),
        delivery_fee: delivery_fee(locale)
      )}
@@ -154,6 +157,10 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       prices -> Format.storefront_price(Enum.min(prices, Decimal), locale)
     end
   end
+
+  def min_fan_cards, do: @min_fan_cards
+
+  defp show_card_fan?(cards), do: length(cards) >= @min_fan_cards
 
   defp card_price_from([], _locale), do: nil
 
@@ -774,7 +781,12 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <section :if={@cards != []} id="cards" class="overflow-x-clip not-last:border-b" aria-labelledby="cards-heading">
+      <section
+        :if={show_card_fan?(@cards)}
+        id="cards"
+        class="overflow-x-clip not-last:border-b"
+        aria-labelledby="cards-heading"
+      >
         <div class="container grid items-center gap-12 py-20 md:py-28 lg:grid-cols-2">
           <ul
             id="card-fan"
@@ -818,26 +830,15 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           </script>
 
           <div class="flex flex-col items-start">
-            <h2 id="cards-heading" class="section-title mb-6">{~t"A card in Jennie's hand"}</h2>
+            <h2 id="cards-heading" class="section-title mb-6">{~t"Your words, written by hand"}</h2>
             <p :if={@card_price_from} class="eyebrow text-base-content/70 mb-4">
               {~t"Cards from #{price = @card_price_from}"}
             </p>
-            <p class="text-base-content/80 mb-4 max-w-prose text-lg leading-relaxed">
-              {~t"Add a card to your bouquet at checkout and tell us what it should say. Jennie writes your message by hand and tucks it in with the flowers."}
-            </p>
-            <p class="text-base-content/70 mb-10 text-sm">
-              {~t"Illustrated by"}
-              <a
-                href="https://cardsbyjojo.se/"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="link-underline-hover hover:text-base-content"
-              >
-                Cards by Jojo
-              </a>
+            <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
+              {~t"Choose a card at checkout and add your message. Jennie writes it out and tucks it in with the flowers."}
             </p>
             <.button navigate={~q"/#{language}/store"} variant="primary" class="group w-fit">
-              {~t"Choose bouquet"}
+              {~t"Send a gift"}
               <.icon
                 name="hero-arrow-right-mini"
                 class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"

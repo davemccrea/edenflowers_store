@@ -167,7 +167,14 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     class="input max-w-48 w-full tabular-nums"
                   />
                   <div class="[&_.fieldset]:mb-0">
-                    <.input field={@form[:featured]} type="checkbox" label={~t"Favourite"} />
+                    <.input
+                      field={@form[:featured]}
+                      type="checkbox"
+                      label={~t"Favourite"}
+                      help={
+                        ~t"Shows on the home page: products under Favourites, and large cards in the card fan once #{count = EdenflowersWeb.Marketing.HomeLive.min_fan_cards()} are ticked."
+                      }
+                    />
                     <.input
                       :if={@free_dist_km}
                       field={@form[:free_delivery]}
