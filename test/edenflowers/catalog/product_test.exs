@@ -10,6 +10,28 @@ defmodule Edenflowers.Catalog.ProductTest do
     {:ok, tax_rate: tax_rate, product_category: product_category}
   end
 
+  describe "Catalog.list_large_cards" do
+    test "lists only cards with a large size in stock", %{tax_rate: tax_rate} do
+      cards = generate(product_category(slug: "cards", visibility: :hidden))
+
+      card = fn size, stock_quantity ->
+        product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards.id, draft: false))
+        generate(product_variant(product_id: product.id, draft: false, size: size, stock_quantity: stock_quantity))
+        product
+      end
+
+      large = card.(:large, nil)
+      small = card.(:small, nil)
+      sold_out_large = card.(:large, 0)
+
+      ids = Enum.map(Catalog.list_large_cards!(authorize?: false), & &1.id)
+
+      assert large.id in ids
+      refute small.id in ids
+      refute sold_out_large.id in ids
+    end
+  end
+
   describe "Catalog.list_store_products filtering" do
     test "excludes products whose only size was removed", %{tax_rate: tax_rate} do
       published_category = generate(product_category(visibility: :public))

@@ -126,6 +126,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
        review_direction: nil,
        subscribable_products: Catalog.list_subscribable_products!() |> Translations.translate(),
        price_from: price_from(Catalog.list_bouquets!(), locale),
+       cards: Catalog.list_large_cards!() |> Translations.translate(),
+       card_price_from: card_price_from(Catalog.list_card_drawer_variants!(), locale),
        delivery_fee: delivery_fee(locale)
      )}
   end
@@ -151,6 +153,12 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       [] -> nil
       prices -> Format.storefront_price(Enum.min(prices, Decimal), locale)
     end
+  end
+
+  defp card_price_from([], _locale), do: nil
+
+  defp card_price_from(variants, locale) do
+    variants |> Enum.map(& &1.price) |> Enum.min(Decimal) |> Format.storefront_price(locale)
   end
 
   defp page_description(nil) do
@@ -707,6 +715,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
+      <.trusted_by />
+
       <section
         :if={@subscribable_products != []}
         id="subscription"
@@ -764,7 +774,78 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         </div>
       </section>
 
-      <.trusted_by />
+      <section :if={@cards != []} id="cards" class="overflow-x-clip not-last:border-b" aria-labelledby="cards-heading">
+        <div class="container grid items-center gap-12 py-20 md:py-28 lg:grid-cols-2">
+          <ul
+            id="card-fan"
+            phx-hook=".CardFan"
+            class="card-fan lg:order-last"
+            style={"--n: #{length(@cards)};"}
+            aria-label={~t"Cards"}
+          >
+            <li :for={{card, i} <- Enum.with_index(@cards)} style={"--i: #{i};"}>
+              <%!-- Card artwork is fine line work, which looks soft at the default WebP quality. --%>
+              <.image
+                src={card.main_photo_slug}
+                alt={card.name}
+                width={487}
+                height={611}
+                crop_type="fit"
+                quality={90}
+                sizes="(min-width: 768px) 13rem, 9.5rem"
+              />
+            </li>
+          </ul>
+          <script :type={Phoenix.LiveView.ColocatedHook} name=".CardFan">
+            export default {
+              mounted() {
+                this.observer = new IntersectionObserver(
+                  ([entry]) => {
+                    if (entry.isIntersecting) {
+                      this.js().setAttribute(this.el, "data-open", "");
+                      this.observer.disconnect();
+                    }
+                  },
+                  { threshold: 0.6 },
+                );
+                this.observer.observe(this.el);
+              },
+
+              destroyed() {
+                this.observer.disconnect();
+              },
+            };
+          </script>
+
+          <div class="flex flex-col items-start">
+            <h2 id="cards-heading" class="section-title mb-6">{~t"A card in Jennie's hand"}</h2>
+            <p :if={@card_price_from} class="eyebrow text-base-content/70 mb-4">
+              {~t"Cards from #{price = @card_price_from}"}
+            </p>
+            <p class="text-base-content/80 mb-4 max-w-prose text-lg leading-relaxed">
+              {~t"Add a card to your bouquet at checkout and tell us what it should say. Jennie writes your message by hand and tucks it in with the flowers."}
+            </p>
+            <p class="text-base-content/70 mb-10 text-sm">
+              {~t"Illustrated by"}
+              <a
+                href="https://cardsbyjojo.se/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline-hover hover:text-base-content"
+              >
+                Cards by Jojo
+              </a>
+            </p>
+            <.button navigate={~q"/#{language}/store"} variant="primary" class="group w-fit">
+              {~t"Choose bouquet"}
+              <.icon
+                name="hero-arrow-right-mini"
+                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
+              />
+            </.button>
+          </div>
+        </div>
+      </section>
 
       <section class="not-last:border-b" aria-labelledby="location-heading">
         <div class="grid md:grid-cols-2">
