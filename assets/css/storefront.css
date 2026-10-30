@@ -600,3 +600,50 @@
     --lift: -1.5%;
   }
 }
+
+/* The home page's wedding photos flip like stop-motion once, each time the section
+   comes into view (the WeddingFrames hook sets data-playing). Every frame shares one
+   grid cell; the last one sits underneath as the still that stays, and each earlier
+   frame covers it for its slot. Steps, not fades, so it reads as stop-motion.
+   The faded edge hides the seam between the photo's wall and the section. */
+.wedding-frames {
+  --frame: 1s;
+  display: grid;
+  mask-image: linear-gradient(to top, transparent, black 12%);
+
+  @media (width >= theme(--breakpoint-md)) {
+    mask-image: linear-gradient(to right, transparent, black 15%);
+  }
+
+  > * {
+    grid-area: 1 / 1;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    max-height: 90svh;
+    object-fit: cover;
+  }
+
+  > :not(:last-child) {
+    z-index: 1;
+    opacity: 0;
+  }
+}
+
+@keyframes wedding-frame {
+  from,
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The first frame waits for the section, so the flips start from it. */
+  .wedding-frames > :first-child {
+    opacity: 1;
+  }
+  .wedding-frames[data-playing] > :not(:last-child) {
+    opacity: 0;
+    animation: wedding-frame var(--frame);
+    animation-delay: calc(var(--i) * var(--frame));
+  }
+}

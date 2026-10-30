@@ -58,5 +58,9 @@
   --color-dusk: oklch(41% 0.058 247);
   --color-dusk-content: oklch(96% 0.015 80);
 
+  /* The dark wall behind the home page's wedding photos, so the photos have no visible edge. */
+  --color-night: oklch(16% 0.012 290);
+  --color-night-content: oklch(94% 0.02 80);
+
   --color-link-underline: oklch(81% 0.15 93);
 }
