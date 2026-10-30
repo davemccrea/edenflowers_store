@@ -61,7 +61,7 @@ umami_db_user: umami
 umami_db_password: "{{ vault_umami_db_password }}"
 umami_app_secret: "{{ vault_umami_app_secret }}"
 # From the website's settings in Umami. The shop loads no tracker while it's empty.
-umami_website_id: 9d158c42-7d9b-4ad0-bab2-996067d2a941
+umami_website_id: 99ac34f2-cd64-4ab1-82c3-22b79d564176
 
 # Anthropic
 anthropic_api_key: "{{ vault_anthropic_api_key }}"
