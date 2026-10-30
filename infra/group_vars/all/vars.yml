@@ -61,7 +61,7 @@ umami_db_user: umami
 umami_db_password: "{{ vault_umami_db_password }}"
 umami_app_secret: "{{ vault_umami_app_secret }}"
 # From the website's settings in Umami. The shop loads no tracker while it's empty.
-umami_website_id: ""
+umami_website_id: 9d158c42-7d9b-4ad0-bab2-996067d2a941
 
 # Anthropic
 anthropic_api_key: "{{ vault_anthropic_api_key }}"
@@ -77,6 +77,3 @@ shop_notice_email: info@edenflowers.fi
 # Web Push for admin order notifications
 vapid_public_key: "BN4aYz2NjwKIBK5pDPWGMPlW3QWeWTP2eBTJaFnra0IBZ0EW4A16OeSrEjdnRUescacckmA3CW5amnYsj4aJZbM"
 vapid_private_key: "{{ vault_vapid_private_key }}"
-
-# Umami
-umami_website_id: 9d158c42-7d9b-4ad0-bab2-996067d2a941
