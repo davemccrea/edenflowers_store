@@ -976,14 +976,14 @@ defmodule EdenflowersWeb.Layouts do
       </div>
 
       <div class="container">
-        <div class="flex flex-col items-center gap-3 pt-6 pb-12">
+        <div class="flex flex-col items-center gap-3 pt-6 pb-10">
           <img
             src={~p"/images/logo-eden-flowers.svg"}
             alt="Eden Flowers"
             width="112"
             height="112"
             loading="lazy"
-            class="mt-8 mb-8 w-28"
+            class="my-4 w-28"
           />
           <div class="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
             <span class="text-xs">

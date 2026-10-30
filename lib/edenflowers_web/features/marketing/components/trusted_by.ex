@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Marketing.TrustedBy do
   @moduledoc """
-  The ruled row of client logos on the home and about pages.
+  The ruled row of client logos at the foot of the about page.
   """
 
   use EdenflowersWeb, :html

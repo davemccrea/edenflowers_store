@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.FetchMap do
   @moduledoc """
   Fetches the Vaasa location map from Mapbox Static Images API and writes it to
-  `images/home-vaasa-map-3.png`, the Imgproxy local-storage source.
+  `images/home-vaasa-map-10.png`, the Imgproxy local-storage source.
 
   ## Why a Mix task
 
@@ -37,11 +37,12 @@ defmodule Mix.Tasks.FetchMap do
   # `pin-m` is Mapbox's medium built-in pin. Color is hex without `#`.
   # Honey approximates --color-link-underline.
   @marker_color "E8B33C"
-  @output_path "images/home-vaasa-map-3.png"
+  # Imgproxy caches an image for a year, so a re-styled map needs a new filename.
+  @output_path "images/home-vaasa-map-10.png"
 
   # The custom style only has land and water, so roads are layered on at
   # request time from Mapbox's own street data, tinted to sit quietly on the
-  # cream land colour.
+  # warm white land colour.
   @road_layer %{
     id: "roads",
     type: "line",
@@ -55,7 +56,7 @@ defmodule Mix.Tasks.FetchMap do
       false
     ],
     paint: %{
-      "line-color": "#c9bfa8",
+      "line-color": "#d2cabd",
       "line-width": [
         "match",
         ["get", "class"],
@@ -108,6 +109,8 @@ defmodule Mix.Tasks.FetchMap do
         access_token: token,
         logo: false,
         attribution: false,
+        # Skips Mapbox's CDN, which otherwise serves a render from before a style edit.
+        fresh: true,
         addlayer: JSON.encode!(@road_layer)
       )
   end
