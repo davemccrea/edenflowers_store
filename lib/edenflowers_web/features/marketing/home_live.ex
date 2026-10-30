@@ -737,6 +737,89 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
       <.trusted_by />
 
+      <section id="weddings" class="bg-night text-night-content not-last:border-b" aria-labelledby="weddings-heading">
+        <div class="grid md:grid-cols-2 md:items-center">
+          <div class="flex flex-col items-start px-4 pt-12 pb-20 sm:px-8 md:px-12 md:py-20 lg:px-20">
+            <p class="eyebrow text-night-content/70 mb-6">{~t"Weddings"}</p>
+            <h2 id="weddings-heading" class="page-title lg:text-6xl">
+              <span class="italic">{~t"Your day."}</span>
+              <br />
+              {~t"Your flowers."}
+            </h2>
+            <p class="text-night-content/80 mt-6 max-w-md text-lg leading-relaxed">
+              {~t"I'd love to hear about your wedding. Tell me about the day and your style, and I'll design bouquets, crowns and decoration that feel like the two of you."}
+            </p>
+            <.button navigate={~q"/#{language}/weddings"} variant="light" class="group mt-10 w-fit">
+              {~t"Wedding flowers"}
+              <.icon
+                name="hero-arrow-right-mini"
+                class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
+              />
+            </.button>
+          </div>
+          <%!-- Photos first on phones, so the stop-motion is what people reach first. --%>
+          <div class="relative max-md:order-first">
+            <div id="wedding-frames" phx-hook=".WeddingFrames" class="wedding-frames">
+              <.image
+                :for={{n, i} <- Enum.with_index([8, 10, 11])}
+                src={"local:///wedding/daniela_streng_#{n}.jpg"}
+                style={"--i: #{i};"}
+                alt=""
+                width={1000}
+                height={1500}
+                sizes="(min-width: 768px) 50vw, 100vw"
+              />
+              <.image
+                src="local:///wedding/daniela_streng_9.jpg"
+                alt={~t"Bride in a flower crown holding her bouquet, looking into the distance"}
+                width={1000}
+                height={1500}
+                sizes="(min-width: 768px) 50vw, 100vw"
+              />
+            </div>
+            <p class="text-night-content/70 absolute right-4 bottom-3 text-xs">
+              {~t"Photo:"}
+              <a
+                href="https://www.danielastreng.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline-hover hover:text-night-content"
+              >
+                Daniela Streng
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+      <script :type={Phoenix.LiveView.ColocatedHook} name=".WeddingFrames">
+        // Plays the stop-motion each time the photos are mostly in view; leaving resets it.
+        // It waits for every frame to decode, so no flip stalls on an unpainted photo.
+        export default {
+          mounted() {
+            const decoded = Promise.all(
+              [...this.el.querySelectorAll("img")].map((img) =>
+                img.decode().catch(() => {}),
+              ),
+            );
+            this.observer = new IntersectionObserver(
+              async ([entry]) => {
+                if (entry.intersectionRatio >= 0.6) {
+                  await decoded;
+                  this.js().setAttribute(this.el, "data-playing", "");
+                } else if (entry.intersectionRatio === 0) {
+                  this.js().removeAttribute(this.el, "data-playing");
+                }
+              },
+              { threshold: [0, 0.6] },
+            );
+            this.observer.observe(this.el);
+          },
+          destroyed() {
+            this.observer.disconnect();
+          },
+        };
+      </script>
+
       <section
         :if={@subscribable_products != []}
         id="subscription"
