@@ -113,7 +113,7 @@ msgstr "Lisää Eden Admin Koti-valikkoon, niin saat ilmoitukset."
 msgid "Add an item to see the price."
 msgstr "Lisää tuote nähdäksesi hinnan."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:630
+#: lib/edenflowers_web/features/admin/product_form_live.ex:635
 #, elixir-autogen, elixir-format
 msgid "Add at most %{count} photos."
 msgstr "Lisää enintään %{count} kuvaa."
@@ -1359,7 +1359,7 @@ msgid "In person"
 msgstr "Paikan päällä"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:403
-#: lib/edenflowers_web/features/admin/product_form_live.ex:488
+#: lib/edenflowers_web/features/admin/product_form_live.ex:493
 #, elixir-autogen, elixir-format
 msgid "In stock"
 msgstr "Varastossa"
@@ -1658,7 +1658,7 @@ msgstr "Uusi tilaus %{order_order_reference}"
 msgid "New order notifications"
 msgstr "Ilmoitukset uusista tilauksista"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:606
+#: lib/edenflowers_web/features/admin/product_form_live.ex:611
 #: lib/edenflowers_web/features/admin/products_live.ex:47
 #, elixir-autogen, elixir-format
 msgid "New product"
@@ -1834,7 +1834,7 @@ msgid "Office supplies"
 msgstr "Toimistotarvikkeet"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:373
-#: lib/edenflowers_web/features/admin/product_form_live.ex:520
+#: lib/edenflowers_web/features/admin/product_form_live.ex:525
 #, elixir-autogen, elixir-format
 msgid "One size"
 msgstr "Yksi koko"
@@ -2240,7 +2240,7 @@ msgid "Previous order"
 msgstr "Edellinen tilaus"
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:402
-#: lib/edenflowers_web/features/admin/product_form_live.ex:488
+#: lib/edenflowers_web/features/admin/product_form_live.ex:493
 #, elixir-autogen, elixir-format
 msgid "Price"
 msgstr "Hinta"
@@ -2287,7 +2287,7 @@ msgstr "Tuote"
 msgid "Product not found."
 msgstr "Tuotetta ei löytynyt."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:574
+#: lib/edenflowers_web/features/admin/product_form_live.ex:579
 #, elixir-autogen, elixir-format
 msgid "Product saved."
 msgstr "Tuote tallennettu."
@@ -2799,7 +2799,7 @@ msgstr "Kirjaudu ulos"
 
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:93
 #: lib/edenflowers_web/features/admin/product_form_live.ex:372
-#: lib/edenflowers_web/features/admin/product_form_live.ex:488
+#: lib/edenflowers_web/features/admin/product_form_live.ex:493
 #: lib/edenflowers_web/features/admin/subscription_log.ex:77
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:71
 #, elixir-autogen, elixir-format
@@ -3047,7 +3047,7 @@ msgstr "Kuvan on oltava alle 40 Mt."
 msgid "The picture must be under 2 MB."
 msgstr "Kuvan on oltava alle 2 Mt."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:581
+#: lib/edenflowers_web/features/admin/product_form_live.ex:586
 #, elixir-autogen, elixir-format
 msgid "The product wasn't saved. Check the fields marked below."
 msgstr "Tuotetta ei tallennettu. Tarkista alla merkityt kentät."
@@ -3826,17 +3826,17 @@ msgstr "Sähköposti ja markkinointi"
 msgid "Hosting"
 msgstr "Ylläpito"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:469
+#: lib/edenflowers_web/features/admin/product_form_live.ex:470
 #, elixir-autogen, elixir-format
 msgid "Shows in the card fan on the home page once %{min} are ticked (%{count} so far)."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:472
+#: lib/edenflowers_web/features/admin/product_form_live.ex:477
 #, elixir-autogen, elixir-format
 msgid "Shows in the card fan on the home page."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:475
+#: lib/edenflowers_web/features/admin/product_form_live.ex:480
 #, elixir-autogen, elixir-format
 msgid "Shows under Favourites on the home page."
 msgstr ""
@@ -3872,3 +3872,8 @@ msgstr "Tallenna ja merkitse maksetuksi tänään"
 #, elixir-autogen, elixir-format
 msgid "due %{date}"
 msgstr "erääntyy %{date}"
+
+#: lib/edenflowers_web/features/admin/product_form_live.ex:474
+#, elixir-autogen, elixir-format
+msgid "Shows in the card fan on the home page, which holds the first %{max} in store order."
+msgstr ""

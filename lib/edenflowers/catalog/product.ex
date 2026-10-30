@@ -16,6 +16,10 @@ defmodule Edenflowers.Catalog.Product do
   alias Edenflowers.Catalog.Preparations
   alias Edenflowers.Catalog.Validations
 
+  # More cards than this fan out too thinly to tap on a phone.
+  @max_fan_cards 7
+  def max_fan_cards, do: @max_fan_cards
+
   postgres do
     table "products"
     repo Edenflowers.Repo
@@ -53,9 +57,9 @@ defmodule Edenflowers.Catalog.Product do
     end
 
     read :featured_cards do
-      description "Cards Jennie has ticked Favourite, for the fan on the home page, in store order. Cards are " <>
-                    "hidden from the storefront, so this offers the same published, in-stock cards as " <>
-                    "ProductVariant's `for_card_drawer`."
+      description "Cards Jennie has ticked Favourite, for the fan on the home page, in store order and no more than " <>
+                    "the fan holds. Cards are hidden from the storefront, so this offers the same published, " <>
+                    "in-stock cards as ProductVariant's `for_card_drawer`."
 
       filter expr(
                featured == true and
@@ -65,7 +69,7 @@ defmodule Edenflowers.Catalog.Product do
                  exists(product_variants, draft == false and (is_nil(stock_quantity) or stock_quantity > 0))
              )
 
-      prepare build(sort: [position: :asc_nils_last, name: :asc], load: [:main_photo_slug])
+      prepare build(sort: [position: :asc_nils_last, name: :asc], load: [:main_photo_slug], limit: @max_fan_cards)
     end
 
     # Categories are data, so the bouquet category is found by its English slug.

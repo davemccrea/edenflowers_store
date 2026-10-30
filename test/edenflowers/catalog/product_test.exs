@@ -35,6 +35,17 @@ defmodule Edenflowers.Catalog.ProductTest do
       refute sold_out.id in ids
     end
 
+    test "lists no more cards than the fan holds", %{tax_rate: tax_rate} do
+      cards = generate(product_category(slug: "cards", visibility: :hidden))
+
+      for _ <- 0..Catalog.Product.max_fan_cards() do
+        card = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards.id, draft: false, featured: true))
+        generate(product_variant(product_id: card.id, draft: false))
+      end
+
+      assert length(Catalog.list_featured_cards!(authorize?: false)) == Catalog.Product.max_fan_cards()
+    end
+
     test "keeps Favourite cards out of the home page's Favourites", %{tax_rate: tax_rate} do
       cards = generate(product_category(slug: "cards", visibility: :hidden))
       card = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards.id, draft: false, featured: true))

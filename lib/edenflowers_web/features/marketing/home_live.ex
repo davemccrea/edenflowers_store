@@ -810,11 +810,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               aria-label={~t"Cards"}
             >
               <li :for={{card, i} <- Enum.with_index(@cards)} style={"--i: #{i};"}>
-                <%!-- The last card is already in front, so it has nothing to do. --%>
-                <.dynamic_tag
-                  tag_name={if i < length(@cards) - 1, do: "button", else: "div"}
-                  {if i < length(@cards) - 1, do: [type: "button", "aria-pressed": "false"], else: []}
-                >
+                <button type="button">
                   <%!-- Card artwork is fine line work, which looks soft at the default WebP quality. --%>
                   <.image
                     src={card.main_photo_slug}
@@ -825,10 +821,10 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                     quality={90}
                     sizes="(min-width: 768px) 13rem, 9.5rem"
                   />
-                </.dynamic_tag>
+                </button>
               </li>
             </ul>
-            <%!-- Names the card that is picked up. --%>
+            <%!-- Names the card that is picked up, or pointed at or focused. --%>
             <p
               id="card-fan-caption"
               phx-update="ignore"
@@ -853,38 +849,67 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
                 this.caption = document.getElementById("card-fan-caption");
 
-                // Clicking a card brings it to the front. While it is there, any click, even on
-                // another card, or Escape puts it back. The last card is already on top.
+                // Clicking a card brings it to the front, swapping out any card already there.
+                // Clicking it again, Escape or a click on the page puts it back. Clicks on other
+                // links and buttons leave it out, since they have their own job to do.
                 this.click = (event) => {
-                  if (this.selected()) return this.putBack();
                   const card = this.el.contains(event.target) && event.target.closest("li");
-                  if (card && card !== this.el.lastElementChild) this.bringToFront(card);
+                  if (card)
+                    return card === this.selected()
+                      ? this.putBack()
+                      : this.bringToFront(card);
+                  if (this.selected() && !event.target.closest("a, button")) this.putBack();
                 };
                 this.escape = (event) => {
                   if (event.key === "Escape" && this.selected()) this.putBack();
                 };
                 document.addEventListener("click", this.click);
                 document.addEventListener("keydown", this.escape);
+
+                // Pointing at or focusing a card names it while no card is picked up. Touch has
+                // no hover, so a tap names the card by picking it up.
+                const point = (card) => {
+                  this.pointed = card;
+                  this.name();
+                };
+                this.el.addEventListener("pointerover", (event) => {
+                  if (event.pointerType === "mouse") point(event.target.closest("li"));
+                });
+                this.el.addEventListener("pointerleave", () => point(null));
+                this.el.addEventListener("focusin", (event) =>
+                  point(event.target.closest("li")),
+                );
+                this.el.addEventListener("focusout", () => point(null));
               },
 
               selected() {
                 return this.el.querySelector("li[data-selected]");
               },
 
+              // Names the card picked up, or else the one pointed at or focused. A picked-up card
+              // moves out from under the pointer, so pointing must not take the name from it.
+              name() {
+                const named = this.selected() || this.pointed;
+                if (named) {
+                  this.caption.textContent = named.querySelector("img").alt;
+                  this.js().setAttribute(this.caption, "data-shown", "");
+                } else {
+                  this.js().removeAttribute(this.caption, "data-shown");
+                }
+              },
+
               bringToFront(card) {
+                if (this.selected()) this.putBack();
                 this.js().removeAttribute(card, "data-put-back");
                 this.js().setAttribute(card, "data-selected", "");
-                this.js().setAttribute(card.firstElementChild, "aria-pressed", "true");
-                this.caption.textContent = card.querySelector("img").alt;
-                this.js().setAttribute(this.caption, "data-shown", "");
+                this.name();
               },
 
               putBack() {
                 const card = this.selected();
                 this.js().removeAttribute(card, "data-selected");
                 this.js().setAttribute(card, "data-put-back", "");
-                this.js().setAttribute(card.firstElementChild, "aria-pressed", "false");
-                this.js().removeAttribute(this.caption, "data-shown");
+                this.name();
               },
 
               destroyed() {
