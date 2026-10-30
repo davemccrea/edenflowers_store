@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.Admin.LinksLive do
          {"Stripe", "https://dashboard.stripe.com"},
          {"Papra documents", "https://papra.edenflowers.fi"}
        ]},
-      {~t"Email and marketing", [{"Brevo", "https://app.brevo.com"}]},
+      {~t"Email and marketing", [{"Umami", "https://stats.edenflowers.fi"}, {"Brevo", "https://app.brevo.com"}]},
       {~t"Hosting",
        [
          {"Cloudflare", "https://dash.cloudflare.com"},
