@@ -318,12 +318,16 @@
   .embla__slide {
     flex-basis: 18rem;
     transform: none;
+  }
+  .embla__slide img {
     opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .embla__slide {
     transform: none;
+  }
+  .embla__slide img {
     opacity: 1;
   }
 }
