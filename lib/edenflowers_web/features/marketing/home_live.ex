@@ -821,6 +821,33 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                   { threshold: 0.6 },
                 );
                 this.observer.observe(this.el);
+
+                // Raising the hovered card covers its right-hand neighbour, so plain :hover
+                // sticks when moving left to right. Each card owns the 6deg wedge it is fanned
+                // to around the shared pivot, whatever the stacking order.
+                this.el.addEventListener("pointermove", (event) => {
+                  if (event.pointerType !== "mouse" || !event.target.closest("li")) {
+                    return this.hover(null);
+                  }
+                  const cards = this.el.children;
+                  const card = cards[0];
+                  const parent = card.offsetParent.getBoundingClientRect();
+                  const pivotX = parent.left + card.offsetLeft + card.offsetWidth / 2;
+                  const pivotY = parent.top + card.offsetTop + card.offsetHeight * 1.8;
+                  const angle =
+                    Math.atan2(event.clientX - pivotX, pivotY - event.clientY) *
+                    (180 / Math.PI);
+                  const i = Math.round(angle / 6 + (cards.length - 1) / 2);
+                  this.hover(cards[Math.min(Math.max(i, 0), cards.length - 1)]);
+                });
+                this.el.addEventListener("pointerleave", () => this.hover(null));
+              },
+
+              hover(card) {
+                if (card === this.hovered) return;
+                if (this.hovered) this.js().removeAttribute(this.hovered, "data-hover");
+                if (card) this.js().setAttribute(card, "data-hover", "");
+                this.hovered = card;
               },
 
               destroyed() {
