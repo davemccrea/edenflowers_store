@@ -32,7 +32,7 @@ msgstr "(öppnas i större format)"
 msgid "Cart, empty"
 msgstr "Varukorgen, tom"
 
-#: lib/edenflowers_web/components/layouts.ex:139
+#: lib/edenflowers_web/components/layouts.ex:149
 #, elixir-autogen, elixir-format
 msgid "Connection lost"
 msgstr "Anslutningen bröts"
@@ -107,7 +107,7 @@ msgstr "Kruka (cm)"
 msgid "Previous month"
 msgstr "Föregående månad"
 
-#: lib/edenflowers_web/components/layouts.ex:144
+#: lib/edenflowers_web/components/layouts.ex:154
 #, elixir-autogen, elixir-format
 msgid "Reconnecting…"
 msgstr "Återansluter…"
@@ -167,14 +167,14 @@ msgstr "Det uppstod ett problem med att beräkna leveranskostnaden, försök ige
 msgid "This field is required"
 msgstr "Det här fältet är obligatoriskt"
 
-#: lib/edenflowers_web/components/layouts.ex:417
-#: lib/edenflowers_web/components/layouts.ex:635
+#: lib/edenflowers_web/components/layouts.ex:427
+#: lib/edenflowers_web/components/layouts.ex:645
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr "Stäng navigeringsmenyn"
 
-#: lib/edenflowers_web/components/layouts.ex:276
-#: lib/edenflowers_web/components/layouts.ex:699
+#: lib/edenflowers_web/components/layouts.ex:286
+#: lib/edenflowers_web/components/layouts.ex:709
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr "Öppna navigeringsmeny"
