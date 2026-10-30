@@ -49,6 +49,9 @@ if config_env() in [:prod, :dev] do
       subject: System.get_env("VAPID_SUBJECT", "mailto:info@edenflowers.fi")
   end
 
+  # Without a website id the shop sends no analytics, as in dev and worktrees.
+  config :edenflowers, :umami_website_id, System.get_env("UMAMI_WEBSITE_ID")
+
   config :edenflowers, :maintenance_mode, System.get_env("MAINTENANCE_MODE") in ~w(true 1)
 
   config :edenflowers,

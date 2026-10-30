@@ -105,6 +105,16 @@ defmodule EdenflowersWeb.Layouts do
 
   defp admin_path?(path), do: path == "/admin" or String.starts_with?(path, "/admin/")
 
+  # Umami counts shoppers, so the admin and staff browsing the shop stay out.
+  # Pay links do too: their URL is the payment token.
+  defp umami_website_id(conn) do
+    user = conn.assigns[:current_user]
+
+    unless admin_path?(conn.request_path) or String.starts_with?(conn.request_path, "/pay/") or (user && user.admin) do
+      Application.get_env(:edenflowers, :umami_website_id)
+    end
+  end
+
   # The Option+Click picker in element_picker.js only turns on for reviewers.
   defp reviewer?(nil), do: false
   defp reviewer?(user), do: Edenflowers.Accounts.can_review?(user)

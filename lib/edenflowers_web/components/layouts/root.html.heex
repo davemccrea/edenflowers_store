@@ -53,6 +53,10 @@
     </script>
     <%!-- Photos come from imgproxy on another host; opening that connection now saves a first visit's LCP photo the wait. --%>
     <link rel="preconnect" href={Application.get_env(:imgproxy, :prefix)} />
+    <%= if website_id = umami_website_id(@conn) do %>
+      <script defer src="https://stats.edenflowers.fi/e.js" data-website-id={website_id}>
+      </script>
+    <% end %>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script phx-track-static type="module" src={~p"/assets/js/app.js"}>
     </script>
