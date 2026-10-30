@@ -232,8 +232,14 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   def handle_event("book", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
-      {:ok, registration} -> {:noreply, assign(socket, registration: registration, editing?: false)}
-      {:error, form} -> {:noreply, socket |> assign(form: form) |> reload_course() |> leave_if_paid()}
+      {:ok, registration} ->
+        {:noreply,
+         socket
+         |> assign(registration: registration, editing?: false)
+         |> EdenflowersWeb.Analytics.track("Course booking started", %{}, once: "course-booking:#{registration.id}")}
+
+      {:error, form} ->
+        {:noreply, socket |> assign(form: form) |> reload_course() |> leave_if_paid()}
     end
   end
 

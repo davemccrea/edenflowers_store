@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
   alias Edenflowers.Format
   alias Edenflowers.Orders
+  alias EdenflowersWeb.Analytics
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -160,6 +161,23 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     {:noreply, assign_order(socket, order)}
   end
 
+  # Sent from the confirmation page rather than when the webhook places the
+  # order, so the order keeps the visit's referrer and campaign.
+  defp track_order_completed(socket, %{committed?: true} = order) do
+    revenue = Analytics.revenue(order.grand_total)
+
+    socket =
+      Analytics.track(socket, "Order completed", Map.put(revenue, :subscription, order.subscription?),
+        once: "order:#{order.id}"
+      )
+
+    if order.subscription?,
+      do: Analytics.track(socket, "Subscription started", revenue, once: "subscription:#{order.id}"),
+      else: socket
+  end
+
+  defp track_order_completed(socket, _order), do: socket
+
   # A guest is granted the order their browser's cart became: by guest_order_id once
   # `CheckoutCompleteController` released it, or by visitor_id when the webhook placed
   # it first. Everyone else goes through the order's read policy.
@@ -182,10 +200,15 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   end
 
   defp assign_order(socket, order) do
-    {:ok, order} = Ash.load(order, [:customer_first_name, :line_items, :fulfillment_fee], authorize?: false)
+    {:ok, order} =
+      Ash.load(order, [:customer_first_name, :line_items, :fulfillment_fee, :grand_total, :subscription?],
+        authorize?: false
+      )
+
     subscription_line = Enum.find(order.line_items, & &1.interval_weeks)
 
     socket
+    |> track_order_completed(order)
     |> assign(:page_title, ~t"Thank you for your order")
     |> assign(:shown_order, order)
     |> assign(:placed?, order.committed?)

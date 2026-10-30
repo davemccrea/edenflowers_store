@@ -25,6 +25,21 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
   end
 
+  test "counts a placed order once in Umami, with its revenue", %{conn: conn, user: user} do
+    order = placed_order(user_id: user.id, paid: true)
+    order_key = "order:#{order.id}"
+    {:ok, %{grand_total: grand_total}} = Ash.load(order, :grand_total, authorize?: false)
+    revenue = Decimal.to_float(grand_total)
+
+    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+
+    assert_push_event(view, "umami", %{
+      name: "Order completed",
+      data: %{revenue: ^revenue, currency: "EUR", subscription: false},
+      once: ^order_key
+    })
+  end
+
   test "does not offer a receipt for an unpaid custom order", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, origin: :custom)
 

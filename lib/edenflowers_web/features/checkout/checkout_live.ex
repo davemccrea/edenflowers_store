@@ -29,6 +29,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Orders.Order
   alias Edenflowers.PhoneNumber
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Analytics
 
   @checkout_states Order.checkout_states()
 
@@ -108,6 +109,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # rarely used, so neither was worth it.
   @impl true
   def handle_params(params, _uri, %{assigns: %{fulfillment_options: _}} = socket) do
+    socket = track_checkout_progress(socket)
     order = socket.assigns.order
     step = Enum.find(@checkout_states, &(Atom.to_string(&1) == params["step"]))
 
@@ -130,6 +132,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   # Mount navigated away.
   def handle_params(_params, _uri, socket), do: {:noreply, socket}
+
+  # Once per cart, so the funnel counts carts reaching a step, not page loads.
+  defp track_checkout_progress(%{assigns: %{order: order}} = socket) when order.state in @checkout_states do
+    socket
+    |> Analytics.track("Checkout started", %{}, once: "checkout:#{order.id}")
+    |> Analytics.track("Checkout step", %{step: order.state}, once: "checkout:#{order.id}:#{order.state}")
+  end
+
+  defp track_checkout_progress(socket), do: socket
 
   @impl true
   def render(assigns) do
@@ -897,7 +908,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
         )
 
       %{reason: :fulfillment_unavailable} ->
-        review_checkout(socket, :return_to_delivery, ~t"This date is no longer available, please choose another")
+        socket
+        |> Analytics.track("Delivery not available", %{reason: :date_unavailable})
+        |> review_checkout(:return_to_delivery, ~t"This date is no longer available, please choose another")
 
       _other ->
         Logger.error("Failed to set up PaymentIntent for order #{socket.assigns.order.id}: #{inspect(error)}")

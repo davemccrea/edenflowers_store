@@ -85,16 +85,20 @@ defmodule EdenflowersWeb.Cart.PromoCode do
   end
 
   def handle_event("apply_promo", %{"form" => params}, socket) do
+    code = params["code"]
+
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, order} ->
         {:noreply,
-         assign(socket,
-           form: build_form(order),
-           open: false
-         )}
+         socket
+         |> assign(form: build_form(order), open: false)
+         |> EdenflowersWeb.Analytics.track("Promo code applied", %{code: code})}
 
       {:error, form} ->
-        {:noreply, assign(socket, form: form, open: true)}
+        {:noreply,
+         socket
+         |> assign(form: form, open: true)
+         |> EdenflowersWeb.Analytics.track("Promo code rejected", %{code: code})}
     end
   end
 

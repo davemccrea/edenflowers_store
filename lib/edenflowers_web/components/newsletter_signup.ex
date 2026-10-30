@@ -85,7 +85,7 @@ defmodule EdenflowersWeb.NewsletterSignup do
 
     case Edenflowers.Accounts.subscribe_to_newsletter(email_address, locale) do
       {:ok, _} ->
-        {:noreply, assign(socket, submitted: true)}
+        {:noreply, socket |> assign(submitted: true) |> EdenflowersWeb.Analytics.track("Newsletter signup")}
 
       {:error, %Ash.Error.Invalid{errors: errors} = error} ->
         if Enum.any?(errors, &(Map.get(&1, :field) == :email)) do

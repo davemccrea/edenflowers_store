@@ -16,6 +16,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   alias Edenflowers.Catalog.ProductType
   alias Edenflowers.Fulfillment
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Analytics
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -28,6 +29,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     product_variants = product.product_variants
     product_category = Translations.translate(product.product_category)
+    # Analytics names a product in English, so a bouquet's adds add up across languages.
+    english_name = product.name
     product = Translations.translate(product)
 
     cart_line = cart_line(socket.assigns.order, product.id)
@@ -36,7 +39,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     {:ok,
      socket
-     |> assign(product: product)
+     |> assign(product: product, english_name: english_name)
      |> assign(gallery: product.photo_slugs -- product.hidden_photo_slugs)
      |> assign(
        page_title: product.name,
@@ -433,7 +436,14 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     case Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1, subscription) do
       {:ok, _line_item} ->
-        {:noreply, push_event(socket, "js-exec", %{to: "#cart-drawer", attr: "phx-show"})}
+        {:noreply,
+         socket
+         |> push_event("js-exec", %{to: "#cart-drawer", attr: "phx-show"})
+         |> Analytics.track("Add to cart", %{
+           product: socket.assigns.english_name,
+           size: socket.assigns.selected_variant.size,
+           subscription: socket.assigns.subscribe?
+         })}
 
       {:error, error} ->
         {:noreply, put_flash(socket, :error, add_error_message(error))}
