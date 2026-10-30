@@ -30,6 +30,7 @@ defmodule EdenflowersWeb.Admin.ReportControllerTest do
         vendor_name: "Kukkatukku",
         description: "Flowers",
         date: ~D[2026-09-03],
+        paid_on: ~D[2026-09-03],
         total_amount: "10.00",
         currency: :eur,
         confidence: :high

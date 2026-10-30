@@ -272,21 +272,25 @@ for attrs <- [
   |> Ash.create!(authorize?: false)
 end
 
-# One per confidence level, the last from a vendor without a VAT number.
-for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence} <- [
-      {"doc-001", "Pohjanmaan Kukkutukku", "FI89012345", ~D[2026-04-03], "875.00", "178.65", :eur, :flowers_and_plants,
-       "Bulk flower stock, spring delivery", :high},
-      {"doc-002", "Ravintola Faros", "FI34567890", ~D[2026-01-22], "68.40", "13.96", :eur, :entertainment,
-       "Lunch with wedding client", :medium},
-      {"doc-003", "Kotipizza", nil, ~D[2026-03-19], "31.50", "6.43", :eur, :entertainment,
-       "Lunch with venue coordinator", :low}
-    ] do
+# One per confidence level and payment state: unpaid, overdue and paid. The
+# last is from a vendor without a VAT number.
+for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence, paid_on, due_on} <-
+      [
+        {"doc-001", "Pohjanmaan Kukkutukku", "FI89012345", ~D[2026-04-03], "875.00", "178.65", :eur,
+         :flowers_and_plants, "Bulk flower stock, spring delivery", :high, nil, Date.add(Date.utc_today(), 14)},
+        {"doc-002", "Ravintola Faros", "FI34567890", ~D[2026-01-22], "68.40", "13.96", :eur, :entertainment,
+         "Lunch with wedding client", :medium, nil, ~D[2026-02-05]},
+        {"doc-003", "Kotipizza", nil, ~D[2026-03-19], "31.50", "6.43", :eur, :entertainment,
+         "Lunch with venue coordinator", :low, ~D[2026-03-19], nil}
+      ] do
   Expense
   |> Ash.Changeset.for_create(:ingest, %{
     document_id: document_id,
     vendor_name: vendor,
     vendor_vat_number: vat,
     date: date,
+    paid_on: paid_on,
+    due_on: due_on,
     total_amount: total,
     vat_amount: vat_amount,
     currency: currency,

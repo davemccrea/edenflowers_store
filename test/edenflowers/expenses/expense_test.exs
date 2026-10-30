@@ -43,26 +43,62 @@ defmodule Edenflowers.Expenses.ExpenseTest do
     end
   end
 
-  describe ":mark_reviewed" do
-    test "sets reviewed_at to the current time" do
-      {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
-      assert expense.reviewed_at == nil
+  describe "needs_review" do
+    test "only when Claude was unsure or left a required field empty, until Jennie saves it" do
+      {:ok, sure} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
 
-      {:ok, reviewed} = Expenses.mark_expense_reviewed(expense, actor: admin_actor())
-      assert reviewed.reviewed_at != nil
+      {:ok, unsure} =
+        Expenses.ingest_expense(%{@valid_attrs | document_id: "doc_unsure", confidence: "medium"},
+          actor: system_actor()
+        )
+
+      {:ok, undated} =
+        Expenses.ingest_expense(Map.merge(Map.delete(@valid_attrs, :date), %{document_id: "doc_undated"}),
+          actor: system_actor()
+        )
+
+      assert [false, true, true] == Enum.map([sure, unsure, undated], &needs_review?/1)
+
+      {:ok, saved} = Expenses.correct_expense(unsure, %{}, actor: admin_actor())
+      refute needs_review?(saved)
     end
 
-    test "a draft missing its date, vendor, total or currency is stored but can't be saved or reviewed until filled in" do
+    test "a draft missing its date, vendor, total or currency is stored but can't be saved until filled in" do
       draft = Map.drop(@valid_attrs, [:date, :vendor_name, :total_amount, :currency])
       {:ok, expense} = Expenses.ingest_expense(draft, actor: system_actor())
 
-      assert {:error, %{errors: errors}} = Expenses.mark_expense_reviewed(expense, actor: admin_actor())
+      assert {:error, %{errors: errors}} = Expenses.correct_expense(expense, %{}, actor: admin_actor())
       assert errors |> Enum.map(& &1.field) |> Enum.sort() == [:currency, :date, :total_amount, :vendor_name]
-
-      assert {:error, _} = Expenses.correct_expense(expense, %{vendor_name: "Acme Oy"}, actor: admin_actor())
 
       complete = %{date: "2026-06-01", vendor_name: "Acme Oy", total_amount: "12.40", currency: :eur}
       assert {:ok, _} = Expenses.correct_expense(expense, complete, actor: admin_actor())
+    end
+  end
+
+  describe "paying" do
+    test "an unpaid invoice is overdue once its due date has passed" do
+      today = Edenflowers.ShopTime.today()
+      attrs = %{@valid_attrs | document_id: "doc_due"}
+
+      {:ok, due_today} = Expenses.ingest_expense(Map.put(attrs, :due_on, today), actor: system_actor())
+      refute overdue?(due_today)
+
+      {:ok, late} = Expenses.ingest_expense(Map.put(attrs, :due_on, Date.add(today, -1)), actor: system_actor())
+      assert overdue?(late)
+
+      {:ok, paid} = Expenses.correct_expense(late, %{paid_today: true}, actor: admin_actor())
+      assert paid.paid_on == today
+      refute overdue?(paid)
+    end
+
+    test "re-ingesting fills an empty paid date but never replaces one" do
+      {:ok, _} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
+
+      {:ok, filled} = Expenses.ingest_expense(Map.put(@valid_attrs, :paid_on, "2026-05-15"), actor: system_actor())
+      assert filled.paid_on == ~D[2026-05-15]
+
+      {:ok, kept} = Expenses.ingest_expense(Map.put(@valid_attrs, :paid_on, "2026-05-20"), actor: system_actor())
+      assert kept.paid_on == ~D[2026-05-15]
     end
   end
 
@@ -156,6 +192,9 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       assert {:error, _} = Expenses.ingest_expense(@valid_attrs, actor: nil)
     end
   end
+
+  defp needs_review?(expense), do: Ash.load!(expense, :needs_review, authorize?: false).needs_review
+  defp overdue?(expense), do: Ash.load!(expense, :overdue, authorize?: false).overdue
 
   defp system_actor, do: %{system: true}
   defp admin_actor, do: %{admin: true}

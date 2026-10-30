@@ -246,7 +246,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :confidence, :atom, required: true
 
-  @doc "Extraction-confidence pill, shared by the expenses table and detail view."
+  @doc "Pill for Claude's extraction confidence, shown only when it isn't high."
   def confidence_badge(assigns) do
     ~H"""
     <.badge tone={confidence_tone(@confidence)}>
@@ -257,6 +257,28 @@ defmodule EdenflowersWeb.Admin.Components do
       />
       {confidence_label(@confidence)}
     </.badge>
+    """
+  end
+
+  attr :expense, :map, required: true, doc: "an expense with `overdue` loaded"
+  attr :locale, :any, required: true
+
+  @doc "When an expense was paid, or an Unpaid or Overdue pill with its due date."
+  def expense_payment_status(%{expense: %{paid_on: nil}} = assigns) do
+    ~H"""
+    <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+      <.badge :if={@expense.overdue} tone={:error}>{~t"Overdue"}</.badge>
+      <.badge :if={!@expense.overdue} tone={:warning}>{~t"Unpaid"}</.badge>
+      <span :if={@expense.due_on} class="text-base-content/75 whitespace-nowrap text-sm tabular-nums">
+        {~t"due #{date = Edenflowers.Format.date(@expense.due_on, @locale)}"}
+      </span>
+    </span>
+    """
+  end
+
+  def expense_payment_status(assigns) do
+    ~H"""
+    <span class="whitespace-nowrap tabular-nums">{Edenflowers.Format.date(@expense.paid_on, @locale)}</span>
     """
   end
 
@@ -650,18 +672,11 @@ defmodule EdenflowersWeb.Admin.Components do
 
   defp confidence_tone(:low), do: :error
   defp confidence_tone(:medium), do: :warning
-  defp confidence_tone(:high), do: :success
   defp confidence_tone(_), do: :neutral
-
-  def confidence_options do
-    Edenflowers.Expenses.Expense.Confidence.values()
-    |> Enum.map(fn value -> {confidence_label(value), value} end)
-  end
 
   # Context keeps "Medium" apart from the variant size, which translates differently.
   defp confidence_label(:low), do: dpgettext("admin", "expense confidence", "Low")
   defp confidence_label(:medium), do: dpgettext("admin", "expense confidence", "Medium")
-  defp confidence_label(:high), do: dpgettext("admin", "expense confidence", "High")
   defp confidence_label(value), do: to_string(value)
 
   defp payment_status_tone(:paid), do: :success
