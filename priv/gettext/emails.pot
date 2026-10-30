@@ -99,11 +99,6 @@ msgstr ""
 msgid "Any order already charged will still be ready to collect on %{date}."
 msgstr ""
 
-#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "As a welcome gift, here's 15% off one order:"
-msgstr ""
-
 #: lib/edenflowers/email/templates/subscription_heads_up.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Away, or want a change? Pause or change it in your account by %{date}:"
@@ -615,12 +610,6 @@ msgstr ""
 msgid "Total"
 msgstr ""
 
-#: lib/edenflowers/email/templates/already_subscribed.text.eex:7
-#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:9
-#, elixir-autogen, elixir-format
-msgid "Use it at checkout by %{date}."
-msgstr ""
-
 #: lib/edenflowers/email/templates/wedding_enquiry.text.eex:10
 #, elixir-autogen, elixir-format
 msgid "Venue: %{venue}"
@@ -725,11 +714,6 @@ msgstr ""
 #: lib/edenflowers/email.ex:600
 #, elixir-autogen, elixir-format
 msgid "Your 15% welcome code for Eden Flowers"
-msgstr ""
-
-#: lib/edenflowers/email/templates/already_subscribed.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Your 15% welcome code is still usable:"
 msgstr ""
 
 #: lib/edenflowers/email.ex:31
@@ -887,4 +871,20 @@ msgstr ""
 #: lib/edenflowers/email.ex:564
 #, elixir-autogen, elixir-format
 msgid "Your wedding enquiry to Eden Flowers"
+msgstr ""
+
+#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "As a welcome gift, you get 15% off one order. Enter the following code at checkout:"
+msgstr ""
+
+#: lib/edenflowers/email/templates/already_subscribed.text.eex:7
+#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:9
+#, elixir-autogen, elixir-format
+msgid "The code is valid until %{date}."
+msgstr ""
+
+#: lib/edenflowers/email/templates/already_subscribed.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Your welcome code for 15% off one order is still valid. Enter the following code at checkout:"
 msgstr ""

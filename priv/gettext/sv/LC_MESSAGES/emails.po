@@ -95,11 +95,6 @@ msgstr "En leverans som redan har debiterats kommer ändå %{date}."
 msgid "Any order already charged will still be ready to collect on %{date}."
 msgstr "En beställning som redan har debiterats finns ändå att hämta %{date}."
 
-#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "As a welcome gift, here's 15% off one order:"
-msgstr "Som välkomstgåva får du 15 % rabatt på en beställning:"
-
 #: lib/edenflowers/email/templates/subscription_heads_up.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Away, or want a change? Pause or change it in your account by %{date}:"
@@ -611,12 +606,6 @@ msgstr "För att pausa, ändra eller avsluta, använd ditt konto senast %{days} 
 msgid "Total"
 msgstr "Totalt"
 
-#: lib/edenflowers/email/templates/already_subscribed.text.eex:7
-#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:9
-#, elixir-autogen, elixir-format
-msgid "Use it at checkout by %{date}."
-msgstr "Använd den i kassan senast %{date}."
-
 #: lib/edenflowers/email/templates/wedding_enquiry.text.eex:10
 #, elixir-autogen, elixir-format
 msgid "Venue: %{venue}"
@@ -722,11 +711,6 @@ msgstr "Din prenumeration på %{product} är klar"
 #, elixir-autogen, elixir-format
 msgid "Your 15% welcome code for Eden Flowers"
 msgstr "Din välkomstrabatt på 15 % från Eden Flowers"
-
-#: lib/edenflowers/email/templates/already_subscribed.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Your 15% welcome code is still usable:"
-msgstr "Din välkomstkod på 15 % gäller fortfarande:"
 
 #: lib/edenflowers/email.ex:31
 #: lib/edenflowers/email.ex:154
@@ -884,3 +868,19 @@ msgstr "Din uppdaterade Eden Flowers-beställning för %{date}"
 #, elixir-autogen, elixir-format
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr "Er bröllopsförfrågan till Eden Flowers"
+
+#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "As a welcome gift, you get 15% off one order. Enter the following code at checkout:"
+msgstr "Som välkomstgåva får du 15 % rabatt på en beställning. Ange följande kod i kassan:"
+
+#: lib/edenflowers/email/templates/already_subscribed.text.eex:7
+#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:9
+#, elixir-autogen, elixir-format
+msgid "The code is valid until %{date}."
+msgstr "Koden gäller till och med %{date}."
+
+#: lib/edenflowers/email/templates/already_subscribed.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Your welcome code for 15% off one order is still valid. Enter the following code at checkout:"
+msgstr "Din välkomstkod för 15 % rabatt på en beställning gäller fortfarande. Ange följande kod i kassan:"
