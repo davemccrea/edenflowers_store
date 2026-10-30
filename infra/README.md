@@ -25,7 +25,7 @@ This updates packages (rebooting if needed), hardens SSH, fail2ban and UFW (only
 
 ## Umami analytics
 
-Umami runs at https://stats.edenflowers.fi on port 3000, bound to localhost so only `cloudflared` reaches it. Its own `umami` database sits on the host Postgres and is dumped and mirrored with the app's. The tracker is served as `/e.js` and collects at `/api/e`, so ad blockers' lists don't match them. A new server needs, in order:
+Umami runs at https://stats.edenflowers.fi on port 3000, bound to localhost so only `cloudflared` reaches it. Its own `umami` database sits on the host Postgres and is dumped and mirrored with the app's. The tracker keeps Umami's default `/script.js` and `/api/send`: Umami's `TRACKER_SCRIPT_NAME` and `COLLECT_API_ENDPOINT` rewrite to `https://localhost:3000` behind the tunnel and answer 500. A new server needs, in order:
 
 1. `vault_umami_db_password` and `vault_umami_app_secret` in the vault, then `just provision`
 2. A public hostname `stats.edenflowers.fi` → `http://localhost:3000` on the tunnel in the Cloudflare Zero Trust dashboard
