@@ -53,19 +53,16 @@ defmodule Edenflowers.Catalog.Product do
     end
 
     read :featured_cards do
-      description "Large cards Jennie has ticked Favourite, for the fan on the home page, in store order. Only " <>
-                    "large ones, so every card in the fan is the same size. Cards are hidden from the storefront, " <>
-                    "so this offers the same published, in-stock cards as ProductVariant's `for_card_drawer`."
+      description "Cards Jennie has ticked Favourite, for the fan on the home page, in store order. Cards are " <>
+                    "hidden from the storefront, so this offers the same published, in-stock cards as " <>
+                    "ProductVariant's `for_card_drawer`."
 
       filter expr(
                featured == true and
                  draft == false and
                  product_category.slug == "cards" and
                  product_category.visibility != :draft and
-                 exists(
-                   product_variants,
-                   size == :large and draft == false and (is_nil(stock_quantity) or stock_quantity > 0)
-                 )
+                 exists(product_variants, draft == false and (is_nil(stock_quantity) or stock_quantity > 0))
              )
 
       prepare build(sort: [position: :asc_nils_last, name: :asc], load: [:main_photo_slug])

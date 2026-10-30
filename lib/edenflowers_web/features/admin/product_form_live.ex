@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   import EdenflowersWeb.Admin.Drawers
   import EdenflowersWeb.Admin.TranslationFields
 
+  alias Edenflowers.Catalog
   alias Edenflowers.Catalog.Product
   alias Edenflowers.Catalog.ProductCategory
   alias Edenflowers.Catalog.ProductType
@@ -18,6 +19,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
+  alias EdenflowersWeb.Marketing.HomeLive
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -35,6 +37,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          |> assign(:categories, ProductCategory |> Ash.read!(actor: actor) |> Translations.translate())
          |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
          |> assign(:free_dist_km, Edenflowers.Fulfillment.free_dist_km())
+         |> assign(:fan_card_count, length(Catalog.list_featured_cards!(actor: actor)))
          |> assign(:form, form)
          |> assign(:translating, nil)
          |> assign(:max_photos, @max_photos)
@@ -171,9 +174,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                       field={@form[:featured]}
                       type="checkbox"
                       label={~t"Favourite"}
-                      help={
-                        ~t"Shows on the home page: products under Favourites, and large cards in the card fan once #{count = EdenflowersWeb.Marketing.HomeLive.min_fan_cards()} are ticked."
-                      }
+                      help={favourite_help(@form, @categories, @fan_card_count)}
                     />
                     <.input
                       :if={@free_dist_km}
@@ -457,6 +458,22 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       </.admin_drawer>
     </li>
     """
+  end
+
+  # Follows the category select like attribute_keys. The count is of saved cards, as saving reloads the page.
+  defp favourite_help(form, categories, fan_card_count) do
+    min = HomeLive.min_fan_cards()
+
+    case Enum.find(categories, &(&1.id == form[:product_category_id].value)) do
+      %{product_type: :card} when fan_card_count < min ->
+        ~t"Shows in the card fan on the home page once #{min = min} are ticked (#{count = fan_card_count} so far)."
+
+      %{product_type: :card} ->
+        ~t"Shows in the card fan on the home page."
+
+      _ ->
+        ~t"Shows under Favourites on the home page."
+    end
   end
 
   # Follows the category select, so choosing Cards swaps height and stems for size at once.

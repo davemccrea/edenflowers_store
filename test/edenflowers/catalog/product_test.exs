@@ -11,7 +11,7 @@ defmodule Edenflowers.Catalog.ProductTest do
   end
 
   describe "Catalog.list_featured_cards" do
-    test "lists only Favourite cards with a large size in stock", %{tax_rate: tax_rate} do
+    test "lists only Favourite cards in stock, of any size", %{tax_rate: tax_rate} do
       cards = generate(product_category(slug: "cards", visibility: :hidden))
 
       card = fn featured, size, stock_quantity ->
@@ -22,16 +22,16 @@ defmodule Edenflowers.Catalog.ProductTest do
         product
       end
 
-      favourite = card.(true, :large, nil)
-      not_favourite = card.(false, :large, nil)
+      large = card.(true, :large, nil)
       small = card.(true, :small, nil)
+      not_favourite = card.(false, :large, nil)
       sold_out = card.(true, :large, 0)
 
       ids = Enum.map(Catalog.list_featured_cards!(authorize?: false), & &1.id)
 
-      assert favourite.id in ids
+      assert large.id in ids
+      assert small.id in ids
       refute not_favourite.id in ids
-      refute small.id in ids
       refute sold_out.id in ids
     end
 
