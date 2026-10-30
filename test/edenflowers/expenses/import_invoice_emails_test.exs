@@ -6,7 +6,6 @@ defmodule Edenflowers.Expenses.ImportInvoiceEmailsTest do
   import Mox
 
   alias Edenflowers.Expenses
-  alias Edenflowers.Expenses.ExpenseImport
   alias Edenflowers.External.FastmailAPI
   alias Edenflowers.External.PapraAPI
 
@@ -29,20 +28,14 @@ defmodule Edenflowers.Expenses.ImportInvoiceEmailsTest do
     %{"id" => "mb_other", "name" => "Importerade", "parentId" => nil}
   ]
 
-  test "uploads each PDF, records it for extraction and moves the email; leaves emails without a PDF" do
+  test "uploads each PDF and moves the email; leaves emails without a PDF" do
     stub_fastmail([@hetzner, @link_only])
 
-    expect(PapraAPI.Mock, :upload_document, fn "Hetzner_2026-10.pdf", "bytes of blob_invoice" ->
-      {:ok, %{document_id: "doc_invoice", organization_id: "org_test"}}
-    end)
-
-    expect(PapraAPI.Mock, :upload_document, fn "terms.PDF", "bytes of blob_terms" ->
-      {:ok, %{document_id: "doc_terms", organization_id: "org_test"}}
-    end)
+    expect(PapraAPI.Mock, :upload_document, fn "Hetzner_2026-10.pdf", "bytes of blob_invoice" -> :ok end)
+    expect(PapraAPI.Mock, :upload_document, fn "terms.PDF", "bytes of blob_terms" -> :ok end)
 
     assert :ok = import_invoice_emails()
 
-    assert ["doc_invoice", "doc_terms"] = imported_document_ids()
     assert_received {:moved, "email_hetzner", %{"mailboxIds/mb_fakturor" => nil, "mailboxIds/mb_importerade" => true}}
     refute_received {:moved, "email_link", _update}
   end
@@ -55,7 +48,6 @@ defmodule Edenflowers.Expenses.ImportInvoiceEmailsTest do
 
     assert log =~ "[error]"
     assert log =~ "Hetzner_2026-10.pdf is already in Papra"
-    assert imported_document_ids() == []
     assert_received {:moved, "email_hetzner", _update}
   end
 
@@ -86,10 +78,6 @@ defmodule Edenflowers.Expenses.ImportInvoiceEmailsTest do
   end
 
   defp import_invoice_emails, do: Expenses.import_invoice_emails(actor: Edenflowers.Actors.system_actor())
-
-  defp imported_document_ids do
-    ExpenseImport |> Ash.read!(authorize?: false) |> Enum.map(& &1.document_id) |> Enum.sort()
-  end
 
   # A fake JMAP server holding `emails` in `Fakturor`. Moves are sent to the test process.
   defp stub_fastmail(emails, opts \\ []) do

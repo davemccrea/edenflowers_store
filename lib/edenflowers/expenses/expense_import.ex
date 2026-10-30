@@ -1,6 +1,6 @@
 defmodule Edenflowers.Expenses.ExpenseImport do
   @moduledoc """
-  Tracks one Papra document from webhook receipt, or upload from an invoice email, through extraction into an expense. Its Oban trigger retries processing and records terminal failures; a scheduled action imports the invoice emails.
+  Tracks one Papra document from its `document:created` webhook through extraction into an expense. Its Oban trigger retries processing and records terminal failures; a scheduled action imports the invoice emails.
   """
 
   use Ash.Resource,
@@ -15,7 +15,7 @@ defmodule Edenflowers.Expenses.ExpenseImport do
     table "expense_imports"
     repo Edenflowers.Repo
 
-    # Removing the import with its expense lets the document be re-imported by tagging it again.
+    # Removing the import with its expense lets a document restored from Papra's trash be imported again.
     references do
       reference :expense, on_delete: :delete
     end
@@ -52,8 +52,8 @@ defmodule Edenflowers.Expenses.ExpenseImport do
     defaults [:read]
 
     create :record do
-      description "Records a Papra document from its webhook and queues it for extraction into an expense. The same " <>
-                    "document twice is recorded once."
+      description "Records a Papra document from its `document:created` webhook and queues it for extraction " <>
+                    "into an expense. The same document twice is recorded once."
 
       accept [:document_id, :organization_id]
       upsert? true
@@ -64,8 +64,9 @@ defmodule Edenflowers.Expenses.ExpenseImport do
 
     action :import_invoice_emails do
       description "Uploads each PDF attached to the invoice emails in the Fastmail folder `Fakturor` to Papra, " <>
-                    "records it for extraction and moves the email to `Fakturor/Importerade`. Emails without a " <>
-                    "PDF stay put. Does nothing without a Fastmail API token, which only production has."
+                    "whose webhook records it for extraction, and moves the email to `Fakturor/Importerade`. " <>
+                    "Emails without a PDF stay put. Does nothing without a Fastmail API token, which only " <>
+                    "production has."
 
       run Edenflowers.Expenses.Actions.ImportInvoiceEmails
     end

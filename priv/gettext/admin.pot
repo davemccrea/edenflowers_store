@@ -561,7 +561,7 @@ msgstr ""
 msgid "Copy payment link"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:244
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:232
 #, elixir-autogen, elixir-format
 msgid "Corrections saved, but the expense could not be marked as reviewed."
 msgstr ""
@@ -1084,7 +1084,7 @@ msgstr ""
 msgid "Expense not found."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:235
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:223
 #, elixir-autogen, elixir-format
 msgid "Expense saved and marked as reviewed."
 msgstr ""
@@ -3048,11 +3048,6 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_log.ex:104
 #, elixir-autogen, elixir-format
 msgid "The customer wasn't emailed."
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:223
-#, elixir-autogen, elixir-format
-msgid "The expense couldn't be deleted because Papra couldn't be reached. Try again later."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:203

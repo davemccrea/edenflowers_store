@@ -54,8 +54,9 @@ defmodule Edenflowers.Expenses.Expense do
   @moduledoc """
   A receipt or invoice imported from Papra and classified for accounting.
 
-  The extracted fields can be corrected in admin. Deleting an expense also
-  removes its Papra tags so the document can be imported again.
+  The extracted fields can be corrected in admin. Deleting an expense leaves its
+  Papra document alone. To import it again, delete the document in Papra and
+  upload the PDF again.
   """
 
   use Ash.Resource,
@@ -83,14 +84,7 @@ defmodule Edenflowers.Expenses.Expense do
   end
 
   actions do
-    defaults [:read]
-
-    destroy :destroy do
-      description "Deletes an expense and removes its tags from the Papra document."
-      primary? true
-      require_atomic? false
-      change Changes.RemovePapraTags
-    end
+    defaults [:read, :destroy]
 
     read :admin_list do
       description "The admin Expenses table: unreviewed first, then newest receipt date, undated ones at the top."

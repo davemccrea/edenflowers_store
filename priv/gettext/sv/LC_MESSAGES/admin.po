@@ -557,7 +557,7 @@ msgstr "Kopiera koden"
 msgid "Copy payment link"
 msgstr "Kopiera betalningslänken"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:244
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:232
 #, elixir-autogen, elixir-format
 msgid "Corrections saved, but the expense could not be marked as reviewed."
 msgstr "Korrigeringarna sparades, men utgiften kunde inte markeras som granskad."
@@ -1080,7 +1080,7 @@ msgstr "Utgiften raderades."
 msgid "Expense not found."
 msgstr "Utgiften hittades inte."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:235
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:223
 #, elixir-autogen, elixir-format
 msgid "Expense saved and marked as reviewed."
 msgstr "Utgiften sparades och markerades som granskad."
@@ -3045,11 +3045,6 @@ msgstr "Kunden hämtar den själv, så ingen bekräftelse mailas."
 #, elixir-autogen, elixir-format
 msgid "The customer wasn't emailed."
 msgstr "Kunden mailades inte."
-
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:223
-#, elixir-autogen, elixir-format
-msgid "The expense couldn't be deleted because Papra couldn't be reached. Try again later."
-msgstr "Utgiften kunde inte raderas eftersom Papra inte gick att nå. Försök igen senare."
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:203
 #, elixir-autogen, elixir-format
