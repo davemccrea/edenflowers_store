@@ -4094,27 +4094,27 @@ msgstr "Sanasi käsin kirjoitettuina"
 #: lib/edenflowers_web/features/marketing/home_live.ex:770
 #, elixir-autogen, elixir-format
 msgid "Wedding flowers"
-msgstr ""
+msgstr "Hääkukat"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:791
 #, elixir-autogen, elixir-format
 msgid "Bride in a flower crown holding her bouquet, looking into the distance"
-msgstr ""
+msgstr "Morsian hiusseppele päässään ja kimppu kädessään katsoo kaukaisuuteen"
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:767
 #, elixir-autogen, elixir-format
 msgid "I'd love to hear about your wedding. Tell me about the day and your style, and I'll design bouquets, crowns and decoration that feel like the two of you."
-msgstr ""
+msgstr "Kuulisin mielelläni häistänne. Kertokaa päivästä ja tyylistänne, niin suunnittelen kimput, seppeleet ja koristelut, jotka näyttävät juuri teiltä."
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:762
 #, elixir-autogen, elixir-format
 msgid "Your day."
-msgstr ""
+msgstr "Teidän päivänne."
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:764
 #, elixir-autogen, elixir-format
 msgid "Your flowers."
-msgstr ""
+msgstr "Teidän kukkanne."
 
 #: lib/edenflowers_web/features/store/store_live.ex:344
 #, elixir-autogen, elixir-format

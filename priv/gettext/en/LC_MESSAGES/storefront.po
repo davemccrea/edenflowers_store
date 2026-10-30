@@ -4067,7 +4067,7 @@ msgstr ""
 
 #. Storefront bar above the header. %{time} is today's order deadline, e.g. 14:00. Must fit one line on a 320px phone, about 45 characters.
 #: lib/edenflowers_web/hooks/put_notice_bar.ex:50
-#, elixir-autogen, elixir-format, fuzzy
+#, elixir-autogen, elixir-format
 msgid "Order by %{time} for delivery today"
 msgstr ""
 
