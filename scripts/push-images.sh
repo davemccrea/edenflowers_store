@@ -25,7 +25,7 @@ if [[ -n "$NON_ASCII" ]]; then
 fi
 ok "filenames are ASCII"
 
-section "Syncing to edenflowers-production"
+section "Pushing to edenflowers-production"
 # imgproxy returns 500 for files it can't read, so force world-readable modes.
 # uploads/ is the app's own folder on the server, so it's never pushed to, and
 # --delete leaves excluded paths alone.
@@ -38,15 +38,8 @@ MAX_DELETE="${MAX_DELETE:-0}"
 DELETED_FILES="$("${PUSH[@]}" --dry-run --itemize-changes | grep '^\*deleting' || true)"
 DELETIONS="$(grep -c . <<<"$DELETED_FILES" || true)"
 if [[ "$DELETIONS" -gt "$MAX_DELETE" ]]; then
-  fail "the push would delete $DELETIONS files from the server (limit $MAX_DELETE):"$'\n'"$DELETED_FILES"$'\n'"If that's intended, rerun with MAX_DELETE=$DELETIONS"
+  fail "the push would delete $DELETIONS files from the server (limit $MAX_DELETE):"$'\n'"$DELETED_FILES"$'\n'"If that's intended, rerun with MAX_DELETE=$DELETIONS."$'\n'"If this machine just never had them, run just pull-images first."
 fi
 
 "${PUSH[@]}" -v
 ok "synced"
-
-# The admin's uploads live only on the production server, so keep a copy here.
-# --max-delete stops an emptied server folder from wiping this copy.
-section "Pulling uploads from edenflowers-production"
-rsync -avz --delete --max-delete=20 --exclude=.DS_Store \
-  edenflowers-production:/opt/edenflowers_store/images/uploads/ images/uploads/
-ok "pulled"

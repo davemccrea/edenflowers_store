@@ -38,7 +38,8 @@ just seed-db [--stripe]         # seed the local database (run after reset-db)
 just deploy [0.3.0]             # tag a release from main (prompts for version if omitted)
 just rollback v1.6.0 [tmp/<dump>] # run an old release, restoring a dump if given
 just backup                     # pg_dump the production database into tmp/
-just sync-images                # push images/ to production and pull its uploads
+just push-images                # push images/ to production
+just pull-images                # download production's images/ (new machine)
 just tail-logs                  # tail app logs
 just open-console               # remote IEx
 just provision                  # apply infra/ to the server (check-provision for a dry run)
@@ -76,9 +77,9 @@ wt remove
 
 ## Deployment
 
-`just deploy` checks the tree is clean and `main` isn't behind origin, runs `mix precommit`, syncs images, bumps `mix.exs` and tags `vX.Y.Z`. After you confirm, it backs up the production database, pushes, watches the GitHub Actions deploy and publishes release notes. Plain pushes deploy nothing.
+`just deploy` checks the tree is clean and `main` isn't behind origin, runs `mix precommit`, pushes images, bumps `mix.exs` and tags `vX.Y.Z`. After you confirm, it backs up the production database, pushes, watches the GitHub Actions deploy and publishes release notes. Plain pushes deploy nothing.
 
-`images/` is gitignored, so photos reach production only through `just sync-images`. It deletes server files removed locally, but only when you allow it: any deletion fails the sync and the deploy and lists the files, and `MAX_DELETE=<n>` lets that many through. It never touches admin uploads in `images/uploads/`, which it pulls back here instead. Filenames must be ASCII.
+`images/` is gitignored, so photos reach production only through `just push-images`. It deletes server files removed locally, but only when you allow it: any deletion fails the push and the deploy and lists the files, and `MAX_DELETE=<n>` lets that many through. If this machine never had those files, `just pull-images` downloads them without deleting anything locally. Neither touches admin uploads in `images/uploads/`, which the Storage Box backs up (see `infra/README.md`). Filenames must be ASCII.
 
 The server itself is provisioned by Ansible in `infra/`, see [infra/README.md](infra/README.md).
 
