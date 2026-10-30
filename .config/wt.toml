@@ -1,6 +1,6 @@
 # Copy gitignored files from main (deps/, .env). _build/ is left out so a stale
 # or half-compiled build in main can't leak in; each worktree compiles its own.
-# images/uploads/ holds the customer photos pulled from production, which dev
+# images/uploads/ may hold customer photos once pulled from production, which dev
 # never serves.
 [step.copy-ignored]
 exclude = ["_build/", "images/uploads/"]

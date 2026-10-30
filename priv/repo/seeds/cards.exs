@@ -2,7 +2,7 @@
 # Safe to rerun: a card is matched by its English name and updated in place.
 #
 # Dev:  priv/repo/seeds.exs runs it, or mix run priv/repo/seeds/cards.exs alone
-# Prod: `just sync-images` and `just backup` first, then
+# Prod: `just push-images` and `just backup` first, then
 #   ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Code.eval_file(Application.app_dir(:edenflowers, \"priv/repo/seeds/cards.exs\"))'"
 
 alias Edenflowers.Catalog.Product

@@ -131,8 +131,8 @@ fi
 
 run_checks
 
-# Before tagging, so a failed sync doesn't leave a local version-bump commit and tag behind.
-scripts/sync-images.sh
+# Before tagging, so a failed push doesn't leave a local version-bump commit and tag behind.
+scripts/push-images.sh
 
 section "Tagging release"
 # Use -i.bak + rm so it works on both BSD sed (macOS) and GNU sed (Linux).

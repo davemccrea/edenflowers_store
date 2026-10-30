@@ -164,10 +164,15 @@ backup:
     mv "$file.partial" "$file"
     ls -lh "$file"
 
-# Push images/ to production and pull its uploads back
+# Push images/ to production, deleting server photos removed locally (up to MAX_DELETE)
 [group('production')]
-sync-images:
-    ./scripts/sync-images.sh
+push-images:
+    ./scripts/push-images.sh
+
+# Download production's images/ (not admin uploads) without deleting anything here
+[group('production')]
+pull-images:
+    rsync -avz --exclude=/uploads/ --exclude=.DS_Store edenflowers-production:/opt/edenflowers_store/images/ images/
 
 # Tail the production app logs
 [group('production')]
