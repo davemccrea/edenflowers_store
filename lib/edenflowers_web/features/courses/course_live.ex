@@ -77,13 +77,14 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               </p>
             </header>
 
-            <figure class="bg-cream aspect-[3/2] relative mt-8 w-full overflow-hidden">
+            <%!-- Course photos are portrait phone shots, so a landscape crop cuts off the arrangement. --%>
+            <figure class="bg-cream aspect-[4/5] relative mt-8 w-full overflow-hidden sm:max-w-lg">
               <.image
                 src={@course.image_slug}
                 alt={@course.name}
-                width={1200}
-                height={800}
-                sizes="(min-width: 1024px) calc(100vw - 32.5rem), (min-width: 640px) calc(100vw - 4rem), calc(100vw - 2rem)"
+                width={1000}
+                height={1250}
+                sizes="(min-width: 640px) 32rem, calc(100vw - 2rem)"
                 priority
                 class="h-full w-full object-cover"
               />
