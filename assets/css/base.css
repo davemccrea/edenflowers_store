@@ -22,6 +22,14 @@
   outline-color: var(--focus-color, var(--color-primary));
 }
 
+/* Dark reverse-out surfaces and opening photos take a light focus ring. */
+:where(.bg-forest) {
+  --focus-color: var(--color-forest-content);
+}
+:where([data-header-overlay]) {
+  --focus-color: white;
+}
+
 /* daisyUI drops the outline on dropdown triggers and menu items. */
 .dropdown > :not(summary):focus-visible,
 .menu li > :is(a, button):focus-visible {
