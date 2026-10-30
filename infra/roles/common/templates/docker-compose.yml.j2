@@ -42,6 +42,9 @@ services:
       BREVO_NEWSLETTER_LIST_ID: "{{ brevo_newsletter_list_id }}"
       VAPID_PUBLIC_KEY: "{{ vapid_public_key }}"
       VAPID_PRIVATE_KEY: "{{ vapid_private_key }}"
+{% if umami_website_id %}
+      UMAMI_WEBSITE_ID: "{{ umami_website_id }}"
+{% endif %}
     volumes:
       - /opt/{{ project_name }}/images/uploads:/app/uploads
 
@@ -68,6 +71,24 @@ services:
     volumes:
       - ./papra:/app/app-data
     user: 1000:1000
+
+  umami:
+    image: ghcr.io/umami-software/umami:3
+    container_name: umami
+    restart: unless-stopped
+    network_mode: host
+    init: true
+    # The server has no swap, so a runaway Umami must not starve the app.
+    mem_limit: 512m
+    environment:
+      DATABASE_URL: "postgresql://{{ umami_db_user }}:{{ umami_db_password }}@127.0.0.1:5432/{{ umami_db_name }}"
+      APP_SECRET: "{{ umami_app_secret }}"
+      # Only cloudflared, on this host, reaches it.
+      HOSTNAME: 127.0.0.1
+      # Neutral names so ad blockers' lists of analytics scripts don't match.
+      TRACKER_SCRIPT_NAME: /e.js
+      COLLECT_API_ENDPOINT: /api/e
+      DISABLE_TELEMETRY: 1
 
   cloudflared:
     image: cloudflare/cloudflared:latest

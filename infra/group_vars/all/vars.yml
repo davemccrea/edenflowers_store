@@ -55,6 +55,14 @@ papra_webhook_secret: "{{ vault_papra_webhook_secret }}"
 papra_organization_id: "org_mdus0pqk7nzlu94sibss1pmm"
 fastmail_api_token: "{{ vault_fastmail_api_token }}"
 
+# Umami (self-hosted analytics at stats.edenflowers.fi)
+umami_db_name: umami
+umami_db_user: umami
+umami_db_password: "{{ vault_umami_db_password }}"
+umami_app_secret: "{{ vault_umami_app_secret }}"
+# From the website's settings in Umami. The shop loads no tracker while it's empty.
+umami_website_id: ""
+
 # Anthropic
 anthropic_api_key: "{{ vault_anthropic_api_key }}"
 

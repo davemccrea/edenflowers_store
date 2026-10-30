@@ -1,6 +1,6 @@
 # Infrastructure
 
-Ansible provisioning for the production server (Ubuntu/Debian). Docker Compose in `/opt/edenflowers_store` runs the app, `imgproxy`, `papra` and `cloudflared`. Postgres runs on the host. Deploys don't go through Ansible, see the main README.
+Ansible provisioning for the production server (Ubuntu/Debian). Docker Compose in `/opt/edenflowers_store` runs the app, `imgproxy`, `papra`, `umami` and `cloudflared`. Postgres runs on the host. Deploys don't go through Ansible, see the main README.
 
 The recipes are in the repo's justfile under `infra`, and run from this folder. Install [Ansible](https://docs.ansible.com/), then `just install-infra` for its collections.
 
@@ -22,6 +22,17 @@ just provision          # extra args go to ansible-playbook
 ```
 
 This updates packages (rebooting if needed), hardens SSH, fail2ban and UFW (only SSH and Tailscale are open, Cloudflare Tunnel brings the traffic), joins Tailscale, sets up Postgres and its 02:00 `pg_dump` (kept 30 days), installs Docker and logs in to ghcr.io, and writes `docker-compose.yml`.
+
+## Umami analytics
+
+Umami runs at https://stats.edenflowers.fi on port 3000, bound to localhost so only `cloudflared` reaches it. Its own `umami` database sits on the host Postgres and is dumped and mirrored with the app's. The tracker is served as `/e.js` and collects at `/api/e`, so ad blockers' lists don't match them. A new server needs, in order:
+
+1. `vault_umami_db_password` and `vault_umami_app_secret` in the vault, then `just provision`
+2. A public hostname `stats.edenflowers.fi` → `http://localhost:3000` on the tunnel in the Cloudflare Zero Trust dashboard
+3. Log in as `admin` / `umami`, change that password at once, and add the website `edenflowers.fi`
+4. Its website id in `umami_website_id` in `vars.yml`, then `just provision` again. The shop loads the tracker from its next restart
+
+Funnels and goals are set up in Umami's own UI.
 
 ## Off-site database and photo backups
 
