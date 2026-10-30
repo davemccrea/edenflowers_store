@@ -1,34 +1,36 @@
 defmodule Edenflowers.Expenses.Expense.Category do
   @moduledoc """
   Expense categories, each mapping to an expense line on Vero's business tax
-  return (form 5). The descriptions double as Claude's classification guide.
+  return, form 5 (Skattedeklaration för näringsverksamhet), named as on the
+  Swedish form with its field code. The descriptions double as Claude's
+  classification guide.
   """
   use Ash.Type.Enum,
     values: [
       flowers_and_plants:
-        "Fresh and dried flowers, plants and greenery bought for resale or arrangements (Vero: Ostot, hankintamenot).",
+        "Fresh and dried flowers, plants and greenery bought for resale or arrangements (Vero: 333 Inköp och förändringar av lager).",
       florist_supplies:
-        "Floral foam, wire, ribbon, wrapping, vases, pots, cards and packaging used in products (Vero: Ostot, hankintamenot).",
-      rent: "Rent for the shop, storage or rented equipment (Vero: Vuokrakulut).",
+        "Floral foam, wire, ribbon, wrapping, vases, pots, cards and packaging used in products (Vero: 333 Inköp och förändringar av lager).",
+      rent: "Rent for the shop, storage or rented equipment (Vero: 343 Hyror).",
       entertainment:
-        "Hospitality for customers and business partners, such as meals, drinks, events and gifts, only 50% deductible (Vero: Edustuskulut).",
+        "Hospitality for customers and business partners, such as meals, drinks, events and gifts, only 50% deductible (Vero: 341 Representationskostnader, half in 342 Avdragbar andel av representationskostnader).",
       bank_fees:
-        "Bank account charges, card terminal and payment provider fees; loan, limit and guarantee fees go in other (Vero: Muut elinkeinotoiminnan kulut).",
+        "Bank account charges, card terminal and payment provider fees; loan, limit and guarantee fees go in other (Vero: 344 Övriga avdragbara kostnader).",
       vehicle:
-        "Fuel, servicing, tyres, insurance, parking and tolls; only deductible as costs when the car is a business asset, driven over 50% for business (Vero: Muut elinkeinotoiminnan kulut).",
-      travel: "Tickets, accommodation and taxis on business trips (Vero: Muut elinkeinotoiminnan kulut).",
+        "Fuel, servicing, tyres, insurance, parking and tolls; only deductible as costs when the car is a business asset, driven over 50% for business (Vero: 344 Övriga avdragbara kostnader).",
+      travel: "Tickets, accommodation and taxis on business trips (Vero: 344 Övriga avdragbara kostnader).",
       marketing:
-        "Advertising, social media ads, printed flyers, signage and ordinary promotional gifts, which are fully deductible (Vero: Muut elinkeinotoiminnan kulut).",
-      software: "Software subscriptions, website hosting and domains (Vero: Muut elinkeinotoiminnan kulut).",
-      utilities: "Electricity, water, waste, phone and internet (Vero: Muut elinkeinotoiminnan kulut).",
+        "Advertising, social media ads, printed flyers, signage and ordinary promotional gifts, which are fully deductible (Vero: 344 Övriga avdragbara kostnader).",
+      software: "Software subscriptions, website hosting and domains (Vero: 344 Övriga avdragbara kostnader).",
+      utilities: "Electricity, water, waste, phone and internet (Vero: 344 Övriga avdragbara kostnader).",
       office_supplies:
-        "Stationery, printer ink, cleaning supplies and other consumables (Vero: Muut elinkeinotoiminnan kulut).",
+        "Stationery, printer ink, cleaning supplies and other consumables (Vero: 344 Övriga avdragbara kostnader).",
       equipment:
-        "Tools, furniture, fridges and other equipment; items up to 1200 € (3600 € a year in total) or lasting 3 years or less are expensed, the rest depreciated (Vero: Muut elinkeinotoiminnan kulut or Poistot).",
-      insurance: "Business, liability and property insurance premiums (Vero: Muut elinkeinotoiminnan kulut).",
-      professional_services: "Accounting, legal and consultancy fees (Vero: Muut elinkeinotoiminnan kulut).",
+        "Tools, furniture, fridges and other equipment; items up to 1200 € (3600 € a year in total) or lasting 3 years or less are expensed, the rest depreciated (Vero: 344 Övriga avdragbara kostnader, or 338 Avdragbar andel av avskrivningar).",
+      insurance: "Business, liability and property insurance premiums (Vero: 344 Övriga avdragbara kostnader).",
+      professional_services: "Accounting, legal and consultancy fees (Vero: 344 Övriga avdragbara kostnader).",
       other:
-        "Anything that fits none of the other categories, including loan and financing fees (Vero: Muut vähennyskelpoiset kulut or Muut rahoituskulut).",
+        "Anything that fits none of the other categories, including loan and financing fees (Vero: 344 Övriga avdragbara kostnader, or 349 Övriga finansiella kostnader for financing fees).",
       unknown:
         "Use when the document does not show what was purchased clearly enough to choose a category. Prefer this over guessing."
     ]

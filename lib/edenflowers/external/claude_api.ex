@@ -42,7 +42,7 @@ defmodule Edenflowers.External.ClaudeAPI do
         "The category that best fits what was purchased:\n" <>
           Enum.map_join(Category.values(), "\n", &"- #{&1}: #{Category.description(&1)}")
     ],
-    description: [type: :string, doc: "Short description of what was purchased."],
+    description: [type: :string, doc: "Short description of what was purchased, in Finland Swedish."],
     confidence: [
       type: :string,
       required: true,
@@ -53,6 +53,7 @@ defmodule Edenflowers.External.ClaudeAPI do
   @prompt """
   Extract the expense details from this receipt or invoice.
   Use a lowercase ISO 4217 code for the currency.
+  Write the description in Finland Swedish, whatever the language of the document.
   Omit any field you cannot determine with reasonable confidence.
   Set confidence to reflect your overall certainty across all fields.
   """
