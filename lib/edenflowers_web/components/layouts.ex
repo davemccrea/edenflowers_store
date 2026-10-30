@@ -223,7 +223,11 @@ defmodule EdenflowersWeb.Layouts do
           "hero-receipt-percent"},
          {~p"/admin/fulfillments", dgettext("admin", "Delivery and pickup"), true, "hero-calendar-days"}
        ]},
-      {dgettext("admin", "Marketing"), [{"https://app.brevo.com", "Brevo", false, "hero-paper-airplane"}]},
+      {dgettext("admin", "Marketing"),
+       [
+         {"https://stats.edenflowers.fi", "Umami", false, "hero-chart-bar"},
+         {"https://app.brevo.com", "Brevo", false, "hero-paper-airplane"}
+       ]},
       {dgettext("admin", "Finances"), [{~p"/admin/expenses", dgettext("admin", "Expenses"), true, "hero-banknotes"}]}
     ]
 
