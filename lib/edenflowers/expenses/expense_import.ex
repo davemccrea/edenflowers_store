@@ -1,6 +1,6 @@
 defmodule Edenflowers.Expenses.ExpenseImport do
   @moduledoc """
-  Tracks one Papra document from webhook receipt through extraction into an expense. Its Oban trigger retries processing and records terminal failures.
+  Tracks one Papra document from webhook receipt, or upload from an invoice email, through extraction into an expense. Its Oban trigger retries processing and records terminal failures; a scheduled action imports the invoice emails.
   """
 
   use Ash.Resource,
@@ -36,6 +36,16 @@ defmodule Edenflowers.Expenses.ExpenseImport do
         where expr(is_nil(processed_at) and is_nil(failed_at))
       end
     end
+
+    # Each run retries whatever the last one left in the folder, so a failed job isn't retried.
+    scheduled_actions do
+      schedule :import_invoice_emails, "*/15 * * * *" do
+        action :import_invoice_emails
+        queue :default
+        worker_module_name Edenflowers.Expenses.Workers.ImportInvoiceEmails
+        default_actor Edenflowers.Actors.system_actor()
+      end
+    end
   end
 
   actions do
@@ -50,6 +60,14 @@ defmodule Edenflowers.Expenses.ExpenseImport do
       upsert_identity :unique_document_id
       upsert_fields [:organization_id]
       change run_oban_trigger(:process)
+    end
+
+    action :import_invoice_emails do
+      description "Uploads each PDF attached to the invoice emails in the Fastmail folder `Fakturor` to Papra, " <>
+                    "records it for extraction and moves the email to `Fakturor/Importerade`. Emails without a " <>
+                    "PDF stay put. Does nothing without a Fastmail API token, which only production has."
+
+      run Edenflowers.Expenses.Actions.ImportInvoiceEmails
     end
 
     update :process do

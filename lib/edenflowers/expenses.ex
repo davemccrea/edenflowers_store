@@ -17,6 +17,7 @@ defmodule Edenflowers.Expenses do
   resources do
     resource Edenflowers.Expenses.ExpenseImport do
       define :record_expense_import, action: :record
+      define :import_invoice_emails, action: :import_invoice_emails
     end
 
     resource Edenflowers.Expenses.Expense do
