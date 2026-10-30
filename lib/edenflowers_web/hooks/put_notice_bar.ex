@@ -43,8 +43,8 @@ defmodule EdenflowersWeb.Hooks.PutNoticeBar do
         nil
 
       {:order_today, deadline} ->
-        gettext_comment("Storefront bar above the header. %{time} is today's order deadline, e.g. 14:00.")
-        ~t"Order by #{time = Format.time(deadline, locale)} for delivery or pickup today"
+        gettext_comment("Storefront bar above the header. %{time} is today's order deadline, e.g. 11 or 14:30.")
+        ~t"Order by #{time = deadline_time(deadline, locale)} for delivery or pickup today"
 
       {:next_open, date} ->
         if date == Date.add(DateTime.to_date(now), 1) do
@@ -55,4 +55,10 @@ defmodule EdenflowersWeb.Hooks.PutNoticeBar do
         end
     end
   end
+
+  # The bar has to fit one line on a phone, so a deadline on the hour drops its minutes.
+  defp deadline_time(%Time{minute: 0} = deadline, locale),
+    do: Localize.Time.to_string!(deadline, locale: locale, format: :H)
+
+  defp deadline_time(deadline, locale), do: Format.time(deadline, locale)
 end

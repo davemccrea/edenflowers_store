@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(selected_variant: selected_variant)
      |> assign(photo_slug: selected_variant.photo_slug)
      |> assign(subscribe?: initial_subscribe?(params, product, cart_line))
-     |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 1))
+     |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 4))
      |> assign(has_subscription?: has_subscription?(socket.assigns.current_user))
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
   end
@@ -121,6 +121,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 priority
                 class="h-full w-full object-cover"
               />
+              <span
+                :if={@free_dist_km}
+                class="bg-base-100/90 text-base-content absolute top-3 left-3 px-2.5 py-1 text-xs"
+                data-testid="free-delivery-tag"
+              >
+                {~t"Free delivery"}
+              </span>
             </figure>
             <%!-- Eight columns whatever the count, so eight photos still fit one row on a phone. --%>
             <ul
