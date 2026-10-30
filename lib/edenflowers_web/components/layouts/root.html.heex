@@ -12,6 +12,7 @@
       }
     />
     <meta name="csrf-token" content={get_csrf_token()} />
+    <meta name="version" content={Edenflowers.Feedback.Note.app_version()} />
     <.live_title default="Store" suffix=" | Eden Flowers">
       {assigns[:page_title] || if(assigns[:status] == 404, do: ~t"Page not found")}
     </.live_title>
