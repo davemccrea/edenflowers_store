@@ -74,7 +74,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
             <.privacy_section id="information" title={~t"What information we use and why"}>
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
                 <li>
-                  {~t"We use names, email, phone and purchase details for orders, subscriptions, courses and enquiries. Checkout may create an account. Instagram handles are optional."}
+                  {~t"We use names, contact details and purchase details for orders, subscriptions, courses and enquiries. Checkout may create an account."}
                 </li>
                 <li>
                   {~t"Delivery details include recipient names, addresses, instructions, card messages and coordinates for calculating distance."}
@@ -132,9 +132,6 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
                   {~t"Blocking cookies in your browser may stop the cart and sign-in working."}
                 </li>
               </ul>
-              <p>
-                {~t"Browser settings do not replace required consent."}
-              </p>
               <p>
                 {~t"Our database stores error reports, which may include IP addresses, browser details and form data."}
               </p>
