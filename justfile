@@ -110,7 +110,7 @@ install-infra *args:
 [group('infra')]
 [working-directory: 'infra']
 edit-vault:
-    ansible-vault edit group_vars/all/vault.yml
+    EDITOR=nvim ansible-vault edit group_vars/all/vault.yml
 
 # Prepare a fresh server as root before its first provision (run once)
 [group('infra')]
