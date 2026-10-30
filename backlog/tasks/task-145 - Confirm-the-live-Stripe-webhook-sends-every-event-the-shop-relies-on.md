@@ -1,9 +1,10 @@
 ---
 id: TASK-145
 title: Confirm the live Stripe webhook sends every event the shop relies on
-status: needs-triage
+status: ready-for-human
 assignee: []
 created_date: '2026-10-29 14:10'
+updated_date: '2026-10-30 17:28'
 labels:
   - spec
   - admin
@@ -35,6 +36,12 @@ Checked in test mode on 2026-10-29: a checkout, a redelivered event and a declin
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 The live-mode endpoint for https://edenflowers.fi/webhook/stripe subscribes to payment_intent.succeeded, payment_intent.canceled, refund.created, refund.updated and setup_intent.succeeded
-- [ ] #2 The endpoint's signing secret matches vault_stripe_webhook_secret in the Ansible vault
-- [ ] #3 A real live-mode order shows a 200 delivery for payment_intent.succeeded in the endpoint's event log, and refunding it from the admin shows 200s for the refund events
+- [ ] #2 The endpoint's API version is 2025-11-17.clover, the version stripity_stripe 3.3.2 calls Stripe with. If not, create a new endpoint on that version, put its signing secret in vault_stripe_webhook_secret, deploy, then delete the old endpoint
+- [ ] #3 The endpoint's event log shows a 200 delivery for payment_intent.succeeded from a real live order, and 200s for refund.created and refund.updated from refunding one in the admin. Use existing live deliveries if there are any; otherwise place a small real order and refund it. A 200 also proves the signing secret matches the vault, since the handler rejects bad signatures
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Grilled 2026-10-30: done by hand in the Stripe dashboard (the CLI's live key expired 2026-01-17). The separate signing-secret check was folded into the delivery check. setup_intent.succeeded is checked by subscription only, not by a live subscription signup.
+<!-- SECTION:NOTES:END -->
