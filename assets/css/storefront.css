@@ -461,15 +461,15 @@
 }
 .card-fan > li {
   --offset: calc(var(--i) - (var(--n) - 1) / 2);
-  --open-delay: calc(max(var(--offset), -1 * var(--offset)) * 70ms);
+  --open-delay: calc(max(var(--offset), -1 * var(--offset)) * 55ms);
   grid-area: 1 / 1;
   width: 9.5rem;
   transform-origin: 50% 180%;
   rotate: calc(var(--offset) * 6deg + var(--tilt, 0deg));
   filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.12));
   transition:
-    rotate 1100ms cubic-bezier(0.3, 1.15, 0.5, 1) var(--open-delay),
-    transform 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--open-delay),
+    rotate 900ms cubic-bezier(0.3, 1.15, 0.5, 1) var(--open-delay),
+    transform 750ms cubic-bezier(0.22, 1, 0.36, 1) var(--open-delay),
     translate 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* A slight, uneven tilt, so the fan looks held rather than drawn. */
@@ -490,21 +490,59 @@
     width: 13rem;
   }
 }
-.card-fan > li:not(:last-child) {
+.card-fan button {
+  display: block;
   cursor: pointer;
+}
+.card-fan button:focus-visible {
+  outline: 2px solid var(--focus-color, var(--color-primary));
+  outline-offset: 3px;
+}
+.card-fan > li:has(:focus-visible) {
+  --lift: -1.5%;
 }
 .card-fan > li[data-selected] {
   z-index: 1;
 }
 /* The other cards part to either side of the selected one. */
 .card-fan > li {
+  --spread: 0.5rem;
   translate: var(--part, 0) var(--lift, 0);
 }
+@media (width >= theme(--breakpoint-md)) {
+  .card-fan > li {
+    --spread: 1rem;
+  }
+}
 .card-fan > li[data-selected] ~ li {
-  --part: 0.75rem;
+  --part: var(--spread);
 }
 .card-fan > li:has(~ li[data-selected]) {
-  --part: -0.75rem;
+  --part: calc(-1 * var(--spread));
+}
+/* The name comes into focus like the hero headline, and keeps its line while hidden
+   so nothing below jumps. */
+.card-fan-caption {
+  min-height: 1lh;
+  margin-top: 1.5rem;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s 300ms;
+}
+.card-fan-caption[data-shown] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card-fan-caption[data-shown] {
+    animation: hero-focus 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }
 /* A selected card springs up out of the fan, crosses over its neighbours at the top and
    drops into place in front, and goes back the same way. It fades slightly as it
@@ -516,9 +554,6 @@
   }
   .card-fan > li[data-put-back] {
     animation: card-to-back 450ms both;
-  }
-  .card-fan > li[data-put-back="swap"] {
-    animation: card-swapped-out 450ms both;
   }
 }
 @keyframes card-to-front {
@@ -555,18 +590,9 @@
     z-index: 0;
   }
 }
-/* Swapped for another card, it stays in front until the new card crosses over it. */
-@keyframes card-swapped-out {
-  0%,
-  40% {
-    z-index: 1;
-  }
-  41% {
-    z-index: 0;
-  }
-}
+/* While a card is out, a click only puts it back, so the others don't invite one. */
 @media (hover: hover) {
-  .card-fan > li:hover {
+  .card-fan:not(:has([data-selected])) > li:hover {
     --lift: -1.5%;
   }
 }

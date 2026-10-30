@@ -788,26 +788,42 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         aria-labelledby="cards-heading"
       >
         <div class="container grid items-center gap-12 py-20 md:py-28 lg:grid-cols-2">
-          <ul
-            id="card-fan"
-            phx-hook=".CardFan"
-            class="card-fan lg:order-last"
-            style={"--n: #{length(@cards)};"}
-            aria-label={~t"Cards"}
-          >
-            <li :for={{card, i} <- Enum.with_index(@cards)} style={"--i: #{i};"}>
-              <%!-- Card artwork is fine line work, which looks soft at the default WebP quality. --%>
-              <.image
-                src={card.main_photo_slug}
-                alt={card.name}
-                width={487}
-                height={611}
-                crop_type="fit"
-                quality={90}
-                sizes="(min-width: 768px) 13rem, 9.5rem"
-              />
-            </li>
-          </ul>
+          <div class="lg:order-last">
+            <ul
+              id="card-fan"
+              phx-hook=".CardFan"
+              class="card-fan"
+              style={"--n: #{length(@cards)};"}
+              aria-label={~t"Cards"}
+            >
+              <li :for={{card, i} <- Enum.with_index(@cards)} style={"--i: #{i};"}>
+                <%!-- The last card is already in front, so it has nothing to do. --%>
+                <.dynamic_tag
+                  tag_name={if i < length(@cards) - 1, do: "button", else: "div"}
+                  {if i < length(@cards) - 1, do: [type: "button", "aria-pressed": "false"], else: []}
+                >
+                  <%!-- Card artwork is fine line work, which looks soft at the default WebP quality. --%>
+                  <.image
+                    src={card.main_photo_slug}
+                    alt={card.name}
+                    width={487}
+                    height={611}
+                    crop_type="fit"
+                    quality={90}
+                    sizes="(min-width: 768px) 13rem, 9.5rem"
+                  />
+                </.dynamic_tag>
+              </li>
+            </ul>
+            <%!-- Names the card that is picked up. --%>
+            <p
+              id="card-fan-caption"
+              phx-update="ignore"
+              class="card-fan-caption text-base-content/80 font-serif text-xl italic"
+              aria-live="polite"
+            >
+            </p>
+          </div>
           <script :type={Phoenix.LiveView.ColocatedHook} name=".CardFan">
             export default {
               mounted() {
@@ -822,38 +838,46 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 );
                 this.observer.observe(this.el);
 
-                // Clicking a card brings it to the front. Clicking it again, another card or
-                // anywhere outside the fan puts it back. The last card is already on top.
-                this.el.addEventListener("click", (event) => {
-                  const card = event.target.closest("li");
-                  const selected = this.el.querySelector("li[data-selected]");
-                  const next =
-                    card && card !== selected && card !== this.el.lastElementChild
-                      ? card
-                      : null;
-                  // Swapped for another card, it slips back while the new one crosses over.
-                  if (selected) this.putBack(selected, next ? "swap" : "");
-                  if (next) {
-                    this.js().removeAttribute(next, "data-put-back");
-                    this.js().setAttribute(next, "data-selected", "");
-                  }
-                });
-                this.clickAway = (event) => {
-                  const selected = this.el.querySelector("li[data-selected]");
-                  if (selected && !this.el.contains(event.target))
-                    this.putBack(selected, "");
+                this.caption = document.getElementById("card-fan-caption");
+
+                // Clicking a card brings it to the front. While it is there, any click, even on
+                // another card, or Escape puts it back. The last card is already on top.
+                this.click = (event) => {
+                  if (this.selected()) return this.putBack();
+                  const card = this.el.contains(event.target) && event.target.closest("li");
+                  if (card && card !== this.el.lastElementChild) this.bringToFront(card);
                 };
-                document.addEventListener("click", this.clickAway);
+                this.escape = (event) => {
+                  if (event.key === "Escape" && this.selected()) this.putBack();
+                };
+                document.addEventListener("click", this.click);
+                document.addEventListener("keydown", this.escape);
               },
 
-              putBack(card, how) {
+              selected() {
+                return this.el.querySelector("li[data-selected]");
+              },
+
+              bringToFront(card) {
+                this.js().removeAttribute(card, "data-put-back");
+                this.js().setAttribute(card, "data-selected", "");
+                this.js().setAttribute(card.firstElementChild, "aria-pressed", "true");
+                this.caption.textContent = card.querySelector("img").alt;
+                this.js().setAttribute(this.caption, "data-shown", "");
+              },
+
+              putBack() {
+                const card = this.selected();
                 this.js().removeAttribute(card, "data-selected");
-                this.js().setAttribute(card, "data-put-back", how);
+                this.js().setAttribute(card, "data-put-back", "");
+                this.js().setAttribute(card.firstElementChild, "aria-pressed", "false");
+                this.js().removeAttribute(this.caption, "data-shown");
               },
 
               destroyed() {
                 this.observer.disconnect();
-                document.removeEventListener("click", this.clickAway);
+                document.removeEventListener("click", this.click);
+                document.removeEventListener("keydown", this.escape);
               },
             };
           </script>
