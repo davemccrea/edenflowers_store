@@ -179,7 +179,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
       view |> form("[data-testid=product-form]", %{subscribe: "true"}) |> render_change()
 
-      assert has_element?(view, "[data-testid=interval-option-4]")
+      assert has_element?(view, "[data-testid=interval-option-4][checked]")
       assert has_element?(view, "[data-testid=per-delivery]", "per delivery")
 
       view
