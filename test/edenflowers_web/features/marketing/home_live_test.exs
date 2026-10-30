@@ -209,4 +209,22 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
       assert matched.id == user.id
     end
   end
+
+  test "Send a gift opens the browser's cart as a gift and goes to the store", %{conn: conn} do
+    cards = generate(product_category(slug: "cards", visibility: :hidden))
+
+    for _ <- 1..EdenflowersWeb.Marketing.HomeLive.min_fan_cards() do
+      card = generate(product(product_category_id: cards.id, draft: false, featured: true))
+      generate(product_variant(product_id: card.id, draft: false))
+    end
+
+    conn = get(conn, ~p"/en")
+    visitor_id = get_session(conn, :visitor_id)
+    {:ok, view, _html} = live(conn, ~p"/en")
+
+    view |> element("button", "Send a gift") |> render_click()
+
+    assert_redirect(view, "/en/store")
+    assert Edenflowers.Orders.get_storefront_cart!(visitor_id, authorize?: false).gift
+  end
 end

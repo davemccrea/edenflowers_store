@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   alias Edenflowers.Catalog
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
+  alias Edenflowers.Orders
   alias Edenflowers.Translations
 
   # Complete-sentence excerpts from feedback.md, preserving the customer's wording and emojis.
@@ -146,6 +147,18 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
        review_leaving: leaving,
        review_direction: step
      )}
+  end
+
+  # Opens the browser's cart already marked as a gift, so checkout starts on the gift
+  # side rather than For me.
+  def handle_event("send_gift", _params, socket) do
+    %{visitor_id: visitor_id, current_user: actor} = socket.assigns
+
+    %{visitor_id: visitor_id}
+    |> Orders.create_for_checkout!(actor: actor)
+    |> Orders.set_gift!(true, actor: actor)
+
+    {:noreply, push_navigate(socket, to: ~q"/#{language}/store")}
   end
 
   defp occasion_label(:wedding), do: ~t"Wedding"
@@ -890,7 +903,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
               {~t"Choose a card at checkout and add your message. Jennie writes it out and tucks it in with the flowers."}
             </p>
-            <.button navigate={~q"/#{language}/store"} variant="primary" class="group w-fit">
+            <.button phx-click="send_gift" variant="primary" class="group w-fit">
               {~t"Send a gift"}
               <.icon
                 name="hero-arrow-right-mini"
