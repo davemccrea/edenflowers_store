@@ -66,7 +66,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 {~t"Flowers play an important part in your whole wedding day. I'll help you find the flowers that best match your wishes and reflect who you are as a couple."}
               </p>
               <div class="mt-8 flex flex-wrap items-center gap-6">
-                <.button href="#my-work" variant="primary">{~t"See my work"}</.button>
+                <.button phx-click={open_enquiry()} variant="primary">{~t"Get in touch"}</.button>
+                <.button href="#my-work" variant="secondary">{~t"See my work"}</.button>
                 <.button :if={@show_prices?} href="#prices" variant="secondary">{~t"Estimate your price"}</.button>
               </div>
             </div>
@@ -159,7 +160,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
                 {~t"Final prices depend on the flowers and techniques you choose. Delivery outside Vaasa is quoted separately."}
               </p>
               <.button phx-click={open_enquiry()} variant="primary" class="mt-8 w-full">
-                {~t"Request a quote"}
+                {~t"Get in touch"}
               </.button>
             </div>
           </div>
@@ -201,7 +202,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
       <section
         id="enquire"
-        class="bg-forest scroll-anchor-below-header not-last:border-b"
+        class="bg-cream text-cream-content scroll-anchor-below-header not-last:border-b"
         aria-labelledby="enquire-heading"
       >
         <div class="grid lg:grid-cols-[minmax(0,32rem)_1fr]">
@@ -215,16 +216,16 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
           />
 
           <div class="flex flex-col items-start gap-8 px-4 py-20 sm:px-8 md:px-12 lg:justify-center lg:px-20">
-            <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
-            <h2 id="enquire-heading" class="section-title text-forest-content">{~t"Planning a wedding?"}</h2>
-            <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
+            <.flower name="flower-30" class="text-cream-content/70 h-12 w-12" />
+            <h2 id="enquire-heading" class="section-title">{~t"Planning a wedding?"}</h2>
+            <p class="text-cream-content/80 max-w-md text-lg leading-relaxed">
               {~t"Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."}
             </p>
-            <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
+            <p class="text-cream-content/80 max-w-md text-lg leading-relaxed">
               {~t"I also provide wedding flowers outside Vaasa. Travel is quoted separately."}
             </p>
-            <.button phx-click={open_enquiry()} variant="inverse">{~t"Request a quote"}</.button>
-            <p class="text-forest-content/85">
+            <.button phx-click={open_enquiry()} variant="primary">{~t"Get in touch"}</.button>
+            <p class="text-cream-content/80">
               {~t"Or call me on"}
               <a href="tel:+358402209494" class="link-underline-static-body whitespace-nowrap">040 220 9494</a>
             </p>
@@ -235,11 +236,11 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       <.drawer
         id="enquiry-drawer"
         placement="right"
-        label={~t"Request a quote"}
+        label={~t"Get in touch"}
         class="bg-base-100 w-[92vw] h-full overflow-y-auto overscroll-contain sm:w-[34rem]"
       >
         <header class="flex flex-row items-center justify-between gap-4 pt-6 pr-4 pl-4 sm:pt-8 sm:pl-8">
-          <h2 class="section-title">{if @enquiry_sent?, do: ~t"Thank you!", else: ~t"Request a quote"}</h2>
+          <h2 class="section-title">{if @enquiry_sent?, do: ~t"Thank you!", else: ~t"Get in touch"}</h2>
           <.icon_button aria_label={~t"Close"} phx-click={JS.exec("phx-hide", to: "#enquiry-drawer")}>
             <.icon name="hero-x-mark" class="h-6 w-6 hover:text-base-content/60" />
           </.icon_button>
