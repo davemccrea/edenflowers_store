@@ -766,7 +766,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
             <p class="text-night-content/80 mt-6 max-w-md text-lg leading-relaxed">
               {~t"I'd love to hear about your wedding. Tell me about the day and your style, and I'll design bouquets, crowns and decoration that feel like the two of you."}
             </p>
-            <.button navigate={~q"/#{language}/weddings"} variant="light" class="group mt-10 w-fit">
+            <.button navigate={~q"/#{language}/weddings"} variant="primary" class="group mt-10 w-fit">
               {~t"Wedding flowers"}
               <.icon
                 name="hero-arrow-right-mini"
