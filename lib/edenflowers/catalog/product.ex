@@ -52,6 +52,24 @@ defmodule Edenflowers.Catalog.Product do
       prepare build(sort: [position: :asc_nils_last, name: :asc], load: [:product_category])
     end
 
+    read :large_cards do
+      description "Large cards for the fan on the home page, in store order, so every card in it is the same size. " <>
+                    "Cards are hidden from the storefront, so this offers the same published, in-stock cards as " <>
+                    "ProductVariant's `for_card_drawer`."
+
+      filter expr(
+               draft == false and
+                 product_category.slug == "cards" and
+                 product_category.visibility != :draft and
+                 exists(
+                   product_variants,
+                   size == :large and draft == false and (is_nil(stock_quantity) or stock_quantity > 0)
+                 )
+             )
+
+      prepare build(sort: [position: :asc_nils_last, name: :asc], load: [:main_photo_slug])
+    end
+
     # Categories are data, so the bouquet category is found by its English slug.
     read :bouquets do
       description "Products in the bouquets category that the store shows, as in `for_store`."

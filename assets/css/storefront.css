@@ -448,3 +448,53 @@
     animation: card-tuck 400ms cubic-bezier(0.34, 1.25, 0.64, 1) both;
   }
 }
+
+/* Home page cards, stacked in one grid cell and fanned like a hand of playing cards.
+   The fan opens with `rotate` and `transform` and hover uses `translate`/`scale`, so
+   each keeps its own transition. The CardFan hook opens the fan once it scrolls into
+   view, from the middle outwards. */
+.card-fan {
+  display: grid;
+  place-items: end center;
+  padding-top: 2rem;
+  padding-bottom: 1rem;
+}
+.card-fan > li {
+  --offset: calc(var(--i) - (var(--n) - 1) / 2);
+  --open-delay: calc(max(var(--offset), -1 * var(--offset)) * 70ms);
+  grid-area: 1 / 1;
+  width: 9.5rem;
+  transform-origin: 50% 180%;
+  rotate: calc(var(--offset) * 6deg + var(--tilt, 0deg));
+  filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.12));
+  transition:
+    rotate 1100ms cubic-bezier(0.3, 1.15, 0.5, 1) var(--open-delay),
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--open-delay),
+    translate 400ms cubic-bezier(0.22, 1, 0.36, 1),
+    scale 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* A slight, uneven tilt, so the fan looks held rather than drawn. */
+.card-fan > li:nth-child(3n + 1) {
+  --tilt: -0.8deg;
+}
+.card-fan > li:nth-child(3n + 2) {
+  --tilt: 0.6deg;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card-fan:not([data-open]) > li {
+    rotate: calc(var(--tilt, 0deg) * 3);
+    transform: translateY(4%);
+  }
+}
+@media (width >= theme(--breakpoint-md)) {
+  .card-fan > li {
+    width: 13rem;
+  }
+}
+@media (hover: hover) {
+  .card-fan > li:hover {
+    z-index: 1;
+    translate: 0 -4%;
+    scale: 1.05;
+  }
+}
