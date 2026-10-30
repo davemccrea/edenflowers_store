@@ -47,6 +47,10 @@ body:has([data-header-overlay])
   line-height: 1.2;
   text-align: center;
 }
+/* The bar spans the viewport's top edge, so an outset focus ring would be clipped to its bottom line. */
+.notice-bar:focus-visible {
+  outline-offset: -4px;
+}
 body:has(#notice-bar):not(:has([data-header-overlay])) main {
   padding-top: var(--notice-bar-height);
 }
@@ -220,6 +224,10 @@ html:has(dialog.slide-drawer:modal) {
    fainter so the bottom-right stays the main light. */
 .footer-sky {
   --footer-sky-glow: 14rem 7rem;
+  /* Like the header over a photo, recolour the theme so the brand green
+     (focus rings included) turns light on the dusk blue. */
+  --color-primary: var(--color-dusk-content);
+  --color-primary-content: var(--color-dusk);
   background-color: var(--color-dusk);
   background-image: var(--grain),
     radial-gradient(
@@ -286,6 +294,6 @@ html:has(dialog.slide-drawer:modal) {
    locale picker's select sets data-pointer on click (cleared on any key
    press or blur) and only keyboard focus outlines the visible trigger. */
 .locale-picker:has(select:focus:not([data-pointer])) {
-  outline: 2px solid currentColor;
+  outline: 2px solid var(--focus-color, var(--color-primary));
   outline-offset: 2px;
 }
