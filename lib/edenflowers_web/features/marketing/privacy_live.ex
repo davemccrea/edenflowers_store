@@ -129,6 +129,9 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
                 </li>
                 <li>{~t"We do not use analytics or advertising cookies."}</li>
                 <li>
+                  {~t"We count page visits with Umami, which we host on our own server. It sets no cookies and stores no IP addresses."}
+                </li>
+                <li>
                   {~t"Blocking cookies in your browser may stop the cart and sign-in working."}
                 </li>
               </ul>
