@@ -2,11 +2,11 @@
 
 <%= dgettext("emails", "Thank you for subscribing to the Eden Flowers newsletter.") %>
 
-<%= dgettext("emails", "As a welcome gift, here's 15% off one order:") %>
+<%= dgettext("emails", "As a welcome gift, you get 15% off one order. Enter the following code at checkout:") %>
 
 <%= @promo_code %>
 
-<%= dgettext("emails", "Use it at checkout by %{date}.", date: @use_by) %>
+<%= dgettext("emails", "The code is valid until %{date}.", date: @use_by) %>
 
 <%= dgettext("emails", "Shop flowers:") %>
 <%= @store_url %>

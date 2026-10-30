@@ -95,11 +95,6 @@ msgstr "Jo veloitettu toimitus tulee silti %{date}."
 msgid "Any order already charged will still be ready to collect on %{date}."
 msgstr "Jo veloitettu tilauksesi on silti noudettavissa %{date}."
 
-#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "As a welcome gift, here's 15% off one order:"
-msgstr "Tervetuliaislahjaksi saat 15 %:n alennuksen yhdestä tilauksesta:"
-
 #: lib/edenflowers/email/templates/subscription_heads_up.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Away, or want a change? Pause or change it in your account by %{date}:"
@@ -611,12 +606,6 @@ msgstr "Voit keskeyttää, muuttaa tai peruuttaa tililläsi viimeistään %{days
 msgid "Total"
 msgstr "Yhteensä"
 
-#: lib/edenflowers/email/templates/already_subscribed.text.eex:7
-#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:9
-#, elixir-autogen, elixir-format
-msgid "Use it at checkout by %{date}."
-msgstr "Käytä se kassalla viimeistään %{date}."
-
 #: lib/edenflowers/email/templates/wedding_enquiry.text.eex:10
 #, elixir-autogen, elixir-format
 msgid "Venue: %{venue}"
@@ -722,11 +711,6 @@ msgstr "Kestotilauksesi on valmis: %{product}"
 #, elixir-autogen, elixir-format
 msgid "Your 15% welcome code for Eden Flowers"
 msgstr "Eden Flowersin 15 %:n tervetulokoodi"
-
-#: lib/edenflowers/email/templates/already_subscribed.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Your 15% welcome code is still usable:"
-msgstr "15 %:n tervetulokoodisi on vielä voimassa:"
 
 #: lib/edenflowers/email.ex:31
 #: lib/edenflowers/email.ex:154
@@ -884,3 +868,19 @@ msgstr "Päivitetty Eden Flowers -tilauksesi: %{date}"
 #, elixir-autogen, elixir-format
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr "Häätiedustelunne Eden Flowersille"
+
+#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "As a welcome gift, you get 15% off one order. Enter the following code at checkout:"
+msgstr "Tervetuliaislahjaksi saat 15 %:n alennuksen yhdestä tilauksesta. Syötä seuraava koodi kassalla:"
+
+#: lib/edenflowers/email/templates/already_subscribed.text.eex:7
+#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:9
+#, elixir-autogen, elixir-format
+msgid "The code is valid until %{date}."
+msgstr "Käytä koodi viimeistään %{date}."
+
+#: lib/edenflowers/email/templates/already_subscribed.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Your welcome code for 15% off one order is still valid. Enter the following code at checkout:"
+msgstr "Tervetulokoodisi 15 %:n alennukseen yhdestä tilauksesta on vielä voimassa. Syötä seuraava koodi kassalla:"
