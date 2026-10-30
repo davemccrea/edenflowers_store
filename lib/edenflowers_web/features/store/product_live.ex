@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     cart_line = cart_line(socket.assigns.order, product.id)
 
-    selected_variant = initial_variant(product_variants, cart_line)
+    selected_variant = initial_variant(product, product_variants, cart_line)
 
     {:ok,
      socket
@@ -55,11 +55,12 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
   end
 
-  defp initial_variant(product_variants, nil), do: default_variant(selectable_variants(product_variants))
+  defp initial_variant(product, product_variants, nil),
+    do: default_variant(product, selectable_variants(product_variants))
 
-  defp initial_variant(product_variants, cart_line) do
+  defp initial_variant(product, product_variants, cart_line) do
     Enum.find(product_variants, &(&1.id == cart_line.product_variant_id)) ||
-      initial_variant(product_variants, nil)
+      initial_variant(product, product_variants, nil)
   end
 
   defp initial_subscribe?(%{"subscribe" => "1"}, product, _cart_line), do: product.subscribable
@@ -446,7 +447,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     selected_variant =
       Enum.find(variants, &(&1.id == socket.assigns.selected_variant.id)) ||
-        default_variant(selectable_variants(variants))
+        default_variant(product, selectable_variants(variants))
 
     {:noreply, assign(socket, product_variants: variants, selected_variant: selected_variant)}
   end
@@ -480,8 +481,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
     end
   end
 
-  defp default_variant([first, _second]), do: first
-  defp default_variant(variants), do: Enum.at(variants, div(length(variants), 2))
+  defp default_variant(%{subscribable: true}, variants),
+    do: Enum.find(variants, &(&1.size == :small)) || middle_variant(variants)
+
+  defp default_variant(_product, variants), do: middle_variant(variants)
+
+  defp middle_variant([first, _second]), do: first
+  defp middle_variant(variants), do: Enum.at(variants, div(length(variants), 2))
 
   defp json_ld(product, variants) do
     availability =
