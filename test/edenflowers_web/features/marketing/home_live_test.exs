@@ -42,7 +42,7 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
 
     shop_calendar(enabled_dates: [today])
     send(view.pid, :refresh_notice_bar)
-    assert has_element?(view, "#notice-bar", "for delivery or pickup today")
+    assert has_element?(view, "#notice-bar", "for delivery today")
 
     shop_calendar(enabled_dates: [])
     send(view.pid, :refresh_notice_bar)
