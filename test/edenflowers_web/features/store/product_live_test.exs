@@ -119,6 +119,15 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert has_element?(view, "#cart-line-items [role=alert]", "Only 1 left")
   end
 
+  test "a subscribable product starts on Small", %{conn: conn} do
+    product = generate(product(subscribable: true, free_delivery: true, draft: false))
+    for size <- [:small, :medium, :large], do: generate(product_variant(product_id: product.id, size: size))
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+
+    assert has_element?(view, "[data-testid=variant-option-small][checked]")
+  end
+
   describe "a subscribable product" do
     setup do
       product = generate(product(subscribable: true, free_delivery: true, draft: false))
