@@ -1,4 +1,9 @@
 {
+  "permissions": {
+    "allow": [
+    "Bash(just:*)"
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "\"$(git rev-parse --show-toplevel)\"/.claude/statusline.sh"
