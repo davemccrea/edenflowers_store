@@ -590,9 +590,8 @@
     z-index: 0;
   }
 }
-/* While a card is out, a click only puts it back, so the others don't invite one. */
 @media (hover: hover) {
-  .card-fan:not(:has([data-selected])) > li:hover {
+  .card-fan > li:not([data-selected]):hover {
     --lift: -1.5%;
   }
 }

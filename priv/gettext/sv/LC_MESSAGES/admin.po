@@ -113,7 +113,7 @@ msgstr "Lägg till Eden Admin på hemskärmen för att få notiser."
 msgid "Add an item to see the price."
 msgstr "Lägg till en artikel för att se priset."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:630
+#: lib/edenflowers_web/features/admin/product_form_live.ex:635
 #, elixir-autogen, elixir-format
 msgid "Add at most %{count} photos."
 msgstr "Lägg till högst %{count} bilder."
@@ -1359,7 +1359,7 @@ msgid "In person"
 msgstr "På plats"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:403
-#: lib/edenflowers_web/features/admin/product_form_live.ex:488
+#: lib/edenflowers_web/features/admin/product_form_live.ex:493
 #, elixir-autogen, elixir-format
 msgid "In stock"
 msgstr "I lager"
@@ -1658,7 +1658,7 @@ msgstr "Ny beställning %{order_order_reference}"
 msgid "New order notifications"
 msgstr "Notiser om nya beställningar"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:606
+#: lib/edenflowers_web/features/admin/product_form_live.ex:611
 #: lib/edenflowers_web/features/admin/products_live.ex:47
 #, elixir-autogen, elixir-format
 msgid "New product"
@@ -1834,7 +1834,7 @@ msgid "Office supplies"
 msgstr "Kontorsmaterial"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:373
-#: lib/edenflowers_web/features/admin/product_form_live.ex:520
+#: lib/edenflowers_web/features/admin/product_form_live.ex:525
 #, elixir-autogen, elixir-format
 msgid "One size"
 msgstr "En storlek"
@@ -2240,7 +2240,7 @@ msgid "Previous order"
 msgstr "Föregående beställning"
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:402
-#: lib/edenflowers_web/features/admin/product_form_live.ex:488
+#: lib/edenflowers_web/features/admin/product_form_live.ex:493
 #, elixir-autogen, elixir-format
 msgid "Price"
 msgstr "Pris"
@@ -2287,7 +2287,7 @@ msgstr "Produkt"
 msgid "Product not found."
 msgstr "Produkten hittades inte."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:574
+#: lib/edenflowers_web/features/admin/product_form_live.ex:579
 #, elixir-autogen, elixir-format
 msgid "Product saved."
 msgstr "Produkten sparades."
@@ -2799,7 +2799,7 @@ msgstr "Logga ut"
 
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:93
 #: lib/edenflowers_web/features/admin/product_form_live.ex:372
-#: lib/edenflowers_web/features/admin/product_form_live.ex:488
+#: lib/edenflowers_web/features/admin/product_form_live.ex:493
 #: lib/edenflowers_web/features/admin/subscription_log.ex:77
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:71
 #, elixir-autogen, elixir-format
@@ -3047,7 +3047,7 @@ msgstr "Bilden får vara högst 40 MB."
 msgid "The picture must be under 2 MB."
 msgstr "Bilden måste vara under 2 MB."
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:581
+#: lib/edenflowers_web/features/admin/product_form_live.ex:586
 #, elixir-autogen, elixir-format
 msgid "The product wasn't saved. Check the fields marked below."
 msgstr "Produkten sparades inte. Kontrollera de markerade fälten nedan."
@@ -3826,17 +3826,17 @@ msgstr "E-post och marknadsföring"
 msgid "Hosting"
 msgstr "Drift"
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:469
+#: lib/edenflowers_web/features/admin/product_form_live.ex:470
 #, elixir-autogen, elixir-format
 msgid "Shows in the card fan on the home page once %{min} are ticked (%{count} so far)."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:472
+#: lib/edenflowers_web/features/admin/product_form_live.ex:477
 #, elixir-autogen, elixir-format
 msgid "Shows in the card fan on the home page."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/product_form_live.ex:475
+#: lib/edenflowers_web/features/admin/product_form_live.ex:480
 #, elixir-autogen, elixir-format
 msgid "Shows under Favourites on the home page."
 msgstr ""
@@ -3872,3 +3872,8 @@ msgstr "Spara och markera betald i dag"
 #, elixir-autogen, elixir-format
 msgid "due %{date}"
 msgstr "förfaller %{date}"
+
+#: lib/edenflowers_web/features/admin/product_form_live.ex:474
+#, elixir-autogen, elixir-format
+msgid "Shows in the card fan on the home page, which holds the first %{max} in store order."
+msgstr ""

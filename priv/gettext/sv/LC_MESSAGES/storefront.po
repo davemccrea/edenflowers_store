@@ -853,13 +853,13 @@ msgstr "Levereras till"
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:944
 #: lib/edenflowers_web/features/checkout/components/fields.ex:131
 #: lib/edenflowers_web/features/checkout/pay_live.ex:133
-#: lib/edenflowers_web/features/marketing/home_live.ex:930
+#: lib/edenflowers_web/features/marketing/home_live.ex:955
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr "Leverans"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:119
-#: lib/edenflowers_web/features/marketing/home_live.ex:924
+#: lib/edenflowers_web/features/marketing/home_live.ex:949
 #: lib/edenflowers_web/features/marketing/terms_live.ex:22
 #: lib/edenflowers_web/features/marketing/terms_live.ex:90
 #, elixir-autogen, elixir-format
@@ -1213,7 +1213,7 @@ msgstr "Slutgiltiga priser beror på önskade blommor och teknik. Fraktkostnader
 msgid "Free"
 msgstr "Gratis"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:935
+#: lib/edenflowers_web/features/marketing/home_live.ex:960
 #, elixir-autogen, elixir-format
 msgid "Free from Minimossen."
 msgstr "Gratis från Minimossen."
@@ -1708,7 +1708,7 @@ msgstr "Hantera den från ditt konto."
 msgid "Manage subscription"
 msgstr "Hantera prenumerationen"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:944
+#: lib/edenflowers_web/features/marketing/home_live.ex:969
 #, elixir-autogen, elixir-format
 msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr "Karta över Vasa med Minimossen utmärkt"
@@ -2189,7 +2189,7 @@ msgstr "Bilder"
 msgid "Pick up your flowers from Eden Flowers"
 msgstr "Hämta dina blommor från Eden Flowers"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:934
+#: lib/edenflowers_web/features/marketing/home_live.ex:959
 #: lib/edenflowers_web/features/marketing/terms_live.ex:94
 #, elixir-autogen, elixir-format
 msgid "Pickup"
@@ -4087,22 +4087,22 @@ msgstr "Beställ senast kl. %{time} för leverans i dag"
 msgid "Cards"
 msgstr "Kort"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:901
+#: lib/edenflowers_web/features/marketing/home_live.ex:926
 #, elixir-autogen, elixir-format
 msgid "Cards from %{price}"
 msgstr "Kort från %{price}"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:904
+#: lib/edenflowers_web/features/marketing/home_live.ex:929
 #, elixir-autogen, elixir-format
 msgid "Choose a card at checkout and add your message. Jennie writes it out and tucks it in with the flowers."
 msgstr "Välj ett kort i kassan och lägg till din hälsning. Jennie skriver kortet och stoppar ner det bland blommorna."
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:899
+#: lib/edenflowers_web/features/marketing/home_live.ex:924
 #, elixir-autogen, elixir-format
 msgid "Your words, written by hand"
 msgstr "Dina ord, skrivna för hand"
 
-#: lib/edenflowers_web/features/marketing/home_live.ex:907
+#: lib/edenflowers_web/features/marketing/home_live.ex:932
 #, elixir-autogen, elixir-format
 msgid "Send a gift"
 msgstr "Skicka en present"
