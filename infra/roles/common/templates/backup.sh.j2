@@ -3,12 +3,13 @@
 set -eu
 
 backup_dir={{ ('/opt/' ~ project_name ~ '/backups') | quote }}
-database={{ db_name | quote }}
 
 # Keep incomplete dumps out of the mirror and preserve good dumps on failure.
-f="$backup_dir/${database}_$(date +%Y%m%dT%H%M%S).dump"
-pg_dump -Fc "$database" > "$f.tmp"
-mv "$f.tmp" "$f"
+for database in {{ db_name | quote }} {{ umami_db_name | quote }}; do
+  f="$backup_dir/${database}_$(date +%Y%m%dT%H%M%S).dump"
+  pg_dump -Fc "$database" > "$f.tmp"
+  mv "$f.tmp" "$f"
+done
 # Local retention also controls the remote dump history via rsync --delete.
 find "$backup_dir" -name '*.dump*' -mtime +30 -delete
 {% if inventory_hostname == 'production' %}

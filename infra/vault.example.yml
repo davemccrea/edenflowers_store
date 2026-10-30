@@ -51,6 +51,13 @@ vault_papra_api_key: "ppapi_..."
 # Signing secret of the /webhook/papra webhook; must match the webhook's secret in Papra
 vault_papra_webhook_secret: "your_papra_webhook_secret"
 
+# Umami
+# Password of Umami's own Postgres role. Generate with: openssl rand -hex 32
+vault_umami_db_password: "your_umami_db_password"
+# Signs Umami's login tokens; changing it logs everyone out of Umami.
+# Generate with: openssl rand -hex 32
+vault_umami_app_secret: "your_umami_app_secret"
+
 # Fastmail API token with mail write access, for importing invoice emails
 vault_fastmail_api_token: "fmu1-..."
 

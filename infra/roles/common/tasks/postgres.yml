@@ -65,6 +65,23 @@
   become: true
   become_user: postgres
 
+- name: Create Umami db user
+  community.postgresql.postgresql_user:
+    state: present
+    name: "{{ umami_db_user }}"
+    password: "{{ umami_db_password }}"
+  become: true
+  become_user: postgres
+
+# Owning its database lets Umami run its own migrations in the public schema.
+- name: Create Umami database
+  community.postgresql.postgresql_db:
+    state: present
+    name: "{{ umami_db_name }}"
+    owner: "{{ umami_db_user }}"
+  become: true
+  become_user: postgres
+
 - name: Get PostgreSQL hba config path
   ansible.builtin.command: psql -t -c "SHOW hba_file"
   become: true
@@ -80,6 +97,19 @@
     databases: all
     method: scram-sha-256
     users: "{{ db_user }}"
+    address: 127.0.0.1/32
+    create: true
+  become: true
+  become_user: postgres
+  notify: Restart postgresql
+
+- name: Allow scram-sha-256 connection for the Umami db user
+  community.postgresql.postgresql_pg_hba:
+    dest: "{{ common_pg_hba_path.stdout | trim }}"
+    contype: host
+    databases: "{{ umami_db_name }}"
+    method: scram-sha-256
+    users: "{{ umami_db_user }}"
     address: 127.0.0.1/32
     create: true
   become: true

@@ -29,6 +29,7 @@ class BackupTest(unittest.TestCase):
             script = env.from_string(TEMPLATE.read_text()).render(
                 project_name="backup_test",
                 db_name="shop_prod",
+                umami_db_name="umami",
                 inventory_hostname=host,
                 vault_backup_storage_user="account",
                 vault_backup_storage_host="box.example",
@@ -74,25 +75,29 @@ class BackupTest(unittest.TestCase):
         code, calls, partials = self.run_backup()
         self.assertEqual(code, 0)
         self.assertEqual([line.split()[0] for line in calls],
-                         ["pg_dump", "mv", "find", "rsync", "rsync", "curl"])
-        self.assertIn("--delete --exclude=*.tmp", calls[3])
-        self.assertIn("StrictHostKeyChecking=yes", calls[3])
-        self.assertTrue(calls[3].endswith("account@box.example:edenflowers/database/"))
-        self.assertTrue(calls[4].endswith("account@box.example:edenflowers/photos/"))
-        self.assertIn("/photos/ account@", calls[4])
-        self.assertIn("--delete", calls[4])
-        self.assertIn("StrictHostKeyChecking=yes", calls[4])
-        self.assertNotIn("--exclude", calls[4])
+                         ["pg_dump", "mv", "pg_dump", "mv", "find", "rsync", "rsync", "curl"])
+        self.assertTrue(calls[0].endswith(" shop_prod"))
+        self.assertTrue(calls[2].endswith(" umami"))
+        self.assertIn("--delete --exclude=*.tmp", calls[5])
+        self.assertIn("StrictHostKeyChecking=yes", calls[5])
+        self.assertTrue(calls[5].endswith("account@box.example:edenflowers/database/"))
+        self.assertTrue(calls[6].endswith("account@box.example:edenflowers/photos/"))
+        self.assertIn("/photos/ account@", calls[6])
+        self.assertIn("--delete", calls[6])
+        self.assertIn("StrictHostKeyChecking=yes", calls[6])
+        self.assertNotIn("--exclude", calls[6])
         self.assertEqual(partials, [])
 
     def test_failures_stop_the_chain(self):
-        stages = ["pg_dump", "mv", "find", "rsync", "photos_rsync", "curl"]
-        commands = ["pg_dump", "mv", "find", "rsync", "rsync", "curl"]
-        for index, command in enumerate(stages):
+        commands = ["pg_dump", "mv", "pg_dump", "mv", "find", "rsync", "rsync", "curl"]
+        # A failing stage's mock fails the first time it runs, ending the chain there.
+        calls_until_failure = {"pg_dump": 1, "mv": 2, "find": 5, "rsync": 6,
+                               "photos_rsync": 7, "curl": 8}
+        for command, count in calls_until_failure.items():
             with self.subTest(command=command):
                 code, calls, _ = self.run_backup(command)
                 self.assertNotEqual(code, 0)
-                self.assertEqual([line.split()[0] for line in calls], commands[:index + 1])
+                self.assertEqual([line.split()[0] for line in calls], commands[:count])
 
     def test_real_mirrors_keep_sibling_backups_and_require_photo_source(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -116,7 +121,7 @@ class BackupTest(unittest.TestCase):
             env = Environment(undefined=StrictUndefined)
             env.filters["quote"] = shlex.quote
             script = env.from_string(TEMPLATE.read_text()).render(
-                project_name="backup_test", db_name="shop_prod",
+                project_name="backup_test", db_name="shop_prod", umami_db_name="umami",
                 inventory_hostname="production",
                 vault_backup_storage_user="account",
                 vault_backup_storage_host="box.example",
@@ -131,6 +136,7 @@ class BackupTest(unittest.TestCase):
             self.assertTrue(heartbeat.exists())
             self.assertEqual((remote / "photos/flower.jpg").read_bytes(), b"original photo")
             self.assertTrue(list((remote / "database").glob("shop_prod_*.dump")))
+            self.assertTrue(list((remote / "database").glob("umami_*.dump")))
             self.assertFalse((remote / "database/incomplete.dump.tmp").exists())
             self.assertFalse((remote / "database/stale.dump").exists())
             self.assertFalse((remote / "photos/deleted.jpg").exists())
@@ -148,7 +154,8 @@ class BackupTest(unittest.TestCase):
     def test_nonproduction_has_no_transfer_or_heartbeat(self):
         code, calls, _ = self.run_backup(host="staging")
         self.assertEqual(code, 0)
-        self.assertEqual([line.split()[0] for line in calls], ["pg_dump", "mv", "find"])
+        self.assertEqual([line.split()[0] for line in calls],
+                         ["pg_dump", "mv", "pg_dump", "mv", "find"])
 
 
 if __name__ == "__main__":
