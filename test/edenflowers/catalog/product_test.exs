@@ -10,25 +10,37 @@ defmodule Edenflowers.Catalog.ProductTest do
     {:ok, tax_rate: tax_rate, product_category: product_category}
   end
 
-  describe "Catalog.list_large_cards" do
-    test "lists only cards with a large size in stock", %{tax_rate: tax_rate} do
+  describe "Catalog.list_featured_cards" do
+    test "lists only Favourite cards with a large size in stock", %{tax_rate: tax_rate} do
       cards = generate(product_category(slug: "cards", visibility: :hidden))
 
-      card = fn size, stock_quantity ->
-        product = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards.id, draft: false))
+      card = fn featured, size, stock_quantity ->
+        product =
+          generate(product(tax_rate_id: tax_rate.id, product_category_id: cards.id, draft: false, featured: featured))
+
         generate(product_variant(product_id: product.id, draft: false, size: size, stock_quantity: stock_quantity))
         product
       end
 
-      large = card.(:large, nil)
-      small = card.(:small, nil)
-      sold_out_large = card.(:large, 0)
+      favourite = card.(true, :large, nil)
+      not_favourite = card.(false, :large, nil)
+      small = card.(true, :small, nil)
+      sold_out = card.(true, :large, 0)
 
-      ids = Enum.map(Catalog.list_large_cards!(authorize?: false), & &1.id)
+      ids = Enum.map(Catalog.list_featured_cards!(authorize?: false), & &1.id)
 
-      assert large.id in ids
+      assert favourite.id in ids
+      refute not_favourite.id in ids
       refute small.id in ids
-      refute sold_out_large.id in ids
+      refute sold_out.id in ids
+    end
+
+    test "keeps Favourite cards out of the home page's Favourites", %{tax_rate: tax_rate} do
+      cards = generate(product_category(slug: "cards", visibility: :hidden))
+      card = generate(product(tax_rate_id: tax_rate.id, product_category_id: cards.id, draft: false, featured: true))
+      generate(product_variant(product_id: card.id, draft: false, size: :large))
+
+      refute card.id in Enum.map(Catalog.list_featured_products!(authorize?: false), & &1.id)
     end
   end
 

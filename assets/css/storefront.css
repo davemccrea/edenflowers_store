@@ -493,7 +493,6 @@
 }
 @media (hover: hover) {
   .card-fan > li:hover {
-    z-index: 1;
     translate: 0 -4%;
     scale: 1.05;
   }
