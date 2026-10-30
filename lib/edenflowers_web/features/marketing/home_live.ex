@@ -778,7 +778,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
           <div class="relative max-md:order-first">
             <div id="wedding-frames" phx-hook=".WeddingFrames" class="wedding-frames">
               <.image
-                :for={{n, i} <- Enum.with_index([8, 10, 11])}
+                :for={{n, i} <- Enum.with_index([10, 11, 8])}
                 src={"local:///wedding/daniela_streng_#{n}.jpg"}
                 style={"--i: #{i};"}
                 alt=""
