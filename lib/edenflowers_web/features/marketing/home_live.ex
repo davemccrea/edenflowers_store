@@ -822,36 +822,38 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                 );
                 this.observer.observe(this.el);
 
-                // Raising the hovered card covers its right-hand neighbour, so plain :hover
-                // sticks when moving left to right. Each card owns the 6deg wedge it is fanned
-                // to around the shared pivot, whatever the stacking order.
-                this.el.addEventListener("pointermove", (event) => {
-                  if (event.pointerType !== "mouse" || !event.target.closest("li")) {
-                    return this.hover(null);
+                // Clicking a card brings it to the front. Clicking it again, another card or
+                // anywhere outside the fan puts it back. The last card is already on top.
+                this.el.addEventListener("click", (event) => {
+                  const card = event.target.closest("li");
+                  const selected = this.el.querySelector("li[data-selected]");
+                  const next =
+                    card && card !== selected && card !== this.el.lastElementChild
+                      ? card
+                      : null;
+                  // Swapped for another card, it slips back while the new one crosses over.
+                  if (selected) this.putBack(selected, next ? "swap" : "");
+                  if (next) {
+                    this.js().removeAttribute(next, "data-put-back");
+                    this.js().setAttribute(next, "data-selected", "");
                   }
-                  const cards = this.el.children;
-                  const card = cards[0];
-                  const parent = card.offsetParent.getBoundingClientRect();
-                  const pivotX = parent.left + card.offsetLeft + card.offsetWidth / 2;
-                  const pivotY = parent.top + card.offsetTop + card.offsetHeight * 1.8;
-                  const angle =
-                    Math.atan2(event.clientX - pivotX, pivotY - event.clientY) *
-                    (180 / Math.PI);
-                  const i = Math.round(angle / 6 + (cards.length - 1) / 2);
-                  this.hover(cards[Math.min(Math.max(i, 0), cards.length - 1)]);
                 });
-                this.el.addEventListener("pointerleave", () => this.hover(null));
+                this.clickAway = (event) => {
+                  const selected = this.el.querySelector("li[data-selected]");
+                  if (selected && !this.el.contains(event.target))
+                    this.putBack(selected, "");
+                };
+                document.addEventListener("click", this.clickAway);
               },
 
-              hover(card) {
-                if (card === this.hovered) return;
-                if (this.hovered) this.js().removeAttribute(this.hovered, "data-hover");
-                if (card) this.js().setAttribute(card, "data-hover", "");
-                this.hovered = card;
+              putBack(card, how) {
+                this.js().removeAttribute(card, "data-selected");
+                this.js().setAttribute(card, "data-put-back", how);
               },
 
               destroyed() {
                 this.observer.disconnect();
+                document.removeEventListener("click", this.clickAway);
               },
             };
           </script>
