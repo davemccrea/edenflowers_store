@@ -47,6 +47,18 @@ window.addEventListener("phx:js-exec", ({ detail }) => {
     .forEach((el) => liveSocket.execJS(el, el.getAttribute(detail.attr)));
 });
 
+// Custom Umami events from EdenflowersWeb.Analytics. A `once` key is only
+// remembered once Umami has it, so a blocked tracker doesn't eat the event.
+window.addEventListener("phx:umami", ({ detail: { name, data, once } }) => {
+  if (!window.umami) return;
+  const key = once && `umami:${once}`;
+  try {
+    if (key && localStorage.getItem(key)) return;
+    if (key) localStorage.setItem(key, "1");
+  } catch {}
+  window.umami.track(name, data);
+});
+
 topbar.config({
   barColors: {
     0: getComputedStyle(document.documentElement).getPropertyValue(

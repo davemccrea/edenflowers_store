@@ -156,7 +156,10 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   @impl true
   def handle_async(:lookup_address, {:ok, {:ok, result}}, socket) do
     if result.error do
-      {:noreply, fail(socket, DeliveryError.message(result.error))}
+      {:noreply,
+       socket
+       |> fail(DeliveryError.message(result.error))
+       |> EdenflowersWeb.Analytics.track("Delivery not available", %{reason: result.error})}
     else
       send(
         self(),

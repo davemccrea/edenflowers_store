@@ -35,7 +35,10 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
          |> push_navigate(to: ~q"/#{language}/courses/#{registration.course_id}?registration=#{registration.id}")}
 
       {:ok, registration} ->
-        {:ok, assign(socket, page_title: ~t"Your booking", locale: Format.locale(), registration: registration)}
+        {:ok,
+         socket
+         |> assign(page_title: ~t"Your booking", locale: Format.locale(), registration: registration)
+         |> track_course_booked(registration)}
 
       {:error, _} ->
         {:ok,
@@ -115,10 +118,21 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> id}, socket) do
     case load_registration(id) do
-      {:ok, registration} -> {:noreply, assign(socket, registration: registration)}
-      {:error, _error} -> {:noreply, socket}
+      {:ok, registration} ->
+        {:noreply, socket |> assign(registration: registration) |> track_course_booked(registration)}
+
+      {:error, _error} ->
+        {:noreply, socket}
     end
   end
+
+  defp track_course_booked(socket, %{committed?: true} = registration) do
+    EdenflowersWeb.Analytics.track(socket, "Course booked", EdenflowersWeb.Analytics.revenue(registration.amount),
+      once: "course-booked:#{registration.id}"
+    )
+  end
+
+  defp track_course_booked(socket, _registration), do: socket
 
   defp load_registration(id) do
     with {:ok, registration} <-
