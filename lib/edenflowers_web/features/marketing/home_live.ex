@@ -201,11 +201,11 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         />
         <div class="pointer-events-none absolute inset-0 opacity-60 mix-blend-soft-light bg-(image:--grain)"></div>
         <div class="container absolute inset-0 flex flex-col justify-end pb-16 sm:pb-28 md:pb-20">
-          <h1 class="hero-display hero-focus max-w-[16ch] italic text-white" style="--reveal-delay: 80ms;">
+          <h1 class="hero-display hero-focus max-w-[16ch] text-white" style="--reveal-delay: 80ms;">
             <span class="sr-only">{~t"Flowers for every stage of life"}</span>
             <span aria-hidden="true">
               {~t"Flowers for"}
-              <span class="hero-rotator">
+              <span class="hero-rotator italic">
                 <span style="--i: 0;">{~t"every stage of life"}</span>
                 <span style="--i: 1;">{~t"a new arrival"}</span>
                 <span style="--i: 2;">{~t"your wedding day"}</span>
