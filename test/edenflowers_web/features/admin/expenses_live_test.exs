@@ -128,9 +128,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     |> Ash.Changeset.force_change_attribute(:expense_id, expense.id)
     |> Ash.create!(authorize?: false)
 
-    expect(Edenflowers.External.PapraAPI.Mock, :remove_document_tag, fn "delete-me", "receipt" -> :ok end)
-    expect(Edenflowers.External.PapraAPI.Mock, :remove_document_tag, fn "delete-me", "processed" -> :ok end)
-
     {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
 
     assert {:error, {:live_redirect, %{to: "/admin/expenses"}}} =
@@ -138,25 +135,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
     assert Ash.read!(Expenses.Expense, authorize?: false) == []
     assert Ash.read!(Expenses.ExpenseImport, authorize?: false) == []
-  end
-
-  test "keeps the expense when the Papra tags can't be removed", %{conn: conn} do
-    expense = create_expense("papra-down", "Acme Oy", "Flowers")
-
-    expect(Edenflowers.External.PapraAPI.Mock, :remove_document_tag, fn _, _ ->
-      {:error, {:papra_http_error, 503}}
-    end)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
-
-    html =
-      ExUnit.CaptureLog.with_log(fn ->
-        view |> element("#expense-actions button[phx-click=delete]", "Delete") |> render_click()
-      end)
-      |> elem(0)
-
-    assert html =~ "Papra couldn&#39;t be reached"
-    assert Ash.get!(Expenses.Expense, expense.id, authorize?: false)
   end
 
   defp create_expense(document_id, vendor_name, description, attrs \\ []) do

@@ -2,7 +2,8 @@ defmodule EdenflowersWeb.Webhooks.PapraHandler do
   @moduledoc """
   Handles verified Papra webhook events.
 
-  Records receipt imports and returns quickly. AshOban performs the slow,
+  Every document created in Papra is a receipt or invoice, so each one is
+  recorded for extraction. Returns quickly. AshOban performs the slow,
   fallible work with retries, and its scheduler recovers missing jobs from the
   persisted import.
 
@@ -15,9 +16,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandler do
 
   alias Edenflowers.Expenses
 
-  @receipt_tag Edenflowers.External.PapraAPI.receipt_tag()
-
-  def handle_event(%{"type" => "document:tag:added", "data" => %{"tagName" => @receipt_tag} = data}) do
+  def handle_event(%{"type" => "document:created", "data" => data}) do
     with {:ok, document_id} <- fetch(data, "documentId"),
          {:ok, organization_id} <- fetch(data, "organizationId"),
          {:ok, _import} <-
@@ -28,7 +27,7 @@ defmodule EdenflowersWeb.Webhooks.PapraHandler do
       :ok
     else
       {:error, {:missing_field, field}} ->
-        Logger.warning("Papra document:tag:added event missing #{field}")
+        Logger.warning("Papra document:created event missing #{field}")
         :error
 
       {:error, error} ->

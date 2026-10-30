@@ -205,24 +205,12 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   end
 
   def handle_event("delete", _params, socket) do
-    case Ash.destroy(socket.assigns.expense, actor: socket.assigns.current_user) do
-      :ok ->
-        {:noreply,
-         socket
-         |> put_flash(:success, ~t"Expense deleted.")
-         |> push_navigate(to: ~p"/admin/expenses")}
+    Ash.destroy!(socket.assigns.expense, actor: socket.assigns.current_user)
 
-      # Deleting removes the tags in Papra first, which is what usually fails.
-      {:error, error} ->
-        Logger.error("Expense #{socket.assigns.expense.id} not deleted: #{inspect(error)}")
-
-        {:noreply,
-         put_flash(
-           socket,
-           :error,
-           ~t"The expense couldn't be deleted because Papra couldn't be reached. Try again later."
-         )}
-    end
+    {:noreply,
+     socket
+     |> put_flash(:success, ~t"Expense deleted.")
+     |> push_navigate(to: ~p"/admin/expenses")}
   end
 
   defp mark_reviewed(socket, expense) do
