@@ -185,6 +185,12 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
       )
     end
 
+    test "an email link's address is pre-filled so the visitor only has to subscribe", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/sv?email=past+1@example.com")
+
+      assert has_element?(view, ~s(#newsletter-form input[name=email_address][value="past+1@example.com"]))
+    end
+
     test "a malformed address is turned away without saving or promising a code", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/en")
 
