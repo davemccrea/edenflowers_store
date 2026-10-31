@@ -441,7 +441,8 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     ]
   end
 
-  # All four photos are 3:4, so the 600x800 fill crop is a no-op.
+  # The 600x800 fill crop is a no-op for the 3:4 photos; the taller gate photo
+  # loses a little top and bottom.
   defp decoration_photos do
     [
       %{

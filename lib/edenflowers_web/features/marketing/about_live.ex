@@ -111,6 +111,7 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
             <.image
               src="local:///image_4.jpg"
               alt={~t"A bouquet of white, peach and rust flowers held against dry autumn grass"}
+              crop="1092:1366:fp:0.62:0.5"
               width={1000}
               height={1250}
               sizes="(min-width: 768px) 50vw, 100vw"
