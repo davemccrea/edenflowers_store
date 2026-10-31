@@ -4,7 +4,7 @@ title: Send a reopening email to recent customers
 status: needs-triage
 assignee: []
 created_date: '2026-10-31 07:39'
-updated_date: '2026-10-31 19:53'
+updated_date: '2026-10-31 20:27'
 labels:
   - spec
   - customers
@@ -87,6 +87,15 @@ created: 2026-10-31 19:53
 ---
 
 2026-10-31: Brevo is removed (TASK-131, TASK-157, v1.23.4). The Brevo decisions above no longer hold: the campaign has to be rebuilt in MailerLite (merge tags, unsubscribe link, temporary group of recent customers). The Brevo list (294 contacts) and draft campaign 3 were downloaded to tmp/brevo-reopening/ in the main checkout before the account was closed. Re-grill the tool decisions before sending.
+
+---
+
+author: @claude
+created: 2026-10-31 20:27
+
+---
+
+2026-10-31: MailerLite now holds other groups safely: the sync only manages the Newsletter group (TASK-157). Once that deploys, the 294 contacts in tmp/brevo-reopening/contacts.csv (main checkout) can be imported into a Reopening group. Still to re-grill: campaign rebuild in MailerLite, send date, clean-up after sending.
 
 ---
 <!-- COMMENTS:END -->

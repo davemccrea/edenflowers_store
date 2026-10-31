@@ -4,7 +4,7 @@ title: Send the newsletter from MailerLite instead of Brevo
 status: ready-for-human
 assignee: []
 created_date: '2026-10-31 12:48'
-updated_date: '2026-10-31 12:57'
+updated_date: '2026-10-31 20:27'
 labels:
   - customers
   - admin
@@ -52,6 +52,15 @@ created: 2026-10-31 12:57
 ---
 
 Code done on branch mailerlite (not merged). Left for David: create the MailerLite account and custom fields language (text), order_count and total_spent (number), last_order_date (date); add vault_mailerlite_api_key; resubscribe a throwaway address through the API to confirm resubscribe: true works; deploy right after a nightly Brevo sync, together with TASK-131.
+
+---
+
+author: @claude
+created: 2026-10-31 20:27
+
+---
+
+2026-10-31: Decision changed: the site now owns a MailerLite group, Newsletter (id 202876690108515964, created), instead of all active subscribers. Pushes and the nightly field refresh add subscribers to it; the nightly sync takes members the site hasn't opted in out of the group rather than unsubscribing them, and never touches contacts outside it. Unsubscribes stay account-wide. Campaigns go to the Newsletter group. Lets other groups (the TASK-152 reopening list) live in MailerLite.
 
 ---
 <!-- COMMENTS:END -->
