@@ -9,8 +9,8 @@ export const pushSupported = () =>
   "PushManager" in window &&
   "Notification" in window;
 
-// Every admin page registers the worker, as it also draws the app's launch
-// screen. Notifications still wait for the device to turn them on.
+// Every admin page registers the worker. Notifications still wait for the
+// device to turn them on.
 export const registerAdminWorker = () =>
   navigator.serviceWorker.register("/admin-sw.js", { scope: "/admin" });
 
