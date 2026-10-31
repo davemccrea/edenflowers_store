@@ -13,7 +13,6 @@ defmodule Edenflowers.Accounts.User do
   alias Edenflowers.Accounts.Calculations
   alias Edenflowers.Accounts.Changes
   alias Edenflowers.Accounts.Workers.PushNewsletterSubscriber
-  alias Edenflowers.Pricing.Workers.SendNewsletterPromoEmail
   alias Edenflowers.Types.Email
 
   authentication do
@@ -138,25 +137,16 @@ defmodule Edenflowers.Accounts.User do
     end
 
     create :subscribe_to_newsletter do
-      description "Opts an email in to the newsletter, creating the user if needed, and queues its welcome email " <>
-                    "and its push to MailerLite. A subscriber who already has a code is emailed the " <>
-                    "already-subscribed wording instead."
+      description "Opts an email in to the newsletter, creating the user if needed. A first-time subscriber gets " <>
+                    "their one-use welcome code at once, so checkout can apply it, and is queued the welcome " <>
+                    "email with it. A subscriber who already has a code keeps it and is emailed the " <>
+                    "already-subscribed wording instead. Either way the opt-in is pushed to MailerLite."
 
       accept [:email, :locale]
       upsert? true
       upsert_identity :unique_email
       change set_attribute(:newsletter_opt_in, true)
-
-      # Both jobs are inserted in the same transaction, so an opt-in never
-      # commits without them. Returning subscribers get both too: the email
-      # worker sends them the "already subscribed" wording, and the push
-      # resubscribes anyone who unsubscribed in MailerLite since.
-      change after_action(fn _changeset, user, _context ->
-               with {:ok, _job} <-
-                      SendNewsletterPromoEmail.enqueue(%{"email" => to_string(user.email), "locale" => user.locale}),
-                    {:ok, _job} <- PushNewsletterSubscriber.enqueue(user),
-                    do: {:ok, user}
-             end)
+      change Changes.GiveNewsletterWelcome
     end
 
     update :update_avatar do

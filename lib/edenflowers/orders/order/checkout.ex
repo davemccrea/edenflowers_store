@@ -129,7 +129,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
     update :submit_contact_details do
       description "Checkout step 1: assigns the cart to the account for the customer's email, creating one if " <>
                     "needed, and moves to gift options. `newsletter_opt_in` also signs that account up to the " <>
-                    "newsletter."
+                    "newsletter and applies their welcome code to the cart, unless it already has a code."
 
       accept [:customer_name, :customer_email]
       require_attributes [:customer_name, :customer_email]

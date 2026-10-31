@@ -39,21 +39,38 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
   end
 
   describe "first subscription" do
-    test "creates a promo, sends welcome email, and sets newsletter_promo_id on user" do
+    test "signup gives the code at once and the welcome email sends it" do
       {:ok, user} = Accounts.subscribe_to_newsletter("new@example.com", "en-GB", authorize?: false)
+      assert_enqueued(worker: SendNewsletterPromoEmail, args: %{"email" => "new@example.com", "welcome" => true})
 
-      assert :ok = perform_job(SendNewsletterPromoEmail, %{"email" => "new@example.com", "locale" => "en"})
+      {:ok, user} = Accounts.get_user_by_email(user.email, authorize?: false, load: [:newsletter_promo])
+      code = to_string(user.newsletter_promo.code)
+      assert code =~ ~r/^[0-9A-F]{6}$/
+
+      assert :ok =
+               perform_job(SendNewsletterPromoEmail, %{
+                 "email" => "new@example.com",
+                 "locale" => "en",
+                 "welcome" => true
+               })
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "new@example.com"}]
         assert {"Jennie", _address} = email.from
         assert email.text_body =~ "\nJennie\nEden Flowers\n"
+        assert email.text_body =~ code
         assert email.subject == "Your 15% welcome code for Eden Flowers"
       end)
+    end
 
-      {:ok, user} = Accounts.get_user_by_email(user.email, authorize?: false, load: [:newsletter_promo])
-      assert user.newsletter_promo_id != nil
-      assert to_string(user.newsletter_promo.code) =~ ~r/^[0-9A-F]{6}$/
+    test "signing up again keeps the first code and queues the already-subscribed wording" do
+      {:ok, first} = Accounts.subscribe_to_newsletter("again@example.com", "fi", authorize?: false)
+      # Clears the first signup's job, which would otherwise swallow the second as a duplicate.
+      Ecto.Adapters.SQL.query!(Edenflowers.Repo, "DELETE FROM oban_jobs")
+      {:ok, second} = Accounts.subscribe_to_newsletter("again@example.com", "fi", authorize?: false)
+
+      assert second.newsletter_promo_id == first.newsletter_promo_id
+      assert_enqueued(worker: SendNewsletterPromoEmail, args: %{"email" => "again@example.com", "welcome" => false})
     end
   end
 

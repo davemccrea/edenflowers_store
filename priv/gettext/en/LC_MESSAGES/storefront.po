@@ -41,7 +41,7 @@ msgid_plural "%{count} place(s) for %{name}"
 msgstr[0] "%{count} place for %{name}"
 msgstr[1] "%{count} places for %{name}"
 
-#: lib/edenflowers_web/features/courses/course_live.ex:412
+#: lib/edenflowers_web/features/courses/course_live.ex:413
 #: lib/edenflowers_web/features/courses/courses_live.ex:216
 #, elixir-autogen, elixir-format
 msgid "%{count} place(s) left"
@@ -76,7 +76,7 @@ msgstr ""
 msgid "%{product}: %{stock}."
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_live.ex:424
+#: lib/edenflowers_web/features/courses/course_live.ex:425
 #: lib/edenflowers_web/features/marketing/contact_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "(opens a map in a new tab)"
@@ -783,7 +783,7 @@ msgstr ""
 msgid "Course"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_live.ex:346
+#: lib/edenflowers_web/features/courses/course_live.ex:347
 #, elixir-autogen, elixir-format
 msgid "Course not found."
 msgstr ""
@@ -967,7 +967,7 @@ msgstr ""
 msgid "Email for your receipt"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_live.ex:409
+#: lib/edenflowers_web/features/courses/course_live.ex:410
 #, elixir-autogen, elixir-format
 msgid "English"
 msgstr ""
@@ -1071,7 +1071,7 @@ msgstr ""
 msgid "Finland"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_live.ex:408
+#: lib/edenflowers_web/features/courses/course_live.ex:409
 #, elixir-autogen, elixir-format
 msgid "Finnish"
 msgstr ""
@@ -1230,7 +1230,7 @@ msgstr ""
 msgid "Fulfillment date cannot be in the past"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_live.ex:411
+#: lib/edenflowers_web/features/courses/course_live.ex:412
 #: lib/edenflowers_web/features/courses/courses_live.ex:214
 #, elixir-autogen, elixir-format
 msgid "Fully booked"
@@ -2368,7 +2368,7 @@ msgstr ""
 msgid "Removing this empties your cart and clears the checkout details you've entered. Continue?"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:581
+#: lib/edenflowers_web/features/store/product_live.ex:573
 #, elixir-autogen, elixir-format
 msgid "Replaces the %{count} bouquets (%{amount}) in your cart."
 msgstr ""
@@ -2664,7 +2664,7 @@ msgstr ""
 msgid "Size"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts/root.html.heex:89
+#: lib/edenflowers_web/components/layouts/root.html.heex:121
 #, elixir-autogen, elixir-format
 msgid "Skip to main content"
 msgstr ""
@@ -2817,7 +2817,7 @@ msgstr ""
 msgid "Sun: closed"
 msgstr ""
 
-#: lib/edenflowers_web/features/courses/course_live.ex:407
+#: lib/edenflowers_web/features/courses/course_live.ex:408
 #, elixir-autogen, elixir-format
 msgid "Swedish"
 msgstr ""
@@ -2989,7 +2989,7 @@ msgstr ""
 msgid "This booking has been refunded, so there is nothing to pay. If you have any questions, just get in touch."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:593
+#: lib/edenflowers_web/features/store/product_live.ex:585
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr ""
@@ -3920,11 +3920,6 @@ msgstr ""
 msgid "If you received flowers from us, your details came from the person who ordered them. We use them only to deliver, and never for marketing."
 msgstr ""
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:224
-#, elixir-autogen, elixir-format
-msgid "Subscribe to the newsletter and a 15% off code will be emailed to you."
-msgstr ""
-
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "+ church and venue decoration on request"
@@ -4130,4 +4125,9 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:48
 #, elixir-autogen, elixir-format
 msgid "Updated 31 October 2026."
+msgstr ""
+
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:224
+#, elixir-autogen, elixir-format
+msgid "Subscribe to the newsletter and get 15% off this order."
 msgstr ""
