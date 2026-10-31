@@ -340,14 +340,17 @@ defmodule EdenflowersWeb.Layouts do
       </div>
     </div>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".AdminApp">
-      import { clearOrderAlerts } from "@/js/push";
+      import { clearOrderAlerts, registerAdminWorker } from "@/js/push";
 
       /**
-       * On the admin layout. Clears new-order notifications and the app icon badge
-       * whenever the admin comes into view.
+       * On the admin layout. Registers the admin service worker, and clears
+       * new-order notifications and the app icon badge whenever the admin comes
+       * into view.
        */
       export default {
         mounted() {
+          if ("serviceWorker" in navigator) registerAdminWorker().catch(() => {});
+
           this.onVisible = () => {
             if (document.visibilityState === "visible") clearOrderAlerts();
           };

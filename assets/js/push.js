@@ -2,18 +2,18 @@
 
 // Web Push for the installed admin app: subscribing this device to new-order
 // notifications, and clearing them (and the icon badge) once the app is open.
-// The service worker lives at /admin-sw.js and only handles push messages.
+// The service worker lives at /admin-sw.js.
 
 export const pushSupported = () =>
   "serviceWorker" in navigator &&
   "PushManager" in window &&
   "Notification" in window;
 
-const registerAdminWorker = () =>
+// Every admin page registers the worker, as it also draws the app's launch
+// screen. Notifications still wait for the device to turn them on.
+export const registerAdminWorker = () =>
   navigator.serviceWorker.register("/admin-sw.js", { scope: "/admin" });
 
-// Looks up the worker without registering it, so devices that never turned
-// notifications on don't get one.
 const existingAdminWorker = () =>
   navigator.serviceWorker.getRegistration("/admin");
 
