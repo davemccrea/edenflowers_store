@@ -208,7 +208,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             width={1080}
             height={1350}
             sizes="(min-width: 1024px) 32rem, 100vw"
-            class="aspect-[4/5] object-[25%_50%] h-full w-full object-cover"
+            class="aspect-[4/5] h-full w-full object-cover"
           />
 
           <div class="flex flex-col items-start gap-8 px-4 py-20 sm:px-8 md:px-12 lg:justify-center lg:px-20">
