@@ -602,14 +602,16 @@
   }
 }
 
-/* The home page's wedding photos flip like stop-motion once, each time the section
-   comes into view (the WeddingFrames hook sets data-playing). Every frame shares one
-   grid cell; the last one sits underneath as the still that stays, and each earlier
-   frame covers it for its slot. Steps, not fades, so it reads as stop-motion.
+/* The home page's wedding photos crossfade once, each time the section comes into
+   view (the WeddingFrames hook sets data-playing). Every frame shares one grid cell,
+   stacked with the earliest on top and the still that stays at the bottom. Each frame
+   holds for --frame, then fades out to show the next one beneath it.
    The faded edge hides the seam between the photo's wall and the section. */
 .wedding-frames {
-  --frame: 1s;
+  --frame: 1.5s;
+  --fade: 0.3s;
   display: grid;
+  isolation: isolate;
   mask-image: linear-gradient(to top, transparent, black 12%);
 
   @media (width >= theme(--breakpoint-md)) {
@@ -618,6 +620,7 @@
 
   > * {
     grid-area: 1 / 1;
+    z-index: calc(-1 * var(--i, 99));
     width: 100%;
     aspect-ratio: 2 / 3;
     max-height: 90svh;
@@ -625,26 +628,23 @@
   }
 
   > :not(:last-child) {
-    z-index: 1;
     opacity: 0;
   }
 }
 
-@keyframes wedding-frame {
-  from,
+@keyframes wedding-frame-out {
   to {
-    opacity: 1;
+    opacity: 0;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* The first frame waits for the section, so the flips start from it. */
-  .wedding-frames > :first-child {
+  /* The frames wait for the section, so the fades start from the first one. */
+  .wedding-frames > :not(:last-child) {
     opacity: 1;
   }
   .wedding-frames[data-playing] > :not(:last-child) {
-    opacity: 0;
-    animation: wedding-frame var(--frame);
-    animation-delay: calc(var(--i) * var(--frame));
+    animation: wedding-frame-out var(--fade) calc((var(--i) + 1) * var(--frame))
+      forwards;
   }
 }
