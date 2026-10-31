@@ -2,8 +2,9 @@ defmodule EdenflowersWeb.Marketing.LocalizedRedirectController do
   @moduledoc """
   Sends URLs without a language, like bare / or a shared /product/:id, to the
   page in the visitor's language: their session's, else Accept-Language's, else
-  Swedish, as resolved by `Localize.Plug.PutLocale`. The query string comes along,
-  so tracking tags on a shared link survive.
+  Swedish, as resolved by `Localize.Plug.PutLocale`. A browser language the shop
+  doesn't speak, like German, gets English, its nearest CLDR match. The query
+  string comes along, so tracking tags on a shared link survive.
   """
   use EdenflowersWeb, :controller
 
