@@ -39,6 +39,36 @@
     <%= if admin_path?(@conn.request_path) do %>
       <meta name="apple-mobile-web-app-title" content="Eden Admin" />
       <link rel="manifest" href="/admin.webmanifest?v=20261015" />
+      <%!-- The installed iPhone app opens on a startup image instead of a white screen.
+            iOS only uses one drawn at the screen's exact pixel size, so this draws the
+            logo for this phone rather than shipping a PNG per iPhone model. --%>
+      <script>
+        if (/iPhone/.test(navigator.userAgent)) {
+          const logo = new Image();
+          logo.onload = () => {
+            const dpr = window.devicePixelRatio;
+            const canvas = document.createElement("canvas");
+            canvas.width = screen.width * dpr;
+            canvas.height = screen.height * dpr;
+            const context = canvas.getContext("2d");
+            context.fillStyle = "#fdfbf9";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            const size = Math.min(screen.width * 0.55, 280) * dpr;
+            context.drawImage(
+              logo,
+              (canvas.width - size) / 2,
+              (canvas.height - size) / 2,
+              size,
+              size,
+            );
+            const link = document.createElement("link");
+            link.rel = "apple-touch-startup-image";
+            link.href = canvas.toDataURL("image/png");
+            document.head.append(link);
+          };
+          logo.src = "/images/logo-eden-flowers.svg";
+        }
+      </script>
     <% else %>
       <meta name="apple-mobile-web-app-title" content="Eden Flowers" />
       <link rel="manifest" href="/site.webmanifest?v=20261015" />
