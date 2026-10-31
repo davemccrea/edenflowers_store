@@ -41,7 +41,9 @@
       <link rel="manifest" href="/admin.webmanifest?v=20261015" />
       <%!-- The installed iPhone app opens on a startup image instead of a white screen.
             iOS only uses one drawn at the screen's exact pixel size, so this draws the
-            logo for this phone rather than shipping a PNG per iPhone model. --%>
+            logo for this phone rather than shipping a PNG per iPhone model. iOS ignores
+            startup images without apple-mobile-web-app-capable, even with a manifest. --%>
+      <meta name="apple-mobile-web-app-capable" content="yes" />
       <script>
         if (/iPhone/.test(navigator.userAgent)) {
           const logo = new Image();
