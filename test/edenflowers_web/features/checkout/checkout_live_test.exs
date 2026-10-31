@@ -281,7 +281,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> visit("/checkout")
       |> fill_in("Your name *", with: "Subscriber")
       |> fill_in("Email *", with: "subscriber@example.com")
-      |> check("Subscribe to the newsletter and a 15% off code will be emailed to you.", exact: false)
+      |> check("Subscribe to the newsletter and get 15% off this order.", exact: false)
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
 
@@ -316,7 +316,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       |> visit("/checkout")
       |> fill_in("Your name *", with: "Returning Guest")
       |> fill_in("Email *", with: "returning@example.com")
-      |> check("Subscribe to the newsletter and a 15% off code will be emailed to you.", exact: false)
+      |> check("Subscribe to the newsletter and get 15% off this order.", exact: false)
       |> click_button("Next")
       |> assert_has("h2", text: "Gift options")
       # click_button re-matches the name with a space before the sr-only ": Your details", so it never matches.

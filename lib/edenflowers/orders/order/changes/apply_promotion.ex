@@ -33,13 +33,18 @@ defmodule Edenflowers.Orders.Order.Changes.ApplyPromotion do
           ~t"Cart total must be at least #{Edenflowers.Format.currency(promotion.minimum_cart_total, order.locale)} to use this promotion"
       )
     else
-      Ash.Changeset.force_change_attributes(changeset,
-        promotion_id: promotion.id,
-        discount_rate: promotion.discount_rate,
-        promotion_name: promotion.name,
-        promotion_code: to_string(promotion.code),
-        promotion_minimum_cart_total: promotion.minimum_cart_total
-      )
+      copy_terms(changeset, promotion)
     end
+  end
+
+  @doc "Assigns the promotion and mirrors its terms onto the order, without checking the cart total."
+  def copy_terms(changeset, promotion) do
+    Ash.Changeset.force_change_attributes(changeset,
+      promotion_id: promotion.id,
+      discount_rate: promotion.discount_rate,
+      promotion_name: promotion.name,
+      promotion_code: to_string(promotion.code),
+      promotion_minimum_cart_total: promotion.minimum_cart_total
+    )
   end
 end

@@ -581,13 +581,57 @@ defmodule Edenflowers.Orders.OrderTest do
 
       assert Ash.load!(updated_order, :newsletter_offer_hidden?, authorize?: false).newsletter_offer_hidden? == true
 
-      {:ok, user} = Accounts.get_user_by_email("subscriber@example.com", authorize?: false)
+      {:ok, user} = Accounts.get_user_by_email("subscriber@example.com", authorize?: false, load: [:newsletter_promo])
       assert user.newsletter_opt_in == true
+
+      assert updated_order.promotion_id == user.newsletter_promo_id
+      assert updated_order.promotion_code == to_string(user.newsletter_promo.code)
+      assert Decimal.equal?(updated_order.discount_rate, "0.15")
 
       assert_enqueued(
         worker: SendNewsletterPromoEmail,
-        args: %{"email" => "subscriber@example.com", "locale" => order.locale}
+        args: %{"email" => "subscriber@example.com", "locale" => order.locale, "welcome" => true}
       )
+    end
+
+    test "checkbox checked keeps a code already on the cart and still emails the welcome code" do
+      promotion = generate(promotion(discount_rate: "0.20"))
+      order = Orders.create_for_checkout!(authorize?: false)
+      order = Orders.add_promotion_with_code!(order, to_string(promotion.code), authorize?: false)
+
+      assert {:ok, updated_order} =
+               order
+               |> Ash.Changeset.for_update(:submit_contact_details, %{
+                 customer_name: "Bargain",
+                 customer_email: "bargain@example.com",
+                 newsletter_opt_in: true
+               })
+               |> Ash.update(authorize?: false)
+
+      assert updated_order.promotion_id == promotion.id
+
+      assert_enqueued(
+        worker: SendNewsletterPromoEmail,
+        args: %{"email" => "bargain@example.com", "welcome" => true}
+      )
+    end
+
+    test "checkbox checked by a lapsed subscriber applies their unused code" do
+      {:ok, promo} = Edenflowers.Pricing.create_newsletter_promotion(authorize?: false)
+      user = Ash.Seed.seed!(User, %{name: "Lapsed", email: "lapsed@example.com", newsletter_promo_id: promo.id})
+      order = Orders.create_for_checkout!(authorize?: false)
+
+      assert {:ok, updated_order} =
+               order
+               |> Ash.Changeset.for_update(:submit_contact_details, %{
+                 customer_name: user.name,
+                 customer_email: "lapsed@example.com",
+                 newsletter_opt_in: true
+               })
+               |> Ash.update(authorize?: false)
+
+      assert updated_order.promotion_id == promo.id
+      assert_enqueued(worker: SendNewsletterPromoEmail, args: %{"email" => "lapsed@example.com", "welcome" => false})
     end
 
     test "checkbox unchecked leaves newsletter_opt_in false, the offer shown, and enqueues no job" do
