@@ -507,33 +507,25 @@ defmodule EdenflowersWeb.Store.ProductLive do
   defp middle_variant([first, _second]), do: first
   defp middle_variant(variants), do: Enum.at(variants, div(length(variants), 2))
 
+  # One Offer per size rather than an AggregateOffer: Google's merchant listings
+  # (price and stock in Shopping results) only read plain Offers.
   defp json_ld(product, variants) do
-    availability =
-      if Enum.all?(variants, &sold_out?/1), do: "https://schema.org/OutOfStock", else: "https://schema.org/InStock"
-
-    offers =
-      case variants do
-        [variant] ->
-          %{"@type" => "Offer", "price" => Decimal.to_string(variant.price, :normal)}
-
-        _ ->
-          prices = Enum.map(variants, & &1.price)
-
-          %{
-            "@type" => "AggregateOffer",
-            "lowPrice" => prices |> Enum.min(Decimal) |> Decimal.to_string(:normal),
-            "highPrice" => prices |> Enum.max(Decimal) |> Decimal.to_string(:normal),
-            "offerCount" => length(variants)
-          }
-      end
-
     %{
       "@context" => "https://schema.org",
       "@type" => "Product",
       "name" => product.name,
       "description" => product.description,
       "image" => image_url(product.main_photo_slug, 1200, 1200),
-      "offers" => Map.merge(offers, %{"priceCurrency" => "EUR", "availability" => availability})
+      "offers" =>
+        for variant <- variants do
+          %{
+            "@type" => "Offer",
+            "price" => Decimal.to_string(variant.price, :normal),
+            "priceCurrency" => "EUR",
+            "availability" =>
+              if(sold_out?(variant), do: "https://schema.org/OutOfStock", else: "https://schema.org/InStock")
+          }
+        end
     }
   end
 

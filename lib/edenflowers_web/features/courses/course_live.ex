@@ -314,6 +314,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
         "endDate" => course.date |> DateTime.new!(course.end_time, ShopTime.timezone()) |> DateTime.to_iso8601(),
         "eventStatus" => "https://schema.org/EventScheduled",
         "eventAttendanceMode" => "https://schema.org/OfflineEventAttendanceMode",
+        "organizer" => %{"@type" => "Organization", "name" => "Eden Flowers", "url" => EdenflowersWeb.Endpoint.url()},
         "location" => %{
           "@type" => "Place",
           "name" => course.location_name,

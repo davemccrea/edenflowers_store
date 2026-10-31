@@ -356,7 +356,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     Ash.read!(LineItem, authorize?: false) |> Enum.filter(&(&1.order_id == order.id))
   end
 
-  test "states the price range and stock to search engines", %{conn: conn} do
+  test "states each size's price and stock to search engines", %{conn: conn} do
     product = generate(product(draft: false))
     generate(product_variant(product_id: product.id, size: :small, price: "40.00", stock_quantity: 0))
     generate(product_variant(product_id: product.id, size: :large, price: "60.00"))
@@ -366,14 +366,10 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert %{"@type" => "Product", "name" => name, "offers" => offers} = json_ld
     assert name == product.name
 
-    assert offers == %{
-             "@type" => "AggregateOffer",
-             "lowPrice" => "40.00",
-             "highPrice" => "60.00",
-             "offerCount" => 2,
-             "priceCurrency" => "EUR",
-             "availability" => "https://schema.org/InStock"
-           }
+    assert Enum.map(offers, &{&1["price"], &1["availability"]}) == [
+             {"40.00", "https://schema.org/OutOfStock"},
+             {"60.00", "https://schema.org/InStock"}
+           ]
   end
 
   defp json_ld(html) do
