@@ -26,11 +26,9 @@ defmodule Edenflowers.Orders.Order.Changes.UpsertUserAndAssignToOrder do
 
       case Accounts.upsert_user(customer_email, customer_name, actor: system_actor()) do
         {:ok, user} ->
-          changeset = Ash.Changeset.force_change_attribute(changeset, :user_id, user.id)
-
-          if Ash.Changeset.get_argument(changeset, :newsletter_opt_in),
-            do: opt_in_to_newsletter(changeset, customer_email),
-            else: changeset
+          changeset
+          |> Ash.Changeset.force_change_attribute(:user_id, user.id)
+          |> maybe_opt_in_to_newsletter(customer_email)
 
         {:error, error} ->
           Logger.error("Failed to upsert user for order #{changeset.data.id}: #{inspect(error)}")
@@ -40,6 +38,12 @@ defmodule Edenflowers.Orders.Order.Changes.UpsertUserAndAssignToOrder do
           })
       end
     end)
+  end
+
+  defp maybe_opt_in_to_newsletter(changeset, customer_email) do
+    if Ash.Changeset.get_argument(changeset, :newsletter_opt_in),
+      do: opt_in_to_newsletter(changeset, customer_email),
+      else: changeset
   end
 
   defp opt_in_to_newsletter(changeset, customer_email) do
