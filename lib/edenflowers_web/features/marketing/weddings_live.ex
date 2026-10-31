@@ -202,12 +202,13 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       <section class="bg-cream text-cream-content not-last:border-b" aria-labelledby="enquire">
         <div class="grid lg:grid-cols-[minmax(0,32rem)_1fr]">
           <.image
-            src="local:///jennie_99.jpg"
+            src="local:///jennie_3.jpg"
             alt="Jennie"
+            crop="2867:3584:fp:0.4:0.5"
             width={1080}
             height={1350}
             sizes="(min-width: 1024px) 32rem, 100vw"
-            class="aspect-[4/5] h-full w-full object-cover"
+            class="aspect-[4/5] object-[25%_50%] h-full w-full object-cover"
           />
 
           <div class="flex flex-col items-start gap-8 px-4 py-20 sm:px-8 md:px-12 lg:justify-center lg:px-20">
