@@ -18,8 +18,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   alias EdenflowersWeb.Admin.DrawerPreview
   alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.OrderLog
-  alias EdenflowersWeb.Admin.ShareLinkDrawer
   alias EdenflowersWeb.Admin.PaymentActions
+  alias EdenflowersWeb.Admin.ShareLinkDrawer
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
