@@ -85,6 +85,16 @@ body {
   padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 }
 
+/* daisyUI fixes a button's height, so a label that wraps (a long translation,
+   a total on a phone) is squashed into one line's height. One line still fits
+   inside --size at every size, so single-line buttons are unchanged. */
+.btn:not(.btn-square, .btn-circle) {
+  height: auto;
+  min-height: var(--size);
+  padding-block: calc(var(--spacing) * 1.5);
+  text-wrap: balance;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   a,
   button,

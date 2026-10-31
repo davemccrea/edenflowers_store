@@ -85,7 +85,7 @@ msgstr "Puhelinnumero, sähköposti tai Instagram-tunnus tarvitaan. Sähköposti
 msgid "Access"
 msgstr "Käyttöoikeus"
 
-#: lib/edenflowers_web/components/layouts.ex:565
+#: lib/edenflowers_web/components/layouts.ex:569
 #: lib/edenflowers_web/features/admin/account_live.ex:21
 #: lib/edenflowers_web/features/admin/account_live.ex:36
 #, elixir-autogen, elixir-format
@@ -150,13 +150,13 @@ msgstr "Osoite"
 msgid "Admin"
 msgstr "Ylläpitäjä"
 
-#: lib/edenflowers_web/components/layouts.ex:529
+#: lib/edenflowers_web/components/layouts.ex:533
 #, elixir-autogen, elixir-format
 msgid "Admin account menu"
 msgstr "Ylläpitäjän tilivalikko"
 
-#: lib/edenflowers_web/components/layouts.ex:255
-#: lib/edenflowers_web/components/layouts.ex:268
+#: lib/edenflowers_web/components/layouts.ex:256
+#: lib/edenflowers_web/components/layouts.ex:269
 #, elixir-autogen, elixir-format
 msgid "Admin navigation"
 msgstr "Ylläpidon navigointi"
@@ -1085,7 +1085,7 @@ msgstr "Kulu päivitetty."
 msgid "Expense: %{var}"
 msgstr "Kulu: %{var}"
 
-#: lib/edenflowers_web/components/layouts.ex:231
+#: lib/edenflowers_web/components/layouts.ex:232
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:44
 #: lib/edenflowers_web/features/admin/expenses_live.ex:23
 #: lib/edenflowers_web/features/admin/expenses_live.ex:37
@@ -1128,7 +1128,7 @@ msgstr "Hinta"
 msgid "Fetch refunds from Stripe"
 msgstr "Hae hyvitykset Stripestä"
 
-#: lib/edenflowers_web/components/layouts.ex:231
+#: lib/edenflowers_web/components/layouts.ex:232
 #: lib/edenflowers_web/features/admin/links_live.ex:27
 #, elixir-autogen, elixir-format
 msgid "Finances"
@@ -2666,12 +2666,12 @@ msgstr "Hae nimellä tai sähköpostilla…"
 msgid "Search name…"
 msgstr "Hae nimellä…"
 
-#: lib/edenflowers_web/components/layouts.ex:372
+#: lib/edenflowers_web/components/layouts.ex:376
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers"
 msgstr "Hae tilauksia ja asiakkaita"
 
-#: lib/edenflowers_web/components/layouts.ex:382
+#: lib/edenflowers_web/components/layouts.ex:386
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers…"
 msgstr "Hae tilauksia ja asiakkaita…"
@@ -2792,7 +2792,7 @@ msgstr "Näytetään kurssisivulla ja varausviesteissä, ja sen mukaan täytetä
 msgid "Shown on this device only."
 msgstr "Näytetään vain tällä laitteella."
 
-#: lib/edenflowers_web/components/layouts.ex:571
+#: lib/edenflowers_web/components/layouts.ex:575
 #: lib/edenflowers_web/features/admin/account_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "Sign out"
@@ -2946,7 +2946,7 @@ msgstr "Kestotilaukset"
 msgid "Swedish"
 msgstr "Ruotsi"
 
-#: lib/edenflowers_web/components/layouts.ex:453
+#: lib/edenflowers_web/components/layouts.ex:457
 #: lib/edenflowers_web/features/admin/links_live.ex:21
 #, elixir-autogen, elixir-format
 msgid "System"
@@ -3459,8 +3459,8 @@ msgstr "Näytä kuva"
 msgid "View receipt"
 msgstr "Näytä kuitti"
 
-#: lib/edenflowers_web/components/layouts.ex:296
-#: lib/edenflowers_web/components/layouts.ex:327
+#: lib/edenflowers_web/components/layouts.ex:297
+#: lib/edenflowers_web/components/layouts.ex:328
 #, elixir-autogen, elixir-format
 msgid "Storefront"
 msgstr "Verkkokauppa"
@@ -3805,14 +3805,14 @@ msgstr ""
 msgid "Online customers"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:235
+#: lib/edenflowers_web/components/layouts.ex:236
 #: lib/edenflowers_web/features/admin/links_live.ex:16
-#: lib/edenflowers_web/features/admin/links_live.ex:58
+#: lib/edenflowers_web/features/admin/links_live.ex:63
 #, elixir-autogen, elixir-format
 msgid "Links"
 msgstr "Linkit"
 
-#: lib/edenflowers_web/features/admin/links_live.ex:41
+#: lib/edenflowers_web/features/admin/links_live.ex:46
 #, elixir-autogen, elixir-format
 msgid "APIs"
 msgstr "Rajapinnat"
@@ -3822,7 +3822,7 @@ msgstr "Rajapinnat"
 msgid "Email and marketing"
 msgstr "Sähköposti ja markkinointi"
 
-#: lib/edenflowers_web/features/admin/links_live.ex:33
+#: lib/edenflowers_web/features/admin/links_live.ex:38
 #, elixir-autogen, elixir-format
 msgid "Hosting"
 msgstr "Ylläpito"

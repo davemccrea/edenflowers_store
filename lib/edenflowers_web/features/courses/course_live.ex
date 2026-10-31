@@ -179,7 +179,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 <.error :for={msg <- Enum.map(@form[:course_id].errors, &translate_error/1)}>{msg}</.error>
 
                 <.button type="submit" variant="primary" size="lg" class="mt-2" data-testid="book-button">
-                  {~t"Continue to payment"} · {Format.currency(total(@course, @form), @locale)}
+                  {~t"Continue to payment"}
                 </.button>
               </.form>
 
@@ -402,16 +402,6 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   defp seat_options(course) do
     Enum.to_list(1..max(min(CourseRegistration.max_seats(), course.seats_left), 1))
-  end
-
-  defp total(course, form) do
-    seats =
-      case Integer.parse(to_string(form[:seats].value)) do
-        {seats, ""} -> seats
-        _ -> 1
-      end
-
-    Decimal.mult(course.price, seats)
   end
 
   defp language_name(:sv), do: ~t"Swedish"
