@@ -12,6 +12,7 @@ defmodule Edenflowers.Accounts.User do
 
   alias Edenflowers.Accounts.Calculations
   alias Edenflowers.Accounts.Changes
+  alias Edenflowers.Accounts.Workers.PushNewsletterSubscriber
   alias Edenflowers.Pricing.Workers.SendNewsletterPromoEmail
   alias Edenflowers.Types.Email
 
@@ -103,10 +104,17 @@ defmodule Edenflowers.Accounts.User do
     end
 
     update :update do
-      description "Changes a user's name, or their newsletter opt-in with the language it applies to. The " <>
-                    "newsletter sync also uses it to opt out anyone who unsubscribed in Brevo."
+      description "Changes a user's name, or their newsletter opt-in with the language it applies to. A changed " <>
+                    "opt-in is queued for MailerLite. The newsletter sync also uses it to opt out anyone who " <>
+                    "unsubscribed in MailerLite."
 
       accept [:name, :newsletter_opt_in, :locale]
+      require_atomic? false
+
+      change after_action(fn _changeset, user, _context ->
+               with {:ok, _job} <- PushNewsletterSubscriber.enqueue(user), do: {:ok, user}
+             end),
+             where: changing(:newsletter_opt_in)
     end
 
     update :request_email_change do
@@ -130,20 +138,23 @@ defmodule Edenflowers.Accounts.User do
     end
 
     create :subscribe_to_newsletter do
-      description "Opts an email in to the newsletter, creating the user if needed, and queues its welcome email. " <>
-                    "A subscriber who already has a code is emailed the already-subscribed wording instead."
+      description "Opts an email in to the newsletter, creating the user if needed, and queues its welcome email " <>
+                    "and its push to MailerLite. A subscriber who already has a code is emailed the " <>
+                    "already-subscribed wording instead."
 
       accept [:email, :locale]
       upsert? true
       upsert_identity :unique_email
       change set_attribute(:newsletter_opt_in, true)
 
-      # The welcome/promotion job is inserted in the same transaction, so an
-      # opt-in never commits without its email queued. Returning subscribers
-      # get it too; the worker sends them the "already subscribed" wording.
+      # Both jobs are inserted in the same transaction, so an opt-in never
+      # commits without them. Returning subscribers get both too: the email
+      # worker sends them the "already subscribed" wording, and the push
+      # resubscribes anyone who unsubscribed in MailerLite since.
       change after_action(fn _changeset, user, _context ->
                with {:ok, _job} <-
                       SendNewsletterPromoEmail.enqueue(%{"email" => to_string(user.email), "locale" => user.locale}),
+                    {:ok, _job} <- PushNewsletterSubscriber.enqueue(user),
                     do: {:ok, user}
              end)
     end
@@ -205,9 +216,9 @@ defmodule Edenflowers.Accounts.User do
       change set_attribute(:stripe_customer_id, nil)
     end
 
-    read :brevo_contacts do
-      description "Everyone the newsletter sync sends to Brevo: newsletter subscribers only, so customers who never " <>
-                    "opted in have no profile there (privacy policy)."
+    read :newsletter_subscribers do
+      description "Everyone sent to MailerLite, with the fields it gets: newsletter subscribers only, so customers " <>
+                    "who never opted in have no profile there (privacy policy)."
 
       filter expr(newsletter_opt_in)
       prepare build(load: [:first_name, :last_name, :phone_number, :placed_order_count, :last_ordered_at, :total_spent])
@@ -283,7 +294,7 @@ defmodule Edenflowers.Accounts.User do
     end
 
     attribute :newsletter_opt_in, :boolean do
-      description "Whether they get the newsletter, which is sent from Brevo."
+      description "Whether they get the newsletter, which is sent from MailerLite."
       allow_nil? false
       default false
       public? true
@@ -346,11 +357,11 @@ defmodule Edenflowers.Accounts.User do
     end
 
     calculate :first_name, :string, {Calculations.FirstName, source: :name} do
-      description "Best guess from the free-text `name`, also handling \"Smith, Jane\". Sent to Brevo."
+      description "Best guess from the free-text `name`, also handling \"Smith, Jane\". Sent to MailerLite."
     end
 
     calculate :last_name, :string, {Calculations.LastName, source: :name} do
-      description "Best guess from the free-text `name`, also handling \"Smith, Jane\". Sent to Brevo."
+      description "Best guess from the free-text `name`, also handling \"Smith, Jane\". Sent to MailerLite."
     end
 
     calculate :initials, :string, {Calculations.Initials, source: :name} do

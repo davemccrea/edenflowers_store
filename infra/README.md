@@ -34,6 +34,14 @@ Umami runs at https://stats.edenflowers.fi on port 3000, bound to localhost so o
 
 Funnels and goals are set up in Umami's own UI.
 
+## Email
+
+Transactional email (sign-in codes, order, payment and course emails) goes through Scaleway Transactional Email; the newsletter is MailerLite. Scaleway forbids marketing email, so newsletters never go through it.
+
+Scaleway: the "Eden Flowers" project is on the pay-as-you-go `essential` plan (300 emails a month free) with `edenflowers.fi` verified in fr-par. The app sends with an API key of the IAM application `edenflowers-mailer`, whose only policy is `TransactionalEmailEmailApiCreate` on that project, so the key can send email and nothing else. Its secret key and the project ID are `vault_scaleway_secret_key` and `vault_scaleway_project_id`. DNS lives in Cloudflare: the DKIM TXT record `<project id>._domainkey`, and `include:_spf.tem.scaleway.com` in the SPF record. Don't add the `blackhole.tem.scaleway.com` MX record Scaleway suggests: the domain's mail goes to Fastmail.
+
+MailerLite: `vault_mailerlite_api_key`. The newsletter workers expect the custom fields `language` (text), `order_count` and `total_spent` (number) and `last_order_date` (date); `name`, `last_name` and `phone` are MailerLite defaults. SPF includes `_spf.mlsend.com`. How the site and MailerLite stay in step is in `Edenflowers.Accounts.Workers.SyncNewsletterList`.
+
 ## Off-site database and photo backups
 
 Production's 02:00 job runs `/opt/edenflowers_store/backup.sh` as postgres. It creates a custom-format dump, prunes local dumps older than 30 days, mirrors completed dumps and original uploaded photos to separate Storage Box directories, then pings a Better Stack heartbeat. A failure at any step prevents the heartbeat. Other inventory hosts only dump and prune locally.

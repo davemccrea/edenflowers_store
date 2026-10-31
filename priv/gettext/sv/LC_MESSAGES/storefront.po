@@ -147,7 +147,7 @@ msgstr "Konto"
 msgid "Accounting records: our legal obligation."
 msgstr "Bokföringsmaterial: vår lagstadgade skyldighet."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:146
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:147
 #, elixir-autogen, elixir-format
 msgid "Accounting: generally at least six years for vouchers and business correspondence, from the end of the calendar year in which the financial year ended. Certain records require ten years from the financial-year end."
 msgstr "Bokföring: i allmänhet minst sex år för verifikationer och affärskorrespondens, räknat från slutet av det kalenderår då räkenskapsperioden avslutades. Vissa handlingar ska sparas i tio år från räkenskapsperiodens slut."
@@ -287,7 +287,7 @@ msgstr "Tillbaka till ditt konto"
 msgid "Billing"
 msgstr "Betalning"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:135
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "Blocking cookies in your browser may stop the cart and sign-in working."
 msgstr "Om du blockerar kakor i webbläsaren kan varukorgen och inloggningen sluta fungera."
@@ -756,7 +756,7 @@ msgid "Continue to payment"
 msgstr "Fortsätt till betalning"
 
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:24
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:124
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:125
 #, elixir-autogen, elixir-format
 msgid "Cookies and fraud prevention"
 msgstr "Kakor och bedrägeribekämpning"
@@ -891,7 +891,7 @@ msgstr "Leveransmetod *"
 msgid "Delivery on %{date} to %{address}"
 msgstr "Leverans %{date} till %{address}"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:119
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:120
 #, elixir-autogen, elixir-format
 msgid "Delivery photos may go to the purchaser, not necessarily the recipient. Emailed copies cannot be recalled."
 msgstr "Leveransfoton kan skickas till köparen, inte nödvändigtvis till mottagaren. Kopior som skickats med e-post kan inte återkallas."
@@ -944,7 +944,7 @@ msgstr "Redigera"
 msgid "Email"
 msgstr "E-post"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:163
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:164
 #, elixir-autogen, elixir-format
 msgid "Email %{email} to:"
 msgstr "Mejla %{email} för att:"
@@ -998,7 +998,7 @@ msgstr "Fyll i adressen i kassan så ser du om jag levererar dit och vad det kos
 msgid "Error loading checkout"
 msgstr "Kassan kunde inte laddas"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:152
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:153
 #, elixir-autogen, elixir-format
 msgid "Error reports: 90 days."
 msgstr "Felrapporter: 90 dagar."
@@ -1407,7 +1407,7 @@ msgid "How it works"
 msgstr "Så går det till"
 
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:25
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:143
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:144
 #, elixir-autogen, elixir-format
 msgid "How long we keep information"
 msgstr "Hur länge vi sparar uppgifter"
@@ -1703,7 +1703,7 @@ msgstr "Hantera prenumerationen"
 msgid "Map of Vaasa, Finland with Minimossen pinned"
 msgstr "Karta över Vasa med Minimossen utmärkt"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:115
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Mapping services receive delivery addresses or coordinates. Website-security and mailbox providers handle traffic and emails."
 msgstr "Karttjänster får leveransadresser eller koordinater. Leverantörer av webbplatssäkerhet och e-posttjänster hanterar trafik och e-post."
@@ -1800,7 +1800,7 @@ msgstr "Nyhetsbrev"
 msgid "Newsletters require your consent."
 msgstr "Nyhetsbrev kräver ditt samtycke."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:149
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:150
 #, elixir-autogen, elixir-format
 msgid "Newsletters: until withdrawal or unsubscribe. Limited opt-out records prevent further marketing; consent evidence may remain where necessary."
 msgstr "Nyhetsbrev: tills samtycket återkallas eller prenumerationen avslutas. Begränsade uppgifter om avregistrering förhindrar fortsatt marknadsföring. Bevis på samtycke kan sparas vid behov."
@@ -1855,12 +1855,12 @@ msgstr "Inget på väg just nu."
 msgid "Number of guests"
 msgstr "Antal gäster"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:167
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:168
 #, elixir-autogen, elixir-format
 msgid "Object to legitimate-interest processing or direct marketing."
 msgstr "Invända mot behandling som grundar sig på berättigat intresse eller mot direktmarknadsföring."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:178
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:179
 #, elixir-autogen, elixir-format
 msgid "Office of the Data Protection Ombudsman"
 msgstr "Dataombudsmannens byrå"
@@ -1984,12 +1984,12 @@ msgstr "Beställning"
 msgid "Our"
 msgstr "Våra"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:117
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:118
 #, elixir-autogen, elixir-format
 msgid "Our accountant receives monthly purchase and payment records."
 msgstr "Vår bokförare får köp- och betalningsuppgifter varje månad."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:139
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:140
 #, elixir-autogen, elixir-format
 msgid "Our database stores error reports, which may include IP addresses, browser details and form data."
 msgstr "Vår databas lagrar felrapporter som kan innehålla IP-adresser, webbläsaruppgifter och formulärdata."
@@ -2004,7 +2004,7 @@ msgstr "Våra rättsliga grunder är:"
 msgid "Our legitimate interests: fulfilling gifts, documenting delivery, administering purchases, handling complaints and preventing website abuse."
 msgstr "Våra berättigade intressen: att leverera gåvor, dokumentera leveranser, administrera köp, hantera reklamationer och förhindra missbruk av webbplatsen."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:126
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:127
 #, elixir-autogen, elixir-format
 msgid "Our session cookie keeps your cart, language and sign-in for up to 30 days."
 msgstr "Vår sessionskaka sparar din varukorg, ditt språk och din inloggning i upp till 30 dagar."
@@ -2286,7 +2286,7 @@ msgstr "Antal"
 msgid "Quote"
 msgstr "Offert"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:182
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:183
 #, elixir-autogen, elixir-format
 msgid "Read also our"
 msgstr "Läs också våra"
@@ -2378,17 +2378,17 @@ msgstr "Ersätter de %{count} buketterna (%{amount}) i din varukorg."
 msgid "Reply to your confirmation email. Each course page lists the deadline for a full refund and the cancellation fee after that."
 msgstr "Svara på bekräftelsemejlet. På varje kurssida står sista dagen för avbokning med full återbetalning och vilken avbokningsavgift som gäller efter det."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:165
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:166
 #, elixir-autogen, elixir-format
 msgid "Request access to or correction of your data."
 msgstr "Begära tillgång till eller rättelse av dina uppgifter."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:166
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "Request deletion, restriction or portability."
 msgstr "Begära radering, begränsning av behandlingen eller överföring av uppgifter."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:170
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:171
 #, elixir-autogen, elixir-format
 msgid "Requests are normally free. We may verify your identity. Within one month we respond or explain a lawful extension. Legal conditions apply; accounting records may need keeping."
 msgstr "Begäranden är normalt avgiftsfria. Vi kan kontrollera din identitet. Inom en månad svarar vi eller förklarar en lagenlig förlängning av tidsfristen. Lagstadgade villkor gäller och bokföringsmaterial kan behöva sparas."
@@ -2438,7 +2438,7 @@ msgstr "Plats för en kort hälsning"
 msgid "Round gold flower arch with white and peach roses"
 msgstr "Rund guldfärgad blomsterbåge med vita och persikofärgade rosor"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:154
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "Routine database backups: about 30 days."
 msgstr "Rutinmässiga säkerhetskopior av databasen: cirka 30 dagar."
@@ -3107,7 +3107,7 @@ msgstr "Två arrangemang i krukor med korallröda rosor och riddarsporrar"
 msgid "Unpaid"
 msgstr "Obetald"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:173
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:174
 #, elixir-autogen, elixir-format
 msgid "Unsubscribe or contact us to withdraw newsletter consent anytime. Earlier lawful processing is unaffected."
 msgstr "Du kan när som helst avsluta prenumerationen eller kontakta oss för att återkalla ditt samtycke till nyhetsbrev. Tidigare laglig behandling påverkas inte."
@@ -3216,7 +3216,7 @@ msgstr "Vi kunde inte skicka din inloggningskod. Försök igen om en stund."
 msgid "We couldn't sign you in. Please try again."
 msgstr "Vi kunde inte logga in dig. Försök igen."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:130
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:131
 #, elixir-autogen, elixir-format
 msgid "We do not use analytics or advertising cookies."
 msgstr "Vi använder inte analys- eller reklamkakor."
@@ -3470,7 +3470,7 @@ msgstr "Du kan avboka eller ändra en webbeställning från ditt konto fram till
 msgid "You can cancel until %{date}"
 msgstr "Du kan avbeställa till och med %{date}"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:176
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:177
 #, elixir-autogen, elixir-format
 msgid "You can complain to Finland's"
 msgstr "Du kan lämna in ett klagomål till"
@@ -3683,7 +3683,7 @@ msgid "Your payment didn't go through. Please try again or choose another paymen
 msgstr "Betalningen gick inte igenom. Försök igen eller välj ett annat betalningssätt."
 
 #: lib/edenflowers_web/features/marketing/privacy_live.ex:26
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:162
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "Your rights"
 msgstr "Dina rättigheter"
@@ -3833,7 +3833,7 @@ msgid "subscription terms"
 msgstr "prenumerationsvillkor"
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:377
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:184
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:185
 #, elixir-autogen, elixir-format
 msgid "terms of sale"
 msgstr "köpvillkoren"
@@ -3895,12 +3895,7 @@ msgid_plural "Cart, %{count} items"
 msgstr[0] "Varukorg, %{count} vara"
 msgstr[1] "Varukorg, %{count} varor"
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:112
-#, elixir-autogen, elixir-format
-msgid "Brevo handles emails. For newsletter subscribers only, it also stores contact details, language and purchase statistics."
-msgstr "Brevo hanterar e-post. Endast för prenumeranter på nyhetsbrevet lagrar Brevo även kontaktuppgifter, språk och köpstatistik."
-
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:128
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:129
 #, elixir-autogen, elixir-format
 msgid "Stripe loads only on payment pages, for fraud prevention, and may use cookies and device/activity data there."
 msgstr "Stripe laddas bara på betalningssidorna för att förebygga bedrägerier och kan där använda kakor samt uppgifter om enheter och aktivitet."
@@ -3910,12 +3905,12 @@ msgstr "Stripe laddas bara på betalningssidorna för att förebygga bedrägerie
 msgid "Delivery details include recipient names, addresses, instructions, card messages and coordinates for calculating distance."
 msgstr "Leveransuppgifterna omfattar mottagarnas namn, adresser, anvisningar, kortmeddelanden och koordinater för att beräkna avstånd."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:151
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:152
 #, elixir-autogen, elixir-format
 msgid "Delivery photos: kept with the order until you ask us to delete them."
 msgstr "Leveransfoton: sparas med beställningen tills du ber oss radera dem."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:158
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:159
 #, elixir-autogen, elixir-format
 msgid "Everything else, such as your account, delivery details and enquiries, we keep until you ask us to delete it, except what accounting law requires us to keep."
 msgstr "Allt annat, till exempel ditt konto, leveransuppgifter och förfrågningar, sparar vi tills du ber oss radera det, utom det som bokföringslagen kräver att vi sparar."
@@ -3924,11 +3919,6 @@ msgstr "Allt annat, till exempel ditt konto, leveransuppgifter och förfrågning
 #, elixir-autogen, elixir-format
 msgid "If you received flowers from us, your details came from the person who ordered them. We use them only to deliver, and never for marketing."
 msgstr "Om du har fått blommor av oss kommer dina uppgifter från den som beställde dem. Vi använder dem bara för leveransen och aldrig för marknadsföring."
-
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:48
-#, elixir-autogen, elixir-format
-msgid "Updated 27 October 2026."
-msgstr "Uppdaterad 27 oktober 2026."
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:224
 #, elixir-autogen, elixir-format
@@ -4100,7 +4090,7 @@ msgstr "Era blommor."
 msgid "Always free from Minimossen."
 msgstr "Alltid gratis från Minimossen."
 
-#: lib/edenflowers_web/features/marketing/privacy_live.ex:132
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:133
 #, elixir-autogen, elixir-format
 msgid "We count page visits with Umami, which we host on our own server. It sets no cookies and stores no IP addresses."
 msgstr "Vi räknar sidbesök med Umami, som körs på vår egen server. Det sätter inga kakor och sparar inga IP-adresser."
@@ -4126,3 +4116,18 @@ msgstr "För utvalda buketter är de första %{km} km av leveransen gratis. Län
 #, elixir-autogen, elixir-format
 msgid "The first %{km} km of delivery from Minimossen are free"
 msgstr "De första %{km} km av leveransen från Minimossen är gratis"
+
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:113
+#, elixir-autogen, elixir-format
+msgid "MailerLite sends the newsletter. It stores newsletter subscribers' contact details, language and purchase statistics, and nobody else's."
+msgstr "MailerLite skickar nyhetsbrevet. Det lagrar kontaktuppgifter, språk och köpstatistik för prenumeranter på nyhetsbrevet, men inte för någon annan."
+
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:111
+#, elixir-autogen, elixir-format
+msgid "Scaleway sends our emails, such as sign-in codes and order confirmations."
+msgstr "Scaleway skickar vår e-post, till exempel inloggningskoder och orderbekräftelser."
+
+#: lib/edenflowers_web/features/marketing/privacy_live.ex:48
+#, elixir-autogen, elixir-format
+msgid "Updated 31 October 2026."
+msgstr "Uppdaterad 31 oktober 2026."

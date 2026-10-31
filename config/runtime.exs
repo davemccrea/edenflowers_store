@@ -134,11 +134,10 @@ if config_env() == :prod do
     token_signing_secret:
       System.get_env("TOKEN_SIGNING_SECRET") || raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
 
-  brevo_api_key = System.get_env("BREVO_API_KEY") || raise("environment variable BREVO_API_KEY is missing.")
+  config :edenflowers, Edenflowers.Mailer,
+    adapter: Swoosh.Adapters.Scaleway,
+    project_id: System.get_env("SCALEWAY_PROJECT_ID") || raise("environment variable SCALEWAY_PROJECT_ID is missing."),
+    secret_key: System.get_env("SCALEWAY_SECRET_KEY") || raise("environment variable SCALEWAY_SECRET_KEY is missing.")
 
-  config :edenflowers, Edenflowers.Mailer, adapter: Swoosh.Adapters.Brevo, api_key: brevo_api_key
-
-  config :edenflowers, :brevo_api_key, brevo_api_key
-
-  config :edenflowers, :brevo_newsletter_list_id, System.get_env("BREVO_NEWSLETTER_LIST_ID")
+  config :edenflowers, :mailerlite_api_key, System.get_env("MAILERLITE_API_KEY")
 end

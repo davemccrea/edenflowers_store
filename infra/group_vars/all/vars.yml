@@ -66,11 +66,12 @@ umami_website_id: 99ac34f2-cd64-4ab1-82c3-22b79d564176
 # Anthropic
 anthropic_api_key: "{{ vault_anthropic_api_key }}"
 
-# Email (Brevo)
-brevo_api_key: "{{ vault_brevo_api_key }}"
+# Transactional email (Scaleway) and newsletter (MailerLite)
+scaleway_project_id: "{{ vault_scaleway_project_id }}"
+scaleway_secret_key: "{{ vault_scaleway_secret_key }}"
+mailerlite_api_key: "{{ vault_mailerlite_api_key }}"
 mailer_from_name: Jennie
 mailer_from_email: info@edenflowers.fi
-brevo_newsletter_list_id: "4"
 error_alert_email: mail@dmccrea.me
 shop_notice_email: info@edenflowers.fi
 

@@ -143,8 +143,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
      )}
   end
 
-  # Brevo campaigns link here with ?email= so a past customer only has to press
-  # subscribe. Brevo doesn't URL-encode the address, so a "+" in it arrives as a
+  # Newsletter campaigns link here with ?email= so a past customer only has to
+  # press subscribe. A merge tag that isn't URL-encoded turns a "+" into a
   # space; addresses never contain spaces, so it's safe to turn them back.
   defp newsletter_email(%{"email" => email}) when is_binary(email), do: String.replace(email, " ", "+")
   defp newsletter_email(_params), do: nil
