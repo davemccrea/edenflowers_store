@@ -151,16 +151,23 @@ watch-deploy:
 rollback tag dump="":
     ./scripts/rollback.sh {{ tag }} {{ dump }}
 
+# Restore a dump into a throwaway local Postgres the way `just rollback` would, and print row counts
+[group('production')]
+check-restore dump:
+    ./scripts/check-restore.sh {{ dump }}
+
 # Back up the production database to tmp/, named after the release it is running
 [group('production')]
 backup:
     #!/usr/bin/env bash
     set -euo pipefail
     # `bin/edenflowers version` prints "edenflowers 1.7.0"
-    version=$(ssh edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers version" | awk '{sub(/\r$/, ""); print "v"$2}') || version=unknown
+    version=$(ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers version" | awk '{print "v"$2}') || version=unknown
     mkdir -p tmp
     file="tmp/production-$version-$(date +%Y%m%dT%H%M%S).dump"
-    ssh edenflowers-production "sudo -u postgres pg_dump -Fc edenflowers_store_prod" > "$file.partial"
+    # -T: a pty would turn every LF byte in the dump into CRLF
+    ssh -T edenflowers-production "sudo -u postgres pg_dump -Fc edenflowers_store_prod" > "$file.partial"
+    pg_restore -f /dev/null "$file.partial" || { echo "$file.partial cannot be read back, so it is no backup" >&2; exit 1; }
     mv "$file.partial" "$file"
     ls -lh "$file"
 
