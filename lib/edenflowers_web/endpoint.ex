@@ -27,6 +27,14 @@ defmodule EdenflowersWeb.Endpoint do
     only: ~w(fonts),
     headers: %{"access-control-allow-origin" => "*"}
 
+  # Without its own cache header, Cloudflare caches the service worker for hours,
+  # so installed admin apps keep the previous release's worker after a deploy.
+  plug Plug.Static,
+    at: "/",
+    from: :edenflowers,
+    only: ~w(admin-sw.js),
+    cache_control_for_etags: "no-cache"
+
   plug Plug.Static,
     at: "/",
     from: :edenflowers,
