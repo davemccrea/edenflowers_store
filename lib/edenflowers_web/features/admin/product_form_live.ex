@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias Edenflowers.Pricing
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.PhotoUpload
+  alias EdenflowersWeb.Admin.ShareLinkDrawer
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
   alias EdenflowersWeb.Store.StoreLive
@@ -89,10 +90,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                 <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
                 <span class="max-md:sr-only">{~t"View in store"}</span>
               </.button>
-              <.copy_link_button
+              <ShareLinkDrawer.open_button
                 :if={@form.source.type == :update && !@form.source.data.draft}
-                id="copy-product-link"
-                path={~p"/product/#{@form.source.data.id}"}
+                id="share-product-link"
               />
               <.button type="submit" variant="primary" size="sm">
                 {~t"Save"}
@@ -199,6 +199,13 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
           </div>
         </.form>
       </.admin_page>
+      <.live_component
+        :if={@form.source.type == :update && !@form.source.data.draft}
+        module={ShareLinkDrawer}
+        id="share-product-link"
+        path={~p"/product/#{@form.source.data.id}"}
+        current_user={@current_user}
+      />
     </Layouts.admin>
     """
   end

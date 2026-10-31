@@ -18,6 +18,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   alias EdenflowersWeb.Admin.DrawerPreview
   alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.OrderLog
+  alias EdenflowersWeb.Admin.ShareLinkDrawer
   alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Layouts
 
@@ -82,11 +83,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               <.icon name="hero-envelope" class="h-4 w-4" />
               {~t"Email everyone"}
             </.button>
-            <.copy_link_button
-              :if={!@past?}
-              id="copy-course-link"
-              path={~p"/courses/#{@course.id}"}
-            />
+            <ShareLinkDrawer.open_button :if={!@past?} id="share-course-link" />
             <.button navigate={~p"/admin/courses/#{@course.id}/edit"} variant="secondary" size="sm">
               <.icon name="hero-pencil-square" class="h-4 w-4" />
               {~t"Edit course"}
@@ -187,6 +184,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         error={@settlement_error}
         locale={@locale}
         preview={@preview}
+      />
+      <.live_component
+        :if={!@past?}
+        module={ShareLinkDrawer}
+        id="share-course-link"
+        path={~p"/courses/#{@course.id}"}
+        current_user={@current_user}
       />
     </Layouts.admin>
     """

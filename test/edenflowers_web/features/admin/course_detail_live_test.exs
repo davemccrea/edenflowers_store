@@ -50,13 +50,53 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
     assert has_element?(view, ~s|a[href="/admin/courses/#{course.id}/edit"]|, "Edit course")
   end
 
-  test "copy link copies the course's full shop URL", %{conn: conn} do
+  test "the share drawer tags the course's shop URL and remembers the tags once copied", %{conn: conn, admin: admin} do
     course = generate(course())
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
     url = EdenflowersWeb.Endpoint.url() <> "/courses/#{course.id}"
-    assert has_element?(view, ~s|#copy-course-link-url[value="#{url}"]|)
+    assert has_element?(view, ~s|#share-course-link-url[value="#{url}"]|)
+
+    view
+    |> form("#share-course-link-form", tags: %{source: "Instagram", medium: "", campaign: "Autumn courses"})
+    |> render_change()
+
+    tagged = url <> "?utm_source=instagram&utm_campaign=autumn-courses"
+    assert has_element?(view, ~s|#share-course-link-url[value="#{tagged}"]|)
+
+    view |> element("#share-course-link-copy") |> render_click()
+
+    assert [{:campaign, "autumn-courses"}, {:source, "instagram"}] ==
+             Edenflowers.Marketing.recent_tracking_tags!(actor: admin)
+             |> Enum.map(&{&1.parameter, &1.value})
+             |> Enum.sort()
+
+    assert has_element?(view, ~s|#share-course-link-campaign-suggestions [phx-click="pick"]|, "autumn-courses")
+
+    view |> element(~s|button[aria-label="Remove autumn-courses from suggestions"]|) |> render_click()
+
+    refute has_element?(view, "#share-course-link-campaign-suggestions")
+
+    assert [{:source, "instagram"}] ==
+             Edenflowers.Marketing.recent_tracking_tags!(actor: admin) |> Enum.map(&{&1.parameter, &1.value})
+  end
+
+  test "tapping a suggested tag fills it in, and tapping it again clears it", %{conn: conn, admin: admin} do
+    course = generate(course())
+    Edenflowers.Marketing.use_tracking_tag!(:medium, "email", actor: admin)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+
+    url = EdenflowersWeb.Endpoint.url() <> "/courses/#{course.id}"
+    chip = element(view, ~s|#share-course-link-medium-suggestions [phx-click="pick"][phx-value-tag="email"]|)
+
+    render_click(chip)
+    assert has_element?(view, ~s|#share-course-link-url[value="#{url}?utm_medium=email"]|)
+    assert has_element?(view, ~s|#share-course-link-medium-suggestions button[aria-pressed="true"]|, "email")
+
+    render_click(chip)
+    assert has_element?(view, ~s|#share-course-link-url[value="#{url}"]|)
   end
 
   test "an unknown course goes back to the list", %{conn: conn} do
