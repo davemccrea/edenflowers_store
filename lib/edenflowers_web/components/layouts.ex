@@ -225,7 +225,8 @@ defmodule EdenflowersWeb.Layouts do
        ]},
       {dgettext("admin", "Marketing"),
        [
-         {"https://stats.edenflowers.fi", "Umami", false, "hero-chart-bar"},
+         {"https://stats.edenflowers.fi/teams/92b475f5-bb78-4cfd-945e-369c9d1418ba/websites/99ac34f2-cd64-4ab1-82c3-22b79d564176",
+          "Umami", false, "hero-chart-bar"},
          {"https://app.brevo.com", "Brevo", false, "hero-paper-airplane"}
        ]},
       {dgettext("admin", "Finances"), [{~p"/admin/expenses", dgettext("admin", "Expenses"), true, "hero-banknotes"}]}
