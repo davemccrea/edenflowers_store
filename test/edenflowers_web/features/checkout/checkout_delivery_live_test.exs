@@ -222,13 +222,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       date = Date.add(Edenflowers.ShopTime.today(), 1)
       admin = generate(admin_user())
       {:ok, view, _html} = live(conn, ~p"/checkout")
-
-      # The calendar opens on the current month, so on a month's last day tomorrow is a page away.
-      if date.month != Edenflowers.ShopTime.today().month do
-        view |> element("#calendar-next-month") |> render_click()
-      end
-
-      selector = ~s|#calendar button[phx-value-date="#{date}"]|
+      selector = "#calendar-day-#{date}"
       assert has_element?(view, selector)
       refute has_element?(view, selector <> ~s|[aria-disabled="true"]|)
 
@@ -241,6 +235,19 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
 
       assert has_element?(view, selector)
       refute has_element?(view, selector <> ~s|[aria-disabled="true"]|)
+    end
+  end
+
+  describe "checkout calendar" do
+    test "opens on the next month when nothing is left to book in this one", %{conn: conn} do
+      today = Edenflowers.ShopTime.today()
+      next_month = today |> Date.end_of_month() |> Date.add(1)
+      shop_calendar(disabled_dates: Enum.to_list(Date.range(today, Date.end_of_month(today))))
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      assert has_element?(view, "#calendar-day-#{next_month}")
+      refute has_element?(view, "#calendar-day-#{today}")
     end
   end
 

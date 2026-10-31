@@ -28,6 +28,7 @@ defmodule EdenflowersWeb.StoreCalendar do
       id={@id}
       today={@today}
       focus_date={@selected_date}
+      open_date={Availability.next_open_date(@calendar, ShopTime.now())}
       status={if @selected_date, do: "#{Localize.Date.to_string!(@selected_date, format: :full)} #{~t"selected"}."}
       class={["border p-2", if(@error, do: "border-error", else: "border-base-content/20")]}
     >
