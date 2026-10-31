@@ -74,6 +74,20 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
     end
   end
 
+  describe "a shared link without a language" do
+    test "goes to the page in the browser's language, keeping tracking tags", %{conn: conn} do
+      id = Ecto.UUID.generate()
+      conn = put_req_header(conn, "accept-language", "fi-FI")
+
+      assert conn |> get("/product/#{id}?utm_source=instagram") |> redirected_to(302) ==
+               "/fi/tuote/#{id}?utm_source=instagram"
+
+      assert conn |> get("/courses/#{id}") |> redirected_to(302) == "/fi/kurssit/#{id}"
+      assert conn |> get("/courses") |> redirected_to(302) == "/fi/kurssit"
+      assert conn |> get("/weddings") |> redirected_to(302) == "/fi/haat"
+    end
+  end
+
   defp bouquets do
     product_category(
       slug: "bouquets",
