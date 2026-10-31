@@ -35,7 +35,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     cart_line = cart_line(socket.assigns.order, product.id)
 
-    selected_variant = initial_variant(product, product_variants, cart_line)
+    subscribe? = initial_subscribe?(params, product, cart_line)
+    selected_variant = initial_variant(subscribe?, product_variants, cart_line)
 
     {:ok,
      socket
@@ -52,18 +53,18 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)
      |> assign(photo_slug: selected_variant.photo_slug)
-     |> assign(subscribe?: initial_subscribe?(params, product, cart_line))
+     |> assign(subscribe?: subscribe?)
      |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 4))
      |> assign(has_subscription?: has_subscription?(socket.assigns.current_user))
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
   end
 
-  defp initial_variant(product, product_variants, nil),
-    do: default_variant(product, selectable_variants(product_variants))
+  defp initial_variant(subscribe?, product_variants, nil),
+    do: default_variant(subscribe?, selectable_variants(product_variants))
 
-  defp initial_variant(product, product_variants, cart_line) do
+  defp initial_variant(subscribe?, product_variants, cart_line) do
     Enum.find(product_variants, &(&1.id == cart_line.product_variant_id)) ||
-      initial_variant(product, product_variants, nil)
+      initial_variant(subscribe?, product_variants, nil)
   end
 
   defp initial_subscribe?(%{"subscribe" => "1"}, product, _cart_line), do: product.subscribable
@@ -409,7 +410,14 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
   @impl true
   def handle_event("change", %{"product_variant_id" => id} = params, socket) do
-    variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
+    subscribe? = params["subscribe"] == "true"
+
+    # Switching between buying once and subscribing moves to that way of buying's default size.
+    variant =
+      if subscribe? == socket.assigns.subscribe?,
+        do: Enum.find(socket.assigns.product_variants, &(&1.id == id)),
+        else: default_variant(subscribe?, selectable_variants(socket.assigns.product_variants))
+
     # Toggling a subscription also sends the size, which mustn't undo a thumbnail pick.
     photo_slug =
       if variant.id == socket.assigns.selected_variant.id, do: socket.assigns.photo_slug, else: variant.photo_slug
@@ -418,7 +426,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      assign(socket,
        selected_variant: variant,
        photo_slug: photo_slug,
-       subscribe?: params["subscribe"] == "true",
+       subscribe?: subscribe?,
        interval_weeks: params["interval_weeks"] || socket.assigns.interval_weeks
      )}
   end
@@ -457,7 +465,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
     selected_variant =
       Enum.find(variants, &(&1.id == socket.assigns.selected_variant.id)) ||
-        default_variant(product, selectable_variants(variants))
+        default_variant(socket.assigns.subscribe?, selectable_variants(variants))
 
     {:noreply, assign(socket, product_variants: variants, selected_variant: selected_variant)}
   end
@@ -491,10 +499,10 @@ defmodule EdenflowersWeb.Store.ProductLive do
     end
   end
 
-  defp default_variant(%{subscribable: true}, variants),
+  defp default_variant(true = _subscribe?, variants),
     do: Enum.find(variants, &(&1.size == :small)) || middle_variant(variants)
 
-  defp default_variant(_product, variants), do: middle_variant(variants)
+  defp default_variant(false = _subscribe?, variants), do: middle_variant(variants)
 
   defp middle_variant([first, _second]), do: first
   defp middle_variant(variants), do: Enum.at(variants, div(length(variants), 2))
