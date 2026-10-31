@@ -11,8 +11,9 @@ self.addEventListener("activate", (event) =>
 // Opening the app (or iOS reloading it after evicting it) shows a blank screen
 // until the server's first byte arrives. Answering that launch at once with
 // this page, which then asks for the real one, keeps it on screen instead:
-// the browser holds the old page until the new one paints. The logo fades in
-// a moment later, so a quick launch doesn't flash it.
+// the browser holds the old page until the new one paints. The logo must not
+// animate in: once the page asks for the real one, Safari stops running its
+// animations, so a faded-in logo never appears.
 const launchScreen = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,11 +24,7 @@ const launchScreen = `<!DOCTYPE html>
 <style>
   html, body { height: 100%; margin: 0; background: oklch(99% 0.004 75); }
   body { display: grid; place-items: center; }
-  svg { width: 160px; opacity: 0; animation: appear 300ms 150ms ease-out forwards; }
-  @keyframes appear { to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) {
-    svg { animation: none; opacity: 1; }
-  }
+  svg { width: 160px; }
 </style>
 </head>
 <body>
