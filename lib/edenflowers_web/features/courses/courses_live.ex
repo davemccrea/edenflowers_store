@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
         </section>
 
         <section
-          class="bg-cream text-cream-content mt-16 grid sm:mt-24 md:grid-cols-[2fr_3fr]"
+          class="bg-cream text-cream-content -mx-4 mt-16 grid sm:mx-0 sm:mt-24 md:grid-cols-[2fr_3fr]"
           aria-labelledby="groups"
         >
           <.image
@@ -106,7 +106,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
             class="aspect-[4/3] object-[69%_30%] h-full w-full object-cover md:aspect-auto"
           />
 
-          <div class="flex flex-col items-start gap-6 px-6 py-12 sm:px-10 md:justify-center md:px-12 md:py-16 lg:px-16 lg:py-20">
+          <div class="flex flex-col items-start gap-6 px-4 py-12 sm:px-10 md:justify-center md:px-12 md:py-16 lg:px-16 lg:py-20">
             <.flower name="flower-30" class="text-cream-content/60 h-12 w-12" />
             <h2 id="groups" class="section-title text-balance">{~t"Courses for private groups"}</h2>
             <p class="max-w-prose text-lg leading-relaxed">
