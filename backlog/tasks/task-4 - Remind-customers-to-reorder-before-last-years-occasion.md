@@ -4,7 +4,7 @@ title: Remind customers to reorder before last year's occasion
 status: needs-triage
 assignee: []
 created_date: '2026-10-10 14:30'
-updated_date: '2026-10-27 13:58'
+updated_date: '2026-10-31 20:30'
 labels:
   - spec
   - customers
@@ -77,6 +77,15 @@ created: 2026-10-27 13:58
 ---
 
 Launch triage 2026-10-27 with David: kept for after launch, not a blocker.
+
+---
+
+author: @claude
+created: 2026-10-31 20:30
+
+---
+
+Marketing review 2026-10-31 with David: kept, and tied to the new marketing tasks. (1) The occasion pages (TASK-161) are a natural second place to offer 'Remind me next year' for a shop special day, alongside the order confirmation page. A reminder email for a special day should link to its page rather than the plain store. (2) Never offer 'Remind me next year' on a sympathy order: whatever rule TASK-159 settles on for sympathy orders should apply here too. (3) A reminder email should mention gift vouchers (TASK-160) only if the customer has no delivery address to hand, never as a sales line. Still needs-triage: the open questions above need grilling before implementation.
 
 ---
 <!-- COMMENTS:END -->
