@@ -222,7 +222,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       date = Date.add(Edenflowers.ShopTime.today(), 1)
       admin = generate(admin_user())
       {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      # The calendar opens on the current month, so on a month's last day tomorrow is a page away.
+      if date.month != Edenflowers.ShopTime.today().month do
+        view |> element("#calendar-next-month") |> render_click()
+      end
+
       selector = ~s|#calendar button[phx-value-date="#{date}"]|
+      assert has_element?(view, selector)
       refute has_element?(view, selector <> ~s|[aria-disabled="true"]|)
 
       calendar = Edenflowers.Fulfillment.get_shop_calendar!()
