@@ -172,7 +172,7 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
       <section class="bg-forest not-last:border-b" aria-labelledby="message-heading">
         <div class="grid md:grid-cols-2">
           <.image
-            src="local:///jennie_5.JPG"
+            src="local:///jennie_5.jpg"
             alt={~t"Jennie smiling down at a bouquet of dahlias and eucalyptus"}
             width={1000}
             height={1250}
