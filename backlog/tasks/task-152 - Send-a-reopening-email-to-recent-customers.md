@@ -4,7 +4,7 @@ title: Send a reopening email to recent customers
 status: needs-triage
 assignee: []
 created_date: '2026-10-31 07:39'
-updated_date: '2026-10-31 08:56'
+updated_date: '2026-10-31 19:53'
 labels:
   - spec
   - customers
@@ -78,6 +78,15 @@ created: 2026-10-31 08:53
 ---
 
 The reopening email will offer 25% for two weeks after sending, set up through TASK-153. Once the send date is known, update campaign 3 to 25% with the end date. Draft refined 2026-10-31: sender, subject, newsletter button with pre-filled email, weekly bouquet paragraph, reply invite, style matched to the site.
+
+---
+
+author: @claude
+created: 2026-10-31 19:53
+
+---
+
+2026-10-31: Brevo is removed (TASK-131, TASK-157, v1.23.4). The Brevo decisions above no longer hold: the campaign has to be rebuilt in MailerLite (merge tags, unsubscribe link, temporary group of recent customers). The Brevo list (294 contacts) and draft campaign 3 were downloaded to tmp/brevo-reopening/ in the main checkout before the account was closed. Re-grill the tool decisions before sending.
 
 ---
 <!-- COMMENTS:END -->
