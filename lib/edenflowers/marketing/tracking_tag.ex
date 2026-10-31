@@ -81,15 +81,17 @@ defmodule Edenflowers.Marketing.TrackingTag do
       end
 
       run fn input, context ->
-        input.arguments.tags
-        |> filled_in()
-        |> Enum.map(fn {parameter, value} -> %{parameter: parameter, value: value} end)
-        |> Ash.bulk_create(
-          __MODULE__,
-          :use,
-          Ash.Context.to_opts(context) ++ [return_errors?: true, stop_on_error?: true]
-        )
-        |> case do
+        result =
+          input.arguments.tags
+          |> filled_in()
+          |> Enum.map(fn {parameter, value} -> %{parameter: parameter, value: value} end)
+          |> Ash.bulk_create(
+            __MODULE__,
+            :use,
+            Ash.Context.to_opts(context) ++ [return_errors?: true, stop_on_error?: true]
+          )
+
+        case result do
           %Ash.BulkResult{status: :success} -> :ok
           %Ash.BulkResult{errors: errors} -> {:error, errors}
         end
