@@ -3863,7 +3863,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:136
 #, elixir-autogen, elixir-format
 msgid "Copy link"
-msgstr ""
+msgstr "Kopiera länk"
 
 #: lib/edenflowers_web/features/admin/product_form_live.ex:188
 #, elixir-autogen, elixir-format
@@ -3889,50 +3889,50 @@ msgstr "Buketter med gratis leverans får så här många km gratis. Längre bor
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:191
 #, elixir-autogen, elixir-format
 msgid "Campaign"
-msgstr ""
+msgstr "Kampanj"
 
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:118
 #, elixir-autogen, elixir-format
 msgid "Link"
-msgstr ""
+msgstr "Länk"
 
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:190
 #, elixir-autogen, elixir-format
 msgid "Medium"
-msgstr ""
+msgstr "Medium"
 
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:36
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:57
 #, elixir-autogen, elixir-format
 msgid "Share link"
-msgstr ""
+msgstr "Dela länk"
 
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:67
 #, elixir-autogen, elixir-format
 msgid "Tags tell Umami where a visitor came from, so you can see which posts bring orders. Leave them empty for a plain link."
-msgstr ""
+msgstr "Taggarna berättar för Umami varifrån en besökare kom, så att du ser vilka inlägg som ger beställningar. Lämna dem tomma för en vanlig länk."
 
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:190
 #, elixir-autogen, elixir-format
 msgid "What kind of post, e.g. social, email or print"
-msgstr ""
+msgstr "Vilken sorts inlägg, t.ex. social, email eller print"
 
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:189
 #, elixir-autogen, elixir-format
 msgid "Where you post it, e.g. instagram or newsletter"
-msgstr ""
+msgstr "Var du lägger upp den, t.ex. instagram eller newsletter"
 
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:191
 #, elixir-autogen, elixir-format
 msgid "Why you're posting, e.g. mothers-day-2026"
-msgstr ""
+msgstr "Varför du lägger upp den, t.ex. mothers-day-2026"
 
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:108
 #, elixir-autogen, elixir-format
 msgid "Remove %{tag} from suggestions"
-msgstr ""
+msgstr "Ta bort %{tag} från förslagen"
 
 #: lib/edenflowers_web/features/admin/share_link_drawer.ex:109
 #, elixir-autogen, elixir-format
 msgid "Remove from suggestions"
-msgstr ""
+msgstr "Ta bort från förslagen"
