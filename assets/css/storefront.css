@@ -85,14 +85,13 @@
 }
 
 /* Below md, Embla drives all 9 quotes with the same focal-point scale as Favourites,
-   and the hook sizes the track to the quote in view. From md up, the 3 sets share one
-   grid cell but only the active set takes up room, so a short set leaves no gap below;
-   on a turn the leaving quotes drift away from the arrow pressed and the next ones
-   drift in behind them, column by column. */
+   with the track sized for the tallest quote. From md up, the 3 sets share one grid
+   cell so the section is sized for the tallest and never jumps; on a turn the leaving
+   quotes drift away from the arrow pressed and the next ones drift in behind them,
+   column by column. */
 @media (width < theme(--breakpoint-md)) {
   .review-pages__track {
     display: flex;
-    align-items: flex-start;
     gap: 2rem;
     touch-action: pan-y pinch-zoom;
   }
@@ -122,15 +121,12 @@
 }
 @media (width >= theme(--breakpoint-md)) {
   .review-pages__track {
-    position: relative;
     display: grid;
   }
   .review-pages__track > * {
     grid-area: 1 / 1;
   }
   .review-pages__track > :not([data-active]) {
-    position: absolute;
-    inset: 0 0 auto;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;

@@ -663,13 +663,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               },
 
               onSelect() {
-                const active = this.embla.internalEngine().options.active;
-                const slide = this.embla.slideNodes()[this.embla.selectedScrollSnap()];
-                this.embla.containerNode().style.height = active
-                  ? `${slide.offsetHeight}px`
-                  : "";
                 if (!this.counterNode) return;
-                if (active) {
+                if (this.embla.internalEngine().options.active) {
                   this.counterNode.textContent = `${this.embla.selectedScrollSnap() + 1} / ${this.embla.scrollSnapList().length}`;
                 } else {
                   this.counterNode.textContent = this.counterNode.dataset.desktopCounter;
