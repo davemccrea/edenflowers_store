@@ -7,7 +7,7 @@ The recipes are in the repo's justfile under `infra`, and run from this folder. 
 ## Vars and vault
 
 - `inventory.ini`: the one host, `production`
-- `group_vars/all/vars.yml`: settings, such as `maintenance_mode`
+- `group_vars/all/vars.yml`: settings, such as `umami_website_id`
 - `group_vars/all/vault.yml`: encrypted secrets, edited with `just edit-vault`. `vault.example.yml` lists every `vault_*` key
 
 The vault password lives in `infra/.vault_pass` (gitignored).

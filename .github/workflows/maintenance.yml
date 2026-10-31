@@ -1,0 +1,35 @@
+# Turns production's maintenance mode on or off from the GitHub app, away from
+# the computer that has the Ansible vault. Same steps as `just maintenance`.
+name: Maintenance mode
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Maintenance mode
+        type: choice
+        options: ["on", "off"]
+
+concurrency: maintenance
+
+jobs:
+  switch:
+    name: Turn maintenance mode ${{ inputs.mode }}
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Write maintenance.env and restart the app
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/edenflowers_store
+            echo "MAINTENANCE_MODE=${{ inputs.mode == 'on' }}" > maintenance.env
+            docker compose up -d app
+
+      - name: Wait for app to boot
+        run: curl -fsS --retry 60 --retry-delay 2 --retry-all-errors https://edenflowers.fi/health

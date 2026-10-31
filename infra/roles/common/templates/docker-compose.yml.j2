@@ -6,6 +6,8 @@ services:
     # Oban waits up to 15s for running jobs; Docker's default 10s kills them mid-run.
     stop_grace_period: 20s
     network_mode: host
+    # MAINTENANCE_MODE, owned by `just maintenance` and the Maintenance workflow, not Ansible.
+    env_file: maintenance.env
     environment:
       PHX_SERVER: "true"
       PHX_HOST: "{{ project_url }}"
@@ -15,7 +17,6 @@ services:
       RELEASE_COOKIE: "{{ release_cookie }}"
       RELEASE_DISTRIBUTION: name
       RELEASE_NODE: "{{ project_name }}@127.0.0.1"
-      MAINTENANCE_MODE: "{{ maintenance_mode | string | lower }}"
       DATABASE_URL: "{{ database_url }}"
       STRIPE_SECRET_KEY: "{{ stripe_secret_key }}"
       STRIPE_PUBLISHABLE_KEY: "{{ stripe_publishable_key }}"

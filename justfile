@@ -171,7 +171,7 @@ backup:
     mv "$file.partial" "$file"
     ls -lh "$file"
 
-# Toggle production's maintenance mode after a prompt: commits the infra/ vars change and provisions
+# Toggle production's maintenance mode after a prompt, restarting the app (the Maintenance workflow does the same from GitHub)
 [group('production')]
 maintenance:
     ./scripts/maintenance.sh
