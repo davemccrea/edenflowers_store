@@ -103,7 +103,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     products =
       Catalog.list_featured_products!()
       |> Translations.translate()
@@ -125,7 +125,8 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
        review_leaving: nil,
        review_direction: nil,
        subscribable_products: Catalog.list_subscribable_products!() |> Translations.translate(),
-       price_from: price_from(Catalog.list_bouquets!(), locale)
+       price_from: price_from(Catalog.list_bouquets!(), locale),
+       newsletter_email: newsletter_email(params)
      )}
   end
 
@@ -141,6 +142,12 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
        review_direction: step
      )}
   end
+
+  # Brevo campaigns link here with ?email= so a past customer only has to press
+  # subscribe. Brevo doesn't URL-encode the address, so a "+" in it arrives as a
+  # space; addresses never contain spaces, so it's safe to turn them back.
+  defp newsletter_email(%{"email" => email}) when is_binary(email), do: String.replace(email, " ", "+")
+  defp newsletter_email(_params), do: nil
 
   defp occasion_label(:wedding), do: ~t"Wedding"
   defp occasion_label(:christening), do: ~t"Christening"
@@ -172,6 +179,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       current_path={@current_path}
       notice_bar={@notice_bar}
       alternates={@alternates}
+      newsletter_email={@newsletter_email}
     >
       <section id="home-hero" phx-hook=".HomeHero" data-header-overlay class="relative overflow-hidden not-last:border-b">
         <%!-- Phones get the photo's own 2:3 portrait so the box crops it only once --%>

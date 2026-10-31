@@ -612,6 +612,7 @@ defmodule EdenflowersWeb.Layouts do
   attr :current_path, :string, required: true
   attr :alternates, :map, default: %{}
   attr :notice_bar, :string, default: nil
+  attr :newsletter_email, :string, default: nil, doc: "pre-fills the footer newsletter signup"
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -896,7 +897,11 @@ defmodule EdenflowersWeb.Layouts do
         <div class="container relative py-20 md:py-36">
           <div class="footer-grid">
             <div id="newsletter" class="footer-grid__newsletter space-y-4">
-              <.live_component id="newsletter-signup-form" module={EdenflowersWeb.NewsletterSignup} />
+              <.live_component
+                id="newsletter-signup-form"
+                module={EdenflowersWeb.NewsletterSignup}
+                email={@newsletter_email}
+              />
             </div>
 
             <div class="footer-grid__location space-y-2">

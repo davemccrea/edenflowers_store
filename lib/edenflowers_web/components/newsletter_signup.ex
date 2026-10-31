@@ -8,7 +8,14 @@ defmodule EdenflowersWeb.NewsletterSignup do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, form: to_form(%{"email_address" => ""}), submitted: false, error: nil)}
+    {:ok, assign(socket, submitted: false, error: nil)}
+  end
+
+  @impl true
+  def update(assigns, socket) do
+    # Only the first render takes the pre-filled address, so a later parent
+    # re-render can't overwrite what the visitor submitted.
+    {:ok, assign_new(socket, :form, fn -> to_form(%{"email_address" => assigns.email || ""}) end)}
   end
 
   @impl true

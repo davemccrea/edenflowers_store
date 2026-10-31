@@ -54,7 +54,27 @@
     <%!-- Photos come from imgproxy on another host; opening that connection now saves a first visit's LCP photo the wait. --%>
     <link rel="preconnect" href={Application.get_env(:imgproxy, :prefix)} />
     <%= if website_id = umami_website_id(@conn) do %>
-      <script defer src="https://stats.edenflowers.fi/script.js" data-website-id={website_id}>
+      <%!-- Email links pre-fill the newsletter signup with ?email=, which must
+            not reach analytics. Same-origin referrers arrive as bare paths. --%>
+      <script>
+        window.umamiDropEmail = (type, payload) => {
+          for (const key of ["url", "referrer"]) {
+            if (!payload[key]?.includes("email=")) continue;
+            const url = new URL(payload[key], location.origin);
+            url.searchParams.delete("email");
+            payload[key] = payload[key].startsWith("/")
+              ? url.pathname + url.search + url.hash
+              : url.href;
+          }
+          return payload;
+        };
+      </script>
+      <script
+        defer
+        src="https://stats.edenflowers.fi/script.js"
+        data-website-id={website_id}
+        data-before-send="umamiDropEmail"
+      >
       </script>
     <% end %>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
