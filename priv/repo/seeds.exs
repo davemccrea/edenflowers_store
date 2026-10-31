@@ -1084,3 +1084,9 @@ place_custom.(%{
   florist_note: "Replaces her earlier delivery, which wilted the next day.",
   line_items: [custom_line.("Replacement bouquet", "0.00")]
 })
+
+# Tags from links Jennie has shared, so the share drawer has chips to pick and
+# remove. Production starts with none.
+for {parameter, value} <- [source: "newsletter", source: "instagram", medium: "social", campaign: "mothers-day-2026"] do
+  Edenflowers.Marketing.use_tracking_tag!(parameter, value, actor: jennie)
+end
