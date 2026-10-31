@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.StoreCalendarTest do
 
   import Phoenix.LiveViewTest
 
+  alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.ShopTime
   alias EdenflowersWeb.StoreCalendar
 
@@ -46,16 +47,18 @@ defmodule EdenflowersWeb.StoreCalendarTest do
       assert html =~ expected_header
     end
 
-    test "with no selected_date, renders today's month" do
+    test "with no selected_date, opens on the month of the next open date" do
+      calendar = Edenflowers.Fulfillment.get_shop_calendar!()
+
       html =
         render_component(&StoreCalendar.store_calendar/1,
           id: "calendar",
-          calendar: Edenflowers.Fulfillment.get_shop_calendar!(),
+          calendar: calendar,
           selected_date: nil
         )
 
       expected_header =
-        ShopTime.today()
+        Availability.next_open_date(calendar, ShopTime.now())
         |> Localize.DateTime.to_string!(format: "MMMM y")
 
       assert html =~ expected_header
@@ -66,14 +69,17 @@ defmodule EdenflowersWeb.StoreCalendarTest do
   # The id, key targets and tabindex all come from the slot's `attrs`, so this
   # fails if StoreCalendar stops spreading them on its day buttons.
   test "each day carries what CalendarHook needs, out of the Tab order" do
+    calendar = Edenflowers.Fulfillment.get_shop_calendar!()
+
     html =
       render_component(&StoreCalendar.store_calendar/1,
         id: "calendar",
-        calendar: Edenflowers.Fulfillment.get_shop_calendar!(),
+        calendar: calendar,
         selected_date: nil
       )
 
-    selector = ~s|button#calendar-day-#{ShopTime.today()}[data-key-targets][tabindex="-1"]|
+    open_date = Availability.next_open_date(calendar, ShopTime.now())
+    selector = ~s|button#calendar-day-#{open_date}[data-key-targets][tabindex="-1"]|
     assert html |> LazyHTML.from_fragment() |> LazyHTML.query(selector) |> Enum.count() == 1
   end
 end
