@@ -16,6 +16,8 @@ defmodule EdenflowersWeb.MonthGrid do
     * `:id` (required)
     * `:today` (required)
     * `:focus_date` - when it changes, the grid shows its month
+    * `:open_date` - the grid first opens on its month when there's no
+      `:focus_date`; later changes don't move the grid
     * `:status` - said after the month whenever the grid changes
     * `:class` - added to the root
 
@@ -43,7 +45,7 @@ defmodule EdenflowersWeb.MonthGrid do
       socket
       |> assign(status: nil, class: nil, weekday: [], week: [], footer: [])
       |> assign(assigns)
-      |> assign_new(:view_date, fn %{today: today} -> focus_date || today end)
+      |> assign_new(:view_date, fn assigns -> focus_date || assigns[:open_date] || assigns.today end)
 
     socket =
       if focus_date && focus_date != socket.assigns[:focus_date],
