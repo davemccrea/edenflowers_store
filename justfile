@@ -171,6 +171,11 @@ backup:
     mv "$file.partial" "$file"
     ls -lh "$file"
 
+# Toggle production's maintenance mode after a prompt: commits the infra/ vars change and provisions
+[group('production')]
+maintenance:
+    ./scripts/maintenance.sh
+
 # Push images/ to production, deleting server photos removed locally (up to MAX_DELETE)
 [group('production')]
 push-images:
