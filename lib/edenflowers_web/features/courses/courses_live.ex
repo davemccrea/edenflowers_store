@@ -53,15 +53,19 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
               <.button href="#coming-up" variant="primary">{~t"See upcoming courses"}</.button>
             </div>
           </div>
-          <%!-- Hidden on phones so the dates, which are what people came for, sit above the fold. --%>
-          <div class="hidden flex-shrink-0 md:block md:w-80 lg:w-96 xl:w-[28rem]">
+          <%!-- On phones a full-bleed strip above the title, cropped from the original to what the hands are doing. --%>
+          <div class="order-first -mx-4 -mt-4 flex-shrink-0 md:order-none md:mx-0 md:mt-0 md:w-80 lg:w-96 xl:w-[28rem]">
             <.image
               src="local:///jennie_4.jpg"
               alt=""
               width={1000}
               height={1250}
-              sizes="(min-width: 1280px) 28rem, (min-width: 1024px) 24rem, 20rem"
-              class="aspect-[4/5] object-[50%_35%] w-full object-cover"
+              sizes="(min-width: 1280px) 28rem, (min-width: 1024px) 24rem, (min-width: 768px) 20rem, 100vw"
+              sources={[
+                %{media: "(max-width: 767px)", width: 960, height: 540, max_width: 960, crop: "4016:2259:fp:0.5:0.5"}
+              ]}
+              priority
+              class="aspect-[16/9] w-full object-cover md:aspect-[4/5] md:object-[50%_35%]"
             />
           </div>
         </section>
