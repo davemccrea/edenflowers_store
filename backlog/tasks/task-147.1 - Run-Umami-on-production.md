@@ -1,10 +1,10 @@
 ---
 id: TASK-147.1
 title: Run Umami on production
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-30 17:41'
-updated_date: '2026-10-30 17:56'
+updated_date: '2026-10-31 10:16'
 labels: []
 dependencies: []
 parent_task_id: TASK-147

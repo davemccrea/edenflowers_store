@@ -1,9 +1,10 @@
 ---
 id: TASK-148
 title: Every Papra document becomes an expense
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-30 14:00'
+updated_date: '2026-10-31 10:23'
 labels:
   - spec
   - admin
@@ -31,8 +32,8 @@ Papra fires the expense import on `document:created` instead of the `receipt` ta
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Uploading a PDF to Papra creates an expense in admin without tagging it
-- [ ] #2 An invoice email filed in Fakturor becomes an expense through the same webhook
+- [x] #1 Uploading a PDF to Papra creates an expense in admin without tagging it
+- [x] #2 An invoice email filed in Fakturor becomes an expense through the same webhook
 - [x] #3 Deleting an expense doesn't depend on Papra being reachable
 <!-- AC:END -->
 
