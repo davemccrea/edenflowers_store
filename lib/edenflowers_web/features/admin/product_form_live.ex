@@ -89,6 +89,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                 <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
                 <span class="max-md:sr-only">{~t"View in store"}</span>
               </.button>
+              <.copy_link_button
+                :if={@form.source.type == :update && !@form.source.data.draft}
+                id="copy-product-link"
+                path={~p"/product/#{@form.source.data.id}"}
+              />
               <.button type="submit" variant="primary" size="sm">
                 {~t"Save"}
               </.button>
