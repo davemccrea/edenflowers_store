@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
         </h1>
 
         <p id="notice-updated" class="font-sans text-base-content/80 mb-16 max-w-3xl text-base leading-relaxed md:mb-20">
-          {~t"Updated 27 October 2026."}
+          {~t"Updated 31 October 2026."}
         </p>
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
@@ -108,8 +108,9 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
                 <li>
                   {~t"Stripe handles payments and saved cards. We keep payment references and limited card details, not full card numbers or security codes."}
                 </li>
+                <li>{~t"Scaleway sends our emails, such as sign-in codes and order confirmations."}</li>
                 <li>
-                  {~t"Brevo handles emails. For newsletter subscribers only, it also stores contact details, language and purchase statistics."}
+                  {~t"MailerLite sends the newsletter. It stores newsletter subscribers' contact details, language and purchase statistics, and nobody else's."}
                 </li>
                 <li>
                   {~t"Mapping services receive delivery addresses or coordinates. Website-security and mailbox providers handle traffic and emails."}

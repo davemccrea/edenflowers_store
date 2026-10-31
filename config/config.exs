@@ -16,7 +16,8 @@ config :cinder, default_theme: "daisy_ui", gettext_backend: EdenflowersWeb.Gette
 config :edenflowers, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  queues: [default: 10],
+  # newsletter runs one job at a time, so a MailerLite sync and an opt-in push never overlap.
+  queues: [default: 10, newsletter: 1],
   repo: Edenflowers.Repo,
   plugins: [
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},

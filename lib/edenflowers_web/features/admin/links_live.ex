@@ -33,7 +33,8 @@ defmodule EdenflowersWeb.Admin.LinksLive do
        [
          {"Umami",
           "https://stats.edenflowers.fi/teams/92b475f5-bb78-4cfd-945e-369c9d1418ba/websites/99ac34f2-cd64-4ab1-82c3-22b79d564176"},
-         {"Brevo", "https://app.brevo.com"}
+         {"MailerLite", "https://dashboard.mailerlite.com"},
+         {"Scaleway email", "https://console.scaleway.com/transactional-email/domains"}
        ]},
       {~t"Hosting",
        [

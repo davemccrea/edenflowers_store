@@ -1,5 +1,7 @@
 # Privacy-policy data audit
 
+> Since 31 October 2026 Brevo is replaced: Scaleway sends transactional email and MailerLite holds the newsletter, for opted-in subscribers only (TASK-131, TASK-157). Brevo findings below describe the setup at the time of writing.
+
 Scope: current working-tree source and configuration, not a production audit or legal sign-off. No production database, provider dashboard, live cookie inventory, processor contract or mailbox was inspected. TASK-116 is untriaged; this note does not implement it or approve its proposed retention periods.
 
 ## Verified processing

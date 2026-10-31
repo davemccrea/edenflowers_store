@@ -1,5 +1,7 @@
 # Privacy policy: proportionate GDPR/legal review
 
+> Since 31 October 2026 Brevo is replaced: Scaleway sends transactional email and MailerLite holds the newsletter, for opted-in subscribers only (TASK-131, TASK-157). Brevo findings below describe the setup at the time of writing.
+
 ## Scope and conclusion
 
 Reviewed `lib/edenflowers_web/features/marketing/privacy_live.ex`, the existing `privacy-policy-data-audit.md`, relevant account/Brevo sync, session/Stripe loading, delivery-email source, translation entries, domain documentation and ADR-0004. This is a source-based compliance assessment, not Finnish legal advice or a production compliance certification. No provider dashboards/contracts, production data, live browser storage, mailbox or operational deletion evidence were inspected. The existing audit's provider and retention findings are starting points, not independent verification of production settings.

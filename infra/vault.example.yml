@@ -64,8 +64,12 @@ vault_fastmail_api_token: "fmu1-..."
 # Anthropic (https://console.anthropic.com/settings/keys)
 vault_anthropic_api_key: "sk-ant-..."
 
-# Brevo API key (SMTP & API > API keys)
-vault_brevo_api_key: "your_brevo_api_key"
+# Scaleway Transactional Email: the project ID and an API key's secret key
+vault_scaleway_project_id: "your_scaleway_project_id"
+vault_scaleway_secret_key: "your_scaleway_secret_key"
+
+# MailerLite API key (Integrations > API)
+vault_mailerlite_api_key: "your_mailerlite_api_key"
 
 # Web Push VAPID private key for admin order notifications. The matching public
 # key goes in group_vars/all/vars.yml.

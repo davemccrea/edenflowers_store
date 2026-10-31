@@ -1,20 +1,16 @@
 defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
-  # Sets the list ID in the global app env.
+  # Clears the MailerLite API key in the global app env in one test.
   use Edenflowers.DataCase, async: false
 
   import Edenflowers.Actors
   import Generator
 
   alias Edenflowers.Accounts
+  alias Edenflowers.Accounts.Workers.PushNewsletterSubscriber
   alias Edenflowers.Accounts.Workers.SyncNewsletterList
 
-  setup do
-    Application.put_env(:edenflowers, :brevo_newsletter_list_id, "7")
-    on_exit(fn -> Application.delete_env(:edenflowers, :brevo_newsletter_list_id) end)
-  end
-
-  test "adds new subscribers, updates listed ones, removes those who opted out" do
-    {:ok, listed} = Accounts.subscribe_to_newsletter("listed@example.com", "fi", authorize?: false)
+  test "refreshes subscribers' fields and unsubscribes active contacts the site hasn't opted in" do
+    {:ok, listed} = Accounts.subscribe_to_newsletter("Listed@Example.com", "fi", authorize?: false)
     {:ok, _} = Accounts.update_name(listed, "Aino Virtanen", actor: system_actor())
 
     generate(
@@ -35,116 +31,97 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
       )
     )
 
-    {:ok, _} = Accounts.subscribe_to_newsletter("New@Example.com", "sv-FI", authorize?: false)
-    {:ok, _} = Accounts.upsert_user("left@example.com", "Left", authorize?: false)
-
-    stub_brevo([%{"email" => "listed@example.com"}, %{"email" => "left@example.com"}])
-
-    assert :ok = perform_job(SyncNewsletterList, %{})
-
-    assert_received {:created,
-                     %{
-                       "email" => "new@example.com",
-                       "attributes" => %{"LANGUAGE" => "sv-FI"},
-                       "listIds" => [7],
-                       "emailBlacklisted" => false
-                     }}
-
-    assert_received {:created,
-                     %{
-                       "email" => "listed@example.com",
-                       "attributes" => %{
-                         "FIRSTNAME" => "Aino",
-                         "LASTNAME" => "Virtanen",
-                         "LANGUAGE" => "fi",
-                         "SMS" => "+358451505141",
-                         "ORDER_COUNT" => 2,
-                         "LAST_ORDER_DATE" => "2026-05-02"
-                       }
-                     }}
-
-    assert_received {:removed, %{"emails" => ["left@example.com"]}}
-  end
-
-  test "sends customers who never opted in nowhere, even with a phone number" do
     {:ok, customer} = Accounts.upsert_user("customer@example.com", "Matti Meikäläinen", authorize?: false)
+    generate(order(state: :placed, user_id: customer.id, ordered_at: DateTime.utc_now()))
 
-    generate(
-      order(state: :placed, user_id: customer.id, customer_phone_number: "040 1234567", ordered_at: DateTime.utc_now())
-    )
-
-    stub_brevo([])
+    stub_mailerlite(active: ["listed@example.com", "by-hand@example.com"], unsubscribed: [])
 
     assert :ok = perform_job(SyncNewsletterList, %{})
 
-    refute_received {:created, %{"email" => "customer@example.com"}}
+    assert_received {:upserted, %{"email" => "listed@example.com", "fields" => fields} = body}
+    refute Map.has_key?(body, "status")
+
+    assert fields == %{
+             "name" => "Aino",
+             "last_name" => "Virtanen",
+             "phone" => "+358451505141",
+             "language" => "fi",
+             "order_count" => 2,
+             "last_order_date" => "2026-05-02",
+             "total_spent" => 0.0
+           }
+
+    assert_received {:upserted, %{"email" => "by-hand@example.com", "status" => "unsubscribed"}}
+    refute_received {:upserted, %{"email" => "customer@example.com"}}
   end
 
-  test "leaves off an SMS number another contact already has" do
-    {:ok, customer} = Accounts.subscribe_to_newsletter("shared@example.com", "fi", authorize?: false)
-
-    generate(
-      order(state: :placed, user_id: customer.id, customer_phone_number: "040 1234567", ordered_at: DateTime.utc_now())
-    )
-
-    Req.Test.stub(SyncNewsletterList, fn
-      %{method: "GET"} = conn ->
-        Req.Test.json(conn, %{"contacts" => []})
-
-      %{method: "POST", request_path: "/v3/contacts"} = conn ->
-        {:ok, body, conn} = Plug.Conn.read_body(conn)
-        body = Jason.decode!(body)
-        send(self(), {:created, body})
-
-        if Map.has_key?(body["attributes"], "SMS"),
-          do: conn |> Plug.Conn.put_status(400) |> Req.Test.json(%{"code" => "duplicate_parameter"}),
-          else: conn |> Plug.Conn.put_status(201) |> Req.Test.json(%{})
-
-      %{method: "POST"} = conn ->
-        conn |> Plug.Conn.put_status(201) |> Req.Test.json(%{})
-    end)
-
-    assert :ok = perform_job(SyncNewsletterList, %{})
-
-    assert_received {:created, %{"attributes" => %{"SMS" => _}}}
-    assert_received {:created, %{"email" => "shared@example.com", "attributes" => attributes}}
-    refute Map.has_key?(attributes, "SMS")
-  end
-
-  test "opts out users who unsubscribed in Brevo" do
+  test "opts out users who unsubscribed in MailerLite" do
     {:ok, _} = Accounts.subscribe_to_newsletter("gone@example.com", "fi", authorize?: false)
 
-    stub_brevo([%{"email" => "gone@example.com", "emailBlacklisted" => true}])
+    stub_mailerlite(active: [], unsubscribed: ["gone@example.com"])
 
     assert :ok = perform_job(SyncNewsletterList, %{})
 
     {:ok, user} = Accounts.get_user_by_email("gone@example.com", authorize?: false)
     refute user.newsletter_opt_in
-    assert_received {:removed, %{"emails" => ["gone@example.com"]}}
+    refute_received {:upserted, %{"email" => "gone@example.com", "fields" => _}}
   end
 
-  test "does nothing without a list ID" do
-    Application.delete_env(:edenflowers, :brevo_newsletter_list_id)
+  test "an opt-in on the site resubscribes, an opt-out unsubscribes" do
+    {:ok, user} = Accounts.subscribe_to_newsletter("back@example.com", "sv-FI", authorize?: false)
+    stub_mailerlite(active: [], unsubscribed: [])
+
+    assert :ok = perform_job(PushNewsletterSubscriber, %{"email" => "back@example.com"})
+
+    assert_received {:upserted,
+                     %{
+                       "email" => "back@example.com",
+                       "status" => "active",
+                       "resubscribe" => true,
+                       "fields" => %{"language" => "sv-FI"}
+                     }}
+
+    {:ok, _} = Accounts.update_newsletter_preference(user, false, "sv-FI", actor: user)
+
+    assert :ok = perform_job(PushNewsletterSubscriber, %{"email" => "back@example.com"})
+
+    assert_received {:upserted, %{"email" => "back@example.com", "status" => "unsubscribed"} = body}
+    refute Map.has_key?(body, "fields")
+  end
+
+  test "queues a push only when the opt-in changes" do
+    {:ok, _} = Accounts.subscribe_to_newsletter("footer@example.com", "fi", authorize?: false)
+    assert_enqueued worker: PushNewsletterSubscriber, args: %{"email" => "footer@example.com"}
+
+    {:ok, user} = Accounts.upsert_user("toggle@example.com", "Aino", authorize?: false)
+    {:ok, user} = Accounts.update_name(user, "Aino Virtanen", actor: user)
+    {:ok, user} = Accounts.update_newsletter_preference(user, false, "fi", actor: user)
+    refute_enqueued worker: PushNewsletterSubscriber, args: %{"email" => "toggle@example.com"}
+
+    {:ok, _} = Accounts.update_newsletter_preference(user, true, "fi", actor: user)
+    assert_enqueued worker: PushNewsletterSubscriber, args: %{"email" => "toggle@example.com"}
+  end
+
+  test "does nothing without an API key" do
+    Application.delete_env(:edenflowers, :mailerlite_api_key)
+    on_exit(fn -> Application.put_env(:edenflowers, :mailerlite_api_key, "test-mailerlite-key") end)
 
     assert :ok = perform_job(SyncNewsletterList, %{})
+    assert :ok = perform_job(PushNewsletterSubscriber, %{"email" => "anyone@example.com"})
   end
 
-  defp stub_brevo(listed_contacts) do
-    Req.Test.stub(SyncNewsletterList, fn
-      %{method: "GET", request_path: "/v3/contacts/lists/7/contacts"} = conn ->
-        Req.Test.json(conn, %{"contacts" => listed_contacts})
+  defp stub_mailerlite(subscribers) do
+    Req.Test.stub(Edenflowers.Accounts.MailerLite, fn
+      %{method: "GET", request_path: "/api/subscribers"} = conn ->
+        conn = Plug.Conn.fetch_query_params(conn)
+        status = String.to_existing_atom(conn.query_params["filter"]["status"])
+        data = Enum.map(Keyword.fetch!(subscribers, status), &%{"email" => &1})
+        Req.Test.json(conn, %{"data" => data, "meta" => %{"next_cursor" => nil}})
 
-      %{method: "POST", request_path: "/v3/contacts"} = conn ->
-        reply(conn, :created, 201)
-
-      %{method: "POST", request_path: "/v3/contacts/lists/7/contacts/remove"} = conn ->
-        reply(conn, :removed, 201)
+      %{method: "POST", request_path: "/api/subscribers"} = conn ->
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
+        send(self(), {:upserted, Jason.decode!(body)})
+        conn |> Plug.Conn.put_status(200) |> Req.Test.json(%{})
     end)
-  end
-
-  defp reply(conn, tag, status) do
-    {:ok, body, conn} = Plug.Conn.read_body(conn)
-    send(self(), {tag, Jason.decode!(body)})
-    conn |> Plug.Conn.put_status(status) |> Req.Test.json(%{})
   end
 end

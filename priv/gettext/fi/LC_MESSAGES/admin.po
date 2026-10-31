@@ -3788,12 +3788,12 @@ msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:236
 #: lib/edenflowers_web/features/admin/links_live.ex:16
-#: lib/edenflowers_web/features/admin/links_live.ex:63
+#: lib/edenflowers_web/features/admin/links_live.ex:64
 #, elixir-autogen, elixir-format
 msgid "Links"
 msgstr "Linkit"
 
-#: lib/edenflowers_web/features/admin/links_live.ex:46
+#: lib/edenflowers_web/features/admin/links_live.ex:47
 #, elixir-autogen, elixir-format
 msgid "APIs"
 msgstr "Rajapinnat"
@@ -3803,7 +3803,7 @@ msgstr "Rajapinnat"
 msgid "Email and marketing"
 msgstr "Sähköposti ja markkinointi"
 
-#: lib/edenflowers_web/features/admin/links_live.ex:38
+#: lib/edenflowers_web/features/admin/links_live.ex:39
 #, elixir-autogen, elixir-format
 msgid "Hosting"
 msgstr "Ylläpito"

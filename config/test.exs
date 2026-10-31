@@ -65,8 +65,8 @@ config :edenflowers, :papra_req_options, plug: {Req.Test, Edenflowers.External.P
 config :edenflowers, :fastmail_api_token, "test-fastmail-token"
 config :edenflowers, :fastmail_req_options, plug: {Req.Test, Edenflowers.External.FastmailAPI}, retry: false
 
-config :edenflowers, :brevo_api_key, "test-brevo-key"
-config :edenflowers, :brevo_req_options, plug: {Req.Test, Edenflowers.Accounts.Workers.SyncNewsletterList}, retry: false
+config :edenflowers, :mailerlite_api_key, "test-mailerlite-key"
+config :edenflowers, :mailerlite_req_options, plug: {Req.Test, Edenflowers.Accounts.MailerLite}, retry: false
 
 # Push services are stubbed per test with Req.Test.
 config :edenflowers, :web_push_req_options, plug: {Req.Test, Edenflowers.WebPush}

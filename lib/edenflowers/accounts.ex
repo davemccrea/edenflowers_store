@@ -30,7 +30,7 @@ defmodule Edenflowers.Accounts do
       define :search_customers, action: :search, args: [:term]
       define :get_user_by_email, action: :get_by_email, args: [:email]
       define :upsert_user, action: :upsert, args: [:email, :name]
-      define :list_brevo_contacts, action: :brevo_contacts
+      define :list_newsletter_subscribers, action: :newsletter_subscribers
       define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email, :locale]
       define :update_name, action: :update, args: [:name]
       define :request_email_change, action: :request_email_change, args: [:email]

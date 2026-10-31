@@ -53,6 +53,7 @@ Optional suggestions may be rejected without changing usable copy.
 | R03 | fi | Accountant + native editor: VAT terminology. |
 | R04 | fi | Developer + native editor: general versus home-only delivery labels. |
 | T19 | sv, fi | Home hero subtitle `Bouquets made fresh on delivery day[, from %{price}].` (storefront, no context): AI-drafted `Färska buketter gjorda på leveransdagen` / `Tuoreet kimput tehtyinä toimituspäivänä`, 29 Oct 2026; Jennie (sv meaning) and native fi review remain. |
+| T20 | sv, fi | Privacy policy processors (storefront, no context) `Scaleway sends our emails, such as sign-in codes and order confirmations.` and `MailerLite sends the newsletter. It stores newsletter subscribers' contact details, language and purchase statistics, and nobody else's.`, replacing the Brevo line, plus `Updated 31 October 2026.`: AI-drafted from the reviewed Brevo wording, 31 Oct 2026; legal meaning (Jennie) and native sv/fi review remain. |
 
 ## AI SEO copy follow-up — 28 October 2026
 

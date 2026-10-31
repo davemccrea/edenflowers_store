@@ -33,13 +33,14 @@ services:
       # Releases before v1.12.0 read this name; keep it so `just rollback` to them still boots.
       ANTHROPIC_API_KEY: "{{ anthropic_api_key }}"
       EDENFLOWERS_ANTHROPIC_API_KEY: "{{ anthropic_api_key }}"
-      BREVO_API_KEY: "{{ brevo_api_key }}"
+      SCALEWAY_PROJECT_ID: "{{ scaleway_project_id }}"
+      SCALEWAY_SECRET_KEY: "{{ scaleway_secret_key }}"
+      MAILERLITE_API_KEY: "{{ mailerlite_api_key }}"
       MAILER_FROM_NAME: "{{ mailer_from_name }}"
       MAILER_FROM_EMAIL: "{{ mailer_from_email }}"
       UPLOADS_DIR: /app/uploads
       ERROR_ALERT_EMAIL: "{{ error_alert_email }}"
       SHOP_NOTICE_EMAIL: "{{ shop_notice_email }}"
-      BREVO_NEWSLETTER_LIST_ID: "{{ brevo_newsletter_list_id }}"
       VAPID_PUBLIC_KEY: "{{ vapid_public_key }}"
       VAPID_PRIVATE_KEY: "{{ vapid_private_key }}"
 {% if umami_website_id %}
