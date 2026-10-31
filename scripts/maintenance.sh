@@ -5,27 +5,23 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 source scripts/lib/ui.sh
 
-VARS=infra/group_vars/all/vars.yml
+# Same steps as .github/workflows/maintenance.yml.
+APP_DIR=/opt/edenflowers_store
 
-CURRENT="$(sed -nE 's/^maintenance_mode: (true|false)$/\1/p' "$VARS")"
+CURRENT="$(ssh -T edenflowers-production "cat $APP_DIR/maintenance.env 2>/dev/null" | sed -nE 's/^MAINTENANCE_MODE=(true|false)$/\1/p')"
 case "$CURRENT" in
   true) STATE=on; NEXT=false; NEXT_STATE=off ;;
   false) STATE=off; NEXT=true; NEXT_STATE=on ;;
-  *) fail "could not read maintenance_mode from $VARS" ;;
+  *) fail "could not read $APP_DIR/maintenance.env on production, run just provision first" ;;
 esac
 
 section "Maintenance mode"
 printf '  currently: %s%s%s\n\n' "$BOLD" "$STATE" "$RESET"
-read -r -p "  Turn it $NEXT_STATE and provision production? [y/N]: " CONFIRM
+read -r -p "  Turn it $NEXT_STATE and restart the app? [y/N]: " CONFIRM
 [[ "$CONFIRM" =~ ^[Yy]$ ]] || fail "cancelled, nothing changed"
 
-# Use -i.bak + rm so it works on both BSD sed (macOS) and GNU sed (Linux).
-sed -i.bak -E "s/^maintenance_mode: .*/maintenance_mode: $NEXT/" "$VARS"
-rm -f "$VARS.bak"
-git commit --quiet -m "Turn maintenance mode $NEXT_STATE" -- "$VARS"
-ok "committed maintenance_mode: $NEXT"
-
-section "Provisioning production"
-just provision
+section "Restarting the app"
+ssh -T edenflowers-production "cd $APP_DIR && echo MAINTENANCE_MODE=$NEXT > maintenance.env && docker compose up -d app"
+curl -fsS --retry 60 --retry-delay 2 --retry-all-errors https://edenflowers.fi/health > /dev/null
 
 printf '\n%s%s✓ Maintenance mode is %s%s\n' "$BOLD" "$GREEN" "$NEXT_STATE" "$RESET"

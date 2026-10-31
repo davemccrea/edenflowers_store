@@ -25,6 +25,16 @@
     job: "find /opt/{{ project_name }}/images -type f -exec chmod 644 {} \\; 2>/dev/null"
     user: root
 
+# Created once and never overwritten, so provisioning keeps whatever
+# `just maintenance` or the Maintenance workflow last set.
+- name: Create maintenance.env
+  ansible.builtin.copy:
+    content: "MAINTENANCE_MODE=false\n"
+    dest: "/opt/{{ project_name }}/maintenance.env"
+    owner: "{{ user }}"
+    mode: "0644"
+    force: false
+
 - name: Place docker-compose.yml
   ansible.builtin.template:
     src: docker-compose.yml.j2

@@ -116,4 +116,6 @@ It backs up the current database first, so the rollback can be undone the same w
 
 ## Maintenance mode
 
-`maintenance_mode` in `infra/group_vars/all/vars.yml` sets `MAINTENANCE_MODE`, which redirects visitors to `/back-soon`. Signed-in admins, and the sign-in, admin and payment-link paths, are let through.
+`MAINTENANCE_MODE` redirects visitors to `/back-soon`. Signed-in admins, and the sign-in, admin and payment-link paths, are let through.
+
+It lives in `/opt/edenflowers_store/maintenance.env` on the server, not in Ansible, so `just provision` leaves it alone. Switch it with `just maintenance`, or away from this computer with the **Maintenance mode** workflow: in the GitHub app, open the repo's Actions, pick the workflow, tap **Run workflow** and choose on or off. Either restarts the app, which takes a few seconds.
