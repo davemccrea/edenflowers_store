@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
           </div>
 
           <aside
-            class="bg-cream text-cream-content min-w-0 p-7 sm:p-9 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky"
+            class="bg-cream text-cream-content -mx-4 min-w-0 px-4 py-8 sm:mx-0 sm:p-9 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky"
             data-testid="course-booking"
           >
             <p :if={@booked_seats > 0} class="mb-6" data-testid="already-booked">
