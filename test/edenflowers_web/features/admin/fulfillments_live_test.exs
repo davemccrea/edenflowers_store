@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
 
-      assert render_async(view, 500) =~ "3,00 € · 1,50 €/km · free within 5 km · up to 20 km"
+      assert render_async(view, 500) =~ "3,00 € · 1,50 €/km · first 5 km free · up to 20 km"
     end
 
     test "an unknown option goes back to the list", %{conn: conn} do
@@ -276,7 +276,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       product = generate(product(free_delivery: true, draft: false))
       generate(product_variant(product_id: product.id))
       {:ok, _view, html} = live(conn, ~p"/en/product/#{product.id}")
-      assert html =~ "Free delivery within 9 km"
+      assert html =~ "The first 9 km of delivery from Minimossen are free"
     end
 
     test "previews what customers pay with the prices as typed", %{conn: conn, home_delivery: home_delivery} do
@@ -298,6 +298,32 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
       assert %{"fee" => 11.0, "now" => 15.0} = preview_point(view, 8)
       assert %{"fee" => nil} = preview_point(view, 20)
       refute Decimal.equal?(Fulfillment.get_option_by_id!(home_delivery.id, authorize?: false).price_per_km, "1.00")
+    end
+
+    test "previews what a free-delivery bouquet pays, free for the first km", %{
+      conn: conn,
+      home_delivery: home_delivery
+    } do
+      {:ok, _} =
+        Fulfillment.update_pricing(
+          home_delivery,
+          %{base_price: "3.00", price_per_km: "1.50", free_dist_km: 5, max_dist_km: 20},
+          authorize?: false
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments/#{home_delivery.id}")
+
+      assert %{"fee" => 10.5, "free" => +0.0} = preview_point(view, 5)
+      # 3.00 + 1.50 × (8 − 5)
+      assert %{"fee" => 15.0, "free" => 7.5} = preview_point(view, 8)
+      assert has_element?(view, "#fee-explorer [data-value=free]")
+
+      view
+      |> form("#pricing-form", %{"pricing" => %{"free_dist_km" => "0"}})
+      |> render_change()
+
+      assert %{"free" => nil} = preview_point(view, 8)
+      refute has_element?(view, "#fee-explorer [data-value=free]")
     end
 
     test "shows the car and fuel cost of each delivery once they're filled in", %{

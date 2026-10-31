@@ -1,10 +1,10 @@
 ---
 id: TASK-88
 title: Make free delivery cover the first 5 km of any trip
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-21 19:23'
-updated_date: '2026-10-27 13:58'
+updated_date: '2026-10-31 11:11'
 labels:
   - spec
   - customers
@@ -26,11 +26,8 @@ Free-delivery bouquets get the first `free_dist_km` (5 km) of their delivery fre
 - Everyone pays `base_price + price_per_km × distance`.
 - A cart with a free-delivery product pays €0 when distance ≤ `free_dist_km`, full price beyond (`Fee.calculate` sets `in_free_delivery_zone`, `Order.fee_for_cart` waives).
 
-## Open business decision
-What a free-delivery cart pays past 5 km:
-1. **`price_per_km × (distance − 5)`**: the 5 km fee is deducted, no jump at the boundary, matches the words. Recommended.
-2. `base_price + price_per_km × (distance − 5)`: jumps by the base price just past 5 km.
-3. Full price (today): copy-only change, but "first 5 km free" would then be misleading.
+## Decision
+A free-delivery cart past `free_dist_km` pays `base_price + price_per_km × (distance − free_dist_km)`. Only the distance part of the first 5 km is free; the base price still applies to any trip past 5 km, so the fee jumps by the base price just past the boundary (e.g. €3.15 at 5.1 km with base €3, €1.50/km).
 
 Products without free delivery stay at `base + per_km × distance`.
 
@@ -41,9 +38,9 @@ Products without free delivery stay at `base + per_km × distance`.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A free-delivery cart is charged per the chosen rule at 4, 5 and 6 km, covered by a test
-- [ ] #2 Store and admin copy says the first 5 km are free, in en, fi and sv
-- [ ] #3 The delivery admin graph shows the free-delivery fee curve under the chosen rule
+- [x] #1 A free-delivery cart is charged per the chosen rule at 4, 5 and 6 km, covered by a test
+- [x] #2 Store and admin copy says the first 5 km are free, in en, fi and sv
+- [x] #3 The delivery admin graph shows the free-delivery fee curve under the chosen rule
 <!-- AC:END -->
 
 ## Comments
@@ -55,6 +52,15 @@ created: 2026-10-27 13:58
 ---
 
 Launch triage 2026-10-27 with David: after launch, not a blocker (today's 'within 5 km' copy is accurate). Rule decided: option 1, a free-delivery cart past free_dist_km pays price_per_km × (distance − free_dist_km), no base price, so there is no jump at the boundary. Products without free delivery stay at base + per_km × distance.
+
+---
+
+author: @claude
+created: 2026-10-31 10:36
+
+---
+
+Rule changed with David 2026-10-31: option 2 instead of option 1. Past free_dist_km a free-delivery cart pays base_price + price_per_km × (distance − free_dist_km), so the base price is always charged past 5 km.
 
 ---
 <!-- COMMENTS:END -->

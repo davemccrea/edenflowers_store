@@ -548,7 +548,7 @@ seed_placed_order = fn attrs ->
           fulfillment_option_name: option.name,
           fulfillment_method: option.fulfillment_method,
           quoted_fulfillment_fee: fee.fulfillment_fee,
-          in_free_delivery_zone: fee.in_free_delivery_zone,
+          quoted_free_delivery_fee: fee.free_delivery_fee,
           fulfillment_tax_rate: tax_rate.percentage,
           # Snapshot the promotion the same way SnapshotPromotion does at checkout.
           # LineItem.discount keys off order.discount_rate + promotion_id, so both

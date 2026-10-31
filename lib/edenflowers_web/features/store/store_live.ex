@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
         nil
 
       %{free_dist_km: km, base_price: base, price_per_km: per_km} when is_integer(km) and km > 0 ->
-        ~t"Free within #{km = km} km for chosen bouquets, otherwise #{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km."
+        ~t"#{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km. On chosen bouquets the first #{km = km} km are free."
 
       %{base_price: base, price_per_km: per_km} ->
         ~t"#{base = Format.storefront_price(base, locale)} plus #{per_km = Format.storefront_price(per_km, locale)} per km."

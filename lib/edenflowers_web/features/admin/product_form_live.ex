@@ -185,7 +185,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                       :if={@free_dist_km}
                       field={@form[:free_delivery]}
                       type="checkbox"
-                      label={~t"Free delivery within #{km = @free_dist_km} km"}
+                      label={~t"First #{km = @free_dist_km} km of delivery free"}
                     />
                     <.input
                       field={@form[:subscribable]}

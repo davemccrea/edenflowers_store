@@ -167,7 +167,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
               class="text-base-content/80 flex items-center gap-2"
             >
               <.icon name="hero-truck" class="h-5 w-5" />
-              {~t"Free delivery within #{km = @free_dist_km} km of Minimossen"}
+              {~t"The first #{km = @free_dist_km} km of delivery from Minimossen are free"}
             </p>
 
             <.form

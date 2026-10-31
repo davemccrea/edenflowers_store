@@ -86,7 +86,7 @@ msgstr ""
 msgid "Medium"
 msgstr ""
 
-#: lib/edenflowers_web/components/month_grid.ex:105
+#: lib/edenflowers_web/components/month_grid.ex:107
 #, elixir-autogen, elixir-format
 msgid "Next month"
 msgstr ""
@@ -106,7 +106,7 @@ msgstr ""
 msgid "Pot (cm)"
 msgstr ""
 
-#: lib/edenflowers_web/components/month_grid.ex:83
+#: lib/edenflowers_web/components/month_grid.ex:85
 #, elixir-autogen, elixir-format
 msgid "Previous month"
 msgstr ""
@@ -146,7 +146,7 @@ msgstr ""
 msgid "close"
 msgstr ""
 
-#: lib/edenflowers_web/components/month_grid.ex:95
+#: lib/edenflowers_web/components/month_grid.ex:97
 #, elixir-autogen, elixir-format
 msgid "go to current month"
 msgstr ""
@@ -185,5 +185,5 @@ msgstr ""
 
 #: lib/edenflowers_web/components/core_components.ex:1029
 #, elixir-autogen, elixir-format
-msgid "Free delivery within %{km} km of Minimossen on marked bouquets."
+msgid "The first %{km} km of delivery from Minimossen are free on marked bouquets."
 msgstr ""

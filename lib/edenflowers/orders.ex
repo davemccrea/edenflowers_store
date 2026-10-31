@@ -87,7 +87,12 @@ defmodule Edenflowers.Orders do
       # The charged fee for a quote not yet on an order, by the order's own rule.
       define_calculation :charged_fulfillment_fee,
         calculation: :fee_for_cart,
-        args: [:quoted_fulfillment_fee, :in_free_delivery_zone, :free_delivery?, {:optional, :fulfillment_fee_override}]
+        args: [
+          :quoted_fulfillment_fee,
+          :quoted_free_delivery_fee,
+          :free_delivery?,
+          {:optional, :fulfillment_fee_override}
+        ]
     end
 
     resource Edenflowers.Orders.Order.Version

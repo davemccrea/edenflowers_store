@@ -29,7 +29,11 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
              "Within 17 km driving distance of the shop, for 5,00 € plus 1,20 € per km"
            )
 
-    assert has_element?(view, "[aria-labelledby=delivery] details", "delivered free within 4 km")
+    assert has_element?(
+             view,
+             "[aria-labelledby=delivery] details",
+             "On chosen bouquets the first 4 km of delivery are free. Further away you pay 5,00 € plus 1,20 € for each km beyond the first 4."
+           )
   end
 
   test "the cancel answer gives the change deadline and links the terms", %{conn: conn} do
@@ -232,7 +236,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
       assert has_element?(
                view,
                "#delivery-question-0",
-               "1,20 € per km. Some products, like subscriptions, are delivered free within 4 km."
+               "1,20 € per km. On chosen bouquets the first 4 km of delivery are free."
              )
 
       assert has_element?(

@@ -45,12 +45,22 @@ defmodule Edenflowers.Orders.Order do
   postgres do
     repo Edenflowers.Repo
     table "orders"
-    migration_types quoted_fulfillment_fee: :decimal, fulfillment_fee_override: :decimal, kept_amount: :decimal
+
+    migration_types quoted_fulfillment_fee: :decimal,
+                    quoted_free_delivery_fee: :decimal,
+                    fulfillment_fee_override: :decimal,
+                    kept_amount: :decimal
+
     identity_wheres_to_sql unique_cart_per_visitor: "state != 'placed'"
 
     check_constraints do
       check_constraint :quoted_fulfillment_fee, "orders_valid_quoted_fulfillment_fee",
         check: "quoted_fulfillment_fee >= 0 AND quoted_fulfillment_fee = round(quoted_fulfillment_fee, 2)",
+        message: "must be a non-negative amount in whole cents"
+
+      check_constraint :quoted_free_delivery_fee, "orders_valid_quoted_free_delivery_fee",
+        check:
+          "quoted_free_delivery_fee IS NULL OR (quoted_free_delivery_fee >= 0 AND quoted_free_delivery_fee = round(quoted_free_delivery_fee, 2))",
         message: "must be a non-negative amount in whole cents"
 
       check_constraint :fulfillment_fee_override, "orders_valid_fulfillment_fee_override",
@@ -300,10 +310,11 @@ defmodule Edenflowers.Orders.Order do
     # The Subscription's date an Occurrence was made for. Its fulfillment_date
     # is later when that day was closed.
     attribute :subscription_date, :date
-    # The fee for the address and option, before a free-delivery cart waives it;
-    # see the `fulfillment_fee` calculation for what is charged.
+    # The fee for the address and option, and the lower one a cart holding a
+    # free-delivery product pays; see the `fulfillment_fee` calculation for
+    # which is charged.
     attribute :quoted_fulfillment_fee, :decimal, constraints: [min: 0, scale: 2]
-    attribute :in_free_delivery_zone, :boolean
+    attribute :quoted_free_delivery_fee, :decimal, constraints: [min: 0, scale: 2]
     # Set by Jennie on a custom order to charge her own fee, e.g. free delivery
     # for a regular. Nil means the fee is calculated, as at checkout.
     attribute :fulfillment_fee_override, :decimal, constraints: [min: 0, scale: 2]
@@ -460,17 +471,18 @@ defmodule Edenflowers.Orders.Order do
     # Derived from the cart rather than stored, so adding or removing a
     # free-delivery product changes it with nothing to reprice.
     calculate :fulfillment_fee, :decimal, expr(fee_for_cart(free_delivery?: free_delivery?)) do
-      description "The delivery or pickup fee charged, in euros: the quoted fee, or 0 when a free-delivery " <>
-                    "product is in the cart and the address is in the free delivery zone. Jennie's override is " <>
-                    "charged as she set it. Loaded on every read."
+      description "The delivery or pickup fee charged, in euros. A cart holding a free-delivery product pays " <>
+                    "the quoted free-delivery fee, which leaves out the first free_dist_km: nothing up to there, " <>
+                    "base price plus per-km price beyond it past there. Any other cart pays the quoted fee. " <>
+                    "Jennie's override is charged as she set it, whatever the cart. Loaded on every read."
     end
 
     calculate :fee_for_cart,
               :decimal,
               expr(
                 if(
-                  in_free_delivery_zone == true and ^arg(:free_delivery?) and is_nil(fulfillment_fee_override),
-                  do: 0,
+                  ^arg(:free_delivery?) and is_nil(fulfillment_fee_override) and not is_nil(quoted_free_delivery_fee),
+                  do: quoted_free_delivery_fee,
                   else: quoted_fulfillment_fee
                 )
               ) do
@@ -742,7 +754,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     exists :free_delivery?, :line_items do
-      description "Whether any line's product waives the fulfillment fee inside the free delivery zone."
+      description "Whether any line's product gets free delivery, so the cart pays the quoted free-delivery fee."
       filter expr(free_delivery == true)
     end
 

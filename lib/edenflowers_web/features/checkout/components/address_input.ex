@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
   HERE drops flat numbers and stair codes the courier needs.
 
   The parent supplies `address` and `fulfillment_option` and owns the quote
-  (the typed address, resolved address, distance, fee and free-delivery eligibility). A lookup
+  (the typed address, resolved address, distance and fee). A lookup
   sends `{:delivery_quoted, quote}` to the parent, and `nil` when the quote
   no longer describes the typed address. The quote never touches the form.
   """
@@ -168,8 +168,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
            address: socket.assigns.typed,
            geocoded_address: result.geocoded_address,
            distance: result.distance,
-           fulfillment_fee: result.fulfillment_fee,
-           in_free_delivery_zone: result.in_free_delivery_zone
+           fulfillment_fee: result.fulfillment_fee
          }}
       )
 

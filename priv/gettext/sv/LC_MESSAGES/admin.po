@@ -40,7 +40,7 @@ msgstr "%{event} · %{name}"
 msgid "%{label} (%{arrow_symbol})"
 msgstr "%{label} (%{arrow_symbol})"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:651
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:659
 #, elixir-autogen, elixir-format
 msgid "%{price}/km"
 msgstr "%{price}/km"
@@ -161,8 +161,8 @@ msgstr "Administratörens kontomeny"
 msgid "Admin navigation"
 msgstr "Adminnavigation"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:408
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:484
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:413
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:487
 #, elixir-autogen, elixir-format
 msgid "After saving"
 msgstr "Efter sparande"
@@ -292,11 +292,6 @@ msgstr "Bokningsuppgifter"
 msgid "Booking not found."
 msgstr "Bokningen hittades inte."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:308
-#, elixir-autogen, elixir-format
-msgid "Bouquets marked Free delivery are delivered free within this distance."
-msgstr "Buketter märkta Gratis leverans levereras gratis inom detta avstånd."
-
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:56
 #, elixir-autogen, elixir-format
 msgid "Calendar"
@@ -368,13 +363,13 @@ msgstr "Annullerade (%{count})"
 msgid "Cancelled by the customer"
 msgstr "Avbokad av kunden"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:416
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:490
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:425
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:493
 #, elixir-autogen, elixir-format
 msgid "Car cost"
 msgstr "Bilkostnad"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:321
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:323
 #, elixir-autogen, elixir-format
 msgid "Car costs"
 msgstr "Bilkostnader"
@@ -557,7 +552,7 @@ msgstr "Kopiera koden"
 msgid "Copy payment link"
 msgstr "Kopiera betalningslänken"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:500
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:503
 #, elixir-autogen, elixir-format
 msgid "Costs count the drive there and back, but not your time."
 msgstr "Kostnaderna räknar med resan dit och tillbaka, men inte din tid."
@@ -821,7 +816,7 @@ msgstr "Leverans och avhämtning"
 msgid "Delivery and pickup share these days."
 msgstr "Leverans och avhämtning har samma dagar."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:429
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:438
 #, elixir-autogen, elixir-format
 msgid "Delivery fee by distance"
 msgstr "Leveransavgift efter avstånd"
@@ -902,12 +897,12 @@ msgstr "Rabatt (%{code})"
 msgid "Discount (%{name})"
 msgstr "Rabatt (%{name})"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:404
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:409
 #, elixir-autogen, elixir-format
 msgid "Distance"
 msgstr "Avstånd"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:477
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:480
 #, elixir-autogen, elixir-format
 msgid "Distance in km"
 msgstr "Avstånd i km"
@@ -1117,8 +1112,8 @@ msgstr "Kunde inte skicka bekräftelse på leverans eller hämtning: %{error}"
 msgid "Favourite"
 msgstr "Favorit"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:408
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:484
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:413
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:487
 #, elixir-autogen, elixir-format
 msgid "Fee"
 msgstr "Avgift"
@@ -1178,20 +1173,10 @@ msgstr "Till %{name}"
 msgid "For money you’ve already received."
 msgstr "För pengar du redan har tagit emot."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:496
-#, elixir-autogen, elixir-format
-msgid "Free delivery"
-msgstr "Gratis leverans"
-
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:307
 #, elixir-autogen, elixir-format
 msgid "Free delivery distance (km)"
 msgstr "Avstånd för gratis leverans (km)"
-
-#: lib/edenflowers_web/features/admin/product_form_live.ex:188
-#, elixir-autogen, elixir-format
-msgid "Free delivery within %{km} km"
-msgstr "Gratis leverans inom %{km} km"
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:254
 #: lib/edenflowers_web/features/admin/products_live.ex:86
@@ -1199,13 +1184,13 @@ msgstr "Gratis leverans inom %{km} km"
 msgid "From"
 msgstr "Från"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:342
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:344
 #, elixir-autogen, elixir-format
 msgid "Fuel consumption (l/100 km)"
 msgstr "Bränsleförbrukning (l/100 km)"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:420
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:493
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:429
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:496
 #, elixir-autogen, elixir-format
 msgid "Fuel cost"
 msgstr "Bränslekostnad"
@@ -1461,7 +1446,7 @@ msgstr "Behållet"
 msgid "Kept after that (%)"
 msgstr "Behålls efter det (%)"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:327
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:329
 #, elixir-autogen, elixir-format
 msgid "Kilometrikorvaus (€/km)"
 msgstr "Kilometerersättning (€/km)"
@@ -1539,7 +1524,7 @@ msgstr "Markera som levererad"
 msgid "Marketing"
 msgstr "Marknadsföring"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:315
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:317
 #, elixir-autogen, elixir-format
 msgid "Maximum distance (km)"
 msgstr "Maximalt avstånd (km)"
@@ -1751,7 +1736,7 @@ msgstr "Inga storlekar"
 msgid "Nobody was home. The order was left here."
 msgstr "Ingen var hemma. Beställningen lämnades här."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:400
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:405
 #, elixir-autogen, elixir-format
 msgid "Not delivered"
 msgstr "Levereras inte"
@@ -1823,8 +1808,8 @@ msgstr "Inget att göra i morgon"
 msgid "Notifications are blocked. Allow them for Eden Admin in your phone's Settings."
 msgstr "Notiser är blockerade. Tillåt dem för Eden Admin i telefonens inställningar."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:412
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:487
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:417
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:490
 #, elixir-autogen, elixir-format
 msgid "Now"
 msgstr "Nu"
@@ -2121,7 +2106,7 @@ msgstr "Betalning:"
 msgid "Pending"
 msgstr "Väntande"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:335
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:337
 #, elixir-autogen, elixir-format
 msgid "Petrol price (€/l)"
 msgstr "Bensinpris (€/l)"
@@ -2604,7 +2589,7 @@ msgstr "Du ser beställningar för samma dag direkt."
 #: lib/edenflowers_web/features/admin/course_form_live.ex:63
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:126
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:269
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:347
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:349
 #: lib/edenflowers_web/features/admin/order_form_live.ex:91
 #: lib/edenflowers_web/features/admin/product_form_live.ex:98
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:52
@@ -3558,11 +3543,6 @@ msgstr "stängd"
 msgid "e.g. Funeral spray, white roses"
 msgstr "t.ex. Sorgdekoration, vita rosor"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:652
-#, elixir-autogen, elixir-format
-msgid "free within %{km} km"
-msgstr "gratis inom %{km} km"
-
 #: lib/edenflowers/orders/validations/not_referenced_by_current_subscription.ex:14
 #, elixir-autogen, elixir-format
 msgid "is used by a current subscription"
@@ -3584,7 +3564,7 @@ msgstr "passerad"
 msgid "today"
 msgstr "i dag"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:653
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:661
 #, elixir-autogen, elixir-format
 msgid "up to %{km} km"
 msgstr "upp till %{km} km"
@@ -3883,3 +3863,24 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Copy link"
 msgstr ""
+
+#: lib/edenflowers_web/features/admin/product_form_live.ex:188
+#, elixir-autogen, elixir-format
+msgid "First %{km} km of delivery free"
+msgstr "De första %{km} km av leveransen gratis"
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:421
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:499
+#, elixir-autogen, elixir-format
+msgid "Free-delivery bouquets"
+msgstr "Buketter med gratis leverans"
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:660
+#, elixir-autogen, elixir-format
+msgid "first %{km} km free"
+msgstr "första %{km} km gratis"
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:309
+#, elixir-autogen, elixir-format
+msgid "Bouquets with free delivery get this many km free. Further away they pay the base price plus the price per km beyond it."
+msgstr "Buketter med gratis leverans får så här många km gratis. Längre bort betalar de baspriset plus priset per km därefter."
