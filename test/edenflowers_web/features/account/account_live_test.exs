@@ -195,7 +195,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "points a customer with no orders at the shop", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, "#upcoming-heading")
+      assert has_element?(view, "#upcoming")
       assert has_element?(view, ~s|a[href="/en/store"]|, "Visit the shop")
     end
   end

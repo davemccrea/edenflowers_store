@@ -198,8 +198,8 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
 
   defp privacy_section(assigns) do
     ~H"""
-    <section aria-labelledby={"#{@id}-heading"} class="max-w-3xl scroll-mt-8" id={@id}>
-      <h2 id={"#{@id}-heading"} class="font-sans mb-6 text-xl font-semibold leading-snug md:text-2xl">{@title}</h2>
+    <section aria-labelledby={@id} class="max-w-3xl">
+      <h2 id={@id} class="font-sans mb-6 text-xl font-semibold leading-snug md:text-2xl">{@title}</h2>
       <div class="font-sans text-base-content max-w-[60ch] space-y-6 text-base font-normal leading-relaxed">
         {render_slot(@inner_block)}
       </div>

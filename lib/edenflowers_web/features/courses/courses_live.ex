@@ -67,12 +67,11 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
         </section>
 
         <section
-          id="coming-up"
-          class="scroll-anchor-below-header mt-12 sm:mt-16"
-          aria-labelledby="upcoming-heading"
+          class="mt-12 sm:mt-16"
+          aria-labelledby="coming-up"
         >
           <div>
-            <h2 id="upcoming-heading" class="section-title">{~t"Coming up"}</h2>
+            <h2 id="coming-up" class="section-title">{~t"Coming up"}</h2>
 
             <div :if={@courses == []} class="mt-6" data-testid="no-courses">
               <p class="text-base-content/80 max-w-prose">
@@ -95,9 +94,8 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
         </section>
 
         <section
-          id="groups"
-          class="bg-cream text-cream-content scroll-anchor-below-header mt-16 grid sm:mt-24 md:grid-cols-[2fr_3fr]"
-          aria-labelledby="groups-heading"
+          class="bg-cream text-cream-content mt-16 grid sm:mt-24 md:grid-cols-[2fr_3fr]"
+          aria-labelledby="groups"
         >
           <.image
             src="local:///image_5.jpg"
@@ -110,7 +108,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
 
           <div class="flex flex-col items-start gap-6 px-6 py-12 sm:px-10 md:justify-center md:px-12 md:py-16 lg:px-16 lg:py-20">
             <.flower name="flower-30" class="text-cream-content/60 h-12 w-12" />
-            <h2 id="groups-heading" class="section-title text-balance">{~t"Courses for private groups"}</h2>
+            <h2 id="groups" class="section-title text-balance">{~t"Courses for private groups"}</h2>
             <p class="max-w-prose text-lg leading-relaxed">
               {~t"I also run courses for private groups, for example at a workplace Christmas party, your staff wellbeing day or a hen party. We can meet in the café space at Minimossen or at your own premises. In summer, making flower crowns outdoors in a park works well."}
             </p>
@@ -192,7 +190,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
         <p class="text-base-content/70 text-sm" data-testid="course-availability">{availability(@course)}</p>
         <.button
           :if={@course.booking_open?}
-          navigate={~q"/#{language}/courses/#{@course.id}" <> "#book-heading"}
+          navigate={~q"/#{language}/courses/#{@course.id}" <> "#book"}
           variant="primary"
           size="sm"
           class="min-h-11 mt-1"

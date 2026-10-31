@@ -64,19 +64,19 @@ defmodule EdenflowersWeb.Marketing.CondolencesLive do
         </div>
       </section>
 
-      <section id="my-work" class="bg-cream scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
+      <section class="bg-cream not-last:border-b" aria-labelledby="my-work">
         <div class="container py-24">
-          <h2 id="work-heading" class="section-title mb-10">{~t"My work"}</h2>
+          <h2 id="my-work" class="section-title mb-10">{~t"My work"}</h2>
           <.gallery id="condolence-gallery">
             <.gallery_photo :for={photo <- @gallery} photo={photo} class="mb-3 break-inside-avoid" />
           </.gallery>
         </div>
       </section>
 
-      <section id="order" class="bg-forest scroll-anchor-below-header not-last:border-b" aria-labelledby="order-heading">
+      <section class="bg-forest not-last:border-b" aria-labelledby="order">
         <div class="container flex flex-col items-center gap-8 py-24 text-center md:py-32">
           <.flower name="flower-30" class="text-forest-content/70 h-12 w-12" />
-          <h2 id="order-heading" class="section-title text-forest-content">{~t"Order for a funeral"}</h2>
+          <h2 id="order" class="section-title text-forest-content">{~t"Order for a funeral"}</h2>
           <p class="text-forest-content/85 max-w-prose text-lg leading-relaxed">
             {~t"Send me a message or call me and we'll choose the flowers together. If you'd like them delivered, give me the date, time and address of the funeral, the name of the deceased and what you'd like written on the card."}
           </p>

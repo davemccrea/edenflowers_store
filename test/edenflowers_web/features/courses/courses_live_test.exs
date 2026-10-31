@@ -23,13 +23,13 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
       assert has_element?(
                view,
-               ~s|[data-testid=courses-list] a[href="/en/courses/#{open.id}#book-heading"][aria-label="Book a place: Autumn Wreaths"]|,
+               ~s|[data-testid=courses-list] a[href="/en/courses/#{open.id}#book"][aria-label="Book a place: Autumn Wreaths"]|,
                "Book a place"
              )
 
       assert has_element?(view, "[data-testid=courses-list]", "Fully booked")
       assert has_element?(view, ~s|h3 a[href="/en/courses/#{full.id}"]|, "Winter Bouquets")
-      refute has_element?(view, ~s|a[href="/en/courses/#{full.id}#book-heading"]|)
+      refute has_element?(view, ~s|a[href="/en/courses/#{full.id}#book"]|)
     end
   end
 
@@ -41,8 +41,8 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
       assert has_element?(view, "[data-testid=courses-list]", "85")
       assert has_element?(view, ~s|h3 a[href="/en/courses/#{course.id}"]|, "Autumn Wreaths")
-      assert view |> element(~s|a[href="/en/courses/#{course.id}#book-heading"]|) |> render() =~ "Book a place"
-      assert has_element?(view, "#coming-up a[href='#newsletter']")
+      assert view |> element(~s|a[href="/en/courses/#{course.id}#book"]|) |> render() =~ "Book a place"
+      assert has_element?(view, "[aria-labelledby=coming-up] a[href='#newsletter']")
     end
 
     test "a closed course explains its status without a booking link", %{conn: conn} do
@@ -52,8 +52,8 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
       assert has_element?(view, "[data-testid=course-availability]", "Booking closed")
       assert has_element?(view, ~s|h3 a[href="/en/courses/#{course.id}"]|)
-      refute has_element?(view, ~s|a[href="/en/courses/#{course.id}#book-heading"]|)
-      assert has_element?(view, "#coming-up a[href='#newsletter']")
+      refute has_element?(view, ~s|a[href="/en/courses/#{course.id}#book"]|)
+      assert has_element?(view, "[aria-labelledby=coming-up] a[href='#newsletter']")
     end
   end
 
@@ -238,8 +238,8 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
 
       assert has_element?(view, "[data-testid=already-booked]", "You have 2 places on this course.")
-      assert has_element?(view, ~s|[data-testid=already-booked] a[href="/account#courses-heading"]|)
-      assert has_element?(view, "#book-heading", "Book more places")
+      assert has_element?(view, ~s|[data-testid=already-booked] a[href="/account#upcoming"]|)
+      assert has_element?(view, "#book", "Book more places")
     end
 
     test "says nothing about an unpaid booking", %{conn: conn, user: user} do

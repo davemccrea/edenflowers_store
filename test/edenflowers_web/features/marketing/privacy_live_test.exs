@@ -9,25 +9,37 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
   test "identifies the controller and the confirmed hosting arrangement", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/privacy")
 
-    assert has_element?(view, "#controller", "Jennie McCrea, trading as Eden Flowers")
-    assert has_element?(view, "#controller", Business.business_id())
-    assert has_element?(view, "#controller", Business.registered_address())
-    assert has_element?(view, ~s|#controller a[href="mailto:#{Business.email()}"]|)
-    assert has_element?(view, ~s|#controller a[href="tel:#{Business.phone()}"]|)
-    assert has_element?(view, "#sharing", "Hetzner hosts our main customer database in Finland.")
+    assert has_element?(view, "[aria-labelledby=controller]", "Jennie McCrea, trading as Eden Flowers")
+    assert has_element?(view, "[aria-labelledby=controller]", Business.business_id())
+    assert has_element?(view, "[aria-labelledby=controller]", Business.registered_address())
+    assert has_element?(view, ~s|[aria-labelledby=controller] a[href="mailto:#{Business.email()}"]|)
+    assert has_element?(view, ~s|[aria-labelledby=controller] a[href="tel:#{Business.phone()}"]|)
+    assert has_element?(view, "[aria-labelledby=sharing]", "Hetzner hosts our main customer database in Finland.")
   end
 
   test "states accounting requirements without promising unimplemented expiry", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/privacy")
 
-    refute has_element?(view, "#retention", "two weeks")
-    assert has_element?(view, "#retention", "end of the calendar year in which the financial year ended")
-    assert has_element?(view, "#retention", "ten years from the financial-year end")
-    assert has_element?(view, "#retention", "Delivery photos: kept with the order until you ask us to delete them.")
-    assert has_element?(view, "#retention", "we keep until you ask us to delete it")
-    refute has_element?(view, "#retention", "until it is, ask us")
-    refute has_element?(view, "#retention", "Enquiries: twelve months")
-    refute has_element?(view, "#retention", "our accountant decides which")
+    refute has_element?(view, "[aria-labelledby=retention]", "two weeks")
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=retention]",
+             "end of the calendar year in which the financial year ended"
+           )
+
+    assert has_element?(view, "[aria-labelledby=retention]", "ten years from the financial-year end")
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=retention]",
+             "Delivery photos: kept with the order until you ask us to delete them."
+           )
+
+    assert has_element?(view, "[aria-labelledby=retention]", "we keep until you ask us to delete it")
+    refute has_element?(view, "[aria-labelledby=retention]", "until it is, ask us")
+    refute has_element?(view, "[aria-labelledby=retention]", "Enquiries: twelve months")
+    refute has_element?(view, "[aria-labelledby=retention]", "our accountant decides which")
 
     for category <- [
           "Accounting",
@@ -35,35 +47,57 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
           "Error reports",
           "Routine database backups"
         ] do
-      assert has_element?(view, "#retention li", category)
+      assert has_element?(view, "[aria-labelledby=retention] li", category)
     end
   end
 
   test "states its legal bases, who receives data and how to exercise rights", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/privacy")
 
-    assert has_element?(view, "#information", "our contract with you or steps you request before it")
-    assert has_element?(view, "#information", "Accounting records: our legal obligation")
-    assert has_element?(view, "#information", "legitimate interests: fulfilling gifts, documenting delivery")
-    assert has_element?(view, "#information", "Newsletters require your consent.")
-    assert has_element?(view, "#sharing", "limited card details, not full card numbers or security codes")
-    assert has_element?(view, "#sharing", "Our accountant receives monthly purchase and payment records")
-    assert has_element?(view, "#cookies", "We do not use analytics or advertising cookies")
-    assert has_element?(view, "#rights", "Within one month we respond or explain a lawful extension")
-    assert has_element?(view, ~s|#rights a[href="https://tietosuoja.fi/en"]|, "Office of the Data Protection Ombudsman")
+    assert has_element?(view, "[aria-labelledby=information]", "our contract with you or steps you request before it")
+    assert has_element?(view, "[aria-labelledby=information]", "Accounting records: our legal obligation")
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=information]",
+             "legitimate interests: fulfilling gifts, documenting delivery"
+           )
+
+    assert has_element?(view, "[aria-labelledby=information]", "Newsletters require your consent.")
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=sharing]",
+             "limited card details, not full card numbers or security codes"
+           )
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=sharing]",
+             "Our accountant receives monthly purchase and payment records"
+           )
+
+    assert has_element?(view, "[aria-labelledby=cookies]", "We do not use analytics or advertising cookies")
+    assert has_element?(view, "[aria-labelledby=rights]", "Within one month we respond or explain a lawful extension")
+
+    assert has_element?(
+             view,
+             ~s|[aria-labelledby=rights] a[href="https://tietosuoja.fi/en"]|,
+             "Office of the Data Protection Ombudsman"
+           )
   end
 
   test "states every data right and how to exercise it", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/privacy")
 
     for right <- ["access", "correction", "deletion", "restriction", "portability", "Object"] do
-      assert has_element?(view, "#rights", right)
+      assert has_element?(view, "[aria-labelledby=rights]", right)
     end
 
-    assert has_element?(view, "#rights", "verify your identity")
-    assert has_element?(view, "#rights", "withdraw newsletter consent")
-    assert has_element?(view, "#rights", "Earlier lawful processing is unaffected")
-    assert has_element?(view, "#rights", Business.email())
+    assert has_element?(view, "[aria-labelledby=rights]", "verify your identity")
+    assert has_element?(view, "[aria-labelledby=rights]", "withdraw newsletter consent")
+    assert has_element?(view, "[aria-labelledby=rights]", "Earlier lawful processing is unaffected")
+    assert has_element?(view, "[aria-labelledby=rights]", Business.email())
   end
 
   test "is available in each language route with alternate and signup links", %{conn: conn} do
@@ -95,7 +129,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
         ] do
       {:ok, view, _html} = live(conn, "/#{language}/privacy")
 
-      assert has_element?(view, "#rights", contact)
+      assert has_element?(view, "[aria-labelledby=rights]", contact)
     end
   end
 

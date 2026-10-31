@@ -169,7 +169,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
           </.form>
         </.account_section>
 
-        <.account_section id="newsletter" title={~t"Newsletter"}>
+        <.account_section id="newsletter-settings" title={~t"Newsletter"}>
           <.form for={%{}} id={@newsletter_form_id} phx-change="toggle_newsletter" class="mt-6">
             <label class="flex max-w-prose items-start gap-3">
               <input type="hidden" name="newsletter_opt_in" value="false" />
@@ -299,8 +299,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
   defp account_section(assigns) do
     ~H"""
-    <section class={@class} aria-labelledby={"#{@id}-heading"}>
-      <h2 id={"#{@id}-heading"} class="section-title">{@title}</h2>
+    <section class={@class} aria-labelledby={@id}>
+      <h2 id={@id} class="section-title">{@title}</h2>
       {render_slot(@inner_block)}
     </section>
     """

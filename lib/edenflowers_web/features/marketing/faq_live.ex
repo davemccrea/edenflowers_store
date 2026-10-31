@@ -61,11 +61,9 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
             <div id="faq-questions" class="space-y-16 md:space-y-20">
               <section
                 :for={{id, title, questions} <- @sections}
-                aria-labelledby={"#{id}-faq-heading"}
-                class="scroll-mt-8"
-                id={id}
+                aria-labelledby={id}
               >
-                <h2 id={"#{id}-faq-heading"} class="font-sans mb-6 text-xl font-semibold leading-snug md:text-2xl">
+                <h2 id={id} class="font-sans mb-6 text-xl font-semibold leading-snug md:text-2xl">
                   {title}
                 </h2>
                 <div class="max-w-3xl">

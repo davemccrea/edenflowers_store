@@ -85,6 +85,12 @@ body {
   padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 }
 
+/* In-page links point at headings. The shy header hides on the way down, so a
+   heading only needs a little room above it. */
+:where(h1[id], h2[id], h3[id]) {
+  scroll-margin-top: calc(var(--spacing) * 8);
+}
+
 /* daisyUI fixes a button's height, so a label that wraps (a long translation,
    a total on a phone) is squashed into one line's height. One line still fits
    inside --size at every size, so single-line buttons are unchanged. */
