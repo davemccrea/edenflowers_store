@@ -106,6 +106,10 @@ defmodule EdenflowersWeb.Router do
     get "/order/:id/pickup.ics", Checkout.PickupCalendarController, :show
 
     get "/", Marketing.LocalizedRedirectController, :show
+    get "/product/:id", Marketing.LocalizedRedirectController, :product
+    get "/courses", Marketing.LocalizedRedirectController, :courses
+    get "/courses/:id", Marketing.LocalizedRedirectController, :course
+    get "/weddings", Marketing.LocalizedRedirectController, :weddings
   end
 
   scope "/", EdenflowersWeb do
