@@ -18,45 +18,77 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
-    assert has_element?(view, "#delivery", "I deliver within 17 km driving distance of the shop")
-    assert has_element?(view, "#cancellation", "until #{days} days before delivery or pickup")
-    assert has_element?(view, "#seller", EdenflowersWeb.Business.business_id())
+    assert has_element?(view, "[aria-labelledby=delivery]", "I deliver within 17 km driving distance of the shop")
+    assert has_element?(view, "[aria-labelledby=cancellation]", "until #{days} days before delivery or pickup")
+    assert has_element?(view, "[aria-labelledby=seller]", EdenflowersWeb.Business.business_id())
   end
 
   test "related terms are grouped without breaking existing deep links", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
-    assert has_element?(view, "#payment #invoices", "Payment is due as stated on the invoice.")
-    assert has_element?(view, "#quality", "let me know as soon as possible and send a photo")
-    assert has_element?(view, "#quality", "provided care instructions are followed")
-    assert has_element?(view, ~s|#quality a[href="/en/faq#care"]|, "Read the care instructions")
-    refute has_element?(view, "#quality", "within 3 days")
-    refute has_element?(view, "#quality", "within 4 days")
-    refute has_element?(view, "#quality a[href^=mailto]")
+    assert has_element?(
+             view,
+             "[aria-labelledby=payment] [aria-labelledby=invoices]",
+             "Payment is due as stated on the invoice."
+           )
+
+    assert has_element?(view, "[aria-labelledby=quality]", "let me know as soon as possible and send a photo")
+    assert has_element?(view, "[aria-labelledby=quality]", "provided care instructions are followed")
+    assert has_element?(view, ~s|[aria-labelledby=quality] a[href="/en/faq#care"]|, "Read the care instructions")
+    refute has_element?(view, "[aria-labelledby=quality]", "within 3 days")
+    refute has_element?(view, "[aria-labelledby=quality]", "within 4 days")
+    refute has_element?(view, "[aria-labelledby=quality] a[href^=mailto]")
     refute has_element?(view, "#substitution")
     refute has_element?(view, ~s|a[href="#substitution"]|)
-    assert has_element?(view, "#delivery #pickup", "during opening hours, unless we've agreed on another time")
-    assert has_element?(view, "#delivery #delivery-problems", "a locked stairwell")
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=delivery] [aria-labelledby=pickup]",
+             "during opening hours, unless we've agreed on another time"
+           )
+
+    assert has_element?(view, "[aria-labelledby=delivery] [aria-labelledby=delivery-problems]", "a locked stairwell")
 
     days = Subscription.lead_days()
-    assert has_element?(view, "#subscriptions #subscription-billing", "#{days} days before each delivery or pickup")
-    assert has_element?(view, "#subscriptions #failed-payments", "the bouquet still comes")
-    assert has_element?(view, "#subscriptions #failed-payments", "I'll get in touch with payment instructions")
-    refute has_element?(view, "#subscriptions #failed-payments", "Nothing more is sent or charged")
-    refute has_element?(view, "#payment", "before each bouquet")
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=subscriptions] [aria-labelledby=subscription-billing]",
+             "#{days} days before each delivery or pickup"
+           )
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=subscriptions] [aria-labelledby=failed-payments]",
+             "the bouquet still comes"
+           )
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=subscriptions] [aria-labelledby=failed-payments]",
+             "I'll get in touch with payment instructions"
+           )
+
+    refute has_element?(
+             view,
+             "[aria-labelledby=subscriptions] [aria-labelledby=failed-payments]",
+             "Nothing more is sent or charged"
+           )
+
+    refute has_element?(view, "[aria-labelledby=payment]", "before each bouquet")
   end
 
   test "delivery terms keep commitments and leave practical instructions to the FAQ", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
-    assert has_element?(view, "#checkout-payments", "Subscriptions require a card.")
+    assert has_element?(view, "[aria-labelledby=checkout-payments]", "Subscriptions require a card.")
 
-    assert has_element?(view, "#delivery-area", "There are no set delivery times.")
-    refute has_element?(view, "#delivery", "The usual cutoff for same-day orders is midday.")
-    assert has_element?(view, "#unattended-delivery", "photo showing where I've left them")
-    assert has_element?(view, ~s|#online-orders a[href="/account"]|, "Go to your account")
-    assert has_element?(view, "#subscription-billing", "You pay for the first bouquet at checkout.")
-    refute has_element?(view, "#delivery", "The earliest delivery is the next day")
+    assert has_element?(view, "[aria-labelledby=delivery-area]", "There are no set delivery times.")
+    refute has_element?(view, "[aria-labelledby=delivery]", "The usual cutoff for same-day orders is midday.")
+    assert has_element?(view, "[aria-labelledby=unattended-delivery]", "photo showing where I've left them")
+    assert has_element?(view, ~s|[aria-labelledby=online-orders] a[href="/account"]|, "Go to your account")
+    assert has_element?(view, "[aria-labelledby=subscription-billing]", "You pay for the first bouquet at checkout.")
+    refute has_element?(view, "[aria-labelledby=delivery]", "The earliest delivery is the next day")
   end
 
   test "names the payment processor but leaves card-data handling to privacy in every language", %{conn: conn} do
@@ -69,9 +101,9 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
         ] do
       {:ok, view, _html} = live(conn, path)
 
-      assert has_element?(view, "#checkout-payments", statement)
-      assert has_element?(view, ~s|#checkout-payments a[href="#{privacy}#sharing"]|)
-      refute has_element?(view, "#checkout-payments", storage_detail)
+      assert has_element?(view, "[aria-labelledby=checkout-payments]", statement)
+      assert has_element?(view, ~s|[aria-labelledby=checkout-payments] a[href="#{privacy}#sharing"]|)
+      refute has_element?(view, "[aria-labelledby=checkout-payments]", storage_detail)
     end
   end
 
@@ -84,7 +116,7 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
       {:ok, view, html} = live(conn, path)
 
       for section <- ["quality", "online-orders"] do
-        assert has_element?(view, ~s|##{section} a[href="#{contact}"]|)
+        assert has_element?(view, ~s|[aria-labelledby=#{section}] a[href="#{contact}"]|)
       end
 
       email_sections =
@@ -94,7 +126,7 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
         |> LazyHTML.attribute("href")
 
       assert email_sections == ["mailto:#{EdenflowersWeb.Business.email()}"]
-      assert has_element?(view, "#seller a[href^=mailto]")
+      assert has_element?(view, "[aria-labelledby=seller] a[href^=mailto]")
     end
   end
 
@@ -110,8 +142,8 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
       {:ok, view, html} = live(conn, path)
       document = LazyHTML.from_document(html)
 
-      assert has_element?(view, "#quality", sentence)
-      assert document |> LazyHTML.query(~s|#quality a[href="#{contact}"]|) |> LazyHTML.text() == phrase
+      assert has_element?(view, "[aria-labelledby=quality]", sentence)
+      assert document |> LazyHTML.query(~s|[aria-labelledby=quality] a[href="#{contact}"]|) |> LazyHTML.text() == phrase
       refute html =~ "__CONTACT_LINK__"
     end
   end
@@ -119,12 +151,23 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
   test "special booking cancellation terms are separate from online flower orders", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
-    assert has_element?(view, "#cancellation #online-orders > h3", "Online flower orders")
-    assert has_element?(view, ~s|#cancellation a[href="#weddings"]|, "Weddings")
-    assert has_element?(view, ~s|#cancellation a[href="#courses"]|, "Courses")
-    assert has_element?(view, "#wedding-cancellation", "not refunded if you cancel later than four weeks")
-    assert has_element?(view, "#courses", "the cancellation terms on each course's page apply")
-    refute has_element?(view, "#cancellation", "For courses, the cancellation terms")
+    assert has_element?(
+             view,
+             "[aria-labelledby=cancellation] [aria-labelledby=online-orders] > h3",
+             "Online flower orders"
+           )
+
+    assert has_element?(view, ~s|[aria-labelledby=cancellation] a[href="#weddings"]|, "Weddings")
+    assert has_element?(view, ~s|[aria-labelledby=cancellation] a[href="#courses"]|, "Courses")
+
+    assert has_element?(
+             view,
+             "[aria-labelledby=wedding-cancellation]",
+             "not refunded if you cancel later than four weeks"
+           )
+
+    assert has_element?(view, "[aria-labelledby=courses]", "the cancellation terms on each course's page apply")
+    refute has_element?(view, "[aria-labelledby=cancellation]", "For courses, the cancellation terms")
   end
 
   test "service links use localized routes", %{conn: conn} do
@@ -135,10 +178,10 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
         ] do
       {:ok, view, _html} = live(conn, path)
 
-      assert has_element?(view, ~s|#quality a[href="#{faq}#care"]|)
-      assert has_element?(view, ~s|#subscription-changes a[href="/account"]|)
-      refute has_element?(view, ~s|#subscriptions a[href="#{faq}#subscriptions"]|)
-      assert has_element?(view, ~s|#courses a[href="#{courses}"]|)
+      assert has_element?(view, ~s|[aria-labelledby=quality] a[href="#{faq}#care"]|)
+      assert has_element?(view, ~s|[aria-labelledby=subscription-changes] a[href="/account"]|)
+      refute has_element?(view, ~s|[aria-labelledby=subscriptions] a[href="#{faq}#subscriptions"]|)
+      assert has_element?(view, ~s|[aria-labelledby=courses] a[href="#{courses}"]|)
     end
   end
 
@@ -176,18 +219,18 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
         ] do
       {:ok, view, _html} = live(conn, page.path)
 
-      assert has_element?(view, "#quality", page.substitution)
-      assert has_element?(view, "#subscription-changes", page.deadline)
-      assert has_element?(view, "#subscription-changes", page.late_cancellation)
-      assert has_element?(view, ~s|#subscription-changes a[href="/account"]|)
-      assert has_element?(view, "#pickup", page.pickup)
-      assert has_element?(view, "#wedding-payment", page.wedding)
+      assert has_element?(view, "[aria-labelledby=quality]", page.substitution)
+      assert has_element?(view, "[aria-labelledby=subscription-changes]", page.deadline)
+      assert has_element?(view, "[aria-labelledby=subscription-changes]", page.late_cancellation)
+      assert has_element?(view, ~s|[aria-labelledby=subscription-changes] a[href="/account"]|)
+      assert has_element?(view, "[aria-labelledby=pickup]", page.pickup)
+      assert has_element?(view, "[aria-labelledby=wedding-payment]", page.wedding)
     end
   end
 
   test "leaves out the distance when nothing is delivered by distance", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
-    assert has_element?(view, "#delivery", "I deliver on the day you choose at checkout.")
+    assert has_element?(view, "[aria-labelledby=delivery]", "I deliver on the day you choose at checkout.")
   end
 end

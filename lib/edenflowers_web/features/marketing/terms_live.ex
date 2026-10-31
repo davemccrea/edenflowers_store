@@ -247,8 +247,8 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
 
   defp terms_section(assigns) do
     ~H"""
-    <section aria-labelledby={"#{@id}-heading"} class="max-w-3xl scroll-mt-8" id={@id}>
-      <h2 id={"#{@id}-heading"} class="font-sans mb-6 text-xl font-semibold leading-snug md:text-2xl">{@title}</h2>
+    <section aria-labelledby={@id} class="max-w-3xl">
+      <h2 id={@id} class="font-sans mb-6 text-xl font-semibold leading-snug md:text-2xl">{@title}</h2>
       <div class="font-sans text-base-content max-w-[60ch] space-y-6 text-base font-normal leading-relaxed">
         {render_slot(@inner_block)}
       </div>
@@ -262,8 +262,8 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
 
   defp terms_subsection(assigns) do
     ~H"""
-    <section aria-labelledby={"#{@id}-heading"} class="scroll-mt-8" id={@id}>
-      <h3 id={"#{@id}-heading"} class="text-base-content font-sans mb-2 text-base font-semibold leading-snug">{@title}</h3>
+    <section aria-labelledby={@id}>
+      <h3 id={@id} class="text-base-content font-sans mb-2 text-base font-semibold leading-snug">{@title}</h3>
       <div class="space-y-3">{render_slot(@inner_block)}</div>
     </section>
     """

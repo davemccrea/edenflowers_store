@@ -127,7 +127,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
           >
             <p :if={@booked_seats > 0} class="mb-6" data-testid="already-booked">
               {~t"You have #{count = @booked_seats} place(s) on this course."N}
-              <.link navigate={~p"/account#courses-heading"} class="link-underline-hover">
+              <.link navigate={~p"/account#upcoming"} class="link-underline-hover">
                 {~t"See your bookings"}
               </.link>
             </p>
@@ -141,15 +141,15 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
             <section
               :if={@course.booking_open? && (is_nil(@registration) || @editing?)}
-              aria-labelledby="book-heading"
+              aria-labelledby="book"
             >
               <%!-- Focused only when returning from "Change booking", whose button has just gone. --%>
               <div class="mb-6 flex flex-wrap items-baseline justify-between gap-3">
                 <h2
-                  id="book-heading"
+                  id="book"
                   tabindex="-1"
                   phx-mounted={@focus_booking? && JS.focus()}
-                  class="section-title scroll-anchor-below-header focus-visible:outline-none"
+                  class="section-title focus-visible:outline-none"
                 >
                   {if @booked_seats > 0, do: ~t"Book more places", else: ~t"Book a place"}
                 </h2>

@@ -89,9 +89,9 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </div>
       </section>
 
-      <section id="my-work" class="bg-cream scroll-anchor-below-header not-last:border-b" aria-labelledby="work-heading">
+      <section class="bg-cream not-last:border-b" aria-labelledby="my-work">
         <div class="container py-24">
-          <h2 id="work-heading" class="section-title mb-10">{~t"My work"}</h2>
+          <h2 id="my-work" class="section-title mb-10">{~t"My work"}</h2>
           <.gallery id="wedding-gallery">
             <figure :for={photo <- @gallery} class="mb-6 break-inside-avoid">
               <.gallery_photo photo={photo} />
@@ -110,13 +110,12 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       </section>
 
       <section
-        id="prices"
-        class="scroll-anchor-below-header not-last:border-b"
-        aria-labelledby={if @show_prices?, do: "prices-heading", else: "decoration-heading"}
+        class="not-last:border-b"
+        aria-labelledby={if @show_prices?, do: "prices", else: "decoration"}
       >
         <div class="container py-24">
           <div :if={!@show_prices?} class="mb-10">
-            <h2 id="decoration-heading" class="section-title mb-4">{~t"Decoration"}</h2>
+            <h2 id="decoration" class="section-title mb-4">{~t"Decoration"}</h2>
             <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
               {~t"Arches and gates for the ceremony, and arrangements and garlands to dress the venue."}
             </p>
@@ -127,7 +126,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
             class="grid items-start gap-10 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-16 lg:grid-cols-[minmax(0,1fr)_22rem]"
           >
             <div>
-              <h2 id="prices-heading" class="section-title mb-4">{~t"Prices"}</h2>
+              <h2 id="prices" class="section-title mb-4">{~t"Prices"}</h2>
               <p class="text-base-content/80 mb-10 max-w-prose text-lg leading-relaxed">
                 {~t"Every wedding is different, so you'll get a more accurate quote once we've talked through what you need and which flowers you'd like."}
               </p>
@@ -200,11 +199,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
         </div>
       </section>
 
-      <section
-        id="enquire"
-        class="bg-cream text-cream-content scroll-anchor-below-header not-last:border-b"
-        aria-labelledby="enquire-heading"
-      >
+      <section class="bg-cream text-cream-content not-last:border-b" aria-labelledby="enquire">
         <div class="grid lg:grid-cols-[minmax(0,32rem)_1fr]">
           <.image
             src="local:///jennie_99.jpg"
@@ -217,7 +212,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
           <div class="flex flex-col items-start gap-8 px-4 py-20 sm:px-8 md:px-12 lg:justify-center lg:px-20">
             <.flower name="flower-30" class="text-cream-content/70 h-12 w-12" />
-            <h2 id="enquire-heading" class="section-title">{~t"Planning a wedding?"}</h2>
+            <h2 id="enquire" class="section-title">{~t"Planning a wedding?"}</h2>
             <p class="text-cream-content/80 max-w-md text-lg leading-relaxed">
               {~t"Tell me your date, your venue and roughly how many guests you're expecting. If there are photos here you love, mention those too."}
             </p>

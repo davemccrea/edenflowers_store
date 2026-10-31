@@ -48,7 +48,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
       {:ok, view, _html} = live(conn, path)
 
       assert has_element?(view, ~s(section[aria-labelledby="process-heading"]), lead_time)
-      assert has_element?(view, "#enquire", travel)
+      assert has_element?(view, "[aria-labelledby=enquire]", travel)
     end
   end
 
