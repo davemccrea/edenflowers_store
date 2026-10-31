@@ -1,15 +1,18 @@
 defmodule Edenflowers.Accounts.Workers.SyncNewsletterList do
   @moduledoc """
-  Nightly reconciliation of MailerLite with the site's newsletter opt-ins.
-  Opt-in changes reach MailerLite straight away through
+  Nightly reconciliation of MailerLite's Newsletter group with the site's
+  newsletter opt-ins. Opt-in changes reach MailerLite straight away through
   `PushNewsletterSubscriber`; this catches what that can't:
 
     * Subscribers who unsubscribed in MailerLite are opted out on the site.
       A newer opt-in on the site would already have resubscribed them, so an
       unsubscribe seen here is always the latest word.
-    * Active subscribers the site doesn't have as opted in (a push that ran
-      out of retries, a contact added by hand) are marked unsubscribed.
-    * Everyone else gets their fields refreshed, so order stats stay current.
+    * Active Newsletter members the site doesn't have as opted in (a push
+      that ran out of retries, a contact added to the group by hand) are
+      taken out of the group. Their status and other groups stay, so contacts
+      Jennie keeps outside the newsletter are never touched.
+    * Everyone else gets their fields refreshed and is put back in the group
+      if they're missing from it.
 
   Customers who never opted in are not sent to MailerLite at all (privacy
   policy).
@@ -31,7 +34,7 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterList do
   end
 
   defp sync do
-    with {:ok, active} <- MailerLite.list("active"),
+    with {:ok, members} <- MailerLite.newsletter_members(),
          {:ok, unsubscribed} <- MailerLite.list("unsubscribed") do
       unsubscribed = MapSet.new(unsubscribed)
       users = Accounts.list_newsletter_subscribers!(actor: system_actor())
@@ -39,9 +42,9 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterList do
       {left, subscribers} = Enum.split_with(users, &(normalize(&1.email) in unsubscribed))
       Enum.each(left, &Accounts.update_newsletter_preference!(&1, false, &1.locale, actor: system_actor()))
 
-      stray = MapSet.difference(MapSet.new(active), MapSet.new(subscribers, &normalize(&1.email)))
+      stray = Map.drop(members, Enum.map(subscribers, &normalize(&1.email)))
 
-      with :ok <- each(stray, &MailerLite.unsubscribe/1) do
+      with :ok <- each(Map.values(stray), &MailerLite.remove_from_newsletter/1) do
         each(subscribers, &MailerLite.update_fields/1)
       end
     end

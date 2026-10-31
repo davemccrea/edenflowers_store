@@ -1,8 +1,10 @@
 defmodule Edenflowers.Accounts.MailerLite do
   @moduledoc """
-  The MailerLite API calls behind the newsletter. The site owns consent:
-  MailerLite's active subscribers are the newsletter list, and there are no
-  groups.
+  The MailerLite API calls behind the newsletter. The site owns consent and
+  the Newsletter group: its active members are the newsletter list, and
+  campaigns go to that group. MailerLite owns unsubscribes, which are
+  account-wide. Other groups and contacts are Jennie's and the site leaves
+  them alone.
 
   Each subscriber carries name, last_name and phone (E.164, from their latest
   order) plus the custom fields language (en-GB, sv-FI or fi), order_count,
@@ -16,6 +18,7 @@ defmodule Edenflowers.Accounts.MailerLite do
   alias Edenflowers.PhoneNumber
 
   @page_size 1000
+  @newsletter_group_id "202876690108515964"
 
   def configured?, do: Application.get_env(:edenflowers, :mailerlite_api_key) != nil
 
@@ -25,31 +28,59 @@ defmodule Edenflowers.Accounts.MailerLite do
   than anything MailerLite holds.
   """
   def subscribe(user) do
-    upsert(%{email: normalize(user.email), fields: fields(user), status: "active", resubscribe: true})
+    upsert(%{
+      email: normalize(user.email),
+      fields: fields(user),
+      groups: [@newsletter_group_id],
+      status: "active",
+      resubscribe: true
+    })
   end
 
   @doc """
-  Refreshes a subscriber's fields without touching their status, so an
-  unsubscribe, bounce or spam complaint in MailerLite stands. Creates them
-  as active if MailerLite doesn't have them yet.
+  Refreshes a subscriber's fields and puts them in the Newsletter group
+  without touching their status, so an unsubscribe, bounce or spam complaint
+  in MailerLite stands. Creates them as active if MailerLite doesn't have
+  them yet.
   """
-  def update_fields(user), do: upsert(%{email: normalize(user.email), fields: fields(user)})
+  def update_fields(user) do
+    upsert(%{email: normalize(user.email), fields: fields(user), groups: [@newsletter_group_id]})
+  end
 
   def unsubscribe(email), do: upsert(%{email: normalize(email), status: "unsubscribed"})
 
-  @doc "Lowercased addresses of every subscriber with the given status."
-  def list(status), do: list(status, nil, [])
+  @doc "Lowercased addresses of every subscriber in the account with the given status."
+  def list(status) do
+    with {:ok, subscribers} <- list("/subscribers", status, nil, []) do
+      {:ok, Enum.map(subscribers, &normalize(&1["email"]))}
+    end
+  end
 
-  defp list(status, cursor, acc) do
+  @doc "Active members of the Newsletter group, as lowercased address => subscriber id."
+  def newsletter_members do
+    with {:ok, subscribers} <- list("/groups/#{@newsletter_group_id}/subscribers", "active", nil, []) do
+      {:ok, Map.new(subscribers, &{normalize(&1["email"]), &1["id"]})}
+    end
+  end
+
+  @doc "Takes a subscriber out of the Newsletter group, leaving their status and other groups as they are."
+  def remove_from_newsletter(subscriber_id) do
+    case Req.delete(client(), url: "/subscribers/#{subscriber_id}/groups/#{@newsletter_group_id}") do
+      {:ok, %Req.Response{status: status}} when status in 200..299 -> :ok
+      other -> error(other)
+    end
+  end
+
+  defp list(url, status, cursor, acc) do
     params = Enum.reject([{"filter[status]", status}, limit: @page_size, cursor: cursor], &is_nil(elem(&1, 1)))
 
-    case Req.get(client(), url: "/subscribers", params: params) do
+    case Req.get(client(), url: url, params: params) do
       {:ok, %Req.Response{status: 200, body: %{"data" => data, "meta" => meta}}} ->
-        acc = acc ++ Enum.map(data, &normalize(&1["email"]))
+        acc = acc ++ data
 
         case meta["next_cursor"] do
           nil -> {:ok, acc}
-          next -> list(status, next, acc)
+          next -> list(url, status, next, acc)
         end
 
       other ->

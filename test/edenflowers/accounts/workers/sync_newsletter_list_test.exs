@@ -9,7 +9,7 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
   alias Edenflowers.Accounts.Workers.PushNewsletterSubscriber
   alias Edenflowers.Accounts.Workers.SyncNewsletterList
 
-  test "refreshes subscribers' fields and unsubscribes active contacts the site hasn't opted in" do
+  test "refreshes subscribers' fields and takes members the site hasn't opted in out of the Newsletter group" do
     {:ok, listed} = Accounts.subscribe_to_newsletter("Listed@Example.com", "fi", authorize?: false)
     {:ok, _} = Accounts.update_name(listed, "Aino Virtanen", actor: system_actor())
 
@@ -34,11 +34,13 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
     {:ok, customer} = Accounts.upsert_user("customer@example.com", "Matti Meikäläinen", authorize?: false)
     generate(order(state: :placed, user_id: customer.id, ordered_at: DateTime.utc_now()))
 
-    stub_mailerlite(active: ["listed@example.com", "by-hand@example.com"], unsubscribed: [])
+    stub_mailerlite(members: [{"listed@example.com", "1"}, {"by-hand@example.com", "2"}], unsubscribed: [])
 
     assert :ok = perform_job(SyncNewsletterList, %{})
 
-    assert_received {:upserted, %{"email" => "listed@example.com", "fields" => fields} = body}
+    assert_received {:upserted,
+                     %{"email" => "listed@example.com", "fields" => fields, "groups" => [_newsletter]} = body}
+
     refute Map.has_key?(body, "status")
 
     assert fields == %{
@@ -51,14 +53,15 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
              "total_spent" => 0.0
            }
 
-    assert_received {:upserted, %{"email" => "by-hand@example.com", "status" => "unsubscribed"}}
+    assert_received {:removed_from_newsletter, "2"}
+    refute_received {:upserted, %{"email" => "by-hand@example.com"}}
     refute_received {:upserted, %{"email" => "customer@example.com"}}
   end
 
   test "opts out users who unsubscribed in MailerLite" do
     {:ok, _} = Accounts.subscribe_to_newsletter("gone@example.com", "fi", authorize?: false)
 
-    stub_mailerlite(active: [], unsubscribed: ["gone@example.com"])
+    stub_mailerlite(members: [], unsubscribed: ["gone@example.com"])
 
     assert :ok = perform_job(SyncNewsletterList, %{})
 
@@ -69,7 +72,7 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
 
   test "an opt-in on the site resubscribes, an opt-out unsubscribes" do
     {:ok, user} = Accounts.subscribe_to_newsletter("back@example.com", "sv-FI", authorize?: false)
-    stub_mailerlite(active: [], unsubscribed: [])
+    stub_mailerlite(members: [], unsubscribed: [])
 
     assert :ok = perform_job(PushNewsletterSubscriber, %{"email" => "back@example.com"})
 
@@ -78,6 +81,7 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
                        "email" => "back@example.com",
                        "status" => "active",
                        "resubscribe" => true,
+                       "groups" => [_newsletter],
                        "fields" => %{"language" => "sv-FI"}
                      }}
 
@@ -110,13 +114,23 @@ defmodule Edenflowers.Accounts.Workers.SyncNewsletterListTest do
     assert :ok = perform_job(PushNewsletterSubscriber, %{"email" => "anyone@example.com"})
   end
 
-  defp stub_mailerlite(subscribers) do
+  defp stub_mailerlite(members: members, unsubscribed: unsubscribed) do
     Req.Test.stub(Edenflowers.Accounts.MailerLite, fn
-      %{method: "GET", request_path: "/api/subscribers"} = conn ->
+      %{method: "GET", path_info: ["api", "subscribers"]} = conn ->
         conn = Plug.Conn.fetch_query_params(conn)
-        status = String.to_existing_atom(conn.query_params["filter"]["status"])
-        data = Enum.map(Keyword.fetch!(subscribers, status), &%{"email" => &1})
+        assert conn.query_params["filter"]["status"] == "unsubscribed"
+        data = Enum.map(unsubscribed, &%{"email" => &1})
         Req.Test.json(conn, %{"data" => data, "meta" => %{"next_cursor" => nil}})
+
+      %{method: "GET", path_info: ["api", "groups", _group, "subscribers"]} = conn ->
+        conn = Plug.Conn.fetch_query_params(conn)
+        assert conn.query_params["filter"]["status"] == "active"
+        data = Enum.map(members, fn {email, id} -> %{"email" => email, "id" => id} end)
+        Req.Test.json(conn, %{"data" => data, "meta" => %{"next_cursor" => nil}})
+
+      %{method: "DELETE", path_info: ["api", "subscribers", id, "groups", _group]} = conn ->
+        send(self(), {:removed_from_newsletter, id})
+        conn |> Plug.Conn.put_status(204) |> Req.Test.text("")
 
       %{method: "POST", request_path: "/api/subscribers"} = conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)

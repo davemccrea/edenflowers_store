@@ -40,7 +40,7 @@ Transactional email (sign-in codes, order, payment and course emails) goes throu
 
 Scaleway: the "Eden Flowers" project is on the pay-as-you-go `essential` plan (300 emails a month free) with `edenflowers.fi` verified in fr-par. The app sends with an API key of the IAM application `edenflowers-mailer`, whose only policy is `TransactionalEmailEmailApiCreate` on that project, so the key can send email and nothing else. Its secret key and the project ID are `vault_scaleway_secret_key` and `vault_scaleway_project_id`. DNS lives in Cloudflare: the DKIM TXT record `<project id>._domainkey`, and `include:_spf.tem.scaleway.com` in the SPF record. Don't add the `blackhole.tem.scaleway.com` MX record Scaleway suggests: the domain's mail goes to Fastmail.
 
-MailerLite: `vault_mailerlite_api_key`. The newsletter workers expect the custom fields `language` (text), `order_count` and `total_spent` (number) and `last_order_date` (date); `name`, `last_name` and `phone` are MailerLite defaults. SPF includes `_spf.mlsend.com`. How the site and MailerLite stay in step is in `Edenflowers.Accounts.Workers.SyncNewsletterList`.
+MailerLite: `vault_mailerlite_api_key`. The newsletter workers expect the custom fields `language` (text), `order_count` and `total_spent` (number) and `last_order_date` (date); `name`, `last_name` and `phone` are MailerLite defaults. The site owns the MailerLite group Newsletter (id hardcoded in `Edenflowers.Accounts.MailerLite`); send newsletters to that group, not to all active subscribers. SPF includes `_spf.mlsend.com`. How the site and MailerLite stay in step is in `Edenflowers.Accounts.Workers.SyncNewsletterList`.
 
 ## Off-site database and photo backups
 
