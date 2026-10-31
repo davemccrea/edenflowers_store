@@ -82,6 +82,11 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               <.icon name="hero-envelope" class="h-4 w-4" />
               {~t"Email everyone"}
             </.button>
+            <.copy_link_button
+              :if={!@past?}
+              id="copy-course-link"
+              path={~p"/courses/#{@course.id}"}
+            />
             <.button navigate={~p"/admin/courses/#{@course.id}/edit"} variant="secondary" size="sm">
               <.icon name="hero-pencil-square" class="h-4 w-4" />
               {~t"Edit course"}

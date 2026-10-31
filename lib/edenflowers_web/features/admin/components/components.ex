@@ -177,6 +177,34 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :id, :string, required: true
+  attr :path, :string, required: true, doc: "the shop page without a language, e.g. /product/:id"
+
+  @doc """
+  Copies a shop page's full URL, e.g. to paste as an Umami link's destination.
+  The path has no language, so each visitor lands on the page in their own.
+  """
+  def copy_link_button(assigns) do
+    ~H"""
+    <input type="hidden" id={"#{@id}-url"} value={EdenflowersWeb.Endpoint.url() <> @path} />
+    <.button
+      id={@id}
+      type="button"
+      phx-click={JS.dispatch("edenflowers:copy", to: "##{@id}-url", detail: %{trigger: "##{@id}"})}
+      variant="secondary"
+      size="sm"
+      class="group max-md:btn-square"
+    >
+      <.icon name="hero-link" class="h-4 w-4 group-data-copied:hidden" />
+      <.icon name="hero-check" class="text-success hidden h-4 w-4 group-data-copied:inline-block" />
+      <span class="max-md:sr-only">{~t"Copy link"}</span>
+      <span class="sr-only" aria-live="polite">
+        <span class="hidden group-data-copied:inline">{~t"Copied"}</span>
+      </span>
+    </.button>
+    """
+  end
+
   attr :recipient_name, :string, default: nil
 
   @doc "Marks a gift order, naming who it's for when the customer said."

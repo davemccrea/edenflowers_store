@@ -50,6 +50,15 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
     assert has_element?(view, ~s|a[href="/admin/courses/#{course.id}/edit"]|, "Edit course")
   end
 
+  test "copy link copies the course's full shop URL", %{conn: conn} do
+    course = generate(course())
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+
+    url = EdenflowersWeb.Endpoint.url() <> "/courses/#{course.id}"
+    assert has_element?(view, ~s|#copy-course-link-url[value="#{url}"]|)
+  end
+
   test "an unknown course goes back to the list", %{conn: conn} do
     assert {:error, {:live_redirect, %{to: "/admin/courses", flash: %{"error" => "Course not found."}}}} =
              live(conn, ~p"/admin/courses/#{Ecto.UUID.generate()}")
