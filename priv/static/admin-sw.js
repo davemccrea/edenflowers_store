@@ -24,7 +24,7 @@ const launchScreen = `<!DOCTYPE html>
 <style>
   html, body { height: 100%; margin: 0; background: oklch(99% 0.004 75); }
   body { display: grid; place-items: center; }
-  svg { width: 160px; }
+  svg { width: min(55vw, 280px); }
 </style>
 </head>
 <body>
