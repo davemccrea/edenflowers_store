@@ -1,10 +1,10 @@
 ---
 id: TASK-147
 title: Self-host Umami for cookieless site analytics
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-10-30 09:38'
-updated_date: '2026-10-30 21:16'
+updated_date: '2026-10-31 10:17'
 labels:
   - spec
   - admin

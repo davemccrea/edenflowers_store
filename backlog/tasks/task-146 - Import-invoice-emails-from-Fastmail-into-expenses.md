@@ -1,10 +1,10 @@
 ---
 id: TASK-146
 title: Import invoice emails from Fastmail into expenses
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-30 09:13'
-updated_date: '2026-10-30 10:11'
+updated_date: '2026-10-31 10:22'
 labels:
   - spec
   - admin
@@ -35,7 +35,7 @@ A Fastmail filter moves invoice emails (Hetzner first) into `Fakturor`; any invo
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 An invoice email moved into the Fastmail folder becomes an expense in admin without manual Papra uploads
+- [x] #1 An invoice email moved into the Fastmail folder becomes an expense in admin without manual Papra uploads
 - [x] #2 The same email is never imported twice, including after a failed or retried job
 - [x] #3 Emails without a PDF attachment are skipped and left in the folder for Jennie to handle
 - [x] #4 A failing mailbox login or Papra upload surfaces through the app's existing error alerts

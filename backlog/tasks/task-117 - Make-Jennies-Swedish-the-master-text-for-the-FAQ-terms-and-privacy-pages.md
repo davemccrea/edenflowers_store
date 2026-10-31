@@ -1,10 +1,10 @@
 ---
 id: TASK-117
 title: 'Make Jennie''s Swedish the master text for the FAQ, terms and privacy pages'
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-24 19:28'
-updated_date: '2026-10-27 13:58'
+updated_date: '2026-10-31 10:22'
 labels:
   - spec
   - customers
@@ -33,8 +33,8 @@ Decided in grilling (2026-10-24):
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Jennie has corrected the Swedish on all three pages
-- [ ] #2 English and Finnish say the same as her Swedish, and no fuzzy entries are left
+- [x] #1 Jennie has corrected the Swedish on all three pages
+- [x] #2 English and Finnish say the same as her Swedish, and no fuzzy entries are left
 <!-- AC:END -->
 
 ## Comments
