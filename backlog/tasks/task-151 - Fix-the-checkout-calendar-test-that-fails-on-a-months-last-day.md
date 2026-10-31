@@ -1,10 +1,10 @@
 ---
 id: TASK-151
 title: Fix the checkout calendar test that fails on a month's last day
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-10-31T09:45:00Z'
-updated_date: '2026-10-31T09:45:00Z'
+updated_date: '2026-10-31 10:21'
 labels:
   - spec
   - developers
@@ -27,6 +27,6 @@ Proposed fix (tried in the closed PR #312, never run): when tomorrow is in next 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The test fails if the day button it checks is missing, rather than passing vacuously
-- [ ] #2 The test passes on the last day of a month as well as on any other day
+- [x] #1 The test fails if the day button it checks is missing, rather than passing vacuously
+- [x] #2 The test passes on the last day of a month as well as on any other day
 <!-- AC:END -->
