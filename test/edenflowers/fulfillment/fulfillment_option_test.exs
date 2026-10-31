@@ -116,32 +116,61 @@ defmodule Edenflowers.Fulfillment.FulfillmentOptionTest do
       [option: option]
     end
 
-    test "calculates fixed pricing", %{tax_rate: tax_rate} do
-      option = generate(fulfillment_option(tax_rate_id: tax_rate.id, rate_type: :fixed, base_price: 0))
+    test "a fixed price is the same for every cart", %{tax_rate: tax_rate} do
+      option = generate(fulfillment_option(tax_rate_id: tax_rate.id, rate_type: :fixed, base_price: "3.00"))
 
-      assert %{error: nil, fulfillment_fee: Decimal.new("0"), in_free_delivery_zone: false} ==
+      assert %{error: nil, fulfillment_fee: Decimal.new("3.00"), free_delivery_fee: Decimal.new("3.00")} ==
                Fulfillment.Fee.calculate(option, 0)
     end
 
     test "charges the base price plus every km from the shop", %{option: option} do
-      assert %{error: nil, fulfillment_fee: Decimal.new("4.50"), in_free_delivery_zone: true} ==
-               Fulfillment.Fee.calculate(option, 0)
-
-      assert %{error: nil, fulfillment_fee: Decimal.new("16.10"), in_free_delivery_zone: false} ==
-               Fulfillment.Fee.calculate(option, 7250)
+      assert {"4.50", _} = fees(option, 0)
+      # 4.50 + 1.60 × 7.25
+      assert {"16.10", _} = fees(option, 7250)
     end
 
-    test "the free distance only marks the free delivery zone", %{option: option} do
-      assert %{error: nil, fulfillment_fee: Decimal.new("12.50"), in_free_delivery_zone: true} ==
-               Fulfillment.Fee.calculate(option, 5000)
+    test "a free-delivery cart pays nothing for the first 5 km", %{option: option} do
+      assert fees(option, 0) == {"4.50", "0"}
 
-      assert %{error: nil, fulfillment_fee: Decimal.new("12.50"), in_free_delivery_zone: false} ==
-               Fulfillment.Fee.calculate(option, 5001)
+      assert fees(option, 4000) == {"10.90", "0"}
+
+      assert fees(option, 5000) == {"12.50", "0"}
+    end
+
+    test "past 5 km a free-delivery cart pays the base price and only the km beyond 5", %{option: option} do
+      # 4.50 + 1.60 × 0.001 rounds to the base price: it jumps by the base price at the boundary.
+      assert fees(option, 5001) == {"12.50", "4.50"}
+
+      # 4.50 + 1.60 × 1
+      assert fees(option, 6000) == {"14.10", "6.10"}
+
+      # 4.50 + 1.60 × 2.25
+      assert fees(option, 7250) == {"16.10", "8.10"}
+
+      # 4.50 + 1.60 × 14.999 = 28.4984
+      assert fees(option, 19_999) == {"36.50", "28.50"}
+    end
+
+    test "with no free distance a free-delivery cart pays the full fee", %{option: option} do
+      option = %{option | free_dist_km: 0}
+
+      assert fees(option, 0) == {"4.50", "4.50"}
+
+      assert fees(option, 6000) == {"14.10", "14.10"}
     end
 
     test "returns :out_of_delivery_range when distance is beyond the max", %{option: option} do
-      assert %{error: :out_of_delivery_range, fulfillment_fee: nil} = Fulfillment.Fee.calculate(option, 20_000)
+      assert %{error: :out_of_delivery_range, fulfillment_fee: nil, free_delivery_fee: nil} =
+               Fulfillment.Fee.calculate(option, 20_000)
     end
+  end
+
+  # Both fees as strings, so "4.50" and "4.5" don't compare equal.
+  defp fees(option, distance) do
+    %{error: nil, fulfillment_fee: fee, free_delivery_fee: free_delivery_fee} =
+      Fulfillment.Fee.calculate(option, distance)
+
+    {Decimal.to_string(fee), Decimal.to_string(free_delivery_fee)}
   end
 
   describe "calculate_delivery action" do

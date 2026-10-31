@@ -533,7 +533,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       option_id: option_id,
       geocoded_address: result.geocoded_address,
       fee: result.fulfillment_fee,
-      in_free_delivery_zone: result.in_free_delivery_zone,
+      free_delivery_fee: result.free_delivery_fee,
       distance: result.distance
     }
 
@@ -795,7 +795,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               option_id: option.id,
               geocoded_address: order.geocoded_address,
               fee: fee.fulfillment_fee,
-              in_free_delivery_zone: fee.in_free_delivery_zone,
+              free_delivery_fee: fee.free_delivery_fee,
               distance: distance
             }
 
@@ -811,12 +811,12 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp stored_quote(_mode, _order), do: nil
 
   defp charge(%{status: :ok} = quote, free_delivery?) do
-    %{quote | fee: Orders.charged_fulfillment_fee!(quote.fee, quote.in_free_delivery_zone, free_delivery?)}
+    %{quote | fee: Orders.charged_fulfillment_fee!(quote.fee, quote.free_delivery_fee, free_delivery?)}
   end
 
   defp charge(quote, _free_delivery?), do: quote
 
-  defp ok_quote(%{status: :ok} = quote), do: %{fee: quote.fee, in_free_delivery_zone: quote.in_free_delivery_zone}
+  defp ok_quote(%{status: :ok} = quote), do: %{fee: quote.fee, free_delivery_fee: quote.free_delivery_fee}
   defp ok_quote(_quote), do: nil
 
   # The price follows the form, the card and the delivery quote, so after mount

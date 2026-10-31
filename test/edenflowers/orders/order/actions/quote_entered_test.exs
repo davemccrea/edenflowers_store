@@ -79,8 +79,8 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEnteredTest do
 
   # As the form's quote, looked up when the address is typed.
   defp delivery_quote(option, distance_m) do
-    %{fulfillment_fee: fee, in_free_delivery_zone: in_zone} = Fee.calculate(option, distance_m)
-    %{fee: fee, in_free_delivery_zone: in_zone}
+    %{fulfillment_fee: fee, free_delivery_fee: free_delivery_fee} = Fee.calculate(option, distance_m)
+    %{fee: fee, free_delivery_fee: free_delivery_fee}
   end
 
   defp stub_distance(distance_m) do
@@ -135,6 +135,26 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEnteredTest do
 
     assert price.free_delivery?
     assert Decimal.equal?(price.fulfillment_fee, "0")
+    assert_priced_as_saved(price, order)
+  end
+
+  test "past the free distance charges a free-delivery product the base price and the km beyond", ctx do
+    stub_distance(3500)
+    free = generate(product(tax_rate_id: ctx.flowers.id, free_delivery: true))
+    free_variant = generate(product_variant(product_id: free.id, price: "60.00"))
+
+    params =
+      params(ctx, %{
+        "fulfillment_option_id" => ctx.delivery.id,
+        "delivery_address" => "Kyrkvägen 5",
+        "line_items" => [%{"kind" => "catalogue", "product_variant_id" => free_variant.id, "quantity" => "1"}]
+      })
+
+    price = Orders.quote_entered_order!(nil, params, delivery_quote(ctx.delivery, 3500), actor: ctx.admin)
+    {:ok, order} = Orders.place_custom_order(params, actor: ctx.admin)
+
+    # 5.00 + 1.00 × (3.5 − 2), rather than 8.50 for every km
+    assert Decimal.equal?(price.fulfillment_fee, "6.50")
     assert_priced_as_saved(price, order)
   end
 

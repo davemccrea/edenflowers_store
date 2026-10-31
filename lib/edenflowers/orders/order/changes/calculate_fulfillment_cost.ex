@@ -1,7 +1,7 @@
 defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
   @moduledoc """
-  For `submit_delivery`, derives `quoted_fulfillment_fee` (and, for delivery,
-  the geocoded fields) from the chosen `FulfillmentOption`. The
+  For `submit_delivery`, derives `quoted_fulfillment_fee` and
+  `quoted_free_delivery_fee` (and, for delivery, the geocoded fields) from the chosen `FulfillmentOption`. The
   corresponding attributes are not in the action's `accept` list, so this
   change is the only path that can set them — closing the trust-the-client
   gap on delivery cost.
@@ -31,11 +31,14 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
 
     case Fulfillment.get_option_by_id(id, authorize?: false) do
       {:ok, option} ->
-        %{fulfillment_fee: fee} = Fee.calculate(option, 0)
+        fee = Fee.calculate(option, 0)
 
         changeset
         |> Ash.Changeset.force_change_attributes(Map.from_keys(ClearDeliveryFields.fields(), nil))
-        |> Ash.Changeset.force_change_attribute(:quoted_fulfillment_fee, fee)
+        |> Ash.Changeset.force_change_attributes(%{
+          quoted_fulfillment_fee: fee.fulfillment_fee,
+          quoted_free_delivery_fee: fee.free_delivery_fee
+        })
 
       {:error, _} ->
         add_error(changeset, :fulfillment_option_id, :unknown)
@@ -49,10 +52,11 @@ defmodule Edenflowers.Orders.Order.Changes.CalculateFulfillmentCost do
     case Fulfillment.calculate_delivery(delivery_address, id, authorize?: false) do
       {:ok, %{error: nil} = result} ->
         changeset
-        |> Ash.Changeset.force_change_attributes(
-          Map.take(result, [:geocoded_address, :position, :here_id, :distance, :in_free_delivery_zone])
-        )
-        |> Ash.Changeset.force_change_attribute(:quoted_fulfillment_fee, result.fulfillment_fee)
+        |> Ash.Changeset.force_change_attributes(Map.take(result, [:geocoded_address, :position, :here_id, :distance]))
+        |> Ash.Changeset.force_change_attributes(%{
+          quoted_fulfillment_fee: result.fulfillment_fee,
+          quoted_free_delivery_fee: result.free_delivery_fee
+        })
 
       {:ok, %{error: reason}} ->
         add_error(changeset, :delivery_address, reason)

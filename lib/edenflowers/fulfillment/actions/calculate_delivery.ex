@@ -26,7 +26,7 @@ defmodule Edenflowers.Fulfillment.Actions.CalculateDelivery do
              here_id: here_id,
              distance: distance,
              fulfillment_fee: fee.fulfillment_fee,
-             in_free_delivery_zone: fee.in_free_delivery_zone
+             free_delivery_fee: fee.free_delivery_fee
            }}
 
         %{error: reason} ->

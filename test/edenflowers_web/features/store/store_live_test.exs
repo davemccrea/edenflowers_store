@@ -56,6 +56,6 @@ defmodule EdenflowersWeb.Store.StoreLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/en/store")
 
-    assert has_element?(view, "#location-heading ~ dl", "Free within 8 km for chosen bouquets")
+    assert has_element?(view, "#location-heading ~ dl", "On chosen bouquets the first 8 km are free")
   end
 end

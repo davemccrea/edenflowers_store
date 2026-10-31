@@ -166,7 +166,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
   defp page_description(km) do
     gettext_comment("%{km} is the configured free-delivery distance in kilometres; only selected bouquets qualify.")
 
-    ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. Free delivery within #{km = km} km of Minimossen on selected bouquets."
+    ~t"Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. The first #{km = km} km of delivery from Minimossen are free on selected bouquets."
   end
 
   @impl true

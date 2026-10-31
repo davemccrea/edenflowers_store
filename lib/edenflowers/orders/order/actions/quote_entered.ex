@@ -113,9 +113,9 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
 
   defp fulfillment_fee(changeset, delivery_quote, free_delivery?) do
     case quoted_fee(changeset, delivery_quote) do
-      %{quoted_fulfillment_fee: quoted, in_free_delivery_zone: in_zone} when not is_nil(quoted) ->
+      %{quoted_fulfillment_fee: quoted, quoted_free_delivery_fee: quoted_free} when not is_nil(quoted) ->
         override = Ash.Changeset.get_attribute(changeset, :fulfillment_fee_override)
-        Orders.charged_fulfillment_fee!(quoted, in_zone, free_delivery?, override)
+        Orders.charged_fulfillment_fee!(quoted, quoted_free, free_delivery?, override)
 
       _ ->
         nil
@@ -126,7 +126,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
     if PriceFulfillment.reprices?(changeset) do
       repriced_fee(changeset, delivery_quote)
     else
-      Map.take(changeset.data, [:quoted_fulfillment_fee, :in_free_delivery_zone])
+      Map.take(changeset.data, [:quoted_fulfillment_fee, :quoted_free_delivery_fee])
     end
   end
 
@@ -141,7 +141,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
   defp located(nil), do: {:error, :unknown}
 
   defp located(delivery_quote),
-    do: {:ok, %{fulfillment_fee: delivery_quote.fee, in_free_delivery_zone: delivery_quote.in_free_delivery_zone}}
+    do: {:ok, %{fulfillment_fee: delivery_quote.fee, free_delivery_fee: delivery_quote.free_delivery_fee}}
 
   defp sum(rows, key), do: Enum.reduce(rows, Decimal.new(0), &Decimal.add(Map.fetch!(&1, key), &2))
 end

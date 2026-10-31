@@ -182,8 +182,9 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     end
 
     attribute :free_dist_km, :integer do
-      description "Within this many km the fee is waived for an order holding a free-delivery product. Only " <>
-                    "a :dynamic option uses it, and it is required there."
+      description "The first this many km are free for an order holding a free-delivery product: nothing up " <>
+                    "to here, and past it base_price plus price_per_km for each km beyond. Only a :dynamic " <>
+                    "option uses it, and it is required there."
 
       public? true
       constraints min: 0

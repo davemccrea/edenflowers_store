@@ -82,7 +82,7 @@ msgstr "Suuri"
 msgid "Medium"
 msgstr "Keskikokoinen"
 
-#: lib/edenflowers_web/components/month_grid.ex:105
+#: lib/edenflowers_web/components/month_grid.ex:107
 #, elixir-autogen, elixir-format
 msgid "Next month"
 msgstr "Seuraava kuukausi"
@@ -102,7 +102,7 @@ msgstr "Ruukku %{size} cm"
 msgid "Pot (cm)"
 msgstr "Ruukku (cm)"
 
-#: lib/edenflowers_web/components/month_grid.ex:83
+#: lib/edenflowers_web/components/month_grid.ex:85
 #, elixir-autogen, elixir-format
 msgid "Previous month"
 msgstr "Edellinen kuukausi"
@@ -142,7 +142,7 @@ msgstr "klo %{time}"
 msgid "close"
 msgstr "sulje"
 
-#: lib/edenflowers_web/components/month_grid.ex:95
+#: lib/edenflowers_web/components/month_grid.ex:97
 #, elixir-autogen, elixir-format
 msgid "go to current month"
 msgstr "siirry kuluvaan kuukauteen"
@@ -181,5 +181,5 @@ msgstr "Avaa navigointivalikko"
 
 #: lib/edenflowers_web/components/core_components.ex:1029
 #, elixir-autogen, elixir-format
-msgid "Free delivery within %{km} km of Minimossen on marked bouquets."
-msgstr "Ilmainen toimitus %{km} km:n säteellä Minimossenista merkityille kimpuille."
+msgid "The first %{km} km of delivery from Minimossen are free on marked bouquets."
+msgstr "Merkityille kimpuille toimituksen ensimmäiset %{km} km Minimossenista ovat ilmaisia."

@@ -279,8 +279,11 @@ defmodule EdenflowersWeb.Marketing.FaqLive do
       end
 
     free =
-      if km = Edenflowers.Fulfillment.free_dist_km(),
-        do: ~t"Some products, like subscriptions, are delivered free within #{km = km} km."
+      if km = Edenflowers.Fulfillment.free_dist_km() do
+        gettext_comment("%{base} and %{per_km} are the same prices as the sentence before, in euros.")
+
+        ~t"On chosen bouquets the first #{km = km} km of delivery are free. Further away you pay #{base = Format.currency(option.base_price, locale)} plus #{per_km = Format.currency(option.price_per_km, locale)} for each km beyond the first #{km = km}."
+      end
 
     availability =
       ~t"Checkout shows the available delivery and pickup dates for the products you choose. The usual cutoff for same-day orders is midday."

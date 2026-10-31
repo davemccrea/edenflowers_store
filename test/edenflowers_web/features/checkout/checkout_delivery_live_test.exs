@@ -70,8 +70,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
             customer_email: "jane@example.com",
             fulfillment_option_id: delivery_option.id,
             fulfillment_date: first_delivery,
-            quoted_fulfillment_fee: Decimal.new("5.00"),
-            in_free_delivery_zone: false
+            quoted_fulfillment_fee: Decimal.new("5.00")
           )
         )
 

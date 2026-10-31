@@ -40,7 +40,7 @@ msgstr "%{event} · %{name}"
 msgid "%{label} (%{arrow_symbol})"
 msgstr "%{label} (%{arrow_symbol})"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:651
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:659
 #, elixir-autogen, elixir-format
 msgid "%{price}/km"
 msgstr "%{price}/km"
@@ -161,8 +161,8 @@ msgstr "Ylläpitäjän tilivalikko"
 msgid "Admin navigation"
 msgstr "Ylläpidon navigointi"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:408
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:484
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:413
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:487
 #, elixir-autogen, elixir-format
 msgid "After saving"
 msgstr "Tallennuksen jälkeen"
@@ -292,11 +292,6 @@ msgstr "Varauksen tiedot"
 msgid "Booking not found."
 msgstr "Varausta ei löytynyt."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:308
-#, elixir-autogen, elixir-format
-msgid "Bouquets marked Free delivery are delivered free within this distance."
-msgstr "Kimput, joissa on merkintä Ilmainen toimitus, toimitetaan ilmaiseksi tällä etäisyydellä."
-
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:56
 #, elixir-autogen, elixir-format
 msgid "Calendar"
@@ -368,13 +363,13 @@ msgstr "Perutut (%{count})"
 msgid "Cancelled by the customer"
 msgstr "Asiakas perui"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:416
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:490
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:425
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:493
 #, elixir-autogen, elixir-format
 msgid "Car cost"
 msgstr "Autokulut"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:321
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:323
 #, elixir-autogen, elixir-format
 msgid "Car costs"
 msgstr "Autokulut"
@@ -557,7 +552,7 @@ msgstr "Kopioi koodi"
 msgid "Copy payment link"
 msgstr "Kopioi maksulinkki"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:500
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:503
 #, elixir-autogen, elixir-format
 msgid "Costs count the drive there and back, but not your time."
 msgstr "Kuluissa on mukana meno- ja paluumatka, mutta ei työaikaasi."
@@ -821,7 +816,7 @@ msgstr "Toimitus ja nouto"
 msgid "Delivery and pickup share these days."
 msgstr "Kuljetus ja nouto käyttävät samoja päiviä."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:429
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:438
 #, elixir-autogen, elixir-format
 msgid "Delivery fee by distance"
 msgstr "Toimitusmaksu etäisyyden mukaan"
@@ -902,12 +897,12 @@ msgstr "Alennus (%{code})"
 msgid "Discount (%{name})"
 msgstr "Alennus (%{name})"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:404
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:409
 #, elixir-autogen, elixir-format
 msgid "Distance"
 msgstr "Etäisyys"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:477
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:480
 #, elixir-autogen, elixir-format
 msgid "Distance in km"
 msgstr "Etäisyys kilometreinä"
@@ -1117,8 +1112,8 @@ msgstr "Tilauksen toimitus- tai noutovahvistuksen lähettäminen epäonnistui: %
 msgid "Favourite"
 msgstr "Suosikki"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:408
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:484
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:413
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:487
 #, elixir-autogen, elixir-format
 msgid "Fee"
 msgstr "Hinta"
@@ -1178,20 +1173,10 @@ msgstr "Vastaanottaja: %{name}"
 msgid "For money you’ve already received."
 msgstr "Jo vastaanottamillesi maksuille."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:496
-#, elixir-autogen, elixir-format
-msgid "Free delivery"
-msgstr "Ilmainen toimitus"
-
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:307
 #, elixir-autogen, elixir-format
 msgid "Free delivery distance (km)"
 msgstr "Ilmaisen toimituksen etäisyys (km)"
-
-#: lib/edenflowers_web/features/admin/product_form_live.ex:188
-#, elixir-autogen, elixir-format
-msgid "Free delivery within %{km} km"
-msgstr "Ilmainen toimitus %{km} km:n säteellä"
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:254
 #: lib/edenflowers_web/features/admin/products_live.ex:86
@@ -1199,13 +1184,13 @@ msgstr "Ilmainen toimitus %{km} km:n säteellä"
 msgid "From"
 msgstr "Alkaen"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:342
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:344
 #, elixir-autogen, elixir-format
 msgid "Fuel consumption (l/100 km)"
 msgstr "Polttoaineenkulutus (l/100 km)"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:420
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:493
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:429
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:496
 #, elixir-autogen, elixir-format
 msgid "Fuel cost"
 msgstr "Polttoainekulut"
@@ -1461,7 +1446,7 @@ msgstr "Pidätetty"
 msgid "Kept after that (%)"
 msgstr "Pidätetään sen jälkeen (%)"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:327
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:329
 #, elixir-autogen, elixir-format
 msgid "Kilometrikorvaus (€/km)"
 msgstr "Kilometrikorvaus (€/km)"
@@ -1539,7 +1524,7 @@ msgstr "Merkitse toimitetuksi"
 msgid "Marketing"
 msgstr "Markkinointi"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:315
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:317
 #, elixir-autogen, elixir-format
 msgid "Maximum distance (km)"
 msgstr "Enimmäisetäisyys (km)"
@@ -1751,7 +1736,7 @@ msgstr "Ei kokoja"
 msgid "Nobody was home. The order was left here."
 msgstr "Kukaan ei ollut kotona. Tilaus jätettiin tähän."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:400
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:405
 #, elixir-autogen, elixir-format
 msgid "Not delivered"
 msgstr "Ei toimiteta"
@@ -1823,8 +1808,8 @@ msgstr "Huomenna ei valmistettavaa"
 msgid "Notifications are blocked. Allow them for Eden Admin in your phone's Settings."
 msgstr "Ilmoitukset on estetty. Salli ne Eden Adminille puhelimen asetuksista."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:412
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:487
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:417
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:490
 #, elixir-autogen, elixir-format
 msgid "Now"
 msgstr "Nyt"
@@ -2121,7 +2106,7 @@ msgstr "Maksu:"
 msgid "Pending"
 msgstr "Odottaa"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:335
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:337
 #, elixir-autogen, elixir-format
 msgid "Petrol price (€/l)"
 msgstr "Bensiinin hinta (€/l)"
@@ -2604,7 +2589,7 @@ msgstr "Näet saman päivän tilaukset heti."
 #: lib/edenflowers_web/features/admin/course_form_live.ex:63
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:126
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:269
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:347
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:349
 #: lib/edenflowers_web/features/admin/order_form_live.ex:91
 #: lib/edenflowers_web/features/admin/product_form_live.ex:98
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:52
@@ -3558,11 +3543,6 @@ msgstr "suljettu"
 msgid "e.g. Funeral spray, white roses"
 msgstr "esim. Surulaite, valkoiset ruusut"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:652
-#, elixir-autogen, elixir-format
-msgid "free within %{km} km"
-msgstr "ilmainen %{km} km:n säteellä"
-
 #: lib/edenflowers/orders/validations/not_referenced_by_current_subscription.ex:14
 #, elixir-autogen, elixir-format
 msgid "is used by a current subscription"
@@ -3584,7 +3564,7 @@ msgstr "mennyt"
 msgid "today"
 msgstr "tänään"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:653
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:661
 #, elixir-autogen, elixir-format
 msgid "up to %{km} km"
 msgstr "enintään %{km} km"
@@ -3883,3 +3863,24 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Copy link"
 msgstr ""
+
+#: lib/edenflowers_web/features/admin/product_form_live.ex:188
+#, elixir-autogen, elixir-format
+msgid "First %{km} km of delivery free"
+msgstr "Toimituksen ensimmäiset %{km} km ilmaiseksi"
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:421
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:499
+#, elixir-autogen, elixir-format
+msgid "Free-delivery bouquets"
+msgstr "Ilmaisen toimituksen kimput"
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:660
+#, elixir-autogen, elixir-format
+msgid "first %{km} km free"
+msgstr "ensimmäiset %{km} km ilmaiseksi"
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:309
+#, elixir-autogen, elixir-format
+msgid "Bouquets with free delivery get this many km free. Further away they pay the base price plus the price per km beyond it."
+msgstr "Ilmaisen toimituksen kimput saavat näin monta kilometriä ilmaiseksi. Kauempana ne maksavat perushinnan sekä kilometrihinnan tämän etäisyyden jälkeen."

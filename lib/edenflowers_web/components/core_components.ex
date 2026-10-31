@@ -1026,7 +1026,7 @@ defmodule EdenflowersWeb.CoreComponents do
   def free_delivery_note(assigns) do
     ~H"""
     <p class={["text-base-content/65 text-sm", @class]}>
-      {~t"Free delivery within #{km = @free_dist_km} km of Minimossen on marked bouquets."}
+      {~t"The first #{km = @free_dist_km} km of delivery from Minimossen are free on marked bouquets."}
     </p>
     """
   end

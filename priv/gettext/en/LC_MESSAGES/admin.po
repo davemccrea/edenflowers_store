@@ -40,7 +40,7 @@ msgstr ""
 msgid "%{label} (%{arrow_symbol})"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:651
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:659
 #, elixir-autogen, elixir-format
 msgid "%{price}/km"
 msgstr ""
@@ -161,8 +161,8 @@ msgstr "Admin account menu"
 msgid "Admin navigation"
 msgstr "Admin navigation"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:408
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:484
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:413
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:487
 #, elixir-autogen, elixir-format
 msgid "After saving"
 msgstr ""
@@ -292,11 +292,6 @@ msgstr "Booking details"
 msgid "Booking not found."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:308
-#, elixir-autogen, elixir-format
-msgid "Bouquets marked Free delivery are delivered free within this distance."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:56
 #, elixir-autogen, elixir-format
 msgid "Calendar"
@@ -368,13 +363,13 @@ msgstr ""
 msgid "Cancelled by the customer"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:416
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:490
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:425
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:493
 #, elixir-autogen, elixir-format
 msgid "Car cost"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:321
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:323
 #, elixir-autogen, elixir-format
 msgid "Car costs"
 msgstr ""
@@ -557,7 +552,7 @@ msgstr ""
 msgid "Copy payment link"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:500
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:503
 #, elixir-autogen, elixir-format
 msgid "Costs count the drive there and back, but not your time."
 msgstr ""
@@ -821,7 +816,7 @@ msgstr ""
 msgid "Delivery and pickup share these days."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:429
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:438
 #, elixir-autogen, elixir-format
 msgid "Delivery fee by distance"
 msgstr ""
@@ -902,12 +897,12 @@ msgstr "Discount (%{code})"
 msgid "Discount (%{name})"
 msgstr "Discount (%{name})"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:404
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:409
 #, elixir-autogen, elixir-format
 msgid "Distance"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:477
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:480
 #, elixir-autogen, elixir-format
 msgid "Distance in km"
 msgstr ""
@@ -1117,8 +1112,8 @@ msgstr "Failed to send fulfillment email: %{error}"
 msgid "Favourite"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:408
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:484
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:413
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:487
 #, elixir-autogen, elixir-format
 msgid "Fee"
 msgstr ""
@@ -1178,19 +1173,9 @@ msgstr ""
 msgid "For money you’ve already received."
 msgstr "For money you’ve already received."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:496
-#, elixir-autogen, elixir-format
-msgid "Free delivery"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:307
 #, elixir-autogen, elixir-format
 msgid "Free delivery distance (km)"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/product_form_live.ex:188
-#, elixir-autogen, elixir-format
-msgid "Free delivery within %{km} km"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_form_live.ex:254
@@ -1199,13 +1184,13 @@ msgstr ""
 msgid "From"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:342
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:344
 #, elixir-autogen, elixir-format
 msgid "Fuel consumption (l/100 km)"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:420
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:493
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:429
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:496
 #, elixir-autogen, elixir-format
 msgid "Fuel cost"
 msgstr ""
@@ -1461,7 +1446,7 @@ msgstr ""
 msgid "Kept after that (%)"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:327
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:329
 #, elixir-autogen, elixir-format
 msgid "Kilometrikorvaus (€/km)"
 msgstr ""
@@ -1539,7 +1524,7 @@ msgstr ""
 msgid "Marketing"
 msgstr "Marketing"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:315
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:317
 #, elixir-autogen, elixir-format
 msgid "Maximum distance (km)"
 msgstr ""
@@ -1751,7 +1736,7 @@ msgstr ""
 msgid "Nobody was home. The order was left here."
 msgstr "Nobody was home. The order was left here."
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:400
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:405
 #, elixir-autogen, elixir-format
 msgid "Not delivered"
 msgstr ""
@@ -1823,8 +1808,8 @@ msgstr ""
 msgid "Notifications are blocked. Allow them for Eden Admin in your phone's Settings."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:412
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:487
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:417
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:490
 #, elixir-autogen, elixir-format
 msgid "Now"
 msgstr ""
@@ -2121,7 +2106,7 @@ msgstr ""
 msgid "Pending"
 msgstr "Pending"
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:335
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:337
 #, elixir-autogen, elixir-format
 msgid "Petrol price (€/l)"
 msgstr ""
@@ -2604,7 +2589,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/course_form_live.ex:63
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:126
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:269
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:347
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:349
 #: lib/edenflowers_web/features/admin/order_form_live.ex:91
 #: lib/edenflowers_web/features/admin/product_form_live.ex:98
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:52
@@ -3558,11 +3543,6 @@ msgstr ""
 msgid "e.g. Funeral spray, white roses"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:652
-#, elixir-autogen, elixir-format
-msgid "free within %{km} km"
-msgstr ""
-
 #: lib/edenflowers/orders/validations/not_referenced_by_current_subscription.ex:14
 #, elixir-autogen, elixir-format
 msgid "is used by a current subscription"
@@ -3584,7 +3564,7 @@ msgstr ""
 msgid "today"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/fulfillments_live.ex:653
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:661
 #, elixir-autogen, elixir-format
 msgid "up to %{km} km"
 msgstr ""
@@ -3882,4 +3862,25 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/components/components.ex:200
 #, elixir-autogen, elixir-format
 msgid "Copy link"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/product_form_live.ex:188
+#, elixir-autogen, elixir-format
+msgid "First %{km} km of delivery free"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:421
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:499
+#, elixir-autogen, elixir-format
+msgid "Free-delivery bouquets"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:660
+#, elixir-autogen, elixir-format
+msgid "first %{km} km free"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/fulfillments_live.ex:309
+#, elixir-autogen, elixir-format
+msgid "Bouquets with free delivery get this many km free. Further away they pay the base price plus the price per km beyond it."
 msgstr ""

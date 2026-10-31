@@ -103,7 +103,7 @@ defmodule Edenflowers.Orders.Order.Changes.PriceFulfillment do
       {:ok,
        Map.merge(
          Map.from_keys(@geocoded_fields, nil),
-         fee(changeset, %{fulfillment_fee: nil, in_free_delivery_zone: false})
+         fee(changeset, %{fulfillment_fee: nil, free_delivery_fee: nil})
        )}
     else
       {:error, :delivery_address,
@@ -111,9 +111,9 @@ defmodule Edenflowers.Orders.Order.Changes.PriceFulfillment do
     end
   end
 
-  # Jennie's own fee wins over the calculated one.
-  defp fee(changeset, %{fulfillment_fee: calculated, in_free_delivery_zone: in_zone}) do
-    %{quoted_fulfillment_fee: override(changeset) || calculated, in_free_delivery_zone: in_zone}
+  # Jennie's own fee wins over the calculated one, for every cart.
+  defp fee(changeset, %{fulfillment_fee: calculated, free_delivery_fee: free_delivery_fee}) do
+    %{quoted_fulfillment_fee: override(changeset) || calculated, quoted_free_delivery_fee: free_delivery_fee}
   end
 
   defp override(changeset), do: Ash.Changeset.get_attribute(changeset, :fulfillment_fee_override)

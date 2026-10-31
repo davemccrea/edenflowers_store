@@ -305,7 +305,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             type="number"
             min="0"
             label={~t"Free delivery distance (km)"}
-            help={~t"Bouquets marked Free delivery are delivered free within this distance."}
+            help={
+              ~t"Bouquets with free delivery get this many km free. Further away they pay the base price plus the price per km beyond it."
+            }
             class="input w-full tabular-nums"
           />
           <.input
@@ -359,7 +361,10 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     points = preview_points(saved, draft, changed?, max_km)
 
     top_value =
-      points |> Enum.flat_map(&[&1.fee, &1.now, &1.car, &1.fuel]) |> Enum.reject(&is_nil/1) |> Enum.max(fn -> 0 end)
+      points
+      |> Enum.flat_map(&[&1.fee, &1.now, &1.free, &1.car, &1.fuel])
+      |> Enum.reject(&is_nil/1)
+      |> Enum.max(fn -> 0 end)
 
     step = Enum.find([1, 2, 5, 10, 20, 50], 100, &(top_value / &1 <= 5))
     top = max(step, ceil(top_value / step) * step)
@@ -387,7 +392,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         },
         fee_ticks: Enum.to_list(0..top//step),
         km_ticks: Enum.to_list(0..max_km//2),
-        paths: Map.new([:fee, :now, :car, :fuel], &{&1, line_path(points, &1, x, y)})
+        paths: Map.new([:fee, :now, :free, :car, :fuel], &{&1, line_path(points, &1, x, y)})
       )
 
     ~H"""
@@ -412,6 +417,10 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           <dt class="text-base-content/75 text-xs">{~t"Now"}</dt>
           <dd class="text-base-content/70 text-lg" data-value="now"></dd>
         </div>
+        <div :if={@paths.free}>
+          <dt class="text-base-content/75 text-xs">{~t"Free-delivery bouquets"}</dt>
+          <dd class="text-success text-lg" data-value="free"></dd>
+        </div>
         <div :if={@paths.car}>
           <dt class="text-base-content/75 text-xs">{~t"Car cost"}</dt>
           <dd class="text-base-content/70 text-lg" data-value="car"></dd>
@@ -428,14 +437,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         role="img"
         aria-label={~t"Delivery fee by distance"}
       >
-        <rect
-          :if={@draft.free_dist_km > 0}
-          x={@x.(0)}
-          y={@c.top}
-          width={@x.(@draft.free_dist_km) - @x.(0)}
-          height={@plot.bottom - @c.top}
-          class="fill-success/10"
-        />
         <g :for={fee <- @fee_ticks}>
           <line x1={@c.left} x2={@plot.right} y1={@y.(fee)} y2={@y.(fee)} class="stroke-base-300" />
           <text x={@c.left - 6} y={@y.(fee) + 4} text-anchor="end" class="fill-base-content/60">{fee} €</text>
@@ -459,11 +460,13 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         />
         <path :if={@paths.car} d={@paths.car} fill="none" stroke-width="2" class="stroke-error/70" />
         <path :if={@paths.fuel} d={@paths.fuel} fill="none" stroke-width="2" class="stroke-warning" />
+        <path :if={@paths.free} d={@paths.free} fill="none" stroke-width="2" class="stroke-success" />
         <path d={@paths.fee} fill="none" stroke-width="2.5" class="stroke-primary" />
         <line data-cursor y1={@c.top} y2={@plot.bottom} class="stroke-base-content/50" stroke-width="1" />
         <circle :if={@paths.now} data-dot="now" r="3.5" class="fill-base-content/40" />
         <circle :if={@paths.car} data-dot="car" r="3.5" class="fill-error" />
         <circle :if={@paths.fuel} data-dot="fuel" r="3.5" class="fill-warning" />
+        <circle :if={@paths.free} data-dot="free" r="3.5" class="fill-success" />
         <circle data-dot="fee" r="4.5" class="fill-primary" />
       </svg>
 
@@ -492,8 +495,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         <span :if={@paths.fuel} class="inline-flex items-center gap-1.5">
           <span class="bg-warning h-0.5 w-4"></span>{~t"Fuel cost"}
         </span>
-        <span :if={@draft.free_dist_km > 0} class="inline-flex items-center gap-1.5">
-          <span class="bg-success/20 h-3 w-4"></span>{~t"Free delivery"}
+        <span :if={@paths.free} class="inline-flex items-center gap-1.5">
+          <span class="bg-success h-0.5 w-4"></span>{~t"Free-delivery bouquets"}
         </span>
       </div>
       <p :if={@paths.car || @paths.fuel} class="text-base-content/70 mt-2 text-xs">
@@ -581,7 +584,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
               ? this.el.dataset.notDelivered
               : this.money.format(point.fee),
           );
-          for (const key of ["now", "car", "fuel"]) {
+          for (const key of ["now", "free", "car", "fuel"]) {
             this.fill(key, point[key] == null ? "–" : this.money.format(point[key]));
           }
         },
@@ -595,15 +598,20 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     """
   end
 
-  # The fee and costs every tenth of a km, from the same calculations as
+  # The fees and costs every tenth of a km, from the same calculations as
   # checkout. The FeeExplorer hook only reads them, so prices are still worked
   # out in one place. A fee is nil where that option no longer delivers.
+  # `free` is what a cart with a free-delivery bouquet pays after saving,
+  # drawn only when there is a free distance.
   defp preview_points(saved, draft, changed?, max_km) do
     for step <- 0..(max_km * @steps_per_km) do
       metres = div(step * 1000, @steps_per_km)
 
+      draft_fees = Fulfillment.Fee.calculate(draft, metres)
+
       %{
-        fee: to_float(Fulfillment.Fee.calculate(draft, metres).fulfillment_fee),
+        fee: to_float(draft_fees.fulfillment_fee),
+        free: if(draft.free_dist_km > 0, do: to_float(draft_fees.free_delivery_fee)),
         now: if(changed?, do: to_float(Fulfillment.Fee.calculate(saved, metres).fulfillment_fee)),
         car: to_float(DeliveryCost.mileage(draft, metres)),
         fuel: to_float(DeliveryCost.fuel(draft, metres))
@@ -649,7 +657,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
       if option.rate_type == :dynamic do
         [
           ~t"#{price = Format.currency(option.price_per_km, locale)}/km",
-          ~t"free within #{km = option.free_dist_km} km",
+          ~t"first #{km = option.free_dist_km} km free",
           ~t"up to #{km = option.max_dist_km} km"
         ]
       else
