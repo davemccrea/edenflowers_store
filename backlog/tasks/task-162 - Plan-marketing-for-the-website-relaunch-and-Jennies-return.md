@@ -37,11 +37,14 @@ A marketing plan for the three months after the new website's launch and Jennie'
 ## Calendar
 - **Tue 3.11 (about):** send the reopening email as drafted; same day an 'I'm back, new website' post and stories, boosted.
 - **16.11:** 25% offer ends; Jennie sets the welcome percent back.
-- **17.11:** two-week baseline in; set the orders-per-week target.
-- **November:** Google Business Profile; promote the Christmas course already on the site.
+- **5.11:** Reel 1 sells the weekly bouquet for Father's Day (Sun 8.11).
+- **By 20.11:** grill TASK-159 and TASK-161, which TASK-163 and the January pages wait on.
+- **November:** Google Business Profile; promote the Christmas course two weeks before it runs.
+- **23-29.11:** Jennie prepares and schedules December's four posts (vouchers, Independence Day 6.12, Lucia 13.12, Christmas deadline) in Meta Business Suite, before the Christmas rush.
 - **Early December:** gift vouchers live (TASK-160, simple version), announced by newsletter and post, also sold as 'a few months of flowers' for gift subscriptions. Christmas flowers and the last order day pushed.
-- **January:** push subscriptions ('flowers through the dark winter'); steer voucher recipients there. Occasion pages (TASK-161) live by mid-January.
-- **February:** Valentine's Day push; review results against the target.
+- **January:** the weekly bouquet through the dark winter, with having it every week as the next step; steer voucher recipients there. Occasion pages (TASK-161) live by mid-January. Two normal weeks, 11.1-24.1, set the orders-per-week target on 25.1.
+- **By 29.1:** check Valentine's deliveries (Sun 14.2) for Sat 13.2 and Sun 14.2.
+- **February:** Valentine's Day push, partly as the friends' day (Vändagen/Ystävänpäivä); review results against the target.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Comments

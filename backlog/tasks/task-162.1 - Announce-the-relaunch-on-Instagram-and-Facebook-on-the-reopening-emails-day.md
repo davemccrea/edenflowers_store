@@ -25,8 +25,8 @@ Decisions (grilled 2026-11-01):
 - **Stories:** same day, with the link sticker. Links use UTM tags from the admin share drawer (source instagram / facebook, campaign reopening-2026).
 - **First boost:** the carousel, 20 EUR, 7 days, Vaasa +15 km (covers Korsholm), goal: website visits.
 - **Follow-up reels**, screen recordings of the store on her phone. Each replaces that week's feed post and ends on the 25% line while it runs:
-  1. About 3 days after launch: ordering a bouquet home, from product to checkout.
-  2. About a week after launch: starting a flower subscription.
+  1. Thu 5.11: ordering the weekly bouquet home, from product to checkout, for Father's Day (Sun 8.11) with the last order time.
+  2. About a week after launch: the weekly bouquet as a subscription, every week or every other week.
 - **Second boost:** after both reels, 20 EUR on whichever got more views, same targeting.
 - Jennie writes the captions; the draft below is a starting point to rewrite freely.
 
@@ -34,7 +34,7 @@ Caption draft (sv, then fi):
 
 N Y  H E M S I D A 🌸
 Nu är den äntligen här, min nya hemsida! På edenflowers.fi kan du nu:
-• beställa buketter hem till dörren (de första 5 km är gratis)
+• beställa veckans bukett hem till dörren (de första 5 km är gratis)
 • starta en blomsterprenumeration
 • boka kurser, bland annat julkursen🌲
 
@@ -43,7 +43,7 @@ Länken hittar du i bion. Hoppas vi ses💛
 
 ⬇️suomeksi⬇️
 Uusi verkkosivuni on vihdoin täällä! Osoitteessa edenflowers.fi voit nyt:
-• tilata kimppuja kotiovelle (ensimmäiset 5 km ilmaiseksi)
+• tilata viikon kimpun kotiovelle (ensimmäiset 5 km ilmaiseksi)
 • aloittaa kukkatilauksen
 • ilmoittautua kursseille, myös joulukurssille🌲
 

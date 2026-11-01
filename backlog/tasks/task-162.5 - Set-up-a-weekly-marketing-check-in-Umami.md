@@ -22,7 +22,8 @@ Decisions (grilled 2026-11-01, trimmed in a Ponytail review):
 - **Who and when:** David, every Monday. A comment on TASK-162 each week: orders and revenue last week, what brought the online ones, boosts, and one thing to change. A chat with Jennie only when something changes.
 - **Orders:** the last-week row on the admin overview (TASK-166), which includes Custom Orders.
 - **Sources:** Umami's own dashboard. One saved report for UTM sources and campaigns over the last 7 days (instagram, facebook, email, card, google). The admin doesn't read Umami.
-- **Baseline:** the two offer weeks are recorded as the launch result. The two weeks after the offer ends set the normal baseline, and the February target comes from that.
+- **Baseline:** the two offer weeks are recorded as the launch result, and the weeks up to Christmas as the Christmas result. Two January weeks, 11.1-24.1, set the normal baseline, and the February target comes from that on 25.1.
+- **Newsletter list:** from 30.11, note the MailerLite subscriber count each Monday.
 - **Boosts:** judged by visits from source instagram/facebook during the boost against the week before, with orders as a bonus. After four boosts, only the kind of post that brought the most visits gets boosted again.
 <!-- SECTION:DESCRIPTION:END -->
 
