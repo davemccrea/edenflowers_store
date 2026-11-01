@@ -68,11 +68,61 @@ defmodule EdenflowersWeb.Webhooks.PapraHandlerTest do
     end
   end
 
+  describe "document:deleted" do
+    defp deleted(document_id) do
+      PapraHandler.handle_event(%{
+        "type" => "document:deleted",
+        "data" => %{"documentId" => document_id, "organizationId" => "org_xyz456"}
+      })
+    end
+
+    defp record(document_id) do
+      Edenflowers.Expenses.record_expense_import!(
+        %{document_id: document_id, organization_id: "org_xyz456"},
+        actor: Edenflowers.Actors.system_actor()
+      )
+    end
+
+    test "deletes the document's expense and import, leaving other documents alone" do
+      record("doc_gone")
+      record("doc_kept")
+
+      for document_id <- ["doc_gone", "doc_kept"] do
+        Edenflowers.Expenses.ingest_expense!(
+          %{document_id: document_id, confidence: :high},
+          actor: Edenflowers.Actors.system_actor()
+        )
+      end
+
+      assert :ok = deleted("doc_gone")
+
+      assert [%{document_id: "doc_kept"}] = Ash.read!(Edenflowers.Expenses.Expense, authorize?: false)
+      assert [%{document_id: "doc_kept"}] = Ash.read!(Edenflowers.Expenses.ExpenseImport, authorize?: false)
+    end
+
+    test "deletes an import that never became an expense, so a re-upload imports it again" do
+      record("doc_pending")
+
+      assert :ok = deleted("doc_pending")
+      assert [] = Ash.read!(Edenflowers.Expenses.ExpenseImport, authorize?: false)
+    end
+
+    test "is a no-op for a document that was never imported" do
+      assert :ok = deleted("doc_unknown")
+    end
+
+    test "returns :error when documentId is missing" do
+      capture_log(fn ->
+        assert :error = PapraHandler.handle_event(%{"type" => "document:deleted", "data" => %{}})
+      end)
+    end
+  end
+
   describe "unhandled events" do
     test "returns :ok for unrecognised event types" do
       assert :ok =
                PapraHandler.handle_event(%{
-                 "type" => "document:deleted",
+                 "type" => "document:updated",
                  "data" => %{}
                })
 

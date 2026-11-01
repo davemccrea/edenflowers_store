@@ -49,7 +49,7 @@ defmodule Edenflowers.Expenses.ExpenseImport do
   end
 
   actions do
-    defaults [:read]
+    defaults [:read, :destroy]
 
     create :record do
       description "Records a Papra document from its `document:created` webhook and queues it for extraction " <>
@@ -60,6 +60,15 @@ defmodule Edenflowers.Expenses.ExpenseImport do
       upsert_identity :unique_document_id
       upsert_fields [:organization_id]
       change run_oban_trigger(:process)
+    end
+
+    action :forget_document do
+      description "Deletes a Papra document's expense and import after its `document:deleted` webhook, " <>
+                    "which Papra sends when the document goes to the trash. Restoring or re-uploading it " <>
+                    "fires `document:created`, which imports it afresh. A document never imported is a no-op."
+
+      argument :document_id, :string, allow_nil?: false
+      run Edenflowers.Expenses.Actions.ForgetDocument
     end
 
     action :import_invoice_emails do
