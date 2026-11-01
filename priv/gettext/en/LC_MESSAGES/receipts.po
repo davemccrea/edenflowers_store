@@ -181,3 +181,95 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "VAT rate"
 msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:28
+#, elixir-autogen, elixir-format
+msgid "Account (IBAN)"
+msgstr ""
+
+#. The sum to transfer, as a field of the payment details.
+#: lib/edenflowers/payments/invoice_labels.ex:67
+#, elixir-autogen, elixir-format
+msgid "Amount"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:29
+#, elixir-autogen, elixir-format
+msgid "BIC"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:21
+#, elixir-autogen, elixir-format
+msgid "Due date"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:25
+#, elixir-autogen, elixir-format
+msgid "Due on this invoice"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:18
+#, elixir-autogen, elixir-format
+msgid "Invoice"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:20
+#, elixir-autogen, elixir-format
+msgid "Invoice date"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:19
+#, elixir-autogen, elixir-format
+msgid "Invoice number"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:23
+#, elixir-autogen, elixir-format
+msgid "Invoiced or paid earlier"
+msgstr ""
+
+#. The standard Finnish invoice line 'viivästyskorko korkolain mukaan' (Interest Act 633/1982).
+#: lib/edenflowers/payments/invoice_labels.ex:77
+#, elixir-autogen, elixir-format
+msgid "Late payment interest according to the Interest Act."
+msgstr ""
+
+#. Money paid towards the order before this invoice, outside any earlier invoice.
+#: lib/edenflowers/payments/invoice_labels.ex:52
+#, elixir-autogen, elixir-format
+msgid "Paid"
+msgstr ""
+
+#. Who the bank transfer goes to, as on a Finnish credit transfer form (saaja).
+#: lib/edenflowers/payments/invoice_labels.ex:57
+#, elixir-autogen, elixir-format
+msgid "Payee"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:26
+#, elixir-autogen, elixir-format
+msgid "Payment details"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:33
+#, elixir-autogen, elixir-format
+msgid "Please use the reference number when you pay."
+msgstr ""
+
+#. The Finnish viitenumero the payer types into their bank, not the order reference.
+#: lib/edenflowers/payments/invoice_labels.ex:62
+#, elixir-autogen, elixir-format
+msgid "Reference number"
+msgstr ""
+
+#. The 54-digit virtuaaliviivakoodi a payer can paste into their bank instead of typing the details.
+#: lib/edenflowers/payments/invoice_labels.ex:72
+#, elixir-autogen, elixir-format
+msgid "Virtual barcode"
+msgstr ""
+
+#. The buying company's own reference for the purchase, such as a purchase order number (viitteenne).
+#: lib/edenflowers/payments/invoice_labels.ex:47
+#, elixir-autogen, elixir-format
+msgid "Your reference"
+msgstr ""

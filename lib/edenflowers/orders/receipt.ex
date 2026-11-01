@@ -13,8 +13,7 @@ defmodule Edenflowers.Orders.Receipt do
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.ReceiptLabels
-
-  @typst_bin "typst"
+  alias Edenflowers.Typst
 
   @order_load [
     :items_subtotal,
@@ -36,13 +35,7 @@ defmodule Edenflowers.Orders.Receipt do
   end
 
   def generate(%struct{} = record) when struct in [Order, CourseRegistration] do
-    json = record |> build_payload() |> Jason.encode!()
-
-    # Keep stderr separate — merging it would corrupt the PDF bytes on stdout.
-    case System.cmd(@typst_bin, typst_args(json)) do
-      {pdf, 0} -> {:ok, pdf}
-      {output, status} -> {:error, {:typst_failed, status, output}}
-    end
+    Typst.render("main.typ", "order", build_payload(record))
   end
 
   # Exposed so payload serialization can be tested without invoking Typst.
@@ -219,21 +212,5 @@ defmodule Edenflowers.Orders.Receipt do
   # Typst expects a language subtag, while app locales include a region.
   defp lang_from_locale(locale) when is_binary(locale) do
     Localize.LanguageTag.parse!(locale).language |> to_string()
-  end
-
-  defp typst_args(json) do
-    priv = :code.priv_dir(:edenflowers)
-
-    [
-      "compile",
-      Path.join(priv, "receipts/main.typ"),
-      "-",
-      "--format",
-      "pdf",
-      "--font-path",
-      Path.join(priv, "receipts/fonts"),
-      "--input",
-      "order=" <> json
-    ]
   end
 end
