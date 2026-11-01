@@ -212,6 +212,11 @@ feedback where="production":
 errors limit="20":
     ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'import Ecto.Query; Edenflowers.Repo.all(from e in ErrorTracker.Error, where: e.status == :unresolved, order_by: [desc: e.last_occurrence_at], limit: {{ limit }}) |> Enum.each(fn e -> IO.puts(\"#{e.id} | #{e.last_occurrence_at} | #{e.kind}: #{String.slice(e.reason, 0, 200)} | #{e.source_function}\") end)'"
 
+# Mark ErrorTracker errors resolved in production. No backup first: it only sets their status, and a new occurrence unresolves them
+[group('production')]
+resolve-errors +ids:
+    ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'for id <- ~w({{ ids }}) do case Edenflowers.Repo.get!(ErrorTracker.Error, id) do %{status: :resolved} -> IO.puts(\"Already resolved ##{id}\"); error -> {:ok, _} = ErrorTracker.resolve(error); IO.puts(\"Resolved ##{id}\") end end'"
+
 # Mark review notes as dealt with in production. No backup first: it only sets their resolved_at
 [group('production')]
 resolve-feedback +numbers:
