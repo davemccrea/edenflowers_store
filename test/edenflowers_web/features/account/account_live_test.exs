@@ -458,7 +458,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=no-subscriptions]", "No subscriptions yet.")
-      assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/en/product/#{product.id}"]|)
+      assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/en/product/#{product.slug}"]|)
     end
 
     test "shows who a subscription delivers to", %{conn: conn, user: user} do

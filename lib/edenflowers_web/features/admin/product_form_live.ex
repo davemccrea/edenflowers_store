@@ -15,6 +15,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias Edenflowers.Catalog.ProductType
   alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Pricing
+  alias Edenflowers.Slug
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Admin.ShareLinkDrawer
@@ -41,6 +42,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          |> assign(:fan_card_count, length(Catalog.list_featured_cards!(actor: actor)))
          |> assign(:form, form)
          |> assign(:translating, nil)
+         |> assign(:slug_edited?, false)
          |> assign(:max_photos, @max_photos)
          |> PhotoUpload.allow_many(:photos,
            max_entries: @max_photos,
@@ -81,7 +83,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               />
               <.button
                 :if={@form.source.type == :update && !@form.source.data.draft}
-                href={~q"/#{language}/product/#{@form.source.data.id}"}
+                href={~q"/#{language}/product/#{@form.source.data}"}
                 target="_blank"
                 variant="secondary"
                 size="sm"
@@ -104,6 +106,16 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             <div class="space-y-6">
               <.form_section title={~t"Name and description"}>
                 <.language_fields form={@form} translating={@translating} />
+                <div class="mt-6">
+                  <.input
+                    field={@form[:slug]}
+                    type="text"
+                    label={~t"Link"}
+                    help={product_url_preview(@form)}
+                    autocomplete="off"
+                    class="input w-full"
+                  />
+                </div>
               </.form_section>
 
               <.form_section title={~t"Photos"}>
@@ -203,7 +215,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         :if={@form.source.type == :update && !@form.source.data.draft}
         module={ShareLinkDrawer}
         id="share-product-link"
-        path={~p"/product/#{@form.source.data.id}"}
+        path={~p"/product/#{@form.source.data}"}
         current_user={@current_user}
       />
     </Layouts.admin>
@@ -539,8 +551,14 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   defp size_label(size), do: variant_size_label(size)
 
   @impl true
-  def handle_event("validate", %{"form" => params}, socket) do
-    {:noreply, update(socket, :form, &AshPhoenix.Form.validate(&1, params))}
+  def handle_event("validate", %{"form" => params} = event, socket) do
+    slug_edited? = socket.assigns.slug_edited? or event["_target"] == ["form", "slug"]
+    params = suggest_slug(params, socket.assigns.form, slug_edited?)
+
+    {:noreply,
+     socket
+     |> assign(:slug_edited?, slug_edited?)
+     |> update(:form, &AshPhoenix.Form.validate(&1, params))}
   end
 
   def handle_event("remove_photo", %{"slug" => slug}, socket),
@@ -638,6 +656,17 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     # From the whole form, as its own params miss the size a new form starts with.
     params = form |> AshPhoenix.Form.params() |> Map.put("photo_slugs", slugs)
     assign(socket, :form, AshPhoenix.Form.validate(form, params))
+  end
+
+  # A new product's link follows its name until Jennie edits the link herself.
+  defp suggest_slug(params, %{source: %{type: :create}}, false = _slug_edited?),
+    do: Map.put(params, "slug", Slug.slugify(params["name"]))
+
+  defp suggest_slug(params, _form, _slug_edited?), do: params
+
+  defp product_url_preview(form) do
+    host = URI.parse(EdenflowersWeb.Endpoint.url()).host
+    "#{host}/product/#{Slug.slugify(form[:slug].value)}"
   end
 
   defp photo_slugs(form), do: form[:photo_slugs].value || []

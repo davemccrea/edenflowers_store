@@ -90,6 +90,8 @@ defmodule Generator do
         description: "Product description",
         # Left to StreamData, a random translation would replace the name in an order's language.
         translations: %{},
+        # Left to StreamData, a random slug would replace the one made from the name.
+        slug: nil,
         photo_slugs: ["image.png"],
         free_delivery: false,
         subscribable: false

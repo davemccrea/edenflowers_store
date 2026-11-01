@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Marketing.LocalizedRedirectController do
   @moduledoc """
-  Sends URLs without a language, like bare / or a shared /product/:id, to the
+  Sends URLs without a language, like bare / or a shared /product/:slug, to the
   page in the visitor's language: their session's, else Accept-Language's, else
   Swedish, as resolved by `Localize.Plug.PutLocale`. A browser language the shop
   doesn't speak, like German, gets English, its nearest CLDR match. The query
@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Marketing.LocalizedRedirectController do
   use EdenflowersWeb, :controller
 
   def show(conn, _params), do: localized_redirect(conn, ~q"/#{language}")
-  def product(conn, %{"id" => id}), do: localized_redirect(conn, ~q"/#{language}/product/#{id}")
+  def product(conn, %{"slug" => slug}), do: localized_redirect(conn, ~q"/#{language}/product/#{slug}")
   def courses(conn, _params), do: localized_redirect(conn, ~q"/#{language}/courses")
   def course(conn, %{"id" => id}), do: localized_redirect(conn, ~q"/#{language}/courses/#{id}")
   def weddings(conn, _params), do: localized_redirect(conn, ~q"/#{language}/weddings")

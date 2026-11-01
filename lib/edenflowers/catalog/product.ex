@@ -12,6 +12,8 @@ defmodule Edenflowers.Catalog.Product do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTranslation.Resource]
 
+  require Ash.Query
+
   alias Edenflowers.Catalog.Changes
   alias Edenflowers.Catalog.Preparations
   alias Edenflowers.Catalog.Validations
@@ -40,6 +42,46 @@ defmodule Edenflowers.Catalog.Product do
       prepare build(
                 load: [:main_photo_slug, :pictured_sizes, :product_category, :tax_rate, product_variants: [:photo_slug]]
               )
+    end
+
+    action :current_slug, :string do
+      allow_nil? true
+
+      description "Where an outdated product link should go: the current slug of the product whose id or " <>
+                    "former slug `param` is, or nil when `param` is neither, such as a current slug. Product " <>
+                    "pages redirect old links with it."
+
+      argument :param, :string do
+        description "The last part of a product URL."
+        allow_nil? false
+      end
+
+      run fn input, _context ->
+        param = input.arguments.param
+
+        product =
+          case Ecto.UUID.cast(param) do
+            {:ok, id} ->
+              Ash.get!(__MODULE__, id, error?: false, authorize?: false)
+
+            :error ->
+              Edenflowers.Catalog.FormerProductSlug
+              |> Ash.Query.filter(slug == ^param)
+              |> Ash.Query.load(:product)
+              |> Ash.read_one!(authorize?: false)
+              |> then(&(&1 && &1.product))
+          end
+
+        {:ok, product && product.slug}
+      end
+    end
+
+    update :assign_slug do
+      description "Gives a product that has no slug one made from its name. `Edenflowers.Release.migrate` " <>
+                    "runs it over products saved before slugs existed."
+
+      require_atomic? false
+      change Changes.SetProductSlug
     end
 
     read :for_store do
@@ -114,13 +156,15 @@ defmodule Edenflowers.Catalog.Product do
         :position,
         :free_delivery,
         :subscribable,
-        :translations
+        :translations,
+        :slug
       ]
 
       argument :product_variants, {:array, :map}
 
       validate Validations.SizePhotosAreProducts
 
+      change Changes.SetProductSlug
       change Changes.TidyHiddenPhotos
 
       change manage_relationship(:product_variants,
@@ -147,7 +191,8 @@ defmodule Edenflowers.Catalog.Product do
         :position,
         :free_delivery,
         :subscribable,
-        :translations
+        :translations,
+        :slug
       ]
 
       argument :product_variants, {:array, :map}
@@ -169,6 +214,7 @@ defmodule Edenflowers.Catalog.Product do
                on_missing: {:destroy, :destroy}
              )
 
+      change Changes.SetProductSlug
       change Changes.TidyHiddenPhotos
       change Changes.ClearRemovedSizePhotos
     end
@@ -183,6 +229,10 @@ defmodule Edenflowers.Catalog.Product do
       authorize_if always()
     end
 
+    policy action(:current_slug) do
+      authorize_if always()
+    end
+
     policy action_type([:create, :update, :destroy]) do
       description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
@@ -192,6 +242,14 @@ defmodule Edenflowers.Catalog.Product do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
+
+    attribute :slug, :string do
+      description "Where the product's page lives, as in /product/red-rose-bouquet. Made from the English name " <>
+                    "when the product is created and kept when it is renamed; Jennie can edit it in the product " <>
+                    "form. Nil only for products saved before slugs existed, until `assign_slug` runs."
+
+      public? true
+    end
 
     attribute :photo_slugs, {:array, :string} do
       description "In display order; the first is the main photo, see `main_photo_slug`."
@@ -240,6 +298,10 @@ defmodule Edenflowers.Catalog.Product do
       allow_nil? false
     end
 
+    has_many :former_slugs, Edenflowers.Catalog.FormerProductSlug do
+      description "Slugs the product used to have. Links with them redirect to its current slug."
+    end
+
     has_many :product_variants, Edenflowers.Catalog.ProductVariant do
       description "Its sizes, each with its own price and Stock, cheapest first. Archived sizes are left out."
     end
@@ -275,5 +337,10 @@ defmodule Edenflowers.Catalog.Product do
 
   identities do
     identity :unique_name, [:name]
+    identity :unique_slug, [:slug]
   end
+end
+
+defimpl Phoenix.Param, for: Edenflowers.Catalog.Product do
+  def to_param(product), do: product.slug
 end

@@ -19,7 +19,7 @@ defmodule EdenflowersWeb.Marketing.SitemapControllerTest do
     assert xml =~ "<loc>http://localhost:4002/fi/toimitusehdot</loc>"
     assert xml =~ "<loc>http://localhost:4002/sv/kopvillkor</loc>"
     assert xml =~ "/fi/kauppa/#{category.slug}</loc>"
-    assert xml =~ "/sv/produkt/#{product.id}</loc>"
-    refute xml =~ draft.id
+    assert xml =~ "/sv/produkt/#{product.slug}</loc>"
+    refute xml =~ draft.slug
   end
 end

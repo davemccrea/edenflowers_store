@@ -205,6 +205,10 @@ defmodule Edenflowers.Orders.LineItem do
   end
 
   calculations do
+    calculate :product_slug, :string, expr(product.slug) do
+      description "Where the cart links the line to: its product's current slug. Nil for a custom item."
+    end
+
     calculate :promotion_applied?, :boolean, expr(order.promotion_applied?) do
       description "Whether its order's promotion code currently applies, so the line is discounted."
     end

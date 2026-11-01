@@ -25,7 +25,11 @@ defmodule Edenflowers.Catalog do
       define :list_bouquets, action: :bouquets
       define :list_products_by_category, action: :by_category, args: [:category_id]
       define :get_product_by_id, action: :for_product_page, get_by: [:id]
+      define :get_product_by_slug, action: :for_product_page, get_by: [:slug]
+      define :current_product_slug, action: :current_slug, args: [:param]
     end
+
+    resource Edenflowers.Catalog.FormerProductSlug
 
     resource Edenflowers.Catalog.ProductVariant do
       define :list_card_drawer_variants, action: :for_card_drawer

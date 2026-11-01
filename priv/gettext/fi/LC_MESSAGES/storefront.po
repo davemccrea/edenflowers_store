@@ -2353,7 +2353,7 @@ msgstr "Yksi vähemmän: %{item_label}"
 msgid "Removing this empties your cart and clears the checkout details you've entered. Continue?"
 msgstr "Tämän poistaminen tyhjentää ostoskorisi ja poistaa syöttämäsi kassatiedot. Jatketaanko?"
 
-#: lib/edenflowers_web/features/store/product_live.ex:608
+#: lib/edenflowers_web/features/store/product_live.ex:607
 #, elixir-autogen, elixir-format
 msgid "Replaces the %{count} bouquets (%{amount}) in your cart."
 msgstr "Korvaa ostoskorisi %{count} kimppua (%{amount})."
@@ -2969,7 +2969,7 @@ msgstr "Tämä varaus on peruttu. Jos sinulla on kysyttävää, ota yhteyttä."
 msgid "This booking has been refunded, so there is nothing to pay. If you have any questions, just get in touch."
 msgstr "Varauksen maksu on palautettu, joten maksettavaa ei ole. Jos sinulla on kysyttävää, ota yhteyttä."
 
-#: lib/edenflowers_web/features/store/product_live.ex:620
+#: lib/edenflowers_web/features/store/product_live.ex:619
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr "Tätä ei voitu lisätä ostoskoriin."
@@ -4118,7 +4118,7 @@ msgid "Thanks! Your %{percent} off code is on its way to your inbox."
 msgstr "Kiitos! %{percent}:n alennuskoodisi on matkalla sähköpostiisi."
 
 #. Over the product photo when it shows another size. %{size} is Small, Medium or Large.
-#: lib/edenflowers_web/features/store/product_live.ex:512
+#: lib/edenflowers_web/features/store/product_live.ex:511
 #, elixir-autogen, elixir-format
 msgid "Pictured: %{size}"
 msgstr "Kuvassa: %{size}"
