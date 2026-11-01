@@ -1,8 +1,9 @@
 defmodule Edenflowers.Orders.Order.Changes.RemoveLineItem do
   @moduledoc """
-  Destroys a line item belonging to the order. If removing it leaves the
-  order with no non-card line items, the order's checkout state is also
-  reset so a new browsing session starts from a clean slate.
+  Destroys a line item belonging to the order. Removing the card also clears
+  the card message. If removing it leaves the order with no non-card line
+  items, the order's checkout state is also reset so a new browsing session
+  starts from a clean slate.
   """
   use Ash.Resource.Change
 
@@ -17,11 +18,23 @@ defmodule Edenflowers.Orders.Order.Changes.RemoveLineItem do
     line_item_id = Ash.Changeset.get_argument(changeset, :line_item_id)
 
     Ash.Changeset.after_action(changeset, fn _changeset, order ->
-      with {:ok, line_item} <- fetch_line_item(line_item_id, order.id),
-           :ok <- Ash.destroy(line_item, action: :remove_item, authorize?: false) do
-        maybe_restart_checkout(order)
+      with {:ok, line_item} <- fetch_line_item(line_item_id, order.id) do
+        remove(order, line_item)
       end
     end)
+  end
+
+  # The card goes through remove_card so its message goes with it.
+  defp remove(order, %LineItem{is_card: true}) do
+    with {:ok, order} <- Orders.remove_card(order, authorize?: false) do
+      maybe_restart_checkout(order)
+    end
+  end
+
+  defp remove(order, line_item) do
+    with :ok <- Ash.destroy(line_item, action: :remove_item, authorize?: false) do
+      maybe_restart_checkout(order)
+    end
   end
 
   defp fetch_line_item(line_item_id, order_id) do

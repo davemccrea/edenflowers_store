@@ -333,7 +333,9 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     update :remove_line_item do
-      description "Removes one line from the cart, and restarts checkout when only a card, or nothing, is left."
+      description "Removes one line from the cart. Removing the card also clears its message. Restarts checkout when only " <>
+                    "a card, or nothing, is left."
+
       argument :line_item_id, :uuid, allow_nil?: false
       change Changes.RemoveLineItem
       require_atomic? false
