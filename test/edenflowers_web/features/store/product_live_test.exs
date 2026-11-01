@@ -308,6 +308,25 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       assert has_element?(view, ~s|[data-testid=product-image][src*="a.jpg"]|)
     end
 
+    test "says which size the photo pictures when it isn't the chosen one", %{conn: conn} do
+      product = generate(product(name: "Rose", draft: false, photo_slugs: ["a.jpg", "b.jpg"]))
+      small = generate(product_variant(product_id: product.id, size: :small, price: "40.00", own_photo_slug: nil))
+      medium = generate(product_variant(product_id: product.id, size: :medium, price: "50.00", own_photo_slug: nil))
+      generate(product_variant(product_id: product.id, size: :large, price: "60.00", own_photo_slug: "b.jpg"))
+
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.id}")
+
+      view |> form("[data-testid=product-form]", %{product_variant_id: small.id}) |> render_change()
+      assert has_element?(view, "[data-testid=pictured-size]", "Pictured: Medium")
+      assert has_element?(view, ~s|[data-testid=product-image][alt="Rose Medium"]|)
+
+      view |> form("[data-testid=product-form]", %{product_variant_id: medium.id}) |> render_change()
+      refute has_element?(view, "[data-testid=pictured-size]")
+
+      view |> element("[data-testid=product-photos] button", "Photo 2") |> render_click()
+      assert has_element?(view, "[data-testid=pictured-size]", "Pictured: Large")
+    end
+
     test "a hidden photo has no thumbnail but still shows for its size", %{conn: conn} do
       product = generate(product(draft: false, photo_slugs: ["a.jpg", "b.jpg", "c.jpg"], hidden_photo_slugs: ["b.jpg"]))
       small = generate(product_variant(product_id: product.id, size: :small, price: "40.00", own_photo_slug: "b.jpg"))
