@@ -1,10 +1,10 @@
 ---
 id: TASK-168.3
 title: Render the invoice PDF
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-01 20:57'
-updated_date: '2026-11-01 21:02'
+updated_date: '2026-11-01 22:03'
 labels: []
 dependencies:
   - TASK-168.2
@@ -23,20 +23,13 @@ Typst template beside the receipt one. It shows seller and buyer details, the in
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The PDF renders in fi, sv and en from the invoice's frozen data
-- [ ] #2 The virtual barcode decodes to the right IBAN, amount, viitenumero and due date
-- [ ] #3 A partial invoice shows the full lines, the earlier invoiced or paid amount and the amount due on it
+- [x] #1 The PDF renders in fi, sv and en from the invoice's frozen data
+- [x] #2 The virtual barcode decodes to the right IBAN, amount, viitenumero and due date
+- [x] #3 A partial invoice shows the full lines, the earlier invoiced or paid amount and the amount due on it
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Existing Typst templates (researched 2026-11-01):
-
-- laskutys (https://typst.app/universe/package/laskutys, v1.1.0, MIT-0): Finnish VAT invoice template, fi/sv/en, optional bank barcode (FI IBANs only) and EPC QR. Not used as-is: it works out VAT itself from items (docs admit cent rounding errors), so it would disagree with Vat.breakdown; it makes an RF creditor reference (ISO 11649), not a domestic viitenumero; it has no credit note, already-invoiced/paid or reminder variants. Read its source for which fields to include and how to lay them out.
-- invoice-pro: German DIN 5008 layout with GiroCode QR. Not relevant.
-- rustycure: Typst QR and bank barcode package (invoice-pro uses it for QR).
-- tiaoma: general Typst barcode generator (Zint), can print Code 128.
-
-Approach: own template beside the receipt one. Elixir works out the viitenumero check digit (7-3-1 weights) and the 54-digit virtuaaliviivakoodi (version 4) string; Typst only prints it as Code 128 via tiaoma or rustycure. Spec: Finanssiala Bank bar code guide, https://www.finanssiala.fi/wp-content/uploads/2021/03/Bank_bar_code_guide.pdf. The bank-barcode Rust crate (https://docs.rs/bank-barcode) is a reference implementation for test vectors.
+Payments.InvoicePdf (load/1, build_payload/1, generate/1) renders priv/receipts/invoice.typ via Edenflowers.Typst.render/3, now shared with Orders.Receipt. Lines, totals and VAT come from Receipt.build_payload/1 in the invoice's locale; earlier invoices (lower numbers) and money paid outside any invoice before it was made (net) print above Due on this invoice. Seller is read in one place, InvoicePdf.seller/1 (Invoice.seller/0 for now). Payments.VirtualBarcode.version_4/4 builds the 54 digits, tested against all Bank Bar Code Guide 5.3 version 4 examples; tiaoma 0.3.0 prints it as Code 128 set C, vendored in priv/receipts/packages and found via --package-path, so no network in dev, CI or the release image. Labels in the receipts domain (InvoiceLabels); fi/sv are AI drafts, queued as R05. Samples: sample/invoice.{fi,fi.final,sv,en.course}.json, preview with typst compile invoice-main.typ --package-path packages --input fixture=…
 <!-- SECTION:NOTES:END -->

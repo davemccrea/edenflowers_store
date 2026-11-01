@@ -10,7 +10,7 @@ Empty English translations intentionally fall back to the English source text.
 | --- | --- | --- |
 | `storefront.po` | Public pages, checkout, sign-in, customer accounts and customer-facing domain messages | Critical |
 | `emails.po` | Customer email subjects and bodies, including emails sent by the shop through admin | Critical |
-| `receipts.po` | Labels and copy printed in order and course receipt PDFs | Critical |
+| `receipts.po` | Labels and copy printed in order and course receipt PDFs and invoice PDFs | Critical |
 | `shared.po` | Reusable UI components, formatting, product descriptions and delivery errors used across audiences | Critical |
 | `errors.po` | Generic form/validation errors | Critical |
 | `admin.po` | Back office, accounting reports, admin-only action errors and notifications to the shop | Can wait |
