@@ -4058,7 +4058,7 @@ msgstr "Brud med hårkrans och bukett, blicken mot fjärran"
 #: lib/edenflowers_web/features/marketing/home_live.ex:770
 #, elixir-autogen, elixir-format
 msgid "I'd love to hear about your wedding. Tell me about the day and your style, and I'll design bouquets, crowns and decoration that feel like the two of you."
-msgstr "Jag vill gärna höra om ert bröllop. Berätta om dagen och er stil, så formger jag buketter, hårkransar och dekorationer som känns som just ni två."
+msgstr "Planerar ni att gifta er? Jag gör allt som hör ett bröllop till. Berätta om er stora dag och er stil, så ser jag till att blommorna blir precis så som ni önskar."
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:765
 #, elixir-autogen, elixir-format
