@@ -59,9 +59,8 @@ defmodule Edenflowers.Expenses.Expense do
   The extracted fields can be corrected in admin. An empty `paid_on` means it
   is still unpaid, so it stays out of the monthly report until Jennie marks it
   paid. Claude fills `paid_on` when the document shows it was already paid,
-  such as a till receipt. Deleting an expense leaves its
-  Papra document alone. To import it again, delete the document in Papra and
-  upload the PDF again.
+  such as a till receipt. Papra is the only place to delete one: trashing the
+  document deletes its expense. To import it again, upload the PDF again.
   """
 
   use Ash.Resource,
@@ -182,6 +181,9 @@ defmodule Edenflowers.Expenses.Expense do
   policies do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action(:ingest)
+      # Papra's document:deleted webhook reads and deletes the document's expense.
+      authorize_if action_type(:read)
+      authorize_if action(:destroy)
     end
 
     bypass actor_attribute_equals(:admin, true) do

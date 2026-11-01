@@ -110,23 +110,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert Ash.get!(Expenses.Expense, expense.id, authorize?: false).paid_on == nil
   end
 
-  test "deletes an expense along with its import", %{conn: conn} do
-    expense = create_expense("delete-me", "Mistake Oy", "Not an expense")
-
-    Expenses.ExpenseImport
-    |> Ash.Changeset.for_create(:record, %{document_id: "delete-me", organization_id: "org"})
-    |> Ash.Changeset.force_change_attribute(:expense_id, expense.id)
-    |> Ash.create!(authorize?: false)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
-
-    assert {:error, {:live_redirect, %{to: "/admin/expenses"}}} =
-             view |> element("#expense-actions button[phx-click=delete]", "Delete") |> render_click()
-
-    assert Ash.read!(Expenses.Expense, authorize?: false) == []
-    assert Ash.read!(Expenses.ExpenseImport, authorize?: false) == []
-  end
-
   defp create_expense(document_id, vendor_name, description, attrs \\ []) do
     Expenses.ingest_expense!(
       Map.merge(

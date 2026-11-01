@@ -3,7 +3,8 @@ defmodule EdenflowersWeb.Webhooks.PapraHandler do
   Handles verified Papra webhook events.
 
   Every document created in Papra is a receipt or invoice, so each one is
-  recorded for extraction. Returns quickly. AshOban performs the slow,
+  recorded for extraction. A document moved to Papra's trash (`document:deleted`)
+  takes its expense with it. Returns quickly. AshOban performs the slow,
   fallible work with retries, and its scheduler recovers missing jobs from the
   persisted import.
 
@@ -32,6 +33,21 @@ defmodule EdenflowersWeb.Webhooks.PapraHandler do
 
       {:error, error} ->
         Logger.error("Failed to record expense import: #{inspect(error)}")
+        :error
+    end
+  end
+
+  def handle_event(%{"type" => "document:deleted", "data" => data}) do
+    with {:ok, document_id} <- fetch(data, "documentId"),
+         :ok <- Expenses.forget_expense_document(document_id, actor: system_actor()) do
+      :ok
+    else
+      {:error, {:missing_field, field}} ->
+        Logger.warning("Papra document:deleted event missing #{field}")
+        :error
+
+      {:error, error} ->
+        Logger.error("Failed to forget deleted Papra document: #{inspect(error)}")
         :error
     end
   end
