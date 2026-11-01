@@ -22,7 +22,7 @@ Eden Flowers has a verified, complete Google Business Profile pointing at the we
 
 **Why:** For local searches like "florist Vaasa" or "kukkakauppa Vaasa", Google shows the map pack (a map with three businesses) above the normal results, and it is built from Business Profiles, not websites. The profile also puts opening hours, directions, phone, photos and reviews in Search and Maps, and is where many local customers will first see the shop.
 
-### Steps (Jennie, or with her)
+### Steps (David)
 
 1. Check whether a profile already exists (search "Eden Flowers Vaasa" on Google Maps) and claim it at business.google.com if so.
 2. Primary category **Florist**; secondary categories such as Flower delivery service, Wedding service, Plant shop.

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eden Flowers Relaunch Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a header with the goal, then one vertical timeline by month, then who does what. */
+:root {
+  /* Eden Flowers DESIGN.md: warm oat neutrals, deep green primary, honey accent. */
+  --paper: oklch(97% 0.008 75);
+  --surface: oklch(99% 0.004 75);
+  --ink: oklch(22% 0.015 75);
+  --muted: oklch(45% 0.02 70);
+  --line: oklch(90% 0.014 75);
+  --moss: oklch(0.3684 0.0478 156.76);
+  --moss-soft: oklch(93% 0.025 150);
+  --rose: oklch(42% 0.08 65);
+  --rose-soft: oklch(93% 0.05 85);
+  --honey: oklch(81% 0.15 93);
+  --display: "Newsreader", Georgia, serif;
+  --body: "Open Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.55 var(--body); }
+main { max-width: 860px; margin: 0 auto; padding: 48px 20px 72px; display: grid; gap: 48px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.3; }
+h1 { font-size: 2.6rem; font-weight: 400; }
+h2 { font-size: 1.6rem; font-weight: 400; }
+h3 { font-family: var(--body); font-size: 1rem; font-weight: 600; }
+p { margin: 0; max-width: 65ch; }
+ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.eyebrow { font-size: .8rem; color: var(--moss); font-weight: 600; }
+header { display: grid; gap: 14px; }
+.lede { font-size: 1.15rem; color: var(--muted); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; }
+.fact b { font-family: var(--display); font-weight: 400; font-size: 1.6rem; font-variant-numeric: tabular-nums; color: var(--moss); }
+.fact span { color: var(--muted); font-size: .92rem; }
+section { display: grid; gap: 18px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .9rem; color: var(--muted); }
+.tag { display: inline-block; font-size: .75rem; font-weight: 600; padding: 1px 8px; border-radius: 4px; vertical-align: 2px; margin-right: 6px; white-space: nowrap; }
+.j { background: var(--rose-soft); color: var(--rose); }
+.d { background: var(--moss-soft); color: var(--moss); }
+.timeline { display: grid; gap: 0; border-left: 2px solid var(--line); margin-left: 8px; }
+.month { position: relative; padding: 0 0 32px 26px; display: grid; gap: 12px; }
+.month::before { content: ""; position: absolute; left: -9px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); border: 3px solid var(--moss); }
+.month.key::before { background: var(--honey); border-color: var(--moss); }
+.month h2 { font-size: 1.45rem; }
+.month h2 small { font-family: var(--body); font-weight: 400; font-size: .95rem; color: var(--muted); margin-left: 8px; }
+.items { display: grid; gap: 10px; }
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; display: grid; grid-template-columns: 92px 1fr; gap: 4px 14px; }
+.item .when { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--moss); font-size: .95rem; }
+.item .what { display: grid; gap: 4px; }
+.item .what p { color: var(--muted); font-size: .95rem; }
+@media (max-width: 520px) { .item { grid-template-columns: 1fr; } }
+.weekly { background: var(--moss-soft); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 10px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.col { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 10px; align-content: start; }
+.approve li { padding-left: 2px; }
+.item ol { margin: 4px 0 0; padding-left: 1.3em; display: grid; gap: 3px; font-size: .95rem; }
+.item .done { font-size: .9rem; color: var(--moss); font-weight: 600; }
+.item .done::before { content: "Done when: "; color: var(--muted); font-weight: 400; }
+.item .tbd { font-size: .9rem; color: var(--rose); font-weight: 600; }
+blockquote { margin: 6px 0 0; padding: 10px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; font-size: .92rem; white-space: pre-line; }
+.toggle { justify-self: start; font: 600 .9rem var(--body); color: var(--moss); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.toggle:focus-visible { outline: 2px solid var(--honey); outline-offset: 2px; }
+.item.collapsed ol, .item.collapsed blockquote, .item.collapsed .what p { display: none; }
+.item { cursor: pointer; }
+.item:hover { border-color: var(--moss); }
+.item:focus-visible { outline: 2px solid var(--honey); outline-offset: 2px; }
+.item h3::after { content: " −"; color: var(--muted); font-weight: 400; }
+.item.collapsed h3::after { content: " +"; }
+footer { color: var(--muted); font-size: .88rem; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="eyebrow">Eden Flowers · November 2026 to February 2027</div>
+  <h1>Marketing plan for the new website and your return</h1>
+  <p class="lede">Three months to win back steady weekly orders. The weekly bouquet leads, Christmas is one part of it, and Valentine's Day closes the plan.</p>
+  <div class="facts">
+    <div class="fact"><b>Orders / week</b><span>the one number we watch, every Monday</span></div>
+    <div class="fact"><b>1–2 h</b><span>of your time a week, mostly Instagram</span></div>
+    <div class="fact"><b>~1750</b><span>Instagram followers, the biggest audience we have</span></div>
+    <div class="fact"><b>293</b><span>past customers get the reopening email, once</span></div>
+    <div class="fact"><b>20–50 €</b><span>a month boosting the best post to Vaasa</span></div>
+  </div>
+</header>
+
+<section>
+  <h2>Timeline</h2>
+  <button type="button" id="detail-toggle" class="toggle" aria-pressed="false">Hide details</button>
+  <div class="legend"><span><span class="tag j">Jennie</span>you do it</span><span><span class="tag d">David</span>David sets it up</span></div>
+
+  <div class="timeline">
+    <div class="month key">
+      <h2>Launch day <small>Tue 3.11, the day the reopening email goes out. If the email moves, every date on this page moves with it.</small></h2>
+      <div class="items">
+        <div class="item"><div class="when">Mon 2.11</div><div class="what"><h3><span class="tag d">David</span>Tag the Instagram and Facebook bio links</h3><ol><li>Admin share drawer: make a link to <b>https://edenflowers.fi/</b> with source <b>instagram</b>, medium <b>bio</b>.</li><li>Make a second one with source <b>facebook</b>, medium <b>bio</b>.</li><li>Paste the first into the Instagram bio, the second into the Facebook page's Website field.</li><li>Make two more links for the launch, campaign <b>reopening-2026</b>: one with source instagram, one with source facebook. Send both to Jennie.</li></ol><p class="done">Both bios open the site, and Jennie has the two launch links.</p></div></div>
+        <div class="item"><div class="when">Mon 2.11</div><div class="what"><h3><span class="tag j">Jennie</span>Get the launch carousel ready</h3><ol><li>Pick the first photo: a bouquet, or you in the shop.</li><li>On your phone, take 2–3 screenshots of edenflowers.fi.</li><li>Rewrite the caption below in your own words, Swedish first, then Finnish. Keep these in: ordering home (first 5 km free), subscriptions, courses including the Christmas course, the 25% line with the 16.11 end date, and "link in bio".</li></ol><blockquote>N Y  H E M S I D A 🌸
+Nu är den äntligen här, min nya hemsida! På edenflowers.fi kan du nu:
+• beställa buketter hem till dörren (de första 5 km är gratis)
+• starta en blomsterprenumeration
+• boka kurser, bland annat julkursen🌲
+
+Kryssa i nyhetsbrevet i kassan så får du 25 % på din beställning, till och med 16.11.
+Länken hittar du i bion. Hoppas vi ses💛
+
+⬇️suomeksi⬇️
+Uusi verkkosivuni on vihdoin täällä! Osoitteessa edenflowers.fi voit nyt:
+• tilata kimppuja kotiovelle (ensimmäiset 5 km ilmaiseksi)
+• aloittaa kukkatilauksen
+• ilmoittautua kursseille, myös joulukurssille🌲
+
+Valitse uutiskirje kassalla, niin saat 25 % alennuksen tilauksestasi 16.11. asti.
+Linkki löytyy biosta. Toivottavasti nähdään💛</blockquote><p class="done">The photos and caption are saved on your phone, ready to post.</p></div></div>
+        <div class="item"><div class="when">Tue 3.11, morning</div><div class="what"><h3><span class="tag d">David</span>Send the reopening email</h3><ol><li>Admin → Promotions → Welcome offer: set it to <b>25%</b> and save.</li><li>MailerLite: send campaign <b>reopening-2026</b> to the <b>Reopening</b> group (293 people).</li><li>Text Jennie that it has gone out.</li></ol><p class="done">The email is sent and new subscribers get 25%.</p></div></div>
+        <div class="item"><div class="when">Tue 3.11, after the email</div><div class="what"><h3><span class="tag j">Jennie</span>Post the carousel on Instagram and Facebook</h3><ol><li>Post the carousel on Instagram.</li><li>In Meta Business Suite, post the same carousel and caption to the Facebook page.</li></ol><p class="done">The post is live on both.</p></div></div>
+        <div class="item"><div class="when">Tue 3.11</div><div class="what"><h3><span class="tag j">Jennie</span>Add stories with a link</h3><ol><li>Post 1–3 stories about the new website.</li><li>Add a link sticker to one of them with the <b>instagram reopening-2026</b> link from David.</li></ol><p class="done">The stories are up, with a working link.</p></div></div>
+        <div class="item"><div class="when">Tue 3.11</div><div class="what"><h3><span class="tag j">Jennie</span>Boost the carousel</h3><ol><li>Open the carousel in Instagram and tap <b>Boost</b>.</li><li>Goal: <b>More website visits</b>.</li><li>Audience: new audience, location <b>Vaasa + 15 km</b> (this covers Korsholm).</li><li>Budget <b>20 € in total</b>, duration <b>7 days</b>.</li><li>Link: the <b>reopening-2026</b> Instagram link David sends you.</li></ol><p class="done">The boost is running. It ends Tue 10.11.</p></div></div>
+      </div>
+    </div>
+    <div class="month">
+      <h2>November <small>launch weeks and the offer</small></h2>
+      <div class="items">
+        <div class="item"><div class="when">Early Nov</div><div class="what"><h3><span class="tag d">David</span>Finish the Google Business Profile</h3><ol><li>Once Yanni's photos arrive, add the shop front, interior, bouquets and weddings at business.google.com.</li><li>Search Maps for "Eden Flowers Vaasa" and check there is one pin for the shop, not a second one under Muurahaistie 1.</li></ol><p class="done">The profile on Maps shows photos and a single pin.</p></div></div>
+        <div class="item"><div class="when">Fri 6.11</div><div class="what"><h3><span class="tag j">Jennie</span>Reel 1: ordering the weekly bouquet home</h3><ol><li>Screen-record your phone: open edenflowers.fi, choose the weekly bouquet, pick home delivery, and go to checkout. Stop before paying.</li><li>End on the 25% line: tick the newsletter box at checkout, until 16.11.</li><li>Post it as a Reel. It is this week's feed post.</li></ol><p class="done">The reel is live.</p></div></div>
+        <div class="item"><div class="when">Mon 9.11</div><div class="what"><h3><span class="tag d">David</span>First Monday check</h3><p>See "Every Monday" below.</p></div></div>
+        <div class="item"><div class="when">Tue 10.11</div><div class="what"><h3><span class="tag j">Jennie</span>Reel 2: starting a flower subscription</h3><ol><li>Screen-record your phone: open a bouquet, choose subscribe, pick every week, every other week or every four weeks, and go to checkout. Stop before paying.</li><li>End on the 25% line.</li><li>Post it as a Reel. It is this week's feed post.</li></ol><p class="done">The reel is live.</p></div></div>
+        <div class="item"><div class="when">Fri 13.11</div><div class="what"><h3><span class="tag j">Jennie</span>Boost the better reel</h3><ol><li>Compare the views on the two reels.</li><li>Boost the one with more views: goal <b>More website visits</b>, <b>Vaasa + 15 km</b>, <b>20 € in total</b>, <b>7 days</b>.</li></ol><p class="done">The boost is running. It ends Fri 20.11.</p></div></div>
+        <div class="item"><div class="when">Tue 17.11, morning</div><div class="what"><h3><span class="tag d">David</span>End the 25% offer</h3><ol><li>Admin → Promotions → Welcome offer: set it back to <b>15%</b> and save.</li></ol><p class="done">New subscribers get 15% again.</p></div></div>
+        <div class="item"><div class="when">One week in Nov</div><div class="what"><h3><span class="tag j">Jennie</span>Post about the Christmas course</h3><ol><li>Make that week's feed post about the Christmas course, and add a story with a link sticker to the course page.</li></ol><p class="done">The post is up.</p></div></div>
+        <div class="item"><div class="when">Once David has the cards ready</div><div class="what"><h3><span class="tag j">Jennie</span>Pass-it-on cards in every gift delivery</h3><ol><li>Approve the card text below, or rewrite it. Tell David.</li><li>David makes the codes and sends a print-ready PDF: about 100 cards, 85×55 mm, 10 to an A4 sheet.</li><li>Print it double-sided on thick paper (about 300 g) and cut along the crop marks.</li><li>Tuck one card into every order with the <b>gift</b> badge in admin. Leave them out of funeral and sympathy orders, pickups and non-gift deliveries.</li></ol><blockquote>S K I C K A  V I D A R E 💛
+Någon tänkte på dig idag. Skicka glädjen vidare: ge blommor till någon du tycker om, med 15 % rabatt.
+A N N A  E T E E N P Ä I N 💛
+Joku ajatteli sinua tänään. Anna ilo eteenpäin: lähetä kukkia jollekulle tärkeälle 15 % alennuksella.</blockquote><p>The back has a QR code that puts the 15% code in the customer's cart, plus the code printed for typing, edenflowers.fi and @edenflowers.fi.</p><p class="done">Every gift delivery leaves the shop with a card.</p></div></div>
+        <div class="item"><div class="when">23.11–6.12</div><div class="what"><h3><span class="tag d">David</span>Measure a normal week</h3><ol><li>The offer weeks (3.11–16.11) are recorded as the launch result.</li><li>The next two full weeks, Mon 23.11–Sun 6.12, show what a normal week looks like.</li><li>On Mon 7.12, write the February orders-per-week target on TASK-162 and tell Jennie.</li></ol><p class="done">Jennie knows the target.</p></div></div>
+      </div>
+    </div>
+    <div class="month key">
+      <h2>December <small>Christmas</small></h2>
+      <div class="items">
+        <div class="item"><div class="when">By Tue 1.12</div><div class="what"><h3><span class="tag d">David</span>Gift vouchers on sale</h3><ol><li>Vouchers are sold on the site. They pay for flowers, subscriptions and courses.</li></ol><p class="done">A voucher can be bought online.</p></div></div>
+        <div class="item"><div class="when">Tue 1.12</div><div class="what"><h3><span class="tag j">Jennie</span><span class="tag d">David</span>Announce the vouchers</h3><ol><li>David drafts the December newsletter about vouchers; you rewrite it in your words; David sends it to subscribers.</li><li>Your feed post that week is the vouchers. Say that a voucher worth a few months of bouquets makes a gift subscription.</li></ol><p class="done">The newsletter is sent and the post is up.</p></div></div>
+        <div class="item"><div class="when">By Tue 1.12</div><div class="what"><h3><span class="tag j">Jennie</span>Set the last Christmas order day</h3><ol><li>Pick the last day for Christmas orders and tell David.</li></ol><p class="tbd">Date still to set.</p><p class="done">David has the date.</p></div></div>
+        <div class="item"><div class="when">3 days before the last order day</div><div class="what"><h3><span class="tag j">Jennie</span><span class="tag d">David</span>Push Christmas flowers and the deadline</h3><ol><li>David sends a short newsletter extra: Christmas flowers and the last order day.</li><li>Your feed post and stories that week say the same, with a link sticker.</li></ol><p class="done">Both are out.</p></div></div>
+      </div>
+    </div>
+    <div class="month">
+      <h2>January <small>flowers through the dark winter</small></h2>
+      <div class="items">
+        <div class="item"><div class="when">First week of Jan</div><div class="what"><h3><span class="tag j">Jennie</span><span class="tag d">David</span>January newsletter: subscriptions</h3><ol><li>David drafts it, you rewrite it, David sends it.</li><li>Theme: flowers through the dark winter. Remind voucher holders that a voucher can pay for a subscription.</li></ol><p class="done">The newsletter is sent.</p></div></div>
+        <div class="item"><div class="when">Every week in Jan</div><div class="what"><h3><span class="tag j">Jennie</span>Weekly posts on subscriptions</h3><ol><li>At least two of January's feed posts are about subscriptions, with a link sticker in the stories.</li></ol><p class="done">Two subscription posts are up by 31.1.</p></div></div>
+        <div class="item"><div class="when">By Fri 15.1</div><div class="what"><h3><span class="tag d">David</span>A page for each special day</h3><ol><li>Valentine's Day, Mother's Day and the other special days get their own page in Swedish, Finnish and English.</li></ol><p class="done">The Valentine's Day page is live in all three languages.</p></div></div>
+      </div>
+    </div>
+    <div class="month key">
+      <h2>February <small>Valentine's Day and the review</small></h2>
+      <div class="items">
+        <div class="item"><div class="when">Mon 1.2</div><div class="what"><h3><span class="tag j">Jennie</span><span class="tag d">David</span>February newsletter: Valentine's Day</h3><ol><li>David drafts it, you rewrite it, David sends it. It links to the Valentine's Day page.</li></ol><p class="done">The newsletter is sent.</p></div></div>
+        <div class="item"><div class="when">Mon 1.2 – Sat 13.2</div><div class="what"><h3><span class="tag j">Jennie</span>Valentine's posts and boost</h3><ol><li>Two feed posts about Valentine's flowers in those two weeks.</li><li>Boost the first one: <b>More website visits</b>, <b>Vaasa + 15 km</b>, <b>20 € in total</b>, <b>7 days</b>, linking to the Valentine's Day page.</li></ol><p class="done">Both posts are up and the boost has run.</p></div></div>
+        <div class="item"><div class="when">Mon 15.2</div><div class="what"><h3><span class="tag j">Jennie</span><span class="tag d">David</span>Look back together</h3><ol><li>David brings orders per week for every week since launch, against the target.</li><li>Together: pick what to keep doing and what to drop for spring.</li></ol><p class="done">You have agreed the plan for spring.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="weekly">
+    <h2>Every week, all three months</h2>
+    <ul>
+      <li><span class="tag j">Jennie</span>One feed post and a few stories, captions in your own words, Swedish then Finnish. Stories that point at the site get a link sticker.</li>
+      <li><span class="tag d">David</span><b>Every Monday:</b> read last week's orders and revenue on the admin overview (shop and custom orders), check the saved Umami report for what brought them (instagram, facebook, email, card, google), and note how any boost did against the week before. Write it as a comment on TASK-162 with one thing to change. Message Jennie only if something changes.</li>
+      <li><span class="tag d">David</span><b>After four boosts:</b> only boost the kind of post that brought the most visits.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Waiting for Jennie</h2>
+  <div class="cols">
+    <div class="col approve">
+      <ul>
+        <li><b>By Mon 2.11:</b> your launch caption (draft above)</li>
+        <li><b>When you can:</b> the pass-it-on card text (draft above)</li>
+        <li><b>When you can:</b> the Swedish line for the Delivered email: "Vill du ha samma bukett igen? Du kan få den levererad varje vecka, varannan eller var fjärde vecka"</li>
+        <li><b>By Tue 1.12:</b> the last Christmas order day</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>Dates follow the reopening email: if it moves, launch day and November move with it.</footer>
+
+</main>
+<script>
+const toggle = document.getElementById("detail-toggle");
+const items = [...document.querySelectorAll(".item")];
+function setOpen(item, open) {
+  item.classList.toggle("collapsed", !open);
+  item.setAttribute("aria-expanded", String(open));
+}
+function syncButton() {
+  const anyOpen = items.some(i => !i.classList.contains("collapsed"));
+  toggle.textContent = anyOpen ? "Hide all details" : "Show all details";
+  toggle.setAttribute("aria-pressed", String(!anyOpen));
+}
+items.forEach(item => {
+  item.tabIndex = 0;
+  item.setAttribute("role", "button");
+  setOpen(item, false);
+  const flip = () => { setOpen(item, item.classList.contains("collapsed")); syncButton(); };
+  item.addEventListener("click", e => { if (!window.getSelection().toString()) flip(); });
+  item.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } });
+});
+toggle.addEventListener("click", () => {
+  const anyOpen = items.some(i => !i.classList.contains("collapsed"));
+  items.forEach(i => setOpen(i, !anyOpen));
+  syncButton();
+});
+syncButton();
+</script>
+</body>
+</html>

@@ -20,7 +20,7 @@ ordinal: 303000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Customers who buy the weekly bouquet (or another subscribable product) for themselves are offered the same bouquet as a subscription, once, in the email that tells them it arrived.
 
-**Why:** Subscriptions are the lead offer of the relaunch plan (TASK-162), but nothing on the site or in the emails asks a one-off buyer to subscribe. Someone who has just received the weekly bouquet is the most likely subscriber the shop will ever have.
+**Why:** The relaunch plan (TASK-162) leads with the weekly bouquet, and subscriptions are where its buyers can go next, but nothing on the site or in the emails asks a one-off buyer to subscribe. Someone who has just received the weekly bouquet is the most likely subscriber the shop will ever have.
 
 ### What to build
 
