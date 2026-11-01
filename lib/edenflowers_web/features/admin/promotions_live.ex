@@ -67,7 +67,7 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
               label={~t"Discount (%)"}
               class="input w-28 tabular-nums"
             />
-            <.button type="submit" variant="primary" size="sm" class="mb-2">{~t"Save"}</.button>
+            <.button type="submit" variant="primary">{~t"Save"}</.button>
           </.form>
         </.form_section>
 
