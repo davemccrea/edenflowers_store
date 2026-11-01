@@ -21,6 +21,7 @@ defmodule Edenflowers.Orders.Order do
     extensions: [AshStateMachine, AshOban, AshPaperTrail.Resource],
     fragments: [
       Edenflowers.Payments.Payable,
+      Edenflowers.Payments.BusinessCustomer,
       Edenflowers.Orders.Order.Checkout,
       Edenflowers.Orders.Order.Occurrences,
       Edenflowers.Orders.Order.Customer,

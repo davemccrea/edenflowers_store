@@ -161,6 +161,36 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert seats_left(course) == 7
     end
 
+    test "a business customer saves with details missing, and is complete once they are all filled in" do
+      course = generate(course(total_places: 10))
+      admin = generate(admin_user())
+
+      add = fn details ->
+        Courses.add_registration_manually(
+          Map.merge(%{name: "Ada", email: "ada@example.com", course_id: course.id, email_customer?: false}, details),
+          actor: admin
+        )
+      end
+
+      complete? = &Ash.load!(&1, :business_details_complete?, authorize?: false).business_details_complete?
+
+      assert {:ok, partial} = add.(%{business_customer: true, company_name: "Kukka Oy"})
+      refute complete?.(partial)
+
+      assert {:ok, full} =
+               add.(%{
+                 business_customer: true,
+                 company_name: "Kukka Oy",
+                 business_id: "2944459-6",
+                 billing_address: "Kyrkvägen 5\n68600 Jakobstad"
+               })
+
+      assert complete?.(full)
+
+      assert {:error, error} = add.(%{business_customer: true, business_id: "2944459-5"})
+      assert Exception.message(error) =~ "Must be a valid Y-tunnus"
+    end
+
     test "an initial received payment uses the ledger and records its real method" do
       course = generate(course())
       admin = generate(admin_user())

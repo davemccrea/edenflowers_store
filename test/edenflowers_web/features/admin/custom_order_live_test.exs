@@ -692,6 +692,30 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "#order-price", "35,00 €")
     end
 
+    test "records business details once Business customer is ticked", ctx do
+      order = place_custom_order(ctx)
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
+      refute has_element?(view, "#form_company_name")
+
+      view |> form("#order-form", form: %{business_customer: "true"}) |> render_change()
+
+      assert {:error, {:live_redirect, _}} =
+               view
+               |> form("#order-form",
+                 form: %{
+                   company_name: "Kukka Oy",
+                   business_id: "2944459-6",
+                   billing_address: "Kyrkvägen 5\n68600 Jakobstad",
+                   customer_reference: "PO 1234"
+                 }
+               )
+               |> render_submit()
+
+      order = Ash.load!(Ash.reload!(order, authorize?: false), :business_details_complete?, authorize?: false)
+      assert order.business_details_complete?
+      assert order.customer_reference == "PO 1234"
+    end
+
     test "offers Order updated unticked, and previews it once ticked", ctx do
       order = place_custom_order(ctx, %{customer_email: "son@example.com", locale: "en-GB"})
 
