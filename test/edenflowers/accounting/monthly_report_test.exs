@@ -9,7 +9,9 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
   alias Edenflowers.Expenses
   alias Edenflowers.External.PapraAPI
   alias Edenflowers.External.StripeAPI
+  alias Edenflowers.Orders
   alias Edenflowers.Orders.VatRow
+  alias Edenflowers.Payments
 
   setup :verify_on_exit!
 
@@ -28,6 +30,13 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     },
     %VatRow{rate: Decimal.new("0.135"), base: Decimal.new("4.41"), vat: Decimal.new("0.59"), gross: Decimal.new("5.00")}
   ]
+
+  @company %{
+    business_customer: true,
+    company_name: "Kukka Oy",
+    business_id: "2944459-6",
+    billing_address: "Kyrkvägen 5\n68600 Jakobstad"
+  }
 
   describe "split_by_rate/2" do
     test "a payment for the whole order matches its breakdown" do
@@ -297,6 +306,101 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     expect(StripeAPI.Mock, :list_balance_transactions_page, fn _, _ -> {:error, :timeout} end)
 
     assert {:error, :timeout} = MonthlyReport.build(2026, 9)
+  end
+
+  describe "the receivables sheet" do
+    # 23:30 on 30 September and 00:00:30 on 1 October in Helsinki.
+    @last_minute ~U[2026-09-30 20:30:00Z]
+    @next_month ~U[2026-09-30 21:00:30Z]
+
+    setup do
+      admin = generate(admin_user())
+
+      open = invoice(admin, "50.00", ~D[2026-09-01], %{})
+      paid = invoice(admin, "50.00", ~D[2026-09-02])
+      pay(paid, "50.00", @last_minute)
+      paid_later = invoice(admin, "50.00", ~D[2026-09-03])
+      pay(paid_later, "50.00", @next_month)
+      part_paid = invoice(admin, "50.00", ~D[2026-09-04])
+      pay(part_paid, "20.00", ~U[2026-09-10 08:00:00Z])
+      cancelled = invoice(admin, "50.00", ~D[2026-09-05])
+      cancel(admin, cancelled, ~D[2026-09-30])
+      cancelled_later = invoice(admin, "50.00", ~D[2026-09-06])
+      cancel(admin, cancelled_later, ~D[2026-10-01])
+      _issued_later = invoice(admin, "50.00", ~D[2026-10-01])
+      undone = invoice(admin, "50.00", ~D[2026-09-07])
+      pay(undone, "50.00", ~U[2026-09-08 08:00:00Z])
+      pay(undone, "-50.00", ~U[2026-09-25 08:00:00Z])
+
+      %{open: open, paid_later: paid_later, part_paid: part_paid, cancelled_later: cancelled_later, undone: undone}
+    end
+
+    test "lists what was still owed on each invoice at month end", ctx do
+      assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+      [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(4)
+
+      assert headings == [
+               "Fakturanummer",
+               "Fakturadatum",
+               "Förfallodag",
+               "Köpare",
+               "Referens",
+               "Fakturabelopp",
+               "Obetalt vid månadens slut"
+             ]
+
+      {invoices, [[] | totals]} = Enum.split_while(rows, &(&1 != []))
+
+      assert Enum.map(invoices, fn [number, _date, _due, buyer, _reference, amount, open] ->
+               {number, buyer, amount, open}
+             end) == [
+               {"#{ctx.open.number}", "Ada Lovelace", "50.0", "50.0"},
+               {"#{ctx.paid_later.number}", "Kukka Oy", "50.0", "50.0"},
+               {"#{ctx.part_paid.number}", "Kukka Oy", "50.0", "30.0"},
+               {"#{ctx.cancelled_later.number}", "Kukka Oy", "50.0", "50.0"},
+               {"#{ctx.undone.number}", "Kukka Oy", "50.0", "50.0"}
+             ]
+
+      assert [[_number, date, due, _buyer, reference | _] | _] = invoices
+      assert date == excel_date(~D[2026-09-01])
+      assert due == excel_date(~D[2026-09-15])
+      assert reference == Ash.load!(ctx.open, :purchase_reference, authorize?: false).purchase_reference
+
+      assert totals == [[nil, nil, nil, nil, nil, "Summa", "230.0"]]
+    end
+
+    test "leaves the sales sheet counting only the month's payments", _ctx do
+      assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+      rows = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(1)
+
+      # 50 paid at 23:30 on the last day, 20 part-paid, and 50 paid then undone; never the invoices' amounts.
+      assert List.last(List.last(rows)) == "70.0"
+    end
+  end
+
+  # A consumer's invoice when business_details is empty.
+  defp invoice(admin, amount, invoice_date, business_details \\ @company) do
+    order = placed_order(payment_terms: :invoice, payment_intent_id: nil, vat_breakdown: @two_rates)
+    {:ok, order} = Orders.update_order_business_details(order, business_details, actor: admin)
+    {:ok, invoice} = Payments.create_invoice(%{order_id: order.id, amount: amount}, actor: admin)
+    Ash.Seed.update!(invoice, %{invoice_date: invoice_date, due_date: Date.add(invoice_date, 14)})
+  end
+
+  defp pay(invoice, amount, paid_at) do
+    generate(
+      payment(
+        order_id: invoice.order_id,
+        invoice_id: invoice.id,
+        amount: Decimal.new(amount),
+        method: :zervant,
+        paid_at: paid_at
+      )
+    )
+  end
+
+  defp cancel(admin, invoice, credit_date) do
+    {:ok, credit_note} = Payments.cancel_invoice(%{invoice_id: invoice.id}, actor: admin)
+    Ash.Seed.update!(credit_note, %{credit_date: credit_date})
   end
 
   defp transaction(id, type, created, net, fee, source, description) do

@@ -26,6 +26,7 @@ defmodule Edenflowers.Payments do
       define :create_invoice, action: :create
       define :send_invoice, action: :send
       define :get_invoice, action: :read, get_by: [:id]
+      define :list_open_invoices, action: :open_at, args: [:date]
     end
 
     resource Edenflowers.Payments.Invoice.Version
