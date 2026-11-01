@@ -80,7 +80,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert html =~ "Suodattimet"
   end
 
-  test "marking paid today keeps the corrections", %{conn: conn} do
+  test "marking paid keeps the corrections", %{conn: conn} do
     expense = create_expense("pay-today", "Typo Vendr", "Flowers", confidence: :low)
 
     {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
@@ -108,6 +108,16 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
     view |> form("#expense-form", form: %{paid_on: ""}) |> render_submit()
     assert Ash.get!(Expenses.Expense, expense.id, authorize?: false).paid_on == nil
+  end
+
+  test "marks a paid expense unpaid", %{conn: conn} do
+    expense = create_expense("unpay", "Kukkatukku", "Flowers", paid_on: ~D[2026-06-02])
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
+    view |> element("#expense-actions button", "Mark unpaid") |> render_click()
+
+    assert Ash.get!(Expenses.Expense, expense.id, authorize?: false).paid_on == nil
+    assert has_element?(view, "button[name=paid_today]")
   end
 
   defp create_expense(document_id, vendor_name, description, attrs \\ []) do

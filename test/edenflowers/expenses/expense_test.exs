@@ -91,6 +91,14 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       refute overdue?(paid)
     end
 
+    test "marks an incomplete draft unpaid" do
+      attrs = Map.drop(%{@valid_attrs | document_id: "doc_draft"}, [:date, :total_amount])
+      {:ok, draft} = Expenses.ingest_expense(Map.put(attrs, :paid_on, "2026-05-15"), actor: system_actor())
+
+      {:ok, unpaid} = Expenses.mark_expense_unpaid(draft, actor: admin_actor())
+      assert unpaid.paid_on == nil
+    end
+
     test "re-ingesting fills an empty paid date but never replaces one" do
       {:ok, _} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
 

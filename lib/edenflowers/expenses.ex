@@ -24,6 +24,7 @@ defmodule Edenflowers.Expenses do
     resource Edenflowers.Expenses.Expense do
       define :ingest_expense, action: :ingest
       define :correct_expense, action: :correct
+      define :mark_expense_unpaid, action: :mark_unpaid
     end
   end
 end

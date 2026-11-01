@@ -52,6 +52,27 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               <.badge :if={@expense.needs_review} tone={:attention}>{~t"Needs review"}</.badge>
             </span>
           </:subtitle>
+          <:actions>
+            <%!-- Submits the form, so corrections typed below are saved with the paid date. --%>
+            <.button
+              :if={is_nil(@expense.paid_on)}
+              type="submit"
+              form="expense-form"
+              name="paid_today"
+              value="true"
+              variant="primary"
+              size="sm"
+            >
+              <.icon name="hero-check" class="h-4 w-4" /> {~t"Mark paid"}
+            </.button>
+          </:actions>
+          <:menu :if={@expense.paid_on}>
+            <.actions_menu id="expense-actions">
+              <.actions_menu_button menu="expense-actions" phx-click="mark_unpaid">
+                {~t"Mark unpaid"}
+              </.actions_menu_button>
+            </.actions_menu>
+          </:menu>
         </.admin_page_header>
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
@@ -108,20 +129,9 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 </div>
               </div>
             </.form_section>
-            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-              <%!-- First in source order so Enter in a field saves without marking the expense paid. --%>
+            <div class="mt-6">
               <.button type="submit" variant="primary" class="w-full sm:w-auto">
                 {~t"Save"}
-              </.button>
-              <.button
-                :if={is_nil(@expense.paid_on)}
-                type="submit"
-                name="paid_today"
-                value="true"
-                variant="secondary"
-                class="w-full sm:w-auto"
-              >
-                {~t"Save and mark paid today"}
               </.button>
             </div>
           </.form>
@@ -190,6 +200,19 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
          socket
          |> assign(:form, form)
          |> put_flash(:error, ~t"The expense wasn't saved. Check the fields marked below.")}
+    end
+  end
+
+  def handle_event("mark_unpaid", _params, socket) do
+    case Edenflowers.Expenses.mark_expense_unpaid(socket.assigns.expense,
+           actor: socket.assigns.current_user,
+           load: @loads
+         ) do
+      {:ok, updated} ->
+        {:noreply, socket |> assign_expense(updated) |> put_flash(:success, ~t"Marked unpaid.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, ~t"The expense wasn't marked unpaid.")}
     end
   end
 
