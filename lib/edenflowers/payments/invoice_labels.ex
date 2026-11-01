@@ -31,8 +31,22 @@ defmodule Edenflowers.Payments.InvoiceLabels do
         "amount" => amount(),
         "virtual-barcode" => virtual_barcode(),
         "use-reference" => dgettext("receipts", "Please use the reference number when you pay."),
-        "late-interest" => late_interest()
+        "late-interest" => late_interest(),
+        "credit-note" => dgettext("receipts", "Credit note"),
+        "credit-note-number" => dgettext("receipts", "Credit note number"),
+        "credit-date" => dgettext("receipts", "Date"),
+        "reason" => reason(),
+        "credited" => credited(),
+        "nothing-to-pay" => dgettext("receipts", "There is nothing to pay on the cancelled invoice.")
       }
+    end)
+  end
+
+  @doc "The line naming the Invoice a Credit note cancels, with its number and formatted date."
+  def credits(number, date, locale) do
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+      gettext_comment("On a credit note: the invoice it cancels, with that invoice's date.")
+      dgettext("receipts", "Credits invoice %{number} dated %{date}", number: number, date: date)
     end)
   end
 
@@ -70,6 +84,16 @@ defmodule Edenflowers.Payments.InvoiceLabels do
   defp virtual_barcode do
     gettext_comment("The 54-digit virtuaaliviivakoodi a payer can paste into their bank instead of typing the details.")
     dgettext("receipts", "Virtual barcode")
+  end
+
+  defp reason do
+    gettext_comment("Why Jennie cancelled the invoice, as she wrote it.")
+    dgettext("receipts", "Reason")
+  end
+
+  defp credited do
+    gettext_comment("The total a credit note takes off, printed as a negative amount (hyvitetään).")
+    dgettext("receipts", "Credited")
   end
 
   defp late_interest do

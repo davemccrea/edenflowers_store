@@ -6,7 +6,8 @@ defmodule Edenflowers.Payments.Invoice do
 
   Once created it never changes: its number, amount, dates and the buyer
   details it was sent with are frozen, so later edits to the purchase don't
-  reach it. A correction is a cancellation and a new invoice.
+  reach it. A correction is a Credit note, which cancels it while leaving it
+  as it was, and a new invoice.
 
   It is paid once the bank transfers Jennie records against it (Payments
   with its `invoice_id`) cover its amount.
@@ -99,7 +100,7 @@ defmodule Edenflowers.Payments.Invoice do
       validate present(:amount), message: "nothing is left to invoice, so enter an amount"
       validate attribute_in(:locale, @locales)
       validate compare(:due_date, greater_than_or_equal_to: :invoice_date), message: "can't be before the invoice date"
-      change Changes.SendNewInvoice
+      change Changes.SendWhenCreated
     end
 
     update :send do
@@ -225,14 +226,33 @@ defmodule Edenflowers.Payments.Invoice do
     has_many :payments, Edenflowers.Payments.Payment do
       description "The bank transfers Jennie recorded as paying it, and any Undo or refund of them."
     end
+
+    has_one :credit_note, Edenflowers.Payments.CreditNote do
+      description "The Credit note that cancels it, if Jennie cancelled it."
+    end
   end
 
   calculations do
-    calculate :status, :atom, expr(if amount_paid >= amount, do: :paid, else: :open) do
+    calculate :status,
+              :atom,
+              expr(
+                cond do
+                  exists(credit_note, true) -> :cancelled
+                  amount_paid >= amount -> :paid
+                  true -> :open
+                end
+              ) do
       constraints one_of: [:open, :paid, :cancelled]
 
-      description "Where it stands: :open until its Payments cover its amount, then :paid. A refund or Undo of " <>
-                    "one of them can open it again. :cancelled is for one a Credit note cancels."
+      description "Where it stands: :cancelled once a Credit note names it, otherwise :open until its Payments " <>
+                    "cover its amount, then :paid. A refund or Undo of one of them can open it again. Only " <>
+                    ":open counts toward what a purchase has invoiced and can take a Payment."
+    end
+
+    calculate :cancellable?, :boolean, expr(status == :open and amount_paid == 0) do
+      description "Whether Jennie can cancel it with a Credit note: open with nothing paid on it. One with " <>
+                    "Payments, even part-paid, can't be, as those Payments would count against no open invoice; " <>
+                    "she undoes them first. Validations.Cancellable refuses a Credit note otherwise."
     end
 
     calculate :paid?, :boolean, expr(status == :paid) do

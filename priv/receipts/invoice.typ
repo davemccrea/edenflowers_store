@@ -1,8 +1,6 @@
 #import "@preview/tiaoma:0.3.0"
-#import "theme.typ": colors, fonts, type-scale, eyebrow, display, hairline, honey-rule
-#import "parts.typ": line-items, vat-breakdown
-
-#let shop = toml("shop.toml")
+#import "theme.typ": colors, type-scale, eyebrow, hairline
+#import "parts.typ": invoice-page, buyer-and-facts, line-items, vat-breakdown
 
 // Render one invoice. `invoice` is a flat dict built by
 // Edenflowers.Payments.InvoicePdf; see sample/invoice.*.json. The purchase's
@@ -32,68 +30,11 @@
 
   let t(key) = invoice.labels.at(key)
   let num(body) = text(features: ("tnum",), body)
-  let lines(address) = if address != none { address.split("\n").join(linebreak()) }
   let seller = invoice.seller
   let buyer = invoice.buyer
 
-  // The seller's details are in the footer, as on most Finnish invoices, and
-  // again in the payment details.
-  set page(
-    paper: "a4",
-    margin: (top: 24mm, bottom: 22mm, x: 22mm),
-    footer: context [
-      #set text(font: fonts.sans, size: type-scale.micro, fill: colors.ink-muted)
-      #hairline
-      #v(6pt)
-      #grid(
-        columns: (1fr, auto),
-        align: (left, right),
-        [
-          #seller.name · #seller.address · #t("business-id") #seller.business_id \
-          #shop.email · #shop.phone
-        ],
-        [#counter(page).display() / #context counter(page).final().first()],
-      )
-    ],
-  )
-
-  set document(
-    title: t("invoice") + " " + str(invoice.number),
-    author: seller.name,
-    date: none,
-  )
-
-  set text(font: fonts.sans, size: type-scale.body, fill: colors.ink, lang: invoice.lang)
-  set par(leading: 0.65em, justify: false)
-
-  // ── Masthead ────────────────────────────────────────────────────────
-  // Same anchor as the receipt: the document type top-left, logo top-right.
-  grid(
-    columns: (auto, 1fr),
-    align: (left + top, right + top),
-    [
-      #display(t("invoice"))
-      #v(6pt)
-      #box(honey-rule(length: 40pt))
-    ],
-    image("assets/logo.svg", height: 64pt),
-  )
-
-  v(14pt)
-
-  // ── Buyer + invoice facts ───────────────────────────────────────────
-  // A company is addressed by name, with the person who ordered under it.
-  let buyer-lines = if buyer.company_name != none {
-    (
-      text(weight: "semibold", buyer.company_name),
-      buyer.name,
-      lines(buyer.address),
-      [#t("business-id") #buyer.business_id],
-      buyer.email,
-    )
-  } else {
-    (text(weight: "semibold", buyer.name), lines(buyer.address), buyer.email)
-  }
+  // The seller's details are in the footer, and again in the payment details.
+  show: invoice-page.with(seller, t, t("invoice"), invoice.number, invoice.lang)
 
   let purchase-label = if invoice.fulfillment_method == "course" { t("course") } else { t("order") }
   let facts = (
@@ -106,21 +47,7 @@
     facts.push((t("your-reference"), invoice.customer_reference))
   }
 
-  grid(
-    columns: (1fr, 1fr),
-    column-gutter: 20pt,
-    [
-      #eyebrow(t("customer"))
-      #v(5pt)
-      #buyer-lines.filter(line => line != none).join(linebreak())
-    ],
-    grid(
-      columns: (auto, auto),
-      column-gutter: 12pt,
-      row-gutter: 7pt,
-      ..facts.map(((label, value)) => ([#label], num(text(weight: "semibold", value)))).flatten(),
-    ),
-  )
+  buyer-and-facts(buyer, facts, t)
 
   v(18pt)
 

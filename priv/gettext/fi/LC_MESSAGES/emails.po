@@ -9,12 +9,14 @@ msgstr ""
 
 #: lib/edenflowers/email.ex:686
 #: lib/edenflowers/email.ex:727
+#: lib/edenflowers/email.ex:750
 #, elixir-autogen, elixir-format
 msgid "%{code} is your email change code for Eden Flowers"
 msgstr "Koodi %{code} vahvistaa uuden sähköpostiosoitteesi Eden Flowers -tilillesi"
 
 #: lib/edenflowers/email.ex:678
 #: lib/edenflowers/email.ex:719
+#: lib/edenflowers/email.ex:742
 #, elixir-autogen, elixir-format
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr "%{otp_code} on Eden Flowers -kirjautumiskoodisi"
@@ -27,7 +29,7 @@ msgid_plural "%{count} places on %{course}, %{date}"
 msgstr[0] "1 paikka kurssilla %{course}, %{date}"
 msgstr[1] "%{count} paikkaa kurssilla %{course}, %{date}"
 
-#: lib/edenflowers/email/templates.ex:60
+#: lib/edenflowers/email/templates.ex:61
 #, elixir-autogen, elixir-format
 msgid "65230 Vasa"
 msgstr "65230 Vaasa"
@@ -44,23 +46,26 @@ msgstr "Ystävällinen muistutus: tilauksestasi (%{date}) on vielä maksamatta %
 
 #: lib/edenflowers/email.ex:468
 #: lib/edenflowers/email.ex:511
+#: lib/edenflowers/email.ex:534
 #, elixir-autogen, elixir-format
 msgid "A refund for your Eden Flowers order for %{date}"
 msgstr "Hyvitys Eden Flowers -tilauksestasi: %{date}"
 
-#: lib/edenflowers/email.ex:526
+#: lib/edenflowers/email.ex:549
 #, elixir-autogen, elixir-format
 msgid "A refund for your booking on %{course}"
 msgstr "Hyvitys varauksestasi kurssille %{course}"
 
 #: lib/edenflowers/email.ex:131
 #: lib/edenflowers/email.ex:174
+#: lib/edenflowers/email.ex:197
 #, elixir-autogen, elixir-format
 msgid "A reminder about your booking on %{course}"
 msgstr "Muistutus varauksestasi kurssille %{course}"
 
 #: lib/edenflowers/email.ex:115
 #: lib/edenflowers/email.ex:158
+#: lib/edenflowers/email.ex:181
 #, elixir-autogen, elixir-format
 msgid "A reminder about your order for %{date}"
 msgstr "Muistutus tilauksestasi: %{date}"
@@ -192,6 +197,7 @@ msgstr "Tässä on kirjautumiskoodisi Eden Flowersiin:"
 #: lib/edenflowers/email/templates/contact_message.text.eex:1
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:1
 #: lib/edenflowers/email/templates/course_reminder.text.eex:1
+#: lib/edenflowers/email/templates/credit_note.text.eex:1
 #: lib/edenflowers/email/templates/invoice.text.eex:1
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:1
 #: lib/edenflowers/email/templates/order_confirmation.text.eex:1
@@ -218,6 +224,7 @@ msgstr "Hei %{name},"
 #: lib/edenflowers/email/templates/contact_message.text.eex:1
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:1
 #: lib/edenflowers/email/templates/course_reminder.text.eex:1
+#: lib/edenflowers/email/templates/credit_note.text.eex:1
 #: lib/edenflowers/email/templates/email_change_code.text.eex:1
 #: lib/edenflowers/email/templates/invoice.text.eex:1
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:1
@@ -366,7 +373,7 @@ msgstr "Seuraavat toimitukset odottavat, kunnes tämä on maksettu. Jotta ne jat
 msgid "Left to pay"
 msgstr "Maksettavaa jäljellä"
 
-#: lib/edenflowers/email/templates.ex:60
+#: lib/edenflowers/email/templates.ex:61
 #, elixir-autogen, elixir-format
 msgid "Myrvägen 1"
 msgstr "Muurahaistie 1"
@@ -404,6 +411,7 @@ msgstr "Vieraiden määrä: %{guests}"
 
 #: lib/edenflowers/email.ex:447
 #: lib/edenflowers/email.ex:490
+#: lib/edenflowers/email.ex:513
 #, elixir-autogen, elixir-format
 msgid "Order %{reference} cancelled"
 msgstr "Tilaus %{reference} peruttu"
@@ -426,16 +434,17 @@ msgstr "Maksettu tähän mennessä"
 
 #: lib/edenflowers/email.ex:210
 #: lib/edenflowers/email.ex:253
+#: lib/edenflowers/email.ex:276
 #, elixir-autogen, elixir-format
 msgid "Payment needed for your flowers on %{date}"
 msgstr "Kukkiesi maksu puuttuu (%{date})"
 
-#: lib/edenflowers/email.ex:75
+#: lib/edenflowers/email.ex:76
 #, elixir-autogen, elixir-format
 msgid "Payment received for %{course}, %{date}"
 msgstr "Maksu vastaanotettu: %{course}, %{date}"
 
-#: lib/edenflowers/email.ex:59
+#: lib/edenflowers/email.ex:60
 #, elixir-autogen, elixir-format
 msgid "Payment received for your order for %{date}"
 msgstr "Maksu vastaanotettu tilauksestasi: %{date}"
@@ -497,7 +506,7 @@ msgstr "Alustava hinta-arvio, ei tarjous: %{estimate}"
 msgid "See you there,"
 msgstr "Nähdään,"
 
-#: lib/edenflowers/email.ex:578
+#: lib/edenflowers/email.ex:601
 #, elixir-autogen, elixir-format
 msgid "See you tomorrow at %{course}"
 msgstr "Nähdään huomenna kurssilla %{course}"
@@ -626,6 +635,7 @@ msgstr "Hääpaikka: %{venue}"
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:13
 #: lib/edenflowers/email/templates/booking_refunded.text.eex:9
 #: lib/edenflowers/email/templates/contact_message.text.eex:14
+#: lib/edenflowers/email/templates/credit_note.text.eex:7
 #: lib/edenflowers/email/templates/invoice.text.eex:17
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:14
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:11
@@ -689,6 +699,7 @@ msgstr "Maksat, kun noudat tilauksesi."
 
 #: lib/edenflowers/email.ex:622
 #: lib/edenflowers/email.ex:663
+#: lib/edenflowers/email.ex:686
 #, elixir-autogen, elixir-format
 msgid "You're already subscribed to the Eden Flowers newsletter"
 msgstr "Tilaat jo Eden Flowersin uutiskirjettä"
@@ -700,6 +711,7 @@ msgstr "Tilaat jo Eden Flowersin uutiskirjettä."
 
 #: lib/edenflowers/email.ex:525
 #: lib/edenflowers/email.ex:566
+#: lib/edenflowers/email.ex:589
 #, elixir-autogen, elixir-format
 msgid "You're booked on %{course}, %{date}"
 msgstr "Varauksesi kurssille %{course} on vahvistettu, %{date}"
@@ -708,6 +720,8 @@ msgstr "Varauksesi kurssille %{course} on vahvistettu, %{date}"
 #: lib/edenflowers/email.ex:305
 #: lib/edenflowers/email.ex:324
 #: lib/edenflowers/email.ex:348
+#: lib/edenflowers/email.ex:347
+#: lib/edenflowers/email.ex:371
 #, elixir-autogen, elixir-format
 msgid "Your %{product} subscription is cancelled"
 msgstr "Kestotilauksesi on peruttu: %{product}"
@@ -719,6 +733,7 @@ msgstr "Kestotilauksesi (%{product}) on peruttu. Korttiasi ei veloiteta enää."
 
 #: lib/edenflowers/email.ex:254
 #: lib/edenflowers/email.ex:297
+#: lib/edenflowers/email.ex:320
 #, elixir-autogen, elixir-format
 msgid "Your %{product} subscription is set up"
 msgstr "Kestotilauksesi on valmis: %{product}"
@@ -727,30 +742,36 @@ msgstr "Kestotilauksesi on valmis: %{product}"
 #: lib/edenflowers/email.ex:153
 #: lib/edenflowers/email.ex:33
 #: lib/edenflowers/email.ex:196
+#: lib/edenflowers/email.ex:34
+#: lib/edenflowers/email.ex:219
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order for %{date}"
 msgstr "Eden Flowers -tilauksesi: %{date}"
 
 #: lib/edenflowers/email.ex:406
 #: lib/edenflowers/email.ex:449
+#: lib/edenflowers/email.ex:472
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order for %{date} is cancelled"
 msgstr "Eden Flowers -tilauksesi on peruttu: %{date}"
 
 #: lib/edenflowers/email.ex:370
 #: lib/edenflowers/email.ex:413
+#: lib/edenflowers/email.ex:436
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order has been delivered"
 msgstr "Eden Flowers -tilauksesi on toimitettu"
 
 #: lib/edenflowers/email.ex:388
 #: lib/edenflowers/email.ex:431
+#: lib/edenflowers/email.ex:454
 #, elixir-autogen, elixir-format
 msgid "Your Eden Flowers order was left at the door"
 msgstr "Eden Flowers -tilauksesi jätettiin ovelle"
 
 #: lib/edenflowers/email.ex:424
 #: lib/edenflowers/email.ex:467
+#: lib/edenflowers/email.ex:490
 #, elixir-autogen, elixir-format
 msgid "Your booking on %{course} is cancelled"
 msgstr "Varauksesi kurssille %{course} on peruttu"
@@ -787,12 +808,14 @@ msgstr "Toimituksesi %{date} on jo veloitettu, ja se tulee silti."
 
 #: lib/edenflowers/email.ex:189
 #: lib/edenflowers/email.ex:232
+#: lib/edenflowers/email.ex:255
 #, elixir-autogen, elixir-format
 msgid "Your flowers for %{date}"
 msgstr "Kukkasi: %{date}"
 
 #: lib/edenflowers/email.ex:584
 #: lib/edenflowers/email.ex:625
+#: lib/edenflowers/email.ex:648
 #, elixir-autogen, elixir-format
 msgid "Your message to Eden Flowers"
 msgstr "Viestisi Eden Flowersille"
@@ -815,12 +838,14 @@ msgstr "Seuraavat kukkasi (%{product}) ovat noudettavissa %{date} osoitteesta %{
 
 #: lib/edenflowers/email.ex:332
 #: lib/edenflowers/email.ex:375
+#: lib/edenflowers/email.ex:398
 #, elixir-autogen, elixir-format
 msgid "Your next flowers are ready on %{date}"
 msgstr "Seuraavat kukkasi ovat valmiina %{date}"
 
 #: lib/edenflowers/email.ex:333
 #: lib/edenflowers/email.ex:376
+#: lib/edenflowers/email.ex:399
 #, elixir-autogen, elixir-format
 msgid "Your next flowers come on %{date}"
 msgstr "Seuraavat kukkasi tulevat %{date}"
@@ -837,6 +862,7 @@ msgstr "Tilauksesi (%{date}) on peruttu."
 
 #: lib/edenflowers/email.ex:368
 #: lib/edenflowers/email.ex:411
+#: lib/edenflowers/email.ex:434
 #, elixir-autogen, elixir-format
 msgid "Your order for %{recipient} has been delivered"
 msgstr "Tilauksesi on toimitettu – vastaanottaja: %{recipient}"
@@ -848,6 +874,7 @@ msgstr "Tilauksesi on toimitettu. Vastaanottaja: %{recipient}."
 
 #: lib/edenflowers/email.ex:386
 #: lib/edenflowers/email.ex:429
+#: lib/edenflowers/email.ex:452
 #, elixir-autogen, elixir-format
 msgid "Your order for %{recipient} was left at the door"
 msgstr "Tilauksesi jätettiin ovelle – vastaanottaja: %{recipient}"
@@ -867,7 +894,7 @@ msgstr "Tilauksesi on toimitettu."
 msgid "Your promo code discount was for the first order only. Later orders are at the price above."
 msgstr "Alennuskoodisi koski vain ensimmäistä tilausta. Seuraavat tilaukset ovat yllä olevaan hintaan."
 
-#: lib/edenflowers/email.ex:97
+#: lib/edenflowers/email.ex:98
 #, elixir-autogen, elixir-format
 msgid "Your receipt from Eden Flowers"
 msgstr "Kuittisi Eden Flowersilta"
@@ -884,12 +911,14 @@ msgstr "Kuitti on liitteenä. Jos sinulla on kysyttävää tilauksesta, vastaa t
 
 #: lib/edenflowers/email.ex:166
 #: lib/edenflowers/email.ex:209
+#: lib/edenflowers/email.ex:232
 #, elixir-autogen, elixir-format
 msgid "Your updated Eden Flowers order for %{date}"
 msgstr "Päivitetty Eden Flowers -tilauksesi: %{date}"
 
 #: lib/edenflowers/email.ex:565
 #: lib/edenflowers/email.ex:606
+#: lib/edenflowers/email.ex:629
 #, elixir-autogen, elixir-format
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr "Häätiedustelunne Eden Flowersille"
@@ -907,6 +936,7 @@ msgstr "Tervetuliaislahjaksi saat %{percent}:n alennuksen yhdestä tilauksesta. 
 
 #: lib/edenflowers/email.ex:603
 #: lib/edenflowers/email.ex:644
+#: lib/edenflowers/email.ex:667
 #, elixir-autogen, elixir-format
 msgid "Your %{percent} welcome code for Eden Flowers"
 msgstr "Eden Flowersin %{percent}:n tervetulokoodi"
@@ -982,12 +1012,12 @@ msgstr "Jos laskussa on jotain väärin, vastaa vain tähän viestiin."
 msgid "Invoice %{number}"
 msgstr "Lasku %{number}"
 
-#: lib/edenflowers/email.ex:146
+#: lib/edenflowers/email.ex:147
 #, elixir-autogen, elixir-format
 msgid "Invoice %{number} for %{course}"
 msgstr "Lasku %{number}: %{course}"
 
-#: lib/edenflowers/email.ex:142
+#: lib/edenflowers/email.ex:143
 #, elixir-autogen, elixir-format
 msgid "Invoice %{number} for your order for %{date}"
 msgstr "Lasku %{number}: tilauksesi %{date}"
@@ -1026,3 +1056,18 @@ msgstr "Viitteenne"
 #, elixir-autogen, elixir-format
 msgid "Payee"
 msgstr "Saaja"
+
+#: lib/edenflowers/email/templates/credit_note.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "I've cancelled invoice %{number} from %{date}, so you don't need to pay it. My credit note %{credit_note} is attached for your records."
+msgstr "Olen perunut %{date} päivätyn laskun %{number}, joten sinun ei tarvitse maksaa sitä. Hyvityslasku %{credit_note} on liitteenä tiedoksesi."
+
+#: lib/edenflowers/email/templates/credit_note.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "If anything is still to pay, I'll send you a new invoice."
+msgstr "Jos jotain jää vielä maksettavaa, lähetän sinulle uuden laskun."
+
+#: lib/edenflowers/email.ex:158
+#, elixir-autogen, elixir-format
+msgid "Invoice %{number} is cancelled"
+msgstr "Lasku %{number} on peruttu"

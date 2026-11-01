@@ -21,6 +21,7 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Payments.Changes.IssueInvoice
   alias Edenflowers.Payments.Changes.SendInvoice
   alias Edenflowers.Payments.Changes.SendPaymentReceivedEmail
+  alias Edenflowers.Payments.CreditNote
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.InvoicePdf
   alias Edenflowers.Translations
@@ -109,6 +110,20 @@ defmodule Edenflowers.Email.Preview do
 
     booking_email(:confirmation, entered, inputs)
   end
+
+  @doc """
+  The Credit note email for `credit_note` (with its `invoice` loaded) with
+  Jennie's `message`, or for the one she is about to make to cancel an
+  `invoice`, before it has a number.
+  """
+  def build_credit_note(%CreditNote{} = credit_note, message) do
+    credit_note
+    |> Email.credit_note(message)
+    |> Swoosh.Email.attachment(InvoicePdf.attachment("", credit_note))
+  end
+
+  def build_credit_note(%Invoice{} = invoice, message),
+    do: build_credit_note(%CreditNote{number: "…", invoice: invoice}, message)
 
   @doc "The Invoice email `:send` would send for `invoice` now, with Jennie's `message`."
   def build_invoice(%Invoice{} = invoice, message) do

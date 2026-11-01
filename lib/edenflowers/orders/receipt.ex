@@ -209,8 +209,8 @@ defmodule Edenflowers.Orders.Receipt do
     end)
   end
 
-  # Typst expects a language subtag, while app locales include a region.
-  defp lang_from_locale(locale) when is_binary(locale) do
+  @doc "The language subtag Typst expects, as \"sv\" for \"sv-FI\": app locales include a region."
+  def lang_from_locale(locale) when is_binary(locale) do
     Localize.LanguageTag.parse!(locale).language |> to_string()
   end
 end

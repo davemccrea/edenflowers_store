@@ -89,7 +89,7 @@ A bill Jennie sends for an order or Course booking on invoice terms, paid by ban
 _Avoid_: Bill, Zervant invoice, payment request (a Payment Link is not an Invoice)
 
 **Credit note**:
-What cancels an Invoice (hyvityslasku): it names the Invoice it cancels, takes the next number in the same series, and leaves that Invoice asking for nothing.
+What cancels an Invoice (hyvityslasku): it names the Invoice it cancels, takes the next number in the same series, credits its whole amount and leaves that Invoice asking for nothing. The Invoice itself stays as it was, now cancelled, and no longer counts as invoiced. Only an Invoice with nothing paid on it can be cancelled: Jennie undoes any Payment against it first. Sent to the customer in the Invoice's language.
 _Avoid_: Credit invoice, refund (a Refund is money handed back)
 
 **Business customer**:

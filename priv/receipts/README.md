@@ -1,6 +1,6 @@
 # priv/receipts
 
-Typst project for the PDFs the shop sends: the receipt emailed with orders and course bookings (`main.typ`, `receipt.typ`), and the invoice for a purchase on invoice terms (`invoice-main.typ`, `invoice.typ`). `parts.typ` holds the line items and VAT breakdown both print. `Edenflowers.Orders.Receipt` and `Edenflowers.Payments.InvoicePdf` build the payloads; `Edenflowers.Typst` shells out to `typst`.
+Typst project for the PDFs the shop sends: the receipt emailed with orders and course bookings (`main.typ`, `receipt.typ`), the invoice for a purchase on invoice terms (`invoice-main.typ`, `invoice.typ`), and the credit note that cancels an invoice (`credit-note-main.typ`, `credit-note.typ`). `parts.typ` holds the line items and VAT breakdown they print, and the page, masthead and buyer block the invoice and credit note share. `Edenflowers.Orders.Receipt` and `Edenflowers.Payments.InvoicePdf` build the payloads; `Edenflowers.Typst` shells out to `typst`.
 
 Typst is pinned to the version in `scripts/install-typst.sh` (`just install-typst`), which must match the Dockerfile and CI. Layout can shift between pre-1.0 releases.
 
@@ -11,9 +11,10 @@ cd priv/receipts
 typst watch main.typ preview.pdf --font-path fonts                       # sv delivery
 typst compile main.typ preview.pdf --font-path fonts --input fixture=en.pickup
 typst compile invoice-main.typ preview.pdf --font-path fonts --package-path packages --input fixture=fi.final
+typst compile credit-note-main.typ preview.pdf --font-path fonts --input fixture=sv
 ```
 
-Fixtures are the files in `sample/` (`order.<fixture>.json`, `invoice.<fixture>.json`), which also show the payload shape. Money, dates and VAT arrive pre-formatted as strings. The `lang` field sets Typst's text language. The `labels` dictionary arrives translated from the `receipts` Gettext domain, using the order, booking or invoice locale. Sample labels are snapshots for standalone Typst previews; update them alongside receipt and invoice translations.
+Fixtures are the files in `sample/` (`order.<fixture>.json`, `invoice.<fixture>.json`, `credit-note.<fixture>.json`), which also show the payload shape. Money, dates and VAT arrive pre-formatted as strings. The `lang` field sets Typst's text language. The `labels` dictionary arrives translated from the `receipts` Gettext domain, using the order, booking or invoice locale. Sample labels are snapshots for standalone Typst previews; update them alongside receipt and invoice translations.
 
 ## Fonts
 

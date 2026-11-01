@@ -17,6 +17,7 @@ defmodule Edenflowers.Email do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.ShopNotice
   alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Payments.CreditNote
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.ReferenceNumber
 
@@ -143,6 +144,28 @@ defmodule Edenflowers.Email do
 
   defp invoice_subject(invoice, %CourseRegistration{} = registration),
     do: ~t"Invoice #{number = invoice.number} for #{course = registration.course.name}"
+
+  @doc """
+  Jennie's credit note for an Invoice she cancelled, with the PDF the sender
+  attaches: the invoice needs no paying, and a new one follows if anything
+  is still owed. To the Invoice's buyer, in its language. Expects `invoice`
+  loaded.
+  """
+  def credit_note(%CreditNote{invoice: %Invoice{} = invoice} = credit_note, message \\ nil) do
+    customer_email(invoice, from_address(), fn email ->
+      email
+      |> subject(~t"Invoice #{number = invoice.number} is cancelled")
+      |> text_body(
+        Templates.credit_note(%{
+          invoice: invoice,
+          credit_note: credit_note,
+          first_name: FirstName.extract(invoice.buyer_name),
+          message: message,
+          invoice_date: Format.date(invoice.invoice_date, invoice.locale)
+        })
+      )
+    end)
+  end
 
   @doc """
   Jennie's reminder of what is still owed on an order or booking, with the

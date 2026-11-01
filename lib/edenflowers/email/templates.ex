@@ -17,6 +17,7 @@ defmodule Edenflowers.Email.Templates do
     {:payment_reminder, [:assigns]},
     {:booking_payment_reminder, [:assigns]},
     {:invoice, [:assigns]},
+    {:credit_note, [:assigns]},
     {:order_details, [:assigns]},
     {:order_updated, [:assigns]},
     {:order_totals, [:assigns]},

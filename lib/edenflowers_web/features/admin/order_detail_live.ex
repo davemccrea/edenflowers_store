@@ -759,7 +759,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     order
     |> Ash.load!(:paper_trail_versions, authorize?: false)
     |> Map.fetch!(:paper_trail_versions)
-    |> OrderLog.entries(payments, locale)
+    |> OrderLog.entries(payments, locale, order.invoices)
   end
 
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)

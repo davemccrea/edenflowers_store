@@ -10,6 +10,7 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
   alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments
+  alias Edenflowers.Payments.CreditNote
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.InvoicePdf
   alias Edenflowers.Payments.Payment
@@ -47,6 +48,39 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
       assert payload.amount == "780,00\u00A0€"
 
       assert InvoicePdf.build_payload(%{booking_fee | order: order}).earlier_invoices == []
+    end
+
+    test "leaves out an earlier invoice cancelled before this one was made, but not one cancelled after" do
+      wrong = invoice(1000, amount: "300.00", credit_note: %CreditNote{number: 1001})
+      booking_fee = invoice(1002, amount: "250.00")
+      final = invoice(1004, amount: "830.00")
+      order = %{wedding() | invoices: [wrong, booking_fee, final]}
+
+      assert [%{number: 1002}] = InvoicePdf.build_payload(%{final | order: order}).earlier_invoices
+
+      cancelled_later = %{wrong | credit_note: %CreditNote{number: 1003}}
+      order = %{order | invoices: [cancelled_later, booking_fee]}
+      assert [%{number: 1000}] = InvoicePdf.build_payload(%{booking_fee | order: order}).earlier_invoices
+    end
+
+    test "a credit note has the sample fixtures' shape and labels, names its invoice and credits its amount" do
+      for {locale, fixture} <- [
+            {"fi", "credit-note.fi.json"},
+            {"sv-FI", "credit-note.sv.json"},
+            {"en-GB", "credit-note.en.course.json"}
+          ] do
+        credited = invoice(1000, locale: locale, amount: "300.00", invoice_date: ~D[2026-05-15])
+        payload = InvoicePdf.build_payload(%CreditNote{number: 1001, credit_date: ~D[2026-05-18], invoice: credited})
+        fixture = read_fixture(fixture)
+
+        assert keys(payload) == keys(fixture)
+        assert keys(payload.buyer) == keys(fixture["buyer"])
+        assert keys(payload.seller) == keys(fixture["seller"])
+        assert payload.labels == fixture["labels"]
+        assert payload.credits =~ "1000"
+        assert payload.credits =~ "15.5.2026"
+        assert payload.amount == "−300,00 €"
+      end
     end
 
     test "counts money paid outside any invoice before it was made, net of refunds" do

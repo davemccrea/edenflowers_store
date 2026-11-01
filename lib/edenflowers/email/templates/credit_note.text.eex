@@ -1,0 +1,9 @@
+<%= if @first_name do %><%= dgettext("emails", "Hi %{name},", name: @first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
+
+<%= dgettext("emails", "I've cancelled invoice %{number} from %{date}, so you don't need to pay it. My credit note %{credit_note} is attached for your records.", number: @invoice.number, date: @invoice_date, credit_note: @credit_note.number) %>
+
+<%= message(@message) %><%= dgettext("emails", "If anything is still to pay, I'll send you a new invoice.") %>
+
+<%= dgettext("emails", "Warm wishes,") %>
+
+<%= signature() %>

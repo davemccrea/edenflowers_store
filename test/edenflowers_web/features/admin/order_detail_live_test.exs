@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
+  alias Edenflowers.Payments
 
   setup :log_in_admin
 
@@ -696,6 +697,54 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       refute has_element?(view, "#invoices-missing")
       refute has_element?(view, ~s|button[form="invoices-form"][disabled]|)
       assert has_element?(view, "#order-log", "Business details changed")
+    end
+
+    test "Jennie cancels a sent one with a credit note, emailed and logged", %{conn: conn, admin: admin} do
+      order = invoice_terms_order(locale: "fi")
+      {:ok, invoice} = Payments.create_invoice(%{order_id: order.id, email_customer?: true}, actor: admin)
+      assert_email_sent()
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+      view |> element("#invoice-#{invoice.id} button", "Cancel") |> render_click()
+
+      assert has_element?(
+               view,
+               ~s|#invoices-cancel-form input[type="checkbox"][name="cancel[email_customer?]"][checked]|
+             )
+
+      view |> form("#invoices-cancel-form", cancel: %{reason: "Väärä summa"}) |> render_submit()
+
+      assert_email_sent(fn email ->
+        assert [%{filename: "hyvityslasku-" <> _}] = email.attachments
+      end)
+
+      %{credit_note: credit_note} = Ash.load!(invoice, :credit_note, authorize?: false)
+      assert has_element?(view, "#invoice-#{invoice.id}", "Cancelled")
+      refute has_element?(view, "#invoice-#{invoice.id} button", "Cancel")
+      assert has_element?(view, ~s|#credit-note-#{credit_note.id} a[href="/admin/credit-notes/#{credit_note.id}"]|)
+
+      assert has_element?(
+               view,
+               "#order-log",
+               "Invoice #{invoice.number} cancelled with credit note #{credit_note.number}"
+             )
+
+      assert has_element?(view, "#order-log", "Väärä summa")
+
+      conn = get(conn, ~p"/admin/credit-notes/#{credit_note.id}")
+      assert [disposition] = get_resp_header(conn, "content-disposition")
+      assert disposition =~ ~s|filename="hyvityslasku-#{credit_note.number}.pdf"|
+    end
+
+    test "a paid invoice offers no Cancel", %{conn: conn, admin: admin} do
+      order = invoice_terms_order()
+      {:ok, invoice} = Payments.create_invoice(%{order_id: order.id, amount: "20.00"}, actor: admin)
+      {:ok, _order} = Orders.record_payment(order, "20.00", :zervant, %{invoice_id: invoice.id}, actor: admin)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+      assert has_element?(view, "#invoice-#{invoice.id}", "Paid")
+      refute has_element?(view, "#invoice-#{invoice.id} button", "Cancel")
     end
 
     test "the PDF downloads for an admin, named in the invoice's language", %{conn: conn, admin: admin} do

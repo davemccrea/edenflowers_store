@@ -48,6 +48,7 @@ msgid "Customer"
 msgstr ""
 
 #: lib/edenflowers/orders/receipt_labels.ex:19
+#: lib/edenflowers/payments/invoice_labels.ex:37
 #, elixir-autogen, elixir-format
 msgid "Date"
 msgstr ""
@@ -188,7 +189,7 @@ msgid "Account (IBAN)"
 msgstr ""
 
 #. The sum to transfer, as a field of the payment details.
-#: lib/edenflowers/payments/invoice_labels.ex:67
+#: lib/edenflowers/payments/invoice_labels.ex:81
 #, elixir-autogen, elixir-format
 msgid "Amount"
 msgstr ""
@@ -229,19 +230,19 @@ msgid "Invoiced or paid earlier"
 msgstr ""
 
 #. The standard Finnish invoice line 'viivästyskorko korkolain mukaan' (Interest Act 633/1982).
-#: lib/edenflowers/payments/invoice_labels.ex:77
+#: lib/edenflowers/payments/invoice_labels.ex:101
 #, elixir-autogen, elixir-format
 msgid "Late payment interest according to the Interest Act."
 msgstr ""
 
 #. Money paid towards the order before this invoice, outside any earlier invoice.
-#: lib/edenflowers/payments/invoice_labels.ex:52
+#: lib/edenflowers/payments/invoice_labels.ex:66
 #, elixir-autogen, elixir-format
 msgid "Paid"
 msgstr ""
 
 #. Who the bank transfer goes to, as on a Finnish credit transfer form (saaja).
-#: lib/edenflowers/payments/invoice_labels.ex:57
+#: lib/edenflowers/payments/invoice_labels.ex:71
 #, elixir-autogen, elixir-format
 msgid "Payee"
 msgstr ""
@@ -257,19 +258,52 @@ msgid "Please use the reference number when you pay."
 msgstr ""
 
 #. The Finnish viitenumero the payer types into their bank, not the order reference.
-#: lib/edenflowers/payments/invoice_labels.ex:62
+#: lib/edenflowers/payments/invoice_labels.ex:76
 #, elixir-autogen, elixir-format
 msgid "Reference number"
 msgstr ""
 
 #. The 54-digit virtuaaliviivakoodi a payer can paste into their bank instead of typing the details.
-#: lib/edenflowers/payments/invoice_labels.ex:72
+#: lib/edenflowers/payments/invoice_labels.ex:86
 #, elixir-autogen, elixir-format
 msgid "Virtual barcode"
 msgstr ""
 
 #. The buying company's own reference for the purchase, such as a purchase order number (viitteenne).
-#: lib/edenflowers/payments/invoice_labels.ex:47
+#: lib/edenflowers/payments/invoice_labels.ex:61
 #, elixir-autogen, elixir-format
 msgid "Your reference"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:35
+#, elixir-autogen, elixir-format
+msgid "Credit note"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:36
+#, elixir-autogen, elixir-format
+msgid "Credit note number"
+msgstr ""
+
+#. The total a credit note takes off, printed as a negative amount (hyvitetään).
+#: lib/edenflowers/payments/invoice_labels.ex:96
+#, elixir-autogen, elixir-format
+msgid "Credited"
+msgstr ""
+
+#. On a credit note: the invoice it cancels, with that invoice's date.
+#: lib/edenflowers/payments/invoice_labels.ex:49
+#, elixir-autogen, elixir-format
+msgid "Credits invoice %{number} dated %{date}"
+msgstr ""
+
+#. Why Jennie cancelled the invoice, as she wrote it.
+#: lib/edenflowers/payments/invoice_labels.ex:91
+#, elixir-autogen, elixir-format
+msgid "Reason"
+msgstr ""
+
+#: lib/edenflowers/payments/invoice_labels.ex:40
+#, elixir-autogen, elixir-format
+msgid "There is nothing to pay on the cancelled invoice."
 msgstr ""
