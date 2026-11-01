@@ -29,7 +29,7 @@ A marketing plan for the three months after the new website's launch and Jennie'
 
 ## Plan
 - **Goal:** steady weekly orders. **Metric:** orders per week, checked weekly. The first two weeks after the email are the baseline; then agree a target for February.
-- **Lead offer:** flower subscriptions. Channels sell directly; newsletter growth is a side effect.
+- **Lead offer:** the weekly bouquet (changed from flower subscriptions, 2026-11-01). Channels sell directly; newsletter growth is a side effect.
 - **Instagram:** one post a week plus stories, captions in Jennie's own voice. About 20-50 EUR a month boosting the best post to Vaasa, linking to whatever the post shows. Links carry UTM tags so Umami can tell posts and boosts apart.
 - **Newsletter:** monthly in Jennie's voice, plus short Christmas extras. Only to subscribers.
 - **Google:** Business Profile set up in November (TASK-73), then the review ask in the Delivered email (TASK-159).
@@ -117,7 +117,7 @@ created: 2026-11-01 14:07
 
 Review with the marketing skills (marketing-plan AARRR lens, 2026-11-01). Gaps found, each turned into a ticket:
 - Activation: the site doesn't link to Instagram or Facebook, and the bio link isn't tagged (TASK-162.2). Facebook was in the plan's audience but had no role; it now gets the launch post via Meta Business Suite (TASK-162.1).
-- Acquisition: the launch post for the 1750 followers had no ticket (TASK-162.1). The relaunch is a local press story (TASK-162.4). Every delivered bouquet reaches a likely next customer, so a card in each order (TASK-162.3).
+- Acquisition: the launch post for the 1750 followers had no ticket (TASK-162.1). Every delivered bouquet reaches a likely next customer, so a card in each order (TASK-162.3).
 - Revenue: subscriptions are the lead offer, but nothing asks a one-off weekly bouquet buyer to subscribe (TASK-163, a spec of its own).
 - Measurement: a saved weekly view in Umami plus rules for judging boosts (TASK-162.5). Custom Orders are not in Umami, so the weekly number counts both. The baseline window (3.11-16.11) overlaps the 25% offer and will overstate a normal week; decide in TASK-162.5.
 - Timing: Finnish companies settle Christmas gifts by mid to late November, so vouchers live in early December come late for corporate buyers (noted on TASK-160).
