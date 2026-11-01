@@ -4,6 +4,7 @@ title: Ask happy customers for a Google review when their flowers arrive
 status: needs-triage
 assignee: []
 created_date: '2026-10-31 20:30'
+updated_date: '2026-11-01 19:13'
 labels:
   - spec
   - customers
@@ -47,3 +48,16 @@ A short line under Jennie's thanks in the Delivered email (`order_delivered.text
 - [ ] #3 Whether an order asks is an Order calculation, and the email reads it
 - [ ] #4 The line reads naturally in sv, fi and en in mix print_emails, and Email.Previews has a scenario with and without it
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-01 19:13
+
+---
+
+TASK-163 depends on this: its suggests_subscription? calculation skips any order where asks_for_review? is true, so one email never carries both asks.
+
+---
+<!-- COMMENTS:END -->
