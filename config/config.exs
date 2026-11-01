@@ -149,6 +149,11 @@ config :logger, :default_formatter,
 
 config :phoenix, :json_library, Jason
 
+# OTP's TLS 1.3 session ticket store (ssl 11.5) crashes with a TryClauseError when
+# reusing Stripe's tickets, killing the request. Full handshakes avoid the store.
+# Re-enable once a newer OTP fixes tls_client_ticket_store:get_tickets/4.
+config :hackney, tls_session_resumption: false
+
 import_config "#{config_env()}.exs"
 
 config :elixir, :time_zone_database, Tz.TimeZoneDatabase
