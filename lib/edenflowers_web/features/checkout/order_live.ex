@@ -72,7 +72,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
               <%= if @shown_order.fulfillment_method == :delivery do %>
                 {~t"I'll deliver your order on #{@date}."}
               <% else %>
-                {~t"Your order will be ready at the shop on #{@date}."}
+                {~t"Your order will be ready to collect on #{@date}."}
               <% end %>
             </p>
             <p
