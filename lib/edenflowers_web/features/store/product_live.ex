@@ -117,13 +117,14 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
           <div class="md:col-start-1 md:row-span-2 md:row-start-1">
             <figure>
-              <div class="bg-cream aspect-[4/5] relative overflow-hidden">
+              <div class="bg-cream aspect-square relative overflow-hidden md:aspect-[4/5]">
                 <.image
                   data-testid="product-image"
                   src={@photo_slug}
                   alt={photo_alt(@product, @photo_slug)}
                   width={1000}
                   height={1250}
+                  sources={[%{media: "(max-width: 767px)", width: 1000, height: 1000}]}
                   sizes="(min-width: 768px) 480px, 100vw"
                   priority
                   class="h-full w-full object-cover"
@@ -157,10 +158,17 @@ defmodule EdenflowersWeb.Store.ProductLive do
                   phx-click="show_photo"
                   phx-value-slug={slug}
                   aria-pressed={to_string(slug == @photo_slug)}
-                  class={["bg-cream aspect-[4/5] outline-primary relative block w-full overflow-hidden outline-offset-2 focus-visible:outline-2", slug == @photo_slug && "outline-base-content outline-1", slug != @photo_slug && "opacity-70 hover:opacity-100"]}
+                  class={["bg-cream aspect-square outline-primary relative block w-full overflow-hidden outline-offset-2 focus-visible:outline-2 md:aspect-[4/5]", slug == @photo_slug && "outline-base-content outline-1", slug != @photo_slug && "opacity-70 hover:opacity-100"]}
                 >
                   <span class="sr-only">{~t"Photo #{index}"}</span>
-                  <.image src={slug} alt="" width={120} height={150} class="absolute inset-0 h-full w-full object-cover" />
+                  <.image
+                    src={slug}
+                    alt=""
+                    width={120}
+                    height={150}
+                    sources={[%{media: "(max-width: 767px)", width: 120, height: 120}]}
+                    class="absolute inset-0 h-full w-full object-cover"
+                  />
                 </button>
               </li>
             </ul>
