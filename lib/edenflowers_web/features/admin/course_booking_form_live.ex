@@ -90,6 +90,9 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
                 class="select w-full"
               />
             </div>
+            <div class="mt-4">
+              <.business_customer_fields form={@form} />
+            </div>
           </.form_section>
 
           <.form_section title={~t"Payment"} joined>

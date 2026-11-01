@@ -128,6 +128,9 @@ msgstr ""
 msgid "Must be a valid email address"
 msgstr ""
 
+msgid "Must be a valid Y-tunnus, such as 1234567-8"
+msgstr ""
+
 msgid "choose a product"
 msgstr ""
 

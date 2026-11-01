@@ -35,7 +35,12 @@ defmodule Edenflowers.Orders.Order.Admin do
     :delivery_address,
     :delivery_instructions,
     :fulfillment_fee_override,
-    :florist_note
+    :florist_note,
+    :business_customer,
+    :company_name,
+    :business_id,
+    :billing_address,
+    :customer_reference
   ]
 
   @admin_show_load [

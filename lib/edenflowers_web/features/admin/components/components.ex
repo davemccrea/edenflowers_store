@@ -538,6 +538,51 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
+  attr :form, Phoenix.HTML.Form, required: true
+
+  @doc """
+  The Business customer checkbox and, once ticked, the company details its
+  invoice is addressed to. None are needed to save; only to invoice.
+  """
+  def business_customer_fields(assigns) do
+    ~H"""
+    <div class="space-y-4">
+      <.input field={@form[:business_customer]} type="checkbox" label={~t"Business customer"} />
+      <div :if={@form[:business_customer].value in [true, "true"]} class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <.input field={@form[:company_name]} type="text" label={~t"Company name"} class="input w-full" />
+        <.input
+          field={@form[:business_id]}
+          type="text"
+          label={~t"Y-tunnus"}
+          placeholder="1234567-8"
+          class="input w-full"
+          autocomplete="off"
+        />
+        <div class="sm:col-span-2">
+          <.input
+            field={@form[:billing_address]}
+            type="textarea"
+            label={~t"Billing address"}
+            rows="3"
+            class="textarea w-full"
+          />
+        </div>
+        <.input
+          field={@form[:customer_reference]}
+          type="text"
+          label={~t"Their reference (optional)"}
+          help={~t"A PO number or other reference they want on the invoice."}
+          class="input w-full"
+          autocomplete="off"
+        />
+      </div>
+      <p :if={@form[:business_customer].value in [true, "true"]} class="text-base-content/75 text-sm">
+        {~t"You can save without these. Company name, Y-tunnus and billing address are needed before invoicing."}
+      </p>
+    </div>
+    """
+  end
+
   attr :label, :string, required: true
   attr :class, :any, default: nil
   slot :inner_block, required: true

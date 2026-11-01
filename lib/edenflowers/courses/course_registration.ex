@@ -29,6 +29,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     extensions: [AshStateMachine, AshOban],
     fragments: [
       Edenflowers.Payments.Payable,
+      Edenflowers.Payments.BusinessCustomer,
       Edenflowers.Courses.CourseRegistration.Checkout,
       Edenflowers.Courses.CourseRegistration.Customer,
       Edenflowers.Courses.CourseRegistration.Payment,

@@ -484,6 +484,28 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       end)
     end
 
+    test "business details show once Business customer is ticked, and save incomplete", %{conn: conn} do
+      course = generate(course(total_places: 10))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
+      refute has_element?(view, "#form_company_name")
+
+      view |> form("#booking-form", form: %{business_customer: "true"}) |> render_change()
+      assert has_element?(view, "#form_company_name")
+
+      assert view
+             |> form("#booking-form", form: %{business_id: "2944459-5"})
+             |> render_change() =~ "Must be a valid Y-tunnus"
+
+      view
+      |> form("#booking-form", form: %{company_name: "Kukka Oy", business_id: "2944459-6"})
+      |> render_change()
+
+      booking = add_booking(view, course, "false")
+      assert booking.business_customer
+      assert booking.company_name == "Kukka Oy"
+      refute Ash.load!(booking, :business_details_complete?, authorize?: false).business_details_complete?
+    end
+
     test "a payment link is still created when confirmation is not emailed", %{conn: conn} do
       course = generate(course(total_places: 10))
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")

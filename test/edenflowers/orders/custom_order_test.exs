@@ -319,6 +319,38 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     end
   end
 
+  describe "a business customer" do
+    defp complete?(order),
+      do: Ash.load!(order, :business_details_complete?, authorize?: false).business_details_complete?
+
+    test "saves with details missing, and is complete once the company is named, identified and addressed", ctx do
+      {:ok, consumer} = place(ctx)
+      {:ok, business} = place(ctx, %{business_customer: true, company_name: "Kukka Oy"})
+
+      assert complete?(consumer)
+      refute complete?(business)
+
+      {:ok, business} =
+        Orders.edit_order(
+          business,
+          params(ctx, %{
+            business_customer: true,
+            company_name: "Kukka Oy",
+            business_id: "2944459-6",
+            billing_address: "Kyrkvägen 5\n68600 Jakobstad"
+          }),
+          actor: ctx.admin
+        )
+
+      assert complete?(business)
+    end
+
+    test "refuses a Y-tunnus with the wrong check digit", ctx do
+      assert {:error, error} = place(ctx, %{business_customer: true, business_id: "2944459-5"})
+      assert Exception.message(error) =~ "Must be a valid Y-tunnus"
+    end
+  end
+
   describe "the time of day" do
     test "is any time, an exact time or a window", ctx do
       {:ok, any} = place(ctx, %{fulfillment_time: :any, fulfillment_time_start: ~T[14:00:00]})

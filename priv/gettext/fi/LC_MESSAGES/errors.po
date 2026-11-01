@@ -121,6 +121,9 @@ msgstr "Tätä kurssia ei ole enää olemassa."
 msgid "Must be a valid email address"
 msgstr "Anna kelvollinen sähköpostiosoite"
 
+msgid "Must be a valid Y-tunnus, such as 1234567-8"
+msgstr "Anna kelvollinen Y-tunnus, esim. 1234567-8"
+
 msgid "choose a product"
 msgstr "valitse tuote"
 

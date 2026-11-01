@@ -41,7 +41,20 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       description "Jennie accepts a booking, including after online cutoff or over capacity. Holds places immediately, " <>
                     "with payment by link, separate invoice, at the course, or already received. Confirmation is optional."
 
-      accept [:name, :email, :seats, :course_id, :locale, :payment_terms]
+      accept [
+        :name,
+        :email,
+        :seats,
+        :course_id,
+        :locale,
+        :payment_terms,
+        :business_customer,
+        :company_name,
+        :business_id,
+        :billing_address,
+        :customer_reference
+      ]
+
       argument :email_customer?, :boolean, default: true
       argument :message, :string, description: "Jennie's note in the booking confirmation."
       argument :amount, :decimal, constraints: [greater_than: 0, scale: 2]

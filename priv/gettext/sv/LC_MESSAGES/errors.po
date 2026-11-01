@@ -121,6 +121,9 @@ msgstr "Den här kursen finns inte längre."
 msgid "Must be a valid email address"
 msgstr "Ange en giltig e-postadress"
 
+msgid "Must be a valid Y-tunnus, such as 1234567-8"
+msgstr "Ange ett giltigt FO-nummer, t.ex. 1234567-8"
+
 msgid "choose a product"
 msgstr "välj en produkt"
 
