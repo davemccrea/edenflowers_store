@@ -4075,3 +4075,23 @@ msgstr "Y-tunnus"
 #, elixir-autogen, elixir-format
 msgid "You can save without these. Company name, Y-tunnus and billing address are needed before invoicing."
 msgstr "Voit tallentaa ilman näitä. Yrityksen nimi, Y-tunnus ja laskutusosoite tarvitaan ennen laskutusta."
+
+#: lib/edenflowers/payments/validations/invoiceable.ex:21
+#, elixir-autogen, elixir-format
+msgid "Fill in the company name, Y-tunnus and billing address first."
+msgstr ""
+
+#: lib/edenflowers/payments/validations/invoiceable.ex:22
+#, elixir-autogen, elixir-format
+msgid "Fill in the customer's name and email first."
+msgstr ""
+
+#: lib/edenflowers/payments/validations/invoiceable.ex:19
+#, elixir-autogen, elixir-format
+msgid "Only a placed order or a confirmed booking can be invoiced."
+msgstr ""
+
+#: lib/edenflowers/payments/validations/invoiceable.ex:20
+#, elixir-autogen, elixir-format
+msgid "Only a purchase on invoice terms can be invoiced."
+msgstr ""

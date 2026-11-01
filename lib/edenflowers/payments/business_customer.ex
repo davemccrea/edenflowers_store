@@ -7,6 +7,20 @@ defmodule Edenflowers.Payments.BusinessCustomer do
   """
   use Spark.Dsl.Fragment, of: Ash.Resource
 
+  alias Edenflowers.Orders.Validations.Holds
+
+  actions do
+    update :update_business_details do
+      description "Jennie fills in or corrects who an invoice is addressed to, whatever the order or booking's " <>
+                    "fulfilment: invoices usually go out after delivery, and a cancelled purchase may still be " <>
+                    "invoiced for what she kept. Changes nothing else. Invoices already made keep the details " <>
+                    "they were sent with."
+
+      accept [:business_customer, :company_name, :business_id, :billing_address, :customer_reference]
+      validate {Holds, calculation: :committed?, message: "is not placed or confirmed"}
+    end
+  end
+
   attributes do
     attribute :business_customer, :boolean do
       description "Whether a company is buying, so its invoice is addressed to the company with its Y-tunnus."

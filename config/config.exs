@@ -95,6 +95,21 @@ config :edenflowers,
     Edenflowers.Marketing
   ]
 
+# Edenflowers.Payments.Invoice. The seller's name, address and Y-tunnus match
+# priv/receipts/shop.toml, which receipts print.
+config :edenflowers, :invoices,
+  # PLACEHOLDER: must be Zervant's last invoice number + 1 before go-live.
+  # Only the first invoice reads it; later ones follow the last number.
+  first_number: 1000,
+  seller: %{
+    name: "Eden Flowers",
+    business_id: "2944459-6",
+    address: "Minimossen, Myrvägen 1, 65230 Vasa",
+    # PLACEHOLDER: Jennie's real IBAN and BIC before go-live.
+    iban: "FI00 0000 0000 0000 00",
+    bic: "PLACEHOLDER"
+  }
+
 # Admin photo uploads. Dev keeps them out of images/, the photos synced to the
 # servers; `just start-imgproxy` serves them. Production sets UPLOADS_DIR to a folder
 # inside imgproxy's images dir.

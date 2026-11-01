@@ -30,6 +30,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     fragments: [
       Edenflowers.Payments.Payable,
       Edenflowers.Payments.BusinessCustomer,
+      Edenflowers.Payments.Invoiceable,
       Edenflowers.Courses.CourseRegistration.Checkout,
       Edenflowers.Courses.CourseRegistration.Customer,
       Edenflowers.Courses.CourseRegistration.Payment,
@@ -185,9 +186,20 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Every Payment and refund on the registration, oldest first."
       sort paid_at: :asc
     end
+
+    has_many :invoices, Edenflowers.Payments.Invoice do
+      description "Every invoice Jennie sent for the booking, oldest first."
+      sort number: :asc
+    end
   end
 
   calculations do
+    # A booking always has a name and an email.
+    calculate :buyer_details_complete?, :boolean, expr(business_details_complete?) do
+      description "Whether an invoice has someone to address: always for a consumer, and for a business " <>
+                    "customer once the company details are filled in."
+    end
+
     calculate :receipt_available?, :boolean, expr(status == :confirmed and amount_paid > 0) do
       description "Whether the customer can download a receipt for actual money recorded on this booking."
     end

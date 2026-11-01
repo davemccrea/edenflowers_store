@@ -19,7 +19,7 @@ A place, or group of places, the shop has committed to provide: confirmed when J
 _Avoid_: Hold, reservation, pending booking
 
 **Manual course booking**:
-A Course booking Jennie accepts on a customer's behalf, however the request reached her, including after online booking closes or when the course is full. Like a Custom Order, it can be paid through a Payment Link, by an invoice Jennie handles separately, or in person at the course. Confirmation of places does not mean payment was received.
+A Course booking Jennie accepts on a customer's behalf, however the request reached her, including after online booking closes or when the course is full. Like a Custom Order, it can be paid through a Payment Link, by Invoice, or in person at the course. Confirmation of places does not mean payment was received.
 _Avoid_: Invite, awaiting payment booking
 
 **Course checkout**:
@@ -81,8 +81,20 @@ The email Jennie sends by hand to ask for a Balance still owed on an order or bo
 _Avoid_: Bill, dunning, payment request
 
 **Payment**:
-Money that moved for an order or Course booking, by Stripe, the Zettle card reader, MobilePay to Jennie's own number, cash, or a Zervant invoice paid to her bank. Stripe reports its own payments and Jennie records the other methods; a refund is a negative Payment, and a purchase can have several, including money arriving after cancellation.
+Money that moved for an order or Course booking, by Stripe, the Zettle card reader, MobilePay to Jennie's own number, cash, or a bank transfer paying an Invoice. Stripe reports its own payments and Jennie records the other methods; a refund is a negative Payment, and a purchase can have several, including money arriving after cancellation.
 _Avoid_: Transaction, charge, in-person payment, offline payment, manual payment
+
+**Invoice**:
+A bill Jennie sends for an order or Course booking on invoice terms, paid by bank transfer with its viitenumero. A purchase can have several, such as a wedding's booking fee before and the rest after delivery; each asks for the Balance not yet invoiced unless she chooses another amount, due 14 days after its date unless she chooses another day. Numbered in one gapless series with Credit notes, continuing Zervant's. It never changes once made: it keeps the buyer details it was sent with, and a mistake is put right with a Credit note and a new Invoice.
+_Avoid_: Bill, Zervant invoice, payment request (a Payment Link is not an Invoice)
+
+**Credit note**:
+What cancels an Invoice (hyvityslasku): it names the Invoice it cancels, takes the next number in the same series, and leaves that Invoice asking for nothing.
+_Avoid_: Credit invoice, refund (a Refund is money handed back)
+
+**Business customer**:
+A company buying an order or Course booking, so its Invoice is addressed to the company with its Y-tunnus, billing address and any reference of its own (viitteenne). Jennie fills the details in whenever she learns them; only invoicing needs them.
+_Avoid_: Corporate customer, B2B customer, company account
 
 **Balance**:
 What is still owed on a placed order or a confirmed course booking: its Total due minus what has been paid, leaving out Goodwill refunds. Positive is to collect, negative is to refund; editing a paid order or cancelling one is what usually leaves one. Once the Total due drops below what was paid, only money still held above it is owed back.
