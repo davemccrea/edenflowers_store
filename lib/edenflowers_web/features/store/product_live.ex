@@ -82,6 +82,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
         in_cart?: in_cart?(assigns),
         replaces_cart?: replaces_cart?,
         cart_note: replaces_cart? && replace_note(lines),
+        pictured_caption: pictured_caption(product, assigns.photo_slug, assigns.selected_variant),
         blocked?: lines != [] and not replaces_cart? and (subscribe? or Enum.any?(lines, & &1.interval_weeks))
       )
 
@@ -115,24 +116,33 @@ defmodule EdenflowersWeb.Store.ProductLive do
           </header>
 
           <div class="md:col-start-1 md:row-span-2 md:row-start-1">
-            <figure class="bg-cream aspect-[4/5] relative overflow-hidden">
-              <.image
-                data-testid="product-image"
-                src={@photo_slug}
-                alt={"#{@product.name} #{variant_size_label(@selected_variant.size)}"}
-                width={1000}
-                height={1250}
-                sizes="(min-width: 768px) 480px, 100vw"
-                priority
-                class="h-full w-full object-cover"
-              />
-              <span
-                :if={@free_dist_km}
-                class="bg-base-100/90 text-base-content absolute top-3 left-3 px-2.5 py-1 text-xs"
-                data-testid="free-delivery-tag"
+            <figure>
+              <div class="bg-cream aspect-[4/5] relative overflow-hidden">
+                <.image
+                  data-testid="product-image"
+                  src={@photo_slug}
+                  alt={photo_alt(@product, @photo_slug)}
+                  width={1000}
+                  height={1250}
+                  sizes="(min-width: 768px) 480px, 100vw"
+                  priority
+                  class="h-full w-full object-cover"
+                />
+                <span
+                  :if={@free_dist_km}
+                  class="bg-base-100/90 text-base-content absolute top-3 left-3 px-2.5 py-1 text-xs"
+                  data-testid="free-delivery-tag"
+                >
+                  {~t"Free delivery"}
+                </span>
+              </div>
+              <figcaption
+                :if={@pictured_caption}
+                class="text-base-content/80 font-serif mt-2 italic"
+                data-testid="pictured-size"
               >
-                {~t"Free delivery"}
-              </span>
+                {@pictured_caption}
+              </figcaption>
             </figure>
             <%!-- Eight columns whatever the count, so eight photos still fit one row on a phone. --%>
             <ul
@@ -475,6 +485,23 @@ defmodule EdenflowersWeb.Store.ProductLive do
       {:ok, product} -> product
       # A malformed id is an invalid-filter error rather than NotFound; both should 404.
       {:error, _} -> raise Ash.Error.Query.NotFound, resource: Edenflowers.Catalog.Product
+    end
+  end
+
+  defp photo_alt(product, photo_slug) do
+    case product.pictured_sizes[photo_slug] do
+      nil -> product.name
+      size -> "#{product.name} #{variant_size_label(size)}"
+    end
+  end
+
+  # Names the size the photo shows, when that's known and isn't the chosen size.
+  defp pictured_caption(product, photo_slug, selected_variant) do
+    pictured_size = product.pictured_sizes[photo_slug]
+
+    if pictured_size && pictured_size != selected_variant.size do
+      gettext_comment("Over the product photo when it shows another size. %{size} is Small, Medium or Large.")
+      ~t"Pictured: #{size = variant_size_label(pictured_size)}"
     end
   end
 

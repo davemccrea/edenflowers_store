@@ -207,6 +207,25 @@ defmodule Edenflowers.Catalog.ProductTest do
       assert Ash.get!(Catalog.ProductVariant, loses.id, authorize?: false, load: [:photo_slug]).photo_slug == "a.jpg"
     end
 
+    test "the main photo pictures Medium, and a size's own photo pictures that size" do
+      product = generate(product(photo_slugs: ["main.jpg", "large.jpg", "shared.jpg", "detail.jpg"]))
+      generate(product_variant(product_id: product.id, size: :medium, own_photo_slug: nil))
+      generate(product_variant(product_id: product.id, size: :large, own_photo_slug: "large.jpg"))
+      generate(product_variant(product_id: product.id, size: :small, own_photo_slug: "shared.jpg"))
+      generate(product_variant(product_id: product.id, size: :large, own_photo_slug: "shared.jpg"))
+
+      # A photo two sizes share, or one no size uses, pictures no known size.
+      assert Ash.load!(product, :pictured_sizes).pictured_sizes == %{"main.jpg" => :medium, "large.jpg" => :large}
+    end
+
+    test "without a Medium size, the main photo pictures no known size" do
+      product = generate(product(photo_slugs: ["main.jpg"]))
+      generate(product_variant(product_id: product.id, size: :small, own_photo_slug: nil))
+      generate(product_variant(product_id: product.id, size: :large, own_photo_slug: nil))
+
+      assert Ash.load!(product, :pictured_sizes).pictured_sizes == %{}
+    end
+
     test "hidden photos stay among its photos and never include the main one" do
       product = generate(product(photo_slugs: ["a.jpg", "b.jpg", "c.jpg"]))
 

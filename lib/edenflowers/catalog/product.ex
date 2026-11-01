@@ -37,7 +37,9 @@ defmodule Edenflowers.Catalog.Product do
       description "A product with everything its page shows (sizes, category and photos) plus its tax rate. " <>
                     "Unlike the store reads, drafts are not filtered out."
 
-      prepare build(load: [:main_photo_slug, :product_category, :tax_rate, product_variants: [:photo_slug]])
+      prepare build(
+                load: [:main_photo_slug, :pictured_sizes, :product_category, :tax_rate, product_variants: [:photo_slug]]
+              )
     end
 
     read :for_store do
@@ -246,6 +248,12 @@ defmodule Edenflowers.Catalog.Product do
   calculations do
     calculate :main_photo_slug, :string, expr(at(photo_slugs, 0)) do
       description "The first of `photo_slugs`, shown on store cards and for sizes without their own photo."
+    end
+
+    calculate :pictured_sizes, :map, Edenflowers.Catalog.Calculations.PicturedSizes do
+      description "Which size each photo shows, keyed by photo slug: a size's own photo shows that size, and the " <>
+                    "main photo shows Medium when the product has one. Photos of unknown size are left out. The " <>
+                    "product page uses it to say when the photo isn't the chosen size."
     end
 
     calculate :sold_out?,
