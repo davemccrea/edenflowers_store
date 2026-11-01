@@ -183,9 +183,10 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     end
   end
 
-  defp receipt_name(n, expense) do
+  defp receipt_name(n, expense, content_type) do
     number = n |> Integer.to_string() |> String.pad_leading(3, "0")
-    "#{number}_#{Date.to_iso8601(expense.paid_on)}_#{ascii_vendor(expense.vendor_name)}.pdf"
+    extension = content_type |> MIME.extensions() |> List.first("pdf")
+    "#{number}_#{Date.to_iso8601(expense.paid_on)}_#{ascii_vendor(expense.vendor_name)}.#{extension}"
   end
 
   defp ascii_vendor(nil), do: ""
@@ -201,8 +202,8 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     organization_id = Application.get_env(:edenflowers, :papra_organization_id)
 
     case PapraAPI.impl().fetch_document(organization_id, expense.document_id) do
-      {:ok, %{body: body}} ->
-        {n, expense, receipt_name(n, expense), body}
+      {:ok, %{body: body, content_type: content_type}} ->
+        {n, expense, receipt_name(n, expense, content_type), body}
 
       {:error, error} ->
         Logger.warning("Receipt #{expense.document_id} couldn't be fetched for the monthly report: #{inspect(error)}")

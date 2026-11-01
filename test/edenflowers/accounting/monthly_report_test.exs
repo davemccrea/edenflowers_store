@@ -144,8 +144,9 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     create_expense("doc-tools", "Työkalu Åb", ~D[2026-09-20], "EUR", "10.00", "2.00")
     create_expense("doc-august", "August Oy", ~D[2026-08-31], "EUR", "1.00", "0.20")
 
-    stub(PapraAPI.Mock, :fetch_document, fn "org_test", document_id ->
-      {:ok, %{body: "%PDF #{document_id}", content_type: "application/pdf"}}
+    stub(PapraAPI.Mock, :fetch_document, fn
+      "org_test", "doc-tools" -> {:ok, %{body: "PNG doc-tools", content_type: "image/png"}}
+      "org_test", document_id -> {:ok, %{body: "%PDF #{document_id}", content_type: "application/pdf"}}
     end)
 
     assert {:ok, "redovisning-2026-09.zip", zip} = MonthlyReport.build(2026, 9)
@@ -154,7 +155,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     assert Map.keys(files) |> Enum.sort() == [
              "kvitton/001_2026-09-03_Kukkatukku-Oy.pdf",
              "kvitton/002_2026-09-11_Adobe.pdf",
-             "kvitton/003_2026-09-20_Tyokalu-Ab.pdf",
+             "kvitton/003_2026-09-20_Tyokalu-Ab.png",
              "rapport-2026-09.xlsx"
            ]
 
