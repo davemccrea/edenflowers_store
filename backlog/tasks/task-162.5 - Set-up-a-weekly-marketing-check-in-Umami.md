@@ -1,11 +1,13 @@
 ---
 id: TASK-162.5
 title: Set up a weekly marketing check in Umami
-status: needs-triage
+status: ready-for-human
 assignee: []
 created_date: '2026-11-01 14:07'
+updated_date: '2026-11-01 16:34'
 labels: []
-dependencies: []
+dependencies:
+  - TASK-166
 parent_task_id: TASK-162
 type: task
 ordinal: 302000
@@ -14,19 +16,31 @@ ordinal: 302000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-**Why:** The plan's metric is orders per week, checked weekly. Without a saved view, every weekly check means rebuilding it, and the 1-2 h a week goes to that instead of posting.
+**Why:** The plan's metric is orders per week, checked weekly. A fixed routine keeps the check to a few minutes, so the 1-2 h a week goes to posting.
 
-- A saved Umami view or report with: orders completed per week (and revenue), subscriptions started, new subscribers, orders by source and campaign (instagram, facebook, email, card, google).
-- A note in TASK-162 each week: orders, what brought them, what to change.
-- Each boost is judged on orders it brought. After four boosts, keep boosting only what works.
-
-Open: the baseline window. The first two weeks after the email (3.11-16.11) overlap the 25% offer, so they overstate a normal week. Either set the target from 17.11-30.11, or keep the offer weeks and discount them.
-
-Note: Umami counts only online events. Custom Orders (phone, in the shop) are in the admin, so the weekly number takes both.
+Decisions (grilled 2026-11-01, trimmed in a Ponytail review):
+- **Who and when:** David, every Monday. A comment on TASK-162 each week: orders and revenue last week, what brought the online ones, boosts, and one thing to change. A chat with Jennie only when something changes.
+- **Orders:** the last-week row on the admin overview (TASK-166), which includes Custom Orders.
+- **Sources:** Umami's own dashboard. One saved report for UTM sources and campaigns over the last 7 days (instagram, facebook, email, card, google). The admin doesn't read Umami.
+- **Baseline:** the two offer weeks are recorded as the launch result. The two weeks after the offer ends set the normal baseline, and the February target comes from that.
+- **Boosts:** judged by visits from source instagram/facebook during the boost against the week before, with orders as a bonus. After four boosts, only the kind of post that brought the most visits gets boosted again.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A saved Umami view shows the weekly numbers by source and campaign
-- [ ] #2 The baseline window is decided and the February target is recorded on TASK-162
+- [ ] #1 The baseline window is decided and the February target is recorded on TASK-162
+- [ ] #2 A saved Umami report shows the last 7 days by UTM source and campaign
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-01 16:34
+
+---
+
+2026-11-01: Grilled with David. Reading Umami from admin was dropped in a Ponytail review.
+
+---
+<!-- COMMENTS:END -->
