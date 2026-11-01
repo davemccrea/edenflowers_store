@@ -24,8 +24,8 @@ defmodule EdenflowersWeb.Store.StoreLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/en/store/wreaths")
 
-    assert has_element?(view, "a[href='/en/product/#{sold_out.id}'] [data-testid=sold-out]")
-    refute has_element?(view, "a[href='/en/product/#{partly.id}'] [data-testid=sold-out]")
+    assert has_element?(view, "a[href='/en/product/#{sold_out.slug}'] [data-testid=sold-out]")
+    refute has_element?(view, "a[href='/en/product/#{partly.slug}'] [data-testid=sold-out]")
   end
 
   test "/store opens on bouquets", %{conn: conn} do

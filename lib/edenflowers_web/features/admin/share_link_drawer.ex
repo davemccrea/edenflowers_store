@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Admin.ShareLinkDrawer do
   and the fields offer them again next time.
 
   Render it outside any form, since it has its own, with `id`, `path` (the shop
-  page without a language, e.g. /product/:id) and `current_user`. Put
+  page without a language, e.g. /product/:slug) and `current_user`. Put
   `open_button/1` where Jennie should find it, such as the page header.
   """
 

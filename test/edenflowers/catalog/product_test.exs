@@ -237,6 +237,62 @@ defmodule Edenflowers.Catalog.ProductTest do
     end
   end
 
+  describe "a product's slug" do
+    test "is made from the English name, without accents or punctuation" do
+      assert generate(product(name: "Vårens Rosé  Bukett!")).slug == "varens-rose-bukett"
+    end
+
+    test "is the one typed in the form, made URL-shaped" do
+      assert generate(product(name: "Red roses", slug: "Röda Rosor")).slug == "roda-rosor"
+    end
+
+    test "gets -2 when another product already has it" do
+      generate(product(name: "Rosé"))
+      assert generate(product(name: "Rose")).slug == "rose-2"
+    end
+
+    test "stays put when the product is renamed" do
+      product = generate(product(name: "Red roses"))
+      assert update!(product, %{name: "Crimson roses"}).slug == "red-roses"
+    end
+
+    test "edited, sends links with the old slug and the id to the new one" do
+      product = generate(product(name: "Red roses"))
+      product = update!(product, %{slug: "roses"})
+
+      assert Catalog.current_product_slug!("red-roses") == "roses"
+      assert Catalog.current_product_slug!(product.id) == "roses"
+      assert Catalog.current_product_slug!("roses") == nil
+    end
+
+    test "a former slug stays with its product" do
+      roses = generate(product(name: "Red roses"))
+      update!(roses, %{slug: "roses"})
+      tulips = generate(product(name: "Tulips"))
+
+      assert {:error, error} = update(tulips, %{slug: "red-roses"})
+      assert Exception.message(error) =~ "already used by another product"
+      assert generate(product(name: "Red roses!")).slug == "red-roses-2"
+    end
+
+    test "a product can take back its own former slug" do
+      product = generate(product(name: "Red roses"))
+      product = product |> update!(%{slug: "roses"}) |> update!(%{slug: "red-roses"})
+
+      assert product.slug == "red-roses"
+      assert Catalog.current_product_slug!("roses") == "red-roses"
+    end
+
+    test "is given to products saved before slugs existed" do
+      product = generate(product(name: "Red roses"))
+      Edenflowers.Repo.update_all(Catalog.Product, set: [slug: nil])
+
+      Edenflowers.Release.assign_missing_product_slugs!()
+
+      assert Ash.reload!(product, authorize?: false).slug == "red-roses"
+    end
+  end
+
   defp update(product, params),
     do: product |> Ash.Changeset.for_update(:update, params) |> Ash.update(authorize?: false)
 

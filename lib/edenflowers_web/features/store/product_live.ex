@@ -21,8 +21,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @impl true
-  def mount(%{"id" => id} = params, _session, socket) do
-    product = get_product!(id)
+  def mount(%{"slug" => slug} = params, _session, socket) do
+    product = get_product!(slug)
 
     if connected?(socket),
       do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "product_variant:changed:#{product.id}")
@@ -44,7 +44,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(gallery: product.photo_slugs -- product.hidden_photo_slugs)
      |> assign(
        page_title: product.name,
-       alternates: alternates("/#{language}/product/#{product.id}"),
+       alternates: alternates("/#{language}/product/#{product.slug}"),
        page_description: product.description,
        og_image: image_url(product.main_photo_slug, 1200, 630),
        json_ld: json_ld(product, product_variants)
@@ -488,10 +488,9 @@ defmodule EdenflowersWeb.Store.ProductLive do
     {:noreply, assign(socket, product_variants: variants, selected_variant: selected_variant)}
   end
 
-  defp get_product!(id) do
-    case Catalog.get_product_by_id(id) do
+  defp get_product!(slug) do
+    case Catalog.get_product_by_slug(slug) do
       {:ok, product} -> product
-      # A malformed id is an invalid-filter error rather than NotFound; both should 404.
       {:error, _} -> raise Ash.Error.Query.NotFound, resource: Edenflowers.Catalog.Product
     end
   end

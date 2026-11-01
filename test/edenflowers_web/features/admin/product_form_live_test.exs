@@ -43,6 +43,19 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert Enum.all?(product.product_variants, &is_nil(&1.own_photo_slug))
   end
 
+  test "a new product's link follows its name until Jennie edits the link", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/products/new")
+
+    view |> form("#product-form") |> render_change(%{"_target" => ["form", "name"], form: %{name: "Röda rosor"}})
+    assert view |> element("#product-form input[name='form[slug]']") |> render() =~ ~s(value="roda-rosor")
+
+    view |> form("#product-form") |> render_change(%{"_target" => ["form", "slug"], form: %{slug: "Roses!"}})
+    assert render(view) =~ "/product/roses"
+
+    view |> form("#product-form") |> render_change(%{"_target" => ["form", "name"], form: %{name: "Tulips"}})
+    assert view |> element("#product-form input[name='form[slug]']") |> render() =~ ~s(value="Roses!")
+  end
+
   test "edits a size's price without touching the others", %{conn: conn} do
     product = generate(product())
     small = generate(product_variant(product_id: product.id, size: :small, price: "40.00"))

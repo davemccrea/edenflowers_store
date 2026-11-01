@@ -497,7 +497,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     path =
       case Catalog.list_subscribable_products!() do
         [] -> nil
-        [product] -> ~q"/#{language}/product/#{product.id}"
+        [product] -> ~q"/#{language}/product/#{product}"
         _several -> ~q"/#{language}/store"
       end
 

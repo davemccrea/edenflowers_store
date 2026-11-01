@@ -36,10 +36,10 @@ defmodule Edenflowers.Orders.Order.Checkout do
     :newsletter_offer_hidden?,
     :promotion,
     :fulfillment_option,
-    line_items: [:total]
+    line_items: [:total, :product_slug]
   ]
 
-  @storefront_load [:total_items_in_cart, :add_ons_only?, :promotion_applied?, :line_items]
+  @storefront_load [:total_items_in_cart, :add_ons_only?, :promotion_applied?, line_items: [:product_slug]]
 
   oban do
     triggers do

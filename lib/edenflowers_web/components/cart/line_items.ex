@@ -25,7 +25,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
           <li :for={line_item <- @order.line_items} class="flex flex-row gap-3 text-base sm:gap-4">
             <%= if not line_item.is_card do %>
               <.link
-                navigate={~q"/#{language}/product/#{line_item.product_id}"}
+                navigate={~q"/#{language}/product/#{line_item.product_slug}"}
                 class="shrink-0 transition-opacity hover:opacity-70"
               >
                 <.image
@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                 <div class="flex min-w-0 flex-col gap-0.5 break-words">
                   <%= if not line_item.is_card do %>
                     <.link
-                      navigate={~q"/#{language}/product/#{line_item.product_id}"}
+                      navigate={~q"/#{language}/product/#{line_item.product_slug}"}
                       class="link-underline-hover"
                     >
                       {line_item.product_name}
