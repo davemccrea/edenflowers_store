@@ -767,7 +767,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               {~t"Your flowers."}
             </h2>
             <p class="text-night-content/80 mt-6 max-w-md text-lg leading-relaxed">
-              {~t"I'd love to hear about your wedding. Tell me about the day and your style, and I'll design bouquets, crowns and decoration that feel like the two of you."}
+              {~t"Planning to get married? I do everything a wedding needs. Tell me about your big day and your style, and I'll make sure the flowers are exactly as you wish."}
             </p>
             <.button navigate={~q"/#{language}/weddings"} variant="primary" class="group mt-10 w-fit">
               {~t"Wedding flowers"}
