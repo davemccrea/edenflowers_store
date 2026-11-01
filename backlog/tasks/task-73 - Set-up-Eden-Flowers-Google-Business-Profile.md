@@ -46,5 +46,5 @@ Keep the name, address and phone identical to the website's Contact page.
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-2026-10-29: Profile is set up and verified (per David). Only photos are missing; waiting on photos from Yanni. Gaps found online: Stormossen's Minimossen pages linked to the old /valkommen and /tervetuloa pages, now redirected (71e1dc1b). Stormossen gives the address in Finnish (Muurahaistie 1), so check Maps has a single pin for the shop. Check Facebook and Instagram details match the Contact page. Finder.fi's listing has no phone, hours or website and could be claimed.
+2026-10-29: Profile is set up and verified (per David). Only photos are missing; waiting on photos from Jennie. Gaps found online: Stormossen's Minimossen pages linked to the old /valkommen and /tervetuloa pages, now redirected (71e1dc1b). Stormossen gives the address in Finnish (Muurahaistie 1), so check Maps has a single pin for the shop. Check Facebook and Instagram details match the Contact page. Finder.fi's listing has no phone, hours or website and could be claimed.
 <!-- SECTION:NOTES:END -->
