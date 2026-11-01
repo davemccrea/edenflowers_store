@@ -91,14 +91,14 @@ defmodule Edenflowers.Expenses.Expense do
     defaults [:read, :destroy]
 
     read :admin_list do
-      description "The admin Expenses table: unpaid first, soonest due, then ones needing review, then newest receipt date."
+      description "The admin Expenses table: ones needing review first, since a paid one goes into the monthly report as Claude read it, then unpaid, soonest due, then newest receipt date."
       pagination offset?: true, keyset?: true, countable: true, required?: false
 
       prepare build(
                 sort: [
+                  needs_review: :desc,
                   paid: :asc,
                   due_on: :asc_nils_last,
-                  needs_review: :desc,
                   date: :desc_nils_first,
                   processed_at: :desc
                 ]

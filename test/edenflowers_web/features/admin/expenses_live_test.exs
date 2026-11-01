@@ -41,14 +41,14 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert newer_position < older_position
   end
 
-  test "lists unpaid expenses first, then ones needing review", %{conn: conn} do
+  test "lists expenses needing review first, then unpaid ones", %{conn: conn} do
     create_expense("paid", "Paid Vendor", "Done", date: ~D[2026-03-10], paid_on: ~D[2026-03-10])
     create_expense("unsure", "Unsure Vendor", "Check", date: ~D[2026-01-05], paid_on: ~D[2026-01-05], confidence: :low)
     create_expense("unpaid", "Unpaid Vendor", "Pending", date: ~D[2026-01-01])
 
     {:ok, _view, html} = live(conn, ~p"/admin/expenses")
 
-    positions = Enum.map(["Unpaid Vendor", "Unsure Vendor", "Paid Vendor"], &elem(:binary.match(html, &1), 0))
+    positions = Enum.map(["Unsure Vendor", "Unpaid Vendor", "Paid Vendor"], &elem(:binary.match(html, &1), 0))
     assert positions == Enum.sort(positions)
   end
 
