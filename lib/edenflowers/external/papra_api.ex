@@ -60,7 +60,8 @@ defmodule Edenflowers.External.PapraAPI do
     end
   end
 
-  # Papra accepts `name`, `documentDate` (ISO 8601), `content` and `notes`; the public docs only list the first and third.
+  # Papra accepts `name`, `documentDate` (ISO 8601), `content` and `notes`;
+  # the public docs only list the first and third.
   @impl true
   def update_document(document_id, fields) do
     url = "#{organization_api_url()}/documents/#{document_id}"
