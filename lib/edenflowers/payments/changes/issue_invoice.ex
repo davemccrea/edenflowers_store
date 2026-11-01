@@ -15,7 +15,6 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments.Invoice
-  alias Edenflowers.Payments.Payment
   alias Edenflowers.Payments.ReferenceNumber
   alias Edenflowers.Repo
   alias Edenflowers.ShopTime
@@ -32,14 +31,15 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
         changeset
         |> Ash.Changeset.force_change_attributes(buyer(purchase))
         |> Ash.Changeset.force_change_attribute(:invoice_date, today)
-        |> Ash.Changeset.change_new_attribute(:due_date, Date.add(today, Payment.overdue_after_days()))
+        |> Ash.Changeset.change_new_attribute(:due_date, Invoice.default_due_date())
         |> Ash.Changeset.change_new_attribute(:locale, purchase.locale)
         |> default_amount(purchase.uninvoiced_balance)
         |> Ash.Changeset.before_action(&number/1)
     end
   end
 
-  defp buyer(%Order{} = order) do
+  @doc "The buyer details an invoice for `purchase` freezes, as Invoice attributes."
+  def buyer(%Order{} = order) do
     own_delivery? = order.fulfillment_method == :delivery and not order.gift
 
     Map.merge(business(order), %{
@@ -49,7 +49,7 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
     })
   end
 
-  defp buyer(%CourseRegistration{} = registration) do
+  def buyer(%CourseRegistration{} = registration) do
     Map.merge(business(registration), %{
       buyer_name: registration.name,
       buyer_email: registration.email,

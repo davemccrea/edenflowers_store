@@ -24,6 +24,8 @@ defmodule Edenflowers.Payments do
 
     resource Edenflowers.Payments.Invoice do
       define :create_invoice, action: :create
+      define :send_invoice, action: :send
+      define :get_invoice, action: :read, get_by: [:id]
     end
   end
 

@@ -137,6 +137,7 @@ defmodule Edenflowers.Orders.Order do
       :place_custom,
       :edit,
       :update_florist_note,
+      :update_business_details,
       :cancel,
       :cancel_by_customer,
       :mark_fulfilled,

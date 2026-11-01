@@ -631,6 +631,88 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert to == ~p"/admin/orders"
   end
 
+  describe "invoices" do
+    defp invoice_terms_order(attrs \\ []),
+      do: placed_order([origin: :custom, payment_terms: :invoice, payment_intent_id: nil] ++ attrs)
+
+    test "Jennie creates and emails one, then finds it listed with its PDF", %{conn: conn} do
+      order = invoice_terms_order(locale: "fi")
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+      assert has_element?(view, "#order-invoices", "No invoices yet.")
+      view |> element("#order-invoices button", "Create invoice") |> render_click()
+
+      assert has_element?(view, ~s|#invoices-form input[name="invoice[amount]"][value="88.50"]|)
+      assert has_element?(view, ~s|#invoices-form select[name="invoice[locale]"] option[value="fi"][selected]|)
+
+      view
+      |> form("#invoices-form", invoice: %{amount: "50.00", message: "Kiitos!"})
+      |> render_submit()
+
+      assert_email_sent(fn email ->
+        assert email.to == [{"", "ada@example.com"}]
+        assert email.text_body =~ "Kiitos!"
+        assert [%{filename: "lasku-" <> _}] = email.attachments
+      end)
+
+      [invoice] = Ash.load!(order, :invoices, authorize?: false).invoices
+      assert Decimal.equal?(invoice.amount, "50.00")
+      assert has_element?(view, "#invoice-#{invoice.id}", "Sent")
+      assert has_element?(view, ~s|#invoice-#{invoice.id} a[href="/admin/invoices/#{invoice.id}"]|, "PDF")
+    end
+
+    test "unticking the email makes it without sending, to send later", %{conn: conn} do
+      order = invoice_terms_order()
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element("#order-invoices button", "Create invoice") |> render_click()
+
+      view |> form("#invoices-form", invoice: %{"email_customer?" => "false"}) |> render_submit()
+
+      assert_no_email_sent()
+      [invoice] = Ash.load!(order, :invoices, authorize?: false).invoices
+      assert has_element?(view, "#invoice-#{invoice.id}", "Not sent")
+
+      view |> element("#invoice-#{invoice.id} button", "Send") |> render_click()
+      view |> form("#invoices-send-form") |> render_submit()
+
+      assert_email_sent(subject: "Invoice #{invoice.number} for your order for Wednesday 10.6.")
+      assert has_element?(view, "#invoice-#{invoice.id}", "Sent")
+    end
+
+    test "names missing business details and lets Jennie fill them in there", %{conn: conn} do
+      order = invoice_terms_order(fulfillment_status: :fulfilled, business_customer: true, company_name: "Kukka Oy")
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      view |> element("#order-invoices button", "Create invoice") |> render_click()
+
+      assert has_element?(view, "#invoices-missing li", "Y-tunnus")
+      assert has_element?(view, "#invoices-missing li", "Billing address")
+      refute has_element?(view, "#invoices-missing li", "Company name")
+      assert has_element?(view, ~s|button[form="invoices-form"][disabled]|)
+
+      view
+      |> form("#invoices-business-form", business: %{business_id: "2944459-6", billing_address: "Kyrkvägen 5"})
+      |> render_submit()
+
+      refute has_element?(view, "#invoices-missing")
+      refute has_element?(view, ~s|button[form="invoices-form"][disabled]|)
+      assert has_element?(view, "#order-log", "Business details changed")
+    end
+
+    test "the PDF downloads for an admin, named in the invoice's language", %{conn: conn, admin: admin} do
+      order = invoice_terms_order()
+      {:ok, invoice} = Edenflowers.Payments.create_invoice(%{order_id: order.id, locale: "sv-FI"}, actor: admin)
+
+      conn = get(conn, ~p"/admin/invoices/#{invoice.id}")
+
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-type") == ["application/pdf"]
+      assert [disposition] = get_resp_header(conn, "content-disposition")
+      assert disposition =~ ~s|filename="faktura-#{invoice.number}.pdf"|
+
+      assert get(build_conn(), ~p"/admin/invoices/#{invoice.id}").status == 404
+    end
+  end
+
   describe "refund" do
     test "Refund is offered only once nothing is to collect", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{placed_order(paid: "40.00").id}")

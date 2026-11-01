@@ -22,8 +22,12 @@ built back to what sets it off:
    `lib/edenflowers/orders/order/` and
    `lib/edenflowers/courses/course_registration/` (each resource's actions and
    triggers live in its fragments there, mostly `emails.ex`),
-   `orders/subscription.ex` and `lib/edenflowers/payments/payable.ex`. Read each `where:` condition and each
-   argument's default, such as whether "email the customer" starts ticked.
+   `orders/subscription.ex`, `lib/edenflowers/payments/payable.ex` and
+   `lib/edenflowers/payments/invoice.ex` (the Invoice email, for an order or a
+   booking alike, so it goes in both tables). Read each `where:` condition and
+   each argument's default, such as whether "email the customer" starts
+   ticked; where the admin form ticks a box the action leaves unticked, as the
+   Create invoice drawer does, say what Jennie sees.
 4. For an email queued through an AshOban trigger (`oban do triggers`), read
    its `scheduler_cron` and `where expr(...)` for scheduled ones, and the
    comment above it.

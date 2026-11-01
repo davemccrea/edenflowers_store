@@ -57,5 +57,20 @@ defmodule Edenflowers.Payments.BusinessCustomer do
                     "company name, Y-tunnus and billing address are all filled in. Saving never needs this; " <>
                     "creating an invoice does."
     end
+
+    calculate :missing_business_details,
+              {:array, :atom},
+              fn records, _context ->
+                Enum.map(records, fn
+                  %{business_customer: true} = record ->
+                    Enum.filter([:company_name, :business_id, :billing_address], &is_nil(Map.get(record, &1)))
+
+                  _consumer ->
+                    []
+                end)
+              end do
+      description "Which of company_name, business_id and billing_address a business customer still lacks before " <>
+                    "it can be invoiced, so the admin can name them. Empty for a consumer and once complete."
+    end
   end
 end

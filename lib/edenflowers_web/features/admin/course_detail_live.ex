@@ -18,6 +18,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.DrawerPreview
   alias EdenflowersWeb.Admin.EmailDrawer
+  alias EdenflowersWeb.Admin.InvoiceDrawer
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Admin.ShareLinkDrawer
@@ -136,6 +137,9 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
                   {registration.email}
                 </a>
                 <.refunds registration={registration} locale={@locale} />
+                <div :if={registration.invoices != []} id={"registration-invoices-#{registration.id}"} class="mt-2">
+                  <InvoiceDrawer.invoice_list invoices={registration.invoices} locale={@locale} drawer="invoices" />
+                </div>
               </div>
               <div class="col-start-2 row-start-1 justify-self-end">
                 <.registration_actions registration={registration} locale={@locale} />
@@ -245,6 +249,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         error={@settlement_error}
         locale={@locale}
         preview={@preview}
+      />
+      <.live_component
+        module={InvoiceDrawer}
+        id="invoices"
+        purchases={@course.bookings}
+        locale={@locale}
+        current_user={@current_user}
       />
       <.live_component
         :if={!@past? && !@course.draft}
@@ -422,6 +433,9 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:bookings"}, socket), do: {:noreply, reload_course(socket)}
 
+  def handle_info({InvoiceDrawer, {kind, message}}, socket),
+    do: {:noreply, socket |> reload_course() |> put_flash(kind, message)}
+
   def handle_info(_message, socket), do: {:noreply, socket}
 
   defp with_registration(socket, id, payment_action) do
@@ -515,21 +529,22 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   defp load_course(socket, id) do
     load = [
       :seats_booked,
-      bookings: [
-        :amount_paid,
-        :amount_held,
-        :balance,
-        :to_collect?,
-        :to_refund?,
-        :refund_methods,
-        :default_refund_method,
-        :refundable?,
-        :seats_held,
-        :payment_link_open?,
-        :payment_reminder?,
-        payments: [:undoable?, :reversal],
-        open_invoices: [:amount_unpaid]
-      ]
+      bookings:
+        [
+          :amount_paid,
+          :amount_held,
+          :balance,
+          :to_collect?,
+          :to_refund?,
+          :refund_methods,
+          :default_refund_method,
+          :refundable?,
+          :seats_held,
+          :payment_link_open?,
+          :payment_reminder?,
+          payments: [:undoable?, :reversal],
+          open_invoices: [:amount_unpaid]
+        ] ++ InvoiceDrawer.purchase_load()
     ]
 
     case Courses.get_course_by_id(id, actor: socket.assigns.current_user, load: load) do
@@ -577,6 +592,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         {if @registration.confirmation_emailed_at,
           do: ~t"Resend confirmation",
           else: ~t"Email confirmation"}
+      </.actions_menu_button>
+      <.actions_menu_button
+        :if={@registration.payment_terms == :invoice}
+        menu={"registration-actions-#{@registration.id}"}
+        phx-click={InvoiceDrawer.open_create("invoices", @registration)}
+      >
+        {~t"Create invoice"}
       </.actions_menu_button>
       <.actions_menu_button
         :if={@registration.to_collect?}

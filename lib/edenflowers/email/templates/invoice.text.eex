@@ -1,0 +1,19 @@
+<%= if @first_name do %><%= dgettext("emails", "Hi %{name},", name: @first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
+
+<%= if match?(%Edenflowers.Orders.Order{}, @purchase) do %><%= dgettext("emails", "Thank you for your order for %{date}. My invoice is attached.", date: @format_weekday_date.(@purchase.fulfillment_date)) %><% else %><%= dgettext("emails", "Thank you for booking %{course} on %{date}. My invoice is attached.", course: @purchase.course.name, date: @format_weekday_date.(@purchase.course.date)) %><% end %><%= if @part? do %> <%= dgettext("emails", "It is for %{amount} of the %{total} total.", amount: @format_currency.(@invoice.amount), total: @format_currency.(@purchase.total_due)) %><% end %>
+
+<%= message(@message) %><%= dgettext("emails", "Invoice %{number}", number: @invoice.number) %>
+<%= dgettext("emails", "Amount due") %>  <%= @format_currency.(@invoice.amount) %>
+<%= dgettext("emails", "Due date") %>  <%= @format_date.(@invoice.due_date) %>
+<%= dgettext("emails", "Payee") %>  <%= @payee %>
+<%= dgettext("emails", "Account (IBAN)") %>  <%= @iban %>
+<%= dgettext("emails", "Reference number") %>  <%= @reference_number %>
+<%= if @invoice.customer_reference do %><%= dgettext("emails", "Your reference") %>  <%= @invoice.customer_reference %>
+<% end %>
+<%= dgettext("emails", "Please use the reference number when you pay, so I can match your payment to this invoice.") %>
+
+<%= dgettext("emails", "If anything on it looks wrong, just reply to this email.") %>
+
+<%= dgettext("emails", "Warm wishes,") %>
+
+<%= signature() %>

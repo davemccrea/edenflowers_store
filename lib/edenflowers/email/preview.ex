@@ -18,7 +18,11 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   alias Edenflowers.Payments.Changes.Cancel
+  alias Edenflowers.Payments.Changes.IssueInvoice
+  alias Edenflowers.Payments.Changes.SendInvoice
   alias Edenflowers.Payments.Changes.SendPaymentReceivedEmail
+  alias Edenflowers.Payments.Invoice
+  alias Edenflowers.Payments.InvoicePdf
   alias Edenflowers.Translations
 
   @doc """
@@ -105,6 +109,55 @@ defmodule Edenflowers.Email.Preview do
 
     booking_email(:confirmation, entered, inputs)
   end
+
+  @doc "The Invoice email `:send` would send for `invoice` now, with Jennie's `message`."
+  def build_invoice(%Invoice{} = invoice, message) do
+    invoice
+    |> SendInvoice.load_for_email()
+    |> Email.invoice(message)
+    |> Swoosh.Email.attachment(InvoicePdf.attachment("", invoice))
+  end
+
+  @doc """
+  The Invoice email for one Jennie is about to create for `purchase`, from
+  the form's `params` (amount, due_date, locale), before it has a number.
+  Unfilled or unreadable fields read as the defaults the action would use.
+  """
+  def build_new_invoice(purchase, params, message) do
+    {key, load} =
+      case purchase do
+        %Order{} -> {:order, [:total_due, :balance, :uninvoiced_balance]}
+        %CourseRegistration{} -> {:course_registration, [:course, :total_due, :balance, :uninvoiced_balance]}
+      end
+
+    purchase = Ash.load!(purchase, load, authorize?: false, reuse_values?: false)
+
+    purchase
+    |> IssueInvoice.buyer()
+    |> Map.merge(%{
+      order: nil,
+      course_registration: nil,
+      number: "…",
+      reference_number: "…",
+      amount: decimal(params["amount"]) || purchase.uninvoiced_balance,
+      due_date: date(params["due_date"]) || Invoice.default_due_date(),
+      locale: presence(params["locale"]) || purchase.locale
+    })
+    |> then(&struct(Invoice, &1))
+    |> Map.put(key, purchase)
+    |> SendInvoice.in_invoice_locale()
+    |> then(&Swoosh.Email.attachment(Email.invoice(&1, message), InvoicePdf.attachment("", &1)))
+  end
+
+  defp date(text) do
+    case Date.from_iso8601(text || "") do
+      {:ok, date} -> date
+      _ -> nil
+    end
+  end
+
+  defp presence(""), do: nil
+  defp presence(text), do: text
 
   # Placing opens a link for payment-link terms; an edited order keeps the one it has.
   defp entered_link?(entered, nil), do: entered.payment_terms == :payment_link

@@ -41,9 +41,16 @@ defmodule Edenflowers.Payments.InvoiceTest do
     end
 
     test "for a business customer needs the company details, which can be added after delivery", ctx do
-      order = placed_order(payment_terms: :invoice, fulfillment_status: :fulfilled, business_customer: true)
+      order =
+        placed_order(
+          payment_terms: :invoice,
+          fulfillment_status: :fulfilled,
+          business_customer: true,
+          company_name: "Kukka Oy"
+        )
 
       assert error_message(invoice(%{order_id: order.id}, ctx)) =~ "company name, Y-tunnus and billing address"
+      assert Ash.load!(order, :missing_business_details).missing_business_details == [:business_id, :billing_address]
 
       {:ok, order} = Orders.update_order_business_details(order, @company, actor: ctx.admin)
 
@@ -150,6 +157,58 @@ defmodule Edenflowers.Payments.InvoiceTest do
       Swoosh.TestAssertions.assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
         assert email.text_body =~ "I've received your payment of 88,50 €."
+      end)
+    end
+  end
+
+  describe "emailing one" do
+    test "goes out on creating when asked, in the invoice's language with its PDF", ctx do
+      order = placed_order(payment_terms: :invoice, locale: "en-GB") |> Ash.Seed.update!(@company)
+
+      {:ok, invoice} =
+        invoice(%{order_id: order.id}, ctx, %{locale: "fi", email_customer?: true, message: "Kiitos paljon!"})
+
+      assert invoice.__metadata__.emailed?
+      assert invoice.sent_at
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.to == [{"", "ada@example.com"}]
+        assert email.text_body =~ "Kiitos paljon!"
+        assert email.text_body =~ ReferenceNumber.format(invoice.reference_number)
+        assert [%{filename: filename, content_type: "application/pdf"}] = email.attachments
+        assert filename == "lasku-#{invoice.number}.pdf"
+      end)
+    end
+
+    test "waits for Jennie to send it otherwise", ctx do
+      order = placed_order(payment_terms: :invoice)
+
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx)
+
+      refute invoice.sent_at
+      Swoosh.TestAssertions.assert_no_email_sent()
+
+      {:ok, sent} = Payments.send_invoice(invoice, %{message: nil}, actor: ctx.admin)
+
+      assert sent.sent_at
+      assert Decimal.equal?(sent.amount, invoice.amount)
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.subject =~ "Invoice #{invoice.number}"
+        assert [%{filename: "invoice-" <> _}] = email.attachments
+      end)
+    end
+
+    test "names a booking's course in the invoice's language", ctx do
+      registration = generate(course_registration(status: :confirmed, payment_terms: :invoice, locale: "en-GB"))
+
+      {:ok, invoice} =
+        invoice(%{course_registration_id: registration.id}, ctx, %{locale: "sv-FI", email_customer?: true})
+
+      assert invoice.__metadata__.emailed?
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert [%{filename: "faktura-" <> _}] = email.attachments
       end)
     end
   end
