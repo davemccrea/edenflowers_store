@@ -1,9 +1,10 @@
 ---
 id: TASK-168.8
 title: List unpaid invoices in the monthly report
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-01 20:57'
+updated_date: '2026-11-01 23:14'
 labels: []
 dependencies:
   - TASK-168.5
@@ -22,6 +23,12 @@ Add a section listing invoices sent and still unpaid at the end of the reported 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The monthly report lists invoices unpaid at month end with number, dates, buyer and amount open
-- [ ] #2 Sales totals in the report are unchanged
+- [x] #1 The monthly report lists invoices unpaid at month end with number, dates, buyer and amount open
+- [x] #2 Sales totals in the report are unchanged
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Invoice gains read action open_at (date arg: made by then, no Credit note dated by then, amount_open_at > 0) and calcs amount_open_at (date arg: amount less Payments with paid_at on or before that Helsinki day, refunds and Undos netted), buyer (company name for a business customer, else buyer name) and purchase_reference. Payments.list_open_invoices. Monthly report gains a fourth sheet, Kundfordringar: number, invoice date, due date, buyer, reference, invoice amount, unpaid at month end, and a Summa row. Paid or cancelled later still lists, so the sheet reads the same whenever it is built. Sales sheet untouched (ADR 0004). sv/fi headings AI-drafted, queued as R07.
+<!-- SECTION:NOTES:END -->

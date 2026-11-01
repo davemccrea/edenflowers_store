@@ -9,6 +9,10 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   unpaid ones wait until Jennie marks them paid. The sales sheet is the shop's only
   sales record (ADR 0004), so every payment method counts.
 
+  The receivables sheet lists the invoices still owed at month end, for the
+  accountant to book what replaced Zervant's receivables list. Invoices are
+  payment requests, not sales, so it never changes the sales sheet.
+
   A receipt Papra can't serve doesn't stop the report: its row says so.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin", context: "accounting report"]
@@ -20,6 +24,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   alias Edenflowers.External.PapraAPI
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders.Calculations.Vat
+  alias Edenflowers.Payments
   alias Edenflowers.Payments.Payment
   alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.Components
@@ -40,6 +45,11 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
     with {:ok, payments} <- payments(first, last),
          {:ok, expenses} <- paid_expenses(first, last),
+         {:ok, invoices} <-
+           Payments.list_open_invoices(last,
+             load: [:buyer, :purchase_reference, amount_open_at: %{date: last}],
+             authorize?: false
+           ),
          rows =
            expenses
            |> Enum.with_index(1)
@@ -48,7 +58,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
          receipts = for({_n, _expense, name, body} <- rows, body, do: {~c"kvitton/#{name}", body}),
          {:ok, transactions} <-
            StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
-         sheets = [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions)],
+         sheets = [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions), receivables_sheet(invoices)],
          workbook = %Workbook{sheets: Enum.map(sheets, &with_basic_font/1)},
          {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
          files = [{~c"#{spreadsheet}", xlsx} | receipts],
@@ -316,6 +326,40 @@ defmodule Edenflowers.Accounting.MonthlyReport do
             [nil, nil, ["Total fees", bold: true], nil, stripe_amount_cell(fees)],
             [nil, nil, ["Total payouts", bold: true], nil, nil, stripe_amount_cell(paid_out)]
           ]
+    }
+  end
+
+  defp receivables_sheet(invoices) do
+    headings = [
+      ~t"Invoice number",
+      ~t"Invoice date",
+      ~t"Due date",
+      ~t"Buyer",
+      ~t"Reference",
+      ~t"Invoice amount",
+      ~t"Unpaid at month end"
+    ]
+
+    rows =
+      Enum.map(invoices, fn invoice ->
+        [
+          invoice.number,
+          date_cell(invoice.invoice_date),
+          date_cell(invoice.due_date),
+          invoice.buyer,
+          invoice.purchase_reference,
+          amount_cell(invoice.amount),
+          amount_cell(invoice.amount_open_at)
+        ]
+      end)
+
+    total = invoices |> Enum.map(& &1.amount_open_at) |> Enum.reduce(Decimal.new("0.00"), &Decimal.add/2)
+
+    %Sheet{
+      name: "Kundfordringar",
+      rows:
+        [Enum.map(headings, &[&1, bold: true]) | rows] ++
+          [[], [nil, nil, nil, nil, nil, [~t"Sum", bold: true], amount_cell(total)]]
     }
   end
 

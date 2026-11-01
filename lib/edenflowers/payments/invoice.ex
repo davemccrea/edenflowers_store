@@ -94,6 +94,27 @@ defmodule Edenflowers.Payments.Invoice do
   actions do
     defaults [:read]
 
+    read :open_at do
+      description "The invoices still owed at the end of a day, for the receivables list in the accountant's " <>
+                    "monthly report: made by then, not cancelled by a Credit note dated by then, and not covered " <>
+                    "by the Payments dated by then (in Helsinki), refunds and Undos taken off. An invoice paid " <>
+                    "or cancelled later still counts, so the list reads the same whenever the report is built. " <>
+                    "Sorted by number. Load amount_open_at with the same date for what was owed on each."
+
+      argument :date, :date do
+        description "The last day counted, such as the reported month's last day."
+        allow_nil? false
+      end
+
+      filter expr(
+               invoice_date <= ^arg(:date) and
+                 not exists(credit_note, credit_date <= ^arg(:date)) and
+                 amount_open_at(date: ^arg(:date)) > 0
+             )
+
+      prepare build(sort: [number: :asc])
+    end
+
     create :create do
       description "Jennie invoices an order or Course booking on invoice terms whose buyer details are complete " <>
                     "(invoiceable?). It takes the next number in the series and its viitenumero, is dated today " <>
@@ -295,6 +316,41 @@ defmodule Edenflowers.Payments.Invoice do
 
     calculate :paid?, :boolean, expr(status == :paid) do
       description "Whether its Payments cover its amount."
+    end
+
+    calculate :amount_open_at,
+              :decimal,
+              expr(
+                amount -
+                  (sum(payments,
+                     field: :amount,
+                     query: [
+                       filter:
+                         expr(
+                           fragment(
+                             "(? AT TIME ZONE 'UTC' AT TIME ZONE ?)::date",
+                             paid_at,
+                             ^Edenflowers.ShopTime.timezone()
+                           ) <=
+                             ^arg(:date)
+                         )
+                     ]
+                   ) || 0)
+              ) do
+      description "What was still to pay on it at the end of a day in euros: its amount less its Payments dated " <>
+                    "that day or before in Helsinki, refunds and Undos taken off. Later Payments don't count, so " <>
+                    "the monthly report shows what was owed at month end. Ignores Credit notes: open_at leaves " <>
+                    "cancelled invoices out."
+
+      argument :date, :date, allow_nil?: false
+    end
+
+    calculate :buyer, :string, expr(if business_customer, do: company_name, else: buyer_name) do
+      description "Who it bills, for lists: the company's name for a business customer, otherwise the customer's."
+    end
+
+    calculate :purchase_reference, :string, expr(order.order_reference || course_registration.reference) do
+      description "The reference of the order or Course booking it bills."
     end
 
     calculate :amount_unpaid, :decimal, expr(amount - amount_paid) do
