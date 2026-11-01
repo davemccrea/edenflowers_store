@@ -3,15 +3,15 @@ defmodule Edenflowers.External.PapraAPITest do
 
   alias Edenflowers.External.PapraAPI
 
-  test "renames a document" do
+  test "updates a document" do
     Req.Test.stub(PapraAPI, fn %{method: "PATCH", request_path: "/api/organizations/org_test/documents/doc_1"} = conn ->
       {:ok, body, conn} = Plug.Conn.read_body(conn)
-      send(self(), {:renamed, Jason.decode!(body)})
+      send(self(), {:updated, Jason.decode!(body)})
       Req.Test.json(conn, %{})
     end)
 
-    assert :ok = PapraAPI.rename_document("doc_1", "2026-10-23 Kukkatukku Oy.pdf")
-    assert_received {:renamed, %{"name" => "2026-10-23 Kukkatukku Oy.pdf"}}
+    assert :ok = PapraAPI.update_document("doc_1", %{name: "2026-10-23 Kukkatukku Oy.pdf", documentDate: "2026-10-23"})
+    assert_received {:updated, %{"name" => "2026-10-23 Kukkatukku Oy.pdf", "documentDate" => "2026-10-23"}}
   end
 
   test "fetches a document with the type its bytes show, not the type Papra labels it" do

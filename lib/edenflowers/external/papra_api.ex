@@ -1,13 +1,13 @@
 defmodule Edenflowers.External.PapraAPI.Behaviour do
   @moduledoc """
-  Contract for fetching, uploading and renaming documents in Papra.
+  Contract for fetching, uploading and updating documents in Papra.
   """
 
   @callback fetch_document(organization_id :: String.t(), document_id :: String.t()) ::
               {:ok, %{body: binary(), content_type: String.t()}}
               | {:error, term()}
 
-  @callback rename_document(document_id :: String.t(), name :: String.t()) :: :ok | {:error, term()}
+  @callback update_document(document_id :: String.t(), fields :: map()) :: :ok | {:error, term()}
 
   @callback upload_document(filename :: String.t(), body :: binary()) ::
               :ok | {:error, :already_exists} | {:error, term()}
@@ -60,11 +60,12 @@ defmodule Edenflowers.External.PapraAPI do
     end
   end
 
+  # Papra accepts `name`, `documentDate` (ISO 8601), `content` and `notes`; the public docs only list the first and third.
   @impl true
-  def rename_document(document_id, name) do
+  def update_document(document_id, fields) do
     url = "#{organization_api_url()}/documents/#{document_id}"
 
-    case Req.patch([url: url, json: %{name: name}, auth: {:bearer, api_key()}] ++ req_options()) do
+    case Req.patch([url: url, json: fields, auth: {:bearer, api_key()}] ++ req_options()) do
       {:ok, %Req.Response{status: status}} when status in 200..299 -> :ok
       {:ok, %Req.Response{status: status}} -> {:error, {:papra_http_error, status}}
       {:error, reason} -> {:error, {:papra_request_failed, reason}}

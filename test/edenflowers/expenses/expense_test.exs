@@ -138,50 +138,66 @@ defmodule Edenflowers.Expenses.ExpenseTest do
     end
   end
 
-  describe "naming the Papra document" do
+  describe "updating the Papra document" do
     setup do
-      stub(Edenflowers.External.PapraAPI.Mock, :rename_document, fn document_id, name ->
-        send(self(), {:renamed, document_id, name})
+      stub(Edenflowers.External.PapraAPI.Mock, :update_document, fn document_id, fields ->
+        send(self(), {:updated, document_id, fields})
         :ok
       end)
 
       :ok
     end
 
-    test "names it after the receipt date and vendor" do
+    test "dates it and names it after the receipt date and vendor" do
       {:ok, _} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
 
-      assert_received {:renamed, "doc_abc123", "2026-05-15 Acme Oy.pdf"}
+      assert_received {:updated, "doc_abc123", %{documentDate: "2026-05-15", name: "2026-05-15 Acme Oy.pdf"}}
     end
 
-    test "waits until both the date and the vendor are known" do
+    test "waits for the date before updating it" do
       {:ok, expense} = Expenses.ingest_expense(Map.delete(@valid_attrs, :date), actor: system_actor())
-      refute_received {:renamed, _, _}
+      refute_received {:updated, _, _}
 
       {:ok, _} = Expenses.correct_expense(expense, %{date: "2026-05-16"}, actor: admin_actor())
-      assert_received {:renamed, "doc_abc123", "2026-05-16 Acme Oy.pdf"}
+      assert_received {:updated, "doc_abc123", %{documentDate: "2026-05-16", name: "2026-05-16 Acme Oy.pdf"}}
     end
 
-    test "renames it again when the vendor is corrected, but not for other fields" do
+    test "dates it but leaves its name while the vendor is unknown" do
+      {:ok, _} = Expenses.ingest_expense(Map.delete(@valid_attrs, :vendor_name), actor: system_actor())
+
+      assert_received {:updated, "doc_abc123", fields}
+      assert fields == %{documentDate: "2026-05-15"}
+    end
+
+    test "updates it again when the date or vendor is corrected, but not for other fields" do
       {:ok, expense} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
-      assert_received {:renamed, _, _}
+      assert_received {:updated, _, _}
 
       {:ok, expense} = Expenses.correct_expense(expense, %{category: "travel"}, actor: admin_actor())
-      refute_received {:renamed, _, _}
+      refute_received {:updated, _, _}
 
-      {:ok, _} = Expenses.correct_expense(expense, %{vendor_name: "Kukkatukku Oy"}, actor: admin_actor())
-      assert_received {:renamed, "doc_abc123", "2026-05-15 Kukkatukku Oy.pdf"}
+      {:ok, expense} = Expenses.correct_expense(expense, %{vendor_name: "Kukkatukku Oy"}, actor: admin_actor())
+      assert_received {:updated, "doc_abc123", %{name: "2026-05-15 Kukkatukku Oy.pdf"}}
+
+      {:ok, _} = Expenses.correct_expense(expense, %{date: "2026-05-20"}, actor: admin_actor())
+      assert_received {:updated, "doc_abc123", %{documentDate: "2026-05-20", name: "2026-05-20 Kukkatukku Oy.pdf"}}
     end
 
-    test "still saves the expense when Papra can't rename it" do
-      expect(Edenflowers.External.PapraAPI.Mock, :rename_document, fn _, _ -> {:error, {:papra_http_error, 500}} end)
+    test "drops a trailing dot from the vendor so the name has one before pdf" do
+      {:ok, _} = Expenses.ingest_expense(Map.put(@valid_attrs, :vendor_name, "MailerLite Ltd."), actor: system_actor())
+
+      assert_received {:updated, "doc_abc123", %{name: "2026-05-15 MailerLite Ltd.pdf"}}
+    end
+
+    test "still saves the expense when Papra can't update it" do
+      expect(Edenflowers.External.PapraAPI.Mock, :update_document, fn _, _ -> {:error, {:papra_http_error, 500}} end)
 
       log =
         capture_log(fn ->
           assert {:ok, _} = Expenses.ingest_expense(@valid_attrs, actor: system_actor())
         end)
 
-      assert log =~ "Failed to rename Papra document doc_abc123"
+      assert log =~ "Failed to update Papra document doc_abc123"
     end
   end
 
