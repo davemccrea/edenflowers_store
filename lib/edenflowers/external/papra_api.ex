@@ -32,9 +32,9 @@ defmodule Edenflowers.External.PapraAPI do
     url =
       "#{base_url()}/api/organizations/#{organization_id}/documents/#{document_id}/file"
 
-    case Req.get(url, auth: {:bearer, api_key()}, decode_body: false) do
+    case Req.get([url: url, auth: {:bearer, api_key()}, decode_body: false] ++ req_options()) do
       {:ok, %Req.Response{status: 200, body: body} = response} ->
-        {:ok, %{body: body, content_type: content_type(response)}}
+        {:ok, %{body: body, content_type: content_type(body, response)}}
 
       {:ok, %Req.Response{status: status}} ->
         {:error, {:papra_http_error, status}}
@@ -44,8 +44,16 @@ defmodule Edenflowers.External.PapraAPI do
     end
   end
 
-  # Papra serves a document with the type it was uploaded as. Anyone can drop a photo or screenshot in, not only PDFs.
-  defp content_type(response) do
+  # Papra serves a document with the type it was uploaded as, which can be wrong: our email import uploads
+  # every attachment as a PDF, and anyone can drop a screenshot in. Claude rejects a mislabelled file,
+  # so the bytes decide, and the header only covers types we don't recognise.
+  defp content_type(<<"%PDF", _::binary>>, _response), do: "application/pdf"
+  defp content_type(<<0x89, "PNG", _::binary>>, _response), do: "image/png"
+  defp content_type(<<0xFF, 0xD8, 0xFF, _::binary>>, _response), do: "image/jpeg"
+  defp content_type(<<"GIF8", _::binary>>, _response), do: "image/gif"
+  defp content_type(<<"RIFF", _::binary-size(4), "WEBP", _::binary>>, _response), do: "image/webp"
+
+  defp content_type(_body, response) do
     case Req.Response.get_header(response, "content-type") do
       [type | _] -> type |> String.split(";") |> hd() |> String.trim()
       [] -> "application/pdf"
