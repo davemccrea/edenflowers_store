@@ -4,6 +4,7 @@ title: 'Sell gift vouchers that pay for flowers, subscriptions and courses'
 status: needs-triage
 assignee: []
 created_date: '2026-10-31 20:30'
+updated_date: '2026-11-01 14:07'
 labels:
   - spec
   - customers
@@ -45,3 +46,16 @@ Customers can buy an Eden Flowers gift voucher online or in the shop, and whoeve
 - [ ] #4 Anyone with the code can see what is left on it
 - [ ] #5 The monthly report shows vouchers sold, spent and outstanding as the accountant needs
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-01 14:07
+
+---
+
+From the TASK-162 review (2026-11-01): Finnish companies usually settle Christmas gifts by mid to late November. Live in early December suits private buyers, but corporate voucher sales need it by about 20.11, or they wait until next year.
+
+---
+<!-- COMMENTS:END -->
