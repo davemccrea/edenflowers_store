@@ -1,9 +1,10 @@
 ---
 id: TASK-162.2
-title: Link Instagram and the website both ways
-status: needs-triage
+title: Tag the Instagram and Facebook bio links to the site
+status: ready-for-human
 assignee: []
 created_date: '2026-11-01 14:07'
+updated_date: '2026-11-01 16:07'
 labels: []
 dependencies: []
 parent_task_id: TASK-162
@@ -14,16 +15,28 @@ ordinal: 299000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-**Why:** Instagram is the plan's main channel, but the site's footer has no link to Instagram or Facebook, and orders from the Instagram bio only show up in Umami if that link is tagged.
+**Why:** Instagram is the plan's main channel, and orders from the Instagram bio or the Facebook page only show up by source in Umami if those links are tagged.
 
-- Instagram bio and Facebook page link to the site with UTM tags (source instagram/facebook, medium bio), made in the admin share drawer.
-- Footer links to Instagram and Facebook.
-
-Open: which page the bio links to (home or store), and whether the footer links are icons or text.
+Decisions (grilled 2026-11-01):
+- The Instagram bio and the Facebook page's website field link to the bare homepage, https://edenflowers.fi/, so the site picks the language from the browser. The root redirect keeps the query string, so the tags survive.
+- UTM tags from the admin share drawer: source instagram / facebook, medium bio.
+- The storefront footer already links to Instagram and Facebook (Socials, Business.social_urls/0); nothing to build.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 The Instagram bio and Facebook page link to the site with UTM tags
-- [ ] #2 The storefront footer links to Instagram and Facebook
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-01 16:07
+
+---
+
+2026-11-01: Grilled with David. Left for Jennie or David: make both links in the share drawer and paste them into the Instagram bio and the Facebook page.
+
+---
+<!-- COMMENTS:END -->
