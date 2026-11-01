@@ -21,6 +21,10 @@ defmodule Edenflowers.Payments do
 
   resources do
     resource Edenflowers.Payments.Payment
+
+    resource Edenflowers.Payments.Invoice do
+      define :create_invoice, action: :create
+    end
   end
 
   require Logger

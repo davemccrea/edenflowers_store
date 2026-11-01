@@ -22,6 +22,7 @@ defmodule Edenflowers.Orders.Order do
     fragments: [
       Edenflowers.Payments.Payable,
       Edenflowers.Payments.BusinessCustomer,
+      Edenflowers.Payments.Invoiceable,
       Edenflowers.Orders.Order.Checkout,
       Edenflowers.Orders.Order.Occurrences,
       Edenflowers.Orders.Order.Customer,
@@ -200,6 +201,7 @@ defmodule Edenflowers.Orders.Order do
                      :edit,
                      :quote_entered,
                      :update_florist_note,
+                     :update_business_details,
                      :cancel,
                      :record_payment,
                      :undo_payment,
@@ -404,9 +406,21 @@ defmodule Edenflowers.Orders.Order do
       description "Every Payment and refund on the order, by any method, oldest first. Refunds are negative."
       sort paid_at: :asc
     end
+
+    has_many :invoices, Edenflowers.Payments.Invoice do
+      description "Every invoice Jennie sent for the order, oldest first."
+      sort number: :asc
+    end
   end
 
   calculations do
+    calculate :buyer_details_complete?,
+              :boolean,
+              expr(not is_nil(customer_name) and not is_nil(customer_email) and business_details_complete?) do
+      description "Whether an invoice has someone to address and send to: the customer's name and email, and " <>
+                    "for a business customer the company details too."
+    end
+
     calculate :payment_overdue?,
               :boolean,
               expr(

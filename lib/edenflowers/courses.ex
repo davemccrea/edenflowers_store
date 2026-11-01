@@ -85,6 +85,7 @@ defmodule Edenflowers.Courses do
       define :record_registration_payment, action: :record_payment, args: [:amount, :payment_method]
       define :remove_registration_seat, action: :remove_seat
       define :cancel_registration, action: :cancel
+      define :update_registration_business_details, action: :update_business_details
     end
   end
 end
