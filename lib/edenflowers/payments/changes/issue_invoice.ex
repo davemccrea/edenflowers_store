@@ -3,20 +3,16 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
   Fills in a new invoice from its purchase: the frozen buyer details, today's
   date, and the defaults Jennie didn't override (amount, due date, language).
 
-  The number is taken inside the insert's transaction, under a lock every
-  invoice takes, as the last number + 1. A Postgres sequence would leave a
-  gap whenever an insert rolled back; this way a failed insert frees its
-  number for the next one, so the series stays gapless.
+  The number is the next in the series it shares with Credit notes
+  (`NumberSeries`), taken just before the insert.
   """
   use Ash.Resource.Change
-
-  import Ecto.Query, only: [from: 2]
 
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments.Invoice
+  alias Edenflowers.Payments.NumberSeries
   alias Edenflowers.Payments.ReferenceNumber
-  alias Edenflowers.Repo
   alias Edenflowers.ShopTime
 
   @impl true
@@ -70,15 +66,8 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
       else: changeset
   end
 
-  # ponytail: one lock for every invoice; fine for one shop's handful a month.
   defp number(changeset) do
-    Repo.query!("SELECT pg_advisory_xact_lock(hashtext('invoice_number'))")
-
-    number =
-      case Repo.one(from(i in "invoices", select: max(i.number))) do
-        nil -> Invoice.first_number()
-        last -> last + 1
-      end
+    number = NumberSeries.take()
 
     changeset
     |> Ash.Changeset.force_change_attribute(:number, number)

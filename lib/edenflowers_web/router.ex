@@ -207,6 +207,7 @@ defmodule EdenflowersWeb.Router do
     get "/account/avatar", EdenflowersWeb.Admin.AvatarController, :show
     get "/reports", EdenflowersWeb.Admin.ReportController, :show
     get "/invoices/:id", EdenflowersWeb.Admin.InvoiceController, :show
+    get "/credit-notes/:id", EdenflowersWeb.Admin.InvoiceController, :credit_note
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
 

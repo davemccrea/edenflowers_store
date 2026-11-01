@@ -213,6 +213,97 @@ defmodule Edenflowers.Payments.InvoiceTest do
     end
   end
 
+  describe "cancelling one" do
+    defp cancel(invoice, ctx, attrs \\ %{}) do
+      Payments.cancel_invoice(Map.put(attrs, :invoice_id, invoice.id), actor: ctx.admin)
+    end
+
+    test "issues a credit note numbered next in the same series", ctx do
+      order = placed_order(payment_terms: :invoice)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx, %{amount: "30.00"})
+
+      {:ok, credit_note} = cancel(invoice, ctx, %{reason: "Wrong amount"})
+      {:ok, next} = invoice(%{order_id: order.id}, ctx)
+
+      assert credit_note.number == invoice.number + 1
+      assert credit_note.credit_date == ShopTime.today()
+      assert next.number == credit_note.number + 1
+      assert Ash.load!(invoice, :status).status == :cancelled
+    end
+
+    test "no longer counts it as invoiced, so the next invoice asks for the whole Balance", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx, %{amount: "30.00"})
+
+      {:ok, _credit_note} = cancel(invoice, ctx)
+
+      order = Ash.load!(order, [:uninvoiced_balance, :open_invoices], authorize?: false)
+      assert Decimal.equal?(order.uninvoiced_balance, "88.50")
+      assert order.open_invoices == []
+      assert error_message(pay(order, "30.00", invoice, ctx)) =~ "is cancelled"
+    end
+
+    test "is refused once anything is paid on it, until that is undone", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, paid} = invoice(%{order_id: order.id}, ctx, %{amount: "20.00"})
+      {:ok, part_paid} = invoice(%{order_id: order.id}, ctx, %{amount: "30.00"})
+      {:ok, order} = pay(order, "20.00", paid, ctx)
+      {:ok, order} = pay(order, "10.00", part_paid, ctx)
+
+      assert error_message(cancel(paid, ctx)) =~ "A paid invoice can't be cancelled"
+      assert error_message(cancel(part_paid, ctx)) =~ "Undo them first"
+
+      ten = Enum.find(Ash.load!(order, :payments, authorize?: false).payments, &Decimal.equal?(&1.amount, "10.00"))
+      {:ok, _order} = Orders.undo_payment(order, ten.id, actor: ctx.admin)
+
+      assert {:ok, _credit_note} = cancel(part_paid, ctx)
+    end
+
+    test "only once", ctx do
+      order = placed_order(payment_terms: :invoice)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx)
+      {:ok, credit_note} = cancel(invoice, ctx)
+
+      assert error_message(cancel(invoice, ctx)) =~ "Credit note #{credit_note.number} already cancels"
+    end
+
+    test "emails the credit note in the invoice's language when asked", ctx do
+      order = placed_order(payment_terms: :invoice, locale: "en-GB")
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx, %{locale: "sv-FI"})
+
+      {:ok, credit_note} = cancel(invoice, ctx, %{email_customer?: true, message: "Förlåt för krånglet!"})
+
+      assert credit_note.__metadata__.emailed?
+      assert credit_note.sent_at
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.to == [{"", "ada@example.com"}]
+        assert email.subject =~ "#{invoice.number}"
+        assert email.text_body =~ "Förlåt för krånglet!"
+        assert [%{filename: filename, content_type: "application/pdf"}] = email.attachments
+        assert filename == "kreditnota-#{credit_note.number}.pdf"
+      end)
+    end
+
+    test "waits for Jennie to send it otherwise", ctx do
+      order = placed_order(payment_terms: :invoice)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx)
+      {:ok, credit_note} = cancel(invoice, ctx)
+
+      refute credit_note.sent_at
+      Swoosh.TestAssertions.assert_no_email_sent()
+
+      {:ok, sent} = Payments.send_credit_note(credit_note, %{message: nil}, actor: ctx.admin)
+
+      assert sent.sent_at
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.text_body =~ "I've cancelled invoice #{invoice.number}"
+        assert [%{filename: "credit-note-" <> _}] = email.attachments
+      end)
+    end
+  end
+
   test "keeps the buyer details it was made with", ctx do
     order = placed_order(payment_terms: :invoice) |> Ash.Seed.update!(@company)
 

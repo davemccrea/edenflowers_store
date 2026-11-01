@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
 
   Payments come from their own records rather than versions: a Stripe refund
   changes nothing on the order row, and only the record holds the amount.
+  Invoices and the credit notes cancelling them do too, for the same reason.
   Lines live on another resource, so a version shows them only through its
   `items`, which `RecordEnteredLineItems` sets when they change.
   """
@@ -35,9 +36,34 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     :customer_reference
   ]
 
-  def entries(versions, payments, locale) do
-    (Enum.map(versions, &entry(&1, locale)) ++ Enum.map(payments, &payment_entry(&1, locale)))
+  @doc "`invoices` need `credit_note` loaded; each and any credit note cancelling it is an entry."
+  def entries(versions, payments, locale, invoices \\ []) do
+    (Enum.map(versions, &entry(&1, locale)) ++
+       Enum.map(payments, &payment_entry(&1, locale)) ++ Enum.flat_map(invoices, &invoice_entries(&1, locale)))
     |> Enum.sort_by(& &1.at, {:desc, DateTime})
+  end
+
+  defp invoice_entries(invoice, locale) do
+    {number, amount} = {invoice.number, Format.currency(invoice.amount, locale)}
+    created = %{at: invoice.inserted_at, title: ~t"Invoice #{number} created · #{amount}", details: []}
+
+    case invoice.credit_note do
+      nil ->
+        [created]
+
+      credit_note ->
+        credit = credit_note.number
+        details = if credit_note.reason, do: [{~t"Reason", credit_note.reason}], else: []
+
+        [
+          created,
+          %{
+            at: credit_note.inserted_at,
+            title: ~t"Invoice #{number} cancelled with credit note #{credit}",
+            details: details
+          }
+        ]
+    end
   end
 
   def payment_method_label(:stripe), do: ~t"Stripe"

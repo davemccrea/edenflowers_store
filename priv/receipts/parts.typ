@@ -1,6 +1,85 @@
-// Blocks the receipt and the invoice print the same way, so a customer sees
-// one set of lines and one VAT breakdown whichever document they hold.
-#import "theme.typ": colors, type-scale, eyebrow
+// Blocks the receipt, the invoice and the credit note print the same way, so
+// a customer sees one set of lines and one VAT breakdown whichever document
+// they hold, and an invoice and its credit note look like one series.
+#import "theme.typ": colors, fonts, type-scale, eyebrow, display, hairline, honey-rule
+
+#let shop = toml("shop.toml")
+
+// The page an invoice or a credit note is printed on, `title` top-left and
+// the logo top-right as on the receipt. The seller's details are in the
+// footer, as on most Finnish invoices. Use as `show: invoice-page.with(…)`.
+#let invoice-page(seller, t, title, number, lang, body) = {
+  set page(
+    paper: "a4",
+    margin: (top: 24mm, bottom: 22mm, x: 22mm),
+    footer: context [
+      #set text(font: fonts.sans, size: type-scale.micro, fill: colors.ink-muted)
+      #hairline
+      #v(6pt)
+      #grid(
+        columns: (1fr, auto),
+        align: (left, right),
+        [
+          #seller.name · #seller.address · #t("business-id") #seller.business_id \
+          #shop.email · #shop.phone
+        ],
+        [#counter(page).display() / #context counter(page).final().first()],
+      )
+    ],
+  )
+
+  set document(title: title + " " + str(number), author: seller.name, date: none)
+  set text(font: fonts.sans, size: type-scale.body, fill: colors.ink, lang: lang)
+  set par(leading: 0.65em, justify: false)
+
+  grid(
+    columns: (auto, 1fr),
+    align: (left + top, right + top),
+    [
+      #display(title)
+      #v(6pt)
+      #box(honey-rule(length: 40pt))
+    ],
+    image("assets/logo.svg", height: 64pt),
+  )
+
+  v(14pt)
+
+  body
+}
+
+// Who the document is for beside its facts, as (label, value) pairs. A
+// company is addressed by name, with the person who ordered under it.
+#let buyer-and-facts(buyer, facts, t) = {
+  let lines(address) = if address != none { address.split("\n").join(linebreak()) }
+  let buyer-lines = if buyer.company_name != none {
+    (
+      text(weight: "semibold", buyer.company_name),
+      buyer.name,
+      lines(buyer.address),
+      [#t("business-id") #buyer.business_id],
+      buyer.email,
+    )
+  } else {
+    (text(weight: "semibold", buyer.name), lines(buyer.address), buyer.email)
+  }
+
+  grid(
+    columns: (1fr, 1fr),
+    column-gutter: 20pt,
+    [
+      #eyebrow(t("customer"))
+      #v(5pt)
+      #buyer-lines.filter(line => line != none).join(linebreak())
+    ],
+    grid(
+      columns: (auto, auto),
+      column-gutter: 12pt,
+      row-gutter: 7pt,
+      ..facts.map(((label, value)) => ([#label], text(features: ("tnum",), weight: "semibold", value))).flatten(),
+    ),
+  )
+}
 
 // Column headers: quiet sans, mixed case, muted ink. Reserved for the
 // section heading above; the hairline rule alone separates header from

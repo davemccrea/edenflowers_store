@@ -29,6 +29,7 @@ defmodule Edenflowers.Email.Previews do
         payment_received(locale) ++
         payment_reminder(locale) ++
         invoice(locale) ++
+        credit_note(locale) ++
         purchase_receipt(locale) ++
         subscription_payment_failed(locale) ++
         subscription_charged(locale) ++
@@ -647,6 +648,25 @@ defmodule Edenflowers.Email.Previews do
            },
            locale
          )
+       )}
+    ]
+  end
+
+  defp credit_note(locale) do
+    wrong_amount =
+      cond do
+        String.starts_with?(locale, "fi") -> "Anteeksi, summa meni minulta väärin."
+        String.starts_with?(locale, "sv") -> "Förlåt, jag skrev fel summa."
+        true -> "Sorry, I got the amount wrong."
+      end
+
+    [
+      {"Credit note", "cancelling an invoice", :credit_note,
+       Email.credit_note(%Edenflowers.Payments.CreditNote{number: 1043, invoice: invoice_for(%{}, locale)})},
+      {"Credit note", "with a message from Jennie", :credit_note,
+       Email.credit_note(
+         %Edenflowers.Payments.CreditNote{number: 1043, invoice: invoice_for(%{}, locale)},
+         wrong_amount
        )}
     ]
   end

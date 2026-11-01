@@ -27,6 +27,12 @@ defmodule Edenflowers.Payments do
       define :send_invoice, action: :send
       define :get_invoice, action: :read, get_by: [:id]
     end
+
+    resource Edenflowers.Payments.CreditNote do
+      define :cancel_invoice, action: :create
+      define :send_credit_note, action: :send
+      define :get_credit_note, action: :read, get_by: [:id]
+    end
   end
 
   require Logger

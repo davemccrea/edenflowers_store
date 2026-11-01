@@ -3,11 +3,15 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
   Invoicing an order or a Course booking from the page Jennie is already on.
   The drawer creates an invoice, emailing it at once unless she unticks it,
   lets her fill in the business details it still needs, and sends one made
-  earlier. `invoice_list/1` lists a purchase's invoices with their PDFs.
+  earlier. It also cancels an open invoice with nothing paid on it by
+  issuing a Credit note, emailed at once unless she unticks it.
+  `invoice_list/1` lists a purchase's invoices and credit notes with their
+  PDFs.
 
   Render it once per page with `id`, `purchases` (the orders or bookings the
   page shows, each loaded with `purchase_load/0`), `locale` and
-  `current_user`. Open it with `open_create/2` or `open_send/2`. After any
+  `current_user`. Open it with `open_create/2`, `open_send/2` or
+  `open_cancel/2`. After any
   change it sends the page `{InvoiceDrawer, {flash_kind, message}}`, so the
   page reloads what it shows and flashes the message.
   """
@@ -22,6 +26,7 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
   alias Edenflowers.Format
   alias Edenflowers.Locales
   alias Edenflowers.Payments
+  alias Edenflowers.Payments.CreditNote
   alias Edenflowers.Payments.Invoice
 
   @doc "What every purchase passed in needs loaded."
@@ -32,7 +37,7 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
       :buyer_details_complete?,
       :business_details_complete?,
       :missing_business_details,
-      invoices: [:status]
+      invoices: [:status, :cancellable?, :credit_note]
     ]
   end
 
@@ -40,13 +45,23 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
   def open_create(id, purchase), do: JS.push("open_create", target: "##{id}", value: %{purchase_id: purchase.id})
 
   @doc "Opens drawer `id` to email `invoice` to the customer."
-  def open_send(id, invoice), do: JS.push("open_send", target: "##{id}", value: %{invoice_id: invoice.id})
+  def open_send(id, %Invoice{} = invoice), do: JS.push("open_send", target: "##{id}", value: %{invoice_id: invoice.id})
 
-  attr :invoices, :list, required: true, doc: "with `status` loaded"
+  def open_send(id, %CreditNote{} = credit_note),
+    do: JS.push("open_send_credit_note", target: "##{id}", value: %{credit_note_id: credit_note.id})
+
+  @doc "Opens drawer `id` to cancel `invoice` with a Credit note."
+  def open_cancel(id, invoice), do: JS.push("open_cancel", target: "##{id}", value: %{invoice_id: invoice.id})
+
+  attr :invoices, :list, required: true, doc: "with `status`, `cancellable?` and `credit_note` loaded"
   attr :locale, :string, required: true
   attr :drawer, :string, required: true, doc: "the InvoiceDrawer's id, which Send opens"
 
-  @doc "A purchase's invoices, oldest first, each with its PDF and, until it has gone, Send."
+  @doc """
+  A purchase's invoices, oldest first, each with its PDF and, until it has
+  gone, Send. One with nothing paid on it can be cancelled; a cancelled one
+  shows the credit note that cancels it, with its own PDF and Send.
+  """
   def invoice_list(assigns) do
     ~H"""
     <ul class="divide-base-content/12 divide-y text-sm">
@@ -80,9 +95,49 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
           >
             {~t"Send"}
           </button>
+          <button
+            :if={invoice.cancellable?}
+            type="button"
+            phx-click={open_cancel(@drawer, invoice)}
+            class="link link-error touch-target"
+          >
+            {~t"Cancel"}
+          </button>
         </p>
+        <.credit_note_line :if={invoice.credit_note} credit_note={invoice.credit_note} locale={@locale} drawer={@drawer} />
       </li>
     </ul>
+    """
+  end
+
+  attr :credit_note, CreditNote, required: true
+  attr :locale, :string, required: true
+  attr :drawer, :string, required: true
+
+  defp credit_note_line(assigns) do
+    ~H"""
+    <p id={"credit-note-#{@credit_note.id}"} class="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <span class="tabular-nums">
+        {~t"Credit note #{number = @credit_note.number}, #{date = Format.date(@credit_note.credit_date, @locale)}"}
+      </span>
+      <span :if={!@credit_note.sent_at} class="text-warning-content font-semibold">{~t"Not sent"}</span>
+      <.link
+        href={~p"/admin/credit-notes/#{@credit_note.id}"}
+        target="_blank"
+        rel="noopener"
+        class="link link-primary touch-target inline-flex items-center gap-1"
+      >
+        {~t"PDF"} <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
+      </.link>
+      <button
+        :if={!@credit_note.sent_at}
+        type="button"
+        phx-click={open_send(@drawer, @credit_note)}
+        class="link link-primary touch-target"
+      >
+        {~t"Send"}
+      </button>
+    </p>
     """
   end
 
@@ -111,11 +166,16 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
 
   @impl true
   def render(assigns) do
-    assigns = assign(assigns, purchase: purchase(assigns), invoice: invoice(assigns))
+    assigns =
+      assign(assigns, purchase: purchase(assigns), invoice: invoice(assigns), credit_note: credit_note(assigns))
 
     ~H"""
     <div id={@id}>
-      <.admin_drawer id={"#{@id}-drawer"} title={title(@mode, @invoice)} on_close={JS.push("close", target: @myself)}>
+      <.admin_drawer
+        id={"#{@id}-drawer"}
+        title={title(@mode, @invoice, @credit_note)}
+        on_close={JS.push("close", target: @myself)}
+      >
         <%= if @purchase && match?({:create, _}, @mode) do %>
           <.drawer_body>
             <div
@@ -210,7 +270,50 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
         <% end %>
 
         <.form
-          :if={@invoice && match?({:send, _}, @mode)}
+          :if={@invoice && match?({:cancel, _}, @mode)}
+          for={@cancel_form}
+          id={"#{@id}-cancel-form"}
+          phx-change="validate_cancel"
+          phx-submit="cancel"
+          phx-target={@myself}
+          class="flex min-h-0 flex-1 flex-col"
+        >
+          <.drawer_body>
+            <p class="tabular-nums">
+              {Format.currency(@invoice.amount, @locale)} · {~t"dated #{date = Format.date(@invoice.invoice_date, @locale)}"}
+            </p>
+            <p class="text-base-content/75 text-sm">
+              {~t"A credit note cancels the whole invoice, so it no longer counts as invoiced. If anything is still to pay, create a new invoice afterwards."}
+            </p>
+            <.input
+              field={@cancel_form[:reason]}
+              type="textarea"
+              rows="2"
+              label={~t"Reason (optional)"}
+              placeholder={~t"Printed on the credit note, in the invoice's language."}
+              class="textarea w-full"
+            />
+            <.customer_email
+              id={"#{@id}-cancel-email"}
+              send={@cancel_form[:email_customer?]}
+              label={~t"Email the credit note to the customer"}
+              message={@cancel_form[:message]}
+              to={@invoice.buyer_email}
+              preview={@preview}
+            />
+          </.drawer_body>
+          <.drawer_footer>
+            <.button type="submit" variant="destructive">
+              {if sending?(@cancel_form), do: ~t"Cancel and send", else: ~t"Cancel invoice"}
+            </.button>
+            <.button type="button" phx-click={JS.exec("phx-hide", to: "##{@id}-drawer")} variant="ghost">
+              {~t"Keep invoice"}
+            </.button>
+          </.drawer_footer>
+        </.form>
+
+        <.form
+          :if={(@invoice && match?({:send, _}, @mode)) || @credit_note}
           for={@send_form}
           id={"#{@id}-send-form"}
           phx-change="validate_send"
@@ -219,19 +322,26 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
           class="flex min-h-0 flex-1 flex-col"
         >
           <.drawer_body>
-            <p class="tabular-nums">
+            <p :if={@invoice} class="tabular-nums">
               {Format.currency(@invoice.amount, @locale)} · {~t"due #{date = Format.date(@invoice.due_date, @locale)}"}
+            </p>
+            <p :if={@credit_note} class="tabular-nums">
+              {~t"Cancels invoice #{number = @credit_note.invoice.number}"} · {Format.currency(
+                Decimal.negate(@credit_note.invoice.amount),
+                @locale
+              )}
             </p>
             <.customer_email
               id={"#{@id}-send-email"}
               message={@send_form[:message]}
-              to={@invoice.buyer_email}
+              to={(@invoice || @credit_note.invoice).buyer_email}
               preview={@preview}
             />
           </.drawer_body>
           <.drawer_footer>
             <.button type="submit" variant="primary">
-              <.icon name="hero-envelope" class="h-4 w-4" /> {~t"Send invoice"}
+              <.icon name="hero-envelope" class="h-4 w-4" />
+              {if @credit_note, do: ~t"Send credit note", else: ~t"Send invoice"}
             </.button>
             <.button type="button" phx-click={JS.exec("phx-hide", to: "##{@id}-drawer")} variant="ghost">
               {~t"Cancel"}
@@ -243,8 +353,10 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
     """
   end
 
-  defp title({:send, _id}, %Invoice{number: number}), do: ~t"Send invoice #{number}"
-  defp title(_mode, _invoice), do: ~t"Create invoice"
+  defp title({:send, _id}, %Invoice{number: number}, _credit_note), do: ~t"Send invoice #{number}"
+  defp title({:cancel, _id}, %Invoice{number: number}, _credit_note), do: ~t"Cancel invoice #{number}"
+  defp title({:send_credit_note, _id}, _invoice, %CreditNote{number: number}), do: ~t"Send credit note #{number}"
+  defp title(_mode, _invoice, _credit_note), do: ~t"Create invoice"
 
   defp business_field_label(:company_name), do: ~t"Company name"
   defp business_field_label(:business_id), do: ~t"Y-tunnus"
@@ -270,6 +382,39 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
     socket = assign(socket, mode: {:send, id}, send_form: to_form(%{"message" => ""}, as: :send))
 
     {:noreply, socket |> assign_send_preview() |> show_drawer()}
+  end
+
+  def handle_event("open_send_credit_note", %{"credit_note_id" => id}, socket) do
+    socket = assign(socket, mode: {:send_credit_note, id}, send_form: to_form(%{"message" => ""}, as: :send))
+
+    {:noreply, socket |> assign_send_preview() |> show_drawer()}
+  end
+
+  def handle_event("open_cancel", %{"invoice_id" => id}, socket) do
+    socket = assign(socket, mode: {:cancel, id})
+
+    {:noreply,
+     socket
+     |> assign(:cancel_form, cancel_form(invoice(socket.assigns), socket.assigns.current_user))
+     |> assign_cancel_preview()
+     |> show_drawer()}
+  end
+
+  def handle_event("validate_cancel", %{"cancel" => params}, socket) do
+    {:noreply,
+     socket
+     |> assign(:cancel_form, AshPhoenix.Form.validate(socket.assigns.cancel_form, params))
+     |> assign_cancel_preview()}
+  end
+
+  def handle_event("cancel", %{"cancel" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.cancel_form, params: params) do
+      {:ok, credit_note} ->
+        {:noreply, socket |> hide_drawer() |> changed(cancelled_message(invoice(socket.assigns), credit_note))}
+
+      {:error, form} ->
+        {:noreply, assign(socket, :cancel_form, form)}
+    end
   end
 
   def handle_event("close", _params, socket) do
@@ -309,6 +454,19 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
     {:noreply, socket |> assign(:send_form, to_form(params, as: :send)) |> assign_send_preview()}
   end
 
+  def handle_event("send", %{"send" => %{"message" => message}}, %{assigns: %{mode: {:send_credit_note, _}}} = socket) do
+    credit_note = credit_note(socket.assigns)
+
+    case Payments.send_credit_note(credit_note, %{message: message}, actor: socket.assigns.current_user) do
+      {:ok, _sent} ->
+        {:noreply,
+         socket |> hide_drawer() |> changed({:success, ~t"Credit note #{number = credit_note.number} emailed."})}
+
+      {:error, _error} ->
+        {:noreply, changed(socket, {:error, ~t"Could not email the credit note. Try again in a moment."})}
+    end
+  end
+
   def handle_event("send", %{"send" => %{"message" => message}}, socket) do
     invoice = invoice(socket.assigns)
 
@@ -331,6 +489,22 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
     end
   end
 
+  defp cancelled_message(invoice, credit_note) do
+    {invoice, number} = {invoice.number, credit_note.number}
+
+    case credit_note.__metadata__[:emailed?] do
+      true ->
+        {:success, ~t"Invoice #{invoice} cancelled with credit note #{number}, emailed to the customer."}
+
+      false ->
+        {:error,
+         ~t"Invoice #{invoice} cancelled with credit note #{number}, but it could not be emailed. Send it from the invoice list."}
+
+      nil ->
+        {:success, ~t"Invoice #{invoice} cancelled with credit note #{number}."}
+    end
+  end
+
   defp changed(socket, flash) do
     send(self(), {__MODULE__, flash})
     socket
@@ -342,11 +516,21 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
   defp purchase(%{mode: {:create, id}, purchases: purchases}), do: Enum.find(purchases, &(&1.id == id))
   defp purchase(_assigns), do: nil
 
-  defp invoice(%{mode: {:send, id}, purchases: purchases}) do
+  defp invoice(%{mode: {mode, id}, purchases: purchases}) when mode in [:send, :cancel] do
     purchases |> Enum.flat_map(& &1.invoices) |> Enum.find(&(&1.id == id))
   end
 
   defp invoice(_assigns), do: nil
+
+  defp credit_note(%{mode: {:send_credit_note, id}, purchases: purchases}) do
+    purchases
+    |> Enum.flat_map(& &1.invoices)
+    |> Enum.find_value(fn invoice ->
+      if invoice.credit_note && invoice.credit_note.id == id, do: %{invoice.credit_note | invoice: invoice}
+    end)
+  end
+
+  defp credit_note(_assigns), do: nil
 
   defp purchase_email(%CourseRegistration{email: email}), do: email
   defp purchase_email(order), do: order.customer_email
@@ -367,6 +551,19 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
         "message" => ""
       },
       transform_params: fn _form, params, _type -> Map.put(params, key, purchase.id) end
+    )
+    |> to_form()
+  end
+
+  # Emailing starts ticked only for an invoice the customer was sent: a credit
+  # note for one they never had would only puzzle them.
+  defp cancel_form(invoice, actor) do
+    CreditNote
+    |> AshPhoenix.Form.for_create(:create,
+      actor: actor,
+      as: "cancel",
+      params: %{"reason" => "", "email_customer?" => to_string(!!invoice.sent_at), "message" => ""},
+      transform_params: fn _form, params, _type -> Map.put(params, "invoice_id", invoice.id) end
     )
     |> to_form()
   end
@@ -393,8 +590,22 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
     assign(socket, :preview, preview)
   end
 
+  defp assign_cancel_preview(socket) do
+    form = socket.assigns.cancel_form
+    preview = if sending?(form), do: Preview.build_credit_note(invoice(socket.assigns), form[:message].value)
+
+    assign(socket, :preview, preview)
+  end
+
   defp assign_send_preview(socket) do
-    preview = Preview.build_invoice(invoice(socket.assigns), socket.assigns.send_form[:message].value)
+    message = socket.assigns.send_form[:message].value
+
+    preview =
+      case socket.assigns.mode do
+        {:send_credit_note, _id} -> Preview.build_credit_note(credit_note(socket.assigns), message)
+        {:send, _id} -> Preview.build_invoice(invoice(socket.assigns), message)
+      end
+
     assign(socket, :preview, preview)
   end
 end
