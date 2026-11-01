@@ -108,23 +108,26 @@ defmodule Edenflowers.Email do
   @doc """
   Jennie's invoice for an order or a booking, with the PDF the sender
   attaches: what it asks for, by when, and how to pay it by bank transfer.
-  In the invoice's own language, to the email it was made for. Expects
+  In the invoice's own language, to the email it was made for. Sent while
+  it is overdue, it is a friendly reminder: a gentler subject and a line
+  saying when it was due. Expects `:overdue?` and
   `order: [:total_due, :balance]` or `course_registration: [:course, :total_due, :balance]`
   loaded, with the course in the invoice's language.
   """
-  def invoice(%Invoice{} = invoice, message \\ nil) do
+  def invoice(%Invoice{overdue?: reminder?} = invoice, message \\ nil) when is_boolean(reminder?) do
     purchase = invoice.order || invoice.course_registration
     locale = invoice.locale
 
     customer_email(invoice, from_address(), fn email ->
       email
-      |> subject(invoice_subject(invoice, purchase))
+      |> subject(if reminder?, do: reminder_subject(invoice, purchase), else: invoice_subject(invoice, purchase))
       |> text_body(
         Templates.invoice(%{
           invoice: invoice,
           purchase: purchase,
           first_name: FirstName.extract(invoice.buyer_name),
           message: message,
+          reminder?: reminder?,
           part?: Decimal.lt?(invoice.amount, purchase.balance),
           payee: Invoice.seller().name,
           iban: Invoice.seller().iban,
@@ -144,6 +147,14 @@ defmodule Edenflowers.Email do
 
   defp invoice_subject(invoice, %CourseRegistration{} = registration),
     do: ~t"Invoice #{number = invoice.number} for #{course = registration.course.name}"
+
+  defp reminder_subject(invoice, %Order{} = order) do
+    date = Format.weekday_day_month(order.fulfillment_date, invoice.locale)
+    ~t"A reminder about invoice #{number = invoice.number} for your order for #{date}"
+  end
+
+  defp reminder_subject(invoice, %CourseRegistration{} = registration),
+    do: ~t"A reminder about invoice #{number = invoice.number} for #{course = registration.course.name}"
 
   @doc """
   Jennie's credit note for an Invoice she cancelled, with the PDF the sender

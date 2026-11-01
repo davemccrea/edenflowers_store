@@ -156,7 +156,9 @@ defmodule Edenflowers.Email.Preview do
       reference_number: "…",
       amount: decimal(params["amount"]) || purchase.uninvoiced_balance,
       due_date: date(params["due_date"]) || Invoice.default_due_date(),
-      locale: presence(params["locale"]) || purchase.locale
+      locale: presence(params["locale"]) || purchase.locale,
+      # A new invoice can't be due before today, so it is never a reminder.
+      overdue?: false
     })
     |> then(&struct(Invoice, &1))
     |> Map.put(key, purchase)

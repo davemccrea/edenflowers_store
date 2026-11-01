@@ -648,8 +648,32 @@ defmodule Edenflowers.Email.Previews do
            },
            locale
          )
+       )},
+      {"Invoice", "reminder, sent again once overdue", :invoice,
+       Email.invoice(invoice_for(%{overdue?: true, order: order(handed_over, locale)}, locale))},
+      {"Invoice", "reminder for a course booking, with a message from Jennie", :invoice,
+       Email.invoice(
+         invoice_for(
+           %{
+             overdue?: true,
+             amount: Decimal.new("45.00"),
+             buyer_name: "Anna Berg",
+             buyer_email: "anna@example.com",
+             course_registration: registration(%{total_due: Decimal.new("45.00")}, locale)
+           },
+           locale
+         ),
+         reminder_message(locale)
        )}
     ]
+  end
+
+  defp reminder_message(locale) do
+    cond do
+      String.starts_with?(locale, "fi") -> "Toivottavasti kurssi oli mukava!"
+      String.starts_with?(locale, "sv") -> "Hoppas att du trivdes på kursen!"
+      true -> "I hope you enjoyed the course!"
+    end
   end
 
   defp credit_note(locale) do
@@ -683,6 +707,7 @@ defmodule Edenflowers.Email.Previews do
         buyer_name: "Maria Nyström",
         buyer_email: "maria@example.com",
         business_customer: false,
+        overdue?: false,
         order: nil,
         course_registration: nil
       },

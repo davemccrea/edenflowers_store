@@ -2,8 +2,8 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
   @moduledoc """
   Invoicing an order or a Course booking from the page Jennie is already on.
   The drawer creates an invoice, emailing it at once unless she unticks it,
-  lets her fill in the business details it still needs, and sends one made
-  earlier. It also cancels an open invoice with nothing paid on it by
+  lets her fill in the business details it still needs, and sends an open
+  one made earlier or resends it, as a reminder once it is overdue. It also cancels an open invoice with nothing paid on it by
   issuing a Credit note, emailed at once unless she unticks it.
   `invoice_list/1` lists a purchase's invoices and credit notes with their
   PDFs.
@@ -37,7 +37,7 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
       :buyer_details_complete?,
       :business_details_complete?,
       :missing_business_details,
-      invoices: [:status, :cancellable?, :credit_note]
+      invoices: [:status, :overdue?, :sendable?, :cancellable?, :credit_note]
     ]
   end
 
@@ -53,14 +53,19 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
   @doc "Opens drawer `id` to cancel `invoice` with a Credit note."
   def open_cancel(id, invoice), do: JS.push("open_cancel", target: "##{id}", value: %{invoice_id: invoice.id})
 
-  attr :invoices, :list, required: true, doc: "with `status`, `cancellable?` and `credit_note` loaded"
+  attr :invoices, :list,
+    required: true,
+    doc: "with `status`, `overdue?`, `sendable?`, `cancellable?` and `credit_note` loaded"
+
   attr :locale, :string, required: true
   attr :drawer, :string, required: true, doc: "the InvoiceDrawer's id, which Send opens"
 
   @doc """
-  A purchase's invoices, oldest first, each with its PDF and, until it has
-  gone, Send. One with nothing paid on it can be cancelled; a cancelled one
-  shows the credit note that cancels it, with its own PDF and Send.
+  A purchase's invoices, oldest first, each with its PDF, flagged when
+  overdue. An open one can be sent, or resent once it has gone, which makes
+  an overdue one's email a reminder. One with nothing paid on it can be
+  cancelled; a cancelled one shows the credit note that cancels it, with its
+  own PDF and Send.
   """
   def invoice_list(assigns) do
     ~H"""
@@ -69,7 +74,8 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
         <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span class="font-semibold tabular-nums">{~t"Invoice #{number = invoice.number}"}</span>
           <span class="tabular-nums">{Format.currency(invoice.amount, @locale)}</span>
-          <.badge tone={status_tone(invoice.status)}>{status_label(invoice.status)}</.badge>
+          <.badge :if={invoice.overdue?} tone={:error}>{~t"Overdue"}</.badge>
+          <.badge :if={!invoice.overdue?} tone={status_tone(invoice.status)}>{status_label(invoice.status)}</.badge>
         </p>
         <p class="text-base-content/75 tabular-nums">
           {~t"Dated #{date = Format.date(invoice.invoice_date, @locale)}, due #{due = Format.date(invoice.due_date, @locale)}"}
@@ -88,12 +94,12 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
             {~t"PDF"} <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
           </.link>
           <button
-            :if={!invoice.sent_at}
+            :if={invoice.sendable?}
             type="button"
             phx-click={open_send(@drawer, invoice)}
             class="link link-primary touch-target"
           >
-            {~t"Send"}
+            {if invoice.sent_at, do: ~t"Resend", else: ~t"Send"}
           </button>
           <button
             :if={invoice.cancellable?}
@@ -322,8 +328,13 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
           class="flex min-h-0 flex-1 flex-col"
         >
           <.drawer_body>
-            <p :if={@invoice} class="tabular-nums">
+            <p :if={@invoice} class="flex flex-wrap items-center gap-x-2 gap-y-1 tabular-nums">
               {Format.currency(@invoice.amount, @locale)} · {~t"due #{date = Format.date(@invoice.due_date, @locale)}"}
+              <.badge :if={@invoice.overdue?} tone={:error}>{~t"Overdue"}</.badge>
+            </p>
+            <p :if={@invoice && @invoice.sent_at} class="text-base-content/75 text-sm">
+              {~t"Last sent #{date = Format.date(@invoice.sent_at, @locale)}."}
+              <span :if={@invoice.overdue?}>{~t"The email reminds the customer it is overdue."}</span>
             </p>
             <p :if={@credit_note} class="tabular-nums">
               {~t"Cancels invoice #{number = @credit_note.invoice.number}"} · {Format.currency(
@@ -341,7 +352,7 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
           <.drawer_footer>
             <.button type="submit" variant="primary">
               <.icon name="hero-envelope" class="h-4 w-4" />
-              {if @credit_note, do: ~t"Send credit note", else: ~t"Send invoice"}
+              {send_label(@invoice, @credit_note)}
             </.button>
             <.button type="button" phx-click={JS.exec("phx-hide", to: "##{@id}-drawer")} variant="ghost">
               {~t"Cancel"}
@@ -353,10 +364,15 @@ defmodule EdenflowersWeb.Admin.InvoiceDrawer do
     """
   end
 
-  defp title({:send, _id}, %Invoice{number: number}, _credit_note), do: ~t"Send invoice #{number}"
+  defp title({:send, _id}, %Invoice{number: number, sent_at: nil}, _credit_note), do: ~t"Send invoice #{number}"
+  defp title({:send, _id}, %Invoice{number: number}, _credit_note), do: ~t"Resend invoice #{number}"
   defp title({:cancel, _id}, %Invoice{number: number}, _credit_note), do: ~t"Cancel invoice #{number}"
   defp title({:send_credit_note, _id}, _invoice, %CreditNote{number: number}), do: ~t"Send credit note #{number}"
   defp title(_mode, _invoice, _credit_note), do: ~t"Create invoice"
+
+  defp send_label(_invoice, %CreditNote{}), do: ~t"Send credit note"
+  defp send_label(%Invoice{overdue?: true}, _credit_note), do: ~t"Send reminder"
+  defp send_label(_invoice, _credit_note), do: ~t"Send invoice"
 
   defp business_field_label(:company_name), do: ~t"Company name"
   defp business_field_label(:business_id), do: ~t"Y-tunnus"

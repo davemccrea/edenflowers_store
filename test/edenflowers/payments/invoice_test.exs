@@ -304,6 +304,100 @@ defmodule Edenflowers.Payments.InvoiceTest do
     end
   end
 
+  describe "once past its due date" do
+    defp due(invoice, days_from_today),
+      do: Ash.Seed.update!(invoice, %{due_date: Date.add(ShopTime.today(), days_from_today)})
+
+    defp overdue?(record), do: Ash.load!(record, :overdue?, authorize?: false, reuse_values?: false).overdue?
+
+    test "is overdue while open, from the day after its due date", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, paid} = invoice(%{order_id: order.id}, ctx, %{amount: "20.00"})
+      {:ok, cancelled} = invoice(%{order_id: order.id}, ctx, %{amount: "20.00"})
+      {:ok, part_paid} = invoice(%{order_id: order.id}, ctx, %{amount: "20.00"})
+      {:ok, due_today} = invoice(%{order_id: order.id}, ctx, %{amount: "20.00"})
+
+      {:ok, order} = pay(order, "20.00", paid, ctx)
+      {:ok, _order} = pay(order, "5.00", part_paid, ctx)
+      {:ok, _credit_note} = cancel(cancelled, ctx)
+      Enum.each([paid, cancelled, part_paid], &due(&1, -1))
+
+      refute overdue?(paid)
+      refute overdue?(cancelled)
+      assert overdue?(part_paid)
+      refute overdue?(due(due_today, 0))
+    end
+
+    test "puts its purchase under Payment overdue, while an invoiced Balance waits for its own due date", ctx do
+      handed_over = Date.add(ShopTime.today(), -30)
+      order = placed_order(payment_terms: :invoice, fulfillment_status: :fulfilled, fulfillment_date: handed_over)
+      payment_overdue? = fn -> Ash.load!(order, :payment_overdue?, authorize?: false).payment_overdue? end
+
+      assert payment_overdue?.()
+
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx)
+      refute payment_overdue?.()
+
+      due(invoice, -1)
+      assert payment_overdue?.()
+      assert order.id in Enum.map(Orders.list_unsettled_orders!(actor: ctx.admin), & &1.id)
+    end
+
+    test "resending it emails the same PDF with a friendly reminder, logged as one", ctx do
+      order = placed_order(payment_terms: :invoice)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx, %{email_customer?: true})
+
+      Swoosh.TestAssertions.assert_email_sent(subject: "Invoice #{invoice.number} for your order for Wednesday 10.6.")
+
+      invoice = due(invoice, -1)
+      {:ok, _sent} = Payments.send_invoice(invoice, %{message: "Hope all went well!"}, actor: ctx.admin)
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.subject =~ "A reminder about invoice #{invoice.number}"
+        assert email.text_body =~ "friendly reminder that it was due on"
+        assert email.text_body =~ "Hope all went well!"
+        assert [%{filename: filename}] = email.attachments
+        assert filename == "invoice-#{invoice.number}.pdf"
+      end)
+
+      versions = Ash.load!(invoice, :paper_trail_versions, authorize?: false).paper_trail_versions
+      assert versions |> Enum.sort_by(& &1.version_inserted_at, DateTime) |> Enum.map(& &1.reminder) == [false, true]
+    end
+
+    test "can't be sent once paid or cancelled", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, paid} = invoice(%{order_id: order.id}, ctx, %{amount: "20.00"})
+      {:ok, cancelled} = invoice(%{order_id: order.id}, ctx, %{amount: "20.00"})
+      {:ok, _order} = pay(order, "20.00", paid, ctx)
+      {:ok, _credit_note} = cancel(cancelled, ctx)
+
+      assert error_message(Payments.send_invoice(paid, %{}, actor: ctx.admin)) =~ "This invoice is paid"
+      assert error_message(Payments.send_invoice(cancelled, %{}, actor: ctx.admin)) =~ "This invoice is cancelled"
+      Swoosh.TestAssertions.assert_no_email_sent()
+    end
+
+    # Jennie decides whether to nudge a late payer (TASK-168): no trigger or
+    # scheduled job may email an invoice or a credit note.
+    test "is never emailed automatically" do
+      documents = [Invoice, Edenflowers.Payments.CreditNote]
+
+      triggered =
+        for domain <- Application.fetch_env!(:edenflowers, :ash_domains),
+            resource <- Ash.Domain.Info.resources(domain),
+            AshOban in Spark.extensions(resource),
+            _trigger <- AshOban.Info.oban_triggers(resource),
+            do: resource
+
+      assert Enum.filter(triggered, &(&1 in documents)) == []
+
+      sends_documents = ~r/send_invoice|send_credit_note|Email\.invoice|Email\.credit_note|SendInvoice|SendCreditNote/
+
+      workers = Path.wildcard("lib/edenflowers/**/workers/*.ex")
+      assert workers != []
+      assert Enum.filter(workers, &(File.read!(&1) =~ sends_documents)) == []
+    end
+  end
+
   test "keeps the buyer details it was made with", ctx do
     order = placed_order(payment_terms: :invoice) |> Ash.Seed.update!(@company)
 

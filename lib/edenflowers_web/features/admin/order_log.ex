@@ -36,7 +36,10 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     :customer_reference
   ]
 
-  @doc "`invoices` need `credit_note` loaded; each and any credit note cancelling it is an entry."
+  @doc """
+  `invoices` need `credit_note` and `paper_trail_versions` loaded; each,
+  every time it was emailed and any credit note cancelling it is an entry.
+  """
   def entries(versions, payments, locale, invoices \\ []) do
     (Enum.map(versions, &entry(&1, locale)) ++
        Enum.map(payments, &payment_entry(&1, locale)) ++ Enum.flat_map(invoices, &invoice_entries(&1, locale)))
@@ -47,23 +50,32 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     {number, amount} = {invoice.number, Format.currency(invoice.amount, locale)}
     created = %{at: invoice.inserted_at, title: ~t"Invoice #{number} created · #{amount}", details: []}
 
-    case invoice.credit_note do
-      nil ->
-        [created]
+    [created] ++
+      Enum.map(invoice.paper_trail_versions, &invoice_send_entry(&1, number)) ++
+      cancelled_entries(invoice.credit_note, number)
+  end
 
-      credit_note ->
-        credit = credit_note.number
-        details = if credit_note.reason, do: [{~t"Reason", credit_note.reason}], else: []
+  defp invoice_send_entry(version, number) do
+    %{
+      at: version.version_inserted_at,
+      title: if(version.reminder, do: ~t"Invoice #{number} reminder emailed", else: ~t"Invoice #{number} emailed"),
+      details: message_details(version)
+    }
+  end
 
-        [
-          created,
-          %{
-            at: credit_note.inserted_at,
-            title: ~t"Invoice #{number} cancelled with credit note #{credit}",
-            details: details
-          }
-        ]
-    end
+  defp cancelled_entries(nil, _number), do: []
+
+  defp cancelled_entries(credit_note, number) do
+    credit = credit_note.number
+    details = if credit_note.reason, do: [{~t"Reason", credit_note.reason}], else: []
+
+    [
+      %{
+        at: credit_note.inserted_at,
+        title: ~t"Invoice #{number} cancelled with credit note #{credit}",
+        details: details
+      }
+    ]
   end
 
   def payment_method_label(:stripe), do: ~t"Stripe"
