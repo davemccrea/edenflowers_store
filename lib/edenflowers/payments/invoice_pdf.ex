@@ -32,6 +32,18 @@ defmodule Edenflowers.Payments.InvoicePdf do
     :grand_total
   ]
 
+  @doc "The PDF's file name in the invoice's language, as `lasku-1001.pdf`, `faktura-1001.pdf` or `invoice-1001.pdf`."
+  def filename(%Invoice{number: number, locale: locale}), do: "#{document_name(locale)}-#{number}.pdf"
+
+  defp document_name("fi"), do: "lasku"
+  defp document_name("sv-FI"), do: "faktura"
+  defp document_name(_english), do: "invoice"
+
+  @doc "The PDF as an email attachment, named by `filename/1`."
+  def attachment(pdf, invoice) do
+    Swoosh.Attachment.new({:data, pdf}, filename: filename(invoice), content_type: "application/pdf")
+  end
+
   def generate(%Invoice{} = invoice) do
     with {:ok, invoice} <- load(invoice) do
       Typst.render("invoice-main.typ", "invoice", build_payload(invoice))

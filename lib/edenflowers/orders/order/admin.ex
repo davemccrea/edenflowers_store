@@ -77,8 +77,14 @@ defmodule Edenflowers.Orders.Order.Admin do
     :fulfillment_confirmation_sendable?,
     :promotion,
     :fulfillment_option,
+    :invoiceable?,
+    :uninvoiced_balance,
+    :buyer_details_complete?,
+    :business_details_complete?,
+    :missing_business_details,
     line_items: [:subtotal, :total],
-    open_invoices: [:amount_unpaid]
+    open_invoices: [:amount_unpaid],
+    invoices: [:status]
   ]
 
   oban do

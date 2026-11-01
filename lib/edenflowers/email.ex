@@ -17,6 +17,8 @@ defmodule Edenflowers.Email do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.ShopNotice
   alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Payments.Invoice
+  alias Edenflowers.Payments.ReferenceNumber
 
   @doc """
   The receipt for an Online Order paid at checkout: when and where, what was
@@ -101,6 +103,46 @@ defmodule Edenflowers.Email do
       )
     end)
   end
+
+  @doc """
+  Jennie's invoice for an order or a booking, with the PDF the sender
+  attaches: what it asks for, by when, and how to pay it by bank transfer.
+  In the invoice's own language, to the email it was made for. Expects
+  `order: [:total_due, :balance]` or `course_registration: [:course, :total_due, :balance]`
+  loaded, with the course in the invoice's language.
+  """
+  def invoice(%Invoice{} = invoice, message \\ nil) do
+    purchase = invoice.order || invoice.course_registration
+    locale = invoice.locale
+
+    customer_email(invoice, from_address(), fn email ->
+      email
+      |> subject(invoice_subject(invoice, purchase))
+      |> text_body(
+        Templates.invoice(%{
+          invoice: invoice,
+          purchase: purchase,
+          first_name: FirstName.extract(invoice.buyer_name),
+          message: message,
+          part?: Decimal.lt?(invoice.amount, purchase.balance),
+          payee: Invoice.seller().name,
+          iban: Invoice.seller().iban,
+          reference_number: ReferenceNumber.format(invoice.reference_number),
+          format_date: &Format.date(&1, locale),
+          format_weekday_date: &Format.weekday_date(&1, locale),
+          format_currency: &Format.currency(&1, locale)
+        })
+      )
+    end)
+  end
+
+  defp invoice_subject(invoice, %Order{} = order) do
+    date = Format.weekday_day_month(order.fulfillment_date, invoice.locale)
+    ~t"Invoice #{number = invoice.number} for your order for #{date}"
+  end
+
+  defp invoice_subject(invoice, %CourseRegistration{} = registration),
+    do: ~t"Invoice #{number = invoice.number} for #{course = registration.course.name}"
 
   @doc """
   Jennie's reminder of what is still owed on an order or booking, with the
@@ -701,6 +743,7 @@ defmodule Edenflowers.Email do
 
   defp recipient(%CourseRegistration{email: email}), do: email
   defp recipient(%Order{customer_email: email}), do: email
+  defp recipient(%Invoice{buyer_email: email}), do: email
   defp recipient(subscription), do: to_string(subscription.user.email)
 
   defp account_url, do: EdenflowersWeb.Endpoint.url() <> "/account"

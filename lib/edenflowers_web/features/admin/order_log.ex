@@ -27,7 +27,12 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     :customer_phone_number,
     :customer_instagram,
     :locale,
-    :florist_note
+    :florist_note,
+    :business_customer,
+    :company_name,
+    :business_id,
+    :billing_address,
+    :customer_reference
   ]
 
   def entries(versions, payments, locale) do
@@ -69,6 +74,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :place_unpaid_occurrence}), do: ~t"Placed, but the saved card was refused"
   defp title(%{version_action_name: :edit}), do: ~t"Edited"
   defp title(%{version_action_name: :update_florist_note}), do: ~t"Florist note changed"
+  defp title(%{version_action_name: :update_business_details}), do: ~t"Business details changed"
   defp title(%{version_action_name: :cancel}), do: ~t"Cancelled"
   defp title(%{version_action_name: :cancel_by_customer}), do: ~t"Cancelled by the customer"
   defp title(%{version_action_name: :mark_fulfilled}), do: ~t"Fulfilled"
@@ -128,6 +134,11 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp field_label(:customer_instagram), do: ~t"Instagram"
   defp field_label(:locale), do: ~t"Language"
   defp field_label(:florist_note), do: ~t"Florist note"
+  defp field_label(:business_customer), do: ~t"Business customer"
+  defp field_label(:company_name), do: ~t"Company name"
+  defp field_label(:business_id), do: ~t"Y-tunnus"
+  defp field_label(:billing_address), do: ~t"Billing address"
+  defp field_label(:customer_reference), do: ~t"Their reference"
 
   defp message_details(%{email_message: nil}), do: []
   defp message_details(version), do: [{~t"Message", version.email_message}]
@@ -141,5 +152,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp show(value, :quoted_fulfillment_fee, locale), do: Format.currency(Decimal.new(value), locale)
   defp show(value, :fulfillment_date, locale), do: Format.date(Date.from_iso8601!(value), locale)
   defp show(value, :locale, _locale), do: Locales.name(value)
+  defp show(true, :business_customer, _locale), do: ~t"Yes"
+  defp show(false, :business_customer, _locale), do: ~t"No"
   defp show(value, _field, _locale), do: value
 end

@@ -685,4 +685,16 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
     end
   end
+
+  test "a booking on invoice terms is invoiced from its menu and lists the invoice", %{conn: conn} do
+    registration = generate(course_registration(status: :confirmed, payment_terms: :invoice, email: "anna@example.com"))
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
+
+    view |> element("#registration-actions-#{registration.id} button", "Create invoice") |> render_click()
+    view |> form("#invoices-form") |> render_submit()
+
+    assert_email_sent(fn email -> assert email.to == [{"", "anna@example.com"}] end)
+    [invoice] = Ash.load!(registration, :invoices, authorize?: false).invoices
+    assert has_element?(view, "#registration-invoices-#{registration.id} #invoice-#{invoice.id}", "Sent")
+  end
 end

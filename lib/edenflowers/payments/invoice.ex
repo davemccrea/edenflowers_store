@@ -11,6 +11,9 @@ defmodule Edenflowers.Payments.Invoice do
   It is paid once the bank transfers Jennie records against it (Payments
   with its `invoice_id`) cover its amount.
 
+  `:send` emails it to the customer with its PDF; creating one can send it
+  at once. Sending only stamps `sent_at`, so the invoice itself never changes.
+
   Numbers come from one gapless series that continues Zervant's, starting at
   `first_number/0` (see `Changes.IssueInvoice`). The seller details printed
   on it come from `seller/0`.
@@ -30,6 +33,9 @@ defmodule Edenflowers.Payments.Invoice do
 
   @doc "The shop's details printed on its invoices: name, business_id, address, iban and bic."
   def seller, do: config()[:seller]
+
+  @doc "The due date an invoice made today gets unless Jennie picks another: 14 days on (Payment.overdue_after_days)."
+  def default_due_date, do: Date.add(Edenflowers.ShopTime.today(), Edenflowers.Payments.Payment.overdue_after_days())
 
   defp config, do: Application.fetch_env!(:edenflowers, :invoices)
 
@@ -75,12 +81,41 @@ defmodule Edenflowers.Payments.Invoice do
 
       accept [:order_id, :course_registration_id, :amount, :due_date, :locale]
 
+      argument :email_customer?, :boolean do
+        description "Whether to email it to the customer once it is made, as :send does. The admin form starts " <>
+                      "with this ticked. A failed email never undoes the invoice: the result's :emailed? " <>
+                      "metadata says whether it went, and :send can try again."
+
+        default false
+      end
+
+      argument :message, :string do
+        description "Jennie's own words for the email, after its first line. Only used when email_customer? is true."
+      end
+
       validate present([:order_id, :course_registration_id], exactly: 1)
       validate Validations.Invoiceable
       change Changes.IssueInvoice
       validate present(:amount), message: "nothing is left to invoice, so enter an amount"
       validate attribute_in(:locale, @locales)
       validate compare(:due_date, greater_than_or_equal_to: :invoice_date), message: "can't be before the invoice date"
+      change Changes.SendNewInvoice
+    end
+
+    update :send do
+      description "Jennie emails the invoice to its buyer's email, in its own language, with its PDF attached and " <>
+                    "her optional message, and sent_at is stamped. Nothing else about the invoice changes. Sent " <>
+                    "by hand only, and it can be sent again."
+
+      accept []
+
+      argument :message, :string do
+        description "Jennie's own words for the email, after its first line."
+      end
+
+      transaction? false
+      require_atomic? false
+      change Changes.SendInvoice
     end
   end
 
@@ -91,6 +126,7 @@ defmodule Edenflowers.Payments.Invoice do
 
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type([:read, :create])
+      authorize_if action(:send)
     end
   end
 
@@ -167,6 +203,11 @@ defmodule Edenflowers.Payments.Invoice do
 
     attribute :customer_reference, :string do
       description "The company's own reference (viitteenne), such as a PO number, when invoiced. Optional."
+    end
+
+    attribute :sent_at, :utc_datetime do
+      description "When it was last emailed to the customer. Nil until it has been: Jennie may make one without " <>
+                    "sending it, or its email may have failed."
     end
 
     timestamps()

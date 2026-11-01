@@ -28,6 +28,7 @@ defmodule Edenflowers.Email.Previews do
         order_updated(locale) ++
         payment_received(locale) ++
         payment_reminder(locale) ++
+        invoice(locale) ++
         purchase_receipt(locale) ++
         subscription_payment_failed(locale) ++
         subscription_charged(locale) ++
@@ -602,6 +603,71 @@ defmodule Edenflowers.Email.Previews do
       {"Account", "sign-in code", :otp_sign_in, Email.otp_sign_in("maria@example.com", "482913")},
       {"Account", "email change code", :email_change_code, Email.email_change_code("maria@example.com", "730184")}
     ]
+  end
+
+  defp invoice(locale) do
+    handed_over = %{
+      payment_terms: :invoice,
+      fulfillment_status: :fulfilled,
+      gift: false,
+      total_due: Decimal.new("64.00")
+    }
+
+    wedding =
+      Map.merge(handed_over, %{
+        fulfillment_status: :pending,
+        grand_total: Decimal.new("1200.00"),
+        total_due: Decimal.new("1200.00"),
+        balance: Decimal.new("1200.00")
+      })
+
+    company = %{
+      business_customer: true,
+      company_name: "Kukka Oy",
+      business_id: "2944459-6",
+      billing_address: "Kyrkvägen 5\n68600 Jakobstad",
+      customer_reference: "PO-4471"
+    }
+
+    [
+      {"Invoice", "order after delivery, consumer", :invoice,
+       Email.invoice(invoice_for(%{order: order(handed_over, locale)}, locale))},
+      {"Invoice", "business customer with their reference, with a message from Jennie", :invoice,
+       Email.invoice(invoice_for(Map.put(company, :order, order(handed_over, locale)), locale), message(locale))},
+      {"Invoice", "wedding booking fee, part of the order", :invoice,
+       Email.invoice(invoice_for(%{amount: Decimal.new("300.00"), order: order(wedding, locale)}, locale))},
+      {"Invoice", "course booking", :invoice,
+       Email.invoice(
+         invoice_for(
+           %{
+             amount: Decimal.new("45.00"),
+             buyer_name: "Anna Berg",
+             buyer_email: "anna@example.com",
+             course_registration: registration(%{total_due: Decimal.new("45.00")}, locale)
+           },
+           locale
+         )
+       )}
+    ]
+  end
+
+  defp invoice_for(attrs, locale) do
+    Map.merge(
+      %Edenflowers.Payments.Invoice{
+        number: 1042,
+        reference_number: Edenflowers.Payments.ReferenceNumber.from_invoice_number(1042),
+        invoice_date: ~D[2026-11-16],
+        due_date: ~D[2026-11-30],
+        amount: Decimal.new("64.00"),
+        locale: locale,
+        buyer_name: "Maria Nyström",
+        buyer_email: "maria@example.com",
+        business_customer: false,
+        order: nil,
+        course_registration: nil
+      },
+      attrs
+    )
   end
 
   # Jennie writes the reason herself, in the customer's language.
