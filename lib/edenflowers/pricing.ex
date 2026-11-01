@@ -3,7 +3,8 @@ defmodule Edenflowers.Pricing do
   Entry point for VAT rates and promotion codes.
 
   `TaxRate` supplies the rate applied to products, courses, and fulfillment;
-  `Promotion` holds discount terms and tracks code use.
+  `Promotion` holds discount terms and tracks code use; `WelcomeOffer` is the
+  rate new newsletter subscribers' codes are generated with.
   """
 
   use Ash.Domain,
@@ -27,5 +28,10 @@ defmodule Edenflowers.Pricing do
     end
 
     resource Edenflowers.Pricing.Promotion.Version
+
+    resource Edenflowers.Pricing.WelcomeOffer do
+      define :get_welcome_offer, action: :get
+      define :update_welcome_offer, action: :update
+    end
   end
 end

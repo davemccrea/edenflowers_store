@@ -11,12 +11,12 @@
 msgid ""
 msgstr ""
 
-#: lib/edenflowers/email.ex:681
+#: lib/edenflowers/email.ex:685
 #, elixir-autogen, elixir-format
 msgid "%{code} is your email change code for Eden Flowers"
 msgstr ""
 
-#: lib/edenflowers/email.ex:673
+#: lib/edenflowers/email.ex:677
 #, elixir-autogen, elixir-format
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr ""
@@ -680,7 +680,7 @@ msgstr ""
 msgid "You pay when you collect your order."
 msgstr ""
 
-#: lib/edenflowers/email.ex:618
+#: lib/edenflowers/email.ex:621
 #, elixir-autogen, elixir-format
 msgid "You're already subscribed to the Eden Flowers newsletter"
 msgstr ""
@@ -709,11 +709,6 @@ msgstr ""
 #: lib/edenflowers/email.ex:255
 #, elixir-autogen, elixir-format
 msgid "Your %{product} subscription is set up"
-msgstr ""
-
-#: lib/edenflowers/email.ex:600
-#, elixir-autogen, elixir-format
-msgid "Your 15% welcome code for Eden Flowers"
 msgstr ""
 
 #: lib/edenflowers/email.ex:31
@@ -873,18 +868,23 @@ msgstr ""
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr ""
 
-#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "As a welcome gift, you get 15% off one order. Enter the following code at checkout:"
-msgstr ""
-
 #: lib/edenflowers/email/templates/already_subscribed.text.eex:7
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "The code is valid until %{date}."
 msgstr ""
 
+#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "As a welcome gift, you get %{percent} off one order. Enter the following code at checkout:"
+msgstr ""
+
+#: lib/edenflowers/email.ex:602
+#, elixir-autogen, elixir-format
+msgid "Your %{percent} welcome code for Eden Flowers"
+msgstr ""
+
 #: lib/edenflowers/email/templates/already_subscribed.text.eex:3
 #, elixir-autogen, elixir-format
-msgid "Your welcome code for 15% off one order is still valid. Enter the following code at checkout:"
+msgid "Your welcome code for %{percent} off one order is still valid. Enter the following code at checkout:"
 msgstr ""

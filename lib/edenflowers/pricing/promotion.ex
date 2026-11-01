@@ -63,7 +63,9 @@ defmodule Edenflowers.Pricing.Promotion do
     end
 
     create :create_for_newsletter do
-      description "Generates a new newsletter subscriber's welcome code: 15% off, one use, valid for 30 days."
+      description "Generates a new newsletter subscriber's welcome code at the `WelcomeOffer` rate: one use, " <>
+                    "valid for 30 days."
+
       change Changes.SetNewsletterDefaults
     end
   end

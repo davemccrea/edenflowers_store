@@ -7,12 +7,12 @@ msgstr ""
 "Language: sv\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers/email.ex:681
+#: lib/edenflowers/email.ex:685
 #, elixir-autogen, elixir-format
 msgid "%{code} is your email change code for Eden Flowers"
 msgstr "%{code} är din kod för att byta e-postadress hos Eden Flowers"
 
-#: lib/edenflowers/email.ex:673
+#: lib/edenflowers/email.ex:677
 #, elixir-autogen, elixir-format
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr "%{otp_code} är din inloggningskod till Eden Flowers"
@@ -676,7 +676,7 @@ msgstr "Du betalar vid leveransen."
 msgid "You pay when you collect your order."
 msgstr "Du betalar när du hämtar din beställning."
 
-#: lib/edenflowers/email.ex:618
+#: lib/edenflowers/email.ex:621
 #, elixir-autogen, elixir-format
 msgid "You're already subscribed to the Eden Flowers newsletter"
 msgstr "Du prenumererar redan på Eden Flowers nyhetsbrev"
@@ -706,11 +706,6 @@ msgstr "Din prenumeration på %{product} är avslutad. Ditt kort debiteras inte 
 #, elixir-autogen, elixir-format
 msgid "Your %{product} subscription is set up"
 msgstr "Din prenumeration på %{product} är klar"
-
-#: lib/edenflowers/email.ex:600
-#, elixir-autogen, elixir-format
-msgid "Your 15% welcome code for Eden Flowers"
-msgstr "Din välkomstrabatt på 15 % från Eden Flowers"
 
 #: lib/edenflowers/email.ex:31
 #: lib/edenflowers/email.ex:154
@@ -869,18 +864,23 @@ msgstr "Din uppdaterade Eden Flowers-beställning för %{date}"
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr "Er bröllopsförfrågan till Eden Flowers"
 
-#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "As a welcome gift, you get 15% off one order. Enter the following code at checkout:"
-msgstr "Som välkomstgåva får du 15 % rabatt på en beställning. Ange följande kod i kassan:"
-
 #: lib/edenflowers/email/templates/already_subscribed.text.eex:7
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "The code is valid until %{date}."
 msgstr "Koden gäller till och med %{date}."
 
+#: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "As a welcome gift, you get %{percent} off one order. Enter the following code at checkout:"
+msgstr "Som välkomstgåva får du %{percent} rabatt på en beställning. Ange följande kod i kassan:"
+
+#: lib/edenflowers/email.ex:602
+#, elixir-autogen, elixir-format
+msgid "Your %{percent} welcome code for Eden Flowers"
+msgstr "Din välkomstrabatt på %{percent} från Eden Flowers"
+
 #: lib/edenflowers/email/templates/already_subscribed.text.eex:3
 #, elixir-autogen, elixir-format
-msgid "Your welcome code for 15% off one order is still valid. Enter the following code at checkout:"
-msgstr "Din välkomstkod för 15 % rabatt på en beställning gäller fortfarande. Ange följande kod i kassan:"
+msgid "Your welcome code for %{percent} off one order is still valid. Enter the following code at checkout:"
+msgstr "Din välkomstkod för %{percent} rabatt på en beställning gäller fortfarande. Ange följande kod i kassan:"

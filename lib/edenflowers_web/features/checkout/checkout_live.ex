@@ -22,12 +22,14 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   alias Edenflowers.Catalog
   alias Edenflowers.External.StripeAPI
+  alias Edenflowers.Format
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Orders.LineItem.Validations.WithinStock
   alias Edenflowers.Orders.Order
   alias Edenflowers.PhoneNumber
+  alias Edenflowers.Pricing
   alias Edenflowers.Translations
   alias EdenflowersWeb.Analytics
 
@@ -72,6 +74,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
        |> assign(:page_title, ~t"Checkout")
        |> assign(:fulfillment_options, fulfillment_options)
        |> assign(:shop_calendar, Fulfillment.get_shop_calendar!())
+       |> assign(:welcome_percent, Format.discount(Pricing.get_welcome_offer!().discount_rate, Format.locale()))
        |> assign(:card_variants, card_variants)
        |> assign(:order, order)
        |> assign(:delivery_quote, quote_from_order(order))
@@ -221,7 +224,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                     <.input
                       :if={not @order.subscription? and !hide_newsletter_offer?(@order, @current_user)}
-                      label={~t"Subscribe to the newsletter and get 15% off this order."}
+                      label={~t"Subscribe to the newsletter and get #{percent = @welcome_percent} off this order."}
                       field={@form[:newsletter_opt_in]}
                       type="checkbox"
                       class="checkbox size-[18px] mt-1 self-start"
