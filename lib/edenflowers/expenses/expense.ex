@@ -176,6 +176,11 @@ defmodule Edenflowers.Expenses.Expense do
 
       change Changes.RenamePapraDocument
     end
+
+    update :mark_unpaid do
+      description "Clears the paid date, for an expense marked paid by mistake. A phone's date picker can't empty the field itself."
+      change set_attribute(:paid_on, nil)
+    end
   end
 
   policies do
@@ -207,12 +212,12 @@ defmodule Edenflowers.Expenses.Expense do
 
   # Claude's draft may lack these, so ingest takes it as it is; Jennie fills
   # them in before she can save or review it. One each, so the form marks each
-  # missing field.
+  # missing field. Marking unpaid doesn't need them.
   validations do
-    validate present(:date), on: :update
-    validate present(:vendor_name), on: :update
-    validate present(:total_amount), on: :update
-    validate present(:currency), on: :update
+    validate present(:date), where: action_is(:correct)
+    validate present(:vendor_name), where: action_is(:correct)
+    validate present(:total_amount), where: action_is(:correct)
+    validate present(:currency), where: action_is(:correct)
   end
 
   attributes do

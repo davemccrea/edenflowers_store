@@ -80,7 +80,11 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             >
               {expense.vendor_name || ~t"Unknown vendor"}
             </.link>
-            <.badge :if={expense.needs_review} tone={:attention} class="ml-1 align-middle">
+            <.badge
+              :if={expense.needs_review}
+              tone={:attention}
+              class="align-middle max-sm:mt-1 max-sm:flex max-sm:w-fit sm:ml-1"
+            >
               {~t"Needs review"}
             </.badge>
           </:col>
