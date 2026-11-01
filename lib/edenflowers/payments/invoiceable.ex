@@ -24,13 +24,21 @@ defmodule Edenflowers.Payments.Invoiceable do
     end
   end
 
+  relationships do
+    has_many :open_invoices, Edenflowers.Payments.Invoice do
+      description "Its Invoices not yet paid, oldest first: the ones a bank transfer can be recorded against."
+      filter expr(status == :open)
+      sort number: :asc
+    end
+  end
+
   aggregates do
-    # Every invoice counts in full until Payments are recorded against
-    # invoices and invoices can be cancelled. Then a cancelled one counts for
-    # nothing, and an open one only for what is still unpaid on it, since the
-    # Balance has already dropped by what was paid.
-    sum :open_invoices_amount, :invoices, :amount do
-      description "What open invoices ask for in euros: the part of the Balance already invoiced."
+    # Only what is still unpaid: the Balance has already dropped by what was
+    # paid on an open invoice, so counting it in full would count that twice.
+    sum :open_invoices_amount, :open_invoices, :amount_unpaid do
+      description "What open invoices still ask for in euros: the part of the Balance already invoiced. Paid " <>
+                    "invoices count for nothing."
+
       default Decimal.new("0")
     end
   end

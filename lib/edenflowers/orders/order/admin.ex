@@ -77,7 +77,8 @@ defmodule Edenflowers.Orders.Order.Admin do
     :fulfillment_confirmation_sendable?,
     :promotion,
     :fulfillment_option,
-    line_items: [:subtotal, :total]
+    line_items: [:subtotal, :total],
+    open_invoices: [:amount_unpaid]
   ]
 
   oban do

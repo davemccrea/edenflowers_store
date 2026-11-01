@@ -20,6 +20,7 @@ defmodule Edenflowers.Payments.Changes.UndoPayment do
       |> Ash.Changeset.set_argument(:payment_method, payment.method)
       |> Ash.Changeset.set_argument(:reverses_payment_id, payment.id)
       |> Ash.Changeset.set_argument(:goodwill, payment.goodwill)
+      |> Ash.Changeset.set_argument(:invoice_id, payment.invoice_id)
     else
       _ -> Ash.Changeset.add_error(changeset, field: :payment_id, message: "can't be undone")
     end

@@ -839,20 +839,29 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|#payment-link-url[value$="/pay/orders/#{order.payment_link_token}"]|)
     end
 
-    test "records a paid Zervant invoice", ctx do
-      order = place_custom_order(ctx)
+    test "records a bank transfer against the order's only open invoice", ctx do
+      order =
+        place_custom_order(ctx, %{payment_terms: :invoice, customer_email: "holm@example.com", email_customer?: false})
+
+      {:ok, invoice} = Edenflowers.Payments.create_invoice(%{order_id: order.id}, actor: ctx.admin)
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
-      assert has_element?(view, ~s|#order-balance-form option[value="mobilepay"]|)
+      refute has_element?(view, "#order-balance-invoice")
 
       view
-      |> form("#order-balance-form", payment: %{payment_method: "zervant", amount: "85,00"})
+      |> form("#order-balance-form", payment: %{payment_method: "zervant"})
+      |> render_change()
+
+      assert has_element?(view, ~s|#order-balance-invoice option[value="#{invoice.id}"][selected]|)
+
+      view
+      |> form("#order-balance-form", payment: %{amount: "85,00"})
       |> render_submit()
 
-      assert has_element?(view, "#order-payments", "Invoice (Zervant)")
-      refute has_element?(view, "#payment-link-url")
+      assert has_element?(view, "#order-payments", "Bank transfer (invoice)")
       refute has_element?(view, "#order-balance-form")
+      assert Ash.load!(invoice, :paid?, authorize?: false).paid?
     end
 
     test "logs what happened to the order", ctx do

@@ -527,7 +527,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :seats_held,
         :payment_link_open?,
         :payment_reminder?,
-        payments: [:undoable?, :reversal]
+        payments: [:undoable?, :reversal],
+        open_invoices: [:amount_unpaid]
       ]
     ]
 

@@ -92,6 +92,68 @@ defmodule Edenflowers.Payments.InvoiceTest do
     assert error_message(invoice(%{order_id: order.id}, ctx)) =~ "nothing is left to invoice"
   end
 
+  describe "paying one by bank transfer" do
+    defp pay(purchase, amount, invoice, ctx, input \\ %{}) do
+      Orders.record_payment(purchase, amount, :zervant, Map.put(input, :invoice_id, invoice.id), actor: ctx.admin)
+    end
+
+    defp reload(invoice), do: Ash.load!(invoice, [:status, :paid?, :amount_paid], authorize?: false)
+
+    defp uninvoiced(order), do: Ash.load!(order, :uninvoiced_balance, authorize?: false).uninvoiced_balance
+
+    test "is paid once its Payments cover it, and open again once one is undone", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx, %{amount: "50.00"})
+
+      {:ok, order} = pay(order, "20.00", invoice, ctx)
+      assert reload(invoice).status == :open
+
+      {:ok, order} = pay(order, "30.00", invoice, ctx)
+      assert reload(invoice).paid?
+
+      thirty = Enum.find(Ash.load!(order, :payments, authorize?: false).payments, &Decimal.equal?(&1.amount, "30.00"))
+      {:ok, _order} = Orders.undo_payment(order, thirty.id, actor: ctx.admin)
+
+      invoice = reload(invoice)
+      assert invoice.status == :open
+      assert Decimal.equal?(invoice.amount_paid, "20.00")
+    end
+
+    test "leaves what is still to invoice where it was", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, booking_fee} = invoice(%{order_id: order.id}, ctx, %{amount: "30.00"})
+      assert Decimal.equal?(uninvoiced(order), "58.50")
+
+      {:ok, order} = pay(order, "10.00", booking_fee, ctx)
+      assert Decimal.equal?(uninvoiced(order), "58.50")
+
+      {:ok, order} = pay(order, "20.00", booking_fee, ctx)
+      assert Decimal.equal?(uninvoiced(order), "58.50")
+    end
+
+    test "can't pay another purchase's invoice", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      other = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, others_invoice} = invoice(%{order_id: other.id}, ctx)
+
+      assert error_message(pay(order, "10.00", others_invoice, ctx)) =~ "isn't for this purchase"
+    end
+
+    test "still emails Payment received", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx)
+
+      {:ok, order} = pay(order, "88.50", invoice, ctx, %{email_receipt?: true})
+
+      assert order.__metadata__.receipt_emailed?
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.to == [{"", "ada@example.com"}]
+        assert email.text_body =~ "I've received your payment of 88,50 €."
+      end)
+    end
+  end
+
   test "keeps the buyer details it was made with", ctx do
     order = placed_order(payment_terms: :invoice) |> Ash.Seed.update!(@company)
 
