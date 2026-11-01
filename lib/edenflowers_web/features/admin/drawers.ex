@@ -205,7 +205,11 @@ defmodule EdenflowersWeb.Admin.Drawers do
   end
 
   attr :id, :string, required: true
-  attr :record, :map, required: true, doc: "an order, with `balance` loaded"
+
+  attr :record, :map,
+    required: true,
+    doc: "an order or booking, with `balance` and `open_invoices: [:amount_unpaid]` loaded"
+
   attr :locale, :string, required: true
   attr :params, :map, default: %{}, doc: "the payment form as Jennie has filled it in so far"
   attr :receipt_email?, :boolean, default: false, doc: "whether the customer can be emailed a receipt"
@@ -216,18 +220,26 @@ defmodule EdenflowersWeb.Admin.Drawers do
   Records money Jennie took herself. Sends `record_payment` with `payment`
   params and the record's id as `record_id`, and `change_payment` with
   `payment` params as the form is filled in.
+
+  A bank transfer offers the record's open Invoices to pay, starting at the
+  only one when there is just one.
   """
   def record_payment_form(assigns) do
     form =
       %{
         "payment_method" => "zettle",
         "amount" => Decimal.to_string(assigns.record.balance, :normal),
-        "email_receipt" => "false"
+        "email_receipt" => "false",
+        "invoice_id" => only_invoice_id(assigns.record.open_invoices)
       }
       |> Map.merge(assigns.params)
       |> to_form(as: :payment)
 
-    assigns = assign(assigns, form: form)
+    assigns =
+      assign(assigns,
+        form: form,
+        invoice_options: invoice_options(assigns.record.open_invoices, assigns.locale)
+      )
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="space-y-4">
@@ -250,6 +262,16 @@ defmodule EdenflowersWeb.Admin.Drawers do
           class="input w-full tabular-nums"
         />
       </div>
+      <.input
+        :if={@form[:payment_method].value == "zervant" and @invoice_options != []}
+        field={@form[:invoice_id]}
+        id={"#{@id}-invoice"}
+        type="select"
+        label={~t"Invoice it pays"}
+        class="select w-full"
+        prompt={~t"No invoice"}
+        options={@invoice_options}
+      />
       <.customer_email
         :if={@receipt_email?}
         id={"#{@id}-email"}
@@ -268,6 +290,17 @@ defmodule EdenflowersWeb.Admin.Drawers do
       </.button>
     </.form>
     """
+  end
+
+  defp only_invoice_id([invoice]), do: invoice.id
+  defp only_invoice_id(_none_or_several), do: ""
+
+  defp invoice_options(invoices, locale) do
+    Enum.map(invoices, fn invoice ->
+      number = invoice.number
+      unpaid = Edenflowers.Format.currency(invoice.amount_unpaid, locale)
+      {~t"Invoice #{number}, #{unpaid} unpaid", invoice.id}
+    end)
   end
 
   @doc "Every way Jennie records money herself; Stripe records its own."

@@ -8,6 +8,9 @@ defmodule Edenflowers.Payments.Invoice do
   details it was sent with are frozen, so later edits to the purchase don't
   reach it. A correction is a cancellation and a new invoice.
 
+  It is paid once the bank transfers Jennie records against it (Payments
+  with its `invoice_id`) cover its amount.
+
   Numbers come from one gapless series that continues Zervant's, starting at
   `first_number/0` (see `Changes.IssueInvoice`). The seller details printed
   on it come from `seller/0`.
@@ -176,6 +179,36 @@ defmodule Edenflowers.Payments.Invoice do
 
     belongs_to :course_registration, Edenflowers.Courses.CourseRegistration do
       description "The Course booking it bills. Nil when it bills an order: it belongs to exactly one."
+    end
+
+    has_many :payments, Edenflowers.Payments.Payment do
+      description "The bank transfers Jennie recorded as paying it, and any Undo or refund of them."
+    end
+  end
+
+  calculations do
+    calculate :status, :atom, expr(if amount_paid >= amount, do: :paid, else: :open) do
+      constraints one_of: [:open, :paid, :cancelled]
+
+      description "Where it stands: :open until its Payments cover its amount, then :paid. A refund or Undo of " <>
+                    "one of them can open it again. :cancelled is for one a Credit note cancels."
+    end
+
+    calculate :paid?, :boolean, expr(status == :paid) do
+      description "Whether its Payments cover its amount."
+    end
+
+    calculate :amount_unpaid, :decimal, expr(amount - amount_paid) do
+      description "What is still to pay on it in euros: its amount less its Payments. Negative if it was overpaid."
+    end
+  end
+
+  aggregates do
+    sum :amount_paid, :payments, :amount do
+      description "What has been paid on it in euros: the Payments recorded against it, refunds and Undos " <>
+                    "taken off."
+
+      default Decimal.new("0")
     end
   end
 

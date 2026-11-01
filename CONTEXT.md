@@ -85,7 +85,7 @@ Money that moved for an order or Course booking, by Stripe, the Zettle card read
 _Avoid_: Transaction, charge, in-person payment, offline payment, manual payment
 
 **Invoice**:
-A bill Jennie sends for an order or Course booking on invoice terms, paid by bank transfer with its viitenumero. A purchase can have several, such as a wedding's booking fee before and the rest after delivery; each asks for the Balance not yet invoiced unless she chooses another amount, due 14 days after its date unless she chooses another day. Numbered in one gapless series with Credit notes, continuing Zervant's. It never changes once made: it keeps the buyer details it was sent with, and a mistake is put right with a Credit note and a new Invoice.
+A bill Jennie sends for an order or Course booking on invoice terms, paid by bank transfer with its viitenumero. A purchase can have several, such as a wedding's booking fee before and the rest after delivery; each asks for the Balance not yet invoiced unless she chooses another amount, due 14 days after its date unless she chooses another day. Numbered in one gapless series with Credit notes, continuing Zervant's. Jennie records each bank transfer as a Payment against the Invoice it pays, and the Invoice is paid once those Payments cover its amount. It never changes once made: it keeps the buyer details it was sent with, and a mistake is put right with a Credit note and a new Invoice.
 _Avoid_: Bill, Zervant invoice, payment request (a Payment Link is not an Invoice)
 
 **Credit note**:

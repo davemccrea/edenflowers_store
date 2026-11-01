@@ -47,6 +47,7 @@ defmodule Edenflowers.Payments.Payment do
       reference :order, on_delete: :restrict
       reference :course_registration, on_delete: :restrict
       reference :reverses_payment, on_delete: :delete
+      reference :invoice, on_delete: :restrict
     end
   end
 
@@ -69,8 +70,11 @@ defmodule Edenflowers.Payments.Payment do
         :card_last4,
         :reverses_payment_id,
         :goodwill,
-        :note
+        :note,
+        :invoice_id
       ]
+
+      validate Edenflowers.Payments.Validations.InvoiceOfPurchase
     end
   end
 
@@ -115,6 +119,12 @@ defmodule Edenflowers.Payments.Payment do
 
     belongs_to :reverses_payment, __MODULE__ do
       description "On an Undo, the payment it takes back: the Undo is the opposite amount. Nil otherwise."
+    end
+
+    belongs_to :invoice, Edenflowers.Payments.Invoice do
+      description "The Invoice this money pays, one of the same purchase's: a bank transfer Jennie matched to it, " <>
+                    "or the Undo of one. Its Payments make up what is paid on it. Nil for money not paying an " <>
+                    "Invoice."
     end
 
     has_one :reversal, __MODULE__ do
