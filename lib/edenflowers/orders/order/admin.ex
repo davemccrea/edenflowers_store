@@ -84,7 +84,7 @@ defmodule Edenflowers.Orders.Order.Admin do
     :missing_business_details,
     line_items: [:subtotal, :total],
     open_invoices: [:amount_unpaid],
-    invoices: [:status, :cancellable?, :credit_note]
+    invoices: [:status, :overdue?, :sendable?, :cancellable?, :credit_note]
   ]
 
   oban do

@@ -2,7 +2,8 @@ defmodule Edenflowers.Payments.Changes.SendInvoice do
   @moduledoc """
   Emails an invoice to its buyer in the invoice's own language, with its PDF
   and Jennie's message, then stamps `sent_at`. The PDF is made first, so a
-  render failure sends nothing.
+  render failure sends nothing. Whether it is `overdue?` is read as it is
+  sent: overdue, the email is a reminder, and the send's version says so.
   """
   use Ash.Resource.Change
 
@@ -20,15 +21,19 @@ defmodule Edenflowers.Payments.Changes.SendInvoice do
       invoice = changeset.data
       message = Ash.Changeset.get_argument(changeset, :message)
 
+      loaded = load_for_email(invoice)
+
       with {:ok, pdf} <- InvoicePdf.generate(invoice),
            {:ok, _result} <-
-             invoice
-             |> load_for_email()
+             loaded
              |> Email.invoice(message)
              |> Swoosh.Email.attachment(InvoicePdf.attachment(pdf, invoice))
              |> Mailer.deliver() do
         Logger.info("Sent invoice #{invoice.number} (#{invoice.id})")
-        Ash.Changeset.force_change_attribute(changeset, :sent_at, DateTime.utc_now())
+
+        changeset
+        |> Ash.Changeset.force_change_attribute(:sent_at, DateTime.utc_now())
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: %{email_message: message, reminder: loaded.overdue?}})
       else
         {:error, error} -> Ash.Changeset.add_error(changeset, "Failed to send invoice: #{inspect(error)}")
       end
@@ -37,12 +42,15 @@ defmodule Edenflowers.Payments.Changes.SendInvoice do
 
   @doc """
   Loads what `Email.invoice/2` reads: the order or the booking with its
-  course, in the invoice's language, and the purchase's Total due.
+  course, in the invoice's language, the purchase's Total due, and whether
+  it is overdue now.
   """
   def load_for_email(invoice) do
     invoice
-    |> Ash.load!([order: [:total_due, :balance], course_registration: [:course, :total_due, :balance]],
-      authorize?: false
+    |> Ash.load!(
+      [:overdue?, order: [:total_due, :balance], course_registration: [:course, :total_due, :balance]],
+      authorize?: false,
+      reuse_values?: false
     )
     |> in_invoice_locale()
   end

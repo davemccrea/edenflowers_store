@@ -13,7 +13,10 @@ defmodule Edenflowers.Payments.Invoice do
   with its `invoice_id`) cover its amount.
 
   `:send` emails it to the customer with its PDF; creating one can send it
-  at once. Sending only stamps `sent_at`, so the invoice itself never changes.
+  at once, and Jennie can send it again while it is open. Sending only stamps
+  `sent_at`, so the invoice itself never changes; each send is kept as a
+  version for the order log. Sent while `overdue?`, the email is a gentle
+  reminder. Nothing sends it automatically.
 
   Numbers come from one gapless series that continues Zervant's, starting at
   `first_number/0` (see `Changes.IssueInvoice`). The seller details printed
@@ -22,7 +25,8 @@ defmodule Edenflowers.Payments.Invoice do
   use Ash.Resource,
     domain: Edenflowers.Payments,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshPaperTrail.Resource]
 
   alias Edenflowers.Payments.Changes
   alias Edenflowers.Payments.Validations
@@ -70,6 +74,23 @@ defmodule Edenflowers.Payments.Invoice do
     end
   end
 
+  # Each send, for the order log: sent_at keeps only the latest, and Jennie
+  # needs to see when a reminder went out after the first email.
+  paper_trail do
+    change_tracking_mode :changes_only
+    store_action_name? true
+    ignore_attributes [:inserted_at, :updated_at]
+    # Creating one is logged from the invoice itself; only sends are versioned.
+    ignore_actions [:create]
+    on_actions [:send]
+    # sent_at is to the second, so a resend within the same second changes nothing but still went out.
+    only_when_changed? false
+
+    # Jennie's message in the email, and whether it went as an overdue reminder.
+    metadata :email_message, :string
+    metadata :reminder, :boolean
+  end
+
   actions do
     defaults [:read]
 
@@ -106,7 +127,9 @@ defmodule Edenflowers.Payments.Invoice do
     update :send do
       description "Jennie emails the invoice to its buyer's email, in its own language, with its PDF attached and " <>
                     "her optional message, and sent_at is stamped. Nothing else about the invoice changes. Sent " <>
-                    "by hand only, and it can be sent again."
+                    "by hand only, and only while it is open (sendable?), as often as she likes. Sent while it " <>
+                    "is overdue?, the email becomes a friendly reminder with a gentler subject and the same PDF. " <>
+                    "Each send is recorded as a version, with her message and whether it was a reminder."
 
       accept []
 
@@ -116,6 +139,7 @@ defmodule Edenflowers.Payments.Invoice do
 
       transaction? false
       require_atomic? false
+      validate Validations.Sendable
       change Changes.SendInvoice
     end
   end
@@ -253,6 +277,20 @@ defmodule Edenflowers.Payments.Invoice do
       description "Whether Jennie can cancel it with a Credit note: open with nothing paid on it. One with " <>
                     "Payments, even part-paid, can't be, as those Payments would count against no open invoice; " <>
                     "she undoes them first. Validations.Cancellable refuses a Credit note otherwise."
+    end
+
+    calculate :overdue?, :boolean, expr(status == :open and due_date < helsinki_today()) do
+      description "Whether it is late: still open after its due date, counted in Helsinki days, so it turns " <>
+                    "overdue the day after the due date. A paid or cancelled invoice is never overdue; one " <>
+                    "paid only in part still is. Admin flags it, the Overview lists its purchase under Payment " <>
+                    "overdue, and sending it again makes the email a friendly reminder. Nothing is sent " <>
+                    "automatically: Jennie decides whether to nudge."
+    end
+
+    calculate :sendable?, :boolean, expr(status == :open) do
+      description "Whether Jennie can email it, for the first time or again: only while it is open. A paid " <>
+                    "invoice needs no email and a cancelled one has its Credit note instead. " <>
+                    "Validations.Sendable refuses :send otherwise."
     end
 
     calculate :paid?, :boolean, expr(status == :paid) do

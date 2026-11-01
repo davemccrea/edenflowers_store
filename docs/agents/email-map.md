@@ -23,7 +23,9 @@ built back to what sets it off:
    `lib/edenflowers/courses/course_registration/` (each resource's actions and
    triggers live in its fragments there, mostly `emails.ex`),
    `orders/subscription.ex`, `lib/edenflowers/payments/payable.ex`,
-   `lib/edenflowers/payments/invoice.ex` (the Invoice email) and
+   `lib/edenflowers/payments/invoice.ex` (the Invoice email, which becomes a
+   reminder with its own subject when Jennie resends an overdue invoice;
+   nothing sends it on a schedule) and
    `lib/edenflowers/payments/credit_note.ex` (the Credit note email, when
    Jennie cancels an invoice); both are for an order or a booking alike, so
    they go in both tables. Read each `where:` condition and each argument's

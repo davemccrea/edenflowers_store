@@ -22,6 +22,11 @@ defmodule Edenflowers.Payments.Invoiceable do
       description "The Balance in euros not yet asked for by an open invoice: what a new invoice is for unless " <>
                     "Jennie chooses another amount. Zero or less means nothing is left to invoice."
     end
+
+    calculate :invoice_overdue?, :boolean, expr(exists(invoices, overdue?)) do
+      description "Whether any of its invoices is overdue: open after its due date. Its payment_overdue? " <>
+                    "follows, so the Overview lists it under Payment overdue for Jennie to chase."
+    end
   end
 
   relationships do

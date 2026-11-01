@@ -271,11 +271,14 @@ defmodule Edenflowers.Courses.CourseRegistration do
     calculate :payment_overdue?,
               :boolean,
               expr(
-                balance > 0 and
-                  course.date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
+                invoice_overdue? or
+                  (uninvoiced_balance > 0 and
+                     course.date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day))
               ) do
-      description "Whether a Balance is still to collect more than 14 days after the course, the usual " <>
-                    "Finnish invoice term, counted in Helsinki days."
+      description "Whether the customer is late paying: one of its invoices is overdue, or a Balance no open " <>
+                    "invoice asks for is still to collect more than 14 days after the course, the usual Finnish " <>
+                    "invoice term, counted in Helsinki days. An invoiced Balance is late only after its " <>
+                    "invoice's own due date."
     end
 
     calculate :payment_reminder?,

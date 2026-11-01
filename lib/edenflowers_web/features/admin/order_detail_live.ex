@@ -756,10 +756,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp order_log(order, payments, locale) do
-    order
-    |> Ash.load!(:paper_trail_versions, authorize?: false)
-    |> Map.fetch!(:paper_trail_versions)
-    |> OrderLog.entries(payments, locale, order.invoices)
+    order =
+      Ash.load!(order, [:paper_trail_versions, invoices: [:credit_note, :paper_trail_versions]], authorize?: false)
+
+    OrderLog.entries(order.paper_trail_versions, payments, locale, order.invoices)
   end
 
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)

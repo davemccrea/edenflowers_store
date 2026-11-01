@@ -736,7 +736,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert disposition =~ ~s|filename="hyvityslasku-#{credit_note.number}.pdf"|
     end
 
-    test "a paid invoice offers no Cancel", %{conn: conn, admin: admin} do
+    test "a paid invoice offers no Cancel or Send", %{conn: conn, admin: admin} do
       order = invoice_terms_order()
       {:ok, invoice} = Payments.create_invoice(%{order_id: order.id, amount: "20.00"}, actor: admin)
       {:ok, _order} = Orders.record_payment(order, "20.00", :zervant, %{invoice_id: invoice.id}, actor: admin)
@@ -745,6 +745,31 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
       assert has_element?(view, "#invoice-#{invoice.id}", "Paid")
       refute has_element?(view, "#invoice-#{invoice.id} button", "Cancel")
+      refute has_element?(view, "#invoice-#{invoice.id} button", "Send")
+    end
+
+    test "Jennie resends an overdue one as a reminder, logged", %{conn: conn, admin: admin} do
+      order = invoice_terms_order(locale: "en-GB")
+      {:ok, invoice} = Payments.create_invoice(%{order_id: order.id, email_customer?: true}, actor: admin)
+      assert_email_sent()
+      Ash.Seed.update!(invoice, %{due_date: Date.add(Edenflowers.ShopTime.today(), -1)})
+
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+      assert has_element?(view, "#invoice-#{invoice.id}", "Overdue")
+      view |> element("#invoice-#{invoice.id} button", "Resend") |> render_click()
+      assert has_element?(view, "#invoices-send-form", "I haven't seen the payment yet")
+
+      view |> form("#invoices-send-form", send: %{message: "Hope the flowers were lovely!"}) |> render_submit()
+
+      assert_email_sent(fn email ->
+        assert email.subject =~ "A reminder about invoice #{invoice.number}"
+        assert [%{filename: "invoice-" <> _}] = email.attachments
+      end)
+
+      assert has_element?(view, "#order-log", "Invoice #{invoice.number} reminder emailed")
+      assert has_element?(view, "#order-log", "Hope the flowers were lovely!")
+      assert has_element?(view, "#order-log", "Invoice #{invoice.number} emailed")
     end
 
     test "the PDF downloads for an admin, named in the invoice's language", %{conn: conn, admin: admin} do

@@ -425,11 +425,14 @@ defmodule Edenflowers.Orders.Order do
     calculate :payment_overdue?,
               :boolean,
               expr(
-                fulfillment_status == :fulfilled and balance > 0 and
-                  fulfillment_date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
+                invoice_overdue? or
+                  (fulfillment_status == :fulfilled and uninvoiced_balance > 0 and
+                     fulfillment_date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day))
               ) do
-      description "Handed over more than 14 days ago (Payment.overdue_after_days) and still owing a Balance. " <>
-                    "Lists the order under Payment overdue on the admin Overview."
+      description "Whether the customer is late paying: one of its invoices is overdue, or it was handed over " <>
+                    "more than 14 days ago (Payment.overdue_after_days) and still owes a Balance no open " <>
+                    "invoice asks for. An invoiced Balance is late only after its invoice's own due date. Lists " <>
+                    "the order under Payment overdue on the admin Overview."
     end
 
     calculate :customer_first_name, :string, {AccountCalculations.FirstName, source: :customer_name} do

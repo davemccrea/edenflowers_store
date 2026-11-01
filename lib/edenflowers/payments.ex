@@ -28,6 +28,8 @@ defmodule Edenflowers.Payments do
       define :get_invoice, action: :read, get_by: [:id]
     end
 
+    resource Edenflowers.Payments.Invoice.Version
+
     resource Edenflowers.Payments.CreditNote do
       define :cancel_invoice, action: :create
       define :send_credit_note, action: :send
