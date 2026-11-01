@@ -8,7 +8,8 @@ Mox.defmock(Edenflowers.External.ClaudeAPI.Mock, for: Edenflowers.External.Claud
 typst_opts = if System.find_executable("typst"), do: [], else: [exclude: [:typst]]
 
 ExUnit.start(typst_opts)
-# Committed before the sandbox starts, so concurrent tests read one row
-# rather than each inserting it and waiting on the others' transactions.
+# Committed before the sandbox starts, so concurrent tests read each singleton row
+# rather than each inserting it and waiting on (or deadlocking with) the others' transactions.
 Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
+Edenflowers.Pricing.get_welcome_offer!(authorize?: false)
 Ecto.Adapters.SQL.Sandbox.mode(Edenflowers.Repo, :manual)
