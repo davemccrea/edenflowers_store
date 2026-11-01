@@ -158,7 +158,8 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
                   class="phx-click-loading:opacity-50"
-                  phx-click="remove_card"
+                  phx-click="remove_item"
+                  phx-value-id={line_item.id}
                   phx-target={@myself}
                   aria_label={~t"Remove"}
                 >
@@ -206,12 +207,6 @@ defmodule EdenflowersWeb.Cart.LineItems do
   @impl true
   def handle_event("remove_item", %{"id" => id}, socket) do
     Orders.remove_line_item(socket.assigns.order, id)
-    {:noreply, socket}
-  end
-
-  # Not `remove_item`: removing the card also clears the card message.
-  def handle_event("remove_card", _, socket) do
-    Orders.remove_card(socket.assigns.order)
     {:noreply, socket}
   end
 

@@ -1327,6 +1327,27 @@ defmodule Edenflowers.Orders.OrderTest do
       assert is_nil(order.card_message)
     end
 
+    test "remove_line_item on the card also clears card_message", %{card_variant_a: card_variant_a} do
+      gift_order = generate(order(state: :gift_options, gift: true))
+      # A bouquet stays in the cart, so removing the card doesn't restart checkout.
+      bouquet = generate(product_variant(product_id: generate(product()).id))
+      generate(line_item(order_id: gift_order.id, product_variant_id: bouquet.id, quantity: 1))
+      {:ok, with_card} = Orders.add_card(gift_order, card_variant_a.id, authorize?: false, load: [:line_items])
+
+      with_message =
+        with_card
+        |> Ash.Changeset.for_update(:submit_gift_options, %{gift: true, recipient_name: "Jane", card_message: "Hello"})
+        |> Ash.update!(authorize?: false)
+
+      card = Enum.find(with_card.line_items, & &1.is_card)
+
+      assert {:ok, order} =
+               Orders.remove_line_item(with_message, card.id, authorize?: false, load: [:line_items])
+
+      refute Enum.any?(order.line_items, & &1.is_card)
+      assert is_nil(order.card_message)
+    end
+
     test "remove_card is a no-op when there is no card line item", %{order: order} do
       order = Orders.get_order_for_checkout!(order.id, authorize?: false)
       refute Enum.any?(order.line_items, & &1.is_card)
