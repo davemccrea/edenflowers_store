@@ -207,6 +207,11 @@ feedback where="production":
         ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'IO.puts(Edenflowers.Feedback.open_notes_markdown())'"
     fi
 
+# Print the most recent unresolved ErrorTracker errors in production
+[group('production')]
+errors limit="20":
+    ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'import Ecto.Query; Edenflowers.Repo.all(from e in ErrorTracker.Error, where: e.status == :unresolved, order_by: [desc: e.last_occurrence_at], limit: {{ limit }}) |> Enum.each(fn e -> IO.puts(\"#{e.id} | #{e.last_occurrence_at} | #{e.kind}: #{String.slice(e.reason, 0, 200)} | #{e.source_function}\") end)'"
+
 # Mark review notes as dealt with in production. No backup first: it only sets their resolved_at
 [group('production')]
 resolve-feedback +numbers:
