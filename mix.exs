@@ -4,7 +4,7 @@ defmodule Edenflowers.MixProject do
   def project do
     [
       app: :edenflowers,
-      version: "1.25.1",
+      version: "1.25.2",
       elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
