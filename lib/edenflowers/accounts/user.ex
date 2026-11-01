@@ -26,7 +26,7 @@ defmodule Edenflowers.Accounts.User do
       enabled? true
       token_resource Edenflowers.Accounts.Token
       signing_secret Edenflowers.Secrets
-      token_lifetime {30, :days}
+      token_lifetime {365, :days}
       store_all_tokens? true
       require_token_presence_for_authentication? true
     end
