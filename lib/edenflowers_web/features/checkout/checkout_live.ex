@@ -680,14 +680,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, assign(socket, delivery_quote: quote)}
   end
 
+  # Rebuilds the form too: another tab may have moved the order to a step whose
+  # form this tab never built.
   defp apply_cart_change(socket, order) do
     # A card removed from the cart takes its message with it; drop the typed
     # value too, or it would reappear if a card is picked again.
-    if has_card?(socket.assigns.order) and not has_card?(order) do
-      {:noreply, assign_forms(socket, order, drop: ["card_message"])}
-    else
-      {:noreply, assign(socket, order: order)}
-    end
+    drop = if has_card?(socket.assigns.order) and not has_card?(order), do: ["card_message"], else: []
+    {:noreply, assign_forms(socket, order, drop: drop)}
   end
 
   defp back_to_store(socket) do

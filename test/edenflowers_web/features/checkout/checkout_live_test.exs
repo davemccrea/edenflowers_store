@@ -103,6 +103,16 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       assert is_nil(saved.payment_intent_id)
     end
 
+    test "an old payment tab shows the step another tab returned to when the cart changes",
+         %{conn: conn, order: order, variant: variant} do
+      {:ok, view, _html} = live(with_cart(conn, order), ~p"/checkout")
+      Orders.return_to_contact_details!(order, actor: nil)
+
+      Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+
+      assert has_element?(view, "[data-testid='customer-name-input'][value='Jane Doe']")
+    end
+
     test "removing the last item from payment redirects without rendering a missing form", %{conn: conn, order: order} do
       {:ok, view, _html} = live(with_cart(conn, order), ~p"/checkout")
       [line_item] = order.line_items
