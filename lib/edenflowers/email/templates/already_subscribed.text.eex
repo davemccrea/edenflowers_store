@@ -1,6 +1,6 @@
 <%= dgettext("emails", "You're already subscribed to the Eden Flowers newsletter.") %>
 <%= if @promo_code do %>
-<%= dgettext("emails", "Your welcome code for 15% off one order is still valid. Enter the following code at checkout:") %>
+<%= dgettext("emails", "Your welcome code for %{percent} off one order is still valid. Enter the following code at checkout:", percent: @percent) %>
 
 <%= @promo_code %>
 

@@ -6,6 +6,8 @@ defmodule EdenflowersWeb.NewsletterSignup do
   use EdenflowersWeb, :live_component
   require Logger
 
+  alias Edenflowers.Format
+
   @impl true
   def mount(socket) do
     {:ok, assign(socket, submitted: false, error: nil)}
@@ -15,7 +17,12 @@ defmodule EdenflowersWeb.NewsletterSignup do
   def update(assigns, socket) do
     # Only the first render takes the pre-filled address, so a later parent
     # re-render can't overwrite what the visitor submitted.
-    {:ok, assign_new(socket, :form, fn -> to_form(%{"email_address" => assigns.email || ""}) end)}
+    {:ok,
+     socket
+     |> assign_new(:form, fn -> to_form(%{"email_address" => assigns.email || ""}) end)
+     |> assign_new(:percent, fn ->
+       Format.discount(Edenflowers.Pricing.get_welcome_offer!().discount_rate, Format.locale())
+     end)}
   end
 
   @impl true
@@ -25,13 +32,13 @@ defmodule EdenflowersWeb.NewsletterSignup do
       <h2 id="newsletter" class="eyebrow text-link-underline">{~t"Newsletter"}</h2>
 
       <p class="font-serif text-2xl leading-snug tracking-tight md:text-3xl">
-        {~t"Get 15% off your first order."}
+        {~t"Get #{percent = @percent} off your first order."}
       </p>
 
       <%= if @submitted do %>
         <%!-- hero-reveal replays here because the element enters the DOM on submit. --%>
         <p class="hero-reveal opacity-80">
-          {~t"Thanks! Your 15% off code is on its way to your inbox."}
+          {~t"Thanks! Your #{percent = @percent} off code is on its way to your inbox."}
         </p>
       <% else %>
         <.form id="newsletter-form" for={@form} phx-target={@myself} phx-submit="submit" class="space-y-4">

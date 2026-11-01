@@ -583,7 +583,7 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp account_and_newsletter(locale) do
-    promo = %{code: "WELCOME-7K2P", expiration_date: ~D[2026-11-18]}
+    promo = %{code: "WELCOME-7K2P", discount_rate: Decimal.new("0.15"), expiration_date: ~D[2026-11-18]}
 
     [
       {"Newsletter welcome", "with promo code", :newsletter_welcome,

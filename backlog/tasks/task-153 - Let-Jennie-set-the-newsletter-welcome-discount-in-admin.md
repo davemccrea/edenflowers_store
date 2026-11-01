@@ -1,10 +1,10 @@
 ---
 id: TASK-153
 title: Let Jennie set the newsletter welcome discount in admin
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-10-31 08:53'
-updated_date: '2026-10-31 20:45'
+updated_date: '2026-11-01 06:36'
 labels:
   - customers
   - admin
@@ -48,10 +48,16 @@ After deploy
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Jennie can see and change the welcome percent from the Promotions page in admin
-- [ ] #2 A subscriber gets a one-use code at the percent set when they sign up, valid for 30 days
-- [ ] #3 Until Jennie sets a percent, signups get a 15% code
-- [ ] #4 The footer signup and the checkout opt-in show the current percent in sv, fi and en
-- [ ] #5 The welcome and already-subscribed emails show the percent on the subscriber's code
-- [ ] #6 Codes sent before a change keep their rate
+- [x] #1 Jennie can see and change the welcome percent from the Promotions page in admin
+- [x] #2 A subscriber gets a one-use code at the percent set when they sign up, valid for 30 days
+- [x] #3 Until Jennie sets a percent, signups get a 15% code
+- [x] #4 The footer signup and the checkout opt-in show the current percent in sv, fi and en
+- [x] #5 The welcome and already-subscribed emails show the percent on the subscriber's code
+- [x] #6 Codes sent before a change keep their rate
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+WelcomeOffer is a single-row Pricing resource like ShopCalendar; :get creates it at 15% on first use. Codes copy the rate at signup. Customer copy uses Format.discount ("15%", not the receipts' "15.0%"). sv/fi keep the existing wording with the percent swapped in; admin strings newly translated for review.
+<!-- SECTION:NOTES:END -->

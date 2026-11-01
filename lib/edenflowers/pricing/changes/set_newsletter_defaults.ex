@@ -8,11 +8,12 @@ defmodule Edenflowers.Pricing.Changes.SetNewsletterDefaults do
   @impl true
   def change(changeset, _opts, _context) do
     today = Edenflowers.ShopTime.today()
+    offer = Edenflowers.Pricing.get_welcome_offer!(authorize?: false)
 
     Ash.Changeset.force_change_attributes(changeset,
       code: Edenflowers.Pricing.Promotion.generate_code(),
       name: "Newsletter Welcome",
-      discount_rate: Decimal.new("0.15"),
+      discount_rate: offer.discount_rate,
       minimum_cart_total: Decimal.new("0"),
       start_date: today,
       expiration_date: Date.add(today, 30),

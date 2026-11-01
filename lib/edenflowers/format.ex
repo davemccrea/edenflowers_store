@@ -158,4 +158,10 @@ defmodule Edenflowers.Format do
   def percentage(rate, locale) do
     Localize.Number.to_string!(rate, locale: locale, format: :percent, fractional_digits: 1)
   end
+
+  # Discounts in customer copy read "15%", not the receipts' "15.0%", but keep "12.5%".
+  @spec discount(Decimal.t(), Localize.Locale.locale_id()) :: String.t()
+  def discount(rate, locale) do
+    Localize.Number.to_string!(rate, locale: locale, format: :percent, max_fractional_digits: 1)
+  end
 end

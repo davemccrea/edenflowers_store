@@ -261,21 +261,25 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     {:ok, ~t"New promotion", to_form(form)}
   end
 
-  # The form asks for a percentage (15) but the resource stores a rate (0.15).
-  # Submit runs this again over already-converted params, so only strings from the browser are converted.
-  defp percent_to_rate(_form, %{"discount_rate" => percent} = params, _action) when is_binary(percent) do
+  @doc """
+  The form asks for a percentage (15) but the resource stores a rate (0.15).
+  Submit runs this again over already-converted params, so only strings from
+  the browser are converted. Also used by the welcome offer form.
+  """
+  def percent_to_rate(_form, %{"discount_rate" => percent} = params, _action) when is_binary(percent) do
     case Decimal.parse(String.trim(percent)) do
       {decimal, ""} -> Map.put(params, "discount_rate", Decimal.div(decimal, 100))
       _ -> params
     end
   end
 
-  defp percent_to_rate(_form, params, _action), do: params
+  def percent_to_rate(_form, params, _action), do: params
 
-  defp rate_to_percent(%Decimal{} = rate),
+  @doc "Shows a stored rate (0.15) as the percentage the form asks for (15)."
+  def rate_to_percent(%Decimal{} = rate),
     do: rate |> Decimal.mult(100) |> Decimal.normalize() |> Decimal.to_string(:normal)
 
-  defp rate_to_percent(value), do: value
+  def rate_to_percent(value), do: value
 
   defp assign_history(socket) do
     history =

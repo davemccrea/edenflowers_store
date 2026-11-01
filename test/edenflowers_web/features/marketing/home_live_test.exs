@@ -19,6 +19,15 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
     assert page_description(conn |> get(~p"/en") |> html_response(200)) =~ "on selected bouquets."
   end
 
+  test "the footer signup offers the current welcome discount", %{conn: conn} do
+    Edenflowers.Pricing.get_welcome_offer!()
+    |> Edenflowers.Pricing.update_welcome_offer!(%{discount_rate: "0.25"}, authorize?: false)
+
+    {:ok, _view, html} = live(conn, ~p"/en")
+
+    assert html =~ "Get 25% off your first order."
+  end
+
   test "the notice bar says when the next delivery or pickup is, and keeps up with the calendar", %{conn: conn} do
     today = Edenflowers.ShopTime.today()
     in_three_days = Date.add(today, 3)

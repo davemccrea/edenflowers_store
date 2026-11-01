@@ -96,6 +96,33 @@ defmodule Edenflowers.Pricing.PromotionTest do
     end
   end
 
+  describe "newsletter welcome codes" do
+    test "are 15% until Jennie sets the welcome offer" do
+      {:ok, promo} = Pricing.create_newsletter_promotion(authorize?: false)
+
+      assert Decimal.equal?(promo.discount_rate, "0.15")
+      assert promo.usage_limit == 1
+      assert promo.expiration_date == Date.add(Edenflowers.ShopTime.today(), 30)
+    end
+
+    test "take the welcome offer set at signup, and codes already sent keep their rate" do
+      {:ok, before_change} = Pricing.create_newsletter_promotion(authorize?: false)
+
+      Pricing.get_welcome_offer!()
+      |> Pricing.update_welcome_offer!(%{discount_rate: "0.25"}, authorize?: false)
+
+      {:ok, after_change} = Pricing.create_newsletter_promotion(authorize?: false)
+
+      assert Decimal.equal?(after_change.discount_rate, "0.25")
+      assert Decimal.equal?(Ash.reload!(before_change, authorize?: false).discount_rate, "0.15")
+    end
+
+    test "only an admin can change the welcome offer" do
+      assert {:error, %Ash.Error.Forbidden{}} =
+               Pricing.update_welcome_offer(Pricing.get_welcome_offer!(), %{discount_rate: "0.5"})
+    end
+  end
+
   describe "Promotion usage tracking" do
     import Generator
 

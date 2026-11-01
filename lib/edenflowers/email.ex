@@ -590,17 +590,20 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Welcomes a new newsletter subscriber with their 15% code. In the
-  caller's locale, as there's no record to take one from.
+  Welcomes a new newsletter subscriber with their code, at the rate on the
+  code itself. In the caller's locale, as there's no record to take one from.
   """
   def newsletter_welcome(email_address, promo, locale) do
+    percent = Format.discount(promo.discount_rate, locale)
+
     new()
     |> from(from_address())
     |> to(email_address)
-    |> subject(~t"Your 15% welcome code for Eden Flowers")
+    |> subject(~t"Your #{percent} welcome code for Eden Flowers")
     |> text_body(
       Templates.newsletter_welcome(%{
         promo_code: promo.code,
+        percent: percent,
         use_by: Format.weekday_date(promo.expiration_date, locale),
         store_url: store_url()
       })
@@ -619,6 +622,7 @@ defmodule Edenflowers.Email do
     |> text_body(
       Templates.already_subscribed(%{
         promo_code: promo && promo.code,
+        percent: promo && Format.discount(promo.discount_rate, locale),
         use_by: promo && Format.weekday_date(promo.expiration_date, locale),
         store_url: store_url()
       })

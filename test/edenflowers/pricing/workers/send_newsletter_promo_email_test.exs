@@ -63,6 +63,28 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
       end)
     end
 
+    test "the welcome email names the rate on the subscriber's own code" do
+      Pricing.get_welcome_offer!()
+      |> Pricing.update_welcome_offer!(%{discount_rate: "0.25"}, authorize?: false)
+
+      {:ok, _user} = Accounts.subscribe_to_newsletter("offer@example.com", "fi", authorize?: false)
+
+      Pricing.get_welcome_offer!()
+      |> Pricing.update_welcome_offer!(%{discount_rate: "0.15"}, authorize?: false)
+
+      assert :ok =
+               perform_job(SendNewsletterPromoEmail, %{
+                 "email" => "offer@example.com",
+                 "locale" => "en",
+                 "welcome" => true
+               })
+
+      assert_email_sent(fn email ->
+        assert email.subject == "Your 25% welcome code for Eden Flowers"
+        assert email.text_body =~ "you get 25% off one order"
+      end)
+    end
+
     test "signing up again keeps the first code and queues the already-subscribed wording" do
       {:ok, first} = Accounts.subscribe_to_newsletter("again@example.com", "fi", authorize?: false)
       # Clears the first signup's job, which would otherwise swallow the second as a duplicate.
