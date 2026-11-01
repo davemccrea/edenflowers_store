@@ -4,7 +4,7 @@ title: Plan marketing for the website relaunch and Jennie's return
 status: ready-for-human
 assignee: []
 created_date: '2026-11-01 13:25'
-updated_date: '2026-11-01 14:05'
+updated_date: '2026-11-01 14:07'
 labels:
   - admin
   - customers
@@ -107,6 +107,21 @@ created: 2026-11-01 14:05
 ---
 
 2026-11-01: Plan confirmed with David. Next: grill TASK-160 (vouchers by early December).
+
+---
+
+author: @claude
+created: 2026-11-01 14:07
+
+---
+
+Review with the marketing skills (marketing-plan AARRR lens, 2026-11-01). Gaps found, each turned into a ticket:
+- Activation: the site doesn't link to Instagram or Facebook, and the bio link isn't tagged (TASK-162.2). Facebook was in the plan's audience but had no role; it now gets the launch post via Meta Business Suite (TASK-162.1).
+- Acquisition: the launch post for the 1750 followers had no ticket (TASK-162.1). The relaunch is a local press story (TASK-162.4). Every delivered bouquet reaches a likely next customer, so a card in each order (TASK-162.3).
+- Revenue: subscriptions are the lead offer, but nothing asks a one-off weekly bouquet buyer to subscribe (TASK-163, a spec of its own).
+- Measurement: a saved weekly view in Umami plus rules for judging boosts (TASK-162.5). Custom Orders are not in Umami, so the weekly number counts both. The baseline window (3.11-16.11) overlaps the 25% offer and will overstate a normal week; decide in TASK-162.5.
+- Timing: Finnish companies settle Christmas gifts by mid to late November, so vouchers live in early December come late for corporate buyers (noted on TASK-160).
+Considered and skipped: abandoned-cart and win-back emails (the 293 have no consent, and the site's own buyers are too few yet); directories beyond Google (low value now); a referral programme (word of mouth and reviews come first).
 
 ---
 <!-- COMMENTS:END -->
