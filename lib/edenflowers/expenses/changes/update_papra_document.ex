@@ -1,9 +1,10 @@
-defmodule Edenflowers.Expenses.Changes.RenamePapraDocument do
+defmodule Edenflowers.Expenses.Changes.UpdatePapraDocument do
   @moduledoc """
-  Names the expense's Papra document after its receipt date and vendor, such as
-  "2026-10-23 Kukkatukku Oy.pdf", once both are known and whenever either
-  changes. A failed rename is only logged: the expense is still saved, and the
-  next change to the date or vendor tries again.
+  Keeps the expense's Papra document in step with its receipt date and vendor,
+  whenever either changes. Papra gets the receipt date as its document date, and
+  once both are known the document is named after them, such as
+  "2026-10-23 Kukkatukku Oy.pdf". A failed update is only logged: the expense is
+  still saved, and the next change to the date or vendor tries again.
   """
   use Ash.Resource.Change
 
@@ -17,7 +18,7 @@ defmodule Edenflowers.Expenses.Changes.RenamePapraDocument do
          Ash.Changeset.changing_attribute?(changeset, :vendor_name) do
       Ash.Changeset.after_transaction(changeset, fn
         _changeset, {:ok, expense} ->
-          rename(expense)
+          update(expense)
           {:ok, expense}
 
         _changeset, error ->
@@ -28,15 +29,21 @@ defmodule Edenflowers.Expenses.Changes.RenamePapraDocument do
     end
   end
 
-  defp rename(%{date: nil}), do: :ok
-  defp rename(%{vendor_name: nil}), do: :ok
+  defp update(%{date: nil}), do: :ok
 
-  defp rename(expense) do
-    name = "#{Date.to_iso8601(expense.date)} #{String.trim(expense.vendor_name)}.pdf"
-
-    case PapraAPI.impl().rename_document(expense.document_id, name) do
+  defp update(expense) do
+    case PapraAPI.impl().update_document(expense.document_id, fields(expense)) do
       :ok -> :ok
-      {:error, error} -> Logger.warning("Failed to rename Papra document #{expense.document_id}: #{inspect(error)}")
+      {:error, error} -> Logger.warning("Failed to update Papra document #{expense.document_id}: #{inspect(error)}")
     end
   end
+
+  defp fields(%{vendor_name: nil, date: date}), do: %{documentDate: Date.to_iso8601(date)}
+
+  defp fields(%{vendor_name: vendor_name, date: date}) do
+    %{documentDate: Date.to_iso8601(date), name: "#{Date.to_iso8601(date)} #{file_safe(vendor_name)}.pdf"}
+  end
+
+  # "MailerLite Ltd." would otherwise become "MailerLite Ltd..pdf".
+  defp file_safe(vendor_name), do: vendor_name |> String.trim() |> String.trim_trailing(".")
 end

@@ -142,7 +142,7 @@ defmodule Edenflowers.Expenses.Expense do
       change set_attribute(:processed_at, &DateTime.utc_now/0)
       # Re-processing only fills an empty paid date, so Jennie's stays.
       change atomic_update(:paid_on, expr(paid_on || upsert_conflict(:paid_on)))
-      change Changes.RenamePapraDocument
+      change Changes.UpdatePapraDocument
     end
 
     update :correct do
@@ -174,7 +174,7 @@ defmodule Edenflowers.Expenses.Expense do
         end
       end
 
-      change Changes.RenamePapraDocument
+      change Changes.UpdatePapraDocument
     end
 
     update :mark_unpaid do

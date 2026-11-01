@@ -27,7 +27,7 @@ defmodule Edenflowers.DataCase do
   setup tags do
     Edenflowers.DataCase.setup_sandbox(tags)
     Edenflowers.DataCase.stub_card_lookup()
-    Edenflowers.DataCase.stub_papra_rename()
+    Edenflowers.DataCase.stub_papra_update()
     :ok
   end
 
@@ -48,10 +48,10 @@ defmodule Edenflowers.DataCase do
   end
 
   @doc """
-  Saving an expense renames its Papra document. Tests that don't care get the
-  rename accepted; a test can still `expect` the call.
+  Saving an expense updates its Papra document. Tests that don't care get the
+  update accepted; a test can still `expect` the call.
   """
-  def stub_papra_rename do
-    Mox.stub(Edenflowers.External.PapraAPI.Mock, :rename_document, fn _document_id, _name -> :ok end)
+  def stub_papra_update do
+    Mox.stub(Edenflowers.External.PapraAPI.Mock, :update_document, fn _document_id, _fields -> :ok end)
   end
 end
