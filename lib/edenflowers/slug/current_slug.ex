@@ -12,7 +12,7 @@ defmodule Edenflowers.Slug.CurrentSlug do
     param = input.arguments.param
 
     record =
-      case Ecto.UUID.cast(param) do
+      case uuid(param) do
         {:ok, id} ->
           Ash.get!(input.resource, id, error?: false, authorize?: false)
 
@@ -25,4 +25,8 @@ defmodule Edenflowers.Slug.CurrentSlug do
 
     {:ok, record && record.slug}
   end
+
+  # Only the written-out form: Ecto.UUID.cast/1 also takes any 16-byte string, like "spring-workshops".
+  defp uuid(param) when byte_size(param) == 36, do: Ecto.UUID.cast(param)
+  defp uuid(_param), do: :error
 end

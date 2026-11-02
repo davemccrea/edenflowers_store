@@ -265,6 +265,22 @@ defmodule Edenflowers.Catalog.ProductTest do
       assert Catalog.current_product_slug!("roses") == nil
     end
 
+    test "a 16-character former slug still redirects" do
+      product = generate(product(name: "Spring workshops"))
+      update!(product, %{slug: "workshops"})
+
+      assert Catalog.current_product_slug!("spring-workshops") == "workshops"
+    end
+
+    test "edited from a form opened before another edit, remembers every earlier slug" do
+      stale = generate(product(name: "Roses"))
+      update!(stale, %{slug: "red-roses"})
+
+      assert update!(stale, %{slug: "summer-roses"}).slug == "summer-roses"
+      assert Catalog.current_product_slug!("roses") == "summer-roses"
+      assert Catalog.current_product_slug!("red-roses") == "summer-roses"
+    end
+
     test "a former slug stays with its product" do
       roses = generate(product(name: "Red roses"))
       update!(roses, %{slug: "roses"})

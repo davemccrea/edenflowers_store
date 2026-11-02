@@ -30,7 +30,7 @@ defmodule Edenflowers.Slug.SetSlug do
 
   defp set_slug(changeset, opts) do
     id = Ash.Changeset.get_attribute(changeset, :id)
-    current = changeset.data.slug
+    current = stored_slug(changeset, id)
     typed = changeset |> Ash.Changeset.get_attribute(:slug) |> Slug.slugify()
 
     cond do
@@ -53,6 +53,17 @@ defmodule Edenflowers.Slug.SetSlug do
         changeset
         |> Ash.Changeset.force_change_attribute(:slug, typed)
         |> Ash.Changeset.after_action(fn _changeset, record -> remember(record, current, opts) end)
+    end
+  end
+
+  # Read afresh rather than from the form's copy, which is stale if the slug
+  # changed in another tab since the form opened.
+  defp stored_slug(%{action_type: :create}, _id), do: nil
+
+  defp stored_slug(changeset, id) do
+    case Ash.get(changeset.resource, id, authorize?: false) do
+      {:ok, record} -> record.slug
+      {:error, _} -> nil
     end
   end
 
