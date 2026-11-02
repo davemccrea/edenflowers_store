@@ -1,8 +1,8 @@
 <%= if @registration.first_name do %><%= dgettext("emails", "Hi %{name},", name: @registration.first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= dgettext("emails", "A reminder that %{course} is tomorrow.", course: @registration.course.name) %>
+<%= dgettext("emails", "A reminder about your booking on %{course}.", course: @registration.course.name) %>
 
-<%= dgettext("emails", "When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
+<%= message(@message) %><%= dgettext("emails", "When: %{date}, %{start}–%{end}", date: @format_date.(@registration.course.date), start: @format_time.(@registration.course.start_time), end: @format_time.(@registration.course.end_time)) %>
 <%= dgettext("emails", "Where: %{venue}, %{address}", venue: @registration.course.location_name, address: @registration.course.location_address) %><%= if Decimal.positive?(@registration.balance) do %>
 
 <%= course_payment(assigns) |> String.trim() %><% end %>

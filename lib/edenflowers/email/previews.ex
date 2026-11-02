@@ -184,13 +184,12 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp purchase_receipt(locale) do
-    handed_over = Map.merge(paid_in_full(), %{fulfillment_status: :fulfilled, gift: false, recipient_name: nil})
+    paid = paid_in_full()
 
     [
-      {"Purchase receipt", "handed over and paid in full", :purchase_receipt,
-       Email.purchase_receipt(order(handed_over, locale))},
+      {"Purchase receipt", "paid, before fulfillment", :purchase_receipt, Email.purchase_receipt(order(paid, locale))},
       {"Purchase receipt", "with a message from Jennie, no customer first name", :purchase_receipt,
-       Email.purchase_receipt(order(Map.put(handed_over, :customer_first_name, nil), locale), message(locale))}
+       Email.purchase_receipt(order(Map.put(paid, :customer_first_name, nil), locale), message(locale))}
     ]
   end
 

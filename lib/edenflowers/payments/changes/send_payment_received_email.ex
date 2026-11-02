@@ -1,9 +1,9 @@
 defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
   @moduledoc """
   Emails Payment received with the receipt PDF, for the payment of the
-  `amount` argument, or else the latest payment. An order handed over and
-  now paid in full gets the purchase receipt instead: a completed sale has
-  no balance to account for. A successful send stamps
+  `amount` argument, or else the latest payment. The `email: :receipt`
+  option sends a neutral copy of an order's receipt instead of announcing
+  a new payment. Fulfillment does not affect either email. A successful send stamps
   `receipt_emailed_at`, and on an order clears `receipt_email_failed_at` and
   logs Jennie's message.
   """
@@ -20,7 +20,7 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
   alias Edenflowers.Translations
 
   @impl true
-  def change(changeset, _opts, _context) do
+  def change(changeset, opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       record = load_for_send(changeset.data)
       amount = Ash.Changeset.get_argument(changeset, :amount) || latest_payment(record)
@@ -29,7 +29,7 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
       with {:ok, pdf} <- Receipt.generate(record),
            {:ok, _result} <-
              record
-             |> email(amount, message)
+             |> email(amount, message, opts)
              |> Swoosh.Email.attachment(Receipt.attachment(pdf, reference(record)))
              |> Mailer.deliver() do
         Logger.info("Sent payment received email for #{inspect(record.__struct__)} #{record.id}")
@@ -45,13 +45,10 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
   end
 
   @doc "The email for `record`'s payment of `amount`, loaded as this change loads it."
-  def email(%Order{fulfillment_status: :fulfilled} = order, amount, message) do
-    if Decimal.eq?(order.balance, 0),
-      do: Email.purchase_receipt(order, message),
-      else: Email.payment_received(order, amount, message)
-  end
-
   def email(record, amount, message), do: Email.payment_received(record, amount, message)
+
+  defp email(order, _amount, message, email: :receipt), do: Email.purchase_receipt(order, message)
+  defp email(record, amount, message, _opts), do: email(record, amount, message)
 
   defp load_for_send(%Order{} = order) do
     Ash.load!(

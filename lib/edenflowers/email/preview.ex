@@ -133,8 +133,6 @@ defmodule Edenflowers.Email.Preview do
   defp order_email(:payment_link, order, inputs),
     do: Email.order_details(order, link_url(order), inputs[:message])
 
-  # A payment being recorded reads as it will once it's in; from the menu,
-  # it's the latest payment again.
   defp order_email(:payment_reminder, order, inputs),
     do: Email.payment_reminder(order, link_url(order), inputs[:message])
 
@@ -164,6 +162,9 @@ defmodule Edenflowers.Email.Preview do
       do: Swoosh.Email.attachment(email, Receipt.attachment("", registration.reference)),
       else: email
   end
+
+  defp booking_email(:course_reminder, registration, inputs),
+    do: Email.course_reminder(registration, inputs[:message])
 
   defp booking_email(:payment_link, registration, inputs) do
     Email.payment_reminder(registration, link_url(registration), inputs[:message])
@@ -195,9 +196,12 @@ defmodule Edenflowers.Email.Preview do
            }, amount}
       end
 
-    record
-    |> SendPaymentReceivedEmail.email(amount, inputs[:message])
-    |> Swoosh.Email.attachment(Receipt.attachment("", reference))
+    email =
+      if match?(%Order{}, record) and is_nil(inputs[:amount]),
+        do: Email.purchase_receipt(record, inputs[:message]),
+        else: SendPaymentReceivedEmail.email(record, amount, inputs[:message])
+
+    Swoosh.Email.attachment(email, Receipt.attachment("", reference))
   end
 
   # A link not yet opened has no token until sending opens it.

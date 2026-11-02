@@ -85,9 +85,8 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  The receipt for an order handed over and paid in full, as a sale is in
-  the shop, with the PDF the sender attaches. Says nothing about where it
-  was paid, which may be any time. Loads as `payment_received/3`.
+  A copy of an order's receipt, with the PDF the sender attaches. Does not
+  announce a new payment or imply fulfillment. Loads as `payment_received/3`.
   """
   def purchase_receipt(%Order{} = order, message \\ nil) do
     customer_email(order, from_address(), fn email ->
@@ -527,14 +526,14 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  The day-before reminder of when and where a course is. Expects `:course`
+  Jennie's manual reminder of when and where a course is. Expects `:course`
   translated and `:first_name` loaded.
   """
-  def course_reminder(registration) do
+  def course_reminder(registration, message \\ nil) do
     customer_email(registration, from_address(), fn email ->
       email
-      |> subject(~t"See you tomorrow at #{course = registration.course.name}")
-      |> text_body(Templates.course_reminder(course_assigns(registration, nil)))
+      |> subject(~t"A reminder about #{course = registration.course.name}")
+      |> text_body(Templates.course_reminder(course_assigns(registration, message)))
     end)
   end
 
