@@ -42,7 +42,8 @@ A marketing plan for the three months after the new website's launch and Jennie'
 - **November:** Google Business Profile; promote the Christmas course two weeks before it runs.
 - **23-29.11:** Jennie prepares and schedules December's four posts (vouchers, Independence Day 6.12, Lucia 13.12, Christmas deadline) in Meta Business Suite, before the Christmas rush.
 - **Early December:** gift vouchers live (TASK-160, simple version), announced by newsletter and post, also sold as 'a few months of flowers' for gift subscriptions. Christmas flowers and the last order day pushed.
-- **January:** the weekly bouquet through the dark winter, with having it every week as the next step; steer voucher recipients there. Occasion pages (TASK-161) live by mid-January. Two normal weeks, 11.1-24.1, set the orders-per-week target on 25.1.
+- **January:** the weekly bouquet through the dark winter, with having it every week as the next step; steer voucher recipients there. Occasion pages (TASK-161) live by mid-January.
+- **30.11-13.12:** two normal weeks before the Christmas rush set the orders-per-week target on 14.12 (January is quiet).
 - **By 29.1:** check Valentine's deliveries (Sun 14.2) for Sat 13.2 and Sun 14.2.
 - **February:** Valentine's Day push, partly as the friends' day (Vändagen/Ystävänpäivä); review results against the target.
 <!-- SECTION:DESCRIPTION:END -->
