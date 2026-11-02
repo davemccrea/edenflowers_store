@@ -21,8 +21,6 @@ defmodule Edenflowers.Orders.Order do
     extensions: [AshStateMachine, AshOban, AshPaperTrail.Resource],
     fragments: [
       Edenflowers.Payments.Payable,
-      Edenflowers.Payments.BusinessCustomer,
-      Edenflowers.Payments.Invoiceable,
       Edenflowers.Orders.Order.Checkout,
       Edenflowers.Orders.Order.Occurrences,
       Edenflowers.Orders.Order.Customer,
@@ -137,7 +135,6 @@ defmodule Edenflowers.Orders.Order do
       :place_custom,
       :edit,
       :update_florist_note,
-      :update_business_details,
       :cancel,
       :cancel_by_customer,
       :mark_fulfilled,
@@ -202,7 +199,6 @@ defmodule Edenflowers.Orders.Order do
                      :edit,
                      :quote_entered,
                      :update_florist_note,
-                     :update_business_details,
                      :cancel,
                      :record_payment,
                      :undo_payment,
@@ -407,32 +403,16 @@ defmodule Edenflowers.Orders.Order do
       description "Every Payment and refund on the order, by any method, oldest first. Refunds are negative."
       sort paid_at: :asc
     end
-
-    has_many :invoices, Edenflowers.Payments.Invoice do
-      description "Every invoice Jennie sent for the order, oldest first."
-      sort number: :asc
-    end
   end
 
   calculations do
-    calculate :buyer_details_complete?,
-              :boolean,
-              expr(not is_nil(customer_name) and not is_nil(customer_email) and business_details_complete?) do
-      description "Whether an invoice has someone to address and send to: the customer's name and email, and " <>
-                    "for a business customer the company details too."
-    end
-
     calculate :payment_overdue?,
               :boolean,
               expr(
-                invoice_overdue? or
-                  (fulfillment_status == :fulfilled and uninvoiced_balance > 0 and
-                     fulfillment_date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day))
+                fulfillment_status == :fulfilled and balance > 0 and
+                  fulfillment_date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
               ) do
-      description "Whether the customer is late paying: one of its invoices is overdue, or it was handed over " <>
-                    "more than 14 days ago (Payment.overdue_after_days) and still owes a Balance no open " <>
-                    "invoice asks for. An invoiced Balance is late only after its invoice's own due date. Lists " <>
-                    "the order under Payment overdue on the admin Overview."
+      description "Whether a fulfilled order still has a balance more than 14 days after fulfillment."
     end
 
     calculate :customer_first_name, :string, {AccountCalculations.FirstName, source: :customer_name} do
@@ -607,11 +587,11 @@ defmodule Edenflowers.Orders.Order do
     calculate :payment_reminder_sendable?,
               :boolean,
               expr(
-                fulfillment_status != :cancelled and (is_nil(payment_terms) or payment_terms != :invoice) and
+                fulfillment_status != :cancelled and
                   not is_nil(customer_email) and to_collect?
               ) do
       description "Whether Jennie can send a Payment reminder: a Balance to collect, an email to send it to, " <>
-                    "and not on invoice terms, as her invoice is its own reminder."
+                    "on a purchase that has not been cancelled."
     end
 
     calculate :payment_status,

@@ -19,7 +19,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.DrawerPreview
   alias EdenflowersWeb.Admin.EmailDrawer
-  alias EdenflowersWeb.Admin.InvoiceDrawer
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Admin.PhotoUpload
@@ -152,13 +151,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           preview={@preview}
           swedish_toggle?={swedish_toggle?(@order)}
           {EmailDrawer.text(@email_kind, @order, @locale)}
-        />
-        <.live_component
-          module={InvoiceDrawer}
-          id="invoices"
-          purchases={[@order]}
-          locale={@locale}
-          current_user={@current_user}
         />
         <.settlement_drawer
           order={@order}
@@ -358,24 +350,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 </div>
               </div>
             </section>
-
-            <.widget
-              :if={@order.payment_terms == :invoice or @order.invoices != []}
-              id="order-invoices"
-              title={~t"Invoices"}
-            >
-              <p :if={@order.invoices == []} class="text-base-content/75 text-sm">{~t"No invoices yet."}</p>
-              <InvoiceDrawer.invoice_list invoices={@order.invoices} locale={@locale} drawer="invoices" />
-              <.button
-                type="button"
-                phx-click={InvoiceDrawer.open_create("invoices", @order)}
-                variant="secondary"
-                size="sm"
-                class="mt-4"
-              >
-                <.icon name="hero-document-plus" class="h-4 w-4" /> {~t"Create invoice"}
-              </.button>
-            </.widget>
 
             <.widget id="order-customer" title={~t"Customer"}>
               <.person_block>
@@ -668,10 +642,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  def handle_info({InvoiceDrawer, {kind, message}}, socket) do
-    {:noreply, socket |> assign_order(reload(socket.assigns.order, socket)) |> put_flash(kind, message)}
-  end
-
   def handle_info(_message, socket), do: {:noreply, socket}
 
   # Reloads on an error too: a payment can be recorded while its receipt failed to send.
@@ -758,9 +728,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   defp order_log(order, payments, locale) do
     order =
-      Ash.load!(order, [:paper_trail_versions, invoices: [:credit_note, :paper_trail_versions]], authorize?: false)
+      Ash.load!(order, :paper_trail_versions, authorize?: false)
 
-    OrderLog.entries(order.paper_trail_versions, payments, locale, order.invoices)
+    OrderLog.entries(order.paper_trail_versions, payments, locale)
   end
 
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)

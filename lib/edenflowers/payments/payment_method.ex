@@ -7,7 +7,7 @@ defmodule Edenflowers.Payments.PaymentMethod do
 
   `:zervant` keeps its name from when invoices were sent from Zervant: it is the
   value stored on existing payments, and renaming it would need a hand-written data
-  migration. Shown as "Bank transfer (invoice)".
+  migration. Shown as "Bank transfer".
   """
   use Ash.Type.Enum, values: [:stripe, :zettle, :mobilepay, :cash, :zervant]
 end

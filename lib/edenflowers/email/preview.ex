@@ -18,7 +18,6 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   alias Edenflowers.Payments.Changes.Cancel
-  alias Edenflowers.Payments.Changes.IssueInvoice
   alias Edenflowers.Payments.Changes.SendInvoice
   alias Edenflowers.Payments.Changes.SendPaymentReceivedEmail
   alias Edenflowers.Payments.CreditNote
@@ -66,8 +65,6 @@ defmodule Edenflowers.Email.Preview do
     {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
     paid = if order, do: order.amount_paid, else: Decimal.new(0)
     balance = Decimal.sub(price.total, paid)
-    sent_invoices = sent_open_invoices(order)
-    sent_invoices_amount = Enum.reduce(sent_invoices, Decimal.new(0), &Decimal.add(&1.amount_unpaid, &2))
 
     entered = %{
       entered
@@ -77,10 +74,7 @@ defmodule Edenflowers.Email.Preview do
         fulfillment_fee: price.fulfillment_fee,
         grand_total: price.total,
         amount_paid: paid,
-        balance: balance,
-        sent_open_invoices: sent_invoices,
-        # As the order's own invoice_to_send? reads once the edit is saved.
-        invoice_to_send?: Decimal.gt?(balance, sent_invoices_amount)
+        balance: balance
     }
 
     url = if entered_link?(entered, order), do: link_url(entered)
@@ -90,11 +84,6 @@ defmodule Edenflowers.Email.Preview do
       :order_updated -> Email.order_updated(entered, url, inputs[:message])
     end
   end
-
-  defp sent_open_invoices(nil), do: []
-
-  defp sent_open_invoices(order),
-    do: Ash.load!(order, [sent_open_invoices: [:overdue?, :amount_unpaid]], authorize?: false).sent_open_invoices
 
   @doc """
    The confirmation email for a booking Jennie is entering for `course`, from
@@ -114,8 +103,7 @@ defmodule Edenflowers.Email.Preview do
           seats: seats,
           amount_paid: amount_paid,
           balance: Decimal.sub(Decimal.mult(course.price, seats), amount_paid),
-          payment_link_token: if(entered.payment_terms == :payment_link, do: "preview"),
-          sent_open_invoices: []
+          payment_link_token: if(entered.payment_terms == :payment_link, do: "preview")
       }
       |> translated()
 
@@ -144,44 +132,19 @@ defmodule Edenflowers.Email.Preview do
     |> Swoosh.Email.attachment(InvoicePdf.attachment("", invoice))
   end
 
-  @doc """
-  The Invoice email for one Jennie is about to create for `purchase`, from
-  the form's `params` (amount, due_date, locale), before it has a number.
-  Unfilled or unreadable fields read as the defaults the action would use.
-  """
-  def build_new_invoice(purchase, params, message) do
-    {key, load} =
-      case purchase do
-        %Order{} ->
-          {:order, [:total_due, :balance, :uninvoiced_balance, :cancelled?]}
+  @doc "Preview a standalone invoice draft before issuance."
+  def build_new_invoice(%Invoice{} = draft, params, message) do
+    invoice = %{
+      draft
+      | number: "…",
+        reference_number: "…",
+        amount_paid: Decimal.new(0),
+        amount_unpaid: draft.amount,
+        due_date: date(params["due_date"]) || draft.due_date || Invoice.default_due_date(),
+        overdue?: false
+    }
 
-        %CourseRegistration{} ->
-          {:course_registration, [:course, :total_due, :balance, :uninvoiced_balance, :cancelled?]}
-      end
-
-    purchase = Ash.load!(purchase, load, authorize?: false, reuse_values?: false)
-    amount = decimal(params["amount"]) || purchase.uninvoiced_balance
-
-    purchase
-    |> IssueInvoice.buyer()
-    |> Map.merge(%{
-      order: nil,
-      course_registration: nil,
-      number: "…",
-      reference_number: "…",
-      amount: amount,
-      amount_paid: Decimal.new(0),
-      amount_unpaid: amount,
-      due_date: date(params["due_date"]) || Invoice.default_due_date(),
-      locale: presence(params["locale"]) || purchase.locale,
-      # A new invoice can't be due before today, so it is never a reminder.
-      overdue?: false,
-      cancellation_charge?: purchase.cancelled?
-    })
-    |> then(&struct(Invoice, &1))
-    |> Map.put(key, purchase)
-    |> SendInvoice.in_invoice_locale()
-    |> then(&Swoosh.Email.attachment(Email.invoice(&1, message), InvoicePdf.attachment("", &1)))
+    Swoosh.Email.attachment(Email.invoice(invoice, message), InvoicePdf.attachment("", invoice))
   end
 
   defp date(text) do
@@ -190,9 +153,6 @@ defmodule Edenflowers.Email.Preview do
       _ -> nil
     end
   end
-
-  defp presence(""), do: nil
-  defp presence(text), do: text
 
   # Placing opens a link for payment-link terms; an edited order keeps the one it has.
   defp entered_link?(entered, nil), do: entered.payment_terms == :payment_link
@@ -211,8 +171,6 @@ defmodule Edenflowers.Email.Preview do
       :balance,
       :payment_link_open?,
       :payments,
-      :invoice_to_send?,
-      sent_open_invoices: [:overdue?],
       line_items: [:subtotal]
     ]
 
@@ -250,9 +208,7 @@ defmodule Edenflowers.Email.Preview do
       :amount_paid,
       :balance,
       :payments,
-      :payment_link_open?,
-      :invoice_to_send?,
-      sent_open_invoices: [:overdue?]
+      :payment_link_open?
     ]
 
   defp booking_email(:confirmation, registration, inputs) do

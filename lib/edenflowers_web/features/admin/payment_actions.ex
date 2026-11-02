@@ -52,8 +52,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
       amount: String.replace(amount, ",", "."),
       payment_method: payment_method,
       email_receipt?: params["email_receipt"] == "true",
-      message: params["message"],
-      invoice_id: if(payment_method == "zervant", do: params["invoice_id"])
+      message: params["message"]
     }
 
     case Ash.update(payable, input, action: :record_payment, actor: actor) do

@@ -288,13 +288,13 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       end)
     end
 
-    test "with an invoice, says it comes after pickup", ctx do
+    test "bank transfer terms leave payment arrangements to Jennie", ctx do
       {:ok, _order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_terms: :invoice})
       Oban.drain_queue(queue: :default)
 
       assert_email_sent(fn email ->
         assert email.text_body =~
-                 ~r/Collect on [^\n]+ from Minimossen[^\n]+\n\nI'll send you an invoice after you've collected your order\./
+                 ~r/Collect on [^\n]+ from Minimossen[^\n]+\n\nI'll be in touch about how to pay it\./
       end)
     end
 
@@ -316,38 +316,6 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, _order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 
       refute_enqueued(worker: SendOrderDetailsEmail)
-    end
-  end
-
-  describe "a business customer" do
-    defp complete?(order),
-      do: Ash.load!(order, :business_details_complete?, authorize?: false).business_details_complete?
-
-    test "saves with details missing, and is complete once the company is named, identified and addressed", ctx do
-      {:ok, consumer} = place(ctx)
-      {:ok, business} = place(ctx, %{business_customer: true, company_name: "Kukka Oy"})
-
-      assert complete?(consumer)
-      refute complete?(business)
-
-      {:ok, business} =
-        Orders.edit_order(
-          business,
-          params(ctx, %{
-            business_customer: true,
-            company_name: "Kukka Oy",
-            business_id: "2944459-6",
-            billing_address: "Kyrkvägen 5\n68600 Jakobstad"
-          }),
-          actor: ctx.admin
-        )
-
-      assert complete?(business)
-    end
-
-    test "refuses a Y-tunnus with the wrong check digit", ctx do
-      assert {:error, error} = place(ctx, %{business_customer: true, business_id: "2944459-5"})
-      assert Exception.message(error) =~ "Must be a valid Y-tunnus"
     end
   end
 

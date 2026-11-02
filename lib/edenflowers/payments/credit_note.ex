@@ -39,7 +39,7 @@ defmodule Edenflowers.Payments.CreditNote do
       description "Jennie cancels an Invoice that has nothing paid on it (Invoice.cancellable?) by issuing a " <>
                     "credit note for its whole amount. It takes the next number in the series Invoices share, is " <>
                     "dated today in Helsinki, and can carry her reason, printed on it. The Invoice stops counting " <>
-                    "as open or invoiced, so the next invoice for the purchase defaults to the right amount."
+                    "as open. Paid and partly paid invoice corrections go to the accountant."
 
       accept [:invoice_id, :reason]
 

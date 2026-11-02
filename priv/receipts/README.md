@@ -1,6 +1,6 @@
 # priv/receipts
 
-Typst project for the PDFs the shop sends: the receipt emailed with orders and course bookings (`main.typ`, `receipt.typ`), the invoice for a purchase on invoice terms (`invoice-main.typ`, `invoice.typ`), and the credit note that cancels an invoice (`credit-note-main.typ`, `credit-note.typ`). `parts.typ` holds the line items and VAT breakdown they print, and the page, masthead and buyer block the invoice and credit note share. `Edenflowers.Orders.Receipt` and `Edenflowers.Payments.InvoicePdf` build the payloads; `Edenflowers.Typst` shells out to `typst`.
+Typst project for the PDFs the shop sends: the receipt emailed with orders and course bookings (`main.typ`, `receipt.typ`), the standalone invoice with its own billed lines and VAT (`invoice-main.typ`, `invoice.typ`), and the credit note that cancels an invoice (`credit-note-main.typ`, `credit-note.typ`). `parts.typ` holds the line items and VAT breakdown they print, and the page, masthead and buyer block the invoice and credit note share. `Edenflowers.Orders.Receipt` and `Edenflowers.Payments.InvoicePdf` build the payloads; `Edenflowers.Typst` shells out to `typst`.
 
 Typst is pinned to the version in `scripts/install-typst.sh` (`just install-typst`), which must match the Dockerfile and CI. Layout can shift between pre-1.0 releases.
 

@@ -106,46 +106,30 @@ defmodule Edenflowers.Email do
     end)
   end
 
-  @doc """
-  Jennie's invoice for an order or a booking, with the PDF the sender
-  attaches: what it asks for, by when, and how to pay it by bank transfer.
-  In the invoice's own language, to the email it was made for. Sent while
-  it is overdue, it is a friendly reminder: a gentler subject and a line
-  saying when it was due. Once something is paid on it, it says what is
-  still to pay. One made after the purchase was cancelled bills the
-  cancellation charge and says so. Expects `:overdue?`, `:amount_paid`,
-  `:amount_unpaid`, `:cancellation_charge?` and
-  `order: [:total_due, :balance]` or `course_registration: [:course, :total_due, :balance]`
-  loaded, with the course in the invoice's language.
-  """
+  @doc "The standalone invoice email, using its own buyer, frozen seller and current balance."
   def invoice(invoice, message \\ nil)
 
   def invoice(
-        %Invoice{
-          overdue?: reminder?,
-          cancellation_charge?: cancellation_charge?,
-          amount_paid: %Decimal{} = amount_paid,
-          amount_unpaid: %Decimal{}
-        } = invoice,
+        %Invoice{overdue?: reminder?, amount_paid: %Decimal{} = paid, amount_unpaid: %Decimal{}} = invoice,
         message
       )
-      when is_boolean(reminder?) and is_boolean(cancellation_charge?) do
-    purchase = invoice.order || invoice.course_registration
+      when is_boolean(reminder?) do
     locale = invoice.locale
 
     customer_email(invoice, from_address(), fn email ->
       email
-      |> subject(if reminder?, do: reminder_subject(invoice, purchase), else: invoice_subject(invoice, purchase))
+      |> subject(
+        if reminder?,
+          do: ~t"A reminder about invoice #{number = invoice.number}",
+          else: ~t"Invoice #{number = invoice.number}"
+      )
       |> text_body(
         Templates.invoice(%{
           invoice: invoice,
-          purchase: purchase,
           first_name: FirstName.extract(invoice.buyer_name),
           message: message,
           reminder?: reminder?,
-          cancellation_charge?: cancellation_charge?,
-          part_paid?: Decimal.positive?(amount_paid),
-          part?: Decimal.lt?(invoice.amount, purchase.balance),
+          part_paid?: Decimal.positive?(paid),
           payee: seller(invoice)["name"],
           iban: seller(invoice)["iban"],
           reference_number: ReferenceNumber.format(invoice.reference_number),
@@ -157,26 +141,9 @@ defmodule Edenflowers.Email do
     end)
   end
 
-  # The seller frozen on the invoice, so a resend matches its PDF. A preview
-  # of an invoice not yet created has no content, so it reads the config.
   defp seller(%Invoice{content: %{"seller" => seller}}), do: seller
-  defp seller(_new_invoice), do: Map.new(Invoice.seller(), fn {key, value} -> {to_string(key), value} end)
-
-  defp invoice_subject(invoice, %Order{} = order) do
-    date = Format.weekday_day_month(order.fulfillment_date, invoice.locale)
-    ~t"Invoice #{number = invoice.number} for your order for #{date}"
-  end
-
-  defp invoice_subject(invoice, %CourseRegistration{} = registration),
-    do: ~t"Invoice #{number = invoice.number} for #{course = registration.course.name}"
-
-  defp reminder_subject(invoice, %Order{} = order) do
-    date = Format.weekday_day_month(order.fulfillment_date, invoice.locale)
-    ~t"A reminder about invoice #{number = invoice.number} for your order for #{date}"
-  end
-
-  defp reminder_subject(invoice, %CourseRegistration{} = registration),
-    do: ~t"A reminder about invoice #{number = invoice.number} for #{course = registration.course.name}"
+  defp seller(%Invoice{seller_snapshot: seller}) when is_map(seller) and map_size(seller) > 0, do: seller
+  defp seller(_invoice), do: Map.new(Invoice.seller(), fn {key, value} -> {to_string(key), value} end)
 
   @doc """
   Jennie's credit note for an Invoice she cancelled, with the PDF the sender
@@ -242,9 +209,9 @@ defmodule Edenflowers.Email do
   @doc """
   What Jennie and the customer agreed for a custom order she placed, and how
   to pay. Once the order is handed over it leaves out the delivery or pickup
-  line. On invoice terms it points to the invoices the customer was sent.
+  line.
   Expects `:customer_first_name`, `:grand_total`, `:amount_paid`,
-  `:balance`, `:invoice_to_send?`, `sent_open_invoices: [:overdue?]` and
+  `:balance` and
   `line_items: [:subtotal]` loaded.
   """
   def order_details(order, payment_link_url, message \\ nil) do
@@ -501,9 +468,7 @@ defmodule Edenflowers.Email do
   Expects it read with `:for_customer_email`. `money` is
   `Payments.Changes.Cancel.money/2`: the `charge`, what went back through
   Stripe (`refunded`), what Jennie still hands back herself (`to_return`)
-  and what of the charge is still to pay (`to_collect`), which she invoices
-  on invoice terms, and what becomes of the invoices the customer was
-  already sent (`earlier_invoices`).
+  and what of the charge is still to pay (`to_collect`).
   """
   def cancelled(%Order{} = order, money) do
     customer_email(order, from_address(), fn email ->
@@ -517,10 +482,6 @@ defmodule Edenflowers.Email do
           refunded: money.refunded,
           to_return: money.to_return,
           to_collect: money.to_collect,
-          earlier_invoices: money.earlier_invoices,
-          earlier_invoice_count: money.earlier_invoice_count,
-          invoiced: money.invoiced,
-          invoice?: order.payment_terms == :invoice,
           refunded_to: refunded_to(order.payments),
           format_currency: &Format.currency(&1, order.locale),
           format_date: &Format.weekday_date(&1, order.locale)
@@ -541,10 +502,6 @@ defmodule Edenflowers.Email do
           refunded: money.refunded,
           to_return: money.to_return,
           to_collect: money.to_collect,
-          earlier_invoices: money.earlier_invoices,
-          earlier_invoice_count: money.earlier_invoice_count,
-          invoiced: money.invoiced,
-          invoice?: registration.payment_terms == :invoice,
           refunded_to: refunded_to(registration.payments),
           format_date: &Format.weekday_date(&1, registration.locale),
           format_currency: &Format.currency(&1, registration.locale)
@@ -655,9 +612,7 @@ defmodule Edenflowers.Email do
 
   @doc """
   Jennie's manual reminder of when and where a course is. Expects `:course`
-  translated, `:first_name`, `:balance`, `:invoice_to_send?` and
-  `sent_open_invoices: [:overdue?]` loaded: on invoice terms it points to the
-  invoices the customer was sent.
+  translated, `:first_name` and `:balance` loaded.
   """
   def course_reminder(registration, message \\ nil) do
     customer_email(registration, from_address(), fn email ->

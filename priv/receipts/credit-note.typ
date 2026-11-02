@@ -1,17 +1,17 @@
 #import "theme.typ": hairline
-#import "parts.typ": invoice-page, buyer-and-facts
+#import "parts.typ": invoice-page, buyer-and-facts, line-items, vat-breakdown
 
 // Render one credit note: the hyvityslasku that cancels an invoice. `note` is
 // a flat dict built by Edenflowers.Payments.InvoicePdf; see
 // sample/credit-note.*.json. It prints on the invoice's page with the
 // invoice's buyer, names the invoice it cancels and credits its amount, which
 // arrives formatted as negative. There is nothing to pay, so it has no
-// payment details or bar code, and it leaves out the purchase's lines, which
-// may have changed since the invoice was made.
+// payment details or bar code. Its lines and VAT exactly reverse the original
+// invoice's immutable numeric snapshot.
 #let credit-note(note) = {
   let required = (
     "lang", "labels", "number", "credit_date", "invoice_number", "invoice_date",
-    "seller", "buyer", "amount",
+    "seller", "buyer", "amount", "line_items", "vat_breakdown",
   )
   for key in required {
     assert(key in note, message: "credit note: missing required key `" + key + "`")
@@ -50,6 +50,10 @@
     v(14pt)
   }
 
+  line-items(note.line_items, t, price-label: t("unit-price-incl-vat"))
+  v(14pt)
+  align(right, block(width: 60%, vat-breakdown(note.vat_breakdown, t)))
+  v(14pt)
   hairline
   v(4pt)
   grid(

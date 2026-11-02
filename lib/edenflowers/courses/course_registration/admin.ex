@@ -39,7 +39,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
 
     create :add_manually do
       description "Jennie accepts a booking, including after online cutoff or over capacity. Holds places immediately, " <>
-                    "with payment by link, separate invoice, at the course, or already received. Confirmation is optional."
+                    "with payment by link, bank transfer, at the course, or already received. Confirmation is optional."
 
       accept [
         :name,
@@ -47,12 +47,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
         :seats,
         :course_id,
         :locale,
-        :payment_terms,
-        :business_customer,
-        :company_name,
-        :business_id,
-        :billing_address,
-        :customer_reference
+        :payment_terms
       ]
 
       argument :email_customer?, :boolean, default: true
@@ -134,7 +129,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       description "Jennie cancels a confirmed booking, freeing its places and keeping a cancellation charge " <>
                     "whether or not it was paid: paid above it is refunded, card payments through Stripe and the " <>
                     "rest left as a Balance to hand back, and any of it unpaid is left as a Balance to collect, " <>
-                    "for Jennie to invoice. Emails the customer unless told not to."
+                    "as a balance for Jennie to collect. Emails the customer unless told not to."
 
       accept [:cancellation_reason]
 

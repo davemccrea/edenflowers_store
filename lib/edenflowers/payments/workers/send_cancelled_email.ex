@@ -19,9 +19,6 @@ defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
       "refunded_amount" => Decimal.to_string(money.refunded),
       "to_return" => Decimal.to_string(money.to_return),
       "to_collect" => Decimal.to_string(money.to_collect),
-      "earlier_invoices" => to_string(money.earlier_invoices),
-      "earlier_invoice_count" => money.earlier_invoice_count,
-      "invoiced" => Decimal.to_string(money.invoiced),
       "cancelled_by" => to_string(cancelled_by)
     })
   end
@@ -34,10 +31,7 @@ defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
       charge: Decimal.new(args["charge"] || "0"),
       refunded: Decimal.new(args["refunded_amount"]),
       to_return: Decimal.new(args["to_return"]),
-      to_collect: Decimal.new(args["to_collect"] || "0"),
-      earlier_invoices: String.to_existing_atom(args["earlier_invoices"] || "none"),
-      earlier_invoice_count: args["earlier_invoice_count"] || 0,
-      invoiced: Decimal.new(args["invoiced"] || "0")
+      to_collect: Decimal.new(args["to_collect"] || "0")
     }
 
     record = Payments.get_for_customer_email!(args)

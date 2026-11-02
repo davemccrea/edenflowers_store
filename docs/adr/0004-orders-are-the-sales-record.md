@@ -1,17 +1,20 @@
-# Orders are the sales record, not the payment services
+# Purchases and standalone invoices are the sales record
 
-Sales reach the shop through Stripe, Zettle, Zervant invoices, MobilePay and cash, and Zettle and Zervant each keep their own sales records with VAT. Booking from each service would mean several sources the accountant must combine without counting any sale twice, and MobilePay and cash have no record with VAT at all. So every sale, over-the-counter ones included, is entered as an order, and the orders are the only record the shop's sales are booked from. The payment services are only ways of getting paid: what the accountant takes from them is fees and payouts, to match the bank.
+The monthly report is the accountant's single source of sales and VAT. Store orders and course bookings describe shop purchases; standalone invoices describe occasional weddings and bespoke work without inventing a purchase. Each Payment belongs to exactly one of these three sources, so recording an invoice receipt cannot also count it as a purchase receipt. The payment services supply fees and payouts for bank reconciliation, never a second sales total.
 
-Because they're the sales record, placed orders and course bookings are never deleted. A mistake is cancelled and settled, and working lists filter cancelled records out.
+VAT remains cash based: sales enter the report on each Payment's Helsinki paid date. Issuing an invoice freezes its own billed lines and numeric gross, base and VAT per rate, but adds no cash sale. Crediting an unpaid invoice adds no receipt or refund. Month-end receivables reconstruct unpaid issued invoices from document dates, credits and dated Payments; drafts never count.
+
+Invoice receipts use the frozen financial breakdown. In paid-date order (ties by payment id), cumulative gross is allocated by each rate's share, rounded half up to cents, with the residual on the largest gross rate (ties to the lower VAT rate). Cumulative base uses the frozen base/gross proportion within each rate, and VAT is gross minus base. Each receipt reports the difference between cumulative allocations before and after it. This makes final settlement reproduce the frozen VAT exactly and lets reversals return to zero without accumulated rounding drift; zero-gross rates allocate zero.
 
 ## Considered Options
 
-- **Each service is the record of its own sales.** Rejected: payments recorded on orders would have to be left out wherever another service also holds them, and that boundary moves whenever the accountant's setup does.
-- **Pull Zettle's purchases into the monthly report.** Rejected: Zettle purchases don't link to orders, so telling a walk-in sale from a Zettle payment already on an order would rest on fragile matching.
-- **Delete mistaken Custom Orders, or archive old ones.** Rejected: either would lose sales, VAT and payment history the accounts depend on. Filtering does the same job for Jennie's lists.
+- **Each payment service is its own sales record.** Rejected: Zettle, Stripe and bank receipts could then count sales already recorded in the shop, while cash and MobilePay have no separate VAT record.
+- **Every bespoke invoice requires a store order or booking.** Rejected: that ties invoice lines, VAT and payments to purchase balances and makes ordinary wedding booking and remainder invoices unnecessarily complex.
+- **Count issued invoices as sales alongside their receipts.** Rejected: this double counts sales and contradicts the existing cash-based accounting convention.
 
 ## Consequences
 
-- The accountant books sales only from the monthly report, never also from Zettle's or Zervant's own reports.
-- A Zettle sale with no order is missing from the VAT return. Comparing Zettle's own sales total with the Zettle payments recorded on orders would catch a forgotten order; that check is planned for the monthly report but not built yet.
-- Keeping purchases is an accounting need, not a privacy retention period. That's decided separately.
+- The accountant books sales only from the monthly report, never also from payment-service reports or a separate invoice total.
+- Placed orders, confirmed bookings, issued invoices and payment history are retained. Corrections preserve the original records; paid invoice corrections go to the accountant.
+- A Zettle sale without an order remains missing from the report. Comparing Zettle's totals with recorded Zettle payments would catch omissions; that check is not built yet.
+- Retention for accounting does not itself define a privacy retention period.

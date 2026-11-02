@@ -1,4 +1,4 @@
-<%= if Decimal.positive?(@registration.balance) do %><%= cond do %><% @registration.payment_terms == :invoice and @registration.sent_open_invoices == [] -> %><%= dgettext("emails", "Amount to pay: %{amount}. I'll send you an invoice separately.", amount: @format_currency.(@registration.balance)) %><% @registration.payment_terms == :invoice -> %><%= dgettext("emails", "Amount to pay: %{amount}.", amount: @format_currency.(@registration.balance)) %> <%= invoices_due_line(@registration.sent_open_invoices, @format_date) %><%= if @registration.invoice_to_send? do %> <%= dgettext("emails", "I'll send you an invoice for the rest.") %><% end %><% @payment_link_url -> %><%= dgettext("emails", "Amount to pay: %{amount}.", amount: @format_currency.(@registration.balance)) %>
+<%= if Decimal.positive?(@registration.balance) do %><%= dgettext("emails", "Amount to pay: %{amount}.", amount: @format_currency.(@registration.balance)) %>
 
-<%= dgettext("emails", "You can pay online here:") %>
-<%= @payment_link_url %><% true -> %><%= dgettext("emails", "Amount to pay: %{amount}. Please pay at the course.", amount: @format_currency.(@registration.balance)) %><% end %><% end %>
+<%= cond do %><% @payment_link_url -> %><%= dgettext("emails", "You can pay online here:") %>
+<%= @payment_link_url %><% @registration.payment_terms == :invoice -> %><%= dgettext("emails", "I'll be in touch about how to pay it.") %><% true -> %><%= dgettext("emails", "Please pay at the course.") %><% end %><% end %>

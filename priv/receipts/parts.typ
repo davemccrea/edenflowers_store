@@ -88,7 +88,7 @@
 )
 
 // `t` looks a label up in the payload's translated labels.
-#let line-items(items, t) = table(
+#let line-items(items, t, price-label: none) = table(
   columns: (1fr, 110pt, 36pt, auto, 64pt),
   column-gutter: 8pt,
   align: (left, right, right, right, right),
@@ -97,7 +97,7 @@
 
   table.header(
     head(t("item")),
-    head(t("unit-price-excl-vat")),
+    head(if price-label == none { t("unit-price-excl-vat") } else { price-label }),
     head(t("quantity")),
     head(t("vat-rate")),
     head(t("total")),
