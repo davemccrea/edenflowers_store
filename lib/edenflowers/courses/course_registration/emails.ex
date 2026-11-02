@@ -35,21 +35,17 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
         default_actor system_actor()
       end
 
-      # Once a day, the day before the course. The stamp makes it one each.
+      # Only queued when Jennie explicitly sends course reminders.
       trigger :send_reminder_email do
         action :send_reminder_email
         queue :default
         max_attempts 3
         lock_for_update? false
-        scheduler_cron "0 7 * * *"
+        scheduler_cron false
         worker_module_name Edenflowers.Courses.Workers.SendReminderEmail
         scheduler_module_name Edenflowers.Courses.Schedulers.SendReminderEmail
         default_actor system_actor()
-
-        where expr(
-                status == :confirmed and is_nil(reminder_emailed_at) and
-                  course.date == date_add(helsinki_today(), 1, :day)
-              )
+        where expr(status == :confirmed)
       end
     end
   end
@@ -97,9 +93,18 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
       change Changes.SendConfirmationEmail
     end
 
-    update :send_reminder_email do
-      description "Reminds a confirmed booking of its course the day before, once. Run daily by Oban."
+    update :email_course_reminder do
+      description "Jennie explicitly queues a course reminder for a confirmed booking."
       accept []
+      argument :message, :string
+      validate attribute_equals(:status, :confirmed), message: "is not confirmed"
+      change {PaymentChanges.QueueEmail, trigger: :send_reminder_email}
+    end
+
+    update :send_reminder_email do
+      description "Sends the course reminder Jennie queued, in the booking's language."
+      accept []
+      argument :message, :string
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       transaction? false
       require_atomic? false

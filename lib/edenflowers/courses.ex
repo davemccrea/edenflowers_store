@@ -10,6 +10,41 @@ defmodule Edenflowers.Courses do
     otp_app: :edenflowers,
     extensions: [AshAdmin.Domain]
 
+  require Ash.Query
+
+  @doc "Queues reminders for the course's current confirmed bookings only, in one transaction."
+  def send_course_reminders(course_id, message, actor) do
+    case Edenflowers.Repo.transaction(fn -> queue_reminders(course_id, message, actor) end) do
+      {:ok, {count, notifications}} ->
+        Ash.Notifier.notify(notifications)
+        {:ok, count}
+
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
+  defp queue_reminders(course_id, message, actor) do
+    registrations =
+      Edenflowers.Courses.CourseRegistration
+      |> Ash.Query.filter(course_id == ^course_id and status == :confirmed)
+      |> Ash.read!(actor: actor)
+
+    notifications =
+      Enum.flat_map(registrations, fn registration ->
+        case Ash.update(registration, %{message: message},
+               action: :email_course_reminder,
+               actor: actor,
+               return_notifications?: true
+             ) do
+          {:ok, _registration, notifications} -> notifications
+          {:error, error} -> Edenflowers.Repo.rollback(error)
+        end
+      end)
+
+    {length(registrations), notifications}
+  end
+
   admin do
     show?(true)
   end

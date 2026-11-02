@@ -153,7 +153,7 @@ defmodule Edenflowers.Orders.Order.Emails do
     update :send_payment_received_email do
       description "Run by its job: emails Payment received with the receipt PDF for amount, or else the latest " <>
                     "payment that isn't a refund, after a payment link is paid or Jennie records a payment and " <>
-                    "ticks to email it. A fulfilled order settled in full gets the purchase receipt instead."
+                    "ticks to email it, regardless of fulfillment."
 
       accept []
       argument :amount, :decimal
@@ -174,10 +174,9 @@ defmodule Edenflowers.Orders.Order.Emails do
       change Changes.SendFulfillmentEmail
     end
 
-    # Payment received again, from the order's menu.
+    # A neutral receipt copy, without announcing another payment.
     update :email_receipt do
-      description "Jennie re-sends a paid order's receipt from the order's menu: Payment received, or the " <>
-                    "purchase receipt once the order is fulfilled and settled."
+      description "Jennie sends a paid order's receipt from the order's menu without announcing a new payment."
 
       accept []
       argument :message, :string
@@ -185,7 +184,7 @@ defmodule Edenflowers.Orders.Order.Emails do
       validate present(:customer_email), message: "has no email address"
       transaction? false
       require_atomic? false
-      change PaymentChanges.SendPaymentReceivedEmail
+      change {PaymentChanges.SendPaymentReceivedEmail, email: :receipt}
     end
 
     # Sent by hand only. Opens a payment link if none is open.

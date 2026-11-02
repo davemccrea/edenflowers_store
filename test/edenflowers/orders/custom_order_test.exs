@@ -987,7 +987,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   describe "emailing the receipt on request" do
     @tag :typst
     test "sends it for an order paid in person", ctx do
-      {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
+      {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false, locale: "en-GB"})
 
       {:ok, order} =
         Orders.record_payment(order, "134.00", :cash, actor: ctx.admin)
@@ -995,7 +995,11 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       {:ok, order} = Orders.email_receipt(order, actor: ctx.admin)
 
       assert order.receipt_emailed_at
-      assert_email_sent(fn email -> assert [_receipt] = email.attachments end)
+
+      assert_email_sent(fn email ->
+        assert [_receipt] = email.attachments
+        assert email.subject == "Your receipt from Eden Flowers"
+      end)
     end
 
     @tag :typst
@@ -1019,6 +1023,32 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert {:error, error} = Orders.email_receipt(order, actor: ctx.admin)
       assert Exception.message(error) =~ "is not paid yet"
+    end
+  end
+
+  for fulfilled? <- [false, true] do
+    @tag :typst
+    test "a payment recorded with fulfilled=#{fulfilled?} announces payment rather than fulfillment", ctx do
+      {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false, locale: "en-GB"})
+
+      order =
+        if unquote(fulfilled?) do
+          {:ok, fulfilled} = Orders.mark_order_fulfilled(order, %{email_customer?: false}, actor: ctx.admin)
+          fulfilled
+        else
+          order
+        end
+
+      preview = Edenflowers.Email.Preview.build(:receipt, order, %{amount: "134.00"})
+
+      assert {:ok, _order} =
+               Orders.record_payment(order, "134.00", :cash, %{email_receipt?: true}, actor: ctx.admin)
+
+      assert_email_sent(fn email ->
+        assert email.subject =~ "Payment received"
+        assert email.text_body == preview.text_body
+        assert [_receipt] = email.attachments
+      end)
     end
   end
 end

@@ -18,7 +18,7 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
       payment_method: payment_method(params["how"])
     }
 
-    # Recording a payment emails the same receipt as the menu, for the amount entered.
+    # The entered amount distinguishes a new payment from a neutral receipt copy.
     kind = if kind == :payment, do: :receipt, else: kind
 
     Preview.build(kind, record, inputs, if(params["in_swedish"] == "true", do: "sv-FI"))

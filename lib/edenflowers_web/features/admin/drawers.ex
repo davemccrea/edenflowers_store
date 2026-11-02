@@ -139,7 +139,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
 
   attr :email, Swoosh.Email, required: true
 
-  defp email_preview(assigns) do
+  def email_preview(assigns) do
     ~H"""
     <section
       aria-label={~t"Email preview"}

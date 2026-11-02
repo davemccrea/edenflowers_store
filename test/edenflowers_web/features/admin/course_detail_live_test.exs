@@ -9,6 +9,33 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
   setup :log_in_admin
 
+  test "Jennie previews and manually sends course reminders in each booking's language", %{conn: conn} do
+    course = generate(course(name: "Autumn wreaths"))
+    anna = generate(course_registration(course_id: course.id, status: :confirmed, name: "Anna", locale: "en-GB"))
+    generate(course_registration(course_id: course.id, status: :confirmed, name: "Birgitta", locale: "sv-FI"))
+    generate(course_registration(course_id: course.id, status: :cancelled, name: "Cancelled Carl"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+    refute_enqueued(worker: Edenflowers.Courses.Workers.SendReminderEmail)
+
+    view |> element("button[phx-click=open_course_reminders]") |> render_click()
+    assert has_element?(view, "#course-reminder-drawer summary", "Anna")
+    assert has_element?(view, "#course-reminder-drawer summary", "Birgitta")
+    refute has_element?(view, "#course-reminder-drawer summary", "Cancelled Carl")
+    assert has_element?(view, "#course-reminder-drawer", "A reminder about Autumn wreaths")
+
+    view |> form("#course-reminder-form", reminder: %{message: "Bring an apron."}) |> render_change()
+    assert has_element?(view, "#course-reminder-drawer", "Bring an apron.")
+    assert_no_email_sent()
+
+    view |> form("#course-reminder-form") |> render_submit()
+    assert render(view) =~ "Course reminders queued."
+    jobs = all_enqueued(worker: Edenflowers.Courses.Workers.SendReminderEmail)
+    assert length(jobs) == 2
+    assert Enum.any?(jobs, &(&1.args["primary_key"]["id"] == anna.id))
+    assert Enum.all?(jobs, &(&1.args["action_arguments"]["message"] == "Bring an apron."))
+  end
+
   test "lists confirmed bookings with seat counts, hides unpaid ones and shows cancelled ones apart", %{conn: conn} do
     course = generate(course(name: "Autumn wreaths", total_places: 10))
 
