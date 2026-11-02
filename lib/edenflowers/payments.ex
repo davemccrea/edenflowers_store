@@ -23,6 +23,7 @@ defmodule Edenflowers.Payments do
     resource Edenflowers.Payments.Payment
 
     resource Edenflowers.Payments.Invoice do
+      define :search_invoice_customers, action: :previous_customers, args: [:term]
       define :create_invoice, action: :create
       define :update_invoice_draft, action: :update_draft
       define :issue_invoice, action: :issue

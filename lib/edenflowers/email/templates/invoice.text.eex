@@ -6,19 +6,9 @@
 
 <% @reminder? -> %><%= dgettext("emails", "Just a friendly reminder that it was due on %{date}, and I haven't seen the payment yet. If you've already paid, thank you, and please ignore this email.", date: @format_weekday_date.(@invoice.due_date)) %>
 
-<% true -> %><% end %><%= message(@message) %><%= dgettext("emails", "Invoice %{number}", number: @invoice.number) %>
-<%= if @part_paid? do %><%= dgettext("emails", "Invoice amount") %>  <%= @format_currency.(@invoice.amount) %>
-<%= dgettext("emails", "Still to pay") %>  <%= @format_currency.(@invoice.amount_unpaid) %>
-<% else %><%= dgettext("emails", "Amount due") %>  <%= @format_currency.(@invoice.amount) %>
-<% end %><%= dgettext("emails", "Due date") %>  <%= @format_date.(@invoice.due_date) %>
-<%= dgettext("emails", "Payee") %>  <%= @payee %>
-<%= dgettext("emails", "Account (IBAN)") %>  <%= @iban %>
-<%= dgettext("emails", "Reference number") %>  <%= @reference_number %>
-<%= if @invoice.customer_reference do %><%= dgettext("emails", "Your reference") %>  <%= @invoice.customer_reference %>
-<% end %>
-<%= dgettext("emails", "Please use the reference number when you pay, so I can match your payment to this invoice.") %>
+<% @part_paid? -> %><%= dgettext("emails", "Thank you for your payment. There is %{amount} still to pay.", amount: @format_currency.(@invoice.amount_unpaid)) %>
 
-<%= dgettext("emails", "If anything on it looks wrong, just reply to this email.") %>
+<% true -> %><% end %><%= message(@message) %><%= dgettext("emails", "If anything on it looks wrong, just reply to this email.") %>
 
 <%= dgettext("emails", "Warm wishes,") %>
 

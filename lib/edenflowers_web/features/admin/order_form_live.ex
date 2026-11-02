@@ -104,43 +104,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         >
           <div class="space-y-6">
             <.form_section title={~t"Customer"}>
-              <div :if={@mode == :new} class="mb-4">
-                <label for="form_customer_id_text_input" class="mb-1 block">{~t"Find an existing customer"}</label>
-                <LiveSelect.live_select
-                  field={@form[:customer_id]}
-                  id="customer-select"
-                  allow_clear
-                  debounce={300}
-                  update_min_len={0}
-                  style={:daisyui}
-                  container_class="relative"
-                  dropdown_class="absolute z-10 mt-2 max-h-64 w-full overflow-y-auto menu bg-base-100 border-base-content/12 border p-1 shadow"
-                  option_class="break-words whitespace-normal pointer-coarse:min-h-11"
-                  active_option_class="bg-primary text-primary-content"
-                  available_option_class="cursor-pointer"
-                  selected_option_class="cursor-pointer font-semibold"
-                  text_input_class="input w-full pr-10 placeholder:text-base-content/75"
-                  text_input_selected_class=""
-                  no_basic_styles_for_clear_buttons
-                  clear_button_class="btn btn-ghost btn-square absolute inset-y-0 right-0 h-full"
-                >
-                  <:option :let={option}>
-                    <span data-selected={to_string(option.selected)}>{option.label}</span>
-                  </:option>
-                  <:clear_button>
-                    <.icon name="hero-x-mark" class="size-5" />
-                    <span class="sr-only">{~t"Clear customer selection"}</span>
-                  </:clear_button>
-                </LiveSelect.live_select>
-                <p id="customer-search-help" class="text-base-content/75 mt-1.5 text-sm">
-                  {~t"Search by name or email."}
-                </p>
-                <div id="customer-results" role="status">
-                  <p :if={@customer_search_empty?} class="text-base-content/75 mt-2 text-sm">
-                    {~t"No customers found."}
-                  </p>
-                </div>
-              </div>
+              <.customer_picker :if={@mode == :new} field={@form[:customer_id]} empty?={@customer_search_empty?} />
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                   <.input

@@ -150,4 +150,5 @@ msgid "Add at least one item"
 msgstr ""
 
 msgid "Must be a website address starting with http:// or https://"
+msgid "cannot be before the invoice date"
 msgstr ""

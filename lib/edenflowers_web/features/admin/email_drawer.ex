@@ -14,6 +14,8 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Payments.CreditNote
+  alias Edenflowers.Payments.Invoice
   alias EdenflowersWeb.Admin.DrawerPreview
 
   @doc """
@@ -47,6 +49,24 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
   @doc "The drawer's heading, button and recipient for `kind`."
   def text(nil, _record, _locale), do: %{}
   def text(_kind, nil, _locale), do: %{}
+
+  def text(:invoice, %Invoice{} = invoice, locale) do
+    %{
+      title: ~t"Email invoice",
+      submit_label: invoice_send_label(invoice),
+      to: invoice.buyer_email,
+      last_sent: invoice.sent_at && Format.datetime(invoice.sent_at, locale)
+    }
+  end
+
+  def text(:credit_note, %CreditNote{} = credit_note, locale) do
+    %{
+      title: ~t"Email credit note",
+      submit_label: ~t"Send credit note",
+      to: credit_note.invoice.buyer_email,
+      last_sent: credit_note.sent_at && Format.datetime(credit_note.sent_at, locale)
+    }
+  end
 
   def text(kind, %Order{} = order, locale) do
     {title, submit_label, last_sent_at} =
@@ -96,4 +116,8 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
         }
     end
   end
+
+  defp invoice_send_label(%{overdue?: true}), do: ~t"Send reminder"
+  defp invoice_send_label(%{sent_at: nil}), do: ~t"Send invoice"
+  defp invoice_send_label(_invoice), do: ~t"Resend invoice"
 end

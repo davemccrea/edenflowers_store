@@ -38,10 +38,23 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
     assert email.subject == "Invoice #{invoice.number}"
     assert email.text_body =~ "My invoice #{invoice.number} is attached."
     assert email.text_body =~ "Thank you"
+    refute email.text_body =~ "Amount due"
+    refute email.text_body =~ "Due date"
+    refute email.text_body =~ "IBAN"
+    refute email.text_body =~ "Reference number"
     refute email.text_body =~ "of the"
     preview = Edenflowers.Email.Preview.build_invoice(invoice, "Preview")
     assert preview.subject == email.subject
     assert preview.text_body =~ "Preview"
+  end
+
+  test "a partly paid invoice still states the outstanding balance", %{admin: admin, draft: draft} do
+    {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
+    {:ok, invoice} = Payments.record_invoice_payment(invoice, "100", %{}, actor: admin)
+    email = invoice |> SendInvoice.load_for_email() |> Email.invoice()
+    remaining = Edenflowers.Format.currency(Decimal.new("200"), invoice.locale)
+    assert email.text_body =~ "There is #{remaining} still to pay."
+    refute email.text_body =~ "IBAN"
   end
 
   @tag :typst

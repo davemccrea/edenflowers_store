@@ -72,6 +72,24 @@ defmodule Edenflowers.Payments.Invoice do
       prepare build(sort: [inserted_at: :desc])
     end
 
+    read :previous_customers do
+      description "Find previous invoice customers, using the latest emailed invoice for each email and business."
+      argument :term, :ci_string, allow_nil?: false
+
+      filter expr(
+               not is_nil(sent_at) and
+                 (contains(buyer_name, ^arg(:term)) or contains(buyer_email, ^arg(:term)) or
+                    contains(company_name, ^arg(:term)))
+             )
+
+      prepare build(
+                distinct: [:buyer_email_key, :business_customer, :business_id],
+                distinct_sort: [sent_at: :desc, inserted_at: :desc, id: :desc],
+                sort: [sent_at: :desc, inserted_at: :desc, id: :desc],
+                load: [:buyer]
+              )
+    end
+
     read :open_at do
       description "The invoices still owed at the end of a day, for the receivables list in the accountant's " <>
                     "monthly report: made by then, not cancelled by a Credit note dated by then, and not covered " <>
@@ -238,7 +256,7 @@ defmodule Edenflowers.Payments.Invoice do
       description "The customer's name, as it was when invoiced."
     end
 
-    attribute :buyer_email, :string do
+    attribute :buyer_email, Edenflowers.Types.Email do
       description "Where it is sent: the customer's email when invoiced."
     end
 
@@ -306,6 +324,8 @@ defmodule Edenflowers.Payments.Invoice do
   end
 
   calculations do
+    calculate :buyer_email_key, :string, expr(string_downcase(buyer_email))
+
     calculate :editable?, :boolean, expr(is_nil(issued_at))
     calculate :issued?, :boolean, expr(not is_nil(issued_at))
 

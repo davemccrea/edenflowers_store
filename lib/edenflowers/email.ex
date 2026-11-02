@@ -20,7 +20,6 @@ defmodule Edenflowers.Email do
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Payments.CreditNote
   alias Edenflowers.Payments.Invoice
-  alias Edenflowers.Payments.ReferenceNumber
 
   @doc """
   The receipt for an Online Order paid at checkout: when and where, what was
@@ -106,7 +105,7 @@ defmodule Edenflowers.Email do
     end)
   end
 
-  @doc "The standalone invoice email, using its own buyer, frozen seller and current balance."
+  @doc "The standalone invoice email, naming its attachment and any outstanding balance."
   def invoice(invoice, message \\ nil)
 
   def invoice(
@@ -130,20 +129,12 @@ defmodule Edenflowers.Email do
           message: message,
           reminder?: reminder?,
           part_paid?: Decimal.positive?(paid),
-          payee: seller(invoice)["name"],
-          iban: seller(invoice)["iban"],
-          reference_number: ReferenceNumber.format(invoice.reference_number),
-          format_date: &Format.date(&1, locale),
           format_weekday_date: &Format.weekday_date(&1, locale),
           format_currency: &Format.currency(&1, locale)
         })
       )
     end)
   end
-
-  defp seller(%Invoice{content: %{"seller" => seller}}), do: seller
-  defp seller(%Invoice{seller_snapshot: seller}) when is_map(seller) and map_size(seller) > 0, do: seller
-  defp seller(_invoice), do: Map.new(Invoice.seller(), fn {key, value} -> {to_string(key), value} end)
 
   @doc """
   Jennie's credit note for an Invoice she cancelled, with the PDF the sender

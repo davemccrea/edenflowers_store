@@ -41,7 +41,9 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
               {if invoice.number, do: to_string(invoice.number), else: ~t"Draft"}
             </.link>
           </:col>
-          <:col :let={invoice} field="buyer" search label={~t"Buyer"}>{invoice.buyer || ~t"Buyer details needed"}</:col>
+          <:col :let={invoice} field="buyer" search label={~t"Customer"}>
+            {invoice.buyer || ~t"Customer details needed"}
+          </:col>
           <:col
             :let={invoice}
             field="status"
