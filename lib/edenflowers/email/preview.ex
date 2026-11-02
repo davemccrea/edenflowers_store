@@ -29,8 +29,8 @@ defmodule Edenflowers.Email.Preview do
   @doc """
   The email `kind` would send for `record`, in `locale` or else the
   customer's own. `inputs` holds what Jennie has entered so far: her
-  `message`, and for some kinds the `refund` amount, the `payment_method`
-  or whether the `photo?` goes with it (else what `:mark_fulfilled` stored).
+  `message`, and for some kinds the `refund` amount, the cancellation
+  `charge`, the `payment_method` or whether the `photo?` goes with it (else what `:mark_fulfilled` stored).
   """
   def build(kind, record, inputs, locale \\ nil)
 
@@ -66,6 +66,8 @@ defmodule Edenflowers.Email.Preview do
     {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
     paid = if order, do: order.amount_paid, else: Decimal.new(0)
     balance = Decimal.sub(price.total, paid)
+    sent_invoices = sent_open_invoices(order)
+    sent_invoices_amount = Enum.reduce(sent_invoices, Decimal.new(0), &Decimal.add(&1.amount_unpaid, &2))
 
     entered = %{
       entered
@@ -75,7 +77,10 @@ defmodule Edenflowers.Email.Preview do
         fulfillment_fee: price.fulfillment_fee,
         grand_total: price.total,
         amount_paid: paid,
-        balance: balance
+        balance: balance,
+        sent_open_invoices: sent_invoices,
+        # As the order's own invoice_to_send? reads once the edit is saved.
+        invoice_to_send?: Decimal.gt?(balance, sent_invoices_amount)
     }
 
     url = if entered_link?(entered, order), do: link_url(entered)
@@ -85,6 +90,11 @@ defmodule Edenflowers.Email.Preview do
       :order_updated -> Email.order_updated(entered, url, inputs[:message])
     end
   end
+
+  defp sent_open_invoices(nil), do: []
+
+  defp sent_open_invoices(order),
+    do: Ash.load!(order, [sent_open_invoices: [:overdue?, :amount_unpaid]], authorize?: false).sent_open_invoices
 
   @doc """
    The confirmation email for a booking Jennie is entering for `course`, from
@@ -104,7 +114,8 @@ defmodule Edenflowers.Email.Preview do
           seats: seats,
           amount_paid: amount_paid,
           balance: Decimal.sub(Decimal.mult(course.price, seats), amount_paid),
-          payment_link_token: if(entered.payment_terms == :payment_link, do: "preview")
+          payment_link_token: if(entered.payment_terms == :payment_link, do: "preview"),
+          sent_open_invoices: []
       }
       |> translated()
 
@@ -141,11 +152,15 @@ defmodule Edenflowers.Email.Preview do
   def build_new_invoice(purchase, params, message) do
     {key, load} =
       case purchase do
-        %Order{} -> {:order, [:total_due, :balance, :uninvoiced_balance]}
-        %CourseRegistration{} -> {:course_registration, [:course, :total_due, :balance, :uninvoiced_balance]}
+        %Order{} ->
+          {:order, [:total_due, :balance, :uninvoiced_balance, :cancelled?]}
+
+        %CourseRegistration{} ->
+          {:course_registration, [:course, :total_due, :balance, :uninvoiced_balance, :cancelled?]}
       end
 
     purchase = Ash.load!(purchase, load, authorize?: false, reuse_values?: false)
+    amount = decimal(params["amount"]) || purchase.uninvoiced_balance
 
     purchase
     |> IssueInvoice.buyer()
@@ -154,11 +169,14 @@ defmodule Edenflowers.Email.Preview do
       course_registration: nil,
       number: "…",
       reference_number: "…",
-      amount: decimal(params["amount"]) || purchase.uninvoiced_balance,
+      amount: amount,
+      amount_paid: Decimal.new(0),
+      amount_unpaid: amount,
       due_date: date(params["due_date"]) || Invoice.default_due_date(),
       locale: presence(params["locale"]) || purchase.locale,
       # A new invoice can't be due before today, so it is never a reminder.
-      overdue?: false
+      overdue?: false,
+      cancellation_charge?: purchase.cancelled?
     })
     |> then(&struct(Invoice, &1))
     |> Map.put(key, purchase)
@@ -182,8 +200,8 @@ defmodule Edenflowers.Email.Preview do
 
   defp order_load(:fulfillment), do: [:customer_first_name, :recipient_first_name]
 
-  defp order_load(kind) when kind in [:cancelled, :refunded],
-    do: [:customer_first_name, :payments, :paid_through_stripe]
+  defp order_load(:cancelled), do: [:customer_first_name, :payments | Cancel.load()]
+  defp order_load(:refunded), do: [:customer_first_name, :payments, :paid_through_stripe]
 
   defp order_load(_kind),
     do: [
@@ -193,6 +211,8 @@ defmodule Edenflowers.Email.Preview do
       :balance,
       :payment_link_open?,
       :payments,
+      :invoice_to_send?,
+      sent_open_invoices: [:overdue?],
       line_items: [:subtotal]
     ]
 
@@ -215,15 +235,25 @@ defmodule Edenflowers.Email.Preview do
   end
 
   defp order_email(:cancelled, order, inputs) do
-    Email.cancelled(%{order | cancellation_reason: inputs[:message]}, Cancel.money(order, refund(inputs)))
+    Email.cancelled(%{order | cancellation_reason: inputs[:message]}, Cancel.money(order, charge(order, inputs)))
   end
 
   defp order_email(:refunded, order, inputs), do: Email.refunded(order, refund_details(inputs))
 
-  defp booking_load(kind) when kind in [:cancelled, :refunded],
-    do: [:course, :first_name, :payments, :paid_through_stripe]
+  defp booking_load(:cancelled), do: [:course, :first_name, :payments | Cancel.load()]
+  defp booking_load(:refunded), do: [:course, :first_name, :payments, :paid_through_stripe]
 
-  defp booking_load(_kind), do: [:course, :first_name, :amount_paid, :balance, :payments, :payment_link_open?]
+  defp booking_load(_kind),
+    do: [
+      :course,
+      :first_name,
+      :amount_paid,
+      :balance,
+      :payments,
+      :payment_link_open?,
+      :invoice_to_send?,
+      sent_open_invoices: [:overdue?]
+    ]
 
   defp booking_email(:confirmation, registration, inputs) do
     email = Email.course_confirmation(registration, inputs[:message])
@@ -246,7 +276,7 @@ defmodule Edenflowers.Email.Preview do
   defp booking_email(:receipt, registration, inputs), do: payment_receipt(registration, inputs, registration.reference)
 
   defp booking_email(:cancelled, registration, inputs) do
-    money = Cancel.money(registration, refund(inputs))
+    money = Cancel.money(registration, charge(registration, inputs))
     Email.cancelled(%{registration | cancellation_reason: inputs[:message]}, money)
   end
 
@@ -282,6 +312,9 @@ defmodule Edenflowers.Email.Preview do
 
   defp refund_details(inputs),
     do: %{amount: refund(inputs), payment_method: inputs[:payment_method] || :stripe, note: inputs[:message]}
+
+  # An empty charge cancels with the default, so it reads as that.
+  defp charge(record, inputs), do: decimal(inputs[:charge]) || record.default_cancellation_charge
 
   defp refund(inputs), do: decimal(inputs[:refund]) || Decimal.new(0)
 

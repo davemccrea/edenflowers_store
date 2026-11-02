@@ -131,18 +131,19 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
 
     # Frees the places. Payments.Changes.Cancel says what happens to the money.
     update :cancel do
-      description "Jennie cancels a confirmed booking, freeing its places and refunding all but what she keeps: " <>
-                    "card payments through Stripe, the rest left as a Balance. Emails the customer unless told not to."
+      description "Jennie cancels a confirmed booking, freeing its places and keeping a cancellation charge " <>
+                    "whether or not it was paid: paid above it is refunded, card payments through Stripe and the " <>
+                    "rest left as a Balance to hand back, and any of it unpaid is left as a Balance to collect, " <>
+                    "for Jennie to invoice. Emails the customer unless told not to."
 
       accept [:cancellation_reason]
 
-      argument :refund, :decimal,
+      argument :cancellation_charge, :decimal,
         constraints: [scale: 2],
-        description: "What Jennie chose to refund. Without it, the course's cancellation terms decide."
-
-      argument :held, :decimal,
-        constraints: [scale: 2],
-        description: "What was held when Jennie opened the cancel form, so a retry never refunds twice."
+        description:
+          "What Jennie keeps for the cancelled booking, from 0 to its Total due, paid or not. It " <>
+            "becomes the Total due. Without it, the course's cancellation terms decide " <>
+            "(default_cancellation_charge)."
 
       argument :email_customer?, :boolean, default: true
       change transition_state(:cancelled)

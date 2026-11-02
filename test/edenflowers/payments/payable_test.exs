@@ -607,19 +607,22 @@ defmodule Edenflowers.Payments.PayableTest do
         assert :ok = perform_job(Edenflowers.Payments.Workers.SendRefundedEmail, job.args)
       end
 
-      test "cancelling refunds through Stripe all but what Jennie keeps, and emails the customer" do
+      test "cancelling refunds through Stripe all but the cancellation charge, and emails the customer" do
         record = with_email(build(@parent))
         stripe_payment(@parent, record, "pi_paid", "80.00", ~U[2026-10-01 10:00:00Z])
         expect_stripe_refund("pi_paid", 6_000)
 
-        assert {:ok, cancelled} = cancel(record, %{refund: "60.00", held: "80.00"})
+        assert {:ok, cancelled} = cancel(record, %{cancellation_charge: "20.00"})
 
         assert cancelled.cancelled_at
         assert cancelled.cancellation_emailed_to
         assert_money(cancelled.kept_amount, "20.00")
         assert reload(cancelled).settled?
         assert [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
-        assert %{"refunded_amount" => "60.00", "to_return" => "0.00"} = job.args
+
+        assert %{"charge" => "20.00", "refunded_amount" => "60.00", "to_return" => "0.00", "to_collect" => "0"} =
+                 job.args
+
         assert :ok = perform_job(Edenflowers.Payments.Workers.SendCancelledEmail, job.args)
 
         Swoosh.TestAssertions.assert_email_sent(fn email ->
@@ -627,7 +630,7 @@ defmodule Edenflowers.Payments.PayableTest do
         end)
       end
 
-      test "cancelling without a refund amount refunds everything held" do
+      test "cancelling without a charge refunds everything held" do
         record = build(@parent, payments: [cash: "80.00"])
 
         assert {:ok, cancelled} = cancel(record, %{})
@@ -648,26 +651,49 @@ defmodule Edenflowers.Payments.PayableTest do
         |> stub(:list_refunds, fn _pi -> {:ok, []} end)
         |> expect(:create_refund, 0, fn _pi, _cents, _key, _metadata -> flunk("refunded twice") end)
 
-        assert {:ok, cancelled} = cancel(record, %{refund: "60.00", held: "80.00"})
+        assert {:ok, cancelled} = cancel(record, %{cancellation_charge: "20.00"})
         assert_money(cancelled.kept_amount, "20.00")
         assert reload(cancelled).settled?
       end
 
-      test "money that arrived after Jennie opened the drawer refuses the cancel" do
-        record = build(@parent, payments: [cash: "80.00"])
+      test "a charge on an unpaid one is left to collect, and refunds nothing" do
+        record = with_email(build(@parent))
 
-        assert {:error, error} = cancel(record, %{refund: "50.00", held: "50.00"})
-        assert Exception.message(error) =~ "This changed while you had it open"
-        refute cancelled?(record)
+        assert {:ok, cancelled} = cancel(record, %{cancellation_charge: "40.00"})
+
+        cancelled = reload(cancelled)
+        assert_money(cancelled.total_due, "40.00")
+        assert_money(cancelled.balance, "40.00")
+        assert cancelled.to_collect?
+        assert [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
+        assert %{"charge" => "40.00", "refunded_amount" => "0", "to_collect" => "40.00"} = job.args
       end
 
-      test "a refund outside nothing to what was held is refused" do
-        record = build(@parent, payments: [cash: "80.00"])
+      test "a charge above what was paid leaves the rest of it to collect" do
+        record = build(@parent, payments: [cash: "20.00"])
 
-        for refund <- ["80.01", "-1.00"] do
-          assert {:error, error} = cancel(record, %{refund: refund, held: "80.00"})
+        assert {:ok, cancelled} = cancel(record, %{cancellation_charge: "40.00"})
+
+        assert_money(reload(cancelled).balance, "20.00")
+      end
+
+      test "a charge below what was paid in person leaves the rest to hand back" do
+        record = build(@parent, payments: [cash: "100.00"])
+
+        assert {:ok, cancelled} = cancel(record, %{cancellation_charge: "30.00"})
+
+        assert_money(reload(cancelled).balance, "-70.00")
+      end
+
+      test "a charge outside nothing to the Total due is refused, paid or not" do
+        record = build(@parent, payments: [cash: "20.00"])
+
+        for charge <- ["80.01", "-1.00"] do
+          assert {:error, error} = cancel(record, %{cancellation_charge: charge})
           assert Exception.message(error) =~ "Enter an amount from 0 € to 80,00 €."
         end
+
+        refute cancelled?(record)
       end
 
       test "money paid in person is left for Jennie to hand back" do

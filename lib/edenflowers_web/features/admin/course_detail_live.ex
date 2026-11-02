@@ -146,7 +146,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               </div>
             </li>
             <.cancelled_row
-              :for={registration <- @cancelled_to_refund}
+              :for={registration <- @cancelled_unsettled}
               registration={registration}
               highlighted_booking_id={@highlighted_booking_id}
               locale={@locale}
@@ -305,7 +305,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     settle(socket, id, &PaymentActions.refund(&1, params, actor))
   end
 
-  def handle_event("change_payment", %{"record_id" => id, "payment" => params}, socket) do
+  def handle_event("change_payment", %{"record_id" => id, "payment" => params} = event, socket) do
+    params = PaymentActions.payment_params(params, event["_target"])
     preview = DrawerPreview.build(:payment, booking(socket.assigns.course, id), params)
     {:noreply, socket |> update(:payment_params, &Map.put(&1, id, params)) |> assign(:preview, preview)}
   end
@@ -536,6 +537,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           :balance,
           :to_collect?,
           :to_refund?,
+          :cancelled_unsettled?,
           :refund_methods,
           :default_refund_method,
           :refundable?,
@@ -556,8 +558,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          assign(socket,
            course: course,
            registrations: registrations,
-           cancelled_to_refund: Enum.filter(cancelled, & &1.to_refund?),
-           cancelled_settled: Enum.reject(cancelled, & &1.to_refund?),
+           cancelled_unsettled: Enum.filter(cancelled, & &1.cancelled_unsettled?),
+           cancelled_settled: Enum.reject(cancelled, & &1.cancelled_unsettled?),
            past?: Date.before?(course.date, Edenflowers.ShopTime.today()),
            bcc: registrations |> Enum.map(& &1.email) |> Enum.uniq() |> Enum.join(",")
          )}
@@ -672,6 +674,19 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           <.settlement_badge registration={@registration} locale={@locale} />
         </p>
         <p class="text-base-content/75 truncate text-sm">{@registration.email}</p>
+        <div :if={@registration.invoices != []} id={"registration-invoices-#{@registration.id}"} class="mt-2">
+          <InvoiceDrawer.invoice_list invoices={@registration.invoices} locale={@locale} drawer="invoices" />
+        </div>
+      </div>
+      <div :if={@registration.invoiceable?} class="col-start-2 row-start-1 justify-self-end">
+        <.actions_menu id={"registration-actions-#{@registration.id}"}>
+          <.actions_menu_button
+            menu={"registration-actions-#{@registration.id}"}
+            phx-click={InvoiceDrawer.open_create("invoices", @registration)}
+          >
+            {~t"Create invoice"}
+          </.actions_menu_button>
+        </.actions_menu>
       </div>
     </li>
     """

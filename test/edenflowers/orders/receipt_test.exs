@@ -7,6 +7,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
   alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Receipt
+  alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.Payment
 
   # Structural diff against the fixtures — catches missing keys / nullability drift without coupling to arithmetic.
@@ -53,6 +54,12 @@ defmodule Edenflowers.Orders.ReceiptTest do
           assert Gettext.get_locale(EdenflowersWeb.Gettext) == "en"
         end
       end)
+    end
+
+    test "asks only for questions, not changes, once the order is handed over" do
+      handed_over = %{build_delivery_order(locale: "fi") | upcoming?: false}
+
+      assert Receipt.build_payload(handed_over).labels == read_fixture("order.fi.invoice.json")["labels"]
     end
 
     test "uses fi locale conventions for currency and percentage" do
@@ -215,6 +222,21 @@ defmodule Edenflowers.Orders.ReceiptTest do
       assert Receipt.build_payload(order).payments == []
     end
 
+    test "names the invoice a bank transfer paid, so a company can match them" do
+      order =
+        build_delivery_order(locale: "fi")
+        |> Map.put(:payments, [
+          payment("40.00", :zervant, ~U[2026-05-28 10:00:00Z],
+            payment_method_type: "zervant",
+            invoice: %Invoice{number: 1338}
+          ),
+          payment("5.00", :cash, ~U[2026-05-29 10:00:00Z], payment_method_type: "cash")
+        ])
+
+      assert [%{invoice_label: "Tilisiirto, lasku 1338"}, %{invoice_label: nil}] =
+               Receipt.build_payload(order).payments
+    end
+
     test "names how a course booking was paid" do
       registration = %CourseRegistration{
         locale: "en-GB",
@@ -225,6 +247,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
         amount: Decimal.new("85.00"),
         tax_rate: Decimal.new("0.255"),
         confirmed_at: ~U[2026-09-22 15:40:00Z],
+        upcoming?: true,
         payments: [
           payment("85.00", :stripe, ~U[2026-09-22 15:40:00Z],
             payment_method_type: "card",
@@ -286,7 +309,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
   end
 
   defp payment(amount, method, paid_at, paid_with \\ []) do
-    struct!(%Payment{amount: Decimal.new(amount), method: method, paid_at: paid_at}, paid_with)
+    struct!(%Payment{amount: Decimal.new(amount), method: method, paid_at: paid_at, invoice: nil}, paid_with)
   end
 
   defp sum(line_items, field) do
@@ -318,6 +341,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
         items_total: items_total,
         grand_total: Decimal.add(items_total, fee),
         line_items: line_items,
+        upcoming?: true,
         payments: []
       },
       attrs

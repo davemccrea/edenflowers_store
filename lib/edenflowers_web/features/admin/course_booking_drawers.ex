@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
         :if={@registration.status == :cancelled and Decimal.positive?(@registration.kept_amount)}
         class="flex justify-between gap-4 py-2"
       >
-        <dt class="text-base-content/75">{~t"Kept"}</dt>
+        <dt class="text-base-content/75">{~t"Cancellation charge"}</dt>
         <dd>{Format.currency(@registration.kept_amount, @locale)}</dd>
       </div>
       <div :if={@registration.to_refund?} class="flex justify-between gap-4 py-2">

@@ -68,7 +68,17 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
 
   defp load_for_send(registration) do
     registration
-    |> Ash.load!([:course, :payments, :first_name, :amount_paid, :balance, :payment_link_open?], actor: system_actor())
+    |> Ash.load!(
+      [
+        :first_name,
+        :amount_paid,
+        :balance,
+        :payment_link_open?,
+        :invoice_to_send?,
+        sent_open_invoices: [:overdue?]
+      ] ++ Receipt.registration_load(),
+      actor: system_actor()
+    )
     |> translate_course()
   end
 

@@ -333,6 +333,15 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert Decimal.equal?(balance(early), "-85.00")
     end
 
+    test "charges the course's fee late though nothing was paid, leaving it to collect", %{admin: admin} do
+      course = generate(course(date: Date.add(ShopTime.today(), 1), cancellation_fee_percent: 50))
+      {:ok, unpaid} = add_manually(course, 1, admin)
+
+      {:ok, cancelled} = Courses.cancel_registration(unpaid, actor: admin)
+      assert Decimal.equal?(cancelled.kept_amount, "42.50")
+      assert Decimal.equal?(balance(cancelled), "42.50")
+    end
+
     test "emails the customer the reason, unless Jennie unticks it", %{admin: admin} do
       {:ok, registration} =
         Courses.cancel_registration(paid_booking(1, admin), %{cancellation_reason: "Jag är sjuk."}, actor: admin)

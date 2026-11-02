@@ -15,8 +15,9 @@ defmodule EdenflowersWeb.Courses.CourseReceiptController do
     with {:ok, %{receipt_available?: true} = registration} <-
            Courses.get_registration_by_id(id,
              actor: conn.assigns[:current_user],
-             load: [:course, :payments, :receipt_available?]
+             load: [:receipt_available?]
            ),
+         {:ok, registration} <- Receipt.load_for_receipt(registration),
          {:ok, pdf} <- Receipt.generate(translate_course(registration)) do
       send_download(conn, {:binary, pdf},
         filename: "eden-flowers-#{registration.reference}.pdf",

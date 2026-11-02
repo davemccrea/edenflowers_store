@@ -5,7 +5,7 @@ defmodule Edenflowers.Orders.Receipt do
 
   Deterministic over the placed order's snapshot columns, so the PDF
   bytes aren't persisted.
-  Use `load_for_receipt/1` to load the aggregates `generate/1` expects.
+  Use `load_for_receipt/1` to load what `generate/1` expects.
   """
 
   alias Edenflowers.Courses.CourseRegistration
@@ -22,13 +22,20 @@ defmodule Edenflowers.Orders.Receipt do
     :promotion_applied?,
     :grand_total,
     :contact_phone_number,
-    :payments,
+    :upcoming?,
+    payments: [:invoice],
     line_items: [:subtotal, :total, :unit_price_ex_tax]
   ]
 
-  def order_load, do: @order_load
+  @registration_load [:course, :upcoming?, payments: [:invoice]]
 
-  def load_for_receipt(order), do: Ash.load(order, @order_load, authorize?: false)
+  def order_load, do: @order_load
+  def registration_load, do: @registration_load
+
+  def load_for_receipt(%Order{} = order), do: Ash.load(order, @order_load, authorize?: false)
+
+  def load_for_receipt(%CourseRegistration{} = registration),
+    do: Ash.load(registration, @registration_load, authorize?: false)
 
   def attachment(pdf, reference) do
     Swoosh.Attachment.new({:data, pdf}, filename: "eden-flowers-#{reference}.pdf", content_type: "application/pdf")
@@ -44,7 +51,8 @@ defmodule Edenflowers.Orders.Receipt do
 
     %{
       lang: lang_from_locale(locale),
-      labels: ReceiptLabels.for_locale(locale),
+      labels: ReceiptLabels.for_receipt(locale, order.upcoming?),
+      seller: seller(),
       order_reference: order.order_reference,
       ordered_at: Format.datetime(order.ordered_at, locale),
       customer_name: order.customer_name,
@@ -69,7 +77,7 @@ defmodule Edenflowers.Orders.Receipt do
     }
   end
 
-  # Expects the registration's `course` and `payments` loaded. A booking has
+  # Expects `registration_load/0` loaded. A booking has
   # one line and a single VAT rate, so the breakdown is computed here rather
   # than snapshotted.
   def build_payload(%CourseRegistration{} = registration) do
@@ -80,7 +88,8 @@ defmodule Edenflowers.Orders.Receipt do
 
     %{
       lang: lang_from_locale(locale),
-      labels: ReceiptLabels.for_locale(locale),
+      labels: ReceiptLabels.for_receipt(locale, registration.upcoming?),
+      seller: seller(),
       order_reference: registration.reference,
       ordered_at: Format.datetime(registration.confirmed_at || registration.inserted_at, locale),
       customer_name: registration.name,
@@ -145,7 +154,9 @@ defmodule Edenflowers.Orders.Receipt do
       card_brand: payment.card_brand,
       card_last4: payment.card_last4,
       paid_on: Format.date(payment.paid_at, locale),
-      amount: Format.currency(payment.amount, locale)
+      amount: Format.currency(payment.amount, locale),
+      # Named so a business customer can match the payment to the invoice it paid.
+      invoice_label: payment.invoice && ReceiptLabels.invoice_payment(payment.invoice.number, locale)
     }
   end
 
@@ -208,6 +219,9 @@ defmodule Edenflowers.Orders.Receipt do
       EdenflowersWeb.CoreComponents.variant_size_label(size)
     end)
   end
+
+  # The trader registered with the Y-tunnus, for the footer, as on an invoice.
+  defp seller, do: Map.take(Application.fetch_env!(:edenflowers, :seller), [:name, :business_id, :address])
 
   @doc "The language subtag Typst expects, as \"sv\" for \"sv-FI\": app locales include a region."
   def lang_from_locale(locale) when is_binary(locale) do

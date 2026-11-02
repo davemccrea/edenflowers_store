@@ -518,7 +518,7 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: kept_amount, else: grand_total) do
       description "The Total due in euros, which the Balance is worked out from: the grand total, or once " <>
-                    "cancelled only what Jennie kept."
+                    "cancelled the cancellation charge Jennie kept, paid or not."
     end
 
     calculate :committed?, :boolean, expr(state == :placed) do
@@ -533,8 +533,9 @@ defmodule Edenflowers.Orders.Order do
       description "Whether Jennie can cancel it now: placed and not yet fulfilled or cancelled."
     end
 
-    calculate :refund_on_cancelling, :decimal, expr(if amount_held > 0, do: amount_held, else: 0) do
-      description "What cancelling now would refund in euros unless Jennie keeps some: all the money still held."
+    calculate :default_cancellation_charge, :decimal, expr(0) do
+      description "The cancellation charge in euros cancelling keeps unless Jennie enters one: nothing, so " <>
+                    "everything paid is refunded."
     end
 
     calculate :editable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do

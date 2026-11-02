@@ -433,16 +433,18 @@ defmodule Edenflowers.Orders.Order.Admin do
 
     # Puts the stock back. Payments.Changes.Cancel says what happens to the money.
     update :cancel do
-      description "Jennie cancels a placed order, choosing what to refund and keep: card payments go back through " <>
-                    "Stripe, stock returns, and the customer is emailed unless unticked. Unlike " <>
-                    "cancel_by_customer, it takes any order still to make, whatever its date or payment method."
+      description "Jennie cancels a placed order, choosing a cancellation charge to keep whether or not it was " <>
+                    "paid: paid above it is refunded, card payments back through Stripe, and any of it unpaid is " <>
+                    "left as a Balance to collect. Stock returns, and the customer is emailed unless unticked. " <>
+                    "Unlike cancel_by_customer, it takes any order still to make, whatever its date or payment method."
 
       accept [:cancellation_reason]
-      argument :refund, :decimal, constraints: [scale: 2], description: "What Jennie chose to refund."
 
-      argument :held, :decimal,
+      argument :cancellation_charge, :decimal,
         constraints: [scale: 2],
-        description: "What the order held when she opened the cancel form, so a retry never refunds twice."
+        description:
+          "What Jennie keeps for the cancelled order, from 0 to its Total due, paid or not. It " <>
+            "becomes the Total due. Without it, nothing is kept and everything paid is refunded."
 
       argument :email_customer?, :boolean, default: true
       # A subscription cancelled by its customer cancels its occurrences as them.

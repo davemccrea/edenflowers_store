@@ -266,6 +266,26 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     assert_email_sent(fn email -> assert [%{content_type: "application/pdf"}] = email.attachments end)
   end
 
+  test "choosing a bank transfer ticks Payment received and shows it, and another method unticks it",
+       %{conn: conn} do
+    order = build(:order)
+    {view, _panel} = open(conn, :order, order)
+
+    change = fn method ->
+      view
+      |> element("#order-balance-form")
+      |> render_change(%{"_target" => ["payment", "payment_method"], "payment" => %{"payment_method" => method}})
+    end
+
+    change.("zervant")
+    assert has_element?(view, "#order-balance-email-send[checked]")
+    assert has_element?(view, "#order-balance-email-preview")
+
+    change.("cash")
+    refute has_element?(view, "#order-balance-email-send[checked]")
+    refute has_element?(view, "#order-balance-email-preview")
+  end
+
   test "unticked, the payment that settles an order sends nothing", %{conn: conn} do
     order = build(:order)
     {view, _panel} = open(conn, :order, order)

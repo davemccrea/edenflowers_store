@@ -35,6 +35,11 @@ defmodule Edenflowers.Payments.VirtualBarcodeTest do
     end
   end
 
+  test "matches Zervant's invoice 1336 to Jennie's account" do
+    assert VirtualBarcode.version_4("FI69 3939 0018 3959 05", Decimal.new("544.00"), "13369", ~D[2026-09-27]) ==
+             "469393900183959050005440000000000000000000013369260927"
+  end
+
   test "can't carry a non-Finnish IBAN or a million euros" do
     assert_raise MatchError, fn ->
       VirtualBarcode.version_4("SE45 5000 0000 0583 9825 7466", Decimal.new("10.00"), "10009", ~D[2026-11-15])

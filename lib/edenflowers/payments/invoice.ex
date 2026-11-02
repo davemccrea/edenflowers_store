@@ -5,8 +5,9 @@ defmodule Edenflowers.Payments.Invoice do
   booking fee and then the rest after delivery.
 
   Once created it never changes: its number, amount, dates and the buyer
-  details it was sent with are frozen, so later edits to the purchase don't
-  reach it. A correction is a Credit note, which cancels it while leaving it
+  details it was sent with are frozen, and so is everything its PDF prints
+  (`content`, including the seller's details), so later edits to the
+  purchase or the shop's details don't reach it. A correction is a Credit note, which cancels it while leaving it
   as it was, and a new invoice.
 
   It is paid once the bank transfers Jennie records against it (Payments
@@ -19,8 +20,9 @@ defmodule Edenflowers.Payments.Invoice do
   reminder. Nothing sends it automatically.
 
   Numbers come from one gapless series that continues Zervant's, starting at
-  `first_number/0` (see `Changes.IssueInvoice`). The seller details printed
-  on it come from `seller/0`.
+  `first_number/0` (see `Changes.IssueInvoice`). The seller details and late
+  payment interest it freezes come from `seller/0` and
+  `late_interest_rate/0` as it is made.
   """
   use Ash.Resource,
     domain: Edenflowers.Payments,
@@ -36,13 +38,32 @@ defmodule Edenflowers.Payments.Invoice do
   @doc "The number the first shop invoice gets, when there is none yet: Zervant's last number + 1."
   def first_number, do: config()[:first_number]
 
-  @doc "The shop's details printed on its invoices: name, business_id, address, iban and bic."
-  def seller, do: config()[:seller]
+  @doc "The seller a new invoice freezes and prints: name, business_id, address and iban (`config :edenflowers, :seller`)."
+  def seller, do: Application.fetch_env!(:edenflowers, :seller)
+
+  @doc "The yearly late payment interest a new invoice states, as a fraction: 0.08 for 8 %."
+  def late_interest_rate, do: Decimal.new(config()[:late_interest_rate])
 
   @doc "The due date an invoice made today gets unless Jennie picks another: 14 days on (Payment.overdue_after_days)."
   def default_due_date, do: Date.add(Edenflowers.ShopTime.today(), Edenflowers.Payments.Payment.overdue_after_days())
 
   defp config, do: Application.fetch_env!(:edenflowers, :invoices)
+
+  @doc """
+  The invoice with `id`, its row locked until the transaction ends, then
+  loaded with `load` read after the lock, or nil. Cancelling it and paying it
+  both take the lock, so neither can commit on a status the other has just
+  changed: a Credit note never lands on money, nor money on a Credit note.
+  """
+  def get_locked(id, load) do
+    require Ash.Query
+
+    __MODULE__
+    |> Ash.Query.filter(id == ^id)
+    |> Ash.Query.lock(:for_update)
+    |> Ash.read_one!(authorize?: false)
+    |> then(&(&1 && Ash.load!(&1, load, authorize?: false)))
+  end
 
   @doc "The order or Course booking a create changeset invoices, loaded with `load`, or nil."
   def purchase(changeset, load) do
@@ -118,7 +139,8 @@ defmodule Edenflowers.Payments.Invoice do
     create :create do
       description "Jennie invoices an order or Course booking on invoice terms whose buyer details are complete " <>
                     "(invoiceable?). It takes the next number in the series and its viitenumero, is dated today " <>
-                    "in Helsinki, and freezes a copy of the buyer details. The amount defaults to the Balance not " <>
+                    "in Helsinki, and freezes a copy of the buyer details and of everything its PDF prints " <>
+                    "(content), so the PDF never changes after it is made. The amount defaults to the Balance not " <>
                     "yet invoiced, the due date to 14 days later (Payment.overdue_after_days) and the language " <>
                     "to the purchase's; Jennie can change all three."
 
@@ -142,6 +164,7 @@ defmodule Edenflowers.Payments.Invoice do
       validate present(:amount), message: "nothing is left to invoice, so enter an amount"
       validate attribute_in(:locale, @locales)
       validate compare(:due_date, greater_than_or_equal_to: :invoice_date), message: "can't be before the invoice date"
+      change Changes.FreezeInvoiceContent
       change Changes.SendWhenCreated
     end
 
@@ -251,6 +274,18 @@ defmodule Edenflowers.Payments.Invoice do
       description "The company's own reference (viitteenne), such as a PO number, when invoiced. Optional."
     end
 
+    attribute :content, :map do
+      description "Everything its PDF prints but the labels, frozen as it is made (InvoicePdf.content/1), so " <>
+                    "the PDF never changes: the purchase's lines, totals and VAT per rate in its language, a " <>
+                    "Course booking's course translated into it; the earlier invoices and money paid before it; " <>
+                    "the seller's name, Y-tunnus, address and IBAN; the buyer block; its number, dates, " <>
+                    "late payment interest, amount due, viitenumero and virtual barcode. Money and dates are formatted strings, under " <>
+                    "string keys. The admin download, the email and every resend render it, with the labels " <>
+                    "translated afresh, and a Credit note prints its buyer and seller from it."
+
+      allow_nil? false
+    end
+
     attribute :sent_at, :utc_datetime do
       description "When it was last emailed to the customer. Nil until it has been: Jennie may make one without " <>
                     "sending it, or its email may have failed."
@@ -351,6 +386,17 @@ defmodule Edenflowers.Payments.Invoice do
 
     calculate :purchase_reference, :string, expr(order.order_reference || course_registration.reference) do
       description "The reference of the order or Course booking it bills."
+    end
+
+    calculate :cancellation_charge?,
+              :boolean,
+              expr(
+                (not is_nil(order.cancelled_at) and inserted_at > order.cancelled_at) or
+                  (not is_nil(course_registration.cancelled_at) and inserted_at > course_registration.cancelled_at)
+              ) do
+      description "Whether it bills a cancellation charge: made after its order or Course booking was cancelled, " <>
+                    "when the Total due is what Jennie kept. One made before the cancel still bills the purchase " <>
+                    "itself, even if sent again later. Its email opens with which."
     end
 
     calculate :amount_unpaid, :decimal, expr(amount - amount_paid) do

@@ -1,12 +1,16 @@
 <%= if @first_name do %><%= dgettext("emails", "Hi %{name},", name: @first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= if match?(%Edenflowers.Orders.Order{}, @purchase) do %><%= dgettext("emails", "Thank you for your order for %{date}. My invoice is attached.", date: @format_weekday_date.(@purchase.fulfillment_date)) %><% else %><%= dgettext("emails", "Thank you for booking %{course} on %{date}. My invoice is attached.", course: @purchase.course.name, date: @format_weekday_date.(@purchase.course.date)) %><% end %><%= if @part? do %> <%= dgettext("emails", "It is for %{amount} of the %{total} total.", amount: @format_currency.(@invoice.amount), total: @format_currency.(@purchase.total_due)) %><% end %>
+<%= cond do %><% match?(%Edenflowers.Orders.Order{}, @purchase) and @cancellation_charge? -> %><%= dgettext("emails", "My invoice for the cancellation charge for your order for %{date} is attached.", date: @format_weekday_date.(@purchase.fulfillment_date)) %><% match?(%Edenflowers.Orders.Order{}, @purchase) -> %><%= dgettext("emails", "Thank you for your order for %{date}. My invoice is attached.", date: @format_weekday_date.(@purchase.fulfillment_date)) %><% @cancellation_charge? -> %><%= dgettext("emails", "My invoice for the cancellation charge for your booking on %{course} on %{date} is attached.", course: @purchase.course.name, date: @format_weekday_date.(@purchase.course.date)) %><% true -> %><%= dgettext("emails", "Thank you for booking %{course} on %{date}. My invoice is attached.", course: @purchase.course.name, date: @format_weekday_date.(@purchase.course.date)) %><% end %><%= if @part? do %> <%= dgettext("emails", "It is for %{amount} of the %{total} total.", amount: @format_currency.(@invoice.amount), total: @format_currency.(@purchase.total_due)) %><% end %>
 
-<%= if @reminder? do %><%= dgettext("emails", "Just a friendly reminder that it was due on %{date}, and I haven't seen the payment yet. If you've already paid, thank you, and please ignore this email.", date: @format_weekday_date.(@invoice.due_date)) %>
+<%= cond do %><% @reminder? and @part_paid? -> %><%= dgettext("emails", "Just a friendly reminder that it was due on %{date}, and %{amount} of it is still to pay. Thank you for what you've paid so far.", date: @format_weekday_date.(@invoice.due_date), amount: @format_currency.(@invoice.amount_unpaid)) %>
 
-<% end %><%= message(@message) %><%= dgettext("emails", "Invoice %{number}", number: @invoice.number) %>
-<%= dgettext("emails", "Amount due") %>  <%= @format_currency.(@invoice.amount) %>
-<%= dgettext("emails", "Due date") %>  <%= @format_date.(@invoice.due_date) %>
+<% @reminder? -> %><%= dgettext("emails", "Just a friendly reminder that it was due on %{date}, and I haven't seen the payment yet. If you've already paid, thank you, and please ignore this email.", date: @format_weekday_date.(@invoice.due_date)) %>
+
+<% true -> %><% end %><%= message(@message) %><%= dgettext("emails", "Invoice %{number}", number: @invoice.number) %>
+<%= if @part_paid? do %><%= dgettext("emails", "Invoice amount") %>  <%= @format_currency.(@invoice.amount) %>
+<%= dgettext("emails", "Still to pay") %>  <%= @format_currency.(@invoice.amount_unpaid) %>
+<% else %><%= dgettext("emails", "Amount due") %>  <%= @format_currency.(@invoice.amount) %>
+<% end %><%= dgettext("emails", "Due date") %>  <%= @format_date.(@invoice.due_date) %>
 <%= dgettext("emails", "Payee") %>  <%= @payee %>
 <%= dgettext("emails", "Account (IBAN)") %>  <%= @iban %>
 <%= dgettext("emails", "Reference number") %>  <%= @reference_number %>

@@ -12,18 +12,19 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   alias Edenflowers.Courses.CourseRegistration
 
   @doc """
-  The cancel drawer's form for an order or a booking. `held` is what it held
-  as the drawer opens, and goes back with the form, so the cancel works out
-  what's kept from what Jennie saw. The refund starts at `refund_on_cancelling`.
+  The cancel drawer's form for an order or a booking. The cancellation charge
+  starts at `default_cancellation_charge`. `held` and `total` only tell
+  Jennie what was paid and what it cost, so they go back with the form for
+  the drawer to show again, but not to the action.
   """
   def cancel_form(payable) do
-    payable = Ash.load!(payable, [:amount_held, :refund_on_cancelling], authorize?: false)
-    held = Decimal.max(payable.amount_held, 0)
+    payable = Ash.load!(payable, [:amount_held, :total_due, :default_cancellation_charge], authorize?: false)
 
     Phoenix.Component.to_form(
       %{
-        "refund" => Decimal.to_string(payable.refund_on_cancelling, :normal),
-        "held" => Decimal.to_string(held, :normal),
+        "charge" => Decimal.to_string(payable.default_cancellation_charge, :normal),
+        "held" => Decimal.to_string(Decimal.max(payable.amount_held, 0), :normal),
+        "total" => Decimal.to_string(Decimal.max(payable.total_due, 0), :normal),
         "message" => "",
         "email_customer" => "true"
       },
@@ -33,8 +34,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
 
   def cancel(payable, params, actor) do
     input = %{
-      refund: params["refund"] && String.replace(params["refund"], ",", "."),
-      held: params["held"],
+      cancellation_charge: params["charge"] && String.replace(params["charge"], ",", "."),
       cancellation_reason: params["message"],
       email_customer?: params["email_customer"] != "false"
     }
@@ -103,6 +103,16 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     do: Map.put(params, "email_customer", if(params["how"] == "cash", do: "false", else: "true"))
 
   def refund_params(params, _target), do: params
+
+  @doc """
+  The record payment form as Jennie changes it. Choosing a bank transfer ticks
+  the receipt email, since the customer paid from home and would otherwise
+  hear nothing; any other method unticks it, as she was there in person.
+  """
+  def payment_params(params, ["payment", "payment_method"]),
+    do: Map.put(params, "email_receipt", to_string(params["payment_method"] == "zervant"))
+
+  def payment_params(params, _target), do: params
 
   def open_payment_link(payable, actor) do
     case Ash.update(payable, %{}, action: :open_payment_link, actor: actor) do

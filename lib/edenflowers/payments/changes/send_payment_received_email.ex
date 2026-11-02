@@ -62,7 +62,7 @@ defmodule Edenflowers.Payments.Changes.SendPaymentReceivedEmail do
   # Course names are stored per locale, like the receipt reads them.
   defp load_for_send(%CourseRegistration{} = registration) do
     registration
-    |> Ash.load!([:course, :payments, :first_name, :amount_paid, :balance], actor: system_actor())
+    |> Ash.load!([:first_name, :amount_paid, :balance] ++ Receipt.registration_load(), actor: system_actor())
     |> Translations.in_own_locale()
   end
 

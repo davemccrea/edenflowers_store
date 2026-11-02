@@ -23,6 +23,12 @@ defmodule Edenflowers.Payments.Invoiceable do
                     "Jennie chooses another amount. Zero or less means nothing is left to invoice."
     end
 
+    calculate :invoice_to_send?, :boolean, expr(balance > sent_open_invoices_amount) do
+      description "Whether some of the Balance is still to be asked for by an invoice the customer has seen: " <>
+                    "more is owed than the open invoices they were sent still ask for. Its Order details, Booking " <>
+                    "confirmed and Course reminder emails then say an invoice is still to come."
+    end
+
     calculate :invoice_overdue?, :boolean, expr(exists(invoices, overdue?)) do
       description "Whether any of its invoices is overdue: open after its due date. Its payment_overdue? " <>
                     "follows, so the Overview lists it under Payment overdue for Jennie to chase."
@@ -35,6 +41,14 @@ defmodule Edenflowers.Payments.Invoiceable do
       filter expr(status == :open)
       sort number: :asc
     end
+
+    has_many :sent_open_invoices, Edenflowers.Payments.Invoice do
+      description "Its open Invoices that were emailed to the customer, oldest first: the ones its emails can " <>
+                    "point to, as the customer has them. One Jennie made but hasn't sent is news to them."
+
+      filter expr(status == :open and not is_nil(sent_at))
+      sort number: :asc
+    end
   end
 
   aggregates do
@@ -45,6 +59,15 @@ defmodule Edenflowers.Payments.Invoiceable do
                     "invoices count for nothing."
 
       default Decimal.new("0")
+    end
+
+    sum :sent_open_invoices_amount, :sent_open_invoices, :amount_unpaid do
+      description "What the open invoices the customer was sent still ask for in euros."
+      default Decimal.new("0")
+    end
+
+    count :sent_open_invoice_count, :sent_open_invoices do
+      description "How many open invoices the customer was sent, so an email can say invoice or invoices."
     end
   end
 end

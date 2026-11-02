@@ -35,11 +35,6 @@ defmodule Edenflowers.Orders.ReceiptLabels do
         "discount" => dgettext("receipts", "Discount"),
         "total-paid" => dgettext("receipts", "Order total"),
         "thank-you" => dgettext("receipts", "Thank you for your order"),
-        "closing-line" =>
-          dgettext(
-            "receipts",
-            "Questions or changes? Reply to your confirmation email and Jennie will get back to you."
-          ),
         "method-card" => dgettext("receipts", "Card"),
         "method-zettle" => dgettext("receipts", "Card"),
         "method-mobilepay" => dgettext("receipts", "MobilePay"),
@@ -47,6 +42,37 @@ defmodule Edenflowers.Orders.ReceiptLabels do
         "method-cash" => dgettext("receipts", "Cash"),
         "method-zervant" => dgettext("receipts", "Bank transfer")
       }
+    end)
+  end
+
+  @doc """
+  The receipt's labels, closing on how to reach Jennie. Changes are only
+  offered while the order or course is still to come. After that the receipt
+  may come with any email, or be downloaded, so the line names the shop's
+  address too.
+  """
+  def for_receipt(locale, upcoming?) do
+    locale |> for_locale() |> Map.put("closing-line", closing_line(locale, upcoming?))
+  end
+
+  defp closing_line(locale, true = _upcoming?) do
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+      dgettext("receipts", "Questions or changes? Reply to your confirmation email and Jennie will get back to you.")
+    end)
+  end
+
+  defp closing_line(locale, false = _upcoming?) do
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+      # Translators: The receipt's closing line once the order is handed over or the course held. "This" is the receipt, which can also be downloaded rather than emailed.
+      dgettext("receipts", "Questions? Just reply to the email this came with, or write to info@edenflowers.fi.")
+    end)
+  end
+
+  @doc "How a payment against an invoice reads on the receipt."
+  def invoice_payment(number, locale) do
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+      # Translators: A payment row on the receipt, naming the invoice it paid so a company can match them. %{number} is the invoice number, e.g. 1338.
+      dgettext("receipts", "Bank transfer, invoice %{number}", number: number)
     end)
   end
 end

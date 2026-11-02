@@ -14,19 +14,19 @@ defmodule Edenflowers.Payments.Payable do
 
     * `has_many :payments`
     * `calculate :total_due`: what it's still to be paid for. Once cancelled,
-      that's `kept_amount`.
+      that's `kept_amount`, the cancellation charge.
     * `calculate :committed?`: whether money is owed on it at all, so not an
       unplaced cart or a website course checkout still waiting for its payment.
     * `calculate :cancelled?`
     * `calculate :cancellable?`: whether it can be cancelled now
-    * `calculate :refund_on_cancelling`: what cancelling it now refunds unless
-      Jennie says otherwise. An order refunds all it holds; a booking applies
+    * `calculate :default_cancellation_charge`: what cancelling it now keeps
+      unless Jennie enters a charge. An order keeps nothing; a booking applies
       its course's cancellation terms.
     * `customer_email`: who's told about cancels and refunds, or nil
     * a `:for_customer_email` read action that loads what `Email.cancelled/2`
       and `Email.refunded/2` need
     * `cancelled_at` and `cancellation_emailed_to` attributes, and a `:cancel`
-      update action with `Changes.Cancel` and its `refund`, `held` and
+      update action with `Changes.Cancel` and its `cancellation_charge` and
       `email_customer?` arguments
   """
   use Spark.Dsl.Fragment, of: Ash.Resource
@@ -37,8 +37,8 @@ defmodule Edenflowers.Payments.Payable do
 
   attributes do
     attribute :kept_amount, :decimal do
-      description "Money in euros not handed back when it was cancelled: what Jennie chose to keep. " <>
-                    "0 until cancelled."
+      description "The cancellation charge in euros Jennie kept when it was cancelled, paid or not, which " <>
+                    "becomes its Total due. 0 until cancelled."
 
       allow_nil? false
       default 0

@@ -2980,7 +2980,7 @@ msgid "This date is no longer available, please choose another"
 msgstr "Det här datumet är inte längre tillgängligt, välj ett annat"
 
 #: lib/edenflowers/orders/order/validations/cancellable_by_customer.ex:12
-#: lib/edenflowers/payments/changes/cancel.ex:142
+#: lib/edenflowers/payments/changes/cancel.ex:189
 #, elixir-autogen, elixir-format
 msgid "This order can no longer be cancelled online. Please contact us."
 msgstr "Beställningen kan inte längre avbeställas online. Kontakta oss."
@@ -3174,7 +3174,7 @@ msgstr "Vi kan inte genomföra köp utan nödvändiga kontakt- och leveransuppgi
 msgid "We couldn't charge your card for %{date} (%{amount})."
 msgstr "Vi kunde inte debitera ditt kort för leveransen %{date} (%{amount})."
 
-#: lib/edenflowers/payments/changes/cancel.ex:145
+#: lib/edenflowers/payments/changes/cancel.ex:192
 #, elixir-autogen, elixir-format
 msgid "We couldn't refund your order. Please contact us to cancel it."
 msgstr "Vi kunde inte återbetala beställningen. Kontakta oss för att avbeställa den."
@@ -4134,3 +4134,17 @@ msgstr "Din beställning är klar att hämta %{date}."
 #, elixir-autogen, elixir-format
 msgid "My account"
 msgstr "Mitt konto"
+#: lib/edenflowers/courses/course.ex:135
+#, elixir-autogen, elixir-format
+msgid "After that, %{fee}% of the price is charged."
+msgstr "Efter det debiteras %{fee} % av priset."
+
+#: lib/edenflowers/courses/course.ex:134
+#, elixir-autogen, elixir-format
+msgid "After that, the full price is charged."
+msgstr "Efter det debiteras hela priset."
+
+#: lib/edenflowers/courses/course.ex:130
+#, elixir-autogen, elixir-format
+msgid "Cancel at least %{days} days before the course at no cost."
+msgstr "Avboka minst %{days} dagar före kursen utan kostnad."

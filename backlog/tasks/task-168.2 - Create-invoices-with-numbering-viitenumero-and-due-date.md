@@ -4,7 +4,7 @@ title: 'Create invoices with numbering, viitenumero and due date'
 status: done
 assignee: []
 created_date: '2026-11-01 20:57'
-updated_date: '2026-11-01 21:34'
+updated_date: '2026-11-02 13:54'
 labels: []
 dependencies:
   - TASK-168.1
@@ -18,7 +18,7 @@ ordinal: 316000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 **Why:** Everything else hangs off an invoice record whose number, amount and buyer never change after it's made.
 
-Add an Invoice resource belonging to an order or a Course booking. Create action: allowed only on invoice terms and once buyer details are complete (consumer: name and email; business: the TASK-168.1 calculation). Number from one sequence continuing Zervant's (the starting number is set once, from config or a migration-safe seed). The viitenumero comes from the number with the Finnish check digit. The invoice date is today, the due date defaults to 14 days later and can be changed. The amount defaults to the Balance not yet invoiced. Locale defaults to the purchase's. Buyer details are frozen onto the invoice. Shop seller details (name, Y-tunnus, address, IBAN, BIC) go in config.
+Add an Invoice resource belonging to an order or a Course booking. Create action: allowed only on invoice terms and once buyer details are complete (consumer: name and email; business: the TASK-168.1 calculation). Number from one sequence continuing Zervant's (the starting number is set once, from config or a migration-safe seed). The viitenumero comes from the number with the Finnish check digit. The invoice date is today, the due date defaults to 14 days later and can be changed. The amount defaults to the Balance not yet invoiced. Locale defaults to the purchase's. Buyer details are frozen onto the invoice. Shop seller details (name, Y-tunnus, address, IBAN) go in config, and each new invoice freezes them.
 
 Also (agreed in the TASK-168.1 handoff): an update_business_details action on orders and Course bookings that changes only the five business fields, whatever the fulfilment status (cancelled included), so details can be added after delivery or to an existing booking. No UI here; TASK-168.4 builds it.
 
@@ -38,7 +38,7 @@ Add Invoice, Credit note and Business customer to CONTEXT.md, and drop "Zervant 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Payments.Invoice (create/read only, immutable) with Changes.IssueInvoice and Validations.Invoiceable; fragment Payments.Invoiceable (invoiceable?, uninvoiced_balance, open_invoices_amount) and update_business_details on Order and CourseRegistration. Numbers: last + 1 under a transaction advisory lock; the first from config :invoices first_number (PLACEHOLDER 1000: needs Zervant's last + 1 before go-live, and must be at least 100 for a valid viitenumero). Viitenumero via Payments.ReferenceNumber, checked against Finance Finland's worked example. Seller details in config :invoices seller (IBAN and BIC are placeholders). Cancelled purchases can be invoiced, to bill what Jennie kept.
+Payments.Invoice (create/read only, immutable) with Changes.IssueInvoice and Validations.Invoiceable; fragment Payments.Invoiceable (invoiceable?, uninvoiced_balance, open_invoices_amount) and update_business_details on Order and CourseRegistration. Numbers: last + 1 under a transaction advisory lock; the first from config :invoices first_number (1337, Zervant's last + 1; must be at least 100 for a valid viitenumero). Viitenumero via Payments.ReferenceNumber, checked against Finance Finland's worked example. Seller details in config :seller, frozen into each invoice's content as it is made (TASK-168.3). Cancelled purchases can be invoiced, to bill what Jennie kept.
 <!-- SECTION:NOTES:END -->
 
 ## Comments

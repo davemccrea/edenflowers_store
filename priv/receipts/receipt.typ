@@ -5,7 +5,8 @@
 
 // Render a single receipt. `order` is a flat dict whose keys mirror the
 // Ash `Order` / `LineItem` attribute names; see sample/order.*.json.
-// `shop` is loaded from shop.toml. All currency / date / VAT values
+// `shop` (the pickup place and contact details) is loaded from shop.toml; the
+// seller in the footer arrives in `order.seller`. All currency / date / VAT values
 // arrive pre-formatted as strings; labels arrive translated by Gettext.
 #let receipt(order) = {
   // Schema contract. Typst has no struct types, so we assert keys
@@ -13,7 +14,7 @@
   // Required: read unconditionally on every receipt. Optional: key must
   // still be present in the dict; the value may be `none`.
   let required = (
-    "lang", "labels", "order_reference", "ordered_at",
+    "lang", "labels", "seller", "order_reference", "ordered_at",
     "customer_name", "customer_email",
     "fulfillment_method", "fulfillment_date",
     "line_items", "vat_breakdown",
@@ -48,7 +49,7 @@
     }
   }
   for payment in order.payments {
-    for key in ("method", "card_brand", "card_last4", "paid_on", "amount") {
+    for key in ("method", "card_brand", "card_last4", "paid_on", "amount", "invoice_label") {
       assert(key in payment, message: "receipt: payment missing `" + key + "`")
     }
   }
@@ -72,7 +73,7 @@
         columns: (1fr, auto),
         align: (left, right),
         [
-          #shop.name · #shop.address · #t("business-id") #shop.business_id \
+          #order.seller.name · #order.seller.address · #t("business-id") #order.seller.business_id \
           #shop.email · #shop.phone
         ],
         [#counter(page).display() / #context counter(page).final().first()],
@@ -82,7 +83,7 @@
 
   set document(
     title: t("receipt") + " " + order.order_reference,
-    author: shop.name,
+    author: order.seller.name,
     date: none,
   )
 
@@ -245,7 +246,9 @@
     text(features: ("tnum",))[•••• #payment.card_last4]
   } else if payment.card_brand != none [
     #capitalized(payment.card_brand) •••• #payment.card_last4
-  ] else if payment.method in method-labels {
+  ] else if payment.invoice_label != none {
+    payment.invoice_label
+  } else if payment.method in method-labels {
     t("method-" + payment.method)
   } else {
     capitalized(payment.method)

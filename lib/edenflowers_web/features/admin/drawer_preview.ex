@@ -2,7 +2,8 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
   @moduledoc """
   The customer email a drawer would send, from its form as Jennie has filled it
   in so far: her message and, for a payment or refund, the amount and how she
-  hands it back. What the order and course pages' drawers share.
+  hands it back, or for a cancel the charge she keeps. What the order and
+  course pages' drawers share.
   """
 
   alias Edenflowers.Email.Preview
@@ -13,7 +14,8 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
 
     inputs = %{
       message: params["message"] || params["note"],
-      refund: params["refund"] || params["amount"] || owed_back(record),
+      refund: params["amount"] || owed_back(record),
+      charge: params["charge"],
       amount: if(kind == :payment, do: params["amount"] || balance(record)),
       payment_method: payment_method(params["how"])
     }

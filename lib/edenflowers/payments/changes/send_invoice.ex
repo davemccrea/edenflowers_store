@@ -42,13 +42,21 @@ defmodule Edenflowers.Payments.Changes.SendInvoice do
 
   @doc """
   Loads what `Email.invoice/2` reads: the order or the booking with its
-  course, in the invoice's language, the purchase's Total due, and whether
-  it is overdue now.
+  course, in the invoice's language, the purchase's Total due, whether it
+  is overdue now, what has been paid on it and whether it bills a
+  cancellation charge.
   """
   def load_for_email(invoice) do
     invoice
     |> Ash.load!(
-      [:overdue?, order: [:total_due, :balance], course_registration: [:course, :total_due, :balance]],
+      [
+        :overdue?,
+        :amount_paid,
+        :amount_unpaid,
+        :cancellation_charge?,
+        order: [:total_due, :balance],
+        course_registration: [:course, :total_due, :balance]
+      ],
       authorize?: false,
       reuse_values?: false
     )
