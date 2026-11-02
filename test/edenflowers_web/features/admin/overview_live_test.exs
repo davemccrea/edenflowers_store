@@ -218,21 +218,6 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(view, ~s|#attention-failed-subscriptions a[href="/admin/subscriptions/#{failed.id}"]|)
     end
 
-    test "lists sizes on sale that have sold out", %{conn: conn} do
-      category = generate(product_category(visibility: :public))
-      product = generate(product(name: "Peony bouquet", draft: false, product_category_id: category.id))
-      generate(product_variant(product_id: product.id, stock_quantity: 0, draft: false))
-      generate(product_variant(product_id: product.id, size: :large, stock_quantity: 3, draft: false))
-
-      hidden = generate(product(draft: true, product_category_id: category.id))
-      generate(product_variant(product_id: hidden.id, stock_quantity: 0, draft: false))
-
-      {:ok, view, _html} = live(conn, ~p"/admin")
-
-      assert has_element?(view, "#attention-sold-out summary", "Sold out 1")
-      assert has_element?(view, ~s|#attention-sold-out a[href="/admin/products/#{product.id}"]|, "Peony bouquet")
-    end
-
     test "flags refunds and overdue payments, and totals what orders still owe", %{conn: conn} do
       overdue = placed_order(customer_name: "Ada Lovelace", fulfillment_status: :fulfilled, payment_intent_id: nil)
 

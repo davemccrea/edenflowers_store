@@ -8,7 +8,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   import EdenflowersWeb.Admin.Components
 
-  alias Edenflowers.Catalog
   alias Edenflowers.Courses
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
@@ -159,11 +158,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           {"failed-subscriptions", "hero-credit-card", ~t"Subscription payment failed",
            Enum.map(Orders.list_failed_subscriptions!(actor: actor), &subscription_row/1)},
           {"refund", "hero-arrow-uturn-left", ~t"To refund", to_refund},
-          {"payment-overdue", "hero-banknotes", ~t"Payment overdue", payment_overdue},
-          {"sold-out", "hero-archive-box-x-mark", ~t"Sold out",
-           Catalog.list_sold_out_variants!(actor: actor)
-           |> Translations.translate_assoc(:product)
-           |> Enum.map(&sold_out_row/1)}
+          {"payment-overdue", "hero-banknotes", ~t"Payment overdue", payment_overdue}
         ],
         fn {_key, _icon, _title, rows} -> rows == [] end
       )
@@ -246,15 +241,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       who: subscription.user.name || ~t"Unnamed customer",
       what: Translations.translate(subscription.product_variant.product).name,
       href: ~p"/admin/subscriptions/#{subscription.id}"
-    }
-  end
-
-  defp sold_out_row(variant) do
-    %{
-      id: "variant-#{variant.id}",
-      who: variant.product.name,
-      what: variant.size && variant_size_label(variant.size),
-      href: ~p"/admin/products/#{variant.product_id}"
     }
   end
 

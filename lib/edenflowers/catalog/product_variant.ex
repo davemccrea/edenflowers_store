@@ -96,17 +96,6 @@ defmodule Edenflowers.Catalog.ProductVariant do
       validate {Validations.NotReferencedByCurrentSubscription, reference: :product_variant, field: :id}
     end
 
-    read :sold_out do
-      description "Sizes on sale that have run out, for the admin Overview. Cards count, as checkout offers them."
-
-      filter expr(
-               stock_quantity == 0 and draft == false and product.draft == false and
-                 product.product_category.visibility != :draft
-             )
-
-      prepare build(sort: [size: :asc], load: [:product])
-    end
-
     read :for_card_drawer do
       description "Card sizes offered in checkout's card drawer, as cards are hidden from the storefront. Only " <>
                     "published sizes in stock."
