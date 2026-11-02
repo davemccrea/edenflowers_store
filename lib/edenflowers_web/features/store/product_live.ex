@@ -139,7 +139,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
               </div>
               <figcaption
                 :if={@pictured_caption}
-                class="text-base-content/80 font-serif mt-2 italic"
+                class="text-base-content/80 font-serif mt-2 text-lg italic"
                 data-testid="pictured-size"
               >
                 {@pictured_caption}
@@ -224,8 +224,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
                         class={["text-primary", bouquet_drawing_size(variant.size)]}
                       />
                     </span>
-                    <span class="font-serif text-lg leading-tight">{variant_size_label(variant.size)}</span>
-                    <span class="text-base-content/80 font-serif leading-tight">
+                    <span class="font-serif text-xl leading-tight">{variant_size_label(variant.size)}</span>
+                    <span class="text-base-content/80 font-serif text-lg leading-tight">
                       <%= if sold_out?(variant) do %>
                         {~t"Sold out"}
                       <% else %>
@@ -283,8 +283,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       class="sr-only"
                       data-testid="buy-once-option"
                     />
-                    <span class="font-serif text-lg leading-tight">{~t"Buy once"}</span>
-                    <span class="text-base-content/80 font-serif leading-tight">
+                    <span class="font-serif text-xl leading-tight">{~t"Buy once"}</span>
+                    <span class="text-base-content/80 font-serif text-lg leading-tight">
                       {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
                     </span>
                   </label>
@@ -297,8 +297,8 @@ defmodule EdenflowersWeb.Store.ProductLive do
                       class="sr-only"
                       data-testid="subscribe-option"
                     />
-                    <span class="font-serif text-lg leading-tight">{~t"Subscription"}</span>
-                    <span class="text-base-content/80 font-serif leading-tight">
+                    <span class="font-serif text-xl leading-tight">{~t"Subscription"}</span>
+                    <span class="text-base-content/80 font-serif text-lg leading-tight">
                       {Edenflowers.Format.storefront_price(@selected_variant.price, Edenflowers.Format.locale())}
                       {~t"per delivery"}
                     </span>

@@ -1,7 +1,7 @@
 /* Open Sans is variable across the two weights the site uses, 400 and 600,
    plus 700 for the wordmark alone.
-   Newsreader is 400 only, varying just its optical-size axis, which the
-   browser applies automatically. Both are subset to Latin.
+   EB Garamond is static 400 only, upright and italic. Both are subset to
+   Latin.
    SIL OFL 1.1, see priv/static/fonts/OFL.txt. */
 @font-face {
   font-family: "Open Sans";
@@ -18,23 +18,23 @@
   src: url("/fonts/OpenSans-VariableItalic.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Newsreader";
+  font-family: "EB Garamond";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/Newsreader-Variable.woff2") format("woff2");
+  src: url("/fonts/EBGaramond-Regular.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Newsreader";
+  font-family: "EB Garamond";
   font-style: italic;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/Newsreader-VariableItalic.woff2") format("woff2");
+  src: url("/fonts/EBGaramond-Italic.woff2") format("woff2");
 }
 
 @theme {
   --font-sans: "Open Sans", sans-serif;
-  --font-serif: "Newsreader", serif;
+  --font-serif: "EB Garamond", serif;
   --header-height: 8rem;
   --notice-bar-height: 2.25rem;
   /* Space under the fixed header for a page's first block. */
