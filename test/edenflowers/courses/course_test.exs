@@ -21,4 +21,28 @@ defmodule Edenflowers.Courses.CourseTest do
       assert after_end.ended?
     end
   end
+
+  describe "a course's slug" do
+    test "is made from its name, and a repeat run of the same course gets -2" do
+      assert generate(course(name: "Spring wreaths")).slug == "spring-wreaths"
+      assert generate(course(name: "Spring wreaths!")).slug == "spring-wreaths-2"
+    end
+
+    test "edited, sends links with the old slug and the id to the new one" do
+      course = generate(course(name: "Spring wreaths"))
+      course = course |> Ash.Changeset.for_update(:update, %{slug: "wreaths-2027"}) |> Ash.update!(authorize?: false)
+
+      assert Edenflowers.Courses.current_course_slug!("spring-wreaths") == "wreaths-2027"
+      assert Edenflowers.Courses.current_course_slug!(course.id) == "wreaths-2027"
+    end
+
+    test "is given to courses saved before slugs existed" do
+      course = generate(course(name: "Spring wreaths"))
+      Edenflowers.Repo.update_all(Edenflowers.Courses.Course, set: [slug: nil])
+
+      Edenflowers.Release.assign_missing_slugs!()
+
+      assert Ash.reload!(course, authorize?: false).slug == "spring-wreaths"
+    end
+  end
 end

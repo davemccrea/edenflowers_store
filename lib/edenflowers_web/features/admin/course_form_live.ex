@@ -8,10 +8,12 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.PhotoUpload, only: [photo_input: 1]
   import EdenflowersWeb.Admin.TranslationFields
+  import EdenflowersWeb.Admin.SlugField, only: [slug_field: 1]
 
   alias Edenflowers.Courses.Course
   alias Edenflowers.Pricing
   alias EdenflowersWeb.Admin.PhotoUpload
+  alias EdenflowersWeb.Admin.SlugField
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
 
@@ -31,6 +33,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
          |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
          |> assign(:form, form)
          |> assign(:translating, nil)
+         |> assign(:slug_edited?, false)
          |> PhotoUpload.allow(@photo_fields)}
 
       :error ->
@@ -50,7 +53,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
           <:actions>
             <.button
               :if={@form.source.type == :update}
-              href={~q"/#{language}/courses/#{@form.source.data.id}"}
+              href={~q"/#{language}/courses/#{@form.source.data}"}
               target="_blank"
               variant="secondary"
               size="sm"
@@ -76,6 +79,9 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
           <div class="space-y-6">
             <.form_section title={~t"Name and description"}>
               <.language_fields form={@form} translating={@translating} />
+              <div class="mt-6">
+                <.slug_field field={@form[:slug]} path="/courses/" />
+              </div>
             </.form_section>
 
             <.form_section title={~t"When"}>
@@ -178,9 +184,18 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   end
 
   @impl true
-  def handle_event("validate", %{"form" => params}, socket) do
-    params = PhotoUpload.merge_slugs(params, socket, @photo_fields)
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
+  def handle_event("validate", %{"form" => params} = event, socket) do
+    slug_edited? = socket.assigns.slug_edited? or SlugField.edited?(event)
+
+    params =
+      params
+      |> PhotoUpload.merge_slugs(socket, @photo_fields)
+      |> SlugField.suggest(socket.assigns.form, slug_edited?)
+
+    {:noreply,
+     socket
+     |> assign(:slug_edited?, slug_edited?)
+     |> assign(:form, AshPhoenix.Form.validate(socket.assigns.form, params))}
   end
 
   def handle_event("translate", %{"from" => from}, socket),

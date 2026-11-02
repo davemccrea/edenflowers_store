@@ -23,7 +23,7 @@ defmodule EdenflowersWeb.Marketing.SitemapController do
 
     categories = for category <- Catalog.list_categories!(), do: alternates("/#{language}/store/#{category.slug}")
     products = for product <- Catalog.list_store_products!(), do: alternates("/#{language}/product/#{product.slug}")
-    courses = for course <- Courses.list_upcoming_courses!(), do: alternates("/#{language}/courses/#{course.id}")
+    courses = for course <- Courses.list_upcoming_courses!(), do: alternates("/#{language}/courses/#{course.slug}")
 
     urls =
       for alternates <- pages ++ categories ++ products ++ courses,

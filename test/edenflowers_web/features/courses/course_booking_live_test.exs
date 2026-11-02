@@ -72,7 +72,8 @@ defmodule EdenflowersWeb.Courses.CourseBookingLiveTest do
       assert {:error, {:live_redirect, %{to: to, flash: %{"error" => error}}}} =
                live(conn, ~p"/courses/bookings/#{registration.id}?redirect_status=failed")
 
-      assert to == "/en/courses/#{registration.course_id}?registration=#{registration.id}"
+      course = Ash.get!(Edenflowers.Courses.Course, registration.course_id, authorize?: false)
+      assert to == "/en/courses/#{course.slug}?registration=#{registration.id}"
       assert error =~ "Your payment didn't go through"
 
       {:ok, view, _html} = live(conn, to)
@@ -80,12 +81,13 @@ defmodule EdenflowersWeb.Courses.CourseBookingLiveTest do
     end
 
     test "a link to someone else's course or a paid booking resumes no checkout", %{conn: conn} do
-      registration = generate(course_registration(status: :pending))
-      paid = generate(course_registration(status: :confirmed, course_id: registration.course_id))
+      course = generate(course())
+      registration = generate(course_registration(status: :pending, course_id: course.id))
+      paid = generate(course_registration(status: :confirmed, course_id: course.id))
       other_course = generate(course())
 
-      for {course_id, id} <- [{other_course.id, registration.id}, {paid.course_id, paid.id}, {other_course.id, "x"}] do
-        {:ok, view, _html} = live(conn, ~p"/en/courses/#{course_id}?registration=#{id}")
+      for {course, id} <- [{other_course, registration.id}, {course, paid.id}, {other_course, "x"}] do
+        {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}?registration=#{id}")
         assert has_element?(view, "#booking-form")
         refute has_element?(view, "#course-payment-form")
       end

@@ -254,7 +254,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      assert has_element?(view, ~s|li a[href="/en/courses/#{course.id}"]|, "Autumn Wreaths")
+      assert has_element?(view, ~s|li a[href="/en/courses/#{course.slug}"]|, "Autumn Wreaths")
       assert has_element?(view, "li", "2 places")
       assert has_element?(view, ~s|a[href="/courses/bookings/#{registration.id}/receipt"]|, "Receipt")
     end

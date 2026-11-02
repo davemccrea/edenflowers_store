@@ -149,7 +149,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
         </time>
 
         <.link
-          navigate={~q"/#{language}/courses/#{@course.id}"}
+          navigate={~q"/#{language}/courses/#{@course}"}
           aria-label={@course.name}
           class="block"
         >
@@ -167,7 +167,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
       <div class="min-w-0">
         <h3 class={["card-heading text-balance", !@course.booking_open? && "text-base-content/70"]}>
           <.link
-            navigate={~q"/#{language}/courses/#{@course.id}"}
+            navigate={~q"/#{language}/courses/#{@course}"}
             class="link-underline-hover"
           >
             {@course.name}
@@ -194,7 +194,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
         <p class="text-base-content/70 text-sm" data-testid="course-availability">{availability(@course)}</p>
         <.button
           :if={@course.booking_open?}
-          navigate={~q"/#{language}/courses/#{@course.id}" <> "#book"}
+          navigate={~q"/#{language}/courses/#{@course}" <> "#book"}
           variant="primary"
           size="sm"
           class="min-h-11 mt-1"

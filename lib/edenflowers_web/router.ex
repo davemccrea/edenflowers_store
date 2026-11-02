@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.Router do
 
   pipeline :store do
     plug EdenflowersWeb.Plugs.InitStore
-    plug EdenflowersWeb.Plugs.RedirectOldProductLinks
+    plug EdenflowersWeb.Plugs.RedirectOldLinks
   end
 
   scope "/", EdenflowersWeb do
@@ -70,7 +70,7 @@ defmodule EdenflowersWeb.Router do
         live "/#{language}/store/:category", Store.StoreLive
         live "/#{language}/product/:slug", Store.ProductLive
         live "/#{language}/courses", Courses.CoursesLive
-        live "/#{language}/courses/:id", Courses.CourseLive
+        live "/#{language}/courses/:slug", Courses.CourseLive
       end
 
       scope "/", Courses do
@@ -109,7 +109,7 @@ defmodule EdenflowersWeb.Router do
     get "/", Marketing.LocalizedRedirectController, :show
     get "/product/:slug", Marketing.LocalizedRedirectController, :product
     get "/courses", Marketing.LocalizedRedirectController, :courses
-    get "/courses/:id", Marketing.LocalizedRedirectController, :course
+    get "/courses/:slug", Marketing.LocalizedRedirectController, :course
     get "/weddings", Marketing.LocalizedRedirectController, :weddings
   end
 

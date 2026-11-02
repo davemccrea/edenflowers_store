@@ -189,7 +189,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :if={!@past?}
         module={ShareLinkDrawer}
         id="share-course-link"
-        path={~p"/courses/#{@course.id}"}
+        path={~p"/courses/#{@course}"}
         current_user={@current_user}
       />
     </Layouts.admin>

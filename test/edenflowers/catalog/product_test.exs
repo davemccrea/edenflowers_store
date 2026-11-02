@@ -271,7 +271,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       tulips = generate(product(name: "Tulips"))
 
       assert {:error, error} = update(tulips, %{slug: "red-roses"})
-      assert Exception.message(error) =~ "already used by another product"
+      assert Exception.message(error) =~ "already taken"
       assert generate(product(name: "Red roses!")).slug == "red-roses-2"
     end
 
@@ -287,7 +287,7 @@ defmodule Edenflowers.Catalog.ProductTest do
       product = generate(product(name: "Red roses"))
       Edenflowers.Repo.update_all(Catalog.Product, set: [slug: nil])
 
-      Edenflowers.Release.assign_missing_product_slugs!()
+      Edenflowers.Release.assign_missing_slugs!()
 
       assert Ash.reload!(product, authorize?: false).slug == "red-roses"
     end

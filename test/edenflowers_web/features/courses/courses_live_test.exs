@@ -23,13 +23,13 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
       assert has_element?(
                view,
-               ~s|[data-testid=courses-list] a[href="/en/courses/#{open.id}#book"][aria-label="Book a place: Autumn Wreaths"]|,
+               ~s|[data-testid=courses-list] a[href="/en/courses/#{open.slug}#book"][aria-label="Book a place: Autumn Wreaths"]|,
                "Book a place"
              )
 
       assert has_element?(view, "[data-testid=courses-list]", "Fully booked")
-      assert has_element?(view, ~s|h3 a[href="/en/courses/#{full.id}"]|, "Winter Bouquets")
-      refute has_element?(view, ~s|a[href="/en/courses/#{full.id}#book"]|)
+      assert has_element?(view, ~s|h3 a[href="/en/courses/#{full.slug}"]|, "Winter Bouquets")
+      refute has_element?(view, ~s|a[href="/en/courses/#{full.slug}#book"]|)
     end
   end
 
@@ -40,8 +40,8 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       {:ok, view, _html} = live(conn, ~p"/en/courses")
 
       assert has_element?(view, "[data-testid=courses-list]", "85")
-      assert has_element?(view, ~s|h3 a[href="/en/courses/#{course.id}"]|, "Autumn Wreaths")
-      assert view |> element(~s|a[href="/en/courses/#{course.id}#book"]|) |> render() =~ "Book a place"
+      assert has_element?(view, ~s|h3 a[href="/en/courses/#{course.slug}"]|, "Autumn Wreaths")
+      assert view |> element(~s|a[href="/en/courses/#{course.slug}#book"]|) |> render() =~ "Book a place"
       assert has_element?(view, "[aria-labelledby=coming-up] a[href='#newsletter']")
     end
 
@@ -51,8 +51,8 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       {:ok, view, _html} = live(conn, ~p"/en/courses")
 
       assert has_element?(view, "[data-testid=course-availability]", "Booking closed")
-      assert has_element?(view, ~s|h3 a[href="/en/courses/#{course.id}"]|)
-      refute has_element?(view, ~s|a[href="/en/courses/#{course.id}#book"]|)
+      assert has_element?(view, ~s|h3 a[href="/en/courses/#{course.slug}"]|)
+      refute has_element?(view, ~s|a[href="/en/courses/#{course.slug}#book"]|)
       assert has_element?(view, "[aria-labelledby=coming-up] a[href='#newsletter']")
     end
   end
@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     test "books places and shows the payment form", %{conn: conn} do
       course = generate(course(name: "Autumn Wreaths", price: "85.00", total_places: 8))
 
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       view
       |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "3"})
@@ -81,7 +81,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
         {:ok, %{id: "pi_course", client_secret: "pi_course_secret", amount: 25_500}}
       end)
 
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       view
       |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "3"})
@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
     test "paying for places taken meanwhile reopens the form instead of charging", %{conn: conn} do
       course = generate(course(total_places: 2))
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       view
       |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "2"})
@@ -110,7 +110,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
     test "Change booking reopens the form and revises the same registration", %{conn: conn} do
       course = generate(course(price: "85.00"))
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       view
       |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "1"})
@@ -142,7 +142,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
         {:ok, %{id: "pi_course", client_secret: "pi_course_secret"}}
       end)
 
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       view
       |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "1"})
@@ -166,7 +166,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
         {:ok, %{id: "pi_completed", client_secret: "pi_completed_secret", amount: 8500}}
       end)
 
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       view
       |> form("#booking-form", form: %{name: "Ada Lovelace", email: "ada@example.com", seats: "1"})
@@ -192,7 +192,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     test "shows the seat error when others booked the places first", %{conn: conn} do
       course = generate(course(total_places: 4))
 
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       generate(course_registration(course_id: course.id, seats: 3, status: :confirmed))
 
@@ -210,10 +210,21 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     test "a closed course offers the newsletter instead of a form", %{conn: conn} do
       course = generate(course(register_before: Date.add(Edenflowers.ShopTime.today(), -1)))
 
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       assert has_element?(view, "[data-testid=booking-closed]")
       refute has_element?(view, "#booking-form")
+    end
+
+    test "a link with the course's id or a former slug moves permanently to its slug, keeping tracking tags",
+         %{conn: conn} do
+      course = generate(course(name: "Spring wreaths"))
+
+      assert conn |> get("/fi/kurssit/#{course.id}?utm_source=instagram") |> redirected_to(301) ==
+               "/fi/kurssit/spring-wreaths?utm_source=instagram"
+
+      course |> Ash.Changeset.for_update(:update, %{slug: "wreaths"}) |> Ash.update!(authorize?: false)
+      assert conn |> get(~p"/en/courses/spring-wreaths") |> redirected_to(301) == "/en/courses/wreaths"
     end
 
     test "an unknown course is a 404", %{conn: conn} do
@@ -235,7 +246,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       course = generate(course())
       generate(course_registration(course_id: course.id, user_id: user.id, status: :confirmed, seats: 2))
 
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       assert has_element?(view, "[data-testid=already-booked]", "You have 2 places on this course.")
       assert has_element?(view, ~s|[data-testid=already-booked] a[href="/account#upcoming"]|)
@@ -246,7 +257,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
       course = generate(course())
       generate(course_registration(course_id: course.id, user_id: user.id, status: :pending))
 
-      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.id}")
+      {:ok, view, _html} = live(conn, ~p"/en/courses/#{course.slug}")
 
       refute has_element?(view, "[data-testid=already-booked]")
     end
@@ -273,7 +284,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     test "an upcoming course is an event in Helsinki time", %{conn: conn} do
       course = generate(course(date: ~D[2099-06-01], start_time: ~T[10:00:00], end_time: ~T[14:00:00]))
 
-      json_ld = conn |> get(~p"/en/courses/#{course.id}") |> html_response(200) |> json_ld()
+      json_ld = conn |> get(~p"/en/courses/#{course.slug}") |> html_response(200) |> json_ld()
 
       assert %{"@type" => "Event", "startDate" => "2099-06-01T10:00:00+03:00", "offers" => offers} = json_ld
       assert %{"price" => "85.00", "availability" => "https://schema.org/InStock"} = offers
@@ -282,7 +293,7 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
     test "a past course has none", %{conn: conn} do
       course = generate(course(date: Date.add(Edenflowers.ShopTime.today(), -1)))
 
-      assert conn |> get(~p"/en/courses/#{course.id}") |> html_response(200) |> json_ld() == nil
+      assert conn |> get(~p"/en/courses/#{course.slug}") |> html_response(200) |> json_ld() == nil
     end
   end
 
