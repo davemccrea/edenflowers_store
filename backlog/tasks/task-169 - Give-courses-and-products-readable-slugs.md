@@ -1,10 +1,10 @@
 ---
 id: TASK-169
 title: Give courses and products readable slugs
-status: ready-for-agent
+status: in-progress
 assignee: []
 created_date: '2026-11-01 21:00'
-updated_date: '2026-11-01 21:15'
+updated_date: '2026-11-02 11:34'
 labels:
   - spec
   - customers
