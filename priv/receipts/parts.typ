@@ -58,10 +58,9 @@
       buyer.name,
       lines(buyer.address),
       [#t("business-id") #buyer.business_id],
-      buyer.email,
     )
   } else {
-    (text(weight: "semibold", buyer.name), lines(buyer.address), buyer.email)
+    (text(weight: "semibold", buyer.name), lines(buyer.address))
   }
 
   grid(

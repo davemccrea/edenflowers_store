@@ -9,7 +9,7 @@
 
 <%= course_payment(assigns) |> String.trim() %><% end %>
 
-<%= dgettext("emails", "To cancel, reply to this email.") %> <%= Edenflowers.Courses.Course.cancellation_terms(@registration.course) %>
+<%= dgettext("emails", "To cancel, reply to this email.") %> <%= @cancellation_terms %>
 
 <%= dgettext("emails", "See you there,") %>
 

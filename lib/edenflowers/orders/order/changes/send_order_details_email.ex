@@ -32,6 +32,8 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
             :payment_link_open?,
             :payable?,
             :cancelled?,
+            :invoice_to_send?,
+            sent_open_invoices: [:overdue?],
             line_items: [:subtotal]
           ],
           authorize?: false

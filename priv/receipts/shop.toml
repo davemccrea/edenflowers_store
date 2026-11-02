@@ -1,5 +1,7 @@
+# Where pickups happen and how to reach the shop. The seller printed in the
+# footer (name, address, Y-tunnus) arrives in each payload from
+# `config :edenflowers, :seller`.
 name = "Eden Flowers"
 address = "Minimossen, Myrvägen 1, 65230 Vasa"
-business_id = "2944459-6"
 email = "info@edenflowers.fi"
 phone = "040 220 9494"

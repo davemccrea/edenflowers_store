@@ -220,7 +220,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                   else: round(amount * seats_held / seats, 2) + kept_amount
               ) do
       description "The Total due in euros. amount is the price times seats bought, so the seats still held cost " <>
-                    "exactly their share of it. Once cancelled, only what Jennie kept."
+                    "exactly their share of it. Once cancelled, the cancellation charge Jennie kept, paid or not."
     end
 
     calculate :committed?, :boolean, expr(status in [:confirmed, :cancelled]) do
@@ -235,25 +235,26 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Whether Jennie can cancel it now: a confirmed booking, paid or not."
     end
 
-    calculate :refund_on_cancelling,
+    calculate :default_cancellation_charge,
               :decimal,
               expr(
-                cond do
-                  amount_held <= 0 ->
-                    0
-
-                  course.date >= date_add(helsinki_today(), course.cancellation_days, :day) ->
-                    amount_held
-
-                  amount_held > round(amount * course.cancellation_fee_percent / 100, 2) ->
-                    amount_held - round(amount * course.cancellation_fee_percent / 100, 2)
-
-                  true ->
-                    0
+                if course.date >= date_add(helsinki_today(), course.cancellation_days, :day) do
+                  0
+                else
+                  round(total_due * course.cancellation_fee_percent / 100, 2)
                 end
               ) do
-      description "What cancelling now refunds in euros unless Jennie says otherwise: everything held up to the " <>
-                    "course's cancellation_days before it, and after that all but its cancellation fee."
+      description "The cancellation charge in euros cancelling now keeps unless Jennie enters another, paid or " <>
+                    "not: nothing up to the course's cancellation_days before it, and after that its " <>
+                    "cancellation fee on the places still held."
+    end
+
+    calculate :cancelled_unsettled?,
+              :boolean,
+              expr(status == :cancelled and (not settled? or exists(open_invoices, true))) do
+      description "Whether a cancelled booking still needs Jennie: money to refund, a cancellation charge to " <>
+                    "collect or invoice, or an open invoice. The course page lists these beside the live bookings instead " <>
+                    "of folding them away with the settled cancellations."
     end
 
     calculate :customer_email, :string, expr(email) do

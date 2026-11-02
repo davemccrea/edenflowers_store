@@ -2980,7 +2980,7 @@ msgid "This date is no longer available, please choose another"
 msgstr ""
 
 #: lib/edenflowers/orders/order/validations/cancellable_by_customer.ex:12
-#: lib/edenflowers/payments/changes/cancel.ex:142
+#: lib/edenflowers/payments/changes/cancel.ex:189
 #, elixir-autogen, elixir-format
 msgid "This order can no longer be cancelled online. Please contact us."
 msgstr ""
@@ -3174,7 +3174,7 @@ msgstr ""
 msgid "We couldn't charge your card for %{date} (%{amount})."
 msgstr ""
 
-#: lib/edenflowers/payments/changes/cancel.ex:145
+#: lib/edenflowers/payments/changes/cancel.ex:192
 #, elixir-autogen, elixir-format
 msgid "We couldn't refund your order. Please contact us to cancel it."
 msgstr ""
@@ -4133,4 +4133,19 @@ msgstr ""
 #: lib/edenflowers_web/features/account/account_live.ex:64
 #, elixir-autogen, elixir-format
 msgid "My account"
+msgstr ""
+
+#: lib/edenflowers/courses/course.ex:135
+#, elixir-autogen, elixir-format
+msgid "After that, %{fee}% of the price is charged."
+msgstr ""
+
+#: lib/edenflowers/courses/course.ex:134
+#, elixir-autogen, elixir-format
+msgid "After that, the full price is charged."
+msgstr ""
+
+#: lib/edenflowers/courses/course.ex:130
+#, elixir-autogen, elixir-format
+msgid "Cancel at least %{days} days before the course at no cost."
 msgstr ""

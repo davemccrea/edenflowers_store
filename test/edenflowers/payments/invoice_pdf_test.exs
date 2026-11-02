@@ -25,13 +25,13 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
             {"sv-FI", "invoice.sv.json"},
             {"en-GB", "invoice.en.course.json"}
           ] do
-        payload = InvoicePdf.build_payload(invoice(1000, locale: locale))
+        payload = InvoicePdf.payload(frozen(invoice(1000, locale: locale)))
         fixture = read_fixture(fixture)
 
         assert keys(payload) == keys(fixture)
-        assert keys(payload.buyer) == keys(fixture["buyer"])
-        assert keys(payload.seller) == keys(fixture["seller"])
-        assert payload.labels == fixture["labels"]
+        assert keys(payload["buyer"]) == keys(fixture["buyer"])
+        assert keys(payload["seller"]) == keys(fixture["seller"])
+        assert payload["labels"] == fixture["labels"]
       end
     end
 
@@ -44,10 +44,36 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
 
       assert length(payload.line_items) == 2
       assert payload.grand_total == "1\u00A0080,00\u00A0€"
-      assert payload.earlier_invoices == [%{number: 1000, invoice_date: "15.5.2026", amount: "300,00\u00A0€"}]
+      assert payload.earlier_invoices == [%{number: 1000, invoice_date: "15.5.2026", amount: "−300,00\u00A0€"}]
       assert payload.amount == "780,00\u00A0€"
 
       assert InvoicePdf.build_payload(%{booking_fee | order: order}).earlier_invoices == []
+    end
+
+    test "adds up: what neither this invoice nor earlier ones ask for is left to invoice later" do
+      booking_fee = invoice(1000, amount: "300.00")
+      order = %{wedding() | invoices: [booking_fee]}
+
+      assert %{label: "invoiced-later", amount: "−780,00" <> _} =
+               InvoicePdf.build_payload(%{booking_fee | order: order}).remainder
+
+      second = invoice(1001, amount: "400.00")
+      order = %{order | invoices: [booking_fee, second]}
+
+      assert %{label: "invoiced-later", amount: "−380,00" <> _} =
+               InvoicePdf.build_payload(%{second | order: order}).remainder
+
+      final = invoice(1002, amount: "380.00")
+      order = %{order | invoices: [booking_fee, second, final]}
+      assert InvoicePdf.build_payload(%{final | order: order}).remainder == nil
+    end
+
+    test "on a cancelled purchase, what isn't charged is shown as not charged" do
+      charge = invoice(1000, amount: "300.00")
+      order = %{wedding() | cancelled?: true, invoices: [charge]}
+
+      assert %{label: "not-charged", amount: "−780,00" <> _} =
+               InvoicePdf.build_payload(%{charge | order: order}).remainder
     end
 
     test "leaves out an earlier invoice cancelled before this one was made, but not one cancelled after" do
@@ -69,7 +95,7 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
             {"sv-FI", "credit-note.sv.json"},
             {"en-GB", "credit-note.en.course.json"}
           ] do
-        credited = invoice(1000, locale: locale, amount: "300.00", invoice_date: ~D[2026-05-15])
+        credited = frozen(invoice(1000, locale: locale, amount: "300.00", invoice_date: ~D[2026-05-15]))
         payload = InvoicePdf.build_payload(%CreditNote{number: 1001, credit_date: ~D[2026-05-18], invoice: credited})
         fixture = read_fixture(fixture)
 
@@ -77,8 +103,8 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
         assert keys(payload.buyer) == keys(fixture["buyer"])
         assert keys(payload.seller) == keys(fixture["seller"])
         assert payload.labels == fixture["labels"]
-        assert payload.credits =~ "1000"
-        assert payload.credits =~ "15.5.2026"
+        assert payload.invoice_number == 1000
+        assert payload.invoice_date == "15.5.2026"
         assert payload.amount == "−300,00 €"
       end
     end
@@ -94,18 +120,23 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
       ]
 
       assert InvoicePdf.build_payload(%{final | order: %{wedding() | payments: payments}}).paid_earlier ==
-               "130,00\u00A0€"
+               "−130,00\u00A0€"
 
       assert InvoicePdf.build_payload(final).paid_earlier == nil
     end
 
     test "is written in the invoice's language, not the purchase's" do
       invoice = invoice(1000, locale: "fi")
-      payload = InvoicePdf.build_payload(%{invoice | order: %{wedding() | locale: "sv-FI"}})
+      payload = InvoicePdf.payload(frozen(%{invoice | order: %{wedding() | locale: "sv-FI"}}))
 
-      assert payload.lang == "fi"
-      assert payload.labels["invoice"] == "Lasku"
-      assert payload.fulfillment_date == "lauantaina 13.6.2026"
+      assert payload["lang"] == "fi"
+      assert payload["labels"]["invoice"] == "Lasku"
+      assert payload["late_interest_rate"] == "8,00\u00A0%"
+    end
+
+    test "is dated with the order's delivery or the course's day, as its date of supply" do
+      assert InvoicePdf.build_payload(invoice(1000, locale: "fi")).delivery_date == "13.6.2026"
+      assert InvoicePdf.build_payload(invoice(1000, locale: "en-GB")).delivery_date == "28.11.2026"
     end
 
     test "addresses a company at its billing address and a consumer at their own" do
@@ -136,6 +167,40 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
     end
   end
 
+  describe "an invoice's content" do
+    test "is frozen when it is made, so editing the order later doesn't change its PDF" do
+      admin = generate(admin_user())
+      order = placed_order(payment_terms: :invoice, paid: "20.00")
+      {:ok, invoice} = Payments.create_invoice(%{order_id: order.id}, actor: admin)
+      before = InvoicePdf.payload(invoice)
+
+      variant = generate(product_variant(product_id: generate(product()).id, price: "60.00"))
+      generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1))
+
+      after_edit = InvoicePdf.payload(Ash.get!(Invoice, invoice.id, authorize?: false))
+
+      assert after_edit == before
+      assert [%{"quantity" => 2}] = after_edit["line_items"]
+      assert after_edit["grand_total"] == "88,50\u00A0€"
+      assert after_edit["paid_earlier"] == "−20,00\u00A0€"
+    end
+
+    test "names a booking's course in the invoice's language" do
+      admin = generate(admin_user())
+      course = generate(course(name: "Autumn Wreaths"))
+      Ash.Seed.update!(course, %{translations: %{"fi" => %{"name" => "Syksyiset kranssit"}}})
+
+      registration =
+        generate(
+          course_registration(course_id: course.id, status: :confirmed, payment_terms: :invoice, locale: "en-GB")
+        )
+
+      {:ok, invoice} = Payments.create_invoice(%{course_registration_id: registration.id, locale: "fi"}, actor: admin)
+
+      assert [%{"product_name" => "Syksyiset kranssit"}] = invoice.content["line_items"]
+    end
+  end
+
   describe "generate/1" do
     @describetag :typst
 
@@ -159,6 +224,10 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
       assert {:ok, <<"%PDF-", _::binary>>} = InvoicePdf.generate(invoice)
     end
   end
+
+  # What creating the invoice would have frozen onto it.
+  defp frozen(invoice),
+    do: %{invoice | content: invoice |> InvoicePdf.build_payload() |> Jason.encode!() |> Jason.decode!()}
 
   defp company do
     %{business_customer: true, company_name: "Kukka Oy", business_id: "2944459-6", billing_address: "Kyrkvägen 5"}
@@ -219,6 +288,8 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
       items_total: items,
       grand_total: Decimal.add(items, fee),
       line_items: lines,
+      upcoming?: false,
+      cancelled?: false,
       payments: [],
       invoices: []
     }
@@ -234,6 +305,8 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
       amount: Decimal.new("170.00"),
       tax_rate: Decimal.new("0.255"),
       confirmed_at: ~U[2026-10-30 15:40:00Z],
+      upcoming?: true,
+      cancelled?: false,
       payments: [],
       invoices: [],
       course: %Course{

@@ -8,68 +8,56 @@
 // pre-formatted, labels translated, and the virtual barcode as its 54 digits.
 #let invoice(invoice) = {
   let required = (
-    "lang", "labels", "number", "invoice_date", "due_date",
-    "order_reference", "fulfillment_method", "fulfillment_date",
-    "seller", "buyer",
-    "line_items", "vat_breakdown", "items_subtotal", "grand_total",
+    "lang", "labels", "number", "invoice_date", "due_date", "delivery_date",
+    "fulfillment_method", "late_interest_rate", "seller", "buyer",
+    "line_items", "vat_breakdown", "grand_total",
     "earlier_invoices", "amount", "reference_number", "virtual_barcode",
   )
-  let optional = ("customer_reference", "fulfillment_fee", "discount", "paid_earlier")
+  let optional = ("customer_reference", "fulfillment_fee", "discount", "paid_earlier", "remainder")
   for key in required {
     assert(key in invoice, message: "invoice: missing required key `" + key + "`")
   }
   for key in optional {
     assert(key in invoice, message: "invoice: missing optional key `" + key + "` (set to none if absent)")
   }
-  for key in ("name", "business_id", "address", "iban", "bic") {
+  for key in ("name", "business_id", "address", "iban") {
     assert(key in invoice.seller, message: "invoice: seller missing `" + key + "`")
   }
-  for key in ("company_name", "business_id", "name", "address", "email") {
+  for key in ("company_name", "business_id", "name", "address") {
     assert(key in invoice.buyer, message: "invoice: buyer missing `" + key + "`")
   }
 
   let t(key) = invoice.labels.at(key)
   let num(body) = text(features: ("tnum",), body)
-  let seller = invoice.seller
-  let buyer = invoice.buyer
 
-  // The seller's details are in the footer, and again in the payment details.
-  show: invoice-page.with(seller, t, t("invoice"), invoice.number, invoice.lang)
+  // The seller's details are in the footer.
+  show: invoice-page.with(invoice.seller, t, t("invoice"), invoice.number, invoice.lang)
 
-  let purchase-label = if invoice.fulfillment_method == "course" { t("course") } else { t("order") }
+  let date-label = if invoice.fulfillment_method == "delivery" {
+    t("delivery-date")
+  } else if invoice.fulfillment_method == "course" {
+    t("invoice-course-date")
+  } else {
+    t("pickup-date")
+  }
   let facts = (
     (t("invoice-number"), str(invoice.number)),
     (t("invoice-date"), invoice.invoice_date),
+    (date-label, invoice.delivery_date),
     (t("due-date"), invoice.due_date),
-    (purchase-label, invoice.order_reference),
+    (t("reference-number"), invoice.reference_number),
+    (t("late-interest"), invoice.late_interest_rate),
   )
   if invoice.customer_reference != none {
     facts.push((t("your-reference"), invoice.customer_reference))
   }
 
-  buyer-and-facts(buyer, facts, t)
+  buyer-and-facts(invoice.buyer, facts, t)
 
-  v(18pt)
+  v(22pt)
 
-  // ── Line items ──────────────────────────────────────────────────────
   // The whole purchase, even on an invoice for only part of it: the totals
   // below say how much of it this invoice asks for.
-  let date-label = if invoice.fulfillment_method == "delivery" {
-    t("delivery-date")
-  } else if invoice.fulfillment_method == "course" {
-    t("course-date")
-  } else {
-    t("pickup-date")
-  }
-
-  grid(
-    columns: (auto, 1fr),
-    align: (left + bottom, right + bottom),
-    eyebrow(purchase-label),
-    text(size: type-scale.small)[#date-label: #text(weight: "semibold", invoice.fulfillment_date)],
-  )
-  v(6pt)
-
   line-items(invoice.line_items, t)
 
   v(10pt)
@@ -79,53 +67,57 @@
   let row(label, value) = ([#label], [], num(value))
   let rule = grid.cell(colspan: 3)[#v(2pt) #hairline #v(2pt)]
 
-  let totals-rows = (row(t("subtotal"), invoice.items_subtotal),)
+  let total-rows = ()
   if invoice.discount != none {
-    totals-rows.push(row(t("discount"), "−" + invoice.discount))
+    total-rows.push(row(t("discount"), "−" + invoice.discount))
   }
   if invoice.fulfillment_fee != none {
-    totals-rows.push(row(fee-label, invoice.fulfillment_fee))
+    total-rows.push(row(fee-label, invoice.fulfillment_fee))
   }
 
-  // What this purchase was already billed or paid, so a final invoice reads
-  // as the rest of it. Muted: these don't add up to the line below, which is
-  // whatever Jennie chose to ask for now.
-  let muted(body) = text(fill: colors.ink-muted, body)
+  // Deductions from the total, as negative amounts, so the column adds up to
+  // what this invoice asks for: earlier invoices, money paid outside them,
+  // and whatever is left for later (or not charged, once cancelled).
   let earlier-rows = invoice.earlier_invoices.map(earlier => (
-    muted[#t("invoice") #earlier.number, #earlier.invoice_date],
+    [#t("invoice") #earlier.number, #earlier.invoice_date],
     [],
-    num(muted(earlier.amount)),
+    num(earlier.amount),
   ))
   if invoice.paid_earlier != none {
-    earlier-rows.push((muted(t("paid")), [], num(muted(invoice.paid_earlier))))
+    earlier-rows.push((t("paid"), [], num(invoice.paid_earlier)))
+  }
+  if invoice.remainder != none {
+    earlier-rows.push((t(invoice.remainder.label), [], num(invoice.remainder.amount)))
   }
 
-  // The VAT breakdown sits beside the totals, decomposing the order total
-  // rather than the amount due, which may be only part of it.
-  grid(
-    columns: (1fr, 1fr),
-    column-gutter: 32pt,
-    vat-breakdown(invoice.vat_breakdown, t),
-    grid(
-      columns: (auto, 1fr, auto),
-      align: (left, left, right),
-      row-gutter: 7pt,
-      ..totals-rows.flatten(),
-      rule,
-      text(weight: "bold", t("total-paid")),
-      [],
-      num(text(weight: "bold", invoice.grand_total)),
-      grid.cell(colspan: 3)[#v(6pt)],
-      ..if earlier-rows.len() > 0 {
-        (grid.cell(colspan: 3, eyebrow(t("earlier"))),)
-      },
-      ..earlier-rows.flatten(),
-      ..if earlier-rows.len() > 0 { (rule,) },
-      text(weight: "bold", size: 12pt, t("due-on-invoice")),
-      [],
-      num(text(weight: "bold", size: 12pt, invoice.amount)),
-    ),
-  )
+  // An invoice for the whole purchase asks for its total, so the amount due
+  // stands alone; one for part of it shows the total it is part of.
+  let partial = invoice.amount != invoice.grand_total or earlier-rows.len() > 0
+
+  // Placed as on the receipt: the VAT breakdown under the totals, in the
+  // same right-hand column.
+  align(right)[
+    #block(width: 60%)[
+      #grid(
+        columns: (auto, 1fr, auto),
+        align: (left, left, right),
+        row-gutter: 7pt,
+        ..total-rows.flatten(),
+        ..if total-rows.len() > 0 { (rule,) },
+        ..if partial {
+          (text(weight: "bold", t("total")), [], num(text(weight: "bold", invoice.grand_total)))
+        },
+        ..if earlier-rows.len() > 0 { (..earlier-rows.flatten(), rule) },
+        text(weight: "bold", t("due-on-invoice")),
+        [],
+        num(text(weight: "bold", invoice.amount)),
+      )
+
+      #v(14pt)
+
+      #vat-breakdown(invoice.vat_breakdown, t)
+    ]
+  ]
 
   // Elastic, as on the receipt: the payment details anchor to the bottom of
   // a sparse page and follow on after the totals on a full one.
@@ -152,20 +144,16 @@
       #eyebrow(t("payment-details"))
       #v(8pt)
       #grid(
-        columns: (1.3fr, 1.3fr, 1fr),
+        columns: (1.6fr, 1fr, 1fr, 1fr),
         column-gutter: 14pt,
         row-gutter: 9pt,
-        field(t("payee"), seller.name),
-        field(t("iban"), seller.iban),
-        field(t("bic"), seller.bic),
+        field(t("iban"), invoice.seller.iban),
         field(t("reference-number"), invoice.reference_number),
         field(t("due-date"), invoice.due_date),
         field(t("amount"), invoice.amount),
-        grid.cell(colspan: 3, field(t("virtual-barcode"), invoice.virtual_barcode)),
+        grid.cell(colspan: 4, field(t("virtual-barcode"), invoice.virtual_barcode)),
       )
-      #v(8pt)
-      #text(size: type-scale.small)[#t("use-reference") #t("late-interest")]
-      #v(10pt)
+      #v(14pt)
       #align(center, tiaoma.code128(
         invoice.virtual_barcode,
         options: (show-hrt: false),

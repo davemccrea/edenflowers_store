@@ -74,7 +74,7 @@ defmodule Edenflowers.Payments.Payment do
         :invoice_id
       ]
 
-      validate Edenflowers.Payments.Validations.InvoiceOfPurchase
+      validate Edenflowers.Payments.Validations.InvoiceOfPurchase, before_action?: true
     end
   end
 

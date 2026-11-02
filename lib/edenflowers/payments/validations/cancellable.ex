@@ -1,8 +1,12 @@
 defmodule Edenflowers.Payments.Validations.Cancellable do
   @moduledoc """
-  Refuses a credit note for an Invoice that isn't `cancellable?`, read
-  fresh, saying why. The same calculation tells the admin whether to offer
-  Cancel at all.
+  Refuses a credit note for an Invoice that isn't `cancellable?`, saying
+  why. The same calculation tells the admin whether to offer Cancel at all.
+
+  It runs inside the insert's transaction (`before_action?: true`) and reads
+  the Invoice under its row lock (`Invoice.get_locked/2`), which recording a
+  Payment against it takes too, so a Payment arriving at the same moment is
+  either seen here or waits until the Credit note is in.
 
   An Invoice with any money on it can't be cancelled, not only a paid one:
   its Payments would then count against no open invoice. Jennie undoes them
@@ -16,7 +20,7 @@ defmodule Edenflowers.Payments.Validations.Cancellable do
   @impl true
   def validate(changeset, _opts, _context) do
     with id when not is_nil(id) <- Ash.Changeset.get_attribute(changeset, :invoice_id),
-         %Invoice{} = invoice <- Ash.get!(Invoice, id, load: load(), authorize?: false, not_found_error?: false) do
+         %Invoice{} = invoice <- Invoice.get_locked(id, load()) do
       check(invoice)
     else
       _no_invoice -> :ok

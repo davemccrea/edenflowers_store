@@ -3,20 +3,21 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   What cancelling means for an order or a course booking. The action sets its
   own status and adds what else is its own, like putting stock back.
 
-  Refuses unless the record is `cancellable?`, then refunds everything held
-  apart from what Jennie keeps, before the cancel commits, so it is never
-  cancelled while Stripe still holds money it should have handed back. Card
-  payments go back through Stripe first; whatever is left was paid in person,
-  and stays as a balance for Jennie to hand back. A refund Stripe refuses
-  stops the cancel. The cancelled email goes to `customer_email`, if there is
-  one, unless the `email_customer?` argument is false.
+  Refuses unless the record is `cancellable?`. Jennie keeps a cancellation
+  charge, from 0 up to its Total due, whether or not anything was paid: the
+  `cancellation_charge` argument, or else `default_cancellation_charge`. It
+  becomes `kept_amount`, and so the Total due, and the Balance follows: what
+  was paid above the charge is refunded, and any of the charge not yet paid
+  is left to collect, which Jennie invoices by hand.
 
-  What's kept comes from two optional arguments: `refund`, what Jennie typed,
-  and `held`, what was held when she opened the drawer. Kept is `held` minus
-  `refund`, so a retry after Stripe refunded but the cancel failed keeps the
-  same amount and refunds nothing twice. Money that arrived after she opened
-  it refuses the cancel rather than being kept. Without them, it refunds
-  `refund_on_cancelling`.
+  The refund happens before the cancel commits, so it is never cancelled
+  while Stripe still holds money it should have handed back. Card payments
+  go back through Stripe first; whatever is left was paid in person, and
+  stays as a balance for Jennie to hand back. A refund Stripe refuses stops
+  the cancel. As the refund is whatever is still held above the charge, a
+  retry after Stripe refunded but the cancel failed refunds nothing twice.
+  The cancelled email goes to `customer_email`, if there is one, unless the
+  `email_customer?` argument is false.
 
   `cancelled_by` (`:customer` or `:shop`) picks who the errors and the email
   speak to, from the option or else the action's `cancelled_by` argument.
@@ -51,58 +52,104 @@ defmodule Edenflowers.Payments.Changes.Cancel do
     record =
       Ash.load!(
         changeset.data,
-        [:cancellable?, :amount_held, :refund_on_cancelling, :paid_through_stripe, :customer_email],
+        load(),
         authorize?: false,
         reuse_values?: false
       )
 
-    held = Decimal.max(record.amount_held, 0)
-
     with true <- record.cancellable? || {:error, changed_message(cancelled_by)},
-         {:ok, kept} <- kept(changeset, record, held, cancelled_by) do
-      money = money(record, Decimal.sub(held, kept))
+         {:ok, charge} <- charge(changeset, record) do
+      money = money(record, charge)
 
       changeset
-      |> Ash.Changeset.force_change_attribute(:kept_amount, kept)
+      |> Ash.Changeset.force_change_attribute(:kept_amount, charge)
       |> Ash.Changeset.set_context(money)
       |> set_email(record.customer_email)
-      |> refund_through_stripe(record, kept, money.refunded, cancelled_by)
+      |> refund_through_stripe(record, charge, money.refunded, cancelled_by)
     else
       {:error, error} -> Ash.Changeset.add_error(changeset, error)
     end
   end
 
+  @doc "What `money/2` and cancelling need loaded."
+  def load,
+    do: [
+      :cancellable?,
+      :total_due,
+      :amount_held,
+      :amount_paid,
+      :paid_through_stripe,
+      :default_cancellation_charge,
+      :customer_email,
+      :sent_open_invoices_amount,
+      :sent_open_invoice_count
+    ]
+
   @doc """
-  How refunding `to_refund` on cancelling splits: what goes back through
-  Stripe (`refunded`) and what Jennie hands back herself (`to_return`).
-  Expects `paid_through_stripe` loaded.
+  What keeping `charge` on cancelling means for the money: what goes back
+  through Stripe (`refunded`), what Jennie hands back herself (`to_return`)
+  and what of the charge is still to collect (`to_collect`). Paid above the
+  charge is refunded; a Goodwill refund already given counts as paid, as it
+  does for the Balance.
+
+  It also says what becomes of the open invoices the customer was sent
+  (`earlier_invoices`), which still ask for `invoiced` between them
+  (`earlier_invoice_count` of them), so the email can tell the customer
+  which to pay:
+
+    * `:none`: there are none.
+    * `:cancel`: nothing of the charge is left to collect, so they are
+      cancelled and needn't be paid.
+    * `:replace`: they ask for more than is left to collect, so they are
+      cancelled and a new invoice asks for the charge.
+    * `:stand`: they ask for just what is left to collect, so they are paid
+      as they are.
+    * `:top_up`: they ask for part of it, and a new invoice asks for the rest.
+
+  Jennie still makes the Credit notes and new invoices by hand.
   """
-  def money(record, to_refund) do
+  def money(record, charge) do
+    to_refund = Decimal.max(Decimal.sub(record.amount_held, charge), 0)
     refunded = Decimal.min(to_refund, Decimal.max(record.paid_through_stripe, 0))
-    %{refunded: refunded, to_return: Decimal.sub(to_refund, refunded)}
+    to_collect = Decimal.max(Decimal.sub(charge, record.amount_paid), 0)
+
+    %{
+      charge: charge,
+      refunded: refunded,
+      to_return: Decimal.sub(to_refund, refunded),
+      to_collect: to_collect,
+      earlier_invoices: earlier_invoices(record, to_collect),
+      earlier_invoice_count: record.sent_open_invoice_count,
+      invoiced: record.sent_open_invoices_amount
+    }
   end
 
-  defp kept(changeset, record, held_now, cancelled_by) do
-    case {Ash.Changeset.get_argument(changeset, :refund), Ash.Changeset.get_argument(changeset, :held)} do
-      {nil, _held} ->
-        {:ok, Decimal.sub(held_now, record.refund_on_cancelling)}
+  defp earlier_invoices(record, to_collect) do
+    invoiced = record.sent_open_invoices_amount
 
-      {_refund, nil} ->
-        {:error, field: :held, message: "is required with a refund"}
+    cond do
+      record.sent_open_invoice_count == 0 -> :none
+      Decimal.eq?(to_collect, 0) -> :cancel
+      Decimal.gt?(invoiced, to_collect) -> :replace
+      Decimal.eq?(invoiced, to_collect) -> :stand
+      true -> :top_up
+    end
+  end
 
-      {refund, held} ->
-        cond do
-          Decimal.gt?(held_now, held) ->
-            {:error, changed_message(cancelled_by)}
+  defp charge(changeset, record) do
+    total = Decimal.max(record.total_due, 0)
 
-          Decimal.negative?(refund) or Decimal.gt?(refund, held) ->
+    case Ash.Changeset.get_argument(changeset, :cancellation_charge) do
+      nil ->
+        {:ok, record.default_cancellation_charge}
+
+      charge ->
+        if Decimal.negative?(charge) or Decimal.gt?(charge, total),
+          do:
             {:error,
-             field: :refund,
-             message: ~t"Enter an amount from 0 € to #{amount = Format.currency(held, Format.locale())}."a}
-
-          true ->
-            {:ok, Decimal.sub(held, refund)}
-        end
+             field: :cancellation_charge,
+             message: ~t"Enter an amount from 0 € to #{amount = Format.currency(total, Format.locale())}."a},
+          else: {:ok, charge}
     end
   end
 

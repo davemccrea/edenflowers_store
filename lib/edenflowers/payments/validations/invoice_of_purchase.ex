@@ -3,6 +3,11 @@ defmodule Edenflowers.Payments.Validations.InvoiceOfPurchase do
   A Payment can only pay an Invoice of the order or Course booking it is for,
   so money on one purchase never settles another's Invoice, and never one a
   Credit note has cancelled.
+
+  It runs inside the insert's transaction (`before_action?: true`) and reads
+  the Invoice under its row lock (`Invoice.get_locked/2`), which cancelling
+  it takes too, so a Credit note made at the same moment is either seen here
+  or waits until the Payment is in.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
@@ -16,7 +21,7 @@ defmodule Edenflowers.Payments.Validations.InvoiceOfPurchase do
         :ok
 
       invoice_id ->
-        invoice = Ash.get!(Invoice, invoice_id, load: [:status], authorize?: false, not_found_error?: false)
+        invoice = Invoice.get_locked(invoice_id, [:status])
 
         cond do
           !invoice || !same_purchase?(invoice, changeset) ->

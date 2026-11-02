@@ -4,31 +4,27 @@
     "address": "Hovioikeudenpuistikko 15 B\n65100 Vaasa",
     "business_id": "1234567-1",
     "company_name": "Vaasan Juhlatila Oy",
-    "email": "emilia@juhlatila.example.fi",
     "name": "Emilia Virtanen"
   },
   "customer_reference": "PO 2026-118",
+  "delivery_date": "13.6.2026",
   "discount": null,
   "due_date": "29.6.2026",
   "earlier_invoices": [
     {
-      "amount": "300,00 €",
+      "amount": "−300,00 €",
       "invoice_date": "15.5.2026",
-      "number": 1000
+      "number": 1337
     }
   ],
-  "fulfillment_date": "lauantaina 13.6.2026",
   "fulfillment_fee": "35,00 €",
   "fulfillment_method": "delivery",
   "grand_total": "1 080,00 €",
   "invoice_date": "15.6.2026",
-  "items_subtotal": "1 045,00 €",
   "labels": {
     "amount": "Summa",
-    "bic": "BIC",
     "business-id": "Y-tunnus",
     "card-message": "Korttiviesti",
-    "closing-line": "Kysymyksiä tai muutoksia? Vastaa vahvistussähköpostiin ja Jennie palaa asiaan.",
     "course": "Kurssi",
     "course-date": "Päivämäärä",
     "credit-date": "Päivämäärä",
@@ -42,14 +38,16 @@
     "discount": "Alennus",
     "due-date": "Eräpäivä",
     "due-on-invoice": "Maksettavaa tällä laskulla",
-    "earlier": "Aiemmin laskutettu tai maksettu",
+    "invoiced-later": "Laskutetaan myöhemmin",
+    "not-charged": "Ei veloiteta peruutuksen jälkeen",
     "gross": "Verollinen",
     "iban": "Tilinumero (IBAN)",
     "invoice": "Lasku",
+    "invoice-course-date": "Kurssipäivä",
     "invoice-date": "Laskun päivämäärä",
     "invoice-number": "Laskun numero",
     "item": "Tuote",
-    "late-interest": "Viivästyskorko korkolain mukaan.",
+    "late-interest": "Viivästyskorko",
     "method-card": "Kortti",
     "method-cash": "Käteinen",
     "method-klarna": "Klarna",
@@ -57,11 +55,9 @@
     "method-zervant": "Tilisiirto",
     "method-zettle": "Kortti",
     "net": "Veroton",
-    "nothing-to-pay": "Hyvitettyä laskua ei tarvitse maksaa.",
     "order": "Tilaus",
     "order-date": "Tilauspäivä",
     "paid": "Maksettu",
-    "payee": "Saaja",
     "payment-details": "Maksutiedot",
     "pickup": "Nouto",
     "pickup-date": "Noutopäivä",
@@ -76,7 +72,6 @@
     "total": "Yhteensä",
     "total-paid": "Tilauksen loppusumma",
     "unit-price-excl-vat": "Veroton à-hinta",
-    "use-reference": "Käytäthän maksaessasi viitenumeroa.",
     "vat": "Vero",
     "vat-breakdown": "ALV-erittely",
     "vat-rate": "Verokanta",
@@ -84,6 +79,7 @@
     "your-reference": "Viitteenne"
   },
   "lang": "fi",
+  "late_interest_rate": "8,00 %",
   "line_items": [
     {
       "product_name": "Morsiuskimppu",
@@ -118,16 +114,15 @@
       "variant_size": null
     }
   ],
-  "number": 1001,
-  "order_reference": "1530",
+  "number": 1338,
   "paid_earlier": null,
-  "reference_number": "10016",
+  "remainder": null,
+  "reference_number": "13385",
   "seller": {
-    "address": "Minimossen, Myrvägen 1, 65230 Vasa",
-    "bic": "PLACEHOLDER",
+    "address": "Stadsgatan 3, 65300 Vasa",
     "business_id": "2944459-6",
-    "iban": "FI00 0000 0000 0000 00",
-    "name": "Eden Flowers"
+    "iban": "FI69 3939 0018 3959 05",
+    "name": "Jennie McCrea"
   },
   "vat_breakdown": [
     {
@@ -137,5 +132,5 @@
       "tax": "219,44 €"
     }
   ],
-  "virtual_barcode": "400000000000000000007800000000000000000000010016260629"
+  "virtual_barcode": "469393900183959050007800000000000000000000013385260629"
 }

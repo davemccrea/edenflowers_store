@@ -9,6 +9,10 @@ defmodule Edenflowers.Payments.ReferenceNumberTest do
     assert ReferenceNumber.format("1234561") == "12 34561"
   end
 
+  test "matches Zervant's invoice 1336, the last before the shop's" do
+    assert ReferenceNumber.from_invoice_number(1336) == "13369"
+  end
+
   test "appends the Finnish 7-3-1 check digit" do
     assert ReferenceNumber.from_invoice_number(123) == "1232"
     assert ReferenceNumber.from_invoice_number(1_234_567) == "12345672"

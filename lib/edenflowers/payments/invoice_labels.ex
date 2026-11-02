@@ -19,39 +19,34 @@ defmodule Edenflowers.Payments.InvoiceLabels do
         "invoice-number" => dgettext("receipts", "Invoice number"),
         "invoice-date" => dgettext("receipts", "Invoice date"),
         "due-date" => dgettext("receipts", "Due date"),
+        "invoice-course-date" => course_date(),
         "your-reference" => your_reference(),
-        "earlier" => dgettext("receipts", "Invoiced or paid earlier"),
         "paid" => paid(),
+        "invoiced-later" => invoiced_later(),
+        "not-charged" => not_charged(),
         "due-on-invoice" => dgettext("receipts", "Due on this invoice"),
         "payment-details" => dgettext("receipts", "Payment details"),
-        "payee" => payee(),
         "iban" => dgettext("receipts", "Account (IBAN)"),
-        "bic" => dgettext("receipts", "BIC"),
         "reference-number" => reference_number(),
         "amount" => amount(),
         "virtual-barcode" => virtual_barcode(),
-        "use-reference" => dgettext("receipts", "Please use the reference number when you pay."),
         "late-interest" => late_interest(),
         "credit-note" => dgettext("receipts", "Credit note"),
         "credit-note-number" => dgettext("receipts", "Credit note number"),
         "credit-date" => dgettext("receipts", "Date"),
         "reason" => reason(),
-        "credited" => credited(),
-        "nothing-to-pay" => dgettext("receipts", "There is nothing to pay on the cancelled invoice.")
+        "credited" => credited()
       }
-    end)
-  end
-
-  @doc "The line naming the Invoice a Credit note cancels, with its number and formatted date."
-  def credits(number, date, locale) do
-    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
-      gettext_comment("On a credit note: the invoice it cancels, with that invoice's date.")
-      dgettext("receipts", "Credits invoice %{number} dated %{date}", number: number, date: date)
     end)
   end
 
   # One function per commented label: gettext_comment/1 attaches to the next
   # message extracted, so it has to be a statement of its own.
+
+  defp course_date do
+    gettext_comment("On an invoice for a course booking: the day the course is held, as its date of supply.")
+    dgettext("receipts", "Course date")
+  end
 
   defp your_reference do
     gettext_comment(
@@ -66,9 +61,22 @@ defmodule Edenflowers.Payments.InvoiceLabels do
     dgettext("receipts", "Paid")
   end
 
-  defp payee do
-    gettext_comment("Who the bank transfer goes to, as on a Finnish credit transfer form (saaja).")
-    dgettext("receipts", "Payee")
+  defp invoiced_later do
+    gettext_comment(
+      "A deduction in the invoice totals: the part of the order total not asked for on this invoice " <>
+        "or any earlier one, to be invoiced later. Printed as a negative amount."
+    )
+
+    dgettext("receipts", "To be invoiced later")
+  end
+
+  defp not_charged do
+    gettext_comment(
+      "A deduction in the invoice totals of a cancelled order or course booking: the part of its total " <>
+        "not charged because it was cancelled. Printed as a negative amount."
+    )
+
+    dgettext("receipts", "Not charged after cancellation")
   end
 
   defp reference_number do
@@ -97,7 +105,10 @@ defmodule Edenflowers.Payments.InvoiceLabels do
   end
 
   defp late_interest do
-    gettext_comment("The standard Finnish invoice line 'viivästyskorko korkolain mukaan' (Interest Act 633/1982).")
-    dgettext("receipts", "Late payment interest according to the Interest Act.")
+    gettext_comment(
+      "The yearly interest charged on a late payment (viivästyskorko), printed beside a rate such as 8,00 %."
+    )
+
+    dgettext("receipts", "Late payment interest")
   end
 end

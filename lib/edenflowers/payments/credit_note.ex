@@ -55,7 +55,7 @@ defmodule Edenflowers.Payments.CreditNote do
         description "Jennie's own words for the email, after its first line. Only used when email_customer? is true."
       end
 
-      validate Validations.Cancellable
+      validate Validations.Cancellable, before_action?: true
       change Changes.IssueCreditNote
       change Changes.SendWhenCreated
     end

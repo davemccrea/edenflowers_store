@@ -1,6 +1,6 @@
 defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
   @moduledoc """
-  Oban job that tells the customer an order or course booking was cancelled and what money remains to return:
+  Oban job that tells the customer an order or course booking was cancelled and what money remains to return or collect:
   Cancellation confirmed when they cancelled it themselves, else the shop's cancellation.
   """
 
@@ -12,18 +12,33 @@ defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
   alias Edenflowers.Mailer
   alias Edenflowers.Payments
 
-  def new_for(record, %{refunded: refunded, to_return: to_return}, cancelled_by) do
+  def new_for(record, money, cancelled_by) do
     new(%{
       (Payments.parent_key(record) |> to_string()) => record.id,
-      "refunded_amount" => Decimal.to_string(refunded),
-      "to_return" => Decimal.to_string(to_return),
+      "charge" => Decimal.to_string(money.charge),
+      "refunded_amount" => Decimal.to_string(money.refunded),
+      "to_return" => Decimal.to_string(money.to_return),
+      "to_collect" => Decimal.to_string(money.to_collect),
+      "earlier_invoices" => to_string(money.earlier_invoices),
+      "earlier_invoice_count" => money.earlier_invoice_count,
+      "invoiced" => Decimal.to_string(money.invoiced),
       "cancelled_by" => to_string(cancelled_by)
     })
   end
 
   @impl true
   def perform(%Oban.Job{args: args}) do
-    money = %{refunded: Decimal.new(args["refunded_amount"]), to_return: Decimal.new(args["to_return"])}
+    # Jobs queued before the cancellation charge carry no charge or to_collect,
+    # and before invoices nothing about them.
+    money = %{
+      charge: Decimal.new(args["charge"] || "0"),
+      refunded: Decimal.new(args["refunded_amount"]),
+      to_return: Decimal.new(args["to_return"]),
+      to_collect: Decimal.new(args["to_collect"] || "0"),
+      earlier_invoices: String.to_existing_atom(args["earlier_invoices"] || "none"),
+      earlier_invoice_count: args["earlier_invoice_count"] || 0,
+      invoiced: Decimal.new(args["invoiced"] || "0")
+    }
 
     record = Payments.get_for_customer_email!(args)
 

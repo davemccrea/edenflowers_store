@@ -6,6 +6,7 @@ defmodule Edenflowers.Email.PreviewTest do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
+  alias Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail
   alias Edenflowers.Email.Preview
 
   for amount <- [nil, "25.00", "85.00"] do
@@ -90,10 +91,7 @@ defmodule Edenflowers.Email.PreviewTest do
 
       assert_email_sent(fn email -> assert email.text_body == expected end)
 
-      reminder =
-        registration
-        |> Ash.load!([:course, :first_name, :balance], authorize?: false)
-        |> Edenflowers.Email.course_reminder()
+      reminder = reminder(registration)
 
       refute reminder.text_body =~ "Please pay at the course."
 
@@ -104,5 +102,26 @@ defmodule Edenflowers.Email.PreviewTest do
         refute reminder.text_body =~ "/pay/courses/"
       end
     end
+  end
+
+  test "once its invoice is sent, the course reminder points to it instead of promising one" do
+    admin = generate(admin_user())
+    registration = generate(course_registration(status: :confirmed, payment_terms: :invoice, locale: "en-GB"))
+
+    {:ok, invoice} =
+      Edenflowers.Payments.create_invoice(
+        %{course_registration_id: registration.id, email_customer?: true},
+        actor: admin
+      )
+
+    body = reminder(registration).text_body
+    assert body =~ "My invoice #{invoice.number} is due on"
+    refute body =~ "I'll send you an invoice"
+  end
+
+  defp reminder(registration) do
+    registration
+    |> SendReminderEmail.load_for_send()
+    |> Edenflowers.Email.course_reminder()
   end
 end

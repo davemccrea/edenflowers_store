@@ -4,25 +4,21 @@
     "address": "Korsholmsesplanaden 12 A 4, 65100 Vasa",
     "business_id": null,
     "company_name": null,
-    "email": "margareta.lindqvist@example.fi",
     "name": "Margareta Lindqvist"
   },
   "customer_reference": null,
+  "delivery_date": "22.8.2026",
   "discount": null,
   "due_date": "7.9.2026",
   "earlier_invoices": [],
-  "fulfillment_date": "lördag 22.8.2026",
   "fulfillment_fee": "9,00 €",
   "fulfillment_method": "delivery",
   "grand_total": "577,00 €",
   "invoice_date": "24.8.2026",
-  "items_subtotal": "568,00 €",
   "labels": {
     "amount": "Belopp",
-    "bic": "BIC",
     "business-id": "FO-nummer",
     "card-message": "Kortmeddelande",
-    "closing-line": "Frågor eller ändringar? Svara på bekräftelsemejlet så återkommer Jennie.",
     "course": "Kurs",
     "course-date": "Datum",
     "credit-date": "Datum",
@@ -36,14 +32,16 @@
     "discount": "Rabatt",
     "due-date": "Förfallodag",
     "due-on-invoice": "Att betala på denna faktura",
-    "earlier": "Tidigare fakturerat eller betalt",
+    "invoiced-later": "Faktureras senare",
+    "not-charged": "Debiteras inte efter avbokning",
     "gross": "Totalt",
     "iban": "Kontonummer (IBAN)",
     "invoice": "Faktura",
+    "invoice-course-date": "Kursdatum",
     "invoice-date": "Fakturadatum",
     "invoice-number": "Fakturanummer",
     "item": "Produkt",
-    "late-interest": "Dröjsmålsränta enligt räntelagen.",
+    "late-interest": "Dröjsmålsränta",
     "method-card": "Kort",
     "method-cash": "Kontant",
     "method-klarna": "Klarna",
@@ -51,11 +49,9 @@
     "method-zervant": "Banköverföring",
     "method-zettle": "Kort",
     "net": "Netto",
-    "nothing-to-pay": "Den krediterade fakturan behöver inte betalas.",
     "order": "Beställning",
     "order-date": "Beställningsdatum",
     "paid": "Betalt",
-    "payee": "Mottagare",
     "payment-details": "Betalningsuppgifter",
     "pickup": "Avhämtning",
     "pickup-date": "Avhämtningsdatum",
@@ -70,7 +66,6 @@
     "total": "Totalt",
     "total-paid": "Beställning totalt",
     "unit-price-excl-vat": "à-pris netto",
-    "use-reference": "Ange referensnumret när ni betalar.",
     "vat": "Moms",
     "vat-breakdown": "Momsspecifikation",
     "vat-rate": "Momssats",
@@ -78,6 +73,7 @@
     "your-reference": "Er referens"
   },
   "lang": "sv",
+  "late_interest_rate": "8,00 %",
   "line_items": [
     {
       "product_name": "Bordsdekorationer",
@@ -104,16 +100,15 @@
       "variant_size": null
     }
   ],
-  "number": 1002,
-  "order_reference": "1547",
-  "paid_earlier": "100,00 €",
-  "reference_number": "10029",
+  "number": 1339,
+  "paid_earlier": "−100,00 €",
+  "remainder": null,
+  "reference_number": "13398",
   "seller": {
-    "address": "Minimossen, Myrvägen 1, 65230 Vasa",
-    "bic": "PLACEHOLDER",
+    "address": "Stadsgatan 3, 65300 Vasa",
     "business_id": "2944459-6",
-    "iban": "FI00 0000 0000 0000 00",
-    "name": "Eden Flowers"
+    "iban": "FI69 3939 0018 3959 05",
+    "name": "Jennie McCrea"
   },
   "vat_breakdown": [
     {
@@ -129,5 +124,5 @@
       "tax": "2,95 €"
     }
   ],
-  "virtual_barcode": "400000000000000000004770000000000000000000010029260907"
+  "virtual_barcode": "469393900183959050004770000000000000000000013398260907"
 }

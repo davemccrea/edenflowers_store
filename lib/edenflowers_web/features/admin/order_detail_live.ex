@@ -569,7 +569,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  def handle_event("change_payment", %{"payment" => params}, socket) do
+  def handle_event("change_payment", %{"payment" => params} = event, socket) do
+    params = PaymentActions.payment_params(params, event["_target"])
     {:noreply, socket |> assign(:payment_params, params) |> assign_preview(:payment, params)}
   end
 

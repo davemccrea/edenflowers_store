@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :swedish_toggle?, :boolean, default: false, doc: "whether the customer reads something other than Swedish"
 
   @doc """
-  Cancels an order or a booking: how much to refund, and whether to email
+  Cancels an order or a booking: the cancellation charge to keep, and whether to email
   the customer, with an optional message. Takes `PaymentActions.cancel_form/1`. Sends
   `validate_cancel` and `submit_cancel` with `cancel` params, and
   `close_cancel` when it closes.
@@ -39,16 +39,17 @@ defmodule EdenflowersWeb.Admin.Drawers do
         <.drawer_body>
           <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
           <input type="hidden" name={@form[:held].name} value={@form[:held].value} />
-          <div :if={Decimal.positive?(Decimal.new(@form[:held].value))} class="space-y-2">
+          <input type="hidden" name={@form[:total].name} value={@form[:total].value} />
+          <div :if={Decimal.positive?(Decimal.new(@form[:total].value))} class="space-y-2">
             <.input
-              field={@form[:refund]}
+              field={@form[:charge]}
               type="text"
               inputmode="decimal"
-              label={~t"Amount to refund (€)"}
+              label={~t"Cancellation charge (€)"}
               class="input w-full tabular-nums"
             />
             <p class="text-base-content/75 text-sm">
-              {~t"Paid #{amount = Edenflowers.Format.currency(Decimal.new(@form[:held].value), @locale)}. Card payments go back through Stripe; anything paid in person you hand back yourself. Whatever you don't refund you keep."}
+              {~t"Total #{total = Edenflowers.Format.currency(Decimal.new(@form[:total].value), @locale)}, paid #{paid = Edenflowers.Format.currency(Decimal.new(@form[:held].value), @locale)}. You keep the charge whether or not it was paid. Paid above it is refunded: card payments go back through Stripe, and anything paid in person you hand back yourself. Any of the charge not yet paid is left to collect."}
             </p>
           </div>
           <.customer_email

@@ -434,7 +434,7 @@ defmodule Edenflowers.PaymentsTest do
       # Mox fails the test if cancelling calls cancel_payment_intent. Keeping
       # everything paid leaves Stripe's refunds out of it.
       assert {:ok, %{status: :cancelled}} =
-               Courses.cancel_registration(registration, %{refund: "0", held: "170.00"}, authorize?: false)
+               Courses.cancel_registration(registration, %{cancellation_charge: "170.00"}, authorize?: false)
     end
 
     test "places an order the customer stepped back from while paying", %{order: order} do
@@ -675,7 +675,8 @@ defmodule Edenflowers.PaymentsTest do
     end
 
     test "cancelling refunds nothing Jennie keeps", %{registration: registration} do
-      {:ok, registration} = Courses.cancel_registration(registration, %{refund: "0", held: "170.00"}, authorize?: false)
+      {:ok, registration} =
+        Courses.cancel_registration(registration, %{cancellation_charge: "170.00"}, authorize?: false)
 
       assert [] = refunds(registration)
       assert Decimal.equal?(Ash.load!(registration, :balance, authorize?: false).balance, 0)

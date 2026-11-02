@@ -199,6 +199,22 @@ defmodule Edenflowers.Courses.Course do
     end
   end
 
+  @doc """
+  The same terms for a booking with nothing paid yet, which the booking
+  emails state: a late cancel charges the cancellation fee
+  (`CourseRegistration.default_cancellation_charge`), as nothing is there to
+  refund or keep.
+  """
+  def unpaid_cancellation_terms(course) do
+    free = ~t"Cancel at least #{days = course.cancellation_days} days before the course at no cost."
+
+    case course.cancellation_fee_percent do
+      0 -> free
+      100 -> free <> " " <> ~t"After that, the full price is charged."
+      fee -> free <> " " <> ~t"After that, #{fee = fee}% of the price is charged."
+    end
+  end
+
   relationships do
     has_many :former_slugs, Edenflowers.Courses.FormerCourseSlug do
       description "Slugs the course used to have. Links with them redirect to its current slug."

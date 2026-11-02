@@ -1,4 +1,4 @@
-#import "theme.typ": colors, type-scale, hairline
+#import "theme.typ": hairline
 #import "parts.typ": invoice-page, buyer-and-facts
 
 // Render one credit note: the hyvityslasku that cancels an invoice. `note` is
@@ -10,8 +10,8 @@
 // may have changed since the invoice was made.
 #let credit-note(note) = {
   let required = (
-    "lang", "labels", "number", "credit_date", "credits",
-    "order_reference", "fulfillment_method", "seller", "buyer", "amount",
+    "lang", "labels", "number", "credit_date", "invoice_number", "invoice_date",
+    "seller", "buyer", "amount",
   )
   for key in required {
     assert(key in note, message: "credit note: missing required key `" + key + "`")
@@ -22,7 +22,7 @@
   for key in ("name", "business_id", "address") {
     assert(key in note.seller, message: "credit note: seller missing `" + key + "`")
   }
-  for key in ("company_name", "business_id", "name", "address", "email") {
+  for key in ("company_name", "business_id", "name", "address") {
     assert(key in note.buyer, message: "credit note: buyer missing `" + key + "`")
   }
 
@@ -31,11 +31,11 @@
 
   show: invoice-page.with(note.seller, t, t("credit-note"), note.number, note.lang)
 
-  let purchase-label = if note.fulfillment_method == "course" { t("course") } else { t("order") }
   let facts = (
     (t("credit-note-number"), str(note.number)),
     (t("credit-date"), note.credit_date),
-    (purchase-label, note.order_reference),
+    (t("invoice-number"), str(note.invoice_number)),
+    (t("invoice-date"), note.invoice_date),
   )
   if note.customer_reference != none {
     facts.push((t("your-reference"), note.customer_reference))
@@ -45,13 +45,11 @@
 
   v(28pt)
 
-  text(weight: "semibold", note.credits)
   if note.reason != none {
-    v(4pt)
     [#t("reason"): #note.reason]
+    v(14pt)
   }
 
-  v(14pt)
   hairline
   v(4pt)
   grid(
@@ -59,6 +57,4 @@
     text(weight: "bold", size: 12pt, t("credited")),
     num(text(weight: "bold", size: 12pt, note.amount)),
   )
-  v(10pt)
-  text(size: type-scale.small, fill: colors.ink-muted, t("nothing-to-pay"))
 }

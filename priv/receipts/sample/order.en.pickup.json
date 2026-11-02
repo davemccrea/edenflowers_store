@@ -80,5 +80,10 @@
     "method-klarna": "Klarna",
     "method-cash": "Cash",
     "method-zervant": "Bank transfer"
+  },
+  "seller": {
+    "name": "Jennie McCrea",
+    "business_id": "2944459-6",
+    "address": "Stadsgatan 3, 65300 Vasa"
   }
 }

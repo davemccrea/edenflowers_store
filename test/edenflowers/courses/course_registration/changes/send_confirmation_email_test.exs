@@ -78,5 +78,11 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmailTe
       assert body =~
                "To cancel, reply to this email. Cancel at least 10 days before the course for a full refund. After that, 50% of the price is kept."
     end
+
+    # Nothing paid means nothing to refund or keep: cancelling late charges the fee.
+    test "states the terms as a charge when nothing is paid yet" do
+      assert confirmation_email("0").text_body =~
+               "To cancel, reply to this email. Cancel at least 10 days before the course at no cost. After that, 50% of the price is charged."
+    end
   end
 end

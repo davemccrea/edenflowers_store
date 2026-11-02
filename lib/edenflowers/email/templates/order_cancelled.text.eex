@@ -2,7 +2,11 @@
 
 <%= dgettext("emails", "Your order for %{date} is cancelled.", date: @format_date.(@order.fulfillment_date)) %>
 
-<%= message(@message) %><%= if Decimal.positive?(@refunded) do %><%= refund_line(%{amount: @refunded, how: @refunded_to, format_currency: @format_currency}) %>
+<%= message(@message) %><%= if Decimal.positive?(@charge) do %><%= cancellation_charge(assigns) %>
+
+<% end %><%= if @earlier_invoices == :cancel do %><%= dngettext("emails", "I'll cancel my earlier invoice, so you don't need to pay it.", "I'll cancel my earlier invoices, so you don't need to pay them.", @earlier_invoice_count) %>
+
+<% end %><%= if Decimal.positive?(@refunded) do %><%= refund_line(%{amount: @refunded, how: @refunded_to, format_currency: @format_currency}) %>
 
 <% end %><%= if Decimal.positive?(@to_return) do %><%= if Decimal.positive?(@refunded) do %><%= dgettext("emails", "I'll pay back the other %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% else %><%= dgettext("emails", "I'll pay back %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% end %>
 

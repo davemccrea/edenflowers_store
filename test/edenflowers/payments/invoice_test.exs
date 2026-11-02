@@ -4,10 +4,14 @@ defmodule Edenflowers.Payments.InvoiceTest do
   import Generator
 
   alias Edenflowers.Courses
+  alias Edenflowers.Email
+  alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Payments
+  alias Edenflowers.Payments.Changes.SendInvoice
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.ReferenceNumber
+  alias Edenflowers.Payments.Workers.SendCancelledEmail
   alias Edenflowers.ShopTime
 
   @company %{
@@ -199,6 +203,21 @@ defmodule Edenflowers.Payments.InvoiceTest do
       end)
     end
 
+    test "gives the payee and IBAN frozen on the invoice, so a resend matches its PDF", ctx do
+      order = placed_order(payment_terms: :invoice)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx)
+
+      frozen_seller = %{invoice.content["seller"] | "name" => "Eden Flowers Ab", "iban" => "FI21 1234 5600 0007 85"}
+      invoice = Ash.Seed.update!(invoice, %{content: %{invoice.content | "seller" => frozen_seller}})
+
+      {:ok, _sent} = Payments.send_invoice(invoice, %{message: nil}, actor: ctx.admin)
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.text_body =~ "Eden Flowers Ab"
+        assert email.text_body =~ "FI21 1234 5600 0007 85"
+      end)
+    end
+
     test "names a booking's course in the invoice's language", ctx do
       registration = generate(course_registration(status: :confirmed, payment_terms: :invoice, locale: "en-GB"))
 
@@ -210,6 +229,76 @@ defmodule Edenflowers.Payments.InvoiceTest do
       Swoosh.TestAssertions.assert_email_sent(fn email ->
         assert [%{filename: "faktura-" <> _}] = email.attachments
       end)
+    end
+
+    test "can't be built without what was paid on it", ctx do
+      order = placed_order(payment_terms: :invoice)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx)
+      loaded = SendInvoice.load_for_email(invoice)
+
+      assert_raise FunctionClauseError, fn -> Email.invoice(%{loaded | amount_paid: %Ash.NotLoaded{}}) end
+    end
+
+    test "points the order details to it, and to an invoice for the rest", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx, %{amount: "30.00", email_customer?: true})
+      Swoosh.TestAssertions.assert_email_sent()
+
+      {:ok, _order} = Orders.send_order_details_email(order, %{}, actor: ctx.admin)
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.text_body =~
+                 "My invoice #{invoice.number} is due on #{Format.weekday_date(invoice.due_date, "en-GB")}. " <>
+                   "I'll send you an invoice for the rest after you've collected your order."
+      end)
+    end
+  end
+
+  describe "for a cancelled purchase" do
+    test "made after the cancel bills the cancellation charge and says so; one made before doesn't", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, earlier} = invoice(%{order_id: order.id}, ctx, %{amount: "20.00"})
+      # Made in an earlier second than the cancel, which cancelled_at is stamped to.
+      earlier = Ash.Seed.update!(earlier, %{inserted_at: DateTime.add(earlier.inserted_at, -60)})
+
+      {:ok, _order} =
+        Orders.cancel_order(order, %{cancellation_charge: "30.00", email_customer?: false}, actor: ctx.admin)
+
+      {:ok, charge} = invoice(%{order_id: order.id}, ctx, %{email_customer?: true})
+
+      assert Decimal.equal?(charge.amount, "10.00")
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.text_body =~
+                 "My invoice for the cancellation charge for your order for Wednesday 10.6.2026 is attached."
+      end)
+
+      {:ok, _sent} = Payments.send_invoice(earlier, %{message: nil}, actor: ctx.admin)
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.text_body =~ "Thank you for your order for Wednesday 10.6.2026. My invoice is attached."
+      end)
+    end
+
+    for {charge, sent?, plan, line} <- [
+          {"30.00", true, "replace", "I'll cancel my earlier invoice and send you a new one for it."},
+          {"88.50", true, "stand", "My earlier invoice already asks for it, so please pay that one."},
+          {"0", true, "cancel", "I'll cancel my earlier invoice, so you don't need to pay it."},
+          {"30.00", false, "none", "I'll send you an invoice for it."}
+        ] do
+      test "cancelled with a charge of #{charge}, #{if sent?, do: "sent", else: "unsent"} invoice: #{plan}", ctx do
+        order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+        {:ok, _invoice} = invoice(%{order_id: order.id}, ctx, %{email_customer?: unquote(sent?)})
+        if unquote(sent?), do: Swoosh.TestAssertions.assert_email_sent()
+
+        {:ok, _order} = Orders.cancel_order(order, %{cancellation_charge: unquote(charge)}, actor: ctx.admin)
+
+        [job] = all_enqueued(worker: SendCancelledEmail)
+        assert job.args["earlier_invoices"] == unquote(plan)
+        assert :ok = perform_job(SendCancelledEmail, job.args)
+
+        Swoosh.TestAssertions.assert_email_sent(fn email -> assert email.text_body =~ unquote(line) end)
+      end
     end
   end
 
@@ -362,6 +451,19 @@ defmodule Edenflowers.Payments.InvoiceTest do
 
       versions = Ash.load!(invoice, :paper_trail_versions, authorize?: false).paper_trail_versions
       assert versions |> Enum.sort_by(& &1.version_inserted_at, DateTime) |> Enum.map(& &1.reminder) == [false, true]
+    end
+
+    test "a reminder for one paid in part asks only for the rest", ctx do
+      order = placed_order(payment_terms: :invoice, payment_intent_id: nil)
+      {:ok, invoice} = invoice(%{order_id: order.id}, ctx)
+      {:ok, _order} = pay(order, "20.00", invoice, ctx)
+
+      {:ok, _sent} = Payments.send_invoice(due(invoice, -1), %{message: nil}, actor: ctx.admin)
+
+      Swoosh.TestAssertions.assert_email_sent(fn email ->
+        assert email.text_body =~ "and 68,50\u00A0€ of it is still to pay. Thank you for what you've paid so far."
+        assert email.text_body =~ "Invoice amount  88,50\u00A0€\nStill to pay  68,50\u00A0€"
+      end)
     end
 
     test "can't be sent once paid or cancelled", ctx do
