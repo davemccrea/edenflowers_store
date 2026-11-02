@@ -19,15 +19,17 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
+  @course_load [:seats_left, :booking_open?]
+
   @impl true
-  def mount(%{"id" => id} = params, _session, socket) do
-    case load_course(id) do
+  def mount(%{"slug" => slug} = params, _session, socket) do
+    case load_course(Courses.get_course_by_slug(slug, load: @course_load)) do
       {:ok, course} ->
         {:ok,
          socket
          |> assign(
            page_title: course.name,
-           alternates: alternates("/#{language}/courses/#{course.id}"),
+           alternates: alternates("/#{language}/courses/#{course.slug}"),
            page_description: course.description,
            og_image: image_url(course.image_slug, 1200, 630),
            json_ld: json_ld(course),
@@ -38,7 +40,6 @@ defmodule EdenflowersWeb.Courses.CourseLive do
          |> assign(registration: checkout(params["registration"], course), editing?: false, focus_booking?: false)
          |> assign_form()}
 
-      # A malformed id is an invalid-filter error rather than NotFound; both should 404.
       {:error, _} ->
         raise Ash.Error.Query.NotFound, resource: Courses.Course
     end
@@ -331,14 +332,14 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     end
   end
 
-  defp load_course(id) do
-    with {:ok, course} <- Courses.get_course_by_id(id, load: [:seats_left, :booking_open?]) do
+  defp load_course(result) do
+    with {:ok, course} <- result do
       {:ok, Translations.translate(course)}
     end
   end
 
   defp reload_course(socket) do
-    case load_course(socket.assigns.course.id) do
+    case load_course(Courses.get_course_by_id(socket.assigns.course.id, load: @course_load)) do
       {:ok, course} ->
         assign(socket, course: course)
 

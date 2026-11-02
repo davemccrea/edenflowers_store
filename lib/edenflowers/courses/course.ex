@@ -11,6 +11,8 @@ defmodule Edenflowers.Courses.Course do
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
+  @slug_options [former_slugs: Edenflowers.Courses.FormerCourseSlug, owner_key: :course_id, fallback: "course"]
+
   postgres do
     repo Edenflowers.Repo
     table "courses"
@@ -29,7 +31,7 @@ defmodule Edenflowers.Courses.Course do
   end
 
   actions do
-    defaults [:read, :destroy, :create, :update]
+    defaults [:read, :destroy]
 
     default_accept [
       :name,
@@ -47,8 +49,46 @@ defmodule Edenflowers.Courses.Course do
       :cancellation_fee_percent,
       :tax_rate_id,
       :language,
-      :translations
+      :translations,
+      :slug
     ]
+
+    create :create do
+      description "Creates a course from the admin form."
+      primary? true
+      change {Edenflowers.Slug.SetSlug, @slug_options}
+    end
+
+    update :update do
+      description "Saves the admin course form."
+      primary? true
+      require_atomic? false
+      change {Edenflowers.Slug.SetSlug, @slug_options}
+    end
+
+    update :assign_slug do
+      description "Gives a course that has no slug one made from its name. `Edenflowers.Release.migrate` " <>
+                    "runs it over courses saved before slugs existed."
+
+      accept []
+      require_atomic? false
+      change {Edenflowers.Slug.SetSlug, @slug_options}
+    end
+
+    action :current_slug, :string do
+      description "Where an outdated course link should go: the current slug of the course whose id or " <>
+                    "former slug `param` is, or nil when `param` is neither, such as a current slug. Course " <>
+                    "pages redirect old links with it."
+
+      allow_nil? true
+
+      argument :param, :string do
+        description "The last part of a course URL."
+        allow_nil? false
+      end
+
+      run {Edenflowers.Slug.CurrentSlug, @slug_options}
+    end
 
     read :upcoming do
       description "Courses from today on, in Helsinki time, soonest first, for the courses page and sitemap."
@@ -75,6 +115,10 @@ defmodule Edenflowers.Courses.Course do
       authorize_if always()
     end
 
+    policy action(:current_slug) do
+      authorize_if always()
+    end
+
     policy action_type([:create, :update, :destroy]) do
       description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
@@ -84,6 +128,15 @@ defmodule Edenflowers.Courses.Course do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
+
+    attribute :slug, :string do
+      description "Where the course's page lives, as in /courses/spring-wreath-workshop. Made from the English " <>
+                    "name when the course is created and kept when it is renamed; Jennie can edit it in the " <>
+                    "course form. Nil only for courses saved before slugs existed, until `assign_slug` runs."
+
+      public? true
+    end
+
     attribute :description, :string, allow_nil?: false
     attribute :location_name, :string, allow_nil?: false
     attribute :location_address, :string, allow_nil?: false
@@ -121,6 +174,10 @@ defmodule Edenflowers.Courses.Course do
   end
 
   relationships do
+    has_many :former_slugs, Edenflowers.Courses.FormerCourseSlug do
+      description "Slugs the course used to have. Links with them redirect to its current slug."
+    end
+
     has_many :course_registrations, Edenflowers.Courses.CourseRegistration do
       description "Every retained registration in any status: unfinished checkouts, accepted bookings and " <>
                     "cancelled ones."
@@ -186,4 +243,12 @@ defmodule Edenflowers.Courses.Course do
       authorize? false
     end
   end
+
+  identities do
+    identity :unique_slug, [:slug]
+  end
+end
+
+defimpl Phoenix.Param, for: Edenflowers.Courses.Course do
+  def to_param(course), do: course.slug
 end

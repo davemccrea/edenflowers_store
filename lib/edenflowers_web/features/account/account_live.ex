@@ -438,7 +438,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
     ~H"""
     <div class="min-w-0">
       <h3 class="card-heading text-balance">
-        <.link navigate={~q"/#{language}/courses/#{@registration.course.id}"} class="link-underline-hover">
+        <.link navigate={~q"/#{language}/courses/#{@registration.course}"} class="link-underline-hover">
           {@registration.course.name}
         </.link>
       </h3>

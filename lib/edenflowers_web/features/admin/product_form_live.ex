@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.Drawers
+  import EdenflowersWeb.Admin.SlugField, only: [slug_field: 1]
   import EdenflowersWeb.Admin.TranslationFields
 
   alias Edenflowers.Catalog
@@ -15,10 +16,10 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias Edenflowers.Catalog.ProductType
   alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Pricing
-  alias Edenflowers.Slug
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Admin.ShareLinkDrawer
+  alias EdenflowersWeb.Admin.SlugField
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
   alias EdenflowersWeb.Store.StoreLive
@@ -107,14 +108,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               <.form_section title={~t"Name and description"}>
                 <.language_fields form={@form} translating={@translating} />
                 <div class="mt-6">
-                  <.input
-                    field={@form[:slug]}
-                    type="text"
-                    label={~t"Link"}
-                    help={product_url_preview(@form)}
-                    autocomplete="off"
-                    class="input w-full"
-                  />
+                  <.slug_field field={@form[:slug]} path="/product/" />
                 </div>
               </.form_section>
 
@@ -552,8 +546,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
   @impl true
   def handle_event("validate", %{"form" => params} = event, socket) do
-    slug_edited? = socket.assigns.slug_edited? or event["_target"] == ["form", "slug"]
-    params = suggest_slug(params, socket.assigns.form, slug_edited?)
+    slug_edited? = socket.assigns.slug_edited? or SlugField.edited?(event)
+    params = SlugField.suggest(params, socket.assigns.form, slug_edited?)
 
     {:noreply,
      socket
@@ -656,17 +650,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     # From the whole form, as its own params miss the size a new form starts with.
     params = form |> AshPhoenix.Form.params() |> Map.put("photo_slugs", slugs)
     assign(socket, :form, AshPhoenix.Form.validate(form, params))
-  end
-
-  # A new product's link follows its name until Jennie edits the link herself.
-  defp suggest_slug(params, %{source: %{type: :create}}, false = _slug_edited?),
-    do: Map.put(params, "slug", Slug.slugify(params["name"]))
-
-  defp suggest_slug(params, _form, _slug_edited?), do: params
-
-  defp product_url_preview(form) do
-    host = URI.parse(EdenflowersWeb.Endpoint.url()).host
-    "#{host}/product/#{Slug.slugify(form[:slug].value)}"
   end
 
   defp photo_slugs(form), do: form[:photo_slugs].value || []

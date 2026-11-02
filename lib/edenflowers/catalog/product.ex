@@ -12,11 +12,11 @@ defmodule Edenflowers.Catalog.Product do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshTranslation.Resource]
 
-  require Ash.Query
-
   alias Edenflowers.Catalog.Changes
   alias Edenflowers.Catalog.Preparations
   alias Edenflowers.Catalog.Validations
+
+  @slug_options [former_slugs: Edenflowers.Catalog.FormerProductSlug, owner_key: :product_id, fallback: "product"]
 
   # More cards than this fan out too thinly to tap on a phone.
   @max_fan_cards 7
@@ -56,32 +56,16 @@ defmodule Edenflowers.Catalog.Product do
         allow_nil? false
       end
 
-      run fn input, _context ->
-        param = input.arguments.param
-
-        product =
-          case Ecto.UUID.cast(param) do
-            {:ok, id} ->
-              Ash.get!(__MODULE__, id, error?: false, authorize?: false)
-
-            :error ->
-              Edenflowers.Catalog.FormerProductSlug
-              |> Ash.Query.filter(slug == ^param)
-              |> Ash.Query.load(:product)
-              |> Ash.read_one!(authorize?: false)
-              |> then(&(&1 && &1.product))
-          end
-
-        {:ok, product && product.slug}
-      end
+      run {Edenflowers.Slug.CurrentSlug, @slug_options}
     end
 
     update :assign_slug do
       description "Gives a product that has no slug one made from its name. `Edenflowers.Release.migrate` " <>
                     "runs it over products saved before slugs existed."
 
+      accept []
       require_atomic? false
-      change Changes.SetProductSlug
+      change {Edenflowers.Slug.SetSlug, @slug_options}
     end
 
     read :for_store do
@@ -164,7 +148,7 @@ defmodule Edenflowers.Catalog.Product do
 
       validate Validations.SizePhotosAreProducts
 
-      change Changes.SetProductSlug
+      change {Edenflowers.Slug.SetSlug, @slug_options}
       change Changes.TidyHiddenPhotos
 
       change manage_relationship(:product_variants,
@@ -214,7 +198,7 @@ defmodule Edenflowers.Catalog.Product do
                on_missing: {:destroy, :destroy}
              )
 
-      change Changes.SetProductSlug
+      change {Edenflowers.Slug.SetSlug, @slug_options}
       change Changes.TidyHiddenPhotos
       change Changes.ClearRemovedSizePhotos
     end

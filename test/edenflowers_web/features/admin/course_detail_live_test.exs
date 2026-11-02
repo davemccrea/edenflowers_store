@@ -55,7 +55,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
-    url = EdenflowersWeb.Endpoint.url() <> "/courses/#{course.id}"
+    url = EdenflowersWeb.Endpoint.url() <> "/courses/#{course.slug}"
     assert has_element?(view, ~s|#share-course-link-url[value="#{url}"]|)
 
     view
@@ -88,7 +88,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
 
-    url = EdenflowersWeb.Endpoint.url() <> "/courses/#{course.id}"
+    url = EdenflowersWeb.Endpoint.url() <> "/courses/#{course.slug}"
     chip = element(view, ~s|#share-course-link-medium-suggestions [phx-click="pick"][phx-value-tag="email"]|)
 
     render_click(chip)

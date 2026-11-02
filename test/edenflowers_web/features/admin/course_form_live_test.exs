@@ -9,6 +9,19 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
 
   setup :log_in_admin
 
+  test "a new course's link follows its name until Jennie edits the link", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/new")
+
+    view |> form("#course-form") |> render_change(%{"_target" => ["form", "name"], form: %{name: "Vårkransar"}})
+    assert view |> element("#course-form input[name='form[slug]']") |> render() =~ ~s(value="varkransar")
+
+    view |> form("#course-form") |> render_change(%{"_target" => ["form", "slug"], form: %{slug: "Wreaths!"}})
+    assert render(view) =~ "/courses/wreaths"
+
+    view |> form("#course-form") |> render_change(%{"_target" => ["form", "name"], form: %{name: "Tulips"}})
+    assert view |> element("#course-form input[name='form[slug]']") |> render() =~ ~s(value="Wreaths!")
+  end
+
   test "creates a course with a Swedish translation", %{conn: conn} do
     tax_rate = generate(tax_rate())
 

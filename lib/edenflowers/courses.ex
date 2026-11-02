@@ -17,8 +17,12 @@ defmodule Edenflowers.Courses do
   resources do
     resource Edenflowers.Courses.Course do
       define :get_course_by_id, action: :read, get_by: [:id]
+      define :get_course_by_slug, action: :read, get_by: [:slug]
+      define :current_course_slug, action: :current_slug, args: [:param]
       define :list_upcoming_courses, action: :upcoming
     end
+
+    resource Edenflowers.Courses.FormerCourseSlug
 
     resource Edenflowers.Courses.CourseRegistration do
       define :list_my_registrations, action: :mine

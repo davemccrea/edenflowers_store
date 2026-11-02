@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
         {:ok,
          socket
          |> put_flash(:error, ~t"Your payment didn't go through. Please try again or choose another payment method.")
-         |> push_navigate(to: ~q"/#{language}/courses/#{registration.course_id}?registration=#{registration.id}")}
+         |> push_navigate(to: ~q"/#{language}/courses/#{registration.course}?registration=#{registration.id}")}
 
       {:ok, registration} ->
         {:ok,
