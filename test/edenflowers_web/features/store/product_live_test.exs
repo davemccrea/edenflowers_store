@@ -353,6 +353,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
     product |> Ash.Changeset.for_update(:update, %{slug: "roses"}) |> Ash.update!(authorize?: false)
     assert conn |> get(~p"/en/product/red-roses") |> redirected_to(301) == "/en/product/roses"
+    assert conn |> get("/en/product/red-roses/") |> redirected_to(301) == "/en/product/roses"
   end
 
   test "an unknown product is a 404", %{conn: conn} do

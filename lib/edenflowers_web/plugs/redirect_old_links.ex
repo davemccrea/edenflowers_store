@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.Plugs.RedirectOldLinks do
   defp current_slug(CourseLive, param), do: Courses.current_course_slug(param)
 
   defp redirect_to(conn, slug) do
-    path = conn.request_path |> Path.dirname() |> Path.join(slug)
+    path = "/" <> Enum.join(Enum.drop(conn.path_info, -1) ++ [slug], "/")
     path = if conn.query_string == "", do: path, else: path <> "?" <> conn.query_string
 
     conn
