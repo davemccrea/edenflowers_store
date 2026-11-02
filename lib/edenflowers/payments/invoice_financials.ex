@@ -23,6 +23,43 @@ defmodule Edenflowers.Payments.InvoiceFinancials do
 
   def build(_), do: {:error, "At least one billed line is required"}
 
+  @doc "Field errors for one billed line, using the same rules as the financial snapshot."
+  def line_errors(input) do
+    input = Map.new(input, fn {key, value} -> {to_string(key), value} end)
+
+    Enum.flat_map([:description, :quantity, :unit_price, :vat_rate], fn field ->
+      error = field_error(field, input[to_string(field)])
+
+      if error, do: [{field, error}], else: []
+    end)
+  end
+
+  defp field_error(:description, value) do
+    if !is_binary(value) or String.trim(value) == "", do: {"can't be blank", []}
+  end
+
+  defp field_error(field, value), do: decimal_error(field, value)
+
+  defp decimal_error(field, value) do
+    number = decimal(value)
+
+    cond do
+      field == :quantity and not Decimal.positive?(number) ->
+        {"must be greater than %{number}", [number: 0]}
+
+      field in [:unit_price, :vat_rate] and Decimal.compare(number, 0) == :lt ->
+        {"must be greater than or equal to %{number}", [number: 0]}
+
+      field == :vat_rate and Decimal.compare(number, 100) == :gt ->
+        {"must be less than or equal to %{number}", [number: 100]}
+
+      true ->
+        nil
+    end
+  rescue
+    _ in [ArgumentError, Decimal.Error] -> {"is invalid", []}
+  end
+
   defp line(input) do
     input = Map.new(input, fn {key, value} -> {to_string(key), value} end)
     description = description!(input["description"])
@@ -30,7 +67,7 @@ defmodule Edenflowers.Payments.InvoiceFinancials do
     price = decimal(input["unit_price"])
     rate = decimal(input["vat_rate"])
 
-    unless valid_amounts?(quantity, price, rate), do: raise(ArgumentError)
+    unless line_errors(input) == [], do: raise(ArgumentError)
 
     gross = quantity |> Decimal.mult(price) |> cents()
     base = gross |> Decimal.div(Decimal.add(1, Decimal.div(rate, 100))) |> cents()
@@ -54,11 +91,6 @@ defmodule Edenflowers.Payments.InvoiceFinancials do
   end
 
   defp description!(_), do: raise(ArgumentError)
-
-  defp valid_amounts?(quantity, price, rate) do
-    Decimal.positive?(quantity) and Decimal.compare(price, 0) != :lt and
-      Decimal.compare(rate, 0) != :lt and Decimal.compare(rate, 100) != :gt
-  end
 
   defp totals(rows) do
     Map.new(["gross", "base", "vat"], fn key ->

@@ -5,7 +5,7 @@ status: ready-for-human
 assignee:
   - '@invoice-payments'
 created_date: '2026-11-02 15:03'
-updated_date: '2026-11-02 15:42'
+updated_date: '2026-11-02 16:58'
 labels: []
 dependencies:
   - TASK-168.10
@@ -49,4 +49,6 @@ Run end-to-end standalone/wedding, financial and retained purchase/admin regress
 
 <!-- SECTION:NOTES:BEGIN -->
 Automated verification complete: mix precommit passed all checks and JavaScript tests; 1766 Elixir tests, zero failures, one existing hidden-wedding-price skip. Clean migrations and upgrade from restored local production-v1.25.5 backup passed; all 18 orders, one booking and one payment retained with unchanged canonical row fingerprints. Original databases/backups untouched and throwaway databases removed. Actual linux/amd64 Docker release built and rendered seven fi/sv/en invoice/credit fixtures with --network none; all PDF outputs, reference check digits and full virtual barcode compositions validated. Apple Silicon emulation-only ERL_FLAGS workaround stayed in temporary context, repository Dockerfile unchanged. Localized samples and email previews AI-reviewed, obsolete review-queue items updated. AC4 remains unchecked: native sv/fi and Jennie financial-meaning approval, current seller/bank confirmation and live Zervant-last-number check require humans. Detailed evidence and remaining checks: docs/standalone-invoices-release-check.md; review PDFs/PNGs: tmp/invoice-verification/ and release/. No deployment/staging/commit.
+
+Live dev smoke on 2 November: started pdf-invoices worktree with just port=4010 dev, leaving main-worktree port 4000 untouched. Authenticated real Chrome/Playwright checks passed draft persistence, decimal-comma line inputs, issuance, Finnish/Swedish invoice and full-credit downloads, partial/full bank receipts, reversals, paid-correction guard, independent ordinary wedding invoices, mobile overflow, store/course pages, admin order/course lists and existing details. No uncaught browser exceptions or external invoice emails. Local smoke payments were reversed and both smoke invoices credited. Found and fixed decimal-comma bank-transfer input: invoice lines normalized commas but payment form passed them directly to Ash decimal casting. Added a LiveView regression that failed before the fix; 16 focused invoice UI/payment tests pass, strict Credo and formatting/whitespace checks pass. Native review and cutover confirmations remain open.
 <!-- SECTION:NOTES:END -->

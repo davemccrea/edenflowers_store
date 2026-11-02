@@ -33,6 +33,15 @@ defmodule Edenflowers.Email.Preview do
   """
   def build(kind, record, inputs, locale \\ nil)
 
+  def build(:invoice, %Invoice{} = invoice, inputs, locale),
+    do: build_invoice(%{invoice | locale: locale || invoice.locale}, inputs[:message])
+
+  def build(:credit_note, %CreditNote{} = credit_note, inputs, locale) do
+    credit_note = Ash.load!(credit_note, :invoice, authorize?: false)
+    invoice = %{credit_note.invoice | locale: locale || credit_note.invoice.locale}
+    build_credit_note(%{credit_note | invoice: invoice}, inputs[:message])
+  end
+
   def build(kind, %Order{} = order, inputs, locale) do
     order = order |> Ash.load!(order_load(kind), authorize?: false, reuse_values?: false) |> in_locale(locale)
     order_email(kind, order, inputs)

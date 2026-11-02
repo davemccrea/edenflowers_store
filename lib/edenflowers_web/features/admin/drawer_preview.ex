@@ -7,7 +7,12 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
   """
 
   alias Edenflowers.Email.Preview
+  alias Edenflowers.Payments.CreditNote
+  alias Edenflowers.Payments.Invoice
   alias EdenflowersWeb.Admin.Drawers
+
+  def build(:invoice, %Invoice{} = invoice, params), do: document_preview(:invoice, invoice, params)
+  def build(:credit_note, %CreditNote{} = credit_note, params), do: document_preview(:credit_note, credit_note, params)
 
   def build(kind, record, params) do
     params = if kind == :refunded, do: Drawers.refund_form_params(record, params), else: params
@@ -24,6 +29,10 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
     kind = if kind == :payment, do: :receipt, else: kind
 
     Preview.build(kind, record, inputs, if(params["in_swedish"] == "true", do: "sv-FI"))
+  end
+
+  defp document_preview(kind, document, params) do
+    Preview.build(kind, document, %{message: params["message"]}, if(params["in_swedish"] == "true", do: "sv-FI"))
   end
 
   # The refund form fills itself in from what's owed back, so an empty amount

@@ -333,7 +333,7 @@ defmodule EdenflowersWeb.Layouts do
           </div>
           <.link
             navigate={~p"/admin"}
-            class="text-primary logo-wordmark touch-target justify-self-center whitespace-nowrap text-xl max-sm:tracking-[0.1em] sm:text-2xl"
+            class="text-primary logo-wordmark touch-target justify-self-center whitespace-nowrap text-xl max-[359px]:tracking-[0.06em] max-[359px]:text-sm max-sm:tracking-[0.1em] sm:text-2xl"
           >
             Eden Flowers
           </.link>

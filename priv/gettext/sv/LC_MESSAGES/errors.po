@@ -141,3 +141,5 @@ msgstr "Lägg till minst en artikel"
 
 msgid "Must be a website address starting with http:// or https://"
 msgstr "Ange en webbadress som börjar med http:// eller https://"
+msgid "cannot be before the invoice date"
+msgstr "får inte vara före fakturadatumet"

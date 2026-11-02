@@ -148,3 +148,7 @@ msgstr ""
 
 msgid "Must be a website address starting with http:// or https://"
 msgstr ""
+
+## Invoice due-date validation
+msgid "cannot be before the invoice date"
+msgstr ""
