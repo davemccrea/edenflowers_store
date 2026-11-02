@@ -11,7 +11,7 @@ if config_env() != :prod and File.exists?(".env") do
 end
 
 config :ash_oban, pro?: false
-config :cinder, default_theme: "daisy_ui", gettext_backend: EdenflowersWeb.Gettext, show_filters: :toggle_open
+config :cinder, default_theme: "daisy_ui", gettext_backend: EdenflowersWeb.Gettext, show_filters: :toggle
 
 config :edenflowers, Oban,
   engine: Oban.Engines.Basic,

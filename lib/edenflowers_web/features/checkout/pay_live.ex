@@ -111,7 +111,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
                 <% @payable.fulfillment_method == :delivery -> %>
                   {~t"Delivery on #{date = Format.weekday_date(@payable.fulfillment_date, @locale)} to #{address = @payable.delivery_address}"}
                 <% true -> %>
-                  {~t"Ready to collect at the shop on #{date = Format.weekday_date(@payable.fulfillment_date, @locale)}"}
+                  {~t"Ready to collect on #{date = Format.weekday_date(@payable.fulfillment_date, @locale)}"}
               <% end %>
               <span :if={@payable.gift && @payable.recipient_name} class="block">
                 {~t"For #{recipient = @payable.recipient_name}"}

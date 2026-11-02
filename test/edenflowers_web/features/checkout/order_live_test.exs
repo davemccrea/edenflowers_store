@@ -20,7 +20,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
 
     assert has_element?(view, "h1", "Thank you, Ada.")
-    assert has_element?(view, "#order-status", "ready at the shop")
+    assert has_element?(view, "#order-status", "ready to collect")
     refute has_element?(view, "#order-status", "text message")
     assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
   end

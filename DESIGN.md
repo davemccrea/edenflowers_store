@@ -188,7 +188,7 @@ One centred container (`mx-auto px-4 sm:px-8`) sets the horizontal rhythm; full-
 - **Sections:** 5rem to 9rem of vertical padding, separated by `not-last:border-b`.
 - **Navigation breakpoint:** the desktop nav appears at `xl`; below that it is a drawer, because eight items in three languages don't fit.
 - **Reference pages:** a sticky section index beside the content from `md`.
-- **Product figures:** `4/5` on phones, square from `sm`, each with its own crop rather than one CSS-cropped source.
+- **Product figures:** cards are `4/5` on phones and square from `sm`; the product page is the reverse, square below `md` and `4/5` beside the details. Each shape gets its own crop rather than one CSS-cropped source.
 
 ### Named Rules
 

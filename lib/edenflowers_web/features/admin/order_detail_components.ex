@@ -456,7 +456,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   def payment_link(assigns) do
     ~H"""
     <div id="order-payment-link" class="mt-4">
-      <label for="payment-link-url" class="eyebrow text-base-content/75 mb-1.5 block">
+      <label for="payment-link-url" class="text-base-content/75 mb-1.5 block text-sm">
         {~t"Payment link"}
       </label>
       <div class="flex gap-2">
