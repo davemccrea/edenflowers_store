@@ -9,7 +9,6 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
   alias Edenflowers.Expenses
   alias Edenflowers.External.PapraAPI
   alias Edenflowers.External.StripeAPI
-  alias Edenflowers.Orders
   alias Edenflowers.Orders.VatRow
   alias Edenflowers.Payments
 
@@ -120,8 +119,8 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              ["1002", "beställning", "Kort (Zettle)", "0.135", "0.52", "0.07", "0.59"],
              ["1002", "beställning", "MobilePay", "0.255", "56.25", "14.34", "70.59"],
              ["1002", "beställning", "MobilePay", "0.135", "3.89", "0.52", "4.41"],
-             ["1003", "beställning", "Banköverföring (faktura)", "0.255", "63.75", "16.25", "80.0"],
-             ["1003", "beställning", "Banköverföring (faktura)", "0.135", "4.41", "0.59", "5.0"],
+             ["1003", "beställning", "Banköverföring", "0.255", "63.75", "16.25", "80.0"],
+             ["1003", "beställning", "Banköverföring", "0.135", "4.41", "0.59", "5.0"],
              ["1003", "beställning", "Kontant", "0.255", "-25.0", "-6.37", "-31.37"],
              ["1003", "beställning", "Kontant", "0.135", "-1.73", "-0.23", "-1.96"],
              ["2001", "kurs", "Stripe", "0.255", "67.73", "17.27", "85.0"],
@@ -142,6 +141,44 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
     assert [_headings, [_date, "1001", "beställning", "Kontant" | _] | _] =
              october |> unzip() |> Map.fetch!("rapport-2026-10.xlsx") |> read_sheet(1)
+  end
+
+  test "mixed-rate invoice cash is counted once with frozen cents across months and reversals" do
+    admin = generate(admin_user())
+
+    {:ok, draft} =
+      Payments.create_invoice(
+        %{
+          buyer_name: "Wedding buyer",
+          buyer_email: "buyer@example.com",
+          buyer_address: "Street 1",
+          invoice_date: ~D[2026-08-01],
+          due_date: ~D[2026-08-15],
+          lines: [
+            %{description: "Flowers", quantity: "1", unit_price: "0.05", vat_rate: "25.5"},
+            %{description: "Books", quantity: "1", unit_price: "0.05", vat_rate: "14"}
+          ]
+        },
+        actor: admin
+      )
+
+    {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
+    {:ok, _} = Payments.record_invoice_payment(invoice, "0.03", %{paid_at: ~U[2026-08-31 20:00:00Z]}, actor: admin)
+    {:ok, paid} = Payments.record_invoice_payment(invoice, "0.07", %{paid_at: ~U[2026-09-30 20:59:00Z]}, actor: admin)
+    receipt = Enum.find(paid.payments, &Decimal.equal?(&1.amount, "0.07"))
+    {:ok, _} = Payments.undo_invoice_payment(paid, receipt.id, %{paid_at: ~U[2026-09-30 21:00:00Z]}, actor: admin)
+    order = sales_order("ordinary-order")
+    generate(payment(order_id: order.id, amount: Decimal.new("85"), paid_at: ~U[2026-09-15 08:00:00Z]))
+
+    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+    [_, _order_high, _order_low, low, high | _] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(1)
+    assert Enum.drop(low, 4) == ["0.14", "0.03", "0.01", "0.04"]
+    assert Enum.drop(high, 4) == ["0.255", "0.02", "0.01", "0.03"]
+    assert Enum.at(low, 1) == to_string(invoice.number)
+    assert {:ok, _, october} = MonthlyReport.build(2026, 10)
+    [_, low, high | _] = october |> unzip() |> Map.fetch!("rapport-2026-10.xlsx") |> read_sheet(1)
+    assert Enum.drop(low, 4) == ["0.14", "-0.03", "-0.01", "-0.04"]
+    assert Enum.drop(high, 4) == ["0.255", "-0.02", "-0.01", "-0.03"]
   end
 
   test "zips the month's expense sheet with every receipt it names" do
@@ -328,6 +365,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       cancelled_later = invoice(admin, "50.00", ~D[2026-09-06])
       cancel(admin, cancelled_later, ~D[2026-10-01])
       _issued_later = invoice(admin, "50.00", ~D[2026-10-01])
+      {:ok, _draft} = Payments.create_invoice(%{invoice_date: ~D[2026-09-01]}, actor: admin)
       undone = invoice(admin, "50.00", ~D[2026-09-07])
       pay(undone, "50.00", ~U[2026-09-08 08:00:00Z])
       pay(undone, "-50.00", ~U[2026-09-25 08:00:00Z])
@@ -364,7 +402,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       assert [[_number, date, due, _buyer, reference | _] | _] = invoices
       assert date == excel_date(~D[2026-09-01])
       assert due == excel_date(~D[2026-09-15])
-      assert reference == Ash.load!(ctx.open, :purchase_reference, authorize?: false).purchase_reference
+      assert reference == ctx.open.customer_reference
 
       assert totals == [[nil, nil, nil, nil, nil, "Summa", "230.0"]]
     end
@@ -380,16 +418,28 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
   # A consumer's invoice when business_details is empty.
   defp invoice(admin, amount, invoice_date, business_details \\ @company) do
-    order = placed_order(payment_terms: :invoice, payment_intent_id: nil, vat_breakdown: @two_rates)
-    {:ok, order} = Orders.update_order_business_details(order, business_details, actor: admin)
-    {:ok, invoice} = Payments.create_invoice(%{order_id: order.id, amount: amount}, actor: admin)
-    Ash.Seed.update!(invoice, %{invoice_date: invoice_date, due_date: Date.add(invoice_date, 14)})
+    attrs =
+      Map.merge(
+        %{
+          buyer_name: "Ada Lovelace",
+          buyer_email: "ada@example.com",
+          buyer_address: "Street 1",
+          customer_reference: "Wedding 42",
+          invoice_date: invoice_date,
+          due_date: Date.add(invoice_date, 14),
+          lines: [%{description: "Flowers", quantity: "1", unit_price: amount, vat_rate: "25.5"}]
+        },
+        business_details
+      )
+
+    {:ok, draft} = Payments.create_invoice(attrs, actor: admin)
+    {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
+    invoice
   end
 
   defp pay(invoice, amount, paid_at) do
     generate(
       payment(
-        order_id: invoice.order_id,
         invoice_id: invoice.id,
         amount: Decimal.new(amount),
         method: :zervant,

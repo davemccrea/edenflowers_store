@@ -53,8 +53,7 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
             stripe_refund_id: Map.get(changeset.arguments, :stripe_refund_id),
             reverses_payment_id: Map.get(changeset.arguments, :reverses_payment_id),
             goodwill: goodwill,
-            note: Map.get(changeset.arguments, :note),
-            invoice_id: Map.get(changeset.arguments, :invoice_id)
+            note: Map.get(changeset.arguments, :note)
           })
         )
         |> Ash.create(authorize?: false)

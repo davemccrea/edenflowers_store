@@ -23,11 +23,11 @@ defmodule Edenflowers.Orders.Receipt do
     :grand_total,
     :contact_phone_number,
     :upcoming?,
-    payments: [:invoice],
+    payments: [],
     line_items: [:subtotal, :total, :unit_price_ex_tax]
   ]
 
-  @registration_load [:course, :upcoming?, payments: [:invoice]]
+  @registration_load [:course, :upcoming?, payments: []]
 
   def order_load, do: @order_load
   def registration_load, do: @registration_load
@@ -154,9 +154,7 @@ defmodule Edenflowers.Orders.Receipt do
       card_brand: payment.card_brand,
       card_last4: payment.card_last4,
       paid_on: Format.date(payment.paid_at, locale),
-      amount: Format.currency(payment.amount, locale),
-      # Named so a business customer can match the payment to the invoice it paid.
-      invoice_label: payment.invoice && ReceiptLabels.invoice_payment(payment.invoice.number, locale)
+      amount: Format.currency(payment.amount, locale)
     }
   end
 
@@ -223,7 +221,7 @@ defmodule Edenflowers.Orders.Receipt do
   # The trader registered with the Y-tunnus, for the footer, as on an invoice.
   defp seller, do: Map.take(Application.fetch_env!(:edenflowers, :seller), [:name, :business_id, :address])
 
-  @doc "The language subtag Typst expects, as \"sv\" for \"sv-FI\": app locales include a region."
+  @doc ~s(The language subtag Typst expects, as "sv" for "sv-FI": app locales include a region.)
   def lang_from_locale(locale) when is_binary(locale) do
     Localize.LanguageTag.parse!(locale).language |> to_string()
   end

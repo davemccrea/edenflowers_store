@@ -5,9 +5,9 @@
 //
 // Local preview falls back to a fixture. Override via `--input fixture=…`:
 //   fi          (default, a company's booking fee: the first of two invoices)
-//   fi.final    (the same wedding's final invoice, after the booking fee)
-//   sv          (a consumer's delivery order, partly paid by card first)
-//   en.course   (a Course booking)
+//   fi.final    (the same wedding's independent remainder invoice)
+//   sv          (a consumer's bespoke arrangement)
+//   en.course   (a bespoke workshop invoice)
 #let data = if "invoice" in sys.inputs {
   json(bytes(sys.inputs.invoice))
 } else {

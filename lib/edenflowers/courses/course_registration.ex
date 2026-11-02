@@ -29,8 +29,6 @@ defmodule Edenflowers.Courses.CourseRegistration do
     extensions: [AshStateMachine, AshOban],
     fragments: [
       Edenflowers.Payments.Payable,
-      Edenflowers.Payments.BusinessCustomer,
-      Edenflowers.Payments.Invoiceable,
       Edenflowers.Courses.CourseRegistration.Checkout,
       Edenflowers.Courses.CourseRegistration.Customer,
       Edenflowers.Courses.CourseRegistration.Payment,
@@ -186,20 +184,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Every Payment and refund on the registration, oldest first."
       sort paid_at: :asc
     end
-
-    has_many :invoices, Edenflowers.Payments.Invoice do
-      description "Every invoice Jennie sent for the booking, oldest first."
-      sort number: :asc
-    end
   end
 
   calculations do
-    # A booking always has a name and an email.
-    calculate :buyer_details_complete?, :boolean, expr(business_details_complete?) do
-      description "Whether an invoice has someone to address: always for a consumer, and for a business " <>
-                    "customer once the company details are filled in."
-    end
-
     calculate :receipt_available?, :boolean, expr(status == :confirmed and amount_paid > 0) do
       description "Whether the customer can download a receipt for actual money recorded on this booking."
     end
@@ -251,9 +238,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     calculate :cancelled_unsettled?,
               :boolean,
-              expr(status == :cancelled and (not settled? or exists(open_invoices, true))) do
+              expr(status == :cancelled and not settled?) do
       description "Whether a cancelled booking still needs Jennie: money to refund, a cancellation charge to " <>
-                    "collect or invoice, or an open invoice. The course page lists these beside the live bookings instead " <>
+                    "collect. The course page lists these beside the live bookings instead " <>
                     "of folding them away with the settled cancellations."
     end
 
@@ -272,14 +259,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
     calculate :payment_overdue?,
               :boolean,
               expr(
-                invoice_overdue? or
-                  (uninvoiced_balance > 0 and
-                     course.date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day))
+                balance > 0 and
+                  course.date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
               ) do
-      description "Whether the customer is late paying: one of its invoices is overdue, or a Balance no open " <>
-                    "invoice asks for is still to collect more than 14 days after the course, the usual Finnish " <>
-                    "invoice term, counted in Helsinki days. An invoiced Balance is late only after its " <>
-                    "invoice's own due date."
+      description "Whether a booking still has a balance more than 14 days after the course."
     end
 
     calculate :payment_reminder?,

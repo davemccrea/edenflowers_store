@@ -24,6 +24,10 @@ defmodule Edenflowers.Payments do
 
     resource Edenflowers.Payments.Invoice do
       define :create_invoice, action: :create
+      define :update_invoice_draft, action: :update_draft
+      define :issue_invoice, action: :issue
+      define :record_invoice_payment, action: :record_payment, args: [:amount]
+      define :undo_invoice_payment, action: :undo_payment, args: [:payment_id]
       define :send_invoice, action: :send
       define :get_invoice, action: :read, get_by: [:id]
       define :list_open_invoices, action: :open_at, args: [:date]

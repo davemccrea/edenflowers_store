@@ -197,6 +197,9 @@ defmodule EdenflowersWeb.Router do
       live "/promotions", EdenflowersWeb.Admin.PromotionsLive
       live "/promotions/new", EdenflowersWeb.Admin.PromotionFormLive
       live "/promotions/:id", EdenflowersWeb.Admin.PromotionFormLive
+      live "/invoices", EdenflowersWeb.Admin.InvoicesLive
+      live "/invoices/new", EdenflowersWeb.Admin.InvoiceLive, :new
+      live "/invoices/:id", EdenflowersWeb.Admin.InvoiceLive, :show
       live "/expenses", EdenflowersWeb.Admin.ExpensesLive
       live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive
       live "/account", EdenflowersWeb.Admin.AccountLive
@@ -206,7 +209,7 @@ defmodule EdenflowersWeb.Router do
 
     get "/account/avatar", EdenflowersWeb.Admin.AvatarController, :show
     get "/reports", EdenflowersWeb.Admin.ReportController, :show
-    get "/invoices/:id", EdenflowersWeb.Admin.InvoiceController, :show
+    get "/invoices/:id/pdf", EdenflowersWeb.Admin.InvoiceController, :show
     get "/credit-notes/:id", EdenflowersWeb.Admin.InvoiceController, :credit_note
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)

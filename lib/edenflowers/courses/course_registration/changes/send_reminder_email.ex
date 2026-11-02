@@ -29,9 +29,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail do
   @doc "Loads what `Email.course_reminder/1` reads, with the course in the booking's language."
   def load_for_send(registration) do
     registration
-    |> Ash.load!([:course, :first_name, :balance, :invoice_to_send?, sent_open_invoices: [:overdue?]],
-      actor: system_actor()
-    )
+    |> Ash.load!([:course, :first_name, :balance], actor: system_actor())
     |> Translations.in_own_locale()
   end
 end

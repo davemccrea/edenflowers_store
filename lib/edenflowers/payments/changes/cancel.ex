@@ -8,7 +8,7 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   `cancellation_charge` argument, or else `default_cancellation_charge`. It
   becomes `kept_amount`, and so the Total due, and the Balance follows: what
   was paid above the charge is refunded, and any of the charge not yet paid
-  is left to collect, which Jennie invoices by hand.
+  is left as an ordinary purchase balance to collect.
 
   The refund happens before the cancel commits, so it is never cancelled
   while Stripe still holds money it should have handed back. Card payments
@@ -80,9 +80,7 @@ defmodule Edenflowers.Payments.Changes.Cancel do
       :amount_paid,
       :paid_through_stripe,
       :default_cancellation_charge,
-      :customer_email,
-      :sent_open_invoices_amount,
-      :sent_open_invoice_count
+      :customer_email
     ]
 
   @doc """
@@ -92,21 +90,6 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   charge is refunded; a Goodwill refund already given counts as paid, as it
   does for the Balance.
 
-  It also says what becomes of the open invoices the customer was sent
-  (`earlier_invoices`), which still ask for `invoiced` between them
-  (`earlier_invoice_count` of them), so the email can tell the customer
-  which to pay:
-
-    * `:none`: there are none.
-    * `:cancel`: nothing of the charge is left to collect, so they are
-      cancelled and needn't be paid.
-    * `:replace`: they ask for more than is left to collect, so they are
-      cancelled and a new invoice asks for the charge.
-    * `:stand`: they ask for just what is left to collect, so they are paid
-      as they are.
-    * `:top_up`: they ask for part of it, and a new invoice asks for the rest.
-
-  Jennie still makes the Credit notes and new invoices by hand.
   """
   def money(record, charge) do
     to_refund = Decimal.max(Decimal.sub(record.amount_held, charge), 0)
@@ -117,23 +100,8 @@ defmodule Edenflowers.Payments.Changes.Cancel do
       charge: charge,
       refunded: refunded,
       to_return: Decimal.sub(to_refund, refunded),
-      to_collect: to_collect,
-      earlier_invoices: earlier_invoices(record, to_collect),
-      earlier_invoice_count: record.sent_open_invoice_count,
-      invoiced: record.sent_open_invoices_amount
+      to_collect: to_collect
     }
-  end
-
-  defp earlier_invoices(record, to_collect) do
-    invoiced = record.sent_open_invoices_amount
-
-    cond do
-      record.sent_open_invoice_count == 0 -> :none
-      Decimal.eq?(to_collect, 0) -> :cancel
-      Decimal.gt?(invoiced, to_collect) -> :replace
-      Decimal.eq?(invoiced, to_collect) -> :stand
-      true -> :top_up
-    end
   end
 
   defp charge(changeset, record) do

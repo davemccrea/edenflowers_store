@@ -187,9 +187,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   class="select w-full"
                 />
               </div>
-              <div class="mt-4">
-                <.business_customer_fields form={@form} />
-              </div>
+              <div class="mt-4"></div>
             </.form_section>
 
             <.form_section title={~t"Items"}>
@@ -928,7 +926,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp payment_options do
     [
       %{name: ~t"Payment link", value: "payment_link"},
-      %{name: ~t"Invoice", value: "invoice"},
+      %{name: ~t"Bank transfer", value: "invoice"},
       %{name: ~t"In person", value: "on_fulfillment"}
     ]
   end

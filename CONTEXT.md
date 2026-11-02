@@ -11,7 +11,7 @@ An order the shop has committed to make. An Online Order is placed when its paym
 _Avoid_: Confirmed, submitted
 
 **Cancelled**:
-A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to keep as a cancellation charge, from nothing up to its Total due, whether or not anything was paid, and refunds what was paid above it: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. Any of the charge not yet paid is left as a Balance to collect, which she invoices by hand; cancelling never creates an invoice. A course booking's charge starts at its course's cancellation terms, an order's at nothing. The customer is emailed unless she unticks it, with a message from her if she writes one. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 3 days before its fulfillment date (the Change deadline), which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
+A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to keep as a cancellation charge, from nothing up to its Total due, whether or not anything was paid, and refunds what was paid above it: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. Any of the charge not yet paid is left as a Balance to collect, to settle with the customer; cancelling never creates an invoice. A course booking's charge starts at its course's cancellation terms, an order's at nothing. The customer is emailed unless she unticks it, with a message from her if she writes one. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 3 days before its fulfillment date (the Change deadline), which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Course booking**:
@@ -19,7 +19,7 @@ A place, or group of places, the shop has committed to provide: confirmed when J
 _Avoid_: Hold, reservation, pending booking
 
 **Manual course booking**:
-A Course booking Jennie accepts on a customer's behalf, however the request reached her, including after online booking closes or when the course is full. Like a Custom Order, it can be paid through a Payment Link, by Invoice, or in person at the course. Confirmation of places does not mean payment was received.
+A Course booking Jennie accepts on a customer's behalf, however the request reached her, including after online booking closes or when the course is full. Like a Custom Order, it can be paid through a Payment Link or in person at the course. Confirmation of places does not mean payment was received.
 _Avoid_: Invite, awaiting payment booking
 
 **Course checkout**:
@@ -31,7 +31,7 @@ An order a customer places themselves through checkout.
 _Avoid_: Web order, cart order
 
 **Custom Order**:
-An order Jennie enters in the admin on a customer's behalf, however the request reached her (phone, in the shop, email, message). It may contain catalogue items, items she describes and prices herself, or both. A sale over the counter is a Custom Order too: every sale the shop makes is an order, so the orders are the shop's complete record of its sales.
+An order Jennie enters in the admin on a customer's behalf, however the request reached her (phone, in the shop, email, message). It may contain catalogue items, items she describes and prices herself, or both. A sale over the counter is a Custom Order too; occasional weddings and bespoke work can instead be billed through a standalone Invoice.
 _Avoid_: Phone order, manual order, bespoke order, walk-in sale, till sale
 
 **Florist Note**:
@@ -77,23 +77,23 @@ The email telling a customer their payment for an order or booking arrived outsi
 _Avoid_: Receipt email (the order receipt is what online checkout sends), payment confirmation
 
 **Payment reminder**:
-The email Jennie sends by hand to ask for a Balance still owed on an order or booking, with its Payment Link. Never sent automatically, and never for an order on invoice terms.
+The email Jennie sends by hand to ask for a Balance still owed on an order or booking, with its Payment Link. Never sent automatically.
 _Avoid_: Bill, dunning, payment request
 
 **Payment**:
-Money that moved for an order or Course booking, by Stripe, the Zettle card reader, MobilePay to Jennie's own number, cash, or a bank transfer paying an Invoice. Stripe reports its own payments and Jennie records the other methods; a refund is a negative Payment, and a purchase can have several, including money arriving after cancellation.
+Money that moved for exactly one order, Course booking or standalone Invoice; a refund or Undo is a negative Payment. Orders and bookings accept their usual payment methods, while Invoice Payments are bank transfers recorded by Jennie and affect only that Invoice.
 _Avoid_: Transaction, charge, in-person payment, offline payment, manual payment
 
 **Invoice**:
-A bill Jennie sends for an order or Course booking on invoice terms, paid by bank transfer with its viitenumero. A purchase can have several, such as a wedding's booking fee before and the rest after delivery; each asks for the Balance not yet invoiced unless she chooses another amount, due 14 days after its date unless she chooses another day. Numbered in one gapless series with Credit notes, continuing Zervant's. Jennie records each bank transfer as a Payment against the Invoice it pays, and the Invoice is paid once those Payments cover its amount. It never changes once made: it keeps the buyer details it was sent with and everything its PDF prints (the purchase's lines and totals, the seller's bank details) as they stood that day, so a resend is the same document, and a mistake is put right with a Credit note and a new Invoice. An open Invoice past its due date is overdue: Jennie can resend it, and the Invoice email then carries a friendly reminder line (not a Payment reminder, which goes with a Payment Link). Never resent automatically.
+A standalone bill for weddings or bespoke work, owning its buyer details, billed lines and VAT independently of orders and Course bookings. A draft is editable and unnumbered; issuing freezes the document and assigns its number, and only its own bank-transfer Payments settle it.
 _Avoid_: Bill, Zervant invoice, payment request (a Payment Link is not an Invoice)
 
 **Credit note**:
-What cancels an Invoice (hyvityslasku): it names the Invoice it cancels, takes the next number in the same series, credits its whole amount and leaves that Invoice asking for nothing. The Invoice itself stays as it was, now cancelled, and no longer counts as invoiced. Only an Invoice with nothing paid on it can be cancelled: Jennie undoes any Payment against it first. Sent to the customer in the Invoice's language.
+A numbered document that fully reverses one unpaid issued Invoice, including its original VAT, while preserving the original document. Paid or partly paid corrections go to the accountant; a Credit note is never a cash refund.
 _Avoid_: Credit invoice, refund (a Refund is money handed back)
 
 **Business customer**:
-A company buying an order or Course booking, so its Invoice is addressed to the company with its Y-tunnus, billing address and any reference of its own (viitteenne). Jennie fills the details in whenever she learns them; only invoicing needs them.
+A company billed on a standalone Invoice with its name, Y-tunnus and billing address, plus an optional reference of its own (viitteenne).
 _Avoid_: Corporate customer, B2B customer, company account
 
 **Balance**:

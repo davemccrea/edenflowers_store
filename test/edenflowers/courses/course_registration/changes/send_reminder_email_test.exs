@@ -25,6 +25,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
     assert {:ok, _registration} = perform_job(SendReminderEmail, args)
 
     assert_email_sent(fn email ->
+      refute email.text_body =~ "Amount due"
       assert email.to == [{"", confirmed.email}]
       assert email.subject == "A reminder about #{course.name}"
       assert email.text_body =~ "Bring an apron."

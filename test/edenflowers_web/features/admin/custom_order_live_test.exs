@@ -692,30 +692,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "#order-price", "35,00 €")
     end
 
-    test "records business details once Business customer is ticked", ctx do
-      order = place_custom_order(ctx)
-      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
-      refute has_element?(view, "#form_company_name")
-
-      view |> form("#order-form", form: %{business_customer: "true"}) |> render_change()
-
-      assert {:error, {:live_redirect, _}} =
-               view
-               |> form("#order-form",
-                 form: %{
-                   company_name: "Kukka Oy",
-                   business_id: "2944459-6",
-                   billing_address: "Kyrkvägen 5\n68600 Jakobstad",
-                   customer_reference: "PO 1234"
-                 }
-               )
-               |> render_submit()
-
-      order = Ash.load!(Ash.reload!(order, authorize?: false), :business_details_complete?, authorize?: false)
-      assert order.business_details_complete?
-      assert order.customer_reference == "PO 1234"
-    end
-
     test "offers Order updated unticked, and previews it once ticked", ctx do
       order = place_custom_order(ctx, %{customer_email: "son@example.com", locale: "en-GB"})
 
@@ -839,29 +815,15 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|#payment-link-url[value$="/pay/orders/#{order.payment_link_token}"]|)
     end
 
-    test "records a bank transfer against the order's only open invoice", ctx do
+    test "records a bank transfer directly against the order", ctx do
       order =
         place_custom_order(ctx, %{payment_terms: :invoice, customer_email: "holm@example.com", email_customer?: false})
 
-      {:ok, invoice} = Edenflowers.Payments.create_invoice(%{order_id: order.id}, actor: ctx.admin)
-
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
-
+      view |> form("#order-balance-form", payment: %{payment_method: "zervant", amount: "20.00"}) |> render_submit()
+      order = Ash.load!(order, [:payments, :balance], authorize?: false)
+      assert [%{method: :zervant, invoice_id: nil}] = order.payments
       refute has_element?(view, "#order-balance-invoice")
-
-      view
-      |> form("#order-balance-form", payment: %{payment_method: "zervant"})
-      |> render_change()
-
-      assert has_element?(view, ~s|#order-balance-invoice option[value="#{invoice.id}"][selected]|)
-
-      view
-      |> form("#order-balance-form", payment: %{amount: "85,00"})
-      |> render_submit()
-
-      assert has_element?(view, "#order-payments", "Bank transfer (invoice)")
-      refute has_element?(view, "#order-balance-form")
-      assert Ash.load!(invoice, :paid?, authorize?: false).paid?
     end
 
     test "logs what happened to the order", ctx do

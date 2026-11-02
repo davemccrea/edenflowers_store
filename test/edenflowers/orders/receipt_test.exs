@@ -7,7 +7,6 @@ defmodule Edenflowers.Orders.ReceiptTest do
   alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Receipt
-  alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.Payment
 
   # Structural diff against the fixtures — catches missing keys / nullability drift without coupling to arithmetic.
@@ -59,7 +58,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
     test "asks only for questions, not changes, once the order is handed over" do
       handed_over = %{build_delivery_order(locale: "fi") | upcoming?: false}
 
-      assert Receipt.build_payload(handed_over).labels == read_fixture("order.fi.invoice.json")["labels"]
+      assert Receipt.build_payload(handed_over).labels == read_fixture("order.fi.fulfilled.json")["labels"]
     end
 
     test "uses fi locale conventions for currency and percentage" do
@@ -220,21 +219,6 @@ defmodule Edenflowers.Orders.ReceiptTest do
         ])
 
       assert Receipt.build_payload(order).payments == []
-    end
-
-    test "names the invoice a bank transfer paid, so a company can match them" do
-      order =
-        build_delivery_order(locale: "fi")
-        |> Map.put(:payments, [
-          payment("40.00", :zervant, ~U[2026-05-28 10:00:00Z],
-            payment_method_type: "zervant",
-            invoice: %Invoice{number: 1338}
-          ),
-          payment("5.00", :cash, ~U[2026-05-29 10:00:00Z], payment_method_type: "cash")
-        ])
-
-      assert [%{invoice_label: "Tilisiirto, lasku 1338"}, %{invoice_label: nil}] =
-               Receipt.build_payload(order).payments
     end
 
     test "names how a course booking was paid" do

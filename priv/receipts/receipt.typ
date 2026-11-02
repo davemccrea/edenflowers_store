@@ -49,7 +49,7 @@
     }
   }
   for payment in order.payments {
-    for key in ("method", "card_brand", "card_last4", "paid_on", "amount", "invoice_label") {
+    for key in ("method", "card_brand", "card_last4", "paid_on", "amount") {
       assert(key in payment, message: "receipt: payment missing `" + key + "`")
     }
   }
@@ -246,9 +246,7 @@
     text(features: ("tnum",))[•••• #payment.card_last4]
   } else if payment.card_brand != none [
     #capitalized(payment.card_brand) •••• #payment.card_last4
-  ] else if payment.invoice_label != none {
-    payment.invoice_label
-  } else if payment.method in method-labels {
+  ] else if payment.method in method-labels {
     t("method-" + payment.method)
   } else {
     capitalized(payment.method)

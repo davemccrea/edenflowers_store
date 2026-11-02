@@ -1,8 +1,8 @@
 defmodule Edenflowers.Payments.Payment do
   @moduledoc """
-  Money that moved for an order or a course booking: paid through Stripe
+  Money that moved for an order, course booking or standalone invoice: paid through Stripe
   (checkout or a payment link), recorded by Jennie, or handed back. A refund is
-  a negative payment. It belongs to exactly one order or one registration.
+  a negative payment. It belongs to exactly one order, registration or invoice.
 
   Only money that actually moved is recorded. A PaymentIntent still waiting
   for the customer lives on the order or registration as `payment_intent_id`
@@ -39,8 +39,8 @@ defmodule Edenflowers.Payments.Payment do
         message: "must be an amount in whole cents"
 
       check_constraint :order_id, "payments_one_parent",
-        check: "(order_id IS NULL) <> (course_registration_id IS NULL)",
-        message: "must belong to exactly one order or course registration"
+        check: "num_nonnulls(order_id, course_registration_id, invoice_id) = 1",
+        message: "must belong to exactly one order, course registration or invoice"
     end
 
     references do
@@ -56,7 +56,7 @@ defmodule Edenflowers.Payments.Payment do
 
     create :record do
       description "Records money that moved, positive taken or negative handed back. Created by the order and " <>
-                    "registration actions that take or return money, never on its own."
+                    "registration or standalone invoice actions that take or return money, never on its own."
 
       accept [
         :order_id,
@@ -71,10 +71,11 @@ defmodule Edenflowers.Payments.Payment do
         :reverses_payment_id,
         :goodwill,
         :note,
-        :invoice_id
+        :invoice_id,
+        :paid_at
       ]
 
-      validate Edenflowers.Payments.Validations.InvoiceOfPurchase, before_action?: true
+      validate Edenflowers.Payments.Validations.InvoicePayment, before_action?: true
     end
   end
 
@@ -110,11 +111,11 @@ defmodule Edenflowers.Payments.Payment do
 
   relationships do
     belongs_to :order, Edenflowers.Orders.Order do
-      description "The order it was for. Nil when it is for a course registration: it belongs to exactly one."
+      description "The order it was for; nil for a course registration or standalone invoice."
     end
 
     belongs_to :course_registration, Edenflowers.Courses.CourseRegistration do
-      description "The course registration it was for. Nil when it is for an order: it belongs to exactly one."
+      description "The course registration it was for; nil for an order or standalone invoice."
     end
 
     belongs_to :reverses_payment, __MODULE__ do
@@ -122,9 +123,7 @@ defmodule Edenflowers.Payments.Payment do
     end
 
     belongs_to :invoice, Edenflowers.Payments.Invoice do
-      description "The Invoice this money pays, one of the same purchase's: a bank transfer Jennie matched to it, " <>
-                    "or the Undo of one. Its Payments make up what is paid on it. Nil for money not paying an " <>
-                    "Invoice."
+      description "The standalone invoice this bank transfer or reversal belongs to; never also a purchase."
     end
 
     has_one :reversal, __MODULE__ do

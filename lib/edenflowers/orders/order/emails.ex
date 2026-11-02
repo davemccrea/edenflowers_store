@@ -191,7 +191,7 @@ defmodule Edenflowers.Orders.Order.Emails do
     # Sent by hand only. Opens a payment link if none is open.
     update :send_payment_reminder do
       description "Jennie emails a Payment reminder with the order's payment link, opening one if needed. Never " <>
-                    "for a cancelled order, one on invoice terms, or one with nothing to collect."
+                    "for a cancelled order or one with nothing to collect."
 
       argument :message, :string
 

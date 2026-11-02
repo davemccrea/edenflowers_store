@@ -5,7 +5,6 @@ defmodule EdenflowersWeb.Admin.OrderLog do
 
   Payments come from their own records rather than versions: a Stripe refund
   changes nothing on the order row, and only the record holds the amount.
-  Invoices and the credit notes cancelling them do too, for the same reason.
   Lines live on another resource, so a version shows them only through its
   `items`, which `RecordEnteredLineItems` sets when they change.
   """
@@ -28,61 +27,19 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     :customer_phone_number,
     :customer_instagram,
     :locale,
-    :florist_note,
-    :business_customer,
-    :company_name,
-    :business_id,
-    :billing_address,
-    :customer_reference
+    :florist_note
   ]
 
-  @doc """
-  `invoices` need `credit_note` and `paper_trail_versions` loaded; each,
-  every time it was emailed and any credit note cancelling it is an entry.
-  """
-  def entries(versions, payments, locale, invoices \\ []) do
-    (Enum.map(versions, &entry(&1, locale)) ++
-       Enum.map(payments, &payment_entry(&1, locale)) ++ Enum.flat_map(invoices, &invoice_entries(&1, locale)))
+  def entries(versions, payments, locale) do
+    (Enum.map(versions, &entry(&1, locale)) ++ Enum.map(payments, &payment_entry(&1, locale)))
     |> Enum.sort_by(& &1.at, {:desc, DateTime})
-  end
-
-  defp invoice_entries(invoice, locale) do
-    {number, amount} = {invoice.number, Format.currency(invoice.amount, locale)}
-    created = %{at: invoice.inserted_at, title: ~t"Invoice #{number} created · #{amount}", details: []}
-
-    [created] ++
-      Enum.map(invoice.paper_trail_versions, &invoice_send_entry(&1, number)) ++
-      cancelled_entries(invoice.credit_note, number)
-  end
-
-  defp invoice_send_entry(version, number) do
-    %{
-      at: version.version_inserted_at,
-      title: if(version.reminder, do: ~t"Invoice #{number} reminder emailed", else: ~t"Invoice #{number} emailed"),
-      details: message_details(version)
-    }
-  end
-
-  defp cancelled_entries(nil, _number), do: []
-
-  defp cancelled_entries(credit_note, number) do
-    credit = credit_note.number
-    details = if credit_note.reason, do: [{~t"Reason", credit_note.reason}], else: []
-
-    [
-      %{
-        at: credit_note.inserted_at,
-        title: ~t"Invoice #{number} cancelled with credit note #{credit}",
-        details: details
-      }
-    ]
   end
 
   def payment_method_label(:stripe), do: ~t"Stripe"
   def payment_method_label(:zettle), do: ~t"Card (Zettle)"
   def payment_method_label(:mobilepay), do: ~t"MobilePay"
   def payment_method_label(:cash), do: ~t"Cash"
-  def payment_method_label(:zervant), do: ~t"Bank transfer (invoice)"
+  def payment_method_label(:zervant), do: ~t"Bank transfer"
   def payment_method_label(_method), do: ~t"Unknown"
 
   defp payment_entry(payment, locale) do
@@ -172,11 +129,6 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp field_label(:customer_instagram), do: ~t"Instagram"
   defp field_label(:locale), do: ~t"Language"
   defp field_label(:florist_note), do: ~t"Florist note"
-  defp field_label(:business_customer), do: ~t"Business customer"
-  defp field_label(:company_name), do: ~t"Company name"
-  defp field_label(:business_id), do: ~t"Y-tunnus"
-  defp field_label(:billing_address), do: ~t"Billing address"
-  defp field_label(:customer_reference), do: ~t"Their reference"
 
   defp message_details(%{email_message: nil}), do: []
   defp message_details(version), do: [{~t"Message", version.email_message}]
@@ -190,7 +142,5 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp show(value, :quoted_fulfillment_fee, locale), do: Format.currency(Decimal.new(value), locale)
   defp show(value, :fulfillment_date, locale), do: Format.date(Date.from_iso8601!(value), locale)
   defp show(value, :locale, _locale), do: Locales.name(value)
-  defp show(true, :business_customer, _locale), do: ~t"Yes"
-  defp show(false, :business_customer, _locale), do: ~t"No"
   defp show(value, _field, _locale), do: value
 end

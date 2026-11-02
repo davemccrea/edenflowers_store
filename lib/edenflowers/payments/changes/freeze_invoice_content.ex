@@ -1,15 +1,5 @@
 defmodule Edenflowers.Payments.Changes.FreezeInvoiceContent do
-  @moduledoc """
-  Freezes what a new invoice's PDF prints onto its `content`
-  (`InvoicePdf.content/1`): the purchase's lines, totals and VAT, the earlier
-  invoices and money paid before it, the seller's and buyer's details, the
-  amount due and how to pay it.
-
-  It runs in the insert's transaction once the number is taken, as the PDF
-  prints the number and builds the viitenumero and virtual barcode from it.
-  From then on every render, the email and each resend print this content,
-  however the purchase or the shop's details change.
-  """
+  @moduledoc "Freezes the issued standalone invoice's formatted PDF content after its numeric snapshot and number are assigned."
   use Ash.Resource.Change
 
   alias Edenflowers.Payments.InvoicePdf

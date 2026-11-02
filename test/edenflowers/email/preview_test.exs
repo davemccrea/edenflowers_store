@@ -98,25 +98,10 @@ defmodule Edenflowers.Email.PreviewTest do
       if unquote(terms) == :payment_link do
         assert reminder.text_body =~ EdenflowersWeb.PaymentLink.url_for(registration)
       else
-        assert reminder.text_body =~ "I'll send you an invoice separately."
+        assert reminder.text_body =~ "I'll be in touch about how to pay it."
         refute reminder.text_body =~ "/pay/courses/"
       end
     end
-  end
-
-  test "once its invoice is sent, the course reminder points to it instead of promising one" do
-    admin = generate(admin_user())
-    registration = generate(course_registration(status: :confirmed, payment_terms: :invoice, locale: "en-GB"))
-
-    {:ok, invoice} =
-      Edenflowers.Payments.create_invoice(
-        %{course_registration_id: registration.id, email_customer?: true},
-        actor: admin
-      )
-
-    body = reminder(registration).text_body
-    assert body =~ "My invoice #{invoice.number} is due on"
-    refute body =~ "I'll send you an invoice"
   end
 
   defp reminder(registration) do

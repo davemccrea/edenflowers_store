@@ -88,15 +88,12 @@ defmodule Edenflowers.Payments.Payable do
 
     update :record_payment do
       description "Records money Jennie took by any method except Stripe, optionally emailing the customer a receipt. " <>
-                    "A bank transfer can name the Invoice of this purchase it pays, which counts towards paying it."
+                    "Payments belong directly to this purchase."
 
       argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :email_receipt?, :boolean, default: false
       argument :message, :string
-
-      argument :invoice_id, :uuid,
-        description: "The Invoice of this purchase a bank transfer pays, or nil for money not paying one."
 
       validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
       validate Validations.Recordable
@@ -139,7 +136,6 @@ defmodule Edenflowers.Payments.Payable do
       argument :payment_method, Edenflowers.Payments.PaymentMethod, public?: false
       argument :reverses_payment_id, :uuid, public?: false
       argument :goodwill, :boolean, public?: false
-      argument :invoice_id, :uuid, public?: false
 
       change Changes.UndoPayment
       # Undoing a payment whose money was since handed back would leave it owed again.

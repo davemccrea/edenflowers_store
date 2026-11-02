@@ -256,7 +256,11 @@ defmodule EdenflowersWeb.Layouts do
           "Umami", false, "hero-chart-bar"},
          {"https://dashboard.mailerlite.com", "MailerLite", false, "hero-paper-airplane"}
        ]},
-      {dgettext("admin", "Finances"), [{~p"/admin/expenses", dgettext("admin", "Expenses"), true, "hero-banknotes"}]}
+      {dgettext("admin", "Finances"),
+       [
+         {~p"/admin/invoices", dgettext("admin", "Invoices"), false, "hero-document-text"},
+         {~p"/admin/expenses", dgettext("admin", "Expenses"), true, "hero-banknotes"}
+       ]}
     ]
 
     system_nav = [

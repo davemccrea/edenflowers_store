@@ -9,11 +9,9 @@ defmodule Edenflowers.Payments.Changes.SendInvoice do
 
   require Logger
 
-  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email
   alias Edenflowers.Mailer
   alias Edenflowers.Payments.InvoicePdf
-  alias Edenflowers.Translations
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -40,32 +38,8 @@ defmodule Edenflowers.Payments.Changes.SendInvoice do
     end)
   end
 
-  @doc """
-  Loads what `Email.invoice/2` reads: the order or the booking with its
-  course, in the invoice's language, the purchase's Total due, whether it
-  is overdue now, what has been paid on it and whether it bills a
-  cancellation charge.
-  """
+  @doc "Loads only the standalone invoice balances used in its email and reminder."
   def load_for_email(invoice) do
-    invoice
-    |> Ash.load!(
-      [
-        :overdue?,
-        :amount_paid,
-        :amount_unpaid,
-        :cancellation_charge?,
-        order: [:total_due, :balance],
-        course_registration: [:course, :total_due, :balance]
-      ],
-      authorize?: false,
-      reuse_values?: false
-    )
-    |> in_invoice_locale()
+    Ash.load!(invoice, [:overdue?, :amount_paid, :amount_unpaid], authorize?: false, reuse_values?: false)
   end
-
-  @doc "Puts a loaded booking's course into the invoice's language, which Jennie may have changed from the booking's."
-  def in_invoice_locale(%{course_registration: %CourseRegistration{} = registration} = invoice),
-    do: %{invoice | course_registration: Translations.in_own_locale(%{registration | locale: invoice.locale})}
-
-  def in_invoice_locale(invoice), do: invoice
 end

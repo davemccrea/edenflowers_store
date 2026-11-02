@@ -115,8 +115,8 @@ defmodule Edenflowers.Email.Previews do
            %{payment_terms: :payment_link, card_message: card_message(locale)}, @payment_link},
           {"pickup, no recipient, no delivery fee", pickup(), @payment_link},
           {"part paid, payment link", part_paid(), @payment_link},
-          {"unpaid, invoice after delivery", %{payment_terms: :invoice}, nil},
-          {"unpaid, invoice after pickup", Map.put(pickup(), :payment_terms, :invoice), nil},
+          {"unpaid, bank transfer after delivery", %{payment_terms: :invoice}, nil},
+          {"unpaid, bank transfer after pickup", Map.put(pickup(), :payment_terms, :invoice), nil},
           {"unpaid, pays on delivery", %{payment_terms: :on_fulfillment}, nil},
           {"unpaid, pays at pickup", Map.put(pickup(), :payment_terms, :on_fulfillment), nil},
           {"zero delivery fee, with delivery time window",
@@ -128,17 +128,16 @@ defmodule Edenflowers.Email.Previews do
              fulfillment_time_end: ~T[16:00:00]
            }, @payment_link},
           {"settled, paid in full", paid_in_full(), nil},
-          {"sent after it was handed over, invoice", %{fulfillment_status: :fulfilled, payment_terms: :invoice}, nil},
+          {"sent after it was handed over, bank transfer", %{fulfillment_status: :fulfilled, payment_terms: :invoice},
+           nil},
           {"sent after it was handed over, payment still due",
            %{fulfillment_status: :fulfilled, payment_terms: :on_fulfillment}, nil},
-          {"handed over and its invoice sent",
+          {"handed over, bank transfer",
            %{
              fulfillment_status: :fulfilled,
-             payment_terms: :invoice,
-             sent_open_invoices: [sent_invoice()],
-             invoice_to_send?: false
+             payment_terms: :invoice
            }, nil},
-          {"booking fee invoiced, the rest after delivery", booking_fee_invoiced(), nil},
+          {"bank transfer after delivery", bank_transfer_terms(), nil},
           {"no customer first name", %{customer_first_name: nil}, @payment_link}
         ] do
       {"Order details", title, :order_details, Email.order_details(order(attrs, locale), link)}
@@ -162,16 +161,12 @@ defmodule Edenflowers.Email.Previews do
                %{amount: Decimal.new("70.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}
              ]
            }, nil, nil},
-          {"pickup, invoice after pickup", Map.put(pickup(), :payment_terms, :invoice), nil, nil},
-          {"edited after it was handed over, invoice", %{fulfillment_status: :fulfilled, payment_terms: :invoice}, nil,
-           nil},
+          {"pickup, bank transfer after pickup", Map.put(pickup(), :payment_terms, :invoice), nil, nil},
+          {"edited after it was handed over, bank transfer",
+           %{fulfillment_status: :fulfilled, payment_terms: :invoice}, nil, nil},
           {"edited after it was handed over, payment still due",
            %{fulfillment_status: :fulfilled, payment_terms: :on_fulfillment}, nil, nil},
-          {"booking fee invoice overdue, the rest after pickup",
-           Map.merge(pickup(), %{
-             booking_fee_invoiced()
-             | sent_open_invoices: [%{sent_invoice() | due_date: ~D[2026-11-10], overdue?: true}]
-           }), nil, nil},
+          {"bank transfer after pickup", Map.put(pickup(), :payment_terms, :invoice), nil, nil},
           {"with a message from Jennie", %{}, @payment_link, message(locale)}
         ] do
       {"Order updated", title, :order_updated, Email.order_updated(order(attrs, locale), link, message)}
@@ -259,16 +254,7 @@ defmodule Edenflowers.Email.Previews do
     end
   end
 
-  # An invoice the customer was sent, as its purchase's emails read it.
-  defp sent_invoice, do: %{number: 1042, due_date: ~D[2026-11-30], overdue?: false}
-
-  defp booking_fee_invoiced do
-    %{
-      payment_terms: :invoice,
-      sent_open_invoices: [sent_invoice()],
-      invoice_to_send?: true
-    }
-  end
+  defp bank_transfer_terms, do: %{payment_terms: :invoice}
 
   defp pickup do
     %{
@@ -422,42 +408,15 @@ defmodule Edenflowers.Email.Previews do
          order(Map.merge(paid, %{payments: [card_payment("64.00")]}), locale),
          cancel_money(charge: "20.00", refunded: "44.00")
        )},
-      {"Order cancelled", "unpaid on invoice terms, a cancellation charge to invoice", :cancelled,
+      {"Order cancelled", "unpaid by bank transfer, cancellation charge outstanding", :cancelled,
        Email.cancelled(order(%{payment_terms: :invoice}, locale), cancel_money(charge: "32.00", to_collect: "32.00"))},
-      {"Order cancelled", "invoiced in full before cancelling, a new invoice for the charge", :cancelled,
-       Email.cancelled(
-         order(%{payment_terms: :invoice}, locale),
-         cancel_money(charge: "32.00", to_collect: "32.00", invoiced: "64.00", earlier_invoices: :replace)
-       )},
-      {"Order cancelled", "wedding booking fee invoiced, kept as the charge", :cancelled,
-       Email.cancelled(
-         order(%{payment_terms: :invoice}, locale),
-         cancel_money(charge: "300.00", to_collect: "300.00", invoiced: "300.00", earlier_invoices: :stand)
-       )},
-      {"Order cancelled", "wedding booking fee invoiced, a bigger charge", :cancelled,
-       Email.cancelled(
-         order(%{payment_terms: :invoice}, locale),
-         cancel_money(charge: "500.00", to_collect: "500.00", invoiced: "300.00", earlier_invoices: :top_up)
-       )},
-      {"Order cancelled", "invoiced before cancelling, no charge", :cancelled,
-       Email.cancelled(
-         order(%{payment_terms: :invoice}, locale),
-         cancel_money(invoiced: "64.00", earlier_invoices: :cancel)
-       )},
       {"Order cancelled", "nothing to refund, no customer first name", :cancelled,
        Email.cancelled(order(%{customer_first_name: nil, payments: []}, locale), cancel_money([]))}
     ]
   end
 
-  # What `Payments.Changes.Cancel.money/2` gives the cancelled emails, with
-  # everything else 0 and no earlier invoices. One earlier invoice when there are.
   defp cancel_money(given) do
-    {plan, amounts} = Keyword.pop(given, :earlier_invoices, :none)
-    {count, amounts} = Keyword.pop(amounts, :earlier_invoice_count, if(plan == :none, do: 0, else: 1))
-
-    [:charge, :refunded, :to_return, :to_collect, :invoiced]
-    |> Map.new(&{&1, Decimal.new(Keyword.get(amounts, &1, "0"))})
-    |> Map.merge(%{earlier_invoices: plan, earlier_invoice_count: count})
+    Map.new([:charge, :refunded, :to_return, :to_collect], &{&1, Decimal.new(Keyword.get(given, &1, "0"))})
   end
 
   defp cancellation_confirmed(locale) do
@@ -508,15 +467,13 @@ defmodule Edenflowers.Email.Previews do
              payment_terms: :payment_link,
              payment_link_token: "preview"
            }},
-          {"manual, separate invoice, no receipt",
+          {"manual, bank transfer, no receipt",
            %{amount_paid: Decimal.new(0), balance: Decimal.new("45.00"), payment_terms: :invoice}},
-          {"manual, invoice already sent, no receipt",
+          {"manual, bank transfer, no receipt",
            %{
              amount_paid: Decimal.new(0),
              balance: Decimal.new("45.00"),
-             payment_terms: :invoice,
-             sent_open_invoices: [sent_invoice()],
-             invoice_to_send?: false
+             payment_terms: :invoice
            }},
           {"manual, unpaid, half charged after 10 days before",
            %{
@@ -548,14 +505,10 @@ defmodule Edenflowers.Email.Previews do
           {"paid place", %{amount_paid: Decimal.new("45.00"), balance: Decimal.new(0)}},
           {"unpaid manual booking", %{}},
           {"unpaid, payment link", %{payment_terms: :payment_link, payment_link_token: "preview"}},
-          {"unpaid, separate invoice", %{payment_terms: :invoice}},
-          {"unpaid, invoice already sent",
-           %{payment_terms: :invoice, sent_open_invoices: [sent_invoice()], invoice_to_send?: false}},
-          {"part invoiced, the invoice overdue",
+          {"unpaid, bank transfer", %{payment_terms: :invoice}},
+          {"bank transfer outstanding",
            %{
-             payment_terms: :invoice,
-             sent_open_invoices: [%{sent_invoice() | number: 1040, due_date: ~D[2026-11-10], overdue?: true}],
-             invoice_to_send?: true
+             payment_terms: :invoice
            }},
           {"no first name", %{first_name: nil}}
         ] do
@@ -607,25 +560,14 @@ defmodule Edenflowers.Email.Previews do
           {"refunded to a card", %{payments: [card]}, cancel_money(refunded: "45.00")},
           {"with a reason, paid in cash", %{payments: [cash], cancellation_reason: reason(locale)},
            cancel_money(to_return: "45.00")},
-          {"unpaid on invoice terms, a cancellation charge to invoice", %{payments: [], payment_terms: :invoice},
+          {"unpaid by bank transfer, cancellation charge outstanding", %{payments: [], payment_terms: :invoice},
            cancel_money(charge: "22.50", to_collect: "22.50")},
           {"part paid, the rest of a cancellation charge still to pay",
            %{payments: [%{card | amount: Decimal.new("10.00")}], payment_terms: :payment_link},
            cancel_money(charge: "22.50", to_collect: "12.50")},
-          {"part paid on invoice terms, the rest of a cancellation charge to invoice",
+          {"part paid by bank transfer, charge outstanding",
            %{payments: [%{card | amount: Decimal.new("10.00")}], payment_terms: :invoice},
            cancel_money(charge: "22.50", to_collect: "12.50")},
-          {"two invoices sent before cancelling, a new invoice for the charge",
-           %{payments: [], payment_terms: :invoice, seats: 2},
-           cancel_money(
-             charge: "45.00",
-             to_collect: "45.00",
-             invoiced: "90.00",
-             earlier_invoices: :replace,
-             earlier_invoice_count: 2
-           )},
-          {"invoiced before cancelling, no charge", %{payments: [], payment_terms: :invoice},
-           cancel_money(invoiced: "45.00", earlier_invoices: :cancel)},
           {"nothing paid, no first name", %{first_name: nil, payments: []}, cancel_money([])}
         ] do
       {"Booking cancelled", title, :cancelled, Email.cancelled(registration(attrs, locale), money)}
@@ -710,104 +652,15 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp invoice(locale) do
-    handed_over = %{
-      payment_terms: :invoice,
-      fulfillment_status: :fulfilled,
-      gift: false,
-      total_due: Decimal.new("64.00")
-    }
-
-    wedding =
-      Map.merge(handed_over, %{
-        fulfillment_status: :pending,
-        grand_total: Decimal.new("1200.00"),
-        total_due: Decimal.new("1200.00"),
-        balance: Decimal.new("1200.00")
-      })
-
-    cancelled =
-      Map.merge(handed_over, %{
-        fulfillment_status: :cancelled,
-        total_due: Decimal.new("32.00"),
-        balance: Decimal.new("32.00")
-      })
-
-    company = %{
-      business_customer: true,
-      company_name: "Kukka Oy",
-      business_id: "2944459-6",
-      billing_address: "Kyrkvägen 5\n68600 Jakobstad",
-      customer_reference: "PO-4471"
-    }
-
     [
-      {"Invoice", "order after delivery, consumer", :invoice,
-       Email.invoice(invoice_for(%{order: order(handed_over, locale)}, locale))},
-      {"Invoice", "business customer with their reference, with a message from Jennie", :invoice,
-       Email.invoice(invoice_for(Map.put(company, :order, order(handed_over, locale)), locale), message(locale))},
-      {"Invoice", "wedding booking fee, part of the order", :invoice,
-       Email.invoice(invoice_for(%{amount: Decimal.new("300.00"), order: order(wedding, locale)}, locale))},
-      {"Invoice", "course booking", :invoice,
-       Email.invoice(
-         invoice_for(
-           %{
-             amount: Decimal.new("45.00"),
-             buyer_name: "Anna Berg",
-             buyer_email: "anna@example.com",
-             course_registration: registration(%{total_due: Decimal.new("45.00")}, locale)
-           },
-           locale
-         )
-       )},
-      {"Invoice", "cancellation charge for a cancelled order", :invoice,
-       Email.invoice(
-         invoice_for(
-           %{amount: Decimal.new("32.00"), cancellation_charge?: true, order: order(cancelled, locale)},
-           locale
-         )
-       )},
-      {"Invoice", "cancellation charge for a cancelled course booking", :invoice,
-       Email.invoice(
-         invoice_for(
-           %{
-             amount: Decimal.new("22.50"),
-             cancellation_charge?: true,
-             buyer_name: "Anna Berg",
-             buyer_email: "anna@example.com",
-             course_registration:
-               registration(
-                 %{status: :cancelled, total_due: Decimal.new("22.50"), balance: Decimal.new("22.50")},
-                 locale
-               )
-           },
-           locale
-         )
-       )},
-      {"Invoice", "reminder, sent again once overdue", :invoice,
-       Email.invoice(invoice_for(%{overdue?: true, order: order(handed_over, locale)}, locale))},
+      {"Invoice", "standalone bespoke invoice", :invoice, Email.invoice(invoice_for(%{}, locale))},
+      {"Invoice", "wedding booking advance", :invoice,
+       Email.invoice(invoice_for(%{amount: Decimal.new("300.00")}, locale))},
+      {"Invoice", "independent wedding remainder", :invoice,
+       Email.invoice(invoice_for(%{amount: Decimal.new("780.00")}, locale))},
       {"Invoice", "reminder, part paid", :invoice,
        Email.invoice(
-         invoice_for(
-           %{
-             overdue?: true,
-             amount_paid: Decimal.new("20.00"),
-             order: order(Map.merge(handed_over, part_paid()), locale)
-           },
-           locale
-         )
-       )},
-      {"Invoice", "reminder for a course booking, with a message from Jennie", :invoice,
-       Email.invoice(
-         invoice_for(
-           %{
-             overdue?: true,
-             amount: Decimal.new("45.00"),
-             buyer_name: "Anna Berg",
-             buyer_email: "anna@example.com",
-             course_registration: registration(%{total_due: Decimal.new("45.00")}, locale)
-           },
-           locale
-         ),
+         invoice_for(%{overdue?: true, amount_paid: Decimal.new("20.00")}, locale),
          reminder_message(locale)
        )}
     ]
@@ -853,9 +706,7 @@ defmodule Edenflowers.Email.Previews do
       buyer_email: "maria@example.com",
       business_customer: false,
       overdue?: false,
-      cancellation_charge?: false,
-      order: nil,
-      course_registration: nil
+      buyer_address: "Street 1"
     }
     |> Map.merge(attrs)
     |> then(&%{&1 | amount_unpaid: Decimal.sub(&1.amount, &1.amount_paid)})
@@ -915,8 +766,7 @@ defmodule Edenflowers.Email.Previews do
         grand_total: Decimal.new("64.00"),
         amount_paid: Decimal.new(0),
         balance: Decimal.new("64.00"),
-        payments: [],
-        sent_open_invoices: []
+        payments: []
       },
       attrs
     )
@@ -984,8 +834,7 @@ defmodule Edenflowers.Email.Previews do
       seats: 1,
       balance: Decimal.new("45.00"),
       amount_paid: Decimal.new(0),
-      cancellation_reason: nil,
-      sent_open_invoices: []
+      cancellation_reason: nil
     }
     |> Map.merge(Map.delete(attrs, :course))
     |> Map.put(:course, course)

@@ -69,70 +69,7 @@ defmodule Edenflowers.Email.Templates do
   def message(""), do: ""
   def message(text), do: String.trim(text) <> "\n\n"
 
-  @doc """
-  How a customer pays a cancellation charge still owed: by what the invoices
-  they were sent make of it (`Payments.Changes.Cancel.money/2`), else by a
-  new invoice on invoice terms.
-  """
-  def collect_line(%{earlier_invoices: :replace, earlier_invoice_count: count}) do
-    gettext_comment("After the cancellation charge: \"it\" is the charge, or the part of it still to pay.")
-
-    dngettext(
-      "emails",
-      "I'll cancel my earlier invoice and send you a new one for it.",
-      "I'll cancel my earlier invoices and send you a new one for it.",
-      count
-    )
-  end
-
-  def collect_line(%{earlier_invoices: :stand, earlier_invoice_count: count}) do
-    gettext_comment(
-      "After the cancellation charge: the invoices sent before cancelling ask for just what is left of it."
-    )
-
-    dngettext(
-      "emails",
-      "My earlier invoice already asks for it, so please pay that one.",
-      "My earlier invoices already ask for it, so please pay those.",
-      count
-    )
-  end
-
-  def collect_line(%{earlier_invoices: :top_up, earlier_invoice_count: count} = assigns) do
-    gettext_comment("After the cancellation charge: %{amount} of it is already on the invoices sent before cancelling.")
-
-    dngettext(
-      "emails",
-      "My earlier invoice asks for %{amount} of it, and I'll send you an invoice for the rest.",
-      "My earlier invoices ask for %{amount} of it, and I'll send you an invoice for the rest.",
-      count,
-      amount: assigns.format_currency.(assigns.invoiced)
-    )
-  end
-
-  def collect_line(%{invoice?: true}), do: ~t"I'll send you an invoice for it."
   def collect_line(_assigns), do: ~t"I'll be in touch about how to pay it."
-
-  @doc "When each invoice the customer was sent is due, or was, if it is overdue, as one line."
-  def invoices_due_line(invoices, format_date) do
-    Enum.map_join(invoices, " ", fn invoice ->
-      date = format_date.(invoice.due_date)
-
-      if invoice.overdue?, do: overdue_line(invoice.number, date), else: due_line(invoice.number, date)
-    end)
-  end
-
-  # gettext_comment/1 attaches to the next message extracted, so each line has a function of its own.
-
-  defp due_line(number, date) do
-    gettext_comment("%{date} is a weekday and date, as \"Monday 30.11.2026\".")
-    dgettext("emails", "My invoice %{number} is due on %{date}.", number: number, date: date)
-  end
-
-  defp overdue_line(number, date) do
-    gettext_comment("%{date} is a weekday and date, as \"Monday 30.11.2026\", now past.")
-    dgettext("emails", "My invoice %{number} was due on %{date}.", number: number, date: date)
-  end
 
   @doc "How the emails Jennie sends are signed."
   def signature do

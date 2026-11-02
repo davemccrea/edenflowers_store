@@ -1,29 +1,5 @@
 defmodule Edenflowers.Payments.Invoice do
-  @moduledoc """
-  A bill Jennie sends for an order or a Course booking on invoice terms, to
-  be paid by bank transfer. A purchase can have several, such as a wedding's
-  booking fee and then the rest after delivery.
-
-  Once created it never changes: its number, amount, dates and the buyer
-  details it was sent with are frozen, and so is everything its PDF prints
-  (`content`, including the seller's details), so later edits to the
-  purchase or the shop's details don't reach it. A correction is a Credit note, which cancels it while leaving it
-  as it was, and a new invoice.
-
-  It is paid once the bank transfers Jennie records against it (Payments
-  with its `invoice_id`) cover its amount.
-
-  `:send` emails it to the customer with its PDF; creating one can send it
-  at once, and Jennie can send it again while it is open. Sending only stamps
-  `sent_at`, so the invoice itself never changes; each send is kept as a
-  version for the order log. Sent while `overdue?`, the email is a gentle
-  reminder. Nothing sends it automatically.
-
-  Numbers come from one gapless series that continues Zervant's, starting at
-  `first_number/0` (see `Changes.IssueInvoice`). The seller details and late
-  payment interest it freezes come from `seller/0` and
-  `late_interest_rate/0` as it is made.
-  """
+  @moduledoc "Standalone editable drafts, numbered and frozen when issued."
   use Ash.Resource,
     domain: Edenflowers.Payments,
     data_layer: AshPostgres.DataLayer,
@@ -65,34 +41,10 @@ defmodule Edenflowers.Payments.Invoice do
     |> then(&(&1 && Ash.load!(&1, load, authorize?: false)))
   end
 
-  @doc "The order or Course booking a create changeset invoices, loaded with `load`, or nil."
-  def purchase(changeset, load) do
-    order_id = Ash.Changeset.get_attribute(changeset, :order_id)
-    registration_id = Ash.Changeset.get_attribute(changeset, :course_registration_id)
-
-    {resource, id} =
-      if order_id,
-        do: {Edenflowers.Orders.Order, order_id},
-        else: {Edenflowers.Courses.CourseRegistration, registration_id}
-
-    if id, do: Ash.get!(resource, id, load: load, authorize?: false, not_found_error?: false)
-  end
-
   postgres do
     repo Edenflowers.Repo
     table "invoices"
     migration_types amount: :decimal
-
-    check_constraints do
-      check_constraint :order_id, "invoices_one_parent",
-        check: "(order_id IS NULL) <> (course_registration_id IS NULL)",
-        message: "must belong to exactly one order or course registration"
-    end
-
-    references do
-      reference :order, on_delete: :restrict
-      reference :course_registration, on_delete: :restrict
-    end
   end
 
   # Each send, for the order log: sent_at keeps only the latest, and Jennie
@@ -115,6 +67,11 @@ defmodule Edenflowers.Payments.Invoice do
   actions do
     defaults [:read]
 
+    read :admin_list do
+      pagination offset?: true, keyset?: true, countable: true, required?: false
+      prepare build(sort: [inserted_at: :desc])
+    end
+
     read :open_at do
       description "The invoices still owed at the end of a day, for the receivables list in the accountant's " <>
                     "monthly report: made by then, not cancelled by a Credit note dated by then, and not covered " <>
@@ -128,7 +85,7 @@ defmodule Edenflowers.Payments.Invoice do
       end
 
       filter expr(
-               invoice_date <= ^arg(:date) and
+               not is_nil(issued_at) and invoice_date <= ^arg(:date) and
                  not exists(credit_note, credit_date <= ^arg(:date)) and
                  amount_open_at(date: ^arg(:date)) > 0
              )
@@ -137,35 +94,71 @@ defmodule Edenflowers.Payments.Invoice do
     end
 
     create :create do
-      description "Jennie invoices an order or Course booking on invoice terms whose buyer details are complete " <>
-                    "(invoiceable?). It takes the next number in the series and its viitenumero, is dated today " <>
-                    "in Helsinki, and freezes a copy of the buyer details and of everything its PDF prints " <>
-                    "(content), so the PDF never changes after it is made. The amount defaults to the Balance not " <>
-                    "yet invoiced, the due date to 14 days later (Payment.overdue_after_days) and the language " <>
-                    "to the purchase's; Jennie can change all three."
+      description "Create an unnumbered standalone invoice draft."
 
-      accept [:order_id, :course_registration_id, :amount, :due_date, :locale]
+      accept [
+        :buyer_name,
+        :buyer_email,
+        :buyer_address,
+        :business_customer,
+        :company_name,
+        :business_id,
+        :billing_address,
+        :customer_reference,
+        :invoice_date,
+        :due_date,
+        :locale,
+        :lines,
+        :supply_date,
+        :supply_description
+      ]
+    end
 
-      argument :email_customer?, :boolean do
-        description "Whether to email it to the customer once it is made, as :send does. The admin form starts " <>
-                      "with this ticked. A failed email never undoes the invoice: the result's :emailed? " <>
-                      "metadata says whether it went, and :send can try again."
+    update :update_draft do
+      accept [
+        :buyer_name,
+        :buyer_email,
+        :buyer_address,
+        :business_customer,
+        :company_name,
+        :business_id,
+        :billing_address,
+        :customer_reference,
+        :invoice_date,
+        :due_date,
+        :locale,
+        :lines,
+        :supply_date,
+        :supply_description
+      ]
 
-        default false
-      end
+      require_atomic? false
+      change Changes.EditInvoiceDraft
+    end
 
-      argument :message, :string do
-        description "Jennie's own words for the email, after its first line. Only used when email_customer? is true."
-      end
-
-      validate present([:order_id, :course_registration_id], exactly: 1)
-      validate Validations.Invoiceable
+    update :issue do
+      accept []
+      require_atomic? false
       change Changes.IssueInvoice
-      validate present(:amount), message: "nothing is left to invoice, so enter an amount"
-      validate attribute_in(:locale, @locales)
-      validate compare(:due_date, greater_than_or_equal_to: :invoice_date), message: "can't be before the invoice date"
       change Changes.FreezeInvoiceContent
-      change Changes.SendWhenCreated
+    end
+
+    update :record_payment do
+      description "Records a bank transfer received for this issued invoice, without sending an email."
+      accept []
+      argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
+      argument :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
+      require_atomic? false
+      change Changes.RecordInvoicePayment
+    end
+
+    update :undo_payment do
+      description "Reverses a bank transfer entered by mistake, keeping its original ledger row."
+      accept []
+      argument :payment_id, :uuid, allow_nil?: false
+      argument :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
+      require_atomic? false
+      change {Changes.RecordInvoicePayment, reversal?: true}
     end
 
     update :send do
@@ -195,8 +188,12 @@ defmodule Edenflowers.Payments.Invoice do
 
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type([:read, :create])
-      authorize_if action(:send)
+      authorize_if action([:send, :update_draft, :issue, :record_payment, :undo_payment])
     end
+  end
+
+  validations do
+    validate attribute_in(:locale, @locales)
   end
 
   attributes do
@@ -204,23 +201,22 @@ defmodule Edenflowers.Payments.Invoice do
 
     attribute :number, :integer do
       description "The invoice number, from one gapless series shared with credit notes that continues Zervant's."
-      allow_nil? false
     end
 
     attribute :reference_number, :string do
       description "The viitenumero the customer pays with: the number followed by its Finnish 7-3-1 check digit, " <>
                     "as unspaced digits. ReferenceNumber.format/1 groups it for printing."
-
-      allow_nil? false
     end
 
     attribute :invoice_date, :date do
-      description "The day it was made, in Helsinki."
+      description "The invoice date chosen in the draft."
+      default &Edenflowers.ShopTime.today/0
       allow_nil? false
     end
 
     attribute :due_date, :date do
-      description "When it is to be paid: 14 days after the invoice date unless Jennie chose another day."
+      description "The payment due date."
+      default &__MODULE__.default_due_date/0
       allow_nil? false
     end
 
@@ -228,23 +224,22 @@ defmodule Edenflowers.Payments.Invoice do
       description "Due on this invoice in euros, VAT included: the Balance not yet invoiced unless Jennie chose " <>
                     "another amount."
 
-      allow_nil? false
-      constraints greater_than: 0, scale: 2
+      default 0
+      constraints min: 0, scale: 2
     end
 
     attribute :locale, :string do
-      description "The language it is written in: the purchase's unless Jennie chose another."
+      description "The document language."
+      default "fi"
       allow_nil? false
     end
 
     attribute :buyer_name, :string do
       description "The customer's name, as it was when invoiced."
-      allow_nil? false
     end
 
     attribute :buyer_email, :string do
       description "Where it is sent: the customer's email when invoiced."
-      allow_nil? false
     end
 
     attribute :buyer_address, :string do
@@ -275,16 +270,22 @@ defmodule Edenflowers.Payments.Invoice do
     end
 
     attribute :content, :map do
-      description "Everything its PDF prints but the labels, frozen as it is made (InvoicePdf.content/1), so " <>
-                    "the PDF never changes: the purchase's lines, totals and VAT per rate in its language, a " <>
-                    "Course booking's course translated into it; the earlier invoices and money paid before it; " <>
-                    "the seller's name, Y-tunnus, address and IBAN; the buyer block; its number, dates, " <>
-                    "late payment interest, amount due, viitenumero and virtual barcode. Money and dates are formatted strings, under " <>
-                    "string keys. The admin download, the email and every resend render it, with the labels " <>
-                    "translated afresh, and a Credit note prints its buyer and seller from it."
-
-      allow_nil? false
+      description "Everything its PDF prints but the labels, frozen on issuance from its own billed lines, " <>
+                    "numeric VAT snapshot, seller/buyer, dates, number, amount and bank details. Every download " <>
+                    "and resend uses these immutable formatted string keys."
     end
+
+    attribute :issued_at, :utc_datetime_usec
+    attribute :supply_date, :date
+    attribute :supply_description, :string
+
+    attribute :lines, {:array, :map} do
+      allow_nil? false
+      default []
+    end
+
+    attribute :financial_snapshot, :map
+    attribute :seller_snapshot, :map
 
     attribute :sent_at, :utc_datetime do
       description "When it was last emailed to the customer. Nil until it has been: Jennie may make one without " <>
@@ -295,14 +296,6 @@ defmodule Edenflowers.Payments.Invoice do
   end
 
   relationships do
-    belongs_to :order, Edenflowers.Orders.Order do
-      description "The order it bills. Nil when it bills a Course booking: it belongs to exactly one."
-    end
-
-    belongs_to :course_registration, Edenflowers.Courses.CourseRegistration do
-      description "The Course booking it bills. Nil when it bills an order: it belongs to exactly one."
-    end
-
     has_many :payments, Edenflowers.Payments.Payment do
       description "The bank transfers Jennie recorded as paying it, and any Undo or refund of them."
     end
@@ -313,16 +306,20 @@ defmodule Edenflowers.Payments.Invoice do
   end
 
   calculations do
+    calculate :editable?, :boolean, expr(is_nil(issued_at))
+    calculate :issued?, :boolean, expr(not is_nil(issued_at))
+
     calculate :status,
               :atom,
               expr(
                 cond do
+                  is_nil(issued_at) -> :draft
                   exists(credit_note, true) -> :cancelled
                   amount_paid >= amount -> :paid
                   true -> :open
                 end
               ) do
-      constraints one_of: [:open, :paid, :cancelled]
+      constraints one_of: [:draft, :open, :paid, :cancelled]
 
       description "Where it stands: :cancelled once a Credit note names it, otherwise :open until its Payments " <>
                     "cover its amount, then :paid. A refund or Undo of one of them can open it again. Only " <>
@@ -332,7 +329,7 @@ defmodule Edenflowers.Payments.Invoice do
     calculate :cancellable?, :boolean, expr(status == :open and amount_paid == 0) do
       description "Whether Jennie can cancel it with a Credit note: open with nothing paid on it. One with " <>
                     "Payments, even part-paid, can't be, as those Payments would count against no open invoice; " <>
-                    "she undoes them first. Validations.Cancellable refuses a Credit note otherwise."
+                    "she consults the accountant for corrections. Validations.Cancellable refuses a Credit note otherwise."
     end
 
     calculate :overdue?, :boolean, expr(status == :open and due_date < helsinki_today()) do

@@ -251,7 +251,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert has_element?(view, "#booking-form label", "Email language")
       assert has_element?(view, ~s|input[type="radio"][value="on_fulfillment"][checked]|)
       assert has_element?(view, "#booking-form label", "Payment link")
-      assert has_element?(view, "#booking-form label", "Invoice")
+      assert has_element?(view, "#booking-form label", "Bank transfer")
       assert has_element?(view, "#booking-form label", "In person")
       refute has_element?(view, ~s|input[type="radio"][value="received"]|)
       refute has_element?(view, "#booking-drawer")
@@ -468,7 +468,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       |> form("#booking-form", form: %{email: "birgitta@example.com", locale: "en-GB", payment_terms: "invoice"})
       |> render_change()
 
-      assert has_element?(view, "#booking-email-preview-toggle", "I'll send you an invoice separately.")
+      assert has_element?(view, "#booking-email-preview-toggle", "I'll be in touch about how to pay it.")
       booking = add_booking(view, course, "true", "invoice")
       assert booking.payment_terms == :invoice
       refute booking.payment_link_token
@@ -476,33 +476,11 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert %{success: 1} = Oban.drain_queue(queue: :default)
 
       assert_email_sent(fn email ->
-        assert email.text_body =~ "I'll send you an invoice separately."
+        assert email.text_body =~ "I'll be in touch about how to pay it."
         refute email.text_body =~ "/pay/courses/"
         refute email.text_body =~ "Please pay at the course."
         assert email.attachments == []
       end)
-    end
-
-    test "business details show once Business customer is ticked, and save incomplete", %{conn: conn} do
-      course = generate(course(total_places: 10))
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
-      refute has_element?(view, "#form_company_name")
-
-      view |> form("#booking-form", form: %{business_customer: "true"}) |> render_change()
-      assert has_element?(view, "#form_company_name")
-
-      assert view
-             |> form("#booking-form", form: %{business_id: "2944459-5"})
-             |> render_change() =~ "Must be a valid Y-tunnus"
-
-      view
-      |> form("#booking-form", form: %{company_name: "Kukka Oy", business_id: "2944459-6"})
-      |> render_change()
-
-      booking = add_booking(view, course, "false")
-      assert booking.business_customer
-      assert booking.company_name == "Kukka Oy"
-      refute Ash.load!(booking, :business_details_complete?, authorize?: false).business_details_complete?
     end
 
     test "a payment link is still created when confirmation is not emailed", %{conn: conn} do
@@ -682,85 +660,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert has_element?(view, "#registration-#{registration.id}", "Refunded 20,00 € · Stripe")
       refute has_element?(view, "#registration-#{registration.id}", "To collect")
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
-    end
-  end
-
-  test "a booking on invoice terms is invoiced from its menu and lists the invoice", %{conn: conn} do
-    registration = generate(course_registration(status: :confirmed, payment_terms: :invoice, email: "anna@example.com"))
-    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
-
-    view |> element("#registration-actions-#{registration.id} button", "Create invoice") |> render_click()
-    view |> form("#invoices-form") |> render_submit()
-
-    assert_email_sent(fn email -> assert email.to == [{"", "anna@example.com"}] end)
-    [invoice] = Ash.load!(registration, :invoices, authorize?: false).invoices
-    assert has_element?(view, "#registration-invoices-#{registration.id} #invoice-#{invoice.id}", "Sent")
-  end
-
-  test "cancelling an unpaid booking on invoice terms with a charge leaves it to invoice", %{conn: conn} do
-    registration = generate(course_registration(status: :confirmed, payment_terms: :invoice, email: "anna@example.com"))
-    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
-
-    view |> element(~s|button[phx-click="open_cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
-    assert has_element?(view, "#cancel-form", "Total 85,00 €, paid 0,00 €.")
-
-    view |> form("#cancel-form", cancel: %{charge: "40"}) |> render_change()
-
-    assert has_element?(
-             view,
-             "#cancel-email",
-             "There's a cancellation charge of 40,00 €. I'll send you an invoice for it."
-           )
-
-    view |> form("#cancel-form", cancel: %{charge: "40"}) |> render_submit()
-
-    refute has_element?(view, "#cancelled-bookings #registration-#{registration.id}")
-    view |> element("#registration-actions-#{registration.id} button", "Create invoice") |> render_click()
-    assert has_element?(view, ~s|#invoices-form input[name="invoice[amount]"][value="40"]|)
-    assert [] = Ash.load!(registration, :invoices, authorize?: false).invoices
-  end
-
-  describe "a cancelled booking on invoice terms" do
-    setup do
-      registration =
-        generate(
-          course_registration(
-            status: :cancelled,
-            payment_terms: :invoice,
-            email: "anna@example.com",
-            kept_amount: Decimal.new("40.00")
-          )
-        )
-
-      %{registration: registration}
-    end
-
-    test "stays in view and invoices what Jennie kept", %{conn: conn, registration: registration} do
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
-      refute has_element?(view, "#cancelled-bookings #registration-#{registration.id}")
-
-      view |> element("#registration-actions-#{registration.id} button", "Create invoice") |> render_click()
-      view |> form("#invoices-form") |> render_submit()
-
-      assert_email_sent(fn email -> assert email.to == [{"", "anna@example.com"}] end)
-      [invoice] = Ash.load!(registration, :invoices, authorize?: false).invoices
-      assert Decimal.equal?(invoice.amount, "40.00")
-      assert has_element?(view, "#registration-invoices-#{registration.id} #invoice-#{invoice.id}", "Sent")
-    end
-
-    test "its invoice is cancelled with a credit note", %{conn: conn, admin: admin, registration: registration} do
-      {:ok, invoice} =
-        Edenflowers.Payments.create_invoice(%{course_registration_id: registration.id, email_customer?: false},
-          actor: admin
-        )
-
-      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
-
-      view |> element("#invoice-#{invoice.id} button", "Cancel") |> render_click()
-      view |> form("#invoices-cancel-form", cancel: %{reason: "Wrong amount"}) |> render_submit()
-
-      %{credit_note: credit_note} = Ash.load!(invoice, :credit_note, authorize?: false)
-      assert has_element?(view, "#registration-invoices-#{registration.id} #credit-note-#{credit_note.id}")
     end
   end
 end

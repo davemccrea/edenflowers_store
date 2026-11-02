@@ -6,12 +6,13 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
   VAT is reported on a cash basis, so a payment counts in the month of its
   `paid_at` (Helsinki time), and an expense in the month of its `paid_on`;
-  unpaid ones wait until Jennie marks them paid. The sales sheet is the shop's only
-  sales record (ADR 0004), so every payment method counts.
+  unpaid ones wait until Jennie marks them paid. The sales sheet combines purchase
+  receipts and standalone invoice receipts (ADR 0004), so every payment method counts.
 
   The receivables sheet lists the invoices still owed at month end, for the
-  accountant to book what replaced Zervant's receivables list. Invoices are
-  payment requests, not sales, so it never changes the sales sheet.
+  accountant to book what replaced Zervant's receivables list. Issued invoices
+  freeze their own sale and VAT; only receipts enter the cash sales sheet, so
+  issuing or crediting an unpaid document adds no cash sale.
 
   A receipt Papra can't serve doesn't stop the report: its row says so.
   """
@@ -20,6 +21,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   require Ash.Query
   require Logger
 
+  alias Edenflowers.Accounting.InvoiceReceiptAllocation
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.PapraAPI
   alias Edenflowers.External.StripeAPI
@@ -47,7 +49,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
          {:ok, expenses} <- paid_expenses(first, last),
          {:ok, invoices} <-
            Payments.list_open_invoices(last,
-             load: [:buyer, :purchase_reference, amount_open_at: %{date: last}],
+             load: [:buyer, amount_open_at: %{date: last}],
              authorize?: false
            ),
          rows =
@@ -58,7 +60,8 @@ defmodule Edenflowers.Accounting.MonthlyReport do
          receipts = for({_n, _expense, name, body} <- rows, body, do: {~c"kvitton/#{name}", body}),
          {:ok, transactions} <-
            StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
-         sheets = [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions), receivables_sheet(invoices)],
+         sheets =
+           [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions), receivables_sheet(invoices)],
          workbook = %Workbook{sheets: Enum.map(sheets, &with_basic_font/1)},
          {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
          files = [{~c"#{spreadsheet}", xlsx} | receipts],
@@ -74,7 +77,11 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     Payment
     |> Ash.Query.filter(paid_at >= ^from and paid_at < ^until)
     |> Ash.Query.sort(paid_at: :asc)
-    |> Ash.Query.load(order: [:order_reference, :vat_breakdown], course_registration: [:reference, :tax_rate])
+    |> Ash.Query.load(
+      order: [:order_reference, :vat_breakdown],
+      course_registration: [:reference, :tax_rate],
+      invoice: [:payments]
+    )
     |> Ash.read(authorize?: false)
   end
 
@@ -93,9 +100,17 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   def split_by_rate(amount, vat_breakdown) do
     order_gross = vat_breakdown |> Enum.map(& &1.gross) |> Enum.reduce(Decimal.new(0), &Decimal.add/2)
 
+    if Decimal.equal?(order_gross, 0) do
+      []
+    else
+      split_nonzero(amount, vat_breakdown, order_gross)
+    end
+  end
+
+  defp split_nonzero(amount, vat_breakdown, order_gross) do
     shares =
       Enum.map(vat_breakdown, fn row ->
-        {row.rate, amount |> Decimal.mult(row.gross) |> Decimal.div(order_gross) |> Decimal.round(2)}
+        {row.rate, amount |> Decimal.mult(row.gross) |> Decimal.div(order_gross) |> Decimal.round(2, :half_up)}
       end)
 
     leftover = Decimal.sub(amount, shares |> Enum.map(&elem(&1, 1)) |> Enum.reduce(Decimal.new(0), &Decimal.add/2))
@@ -141,6 +156,16 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   defp sale_rows(%Payment{order: %{} = order} = payment) do
     for {rate, gross} <- split_by_rate(payment.amount, order.vat_breakdown),
         do: sale(payment, order.order_reference, ~t"order", rate, gross)
+  end
+
+  defp sale_rows(%Payment{invoice_id: id, invoice: invoice} = payment) when not is_nil(id) do
+    allocation = InvoiceReceiptAllocation.allocate(invoice.financial_snapshot, invoice.payments)
+
+    for row <- Map.fetch!(allocation, payment.id) do
+      sale(payment, to_string(invoice.number), ~t"invoice", row.rate, row.gross)
+      |> Map.put(:net, row.base)
+      |> Map.put(:vat, row.vat)
+    end
   end
 
   defp sale_rows(%Payment{course_registration: registration} = payment) do
@@ -347,7 +372,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
           date_cell(invoice.invoice_date),
           date_cell(invoice.due_date),
           invoice.buyer,
-          invoice.purchase_reference,
+          invoice.customer_reference,
           amount_cell(invoice.amount),
           amount_cell(invoice.amount_open_at)
         ]

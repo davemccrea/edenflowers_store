@@ -9,8 +9,7 @@ defmodule Edenflowers.Payments.Validations.Cancellable do
   either seen here or waits until the Credit note is in.
 
   An Invoice with any money on it can't be cancelled, not only a paid one:
-  its Payments would then count against no open invoice. Jennie undoes them
-  first, and records the money again against the new invoice.
+  its Payments would then count against no open invoice. Paid or partly paid corrections go to the accountant.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
@@ -29,15 +28,17 @@ defmodule Edenflowers.Payments.Validations.Cancellable do
 
   defp load, do: [:cancellable?, :status, :amount_paid, credit_note: [:number]]
 
+  defp check(%{status: :draft}), do: error(~t"Issue the invoice before creating a credit note.")
+
   defp check(%{cancellable?: true}), do: :ok
 
   defp check(%{status: :cancelled, credit_note: %{number: number}}),
     do: error(~t"Credit note #{number} already cancels this invoice.")
 
-  defp check(%{status: :paid}), do: error(~t"A paid invoice can't be cancelled.")
+  defp check(%{status: :paid}), do: error(~t"Ask the accountant to correct a paid invoice.")
 
   defp check(_part_paid),
-    do: error(~t"Payments are recorded against this invoice. Undo them first, then cancel it.")
+    do: error(~t"Payments are recorded against this invoice. Ask the accountant about this correction.")
 
   defp error(message), do: {:error, field: :invoice_id, message: message}
 end

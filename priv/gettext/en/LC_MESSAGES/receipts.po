@@ -48,7 +48,7 @@ msgid "Customer"
 msgstr ""
 
 #: lib/edenflowers/orders/receipt_labels.ex:19
-#: lib/edenflowers/payments/invoice_labels.ex:36
+#: lib/edenflowers/payments/invoice_labels.ex:33
 #, elixir-autogen, elixir-format
 msgid "Date"
 msgstr ""
@@ -183,13 +183,13 @@ msgstr ""
 msgid "VAT rate"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:29
+#: lib/edenflowers/payments/invoice_labels.ex:26
 #, elixir-autogen, elixir-format
 msgid "Account (IBAN)"
 msgstr ""
 
 #. The sum to transfer, as a field of the payment details.
-#: lib/edenflowers/payments/invoice_labels.ex:89
+#: lib/edenflowers/payments/invoice_labels.ex:58
 #, elixir-autogen, elixir-format
 msgid "Amount"
 msgstr ""
@@ -199,7 +199,7 @@ msgstr ""
 msgid "Due date"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:27
+#: lib/edenflowers/payments/invoice_labels.ex:24
 #, elixir-autogen, elixir-format
 msgid "Due on this invoice"
 msgstr ""
@@ -219,72 +219,55 @@ msgstr ""
 msgid "Invoice number"
 msgstr ""
 
-#. Money paid towards the order before this invoice, outside any earlier invoice.
-#: lib/edenflowers/payments/invoice_labels.ex:61
-#, elixir-autogen, elixir-format
-msgid "Paid"
-msgstr ""
-
-#: lib/edenflowers/payments/invoice_labels.ex:28
+#: lib/edenflowers/payments/invoice_labels.ex:25
 #, elixir-autogen, elixir-format
 msgid "Payment details"
 msgstr ""
 
 #. The Finnish viitenumero the payer types into their bank, not the order reference.
-#: lib/edenflowers/payments/invoice_labels.ex:84
+#: lib/edenflowers/payments/invoice_labels.ex:53
 #, elixir-autogen, elixir-format
 msgid "Reference number"
 msgstr ""
 
 #. The 54-digit virtuaaliviivakoodi a payer can paste into their bank instead of typing the details.
-#: lib/edenflowers/payments/invoice_labels.ex:94
+#: lib/edenflowers/payments/invoice_labels.ex:63
 #, elixir-autogen, elixir-format
 msgid "Virtual barcode"
 msgstr ""
 
 #. The buying company's own reference for the purchase, such as a purchase order number (viitteenne).
-#: lib/edenflowers/payments/invoice_labels.ex:56
+#: lib/edenflowers/payments/invoice_labels.ex:48
 #, elixir-autogen, elixir-format
 msgid "Your reference"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:34
+#: lib/edenflowers/payments/invoice_labels.ex:31
 #, elixir-autogen, elixir-format
 msgid "Credit note"
 msgstr ""
 
-#: lib/edenflowers/payments/invoice_labels.ex:35
+#: lib/edenflowers/payments/invoice_labels.ex:32
 #, elixir-autogen, elixir-format
 msgid "Credit note number"
 msgstr ""
 
 #. The total a credit note takes off, printed as a negative amount (hyvitetään).
-#: lib/edenflowers/payments/invoice_labels.ex:104
+#: lib/edenflowers/payments/invoice_labels.ex:73
 #, elixir-autogen, elixir-format
 msgid "Credited"
 msgstr ""
 
 #. Why Jennie cancelled the invoice, as she wrote it.
-#: lib/edenflowers/payments/invoice_labels.ex:99
+#: lib/edenflowers/payments/invoice_labels.ex:68
 #, elixir-autogen, elixir-format
 msgid "Reason"
 msgstr ""
 
-#. On an invoice for a course booking: the day the course is held, as its date of supply.
-#: lib/edenflowers/payments/invoice_labels.ex:48
-#, elixir-autogen, elixir-format
-msgid "Course date"
-msgstr ""
-
 #. The yearly interest charged on a late payment (viivästyskorko), printed beside a rate such as 8,00 %.
-#: lib/edenflowers/payments/invoice_labels.ex:112
+#: lib/edenflowers/payments/invoice_labels.ex:81
 #, elixir-autogen, elixir-format
 msgid "Late payment interest"
-msgstr ""
-
-#: lib/edenflowers/orders/receipt_labels.ex:75
-#, elixir-autogen, elixir-format
-msgid "Bank transfer, invoice %{number}"
 msgstr ""
 
 #: lib/edenflowers/orders/receipt_labels.ex:67
@@ -292,14 +275,12 @@ msgstr ""
 msgid "Questions? Just reply to the email this came with, or write to info@edenflowers.fi."
 msgstr ""
 
-#. A deduction in the invoice totals of a cancelled order or course booking: the part of its total not charged because it was cancelled. Printed as a negative amount.
-#: lib/edenflowers/payments/invoice_labels.ex:79
+#: lib/edenflowers/payments/invoice_labels.ex:22
 #, elixir-autogen, elixir-format
-msgid "Not charged after cancellation"
+msgid "Date of supply"
 msgstr ""
 
-#. A deduction in the invoice totals: the part of the order total not asked for on this invoice or any earlier one, to be invoiced later. Printed as a negative amount.
-#: lib/edenflowers/payments/invoice_labels.ex:70
-#, elixir-autogen, elixir-format
-msgid "To be invoiced later"
+#: lib/edenflowers/payments/invoice_labels.ex:17
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Unit price incl. VAT"
 msgstr ""

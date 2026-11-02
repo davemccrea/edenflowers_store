@@ -63,16 +63,9 @@ defmodule Edenflowers.Orders.ReceiptLabels do
 
   defp closing_line(locale, false = _upcoming?) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
-      # Translators: The receipt's closing line once the order is handed over or the course held. "This" is the receipt, which can also be downloaded rather than emailed.
+      # Translators: Closing line after handover or the course. "This" is the receipt,
+      # which can also be downloaded rather than emailed.
       dgettext("receipts", "Questions? Just reply to the email this came with, or write to info@edenflowers.fi.")
-    end)
-  end
-
-  @doc "How a payment against an invoice reads on the receipt."
-  def invoice_payment(number, locale) do
-    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
-      # Translators: A payment row on the receipt, naming the invoice it paid so a company can match them. %{number} is the invoice number, e.g. 1338.
-      dgettext("receipts", "Bank transfer, invoice %{number}", number: number)
     end)
   end
 end

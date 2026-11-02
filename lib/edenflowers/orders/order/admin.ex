@@ -35,12 +35,7 @@ defmodule Edenflowers.Orders.Order.Admin do
     :delivery_address,
     :delivery_instructions,
     :fulfillment_fee_override,
-    :florist_note,
-    :business_customer,
-    :company_name,
-    :business_id,
-    :billing_address,
-    :customer_reference
+    :florist_note
   ]
 
   @admin_show_load [
@@ -77,14 +72,7 @@ defmodule Edenflowers.Orders.Order.Admin do
     :fulfillment_confirmation_sendable?,
     :promotion,
     :fulfillment_option,
-    :invoiceable?,
-    :uninvoiced_balance,
-    :buyer_details_complete?,
-    :business_details_complete?,
-    :missing_business_details,
-    line_items: [:subtotal, :total],
-    open_invoices: [:amount_unpaid],
-    invoices: [:status, :overdue?, :sendable?, :cancellable?, :credit_note]
+    line_items: [:subtotal, :total]
   ]
 
   oban do
