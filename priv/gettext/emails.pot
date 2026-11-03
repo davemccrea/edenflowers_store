@@ -99,7 +99,7 @@ msgstr ""
 msgid "Away, or want a change? Pause or change it in your account by %{date}:"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:7
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:9
 #: lib/edenflowers/email/templates/order_fulfillment.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Card message: %{message}"
@@ -120,7 +120,7 @@ msgstr ""
 msgid "Delivered to"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:5
+#: lib/edenflowers/email/templates/order_totals.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr ""
@@ -130,7 +130,7 @@ msgstr ""
 msgid "Delivery on %{date} to %{address}"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:4
+#: lib/edenflowers/email/templates/order_totals.text.eex:2
 #, elixir-autogen, elixir-format
 msgid "Discount"
 msgstr ""
@@ -161,7 +161,7 @@ msgstr ""
 msgid "Flowers you're interested in:"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:6
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:8
 #: lib/edenflowers/email/templates/order_fulfillment.text.eex:2
 #, elixir-autogen, elixir-format
 msgid "For %{recipient}"
@@ -352,7 +352,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:7
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:6
-#: lib/edenflowers/email/templates/order_totals.text.eex:10
+#: lib/edenflowers/email/templates/order_totals.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "Left to pay"
 msgstr ""
@@ -399,17 +399,17 @@ msgid "Order %{reference} cancelled"
 msgstr ""
 
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:6
-#: lib/edenflowers/email/templates/order_totals.text.eex:7
+#: lib/edenflowers/email/templates/order_totals.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Paid"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:11
+#: lib/edenflowers/email/templates/order_totals.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "Paid in full"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:9
+#: lib/edenflowers/email/templates/order_totals.text.eex:7
 #, elixir-autogen, elixir-format
 msgid "Paid so far"
 msgstr ""
@@ -434,7 +434,7 @@ msgstr ""
 msgid "Phone: %{phone}"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:11
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:13
 #, elixir-autogen, elixir-format
 msgid "Plans changed? You can cancel from your account until %{date} for a full refund: %{url}"
 msgstr ""
@@ -570,7 +570,7 @@ msgstr ""
 msgid "The payment for your order for collection on %{date} (%{product}) didn't go through, but your flowers will still be ready to collect."
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:8
+#: lib/edenflowers/email/templates/order_totals.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "To be refunded"
 msgstr ""
@@ -595,7 +595,7 @@ msgstr ""
 msgid "To pause, change or cancel, use your account at least %{days} days before a pickup:"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:6
+#: lib/edenflowers/email/templates/order_totals.text.eex:4
 #, elixir-autogen, elixir-format
 msgid "Total"
 msgstr ""
@@ -612,15 +612,15 @@ msgstr ""
 #: lib/edenflowers/email/templates/contact_message.text.eex:14
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:14
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:11
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:13
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:15
 #: lib/edenflowers/email/templates/order_delivered.text.eex:7
 #: lib/edenflowers/email/templates/order_details.text.eex:8
 #: lib/edenflowers/email/templates/order_left_at_door.text.eex:9
 #: lib/edenflowers/email/templates/order_refunded.text.eex:9
 #: lib/edenflowers/email/templates/order_updated.text.eex:8
-#: lib/edenflowers/email/templates/payment_received.text.eex:6
+#: lib/edenflowers/email/templates/payment_received.text.eex:8
 #: lib/edenflowers/email/templates/payment_reminder.text.eex:11
-#: lib/edenflowers/email/templates/purchase_receipt.text.eex:6
+#: lib/edenflowers/email/templates/purchase_receipt.text.eex:8
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:9
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:15
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:22
@@ -838,7 +838,7 @@ msgstr ""
 msgid "Your receipt is attached."
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:9
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:11
 #, elixir-autogen, elixir-format
 msgid "Your receipt is attached. If you have a question about your order, reply to this email."
 msgstr ""
@@ -890,7 +890,6 @@ msgid "Booking %{reference}: %{course}, %{date}"
 msgstr ""
 
 #: lib/edenflowers/email/templates/order_refunded.text.eex:5
-#: lib/edenflowers/email/templates/order_totals.text.eex:1
 #, elixir-autogen, elixir-format
 msgid "Order %{reference} for %{date}"
 msgstr ""
@@ -913,4 +912,11 @@ msgstr ""
 #: lib/edenflowers/email/templates/order_payment.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "There's %{amount} left to pay."
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:5
+#: lib/edenflowers/email/templates/payment_received.text.eex:5
+#: lib/edenflowers/email/templates/purchase_receipt.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "Order %{reference}"
 msgstr ""

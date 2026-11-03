@@ -95,7 +95,7 @@ msgstr "Jo veloitettu tilauksesi on silti noudettavissa %{date}."
 msgid "Away, or want a change? Pause or change it in your account by %{date}:"
 msgstr "Oletko poissa, tai haluatko muutoksen? Keskeytä tai muuta tilaustasi tililläsi viimeistään %{date}:"
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:7
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:9
 #: lib/edenflowers/email/templates/order_fulfillment.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Card message: %{message}"
@@ -116,7 +116,7 @@ msgstr "Noudettavissa %{date} osoitteesta %{shop}"
 msgid "Delivered to"
 msgstr "Toimitusosoite"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:5
+#: lib/edenflowers/email/templates/order_totals.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr "Toimitus"
@@ -126,7 +126,7 @@ msgstr "Toimitus"
 msgid "Delivery on %{date} to %{address}"
 msgstr "Toimitus %{date} osoitteeseen %{address}"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:4
+#: lib/edenflowers/email/templates/order_totals.text.eex:2
 #, elixir-autogen, elixir-format
 msgid "Discount"
 msgstr "Alennus"
@@ -157,7 +157,7 @@ msgstr "Ensimmäinen nouto"
 msgid "Flowers you're interested in:"
 msgstr "Kukat, joista olette kiinnostuneita:"
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:6
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:8
 #: lib/edenflowers/email/templates/order_fulfillment.text.eex:2
 #, elixir-autogen, elixir-format
 msgid "For %{recipient}"
@@ -348,7 +348,7 @@ msgstr "Seuraavat toimitukset odottavat, kunnes tämä on maksettu. Jotta ne jat
 
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:7
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:6
-#: lib/edenflowers/email/templates/order_totals.text.eex:10
+#: lib/edenflowers/email/templates/order_totals.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "Left to pay"
 msgstr "Maksettavaa jäljellä"
@@ -395,17 +395,17 @@ msgid "Order %{reference} cancelled"
 msgstr "Tilaus %{reference} peruttu"
 
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:6
-#: lib/edenflowers/email/templates/order_totals.text.eex:7
+#: lib/edenflowers/email/templates/order_totals.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Paid"
 msgstr "Maksettu"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:11
+#: lib/edenflowers/email/templates/order_totals.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "Paid in full"
 msgstr "Maksettu kokonaan"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:9
+#: lib/edenflowers/email/templates/order_totals.text.eex:7
 #, elixir-autogen, elixir-format
 msgid "Paid so far"
 msgstr "Maksettu tähän mennessä"
@@ -430,7 +430,7 @@ msgstr "Maksu vastaanotettu tilauksestasi: %{date}"
 msgid "Phone: %{phone}"
 msgstr "Puhelin: %{phone}"
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:11
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:13
 #, elixir-autogen, elixir-format
 msgid "Plans changed? You can cancel from your account until %{date} for a full refund: %{url}"
 msgstr "Muuttuivatko suunnitelmat? Voit perua tilauksen tililtäsi viimeistään %{date} ja saat koko summan takaisin: %{url}"
@@ -566,7 +566,7 @@ msgstr "Tilauksesi (%{product}) maksu ei mennyt läpi, mutta kukkasi toimitetaan
 msgid "The payment for your order for collection on %{date} (%{product}) didn't go through, but your flowers will still be ready to collect."
 msgstr "Tilauksesi (%{product}) maksu ei mennyt läpi, mutta kukkasi ovat silti noudettavissa %{date}."
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:8
+#: lib/edenflowers/email/templates/order_totals.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "To be refunded"
 msgstr "Palautetaan"
@@ -591,7 +591,7 @@ msgstr "Voit keskeyttää, muuttaa tai peruuttaa tililläsi viimeistään %{days
 msgid "To pause, change or cancel, use your account at least %{days} days before a pickup:"
 msgstr "Voit keskeyttää, muuttaa tai peruuttaa tililläsi viimeistään %{days} päivää ennen noutoa:"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:6
+#: lib/edenflowers/email/templates/order_totals.text.eex:4
 #, elixir-autogen, elixir-format
 msgid "Total"
 msgstr "Yhteensä"
@@ -608,15 +608,15 @@ msgstr "Hääpaikka: %{venue}"
 #: lib/edenflowers/email/templates/contact_message.text.eex:14
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:14
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:11
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:13
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:15
 #: lib/edenflowers/email/templates/order_delivered.text.eex:7
 #: lib/edenflowers/email/templates/order_details.text.eex:8
 #: lib/edenflowers/email/templates/order_left_at_door.text.eex:9
 #: lib/edenflowers/email/templates/order_refunded.text.eex:9
 #: lib/edenflowers/email/templates/order_updated.text.eex:8
-#: lib/edenflowers/email/templates/payment_received.text.eex:6
+#: lib/edenflowers/email/templates/payment_received.text.eex:8
 #: lib/edenflowers/email/templates/payment_reminder.text.eex:11
-#: lib/edenflowers/email/templates/purchase_receipt.text.eex:6
+#: lib/edenflowers/email/templates/purchase_receipt.text.eex:8
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:9
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:15
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:22
@@ -834,7 +834,7 @@ msgstr "Alennuskoodisi koski vain ensimmäistä tilausta. Seuraavat tilaukset ov
 msgid "Your receipt is attached."
 msgstr "Kuitti on liitteenä."
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:9
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:11
 #, elixir-autogen, elixir-format
 msgid "Your receipt is attached. If you have a question about your order, reply to this email."
 msgstr "Kuitti on liitteenä. Jos sinulla on kysyttävää tilauksesta, vastaa tähän sähköpostiin."
@@ -886,7 +886,6 @@ msgid "Booking %{reference}: %{course}, %{date}"
 msgstr "Varaus %{reference}: %{course}, %{date}"
 
 #: lib/edenflowers/email/templates/order_refunded.text.eex:5
-#: lib/edenflowers/email/templates/order_totals.text.eex:1
 #, elixir-autogen, elixir-format
 msgid "Order %{reference} for %{date}"
 msgstr "Tilaus %{reference}, %{date}"
@@ -910,3 +909,10 @@ msgstr "Lähetän laskusi erikseen."
 #, elixir-autogen, elixir-format
 msgid "There's %{amount} left to pay."
 msgstr "Maksettavaa on vielä %{amount}."
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:5
+#: lib/edenflowers/email/templates/payment_received.text.eex:5
+#: lib/edenflowers/email/templates/purchase_receipt.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "Order %{reference}"
+msgstr "Tilaus %{reference}"

@@ -95,7 +95,7 @@ msgstr "En beställning som redan har debiterats finns ändå att hämta %{date}
 msgid "Away, or want a change? Pause or change it in your account by %{date}:"
 msgstr "Bortrest, eller vill du ändra något? Pausa eller ändra i ditt konto senast %{date}:"
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:7
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:9
 #: lib/edenflowers/email/templates/order_fulfillment.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Card message: %{message}"
@@ -116,7 +116,7 @@ msgstr "Kan hämtas %{date} på %{shop}"
 msgid "Delivered to"
 msgstr "Levereras till"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:5
+#: lib/edenflowers/email/templates/order_totals.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr "Leverans"
@@ -126,7 +126,7 @@ msgstr "Leverans"
 msgid "Delivery on %{date} to %{address}"
 msgstr "Leverans %{date} till %{address}"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:4
+#: lib/edenflowers/email/templates/order_totals.text.eex:2
 #, elixir-autogen, elixir-format
 msgid "Discount"
 msgstr "Rabatt"
@@ -157,7 +157,7 @@ msgstr "Första avhämtningen"
 msgid "Flowers you're interested in:"
 msgstr "Blommor ni är intresserade av:"
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:6
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:8
 #: lib/edenflowers/email/templates/order_fulfillment.text.eex:2
 #, elixir-autogen, elixir-format
 msgid "For %{recipient}"
@@ -348,7 +348,7 @@ msgstr "Senare leveranser väntar tills den här är betald. För att de ska for
 
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:7
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:6
-#: lib/edenflowers/email/templates/order_totals.text.eex:10
+#: lib/edenflowers/email/templates/order_totals.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "Left to pay"
 msgstr "Kvar att betala"
@@ -395,17 +395,17 @@ msgid "Order %{reference} cancelled"
 msgstr "Beställning %{reference} avbeställd"
 
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:6
-#: lib/edenflowers/email/templates/order_totals.text.eex:7
+#: lib/edenflowers/email/templates/order_totals.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Paid"
-msgstr "Betald"
+msgstr "Betalt"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:11
+#: lib/edenflowers/email/templates/order_totals.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "Paid in full"
 msgstr "Betalt i sin helhet"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:9
+#: lib/edenflowers/email/templates/order_totals.text.eex:7
 #, elixir-autogen, elixir-format
 msgid "Paid so far"
 msgstr "Betalt hittills"
@@ -430,7 +430,7 @@ msgstr "Betalning mottagen för din beställning för %{date}"
 msgid "Phone: %{phone}"
 msgstr "Telefon: %{phone}"
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:11
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:13
 #, elixir-autogen, elixir-format
 msgid "Plans changed? You can cancel from your account until %{date} for a full refund: %{url}"
 msgstr "Har planerna ändrats? Du kan avbeställa via ditt konto till och med %{date} och få hela beloppet tillbaka: %{url}"
@@ -566,7 +566,7 @@ msgstr "Betalningen för din blomleverans %{date} (%{product}) gick inte igenom,
 msgid "The payment for your order for collection on %{date} (%{product}) didn't go through, but your flowers will still be ready to collect."
 msgstr "Betalningen för din beställning för avhämtning %{date} (%{product}) gick inte igenom, men dina blommor är ändå klara att hämta."
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:8
+#: lib/edenflowers/email/templates/order_totals.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "To be refunded"
 msgstr "Att återbetala"
@@ -591,7 +591,7 @@ msgstr "För att pausa, ändra eller avsluta, använd ditt konto senast %{days} 
 msgid "To pause, change or cancel, use your account at least %{days} days before a pickup:"
 msgstr "För att pausa, ändra eller avsluta, använd ditt konto senast %{days} dagar före en avhämtning:"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:6
+#: lib/edenflowers/email/templates/order_totals.text.eex:4
 #, elixir-autogen, elixir-format
 msgid "Total"
 msgstr "Totalt"
@@ -608,15 +608,15 @@ msgstr "Plats: %{venue}"
 #: lib/edenflowers/email/templates/contact_message.text.eex:14
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:14
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:11
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:13
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:15
 #: lib/edenflowers/email/templates/order_delivered.text.eex:7
 #: lib/edenflowers/email/templates/order_details.text.eex:8
 #: lib/edenflowers/email/templates/order_left_at_door.text.eex:9
 #: lib/edenflowers/email/templates/order_refunded.text.eex:9
 #: lib/edenflowers/email/templates/order_updated.text.eex:8
-#: lib/edenflowers/email/templates/payment_received.text.eex:6
+#: lib/edenflowers/email/templates/payment_received.text.eex:8
 #: lib/edenflowers/email/templates/payment_reminder.text.eex:11
-#: lib/edenflowers/email/templates/purchase_receipt.text.eex:6
+#: lib/edenflowers/email/templates/purchase_receipt.text.eex:8
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:9
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:15
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:22
@@ -834,7 +834,7 @@ msgstr "Rabatten från din kampanjkod gällde bara den första beställningen. F
 msgid "Your receipt is attached."
 msgstr "Kvittot finns bifogat."
 
-#: lib/edenflowers/email/templates/order_confirmation.text.eex:9
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:11
 #, elixir-autogen, elixir-format
 msgid "Your receipt is attached. If you have a question about your order, reply to this email."
 msgstr "Kvittot finns bifogat. Svara på det här mailet om du har frågor om din beställning."
@@ -886,7 +886,6 @@ msgid "Booking %{reference}: %{course}, %{date}"
 msgstr "Bokning %{reference}: %{course}, %{date}"
 
 #: lib/edenflowers/email/templates/order_refunded.text.eex:5
-#: lib/edenflowers/email/templates/order_totals.text.eex:1
 #, elixir-autogen, elixir-format
 msgid "Order %{reference} for %{date}"
 msgstr "Beställning %{reference} för %{date}"
@@ -910,3 +909,10 @@ msgstr "Jag skickar din faktura separat."
 #, elixir-autogen, elixir-format
 msgid "There's %{amount} left to pay."
 msgstr "Det återstår %{amount} att betala."
+
+#: lib/edenflowers/email/templates/order_confirmation.text.eex:5
+#: lib/edenflowers/email/templates/payment_received.text.eex:5
+#: lib/edenflowers/email/templates/purchase_receipt.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "Order %{reference}"
+msgstr "Beställning %{reference}"
