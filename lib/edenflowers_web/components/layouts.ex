@@ -43,16 +43,7 @@ defmodule EdenflowersWeb.Layouts do
   slot :inner_block, required: true
 
   def locale_picker(assigns) do
-    current_language = Localize.get_locale().language |> to_string()
-
-    locales =
-      for code <- Edenflowers.Locales.all() do
-        language_code = code |> String.split("-") |> hd()
-        name = Localize.Language.display_name!(language_code, locale: code, fallback: true)
-        {code, String.capitalize(name), language_code == current_language}
-      end
-
-    assigns = assign(assigns, :locales, locales)
+    assigns = assign(assigns, :locales, locale_options())
 
     # A transparent native <select> laid over the slot, so the slot is what
     # shows and the browser's own picker is what opens. The focus outline is
@@ -78,6 +69,40 @@ defmodule EdenflowersWeb.Layouts do
         </option>
       </select>
     </span>
+    """
+  end
+
+  # Each language named in itself, so a visitor can find their own.
+  defp locale_options do
+    current_language = Localize.get_locale().language |> to_string()
+
+    for code <- Edenflowers.Locales.all() do
+      language_code = code |> String.split("-") |> hd()
+      name = Localize.Language.display_name!(language_code, locale: code, fallback: true)
+      {code, String.capitalize(name), language_code == current_language}
+    end
+  end
+
+  attr :current_path, :string, required: true
+  attr :alternates, :map, default: %{}
+
+  defp drawer_locale_links(assigns) do
+    assigns = assign(assigns, :locales, locale_options())
+
+    ~H"""
+    <ul aria-label={dgettext("shared", "Language")} class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+      <li :for={{code, name, current?} <- @locales}>
+        <a
+          href={@alternates[code] || ~p"/locale/#{code}?redirect_to=#{@current_path}"}
+          hreflang={code}
+          lang={code}
+          aria-current={current? && "true"}
+          class="text-base-content/80 link-underline-hover touch-target aria-[current=true]:text-base-content aria-[current=true]:decoration-(--color-link-underline)"
+        >
+          {name}
+        </a>
+      </li>
+    </ul>
     """
   end
 
@@ -677,7 +702,12 @@ defmodule EdenflowersWeb.Layouts do
           </ul>
         </nav>
 
-        <div class="border-base-content/12 space-y-6 border-t pt-6">
+        <div class="border-base-content/12 relative space-y-6 border-t pt-6">
+          <.flower
+            name="flower-42"
+            class="text-primary/20 [--flower-spin-turn:3deg] absolute right-0 bottom-full mb-6 h-24 w-24"
+          />
+
           <.link
             class="font-serif text-base-content link-underline-hover block w-fit text-2xl aria-[current=page]:decoration-(--color-link-underline)"
             aria-current={@current_user && nav_active?(@current_path, ~p"/account") && "page"}
@@ -688,14 +718,7 @@ defmodule EdenflowersWeb.Layouts do
             {if @current_user, do: ~t"My account", else: ~t"Sign In"}
           </.link>
 
-          <div class="text-base-content/80 space-y-1 text-sm">
-            <a class="link-underline-hover touch-target block w-fit" href={"mailto:#{Business.email()}"}>
-              {Business.email()}
-            </a>
-            <a class="link-underline-hover touch-target block w-fit" href={"tel:#{Business.phone()}"}>
-              {Business.phone_display()}
-            </a>
-          </div>
+          <.drawer_locale_links current_path={@current_path} alternates={@alternates} />
 
           <.social_media_links />
         </div>
