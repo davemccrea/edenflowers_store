@@ -1144,7 +1144,7 @@ msgstr "Bara en vänlig påminnelse om att den skulle betalas senast %{date}, oc
 
 #: lib/edenflowers/email/templates.ex:72
 #: lib/edenflowers/email/templates/course_payment.text.eex:4
-#: lib/edenflowers/email/templates/order_payment.text.eex:8
+#: lib/edenflowers/email/templates/order_payment.text.eex:14
 #, elixir-autogen, elixir-format
 msgid "I'll be in touch about how to pay it."
 msgstr "Jag hör av mig om hur du kan betala."
@@ -1188,3 +1188,18 @@ msgstr "Betala på kursen."
 #, elixir-autogen, elixir-format
 msgid "Thank you for your payment. There is %{amount} still to pay."
 msgstr "Tack för din betalning. Det återstår %{amount} att betala."
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:10
+#, elixir-autogen, elixir-format
+msgid "I'll send you an invoice after delivery."
+msgstr "Jag skickar dig en faktura efter leveransen."
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:12
+#, elixir-autogen, elixir-format
+msgid "I'll send you an invoice after you collect your order."
+msgstr "Jag skickar dig en faktura när du har hämtat din beställning."
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:8
+#, elixir-autogen, elixir-format
+msgid "I'll send you an invoice."
+msgstr "Jag skickar dig en faktura."

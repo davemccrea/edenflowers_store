@@ -28,6 +28,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     :sendable?,
     :cancellable?,
     :paper_trail_versions,
+    :order,
     payments: [:undoable?],
     credit_note: [:invoice, :paper_trail_versions]
   ]
@@ -76,7 +77,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={{~t"Invoices", ~p"/admin/invoices"}} sticky={@editable}>
+        <.admin_page_header title={@page_title} back={back(@invoice)} sticky={@editable}>
           <:subtitle :if={!@editable}>
             <.badge tone={InvoicesLive.status_tone(@invoice.status, @invoice.overdue?)}>
               {InvoicesLive.status_label(@invoice.status, @invoice.overdue?)}
@@ -553,7 +554,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
             href="#invoice-payment-form"
             variant="secondary"
             size="sm"
-            class="mt-4"
+            class="mt-4 xl:hidden"
           >
             <.icon name="hero-banknotes" class="h-4 w-4" /> {~t"Record payment"}
           </.button>
@@ -654,11 +655,11 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       {:error, %Phoenix.HTML.Form{}} ->
         {:noreply, assign(socket, error: ~t"Check the fields marked below and try again.")}
 
-      {:error, _issue_error} ->
+      {:error, issue_error} ->
         {:noreply,
          socket
          |> put_form(socket |> draft_form(socket.assigns.invoice) |> AshPhoenix.Form.validate(params))
-         |> assign(error: ~t"Check the fields marked below and try again.")}
+         |> assign(error: issue_message(issue_error))}
     end
   end
 
@@ -717,6 +718,22 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       ),
       ~t"Credit note issued."
     )
+  end
+
+  defp back(%{order: %Edenflowers.Orders.Order{} = order}),
+    do: {~t"Order #{order.order_reference}", ~p"/admin/orders/#{order.id}"}
+
+  defp back(_invoice), do: {~t"Invoices", ~p"/admin/invoices"}
+
+  # An invoice for an order can be refused for the order's sake, which no field shows.
+  defp issue_message(error) do
+    error
+    |> Ash.Error.to_error_class()
+    |> Map.get(:errors, [])
+    |> Enum.find_value(~t"Check the fields marked below and try again.", fn
+      %Ash.Error.Changes.InvalidChanges{fields: [], message: message} when is_binary(message) -> message
+      _field_error -> nil
+    end)
   end
 
   defp finish(socket, {:ok, _}, message), do: {:noreply, socket |> refresh() |> put_flash(:info, message)}

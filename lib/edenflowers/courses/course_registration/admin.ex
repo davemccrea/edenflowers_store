@@ -39,7 +39,8 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
 
     create :add_manually do
       description "Jennie accepts a booking, including after online cutoff or over capacity. Holds places immediately, " <>
-                    "with payment by link, bank transfer, at the course, or already received. Confirmation is optional."
+                    "with payment by link, at the course, or already received. Confirmation is optional. Bank " <>
+                    "transfer terms are refused: a company's course is a private course, invoiced on its own."
 
       accept [
         :name,
@@ -58,6 +59,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       validate present(:amount), where: [present(:payment_method)]
       validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
       validate attribute_in(:locale, @locales)
+      validate attribute_does_not_equal(:payment_terms, :invoice), message: "choose a payment link or in person"
       change Changes.UpsertUser
       change {Changes.PriceBooking, manual?: true}
       change set_attribute(:status, :confirmed)

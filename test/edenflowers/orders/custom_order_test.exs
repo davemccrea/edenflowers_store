@@ -288,13 +288,13 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       end)
     end
 
-    test "bank transfer terms leave payment arrangements to Jennie", ctx do
+    test "invoice terms tell the customer an invoice follows", ctx do
       {:ok, _order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB", payment_terms: :invoice})
       Oban.drain_queue(queue: :default)
 
       assert_email_sent(fn email ->
         assert email.text_body =~
-                 ~r/Collect on [^\n]+ from Minimossen[^\n]+\n\nI'll be in touch about how to pay it\./
+                 ~r/Collect on [^\n]+ from Minimossen[^\n]+\n\nI'll send you an invoice after you collect your order\./
       end)
     end
 

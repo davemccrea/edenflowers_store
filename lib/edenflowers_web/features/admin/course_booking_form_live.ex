@@ -101,7 +101,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
                 type="radio-card"
                 options={[
                   %{value: "payment_link", label: ~t"Payment link"},
-                  %{value: "invoice", label: ~t"Bank transfer"},
                   %{value: "on_fulfillment", label: ~t"In person"}
                 ]}
               >
@@ -109,9 +108,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
               </.input>
               <p :if={@form[:payment_terms].value in [:payment_link, "payment_link"]} class="text-base-content/75 text-sm">
                 {~t"A payment link will be created and included if you email the booking confirmation."}
-              </p>
-              <p :if={@form[:payment_terms].value in [:invoice, "invoice"]} class="text-base-content/75 text-sm">
-                {~t"Record the bank transfer here once it arrives."}
               </p>
             </div>
           </.form_section>

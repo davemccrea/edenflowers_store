@@ -633,6 +633,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   def no_email(%{customer_email: nil}), do: ~t"No email address"
   def no_email(_order), do: nil
 
+  def cancel_unavailable(%{invoiced?: true}), do: ~t"Credit the invoice first"
   def cancel_unavailable(%{cancellable?: true}), do: nil
   def cancel_unavailable(%{fulfillment_status: :fulfilled}), do: ~t"Already fulfilled"
   def cancel_unavailable(%{fulfillment_status: :cancelled}), do: ~t"Already cancelled"

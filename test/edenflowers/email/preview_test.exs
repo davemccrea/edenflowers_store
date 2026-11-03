@@ -58,50 +58,37 @@ defmodule Edenflowers.Email.PreviewTest do
     assert [_receipt] = preview.attachments
   end
 
-  for terms <- [:invoice, :payment_link] do
-    test "manual #{terms} confirmation and course reminder agree with the selected terms" do
-      admin = generate(admin_user())
-      course = generate(course())
+  test "manual payment link confirmation and course reminder agree with the selected terms" do
+    admin = generate(admin_user())
+    course = generate(course())
 
-      changeset =
-        Ash.Changeset.for_create(
-          CourseRegistration,
-          :add_manually,
-          %{
-            name: "Ada",
-            email: "ada@example.com",
-            course_id: course.id,
-            locale: "en-GB",
-            payment_terms: unquote(terms),
-            email_customer?: false
-          },
-          actor: admin
-        )
+    changeset =
+      Ash.Changeset.for_create(
+        CourseRegistration,
+        :add_manually,
+        %{
+          name: "Ada",
+          email: "ada@example.com",
+          course_id: course.id,
+          locale: "en-GB",
+          payment_terms: :payment_link,
+          email_customer?: false
+        },
+        actor: admin
+      )
 
-      preview = Preview.build_entered_booking(changeset, course, %{})
-      registration = Ash.create!(changeset)
-      assert {:ok, _sent} = Courses.email_registration_confirmation(registration, %{}, actor: admin)
+    preview = Preview.build_entered_booking(changeset, course, %{})
+    registration = Ash.create!(changeset)
+    assert {:ok, _sent} = Courses.email_registration_confirmation(registration, %{}, actor: admin)
 
-      expected =
-        if unquote(terms) == :payment_link do
-          String.replace(preview.text_body, "/pay/courses/preview", "/pay/courses/#{registration.payment_link_token}")
-        else
-          preview.text_body
-        end
+    expected =
+      String.replace(preview.text_body, "/pay/courses/preview", "/pay/courses/#{registration.payment_link_token}")
 
-      assert_email_sent(fn email -> assert email.text_body == expected end)
+    assert_email_sent(fn email -> assert email.text_body == expected end)
 
-      reminder = reminder(registration)
-
-      refute reminder.text_body =~ "Please pay at the course."
-
-      if unquote(terms) == :payment_link do
-        assert reminder.text_body =~ EdenflowersWeb.PaymentLink.url_for(registration)
-      else
-        assert reminder.text_body =~ "I'll be in touch about how to pay it."
-        refute reminder.text_body =~ "/pay/courses/"
-      end
-    end
+    reminder = reminder(registration)
+    refute reminder.text_body =~ "Please pay at the course."
+    assert reminder.text_body =~ EdenflowersWeb.PaymentLink.url_for(registration)
   end
 
   defp reminder(registration) do

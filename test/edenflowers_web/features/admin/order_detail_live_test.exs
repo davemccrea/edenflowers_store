@@ -35,6 +35,33 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|button[phx-click="open_cancel"]|, "Cancel order")
   end
 
+  test "an order on invoice terms is invoiced from its page, then shows the invoice and stays locked",
+       %{conn: conn, admin: admin} do
+    order = placed_order(origin: :custom, payment_terms: :invoice, payment_intent_id: nil)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    assert {:error, {:live_redirect, %{to: "/admin/invoices/" <> invoice_id}}} = render_click(view, "create_invoice")
+
+    {:ok, draft} = Edenflowers.Payments.get_invoice(invoice_id, actor: admin)
+    {:ok, draft} = Edenflowers.Payments.update_invoice_draft(draft, %{buyer_address: "Kauppakatu 1"}, actor: admin)
+    {:ok, invoice} = Edenflowers.Payments.issue_invoice(draft, actor: admin)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    assert has_element?(view, "#order-status", "Invoiced")
+    assert has_element?(view, ~s|#order-invoices a[href="/admin/invoices/#{invoice.id}"]|, "Invoice #{invoice.number}")
+    assert has_element?(view, "#order-invoices", "Unpaid")
+    refute has_element?(view, ~s|button[phx-click="create_invoice"]|)
+    assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}/edit"]|)
+    refute has_element?(view, ~s|button[phx-click="open_cancel"]|)
+  end
+
+  test "an order on other terms offers no invoice", %{conn: conn} do
+    order = placed_order(origin: :custom, payment_terms: :payment_link, payment_intent_id: nil)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    refute has_element?(view, ~s|button[phx-click="create_invoice"]|)
+  end
+
   test "a custom order with a payment can't be deleted", %{conn: conn, admin: admin} do
     order = placed_order(origin: :custom, payment_intent_id: nil)
     {:ok, _order} = Orders.record_payment(order, "1.00", :cash, actor: admin)

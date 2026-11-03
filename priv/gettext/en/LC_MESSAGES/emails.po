@@ -1145,7 +1145,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates.ex:72
 #: lib/edenflowers/email/templates/course_payment.text.eex:4
-#: lib/edenflowers/email/templates/order_payment.text.eex:8
+#: lib/edenflowers/email/templates/order_payment.text.eex:14
 #, elixir-autogen, elixir-format
 msgid "I'll be in touch about how to pay it."
 msgstr ""
@@ -1188,4 +1188,19 @@ msgstr ""
 #: lib/edenflowers/email/templates/invoice.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "Thank you for your payment. There is %{amount} still to pay."
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:10
+#, elixir-autogen, elixir-format
+msgid "I'll send you an invoice after delivery."
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:12
+#, elixir-autogen, elixir-format
+msgid "I'll send you an invoice after you collect your order."
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:8
+#, elixir-autogen, elixir-format
+msgid "I'll send you an invoice."
 msgstr ""

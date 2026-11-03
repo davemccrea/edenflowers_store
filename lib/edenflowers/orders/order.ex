@@ -403,6 +403,13 @@ defmodule Edenflowers.Orders.Order do
       description "Every Payment and refund on the order, by any method, oldest first. Refunds are negative."
       sort paid_at: :asc
     end
+
+    has_many :invoices, Edenflowers.Payments.Invoice do
+      description "The invoices Jennie made for this order, drafts and credited ones included, newest first. " <>
+                    "Money paid on them is the invoice's, never the order's."
+
+      sort inserted_at: :desc
+    end
   end
 
   calculations do
@@ -499,6 +506,23 @@ defmodule Edenflowers.Orders.Order do
     calculate :total_due, :decimal, expr(if fulfillment_status == :cancelled, do: kept_amount, else: grand_total) do
       description "The Total due in euros, which the Balance is worked out from: the grand total, or once " <>
                     "cancelled the cancellation charge Jennie kept, paid or not."
+    end
+
+    calculate :invoiced?, :boolean, expr(exists(invoices, covers_order?)) do
+      description "Whether an issued invoice that no Credit note cancels covers it. Until Jennie credits that " <>
+                    "invoice, edits must keep its amount per VAT rate, date and terms, and the order can't be cancelled."
+    end
+
+    calculate :invoiceable?,
+              :boolean,
+              expr(
+                state == :placed and origin == :custom and payment_terms == :invoice and amount_held == 0 and
+                  balance > 0 and not invoiced?
+              ) do
+      description "Whether Jennie can invoice it: a Custom Order on invoice terms with nothing paid, a Balance " <>
+                    "to collect and no invoice already covering it. A cancelled one is invoiced for its " <>
+                    "cancellation charge. The admin offers Create invoice from it and issuing a linked invoice " <>
+                    "checks it again."
     end
 
     calculate :committed?, :boolean, expr(state == :placed) do
@@ -601,13 +625,15 @@ defmodule Edenflowers.Orders.Order do
                 # A cancelled order that took nothing is called off, not unpaid.
                 cond do
                   refunded? -> :refunded
+                  amount_invoiced > 0 and balance <= 0 -> :invoiced
                   fulfillment_status == :cancelled and amount_paid == 0 -> nil
                   balance <= 0 -> :paid
                   true -> :pending
                 end
               ) do
-      description "Paid, pending or refunded, from the Balance and Payments. Nil for a cancelled order that " <>
-                    "never took any money."
+      description "Paid, pending or refunded, from the Balance and Payments, or invoiced when its invoices " <>
+                    "leave nothing to collect on the order itself: it has no receipt, as the money is the " <>
+                    "invoice's. Nil for a cancelled order that never took any money."
     end
 
     calculate :paid?, :boolean, expr(committed? and payment_status == :paid and not cancelled?) do
@@ -721,6 +747,12 @@ defmodule Edenflowers.Orders.Order do
   end
 
   aggregates do
+    sum :amount_invoiced, :invoices, :amount do
+      description "What its issued, uncredited invoices bill in euros, which its Balance leaves to them to collect."
+      filter expr(covers_order?)
+      default Decimal.new("0")
+    end
+
     sum :total_items_in_cart, :line_items, :quantity do
       description "How many items the cart holds, counting quantities, as shown beside the cart."
       default 0

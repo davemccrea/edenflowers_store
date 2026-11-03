@@ -132,11 +132,21 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert {:error, %Ash.Error.Forbidden{}} = add_manually(generate(course()), 1, nil)
     end
 
-    test "payment terms persist without treating a link or invoice as money received" do
+    test "bank transfer terms are refused, as a company's course is invoiced on its own" do
+      admin = generate(admin_user())
+
+      assert {:error, _} =
+               Courses.add_registration_manually(
+                 %{name: "Ada", email: "ada@example.com", course_id: generate(course()).id, payment_terms: :invoice},
+                 actor: admin
+               )
+    end
+
+    test "payment terms persist without treating a link as money received" do
       course = generate(course(total_places: 10))
       admin = generate(admin_user())
 
-      for terms <- [:payment_link, :invoice, :on_fulfillment] do
+      for terms <- [:payment_link, :on_fulfillment] do
         assert {:ok, booking} =
                  Courses.add_registration_manually(
                    %{
@@ -158,7 +168,7 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
         refute_enqueued(worker: Edenflowers.Courses.Workers.SendConfirmationEmail)
       end
 
-      assert seats_left(course) == 7
+      assert seats_left(course) == 8
     end
 
     test "an initial received payment uses the ledger and records its real method" do

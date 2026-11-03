@@ -235,7 +235,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
   end
 
   describe "adding a booking" do
-    test "opens a dedicated booking page with the custom-order payment choices", %{conn: conn} do
+    test "opens a dedicated booking page with its payment choices", %{conn: conn} do
       course = generate(course())
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
       view |> element(~s|a[href="/admin/courses/#{course.id}/bookings/new"]|) |> render_click()
@@ -251,7 +251,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert has_element?(view, "#booking-form label", "Email language")
       assert has_element?(view, ~s|input[type="radio"][value="on_fulfillment"][checked]|)
       assert has_element?(view, "#booking-form label", "Payment link")
-      assert has_element?(view, "#booking-form label", "Bank transfer")
       assert has_element?(view, "#booking-form label", "In person")
       refute has_element?(view, ~s|input[type="radio"][value="received"]|)
       refute has_element?(view, "#booking-drawer")
@@ -460,27 +459,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       refute booking.receipt_emailed_at
     end
 
-    test "invoice confirmation previews and sends separate-invoice instructions", %{conn: conn} do
+    test "offers a payment link or in person, never bank transfer", %{conn: conn} do
       course = generate(course(total_places: 10))
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/bookings/new")
 
-      view
-      |> form("#booking-form", form: %{email: "birgitta@example.com", locale: "en-GB", payment_terms: "invoice"})
-      |> render_change()
-
-      assert has_element?(view, "#booking-email-preview-toggle", "I'll be in touch about how to pay it.")
-      booking = add_booking(view, course, "true", "invoice")
-      assert booking.payment_terms == :invoice
-      refute booking.payment_link_token
-      assert Ash.load!(booking, :payments, authorize?: false).payments == []
-      assert %{success: 1} = Oban.drain_queue(queue: :default)
-
-      assert_email_sent(fn email ->
-        assert email.text_body =~ "I'll be in touch about how to pay it."
-        refute email.text_body =~ "/pay/courses/"
-        refute email.text_body =~ "Please pay at the course."
-        assert email.attachments == []
-      end)
+      assert has_element?(view, ~s|input[name="form[payment_terms]"][value="payment_link"]|)
+      assert has_element?(view, ~s|input[name="form[payment_terms]"][value="on_fulfillment"]|)
+      refute has_element?(view, ~s|input[name="form[payment_terms]"][value="invoice"]|)
     end
 
     test "a payment link is still created when confirmation is not emailed", %{conn: conn} do

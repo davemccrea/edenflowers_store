@@ -13,6 +13,12 @@
 
 <% @order.payment_terms == :on_fulfillment -> %><%= dgettext("emails", "You pay when you collect your order.") %>
 
+<% @order.payment_terms == :invoice and @order.fulfillment_status == :fulfilled -> %><%= dgettext("emails", "I'll send you an invoice.") %>
+
+<% @order.payment_terms == :invoice and @order.fulfillment_method == :delivery -> %><%= dgettext("emails", "I'll send you an invoice after delivery.") %>
+
+<% @order.payment_terms == :invoice -> %><%= dgettext("emails", "I'll send you an invoice after you collect your order.") %>
+
 <% true -> %><%= dgettext("emails", "I'll be in touch about how to pay it.") %>
 
 <% end %>

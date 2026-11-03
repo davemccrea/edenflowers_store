@@ -15,6 +15,8 @@ defmodule Edenflowers.Payments.Payable do
     * `has_many :payments`
     * `calculate :total_due`: what it's still to be paid for. Once cancelled,
       that's `kept_amount`, the cancellation charge.
+    * `amount_invoiced`: what its issued, uncredited invoices bill, which
+      the Balance leaves to them. A course booking is never invoiced: 0.
     * `calculate :committed?`: whether money is owed on it at all, so not an
       unplaced cart or a website course checkout still waiting for its payment.
     * `calculate :cancelled?`
@@ -176,14 +178,15 @@ defmodule Edenflowers.Payments.Payable do
               :decimal,
               expr(
                 cond do
-                  total_due >= amount_paid -> total_due - amount_paid
-                  total_due >= amount_held -> 0
-                  true -> total_due - amount_held
+                  total_due - amount_invoiced >= amount_paid -> total_due - amount_invoiced - amount_paid
+                  total_due - amount_invoiced >= amount_held -> 0
+                  true -> total_due - amount_invoiced - amount_held
                 end
               ) do
-      description "The Balance in euros: positive is still to collect, negative is to refund. A Goodwill refund " <>
-                    "leaves it alone while the price stands, but once it drops below what was paid, only money " <>
-                    "still held above it is owed back."
+      description "The Balance in euros: what is left to collect here, positive, or to refund, negative. What " <>
+                    "its invoices bill is theirs to collect, so an invoiced order reads 0 before it is paid. A " <>
+                    "Goodwill refund leaves it alone while the price stands, but once it drops below what was " <>
+                    "paid, only money still held above it is owed back."
     end
 
     calculate :refunded?,

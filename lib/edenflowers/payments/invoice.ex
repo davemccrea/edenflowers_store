@@ -45,6 +45,10 @@ defmodule Edenflowers.Payments.Invoice do
     repo Edenflowers.Repo
     table "invoices"
     migration_types amount: :decimal
+
+    references do
+      reference :order, on_delete: :restrict
+    end
   end
 
   # Each send, for the invoice history: sent_at keeps only the latest, and Jennie
@@ -54,7 +58,7 @@ defmodule Edenflowers.Payments.Invoice do
     store_action_name? true
     ignore_attributes [:inserted_at, :updated_at]
     # Creating one is logged from the invoice itself; only sends are versioned.
-    ignore_actions [:create]
+    ignore_actions [:create, :create_for_order]
     on_actions [:send]
     # sent_at is to the second, so a resend within the same second changes nothing but still went out.
     only_when_changed? false
@@ -132,6 +136,17 @@ defmodule Edenflowers.Payments.Invoice do
         :supply_date,
         :supply_description
       ]
+    end
+
+    create :create_for_order do
+      description "Starts a draft invoice for an invoiceable? order, prefilled from it: its buyer, language and " <>
+                    "lines, a Delivery or Pickup fee line, the fulfillment date as the date of supply and the order " <>
+                    "number in its place. A cancelled order's draft bills its cancellation charge instead, split " <>
+                    "per VAT rate. Jennie adds the company details and edits the rest before issuing it."
+
+      accept [:order_id]
+      validate present(:order_id)
+      change Changes.PrefillFromOrder
     end
 
     update :update_draft do
@@ -339,6 +354,11 @@ defmodule Edenflowers.Payments.Invoice do
   end
 
   relationships do
+    belongs_to :order, Edenflowers.Orders.Order do
+      description "The order it bills, if any. Issued and not credited, it covers that order's Balance and " <>
+                    "locks the order. Nil for weddings, bespoke work and private courses."
+    end
+
     has_many :payments, Edenflowers.Payments.Payment do
       description "The bank transfers Jennie recorded as paying it, and any Undo or refund of them."
     end
@@ -349,6 +369,10 @@ defmodule Edenflowers.Payments.Invoice do
   end
 
   calculations do
+    calculate :covers_order?, :boolean, expr(not is_nil(issued_at) and not exists(credit_note, true)) do
+      description "Whether it counts against its order's Balance: issued and not cancelled by a Credit note."
+    end
+
     calculate :buyer_email_key, :string, expr(string_downcase(buyer_email))
 
     calculate :editable?, :boolean, expr(is_nil(issued_at))

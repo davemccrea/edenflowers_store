@@ -768,6 +768,7 @@ defmodule EdenflowersWeb.Admin.Components do
 
   def payment_status_label(:paid), do: ~t"Paid"
   def payment_status_label(:refunded), do: ~t"Refunded"
+  def payment_status_label(:invoiced), do: ~t"Invoiced"
   def payment_status_label(:pending), do: ~t"Unpaid"
   def payment_status_label(value), do: to_string(value)
 
