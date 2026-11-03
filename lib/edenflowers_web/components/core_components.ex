@@ -53,6 +53,8 @@ defmodule EdenflowersWeb.CoreComponents do
                 |> String.replace(~r|<svg\b[^>]*>|, "")
                 |> String.replace(~r|</svg>\s*\z|, "")
                 |> String.replace("fill:#000000", "fill:currentColor")
+                # Editor-generated ids clash when a drawing appears twice on a page, and nothing references them.
+                |> String.replace(~r/\s+id="[^"]*"/, "")
 
               {Path.basename(path, ".svg"), %{viewbox: viewbox, body: Phoenix.HTML.raw(body)}}
             end)
