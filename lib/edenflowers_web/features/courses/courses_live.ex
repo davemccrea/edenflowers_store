@@ -5,6 +5,8 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
 
   use EdenflowersWeb, :live_view
 
+  import EdenflowersWeb.Courses.Components
+
   alias Edenflowers.Courses
   alias Edenflowers.Format
   alias Edenflowers.Translations
@@ -184,6 +186,9 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
           class="text-base-content/80 line-clamp-2 mt-3 max-w-lg text-sm leading-relaxed"
         >
           {@course.description}
+        </p>
+        <p :if={@course.photo_credit_name} class="text-base-content/70 mt-2 text-sm" data-testid="photo-credit">
+          <.photo_credit course={@course} />
         </p>
       </div>
 

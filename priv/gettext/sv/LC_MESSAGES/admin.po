@@ -686,14 +686,14 @@ msgstr "Det gick inte att slå på notiser. Försök igen."
 msgid "Course not found."
 msgstr "Kursen hittades inte."
 
-#: lib/edenflowers_web/features/admin/course_form_live.ex:221
+#: lib/edenflowers_web/features/admin/course_form_live.ex:239
 #, elixir-autogen, elixir-format
 msgid "Course saved."
 msgstr "Kursen sparades."
 
 #: lib/edenflowers_web/components/layouts.ex:221
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:61
-#: lib/edenflowers_web/features/admin/course_form_live.ex:240
+#: lib/edenflowers_web/features/admin/course_form_live.ex:258
 #: lib/edenflowers_web/features/admin/courses_live.ex:28
 #: lib/edenflowers_web/features/admin/courses_live.ex:43
 #, elixir-autogen, elixir-format
@@ -1614,7 +1614,7 @@ msgstr "Namn och beskrivning"
 msgid "Needs attention"
 msgstr "Behöver åtgärdas"
 
-#: lib/edenflowers_web/features/admin/course_form_live.ex:256
+#: lib/edenflowers_web/features/admin/course_form_live.ex:274
 #: lib/edenflowers_web/features/admin/courses_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "New course"
@@ -2978,7 +2978,7 @@ msgstr "Det är mer än som betalades via Stripe."
 msgid "That's more than was received."
 msgstr "Det är mer än som har tagits emot."
 
-#: lib/edenflowers_web/features/admin/course_form_live.ex:228
+#: lib/edenflowers_web/features/admin/course_form_live.ex:246
 #, elixir-autogen, elixir-format
 msgid "The course wasn't saved. Check the fields marked below."
 msgstr "Kursen sparades inte. Kontrollera de markerade fälten nedan."
@@ -3984,3 +3984,18 @@ msgstr "Varje bekräftad bokning får en påminnelse på kundens språk."
 #, elixir-autogen, elixir-format
 msgid "Send course reminder"
 msgstr "Skicka kurspåminnelse"
+
+#: lib/edenflowers_web/features/admin/course_form_live.ex:191
+#, elixir-autogen, elixir-format
+msgid "Photographer (optional)"
+msgstr "Fotograf (valfritt)"
+
+#: lib/edenflowers_web/features/admin/course_form_live.ex:197
+#, elixir-autogen, elixir-format
+msgid "Photographer website (optional)"
+msgstr "Fotografens webbplats (valfritt)"
+
+#: lib/edenflowers_web/features/admin/course_form_live.ex:202
+#, elixir-autogen, elixir-format
+msgid "Shown with the course photo. Add a website to link the photographer's name."
+msgstr "Visas vid kursfotot. Lägg till en webbplats för att länka fotografens namn."

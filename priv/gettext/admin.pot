@@ -690,14 +690,14 @@ msgstr ""
 msgid "Course not found."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/course_form_live.ex:221
+#: lib/edenflowers_web/features/admin/course_form_live.ex:239
 #, elixir-autogen, elixir-format
 msgid "Course saved."
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:221
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:61
-#: lib/edenflowers_web/features/admin/course_form_live.ex:240
+#: lib/edenflowers_web/features/admin/course_form_live.ex:258
 #: lib/edenflowers_web/features/admin/courses_live.ex:28
 #: lib/edenflowers_web/features/admin/courses_live.ex:43
 #, elixir-autogen, elixir-format
@@ -1618,7 +1618,7 @@ msgstr ""
 msgid "Needs attention"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/course_form_live.ex:256
+#: lib/edenflowers_web/features/admin/course_form_live.ex:274
 #: lib/edenflowers_web/features/admin/courses_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "New course"
@@ -2982,7 +2982,7 @@ msgstr ""
 msgid "That's more than was received."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/course_form_live.ex:228
+#: lib/edenflowers_web/features/admin/course_form_live.ex:246
 #, elixir-autogen, elixir-format
 msgid "The course wasn't saved. Check the fields marked below."
 msgstr ""
@@ -3987,4 +3987,19 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "Send course reminder"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/course_form_live.ex:191
+#, elixir-autogen, elixir-format
+msgid "Photographer (optional)"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/course_form_live.ex:197
+#, elixir-autogen, elixir-format
+msgid "Photographer website (optional)"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/course_form_live.ex:202
+#, elixir-autogen, elixir-format
+msgid "Shown with the course photo. Add a website to link the photographer's name."
 msgstr ""

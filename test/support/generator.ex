@@ -341,6 +341,8 @@ defmodule Generator do
         location_name: "Minimossen",
         location_address: "Myrvägen 1, 65230 Vasa",
         image_slug: "local:///image_1.jpg",
+        photo_credit_name: nil,
+        photo_credit_url: nil,
         date: Date.add(Edenflowers.ShopTime.today(), 30),
         start_time: ~T[10:00:00],
         end_time: ~T[14:00:00],

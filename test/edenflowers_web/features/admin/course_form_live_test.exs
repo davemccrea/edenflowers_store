@@ -47,6 +47,8 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
                  tax_rate_id: tax_rate.id,
                  location_name: "Minimossen",
                  location_address: "Myrvägen 1",
+                 photo_credit_name: "Anna Riska",
+                 photo_credit_url: "https://example.com/photography",
                  translations: %{"sv-FI": %{name: "Höstkransar"}}
                }
              )
@@ -57,6 +59,8 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     assert course.name == "Autumn wreaths"
     assert course.draft
     assert course.language == :sv
+    assert course.photo_credit_name == "Anna Riska"
+    assert course.photo_credit_url == "https://example.com/photography"
     assert course.translations."sv-FI".name == "Höstkransar"
     assert "local:///uploads/" <> filename = course.image_slug
     assert filename =~ ~r/\A[0-9a-f]{32}\.jpg\z/
@@ -96,6 +100,38 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
 
       assert Enum.any?(Edenflowers.Courses.list_upcoming_courses!(), &(&1.id == course.id)) == listed?
     end
+  end
+
+  test "edits and clears the optional photo attribution", %{conn: conn} do
+    course = generate(course())
+
+    for {name, url} <- [
+          {"Anna Riska", "https://example.com"},
+          {"Anna Riska", ""},
+          {"", ""}
+        ] do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/edit")
+
+      view
+      |> form("#course-form", form: %{photo_credit_name: name, photo_credit_url: url})
+      |> render_submit()
+
+      saved = Ash.get!(Course, course.id, authorize?: false)
+      assert saved.photo_credit_name == if(name == "", do: nil, else: name)
+      assert saved.photo_credit_url == if(url == "", do: nil, else: url)
+    end
+  end
+
+  test "shows invalid photographer websites on the form", %{conn: conn} do
+    course = generate(course())
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/edit")
+
+    view
+    |> form("#course-form", form: %{photo_credit_name: "Anna Riska", photo_credit_url: "javascript:alert(1)"})
+    |> render_submit()
+
+    assert render(view) =~ "Must be a website address starting with http:// or https://"
+    assert Ash.get!(Course, course.id, authorize?: false).photo_credit_url == nil
   end
 
   test "words the cancellation terms from the days and the fee" do

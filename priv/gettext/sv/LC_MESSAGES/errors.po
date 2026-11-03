@@ -135,3 +135,6 @@ msgstr "välj momssats"
 
 msgid "Add at least one item"
 msgstr "Lägg till minst en artikel"
+
+msgid "Must be a website address starting with http:// or https://"
+msgstr "Ange en webbadress som börjar med http:// eller https://"

@@ -184,6 +184,24 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                 label={~t"Photo"}
                 show_errors={@form.source.submitted_once?}
               />
+              <div class="mt-6 space-y-4">
+                <.input
+                  field={@form[:photo_credit_name]}
+                  type="text"
+                  label={~t"Photographer (optional)"}
+                  class="input w-full"
+                />
+                <.input
+                  field={@form[:photo_credit_url]}
+                  type="url"
+                  label={~t"Photographer website (optional)"}
+                  placeholder="https://example.com"
+                  class="input w-full"
+                />
+                <p class="text-base-content/70 text-sm">
+                  {~t"Shown with the course photo. Add a website to link the photographer's name."}
+                </p>
+              </div>
             </.form_section>
           </aside>
         </.form>

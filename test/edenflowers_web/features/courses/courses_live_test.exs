@@ -7,6 +7,33 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
 
   setup :verify_on_exit!
 
+  test "credits the photographer on the course page and list, with an optional website", %{conn: conn} do
+    for url <- [nil, "https://example.com/photography"] do
+      course = generate(course(photo_credit_name: "Anna Riska", photo_credit_url: url))
+
+      for path <- [~p"/en/courses/#{course.slug}", ~p"/en/courses"] do
+        {:ok, view, _html} = live(conn, path)
+        assert render(view) =~ "Photo:"
+        assert render(view) =~ "Anna Riska"
+
+        if url do
+          assert has_element?(view, ~s|a[href="#{url}"][rel="noopener noreferrer"]|, "Anna Riska")
+        else
+          refute has_element?(view, "figcaption a")
+        end
+      end
+    end
+  end
+
+  test "omits the credit when no attribution is supplied", %{conn: conn} do
+    course = generate(course())
+
+    for path <- [~p"/en/courses/#{course.slug}", ~p"/en/courses"] do
+      {:ok, view, _html} = live(conn, path)
+      refute render(view) =~ "Photo:"
+    end
+  end
+
   describe "/courses" do
     test "hides draft courses from the list", %{conn: conn} do
       draft = generate(course(draft: true))

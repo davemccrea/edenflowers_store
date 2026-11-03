@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
   require Logger
   import Edenflowers.Actors
+  import EdenflowersWeb.Courses.Components
   import EdenflowersWeb.StripeForm, only: [stripe_form: 1]
 
   alias Edenflowers.Courses
@@ -79,7 +80,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
             </header>
 
             <%!-- Course photos are portrait phone shots, so a landscape crop cuts off the arrangement. --%>
-            <figure class="bg-cream aspect-[4/5] relative mt-8 w-full overflow-hidden sm:max-w-lg">
+            <figure class="mt-8 w-full sm:max-w-lg">
               <.image
                 src={@course.image_slug}
                 alt={@course.name}
@@ -87,8 +88,11 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 height={1250}
                 sizes="(min-width: 640px) 32rem, calc(100vw - 2rem)"
                 priority
-                class="h-full w-full object-cover"
+                class="bg-cream aspect-[4/5] w-full object-cover"
               />
+              <figcaption :if={@course.photo_credit_name} class="text-base-content/70 mt-2 text-sm">
+                <.photo_credit course={@course} />
+              </figcaption>
             </figure>
 
             <p class="my-8 max-w-prose text-lg leading-relaxed">{@course.description}</p>
