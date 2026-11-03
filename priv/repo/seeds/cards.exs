@@ -31,33 +31,33 @@ descriptions = %{
 
 # {name, size, price, photo}
 cards = [
-  {"Red oak leaves", :small, "1.90", "red_oak_leaves.png"},
-  {"Flower heart", :small, "1.90", "flower_heart.png"},
-  {"Botanical beetle", :small, "1.90", "botanical_beetle.png"},
-  {"Sunflowers with bumble bee", :small, "1.90", "sunflowers_with_bumble_bee.png"},
-  {"Giraffes in love", :small, "1.90", "giraffes_in_love.png"},
-  {"Winter butterfly", :small, "1.90", "winter_butterfly.png"},
-  {"Dahlias", :medium, "3.50", "dahlias-2.png"},
-  {"June flowers", :medium, "3.50", "june_flowers-2.png"},
-  {"Poppies", :medium, "3.50", "poppies-2.png"},
-  {"Pansy flower", :medium, "3.50", "pansy_flower-2.png"},
-  {"Cherries", :medium, "3.50", "cherries-2.png"},
-  {"Magnolia", :medium, "3.50", "magnolia-2.png"},
-  {"Condolence", :medium, "3.50", "kondoleans.png"},
-  {"Meadow", :large, "4.90", "meadow.png"},
-  {"Malva", :large, "4.90", "malva.png"},
-  {"Kira", :large, "4.90", "kira.png"},
-  {"Love spell", :large, "4.90", "love_spell.png"},
-  {"Aruba", :large, "4.90", "aruba.png"},
-  {"Monroe", :large, "4.90", "monroe.png"},
-  {"Botanica", :large, "4.90", "botanica.png"},
-  {"Cherry blossom", :large, "4.90", "cherry_blossom.png"}
+  {"Red oak leaves", :small, "2.90", "red_oak_leaves.png"},
+  {"Flower heart", :small, "2.90", "flower_heart.png"},
+  {"Botanical beetle", :small, "2.90", "botanical_beetle.png"},
+  {"Sunflowers with bumble bee", :small, "2.90", "sunflowers_with_bumble_bee.png"},
+  {"Giraffes in love", :small, "2.90", "giraffes_in_love.png"},
+  {"Winter butterfly", :small, "2.90", "winter_butterfly.png"},
+  {"Dahlias", :medium, "3.90", "dahlias-2.png"},
+  {"June flowers", :medium, "3.90", "june_flowers-2.png"},
+  {"Poppies", :medium, "3.90", "poppies-2.png"},
+  {"Pansy flower", :medium, "3.90", "pansy_flower-2.png"},
+  {"Cherries", :medium, "3.90", "cherries-2.png"},
+  {"Magnolia", :medium, "3.90", "magnolia-2.png"},
+  {"Condolence", :medium, "3.90", "kondoleans.png"},
+  {"Meadow", :large, "5.90", "meadow.png"},
+  {"Malva", :large, "5.90", "malva.png"},
+  {"Kira", :large, "5.90", "kira.png"},
+  {"Love spell", :large, "5.90", "love_spell.png"},
+  {"Aruba", :large, "5.90", "aruba.png"},
+  {"Monroe", :large, "5.90", "monroe.png"},
+  {"Botanica", :large, "5.90", "botanica.png"},
+  {"Cherry blossom", :large, "5.90", "cherry_blossom.png"}
 ]
 
 # The other designs go by their English names in every language.
 translated_names = %{"Condolence" => %{sv: "Kondoleans", fi: "Surunvalittelu"}}
 
-dimensions = %{"Winter butterfly" => "7,5 x 7,5"}
+dimensions = %{small: "7,5 x 7,5", medium: "9 x 11", large: "15 x 15"}
 
 category = ProductCategory |> Ash.Query.filter(slug == "cards") |> Ash.read_one!(authorize?: false)
 tax_rate = TaxRate |> Ash.Query.filter(name == "Standard 25.5%") |> Ash.read_one!(authorize?: false)
@@ -80,7 +80,7 @@ Edenflowers.Repo.transaction(fn ->
       }
     }
 
-    variant = %{size: size, price: price, dimensions_cm: dimensions[name], draft: false}
+    variant = %{size: size, price: price, dimensions_cm: dimensions[size], draft: false}
 
     existing =
       Product
