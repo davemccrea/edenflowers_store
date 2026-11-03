@@ -26,12 +26,14 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
-  attr :data, :map, required: true
+  attr :data, :any, required: true, doc: "a schema.org map, or a list of them"
 
+  # One script per item: some parsers (seen in Safari) assume the top level is
+  # an object and crash on a JSON-LD array.
   def json_ld(assigns) do
     ~H"""
-    <script type="application/ld+json">
-      <%= raw(Jason.encode!(@data, escape: :html_safe)) %>
+    <script :for={item <- List.wrap(@data)} type="application/ld+json">
+      <%= raw(Jason.encode!(item, escape: :html_safe)) %>
     </script>
     """
   end
