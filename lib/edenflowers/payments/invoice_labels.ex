@@ -22,6 +22,8 @@ defmodule Edenflowers.Payments.InvoiceLabels do
         "supply-date" => dgettext("receipts", "Date of supply"),
         "your-reference" => your_reference(),
         "due-on-invoice" => dgettext("receipts", "Due on this invoice"),
+        "paid" => dgettext("receipts", "Paid"),
+        "left-to-pay" => dgettext("receipts", "Still to pay"),
         "payment-details" => dgettext("receipts", "Payment details"),
         "iban" => dgettext("receipts", "Account (IBAN)"),
         "reference-number" => reference_number(),

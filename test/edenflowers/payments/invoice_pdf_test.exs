@@ -4,6 +4,7 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
   alias Edenflowers.Payments.CreditNote
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.InvoiceFinancials
+  alias Edenflowers.Payments.InvoiceLine
   alias Edenflowers.Payments.InvoicePdf
   alias Edenflowers.Payments.ReferenceNumber
 
@@ -55,6 +56,20 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
     end
   end
 
+  test "a part-paid invoice keeps its total and asks only for what is left" do
+    invoice = issued("Wedding flowers", "500.00")
+    full = InvoicePdf.payload(%{invoice | amount_paid: Decimal.new(0), amount_unpaid: Decimal.new("500.00")})
+    refute Map.has_key?(full, "left_to_pay")
+
+    payload = InvoicePdf.payload(%{invoice | amount_paid: Decimal.new("200.00"), amount_unpaid: Decimal.new("300.00")})
+    assert payload["amount"] == full["amount"]
+    assert payload["paid"] =~ "200,00"
+    assert payload["left_to_pay"] =~ "300,00"
+    # Positions 18–25 carry the amount in cents.
+    assert binary_part(payload["virtual_barcode"], 17, 8) == "00030000"
+    assert binary_part(full["virtual_barcode"], 17, 8) == "00050000"
+  end
+
   test "unit prices retain supplied sub-cent precision and include VAT" do
     invoice = issued("Small supplies", "0.005")
     assert [%{"unit_price_ex_tax" => price}] = invoice.content["line_items"]
@@ -81,9 +96,9 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
 
   defp issued(description, price, extra \\ [], locale \\ "fi") do
     {:ok, snapshot} =
-      InvoiceFinancials.build([
-        %{"description" => description, "quantity" => "1", "unit_price" => price, "vat_rate" => "25.5"} | extra
-      ])
+      [%{"description" => description, "quantity" => "1", "unit_price" => price, "vat_rate" => "25.5"} | extra]
+      |> Enum.map(&invoice_line/1)
+      |> InvoiceFinancials.build()
 
     invoice = %Invoice{
       number: 1337,
@@ -109,5 +124,14 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
 
     {:ok, content} = InvoicePdf.content(invoice)
     %{invoice | content: content}
+  end
+
+  defp invoice_line(line) do
+    %InvoiceLine{
+      description: line["description"],
+      quantity: Decimal.new(line["quantity"]),
+      unit_price: Decimal.new(line["unit_price"]),
+      vat_rate: Decimal.new(line["vat_rate"])
+    }
   end
 end

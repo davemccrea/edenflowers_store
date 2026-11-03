@@ -18,7 +18,8 @@ defmodule Edenflowers.Payments.CreditNote do
   use Ash.Resource,
     domain: Edenflowers.Payments,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshPaperTrail.Resource]
 
   alias Edenflowers.Payments.Changes
   alias Edenflowers.Payments.Validations
@@ -30,6 +31,16 @@ defmodule Edenflowers.Payments.CreditNote do
     references do
       reference :invoice, on_delete: :restrict
     end
+  end
+
+  paper_trail do
+    change_tracking_mode :changes_only
+    store_action_name? true
+    ignore_attributes [:inserted_at, :updated_at]
+    ignore_actions [:create]
+    on_actions [:send]
+    only_when_changed? false
+    metadata :email_message, :string
   end
 
   actions do

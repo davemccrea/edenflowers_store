@@ -42,7 +42,15 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
             </.link>
           </:col>
           <:col :let={invoice} field="buyer" search label={~t"Customer"}>
-            {invoice.buyer || ~t"Customer details needed"}
+            <div class="max-sm:max-w-40 max-sm:whitespace-normal">
+              <p class="break-words">{invoice.buyer || ~t"Customer details needed"}</p>
+              <p
+                :if={invoice.status == :open}
+                class={["mt-1 text-xs sm:hidden", if(invoice.overdue?, do: "text-error", else: "text-base-content/75")]}
+              >
+                {~t"Due #{date = Format.date(invoice.due_date, @locale)}"}
+              </p>
+            </div>
           </:col>
           <:col
             :let={invoice}
@@ -63,7 +71,13 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
             <span class="tabular-nums">{Format.date(invoice.due_date, @locale)}</span>
           </:col>
           <:col :let={invoice} field="amount" sort label={~t"Amount"} class="text-right tabular-nums">
-            {if invoice.status == :draft, do: "—", else: Format.currency(invoice.amount, @locale)}
+            <span>{if invoice.status == :draft, do: "—", else: Format.currency(invoice.amount, @locale)}</span>
+            <p
+              :if={invoice.status == :open && Decimal.compare(invoice.amount_unpaid, invoice.amount) == :lt}
+              class="text-base-content/75 mt-1 whitespace-normal text-xs sm:hidden"
+            >
+              {~t"To collect #{amount = Format.currency(invoice.amount_unpaid, @locale)}"}
+            </p>
           </:col>
           <:col :let={invoice} field="amount_unpaid" label={~t"Balance"} class="text-right tabular-nums max-sm:hidden">
             {if invoice.status in [:draft, :cancelled], do: "—", else: Format.currency(invoice.amount_unpaid, @locale)}

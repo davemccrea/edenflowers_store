@@ -1,6 +1,7 @@
 defmodule Edenflowers.Payments.Changes.RecordInvoicePayment do
   @moduledoc "Records standalone receipts or their reversals within the locked invoice transaction."
   use Ash.Resource.Change
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.Payment
@@ -9,11 +10,18 @@ defmodule Edenflowers.Payments.Changes.RecordInvoicePayment do
   def change(changeset, opts, _context) do
     changeset
     |> Ash.Changeset.before_action(fn changeset ->
-      invoice = Invoice.get_locked(changeset.data.id, [:status])
+      invoice = Invoice.get_locked(changeset.data.id, [:status, :amount_unpaid])
 
-      if invoice && invoice.status not in [:draft, :cancelled],
-        do: %{changeset | data: invoice},
-        else: Ash.Changeset.add_error(changeset, "Only issued, uncredited invoices can receive payments")
+      cond do
+        is_nil(invoice) or invoice.status in [:draft, :cancelled] ->
+          Ash.Changeset.add_error(changeset, "Only issued, uncredited invoices can receive payments")
+
+        overpaid?(changeset, invoice, Keyword.get(opts, :reversal?, false)) ->
+          Ash.Changeset.add_error(changeset, field: :amount, message: ~t"That's more than is owed.")
+
+        true ->
+          %{changeset | data: invoice}
+      end
     end)
     |> Ash.Changeset.after_action(fn changeset, invoice ->
       with {:ok, attrs} <- attributes(changeset, Keyword.get(opts, :reversal?, false)),
@@ -36,6 +44,12 @@ defmodule Edenflowers.Payments.Changes.RecordInvoicePayment do
       end
     end)
   end
+
+  # Checked under the invoice lock, so two receipts entered at once can't both fit.
+  defp overpaid?(_changeset, _invoice, true = _reversal?), do: false
+
+  defp overpaid?(changeset, invoice, false),
+    do: Decimal.gt?(Ash.Changeset.get_argument(changeset, :amount), invoice.amount_unpaid)
 
   defp attributes(changeset, false),
     do: {:ok, %{amount: Ash.Changeset.get_argument(changeset, :amount)}}

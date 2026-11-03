@@ -21,6 +21,27 @@ defmodule Edenflowers.Payments.StandaloneInvoiceTest do
     }
   end
 
+  test "a draft may hold an unfinished line but not a wrong one, and issuing needs it finished", %{admin: admin} do
+    line = %{description: "Flowers", quantity: "1", unit_price: "20", vat_rate: "25.5"}
+
+    for {field, value} <- [quantity: "0", quantity: "NaN", unit_price: "-0.01", vat_rate: "100.1", vat_rate: "-1"] do
+      assert {:error, _} = Payments.create_invoice(%{attrs() | lines: [Map.put(line, field, value)]}, actor: admin)
+    end
+
+    {:ok, draft} = Payments.create_invoice(%{attrs() | lines: [%{line | unit_price: nil}]}, actor: admin)
+    assert {:error, _} = Payments.issue_invoice(draft, actor: admin)
+    {:ok, draft} = Payments.update_invoice_draft(draft, %{lines: [%{line | unit_price: "20,50"}]}, actor: admin)
+    assert {:ok, issued} = Payments.issue_invoice(draft, actor: admin)
+    assert Decimal.equal?(issued.amount, "20.50")
+  end
+
+  test "a business customer's Y-tunnus needs its check digit", %{admin: admin} do
+    business = Map.merge(attrs(), %{business_customer: true, company_name: "Kukka Oy", billing_address: "Street 1"})
+    assert {:error, _} = Payments.create_invoice(Map.put(business, :business_id, "2944459-5"), actor: admin)
+    assert {:ok, draft} = Payments.create_invoice(Map.put(business, :business_id, " 2944459-6 "), actor: admin)
+    assert draft.business_id == "2944459-6"
+  end
+
   test "drafts are unnumbered, editable, and absent from receivables", %{admin: admin} do
     assert {:ok, draft} = Payments.create_invoice(%{}, actor: admin)
     assert draft.number == nil
@@ -39,11 +60,11 @@ defmodule Edenflowers.Payments.StandaloneInvoiceTest do
     assert Ash.get!(Invoice, draft.id, authorize?: false).content == issued.content
   end
 
-  test "failed issuance consumes no number and rejects invalid or empty financials", %{admin: admin} do
+  test "failed issuance consumes no number and rejects unfinished, zero or empty financials", %{admin: admin} do
     for lines <- [
           [],
-          [%{description: "Invalid", quantity: "0", unit_price: "10", vat_rate: "25.5"}],
-          [%{description: "Invalid", quantity: "1", unit_price: "10", vat_rate: "101"}]
+          [%{description: "Unfinished", quantity: "1", unit_price: "10", vat_rate: nil}],
+          [%{description: "Free sample", quantity: "1", unit_price: "0", vat_rate: "25.5"}]
         ] do
       assert {:ok, draft} = Payments.create_invoice(Map.put(attrs(), :lines, lines), actor: admin)
       assert {:error, _} = Payments.issue_invoice(draft, actor: admin)

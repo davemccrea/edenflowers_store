@@ -13,10 +13,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   alias Edenflowers.Pricing
   alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.EmailDrawer
+  alias EdenflowersWeb.Admin.InvoiceLog
   alias EdenflowersWeb.Admin.InvoicesLive
   alias EdenflowersWeb.Layouts
 
-  @fields ~w(buyer_name buyer_email buyer_address business_customer company_name business_id billing_address customer_reference invoice_date due_date locale supply_date supply_description)
   @customer_fields ~w(buyer_name buyer_email buyer_address business_customer company_name business_id billing_address locale)
   @load [
     :editable?,
@@ -27,8 +27,9 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     :amount_unpaid,
     :sendable?,
     :cancellable?,
+    :paper_trail_versions,
     payments: [:undoable?],
-    credit_note: [:invoice]
+    credit_note: [:invoice, :paper_trail_versions]
   ]
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
@@ -43,6 +44,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
        email_form: nil,
        email_kind: nil,
        preview: nil,
+       log: [],
        tax_rates: Pricing.list_selectable_tax_rates!(actor: socket.assigns.current_user)
      )}
   end
@@ -55,15 +57,20 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   end
 
   def handle_params(_params, _uri, socket) do
-    params = %{
-      "invoice_date" => Date.to_iso8601(ShopTime.today()),
-      "due_date" => Date.to_iso8601(Invoice.default_due_date()),
-      "locale" => Locales.default(),
-      "business_customer" => "false",
-      "lines" => %{"0" => empty_line(socket.assigns.tax_rates)}
-    }
+    form =
+      Invoice
+      |> AshPhoenix.Form.for_create(
+        :create,
+        form_opts(socket, %{
+          "invoice_date" => Date.to_iso8601(ShopTime.today()),
+          "due_date" => Date.to_iso8601(Invoice.default_due_date()),
+          "locale" => Locales.default(),
+          "business_customer" => "false"
+        })
+      )
+      |> AshPhoenix.Form.add_form(:lines, params: empty_line(socket.assigns.tax_rates), validate?: false)
 
-    {:noreply, socket |> assign(invoice: nil, page_title: ~t"New invoice", editable: true) |> assign_form(params)}
+    {:noreply, socket |> assign(invoice: nil, page_title: ~t"New invoice", editable: true) |> put_form(form)}
   end
 
   def render(assigns) do
@@ -74,6 +81,11 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
           <:subtitle :if={!@editable}>
             <.badge tone={InvoicesLive.status_tone(@invoice.status, @invoice.overdue?)}>
               {InvoicesLive.status_label(@invoice.status, @invoice.overdue?)}
+            </.badge>
+            <.badge :if={@invoice.sendable? && is_nil(@invoice.sent_at)} tone={:neutral}>{~t"Not sent"}</.badge>
+            <.badge :if={@invoice.status == :open} href="#invoice-totals" tone={:warning} class="tabular-nums xl:hidden">
+              {~t"To collect #{amount = Format.currency(@invoice.amount_unpaid, @locale)}"}
+              <.icon name="hero-arrow-down" class="h-3 w-3" />
             </.badge>
           </:subtitle>
           <:actions>
@@ -126,10 +138,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
           phx-change="validate"
           phx-submit="save"
           data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
-          class="space-y-6"
+          class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start"
         >
-          <div class="admin-card divide-base-content/12 divide-y">
-            <.form_section title={~t"Customer"} joined>
+          <div class="min-w-0 space-y-6">
+            <.form_section title={~t"Customer"}>
               <.customer_picker field={@form[:previous_invoice_id]} empty?={@customer_search_empty?} />
               <div class="grid gap-4 sm:grid-cols-2">
                 <.input
@@ -146,6 +158,11 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   class="input w-full"
                   autocomplete="off"
                 />
+              </div>
+              <div class="mt-4">
+                <.input field={@form[:business_customer]} type="checkbox" label={~t"Business customer"} />
+              </div>
+              <div :if={@form[:business_customer].value not in [true, "true"]} class="mt-4">
                 <.input
                   field={@form[:buyer_address]}
                   type="textarea"
@@ -153,99 +170,83 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   class="textarea w-full"
                   rows="3"
                 />
-                <.input field={@form[:customer_reference]} label={~t"Customer reference (optional)"} class="input w-full" />
               </div>
-              <.input field={@form[:business_customer]} type="checkbox" label={~t"Business customer"} />
+              <.input :if={@form[:business_customer].value in [true, "true"]} field={@form[:buyer_address]} type="hidden" />
               <div :if={@form[:business_customer].value in [true, "true"]} class="mt-4 grid gap-4 sm:grid-cols-2">
                 <.input field={@form[:company_name]} label={~t"Company name"} class="input w-full" />
                 <.input field={@form[:business_id]} label={~t"Y-tunnus"} class="input w-full" />
-                <.input
-                  field={@form[:billing_address]}
-                  type="textarea"
-                  label={~t"Billing address"}
-                  class="textarea w-full"
-                  rows="3"
-                />
-              </div>
-            </.form_section>
-            <.form_section title={~t"Dates and language"} joined>
-              <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <.input field={@form[:invoice_date]} type="date" label={~t"Invoice date"} class="input w-full" required />
-                <.input field={@form[:due_date]} type="date" label={~t"Due date"} class="input w-full" required />
-                <.input
-                  field={@form[:locale]}
-                  type="select"
-                  label={~t"Language"}
-                  options={Enum.map(Locales.all(), &{Locales.name(&1), &1})}
-                  class="select w-full"
-                />
-                <.input
-                  field={@form[:supply_date]}
-                  type="date"
-                  label={~t"Supply / advance date (optional)"}
-                  class="input w-full"
-                />
                 <div class="sm:col-span-2">
                   <.input
-                    field={@form[:supply_description]}
-                    label={~t"Supply / advance details (optional)"}
-                    class="input w-full"
+                    field={@form[:billing_address]}
+                    type="textarea"
+                    label={~t"Billing address"}
+                    class="textarea w-full"
+                    rows="3"
                   />
                 </div>
               </div>
             </.form_section>
-            <.form_section title={~t"Items"} joined>
+            <.form_section title={~t"Items"}>
               <:description>{~t"Prices include VAT."}</:description>
               <div class="space-y-5">
-                <fieldset
-                  :for={{line_form, index} <- Enum.with_index(@line_forms)}
-                  id={"invoice-line-#{index}"}
-                  class="border-base-content/12 border-b pb-5 last:border-0"
-                >
-                  <legend class="sr-only">{~t"Item"} {index + 1}</legend>
-                  <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-[minmax(0,3fr)_1fr_1fr_1fr_auto] lg:items-end">
-                    <div class="min-w-0 sm:col-span-3 lg:col-span-1">
-                      <.input
-                        field={line_form[:description]}
-                        id={"line-#{index}-description"}
-                        label={~t"Description"}
-                        class="input w-full"
-                      />
+                <.inputs_for :let={line_form} field={@form[:lines]}>
+                  <fieldset
+                    id={"invoice-line-#{line_form.index}"}
+                    class="border-base-content/12 border-b pb-5 last:border-0"
+                  >
+                    <legend class="sr-only">{~t"Item"} {line_form.index + 1}</legend>
+                    <div class="flex items-start gap-3">
+                      <div class="min-w-0 flex-1">
+                        <.input
+                          field={line_form[:description]}
+                          id={"line-#{line_form.index}-description"}
+                          label={~t"Description"}
+                          class="input w-full"
+                        />
+                      </div>
+                      <.button
+                        type="button"
+                        phx-click="remove_line"
+                        phx-value-path={line_form.name}
+                        variant="ghost"
+                        size="sm"
+                        class="btn-square mt-6 shrink-0"
+                        aria-label={~t"Remove item #{number = line_form.index + 1}"}
+                      >
+                        <.icon name="hero-trash" class="h-4 w-4" />
+                      </.button>
                     </div>
-                    <.input
-                      field={line_form[:quantity]}
-                      id={"line-#{index}-quantity"}
-                      label={~t"Qty"}
-                      inputmode="decimal"
-                      class="input w-full tabular-nums"
-                    />
-                    <.input
-                      field={line_form[:unit_price]}
-                      id={"line-#{index}-price"}
-                      label={~t"Price each (€)"}
-                      inputmode="decimal"
-                      class="input w-full tabular-nums"
-                    />
-                    <.input
-                      field={line_form[:vat_rate]}
-                      id={"line-#{index}-vat"}
-                      type="select"
-                      label={~t"VAT"}
-                      value={normalize_decimal(line_form[:vat_rate].value)}
-                      options={vat_options(@tax_rates, line_form[:vat_rate].value, @locale)}
-                      class="select w-full"
-                    />
-                    <.button
-                      type="button"
-                      phx-click="remove_line"
-                      phx-value-index={index}
-                      variant="ghost"
-                      size="sm"
-                      class="btn-square justify-self-end sm:col-span-3 lg:col-span-1"
-                      aria-label={~t"Remove item #{number = index + 1}"}
-                    ><.icon name="hero-trash" class="h-4 w-4" /></.button>
-                  </div>
-                </fieldset>
+                    <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      <.input
+                        field={line_form[:quantity]}
+                        value={decimal_comma(line_form[:quantity].value)}
+                        id={"line-#{line_form.index}-quantity"}
+                        label={~t"Qty"}
+                        inputmode="decimal"
+                        class="input w-full tabular-nums"
+                      />
+                      <.input
+                        field={line_form[:unit_price]}
+                        value={decimal_comma(line_form[:unit_price].value)}
+                        id={"line-#{line_form.index}-price"}
+                        label={~t"Price each (€)"}
+                        inputmode="decimal"
+                        class="input w-full tabular-nums"
+                      />
+                      <div class="col-span-2 sm:col-span-1">
+                        <.input
+                          field={line_form[:vat_rate]}
+                          id={"line-#{line_form.index}-vat"}
+                          type="select"
+                          label={~t"VAT"}
+                          value={normalize_decimal(line_form[:vat_rate].value)}
+                          options={vat_options(@tax_rates, line_form[:vat_rate].value, @locale)}
+                          class="select w-full"
+                        />
+                      </div>
+                    </div>
+                  </fieldset>
+                </.inputs_for>
               </div>
               <.button type="button" phx-click="add_line" variant="secondary" size="sm"><.icon
                 name="hero-plus"
@@ -253,8 +254,50 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
               /> {~t"Add item"}</.button>
             </.form_section>
           </div>
-          <.totals snapshot={@totals_preview} locale={@locale} draft show_errors={@submitted} />
+          <aside class="min-w-0 space-y-6">
+            <.form_section title={~t"Invoice details"}>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <.input field={@form[:invoice_date]} type="date" label={~t"Invoice date"} class="input w-full" required />
+                <.input field={@form[:due_date]} type="date" label={~t"Due date"} class="input w-full" required />
+                <div class="sm:col-span-2">
+                  <.input
+                    field={@form[:locale]}
+                    type="select"
+                    label={~t"Language"}
+                    options={Enum.map(Locales.all(), &{Locales.name(&1), &1})}
+                    class="select w-full"
+                  />
+                </div>
+              </div>
+              <details
+                id="invoice-additional-details"
+                class="mt-5"
+                open={additional_details?(@form)}
+                phx-mounted={JS.ignore_attributes(["open"])}
+              >
+                <summary class="link link-primary cursor-pointer text-sm">{~t"Additional details (optional)"}</summary>
+                <div class="mt-4 space-y-4">
+                  <.input field={@form[:customer_reference]} label={~t"Customer reference (optional)"} class="input w-full" />
+                  <.input
+                    field={@form[:supply_date]}
+                    type="date"
+                    label={~t"Supply / advance date (optional)"}
+                    class="input w-full"
+                  />
+                  <.input
+                    field={@form[:supply_description]}
+                    label={~t"Supply / advance details (optional)"}
+                    class="input w-full"
+                  />
+                </div>
+              </details>
+            </.form_section>
+            <.totals snapshot={@totals_preview} locale={@locale} draft show_errors={@submitted} />
+          </aside>
         </.form>
+        <div :if={@editable && @invoice} class="mt-6">
+          <.invoice_history log={@log} locale={@locale} />
+        </div>
         <div :if={!@editable} class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <div class="min-w-0 space-y-6">
             <.widget title={@invoice.buyer}>
@@ -272,25 +315,15 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   {~t"Customer reference"}: {@invoice.customer_reference}
                 </p>
               </div>
-              <dl class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <dl class="mt-5 grid grid-cols-2 gap-4">
                 <div>
                   <dt class="text-base-content/75 text-sm">{~t"Invoice date"}</dt><dd class="tabular-nums">
                     {Format.date(@invoice.invoice_date, @locale)}
                   </dd>
                 </div>
                 <div>
-                  <dt class="text-base-content/75 text-sm">{~t"Due date"}</dt><dd class="tabular-nums">
+                  <dt class="text-base-content/75 text-sm">{~t"Due date"}</dt><dd class={["tabular-nums", @invoice.overdue? && "text-error font-semibold"]}>
                     {Format.date(@invoice.due_date, @locale)}
-                  </dd>
-                </div>
-                <div>
-                  <dt class="text-base-content/75 text-sm">{~t"Paid"}</dt><dd class="tabular-nums">
-                    {Format.currency(@invoice.amount_paid, @locale)}
-                  </dd>
-                </div>
-                <div :if={@invoice.status != :cancelled}>
-                  <dt class="text-base-content/75 text-sm">{~t"Balance"}</dt><dd class="tabular-nums">
-                    {Format.currency(@invoice.amount_unpaid, @locale)}
                   </dd>
                 </div>
               </dl>
@@ -309,7 +342,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 </div>
               </dl>
             </.widget>
-            <.totals snapshot={{:ok, @invoice.financial_snapshot}} locale={@locale} />
+            <.totals snapshot={{:ok, @invoice.financial_snapshot}} locale={@locale} invoice={@invoice} />
           </div>
           <aside class="min-w-0 space-y-6">
             <.widget :if={@invoice.sendable?} title={~t"Email invoice"}>
@@ -353,7 +386,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 novalidate
                 phx-change="validate_payment"
                 phx-submit="record_payment"
-                class="mt-5 space-y-4"
+                class="scroll-mt-[calc(env(safe-area-inset-top)+6rem)] mt-5 space-y-4"
               >
                 <.input
                   field={@payment_form[:amount]}
@@ -366,15 +399,27 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 <.input field={@payment_form[:paid_on]} type="date" label={~t"Payment date"} class="input w-full" required />
                 <.button type="submit" variant="primary">{~t"Record bank transfer"}</.button>
               </.form>
+              <p
+                :if={@invoice.status in [:open, :paid] && !@invoice.cancellable?}
+                id="accountant-correction"
+                class="text-base-content/75 mt-4 text-sm"
+              >
+                {~t"For corrections to a paid or partly paid invoice, contact the accountant."}
+              </p>
             </.widget>
-            <.widget title={~t"Corrections"}>
+            <details
+              :if={@invoice.cancellable?}
+              id="invoice-corrections"
+              class="admin-card p-4 sm:p-5"
+              phx-mounted={JS.ignore_attributes(["open"])}
+            >
+              <summary class="cursor-pointer text-base font-semibold">{~t"Correct this invoice"}</summary>
               <.form
-                :if={@invoice.cancellable?}
                 for={@credit_form}
                 id="invoice-credit-form"
                 phx-change="validate_credit"
                 phx-submit="credit"
-                class="space-y-4"
+                class="mt-4 space-y-4"
               >
                 <p>{~t"A full credit note reverses this unpaid invoice and its VAT."}</p>
                 <.input
@@ -390,9 +435,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   data-confirm={~t"Credit the entire unpaid invoice? This cannot be undone."}
                 >{~t"Issue full credit note"}</.button>
               </.form>
-              <p :if={@invoice.status in [:open, :paid] && !@invoice.cancellable?} id="accountant-correction">
-                {~t"For corrections to a paid or partly paid invoice, contact the accountant."}
-              </p>
+            </details>
+            <.widget :if={@invoice.credit_note} title={~t"Credit note"}>
               <div :if={@invoice.credit_note} class="flex flex-wrap items-center gap-3">
                 <p class="w-full">
                   {~t"Credit note"} {@invoice.credit_note.number} · {Format.date(@invoice.credit_note.credit_date, @locale)}
@@ -409,6 +453,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 </.button>
               </div>
             </.widget>
+            <.invoice_history log={@log} locale={@locale} />
           </aside>
         </div>
       </.admin_page>
@@ -416,6 +461,35 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     """
   end
 
+  attr :log, :list, required: true
+  attr :locale, :string, required: true
+
+  defp invoice_history(assigns) do
+    ~H"""
+    <.widget id="invoice-log" title={~t"History"}>
+      <ol class="divide-base-content/12 divide-y text-sm">
+        <.history_entry
+          :for={{entry, index} <- Enum.with_index(@log)}
+          id={"invoice-log-entry-#{index}"}
+          title={entry.title}
+          at={entry.at}
+          locale={@locale}
+        >
+          <:details :if={entry.details != []}>
+            <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
+              <div :for={{label, value} <- entry.details}>
+                <dt :if={label} class="text-base-content/75 text-xs">{label}</dt>
+                <dd class="text-base-content/85 whitespace-pre-line break-words">{value}</dd>
+              </div>
+            </dl>
+          </:details>
+        </.history_entry>
+      </ol>
+    </.widget>
+    """
+  end
+
+  attr :invoice, :any, default: nil
   attr :snapshot, :any, required: true
   attr :locale, :string, required: true
   attr :draft, :boolean, default: false
@@ -423,7 +497,11 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   defp totals(assigns) do
     ~H"""
-    <.widget id="invoice-totals" title={if @draft, do: ~t"Draft totals", else: ~t"Invoice totals"}>
+    <.widget
+      id="invoice-totals"
+      title={if @draft, do: ~t"Draft totals", else: ~t"Invoice totals"}
+      class="scroll-mt-[calc(env(safe-area-inset-top)+6rem)]"
+    >
       <%= case @snapshot do %>
         <% {:ok, snapshot} -> %>
           <dl class="space-y-3 tabular-nums">
@@ -436,10 +514,40 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 )}
               </dd>
             </div>
-            <.money_row label={~t"Total incl. VAT"} amount={Decimal.new(snapshot["gross"])} locale={@locale} strong />
+            <.money_row
+              label={~t"Total incl. VAT"}
+              amount={Decimal.new(snapshot["gross"])}
+              locale={@locale}
+              strong={is_nil(@invoice)}
+              ruled={!is_nil(@invoice)}
+            />
+            <.money_row
+              :if={@invoice && Decimal.positive?(@invoice.amount_paid)}
+              label={~t"Paid"}
+              amount={Decimal.negate(@invoice.amount_paid)}
+              locale={@locale}
+            />
+            <.money_row
+              :if={@invoice && @invoice.status in [:open, :paid]}
+              label={~t"Balance"}
+              amount={@invoice.amount_unpaid}
+              locale={@locale}
+              strong
+            />
           </dl>
+          <.button
+            :if={@invoice && @invoice.status == :open}
+            href="#invoice-payment-form"
+            variant="secondary"
+            size="sm"
+            class="mt-4"
+          >
+            <.icon name="hero-banknotes" class="h-4 w-4" /> {~t"Record payment"}
+          </.button>
         <% {:error, message} -> %>
-          <p :if={@show_errors} role="status" class="text-base-content/75">{message}</p>
+          <p role="status" class="text-base-content/75">
+            {if @show_errors, do: message, else: ~t"Complete the items to see the total."}
+          </p>
       <% end %>
     </.widget>
     """
@@ -460,11 +568,11 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   def handle_event("validate", %{"invoice" => params}, socket) do
     params = prefill_customer(params, socket.assigns)
-    {:noreply, socket |> assign(error: nil) |> assign_form(params, true)}
+    {:noreply, socket |> assign(error: nil) |> validate_form(params)}
   end
 
   def handle_event("recover", %{"invoice" => params}, socket),
-    do: {:noreply, socket |> assign(error: nil) |> assign_form(params, true)}
+    do: {:noreply, socket |> assign(error: nil) |> validate_form(params)}
 
   def handle_event("validate_payment", %{"payment" => params}, socket),
     do:
@@ -490,11 +598,13 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   def handle_event("validate_credit", %{"credit" => params}, socket),
     do: {:noreply, assign(socket, credit_form: to_form(params, as: :credit), error: nil)}
 
-  def handle_event("add_line", _params, socket),
-    do: {:noreply, change_lines(socket, socket.assigns.lines ++ [empty_line(socket.assigns.tax_rates)])}
+  def handle_event("add_line", _params, socket) do
+    params = empty_line(socket.assigns.tax_rates)
+    {:noreply, put_form(socket, AshPhoenix.Form.add_form(socket.assigns.form, :lines, params: params))}
+  end
 
-  def handle_event("remove_line", %{"index" => index}, socket),
-    do: {:noreply, change_lines(socket, List.delete_at(socket.assigns.lines, String.to_integer(index)))}
+  def handle_event("remove_line", %{"path" => path}, socket),
+    do: {:noreply, put_form(socket, AshPhoenix.Form.remove_form(socket.assigns.form, path))}
 
   def handle_event("save", %{"invoice" => params} = input, socket) do
     params = used_params(params)
@@ -504,7 +614,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     socket =
       case result do
         {:ok, draft} -> assign(socket, :invoice, draft)
-        _ -> socket
+        {:error, form} -> put_form(socket, form)
       end
 
     intent = input["intent"]
@@ -528,10 +638,13 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
          |> put_flash(:info, message)
          |> push_navigate(to: ~p"/admin/invoices/#{invoice.id}")}
 
-      {:error, _error} ->
+      {:error, %Phoenix.HTML.Form{}} ->
+        {:noreply, assign(socket, error: ~t"Check the fields marked below and try again.")}
+
+      {:error, _issue_error} ->
         {:noreply,
          socket
-         |> assign_form(params, true)
+         |> put_form(socket |> draft_form(socket.assigns.invoice) |> AshPhoenix.Form.validate(params))
          |> assign(error: ~t"Check the fields marked below and try again.")}
     end
   end
@@ -610,13 +723,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       )
 
   defp show_invoice(socket, invoice) do
-    params =
-      Map.new(@fields, fn field -> {field, form_value(Map.get(invoice, String.to_existing_atom(field)))} end)
-      |> Map.put("lines", indexed(invoice.lines))
-
     socket
     |> assign(
       invoice: invoice,
+      log: InvoiceLog.entries(invoice, socket.assigns.locale),
       editable: invoice.editable?,
       error: nil,
       page_title: if(invoice.number, do: ~t"Invoice #{number = invoice.number}", else: ~t"Invoice draft"),
@@ -628,25 +738,21 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       issue_attempted: false,
       payment_form: payment_form(invoice, socket.assigns.current_user)
     )
-    |> assign_form(params)
+    |> put_form(draft_form(socket, invoice))
   end
 
-  defp assign_form(socket, params, errors? \\ false) do
-    opts = [
-      as: "invoice",
-      actor: socket.assigns.current_user,
-      params: params,
-      errors: errors?,
-      transform_params: fn params, _type ->
-        Map.put(params, "lines", line_values(params))
-      end
-    ]
+  defp form_opts(socket, params) do
+    [as: "invoice", actor: socket.assigns.current_user, params: params, forms: [auto?: true]]
+  end
 
-    form =
-      if socket.assigns.invoice,
-        do: AshPhoenix.Form.for_update(socket.assigns.invoice, :update_draft, opts),
-        else: AshPhoenix.Form.for_create(Invoice, :create, opts)
+  defp draft_form(socket, invoice), do: AshPhoenix.Form.for_update(invoice, :update_draft, form_opts(socket, %{}))
 
+  defp validate_form(socket, params), do: put_form(socket, AshPhoenix.Form.validate(socket.assigns.form, params))
+
+  defp put_form(socket, %Phoenix.HTML.Form{source: form}), do: put_form(socket, form)
+
+  # After a failed issue, the fields issuing needs stay marked as Jennie corrects them.
+  defp put_form(socket, form) do
     form =
       if socket.assigns.issue_attempted do
         form.source
@@ -658,29 +764,17 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
         form
       end
 
-    lines = line_values(params)
-
-    line_forms =
-      params
-      |> Map.get("lines", %{})
-      |> Enum.sort_by(fn {key, _} -> String.to_integer(key) end)
-      |> Enum.map(fn {index, line} ->
-        errors = if errors?, do: InvoiceFinancials.line_errors(normalize_line(line)), else: []
-        to_form(line, as: "invoice[lines][#{index}]", errors: errors)
-      end)
-
-    assign(socket,
-      form: to_form(form),
-      invoice_params: params,
-      lines:
-        params
-        |> Map.get("lines", %{})
-        |> Enum.sort_by(fn {key, _} -> String.to_integer(key) end)
-        |> Enum.map(&elem(&1, 1)),
-      line_forms: line_forms,
-      totals_preview: InvoiceFinancials.build(lines)
-    )
+    assign(socket, form: to_form(form), totals_preview: totals_preview(form.source))
   end
+
+  defp totals_preview(changeset) do
+    if Enum.any?(changeset.errors, &(Map.get(&1, :field) == :lines or match?([:lines | _], Map.get(&1, :path)))),
+      do: {:error, ~t"Complete the items to see the total."},
+      else: InvoiceFinancials.build(Ash.Changeset.get_attribute(changeset, :lines))
+  end
+
+  defp additional_details?(form),
+    do: Enum.any?([:customer_reference, :supply_date, :supply_description], &(form[&1].value not in [nil, ""]))
 
   defp email_record(nil, _invoice), do: nil
   defp email_record(:invoice, invoice), do: invoice
@@ -741,9 +835,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     |> to_form()
   end
 
-  defp change_lines(socket, lines),
-    do: assign_form(socket, Map.put(socket.assigns.invoice_params, "lines", indexed(lines)), true)
-
   defp used_params(params) when is_map(params) do
     params
     |> Enum.reject(fn {key, _} -> String.starts_with?(key, "_unused_") end)
@@ -751,25 +842,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   end
 
   defp used_params(value), do: value
-
-  defp indexed(lines), do: lines |> Enum.with_index() |> Map.new(fn {line, index} -> {to_string(index), line} end)
-
-  defp line_values(%{"lines" => lines}) when is_list(lines), do: Enum.map(lines, &normalize_line/1)
-
-  defp line_values(params) do
-    params
-    |> Map.get("lines", %{})
-    |> Enum.sort_by(fn {key, _} -> String.to_integer(key) end)
-    |> Enum.map(fn {_index, line} -> normalize_line(line) end)
-  end
-
-  defp normalize_line(line) do
-    line
-    |> Map.take(~w(description quantity unit_price vat_rate))
-    |> Map.new(fn {key, value} ->
-      {key, if(key in ~w(quantity unit_price vat_rate), do: normalize_decimal(value), else: value)}
-    end)
-  end
 
   defp payment_params(%{"paid_at" => _} = params), do: params
 
@@ -786,7 +858,12 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   end
 
   defp normalize_decimal(value) when is_binary(value), do: value |> String.trim() |> String.replace(",", ".")
+  defp normalize_decimal(%Decimal{} = value), do: value |> Decimal.normalize() |> Decimal.to_string(:normal)
   defp normalize_decimal(value), do: value
+
+  # Shown as Jennie types it, the Finnish way, once the form has read it as a number.
+  defp decimal_comma(%Decimal{} = value), do: value |> Decimal.to_string(:normal) |> String.replace(".", ",")
+  defp decimal_comma(value), do: value
 
   defp empty_line(tax_rates) do
     rate =

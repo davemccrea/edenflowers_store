@@ -25,7 +25,10 @@ defmodule Edenflowers.Payments.Changes.SendCreditNote do
              |> Swoosh.Email.attachment(InvoicePdf.attachment(pdf, credit_note))
              |> Mailer.deliver() do
         Logger.info("Sent credit note #{credit_note.number} (#{credit_note.id})")
-        Ash.Changeset.force_change_attribute(changeset, :sent_at, DateTime.utc_now())
+
+        changeset
+        |> Ash.Changeset.force_change_attribute(:sent_at, DateTime.utc_now())
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: %{email_message: message}})
       else
         {:error, error} -> Ash.Changeset.add_error(changeset, "Failed to send credit note: #{inspect(error)}")
       end

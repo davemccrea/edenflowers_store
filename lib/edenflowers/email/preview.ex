@@ -119,19 +119,12 @@ defmodule Edenflowers.Email.Preview do
     booking_email(:confirmation, entered, inputs)
   end
 
-  @doc """
-  The Credit note email for `credit_note` (with its `invoice` loaded) with
-  Jennie's `message`, or for the one she is about to make to cancel an
-  `invoice`, before it has a number.
-  """
+  @doc "The Credit note email for `credit_note` (with its `invoice` loaded) with Jennie's `message`."
   def build_credit_note(%CreditNote{} = credit_note, message) do
     credit_note
     |> Email.credit_note(message)
     |> Swoosh.Email.attachment(InvoicePdf.attachment("", credit_note))
   end
-
-  def build_credit_note(%Invoice{} = invoice, message),
-    do: build_credit_note(%CreditNote{number: "…", invoice: invoice}, message)
 
   @doc "The Invoice email `:send` would send for `invoice` now, with Jennie's `message`."
   def build_invoice(%Invoice{} = invoice, message) do
@@ -139,28 +132,6 @@ defmodule Edenflowers.Email.Preview do
     |> SendInvoice.load_for_email()
     |> Email.invoice(message)
     |> Swoosh.Email.attachment(InvoicePdf.attachment("", invoice))
-  end
-
-  @doc "Preview a standalone invoice draft before issuance."
-  def build_new_invoice(%Invoice{} = draft, params, message) do
-    invoice = %{
-      draft
-      | number: "…",
-        reference_number: "…",
-        amount_paid: Decimal.new(0),
-        amount_unpaid: draft.amount,
-        due_date: date(params["due_date"]) || draft.due_date || Invoice.default_due_date(),
-        overdue?: false
-    }
-
-    Swoosh.Email.attachment(Email.invoice(invoice, message), InvoicePdf.attachment("", invoice))
-  end
-
-  defp date(text) do
-    case Date.from_iso8601(text || "") do
-      {:ok, date} -> date
-      _ -> nil
-    end
   end
 
   # Placing opens a link for payment-link terms; an edited order keeps the one it has.

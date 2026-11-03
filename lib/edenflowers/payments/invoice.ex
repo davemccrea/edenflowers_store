@@ -47,7 +47,7 @@ defmodule Edenflowers.Payments.Invoice do
     migration_types amount: :decimal
   end
 
-  # Each send, for the order log: sent_at keeps only the latest, and Jennie
+  # Each send, for the invoice history: sent_at keeps only the latest, and Jennie
   # needs to see when a reminder went out after the first email.
   paper_trail do
     change_tracking_mode :changes_only
@@ -92,7 +92,7 @@ defmodule Edenflowers.Payments.Invoice do
 
     read :open_at do
       description "The invoices still owed at the end of a day, for the receivables list in the accountant's " <>
-                    "monthly report: made by then, not cancelled by a Credit note dated by then, and not covered " <>
+                    "monthly report: issued by then (in Helsinki) and dated by then, not cancelled by a Credit note dated by then, and not covered " <>
                     "by the Payments dated by then (in Helsinki), refunds and Undos taken off. An invoice paid " <>
                     "or cancelled later still counts, so the list reads the same whenever the report is built. " <>
                     "Sorted by number. Load amount_open_at with the same date for what was owed on each."
@@ -103,7 +103,10 @@ defmodule Edenflowers.Payments.Invoice do
       end
 
       filter expr(
-               not is_nil(issued_at) and invoice_date <= ^arg(:date) and
+               not is_nil(issued_at) and
+                 fragment("(? AT TIME ZONE 'UTC' AT TIME ZONE ?)::date", issued_at, ^Edenflowers.ShopTime.timezone()) <=
+                   ^arg(:date) and
+                 invoice_date <= ^arg(:date) and
                  not exists(credit_note, credit_date <= ^arg(:date)) and
                  amount_open_at(date: ^arg(:date)) > 0
              )
@@ -239,8 +242,8 @@ defmodule Edenflowers.Payments.Invoice do
     end
 
     attribute :amount, :decimal do
-      description "Due on this invoice in euros, VAT included: the Balance not yet invoiced unless Jennie chose " <>
-                    "another amount."
+      description "Due on this invoice in euros, VAT included: the gross total of its lines, set when it is " <>
+                    "issued. 0 on a draft."
 
       default 0
       constraints min: 0, scale: 2
@@ -261,8 +264,8 @@ defmodule Edenflowers.Payments.Invoice do
     end
 
     attribute :buyer_address, :string do
-      description "The customer's own postal address when invoiced, if the purchase has one: a delivery to " <>
-                    "themselves, not a gift's Recipient. Nil otherwise."
+      description "The consumer's postal address, printed under their name. A business customer is billed at " <>
+                    "billing_address instead."
     end
 
     attribute :business_customer, :boolean do
@@ -275,7 +278,7 @@ defmodule Edenflowers.Payments.Invoice do
       description "The buying company's name when invoiced. Nil for a consumer."
     end
 
-    attribute :business_id, :string do
+    attribute :business_id, Edenflowers.Types.BusinessId do
       description "The buying company's Y-tunnus when invoiced. Nil for a consumer."
     end
 
@@ -297,7 +300,10 @@ defmodule Edenflowers.Payments.Invoice do
     attribute :supply_date, :date
     attribute :supply_description, :string
 
-    attribute :lines, {:array, :map} do
+    attribute :lines, {:array, Edenflowers.Payments.InvoiceLine} do
+      description "What it bills. A draft's may be unfinished; issuing needs them complete and freezes them " <>
+                    "into financial_snapshot."
+
       allow_nil? false
       default []
     end
@@ -342,8 +348,8 @@ defmodule Edenflowers.Payments.Invoice do
       constraints one_of: [:draft, :open, :paid, :cancelled]
 
       description "Where it stands: :cancelled once a Credit note names it, otherwise :open until its Payments " <>
-                    "cover its amount, then :paid. A refund or Undo of one of them can open it again. Only " <>
-                    ":open counts toward what a purchase has invoiced and can take a Payment."
+                    "cover its amount, then :paid. An Undo of one of them can open it again. Only an :open " <>
+                    "invoice can take a Payment, and never more than its amount_unpaid."
     end
 
     calculate :cancellable?, :boolean, expr(status == :open and amount_paid == 0) do
@@ -355,9 +361,8 @@ defmodule Edenflowers.Payments.Invoice do
     calculate :overdue?, :boolean, expr(status == :open and due_date < helsinki_today()) do
       description "Whether it is late: still open after its due date, counted in Helsinki days, so it turns " <>
                     "overdue the day after the due date. A paid or cancelled invoice is never overdue; one " <>
-                    "paid only in part still is. Admin flags it, the Overview lists its purchase under Payment " <>
-                    "overdue, and sending it again makes the email a friendly reminder. Nothing is sent " <>
-                    "automatically: Jennie decides whether to nudge."
+                    "paid only in part still is. Admin flags it, and sending it again makes the email a friendly " <>
+                    "reminder. Nothing is sent automatically: Jennie decides whether to nudge."
     end
 
     calculate :sendable?, :boolean, expr(status == :open) do
@@ -401,23 +406,8 @@ defmodule Edenflowers.Payments.Invoice do
       description "Who it bills, for lists: the company's name for a business customer, otherwise the customer's."
     end
 
-    calculate :purchase_reference, :string, expr(order.order_reference || course_registration.reference) do
-      description "The reference of the order or Course booking it bills."
-    end
-
-    calculate :cancellation_charge?,
-              :boolean,
-              expr(
-                (not is_nil(order.cancelled_at) and inserted_at > order.cancelled_at) or
-                  (not is_nil(course_registration.cancelled_at) and inserted_at > course_registration.cancelled_at)
-              ) do
-      description "Whether it bills a cancellation charge: made after its order or Course booking was cancelled, " <>
-                    "when the Total due is what Jennie kept. One made before the cancel still bills the purchase " <>
-                    "itself, even if sent again later. Its email opens with which."
-    end
-
     calculate :amount_unpaid, :decimal, expr(amount - amount_paid) do
-      description "What is still to pay on it in euros: its amount less its Payments. Negative if it was overpaid."
+      description "What is still to pay on it in euros: its amount less its Payments, which can't exceed it."
     end
   end
 

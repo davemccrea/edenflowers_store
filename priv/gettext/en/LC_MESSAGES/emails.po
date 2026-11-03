@@ -1171,12 +1171,12 @@ msgid "Just a friendly reminder that it was due on %{date}, and %{amount} of it 
 msgstr ""
 
 #: lib/edenflowers/email.ex:123
-#, elixir-autogen, elixir-format, fuzzy
+#, elixir-autogen, elixir-format
 msgid "A reminder about invoice %{number}"
 msgstr ""
 
 #: lib/edenflowers/email/templates/invoice.text.eex:3
-#, elixir-autogen, elixir-format, fuzzy
+#, elixir-autogen, elixir-format
 msgid "My invoice %{number} is attached."
 msgstr ""
 

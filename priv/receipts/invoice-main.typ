@@ -8,6 +8,7 @@
 //   fi.final    (the same wedding's independent remainder invoice)
 //   sv          (a consumer's bespoke arrangement)
 //   en.course   (a bespoke workshop invoice)
+//   fi.part-paid (the booking fee resent after part of it was paid)
 #let data = if "invoice" in sys.inputs {
   json(bytes(sys.inputs.invoice))
 } else {

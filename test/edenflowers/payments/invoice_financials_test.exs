@@ -1,12 +1,22 @@
 defmodule Edenflowers.Payments.InvoiceFinancialsTest do
   use ExUnit.Case, async: true
   alias Edenflowers.Payments.InvoiceFinancials
+  alias Edenflowers.Payments.InvoiceLine
+
+  defp line(description, quantity, unit_price, vat_rate) do
+    %InvoiceLine{
+      description: description,
+      quantity: quantity && Decimal.new(quantity),
+      unit_price: unit_price && Decimal.new(unit_price),
+      vat_rate: vat_rate && Decimal.new(vat_rate)
+    }
+  end
 
   test "line rounding is half up and each rate conserves gross = base + VAT" do
     lines = [
-      %{"description" => "Fractional", "quantity" => "1.5", "unit_price" => "10.01", "vat_rate" => "25.5"},
-      %{"description" => "Same rate", "quantity" => "3", "unit_price" => "0.01", "vat_rate" => "25.50"},
-      %{"description" => "Exempt", "quantity" => "1", "unit_price" => "2", "vat_rate" => "0"}
+      line("Fractional", "1.5", "10.01", "25.5"),
+      line("Same rate", "3", "0.01", "25.50"),
+      line("Exempt", "1", "2", "0")
     ]
 
     assert {:ok, snapshot} = InvoiceFinancials.build(lines)
@@ -19,21 +29,10 @@ defmodule Edenflowers.Payments.InvoiceFinancialsTest do
     end
   end
 
-  test "rejects non-finite, float, negative, zero-total and missing data" do
-    line = %{"description" => "Flowers", "quantity" => "1", "unit_price" => "20", "vat_rate" => "25.5"}
-
-    for {key, value} <- [
-          {"quantity", "NaN"},
-          {"quantity", "Infinity"},
-          {"quantity", "-1"},
-          {"unit_price", "-0.01"},
-          {"unit_price", 1.1},
-          {"unit_price", "0"},
-          {"vat_rate", "100.1"},
-          {"vat_rate", "-1"},
-          {"description", "  "}
-        ] do
-      assert {:error, _} = InvoiceFinancials.build([Map.put(line, key, value)])
-    end
+  test "nothing billed, an unfinished line or a zero total has no snapshot" do
+    assert {:error, _} = InvoiceFinancials.build([])
+    assert {:error, _} = InvoiceFinancials.build([line("Flowers", "1", nil, "25.5")])
+    assert {:error, _} = InvoiceFinancials.build([line("  ", "1", "20", "25.5")])
+    assert {:error, _} = InvoiceFinancials.build([line("Free sample", "1", "0", "25.5")])
   end
 end

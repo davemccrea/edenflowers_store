@@ -26,8 +26,11 @@ defmodule Edenflowers.Payments.InvoicePdf do
 
   def generate(%Invoice{issued_at: nil}), do: {:error, :draft_invoice}
 
-  def generate(%Invoice{content: content} = invoice) when is_map(content),
-    do: Typst.render("invoice-main.typ", "invoice", payload(invoice))
+  def generate(%Invoice{content: content} = invoice) when is_map(content) do
+    with {:ok, invoice} <- Ash.load(invoice, [:amount_paid, :amount_unpaid], authorize?: false, reuse_values?: false) do
+      Typst.render("invoice-main.typ", "invoice", payload(invoice))
+    end
+  end
 
   def generate(%CreditNote{} = note) do
     with {:ok, note} <- Ash.load(note, :invoice, authorize?: false) do
@@ -35,8 +38,36 @@ defmodule Edenflowers.Payments.InvoicePdf do
     end
   end
 
-  def payload(%Invoice{content: content, locale: locale}),
-    do: Map.put(content, "labels", InvoiceLabels.for_locale(locale))
+  @doc """
+  The frozen content with its labels. Once part of it is paid, a resend asks
+  only for the rest: its lines and total stay as issued, then the payments
+  and what is left, and the payment details and barcode carry what is left.
+  """
+  def payload(%Invoice{content: content, locale: locale} = invoice) do
+    content
+    |> Map.put("labels", InvoiceLabels.for_locale(locale))
+    |> Map.merge(part_paid(invoice))
+  end
+
+  defp part_paid(%Invoice{amount_paid: %Decimal{} = paid, amount_unpaid: %Decimal{} = unpaid} = invoice) do
+    if Decimal.positive?(paid) and Decimal.positive?(unpaid) do
+      %{
+        "paid" => Format.currency(Decimal.negate(paid), invoice.locale),
+        "left_to_pay" => Format.currency(unpaid, invoice.locale),
+        "virtual_barcode" =>
+          VirtualBarcode.version_4(
+            invoice.content["seller"]["iban"],
+            unpaid,
+            invoice.reference_number,
+            invoice.due_date
+          )
+      }
+    else
+      %{}
+    end
+  end
+
+  defp part_paid(_invoice), do: %{}
 
   def content(%Invoice{} = invoice), do: {:ok, invoice |> build_payload() |> Jason.encode!() |> Jason.decode!()}
 

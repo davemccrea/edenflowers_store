@@ -57,6 +57,15 @@ defmodule Edenflowers.Payments.StandaloneInvoicePaymentTest do
     Swoosh.TestAssertions.assert_no_email_sent()
   end
 
+  test "a receipt can't be more than is still owed", ctx do
+    assert {:error, _} = Payments.record_invoice_payment(ctx.invoice, "100.01", actor: ctx.admin)
+    {:ok, partial} = Payments.record_invoice_payment(ctx.invoice, "40", actor: ctx.admin)
+    assert {:error, _} = Payments.record_invoice_payment(partial, "60.01", actor: ctx.admin)
+    {:ok, paid} = Payments.record_invoice_payment(partial, "60", actor: ctx.admin)
+    assert {:error, _} = Payments.record_invoice_payment(paid, "0.01", actor: ctx.admin)
+    assert Decimal.equal?(Ash.load!(paid, :amount_paid, authorize?: false).amount_paid, "100")
+  end
+
   test "admins alone record and reverse, and cannot reverse another invoice's receipt", ctx do
     assert {:error, _} = Payments.record_invoice_payment(ctx.invoice, "10", actor: nil)
     {:ok, paid} = Payments.record_invoice_payment(ctx.invoice, "10", actor: ctx.admin)

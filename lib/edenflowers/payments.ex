@@ -36,6 +36,8 @@ defmodule Edenflowers.Payments do
 
     resource Edenflowers.Payments.Invoice.Version
 
+    resource Edenflowers.Payments.CreditNote.Version
+
     resource Edenflowers.Payments.CreditNote do
       define :cancel_invoice, action: :create
       define :send_credit_note, action: :send

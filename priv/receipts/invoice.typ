@@ -25,6 +25,12 @@
     assert(key in invoice.buyer, message: "invoice: buyer missing `" + key + "`")
   }
 
+  // Set only on a part-paid invoice sent again: the payments so far and what
+  // is left, which the payment details and virtual barcode then ask for.
+  let paid = invoice.at("paid", default: none)
+  let left-to-pay = invoice.at("left_to_pay", default: none)
+  let to-transfer = if left-to-pay != none { left-to-pay } else { invoice.amount }
+
   let t(key) = invoice.labels.at(key)
   let num(body) = text(features: ("tnum",), body)
 
@@ -54,9 +60,13 @@
   align(right)[
     #block(width: 60%)[
       #grid(
-        columns: (1fr, auto), align: (left, right),
+        columns: (1fr, auto), align: (left, right), row-gutter: 6pt,
         text(weight: "bold", t("due-on-invoice")),
         num(text(weight: "bold", invoice.amount)),
+        ..if paid != none {(
+          t("paid"), num(paid),
+          text(weight: "bold", t("left-to-pay")), num(text(weight: "bold", left-to-pay)),
+        )},
       )
       #v(14pt)
       #vat-breakdown(invoice.vat_breakdown, t)
@@ -94,7 +104,7 @@
         field(t("iban"), invoice.seller.iban),
         field(t("reference-number"), invoice.reference_number),
         field(t("due-date"), invoice.due_date),
-        field(t("amount"), invoice.amount),
+        field(t("amount"), to-transfer),
         grid.cell(colspan: 4, field(t("virtual-barcode"), invoice.virtual_barcode)),
       )
       #v(14pt)

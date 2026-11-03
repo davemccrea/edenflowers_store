@@ -88,7 +88,7 @@ Cancelling now asks for the cancellation charge Jennie keeps (0 to the Total due
 
 The invoice PDF was simplified after comparing with Zervant's invoice 1336: no buyer email, order number, subtotal, BIC or payee field; the delivery date, viitenumero and late payment interest are facts beside the buyer; the VAT table always shows; the payment block has IBAN, viitenumero, due date, amount, virtual barcode digits and bar code. The seller (name, address, Y-tunnus, IBAN) lives in config :edenflowers, :seller, which receipts and invoices both print; shop.toml keeps only the pickup place and contact details.
 
-Standalone implementation TASK-168.9–14 complete. TASK-168.15 automated verification passed, including 1766 tests and actual offline localized PDFs in the built release image. It is ready-for-human for native/Jennie review, seller/bank confirmation and live Zervant cutover numbering; parent AC8 remains open. Evidence: docs/standalone-invoices-release-check.md.
+Standalone implementation TASK-168.9–14 complete. TASK-168.15 automated verification passed, including 1766 tests and actual offline localized PDFs in the built release image. It is ready-for-human for native/Jennie review, seller/bank confirmation and live Zervant cutover numbering; parent AC8 remains open. Evidence and remaining checks: TASK-168.15 notes.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
