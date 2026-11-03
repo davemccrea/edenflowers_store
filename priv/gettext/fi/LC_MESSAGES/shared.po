@@ -168,13 +168,13 @@ msgid "This field is required"
 msgstr "Tämä kenttä on pakollinen"
 
 #: lib/edenflowers_web/components/layouts.ex:435
-#: lib/edenflowers_web/components/layouts.ex:654
+#: lib/edenflowers_web/components/layouts.ex:657
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr "Sulje navigointivalikko"
 
 #: lib/edenflowers_web/components/layouts.ex:291
-#: lib/edenflowers_web/components/layouts.ex:718
+#: lib/edenflowers_web/components/layouts.ex:735
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr "Avaa navigointivalikko"
