@@ -508,6 +508,9 @@ defmodule EdenflowersWeb.Layouts do
     """
   end
 
+  defp nav_active?(current_path, path),
+    do: current_path == path or String.starts_with?(current_path, path <> "/")
+
   defp admin_nav_active?(current_path, path, exact) do
     # Nav paths may carry default filters in their query string; only the path decides the active item.
     nav_path = URI.parse(path).path
@@ -658,30 +661,44 @@ defmodule EdenflowersWeb.Layouts do
         </.icon_button>
       </header>
 
-      <div class="flex flex-1 flex-col justify-between p-4 sm:p-8">
+      <div class="flex flex-1 flex-col justify-between gap-10 p-4 sm:p-8">
         <nav>
           <ul class="space-y-4">
             <li :for={{url, name} <- @nav}>
               <.link
-                class="font-serif text-base-content link-underline-hover text-3xl"
+                class="font-serif text-base-content link-underline-hover text-3xl aria-[current=page]:decoration-(--color-link-underline)"
+                aria-current={nav_active?(@current_path, url) && "page"}
                 phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
                 navigate={url}
               >
                 {name}
               </.link>
             </li>
-            <li class="border-base-content/12 border-t pt-4">
-              <.link
-                class="font-serif text-base-content link-underline-hover text-3xl"
-                phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
-                navigate={if @current_user, do: ~p"/account"}
-                href={unless @current_user, do: sign_in_href(@current_path)}
-              >
-                {if @current_user, do: ~t"Account", else: ~t"Sign In"}
-              </.link>
-            </li>
           </ul>
         </nav>
+
+        <div class="border-base-content/12 space-y-6 border-t pt-6">
+          <.link
+            class="font-serif text-base-content link-underline-hover block w-fit text-2xl aria-[current=page]:decoration-(--color-link-underline)"
+            aria-current={@current_user && nav_active?(@current_path, ~p"/account") && "page"}
+            phx-click={JS.exec("phx-hide", to: "#nav-drawer")}
+            navigate={if @current_user, do: ~p"/account"}
+            href={unless @current_user, do: sign_in_href(@current_path)}
+          >
+            {if @current_user, do: ~t"My account", else: ~t"Sign In"}
+          </.link>
+
+          <div class="text-base-content/80 space-y-1 text-sm">
+            <a class="link-underline-hover touch-target block w-fit" href={"mailto:#{Business.email()}"}>
+              {Business.email()}
+            </a>
+            <a class="link-underline-hover touch-target block w-fit" href={"tel:#{Business.phone()}"}>
+              {Business.phone_display()}
+            </a>
+          </div>
+
+          <.social_media_links />
+        </div>
       </div>
     </.drawer>
 
@@ -778,7 +795,7 @@ defmodule EdenflowersWeb.Layouts do
                 <.icon class="text-base-content h-5 w-5 group-hover:text-base-content/60" name="hero-user-circle" />
                 <span class="text-base-content hidden whitespace-nowrap text-sm group-hover:text-base-content/60 md:inline-flex">
                   {if @current_user,
-                    do: ~t"Account",
+                    do: ~t"My account",
                     else: ~t"Sign In"}
                 </span>
               </.link>

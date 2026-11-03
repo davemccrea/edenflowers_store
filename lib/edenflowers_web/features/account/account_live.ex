@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
 
     {:ok,
      socket
-     |> assign(page_title: ~t"Account")
+     |> assign(page_title: ~t"My account")
      |> assign(current_user: user)
      |> assign(details_form: details_form(user))
      |> assign(details_saved?: false)
@@ -61,7 +61,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
       <.container class="max-w-3xl">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 class="page-title">
-            {if @current_user.first_name, do: ~t"Hi, #{@current_user.first_name}!", else: ~t"Account"}
+            {if @current_user.first_name, do: ~t"Hi, #{@current_user.first_name}!", else: ~t"My account"}
           </h1>
           <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm" class="w-fit">
             {~t"Sign out"}
