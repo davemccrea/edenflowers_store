@@ -152,8 +152,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
           buyer_name: "Wedding buyer",
           buyer_email: "buyer@example.com",
           buyer_address: "Street 1",
-          invoice_date: ~D[2026-08-01],
-          due_date: ~D[2026-08-15],
+          supply_date: ~D[2026-08-01],
           lines: [
             %{description: "Flowers", quantity: "1", unit_price: "0.05", vat_rate: "25.5"},
             %{description: "Books", quantity: "1", unit_price: "0.05", vat_rate: "14"}
@@ -367,7 +366,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       _issued_later = invoice(admin, "50.00", ~D[2026-10-01])
       backdated = invoice(admin, "50.00", ~D[2026-09-29])
       Ash.Seed.update!(backdated, %{issued_at: @next_month})
-      {:ok, _draft} = Payments.create_invoice(%{invoice_date: ~D[2026-09-01]}, actor: admin)
+      {:ok, _draft} = Payments.create_invoice(%{supply_date: ~D[2026-09-01]}, actor: admin)
       undone = invoice(admin, "50.00", ~D[2026-09-07])
       pay(undone, "50.00", ~U[2026-09-08 08:00:00Z])
       pay(undone, "-50.00", ~U[2026-09-25 08:00:00Z])
@@ -427,8 +426,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
           buyer_email: "ada@example.com",
           buyer_address: "Street 1",
           customer_reference: "Wedding 42",
-          invoice_date: invoice_date,
-          due_date: Date.add(invoice_date, 14),
+          supply_date: invoice_date,
           lines: [%{description: "Flowers", quantity: "1", unit_price: amount, vat_rate: "25.5"}]
         },
         business_details
@@ -436,7 +434,12 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
     {:ok, draft} = Payments.create_invoice(attrs, actor: admin)
     {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
-    Ash.Seed.update!(invoice, %{issued_at: DateTime.new!(invoice_date, ~T[08:00:00])})
+
+    Ash.Seed.update!(invoice, %{
+      issued_at: DateTime.new!(invoice_date, ~T[08:00:00]),
+      invoice_date: invoice_date,
+      due_date: Date.add(invoice_date, 14)
+    })
   end
 
   defp pay(invoice, amount, paid_at) do

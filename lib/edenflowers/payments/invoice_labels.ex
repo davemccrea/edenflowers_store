@@ -25,6 +25,7 @@ defmodule Edenflowers.Payments.InvoiceLabels do
         "paid" => dgettext("receipts", "Paid"),
         "left-to-pay" => dgettext("receipts", "Still to pay"),
         "payment-details" => dgettext("receipts", "Payment details"),
+        "payee" => payee(),
         "iban" => dgettext("receipts", "Account (IBAN)"),
         "reference-number" => reference_number(),
         "amount" => amount(),
@@ -48,6 +49,11 @@ defmodule Edenflowers.Payments.InvoiceLabels do
     )
 
     dgettext("receipts", "Your reference")
+  end
+
+  defp payee do
+    gettext_comment("Who the bank transfer goes to, beside the account number in the payment details (saaja).")
+    dgettext("receipts", "Payee")
   end
 
   defp reference_number do

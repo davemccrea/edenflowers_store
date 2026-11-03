@@ -26,7 +26,7 @@ defmodule EdenflowersWeb.Admin.InvoiceController do
 
   defp send_pdf(conn, id, document) do
     with {:ok, document} <- document,
-         {:ok, pdf} <- InvoicePdf.generate(document) do
+         {:ok, pdf} <- InvoicePdf.issued(document) do
       send_download(conn, {:binary, pdf},
         filename: InvoicePdf.filename(document),
         content_type: "application/pdf",

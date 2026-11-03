@@ -88,16 +88,19 @@
 )
 
 // `t` looks a label up in the payload's translated labels.
-#let line-items(items, t, price-label: none) = table(
-  columns: (1fr, 110pt, 36pt, auto, 64pt),
+// An invoice prints the unit price with VAT too (`incl-vat: true`), as its
+// lines were priced that way; the VAT-exclusive one is what AVL § 209 e asks for.
+#let line-items(items, t, incl-vat: false) = table(
+  columns: if incl-vat { (1fr, auto, auto, auto, auto, 60pt) } else { (1fr, 110pt, 36pt, auto, 64pt) },
   column-gutter: 8pt,
-  align: (left, right, right, right, right),
+  align: (left,) + (right,) * (if incl-vat { 5 } else { 4 }),
   stroke: none,
   inset: (x: 0pt, y: 5pt),
 
   table.header(
     head(t("item")),
-    head(if price-label == none { t("unit-price-excl-vat") } else { price-label }),
+    head(t("unit-price-excl-vat")),
+    ..if incl-vat { (head(t("unit-price-incl-vat")),) },
     head(t("quantity")),
     head(t("vat-rate")),
     head(t("total")),
@@ -112,6 +115,7 @@
       ]
     ],
     text(features: ("tnum",))[#item.unit_price_ex_tax],
+    ..if incl-vat { (text(features: ("tnum",))[#item.unit_price_incl_tax],) },
     text(features: ("tnum",))[#item.quantity],
     text(features: ("tnum",))[#item.tax_rate],
     text(features: ("tnum",))[#item.total],

@@ -37,9 +37,9 @@
     "invoice-date": "Fakturadatum",
     "credit-note-number": "Kreditnotans nummer",
     "delivery": "Hemleverans",
-    "unit-price-incl-vat": "Styckepris inkl. moms",
+    "unit-price-incl-vat": "à-pris inkl. moms",
     "subtotal": "Delsumma",
-    "gross": "Totalt",
+    "gross": "Inkl. moms",
     "quantity": "Antal",
     "method-zervant": "Banköverföring",
     "supply-date": "Leveransdatum",
@@ -61,19 +61,21 @@
     "method-zettle": "Kort",
     "invoice-number": "Fakturanummer",
     "amount": "Belopp",
-    "unit-price-excl-vat": "à-pris netto",
-    "due-on-invoice": "Att betala på denna faktura"
+    "unit-price-excl-vat": "à-pris exkl. moms",
+    "due-on-invoice": "Att betala på denna faktura",
+    "payee": "Mottagare"
   },
   "lang": "sv",
-  "late_interest_rate": "8,00 %",
+  "late_interest_rate": "8,0 %",
   "line_items": [
     {
       "product_name": "Blomsterarrangemang",
       "quantity": "1",
-      "tax_rate": "25,50 %",
+      "tax_rate": "25,5 %",
       "total": "125,50 €",
-      "unit_price_ex_tax": "125,50 €",
-      "variant_size": null
+      "unit_price_ex_tax": "100,00 €",
+      "variant_size": null,
+      "unit_price_incl_tax": "125,50 €"
     }
   ],
   "number": 1337,
@@ -84,13 +86,13 @@
     "iban": "FI69 3939 0018 3959 05",
     "name": "Jennie McCrea"
   },
-  "supply_date": null,
+  "supply_date": "2.11.2026",
   "supply_description": null,
   "vat_breakdown": [
     {
       "base": "100,00 €",
       "gross": "125,50 €",
-      "rate": "25,50 %",
+      "rate": "25,5 %",
       "tax": "25,50 €"
     }
   ],

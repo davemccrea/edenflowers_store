@@ -50,7 +50,7 @@
     v(14pt)
   }
 
-  line-items(note.line_items, t, price-label: t("unit-price-incl-vat"))
+  line-items(note.line_items, t, incl-vat: true)
   v(14pt)
   align(right, block(width: 60%, vat-breakdown(note.vat_breakdown, t)))
   v(14pt)

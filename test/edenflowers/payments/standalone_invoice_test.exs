@@ -13,6 +13,7 @@ defmodule Edenflowers.Payments.StandaloneInvoiceTest do
       buyer_name: "Alice Buyer",
       buyer_email: "alice@example.com",
       buyer_address: "Street 1, Vaasa",
+      supply_date: ~D[2026-11-02],
       locale: "fi",
       lines: [
         %{description: "Wedding flowers", quantity: "1.5", unit_price: "10.01", vat_rate: "25.5"},
@@ -74,6 +75,22 @@ defmodule Edenflowers.Payments.StandaloneInvoiceTest do
     assert {:ok, draft} = Payments.create_invoice(attrs(), actor: admin)
     assert {:ok, issued} = Payments.issue_invoice(draft, actor: admin)
     assert issued.number == Invoice.first_number()
+  end
+
+  test "an invoice is dated the day it is issued and due its whole payment term later", %{admin: admin} do
+    {:ok, draft} = Payments.create_invoice(Map.put(attrs(), :payment_term_days, 30), actor: admin)
+    assert draft.invoice_date == nil
+    {:ok, issued} = Payments.issue_invoice(draft, actor: admin)
+    today = Edenflowers.ShopTime.today()
+    assert issued.invoice_date == today
+    assert issued.due_date == Date.add(today, 30)
+  end
+
+  test "issuing needs the date of supply the VAT Act asks for", %{admin: admin} do
+    {:ok, draft} = Payments.create_invoice(Map.delete(attrs(), :supply_date), actor: admin)
+    assert {:error, error} = Payments.issue_invoice(draft, actor: admin)
+    assert Enum.any?(error.errors, &(&1.field == :supply_date))
+    assert Ash.get!(Invoice, draft.id, authorize?: false).number == nil
   end
 
   test "stale draft edits cannot alter an issued invoice; documents freeze seller and buyer", %{admin: admin} do

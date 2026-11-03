@@ -9,6 +9,7 @@ defmodule Edenflowers.Payments.InvoiceIssuanceConcurrencyTest do
       buyer_name: "Concurrency buyer",
       buyer_email: "buyer@example.com",
       buyer_address: "Street 1",
+      supply_date: ~D[2026-11-02],
       lines: [%{"description" => "Flowers", "quantity" => "1", "unit_price" => "10", "vat_rate" => "25.5"}]
     }
 

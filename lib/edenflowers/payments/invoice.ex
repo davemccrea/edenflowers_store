@@ -20,8 +20,8 @@ defmodule Edenflowers.Payments.Invoice do
   @doc "The yearly late payment interest a new invoice states, as a fraction: 0.08 for 8 %."
   def late_interest_rate, do: Decimal.new(config()[:late_interest_rate])
 
-  @doc "The due date an invoice made today gets unless Jennie picks another: 14 days on (Payment.overdue_after_days)."
-  def default_due_date, do: Date.add(Edenflowers.ShopTime.today(), Edenflowers.Payments.Payment.overdue_after_days())
+  @doc "The payment term a new draft starts with, in days: 14 (Payment.overdue_after_days)."
+  def default_payment_term_days, do: Edenflowers.Payments.Payment.overdue_after_days()
 
   defp config, do: Application.fetch_env!(:edenflowers, :invoices)
 
@@ -126,8 +126,7 @@ defmodule Edenflowers.Payments.Invoice do
         :business_id,
         :billing_address,
         :customer_reference,
-        :invoice_date,
-        :due_date,
+        :payment_term_days,
         :locale,
         :lines,
         :supply_date,
@@ -145,8 +144,7 @@ defmodule Edenflowers.Payments.Invoice do
         :business_id,
         :billing_address,
         :customer_reference,
-        :invoice_date,
-        :due_date,
+        :payment_term_days,
         :locale,
         :lines,
         :supply_date,
@@ -229,16 +227,21 @@ defmodule Edenflowers.Payments.Invoice do
                     "as unspaced digits. ReferenceNumber.format/1 groups it for printing."
     end
 
-    attribute :invoice_date, :date do
-      description "The invoice date chosen in the draft."
-      default &Edenflowers.ShopTime.today/0
+    attribute :payment_term_days, :integer do
+      description "How many days the customer has to pay, counted from the day it is issued. Sets due_date " <>
+                    "on issuance, so a draft issued days after it was started still gives the whole term."
+
+      default &__MODULE__.default_payment_term_days/0
       allow_nil? false
+      constraints min: 0, max: 365
+    end
+
+    attribute :invoice_date, :date do
+      description "The invoice date: the day it was issued, in Helsinki. Nil on a draft."
     end
 
     attribute :due_date, :date do
-      description "The payment due date."
-      default &__MODULE__.default_due_date/0
-      allow_nil? false
+      description "The payment due date: invoice_date plus payment_term_days. Nil on a draft."
     end
 
     attribute :amount, :decimal do
@@ -297,8 +300,15 @@ defmodule Edenflowers.Payments.Invoice do
     end
 
     attribute :issued_at, :utc_datetime_usec
-    attribute :supply_date, :date
-    attribute :supply_description, :string
+
+    attribute :supply_date, :date do
+      description "The date of supply the VAT Act asks every invoice to state (AVL 209 e §): when the goods " <>
+                    "were delivered or the service done, or for an advance, when it is paid. Issuing needs it."
+    end
+
+    attribute :supply_description, :string do
+      description "Optional wording printed in place of the 'Date of supply' label, such as 'Wedding date'."
+    end
 
     attribute :lines, {:array, Edenflowers.Payments.InvoiceLine} do
       description "What it bills. A draft's may be unfinished; issuing needs them complete and freezes them " <>
@@ -310,6 +320,15 @@ defmodule Edenflowers.Payments.Invoice do
 
     attribute :financial_snapshot, :map
     attribute :seller_snapshot, :map
+
+    attribute :pdf, :binary do
+      description "The PDF as issued, rendered once on issuance and kept for the books: every download and " <>
+                    "email sends these bytes, so later label or template changes never alter an issued " <>
+                    "invoice. Only a resend after a part payment renders a fresh copy asking for the rest. " <>
+                    "Not selected by default; load it."
+
+      select_by_default? false
+    end
 
     attribute :sent_at, :utc_datetime do
       description "When it was last emailed to the customer. Nil until it has been: Jennie may make one without " <>

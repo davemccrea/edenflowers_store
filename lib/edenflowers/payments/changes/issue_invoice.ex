@@ -1,11 +1,17 @@
 defmodule Edenflowers.Payments.Changes.IssueInvoice do
-  @moduledoc "Validates and freezes a standalone draft under its row lock before taking the shared document number."
+  @moduledoc """
+  Validates and freezes a standalone draft under its row lock before taking
+  the shared document number. It is dated the day it is issued, in Helsinki,
+  and due its payment term later, so its date never falls before an earlier
+  number's and a draft left open still gives the customer the whole term.
+  """
   use Ash.Resource.Change
 
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.InvoiceFinancials
   alias Edenflowers.Payments.NumberSeries
   alias Edenflowers.Payments.ReferenceNumber
+  alias Edenflowers.ShopTime
 
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, &issue/1)
@@ -25,11 +31,14 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
     with :ok <- validate_fields(invoice),
          {:ok, snapshot} <- InvoiceFinancials.build(invoice.lines) do
       number = NumberSeries.take()
+      today = ShopTime.today()
       seller = Invoice.seller() |> Map.new(fn {key, value} -> {to_string(key), value} end)
 
       changeset
       |> Ash.Changeset.force_change_attributes(%{
         issued_at: DateTime.utc_now(),
+        invoice_date: today,
+        due_date: Date.add(today, invoice.payment_term_days),
         number: number,
         reference_number: ReferenceNumber.from_invoice_number(number),
         amount: Decimal.new(snapshot["gross"]),
@@ -44,24 +53,14 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
 
   @doc "Field errors for issuance, also shown by the admin editor after a failed issue."
   def field_errors(invoice) do
-    required = [:buyer_name, :buyer_email] ++ address_fields(invoice)
+    required = [:buyer_name, :buyer_email] ++ address_fields(invoice) ++ [:supply_date]
 
-    buyer_errors =
-      Enum.flat_map(required, fn field ->
-        value = Map.get(invoice, field)
+    field_errors =
+      for field <- required,
+          blank?(Map.get(invoice, field)),
+          do: [field: field, message: "can't be blank"]
 
-        if is_binary(value) and String.trim(value) != "",
-          do: [],
-          else: [[field: field, message: "can't be blank"]]
-      end)
-
-    date_errors =
-      if match?(%Date{}, invoice.due_date) and match?(%Date{}, invoice.invoice_date) and
-           Date.compare(invoice.due_date, invoice.invoice_date) == :lt,
-         do: [[field: :due_date, message: "cannot be before the invoice date"]],
-         else: []
-
-    Enum.map(buyer_errors ++ date_errors ++ line_errors(invoice.lines), &Ash.Error.Changes.InvalidAttribute.exception/1)
+    Enum.map(field_errors ++ line_errors(invoice.lines), &Ash.Error.Changes.InvalidAttribute.exception/1)
   end
 
   # A draft's line may be unfinished; an issued one prints every field.

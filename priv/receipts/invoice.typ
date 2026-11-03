@@ -55,7 +55,7 @@
 
   v(22pt)
 
-  line-items(invoice.line_items, t, price-label: t("unit-price-incl-vat"))
+  line-items(invoice.line_items, t, incl-vat: true)
   v(10pt)
   align(right)[
     #block(width: 60%)[
@@ -98,14 +98,15 @@
       #eyebrow(t("payment-details"))
       #v(8pt)
       #grid(
-        columns: (1.6fr, 1fr, 1fr, 1fr),
-        column-gutter: 14pt,
+        columns: (auto, auto, auto, auto, auto),
+        column-gutter: 1fr,
         row-gutter: 9pt,
+        field(t("payee"), invoice.seller.name),
         field(t("iban"), invoice.seller.iban),
         field(t("reference-number"), invoice.reference_number),
         field(t("due-date"), invoice.due_date),
         field(t("amount"), to-transfer),
-        grid.cell(colspan: 4, field(t("virtual-barcode"), invoice.virtual_barcode)),
+        grid.cell(colspan: 5, field(t("virtual-barcode"), invoice.virtual_barcode)),
       )
       #v(14pt)
       #align(center, tiaoma.code128(

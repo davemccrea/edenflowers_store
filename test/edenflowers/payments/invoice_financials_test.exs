@@ -24,9 +24,18 @@ defmodule Edenflowers.Payments.InvoiceFinancialsTest do
     assert snapshot["gross"] == "17.05"
     assert length(snapshot["vat_breakdown"]) == 2
 
-    for row <- snapshot["lines"] ++ snapshot["vat_breakdown"] ++ [snapshot] do
+    for row <- snapshot["vat_breakdown"] ++ [snapshot] do
       assert Decimal.equal?(Decimal.add(row["base"], row["vat"]), row["gross"])
     end
+  end
+
+  test "VAT is taken out once per rate, as orders do, not line by line" do
+    lines = for name <- ~w(A B C), do: line(name, "1", "1.00", "25.5")
+
+    assert {:ok, %{"vat_breakdown" => [row]}} = InvoiceFinancials.build(lines)
+    assert row["base"] == Decimal.to_string(Edenflowers.Pricing.Vat.net_of_vat(Decimal.new(3), Decimal.new("0.255")))
+    assert row["base"] == "2.39"
+    assert row["vat"] == "0.61"
   end
 
   test "nothing billed, an unfinished line or a zero total has no snapshot" do

@@ -18,7 +18,7 @@ defmodule Edenflowers.Payments.Changes.SendCreditNote do
       credit_note = Ash.load!(changeset.data, :invoice, authorize?: false)
       message = Ash.Changeset.get_argument(changeset, :message)
 
-      with {:ok, pdf} <- InvoicePdf.generate(credit_note),
+      with {:ok, pdf} <- InvoicePdf.for_email(credit_note),
            {:ok, _result} <-
              credit_note
              |> Email.credit_note(message)

@@ -61,7 +61,7 @@
     "item": "Tuote",
     "unit-price-excl-vat": "Veroton à-hinta",
     "quantity": "Määrä",
-    "vat": "Vero",
+    "vat": "ALV",
     "total": "Yhteensä",
     "subtotal": "Välisumma",
     "vat-rate": "Verokanta",

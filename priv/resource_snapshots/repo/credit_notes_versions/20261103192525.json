@@ -49,18 +49,6 @@
       "type": "text"
     },
     {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "reminder",
-      "type": "boolean"
-    },
-    {
       "allow_nil?": false,
       "default": "nil",
       "generated?": false,
@@ -81,12 +69,12 @@
           "global": null,
           "strategy": null
         },
-        "name": "invoices_versions_version_source_id_fkey",
+        "name": "credit_notes_versions_version_source_id_fkey",
         "on_delete": null,
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "invoices"
+        "table": "credit_notes"
       },
       "scale": null,
       "size": null,
@@ -136,7 +124,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "476744B42D01BBCDEB2A99AF1050082DD4BF363512B9ACBD1EB0040E423C6D33",
+  "hash": "CC40E845A13F30252AE8611DAF585A9AC218D673B6DC0091AED0CC0E3F3F4E52",
   "identities": [],
   "multitenancy": {
     "attribute": null,
@@ -145,6 +133,6 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "invoices_versions",
+  "table": "credit_notes_versions",
   "temporal": null
 }
