@@ -281,6 +281,27 @@ defmodule Edenflowers.Catalog.ProductTest do
       assert Catalog.current_product_slug!("red-roses") == "summer-roses"
     end
 
+    for slug_input <- [:omitted, :unchanged, :normalized] do
+      test "a stale unrelated save preserves redirects with #{slug_input} slug input" do
+        stale = generate(product(name: "Roses"))
+        update!(stale, %{slug: "red-roses"})
+        params = %{name: "Crimson roses"}
+
+        params =
+          case unquote(slug_input) do
+            :omitted -> params
+            :unchanged -> Map.put(params, :slug, stale.slug)
+            :normalized -> Map.put(params, :slug, "Röses!")
+          end
+
+        update!(stale, params)
+
+        assert Catalog.current_product_slug!(stale.id) == "red-roses"
+        assert Catalog.current_product_slug!("roses") == "red-roses"
+        assert Catalog.current_product_slug!("red-roses") == nil
+      end
+    end
+
     test "a former slug stays with its product" do
       roses = generate(product(name: "Red roses"))
       update!(roses, %{slug: "roses"})

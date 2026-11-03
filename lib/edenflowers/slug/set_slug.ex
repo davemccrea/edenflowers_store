@@ -40,7 +40,8 @@ defmodule Edenflowers.Slug.SetSlug do
         slug = Slug.unique(base, &taken?(changeset.resource, &1, id, opts))
         Ash.Changeset.force_change_attribute(changeset, :slug, slug)
 
-      typed == current ->
+      # An unchanged form field may still contain the slug from before another tab edited it.
+      typed == changeset.data.slug or typed == current ->
         Ash.Changeset.force_change_attribute(changeset, :slug, current)
 
       typed == "" ->

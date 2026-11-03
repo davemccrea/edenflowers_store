@@ -44,5 +44,26 @@ defmodule Edenflowers.Courses.CourseTest do
 
       assert Ash.reload!(course, authorize?: false).slug == "spring-wreaths"
     end
+
+    for slug_input <- [:omitted, :unchanged, :normalized] do
+      test "a stale unrelated save preserves redirects with #{slug_input} slug input" do
+        stale = generate(course(name: "Spring wreaths"))
+        Ash.update!(stale, %{slug: "wreaths-2027"}, action: :update, authorize?: false)
+        params = %{name: "Summer wreaths"}
+
+        params =
+          case unquote(slug_input) do
+            :omitted -> params
+            :unchanged -> Map.put(params, :slug, stale.slug)
+            :normalized -> Map.put(params, :slug, "Spring Wreaths!")
+          end
+
+        Ash.update!(stale, params, action: :update, authorize?: false)
+
+        assert Edenflowers.Courses.current_course_slug!(stale.id) == "wreaths-2027"
+        assert Edenflowers.Courses.current_course_slug!("spring-wreaths") == "wreaths-2027"
+        assert Edenflowers.Courses.current_course_slug!("wreaths-2027") == nil
+      end
+    end
   end
 end
