@@ -15,10 +15,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Payments
   alias Edenflowers.PhoneNumber
   alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.DrawerPreview
   alias EdenflowersWeb.Admin.EmailDrawer
+  alias EdenflowersWeb.Admin.InvoicesLive
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
   alias EdenflowersWeb.Admin.PhotoUpload
@@ -331,6 +333,39 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 payment_message_urls={@payment_message_urls}
               />
               <div
+                :if={@order.invoices != [] || @order.invoiceable?}
+                id="order-invoices"
+                class="border-base-content/12 mt-4 border-t pt-3 text-sm"
+              >
+                <h3 class="text-base-content mb-2 font-semibold">{~t"Invoices"}</h3>
+                <ul :if={@order.invoices != []} class="space-y-1.5">
+                  <li :for={invoice <- @order.invoices} class="flex items-center justify-between gap-3">
+                    <.link navigate={~p"/admin/invoices/#{invoice.id}"} class="link link-primary tabular-nums">
+                      {if invoice.number, do: ~t"Invoice #{number = invoice.number}", else: ~t"Invoice draft"}
+                    </.link>
+                    <span class="flex items-center gap-2">
+                      <span :if={invoice.number} class="tabular-nums">{Format.currency(invoice.amount, @locale)}</span>
+                      <.badge tone={InvoicesLive.status_tone(invoice.status, invoice.overdue?)}>
+                        {InvoicesLive.status_label(invoice.status, invoice.overdue?)}
+                      </.badge>
+                    </span>
+                  </li>
+                </ul>
+                <p :if={@order.invoiced?} class="text-base-content/75 mt-2">
+                  {~t"While the invoice stands, edits must keep the date and the amount for each VAT rate, and the order can't be cancelled. Credit the invoice to change more."}
+                </p>
+                <.button
+                  :if={@order.invoiceable?}
+                  type="button"
+                  phx-click="create_invoice"
+                  variant="secondary"
+                  size="sm"
+                  class="mt-2"
+                >
+                  {~t"Create invoice"}
+                </.button>
+              </div>
+              <div
                 :if={@order.receipt_email_failed_at || @order.order_details_email_failed_at}
                 id="order-email-failed"
                 class="bg-warning/15 border-base-content/12 mt-4 flex gap-2.5 border px-3 py-2.5 text-sm"
@@ -589,6 +624,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   def handle_event("open_payment_link", _params, socket) do
     result = PaymentActions.open_payment_link(socket.assigns.order, socket.assigns.current_user)
     {:noreply, flash_payment_result(socket, result)}
+  end
+
+  def handle_event("create_invoice", _params, socket) do
+    case Payments.create_invoice_for_order(socket.assigns.order.id, actor: socket.assigns.current_user) do
+      {:ok, invoice} ->
+        {:noreply, push_navigate(socket, to: ~p"/admin/invoices/#{invoice.id}")}
+
+      {:error, _} ->
+        {:noreply,
+         socket
+         |> assign_order(reload(socket.assigns.order, socket))
+         |> put_flash(:error, ~t"This order can't be invoiced now.")}
+    end
   end
 
   def handle_event("open_email", %{"kind" => kind}, socket) do

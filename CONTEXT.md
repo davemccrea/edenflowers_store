@@ -81,11 +81,11 @@ The email Jennie sends by hand to ask for a Balance still owed on an order or bo
 _Avoid_: Bill, dunning, payment request
 
 **Payment**:
-Money that moved for exactly one order, Course booking or standalone Invoice; a refund or Undo is a negative Payment. Orders and bookings accept their usual payment methods, while Invoice Payments are bank transfers recorded by Jennie and affect only that Invoice.
+Money that moved for exactly one order, Course booking or Invoice; a refund or Undo is a negative Payment. Orders and bookings accept their usual payment methods, while Invoice Payments are bank transfers recorded by Jennie and affect only that Invoice, even one for an order: each euro is counted where it arrived.
 _Avoid_: Transaction, charge, in-person payment, offline payment, manual payment
 
 **Invoice**:
-A standalone bill for weddings or bespoke work, owning its buyer details, billed lines and VAT independently of orders and Course bookings. A draft is editable and unnumbered; issuing freezes the document and assigns its number, and only its own bank-transfer Payments settle it.
+A bill owning its buyer details, billed lines and VAT, for weddings, bespoke work and private courses, or for one Custom Order on invoice terms with nothing paid. A draft is editable and unnumbered; issuing freezes the document and assigns its number, and only its own bank-transfer Payments settle it. Issued and not credited, an Invoice for an order covers that much of the order's Balance and, until it is credited, the order can't be cancelled or edited in a way that changes its amount per VAT rate, date or terms.
 _Avoid_: Bill, Zervant invoice, payment request (a Payment Link is not an Invoice)
 
 **Credit note**:
@@ -97,7 +97,7 @@ A company billed on a standalone Invoice with its name, Y-tunnus and billing add
 _Avoid_: Corporate customer, B2B customer, company account
 
 **Balance**:
-What is still owed on a placed order or a confirmed course booking: its Total due minus what has been paid, leaving out Goodwill refunds. Positive is to collect, negative is to refund; editing a paid order or cancelling one is what usually leaves one. Once the Total due drops below what was paid, only money still held above it is owed back.
+What is still to collect on a placed order or a confirmed course booking itself: its Total due minus what its issued, uncredited Invoices bill and what has been paid, leaving out Goodwill refunds. An invoiced order reads 0 before its Invoice is paid; Balance means left to collect here, not paid. Positive is to collect, negative is to refund; editing a paid order or cancelling one is what usually leaves one. Once the Total due drops below what was paid, only money still held above it is owed back.
 _Avoid_: Amount mismatch, outstanding, difference
 
 **Total due**:

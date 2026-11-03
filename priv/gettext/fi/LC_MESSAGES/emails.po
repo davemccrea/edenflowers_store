@@ -1144,7 +1144,7 @@ msgstr "Ystävällinen muistutus: lasku erääntyi %{date}, enkä ole vielä nä
 
 #: lib/edenflowers/email/templates.ex:72
 #: lib/edenflowers/email/templates/course_payment.text.eex:4
-#: lib/edenflowers/email/templates/order_payment.text.eex:8
+#: lib/edenflowers/email/templates/order_payment.text.eex:14
 #, elixir-autogen, elixir-format
 msgid "I'll be in touch about how to pay it."
 msgstr "Otan sinuun yhteyttä maksamisesta."
@@ -1188,3 +1188,18 @@ msgstr "Maksa kurssilla."
 #, elixir-autogen, elixir-format
 msgid "Thank you for your payment. There is %{amount} still to pay."
 msgstr "Kiitos maksustasi. Maksettavaa on vielä %{amount}."
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:10
+#, elixir-autogen, elixir-format
+msgid "I'll send you an invoice after delivery."
+msgstr "Lähetän sinulle laskun toimituksen jälkeen."
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:12
+#, elixir-autogen, elixir-format
+msgid "I'll send you an invoice after you collect your order."
+msgstr "Lähetän sinulle laskun, kun olet noutanut tilauksesi."
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:8
+#, elixir-autogen, elixir-format
+msgid "I'll send you an invoice."
+msgstr "Lähetän sinulle laskun."

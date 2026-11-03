@@ -384,6 +384,16 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
             </div>
           </.form_section>
 
+          <.form_section
+            :if={@mode == :edit and @order.origin == :custom and !@order.invoiced?}
+            title={~t"Payment"}
+            class="xl:col-start-1"
+          >
+            <.input :let={option} field={@form[:payment_terms]} type="radio-card" options={payment_options()}>
+              {option.name}
+            </.input>
+          </.form_section>
+
           <.form_section :if={@mode == :edit} title={~t"Email"} class="xl:col-start-1">
             <.customer_email
               id="order-updated-email"
@@ -479,7 +489,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           {:noreply,
            socket
            |> put_form(form)
-           |> put_flash(:error, ~t"The order wasn't saved. Check the fields marked below.")}
+           |> put_flash(:error, save_error(form))}
         end
     end
   end
@@ -489,6 +499,20 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   defp closed_meanwhile?(_socket), do: false
+
+  # An edit refused for an invoiced order's sake names no field to mark.
+  defp save_error(form) do
+    form
+    |> AshPhoenix.Form.raw_errors()
+    |> Enum.find_value(~t"The order wasn't saved. Check the fields marked below.", fn
+      %Ash.Error.Changes.InvalidChanges{fields: fields, message: message}
+      when fields in [nil, []] and is_binary(message) ->
+        message
+
+      _field_error ->
+        nil
+    end)
+  end
 
   @impl true
   def handle_async(:delivery_quote, {:ok, {address, option_id, {:ok, %{error: nil} = result}}}, socket) do
@@ -892,7 +916,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp payment_options do
     [
       %{name: ~t"Payment link", value: "payment_link"},
-      %{name: ~t"Bank transfer", value: "invoice"},
+      %{name: ~t"Invoice after delivery", value: "invoice"},
       %{name: ~t"In person", value: "on_fulfillment"}
     ]
   end

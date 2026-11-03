@@ -147,6 +147,9 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :payment_intent_id, :string
 
     attribute :payment_terms, :atom do
+      description "How Jennie agreed the booking is paid: a payment link or in person. :invoice (bank " <>
+                    "transfer) is only on bookings made before it was withdrawn, and is kept so they still read."
+
       constraints one_of: [:payment_link, :invoice, :on_fulfillment]
       allow_nil? false
       default :on_fulfillment
@@ -197,6 +200,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     calculate :seats_held, :integer, expr(seats - removed_seats) do
       description "Places the booking still holds: seats bought less those Jennie removed when someone dropped out."
+    end
+
+    calculate :amount_invoiced, :decimal, expr(0) do
+      description "Always 0: a company's course is a private course, invoiced on its own, never a booking."
     end
 
     calculate :total_due,

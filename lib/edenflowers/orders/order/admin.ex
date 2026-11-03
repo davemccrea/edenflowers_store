@@ -70,8 +70,11 @@ defmodule Edenflowers.Orders.Order.Admin do
     :details_emailable?,
     :fulfillment_confirmation_applicable?,
     :fulfillment_confirmation_sendable?,
+    :invoiced?,
+    :invoiceable?,
     :promotion,
     :fulfillment_option,
+    invoices: [:status, :overdue?],
     line_items: [:subtotal, :total]
   ]
 
@@ -288,9 +291,11 @@ defmodule Edenflowers.Orders.Order.Admin do
 
     update :edit do
       description "Jennie changes any open order, online or custom, paid or not: stock moves with the lines, a " <>
-                    "changed total leaves a Balance, and `email_customer?` queues the Order updated email."
+                    "changed total leaves a Balance, switching to payment link terms opens a link, and " <>
+                    "`email_customer?` queues the Order updated email. While an invoice covers it, only edits " <>
+                    "that keep its amount per VAT rate, date and terms (KeepInvoicedAmounts)."
 
-      accept @custom_order_fields
+      accept [:payment_terms | @custom_order_fields]
 
       argument :line_items, {:array, :map}, default: []
       validate argument_does_not_equal(:line_items, []), message: "Add at least one item"
@@ -300,6 +305,10 @@ defmodule Edenflowers.Orders.Order.Admin do
       argument :message, :string
 
       validate {Holds, calculation: :editable?, message: "is no longer open"}
+
+      change PaymentChanges.OpenPaymentLink,
+        where: [changing(:payment_terms), attribute_equals(:payment_terms, :payment_link)]
+
       # On the UPDATE too, so an order cancelled or fulfilled since the check
       # matches no row and stock moves only once.
       change filter expr(editable?)
@@ -338,6 +347,7 @@ defmodule Edenflowers.Orders.Order.Admin do
              )
 
       change Changes.RecordEnteredLineItems
+      change Changes.KeepInvoicedAmounts
       change {Changes.AdjustStock, direction: :take}
 
       change {PaymentChanges.QueueEmail, trigger: :send_order_updated_email},
@@ -437,6 +447,7 @@ defmodule Edenflowers.Orders.Order.Admin do
       argument :email_customer?, :boolean, default: true
       # A subscription cancelled by its customer cancels its occurrences as them.
       argument :cancelled_by, :atom, default: :shop, constraints: [one_of: [:shop, :customer]]
+      validate Validations.NotInvoiced
       change set_attribute(:fulfillment_status, :cancelled)
       change PaymentChanges.Cancel
       change {Changes.AdjustStock, direction: :return}

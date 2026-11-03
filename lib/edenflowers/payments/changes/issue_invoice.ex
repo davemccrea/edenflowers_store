@@ -4,9 +4,20 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
   the shared document number. It is dated the day it is issued, in Helsinki,
   and due its payment term later, so its date never falls before an earlier
   number's and a draft left open still gives the customer the whole term.
+
+  An invoice for an order is issued only while that order is `invoiceable?`
+  and for exactly its Balance, checked under the order's row lock so two
+  drafts for one order can't both be issued. Requiring the exact amount
+  refuses a draft left stale by an edit to the order, and never leaves part
+  of the Balance that a second invoice could not collect.
   """
   use Ash.Resource.Change
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
+  require Ash.Query
+
+  alias Edenflowers.Format
+  alias Edenflowers.Orders.Order
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.InvoiceFinancials
   alias Edenflowers.Payments.NumberSeries
@@ -29,7 +40,8 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
 
   defp freeze(changeset, invoice) do
     with :ok <- validate_fields(invoice),
-         {:ok, snapshot} <- InvoiceFinancials.build(invoice.lines) do
+         {:ok, snapshot} <- InvoiceFinancials.build(invoice.lines),
+         :ok <- validate_order(invoice.order_id, Decimal.new(snapshot["gross"])) do
       number = NumberSeries.take()
       today = ShopTime.today()
       seller = Invoice.seller() |> Map.new(fn {key, value} -> {to_string(key), value} end)
@@ -81,6 +93,29 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
     case field_errors(invoice) do
       [] -> :ok
       errors -> {:error, errors}
+    end
+  end
+
+  defp validate_order(nil, _amount), do: :ok
+
+  defp validate_order(order_id, amount) do
+    order =
+      Order
+      |> Ash.Query.filter(id == ^order_id)
+      |> Ash.Query.lock(:for_update)
+      |> Ash.read_one!(authorize?: false)
+      |> Ash.load!([:invoiceable?, :balance], authorize?: false)
+
+    cond do
+      not order.invoiceable? ->
+        {:error, ~t"This order can't be invoiced now: it has a payment or an invoice, or isn't on invoice terms."}
+
+      not Decimal.eq?(amount, order.balance) ->
+        {:error,
+         ~t"The invoice comes to #{invoiced = Format.currency(amount, Format.locale())}, but the order has #{balance = Format.currency(order.balance, Format.locale())} to collect. Make them match."}
+
+      true ->
+        :ok
     end
   end
 

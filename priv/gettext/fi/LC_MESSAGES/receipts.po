@@ -64,6 +64,7 @@ msgid "Delivery date"
 msgstr "Toimituspäivä"
 
 #: lib/edenflowers/orders/receipt_labels.ex:33
+#: lib/edenflowers/payments/changes/prefill_from_order.ex:70
 #, elixir-autogen, elixir-format
 msgid "Delivery fee"
 msgstr "Kotiinkuljetusmaksu"
@@ -124,6 +125,7 @@ msgid "Pickup date"
 msgstr "Noutopäivä"
 
 #: lib/edenflowers/orders/receipt_labels.ex:34
+#: lib/edenflowers/payments/changes/prefill_from_order.ex:71
 #, elixir-autogen, elixir-format
 msgid "Pickup fee"
 msgstr "Noutomaksu"
@@ -300,3 +302,13 @@ msgstr "Maksettu"
 #, elixir-autogen, elixir-format
 msgid "Payee"
 msgstr "Saaja"
+
+#: lib/edenflowers/payments/changes/prefill_from_order.ex:53
+#, elixir-autogen, elixir-format
+msgid "Cancellation charge, order #%{number}"
+msgstr "Peruutusmaksu, tilaus #%{number}"
+
+#: lib/edenflowers/payments/changes/prefill_from_order.ex:46
+#, elixir-autogen, elixir-format
+msgid "Order #%{number}"
+msgstr "Tilaus #%{number}"

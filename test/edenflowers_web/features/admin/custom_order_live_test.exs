@@ -679,6 +679,44 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
     end
   end
 
+  describe "editing an invoiced order" do
+    setup ctx do
+      order = place_custom_order(ctx, %{payment_terms: :invoice, customer_email: "office@kukka.fi"})
+      {:ok, draft} = Edenflowers.Payments.create_invoice_for_order(order.id, actor: ctx.admin)
+      {:ok, draft} = Edenflowers.Payments.update_invoice_draft(draft, %{buyer_address: "Street 1"}, actor: ctx.admin)
+      {:ok, _invoice} = Edenflowers.Payments.issue_invoice(draft, actor: ctx.admin)
+      %{order: order}
+    end
+
+    defp submit_line(view, ctx, name, price) do
+      view
+      |> form("#order-form",
+        form: %{
+          line_items: %{
+            "0" => %{"product_name" => name, "unit_price" => price, "tax_rate_id" => ctx.tax_rate.id, "quantity" => "1"}
+          }
+        }
+      )
+      |> render_submit()
+    end
+
+    test "renaming a line at the same price is saved, without offering other terms", ctx do
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{ctx.order.id}/edit")
+      refute has_element?(view, ~s|input[name="form[payment_terms]"]|)
+
+      assert {:error, {:live_redirect, _}} = submit_line(view, ctx, "Sympathy spray", "85.00")
+      assert [%{product_name: "Sympathy spray"}] = Ash.load!(ctx.order, :line_items, authorize?: false).line_items
+    end
+
+    test "a new price is refused, saying to credit the invoice first", ctx do
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{ctx.order.id}/edit")
+
+      html = submit_line(view, ctx, "Funeral spray", "95.00")
+      assert html =~ "Credit the invoice first"
+      assert [%{product_name: "Funeral spray"}] = Ash.load!(ctx.order, :line_items, authorize?: false).line_items
+    end
+  end
+
   describe "editing" do
     test "keeps the order's own fee unless Jennie changes it", ctx do
       order = place_custom_order(ctx, %{fulfillment_fee_override: "8.00"})
