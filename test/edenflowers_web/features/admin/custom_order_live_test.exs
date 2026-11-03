@@ -680,6 +680,21 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
   end
 
   describe "editing" do
+    test "keeps the order's own fee unless Jennie changes it", ctx do
+      order = place_custom_order(ctx, %{fulfillment_fee_override: "8.00"})
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}/edit")
+      assert has_element?(view, ~s|input[name="form[fulfillment_fee_override]"][value="8.00"]|)
+
+      assert {:error, {:live_redirect, _}} =
+               view |> form("#order-form", form: %{florist_note: "Ring the bell"}) |> render_submit()
+
+      assert Decimal.equal?(
+               Ash.load!(order, :fulfillment_fee, authorize?: false, reuse_values?: false).fulfillment_fee,
+               "8.00"
+             )
+    end
+
     test "prices the order's own lines, and what is still owed on a paid order", ctx do
       order = place_custom_order(ctx)
       generate(payment(order_id: order.id, amount: "50.00"))

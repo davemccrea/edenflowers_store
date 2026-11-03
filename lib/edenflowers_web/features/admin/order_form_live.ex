@@ -597,9 +597,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     |> to_form()
   end
 
-  defp transform_params(_form, params, _action) do
-    Map.update(params, "fulfillment_fee_override", nil, &decimal_comma/1)
-  end
+  # Only a fee the form sent: adding a blank one would clear an order's own fee as the edit form opens.
+  defp transform_params(_form, %{"fulfillment_fee_override" => fee} = params, _action),
+    do: Map.put(params, "fulfillment_fee_override", decimal_comma(fee))
+
+  defp transform_params(_form, params, _action), do: params
 
   defp decimal_comma(value) when is_binary(value), do: String.replace(value, ",", ".")
   defp decimal_comma(value), do: value
