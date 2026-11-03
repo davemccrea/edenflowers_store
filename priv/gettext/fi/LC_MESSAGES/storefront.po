@@ -199,12 +199,12 @@ msgstr "Osoite *"
 msgid "After %{date}"
 msgstr "%{date} jälkeen"
 
-#: lib/edenflowers/courses/course.ex:172
+#: lib/edenflowers/courses/course.ex:179
 #, elixir-autogen, elixir-format
 msgid "After that, %{fee}% of the price is kept."
 msgstr "Sen jälkeen hinnasta pidätetään %{fee} %."
 
-#: lib/edenflowers/courses/course.ex:171
+#: lib/edenflowers/courses/course.ex:178
 #, elixir-autogen, elixir-format
 msgid "After that, the booking can't be refunded."
 msgstr "Sen jälkeen varausta ei voi hyvittää."
@@ -471,7 +471,7 @@ msgstr "Voivatko yritykset maksaa laskulla?"
 msgid "Cancel"
 msgstr "Peruuta"
 
-#: lib/edenflowers/courses/course.ex:167
+#: lib/edenflowers/courses/course.ex:174
 #, elixir-autogen, elixir-format
 msgid "Cancel at least %{days} days before the course for a full refund."
 msgstr "Peru vähintään %{days} päivää ennen kurssia, niin saat koko summan takaisin."

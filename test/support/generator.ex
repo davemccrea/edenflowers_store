@@ -334,6 +334,7 @@ defmodule Generator do
       :create,
       defaults: %{
         name: sequence(:course_name, &"Course #{&1}"),
+        draft: false,
         # Left to StreamData, a random slug would replace the one made from the name.
         slug: nil,
         description: "An afternoon with flowers.",

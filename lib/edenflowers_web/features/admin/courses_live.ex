@@ -94,6 +94,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
             label={~t"Status"}
           >
             <span class="flex flex-wrap gap-1">
+              <.badge :if={course.draft} tone={:neutral}>{~t"Draft"}</.badge>
               <.badge :if={Date.before?(course.date, @today)} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
               <.badge :if={course.to_settle?} tone={:warning}>{~t"To settle"}</.badge>
             </span>

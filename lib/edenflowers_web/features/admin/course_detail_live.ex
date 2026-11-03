@@ -69,6 +69,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               </span>
               <span aria-hidden="true">·</span>
               <span class="whitespace-nowrap">{~t"#{seats = @course.seats_booked} / #{total = @course.total_places} seats"}</span>
+              <.badge :if={@course.draft} tone={:neutral}>{~t"Draft"}</.badge>
               <.badge :if={@past?} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
             </span>
           </:subtitle>
