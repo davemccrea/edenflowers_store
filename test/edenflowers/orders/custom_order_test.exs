@@ -281,6 +281,8 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert_email_sent(fn email ->
         refute email.text_body =~ "Collect on"
+        refute email.text_body =~ "after you've collected"
+        assert email.text_body =~ "Payment is by invoice."
         refute email.text_body =~ "I hope you're happy with it"
         assert email.text_body =~ "Here is what we agreed"
       end)
@@ -998,7 +1000,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert_email_sent(fn email ->
         assert [_receipt] = email.attachments
-        assert email.subject == "Your receipt from Eden Flowers"
+        assert email.subject == "Your receipt from Eden Flowers · #{order.order_reference}"
       end)
     end
 
@@ -1013,7 +1015,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert_email_sent(fn email ->
         refute email.text_body =~ "Thank you for your order"
         refute email.text_body =~ "shop"
-        assert email.subject == "Your receipt from Eden Flowers"
+        assert email.subject == "Your receipt from Eden Flowers · #{order.order_reference}"
         assert email.text_body =~ "Thank you for your purchase. Your receipt is attached."
       end)
     end

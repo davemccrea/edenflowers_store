@@ -1835,7 +1835,7 @@ msgstr "Avaa Papra"
 msgid "Open directions in Google Maps"
 msgstr "Avaa reittiohjeet Google Mapsissa"
 
-#: lib/edenflowers/email.ex:658
+#: lib/edenflowers/email.ex:660
 #, elixir-autogen, elixir-format
 msgid "Open in the admin:"
 msgstr "Avaa hallintapaneelissa:"

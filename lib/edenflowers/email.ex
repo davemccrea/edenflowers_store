@@ -91,7 +91,7 @@ defmodule Edenflowers.Email do
   def purchase_receipt(%Order{} = order, message \\ nil) do
     customer_email(order, from_address(), fn email ->
       email
-      |> subject(~t"Your receipt from Eden Flowers")
+      |> subject(~t"Your receipt from Eden Flowers · #{reference = order.order_reference}")
       |> text_body(
         Templates.purchase_receipt(%{
           order: order,
@@ -471,6 +471,7 @@ defmodule Edenflowers.Email do
           order: order,
           refund: refund,
           refunded_to: refunded_how(refund.payment_method, order.payments),
+          format_date: &Format.weekday_date(&1, order.locale),
           format_currency: &Format.currency(&1, order.locale)
         })
       )
@@ -486,6 +487,7 @@ defmodule Edenflowers.Email do
           registration: registration,
           refund: refund,
           refunded_to: refunded_how(refund.payment_method, registration.payments),
+          format_date: &Format.weekday_date(&1, registration.locale),
           format_currency: &Format.currency(&1, registration.locale)
         })
       )

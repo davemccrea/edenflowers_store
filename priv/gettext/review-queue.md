@@ -76,6 +76,23 @@ context: empty.
 - The existing `Saturdays in particular fill up quickly, as I can only take on a limited number of weddings each Saturday. Most couples book 9–12 months ahead.`
   entry and translations are reused unchanged on the wedding page.
 
+## Email receipt and timing cleanup — 3 November 2026
+
+AI-reviewed by Codex on 2026-11-03. Domain: `emails`; context: empty.
+The user approved adding order identification and removing payment/fulfillment
+timing mismatches. Native Swedish/Finnish review and Jennie's approval of the
+exact translations remain outstanding. No payment deadlines or cancellation
+terms changed.
+
+| English source | Swedish draft | Finnish draft |
+| --- | --- | --- |
+| `Booking %{reference}: %{course}, %{date}` | `Bokning %{reference}: %{course}, %{date}` | `Varaus %{reference}: %{course}, %{date}` |
+| `Order %{reference} for %{date}` | `Beställning %{reference} för %{date}` | `Tilaus %{reference}, %{date}` |
+| `Payment is by invoice.` | `Betalning sker mot faktura.` | `Maksu laskulla.` |
+| `Payment is still due.` | `Betalningen återstår.` | `Maksu on vielä maksamatta.` |
+| `The payment for your order for %{date} (%{product}) didn't go through.` | `Betalningen för din beställning för %{date} (%{product}) gick inte igenom.` | `Tilauksesi (%{product}, %{date}) maksu ei onnistunut.` |
+| `Your receipt from Eden Flowers · %{reference}` | `Ditt kvitto från Eden Flowers · %{reference}` | `Kuittisi Eden Flowersilta · %{reference}` |
+
 ## Remaining coverage
 
 - Cinder dependency alignment added 15 untranslated admin-only entries per

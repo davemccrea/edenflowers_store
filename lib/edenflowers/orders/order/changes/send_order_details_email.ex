@@ -31,6 +31,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
             :balance,
             :payment_link_open?,
             :payable?,
+            :cancelled?,
             line_items: [:subtotal]
           ],
           authorize?: false
@@ -38,6 +39,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
 
       case Keyword.fetch!(opts, :email) do
         :payment_reminder when not order.payable? -> Ash.Changeset.add_error(changeset, "has nothing to pay")
+        :subscription_payment_failed when order.state != :placed or order.cancelled? or not order.payable? -> changeset
         kind -> deliver(changeset, order, kind)
       end
     end)
