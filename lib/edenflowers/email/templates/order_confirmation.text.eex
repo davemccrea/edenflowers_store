@@ -2,6 +2,8 @@
 
 <%= if @order.fulfillment_method == :delivery do %><%= dgettext("emails", "Thank you for your order. I'll deliver it on %{date} to %{address}.", date: @fulfillment_on, address: @order.delivery_address) %><% else %><%= dgettext("emails", "Thank you for your order. You can collect it on %{date} from %{shop}.", date: @fulfillment_on, shop: shop_address()) %><% end %>
 
+<%= dgettext("emails", "Order %{reference}", reference: @order.order_reference) %>
+
 <%= order_totals(assigns) %>
 <%= if @order.gift && @order.recipient_name do %><%= dgettext("emails", "For %{recipient}", recipient: @order.recipient_name) %>
 <%= if @order.card_message do %><%= dgettext("emails", "Card message: %{message}", message: @order.card_message) %>
