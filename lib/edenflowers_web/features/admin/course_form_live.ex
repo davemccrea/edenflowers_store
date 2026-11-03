@@ -168,6 +168,15 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
           </div>
 
           <aside class="flex flex-col gap-6">
+            <.form_section title={~t"Status"}>
+              <.input
+                field={@form[:draft]}
+                type="select"
+                label={~t"Status"}
+                options={[{~t"Draft", true}, {~t"Published", false}]}
+                class="select w-full"
+              />
+            </.form_section>
             <.form_section title={~t"Photo"}>
               <.photo_input
                 field={@form[:image_slug]}

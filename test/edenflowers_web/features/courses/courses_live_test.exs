@@ -8,6 +8,16 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
   setup :verify_on_exit!
 
   describe "/courses" do
+    test "hides draft courses from the list", %{conn: conn} do
+      draft = generate(course(draft: true))
+      published = generate(course(draft: false))
+
+      {:ok, view, _html} = live(conn, ~p"/en/courses")
+
+      assert has_element?(view, ~s|h3 a[href="/en/courses/#{published.slug}"]|)
+      refute has_element?(view, ~s|a[href="/en/courses/#{draft.slug}"]|)
+    end
+
     test "points at the newsletter when nothing is scheduled", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/en/courses")
 

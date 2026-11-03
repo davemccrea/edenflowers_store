@@ -27,6 +27,8 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses/new")
 
+    assert has_element?(view, ~s|select[name="form[draft]"] option[value="true"][selected]|, "Draft")
+
     photo = file_input(view, "#course-form", "photo_form[image_slug]", [photo("Kransar ä.jpg")])
     render_upload(photo, "Kransar ä.jpg")
 
@@ -53,6 +55,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     [course] = Ash.read!(Course, authorize?: false)
     assert course_id == course.id
     assert course.name == "Autumn wreaths"
+    assert course.draft
     assert course.language == :sv
     assert course.translations."sv-FI".name == "Höstkransar"
     assert "local:///uploads/" <> filename = course.image_slug
@@ -81,6 +84,18 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     assert saved.language == :en
     assert saved.cancellation_days == 10
     assert saved.cancellation_fee_percent == 50
+  end
+
+  test "publishes a draft and can hide it again", %{conn: conn} do
+    course = generate(course(draft: true))
+
+    for {draft, listed?} <- [{"false", true}, {"true", false}] do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/edit")
+
+      view |> form("#course-form", form: %{draft: draft}) |> render_submit()
+
+      assert Enum.any?(Edenflowers.Courses.list_upcoming_courses!(), &(&1.id == course.id)) == listed?
+    end
   end
 
   test "words the cancellation terms from the days and the fee" do

@@ -50,7 +50,8 @@ defmodule Edenflowers.Courses.Course do
       :tax_rate_id,
       :language,
       :translations,
-      :slug
+      :slug,
+      :draft
     ]
 
     create :create do
@@ -91,9 +92,9 @@ defmodule Edenflowers.Courses.Course do
     end
 
     read :upcoming do
-      description "Courses from today on, in Helsinki time, soonest first, for the courses page and sitemap."
+      description "Published courses from today on, in Helsinki time, soonest first, for the courses page and sitemap."
       # Helsinki's date, like booking_open?, so a course stays listed until its day ends in Finland.
-      filter expr(date >= helsinki_today())
+      filter expr(draft == false and date >= helsinki_today())
       prepare build(default_sort: [date: :asc, start_time: :asc])
     end
 
@@ -128,6 +129,12 @@ defmodule Edenflowers.Courses.Course do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
+
+    attribute :draft, :boolean do
+      description "Hidden from the public courses list and sitemap while Jennie prepares it."
+      allow_nil? false
+      default true
+    end
 
     attribute :slug, :string do
       description "Where the course's page lives, as in /courses/spring-wreath-workshop. Made from the English " <>

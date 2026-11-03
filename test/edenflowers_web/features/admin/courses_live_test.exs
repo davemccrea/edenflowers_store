@@ -6,6 +6,16 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
   setup :log_in_admin
 
+  test "keeps drafts visible to the admin and marks their status", %{conn: conn} do
+    course = generate(course(draft: true))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses")
+    render_async(view, 500)
+
+    assert has_element?(view, ~s|tbody a[href="/admin/courses/#{course.id}"]|)
+    assert has_element?(view, "tbody tr", "Draft")
+  end
+
   test "lists a course with its booked seats and links to its page", %{conn: conn} do
     course = generate(course(name: "Autumn wreaths", total_places: 10))
     generate(course_registration(course_id: course.id, status: :confirmed, seats: 3))
