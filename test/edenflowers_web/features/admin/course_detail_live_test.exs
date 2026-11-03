@@ -9,6 +9,17 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
   setup :log_in_admin
 
+  test "shows publication status and only offers sharing for published courses", %{conn: conn} do
+    for {draft, status} <- [{true, "Draft"}, {false, "Published"}] do
+      course = generate(course(draft: draft))
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+
+      assert has_element?(view, ".badge", status)
+      assert has_element?(view, "#share-course-link-url") == !draft
+      assert has_element?(view, "#share-course-link-open") == !draft
+    end
+  end
+
   test "Jennie previews and manually sends course reminders in each booking's language", %{conn: conn} do
     course = generate(course(name: "Autumn wreaths"))
     anna = generate(course_registration(course_id: course.id, status: :confirmed, name: "Anna", locale: "en-GB"))

@@ -26,6 +26,25 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
 
     assert has_element?(view, "tbody tr", "3 / 10")
     assert has_element?(view, ~s|tbody a[href="/admin/courses/#{course.id}"]|, "Autumn wreaths")
+    assert has_element?(view, "tbody tr", "Published")
+  end
+
+  test "filters draft and published courses while keeping the period filter", %{conn: conn} do
+    generate(course(name: "Draft wreaths", draft: true))
+    generate(course(name: "Published wreaths", draft: false))
+    past_course("Past wreaths")
+
+    for {draft, shown, hidden} <- [
+          {"true", "Draft wreaths", "Published wreaths"},
+          {"false", "Published wreaths", "Draft wreaths"}
+        ] do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses?#{[draft: draft, period: "current"]}")
+      render_async(view, 500)
+
+      assert has_element?(view, "tbody tr", shown)
+      refute has_element?(view, "tbody tr", hidden)
+      refute has_element?(view, "tbody tr", "Past wreaths")
+    end
   end
 
   test "opens on current courses: upcoming, and past ones until their bookings are settled", %{conn: conn} do

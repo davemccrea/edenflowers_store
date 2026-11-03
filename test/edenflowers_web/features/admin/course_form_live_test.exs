@@ -27,7 +27,8 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses/new")
 
-    assert has_element?(view, ~s|select[name="form[draft]"] option[value="true"][selected]|, "Draft")
+    assert has_element?(view, ~s|#course-form input[type=checkbox][name="form[draft]"]|)
+    refute has_element?(view, ~s|input[type=checkbox][name="form[draft]"][checked]|)
 
     photo = file_input(view, "#course-form", "photo_form[image_slug]", [photo("Kransar ä.jpg")])
     render_upload(photo, "Kransar ä.jpg")
@@ -96,10 +97,26 @@ defmodule EdenflowersWeb.Admin.CourseFormLiveTest do
     for {draft, listed?} <- [{"false", true}, {"true", false}] do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/edit")
 
+      assert has_element?(view, ~s|input[type=checkbox][name="form[draft]"][checked]|) == !listed?
+      assert has_element?(view, "a[target='_blank']", "View in store") == !listed?
+
+      view |> form("#course-form", form: %{draft: draft}) |> render_change()
+      assert has_element?(view, ~s|input[type=checkbox][name="form[draft]"][checked]|) == listed?
+      assert Ash.get!(Course, course.id, authorize?: false).draft == listed?
+
       view |> form("#course-form", form: %{draft: draft}) |> render_submit()
 
       assert Enum.any?(Edenflowers.Courses.list_upcoming_courses!(), &(&1.id == course.id)) == listed?
     end
+  end
+
+  test "saving a published course keeps it published without touching the toggle", %{conn: conn} do
+    course = generate(course(draft: false))
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}/edit")
+
+    view |> form("#course-form") |> render_submit()
+
+    refute Ash.get!(Course, course.id, authorize?: false).draft
   end
 
   test "edits and clears the optional photo attribution", %{conn: conn} do

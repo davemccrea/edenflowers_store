@@ -49,161 +49,159 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={@page_title} back={form_back(@form)} sticky>
-          <:actions>
-            <.button
-              :if={@form.source.type == :update}
-              href={~q"/#{language}/courses/#{@form.source.data}"}
-              target="_blank"
-              variant="secondary"
-              size="sm"
-              class="max-md:btn-square"
-            >
-              <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
-              <span class="max-md:sr-only">{~t"View in store"}</span>
-            </.button>
-            <.button type="submit" form="course-form" variant="primary" size="sm">
-              {~t"Save"}
-            </.button>
-          </:actions>
-        </.admin_page_header>
-
         <.form
           for={@form}
           id="course-form"
           data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
           phx-change="validate"
           phx-submit="save"
-          class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start"
         >
-          <div class="space-y-6">
-            <.form_section title={~t"Name and description"}>
-              <.language_fields form={@form} translating={@translating} />
-              <div class="mt-6">
-                <.slug_field field={@form[:slug]} path="/courses/" />
-              </div>
-            </.form_section>
-
-            <.form_section title={~t"When"}>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <.input field={@form[:date]} type="date" label={~t"Date"} class="input w-full" />
-                <.input
-                  field={@form[:register_before]}
-                  type="date"
-                  label={~t"Book by"}
-                  class="input w-full"
-                />
-                <.input field={@form[:start_time]} type="time" label={~t"Starts"} class="input w-full" />
-                <.input field={@form[:end_time]} type="time" label={~t"Ends"} class="input w-full" />
-              </div>
-            </.form_section>
-
-            <.form_section title={~t"Seats and price"}>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <.input
-                  field={@form[:total_places]}
-                  type="number"
-                  min="1"
-                  label={~t"Seats"}
-                  class="input w-full tabular-nums"
-                />
-                <.input
-                  field={@form[:price]}
-                  type="text"
-                  inputmode="decimal"
-                  label={~t"Price per seat (€)"}
-                  class="input w-full tabular-nums"
-                />
-                <.input
-                  field={@form[:tax_rate_id]}
-                  type="select"
-                  label={~t"VAT"}
-                  options={Enum.map(@tax_rates, &{&1.name, &1.id})}
-                  class="select w-full"
-                />
-              </div>
-            </.form_section>
-
-            <.form_section title={~t"Cancellation"}>
-              <:description>
-                {~t"Shown on the course page and in the booking emails, and used to fill in a cancelled booking's refund."}
-              </:description>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <.input
-                  field={@form[:cancellation_days]}
-                  type="number"
-                  min="0"
-                  label={~t"Full refund until (days before)"}
-                  class="input w-full tabular-nums"
-                />
-                <.input
-                  field={@form[:cancellation_fee_percent]}
-                  type="number"
-                  min="0"
-                  max="100"
-                  label={~t"Kept after that (%)"}
-                  class="input w-full tabular-nums"
-                />
-              </div>
-            </.form_section>
-
-            <.form_section title={~t"Taught in"}>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <.input
-                  field={@form[:language]}
-                  type="select"
-                  label={~t"Language"}
-                  options={[{~t"Swedish", :sv}, {~t"Finnish", :fi}, {~t"English", :en}]}
-                  class="select w-full"
-                />
-              </div>
-            </.form_section>
-
-            <.form_section title={~t"Where"}>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <.input field={@form[:location_name]} type="text" label={~t"Venue"} class="input w-full" />
-                <.input field={@form[:location_address]} type="text" label={~t"Address"} class="input w-full" />
-              </div>
-            </.form_section>
-          </div>
-
-          <aside class="flex flex-col gap-6">
-            <.form_section title={~t"Status"}>
-              <.input
+          <.admin_page_header title={@page_title} back={form_back(@form)} sticky>
+            <:actions>
+              <.live_toggle
                 field={@form[:draft]}
-                type="select"
-                label={~t"Status"}
-                options={[{~t"Draft", true}, {~t"Published", false}]}
-                class="select w-full"
+                label={~t"Published"}
+                label_class="max-sm:sr-only"
+                class="pointer-coarse:min-h-11"
               />
-            </.form_section>
-            <.form_section title={~t"Photo"}>
-              <.photo_input
-                field={@form[:image_slug]}
-                uploads={@uploads}
-                label={~t"Photo"}
-                show_errors={@form.source.submitted_once?}
-              />
-              <div class="mt-6 space-y-4">
-                <.input
-                  field={@form[:photo_credit_name]}
-                  type="text"
-                  label={~t"Photographer (optional)"}
-                  class="input w-full"
+              <.button
+                :if={@form.source.type == :update && !@form.source.data.draft}
+                href={~q"/#{language}/courses/#{@form.source.data}"}
+                target="_blank"
+                variant="secondary"
+                size="sm"
+                class="max-md:btn-square"
+              >
+                <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+                <span class="max-md:sr-only">{~t"View in store"}</span>
+              </.button>
+              <.button type="submit" variant="primary" size="sm">
+                {~t"Save"}
+              </.button>
+            </:actions>
+          </.admin_page_header>
+
+          <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
+            <div class="space-y-6">
+              <.form_section title={~t"Name and description"}>
+                <.language_fields form={@form} translating={@translating} />
+                <div class="mt-6">
+                  <.slug_field field={@form[:slug]} path="/courses/" />
+                </div>
+              </.form_section>
+
+              <.form_section title={~t"When"}>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <.input field={@form[:date]} type="date" label={~t"Date"} class="input w-full" />
+                  <.input
+                    field={@form[:register_before]}
+                    type="date"
+                    label={~t"Book by"}
+                    class="input w-full"
+                  />
+                  <.input field={@form[:start_time]} type="time" label={~t"Starts"} class="input w-full" />
+                  <.input field={@form[:end_time]} type="time" label={~t"Ends"} class="input w-full" />
+                </div>
+              </.form_section>
+
+              <.form_section title={~t"Seats and price"}>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <.input
+                    field={@form[:total_places]}
+                    type="number"
+                    min="1"
+                    label={~t"Seats"}
+                    class="input w-full tabular-nums"
+                  />
+                  <.input
+                    field={@form[:price]}
+                    type="text"
+                    inputmode="decimal"
+                    label={~t"Price per seat (€)"}
+                    class="input w-full tabular-nums"
+                  />
+                  <.input
+                    field={@form[:tax_rate_id]}
+                    type="select"
+                    label={~t"VAT"}
+                    options={Enum.map(@tax_rates, &{&1.name, &1.id})}
+                    class="select w-full"
+                  />
+                </div>
+              </.form_section>
+
+              <.form_section title={~t"Cancellation"}>
+                <:description>
+                  {~t"Shown on the course page and in the booking emails, and used to fill in a cancelled booking's refund."}
+                </:description>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <.input
+                    field={@form[:cancellation_days]}
+                    type="number"
+                    min="0"
+                    label={~t"Full refund until (days before)"}
+                    class="input w-full tabular-nums"
+                  />
+                  <.input
+                    field={@form[:cancellation_fee_percent]}
+                    type="number"
+                    min="0"
+                    max="100"
+                    label={~t"Kept after that (%)"}
+                    class="input w-full tabular-nums"
+                  />
+                </div>
+              </.form_section>
+
+              <.form_section title={~t"Taught in"}>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <.input
+                    field={@form[:language]}
+                    type="select"
+                    label={~t"Language"}
+                    options={[{~t"Swedish", :sv}, {~t"Finnish", :fi}, {~t"English", :en}]}
+                    class="select w-full"
+                  />
+                </div>
+              </.form_section>
+
+              <.form_section title={~t"Where"}>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <.input field={@form[:location_name]} type="text" label={~t"Venue"} class="input w-full" />
+                  <.input field={@form[:location_address]} type="text" label={~t"Address"} class="input w-full" />
+                </div>
+              </.form_section>
+            </div>
+
+            <aside class="flex flex-col gap-6">
+              <.form_section title={~t"Photo"}>
+                <.photo_input
+                  field={@form[:image_slug]}
+                  uploads={@uploads}
+                  label={~t"Photo"}
+                  show_errors={@form.source.submitted_once?}
                 />
-                <.input
-                  field={@form[:photo_credit_url]}
-                  type="url"
-                  label={~t"Photographer website (optional)"}
-                  placeholder="https://example.com"
-                  class="input w-full"
-                />
-                <p class="text-base-content/70 text-sm">
-                  {~t"Shown with the course photo. Add a website to link the photographer's name."}
-                </p>
-              </div>
-            </.form_section>
-          </aside>
+                <div class="mt-6 space-y-4">
+                  <.input
+                    field={@form[:photo_credit_name]}
+                    type="text"
+                    label={~t"Photographer (optional)"}
+                    class="input w-full"
+                  />
+                  <.input
+                    field={@form[:photo_credit_url]}
+                    type="url"
+                    label={~t"Photographer website (optional)"}
+                    placeholder="https://example.com"
+                    class="input w-full"
+                  />
+                  <p class="text-base-content/70 text-sm">
+                    {~t"Shown with the course photo. Add a website to link the photographer's name."}
+                  </p>
+                </div>
+              </.form_section>
+            </aside>
+          </div>
         </.form>
       </.admin_page>
     </Layouts.admin>

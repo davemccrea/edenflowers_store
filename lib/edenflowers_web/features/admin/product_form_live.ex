@@ -514,32 +514,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         do: "#{label}: #{translate_error(error)}"
   end
 
-  attr :field, Phoenix.HTML.FormField, required: true
-  attr :label, :string, required: true
-  attr :label_class, :any, default: nil
-  attr :class, :any, default: nil
-
-  # On means live: it shows the opposite of a draft field. The checkbox follows the
-  # hidden input, so when checked its "false" is the value submitted. Anything but
-  # an explicit false is a draft, as both resources default to draft.
-  defp live_toggle(assigns) do
-    assigns = assign(assigns, :live?, assigns.field.value in [false, "false"])
-
-    ~H"""
-    <label class={["text-base-content flex cursor-pointer items-center gap-1.5 text-sm", @class]}>
-      <input type="hidden" name={@field.name} value="true" />
-      <input
-        type="checkbox"
-        id={@field.id}
-        name={@field.name}
-        value="false"
-        checked={@live?}
-        class="toggle toggle-primary"
-      /><span class={@label_class}>{@label}</span>
-    </label>
-    """
-  end
-
   defp size_label(size) when size in [nil, ""], do: ~t"One size"
   defp size_label(size) when is_binary(size), do: size |> String.to_existing_atom() |> variant_size_label()
   defp size_label(size), do: variant_size_label(size)

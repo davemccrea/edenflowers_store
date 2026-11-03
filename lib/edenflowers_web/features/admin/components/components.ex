@@ -5,6 +5,30 @@ defmodule EdenflowersWeb.Admin.Components do
 
   use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
+  attr :field, Phoenix.HTML.FormField, required: true
+  attr :label, :string, required: true
+  attr :label_class, :any, default: nil
+  attr :class, :any, default: nil
+
+  @doc "A publication toggle whose checked state is the opposite of the draft field."
+  def live_toggle(assigns) do
+    assigns = assign(assigns, :live?, assigns.field.value in [false, "false"])
+
+    ~H"""
+    <label class={["text-base-content flex cursor-pointer items-center gap-1.5 text-sm", @class]}>
+      <input type="hidden" name={@field.name} value="true" />
+      <input
+        type="checkbox"
+        id={@field.id}
+        name={@field.name}
+        value="false"
+        checked={@live?}
+        class="toggle toggle-primary"
+      /><span class={@label_class}>{@label}</span>
+    </label>
+    """
+  end
+
   attr :count, :integer, required: true
   attr :active, :boolean, required: true
   attr :tone, :atom, default: :primary, values: [:primary, :warning]
