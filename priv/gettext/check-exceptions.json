@@ -44,13 +44,5 @@
   {
     "kind": "missing", "locale": "fi", "domain": "routes", "context": "", "form": null,
     "source": "sv", "translation": "", "reason": "Language code intentionally falls back unchanged."
-  },
-  {
-    "kind": "missing", "locale": "sv", "domain": "routes", "context": "", "form": null,
-    "source": "privacy", "translation": "", "reason": "Existing URL retained pending a coordinated route and redirect decision."
-  },
-  {
-    "kind": "missing", "locale": "fi", "domain": "routes", "context": "", "form": null,
-    "source": "privacy", "translation": "", "reason": "Existing URL retained pending a coordinated route and redirect decision."
   }
 ]

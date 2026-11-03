@@ -6,4 +6,10 @@ defmodule EdenflowersWeb.Marketing.LegacyRedirectControllerTest do
       assert conn |> get(old) |> redirected_to(301) == home
     end
   end
+
+  test "the privacy policy's untranslated URLs move to the translated ones", %{conn: conn} do
+    for {old, new} <- [{"/sv/privacy", "/sv/integritetspolicy"}, {"/fi/privacy", "/fi/tietosuojaseloste"}] do
+      assert conn |> get(old) |> redirected_to(301) == new
+    end
+  end
 end

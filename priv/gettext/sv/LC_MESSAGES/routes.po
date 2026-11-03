@@ -128,4 +128,4 @@ msgstr "kopvillkor"
 #: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "privacy"
-msgstr ""
+msgstr "integritetspolicy"

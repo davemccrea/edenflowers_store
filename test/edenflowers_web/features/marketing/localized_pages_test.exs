@@ -38,8 +38,8 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
   test "information sidebars link to the other two pages in the current language", %{conn: conn} do
     for {faq, terms, privacy} <- [
           {"/en/faq", "/en/terms", "/en/privacy"},
-          {"/sv/vanliga-fragor", "/sv/kopvillkor", "/sv/privacy"},
-          {"/fi/ukk", "/fi/toimitusehdot", "/fi/privacy"}
+          {"/sv/vanliga-fragor", "/sv/kopvillkor", "/sv/integritetspolicy"},
+          {"/fi/ukk", "/fi/toimitusehdot", "/fi/tietosuojaseloste"}
         ],
         {path, id, related} <- [
           {faq, "faq-nav", [terms, privacy]},

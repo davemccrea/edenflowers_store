@@ -120,6 +120,8 @@ defmodule EdenflowersWeb.Router do
     get "/courses/pay/:token", PaymentLinkRedirectController, :course
     get "/valkommen", Marketing.LegacyRedirectController, :swedish
     get "/tervetuloa", Marketing.LegacyRedirectController, :finnish
+    get "/sv/privacy", Marketing.LegacyRedirectController, :swedish_privacy
+    get "/fi/privacy", Marketing.LegacyRedirectController, :finnish_privacy
   end
 
   scope "/", EdenflowersWeb do

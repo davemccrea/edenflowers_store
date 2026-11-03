@@ -491,7 +491,12 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               };
             </script>
 
-            <div class="embla__dots mt-4 hidden justify-center gap-2 sm:flex md:hidden" />
+            <%!-- The hook builds the dots, so patches must leave them alone. --%>
+            <div
+              id="featured-blooms-dots"
+              phx-update="ignore"
+              class="embla__dots mt-4 hidden justify-center gap-2 sm:flex md:hidden"
+            />
           </div>
 
           <div class="mt-10 text-center">
