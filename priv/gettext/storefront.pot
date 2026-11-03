@@ -3647,6 +3647,7 @@ msgstr ""
 msgid "Your password has successfully been reset"
 msgstr ""
 
+#: lib/edenflowers_web/components/stripe_form.ex:51
 #: lib/edenflowers_web/features/checkout/checkout_complete_controller.ex:24
 #: lib/edenflowers_web/features/courses/course_booking_live.ex:34
 #: lib/edenflowers_web/payment_link.ex:145

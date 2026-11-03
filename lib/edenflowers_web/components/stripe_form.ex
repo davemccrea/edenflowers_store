@@ -48,6 +48,7 @@ defmodule EdenflowersWeb.StripeForm do
       data-billing-name={@billing_name}
       data-billing-email={@billing_email}
       data-billing-phone={@billing_phone}
+      data-declined-message={~t"Your payment didn't go through. Please try again or choose another payment method."}
       data-stripe-loading={JS.set_attribute(@on_loading, {"disabled", "true"}, to: "#payment-button")}
       data-stripe-ready={JS.remove_attribute(@on_ready, "disabled", to: "#payment-button")}
       class="flex flex-col gap-4"
@@ -233,10 +234,17 @@ defmodule EdenflowersWeb.StripeForm do
         },
 
         // The Payment Element shows validation errors itself, but not a declined
-        // card; Stripe's card_error message is written for the customer.
+        // card; Stripe's card_error message is written for the customer. A failed
+        // bank check (3D Secure) is the customer's to retry, not an outage, and is
+        // matched by code since Stripe doesn't promise it's a card_error.
         handleStripeError(error, message) {
           if (error.type === "card_error") {
             this.stripeErrorMessage.textContent = error.message;
+          } else if (
+            error.code === "payment_intent_authentication_failure" ||
+            error.code === "setup_intent_authentication_failure"
+          ) {
+            this.stripeErrorMessage.textContent = this.el.dataset.declinedMessage;
           } else if (error.type !== "validation_error") {
             this.logAndPushError(message, error);
           }
@@ -252,10 +260,12 @@ defmodule EdenflowersWeb.StripeForm do
         logAndPushError(message, errorObject = null) {
           const msg = `Stripe Hook Error: ${message}`;
           console.error(msg, errorObject || "");
-          this.pushEvent("stripe:error", {
-            message: msg,
-            details: errorObject || "",
-          });
+          // An Error's fields aren't enumerable, so it would reach the log as {}.
+          const details =
+            errorObject instanceof Error
+              ? { name: errorObject.name, message: errorObject.message }
+              : errorObject || "";
+          this.pushEvent("stripe:error", { message: msg, details });
         },
 
         stripeReady() {
