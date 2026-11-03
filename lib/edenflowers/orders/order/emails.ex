@@ -65,6 +65,7 @@ defmodule Edenflowers.Orders.Order.Emails do
         worker_module_name Edenflowers.Orders.Workers.SendPaymentFailedEmail
         scheduler_module_name Edenflowers.Orders.Schedulers.SendPaymentFailedEmail
         default_actor system_actor()
+        where expr(state == :placed and not cancelled? and payable?)
         on_error :record_order_details_email_failure
       end
 

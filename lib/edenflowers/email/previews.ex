@@ -127,6 +127,8 @@ defmodule Edenflowers.Email.Previews do
            }, @payment_link},
           {"settled, paid in full", paid_in_full(), nil},
           {"sent after it was handed over, invoice", %{fulfillment_status: :fulfilled, payment_terms: :invoice}, nil},
+          {"sent after it was handed over, payment still due",
+           %{fulfillment_status: :fulfilled, payment_terms: :on_fulfillment}, nil},
           {"no customer first name", %{customer_first_name: nil}, @payment_link}
         ] do
       {"Order details", title, :order_details, Email.order_details(order(attrs, locale), link)}
@@ -151,6 +153,10 @@ defmodule Edenflowers.Email.Previews do
              ]
            }, nil, nil},
           {"pickup, invoice after pickup", Map.put(pickup(), :payment_terms, :invoice), nil, nil},
+          {"edited after it was handed over, invoice", %{fulfillment_status: :fulfilled, payment_terms: :invoice}, nil,
+           nil},
+          {"edited after it was handed over, payment still due",
+           %{fulfillment_status: :fulfilled, payment_terms: :on_fulfillment}, nil, nil},
           {"with a message from Jennie", %{}, @payment_link, message(locale)}
         ] do
       {"Order updated", title, :order_updated, Email.order_updated(order(attrs, locale), link, message)}
@@ -227,7 +233,9 @@ defmodule Edenflowers.Email.Previews do
   defp subscription_payment_failed(locale) do
     for {title, attrs} <- [
           {"delivery", %{}},
-          {"pickup, no customer first name", Map.put(pickup(), :customer_first_name, nil)}
+          {"pickup, no customer first name", Map.put(pickup(), :customer_first_name, nil)},
+          {"sent after delivery", %{fulfillment_status: :fulfilled}},
+          {"sent after the scheduled day", %{fulfillment_date: ~D[2020-11-14]}}
         ] do
       attrs = Map.merge(%{origin: :subscription, gift: false, recipient_name: nil, recipient_first_name: nil}, attrs)
 
@@ -711,6 +719,7 @@ defmodule Edenflowers.Email.Previews do
       )
 
     %{
+      reference: "EF-C1042",
       first_name: "Anna",
       email: "anna@example.com",
       locale: locale,

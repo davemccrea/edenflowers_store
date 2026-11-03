@@ -7,12 +7,12 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers/email.ex:684
+#: lib/edenflowers/email.ex:686
 #, elixir-autogen, elixir-format
 msgid "%{code} is your email change code for Eden Flowers"
 msgstr ""
 
-#: lib/edenflowers/email.ex:676
+#: lib/edenflowers/email.ex:678
 #, elixir-autogen, elixir-format
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr ""
@@ -45,7 +45,7 @@ msgstr ""
 msgid "A refund for your Eden Flowers order for %{date}"
 msgstr ""
 
-#: lib/edenflowers/email.ex:483
+#: lib/edenflowers/email.ex:484
 #, elixir-autogen, elixir-format
 msgid "A refund for your booking on %{course}"
 msgstr ""
@@ -116,7 +116,7 @@ msgstr ""
 msgid "Delivered to"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:3
+#: lib/edenflowers/email/templates/order_totals.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Delivery"
 msgstr "Delivery"
@@ -126,7 +126,7 @@ msgstr "Delivery"
 msgid "Delivery on %{date} to %{address}"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:2
+#: lib/edenflowers/email/templates/order_totals.text.eex:4
 #, elixir-autogen, elixir-format
 msgid "Discount"
 msgstr "Discount"
@@ -244,12 +244,12 @@ msgstr ""
 msgid "I'll pay back the other %{amount} the same way you paid it."
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_payment.text.eex:4
+#: lib/edenflowers/email/templates/order_payment.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "I'll send you an invoice after delivery."
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_payment.text.eex:6
+#: lib/edenflowers/email/templates/order_payment.text.eex:10
 #, elixir-autogen, elixir-format
 msgid "I'll send you an invoice after you've collected your order."
 msgstr ""
@@ -311,9 +311,9 @@ msgid "If anything doesn't look right, just reply."
 msgstr ""
 
 #: lib/edenflowers/email/templates/booking_cancelled.text.eex:9
-#: lib/edenflowers/email/templates/booking_refunded.text.eex:5
+#: lib/edenflowers/email/templates/booking_refunded.text.eex:7
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:9
-#: lib/edenflowers/email/templates/order_refunded.text.eex:5
+#: lib/edenflowers/email/templates/order_refunded.text.eex:7
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:7
 #, elixir-autogen, elixir-format
 msgid "If you have any questions, just reply to this email."
@@ -348,7 +348,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:7
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:6
-#: lib/edenflowers/email/templates/order_totals.text.eex:8
+#: lib/edenflowers/email/templates/order_totals.text.eex:10
 #, elixir-autogen, elixir-format
 msgid "Left to pay"
 msgstr ""
@@ -395,17 +395,17 @@ msgid "Order %{reference} cancelled"
 msgstr ""
 
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:6
-#: lib/edenflowers/email/templates/order_totals.text.eex:5
+#: lib/edenflowers/email/templates/order_totals.text.eex:7
 #, elixir-autogen, elixir-format
 msgid "Paid"
 msgstr "Paid"
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:9
+#: lib/edenflowers/email/templates/order_totals.text.eex:11
 #, elixir-autogen, elixir-format
 msgid "Paid in full"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:7
+#: lib/edenflowers/email/templates/order_totals.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "Paid so far"
 msgstr ""
@@ -566,7 +566,7 @@ msgstr ""
 msgid "The payment for your order for collection on %{date} (%{product}) didn't go through, but your flowers will still be ready to collect."
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:6
+#: lib/edenflowers/email/templates/order_totals.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "To be refunded"
 msgstr ""
@@ -591,7 +591,7 @@ msgstr ""
 msgid "To pause, change or cancel, use your account at least %{days} days before a pickup:"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_totals.text.eex:4
+#: lib/edenflowers/email/templates/order_totals.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "Total"
 msgstr "Total"
@@ -604,7 +604,7 @@ msgstr ""
 #: lib/edenflowers/email/templates/booking_cancelled.text.eex:11
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:9
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:13
-#: lib/edenflowers/email/templates/booking_refunded.text.eex:7
+#: lib/edenflowers/email/templates/booking_refunded.text.eex:9
 #: lib/edenflowers/email/templates/contact_message.text.eex:14
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:14
 #: lib/edenflowers/email/templates/order_cancelled.text.eex:11
@@ -612,7 +612,7 @@ msgstr ""
 #: lib/edenflowers/email/templates/order_delivered.text.eex:7
 #: lib/edenflowers/email/templates/order_details.text.eex:8
 #: lib/edenflowers/email/templates/order_left_at_door.text.eex:9
-#: lib/edenflowers/email/templates/order_refunded.text.eex:7
+#: lib/edenflowers/email/templates/order_refunded.text.eex:9
 #: lib/edenflowers/email/templates/order_updated.text.eex:8
 #: lib/edenflowers/email/templates/payment_received.text.eex:6
 #: lib/edenflowers/email/templates/payment_reminder.text.eex:11
@@ -656,17 +656,17 @@ msgstr ""
 msgid "You might like to let %{recipient} know it's waiting."
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_payment.text.eex:8
+#: lib/edenflowers/email/templates/order_payment.text.eex:12
 #, elixir-autogen, elixir-format
 msgid "You pay on delivery."
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_payment.text.eex:10
+#: lib/edenflowers/email/templates/order_payment.text.eex:14
 #, elixir-autogen, elixir-format
 msgid "You pay when you collect your order."
 msgstr ""
 
-#: lib/edenflowers/email.ex:620
+#: lib/edenflowers/email.ex:622
 #, elixir-autogen, elixir-format
 msgid "You're already subscribed to the Eden Flowers newsletter"
 msgstr ""
@@ -676,7 +676,7 @@ msgstr ""
 msgid "You're already subscribed to the Eden Flowers newsletter."
 msgstr ""
 
-#: lib/edenflowers/email.ex:523
+#: lib/edenflowers/email.ex:525
 #, elixir-autogen, elixir-format
 msgid "You're booked on %{course}, %{date}"
 msgstr ""
@@ -758,7 +758,7 @@ msgstr ""
 msgid "Your flowers for %{date}"
 msgstr ""
 
-#: lib/edenflowers/email.ex:582
+#: lib/edenflowers/email.ex:584
 #, elixir-autogen, elixir-format
 msgid "Your message to Eden Flowers"
 msgstr ""
@@ -829,11 +829,6 @@ msgstr "Your order has been delivered."
 msgid "Your promo code discount was for the first order only. Later orders are at the price above."
 msgstr ""
 
-#: lib/edenflowers/email.ex:94
-#, elixir-autogen, elixir-format
-msgid "Your receipt from Eden Flowers"
-msgstr ""
-
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "Your receipt is attached."
@@ -849,7 +844,7 @@ msgstr ""
 msgid "Your updated Eden Flowers order for %{date}"
 msgstr ""
 
-#: lib/edenflowers/email.ex:563
+#: lib/edenflowers/email.ex:565
 #, elixir-autogen, elixir-format
 msgid "Your wedding enquiry to Eden Flowers"
 msgstr ""
@@ -865,7 +860,7 @@ msgstr ""
 msgid "As a welcome gift, you get %{percent} off one order. Enter the following code at checkout:"
 msgstr ""
 
-#: lib/edenflowers/email.ex:601
+#: lib/edenflowers/email.ex:603
 #, elixir-autogen, elixir-format
 msgid "Your %{percent} welcome code for Eden Flowers"
 msgstr ""
@@ -875,7 +870,7 @@ msgstr ""
 msgid "Your welcome code for %{percent} off one order is still valid. Enter the following code at checkout:"
 msgstr ""
 
-#: lib/edenflowers/email.ex:535
+#: lib/edenflowers/email.ex:537
 #, elixir-autogen, elixir-format
 msgid "A reminder about %{course}"
 msgstr ""
@@ -883,4 +878,35 @@ msgstr ""
 #: lib/edenflowers/email/templates/course_reminder.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "A reminder about your booking on %{course}."
+msgstr ""
+
+#: lib/edenflowers/email/templates/booking_refunded.text.eex:5
+#, elixir-autogen, elixir-format
+msgid "Booking %{reference}: %{course}, %{date}"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_refunded.text.eex:5
+#: lib/edenflowers/email/templates/order_totals.text.eex:1
+#, elixir-autogen, elixir-format
+msgid "Order %{reference} for %{date}"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:4
+#, elixir-autogen, elixir-format
+msgid "Payment is by invoice."
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:6
+#, elixir-autogen, elixir-format
+msgid "Payment is still due."
+msgstr ""
+
+#: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "The payment for your order for %{date} (%{product}) didn't go through."
+msgstr ""
+
+#: lib/edenflowers/email.ex:94
+#, elixir-autogen, elixir-format
+msgid "Your receipt from Eden Flowers · %{reference}"
 msgstr ""
