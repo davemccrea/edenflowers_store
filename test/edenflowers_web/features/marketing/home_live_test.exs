@@ -170,10 +170,9 @@ defmodule EdenflowersWeb.Marketing.HomeLiveTest do
   end
 
   defp json_ld(html) do
-    case Regex.run(~r|<script type="application/ld\+json">(.*?)</script>|s, html) do
-      [_, json] -> Jason.decode!(json)
-      nil -> nil
-    end
+    ~r|<script type="application/ld\+json">(.*?)</script>|s
+    |> Regex.scan(html, capture: :all_but_first)
+    |> Enum.map(fn [json] -> Jason.decode!(json) end)
   end
 
   describe "footer newsletter signup" do
