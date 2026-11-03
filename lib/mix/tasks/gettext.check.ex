@@ -132,8 +132,10 @@ defmodule Mix.Tasks.Gettext.Check do
 
   defp plural_issues(_message, _locale, _domain), do: []
 
+  # English msgstrs are normally empty, so a fuzzy English entry is a merge
+  # carrying the old wording over the new source, in any domain.
   defp review_issues(message, locale, domain) do
-    if locale != "en" and domain in @critical and Expo.Message.has_flag?(message, "fuzzy") do
+    if (locale == "en" or domain in @critical) and Expo.Message.has_flag?(message, "fuzzy") do
       [issue(message, locale, domain, "fuzzy", nil, nil)]
     else
       []

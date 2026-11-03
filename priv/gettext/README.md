@@ -41,7 +41,7 @@ mix gettext.check
 The progress report separates critical and deferrable work by language and
 catalogue. Missing translations and fuzzy entries are counted separately; obsolete
 entries are excluded. English source text counts as ready. The stats report does not
-block releases automatically. CI runs `mix gettext.check`, which rejects new
+block releases automatically. CI runs `mix gettext.check`, which rejects fuzzy English entries in any domain, new
 missing/fuzzy customer-facing translations, placeholder differences, missing plural
 forms and catalogue/template mismatches in every domain. Admin/cinder coverage
 can wait, but their structure and placeholders must remain valid. English empty
