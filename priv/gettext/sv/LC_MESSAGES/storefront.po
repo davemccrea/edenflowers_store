@@ -3919,7 +3919,7 @@ msgstr "Dina uppgifter i kassan har ändrats. Kontrollera dem innan du betalar."
 #: lib/edenflowers_web/features/marketing/home_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers."
-msgstr "Färska blommor av Jennie på Eden Flowers i Vasa: buketter, blomsterprenumerationer, bröllops- och begravningsblommor."
+msgstr "Färska blommor av Jennie på Eden Flowers i Vasa: buketter, bukettprenumerationer, bröllops- och begravningsblommor."
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:221
 #, elixir-autogen, elixir-format
@@ -4075,7 +4075,7 @@ msgstr "%{base} plus %{per_km} per km. För utvalda buketter är de första %{km
 #: lib/edenflowers_web/features/marketing/home_live.ex:169
 #, elixir-autogen, elixir-format
 msgid "Fresh flowers by Jennie at Eden Flowers in Vaasa: bouquets, flower subscriptions, wedding and funeral flowers. The first %{km} km of delivery from Minimossen are free on selected bouquets."
-msgstr "Färska blommor av Jennie på Eden Flowers i Vasa: buketter, blomsterprenumerationer, bröllops- och begravningsblommor. För utvalda buketter är de första %{km} km av leveransen från Minimossen gratis."
+msgstr "Färska blommor av Jennie på Eden Flowers i Vasa: buketter, bukettprenumerationer, bröllops- och begravningsblommor. För utvalda buketter är de första %{km} km av leveransen från Minimossen gratis."
 
 #. %{base} and %{per_km} are the same prices as the sentence before, in euros.
 #: lib/edenflowers_web/features/marketing/faq_live.ex:285
