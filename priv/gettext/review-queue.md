@@ -84,12 +84,18 @@ timing mismatches. Native Swedish/Finnish review and Jennie's approval of the
 exact translations remain outstanding. No payment deadlines or cancellation
 terms changed.
 
+Follow-up AI review by Codex on 2026-11-03: the user approved the exact English
+`I'll send your invoice separately.` and the amount-specific outstanding-payment
+wording. These replace `Payment is by invoice.` and `Payment is still due.`
+after fulfillment. The translations below reflect those edits; native review
+and Jennie's approval remain outstanding.
+
 | English source | Swedish draft | Finnish draft |
 | --- | --- | --- |
 | `Booking %{reference}: %{course}, %{date}` | `Bokning %{reference}: %{course}, %{date}` | `Varaus %{reference}: %{course}, %{date}` |
 | `Order %{reference} for %{date}` | `Beställning %{reference} för %{date}` | `Tilaus %{reference}, %{date}` |
-| `Payment is by invoice.` | `Betalning sker mot faktura.` | `Maksu laskulla.` |
-| `Payment is still due.` | `Betalningen återstår.` | `Maksu on vielä maksamatta.` |
+| `I'll send your invoice separately.` | `Jag skickar din faktura separat.` | `Lähetän laskusi erikseen.` |
+| `There's %{amount} left to pay.` | `Det återstår %{amount} att betala.` | `Maksettavaa on vielä %{amount}.` |
 | `The payment for your order for %{date} (%{product}) didn't go through.` | `Betalningen för din beställning för %{date} (%{product}) gick inte igenom.` | `Tilauksesi (%{product}, %{date}) maksu ei onnistunut.` |
 | `Your receipt from Eden Flowers · %{reference}` | `Ditt kvitto från Eden Flowers · %{reference}` | `Kuittisi Eden Flowersilta · %{reference}` |
 

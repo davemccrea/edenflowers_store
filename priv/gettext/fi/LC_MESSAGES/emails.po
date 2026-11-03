@@ -891,16 +891,6 @@ msgstr "Varaus %{reference}: %{course}, %{date}"
 msgid "Order %{reference} for %{date}"
 msgstr "Tilaus %{reference}, %{date}"
 
-#: lib/edenflowers/email/templates/order_payment.text.eex:4
-#, elixir-autogen, elixir-format
-msgid "Payment is by invoice."
-msgstr "Maksu laskulla."
-
-#: lib/edenflowers/email/templates/order_payment.text.eex:6
-#, elixir-autogen, elixir-format
-msgid "Payment is still due."
-msgstr "Maksu on vielä maksamatta."
-
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "The payment for your order for %{date} (%{product}) didn't go through."
@@ -910,3 +900,13 @@ msgstr "Tilauksesi (%{product}, %{date}) maksu ei onnistunut."
 #, elixir-autogen, elixir-format
 msgid "Your receipt from Eden Flowers · %{reference}"
 msgstr "Kuittisi Eden Flowersilta · %{reference}"
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:4
+#, elixir-autogen, elixir-format
+msgid "I'll send your invoice separately."
+msgstr "Lähetän laskusi erikseen."
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:6
+#, elixir-autogen, elixir-format
+msgid "There's %{amount} left to pay."
+msgstr "Maksettavaa on vielä %{amount}."

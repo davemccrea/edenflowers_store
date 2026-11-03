@@ -282,7 +282,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert_email_sent(fn email ->
         refute email.text_body =~ "Collect on"
         refute email.text_body =~ "after you've collected"
-        assert email.text_body =~ "Payment is by invoice."
+        assert email.text_body =~ "I'll send your invoice separately."
         refute email.text_body =~ "I hope you're happy with it"
         assert email.text_body =~ "Here is what we agreed"
       end)
