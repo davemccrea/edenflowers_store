@@ -891,16 +891,6 @@ msgstr ""
 msgid "Order %{reference} for %{date}"
 msgstr ""
 
-#: lib/edenflowers/email/templates/order_payment.text.eex:4
-#, elixir-autogen, elixir-format
-msgid "Payment is by invoice."
-msgstr ""
-
-#: lib/edenflowers/email/templates/order_payment.text.eex:6
-#, elixir-autogen, elixir-format
-msgid "Payment is still due."
-msgstr ""
-
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "The payment for your order for %{date} (%{product}) didn't go through."
@@ -909,4 +899,14 @@ msgstr ""
 #: lib/edenflowers/email.ex:94
 #, elixir-autogen, elixir-format
 msgid "Your receipt from Eden Flowers · %{reference}"
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:4
+#, elixir-autogen, elixir-format
+msgid "I'll send your invoice separately."
+msgstr ""
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:6
+#, elixir-autogen, elixir-format
+msgid "There's %{amount} left to pay."
 msgstr ""

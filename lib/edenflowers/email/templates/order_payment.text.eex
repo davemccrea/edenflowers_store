@@ -1,9 +1,9 @@
 <%= cond do %><% not Decimal.positive?(@order.balance) -> %><% @payment_link_url -> %><%= dgettext("emails", "You can pay online here:") %>
 <%= @payment_link_url %>
 
-<% @order.fulfillment_status == :fulfilled and @order.payment_terms == :invoice -> %><%= dgettext("emails", "Payment is by invoice.") %>
+<% @order.fulfillment_status == :fulfilled and @order.payment_terms == :invoice -> %><%= dgettext("emails", "I'll send your invoice separately.") %>
 
-<% @order.fulfillment_status == :fulfilled and @order.payment_terms == :on_fulfillment -> %><%= dgettext("emails", "Payment is still due.") %>
+<% @order.fulfillment_status == :fulfilled and @order.payment_terms == :on_fulfillment -> %><%= dgettext("emails", "There's %{amount} left to pay.", amount: @format_currency.(@order.balance)) %>
 
 <% @order.payment_terms == :invoice and @order.fulfillment_method == :delivery -> %><%= dgettext("emails", "I'll send you an invoice after delivery.") %>
 

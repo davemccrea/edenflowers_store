@@ -891,16 +891,6 @@ msgstr "Bokning %{reference}: %{course}, %{date}"
 msgid "Order %{reference} for %{date}"
 msgstr "Beställning %{reference} för %{date}"
 
-#: lib/edenflowers/email/templates/order_payment.text.eex:4
-#, elixir-autogen, elixir-format
-msgid "Payment is by invoice."
-msgstr "Betalning sker mot faktura."
-
-#: lib/edenflowers/email/templates/order_payment.text.eex:6
-#, elixir-autogen, elixir-format
-msgid "Payment is still due."
-msgstr "Betalningen återstår."
-
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "The payment for your order for %{date} (%{product}) didn't go through."
@@ -910,3 +900,13 @@ msgstr "Betalningen för din beställning för %{date} (%{product}) gick inte ig
 #, elixir-autogen, elixir-format
 msgid "Your receipt from Eden Flowers · %{reference}"
 msgstr "Ditt kvitto från Eden Flowers · %{reference}"
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:4
+#, elixir-autogen, elixir-format
+msgid "I'll send your invoice separately."
+msgstr "Jag skickar din faktura separat."
+
+#: lib/edenflowers/email/templates/order_payment.text.eex:6
+#, elixir-autogen, elixir-format
+msgid "There's %{amount} left to pay."
+msgstr "Det återstår %{amount} att betala."
