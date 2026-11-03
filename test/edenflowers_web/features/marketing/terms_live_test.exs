@@ -94,10 +94,10 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
   test "names the payment processor but leaves card-data handling to privacy in every language", %{conn: conn} do
     for {path, privacy, statement, storage_detail} <- [
           {"/en/terms", "/en/privacy", "All payments on this website are processed by Stripe.", "security code"},
-          {"/sv/kopvillkor", "/sv/privacy", "Alla betalningar på den här webbplatsen hanteras av Stripe.",
+          {"/sv/kopvillkor", "/sv/integritetspolicy", "Alla betalningar på den här webbplatsen hanteras av Stripe.",
            "säkerhetskod"},
-          {"/fi/toimitusehdot", "/fi/privacy", "Stripe käsittelee kaikki tämän verkkosivuston kautta tehtävät maksut.",
-           "turvakoodia"}
+          {"/fi/toimitusehdot", "/fi/tietosuojaseloste",
+           "Stripe käsittelee kaikki tämän verkkosivuston kautta tehtävät maksut.", "turvakoodia"}
         ] do
       {:ok, view, _html} = live(conn, path)
 

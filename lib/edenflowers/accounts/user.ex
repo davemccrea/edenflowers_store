@@ -51,15 +51,17 @@ defmodule Edenflowers.Accounts.User do
   rate_limit do
     backend Edenflowers.RateLimiter
 
+    # Keyed on the lowercased address: the email is matched case-insensitively,
+    # so "Info@" and "info@" are one account and must share one allowance.
     action :request_otp,
       limit: 5,
       per: :timer.minutes(15),
-      key: fn input -> "otp:request:#{input.arguments[:email]}" end
+      key: fn input -> "otp:request:#{String.downcase(to_string(input.arguments[:email]))}" end
 
     action :sign_in_with_otp,
       limit: 5,
       per: :timer.minutes(10),
-      key: fn input -> "otp:sign_in:#{input.arguments[:email]}" end
+      key: fn input -> "otp:sign_in:#{String.downcase(to_string(input.arguments[:email]))}" end
 
     # Each code goes to an address the customer only claims to own.
     action :request_email_change, limit: 5, per: :timer.minutes(15)

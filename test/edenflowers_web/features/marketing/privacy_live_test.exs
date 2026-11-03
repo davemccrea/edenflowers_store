@@ -101,8 +101,10 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
   end
 
   test "is available in each language route with alternate and signup links", %{conn: conn} do
+    paths = %{"en" => "/en/privacy", "sv" => "/sv/integritetspolicy", "fi" => "/fi/tietosuojaseloste"}
+
     for {language, title} <- [{"en", "Privacy policy"}, {"sv", "Integritetspolicy"}, {"fi", "Tietosuojaseloste"}] do
-      path = "/#{language}/privacy"
+      path = paths[language]
       {:ok, view, _html} = live(conn, path)
 
       refute has_element?(view, "#privacy-draft")
@@ -111,38 +113,38 @@ defmodule EdenflowersWeb.Marketing.PrivacyLiveTest do
       assert has_element?(view, ~s|#newsletter-form a[href="#{path}"]|)
 
       for alternate <- ["en", "sv", "fi"] do
-        assert has_element?(view, ~s|#locale-picker-footer option[value="/#{alternate}/privacy"]|)
+        assert has_element?(view, ~s|#locale-picker-footer option[value="#{paths[alternate]}"]|)
       end
 
       html = conn |> get(path) |> html_response(200)
 
       for alternate <- ["en", "sv", "fi"] do
-        assert html =~ ~s|hreflang="#{alternate}" href="http://localhost:4002/#{alternate}/privacy"|
+        assert html =~ ~s|hreflang="#{alternate}" href="http://localhost:4002#{paths[alternate]}"|
       end
     end
   end
 
   test "interpolates contact instructions into complete translated sentences", %{conn: conn} do
-    for {language, contact} <- [
-          {"sv", "Mejla #{Business.email()} för att:"},
-          {"fi", "Lähetä sähköpostia osoitteeseen #{Business.email()}, jos haluat:"}
+    for {path, contact} <- [
+          {"/sv/integritetspolicy", "Mejla #{Business.email()} för att:"},
+          {"/fi/tietosuojaseloste", "Lähetä sähköpostia osoitteeseen #{Business.email()}, jos haluat:"}
         ] do
-      {:ok, view, _html} = live(conn, "/#{language}/privacy")
+      {:ok, view, _html} = live(conn, path)
 
       assert has_element?(view, "[aria-labelledby=rights]", contact)
     end
   end
 
   test "is indexable and in the sitemap in every language", %{conn: conn} do
-    for language <- ["en", "sv", "fi"] do
-      html = conn |> get("/#{language}/privacy") |> html_response(200)
+    for path <- ["/en/privacy", "/sv/integritetspolicy", "/fi/tietosuojaseloste"] do
+      html = conn |> get(path) |> html_response(200)
       refute html =~ ~s|<meta name="robots" content="noindex"|
     end
 
     xml = conn |> get(~p"/sitemap.xml") |> response(200)
     assert xml =~ "/en/privacy"
-    assert xml =~ "/sv/privacy"
-    assert xml =~ "/fi/privacy"
+    assert xml =~ "/sv/integritetspolicy"
+    assert xml =~ "/fi/tietosuojaseloste"
   end
 
   test "checkout links to the privacy policy alongside the newsletter preference", %{conn: conn} do
