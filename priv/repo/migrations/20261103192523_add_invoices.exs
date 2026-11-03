@@ -13,6 +13,7 @@ defmodule Edenflowers.Repo.Migrations.AddInvoices do
       add :number, :bigint, null: false
       add :credit_date, :date, null: false
       add :reason, :text
+      add :pdf, :binary, null: false
       add :sent_at, :utc_datetime
 
       add :inserted_at, :utc_datetime_usec,
@@ -74,8 +75,9 @@ defmodule Edenflowers.Repo.Migrations.AddInvoices do
     alter table(:invoices) do
       add :number, :bigint
       add :reference_number, :text
-      add :invoice_date, :date, null: false
-      add :due_date, :date, null: false
+      add :payment_term_days, :bigint, null: false
+      add :invoice_date, :date
+      add :due_date, :date
       add :amount, :decimal, default: "0"
       add :locale, :text, null: false, default: "fi"
       add :buyer_name, :text
@@ -93,6 +95,7 @@ defmodule Edenflowers.Repo.Migrations.AddInvoices do
       add :lines, {:array, :map}, null: false, default: []
       add :financial_snapshot, :map
       add :seller_snapshot, :map
+      add :pdf, :binary
       add :sent_at, :utc_datetime
 
       add :inserted_at, :utc_datetime_usec,
@@ -178,6 +181,7 @@ defmodule Edenflowers.Repo.Migrations.AddInvoices do
       remove :updated_at
       remove :inserted_at
       remove :sent_at
+      remove :pdf
       remove :seller_snapshot
       remove :financial_snapshot
       remove :lines
@@ -197,6 +201,7 @@ defmodule Edenflowers.Repo.Migrations.AddInvoices do
       remove :amount
       remove :due_date
       remove :invoice_date
+      remove :payment_term_days
       remove :reference_number
       remove :number
     end

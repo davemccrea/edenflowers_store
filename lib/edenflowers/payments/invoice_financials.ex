@@ -1,11 +1,19 @@
 defmodule Edenflowers.Payments.InvoiceFinancials do
-  @moduledoc "Exact invoice arithmetic. Round each extended gross and VAT-exclusive base to cents, half up; VAT is their difference."
+  @moduledoc """
+  Exact invoice arithmetic, by the same rule as orders and receipts. Each
+  line's gross is rounded to cents, half up. The VAT-exclusive base is taken
+  once per VAT rate, from that rate's total gross (`Vat.net_of_vat/2`), and
+  the VAT is their difference: the per-rate figures the VAT Act asks an
+  invoice to state, without rounding drift from many lines.
+  """
 
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
+  alias Edenflowers.Pricing.Vat
+
   @doc """
   The numeric snapshot frozen on issuance, from complete InvoiceLines: each
-  line's and each VAT rate's gross, base and VAT, and the totals, as
+  line's gross, each VAT rate's gross, base and VAT, and the totals, as
   strings. An error message while a line is missing a field or nothing is
   billed.
   """
@@ -17,11 +25,11 @@ defmodule Edenflowers.Payments.InvoiceFinancials do
 
       breakdown =
         lines
-        |> Enum.group_by(& &1["vat_rate"])
-        |> Enum.map(fn {rate, rows} -> Map.put(totals(rows), "rate", rate) end)
+        |> Enum.group_by(& &1["vat_rate"], &Decimal.new(&1["gross"]))
+        |> Enum.map(fn {rate, grosses} -> rate_row(rate, Enum.reduce(grosses, &Decimal.add/2)) end)
         |> Enum.sort_by(&Decimal.new(&1["rate"]), {:asc, Decimal})
 
-      snapshot = totals(lines) |> Map.merge(%{"lines" => lines, "vat_breakdown" => breakdown})
+      snapshot = breakdown |> totals() |> Map.merge(%{"lines" => lines, "vat_breakdown" => breakdown})
 
       if Decimal.positive?(Decimal.new(snapshot["gross"])),
         do: {:ok, snapshot},
@@ -40,18 +48,18 @@ defmodule Edenflowers.Payments.InvoiceFinancials do
   end
 
   defp line(line) do
-    gross = line.quantity |> Decimal.mult(line.unit_price) |> cents()
-    base = gross |> Decimal.div(Decimal.add(1, Decimal.div(line.vat_rate, 100))) |> cents()
-
     %{
       "description" => String.trim(line.description),
       "quantity" => value(line.quantity),
       "unit_price" => value(line.unit_price),
       "vat_rate" => value(line.vat_rate),
-      "gross" => value(gross),
-      "base" => value(base),
-      "vat" => value(Decimal.sub(gross, base))
+      "gross" => line.quantity |> Decimal.mult(line.unit_price) |> Decimal.round(2, :half_up) |> value()
     }
+  end
+
+  defp rate_row(rate, gross) do
+    base = Vat.net_of_vat(gross, Decimal.div(Decimal.new(rate), 100))
+    %{"rate" => rate, "gross" => value(gross), "base" => value(base), "vat" => value(Decimal.sub(gross, base))}
   end
 
   defp totals(rows) do
@@ -60,6 +68,5 @@ defmodule Edenflowers.Payments.InvoiceFinancials do
     end)
   end
 
-  defp cents(value), do: Decimal.round(value, 2, :half_up)
   defp value(value), do: value |> Decimal.normalize() |> Decimal.to_string(:normal)
 end

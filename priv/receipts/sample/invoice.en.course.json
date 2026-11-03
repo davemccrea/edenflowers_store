@@ -62,18 +62,20 @@
     "invoice-number": "Invoice number",
     "amount": "Amount",
     "unit-price-excl-vat": "Unit price net",
-    "due-on-invoice": "Due on this invoice"
+    "due-on-invoice": "Due on this invoice",
+    "payee": "Payee"
   },
   "lang": "en",
-  "late_interest_rate": "8.00%",
+  "late_interest_rate": "8.0%",
   "line_items": [
     {
       "product_name": "Bespoke floral workshop",
       "quantity": "1",
-      "tax_rate": "25.50%",
+      "tax_rate": "25.5%",
       "total": "170,00 €",
-      "unit_price_ex_tax": "170,00 €",
-      "variant_size": null
+      "unit_price_ex_tax": "135,46 €",
+      "variant_size": null,
+      "unit_price_incl_tax": "170,00 €"
     }
   ],
   "number": 1337,
@@ -84,13 +86,13 @@
     "iban": "FI69 3939 0018 3959 05",
     "name": "Jennie McCrea"
   },
-  "supply_date": null,
+  "supply_date": "2.11.2026",
   "supply_description": null,
   "vat_breakdown": [
     {
       "base": "135,46 €",
       "gross": "170,00 €",
-      "rate": "25.50%",
+      "rate": "25.5%",
       "tax": "34,54 €"
     }
   ],

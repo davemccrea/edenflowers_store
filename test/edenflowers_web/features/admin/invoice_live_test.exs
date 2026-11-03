@@ -14,8 +14,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
       "buyer_address" => "Street 1, Vaasa",
       "business_customer" => "false",
       "locale" => "en-GB",
-      "invoice_date" => Date.to_iso8601(Edenflowers.ShopTime.today()),
-      "due_date" => Date.to_iso8601(Date.add(Edenflowers.ShopTime.today(), 14)),
+      "payment_term_days" => "14",
+      "supply_date" => "2026-11-02",
       "lines" => %{
         "0" => %{
           "description" => "Wedding booking flowers",
@@ -224,11 +224,11 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
 
   test "issuance reveals required buyer and date errors and corrections clear them", %{conn: conn, admin: admin} do
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
-    input = params() |> Map.merge(%{"buyer_name" => "", "buyer_address" => "", "due_date" => "2020-01-01"})
+    input = params() |> Map.merge(%{"buyer_name" => "", "buyer_address" => "", "supply_date" => ""})
     view |> form("#invoice-form", invoice: input) |> render_submit(%{"intent" => "issue"})
     assert has_element?(view, "input[name='invoice[buyer_name]'][aria-invalid=true]")
     assert has_element?(view, "textarea[name='invoice[buyer_address]'][aria-invalid=true]")
-    assert has_element?(view, "input[name='invoice[due_date]'][aria-invalid=true]")
+    assert has_element?(view, "input[name='invoice[supply_date]'][aria-invalid=true]")
     assert {:ok, [%{number: nil}]} = Ash.read(Invoice, actor: admin)
     view |> form("#invoice-form", invoice: params()) |> render_change()
     refute has_element?(view, "[aria-invalid=true]")
@@ -349,8 +349,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
 
   test "email failure is visible and remains retryable on the issued invoice", %{conn: conn, admin: admin} do
     {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
-    original = invoice.content
-    Ash.Seed.update!(invoice, %{content: %{}})
+    original = Ash.load!(invoice, :pdf, authorize?: false).pdf
+    Ash.Seed.update!(invoice, %{pdf: nil})
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
     assert has_element?(view, "button", "Send invoice")
     view |> element("button[phx-click=open_email][phx-value-kind=invoice]") |> render_click()
@@ -362,7 +362,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     persisted = Ash.get!(Invoice, invoice.id, actor: admin)
     assert persisted.issued_at
     assert persisted.sent_at == nil
-    Ash.Seed.update!(persisted, %{content: original})
+    Ash.Seed.update!(persisted, %{pdf: original})
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
     view |> element("button[phx-click=open_email][phx-value-kind=invoice]") |> render_click()
     view |> form("#email-form", email: %{message: "Please check"}) |> render_submit()
@@ -466,7 +466,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, "textarea[name='invoice[buyer_address]']", "Updated address")
     assert has_element?(view, "select[name='invoice[locale]'] option[selected][value=fi]")
     assert has_element?(view, "#line-0-description[value='Wedding booking flowers']")
-    assert has_element?(view, "input[name='invoice[due_date]'][value='#{params()["due_date"]}']")
+    assert has_element?(view, "input[name='invoice[payment_term_days]'][value='14']")
 
     view |> form("#invoice-form", invoice: %{buyer_name: "Manually edited"}) |> render_change()
     assert has_element?(view, "input[name='invoice[buyer_name]'][value='Manually edited']")
@@ -568,12 +568,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
   end
 
   test "overdue reminder and paid states remain distinct", %{conn: conn, admin: admin} do
-    invoice = draft(admin)
-
-    {:ok, invoice} =
-      Payments.update_invoice_draft(invoice, %{invoice_date: ~D[2025-01-01], due_date: ~D[2025-01-15]}, actor: admin)
-
-    {:ok, invoice} = Payments.issue_invoice(invoice, actor: admin)
+    {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
+    invoice = Ash.Seed.update!(invoice, %{invoice_date: ~D[2025-01-01], due_date: ~D[2025-01-15]})
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
     assert has_element?(view, "button", "Send reminder")
 

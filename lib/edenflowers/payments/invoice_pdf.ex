@@ -7,6 +7,7 @@ defmodule Edenflowers.Payments.InvoicePdf do
   alias Edenflowers.Payments.InvoiceLabels
   alias Edenflowers.Payments.ReferenceNumber
   alias Edenflowers.Payments.VirtualBarcode
+  alias Edenflowers.Pricing.Vat
   alias Edenflowers.Typst
 
   def filename(%Invoice{number: number, locale: locale}), do: "#{document_name(:invoice, locale)}-#{number}.pdf"
@@ -24,17 +25,38 @@ defmodule Edenflowers.Payments.InvoicePdf do
   def attachment(pdf, document),
     do: Swoosh.Attachment.new({:data, pdf}, filename: filename(document), content_type: "application/pdf")
 
-  def generate(%Invoice{issued_at: nil}), do: {:error, :draft_invoice}
+  @doc """
+  The PDF as it was issued, from its stored bytes: what the customer was
+  first sent and what the books keep. A draft has none.
+  """
+  def issued(%Invoice{issued_at: nil}), do: {:error, :draft_invoice}
+  def issued(%struct{} = document) when struct in [Invoice, CreditNote], do: stored(document)
 
-  def generate(%Invoice{content: content} = invoice) when is_map(content) do
-    with {:ok, invoice} <- Ash.load(invoice, [:amount_paid, :amount_unpaid], authorize?: false, reuse_values?: false) do
-      Typst.render("invoice-main.typ", "invoice", payload(invoice))
+  @doc """
+  The PDF an email carries. The issued one, unless part of the invoice is
+  paid: then a fresh copy asking only for the rest (`payload/1`).
+  """
+  def for_email(%Invoice{} = invoice) do
+    with {:ok, loaded} <- Ash.load(invoice, [:amount_paid, :amount_unpaid], authorize?: false, reuse_values?: false) do
+      if part_paid(loaded) == %{}, do: issued(invoice), else: render(loaded)
     end
   end
 
-  def generate(%CreditNote{} = note) do
-    with {:ok, note} <- Ash.load(note, :invoice, authorize?: false) do
-      Typst.render("credit-note-main.typ", "credit_note", build_payload(note))
+  def for_email(%CreditNote{} = note), do: issued(note)
+
+  @doc """
+  Renders the PDF afresh: on issuance, to be stored, and for a part-paid
+  resend. An invoice prints its frozen content; a credit note needs its
+  Invoice loaded.
+  """
+  def render(%Invoice{} = invoice), do: Typst.render("invoice-main.typ", "invoice", payload(invoice))
+  def render(%CreditNote{} = note), do: Typst.render("credit-note-main.typ", "credit_note", build_payload(note))
+
+  defp stored(document) do
+    case Ash.load(document, :pdf, authorize?: false) do
+      {:ok, %{pdf: pdf}} when is_binary(pdf) -> {:ok, pdf}
+      {:ok, _no_pdf} -> {:error, :no_stored_pdf}
+      error -> error
     end
   end
 
@@ -122,7 +144,8 @@ defmodule Edenflowers.Payments.InvoicePdf do
         product_name: line["description"],
         variant_size: nil,
         quantity: line["quantity"],
-        unit_price_ex_tax: unit_price(line["unit_price"], locale, negative?),
+        unit_price_ex_tax: unit_price(price_excl_vat(line), locale, negative?),
+        unit_price_incl_tax: unit_price(line["unit_price"], locale, negative?),
         tax_rate: percent(Decimal.div(decimal(line["vat_rate"]), 100), locale),
         total: money(line["gross"], locale, negative?)
       }
@@ -140,6 +163,11 @@ defmodule Edenflowers.Payments.InvoicePdf do
       fractional_digits: digits
     )
   end
+
+  # The VAT-exclusive unit price the VAT Act asks for beside it, in cents by the shop's one rule. The
+  # line's own base is rounded once from its gross, so it may differ by a cent from this times the quantity.
+  defp price_excl_vat(line),
+    do: Vat.net_of_vat(decimal(line["unit_price"]), Decimal.div(decimal(line["vat_rate"]), 100))
 
   defp vat_rows(snapshot, locale, negative? \\ false) do
     Enum.map(snapshot["vat_breakdown"], fn row ->
@@ -172,6 +200,5 @@ defmodule Edenflowers.Payments.InvoicePdf do
   defp money(value, locale, negative?),
     do: Format.currency(if(negative?, do: Decimal.negate(decimal(value)), else: decimal(value)), locale)
 
-  defp percent(value, locale),
-    do: Localize.Number.to_string!(decimal(value), locale: locale, format: :percent, fractional_digits: 2)
+  defp percent(value, locale), do: Format.percentage(decimal(value), locale)
 end

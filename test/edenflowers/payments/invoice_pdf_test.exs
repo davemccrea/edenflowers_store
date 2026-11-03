@@ -70,27 +70,29 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
     assert binary_part(full["virtual_barcode"], 17, 8) == "00050000"
   end
 
-  test "unit prices retain supplied sub-cent precision and include VAT" do
+  test "unit prices print with VAT as typed and without VAT in cents, as on orders" do
     invoice = issued("Small supplies", "0.005")
-    assert [%{"unit_price_ex_tax" => price}] = invoice.content["line_items"]
-    assert price == "0,005 €"
-    assert InvoicePdf.payload(invoice)["labels"]["unit-price-incl-vat"] == "Yksikköhinta sis. alv"
+    assert [%{"unit_price_incl_tax" => incl, "unit_price_ex_tax" => excl}] = invoice.content["line_items"]
+    assert incl == "0,005 €"
+    assert excl == "0,00 €"
+    assert [%{"unit_price_ex_tax" => "239,04 €"}] = issued("Flowers", "300.00").content["line_items"]
+    assert InvoicePdf.payload(invoice)["labels"]["unit-price-incl-vat"] == "Verollinen à-hinta"
   end
 
   test "drafts cannot be rendered as numbered official PDFs" do
-    assert {:error, :draft_invoice} = InvoicePdf.generate(%Invoice{})
+    assert {:error, :draft_invoice} = InvoicePdf.issued(%Invoice{})
   end
 
   @tag :typst
   test "invoice and complete credit PDF render in all three languages" do
     for locale <- ["fi", "sv-FI", "en-GB"] do
       invoice = issued("Bespoke flowers", "300.00", [], locale)
-      assert {:ok, <<"%PDF-", _::binary>>} = InvoicePdf.generate(invoice)
+      assert {:ok, <<"%PDF-", _::binary>>} = InvoicePdf.render(invoice)
       # Render directly because this test has no persisted invoice relationship.
       note = %CreditNote{number: 1338, credit_date: ~D[2026-11-02], invoice: invoice}
 
       assert {:ok, <<"%PDF-", _::binary>>} =
-               Edenflowers.Typst.render("credit-note-main.typ", "credit_note", InvoicePdf.build_payload(note))
+               InvoicePdf.render(note)
     end
   end
 

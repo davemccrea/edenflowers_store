@@ -13,6 +13,7 @@ defmodule Edenflowers.Orders.Receipt do
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.ReceiptLabels
+  alias Edenflowers.Pricing
   alias Edenflowers.Typst
 
   @order_load [
@@ -83,7 +84,7 @@ defmodule Edenflowers.Orders.Receipt do
   def build_payload(%CourseRegistration{} = registration) do
     locale = registration.locale
     course = registration.course
-    base = Vat.net_of_vat(registration.amount, registration.tax_rate)
+    base = Pricing.Vat.net_of_vat(registration.amount, registration.tax_rate)
     amount = Format.currency(registration.amount, locale)
 
     %{
@@ -112,7 +113,7 @@ defmodule Edenflowers.Orders.Receipt do
           quantity: registration.seats,
           unit_price_ex_tax:
             Format.currency(
-              Vat.net_of_vat(Decimal.div(registration.amount, registration.seats), registration.tax_rate),
+              Pricing.Vat.net_of_vat(Decimal.div(registration.amount, registration.seats), registration.tax_rate),
               locale
             ),
           tax_rate: Format.percentage(registration.tax_rate, locale),

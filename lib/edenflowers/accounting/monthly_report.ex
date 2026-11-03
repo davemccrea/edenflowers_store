@@ -25,9 +25,9 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.PapraAPI
   alias Edenflowers.External.StripeAPI
-  alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Payments
   alias Edenflowers.Payments.Payment
+  alias Edenflowers.Pricing.Vat
   alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.Components
   alias EdenflowersWeb.Admin.OrderLog

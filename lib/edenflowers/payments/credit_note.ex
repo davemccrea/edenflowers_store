@@ -116,6 +116,14 @@ defmodule Edenflowers.Payments.CreditNote do
       description "Why Jennie cancelled the Invoice, in its language, printed on the credit note. Optional."
     end
 
+    attribute :pdf, :binary do
+      description "The PDF as made, rendered once when it is created and kept for the books: every download " <>
+                    "and email sends these bytes. Not selected by default; load it."
+
+      allow_nil? false
+      select_by_default? false
+    end
+
     attribute :sent_at, :utc_datetime do
       description "When it was last emailed to the customer. Nil until it has been: Jennie may not email one " <>
                     "for an Invoice that never went out, or its email may have failed."

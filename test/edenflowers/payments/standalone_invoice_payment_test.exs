@@ -14,6 +14,7 @@ defmodule Edenflowers.Payments.StandaloneInvoicePaymentTest do
           buyer_name: "Wedding buyer",
           buyer_email: "buyer@example.com",
           buyer_address: "Street 1",
+          supply_date: ~D[2026-11-02],
           lines: [%{description: "Booking flowers", quantity: "1", unit_price: "100", vat_rate: "25.5"}]
         },
         actor: admin

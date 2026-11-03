@@ -284,7 +284,7 @@ defmodule Edenflowers.Orders.ReceiptTest do
       variant_size: size,
       quantity: quantity,
       unit_price: price,
-      unit_price_ex_tax: Edenflowers.Orders.Calculations.Vat.net_of_vat(price, rate),
+      unit_price_ex_tax: Edenflowers.Pricing.Vat.net_of_vat(price, rate),
       tax_rate: rate,
       subtotal: subtotal,
       discount: discount,

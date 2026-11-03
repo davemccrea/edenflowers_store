@@ -62,8 +62,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       |> AshPhoenix.Form.for_create(
         :create,
         form_opts(socket, %{
-          "invoice_date" => Date.to_iso8601(ShopTime.today()),
-          "due_date" => Date.to_iso8601(Invoice.default_due_date()),
+          "payment_term_days" => to_string(Invoice.default_payment_term_days()),
           "locale" => Locales.default(),
           "business_customer" => "false"
         })
@@ -257,8 +256,28 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
           <aside class="min-w-0 space-y-6">
             <.form_section title={~t"Invoice details"}>
               <div class="grid gap-4 sm:grid-cols-2">
-                <.input field={@form[:invoice_date]} type="date" label={~t"Invoice date"} class="input w-full" required />
-                <.input field={@form[:due_date]} type="date" label={~t"Due date"} class="input w-full" required />
+                <div class="sm:col-span-2">
+                  <.input
+                    field={@form[:payment_term_days]}
+                    type="number"
+                    min="0"
+                    max="365"
+                    label={~t"Payment term (days)"}
+                    class="input w-full"
+                    required
+                  />
+                  <p class="text-base-content/75 mt-1 text-sm">
+                    {issue_dates_hint(@form[:payment_term_days].value, @locale)}
+                  </p>
+                </div>
+                <div class="sm:col-span-2">
+                  <.input
+                    field={@form[:supply_date]}
+                    type="date"
+                    label={~t"Date of supply or advance payment"}
+                    class="input w-full"
+                  />
+                </div>
                 <div class="sm:col-span-2">
                   <.input
                     field={@form[:locale]}
@@ -279,14 +298,9 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 <div class="mt-4 space-y-4">
                   <.input field={@form[:customer_reference]} label={~t"Customer reference (optional)"} class="input w-full" />
                   <.input
-                    field={@form[:supply_date]}
-                    type="date"
-                    label={~t"Supply / advance date (optional)"}
-                    class="input w-full"
-                  />
-                  <.input
                     field={@form[:supply_description]}
-                    label={~t"Supply / advance details (optional)"}
+                    label={~t"Label for the date of supply (optional)"}
+                    placeholder={~t"Wedding date"}
                     class="input w-full"
                   />
                 </div>
@@ -308,9 +322,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 </p>
                 <p :if={@invoice.business_customer} class="mt-2">{@invoice.business_id}</p>
                 <p :if={@invoice.supply_date} class="mt-2">
-                  {~t"Supply / advance date"}: {Format.date(@invoice.supply_date, @locale)}
+                  {@invoice.supply_description || ~t"Date of supply"}: {Format.date(@invoice.supply_date, @locale)}
                 </p>
-                <p :if={@invoice.supply_description} class="mt-2">{@invoice.supply_description}</p>
                 <p :if={@invoice.customer_reference} class="mt-2">
                   {~t"Customer reference"}: {@invoice.customer_reference}
                 </p>
@@ -774,7 +787,19 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   end
 
   defp additional_details?(form),
-    do: Enum.any?([:customer_reference, :supply_date, :supply_description], &(form[&1].value not in [nil, ""]))
+    do: Enum.any?([:customer_reference, :supply_description], &(form[&1].value not in [nil, ""]))
+
+  # Issuing dates it today, so the due date shown is the one it gets if issued now.
+  defp issue_dates_hint(term, locale) do
+    case Integer.parse(to_string(term)) do
+      {days, ""} when days in 0..365 ->
+        due = Date.add(ShopTime.today(), days)
+        ~t"Dated the day it is issued. Issued today, it is due #{date = Format.date(due, locale)}."
+
+      _invalid ->
+        ~t"Dated the day it is issued."
+    end
+  end
 
   defp email_record(nil, _invoice), do: nil
   defp email_record(:invoice, invoice), do: invoice

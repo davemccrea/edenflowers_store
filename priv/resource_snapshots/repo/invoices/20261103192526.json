@@ -45,11 +45,23 @@
       "references": null,
       "scale": null,
       "size": null,
+      "source": "payment_term_days",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
       "source": "invoice_date",
       "type": "date"
     },
     {
-      "allow_nil?": false,
+      "allow_nil?": true,
       "default": "nil",
       "generated?": false,
       "precision": null,
@@ -276,6 +288,18 @@
       "references": null,
       "scale": null,
       "size": null,
+      "source": "pdf",
+      "type": "binary"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
       "source": "sent_at",
       "type": "utc_datetime"
     },
@@ -310,7 +334,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "C734D8455AC9EDB31DFD804B794458C3050C74B81239BE2E2ECFC025DACD84F2",
+  "hash": "E0A87ECB0B286308E86AE9CDEAA9B17F40F4BD1E28B81949C171B7990B6B39C9",
   "identities": [
     {
       "all_tenants?": false,

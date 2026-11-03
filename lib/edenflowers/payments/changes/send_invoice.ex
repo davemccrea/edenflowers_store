@@ -21,7 +21,7 @@ defmodule Edenflowers.Payments.Changes.SendInvoice do
 
       loaded = load_for_email(invoice)
 
-      with {:ok, pdf} <- InvoicePdf.generate(invoice),
+      with {:ok, pdf} <- InvoicePdf.for_email(invoice),
            {:ok, _result} <-
              loaded
              |> Email.invoice(message)

@@ -21,7 +21,31 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "version_action_type",
+      "source": "number",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "credit_date",
+      "type": "date"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reason",
       "type": "text"
     },
     {
@@ -33,8 +57,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "version_action_name",
-      "type": "text"
+      "source": "pdf",
+      "type": "binary"
     },
     {
       "allow_nil?": true,
@@ -45,8 +69,32 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "email_message",
-      "type": "text"
+      "source": "sent_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "inserted_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
     },
     {
       "allow_nil?": false,
@@ -69,53 +117,17 @@
           "global": null,
           "strategy": null
         },
-        "name": "credit_notes_versions_version_source_id_fkey",
-        "on_delete": null,
+        "name": "credit_notes_invoice_id_fkey",
+        "on_delete": "restrict",
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "credit_notes"
+        "table": "invoices"
       },
       "scale": null,
       "size": null,
-      "source": "version_source_id",
+      "source": "invoice_id",
       "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "changes",
-      "type": "map"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "version_inserted_at",
-      "type": "utc_datetime_usec"
-    },
-    {
-      "allow_nil?": false,
-      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "version_updated_at",
-      "type": "utc_datetime_usec"
     }
   ],
   "base_filter": null,
@@ -124,8 +136,37 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "C3A29DA1DF85EA6D7CB21F6841257D615EA23A03095F20B3154BD5CCD0CCEB09",
-  "identities": [],
+  "hash": "0AAB07DB1378801920FE7E43E5142A0872B23C7B69754A6D859497AD4D52FDC1",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "credit_notes_one_per_invoice_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "invoice_id"
+        }
+      ],
+      "name": "one_per_invoice",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "credit_notes_unique_number_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "number"
+        }
+      ],
+      "name": "unique_number",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -133,6 +174,6 @@
   },
   "repo": "Elixir.Edenflowers.Repo",
   "schema": null,
-  "table": "credit_notes_versions",
+  "table": "credit_notes",
   "temporal": null
 }

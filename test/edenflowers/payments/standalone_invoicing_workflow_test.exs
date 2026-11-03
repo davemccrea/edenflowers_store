@@ -43,9 +43,9 @@ defmodule Edenflowers.Payments.StandaloneInvoicingWorkflowTest do
     replacement = issue(admin, "Corrected separate quote", "12", "25.5", ~D[2026-10-02])
     assert credit.number + 1 == replacement.number
     assert Ash.get!(Invoice, mistake.id, load: [:status], actor: admin).status == :cancelled
-    assert {:ok, <<"%PDF-", _::binary>>} = InvoicePdf.generate(advance)
-    assert {:ok, <<"%PDF-", _::binary>>} = InvoicePdf.generate(remainder)
-    assert {:ok, <<"%PDF-", _::binary>>} = InvoicePdf.generate(credit)
+    assert {:ok, <<"%PDF-", _::binary>>} = InvoicePdf.issued(advance)
+    assert {:ok, <<"%PDF-", _::binary>>} = InvoicePdf.issued(remainder)
+    assert {:ok, <<"%PDF-", _::binary>>} = InvoicePdf.issued(credit)
   end
 
   defp issue(admin, description, price, rate, date) do
@@ -57,14 +57,18 @@ defmodule Edenflowers.Payments.StandaloneInvoicingWorkflowTest do
           buyer_address: "Street 1, Vaasa",
           customer_reference: "Wedding 2026",
           locale: "sv-FI",
-          invoice_date: date,
-          due_date: Date.add(date, 14),
+          supply_date: date,
           lines: [%{description: description, quantity: "1", unit_price: price, vat_rate: rate}]
         },
         actor: admin
       )
 
     {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
-    Ash.Seed.update!(invoice, %{issued_at: DateTime.new!(date, ~T[08:00:00])})
+
+    Ash.Seed.update!(invoice, %{
+      issued_at: DateTime.new!(date, ~T[08:00:00]),
+      invoice_date: date,
+      due_date: Date.add(date, 14)
+    })
   end
 end

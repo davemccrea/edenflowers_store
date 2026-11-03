@@ -16,6 +16,7 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
           buyer_name: "Emma Buyer",
           buyer_email: "emma@example.com",
           buyer_address: "Street 1",
+          supply_date: ~D[2026-11-02],
           locale: "en-GB",
           lines: [%{description: "Wedding booking advance", quantity: "1", unit_price: "300", vat_rate: "25.5"}]
         },
@@ -28,7 +29,7 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
   test "draft cannot be sent, downloaded or credited", %{admin: admin, draft: draft} do
     assert {:error, error} = Payments.send_invoice(draft, %{}, actor: admin)
     assert Exception.message(error) =~ "Issue this invoice before sending it."
-    assert {:error, :draft_invoice} = InvoicePdf.generate(draft)
+    assert {:error, :draft_invoice} = InvoicePdf.issued(draft)
     assert {:error, _} = Payments.cancel_invoice(%{invoice_id: draft.id}, actor: admin)
   end
 
@@ -59,29 +60,51 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
   end
 
   @tag :typst
-  test "failed sends preserve issuance and can retry the frozen document as a reminder", %{admin: admin, draft: draft} do
-    {:ok, draft} =
-      Payments.update_invoice_draft(draft, %{invoice_date: ~D[2025-01-01], due_date: ~D[2025-01-15]}, actor: admin)
-
+  test "failed sends preserve issuance and can retry the issued document as a reminder", %{admin: admin, draft: draft} do
     {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
-    original = invoice.content
-    broken = Ash.Seed.update!(invoice, %{content: %{}})
+    invoice = Ash.Seed.update!(invoice, %{invoice_date: ~D[2025-01-01], due_date: ~D[2025-01-15]})
+    original = Ash.load!(invoice, :pdf, authorize?: false).pdf
+    broken = Ash.Seed.update!(invoice, %{pdf: nil})
     assert {:error, _} = Payments.send_invoice(broken, %{}, actor: admin)
     persisted = Ash.get!(Invoice, invoice.id, authorize?: false)
     assert persisted.issued_at == invoice.issued_at
     assert persisted.number == invoice.number
     assert persisted.sent_at == nil
-    restored = Ash.Seed.update!(persisted, %{content: original})
+    restored = Ash.Seed.update!(persisted, %{pdf: original})
     assert {:ok, sent} = Payments.send_invoice(restored, %{message: "Reminder"}, actor: admin)
     assert sent.sent_at
-    assert sent.content == original
 
     Swoosh.TestAssertions.assert_email_sent(fn email ->
       assert email.subject =~ "A reminder about invoice"
       assert email.text_body =~ "friendly reminder"
-      assert [%{filename: filename}] = email.attachments
+      assert [%{filename: filename, data: ^original}] = email.attachments
       assert filename == "invoice-#{invoice.number}.pdf"
     end)
+  end
+
+  @tag :typst
+  test "the issued PDFs are kept, so later changes never alter what the books hold", %{admin: admin, draft: draft} do
+    {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
+    {:ok, issued_pdf} = InvoicePdf.issued(invoice)
+    assert <<"%PDF-", _::binary>> = issued_pdf
+    # Stands in for a template or translation change after issuance.
+    changed = Ash.Seed.update!(invoice, %{content: put_in(invoice.content, ["buyer", "name"], "Someone else")})
+    assert InvoicePdf.issued(changed) == {:ok, issued_pdf}
+    assert InvoicePdf.for_email(changed) == {:ok, issued_pdf}
+
+    {:ok, part_paid} = Payments.record_invoice_payment(invoice, "100", %{}, actor: admin)
+    assert {:ok, reminder_pdf} = InvoicePdf.for_email(part_paid)
+    refute reminder_pdf == issued_pdf
+    assert InvoicePdf.issued(part_paid) == {:ok, issued_pdf}
+  end
+
+  @tag :typst
+  test "a credit note's PDF is kept as made", %{admin: admin, draft: draft} do
+    {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
+    {:ok, credit} = Payments.cancel_invoice(%{invoice_id: invoice.id}, actor: admin)
+    {:ok, pdf} = InvoicePdf.issued(credit)
+    Ash.Seed.update!(invoice, %{content: put_in(invoice.content, ["buyer", "name"], "Someone else")})
+    assert InvoicePdf.issued(Ash.get!(Payments.CreditNote, credit.id, authorize?: false)) == {:ok, pdf}
   end
 
   test "full credit is created without changing immutable invoice financials", %{admin: admin, draft: draft} do

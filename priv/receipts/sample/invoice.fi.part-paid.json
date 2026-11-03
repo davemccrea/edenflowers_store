@@ -11,7 +11,7 @@
   "invoice_date": "2.11.2026",
   "labels": {
     "virtual-barcode": "Virtuaaliviivakoodi",
-    "vat": "Vero",
+    "vat": "ALV",
     "reference": "Viite",
     "card-message": "Korttiviesti",
     "order-date": "Tilauspäivä",
@@ -34,10 +34,10 @@
     "method-klarna": "Klarna",
     "pickup-fee": "Noutomaksu",
     "invoice": "Lasku",
-    "invoice-date": "Laskun päivämäärä",
+    "invoice-date": "Laskupäivä",
     "credit-note-number": "Hyvityslaskun numero",
     "delivery": "Kotiinkuljetus",
-    "unit-price-incl-vat": "Yksikköhinta sis. alv",
+    "unit-price-incl-vat": "Verollinen à-hinta",
     "subtotal": "Välisumma",
     "gross": "Verollinen",
     "quantity": "Määrä",
@@ -64,18 +64,20 @@
     "unit-price-excl-vat": "Veroton à-hinta",
     "due-on-invoice": "Maksettavaa tällä laskulla",
     "paid": "Maksettu",
-    "left-to-pay": "Maksettavaa jäljellä"
+    "left-to-pay": "Maksettavaa jäljellä",
+    "payee": "Saaja"
   },
   "lang": "fi",
-  "late_interest_rate": "8,00 %",
+  "late_interest_rate": "8,0 %",
   "line_items": [
     {
       "product_name": "Häävarauksen ennakkomaksu",
       "quantity": "1",
-      "tax_rate": "25,50 %",
+      "tax_rate": "25,5 %",
       "total": "300,00 €",
-      "unit_price_ex_tax": "300,00 €",
-      "variant_size": null
+      "unit_price_ex_tax": "239,04 €",
+      "variant_size": null,
+      "unit_price_incl_tax": "300,00 €"
     }
   ],
   "number": 1337,
@@ -86,13 +88,13 @@
     "iban": "FI69 3939 0018 3959 05",
     "name": "Jennie McCrea"
   },
-  "supply_date": null,
+  "supply_date": "2.11.2026",
   "supply_description": null,
   "vat_breakdown": [
     {
       "base": "239,04 €",
       "gross": "300,00 €",
-      "rate": "25,50 %",
+      "rate": "25,5 %",
       "tax": "60,96 €"
     }
   ],
