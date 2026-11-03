@@ -41,6 +41,8 @@ images
 .DS_Store
 
 .playwright-mcp
+# Written per worktree with its own port (see .config/wt.toml)
+/.mcp.json
 
 /priv/heroku_import/
 

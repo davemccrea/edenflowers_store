@@ -50,6 +50,15 @@ defmodule EdenflowersWeb.GettextCheckTest do
     assert [%{"kind" => "fuzzy"}] = Check.check(root)
   end
 
+  test "fuzzy English fails in every domain while admin translations can wait", %{root: root} do
+    catalogue(root, "admin", @singular)
+    translate(root, "sv", "admin", "#, fuzzy\n" <> @singular)
+    assert Check.check(root) == []
+
+    translate(root, "en", "admin", "#, fuzzy\n" <> @singular)
+    assert [%{"kind" => "fuzzy", "locale" => "en", "domain" => "admin"}] = Check.check(root)
+  end
+
   test "admin coverage can wait but its placeholders must still be valid", %{root: root} do
     catalogue(root, "admin", @singular)
     translate(root, "fi", "admin", String.replace(@singular, "Hei %{name}", ""))

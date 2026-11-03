@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-    "Bash(just:*)"
+      "Bash(just:*)"
     ]
   },
   "statusLine": {
@@ -19,5 +19,8 @@
         ]
       }
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "tidewave"
+  ]
 }
