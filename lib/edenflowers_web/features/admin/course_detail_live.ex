@@ -70,6 +70,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               <span aria-hidden="true">·</span>
               <span class="whitespace-nowrap">{~t"#{seats = @course.seats_booked} / #{total = @course.total_places} seats"}</span>
               <.badge :if={@course.draft} tone={:neutral}>{~t"Draft"}</.badge>
+              <.badge :if={!@course.draft} tone={:success}>{~t"Published"}</.badge>
               <.badge :if={@past?} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
             </span>
           </:subtitle>
@@ -95,7 +96,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               <.icon name="hero-envelope" class="h-4 w-4" />
               {~t"Email everyone"}
             </.button>
-            <ShareLinkDrawer.open_button :if={!@past?} id="share-course-link" />
+            <ShareLinkDrawer.open_button :if={!@past? && !@course.draft} id="share-course-link" />
             <.button navigate={~p"/admin/courses/#{@course.id}/edit"} variant="secondary" size="sm">
               <.icon name="hero-pencil-square" class="h-4 w-4" />
               {~t"Edit course"}
@@ -246,7 +247,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         preview={@preview}
       />
       <.live_component
-        :if={!@past?}
+        :if={!@past? && !@course.draft}
         module={ShareLinkDrawer}
         id="share-course-link"
         path={~p"/courses/#{@course}"}

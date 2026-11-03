@@ -63,6 +63,13 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           theme={EdenflowersWeb.Admin.CinderTheme}
           click={fn course -> JS.navigate(~p"/admin/courses/#{course.id}") end}
         >
+          <:filter
+            field="period"
+            type={:select}
+            label={~t"Show"}
+            prompt={~t"All courses"}
+            options={[{~t"Still to do", :current}, {dpgettext("admin", "course", "Done"), :past}]}
+          />
           <:col :let={course} field="name" label={~t"Name"}>
             <.link
               navigate={~p"/admin/courses/#{course.id}"}
@@ -84,17 +91,19 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
           </:col>
           <:col
             :let={course}
-            field="period"
+            field="draft"
+            sort
             filter={[
               type: :select,
-              label: ~t"Show",
-              prompt: ~t"All courses",
-              options: [{~t"Still to do", :current}, {dpgettext("admin", "course", "Done"), :past}]
+              label: ~t"Status",
+              prompt: ~t"All",
+              options: [{~t"Draft", true}, {~t"Published", false}]
             ]}
             label={~t"Status"}
           >
             <span class="flex flex-wrap gap-1">
               <.badge :if={course.draft} tone={:neutral}>{~t"Draft"}</.badge>
+              <.badge :if={!course.draft} tone={:success}>{~t"Published"}</.badge>
               <.badge :if={Date.before?(course.date, @today)} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
               <.badge :if={course.to_settle?} tone={:warning}>{~t"To settle"}</.badge>
             </span>
