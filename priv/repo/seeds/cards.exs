@@ -57,7 +57,7 @@ cards = [
 # The other designs go by their English names in every language.
 translated_names = %{"Condolence" => %{sv: "Kondoleans", fi: "Surunvalittelu"}}
 
-dimensions = %{"Winter butterfly" => "7,5 × 7,5"}
+dimensions = %{"Winter butterfly" => "7,5 x 7,5"}
 
 category = ProductCategory |> Ash.Query.filter(slug == "cards") |> Ash.read_one!(authorize?: false)
 tax_rate = TaxRate |> Ash.Query.filter(name == "Standard 25.5%") |> Ash.read_one!(authorize?: false)
