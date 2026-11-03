@@ -105,6 +105,19 @@ msgstr ""
 msgid "must be greater than or equal to %{number}"
 msgstr ""
 
+## From Ash numeric type constraints
+msgid "must be less than %{less_than}"
+msgstr ""
+
+msgid "must be greater than %{greater_than}"
+msgstr ""
+
+msgid "must be less than or equal to %{max}"
+msgstr ""
+
+msgid "must be greater than or equal to %{min}"
+msgstr ""
+
 msgid "must be equal to %{number}"
 msgstr ""
 

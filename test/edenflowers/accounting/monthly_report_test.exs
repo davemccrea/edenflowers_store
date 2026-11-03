@@ -365,6 +365,8 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       cancelled_later = invoice(admin, "50.00", ~D[2026-09-06])
       cancel(admin, cancelled_later, ~D[2026-10-01])
       _issued_later = invoice(admin, "50.00", ~D[2026-10-01])
+      backdated = invoice(admin, "50.00", ~D[2026-09-29])
+      Ash.Seed.update!(backdated, %{issued_at: @next_month})
       {:ok, _draft} = Payments.create_invoice(%{invoice_date: ~D[2026-09-01]}, actor: admin)
       undone = invoice(admin, "50.00", ~D[2026-09-07])
       pay(undone, "50.00", ~U[2026-09-08 08:00:00Z])
@@ -434,7 +436,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
     {:ok, draft} = Payments.create_invoice(attrs, actor: admin)
     {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
-    invoice
+    Ash.Seed.update!(invoice, %{issued_at: DateTime.new!(invoice_date, ~T[08:00:00])})
   end
 
   defp pay(invoice, amount, paid_at) do

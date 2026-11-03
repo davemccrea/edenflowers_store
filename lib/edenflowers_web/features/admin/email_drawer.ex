@@ -37,6 +37,7 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
     socket
     |> assign(assigns)
     |> assign(email_form: nil, email_kind: nil, preview: nil)
+    |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-hide"})
   end
 
   @doc "Rebuilds the preview from the drawer's form as Jennie types."

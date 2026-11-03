@@ -61,8 +61,22 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
          do: [[field: :due_date, message: "cannot be before the invoice date"]],
          else: []
 
-    Enum.map(buyer_errors ++ date_errors, &Ash.Error.Changes.InvalidAttribute.exception/1)
+    Enum.map(buyer_errors ++ date_errors ++ line_errors(invoice.lines), &Ash.Error.Changes.InvalidAttribute.exception/1)
   end
+
+  # A draft's line may be unfinished; an issued one prints every field.
+  defp line_errors(lines) do
+    lines
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {line, index} ->
+      for field <- [:description, :quantity, :unit_price, :vat_rate],
+          blank?(Map.get(line, field)),
+          do: [field: field, path: [:lines, index], message: "can't be blank"]
+    end)
+  end
+
+  defp blank?(value) when is_binary(value), do: String.trim(value) == ""
+  defp blank?(value), do: is_nil(value)
 
   defp validate_fields(invoice) do
     case field_errors(invoice) do

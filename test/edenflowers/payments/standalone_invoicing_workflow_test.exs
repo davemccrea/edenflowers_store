@@ -65,6 +65,6 @@ defmodule Edenflowers.Payments.StandaloneInvoicingWorkflowTest do
       )
 
     {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
-    invoice
+    Ash.Seed.update!(invoice, %{issued_at: DateTime.new!(date, ~T[08:00:00])})
   end
 end

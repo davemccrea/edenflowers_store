@@ -26,7 +26,8 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
   end
 
   test "draft cannot be sent, downloaded or credited", %{admin: admin, draft: draft} do
-    assert {:error, _} = Payments.send_invoice(draft, %{}, actor: admin)
+    assert {:error, error} = Payments.send_invoice(draft, %{}, actor: admin)
+    assert Exception.message(error) =~ "Issue this invoice before sending it."
     assert {:error, :draft_invoice} = InvoicePdf.generate(draft)
     assert {:error, _} = Payments.cancel_invoice(%{invoice_id: draft.id}, actor: admin)
   end

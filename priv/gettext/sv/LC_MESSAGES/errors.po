@@ -98,6 +98,19 @@ msgstr "måste vara mindre än eller lika med %{number}"
 msgid "must be greater than or equal to %{number}"
 msgstr "måste vara större än eller lika med %{number}"
 
+## From Ash numeric type constraints
+msgid "must be less than %{less_than}"
+msgstr "måste vara mindre än %{less_than}"
+
+msgid "must be greater than %{greater_than}"
+msgstr "måste vara större än %{greater_than}"
+
+msgid "must be less than or equal to %{max}"
+msgstr "måste vara mindre än eller lika med %{max}"
+
+msgid "must be greater than or equal to %{min}"
+msgstr "måste vara större än eller lika med %{min}"
+
 msgid "must be equal to %{number}"
 msgstr "måste vara lika med %{number}"
 

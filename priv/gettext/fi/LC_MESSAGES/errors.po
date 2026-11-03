@@ -98,6 +98,19 @@ msgstr "on oltava pienempi tai yhtä suuri kuin %{number}"
 msgid "must be greater than or equal to %{number}"
 msgstr "on oltava suurempi tai yhtä suuri kuin %{number}"
 
+## From Ash numeric type constraints
+msgid "must be less than %{less_than}"
+msgstr "on oltava pienempi kuin %{less_than}"
+
+msgid "must be greater than %{greater_than}"
+msgstr "on oltava suurempi kuin %{greater_than}"
+
+msgid "must be less than or equal to %{max}"
+msgstr "on oltava pienempi tai yhtä suuri kuin %{max}"
+
+msgid "must be greater than or equal to %{min}"
+msgstr "on oltava suurempi tai yhtä suuri kuin %{min}"
+
 msgid "must be equal to %{number}"
 msgstr "on oltava yhtä suuri kuin %{number}"
 

@@ -54,6 +54,103 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert Decimal.equal?(issued.amount, "15.02")
   end
 
+  test "saved drafts and issued invoices show lifecycle history", %{conn: conn, admin: admin} do
+    invoice = draft(admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    assert has_element?(view, "#invoice-log", "Draft created")
+    refute has_element?(view, "#invoice-log", "Invoice issued")
+    {:ok, _} = Payments.issue_invoice(invoice, actor: admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    assert has_element?(view, "#invoice-log", "Invoice issued")
+    assert has_element?(view, "#invoice-log time[datetime]")
+  end
+
+  test "history preserves every invoice email, reminder and message", %{conn: conn, admin: admin} do
+    {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
+    {:ok, _} = Payments.send_invoice(invoice, %{message: "First email"}, actor: admin)
+    {:ok, _} = Payments.send_invoice(invoice, %{message: "A second copy"}, actor: admin)
+    # Moving the business date makes the next send a reminder without changing earlier send metadata.
+    invoice = Ash.Seed.update!(invoice, %{invoice_date: ~D[2025-01-01], due_date: ~D[2025-01-15]})
+    {:ok, _} = Payments.send_invoice(invoice, %{message: "Reminder message"}, actor: admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    assert has_element?(view, "#invoice-log", "First email")
+    assert has_element?(view, "#invoice-log", "A second copy")
+    assert has_element?(view, "#invoice-log", "Reminder message")
+    assert has_element?(view, "#invoice-log", "Payment reminder emailed")
+    assert has_element?(view, "#invoice-log details summary")
+    assert has_element?(view, "#invoice-log", "buyer@example.com")
+    assert length(Ash.load!(invoice, :paper_trail_versions, actor: admin).paper_trail_versions) == 3
+  end
+
+  test "payment, reversal and credit events refresh the same history", %{conn: conn, admin: admin} do
+    {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    view |> form("#invoice-payment-form", payment: %{amount: "5", paid_on: "2026-11-02"}) |> render_submit()
+    assert has_element?(view, "#invoice-log", "Paid")
+    assert has_element?(view, "#invoice-log", "Bank transfer")
+    view |> element("button", "Reverse payment") |> render_click()
+    assert has_element?(view, "#invoice-log", "Undid")
+    view |> form("#invoice-credit-form", credit: %{reason: "Replace incorrect details"}) |> render_submit()
+    note = Ash.load!(invoice, :credit_note, actor: admin).credit_note
+    assert has_element?(view, "#invoice-log", "Credit note #{note.number} issued")
+    assert has_element?(view, "#invoice-log", "Replace incorrect details")
+
+    for message <- ["First credit email", "Second credit email"] do
+      view |> element("button[phx-click=open_email][phx-value-kind=credit_note]") |> render_click()
+      view |> form("#email-form", email: %{message: message}) |> render_submit()
+    end
+
+    assert has_element?(view, "#invoice-log", "First credit email")
+    assert has_element?(view, "#invoice-log", "Second credit email")
+    assert length(Ash.load!(note, :paper_trail_versions, actor: admin).paper_trail_versions) == 2
+  end
+
+  test "optional invoice details reopen on an existing draft and business addresses stay distinct", %{
+    conn: conn,
+    admin: admin
+  } do
+    {:ok, invoice} =
+      Payments.update_invoice_draft(
+        draft(admin),
+        %{customer_reference: "Wedding PO", supply_date: ~D[2026-12-01], supply_description: "Flowers supplied"},
+        actor: admin
+      )
+
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    assert has_element?(view, "#invoice-additional-details[open]")
+    assert has_element?(view, "input[name='invoice[customer_reference]'][value='Wedding PO']")
+    view |> form("#invoice-form", invoice: %{business_customer: "true"}) |> render_change()
+    refute has_element?(view, "textarea[name='invoice[buyer_address]']")
+    assert has_element?(view, "input[type=hidden][name='invoice[buyer_address]'][value='Street 1, Vaasa']")
+    assert has_element?(view, "textarea[name='invoice[billing_address]']")
+    view |> form("#invoice-form", invoice: %{business_customer: "false"}) |> render_change()
+    assert has_element?(view, "textarea[name='invoice[buyer_address]']", "Street 1, Vaasa")
+  end
+
+  test "part payment is deducted from the original total and leaves a clear balance", %{conn: conn, admin: admin} do
+    {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
+    {:ok, _} = Payments.record_invoice_payment(invoice, "5", %{}, actor: admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    assert has_element?(view, "#invoice-totals", "15,02")
+    assert has_element?(view, "#invoice-totals", "−5,00")
+    assert has_element?(view, "#invoice-totals", "10,02")
+    assert has_element?(view, "#invoice-totals a[href='#invoice-payment-form']", "Record payment")
+    refute has_element?(view, "#invoice-corrections")
+  end
+
+  test "full credit is an intentional disclosure while ordinary invoice actions stay available", %{
+    conn: conn,
+    admin: admin
+  } do
+    {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    assert has_element?(view, "#invoice-corrections summary", "Correct this invoice")
+    refute has_element?(view, "#invoice-corrections[open]")
+    assert has_element?(view, "button[phx-click=open_email][phx-value-kind=invoice]", "Send invoice")
+    assert has_element?(view, "#invoice-payment-form")
+    assert has_element?(view, "#invoice-credit-form button[data-confirm]")
+  end
+
   test "invalid line inputs block issuance and show a useful error", %{conn: conn, admin: admin} do
     invoice = draft(admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
@@ -61,7 +158,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     view |> form("#invoice-form", invoice: invalid) |> render_change()
     view |> form("#invoice-form") |> render_submit(%{"intent" => "issue"})
     assert has_element?(view, "#line-0-quantity[aria-invalid=true]")
-    assert has_element?(view, "#line-0-quantity-error")
+    assert has_element?(view, "#line-0-quantity-error", "must be greater than 0")
     assert Ash.get!(Invoice, invoice.id, actor: admin).number == nil
   end
 
@@ -102,7 +199,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
   test "validation stays quiet until a field is used and updates as it is corrected", %{conn: conn} do
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
     refute has_element?(view, "[aria-invalid=true]")
-    refute has_element?(view, "#invoice-totals [role=status]")
+    assert has_element?(view, "#invoice-totals [role=status]", "Complete the items to see the total.")
 
     input =
       params()
@@ -239,7 +336,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
 
   test "failed new issuance keeps one draft for correction", %{conn: conn, admin: admin} do
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
-    invalid = put_in(params(), ["lines", "0", "quantity"], "0")
+    invalid = put_in(params(), ["lines", "0", "quantity"], "")
 
     for _ <- 1..2 do
       view |> form("#invoice-form", invoice: invalid) |> render_submit(%{"intent" => "issue"})
@@ -261,6 +358,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert render(view) =~ "It remains issued"
     assert has_element?(view, "#email-form")
     assert has_element?(view, "#email-form textarea", "Please check")
+    refute has_element?(view, "#invoice-log", "Invoice emailed")
     persisted = Ash.get!(Invoice, invoice.id, actor: admin)
     assert persisted.issued_at
     assert persisted.sent_at == nil
@@ -308,6 +406,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert_no_email_sent()
     view |> form("#email-form") |> render_submit()
     assert render(view) =~ "Credit note emailed."
+    assert_push_event(view, "js-exec", %{to: "#email-drawer", attr: "phx-hide"})
     refute has_element?(view, "#email-form")
     assert Payments.get_credit_note!(note.id, actor: admin).sent_at
     assert_email_sent(fn email -> assert email.text_body =~ "Your replacement will follow." end)
