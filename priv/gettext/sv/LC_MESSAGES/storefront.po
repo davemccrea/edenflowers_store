@@ -1110,7 +1110,7 @@ msgstr "Brudnäbbsbukett eller kastbukett"
 #: lib/edenflowers_web/features/marketing/home_live.ex:745
 #, elixir-autogen, elixir-format
 msgid "Flower subscription"
-msgstr "Blomsterprenumeration"
+msgstr "Bukettprenumeration"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:172
 #, elixir-autogen, elixir-format
@@ -1135,7 +1135,7 @@ msgstr "Blommor för"
 #: lib/edenflowers_web/features/marketing/home_live.ex:199
 #, elixir-autogen, elixir-format
 msgid "Flowers for every stage of life"
-msgstr "Blommor för alla livets skeden"
+msgstr "Blommor för livets alla skeden"
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:66
 #, elixir-autogen, elixir-format
@@ -3730,7 +3730,7 @@ msgstr "t.ex. Portkod 1234, lämna vid ytterdörren"
 #: lib/edenflowers_web/features/marketing/home_live.ex:207
 #, elixir-autogen, elixir-format
 msgid "every stage of life"
-msgstr "alla livets skeden"
+msgstr "livets alla skeden"
 
 #: lib/edenflowers_web/features/marketing/faq_live.ex:203
 #, elixir-autogen, elixir-format
@@ -3971,12 +3971,12 @@ msgstr "en mysig helg"
 #: lib/edenflowers_web/features/marketing/home_live.ex:216
 #, elixir-autogen, elixir-format
 msgid "Bouquets made fresh on delivery day, from %{price}."
-msgstr "Färska buketter gjorda på leveransdagen, från %{price}."
+msgstr "Buketter gjorda av färska snittblommor, från %{price}."
 
 #: lib/edenflowers_web/features/marketing/home_live.ex:218
 #, elixir-autogen, elixir-format
 msgid "Bouquets made fresh on delivery day."
-msgstr "Färska buketter gjorda på leveransdagen."
+msgstr "Buketter gjorda av färska snittblommor."
 
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:120
 #, elixir-autogen, elixir-format
