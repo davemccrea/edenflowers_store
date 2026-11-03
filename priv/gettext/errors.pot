@@ -142,3 +142,6 @@ msgstr ""
 
 msgid "Add at least one item"
 msgstr ""
+
+msgid "Must be a website address starting with http:// or https://"
+msgstr ""

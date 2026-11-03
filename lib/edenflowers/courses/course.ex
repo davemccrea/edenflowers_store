@@ -39,6 +39,8 @@ defmodule Edenflowers.Courses.Course do
       :location_name,
       :location_address,
       :image_slug,
+      :photo_credit_name,
+      :photo_credit_url,
       :date,
       :start_time,
       :end_time,
@@ -126,6 +128,14 @@ defmodule Edenflowers.Courses.Course do
     end
   end
 
+  validations do
+    validate match(:photo_credit_url, ~r{\Ahttps?://[^\s/?#]+(?:[/?#][^\s]*)?\z}i),
+      where: present(:photo_credit_url),
+      message: "Must be a website address starting with http:// or https://"
+
+    validate present(:photo_credit_name), where: present(:photo_credit_url)
+  end
+
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
@@ -148,6 +158,15 @@ defmodule Edenflowers.Courses.Course do
     attribute :location_name, :string, allow_nil?: false
     attribute :location_address, :string, allow_nil?: false
     attribute :image_slug, :string, allow_nil?: false
+
+    attribute :photo_credit_name, :string do
+      description "Optional photographer credit shown with the course photo."
+    end
+
+    attribute :photo_credit_url, :string do
+      description "Optional photographer website linked from the photo credit."
+    end
+
     attribute :date, :date, allow_nil?: false
     attribute :start_time, :time, allow_nil?: false
     attribute :end_time, :time, allow_nil?: false

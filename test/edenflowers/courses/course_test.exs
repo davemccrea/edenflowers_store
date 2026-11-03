@@ -3,6 +3,17 @@ defmodule Edenflowers.Courses.CourseTest do
 
   import Generator
 
+  test "a photographer website needs a name and an HTTP or HTTPS address" do
+    course = generate(course())
+
+    for url <- ["example.com", "javascript:alert(1)", "//example.com", "https://", "https://example.com/a b"] do
+      assert {:error, _} =
+               Ash.update(course, %{photo_credit_name: "Anna", photo_credit_url: url}, authorize?: false)
+    end
+
+    assert {:error, _} = Ash.update(course, %{photo_credit_url: "https://example.com"}, authorize?: false)
+  end
+
   for {season, date, utc_end} <- [
         {:winter, ~D[2026-01-15], ~U[2026-01-15 11:00:00Z]},
         {:summer, ~D[2026-07-15], ~U[2026-07-15 10:00:00Z]},
