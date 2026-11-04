@@ -6,6 +6,8 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
   use Cinder.UrlSync
 
+  require Logger
+
   import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Bank
@@ -14,8 +16,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   alias Edenflowers.Format
   alias EdenflowersWeb.Admin.BankController
   alias EdenflowersWeb.Layouts
-
-  require Logger
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
