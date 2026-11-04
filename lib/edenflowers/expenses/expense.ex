@@ -58,8 +58,9 @@ defmodule Edenflowers.Expenses.Expense do
 
   The extracted fields can be corrected in admin. An empty `paid_on` means it
   is still unpaid, so it stays out of the monthly report until Jennie marks it
-  paid. Claude fills `paid_on` when the document shows it was already paid,
-  such as a till receipt. Papra is the only place to delete one: trashing the
+  paid. A future `paid_on` means she has scheduled the payment in her bank; it
+  counts as paid from that day. Claude fills `paid_on` when the document shows
+  it was already paid, such as a till receipt. Papra is the only place to delete one: trashing the
   document deletes its expense. To import it again, upload the PDF again.
   """
 
@@ -146,7 +147,7 @@ defmodule Edenflowers.Expenses.Expense do
     end
 
     update :correct do
-      description "Jennie checks Claude's extraction, corrects what it got wrong, and can mark it paid today."
+      description "Jennie checks Claude's extraction, corrects what it got wrong, and can mark it paid today or scheduled in her bank for its due date."
 
       accept [
         :vendor_name,
@@ -163,12 +164,26 @@ defmodule Edenflowers.Expenses.Expense do
 
       argument :paid_today, :boolean, default: false
 
+      argument :scheduled_for_due_date, :boolean do
+        default false
+
+        description "Jennie has set the invoice up in her bank to be paid on its due date, so that becomes its paid date."
+      end
+
       require_atomic? false
       change set_attribute(:reviewed_at, &DateTime.utc_now/0)
 
       change fn changeset, _context ->
         if Ash.Changeset.get_argument(changeset, :paid_today) do
           Ash.Changeset.force_change_attribute(changeset, :paid_on, Edenflowers.ShopTime.today())
+        else
+          changeset
+        end
+      end
+
+      change fn changeset, _context ->
+        if Ash.Changeset.get_argument(changeset, :scheduled_for_due_date) do
+          Ash.Changeset.force_change_attribute(changeset, :paid_on, Ash.Changeset.get_attribute(changeset, :due_on))
         else
           changeset
         end
@@ -218,6 +233,10 @@ defmodule Edenflowers.Expenses.Expense do
     validate present(:vendor_name), where: action_is(:correct)
     validate present(:total_amount), where: action_is(:correct)
     validate present(:currency), where: action_is(:correct)
+
+    validate present(:due_on),
+      where: [action_is(:correct), argument_equals(:scheduled_for_due_date, true)],
+      message: "is needed to schedule the payment"
   end
 
   attributes do
@@ -229,7 +248,7 @@ defmodule Edenflowers.Expenses.Expense do
     attribute :date, :date
 
     attribute :paid_on, :date do
-      description "Empty while unpaid. Claude sets it from a document that shows it was already paid."
+      description "The day the money leaves: empty while unpaid, in the future once Jennie has scheduled the payment in her bank. Claude sets it from a document that shows it was already paid."
     end
 
     attribute :due_on, :date do
@@ -257,7 +276,13 @@ defmodule Edenflowers.Expenses.Expense do
   end
 
   calculations do
-    calculate :paid, :boolean, expr(not is_nil(paid_on))
+    calculate :paid, :boolean, expr(not is_nil(paid_on)) do
+      description "Paid or scheduled: Jennie has nothing left to do about the payment."
+    end
+
+    calculate :scheduled, :boolean, expr(paid_on > helsinki_today()) do
+      description "Scheduled in Jennie's bank for a future day; it counts as paid from then."
+    end
 
     calculate :overdue, :boolean, expr(is_nil(paid_on) and due_on < helsinki_today())
 

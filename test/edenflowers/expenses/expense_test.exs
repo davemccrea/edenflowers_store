@@ -91,6 +91,26 @@ defmodule Edenflowers.Expenses.ExpenseTest do
       refute overdue?(paid)
     end
 
+    test "a payment scheduled for the due date isn't overdue and counts as paid from that day" do
+      today = Edenflowers.ShopTime.today()
+      attrs = %{@valid_attrs | document_id: "doc_scheduled"}
+
+      {:ok, invoice} = Expenses.ingest_expense(Map.put(attrs, :due_on, Date.add(today, 10)), actor: system_actor())
+      {:ok, scheduled} = Expenses.correct_expense(invoice, %{scheduled_for_due_date: true}, actor: admin_actor())
+
+      assert scheduled.paid_on == Date.add(today, 10)
+      assert Ash.load!(scheduled, :scheduled, authorize?: false).scheduled
+
+      {:ok, past} = Expenses.correct_expense(scheduled, %{paid_on: Date.add(today, -1)}, actor: admin_actor())
+      refute Ash.load!(past, :scheduled, authorize?: false).scheduled
+    end
+
+    test "can't schedule a payment without a due date" do
+      {:ok, invoice} = Expenses.ingest_expense(%{@valid_attrs | document_id: "doc_no_due"}, actor: system_actor())
+
+      assert {:error, _} = Expenses.correct_expense(invoice, %{scheduled_for_due_date: true}, actor: admin_actor())
+    end
+
     test "marks an incomplete draft unpaid" do
       attrs = Map.drop(%{@valid_attrs | document_id: "doc_draft"}, [:date, :total_amount])
       {:ok, draft} = Expenses.ingest_expense(Map.put(attrs, :paid_on, "2026-05-15"), actor: system_actor())

@@ -284,10 +284,10 @@ defmodule EdenflowersWeb.Admin.Components do
     """
   end
 
-  attr :expense, :map, required: true, doc: "an expense with `overdue` loaded"
+  attr :expense, :map, required: true, doc: "an expense with `overdue` and `scheduled` loaded"
   attr :locale, :any, required: true
 
-  @doc "When an expense was paid, or an Unpaid or Overdue pill with its due date."
+  @doc "When an expense was paid, a Scheduled pill with its payment date, or an Unpaid or Overdue pill with its due date."
   def expense_payment_status(%{expense: %{paid_on: nil}} = assigns) do
     ~H"""
     <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -295,6 +295,17 @@ defmodule EdenflowersWeb.Admin.Components do
       <.badge :if={!@expense.overdue} tone={:warning}>{~t"Unpaid"}</.badge>
       <span :if={@expense.due_on} class="text-base-content/75 whitespace-nowrap text-sm tabular-nums">
         {~t"due #{date = Edenflowers.Format.date(@expense.due_on, @locale)}"}
+      </span>
+    </span>
+    """
+  end
+
+  def expense_payment_status(%{expense: %{scheduled: true}} = assigns) do
+    ~H"""
+    <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+      <.badge tone={:neutral} icon="hero-calendar">{~t"Scheduled"}</.badge>
+      <span class="text-base-content/75 whitespace-nowrap text-sm tabular-nums">
+        {Edenflowers.Format.date(@expense.paid_on, @locale)}
       </span>
     </span>
     """
