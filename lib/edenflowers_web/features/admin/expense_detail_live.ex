@@ -116,7 +116,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   type="text"
                   inputmode="numeric"
                   label={~t"Reference number"}
-                  help={~t"Pay it with this reference and it's marked paid once the bank books the payment."}
                   class="input w-full"
                 />
                 <.input
