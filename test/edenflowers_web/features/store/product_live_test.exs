@@ -138,9 +138,9 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       product = generate(product(subscribable: true, free_delivery: true, draft: false))
 
       variants =
-        for size <- [:small, :medium, :large],
+        for {size, price} <- [small: "40.00", medium: "50.00", large: "60.00"],
             into: %{},
-            do: {size, generate(product_variant(product_id: product.id, size: size))}
+            do: {size, generate(product_variant(product_id: product.id, size: size, price: price))}
 
       %{product: product, variants: variants}
     end
@@ -182,9 +182,10 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
       assert has_element?(view, "[data-testid=variant-option-large][checked]")
       refute has_element?(view, "[data-testid=subscribe-option][checked]")
 
+      # With Large sold out, two sizes are left, and the default of two is the first.
       Ash.Seed.update!(variants.large, %{stock_quantity: 0})
       {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}?size=large")
-      assert has_element?(view, "[data-testid=variant-option-medium][checked]")
+      assert has_element?(view, "[data-testid=variant-option-small][checked]")
     end
   end
 
