@@ -19,6 +19,7 @@ defmodule Edenflowers.Bank do
       define :current_bank_connection, action: :current, not_found_error?: false
       define :bank_authorization_url, action: :authorization_url, args: [:state, :redirect_url]
       define :connect_bank, action: :connect, args: [:code]
+      define :sync_bank_payments, action: :sync_payments
     end
   end
 end

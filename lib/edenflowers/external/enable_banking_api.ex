@@ -48,6 +48,41 @@ defmodule Edenflowers.External.EnableBankingAPI do
     end
   end
 
+  @doc """
+  The account's booked transactions from `date_from` on, every page of them,
+  each as `%{id, direction, amount, currency, booked_on, reference_number}`.
+  `direction` is `:out` for a payment from the account, `:in` for one to it.
+  """
+  def booked_transactions(account_id, date_from) do
+    fetch_transactions(account_id, [date_from: Date.to_iso8601(date_from), transaction_status: "BOOK"], [])
+  end
+
+  defp fetch_transactions(account_id, params, acc) do
+    with {:ok, %{"transactions" => transactions} = page} <-
+           request(:get, "/accounts/#{account_id}/transactions", params: params) do
+      acc = acc ++ Enum.map(transactions, &transaction/1)
+
+      case page["continuation_key"] do
+        key when is_binary(key) and key != "" ->
+          fetch_transactions(account_id, Keyword.put(params, :continuation_key, key), acc)
+
+        _last_page ->
+          {:ok, acc}
+      end
+    end
+  end
+
+  defp transaction(transaction) do
+    %{
+      id: transaction["entry_reference"] || transaction["transaction_id"],
+      direction: if(transaction["credit_debit_indicator"] == "CRDT", do: :in, else: :out),
+      amount: Decimal.new(transaction["transaction_amount"]["amount"]),
+      currency: String.downcase(transaction["transaction_amount"]["currency"]),
+      booked_on: Date.from_iso8601!(transaction["booking_date"]),
+      reference_number: transaction["reference_number"]
+    }
+  end
+
   defp maximum_consent_seconds do
     with {:ok, %{"aspsps" => aspsps}} <- request(:get, "/aspsps", params: [country: @aspsp.country]) do
       case Enum.find(aspsps, &(&1["name"] == @aspsp.name)) do

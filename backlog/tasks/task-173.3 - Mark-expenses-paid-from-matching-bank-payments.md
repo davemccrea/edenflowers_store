@@ -1,9 +1,10 @@
 ---
 id: TASK-173.3
 title: Mark expenses paid from matching bank payments
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-04 17:44'
+updated_date: '2026-11-04 18:10'
 labels: []
 dependencies:
   - TASK-173.2
@@ -25,8 +26,14 @@ ordinal: 334000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Claude's extraction fills reference_number, and Jennie can edit it
-- [ ] #2 A booked payment with matching reference, amount and currency marks the expense paid on its booking date
-- [ ] #3 A payment whose amount differs, or that matches several expenses, leaves them unpaid
-- [ ] #4 The sync does nothing when Enable Banking isn't configured or no bank is connected
+- [x] #1 Claude's extraction fills reference_number, and Jennie can edit it
+- [x] #2 A booked payment with matching reference, amount and currency marks the expense paid on its booking date
+- [x] #3 A payment whose amount differs, or that matches several expenses, leaves them unpaid
+- [x] #4 The sync does nothing when Enable Banking isn't configured or no bank is connected
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Expense.reference_number, stored normalized (Payments.ReferenceNumber.normalize: no spaces, upper case, Finnish leading zeros dropped). Claude extracts it; editable on the expense page. Bank.Connection :sync_payments (AshOban, 0 */6 * * *) runs Bank.Actions.SyncPayments: reads BOOK transactions from the later of the connection date and 14 days ago, and calls Expense :settle_from_bank for each outgoing one with a reference. That settles exactly one unpaid or scheduled expense with the same reference, amount and currency, setting paid_on to the booking date. The not-configured guard is one line and untested; the no-connection and expired cases are tested.
+<!-- SECTION:NOTES:END -->

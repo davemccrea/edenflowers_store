@@ -25,6 +25,21 @@ defmodule Edenflowers.Payments.ReferenceNumber do
     end
   end
 
+  @doc """
+  The form two copies of one reference are compared in: no spaces, upper
+  case, and a Finnish reference without the leading zeros banks pad it with.
+  Nil for a blank one.
+  """
+  def normalize(nil), do: nil
+
+  def normalize(reference) do
+    case reference |> String.replace(~r/\s/, "") |> String.upcase() do
+      "" -> nil
+      "RF" <> _ = international -> international
+      finnish -> String.trim_leading(finnish, "0")
+    end
+  end
+
   @doc "Groups a reference number in fives from the right, as banks print it: 1 23453."
   def format(reference) do
     reference

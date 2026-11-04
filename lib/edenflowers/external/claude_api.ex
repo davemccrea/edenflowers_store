@@ -39,6 +39,11 @@ defmodule Edenflowers.External.ClaudeAPI do
         "Only if the document shows it has already been paid (a till or card receipt, an order confirmation charged to a card, an invoice marked paid): the payment date in ISO 8601 format. Omit for an invoice still to be paid."
     ],
     due_on: [type: :string, doc: "For an invoice still to be paid, its due date in ISO 8601 format, if shown."],
+    reference_number: [
+      type: :string,
+      doc:
+        "For an invoice still to be paid, the payment reference to quote when paying it (viitenumero, referensnummer, or an RF creditor reference), exactly as printed. Not an order, customer or invoice number."
+    ],
     total_amount: [type: :string, doc: "Total amount including VAT as a decimal string, e.g. 121.00."],
     vat_amount: [type: :string, doc: "VAT/tax amount as a decimal string, e.g. 25.50, if shown separately."],
     currency: [type: :string, doc: "ISO 4217 currency code, lowercase (e.g. eur, sek)."],

@@ -427,7 +427,7 @@ msgstr ""
 msgid "Catalogue item"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:138
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:146
 #: lib/edenflowers_web/features/admin/expenses_live.ex:143
 #: lib/edenflowers_web/features/admin/expenses_live.ex:144
 #: lib/edenflowers_web/features/admin/product_form_live.ex:164
@@ -508,7 +508,7 @@ msgstr ""
 msgid "Collect what's owed before refunding."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:171
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:179
 #, elixir-autogen, elixir-format
 msgid "Confidence"
 msgstr ""
@@ -714,7 +714,7 @@ msgstr ""
 msgid "Created by you"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:117
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:125
 #, elixir-autogen, elixir-format
 msgid "Currency"
 msgstr ""
@@ -858,7 +858,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:139
 #: lib/edenflowers_web/features/admin/components/translation_fields.ex:157
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:143
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:151
 #: lib/edenflowers_web/features/admin/invoice_live.ex:281
 #: lib/edenflowers_web/features/admin/invoice_live.ex:298
 #: lib/edenflowers_web/features/admin/invoice_live.ex:411
@@ -1077,7 +1077,7 @@ msgstr ""
 msgid "Expense not found."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:219
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:227
 #, elixir-autogen, elixir-format
 msgid "Expense updated."
 msgstr ""
@@ -1688,7 +1688,7 @@ msgstr ""
 msgid "No"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:163
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:171
 #, elixir-autogen, elixir-format
 msgid "No amount"
 msgstr ""
@@ -1849,7 +1849,7 @@ msgstr ""
 msgid "Open in the admin:"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:183
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:191
 #, elixir-autogen, elixir-format
 msgid "Open receipt in Papra"
 msgstr ""
@@ -2263,7 +2263,7 @@ msgstr ""
 msgid "Prices"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:187
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:195
 #, elixir-autogen, elixir-format
 msgid "Processed"
 msgstr ""
@@ -2341,7 +2341,7 @@ msgstr ""
 msgid "Qty"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:175
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:183
 #, elixir-autogen, elixir-format
 msgid "Receipt"
 msgstr ""
@@ -2564,7 +2564,7 @@ msgstr ""
 msgid "Review"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:190
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:198
 #: lib/edenflowers_web/features/admin/expenses_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "Reviewed"
@@ -2602,7 +2602,7 @@ msgid "Same-day orders arrive straight away."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:79
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:150
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:158
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:269
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:349
 #: lib/edenflowers_web/features/admin/order_form_live.ex:91
@@ -3018,7 +3018,7 @@ msgstr ""
 msgid "The customer wasn't emailed."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:225
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:233
 #, elixir-autogen, elixir-format
 msgid "The expense wasn't saved. Check the fields marked below."
 msgstr ""
@@ -3226,8 +3226,8 @@ msgstr ""
 msgid "Total"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:125
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:156
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:133
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:164
 #, elixir-autogen, elixir-format
 msgid "Total amount"
 msgstr ""
@@ -3402,7 +3402,7 @@ msgstr ""
 msgid "VAT"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:132
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:140
 #, elixir-autogen, elixir-format
 msgid "VAT amount"
 msgstr ""
@@ -3977,12 +3977,12 @@ msgstr ""
 msgid "Mark unpaid"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:235
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:243
 #, elixir-autogen, elixir-format
 msgid "Marked unpaid."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:238
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:246
 #, elixir-autogen, elixir-format
 msgid "The expense wasn't marked unpaid."
 msgstr ""
@@ -4054,7 +4054,7 @@ msgstr ""
 msgid "Paid or scheduled"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:150
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:158
 #, elixir-autogen, elixir-format
 msgid "Confirm details"
 msgstr ""
@@ -4604,6 +4604,7 @@ msgstr ""
 msgid "Price each"
 msgstr ""
 
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:118
 #: lib/edenflowers_web/features/admin/invoice_live.ex:396
 #, elixir-autogen, elixir-format
 msgid "Reference number"
@@ -4702,4 +4703,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/expenses_live.ex:180
 #, elixir-autogen, elixir-format
 msgid "Until %{date}"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:119
+#, elixir-autogen, elixir-format
+msgid "Once the bank pays it with this reference, it's marked paid."
 msgstr ""
