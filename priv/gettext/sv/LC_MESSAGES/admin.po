@@ -4036,11 +4036,6 @@ msgstr "Visas vid kursfotot. Lägg till en webbplats för att länka fotografens
 msgid "Stop orders for this day? Customers can't order for it until you reopen it."
 msgstr "Stoppa beställningar för den här dagen? Kunderna kan inte beställa till den förrän du öppnar den igen."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:110
-#, elixir-autogen, elixir-format
-msgid "Leave empty while it's unpaid. A future date means the payment is scheduled."
-msgstr "Lämna tomt så länge den är obetald. Ett datum framåt i tiden betyder att betalningen är schemalagd."
-
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:70
 #, elixir-autogen, elixir-format
 msgid "Mark payment scheduled"
@@ -4677,11 +4672,6 @@ msgstr ""
 msgid "Until %{date}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:119
-#, elixir-autogen, elixir-format
-msgid "Once the bank pays it with this reference, it's marked paid."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/overview_live.ex:532
 #, elixir-autogen, elixir-format
 msgid "Accounting"
@@ -4731,3 +4721,13 @@ msgstr "Inte vald"
 #, elixir-autogen, elixir-format
 msgid "How to buy"
 msgstr "Köpsätt"
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:110
+#, elixir-autogen, elixir-format
+msgid "Leave empty if unpaid. A future date means it's scheduled."
+msgstr "Lämna tomt om den är obetald. Ett framtida datum betyder att den är schemalagd."
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:119
+#, elixir-autogen, elixir-format
+msgid "Pay it with this reference and it's marked paid once the bank books the payment."
+msgstr "Betala med det här referensnumret så markeras den betald när banken bokför betalningen."
