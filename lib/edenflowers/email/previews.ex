@@ -162,8 +162,8 @@ defmodule Edenflowers.Email.Previews do
              ]
            }, nil, nil},
           {"pickup, bank transfer after pickup", Map.put(pickup(), :payment_terms, :invoice), nil, nil},
-          {"edited after it was handed over, bank transfer",
-           %{fulfillment_status: :fulfilled, payment_terms: :invoice}, nil, nil},
+          {"edited after it was handed over, bank transfer", %{fulfillment_status: :fulfilled, payment_terms: :invoice},
+           nil, nil},
           {"edited after it was handed over, payment still due",
            %{fulfillment_status: :fulfilled, payment_terms: :on_fulfillment}, nil, nil},
           {"bank transfer after pickup", Map.put(pickup(), :payment_terms, :invoice), nil, nil},
