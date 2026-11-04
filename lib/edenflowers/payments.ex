@@ -35,7 +35,7 @@ defmodule Edenflowers.Payments do
       define :get_invoice, action: :read, get_by: [:id]
       define :list_open_invoices, action: :open_at, args: [:date]
 
-      define :invoices_awaiting_bank_payment, action: :awaiting_bank_payment, args: [:reference_number]
+      define :invoices_awaiting_bank_payment, action: :awaiting_bank_payment, args: [:reference_number, :booked_on]
 
       define :settle_invoice_from_bank,
         action: :settle_from_bank,
