@@ -11,6 +11,22 @@ defmodule EdenflowersWeb.Admin.ReportControllerTest do
 
   setup :log_in_admin
 
+  setup do
+    Req.Test.stub(
+      Edenflowers.External.EnableBankingAPI,
+      &Req.Test.json(&1, %{"transactions" => [], "continuation_key" => nil})
+    )
+
+    %{
+      bank_connection:
+        Ash.Seed.seed!(Edenflowers.Bank.Connection, %{
+          session_id: "session-1",
+          account_ids: ["account-1"],
+          valid_until: DateTime.add(DateTime.utc_now(), 90, :day)
+        })
+    }
+  end
+
   test "the Overview report form defaults to the previous month", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin")
 
@@ -61,6 +77,22 @@ defmodule EdenflowersWeb.Admin.ReportControllerTest do
     assert redirected_to(conn) == ~p"/admin"
     assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "couldn't be built"
     assert log =~ ~s(Monthly report for "2026-09" failed:)
+  end
+
+  test "downloads the report without the bank statement when the bank can't be read, and says so on Overview",
+       %{conn: conn, bank_connection: connection} do
+    Ash.Seed.update!(connection, %{valid_until: DateTime.add(DateTime.utc_now(), -1, :day)})
+
+    stub(Edenflowers.External.StripeAPI.Mock, :list_balance_transactions_page, fn _, _ ->
+      {:ok, %{data: [], has_more: false}}
+    end)
+
+    {:ok, overview, _html} = live(conn, ~p"/admin")
+
+    {download, _log} = with_log(fn -> get(conn, ~p"/admin/reports?month=2026-09") end)
+
+    assert get_resp_header(download, "content-disposition") == [~s(attachment; filename="redovisning-2026-09.zip")]
+    assert render(overview) =~ "The 2026-09 report was downloaded without the bank transactions"
   end
 
   test "flashes an error for a malformed month", %{conn: conn} do

@@ -21,6 +21,11 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   only holds during the year: the accounts must be put on an accrual basis at
   year end, which needs December's unpaid purchases (KPL 2:4 §, 4:6 §).
 
+  The bank statement is the month's booked transactions on the shop's account,
+  as a CSV for the accountant's bookkeeping. If the bank can't be read, or isn't
+  connected, the report is built without it and says it's missing, so Jennie
+  can be told.
+
   A receipt Papra can't serve doesn't stop the report: its row says so.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin", context: "accounting report"]
@@ -29,6 +34,7 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   require Logger
 
   alias Edenflowers.Accounting.InvoiceReceiptAllocation
+  alias Edenflowers.Bank
   alias Edenflowers.Expenses
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.PapraAPI
@@ -44,11 +50,18 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   alias Elixlsx.Sheet
   alias Elixlsx.Workbook
 
-  def build(year, month) do
-    Gettext.with_locale(EdenflowersWeb.Gettext, "sv", fn -> build_zip(year, month) end)
+  @doc """
+  Returns `{:ok, filename, zip, missing}`, where `missing` lists what couldn't
+  be included: `[:bank_statement]` or `[]`.
+
+  `psu_headers` are Enable Banking's PSU headers from Jennie's request, so the
+  bank read counts her as present (see `Edenflowers.Bank.Connection`).
+  """
+  def build(year, month, options \\ []) do
+    Gettext.with_locale(EdenflowersWeb.Gettext, "sv", fn -> build_zip(year, month, options) end)
   end
 
-  defp build_zip(year, month) do
+  defp build_zip(year, month, options) do
     first = Date.new!(year, month, 1)
     label = first |> Date.to_iso8601() |> String.slice(0, 7)
     spreadsheet = "rapport-#{label}.xlsx"
@@ -88,10 +101,62 @@ defmodule Edenflowers.Accounting.MonthlyReport do
          {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
          invoice_files =
            for(document <- invoice_documents, do: {~c"kundfakturor/#{InvoicePdf.filename(document)}", document.pdf}),
-         files = [{~c"#{spreadsheet}", xlsx} | receipts ++ invoice_files],
+         {bank_files, missing} = bank_statement(first, last, label, options),
+         files = [{~c"#{spreadsheet}", xlsx} | receipts ++ invoice_files ++ bank_files],
          {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
-      {:ok, "redovisning-#{label}.zip", zip}
+      {:ok, "redovisning-#{label}.zip", zip, missing}
     end
+  end
+
+  # Returns the zip entries and what's missing.
+  defp bank_statement(first, last, label, options) do
+    psu = %{psu_headers: Keyword.get(options, :psu_headers, %{})}
+
+    case Bank.booked_bank_transactions(first, last, psu, authorize?: false) do
+      {:ok, nil} ->
+        {[], []}
+
+      {:ok, transactions} ->
+        {[{~c"kontoutdrag-#{label}.csv", bank_csv(transactions)}], []}
+
+      {:error, error} ->
+        Logger.warning("The bank statement couldn't be read for the monthly report: #{inspect(error)}")
+        {[], [:bank_statement]}
+    end
+  end
+
+  # Semicolons and decimal commas, with a BOM, so Excel in Finland opens it as columns.
+  defp bank_csv(transactions) do
+    headings = [
+      ~t"Booking date",
+      ~t"Amount",
+      ~t"Currency",
+      ~t"Payee or payer",
+      ~t"Reference",
+      ~t"Message",
+      ~t"Archive ID"
+    ]
+
+    rows =
+      Enum.map(transactions, fn transaction ->
+        amount = if transaction.direction == :out, do: Decimal.negate(transaction.amount), else: transaction.amount
+
+        [
+          Date.to_iso8601(transaction.booked_on),
+          amount |> Decimal.to_string(:normal) |> String.replace(".", ","),
+          currency(transaction.currency),
+          transaction.counterparty,
+          transaction.reference_number,
+          transaction.message,
+          transaction.id
+        ]
+      end)
+
+    ["\uFEFF" | Enum.map([headings | rows], &csv_line/1)] |> IO.iodata_to_binary()
+  end
+
+  defp csv_line(fields) do
+    Enum.map_join(fields, ";", fn field -> ~s("#{field |> to_string() |> String.replace(~s("), ~s(""))}") end) <> "\r\n"
   end
 
   defp payments(first, last) do

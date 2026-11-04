@@ -42,6 +42,28 @@ defmodule Edenflowers.Bank.Connection do
       run Edenflowers.Bank.Actions.SyncPayments
     end
 
+    action :booked_transactions, {:array, :map} do
+      description "The booked transactions from `date_from` to `date_to` on every account of the current " <>
+                    "connection, oldest first, each as `%{id, direction, amount, currency, booked_on, " <>
+                    "reference_number, counterparty, message}`. " <>
+                    "Nil without Enable Banking configured, which only production is; " <>
+                    "an error without a current consent. " <>
+                    "Pass Jennie's browser as `psu_headers` when she asked for the read, " <>
+                    "so it doesn't use one of the four reads a day the bank allows without her."
+
+      allow_nil? true
+
+      argument :date_from, :date, allow_nil?: false
+      argument :date_to, :date, allow_nil?: false
+
+      argument :psu_headers, :map do
+        description "Enable Banking's PSU headers from Jennie's request, e.g. `%{\"psu-ip-address\" => ip}`. " <>
+                      "Leave out for a read nobody asked for."
+      end
+
+      run Edenflowers.Bank.Actions.BookedTransactions
+    end
+
     read :current do
       description "The newest connection, expired or not; nil before the bank was ever connected."
       get? true
