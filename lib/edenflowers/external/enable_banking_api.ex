@@ -29,7 +29,8 @@ defmodule Edenflowers.External.EnableBankingAPI do
                aspsp: @aspsp,
                state: state,
                redirect_url: redirect_url,
-               psu_type: "business"
+               # The shop's account is linked in Enable Banking as Jennie's personal one.
+               psu_type: "personal"
              }
            ) do
       {:ok, url}
