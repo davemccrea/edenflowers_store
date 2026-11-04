@@ -623,6 +623,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           aria-describedby={"#{@id}-title"}
           phx-click="toggle-date"
           phx-value-date={Date.to_iso8601(@date)}
+          data-confirm={
+            @booking == :open && ~t"Stop orders for this day? Customers can't order for it until you reopen it."
+          }
         >
           <%= if @booking == :open do %>
             <.icon name="hero-no-symbol" class="h-4 w-4" /> {~t"Stop orders"}

@@ -22,7 +22,7 @@ msgstr "%{count} förra månaden till och med %{date}"
 msgid "%{count} left"
 msgstr "%{count} kvar"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:766
+#: lib/edenflowers_web/features/admin/overview_live.ex:769
 #, elixir-autogen, elixir-format
 msgid "%{count} order(s)"
 msgid_plural "%{count} order(s)"
@@ -409,7 +409,7 @@ msgid "Card replaced"
 msgstr "Kortet bytt"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:251
-#: lib/edenflowers_web/features/admin/overview_live.ex:820
+#: lib/edenflowers_web/features/admin/overview_live.ex:823
 #, elixir-autogen, elixir-format
 msgid "Card to write"
 msgstr "Kort att skriva"
@@ -483,7 +483,7 @@ msgstr "Stäng"
 
 #: lib/edenflowers_web/components/admin_calendar.ex:107
 #: lib/edenflowers_web/features/admin/overview_live.ex:614
-#: lib/edenflowers_web/features/admin/overview_live.ex:765
+#: lib/edenflowers_web/features/admin/overview_live.ex:768
 #, elixir-autogen, elixir-format
 msgid "Closed"
 msgstr "Stängd"
@@ -752,7 +752,7 @@ msgstr "Kunder"
 msgid "Date"
 msgstr "Datum"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:671
+#: lib/edenflowers_web/features/admin/overview_live.ex:674
 #, elixir-autogen, elixir-format
 msgid "Days"
 msgstr "Dagar"
@@ -773,7 +773,7 @@ msgstr "Radera kampanjen? Det går inte att ångra."
 msgid "Deliver to"
 msgstr "Leveransadress"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:861
+#: lib/edenflowers_web/features/admin/overview_live.ex:864
 #, elixir-autogen, elixir-format
 msgid "Deliveries"
 msgstr "Leveranser"
@@ -1570,7 +1570,7 @@ msgid "Minimum cart total (€)"
 msgstr "Minsta varukorgssumma (€)"
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:402
-#: lib/edenflowers_web/features/admin/overview_live.ex:823
+#: lib/edenflowers_web/features/admin/overview_live.ex:826
 #, elixir-autogen, elixir-format
 msgid "Missing recipient phone"
 msgstr "Mottagarens telefon saknas"
@@ -1786,17 +1786,17 @@ msgstr "Det finns inget kvar att reglera på den här bokningen."
 msgid "Nothing left to settle on this order."
 msgstr "Det finns inget kvar att reglera på den här beställningen."
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:777
+#: lib/edenflowers_web/features/admin/overview_live.ex:780
 #, elixir-autogen, elixir-format
 msgid "Nothing to make"
 msgstr "Inget att göra"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:775
+#: lib/edenflowers_web/features/admin/overview_live.ex:778
 #, elixir-autogen, elixir-format
 msgid "Nothing to make today"
 msgstr "Inget att göra i dag"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:776
+#: lib/edenflowers_web/features/admin/overview_live.ex:779
 #, elixir-autogen, elixir-format
 msgid "Nothing to make tomorrow"
 msgstr "Inget att göra i morgon"
@@ -2163,7 +2163,7 @@ msgstr "Avhämtning %{time}, beställning %{order_order_reference}"
 msgid "Pickup for today %{order_order_reference}"
 msgstr "Avhämtning för idag %{order_order_reference}"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:862
+#: lib/edenflowers_web/features/admin/overview_live.ex:865
 #, elixir-autogen, elixir-format
 msgid "Pickups"
 msgstr "Avhämtningar"
@@ -2485,7 +2485,7 @@ msgstr "Ta bort bild %{n}"
 msgid "Rent"
 msgstr "Hyror"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:630
+#: lib/edenflowers_web/features/admin/overview_live.ex:633
 #, elixir-autogen, elixir-format
 msgid "Reopen orders"
 msgstr "Öppna beställningar"
@@ -2865,7 +2865,7 @@ msgstr "Att göra"
 msgid "Stock"
 msgstr "Lager"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:628
+#: lib/edenflowers_web/features/admin/overview_live.ex:631
 #, elixir-autogen, elixir-format
 msgid "Stop orders"
 msgstr "Stoppa beställningar"
@@ -3134,7 +3134,7 @@ msgstr "Att ta betalt"
 #: lib/edenflowers_web/features/admin/components/components.ex:458
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:679
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:98
-#: lib/edenflowers_web/features/admin/overview_live.ex:827
+#: lib/edenflowers_web/features/admin/overview_live.ex:830
 #, elixir-autogen, elixir-format
 msgid "To collect %{amount}"
 msgstr "Att ta betalt %{amount}"
@@ -3170,7 +3170,7 @@ msgid "To: %{email}"
 msgstr "Till: %{email}"
 
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:661
-#: lib/edenflowers_web/features/admin/overview_live.ex:775
+#: lib/edenflowers_web/features/admin/overview_live.ex:778
 #, elixir-autogen, elixir-format
 msgid "Today"
 msgstr "I dag"
@@ -3190,7 +3190,7 @@ msgstr "Markera/avmarkera %{weekday}"
 msgid "Toggle week %{first} to %{last}"
 msgstr "Markera/avmarkera vecka %{first}–%{last}"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:776
+#: lib/edenflowers_web/features/admin/overview_live.ex:779
 #, elixir-autogen, elixir-format
 msgid "Tomorrow"
 msgstr "I morgon"
@@ -3299,7 +3299,7 @@ msgstr "Obegränsat"
 #: lib/edenflowers_web/features/admin/orders_live.ex:79
 #: lib/edenflowers_web/features/admin/overview_live.ex:227
 #: lib/edenflowers_web/features/admin/overview_live.ex:241
-#: lib/edenflowers_web/features/admin/overview_live.ex:798
+#: lib/edenflowers_web/features/admin/overview_live.ex:801
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:55
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:65
 #, elixir-autogen, elixir-format
@@ -3309,7 +3309,7 @@ msgstr "Namnlös kund"
 #: lib/edenflowers_web/features/admin/components/components.ex:295
 #: lib/edenflowers_web/features/admin/components/components.ex:713
 #: lib/edenflowers_web/features/admin/expenses_live.ex:111
-#: lib/edenflowers_web/features/admin/overview_live.ex:829
+#: lib/edenflowers_web/features/admin/overview_live.ex:832
 #, elixir-autogen, elixir-format
 msgid "Unpaid"
 msgstr "Obetald"
@@ -3413,7 +3413,7 @@ msgstr "Plats"
 msgid "View %{amount} payment in Stripe"
 msgstr "Visa betalningen på %{amount} i Stripe"
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:698
+#: lib/edenflowers_web/features/admin/overview_live.ex:701
 #, elixir-autogen, elixir-format
 msgid "View all orders"
 msgstr "Visa alla beställningar"
@@ -4002,3 +4002,8 @@ msgstr "Fotografens webbplats (valfritt)"
 #, elixir-autogen, elixir-format
 msgid "Shown with the course photo. Add a website to link the photographer's name."
 msgstr "Visas vid kursfotot. Lägg till en webbplats för att länka fotografens namn."
+
+#: lib/edenflowers_web/features/admin/overview_live.ex:627
+#, elixir-autogen, elixir-format
+msgid "Stop orders for this day? Customers can't order for it until you reopen it."
+msgstr "Stoppa beställningar för den här dagen? Kunderna kan inte beställa till den förrän du öppnar den igen."
