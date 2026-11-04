@@ -1,8 +1,9 @@
 defmodule Edenflowers.Bank.Actions.SyncPayments do
   @moduledoc """
   Reads the booked transactions of every account on the current bank
-  connection and settles what they pay: a payment out marks its expense paid.
-  Payments the matching can't place are left for Jennie.
+  connection and settles what they pay: a payment out marks its expense paid,
+  a transfer in is recorded on its invoice. Payments the matching can't place
+  are left for Jennie.
 
   Does nothing without Enable Banking configured (only production is), before
   the bank is first connected, or once the consent has ended.
@@ -16,6 +17,7 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
   alias Edenflowers.Expenses
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.EnableBankingAPI
+  alias Edenflowers.Payments
 
   # ponytail: re-reads two weeks each run instead of tracking a cursor; matching
   # is idempotent, since a settled expense no longer awaits a payment.
@@ -64,6 +66,11 @@ defmodule Edenflowers.Bank.Actions.SyncPayments do
         actor: system_actor()
       )
     end
+  end
+
+  defp settle(%{direction: :in, reference_number: reference, id: id, currency: "eur"} = transaction)
+       when is_binary(reference) and is_binary(id) do
+    Payments.settle_invoice_from_bank(reference, transaction.amount, transaction.booked_on, id, actor: system_actor())
   end
 
   defp settle(_transaction), do: :skip

@@ -72,7 +72,8 @@ defmodule Edenflowers.Payments.Payment do
         :goodwill,
         :note,
         :invoice_id,
-        :paid_at
+        :paid_at,
+        :bank_transaction_id
       ]
 
       validate Edenflowers.Payments.Validations.InvoicePayment, before_action?: true
@@ -106,6 +107,12 @@ defmodule Edenflowers.Payments.Payment do
     attribute :goodwill, :boolean, allow_nil?: false, default: false
     attribute :note, :string
     attribute :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
+
+    attribute :bank_transaction_id, :string do
+      description "The bank's id for the transfer the bank sync recorded this from, so it's recorded once. " <>
+                    "Nil for anything Jennie entered or Stripe took."
+    end
+
     timestamps()
   end
 
@@ -146,5 +153,6 @@ defmodule Edenflowers.Payments.Payment do
     # A Stripe refund beyond what was owed back is split off as goodwill.
     identity :unique_stripe_refund, [:stripe_refund_id, :goodwill]
     identity :unique_reversal, [:reverses_payment_id]
+    identity :unique_bank_transaction, [:bank_transaction_id]
   end
 end

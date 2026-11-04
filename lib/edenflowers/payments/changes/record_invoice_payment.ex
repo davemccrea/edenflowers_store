@@ -51,8 +51,13 @@ defmodule Edenflowers.Payments.Changes.RecordInvoicePayment do
   defp overpaid?(changeset, invoice, false),
     do: Decimal.gt?(Ash.Changeset.get_argument(changeset, :amount), invoice.amount_unpaid)
 
-  defp attributes(changeset, false),
-    do: {:ok, %{amount: Ash.Changeset.get_argument(changeset, :amount)}}
+  defp attributes(changeset, false) do
+    {:ok,
+     %{
+       amount: Ash.Changeset.get_argument(changeset, :amount),
+       bank_transaction_id: Ash.Changeset.get_argument(changeset, :bank_transaction_id)
+     }}
+  end
 
   defp attributes(changeset, true) do
     id = Ash.Changeset.get_argument(changeset, :payment_id)

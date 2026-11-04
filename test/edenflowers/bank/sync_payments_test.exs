@@ -8,6 +8,7 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
   alias Edenflowers.Expenses
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.EnableBankingAPI
+  alias Edenflowers.Payments
 
   setup :verify_on_exit!
 
@@ -63,6 +64,47 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
     assert :ok = Bank.sync_bank_payments(actor: system_actor())
   end
 
+  describe "transfers in" do
+    setup do
+      connect()
+      %{invoice: issue_invoice()}
+    end
+
+    test "one quoting an open invoice's reference is recorded as its payment, once", %{invoice: invoice} do
+      stub_transactions([transfer("100.00", invoice.reference_number, "2026-11-03")])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      invoice = Ash.load!(invoice, [:status, :payments], authorize?: false)
+      assert invoice.status == :paid
+      assert [%{amount: amount, paid_at: paid_at}] = invoice.payments
+      assert Decimal.equal?(amount, "100.00")
+      assert Edenflowers.ShopTime.today(paid_at) == ~D[2026-11-03]
+    end
+
+    test "a part payment is recorded and leaves the rest owed", %{invoice: invoice} do
+      stub_transactions([transfer("50.00", invoice.reference_number, "2026-11-03")])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      invoice = Ash.load!(invoice, [:status, :amount_unpaid], authorize?: false)
+      assert invoice.status == :open
+      assert Decimal.equal?(invoice.amount_unpaid, "50.00")
+    end
+
+    test "an overpayment or an unknown reference is left for Jennie", %{invoice: invoice} do
+      stub_transactions([
+        transfer("200.00", invoice.reference_number, "2026-11-03"),
+        transfer("100.00", "123453", "2026-11-03")
+      ])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      assert Ash.load!(invoice, :status, authorize?: false).status == :open
+    end
+  end
+
   test "an invoice's reference is stored the way the bank sends it" do
     stub(Edenflowers.External.PapraAPI.Mock, :update_document, fn _, _ -> :ok end)
 
@@ -103,6 +145,27 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
       "status" => "BOOK",
       "reference_number" => reference
     }
+  end
+
+  defp transfer(amount, reference, booking_date),
+    do: %{payment(amount, reference, booking_date) | "credit_debit_indicator" => "CRDT"}
+
+  # Unit prices include VAT: 100 € owed.
+  defp issue_invoice do
+    admin = %{admin: true}
+
+    {:ok, draft} =
+      Payments.create_invoice(
+        %{
+          buyer_name: "Hääpari",
+          buyer_email: "buyer@example.com",
+          supply_date: ~D[2026-11-02],
+          lines: [%{description: "Wedding flowers", quantity: "1", unit_price: "100", vat_rate: "25.5"}]
+        },
+        actor: admin
+      )
+
+    Payments.issue_invoice!(draft, actor: admin)
   end
 
   defp stub_transactions(transactions) do
