@@ -50,6 +50,7 @@ defmodule Edenflowers.Payments do
       define :cancel_invoice, action: :create
       define :send_credit_note, action: :send
       define :get_credit_note, action: :read, get_by: [:id]
+      define :list_credit_notes_dated_between, action: :dated_between, args: [:first, :last]
     end
   end
 

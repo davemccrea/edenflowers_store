@@ -1,8 +1,8 @@
 defmodule Edenflowers.Accounting.MonthlyReport do
   @moduledoc """
   Builds the zip Jennie sends her accountant each month: a spreadsheet of the
-  month's sales, expenses and Stripe fees and payouts, and every receipt PDF
-  behind the expenses, in Swedish.
+  month's sales, expenses and Stripe fees and payouts, and every receipt and
+  invoice PDF behind them, in Swedish.
 
   VAT is reported on a cash basis, so a payment counts in the month of its
   `paid_at` (Helsinki time), and an expense in the month of its `paid_on`;
@@ -12,7 +12,14 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   The receivables sheet lists the invoices still owed at month end, for the
   accountant to book what replaced Zervant's receivables list. Issued invoices
   freeze their own sale and VAT; only receipts enter the cash sales sheet, so
-  issuing or crediting an unpaid document adds no cash sale.
+  issuing or crediting an unpaid document adds no cash sale. Like an expense's
+  receipt, an invoice's PDF comes in each month a payment of it does. Nothing
+  can be paid on a cancelled invoice, so a credit note comes in the month it
+  is dated, with the invoice it cancels.
+
+  The payables sheet lists the expenses still unpaid at month end. Cash basis
+  only holds during the year: the accounts must be put on an accrual basis at
+  year end, which needs December's unpaid purchases (KPL 2:4 §, 4:6 §).
 
   A receipt Papra can't serve doesn't stop the report: its row says so.
   """
@@ -22,10 +29,13 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   require Logger
 
   alias Edenflowers.Accounting.InvoiceReceiptAllocation
+  alias Edenflowers.Expenses
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.External.PapraAPI
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Payments
+  alias Edenflowers.Payments.Invoice
+  alias Edenflowers.Payments.InvoicePdf
   alias Edenflowers.Payments.Payment
   alias Edenflowers.Pricing.Vat
   alias Edenflowers.ShopTime
@@ -47,11 +57,17 @@ defmodule Edenflowers.Accounting.MonthlyReport do
 
     with {:ok, payments} <- payments(first, last),
          {:ok, expenses} <- paid_expenses(first, last),
-         {:ok, invoices} <-
+         {:ok, open_invoices} <-
            Payments.list_open_invoices(last,
              load: [:buyer, amount_open_at: %{date: last}],
              authorize?: false
            ),
+         {:ok, credit_notes} <-
+           Payments.list_credit_notes_dated_between(first, last,
+             load: [:pdf, invoice: [:buyer, :pdf]],
+             authorize?: false
+           ),
+         {:ok, unpaid_expenses} <- Expenses.list_expenses_unpaid_at(last, authorize?: false),
          rows =
            expenses
            |> Enum.with_index(1)
@@ -60,11 +76,19 @@ defmodule Edenflowers.Accounting.MonthlyReport do
          receipts = for({_n, _expense, name, body} <- rows, body, do: {~c"kvitton/#{name}", body}),
          {:ok, transactions} <-
            StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
-         sheets =
-           [sales_sheet(payments), expenses_sheet(rows), stripe_sheet(transactions), receivables_sheet(invoices)],
+         invoice_documents = invoice_documents(payments, credit_notes),
+         sheets = [
+           sales_sheet(payments),
+           expenses_sheet(rows),
+           stripe_sheet(transactions),
+           receivables_sheet(open_invoices),
+           payables_sheet(unpaid_expenses)
+         ],
          workbook = %Workbook{sheets: Enum.map(sheets, &with_basic_font/1)},
          {:ok, {_, xlsx}} <- Elixlsx.write_to_memory(workbook, spreadsheet),
-         files = [{~c"#{spreadsheet}", xlsx} | receipts],
+         invoice_files =
+           for(document <- invoice_documents, do: {~c"kundfakturor/#{InvoicePdf.filename(document)}", document.pdf}),
+         files = [{~c"#{spreadsheet}", xlsx} | receipts ++ invoice_files],
          {:ok, {_, zip}} <- :zip.create(~c"redovisning-#{label}.zip", files, [:memory]) do
       {:ok, "redovisning-#{label}.zip", zip}
     end
@@ -80,9 +104,19 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     |> Ash.Query.load(
       order: [:order_reference, :vat_breakdown],
       course_registration: [:reference, :tax_rate],
-      invoice: [:payments]
+      invoice: [:payments, :buyer, :pdf]
     )
     |> Ash.read(authorize?: false)
+  end
+
+  defp invoice_documents(payments, credit_notes) do
+    paid_invoices = for %{invoice: %Invoice{} = invoice} <- payments, do: invoice
+    cancelled_invoices = Enum.map(credit_notes, & &1.invoice)
+
+    (paid_invoices ++ cancelled_invoices)
+    |> Enum.uniq_by(& &1.id)
+    |> Enum.concat(credit_notes)
+    |> Enum.sort_by(& &1.number)
   end
 
   defp helsinki_midnight_utc(date) do
@@ -254,7 +288,6 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       ~t"Vendor",
       ~t"Vendor VAT number",
       ~t"Category",
-      ~t"Description",
       ~t"Currency",
       ~t"Total",
       ~t"VAT",
@@ -276,7 +309,6 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       expense.vendor_name,
       expense.vendor_vat_number,
       expense.category && Components.category_label(expense.category),
-      expense.description,
       currency(expense.currency),
       amount_cell(expense.total_amount),
       amount_cell(expense.vat_amount),
@@ -288,10 +320,18 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   defp currency_totals(rows) do
     rows
     |> Enum.map(fn {_n, expense, _receipt, _body} -> expense end)
+    |> currency_totals(5)
+  end
+
+  # One row per currency, the Sum label in the column before the currency and
+  # the totals under Total, VAT and Net that follow it.
+  defp currency_totals(expenses, columns_before_label) do
+    expenses
     |> Enum.group_by(&currency(&1.currency))
     |> Enum.sort_by(fn {currency, _} -> currency end)
     |> Enum.map(fn {currency, expenses} ->
-      [nil, nil, nil, nil, nil, nil, [~t"Sum", bold: true], currency] ++
+      List.duplicate(nil, columns_before_label) ++
+        [[~t"Sum", bold: true], currency] ++
         Enum.map([& &1.total_amount, & &1.vat_amount, &net/1], fn amount ->
           expenses
           |> Enum.map(amount)
@@ -360,7 +400,6 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       ~t"Invoice date",
       ~t"Due date",
       ~t"Buyer",
-      ~t"Reference",
       ~t"Invoice amount",
       ~t"Unpaid at month end"
     ]
@@ -372,7 +411,6 @@ defmodule Edenflowers.Accounting.MonthlyReport do
           date_cell(invoice.invoice_date),
           date_cell(invoice.due_date),
           invoice.buyer,
-          invoice.customer_reference,
           amount_cell(invoice.amount),
           amount_cell(invoice.amount_open_at)
         ]
@@ -384,7 +422,38 @@ defmodule Edenflowers.Accounting.MonthlyReport do
       name: "Kundfordringar",
       rows:
         [Enum.map(headings, &[&1, bold: true]) | rows] ++
-          [[], [nil, nil, nil, nil, nil, [~t"Sum", bold: true], amount_cell(total)]]
+          [[], [nil, nil, nil, nil, [~t"Sum", bold: true], amount_cell(total)]]
+    }
+  end
+
+  # Their receipts arrive in the report of the month they are paid.
+  defp payables_sheet(expenses) do
+    headings = [
+      ~t"Invoice date",
+      ~t"Vendor",
+      ~t"Category",
+      ~t"Currency",
+      ~t"Total",
+      ~t"VAT",
+      ~t"Net"
+    ]
+
+    rows =
+      Enum.map(expenses, fn expense ->
+        [
+          date_cell(expense.date),
+          expense.vendor_name,
+          expense.category && Components.category_label(expense.category),
+          currency(expense.currency),
+          amount_cell(expense.total_amount),
+          amount_cell(expense.vat_amount),
+          amount_cell(net(expense))
+        ]
+      end)
+
+    %Sheet{
+      name: "Leverantörsskulder",
+      rows: [Enum.map(headings, &[&1, bold: true]) | rows] ++ [[]] ++ currency_totals(expenses, 2)
     }
   end
 

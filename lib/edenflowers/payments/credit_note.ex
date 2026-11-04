@@ -46,6 +46,17 @@ defmodule Edenflowers.Payments.CreditNote do
   actions do
     defaults [:read]
 
+    read :dated_between do
+      description "The credit notes dated in a period, such as the month of the accountant's monthly report, " <>
+                    "sorted by number."
+
+      argument :first, :date, allow_nil?: false, description: "The first credit date counted."
+      argument :last, :date, allow_nil?: false, description: "The last credit date counted."
+
+      filter expr(credit_date >= ^arg(:first) and credit_date <= ^arg(:last))
+      prepare build(sort: [number: :asc])
+    end
+
     create :create do
       description "Jennie cancels an Invoice that has nothing paid on it (Invoice.cancellable?) by issuing a " <>
                     "credit note for its whole amount. It takes the next number in the series Invoices share, is " <>

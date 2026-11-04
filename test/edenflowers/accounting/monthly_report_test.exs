@@ -214,7 +214,6 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              "Leverantör",
              "Leverantörens momsnummer",
              "Kategori",
-             "Beskrivning",
              "Valuta",
              "Totalt",
              "Moms",
@@ -230,7 +229,6 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
                "Kukkatukku Oy",
                "FI12345678",
                "Kontorsmaterial",
-               "Supplies",
                "EUR",
                "125.5",
                "25.5",
@@ -240,8 +238,8 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              ["2" | _] = adobe,
              ["3" | _],
              [],
-             [nil, nil, nil, nil, nil, nil, "Summa", "EUR", "135.5", "27.5", "108.0"],
-             [nil, nil, nil, nil, nil, nil, "Summa", "SEK", "120.0", "24.0", "96.0"]
+             [nil, nil, nil, nil, nil, "Summa", "EUR", "135.5", "27.5", "108.0"],
+             [nil, nil, nil, nil, nil, "Summa", "SEK", "120.0", "24.0", "96.0"]
            ] = rows
 
     assert paid == excel_date(~D[2026-09-03])
@@ -382,14 +380,13 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
                "Fakturadatum",
                "Förfallodag",
                "Köpare",
-               "Referens",
                "Fakturabelopp",
                "Obetalt vid månadens slut"
              ]
 
       {invoices, [[] | totals]} = Enum.split_while(rows, &(&1 != []))
 
-      assert Enum.map(invoices, fn [number, _date, _due, buyer, _reference, amount, open] ->
+      assert Enum.map(invoices, fn [number, _date, _due, buyer, amount, open] ->
                {number, buyer, amount, open}
              end) == [
                {"#{ctx.open.number}", "Ada Lovelace", "50.0", "50.0"},
@@ -399,12 +396,11 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
                {"#{ctx.undone.number}", "Kukka Oy", "50.0", "50.0"}
              ]
 
-      assert [[_number, date, due, _buyer, reference | _] | _] = invoices
+      assert [[_number, date, due | _] | _] = invoices
       assert date == excel_date(~D[2026-09-01])
       assert due == excel_date(~D[2026-09-15])
-      assert reference == ctx.open.customer_reference
 
-      assert totals == [[nil, nil, nil, nil, nil, "Summa", "230.0"]]
+      assert totals == [[nil, nil, nil, nil, "Summa", "230.0"]]
     end
 
     test "leaves the sales sheet counting only the month's payments", _ctx do
@@ -414,6 +410,60 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       # 50 paid at 23:30 on the last day, 20 part-paid, and 50 paid then undone; never the invoices' amounts.
       assert List.last(List.last(rows)) == "70.0"
     end
+  end
+
+  test "zips an invoice in each month it is paid, and a credit note with its invoice when dated" do
+    admin = generate(admin_user())
+    paid_next_month = invoice(admin, "50.00", ~D[2026-09-10])
+    pay(paid_next_month, "50.00", ~U[2026-10-03 08:00:00Z])
+    cancelled = invoice(admin, "30.00", ~D[2026-09-11])
+    credit_note = cancel(admin, cancelled, ~D[2026-09-20])
+    part_paid = invoice(admin, "40.00", ~D[2026-08-25])
+    pay(part_paid, "15.00", ~U[2026-09-05 08:00:00Z])
+    pay(part_paid, "25.00", ~U[2026-10-02 08:00:00Z])
+    {:ok, _draft} = Payments.create_invoice(%{supply_date: ~D[2026-09-01]}, actor: admin)
+
+    assert {:ok, _, september} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, october} = MonthlyReport.build(2026, 10)
+    files = unzip(september)
+
+    assert invoice_files(files) == [
+             "kundfakturor/hyvityslasku-#{credit_note.number}.pdf",
+             "kundfakturor/lasku-#{cancelled.number}.pdf",
+             "kundfakturor/lasku-#{part_paid.number}.pdf"
+           ]
+
+    assert invoice_files(unzip(october)) == [
+             "kundfakturor/lasku-#{paid_next_month.number}.pdf",
+             "kundfakturor/lasku-#{part_paid.number}.pdf"
+           ]
+
+    {:ok, stored} = Ash.load(part_paid, :pdf, authorize?: false)
+    assert files["kundfakturor/lasku-#{part_paid.number}.pdf"] == stored.pdf
+  end
+
+  defp invoice_files(files),
+    do: files |> Map.keys() |> Enum.filter(&String.starts_with?(&1, "kundfakturor/")) |> Enum.sort()
+
+  test "the payables sheet lists the expenses still unpaid at month end" do
+    create_expense("doc-unpaid", "Unpaid Oy", ~D[2026-09-25], "EUR", "40.00", "8.00", paid_on: nil)
+    create_expense("doc-paid-later", "Later Oy", ~D[2026-09-20], "EUR", "10.00", "2.00", paid_on: ~D[2026-10-05])
+    create_expense("doc-scheduled", "Scheduled Ab", ~D[2026-09-28], "SEK", "100.00", "20.00", paid_on: ~D[2026-10-14])
+    create_expense("doc-paid", "Paid Oy", ~D[2026-09-10], "EUR", "5.00", "1.00", paid_on: ~D[2026-09-15])
+    create_expense("doc-october", "October Oy", ~D[2026-10-02], "EUR", "5.00", "1.00", paid_on: nil)
+
+    stub(PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, %{body: "%PDF", content_type: "application/pdf"}} end)
+
+    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+    [_headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(5)
+
+    {expenses, [[] | totals]} = Enum.split_while(rows, &(&1 != []))
+    assert Enum.map(expenses, &Enum.at(&1, 1)) == ["Later Oy", "Unpaid Oy", "Scheduled Ab"]
+
+    assert totals == [
+             [nil, nil, "Summa", "EUR", "50.0", "10.0", "40.0"],
+             [nil, nil, "Summa", "SEK", "100.0", "20.0", "80.0"]
+           ]
   end
 
   # A consumer's invoice when business_details is empty.

@@ -216,6 +216,21 @@ defmodule Edenflowers.Expenses.Expense do
              )
     end
 
+    read :unpaid_at do
+      description "The expenses Jennie still owed at the end of a day, for the payables list in the accountant's " <>
+                    "monthly report: dated by then and not paid by then. A scheduled payment counts as unpaid " <>
+                    "until its day, and one paid later still counts, so the list reads the same whenever the " <>
+                    "report is built. Undated ones are left out, as they belong to no month. Sorted by date."
+
+      argument :date, :date do
+        description "The last day counted, such as the reported month's last day."
+        allow_nil? false
+      end
+
+      filter expr(date <= ^arg(:date) and (is_nil(paid_on) or paid_on > ^arg(:date)))
+      prepare build(sort: [date: :asc, vendor_name: :asc])
+    end
+
     update :paid_from_bank do
       description "The bank booked this expense's payment, so its paid date becomes the booking date, replacing a scheduled one."
       accept []

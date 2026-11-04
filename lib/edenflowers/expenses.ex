@@ -25,6 +25,7 @@ defmodule Edenflowers.Expenses do
       define :ingest_expense, action: :ingest
       define :correct_expense, action: :correct
       define :mark_expense_unpaid, action: :mark_unpaid
+      define :list_expenses_unpaid_at, action: :unpaid_at, args: [:date]
 
       define :expenses_awaiting_bank_payment,
         action: :awaiting_bank_payment,
