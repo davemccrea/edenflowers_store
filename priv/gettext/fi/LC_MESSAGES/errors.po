@@ -154,5 +154,6 @@ msgstr "Lisää vähintään yksi tuote"
 
 msgid "Must be a website address starting with http:// or https://"
 msgstr "Anna verkko-osoite, joka alkaa merkkijonolla http:// tai https://"
+
 msgid "cannot be before the invoice date"
 msgstr "ei voi olla ennen laskun päivämäärää"

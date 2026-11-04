@@ -294,7 +294,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert_email_sent(fn email ->
         assert email.text_body =~
-                 ~r/Collect on [^\n]+ from Minimossen[^\n]+\n\nI'll send you an invoice after you collect your order\./
+                 ~r/Collect on [^\n]+ from Minimossen[^\n]+\n\nI'll send you an invoice after you've collected your order\./
       end)
     end
 
