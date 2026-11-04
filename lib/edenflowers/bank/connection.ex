@@ -34,7 +34,8 @@ defmodule Edenflowers.Bank.Connection do
     defaults [:read]
 
     action :sync_payments do
-      description "Reads the shop's booked bank transactions and marks paid the expenses they pay. " <>
+      description "Reads the shop's booked bank transactions, marks paid the expenses they pay and records " <>
+                    "the invoice payments they bring. " <>
                     "Does nothing without Enable Banking configured, which only production is, " <>
                     "or without a current consent."
 

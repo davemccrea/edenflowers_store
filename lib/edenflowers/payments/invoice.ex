@@ -202,8 +202,33 @@ defmodule Edenflowers.Payments.Invoice do
       accept []
       argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
+
+      argument :bank_transaction_id, :string do
+        description "Set when the bank sync records the transfer, so the same transfer is never recorded twice."
+      end
+
       require_atomic? false
       change Changes.RecordInvoicePayment
+    end
+
+    read :awaiting_bank_payment do
+      description "The open invoice a customer pays with this reference number."
+      argument :reference_number, :string, allow_nil?: false
+      filter expr(reference_number == ^arg(:reference_number) and status == :open)
+    end
+
+    action :settle_from_bank, :boolean do
+      description "Records a booked bank transfer on the open invoice whose reference number it quotes, with " <>
+                    "its amount and booking date, like Jennie entering it. A transfer already recorded, one " <>
+                    "matching no open invoice, or one for more than is owed is left alone; an overpayment " <>
+                    "needs Jennie. Returns whether it was recorded."
+
+      argument :reference_number, :string, allow_nil?: false
+      argument :amount, :decimal, allow_nil?: false
+      argument :booked_on, :date, allow_nil?: false
+      argument :bank_transaction_id, :string, allow_nil?: false
+
+      run Edenflowers.Payments.Actions.SettleInvoiceFromBank
     end
 
     update :undo_payment do
@@ -238,6 +263,8 @@ defmodule Edenflowers.Payments.Invoice do
   policies do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action_type(:read)
+      # The bank sync records the transfers that quote an invoice's reference number.
+      authorize_if action([:settle_from_bank, :record_payment])
     end
 
     bypass actor_attribute_equals(:admin, true) do
