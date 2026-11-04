@@ -1,19 +1,24 @@
 defmodule EdenflowersWeb.Admin.OverviewLive do
   @moduledoc """
   Back-office home page with a nine-day fulfillment calendar, items needing
-  attention, sales, and the monthly accounting report.
+  attention, sales, the monthly accounting report and the bank connection.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
   import EdenflowersWeb.Admin.Components
 
+  require Logger
+
+  alias Edenflowers.Bank
   alias Edenflowers.Courses
+  alias Edenflowers.External.EnableBankingAPI
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Orders
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Admin.BankController
   alias EdenflowersWeb.Admin.PushSubscriptions
   alias EdenflowersWeb.Layouts
 
@@ -33,6 +38,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
      |> assign(:locale, Localize.get_locale())
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
      |> assign(:report_month, previous_month())
+     |> assign(:bank_connection, bank_connection(socket.assigns.current_user))
      |> assign(:connected_customers, EdenflowersWeb.Presence.connected_customers())
      |> assign(:calendar, Fulfillment.get_shop_calendar!(actor: socket.assigns.current_user))
      |> assign_orders()}
@@ -77,13 +83,23 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             />
           </div>
           <div class="min-w-0 xl:col-start-2">
-            <.report_widget month={@report_month} />
+            <.accounting_widget month={@report_month} bank_connection={@bank_connection} locale={@locale} />
             <.online_customers customers={@connected_customers} />
           </div>
         </div>
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  # Only production can reach the bank, so elsewhere there's nothing to connect.
+  defp bank_connection(actor) do
+    if EnableBankingAPI.configured?() do
+      {:ok, connection} = Bank.current_bank_connection(actor: actor, load: [:expired, :renewal_due])
+      {:configured, connection}
+    else
+      :not_configured
+    end
   end
 
   @impl true
@@ -102,6 +118,20 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
 
   # Only today, so a page left open overnight can't toggle yesterday.
+  def handle_event("connect_bank", _params, socket) do
+    user = socket.assigns.current_user
+    state = BankController.sign_state(user)
+
+    case Bank.bank_authorization_url(state, url(~p"/admin/bank/callback"), actor: user) do
+      {:ok, url} ->
+        {:noreply, redirect(socket, external: url)}
+
+      {:error, error} ->
+        Logger.error("Starting a bank connection failed: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, ~t"The bank couldn't be reached. Please try again.")}
+    end
+  end
+
   def handle_event("toggle-date", %{"date" => date}, socket) do
     date = Date.from_iso8601!(date)
     %{calendar: calendar, current_user: actor} = socket.assigns
@@ -490,14 +520,17 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     """
   end
 
-  attr :month, :string, required: true
-
   # A plain GET, not a LiveView event, so the browser downloads the zip itself. The
   # new tab loads while the zip builds and closes once the download starts; on an
   # error it shows Overview with the flash.
-  defp report_widget(assigns) do
+  attr :month, :string, required: true
+  attr :bank_connection, :any, required: true, doc: "`:not_configured` or `{:configured, connection or nil}`"
+  attr :locale, :any, required: true
+
+  defp accounting_widget(assigns) do
     ~H"""
-    <.widget title={~t"Accountant report"}>
+    <.widget title={~t"Accounting"}>
+      <h3 class="text-base-content mb-2 text-sm font-semibold">{~t"Accountant report"}</h3>
       <form
         id="report-form"
         action={~p"/admin/reports"}
@@ -514,7 +547,52 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           {~t"Download"}
         </.button>
       </form>
+      <.bank_status
+        :if={@bank_connection != :not_configured}
+        connection={elem(@bank_connection, 1)}
+        locale={@locale}
+      />
     </.widget>
+    """
+  end
+
+  attr :connection, :any, required: true
+  attr :locale, :any, required: true
+
+  # The bank marks expenses and invoices paid from its payments.
+  defp bank_status(assigns) do
+    ~H"""
+    <div id="bank-status" role="status" class="border-base-content/12 mt-5 border-t pt-4 text-sm">
+      <h3 class="text-base-content mb-2 flex flex-wrap items-center gap-2 font-semibold">
+        {~t"Bank"}
+        <%= cond do %>
+          <% is_nil(@connection) -> %>
+            <.badge tone={:neutral}>{~t"Not connected"}</.badge>
+          <% @connection.expired -> %>
+            <.badge tone={:error}>{~t"Disconnected"}</.badge>
+          <% @connection.renewal_due -> %>
+            <.badge tone={:warning}>{~t"Ending soon"}</.badge>
+          <% true -> %>
+            <.badge tone={:success}>{~t"Connected"}</.badge>
+        <% end %>
+      </h3>
+      <p class="text-base-content/75 mb-3">
+        <%= cond do %>
+          <% is_nil(@connection) -> %>
+            {~t"Connect it to mark expenses and invoices paid as payments leave or arrive."}
+          <% @connection.expired -> %>
+            {~t"The connection ended on #{date = Format.date(@connection.valid_until, @locale)}. Connect again to keep payments up to date."}
+          <% @connection.renewal_due -> %>
+            {~t"It ends on #{date = Format.date(@connection.valid_until, @locale)}. Connect again to keep payments up to date."}
+          <% true -> %>
+            {~t"Until #{date = Format.date(@connection.valid_until, @locale)}"}
+        <% end %>
+      </p>
+      <.button phx-click="connect_bank" variant="secondary" size="sm">
+        <.icon name="hero-building-library" class="h-4 w-4" />
+        {if @connection, do: ~t"Reconnect", else: ~t"Connect bank"}
+      </.button>
+    </div>
     """
   end
 
