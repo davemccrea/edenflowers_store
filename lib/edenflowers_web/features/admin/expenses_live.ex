@@ -54,7 +54,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
           resource={Expense}
           action={:admin_list}
           actor={@current_user}
-          query_opts={[load: [:overdue, :needs_review]]}
+          query_opts={[load: [:overdue, :scheduled, :needs_review]]}
           search={[
             label: ~t"Search",
             placeholder: ~t"Search vendor or description…",
@@ -108,7 +108,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
               type: :select,
               label: ~t"Payment",
               prompt: ~t"All",
-              options: [{~t"Paid", true}, {~t"Unpaid", false}]
+              options: [{~t"Paid or scheduled", true}, {~t"Unpaid", false}]
             ]}
             label={~t"Paid"}
           >

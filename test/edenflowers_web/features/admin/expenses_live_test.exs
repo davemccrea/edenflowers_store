@@ -98,6 +98,18 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     refute has_element?(view, "button[name=paid_today]")
   end
 
+  test "marks a payment scheduled for the due date", %{conn: conn} do
+    due_on = Date.add(Edenflowers.ShopTime.today(), 14)
+    expense = create_expense("schedule", "Kukkatukku", "Flowers", due_on: due_on)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
+    view |> form("#expense-form") |> render_submit(%{scheduled_for_due_date: "true"})
+
+    assert Ash.get!(Expenses.Expense, expense.id, authorize?: false).paid_on == due_on
+    assert render(view) =~ "Scheduled"
+    refute has_element?(view, "button[name=scheduled_for_due_date]")
+  end
+
   test "sets and clears the paid date", %{conn: conn} do
     expense = create_expense("paid-on", "Kukkatukku", "Flowers")
 

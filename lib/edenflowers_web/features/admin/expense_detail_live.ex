@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
 
-  @loads [:overdue, :needs_review]
+  @loads [:overdue, :scheduled, :needs_review]
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -45,15 +45,30 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
         >
           <:subtitle>
             <span class="inline-flex flex-wrap items-center gap-2">
-              <.expense_payment_status :if={is_nil(@expense.paid_on)} expense={@expense} locale={@locale} />
-              <.badge :if={@expense.paid_on} tone={:success} icon="hero-check">
+              <.expense_payment_status
+                :if={is_nil(@expense.paid_on) or @expense.scheduled}
+                expense={@expense}
+                locale={@locale}
+              />
+              <.badge :if={@expense.paid_on && !@expense.scheduled} tone={:success} icon="hero-check">
                 {~t"Paid #{date = Format.date(@expense.paid_on, @locale)}"}
               </.badge>
               <.badge :if={@expense.needs_review} tone={:attention}>{~t"Needs review"}</.badge>
             </span>
           </:subtitle>
           <:actions>
-            <%!-- Submits the form, so corrections typed below are saved with the paid date. --%>
+            <%!-- These submit the form, so corrections typed below are saved with the paid date. --%>
+            <.button
+              :if={is_nil(@expense.paid_on) and not is_nil(@expense.due_on)}
+              type="submit"
+              form="expense-form"
+              name="scheduled_for_due_date"
+              value="true"
+              variant="secondary"
+              size="sm"
+            >
+              <.icon name="hero-calendar" class="h-4 w-4" /> {~t"Mark payment scheduled"}
+            </.button>
             <.button
               :if={is_nil(@expense.paid_on)}
               type="submit"
@@ -92,7 +107,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   field={@form[:paid_on]}
                   type="date"
                   label={~t"Paid on"}
-                  help={~t"Leave empty while it's unpaid."}
+                  help={~t"Leave empty while it's unpaid. A future date means the payment is scheduled."}
                   class="input w-full"
                 />
                 <.input field={@form[:due_on]} type="date" label={~t"Due date"} class="input w-full" />
@@ -185,7 +200,10 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   end
 
   def handle_event("correct", %{"form" => params} = submit_params, socket) do
-    params = Map.put(params, "paid_today", Map.get(submit_params, "paid_today", "false"))
+    params =
+      params
+      |> Map.put("paid_today", Map.get(submit_params, "paid_today", "false"))
+      |> Map.put("scheduled_for_due_date", Map.get(submit_params, "scheduled_for_due_date", "false"))
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: params, action_opts: [load: @loads]) do
       {:ok, updated} ->
