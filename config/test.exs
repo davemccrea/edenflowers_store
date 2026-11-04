@@ -65,6 +65,15 @@ config :edenflowers, :papra_req_options, plug: {Req.Test, Edenflowers.External.P
 config :edenflowers, :fastmail_api_token, "test-fastmail-token"
 config :edenflowers, :fastmail_req_options, plug: {Req.Test, Edenflowers.External.FastmailAPI}, retry: false
 
+# A throwaway key generated for tests; production's lives in the Ansible vault.
+config :edenflowers, :enable_banking,
+  application_id: "test-application-id",
+  private_key: File.read!(Path.expand("../test/support/fixtures/enable_banking_test_key.pem", __DIR__))
+
+config :edenflowers, :enable_banking_req_options,
+  plug: {Req.Test, Edenflowers.External.EnableBankingAPI},
+  retry: false
+
 config :edenflowers, :mailerlite_api_key, "test-mailerlite-key"
 config :edenflowers, :mailerlite_req_options, plug: {Req.Test, Edenflowers.Accounts.MailerLite}, retry: false
 

@@ -1,9 +1,10 @@
 ---
 id: TASK-173.2
 title: Connect the shop's bank account from the Expenses page
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-04 17:44'
+updated_date: '2026-11-04 17:56'
 labels: []
 dependencies: []
 parent_task_id: TASK-173
@@ -24,7 +25,13 @@ ordinal: 333000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Connecting from the Expenses page stores the session and shows its expiry date
-- [ ] #2 The status line warns from 14 days before the consent ends
-- [ ] #3 A callback with a wrong state or failed code stores nothing and shows an error
+- [x] #1 Connecting from the Expenses page stores the session and shows its expiry date
+- [x] #2 The status line warns from 14 days before the consent ends
+- [x] #3 A callback with a wrong state or failed code stores nothing and shows an error
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Edenflowers.Bank domain with Bank.Connection (newest row is current; expired and renewal_due calcs). External.EnableBankingAPI signs RS256 JWTs with JOSE; GET /aspsps for the longest consent, POST /auth (psu_type business), POST /sessions. Connect/Reconnect on the Expenses page status line; BankController.callback verifies a Phoenix.Token state for the same admin. Hidden where Enable Banking isn't configured. Tests stub with Req.Test using a throwaway key in test/support/fixtures.
+<!-- SECTION:NOTES:END -->

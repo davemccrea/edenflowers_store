@@ -91,6 +91,7 @@ config :edenflowers,
     Edenflowers.Courses,
     Edenflowers.Payments,
     Edenflowers.Expenses,
+    Edenflowers.Bank,
     Edenflowers.Feedback,
     Edenflowers.Marketing
   ]
