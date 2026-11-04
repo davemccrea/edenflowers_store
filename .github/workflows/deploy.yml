@@ -82,14 +82,13 @@ jobs:
             set -e
             cd /opt/edenflowers_store
 
-            # Pull latest image
-            docker compose pull
+            # Only the app: recreating cloudflared on a newer image drops the whole site
+            docker compose pull app
 
             # Run migrations before swapping traffic
             docker compose run --rm app /app/bin/migrate
 
-            # Restart app with new image
-            docker compose up -d --remove-orphans
+            docker compose up -d --no-deps app
 
             # Each deploy leaves the previous image behind; rollback re-pulls it from the registry
             docker image prune -af
