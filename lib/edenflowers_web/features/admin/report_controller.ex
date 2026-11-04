@@ -9,9 +9,13 @@ defmodule EdenflowersWeb.Admin.ReportController do
 
   alias Edenflowers.Accounting.MonthlyReport
 
-  def show(%{assigns: %{current_user: %{admin: true}}} = conn, %{"month" => month}) do
+  def show(%{assigns: %{current_user: %{admin: true} = user}} = conn, %{"month" => month}) do
     with {:ok, year, month_number} <- parse_month(month),
-         {:ok, filename, zip} <- MonthlyReport.build(year, month_number) do
+         {:ok, filename, zip, missing} <- MonthlyReport.build(year, month_number, psu_headers: psu_headers(conn)) do
+      if :bank_statement in missing do
+        Phoenix.PubSub.broadcast(Edenflowers.PubSub, report_topic(user), {:bank_statement_missing, month})
+      end
+
       send_download(conn, {:binary, zip}, filename: filename, content_type: "application/zip")
     else
       error ->
@@ -24,6 +28,26 @@ defmodule EdenflowersWeb.Admin.ReportController do
   end
 
   def show(conn, _params), do: send_resp(conn, :not_found, "Not found")
+
+  @doc """
+  Where the Overview Jennie downloaded from hears what the report left out,
+  since the tab the download opens in closes before it could say.
+  """
+  def report_topic(user), do: "admin:reports:#{user.id}"
+
+  # Every PSU header the browser gives us: the bank wants all it requires or none.
+  # Behind Cloudflare, remote_ip is the tunnel's; Cloudflare passes on Jennie's.
+  defp psu_headers(conn) do
+    ip_address = List.first(get_req_header(conn, "cf-connecting-ip")) || to_string(:inet.ntoa(conn.remote_ip))
+
+    forwarded =
+      for header <- ~w(user-agent referer accept accept-charset accept-encoding accept-language),
+          value = List.first(get_req_header(conn, header)),
+          into: %{},
+          do: {"psu-" <> header, value}
+
+    Map.put(forwarded, "psu-ip-address", ip_address)
+  end
 
   defp parse_month(<<year::binary-4, "-", month::binary-2>>) do
     with {year, ""} <- Integer.parse(year),

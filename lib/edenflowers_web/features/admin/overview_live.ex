@@ -20,6 +20,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.BankController
   alias EdenflowersWeb.Admin.PushSubscriptions
+  alias EdenflowersWeb.Admin.ReportController
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -30,6 +31,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       EdenflowersWeb.Endpoint.subscribe("admin:orders")
       EdenflowersWeb.Endpoint.subscribe("admin:bookings")
       EdenflowersWeb.Presence.subscribe()
+      Phoenix.PubSub.subscribe(Edenflowers.PubSub, ReportController.report_topic(socket.assigns.current_user))
     end
 
     {:ok,
@@ -149,6 +151,15 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{}, socket), do: {:noreply, assign_orders(socket)}
+
+  def handle_info({:bank_statement_missing, month}, socket) do
+    {:noreply,
+     put_flash(
+       socket,
+       :error,
+       ~t"The #{month} report was downloaded without the bank transactions, because the bank couldn't be read. Try again later, or reconnect the bank if it has disconnected."
+     )}
+  end
 
   # Whether customers can book `date` (:open), Jennie closed just that day (:closed),
   # or neither, when the weekday rule, same-day setting or deadline already shut it.

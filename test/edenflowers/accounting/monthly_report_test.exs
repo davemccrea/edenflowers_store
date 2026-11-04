@@ -7,6 +7,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
   alias Edenflowers.Accounting.MonthlyReport
   alias Edenflowers.Expenses
+  alias Edenflowers.External.EnableBankingAPI
   alias Edenflowers.External.PapraAPI
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders.VatRow
@@ -16,7 +17,17 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
   setup do
     stub(StripeAPI.Mock, :list_balance_transactions_page, fn _, _ -> {:ok, %{data: [], has_more: false}} end)
-    :ok
+
+    Req.Test.stub(EnableBankingAPI, &Req.Test.json(&1, %{"transactions" => [], "continuation_key" => nil}))
+
+    connection =
+      Ash.Seed.seed!(Edenflowers.Bank.Connection, %{
+        session_id: "session-1",
+        account_ids: ["account-1"],
+        valid_until: DateTime.add(DateTime.utc_now(), 90, :day)
+      })
+
+    %{bank_connection: connection}
   end
 
   # A 25.5% product for 80.00 and a 13.5% delivery fee of 5.00.
@@ -96,7 +107,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     # 00:00:30 on 1 October in Helsinki.
     generate(payment(order_id: paid.id, amount: Decimal.new("1.00"), method: :cash, paid_at: ~U[2026-09-30 21:00:30Z]))
 
-    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
     [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(1)
 
     assert headings == [
@@ -137,7 +148,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              [nil, nil, nil, "Summa", nil, "177.75", "43.92", "221.67"]
            ]
 
-    assert {:ok, _, october} = MonthlyReport.build(2026, 10)
+    assert {:ok, _, october, _} = MonthlyReport.build(2026, 10)
 
     assert [_headings, [_date, "1001", "beställning", "Kontant" | _] | _] =
              october |> unzip() |> Map.fetch!("rapport-2026-10.xlsx") |> read_sheet(1)
@@ -168,12 +179,12 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     order = sales_order("ordinary-order")
     generate(payment(order_id: order.id, amount: Decimal.new("85"), paid_at: ~U[2026-09-15 08:00:00Z]))
 
-    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
     [_, _order_high, _order_low, low, high | _] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(1)
     assert Enum.drop(low, 4) == ["0.14", "0.03", "0.01", "0.04"]
     assert Enum.drop(high, 4) == ["0.255", "0.02", "0.01", "0.03"]
     assert Enum.at(low, 1) == to_string(invoice.number)
-    assert {:ok, _, october} = MonthlyReport.build(2026, 10)
+    assert {:ok, _, october, _} = MonthlyReport.build(2026, 10)
     [_, low, high | _] = october |> unzip() |> Map.fetch!("rapport-2026-10.xlsx") |> read_sheet(1)
     assert Enum.drop(low, 4) == ["0.14", "-0.03", "-0.01", "-0.04"]
     assert Enum.drop(high, 4) == ["0.255", "-0.02", "-0.01", "-0.03"]
@@ -193,10 +204,11 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       "org_test", document_id -> {:ok, %{body: "%PDF #{document_id}", content_type: "application/pdf"}}
     end)
 
-    assert {:ok, "redovisning-2026-09.zip", zip} = MonthlyReport.build(2026, 9)
+    assert {:ok, "redovisning-2026-09.zip", zip, _} = MonthlyReport.build(2026, 9)
     files = unzip(zip)
 
     assert Map.keys(files) |> Enum.sort() == [
+             "kontoutdrag-2026-09.csv",
              "kvitton/001_2026-09-03_Kukkatukku-Oy.pdf",
              "kvitton/002_2026-09-11_Adobe.pdf",
              "kvitton/003_2026-09-20_Tyokalu-Ab.png",
@@ -252,19 +264,19 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
     stub(PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, %{body: "%PDF", content_type: "application/pdf"}} end)
 
-    assert {:ok, _, august} = MonthlyReport.build(2026, 8)
+    assert {:ok, _, august, _} = MonthlyReport.build(2026, 8)
     refute Map.has_key?(unzip(august), "kvitton/001_2026-09-02_Late-Oy.pdf")
-    assert Map.keys(unzip(august)) == ["rapport-2026-08.xlsx"]
+    assert Map.keys(unzip(august)) == ["kontoutdrag-2026-08.csv", "rapport-2026-08.xlsx"]
 
-    assert {:ok, _, september} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, september, _} = MonthlyReport.build(2026, 9)
     assert Map.has_key?(unzip(september), "kvitton/001_2026-09-02_Late-Oy.pdf")
   end
 
   test "leaves out expenses with no date" do
     create_expense("doc-undated", "Undated Oy", nil, "EUR", "5.00", "1.00", paid_on: nil)
 
-    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
-    assert Map.keys(unzip(zip)) == ["rapport-2026-09.xlsx"]
+    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
+    assert Map.keys(unzip(zip)) == ["kontoutdrag-2026-09.csv", "rapport-2026-09.xlsx"]
   end
 
   test "marks a receipt Papra can't serve as missing and still builds the report" do
@@ -276,11 +288,16 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       _, "doc-missing" -> {:error, {:papra_http_error, 500}}
     end)
 
-    {{:ok, _, zip}, log} = with_log(fn -> MonthlyReport.build(2026, 9) end)
+    {{:ok, _, zip, _}, log} = with_log(fn -> MonthlyReport.build(2026, 9) end)
     files = unzip(zip)
 
     assert log =~ "Receipt doc-missing couldn't be fetched"
-    assert Map.keys(files) |> Enum.sort() == ["kvitton/001_2026-09-04_Found-Oy.pdf", "rapport-2026-09.xlsx"]
+
+    assert Map.keys(files) |> Enum.sort() == [
+             "kontoutdrag-2026-09.csv",
+             "kvitton/001_2026-09-04_Found-Oy.pdf",
+             "rapport-2026-09.xlsx"
+           ]
 
     assert [_headings, found, missing_row | _] = read_sheet(files["rapport-2026-09.xlsx"], 2)
     assert List.last(found) == "001_2026-09-04_Found-Oy.pdf"
@@ -311,7 +328,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       {:ok, %{data: second_page, has_more: false}}
     end)
 
-    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
     [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(3)
 
     assert headings == ["Created", "Type", "Description", "Amount", "Fee", "Net", "Payout"]
@@ -339,6 +356,68 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     expect(StripeAPI.Mock, :list_balance_transactions_page, fn _, _ -> {:error, :timeout} end)
 
     assert {:error, :timeout} = MonthlyReport.build(2026, 9)
+  end
+
+  describe "the bank statement" do
+    test "is the month's booked transactions, read with Jennie present" do
+      Req.Test.stub(EnableBankingAPI, fn conn ->
+        assert conn.request_path == "/accounts/account-1/transactions"
+        assert conn.query_params["date_from"] == "2026-09-01"
+        assert conn.query_params["date_to"] == "2026-09-30"
+        assert Plug.Conn.get_req_header(conn, "psu-ip-address") == ["203.0.113.7"]
+
+        Req.Test.json(conn, %{
+          "transactions" => [
+            %{
+              "entry_reference" => "tx-2",
+              "credit_debit_indicator" => "CRDT",
+              "transaction_amount" => %{"amount" => "100.00", "currency" => "EUR"},
+              "booking_date" => "2026-09-04",
+              "reference_number" => "123453",
+              "debtor" => %{"name" => "Hääpari"},
+              "remittance_information" => []
+            },
+            %{
+              "entry_reference" => "tx-1",
+              "credit_debit_indicator" => "DBIT",
+              "transaction_amount" => %{"amount" => "875.50", "currency" => "EUR"},
+              "booking_date" => "2026-09-02",
+              "creditor" => %{"name" => "Kukkatukku \"Oy\""},
+              "remittance_information" => ["Lasku 42"]
+            }
+          ],
+          "continuation_key" => nil
+        })
+      end)
+
+      assert {:ok, _, zip, _} =
+               MonthlyReport.build(2026, 9,
+                 psu_headers: %{"psu-ip-address" => "203.0.113.7", "psu-user-agent" => "Safari"}
+               )
+
+      assert zip |> unzip() |> Map.fetch!("kontoutdrag-2026-09.csv") |> String.split("\r\n", trim: true) |> tl() == [
+               ~s("2026-09-02";"-875,50";"EUR";"Kukkatukku ""Oy""";"";"Lasku 42";"tx-1"),
+               ~s("2026-09-04";"100,00";"EUR";"Hääpari";"123453";"";"tx-2")
+             ]
+    end
+
+    test "is left out, and said to be missing, when the bank can't be read" do
+      Req.Test.stub(EnableBankingAPI, &Plug.Conn.send_resp(&1, 429, "Too many requests"))
+
+      {{:ok, _, zip, missing}, _log} = with_log(fn -> MonthlyReport.build(2026, 9) end)
+
+      assert missing == [:bank_statement]
+      assert zip |> unzip() |> Map.has_key?("rapport-2026-09.xlsx")
+      refute zip |> unzip() |> Map.has_key?("kontoutdrag-2026-09.csv")
+    end
+
+    test "is said to be missing once the bank's consent has ended", %{bank_connection: connection} do
+      Ash.Seed.update!(connection, %{valid_until: DateTime.add(DateTime.utc_now(), -1, :day)})
+
+      {{:ok, _, _zip, missing}, _log} = with_log(fn -> MonthlyReport.build(2026, 9) end)
+
+      assert missing == [:bank_statement]
+    end
   end
 
   describe "the receivables sheet" do
@@ -372,7 +451,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     end
 
     test "lists what was still owed on each invoice at month end", ctx do
-      assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+      assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
       [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(4)
 
       assert headings == [
@@ -404,7 +483,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     end
 
     test "leaves the sales sheet counting only the month's payments", _ctx do
-      assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+      assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
       rows = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(1)
 
       # 50 paid at 23:30 on the last day, 20 part-paid, and 50 paid then undone; never the invoices' amounts.
@@ -423,8 +502,8 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     pay(part_paid, "25.00", ~U[2026-10-02 08:00:00Z])
     {:ok, _draft} = Payments.create_invoice(%{supply_date: ~D[2026-09-01]}, actor: admin)
 
-    assert {:ok, _, september} = MonthlyReport.build(2026, 9)
-    assert {:ok, _, october} = MonthlyReport.build(2026, 10)
+    assert {:ok, _, september, _} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, october, _} = MonthlyReport.build(2026, 10)
     files = unzip(september)
 
     assert invoice_files(files) == [
@@ -454,7 +533,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
     stub(PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, %{body: "%PDF", content_type: "application/pdf"}} end)
 
-    assert {:ok, _, zip} = MonthlyReport.build(2026, 9)
+    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
     [_headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(5)
 
     {expenses, [[] | totals]} = Enum.split_while(rows, &(&1 != []))

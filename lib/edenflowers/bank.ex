@@ -20,6 +20,7 @@ defmodule Edenflowers.Bank do
       define :bank_authorization_url, action: :authorization_url, args: [:state, :redirect_url]
       define :connect_bank, action: :connect, args: [:code]
       define :sync_bank_payments, action: :sync_payments
+      define :booked_bank_transactions, action: :booked_transactions, args: [:date_from, :date_to]
     end
   end
 end

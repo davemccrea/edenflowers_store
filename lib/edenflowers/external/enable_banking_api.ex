@@ -51,21 +51,36 @@ defmodule Edenflowers.External.EnableBankingAPI do
 
   @doc """
   The account's booked transactions from `date_from` on, every page of them,
-  each as `%{id, direction, amount, currency, booked_on, reference_number}`.
+  each as `%{id, direction, amount, currency, booked_on, reference_number, counterparty, message}`.
   `direction` is `:out` for a payment from the account, `:in` for one to it.
+
+  Options:
+    * `:date_to` - the last booking date to read.
+    * `:psu_headers` - Jennie's browser, as `[{"psu-ip-address", ip}, ...]`, when
+      she asked for the read. The bank then counts her as present, so the read
+      doesn't use one of the four a day it allows without her. Any PSU header
+      makes the bank expect all it requires (`required_psu_headers` in `/aspsps`),
+      so pass every one there is.
   """
-  def booked_transactions(account_id, date_from) do
-    fetch_transactions(account_id, [date_from: Date.to_iso8601(date_from), transaction_status: "BOOK"], [])
+  def booked_transactions(account_id, date_from, options \\ []) do
+    params =
+      [date_from: Date.to_iso8601(date_from), transaction_status: "BOOK"] ++
+        case options[:date_to] do
+          nil -> []
+          date_to -> [date_to: Date.to_iso8601(date_to)]
+        end
+
+    fetch_transactions(account_id, params, Keyword.get(options, :psu_headers, []), [])
   end
 
-  defp fetch_transactions(account_id, params, acc) do
+  defp fetch_transactions(account_id, params, headers, acc) do
     with {:ok, %{"transactions" => transactions} = page} <-
-           request(:get, "/accounts/#{account_id}/transactions", params: params) do
+           request(:get, "/accounts/#{account_id}/transactions", params: params, headers: headers) do
       acc = acc ++ Enum.map(transactions, &transaction/1)
 
       case page["continuation_key"] do
         key when is_binary(key) and key != "" ->
-          fetch_transactions(account_id, Keyword.put(params, :continuation_key, key), acc)
+          fetch_transactions(account_id, Keyword.put(params, :continuation_key, key), headers, acc)
 
         _last_page ->
           {:ok, acc}
@@ -74,13 +89,18 @@ defmodule Edenflowers.External.EnableBankingAPI do
   end
 
   defp transaction(transaction) do
+    direction = if(transaction["credit_debit_indicator"] == "CRDT", do: :in, else: :out)
+    counterparty = if direction == :in, do: transaction["debtor"], else: transaction["creditor"]
+
     %{
       id: transaction["entry_reference"] || transaction["transaction_id"],
-      direction: if(transaction["credit_debit_indicator"] == "CRDT", do: :in, else: :out),
+      direction: direction,
       amount: Decimal.new(transaction["transaction_amount"]["amount"]),
       currency: String.downcase(transaction["transaction_amount"]["currency"]),
       booked_on: Date.from_iso8601!(transaction["booking_date"]),
-      reference_number: transaction["reference_number"]
+      reference_number: transaction["reference_number"],
+      counterparty: counterparty && counterparty["name"],
+      message: transaction["remittance_information"] |> List.wrap() |> Enum.join(" ")
     }
   end
 
