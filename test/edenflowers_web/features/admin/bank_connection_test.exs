@@ -69,6 +69,7 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
     assert has_element?(view, "#bank-status", "Bank disconnected")
   end
 
+  @tag :capture_log
   test "a callback with someone else's state stores nothing", %{conn: conn} do
     Req.Test.stub(EnableBankingAPI, fn _conn -> flunk("Enable Banking was called") end)
     state = BankController.sign_state(%{id: Ash.UUID.generate()})
@@ -80,6 +81,7 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
     assert Ash.read!(Connection, authorize?: false) == []
   end
 
+  @tag :capture_log
   test "a code the bank rejects stores nothing", %{conn: conn, admin: user} do
     Req.Test.stub(EnableBankingAPI, fn conn ->
       conn |> Plug.Conn.put_status(422) |> Req.Test.json(%{"error" => "invalid code"})

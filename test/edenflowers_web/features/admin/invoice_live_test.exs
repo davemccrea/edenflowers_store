@@ -334,6 +334,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, "a[href='/admin/invoices/#{issued.id}']")
   end
 
+  @tag :capture_log
   test "drafts have no downloadable document", %{conn: conn, admin: admin} do
     invoice = draft(admin)
     conn = get(conn, ~p"/admin/invoices/#{invoice.id}/pdf")
