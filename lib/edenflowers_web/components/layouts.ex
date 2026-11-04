@@ -231,6 +231,8 @@ defmodule EdenflowersWeb.Layouts do
     default: false,
     doc: "pins the page to the window height so the content manages its own scrolling"
 
+  attr :search_term, :string, default: nil, doc: "prefills the header search, so a results page shows its query"
+
   slot :inner_block, required: true
 
   def admin(assigns) do
@@ -343,13 +345,13 @@ defmodule EdenflowersWeb.Layouts do
         </div>
 
         <div class="[view-transition-name:admin-search] border-base-content/12 border-b px-4 py-2 lg:hidden">
-          <.admin_search id="admin-search-mobile" />
+          <.admin_search id="admin-search-mobile" value={@search_term} />
         </div>
 
         <%!-- The view-transition name makes this a stacking context, so it needs a z-index for
              the user menu to open over a page's sticky header. --%>
         <div class="[view-transition-name:admin-header] border-base-content/12 relative z-30 hidden items-center justify-between gap-6 border-b px-8 py-3 lg:flex">
-          <.admin_search id="admin-search" class="w-full max-w-md" />
+          <.admin_search id="admin-search" value={@search_term} class="w-full max-w-md" />
           <div class="flex items-center gap-4">
             <.link
               href={~q"/#{language}"}
@@ -399,6 +401,7 @@ defmodule EdenflowersWeb.Layouts do
   end
 
   attr :id, :string, required: true
+  attr :value, :string, default: nil
   attr :class, :any, default: nil
 
   defp admin_search(assigns) do
@@ -413,9 +416,10 @@ defmodule EdenflowersWeb.Layouts do
         id={@id}
         type="search"
         name="q"
+        value={@value}
         data-admin-search
         placeholder={dgettext("admin", "Search orders and customers…")}
-        class="input w-full pl-9 lg:input-sm"
+        class="input w-full pl-9 lg:pr-10"
       />
       <kbd
         aria-hidden="true"

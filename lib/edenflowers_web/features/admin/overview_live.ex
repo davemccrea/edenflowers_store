@@ -63,7 +63,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:grid-rows-[max-content_max-content_1fr] xl:items-start">
           <.attention_widget :if={@attention != []} groups={@attention} locale={@locale} />
-          <div class="min-w-0 space-y-6 xl:col-start-1 xl:row-span-3 xl:row-start-1">
+          <%!-- Below xl the wrapper dissolves into the page grid, so a phone still reads
+               sales before the monthly accounting. --%>
+          <div class="contents xl:col-start-1 xl:row-span-3 xl:row-start-1 xl:block xl:min-w-0 xl:space-y-6">
             <.days_card
               days={@days}
               day={selected_day(@day, @days)}
@@ -72,6 +74,10 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               today={@today}
               locale={@locale}
             />
+            <div class="grid min-w-0 gap-6 max-xl:order-last sm:grid-cols-2 sm:items-start">
+              <.accounting_widget month={@report_month} bank_connection={@bank_connection} locale={@locale} />
+              <.online_customers customers={@connected_customers} />
+            </div>
           </div>
           <div class="min-w-0 xl:col-start-2">
             <.sales_widget
@@ -83,10 +89,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               owed={@owed}
               locale={@locale}
             />
-          </div>
-          <div class="min-w-0 xl:col-start-2">
-            <.accounting_widget month={@report_month} bank_connection={@bank_connection} locale={@locale} />
-            <.online_customers customers={@connected_customers} />
           </div>
         </div>
       </.admin_page>
@@ -397,24 +399,25 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <dd class="text-base-content text-3xl font-semibold tabular-nums tracking-tight">
             {Format.currency(@sales.revenue, @locale)}
           </dd>
-          <dd id="revenue-last-month" class="text-base-content/75 mt-0.5 text-xs tabular-nums">
-            {~t"#{amount = Format.currency(@last_month.revenue, @locale)} last month by #{date = Format.day_month(@last_month_to, @locale)}"}
-          </dd>
         </dl>
 
-        <div class="text-right">
-          <dl id="sales">
-            <dt class="text-base-content/75 text-sm">{~t"Sales"}</dt>
-            <dd class="text-base-content text-3xl font-semibold tabular-nums tracking-tight">{@sales.order_count}</dd>
-          </dl>
-          <p id="sales-last-month" class="text-base-content/75 mt-0.5 text-xs tabular-nums">
-            {~t"#{count = @last_month.order_count} last month by #{date = Format.day_month(@last_month_to, @locale)}"}
-          </p>
-        </div>
+        <dl id="sales" class="text-right">
+          <dt class="text-base-content/75 text-sm">{~t"Sales"}</dt>
+          <dd class="text-base-content text-xl font-semibold tabular-nums">{@sales.order_count}</dd>
+        </dl>
       </div>
 
+      <%!-- The date once, then each figure under the one it compares with. --%>
+      <dl id="last-month" class="text-base-content/75 mt-3 text-sm">
+        <dt class="text-xs">{~t"Last month by #{date = Format.day_month(@last_month_to, @locale)}"}</dt>
+        <dd class="flex justify-between gap-4 tabular-nums">
+          <span id="revenue-last-month">{Format.currency(@last_month.revenue, @locale)}</span>
+          <span id="sales-last-month">{@last_month.order_count}</span>
+        </dd>
+      </dl>
+
       <figure id="revenue-pace" class="mt-4" aria-hidden="true">
-        <div class="border-base-content/12 relative h-24 border-b">
+        <div class="border-base-content/12 relative h-28 border-b">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">
             <path d={@chart.this_area} class="fill-primary/12" />
             <path
@@ -432,6 +435,11 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               class="stroke-primary stroke-2"
             />
           </svg>
+          <%!-- Where last month stood on the same day: the figure in the row above. --%>
+          <span
+            class="border-base-content/50 bg-base-100 absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+            style={"left: #{@chart.last_today_x}%; top: #{@chart.last_today_y}%"}
+          />
           <span
             class="bg-primary ring-base-100 absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2"
             style={"left: #{@chart.today_x}%; top: #{@chart.today_y}%"}
@@ -482,6 +490,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     this_points = this |> Enum.with_index() |> Enum.map(fn {value, index} -> point.(index, value) end)
     last_points = last |> Enum.with_index() |> Enum.map(fn {value, index} -> point.(index, value) end)
     {today_x, today_y} = List.last(this_points)
+    # Date.shift clamps the same day last month, so 31.3. compares with 28.2., the line's end.
+    {last_today_x, last_today_y} = Enum.at(last_points, min(length(this), length(last)) - 1)
     {_, baseline} = point.(0, low)
 
     %{
@@ -489,7 +499,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       this_area: svg_path(this_points) <> " L#{today_x},#{baseline} L0,#{baseline} Z",
       last_line: svg_path(last_points),
       today_x: today_x,
-      today_y: today_y
+      today_y: today_y,
+      last_today_x: last_today_x,
+      last_today_y: last_today_y
     }
   end
 
@@ -508,7 +520,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     assigns = assign(assigns, named: named, anonymous_count: length(anonymous))
 
     ~H"""
-    <div id="connected-customers" class="mt-6">
+    <div id="connected-customers" class="min-w-0">
       <.widget title={~t"Online customers"}>
         <p class="text-2xl font-semibold tabular-nums" id="connected-customers-count">
           {length(@customers)}

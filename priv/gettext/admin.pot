@@ -11,22 +11,12 @@
 msgid ""
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:401
-#, elixir-autogen, elixir-format
-msgid "%{amount} last month by %{date}"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/overview_live.ex:411
-#, elixir-autogen, elixir-format
-msgid "%{count} last month by %{date}"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/products_live.ex:142
 #, elixir-autogen, elixir-format
 msgid "%{count} left"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:858
+#: lib/edenflowers_web/features/admin/overview_live.ex:870
 #, elixir-autogen, elixir-format
 msgid "%{count} order(s)"
 msgid_plural "%{count} order(s)"
@@ -89,14 +79,14 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:603
+#: lib/edenflowers_web/components/layouts.ex:607
 #: lib/edenflowers_web/features/admin/account_live.ex:21
 #: lib/edenflowers_web/features/admin/account_live.ex:36
 #, elixir-autogen, elixir-format
 msgid "Account"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:544
+#: lib/edenflowers_web/features/admin/overview_live.ex:556
 #, elixir-autogen, elixir-format
 msgid "Accountant report"
 msgstr ""
@@ -154,13 +144,13 @@ msgstr ""
 msgid "Admin"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:567
+#: lib/edenflowers_web/components/layouts.ex:571
 #, elixir-autogen, elixir-format
 msgid "Admin account menu"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:287
-#: lib/edenflowers_web/components/layouts.ex:300
+#: lib/edenflowers_web/components/layouts.ex:289
+#: lib/edenflowers_web/components/layouts.ex:302
 #, elixir-autogen, elixir-format
 msgid "Admin navigation"
 msgstr ""
@@ -412,7 +402,7 @@ msgid "Card replaced"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:253
-#: lib/edenflowers_web/features/admin/overview_live.ex:912
+#: lib/edenflowers_web/features/admin/overview_live.ex:924
 #, elixir-autogen, elixir-format
 msgid "Card to write"
 msgstr ""
@@ -453,7 +443,7 @@ msgid "Check the delivery photo below, then send it again from the menu."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:225
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:382
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:379
 #, elixir-autogen, elixir-format
 msgid "Check the error, then send it again from the menu."
 msgstr ""
@@ -485,8 +475,8 @@ msgid "Close"
 msgstr ""
 
 #: lib/edenflowers_web/components/admin_calendar.ex:107
-#: lib/edenflowers_web/features/admin/overview_live.ex:703
-#: lib/edenflowers_web/features/admin/overview_live.ex:857
+#: lib/edenflowers_web/features/admin/overview_live.ex:715
+#: lib/edenflowers_web/features/admin/overview_live.ex:869
 #, elixir-autogen, elixir-format
 msgid "Closed"
 msgstr ""
@@ -533,8 +523,8 @@ msgstr ""
 msgid "Confirmation emailed."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:742
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:812
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:739
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:809
 #, elixir-autogen, elixir-format
 msgid "Confirmation queued."
 msgstr ""
@@ -582,17 +572,17 @@ msgstr ""
 msgid "Could not email the payment link."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:679
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:676
 #, elixir-autogen, elixir-format
 msgid "Could not fetch refunds from Stripe. Try again in a moment."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:753
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:750
 #, elixir-autogen, elixir-format
 msgid "Could not mark order as fulfilled."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:816
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:813
 #, elixir-autogen, elixir-format
 msgid "Could not queue the confirmation."
 msgstr ""
@@ -617,7 +607,7 @@ msgstr ""
 msgid "Could not remove the seat."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:542
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:539
 #, elixir-autogen, elixir-format
 msgid "Could not save the note."
 msgstr ""
@@ -629,13 +619,13 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:340
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:484
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:794
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:827
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:791
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:824
 #, elixir-autogen, elixir-format
 msgid "Could not send the email. Try again in a moment."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:805
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:802
 #, elixir-autogen, elixir-format
 msgid "Could not send the receipt. Try again in a moment."
 msgstr ""
@@ -661,19 +651,19 @@ msgid "Could not upload the picture."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:220
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:721
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:718
 #, elixir-autogen, elixir-format
 msgid "Couldn't email the confirmation."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:379
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:723
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:376
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:720
 #, elixir-autogen, elixir-format
 msgid "Couldn't email the order details."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:376
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:722
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:373
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:719
 #, elixir-autogen, elixir-format
 msgid "Couldn't email the receipt."
 msgstr ""
@@ -695,7 +685,7 @@ msgstr ""
 msgid "Course saved."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:248
+#: lib/edenflowers_web/components/layouts.ex:250
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:61
 #: lib/edenflowers_web/features/admin/course_form_live.ex:256
 #: lib/edenflowers_web/features/admin/courses_live.ex:28
@@ -721,7 +711,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/customers_live.ex:55
 #: lib/edenflowers_web/features/admin/invoices_live.ex:48
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:389
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:386
 #: lib/edenflowers_web/features/admin/order_form_live.ex:106
 #: lib/edenflowers_web/features/admin/order_log.ex:126
 #: lib/edenflowers_web/features/admin/orders_live.ex:74
@@ -736,11 +726,11 @@ msgstr ""
 msgid "Customer not found."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:243
+#: lib/edenflowers_web/components/layouts.ex:245
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:54
 #: lib/edenflowers_web/features/admin/customers_live.ex:23
 #: lib/edenflowers_web/features/admin/customers_live.ex:37
-#: lib/edenflowers_web/features/admin/search_live.ex:86
+#: lib/edenflowers_web/features/admin/search_live.ex:90
 #, elixir-autogen, elixir-format
 msgid "Customers"
 msgstr ""
@@ -756,7 +746,7 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:763
+#: lib/edenflowers_web/features/admin/overview_live.ex:775
 #, elixir-autogen, elixir-format
 msgid "Days"
 msgstr ""
@@ -777,7 +767,7 @@ msgstr ""
 msgid "Deliver to"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:953
+#: lib/edenflowers_web/features/admin/overview_live.ex:965
 #, elixir-autogen, elixir-format
 msgid "Deliveries"
 msgstr ""
@@ -804,7 +794,7 @@ msgstr ""
 msgid "Delivery address"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:251
+#: lib/edenflowers_web/components/layouts.ex:253
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:54
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:93
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:200
@@ -912,7 +902,7 @@ msgstr ""
 msgid "Distance in km"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:558
+#: lib/edenflowers_web/features/admin/overview_live.ex:570
 #, elixir-autogen, elixir-format
 msgid "Download"
 msgstr ""
@@ -1087,7 +1077,7 @@ msgstr ""
 msgid "Expense: %{var}"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:262
+#: lib/edenflowers_web/components/layouts.ex:264
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:44
 #: lib/edenflowers_web/features/admin/expenses_live.ex:23
 #: lib/edenflowers_web/features/admin/expenses_live.ex:37
@@ -1130,7 +1120,7 @@ msgstr ""
 msgid "Fetch refunds from Stripe"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:259
+#: lib/edenflowers_web/components/layouts.ex:261
 #: lib/edenflowers_web/features/admin/links_live.ex:27
 #, elixir-autogen, elixir-format
 msgid "Finances"
@@ -1272,7 +1262,7 @@ msgstr ""
 msgid "Get directions"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:307
+#: lib/edenflowers_web/features/admin/overview_live.ex:309
 #, elixir-autogen, elixir-format
 msgid "Get new orders on this phone"
 msgstr ""
@@ -1303,22 +1293,22 @@ msgstr ""
 msgid "Goes after the first line of the email."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:182
+#: lib/edenflowers_web/features/admin/overview_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "Hi"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:906
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:903
 #, elixir-autogen, elixir-format
 msgid "Hi %{order_customer_first_name}, you can pay %{amount} for your Eden Flowers order %{order_order_reference} here: %{url}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:897
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:894
 #, elixir-autogen, elixir-format
 msgid "Hi %{order_customer_first_name}, your Eden Flowers order %{order_order_reference} is ready for pick up."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:180
+#: lib/edenflowers_web/features/admin/overview_live.ex:182
 #, elixir-autogen, elixir-format
 msgid "Hi, %{first_name}"
 msgstr ""
@@ -1329,7 +1319,7 @@ msgid "Hide photo %{n} from the store's gallery"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/invoice_live.ex:616
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:441
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:438
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:175
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:212
 #, elixir-autogen, elixir-format
@@ -1458,7 +1448,7 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:450
+#: lib/edenflowers_web/features/admin/overview_live.ex:458
 #, elixir-autogen, elixir-format
 msgid "Last month"
 msgstr ""
@@ -1518,7 +1508,7 @@ msgstr ""
 msgid "Mark as delivered"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:253
+#: lib/edenflowers_web/components/layouts.ex:255
 #: lib/edenflowers_web/features/admin/components/components.ex:310
 #, elixir-autogen, elixir-format
 msgid "Marketing"
@@ -1573,8 +1563,8 @@ msgstr ""
 msgid "Minimum cart total (€)"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:437
-#: lib/edenflowers_web/features/admin/overview_live.ex:915
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:434
+#: lib/edenflowers_web/features/admin/overview_live.ex:927
 #, elixir-autogen, elixir-format
 msgid "Missing recipient phone"
 msgstr ""
@@ -1584,7 +1574,7 @@ msgstr ""
 msgid "MobilePay"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:553
+#: lib/edenflowers_web/features/admin/overview_live.ex:565
 #, elixir-autogen, elixir-format
 msgid "Month"
 msgstr ""
@@ -1615,7 +1605,7 @@ msgstr ""
 msgid "Name and description"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:631
+#: lib/edenflowers_web/features/admin/overview_live.ex:643
 #, elixir-autogen, elixir-format
 msgid "Needs attention"
 msgstr ""
@@ -1699,7 +1689,7 @@ msgid "No bookings yet"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/components.ex:75
-#: lib/edenflowers_web/features/admin/search_live.ex:95
+#: lib/edenflowers_web/features/admin/search_live.ex:99
 #, elixir-autogen, elixir-format
 msgid "No customers found."
 msgstr ""
@@ -1719,12 +1709,12 @@ msgstr ""
 msgid "No more orders are made or charged. This can't be undone."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:669
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:666
 #, elixir-autogen, elixir-format
 msgid "No new refunds in Stripe."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/search_live.ex:76
+#: lib/edenflowers_web/features/admin/search_live.ex:80
 #, elixir-autogen, elixir-format
 msgid "No orders found."
 msgstr ""
@@ -1749,7 +1739,7 @@ msgstr ""
 msgid "Not fulfilled yet"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:313
+#: lib/edenflowers_web/features/admin/overview_live.ex:315
 #, elixir-autogen, elixir-format
 msgid "Not now"
 msgstr ""
@@ -1770,7 +1760,7 @@ msgstr ""
 msgid "Not subscribed"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:538
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:535
 #, elixir-autogen, elixir-format
 msgid "Note saved."
 msgstr ""
@@ -1791,17 +1781,17 @@ msgstr ""
 msgid "Nothing left to settle on this order."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:869
+#: lib/edenflowers_web/features/admin/overview_live.ex:881
 #, elixir-autogen, elixir-format
 msgid "Nothing to make"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:867
+#: lib/edenflowers_web/features/admin/overview_live.ex:879
 #, elixir-autogen, elixir-format
 msgid "Nothing to make today"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:868
+#: lib/edenflowers_web/features/admin/overview_live.ex:880
 #, elixir-autogen, elixir-format
 msgid "Nothing to make tomorrow"
 msgstr ""
@@ -1875,7 +1865,7 @@ msgstr ""
 msgid "Order %{reference} cancelled by the customer"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:574
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:571
 #, elixir-autogen, elixir-format
 msgid "Order cancelled."
 msgstr ""
@@ -1890,17 +1880,17 @@ msgstr ""
 msgid "Order details failed"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:790
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:787
 #, elixir-autogen, elixir-format
 msgid "Order details sent."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:738
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:735
 #, elixir-autogen, elixir-format
 msgid "Order marked as collected."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:737
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:734
 #, elixir-autogen, elixir-format
 msgid "Order marked as delivered."
 msgstr ""
@@ -1926,7 +1916,7 @@ msgstr ""
 msgid "Ordered"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:241
+#: lib/edenflowers_web/components/layouts.ex:243
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:65
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:112
 #: lib/edenflowers_web/features/admin/customers_live.ex:66
@@ -1934,7 +1924,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_form_live.ex:561
 #: lib/edenflowers_web/features/admin/orders_live.ex:28
 #: lib/edenflowers_web/features/admin/orders_live.ex:42
-#: lib/edenflowers_web/features/admin/search_live.ex:59
+#: lib/edenflowers_web/features/admin/search_live.ex:63
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:141
 #, elixir-autogen, elixir-format
 msgid "Orders"
@@ -1958,12 +1948,12 @@ msgstr ""
 msgid "Overdue"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:198
+#: lib/edenflowers_web/features/admin/overview_live.ex:200
 #, elixir-autogen, elixir-format
 msgid "Overdue orders"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:238
+#: lib/edenflowers_web/components/layouts.ex:240
 #: lib/edenflowers_web/features/admin/overview_live.ex:39
 #, elixir-autogen, elixir-format
 msgid "Overview"
@@ -2053,7 +2043,7 @@ msgstr ""
 msgid "Payment needed emailed"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:202
+#: lib/edenflowers_web/features/admin/overview_live.ex:204
 #, elixir-autogen, elixir-format
 msgid "Payment overdue"
 msgstr ""
@@ -2090,7 +2080,7 @@ msgid "Payment reminder emailed"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:480
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:823
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:820
 #, elixir-autogen, elixir-format
 msgid "Payment reminder sent."
 msgstr ""
@@ -2169,7 +2159,7 @@ msgstr ""
 msgid "Pickup for today %{order_order_reference}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:954
+#: lib/edenflowers_web/features/admin/overview_live.ex:966
 #, elixir-autogen, elixir-format
 msgid "Pickups"
 msgstr ""
@@ -2284,7 +2274,7 @@ msgstr ""
 msgid "Product saved."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:247
+#: lib/edenflowers_web/components/layouts.ex:249
 #: lib/edenflowers_web/features/admin/product_form_live.ex:76
 #: lib/edenflowers_web/features/admin/products_live.ex:28
 #: lib/edenflowers_web/features/admin/products_live.ex:43
@@ -2312,7 +2302,7 @@ msgstr ""
 msgid "Promotion saved."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:249
+#: lib/edenflowers_web/components/layouts.ex:251
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:49
 #: lib/edenflowers_web/features/admin/promotions_live.ex:27
 #: lib/edenflowers_web/features/admin/promotions_live.ex:42
@@ -2356,12 +2346,12 @@ msgstr ""
 msgid "Receipt failed"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:801
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:798
 #, elixir-autogen, elixir-format
 msgid "Receipt sent."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:423
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:420
 #: lib/edenflowers_web/features/admin/order_form_live.ex:270
 #: lib/edenflowers_web/features/admin/order_log.ex:123
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:199
@@ -2456,7 +2446,7 @@ msgstr ""
 msgid "Refunded with Stripe."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:675
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:672
 #, elixir-autogen, elixir-format
 msgid "Refunds from Stripe recorded."
 msgstr ""
@@ -2498,7 +2488,7 @@ msgstr ""
 msgid "Rent"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:722
+#: lib/edenflowers_web/features/admin/overview_live.ex:734
 #, elixir-autogen, elixir-format
 msgid "Reopen orders"
 msgstr ""
@@ -2554,7 +2544,7 @@ msgstr ""
 msgid "Resumed"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:396
+#: lib/edenflowers_web/features/admin/overview_live.ex:398
 #, elixir-autogen, elixir-format
 msgid "Revenue"
 msgstr ""
@@ -2570,8 +2560,8 @@ msgstr ""
 msgid "Reviewed"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:239
-#: lib/edenflowers_web/features/admin/overview_live.ex:407
+#: lib/edenflowers_web/components/layouts.ex:241
+#: lib/edenflowers_web/features/admin/overview_live.ex:405
 #, elixir-autogen, elixir-format
 msgid "Sales"
 msgstr ""
@@ -2596,7 +2586,7 @@ msgstr ""
 msgid "Same-day order deadline"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:309
+#: lib/edenflowers_web/features/admin/overview_live.ex:311
 #, elixir-autogen, elixir-format
 msgid "Same-day orders arrive straight away."
 msgstr ""
@@ -2669,12 +2659,12 @@ msgstr ""
 msgid "Search name…"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:407
+#: lib/edenflowers_web/components/layouts.ex:410
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:417
+#: lib/edenflowers_web/components/layouts.ex:421
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers…"
 msgstr ""
@@ -2711,12 +2701,12 @@ msgstr ""
 msgid "Seats and price"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/search_live.ex:101
+#: lib/edenflowers_web/features/admin/search_live.ex:105
 #, elixir-autogen, elixir-format
 msgid "See all matching customers"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/search_live.ex:82
+#: lib/edenflowers_web/features/admin/search_live.ex:86
 #, elixir-autogen, elixir-format
 msgid "See all matching orders"
 msgstr ""
@@ -2767,7 +2757,7 @@ msgstr ""
 msgid "Sent to"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:245
+#: lib/edenflowers_web/components/layouts.ex:247
 #, elixir-autogen, elixir-format
 msgid "Shop"
 msgstr ""
@@ -2793,7 +2783,7 @@ msgstr ""
 msgid "Shown on this device only."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:609
+#: lib/edenflowers_web/components/layouts.ex:613
 #: lib/edenflowers_web/features/admin/account_live.ex:121
 #, elixir-autogen, elixir-format
 msgid "Sign out"
@@ -2865,7 +2855,7 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:461
+#: lib/edenflowers_web/features/admin/overview_live.ex:469
 #, elixir-autogen, elixir-format
 msgid "Still to come in"
 msgstr ""
@@ -2881,7 +2871,7 @@ msgstr ""
 msgid "Stock"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:720
+#: lib/edenflowers_web/features/admin/overview_live.ex:732
 #, elixir-autogen, elixir-format
 msgid "Stop orders"
 msgstr ""
@@ -2927,7 +2917,7 @@ msgstr ""
 msgid "Subscription paused."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:199
+#: lib/edenflowers_web/features/admin/overview_live.ex:201
 #, elixir-autogen, elixir-format
 msgid "Subscription payment failed"
 msgstr ""
@@ -2937,7 +2927,7 @@ msgstr ""
 msgid "Subscription resumed."
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:242
+#: lib/edenflowers_web/components/layouts.ex:244
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:80
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:56
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:28
@@ -2951,13 +2941,13 @@ msgstr ""
 msgid "Swedish"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:488
+#: lib/edenflowers_web/components/layouts.ex:492
 #: lib/edenflowers_web/features/admin/links_live.ex:21
 #, elixir-autogen, elixir-format
 msgid "System"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:519
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:516
 #, elixir-autogen, elixir-format
 msgid "Take a photo of where you left the order."
 msgstr ""
@@ -2972,7 +2962,7 @@ msgstr ""
 msgid "Text payment link"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:403
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:400
 #, elixir-autogen, elixir-format
 msgid "Text ready for pickup"
 msgstr ""
@@ -3089,8 +3079,8 @@ msgstr ""
 msgid "This does not refund. Refund the seat here afterwards. Remove one seat from this booking?"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:393
-#: lib/edenflowers_web/features/admin/overview_live.ex:446
+#: lib/edenflowers_web/features/admin/overview_live.ex:395
+#: lib/edenflowers_web/features/admin/overview_live.ex:454
 #, elixir-autogen, elixir-format
 msgid "This month"
 msgstr ""
@@ -3153,7 +3143,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/invoice_live.ex:101
 #: lib/edenflowers_web/features/admin/invoices_live.ex:84
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:100
-#: lib/edenflowers_web/features/admin/overview_live.ex:919
+#: lib/edenflowers_web/features/admin/overview_live.ex:931
 #, elixir-autogen, elixir-format
 msgid "To collect %{amount}"
 msgstr ""
@@ -3166,7 +3156,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/components/components.ex:549
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:112
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:43
-#: lib/edenflowers_web/features/admin/overview_live.ex:201
+#: lib/edenflowers_web/features/admin/overview_live.ex:203
 #, elixir-autogen, elixir-format
 msgid "To refund"
 msgstr ""
@@ -3189,7 +3179,7 @@ msgid "To: %{email}"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:662
-#: lib/edenflowers_web/features/admin/overview_live.ex:867
+#: lib/edenflowers_web/features/admin/overview_live.ex:879
 #, elixir-autogen, elixir-format
 msgid "Today"
 msgstr ""
@@ -3209,7 +3199,7 @@ msgstr ""
 msgid "Toggle week %{first} to %{last}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:868
+#: lib/edenflowers_web/features/admin/overview_live.ex:880
 #, elixir-autogen, elixir-format
 msgid "Tomorrow"
 msgstr ""
@@ -3254,7 +3244,7 @@ msgstr ""
 msgid "Travel"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:314
+#: lib/edenflowers_web/features/admin/overview_live.ex:316
 #, elixir-autogen, elixir-format
 msgid "Turn on"
 msgstr ""
@@ -3321,9 +3311,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:53
 #: lib/edenflowers_web/features/admin/customers_live.ex:60
 #: lib/edenflowers_web/features/admin/orders_live.ex:79
-#: lib/edenflowers_web/features/admin/overview_live.ex:268
-#: lib/edenflowers_web/features/admin/overview_live.ex:282
-#: lib/edenflowers_web/features/admin/overview_live.ex:890
+#: lib/edenflowers_web/features/admin/overview_live.ex:270
+#: lib/edenflowers_web/features/admin/overview_live.ex:284
+#: lib/edenflowers_web/features/admin/overview_live.ex:902
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:55
 #: lib/edenflowers_web/features/admin/subscriptions_live.ex:65
 #, elixir-autogen, elixir-format
@@ -3335,7 +3325,7 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/expenses_live.ex:111
 #: lib/edenflowers_web/features/admin/invoices_live.ex:67
 #: lib/edenflowers_web/features/admin/invoices_live.ex:107
-#: lib/edenflowers_web/features/admin/overview_live.ex:921
+#: lib/edenflowers_web/features/admin/overview_live.ex:933
 #, elixir-autogen, elixir-format
 msgid "Unpaid"
 msgstr ""
@@ -3443,19 +3433,19 @@ msgstr ""
 msgid "View %{amount} payment in Stripe"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:790
+#: lib/edenflowers_web/features/admin/overview_live.ex:802
 #, elixir-autogen, elixir-format
 msgid "View all orders"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:414
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:411
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "View customer's orders"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:227
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:383
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:380
 #, elixir-autogen, elixir-format
 msgid "View errors"
 msgstr ""
@@ -3478,8 +3468,8 @@ msgstr ""
 msgid "View receipt"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:328
-#: lib/edenflowers_web/components/layouts.ex:359
+#: lib/edenflowers_web/components/layouts.ex:330
+#: lib/edenflowers_web/components/layouts.ex:361
 #, elixir-autogen, elixir-format
 msgid "Storefront"
 msgstr ""
@@ -3504,7 +3494,7 @@ msgstr ""
 msgid "WhatsApp payment link"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:404
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:401
 #, elixir-autogen, elixir-format
 msgid "WhatsApp ready for pickup"
 msgstr ""
@@ -3808,24 +3798,24 @@ msgstr ""
 msgid "Must be one of the product's photos"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:520
+#: lib/edenflowers_web/features/admin/overview_live.ex:532
 #, elixir-autogen, elixir-format
 msgid "%{count} anonymous visitor"
 msgid_plural "%{count} anonymous visitors"
 msgstr[0] ""
 msgstr[1] ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:517
+#: lib/edenflowers_web/features/admin/overview_live.ex:529
 #, elixir-autogen, elixir-format
 msgid "No customers online"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:512
+#: lib/edenflowers_web/features/admin/overview_live.ex:524
 #, elixir-autogen, elixir-format
 msgid "Online customers"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:267
+#: lib/edenflowers_web/components/layouts.ex:269
 #: lib/edenflowers_web/features/admin/links_live.ex:16
 #: lib/edenflowers_web/features/admin/links_live.ex:64
 #, elixir-autogen, elixir-format
@@ -4037,7 +4027,7 @@ msgstr ""
 msgid "Shown with the course photo. Add a website to link the photographer's name."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:716
+#: lib/edenflowers_web/features/admin/overview_live.ex:728
 #, elixir-autogen, elixir-format
 msgid "Stop orders for this day? Customers can't order for it until you reopen it."
 msgstr ""
@@ -4089,7 +4079,7 @@ msgstr ""
 msgid "Invoice %{number}"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:261
+#: lib/edenflowers_web/components/layouts.ex:263
 #: lib/edenflowers_web/features/admin/invoice_live.ex:831
 #: lib/edenflowers_web/features/admin/invoices_live.ex:14
 #: lib/edenflowers_web/features/admin/invoices_live.ex:23
@@ -4519,7 +4509,7 @@ msgstr ""
 msgid "Wedding date"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:365
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:362
 #, elixir-autogen, elixir-format
 msgid "Create invoice"
 msgstr ""
@@ -4546,7 +4536,7 @@ msgstr ""
 msgid "Only an order on invoice terms with nothing paid and a balance to collect can be invoiced."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:638
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:635
 #, elixir-autogen, elixir-format
 msgid "This order can't be invoiced now."
 msgstr ""
@@ -4564,11 +4554,6 @@ msgstr ""
 #: lib/edenflowers/orders/order/changes/keep_invoiced_amounts.ex:43
 #, elixir-autogen, elixir-format
 msgid "Credit the invoice first: this edit changes what it bills for each VAT rate."
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:355
-#, elixir-autogen, elixir-format
-msgid "While the invoice stands, edits must keep the date and the amount for each VAT rate, and the order can't be cancelled. Credit the invoice to change more."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/invoice_live.ex:465
@@ -4643,22 +4628,22 @@ msgstr ""
 msgid "Bank connected."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:604
+#: lib/edenflowers_web/features/admin/overview_live.ex:616
 #, elixir-autogen, elixir-format
 msgid "Connect bank"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:597
+#: lib/edenflowers_web/features/admin/overview_live.ex:609
 #, elixir-autogen, elixir-format
 msgid "It ends on %{date}. Connect again to keep payments up to date."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:604
+#: lib/edenflowers_web/features/admin/overview_live.ex:616
 #, elixir-autogen, elixir-format
 msgid "Reconnect"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:133
+#: lib/edenflowers_web/features/admin/overview_live.ex:135
 #, elixir-autogen, elixir-format
 msgid "The bank couldn't be reached. Please try again."
 msgstr ""
@@ -4668,47 +4653,47 @@ msgstr ""
 msgid "The bank wasn't connected. Please try again."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:595
+#: lib/edenflowers_web/features/admin/overview_live.ex:607
 #, elixir-autogen, elixir-format
 msgid "The connection ended on %{date}. Connect again to keep payments up to date."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:599
+#: lib/edenflowers_web/features/admin/overview_live.ex:611
 #, elixir-autogen, elixir-format
 msgid "Until %{date}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:543
+#: lib/edenflowers_web/features/admin/overview_live.ex:555
 #, elixir-autogen, elixir-format
 msgid "Accounting"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:578
+#: lib/edenflowers_web/features/admin/overview_live.ex:590
 #, elixir-autogen, elixir-format
 msgid "Bank"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:593
+#: lib/edenflowers_web/features/admin/overview_live.ex:605
 #, elixir-autogen, elixir-format
 msgid "Connect it to mark expenses and invoices paid as payments leave or arrive."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:587
+#: lib/edenflowers_web/features/admin/overview_live.ex:599
 #, elixir-autogen, elixir-format
 msgid "Connected"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:583
+#: lib/edenflowers_web/features/admin/overview_live.ex:595
 #, elixir-autogen, elixir-format
 msgid "Disconnected"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:585
+#: lib/edenflowers_web/features/admin/overview_live.ex:597
 #, elixir-autogen, elixir-format
 msgid "Ending soon"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:581
+#: lib/edenflowers_web/features/admin/overview_live.ex:593
 #, elixir-autogen, elixir-format
 msgid "Not connected"
 msgstr ""
@@ -4763,7 +4748,17 @@ msgctxt "accounting report"
 msgid "Payee or payer"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/overview_live.ex:160
+#: lib/edenflowers_web/features/admin/overview_live.ex:162
 #, elixir-autogen, elixir-format
 msgid "The %{month} report was downloaded without the bank transactions, because the bank couldn't be read. Try again later, or reconnect the bank if it has disconnected."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/search_live.ex:59
+#, elixir-autogen, elixir-format
+msgid "No orders or customers match “%{term}”."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/overview_live.ex:412
+#, elixir-autogen, elixir-format
+msgid "Last month by %{date}"
 msgstr ""
