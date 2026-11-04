@@ -7,31 +7,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
 
   setup :log_in_admin
 
-  defp params do
-    %{
-      "buyer_name" => "Wedding Buyer",
-      "buyer_email" => "buyer@example.com",
-      "business_customer" => "false",
-      "locale" => "en-GB",
-      "payment_term_days" => "14",
-      "supply_date" => "2026-11-02",
-      "lines" => %{
-        "0" => %{
-          "description" => "Wedding booking flowers",
-          "quantity" => "1.5",
-          "unit_price" => "10.01",
-          "vat_rate" => "25.5"
-        }
-      }
-    }
-  end
-
-  defp draft(admin) do
-    attrs = params() |> Map.put("lines", Map.values(params()["lines"]))
-    {:ok, draft} = Payments.create_invoice(attrs, actor: admin)
-    draft
-  end
-
   test "standalone draft previews totals, saves, and issues without a purchase", %{conn: conn, admin: admin} do
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
     view |> form("#invoice-form", invoice: params()) |> render_change()
@@ -588,5 +563,30 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     refute has_element?(view, "#invoice-payment-form")
     refute has_element?(view, "#email-form")
     assert Ash.get!(Invoice, invoice.id, actor: admin, load: :status).status == :paid
+  end
+
+  defp params do
+    %{
+      "buyer_name" => "Wedding Buyer",
+      "buyer_email" => "buyer@example.com",
+      "business_customer" => "false",
+      "locale" => "en-GB",
+      "payment_term_days" => "14",
+      "supply_date" => "2026-11-02",
+      "lines" => %{
+        "0" => %{
+          "description" => "Wedding booking flowers",
+          "quantity" => "1.5",
+          "unit_price" => "10.01",
+          "vat_rate" => "25.5"
+        }
+      }
+    }
+  end
+
+  defp draft(admin) do
+    attrs = params() |> Map.put("lines", Map.values(params()["lines"]))
+    {:ok, draft} = Payments.create_invoice(attrs, actor: admin)
+    draft
   end
 end
