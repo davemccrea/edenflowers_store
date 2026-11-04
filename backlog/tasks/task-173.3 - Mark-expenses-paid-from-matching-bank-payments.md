@@ -19,7 +19,7 @@ ordinal: 334000
 
 - Expense gains `reference_number` (string, nullable). Claude extracts it on ingest (Finnish viitenumero or RF reference, as printed); Jennie can correct it in the detail form. Add it to `ingest`'s accept and upsert_fields, and to `correct`'s accept. No backfill of existing expenses. Generate the migration with `mix ash.codegen`.
 - A scheduled AshOban action every 6 hours, a no-op without the Enable Banking config or a connected bank: reads booked debit transactions since the later of `connected_at` and the last successful sync (with a few days' overlap), for each linked account.
-- A transaction marks an unpaid expense paid on its booking date when reference numbers match ignoring spaces and the amount and currency match to the cent. Several matches or a different amount are skipped.
+- A transaction marks an unpaid or scheduled expense paid on its booking date when reference numbers match ignoring spaces and the amount and currency match to the cent. Several matches or a different amount are skipped. A scheduled expense (future `paid_on`, from 59e72128) gets the booking date in place of the planned one, so a payment the bank moved past a weekend lands in the right month.
 - Put the matching in an Ash action on Expense, not in the worker.
 <!-- SECTION:DESCRIPTION:END -->
 
