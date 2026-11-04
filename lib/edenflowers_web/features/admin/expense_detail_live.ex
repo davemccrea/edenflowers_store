@@ -112,6 +112,14 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                 />
                 <.input field={@form[:due_on]} type="date" label={~t"Due date"} class="input w-full" />
                 <.input
+                  field={@form[:reference_number]}
+                  type="text"
+                  inputmode="numeric"
+                  label={~t"Reference number"}
+                  help={~t"Once the bank pays it with this reference, it's marked paid."}
+                  class="input w-full"
+                />
+                <.input
                   field={@form[:currency]}
                   type="select"
                   label={~t"Currency"}

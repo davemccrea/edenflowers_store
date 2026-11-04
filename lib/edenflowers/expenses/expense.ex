@@ -71,6 +71,7 @@ defmodule Edenflowers.Expenses.Expense do
     notifiers: [Ash.Notifier.PubSub]
 
   alias Edenflowers.Expenses.Changes
+  alias Edenflowers.Payments.ReferenceNumber
 
   postgres do
     table "expenses"
@@ -122,6 +123,7 @@ defmodule Edenflowers.Expenses.Expense do
         :category,
         :description,
         :confidence,
+        :reference_number,
         :processed_at
       ]
 
@@ -132,6 +134,7 @@ defmodule Edenflowers.Expenses.Expense do
         :date,
         :paid_on,
         :due_on,
+        :reference_number,
         :total_amount,
         :vat_amount,
         :currency,
@@ -141,6 +144,7 @@ defmodule Edenflowers.Expenses.Expense do
       ]
 
       change set_attribute(:processed_at, &DateTime.utc_now/0)
+      change Changes.NormalizeReferenceNumber
       # Re-processing only fills an empty paid date, so Jennie's stays.
       change atomic_update(:paid_on, expr(paid_on || upsert_conflict(:paid_on)))
       change Changes.UpdatePapraDocument
@@ -155,6 +159,7 @@ defmodule Edenflowers.Expenses.Expense do
         :date,
         :paid_on,
         :due_on,
+        :reference_number,
         :total_amount,
         :vat_amount,
         :currency,
@@ -189,6 +194,7 @@ defmodule Edenflowers.Expenses.Expense do
         end
       end
 
+      change Changes.NormalizeReferenceNumber
       change Changes.UpdatePapraDocument
     end
 
@@ -196,11 +202,59 @@ defmodule Edenflowers.Expenses.Expense do
       description "Clears the paid date, for an expense marked paid by mistake. A phone's date picker can't empty the field itself."
       change set_attribute(:paid_on, nil)
     end
+
+    read :awaiting_bank_payment do
+      description "The unpaid or scheduled expenses a bank payment with this reference, amount and currency would settle."
+
+      argument :reference_number, :string, allow_nil?: false
+      argument :amount, :decimal, allow_nil?: false
+      argument :currency, __MODULE__.Currency, allow_nil?: false
+
+      filter expr(
+               reference_number == ^arg(:reference_number) and total_amount == ^arg(:amount) and
+                 currency == ^arg(:currency) and (is_nil(paid_on) or paid_on > helsinki_today())
+             )
+    end
+
+    update :paid_from_bank do
+      description "The bank booked this expense's payment, so its paid date becomes the booking date, replacing a scheduled one."
+      accept []
+      argument :booked_on, :date, allow_nil?: false
+      change set_attribute(:paid_on, arg(:booked_on))
+    end
+
+    action :settle_from_bank, :boolean do
+      description "Marks the one expense a booked bank payment settles paid on its booking date. " <>
+                    "Matches the reference number, amount and currency exactly; with no match or several, " <>
+                    "nothing changes and Jennie marks it by hand. Returns whether one was settled."
+
+      argument :reference_number, :string, allow_nil?: false
+      argument :amount, :decimal, allow_nil?: false
+      argument :currency, __MODULE__.Currency, allow_nil?: false
+      argument :booked_on, :date, allow_nil?: false
+
+      run fn input, context ->
+        %{reference_number: reference, amount: amount, currency: currency, booked_on: booked_on} = input.arguments
+        opts = Ash.Context.to_opts(context)
+
+        with reference when is_binary(reference) <- ReferenceNumber.normalize(reference),
+             {:ok, [expense]} <-
+               Edenflowers.Expenses.expenses_awaiting_bank_payment(reference, amount, currency, opts),
+             {:ok, _expense} <- Edenflowers.Expenses.mark_expense_paid_from_bank(expense, booked_on, opts) do
+          {:ok, true}
+        else
+          {:error, error} -> {:error, error}
+          _no_single_match -> {:ok, false}
+        end
+      end
+    end
   end
 
   policies do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action(:ingest)
+      # The bank sync settles the expenses its payments match.
+      authorize_if action([:settle_from_bank, :paid_from_bank])
       # Papra's document:deleted webhook reads and deletes the document's expense.
       authorize_if action_type(:read)
       authorize_if action(:destroy)
@@ -253,6 +307,10 @@ defmodule Edenflowers.Expenses.Expense do
 
     attribute :due_on, :date do
       description "When an unpaid invoice falls due, if the document says."
+    end
+
+    attribute :reference_number, :string do
+      description "The payment reference printed on an invoice, without spaces. The bank sync matches the payment by it."
     end
 
     attribute :total_amount, :decimal do

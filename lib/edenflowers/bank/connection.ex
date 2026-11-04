@@ -8,7 +8,8 @@ defmodule Edenflowers.Bank.Connection do
   use Ash.Resource,
     domain: Edenflowers.Bank,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshOban]
 
   alias Edenflowers.External.EnableBankingAPI
 
@@ -17,8 +18,28 @@ defmodule Edenflowers.Bank.Connection do
     repo Edenflowers.Repo
   end
 
+  # Four runs a day, the most PSD2 allows without Jennie at the bank.
+  oban do
+    scheduled_actions do
+      schedule :sync_payments, "0 */6 * * *" do
+        action :sync_payments
+        queue :default
+        worker_module_name Edenflowers.Bank.Workers.SyncPayments
+        default_actor Edenflowers.Actors.system_actor()
+      end
+    end
+  end
+
   actions do
     defaults [:read]
+
+    action :sync_payments do
+      description "Reads the shop's booked bank transactions and marks paid the expenses they pay. " <>
+                    "Does nothing without Enable Banking configured, which only production is, " <>
+                    "or without a current consent."
+
+      run Edenflowers.Bank.Actions.SyncPayments
+    end
 
     read :current do
       description "The newest connection, expired or not; nil before the bank was ever connected."
@@ -58,6 +79,7 @@ defmodule Edenflowers.Bank.Connection do
   policies do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action_type(:read)
+      authorize_if action(:sync_payments)
     end
 
     bypass actor_attribute_equals(:admin, true) do
