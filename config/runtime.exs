@@ -90,6 +90,12 @@ if config_env() == :prod do
     config :edenflowers, :fastmail_api_token, fastmail_api_token
   end
 
+  # Production only: dev and worktrees must never read the shop's bank account.
+  with application_id when is_binary(application_id) <- System.get_env("ENABLE_BANKING_APPLICATION_ID"),
+       private_key when is_binary(private_key) <- System.get_env("ENABLE_BANKING_PRIVATE_KEY") do
+    config :edenflowers, :enable_banking, application_id: application_id, private_key: private_key
+  end
+
   # Set on the production server only.
   if error_alert_email = System.get_env("ERROR_ALERT_EMAIL") do
     config :edenflowers, :error_alert_email, error_alert_email

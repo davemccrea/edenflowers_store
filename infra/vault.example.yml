@@ -61,6 +61,13 @@ vault_umami_app_secret: "your_umami_app_secret"
 # Fastmail API token with mail write access, for importing invoice emails
 vault_fastmail_api_token: "fmu1-..."
 
+# Enable Banking (https://enablebanking.com/cp/applications), for reading the shop's
+# S-Pankki transactions: the Production application's ID and the private key
+# downloaded when it was created, on one line with \n escapes. Print it with:
+# awk '{printf "%s\\n", $0}' key.pem
+vault_enable_banking_application_id: "00000000-0000-0000-0000-000000000000"
+vault_enable_banking_private_key: "-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
+
 # Anthropic (https://console.anthropic.com/settings/keys)
 vault_anthropic_api_key: "sk-ant-..."
 

@@ -53,6 +53,8 @@ papra_api_key: "{{ vault_papra_api_key }}"
 papra_webhook_secret: "{{ vault_papra_webhook_secret }}"
 papra_organization_id: "org_mdus0pqk7nzlu94sibss1pmm"
 fastmail_api_token: "{{ vault_fastmail_api_token }}"
+enable_banking_application_id: "{{ vault_enable_banking_application_id }}"
+enable_banking_private_key: "{{ vault_enable_banking_private_key }}"
 
 # Umami (self-hosted analytics at stats.edenflowers.fi)
 umami_db_name: umami

@@ -31,6 +31,9 @@ services:
       PAPRA_WEBHOOK_SECRET: "{{ papra_webhook_secret }}"
       PAPRA_ORGANIZATION_ID: "{{ papra_organization_id }}"
       FASTMAIL_API_TOKEN: "{{ fastmail_api_token }}"
+      ENABLE_BANKING_APPLICATION_ID: "{{ enable_banking_application_id }}"
+      # to_json keeps the PEM's line breaks as \n escapes inside one YAML string.
+      ENABLE_BANKING_PRIVATE_KEY: {{ enable_banking_private_key | to_json }}
       # Releases before v1.12.0 read this name; keep it so `just rollback` to them still boots.
       ANTHROPIC_API_KEY: "{{ anthropic_api_key }}"
       EDENFLOWERS_ANTHROPIC_API_KEY: "{{ anthropic_api_key }}"
