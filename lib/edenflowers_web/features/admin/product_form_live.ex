@@ -15,12 +15,14 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias Edenflowers.Catalog.ProductCategory
   alias Edenflowers.Catalog.ProductType
   alias Edenflowers.Catalog.ProductVariantSize
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.Pricing
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Admin.ShareLinkDrawer
   alias EdenflowersWeb.Admin.SlugField
   alias EdenflowersWeb.Admin.TranslationFields
+  alias EdenflowersWeb.Checkout.Fields
   alias EdenflowersWeb.Layouts
   alias EdenflowersWeb.Store.StoreLive
 
@@ -210,6 +212,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         module={ShareLinkDrawer}
         id="share-product-link"
         path={~p"/product/#{@form.source.data}"}
+        choices={share_link_choices(@form.source.data)}
         current_user={@current_user}
       />
     </Layouts.admin>
@@ -588,6 +591,24 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   @impl true
   def handle_async(:translate, result, socket),
     do: {:noreply, TranslationFields.put_translations(socket, result)}
+
+  defp share_link_choices(product) do
+    sizes = Enum.map(product.product_variants, & &1.size)
+
+    size_options =
+      for size <- ProductVariantSize.values(), size in sizes, do: {variant_size_label(size), size}
+
+    size_choice = {:size, ~t"Size", [{~t"Not chosen", ""} | size_options]}
+    intervals = for weeks <- Subscription.intervals(), do: {Fields.interval_label(weeks), weeks}
+    subscribe_choice = {:every, ~t"How to buy", [{~t"Buy once", ""} | intervals]}
+
+    cond do
+      product.subscribable and size_options != [] -> [size_choice, subscribe_choice]
+      product.subscribable -> [subscribe_choice]
+      size_options != [] -> [size_choice]
+      true -> []
+    end
+  end
 
   defp load_form(%{"id" => id}, actor) do
     case Ash.get(Product, id, actor: actor, load: [:product_variants, :sold_out?]) do

@@ -133,6 +133,61 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert has_element?(view, "[data-testid=variant-option-medium][checked]")
   end
 
+  describe "a link with a choice" do
+    setup do
+      product = generate(product(subscribable: true, free_delivery: true, draft: false))
+
+      variants =
+        for size <- [:small, :medium, :large],
+            into: %{},
+            do: {size, generate(product_variant(product_id: product.id, size: size))}
+
+      %{product: product, variants: variants}
+    end
+
+    test "?subscribe=1 starts on Small every four weeks, over a one-time Medium in the cart", %{
+      conn: conn,
+      product: product,
+      variants: variants,
+      order: order
+    } do
+      Orders.add_line_item!(order.id, variants.medium.id, 1, authorize?: false)
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}?subscribe=1")
+
+      assert has_element?(view, "[data-testid=subscribe-option][checked]")
+      assert has_element?(view, "[data-testid=variant-option-small][checked]")
+      assert has_element?(view, "[data-testid=interval-option-4][checked]")
+    end
+
+    test "?every=2 starts as a subscription every two weeks, keeping the cart's size out of it", %{
+      conn: conn,
+      product: product,
+      variants: variants,
+      order: order
+    } do
+      Orders.add_line_item!(order.id, variants.large.id, 1, authorize?: false)
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}?every=2")
+
+      assert has_element?(view, "[data-testid=subscribe-option][checked]")
+      assert has_element?(view, "[data-testid=variant-option-small][checked]")
+      assert has_element?(view, "[data-testid=interval-option-2][checked]")
+    end
+
+    test "?size= starts on that size, or the default when it's sold out", %{
+      conn: conn,
+      product: product,
+      variants: variants
+    } do
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}?size=large")
+      assert has_element?(view, "[data-testid=variant-option-large][checked]")
+      refute has_element?(view, "[data-testid=subscribe-option][checked]")
+
+      Ash.Seed.update!(variants.large, %{stock_quantity: 0})
+      {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}?size=large")
+      assert has_element?(view, "[data-testid=variant-option-medium][checked]")
+    end
+  end
+
   describe "a subscribable product" do
     setup do
       product = generate(product(subscribable: true, free_delivery: true, draft: false))

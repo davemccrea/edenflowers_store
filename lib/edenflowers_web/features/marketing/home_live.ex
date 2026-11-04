@@ -734,7 +734,7 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
               {~t"Flowers for you or someone else every week, every two weeks or every four weeks, delivered or ready to pick up. Pause, change or stop from your account up to #{days = Edenflowers.Orders.Subscription.change_deadline_days()} days before a bouquet."}
             </p>
             <.button
-              navigate={~q"/#{language}/product/#{product}?subscribe=1"}
+              navigate={~q"/#{language}/product/#{product}?every=4"}
               variant="primary"
               class="group w-fit"
             >

@@ -56,7 +56,9 @@ defmodule Edenflowers.Marketing.TrackingTag do
                     "stored tags are. With no tags it is `url` unchanged, a plain link."
 
       argument :url, :string do
-        description "The full shop URL, without a language so each visitor lands on the page in their own."
+        description "The full shop URL, without a language so each visitor lands on the page in their own. " <>
+                      "It may already have a query, like a product page's `?size=small`."
+
         allow_nil? false
       end
 
@@ -68,7 +70,9 @@ defmodule Edenflowers.Marketing.TrackingTag do
       run fn input, _context ->
         %{url: url, tags: tags} = input.arguments
         query = for {parameter, value} <- filled_in(tags), do: {"utm_#{parameter}", value}
-        {:ok, if(query == [], do: url, else: url <> "?" <> URI.encode_query(query))}
+
+        {:ok,
+         if(query == [], do: url, else: url |> URI.parse() |> URI.append_query(URI.encode_query(query)) |> to_string())}
       end
     end
 

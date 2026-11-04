@@ -1,6 +1,10 @@
 defmodule EdenflowersWeb.Store.ProductLive do
   @moduledoc """
   Public product page for choosing a size and adding it to the cart or starting a subscription.
+
+  A link can start the page on a choice: `?every=1|2|4` for a subscription every so many
+  weeks (Small, unless `size` says otherwise) and `?size=small|medium|large` for a size.
+  `?subscribe=1`, every four weeks, is kept for links shared before `every` existed.
   """
 
   use EdenflowersWeb, :live_view
@@ -33,10 +37,12 @@ defmodule EdenflowersWeb.Store.ProductLive do
     english_name = product.name
     product = Translations.translate(product)
 
-    cart_line = cart_line(socket.assigns.order, product.id)
+    # A link that picks a size or a subscription, like the home page's subscription button or
+    # a link Jennie shares, starts on its pick rather than on what's already in the cart.
+    cart_line = if linked_choice?(params), do: nil, else: cart_line(socket.assigns.order, product.id)
 
     subscribe? = initial_subscribe?(params, product, cart_line)
-    selected_variant = initial_variant(subscribe?, product_variants, cart_line)
+    selected_variant = initial_variant(params, subscribe?, product_variants, cart_line)
 
     {:ok,
      socket
@@ -54,20 +60,32 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(selected_variant: selected_variant)
      |> assign(photo_slug: selected_variant.photo_slug)
      |> assign(subscribe?: subscribe?)
-     |> assign(interval_weeks: to_string((cart_line && cart_line.interval_weeks) || 4))
+     |> assign(interval_weeks: to_string(linked_interval(params) || (cart_line && cart_line.interval_weeks) || 4))
      |> assign(has_subscription?: has_subscription?(socket.assigns.current_user))
      |> assign(free_dist_km: product.free_delivery && Fulfillment.free_dist_km())}
   end
 
-  defp initial_variant(subscribe?, product_variants, nil),
+  defp linked_choice?(params), do: Enum.any?(["size", "subscribe", "every"], &Map.has_key?(params, &1))
+
+  defp linked_interval(%{"every" => every}), do: Enum.find(Subscription.intervals(), &(to_string(&1) == every))
+  defp linked_interval(_params), do: nil
+
+  # A linked size that's sold out or missing falls back to the default.
+  defp initial_variant(%{"size" => size}, subscribe?, product_variants, nil) do
+    variants = selectable_variants(product_variants)
+    Enum.find(variants, &(to_string(&1.size) == size)) || default_variant(subscribe?, variants)
+  end
+
+  defp initial_variant(_params, subscribe?, product_variants, nil),
     do: default_variant(subscribe?, selectable_variants(product_variants))
 
-  defp initial_variant(subscribe?, product_variants, cart_line) do
+  defp initial_variant(params, subscribe?, product_variants, cart_line) do
     Enum.find(product_variants, &(&1.id == cart_line.product_variant_id)) ||
-      initial_variant(subscribe?, product_variants, nil)
+      initial_variant(params, subscribe?, product_variants, nil)
   end
 
   defp initial_subscribe?(%{"subscribe" => "1"}, product, _cart_line), do: product.subscribable
+  defp initial_subscribe?(%{"every" => _every}, product, _cart_line), do: product.subscribable
   defp initial_subscribe?(_params, _product, nil), do: false
   defp initial_subscribe?(_params, _product, cart_line), do: cart_line.interval_weeks != nil
 

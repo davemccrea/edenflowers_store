@@ -56,6 +56,22 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     assert view |> element("#product-form input[name='form[slug]']") |> render() =~ ~s(value="Roses!")
   end
 
+  test "the share drawer links to a size and a subscription every so many weeks", %{conn: conn} do
+    product = generate(product(subscribable: true, draft: false))
+    for size <- [:small, :medium], do: generate(product_variant(product_id: product.id, size: size))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{product.id}")
+
+    refute has_element?(view, ~s|#share-product-link-form option[value="large"]|)
+
+    view
+    |> form("#share-product-link-form", tags: %{size: "small", every: "2", source: "Instagram"})
+    |> render_change()
+
+    url = EdenflowersWeb.Endpoint.url() <> "/product/#{product.slug}?size=small&every=2&utm_source=instagram"
+    assert has_element?(view, ~s|#share-product-link-url[value="#{url}"]|)
+  end
+
   test "edits a size's price without touching the others", %{conn: conn} do
     product = generate(product())
     small = generate(product_variant(product_id: product.id, size: :small, price: "40.00"))

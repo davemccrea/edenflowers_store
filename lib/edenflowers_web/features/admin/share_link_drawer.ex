@@ -11,6 +11,10 @@ defmodule EdenflowersWeb.Admin.ShareLinkDrawer do
   Render it outside any form, since it has its own, with `id`, `path` (the shop
   page without a language, e.g. /product/:slug) and `current_user`. Put
   `open_button/1` where Jennie should find it, such as the page header.
+
+  `choices` adds selects for query parameters the page starts on, as
+  `{parameter, label, options}` with `options` as `{label, value}` pairs. An
+  empty value leaves the parameter out, e.g. a product page's size.
   """
 
   use EdenflowersWeb, {:live_component, gettext_domain: "admin"}
@@ -40,7 +44,7 @@ defmodule EdenflowersWeb.Admin.ShareLinkDrawer do
 
   @impl true
   def update(assigns, socket) do
-    socket = assign(socket, assigns)
+    socket = socket |> assign(choices: []) |> assign(assigns)
 
     # The parent re-renders on every keystroke in its own form; set up once.
     if socket.assigns[:form] do
@@ -63,6 +67,14 @@ defmodule EdenflowersWeb.Admin.ShareLinkDrawer do
           class="flex min-h-0 flex-1 flex-col"
         >
           <.drawer_body>
+            <.input
+              :for={{parameter, label, options} <- @choices}
+              type="select"
+              field={@form[parameter]}
+              label={label}
+              options={options}
+              class="select w-full"
+            />
             <p class="text-base-content/75 text-sm">
               {~t"Tags tell Umami where a visitor came from, so you can see which posts bring orders. Leave them empty for a plain link."}
             </p>
@@ -172,12 +184,22 @@ defmodule EdenflowersWeb.Admin.ShareLinkDrawer do
 
   defp assign_tags(socket, params) do
     form = to_form(params, as: :tags)
-    url = EdenflowersWeb.Endpoint.url() <> socket.assigns.path
+    url = EdenflowersWeb.Endpoint.url() <> path_with_choices(socket.assigns, params)
 
     assign(socket,
       form: form,
       url: Marketing.tagged_url!(url, tags(form), actor: socket.assigns.current_user)
     )
+  end
+
+  defp path_with_choices(%{path: path, choices: choices}, params) do
+    query =
+      for {parameter, _label, _options} <- choices,
+          value = params[to_string(parameter)],
+          value not in [nil, ""],
+          do: {parameter, value}
+
+    if query == [], do: path, else: path <> "?" <> URI.encode_query(query)
   end
 
   defp chosen?(form, parameter, value) do
