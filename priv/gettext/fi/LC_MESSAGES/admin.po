@@ -505,7 +505,7 @@ msgstr "Peri maksu"
 msgid "Collect what's owed before refunding."
 msgstr "Peri maksamatta oleva summa ennen hyvitystä."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:166
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "Confidence"
 msgstr "Luottamustaso"
@@ -1066,7 +1066,7 @@ msgstr "Laitteet ja kalusteet"
 msgid "Expense not found."
 msgstr "Kulua ei löytynyt."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:214
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:215
 #, elixir-autogen, elixir-format
 msgid "Expense updated."
 msgstr "Kulu päivitetty."
@@ -1683,7 +1683,7 @@ msgstr "Seuraava tilaus"
 msgid "No"
 msgstr "Ei"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:162
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "No amount"
 msgstr "Ei summaa"
@@ -1844,7 +1844,7 @@ msgstr "Avaa reittiohjeet Google Mapsissa"
 msgid "Open in the admin:"
 msgstr "Avaa hallintapaneelissa:"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:178
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:179
 #, elixir-autogen, elixir-format
 msgid "Open receipt in Papra"
 msgstr "Avaa kuitti Paprassa"
@@ -2254,7 +2254,7 @@ msgstr "Hinta per paikka (€)"
 msgid "Prices"
 msgstr "Hinnat"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:182
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:183
 #, elixir-autogen, elixir-format
 msgid "Processed"
 msgstr "Käsitelty"
@@ -2329,7 +2329,7 @@ msgstr "Julkaistu"
 msgid "Qty"
 msgstr "Määrä"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:170
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:171
 #, elixir-autogen, elixir-format
 msgid "Receipt"
 msgstr "Kuitti"
@@ -2550,7 +2550,7 @@ msgstr "Liikevaihto"
 msgid "Review"
 msgstr "Tarkistus"
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:185
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:186
 #: lib/edenflowers_web/features/admin/expenses_live.ex:74
 #, elixir-autogen, elixir-format
 msgid "Reviewed"
@@ -2588,7 +2588,7 @@ msgid "Same-day orders arrive straight away."
 msgstr "Näet saman päivän tilaukset heti."
 
 #: lib/edenflowers_web/features/admin/course_form_live.ex:79
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:149
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:150
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:269
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:349
 #: lib/edenflowers_web/features/admin/order_form_live.ex:91
@@ -3002,7 +3002,7 @@ msgstr "Asiakas noutaa sen itse, joten vahvistusta ei lähetetä."
 msgid "The customer wasn't emailed."
 msgstr "Asiakkaalle ei lähetetty sähköpostia."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:220
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:221
 #, elixir-autogen, elixir-format
 msgid "The expense wasn't saved. Check the fields marked below."
 msgstr "Kulua ei tallennettu. Tarkista alla merkityt kentät."
@@ -3206,7 +3206,7 @@ msgid "Total"
 msgstr "Yhteensä"
 
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:125
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:155
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:156
 #, elixir-autogen, elixir-format
 msgid "Total amount"
 msgstr "Yhteensä"
@@ -3941,12 +3941,12 @@ msgstr ""
 msgid "Mark unpaid"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:230
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:231
 #, elixir-autogen, elixir-format
 msgid "Marked unpaid."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:233
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:234
 #, elixir-autogen, elixir-format
 msgid "The expense wasn't marked unpaid."
 msgstr ""
@@ -4016,4 +4016,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/expenses_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Paid or scheduled"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:150
+#, elixir-autogen, elixir-format
+msgid "Confirm details"
 msgstr ""
