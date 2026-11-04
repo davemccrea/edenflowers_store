@@ -212,9 +212,15 @@ defmodule Edenflowers.Payments.Invoice do
     end
 
     read :awaiting_bank_payment do
-      description "The open invoice a customer pays with this reference number."
+      description "The open invoice a transfer booked on booked_on pays with this reference number. One " <>
+                    "issued after the booking day can't be what it pays: the customer had no reference number " <>
+                    "yet. This keeps a transfer whose Payment was deleted, such as a test invoice's, from " <>
+                    "settling the next invoice that reuses its number."
+
       argument :reference_number, :string, allow_nil?: false
-      filter expr(reference_number == ^arg(:reference_number) and status == :open)
+      argument :booked_on, :date, allow_nil?: false
+
+      filter expr(reference_number == ^arg(:reference_number) and status == :open and invoice_date <= ^arg(:booked_on))
     end
 
     action :settle_from_bank, :boolean do

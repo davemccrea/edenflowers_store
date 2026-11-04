@@ -21,7 +21,12 @@ defmodule Edenflowers.Payments.Actions.SettleInvoiceFromBank do
 
     with false <- recorded?(transaction_id),
          reference when is_binary(reference) <- ReferenceNumber.normalize(reference),
-         {:ok, [invoice]} <- Payments.invoices_awaiting_bank_payment(reference, [load: [:amount_unpaid]] ++ opts),
+         {:ok, [invoice]} <-
+           Payments.invoices_awaiting_bank_payment(
+             reference,
+             booked_on,
+             [load: [:amount_unpaid]] ++ opts
+           ),
          false <- Decimal.gt?(amount, invoice.amount_unpaid),
          {:ok, _invoice} <-
            Payments.record_invoice_payment(

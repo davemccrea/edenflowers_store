@@ -67,11 +67,11 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
   describe "transfers in" do
     setup do
       connect()
-      %{invoice: issue_invoice()}
+      %{invoice: issue_invoice(), today: Edenflowers.ShopTime.today() |> Date.to_iso8601()}
     end
 
-    test "one quoting an open invoice's reference is recorded as its payment, once", %{invoice: invoice} do
-      stub_transactions([transfer("100.00", invoice.reference_number, "2026-11-03")])
+    test "one quoting an open invoice's reference is recorded as its payment, once", %{invoice: invoice, today: today} do
+      stub_transactions([transfer("100.00", invoice.reference_number, today)])
 
       Bank.sync_bank_payments!(actor: system_actor())
       Bank.sync_bank_payments!(actor: system_actor())
@@ -80,11 +80,11 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
       assert invoice.status == :paid
       assert [%{amount: amount, paid_at: paid_at}] = invoice.payments
       assert Decimal.equal?(amount, "100.00")
-      assert Edenflowers.ShopTime.today(paid_at) == ~D[2026-11-03]
+      assert Date.to_iso8601(Edenflowers.ShopTime.today(paid_at)) == today
     end
 
-    test "a part payment is recorded and leaves the rest owed", %{invoice: invoice} do
-      stub_transactions([transfer("50.00", invoice.reference_number, "2026-11-03")])
+    test "a part payment is recorded and leaves the rest owed", %{invoice: invoice, today: today} do
+      stub_transactions([transfer("50.00", invoice.reference_number, today)])
 
       Bank.sync_bank_payments!(actor: system_actor())
 
@@ -93,11 +93,20 @@ defmodule Edenflowers.Bank.SyncPaymentsTest do
       assert Decimal.equal?(invoice.amount_unpaid, "50.00")
     end
 
-    test "an overpayment or an unknown reference is left for Jennie", %{invoice: invoice} do
+    test "an overpayment or an unknown reference is left for Jennie", %{invoice: invoice, today: today} do
       stub_transactions([
-        transfer("200.00", invoice.reference_number, "2026-11-03"),
-        transfer("100.00", "123453", "2026-11-03")
+        transfer("200.00", invoice.reference_number, today),
+        transfer("100.00", "123453", today)
       ])
+
+      Bank.sync_bank_payments!(actor: system_actor())
+
+      assert Ash.load!(invoice, :status, authorize?: false).status == :open
+    end
+
+    test "one booked before the invoice was issued is left alone", %{invoice: invoice} do
+      yesterday = Edenflowers.ShopTime.today() |> Date.add(-1) |> Date.to_iso8601()
+      stub_transactions([transfer("100.00", invoice.reference_number, yesterday)])
 
       Bank.sync_bank_payments!(actor: system_actor())
 
