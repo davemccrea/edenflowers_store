@@ -171,6 +171,12 @@ backup:
     mv "$file.partial" "$file"
     ls -lh "$file"
 
+# Pull and restart production's other services (cloudflared, imgproxy, umami, papra). Restarting cloudflared drops the site for a few seconds
+[group('production')]
+update-services:
+    # Not app: its `latest` tag would skip migrations and undo a rollback; `just deploy` updates it
+    ssh -T edenflowers-production 'cd /opt/edenflowers_store && services=$(docker compose config --services | grep -vx app) && docker compose pull $services && docker compose up -d --no-deps $services && docker image prune -f'
+
 # Toggle production's maintenance mode after a prompt, restarting the app (the Maintenance workflow does the same from GitHub)
 [group('production')]
 maintenance:
