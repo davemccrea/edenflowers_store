@@ -11,7 +11,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     %{
       "buyer_name" => "Wedding Buyer",
       "buyer_email" => "buyer@example.com",
-      "buyer_address" => "Street 1, Vaasa",
       "business_customer" => "false",
       "locale" => "en-GB",
       "payment_term_days" => "14",
@@ -88,7 +87,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     view |> form("#invoice-payment-form", payment: %{amount: "5", paid_on: "2026-11-02"}) |> render_submit()
     assert has_element?(view, "#invoice-log", "Paid")
     assert has_element?(view, "#invoice-log", "Bank transfer")
-    view |> element("button", "Reverse payment") |> render_click()
+    view |> element("button[phx-click=undo_payment]", "Undo") |> render_click()
     assert has_element?(view, "#invoice-log", "Undid")
     view |> form("#invoice-credit-form", credit: %{reason: "Replace incorrect details"}) |> render_submit()
     note = Ash.load!(invoice, :credit_note, actor: admin).credit_note
@@ -105,7 +104,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert length(Ash.load!(note, :paper_trail_versions, actor: admin).paper_trail_versions) == 2
   end
 
-  test "optional invoice details reopen on an existing draft and business addresses stay distinct", %{
+  test "optional invoice details reopen on an existing draft and only a business has an address", %{
     conn: conn,
     admin: admin
   } do
@@ -120,21 +119,19 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, "#invoice-additional-details[open]")
     assert has_element?(view, "input[name='invoice[customer_reference]'][value='Wedding PO']")
     view |> form("#invoice-form", invoice: %{business_customer: "true"}) |> render_change()
-    refute has_element?(view, "textarea[name='invoice[buyer_address]']")
-    assert has_element?(view, "input[type=hidden][name='invoice[buyer_address]'][value='Street 1, Vaasa']")
     assert has_element?(view, "textarea[name='invoice[billing_address]']")
     view |> form("#invoice-form", invoice: %{business_customer: "false"}) |> render_change()
-    assert has_element?(view, "textarea[name='invoice[buyer_address]']", "Street 1, Vaasa")
+    refute has_element?(view, "textarea[name='invoice[billing_address]']")
   end
 
   test "part payment is deducted from the original total and leaves a clear balance", %{conn: conn, admin: admin} do
     {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
     {:ok, _} = Payments.record_invoice_payment(invoice, "5", %{}, actor: admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
-    assert has_element?(view, "#invoice-totals", "15,02")
-    assert has_element?(view, "#invoice-totals", "−5,00")
-    assert has_element?(view, "#invoice-totals", "10,02")
-    assert has_element?(view, "#invoice-totals a[href='#invoice-payment-form']", "Record payment")
+    assert has_element?(view, "#invoice-payment", "15,02")
+    assert has_element?(view, "#invoice-payment", "−5,00")
+    assert has_element?(view, "#invoice-payment", "10,02")
+    assert has_element?(view, "a[href='#invoice-payment']", "To collect 10,02")
     refute has_element?(view, "#invoice-corrections")
   end
 
@@ -168,9 +165,9 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     view |> form("#invoice-payment-form", payment: %{amount: "5", paid_on: "2026-11-02"}) |> render_submit()
     assert has_element?(view, "#accountant-correction", "contact the accountant")
     refute has_element?(view, "#invoice-credit-form")
-    view |> element("button", "Reverse payment") |> render_click()
+    view |> element("button[phx-click=undo_payment]", "Undo") |> render_click()
     assert has_element?(view, "#invoice-credit-form")
-    assert render(view) =~ "Reversal"
+    assert has_element?(view, "#invoice-payment", "Undone")
     view |> form("#invoice-credit-form", credit: %{reason: "Replaced invoice"}) |> render_submit()
     assert render(view) =~ "Credited"
     refute has_element?(view, "#invoice-payment-form")
@@ -224,10 +221,9 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
 
   test "issuance reveals required buyer and date errors and corrections clear them", %{conn: conn, admin: admin} do
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
-    input = params() |> Map.merge(%{"buyer_name" => "", "buyer_address" => "", "supply_date" => ""})
+    input = params() |> Map.merge(%{"buyer_name" => "", "supply_date" => ""})
     view |> form("#invoice-form", invoice: input) |> render_submit(%{"intent" => "issue"})
     assert has_element?(view, "input[name='invoice[buyer_name]'][aria-invalid=true]")
-    assert has_element?(view, "textarea[name='invoice[buyer_address]'][aria-invalid=true]")
     assert has_element?(view, "input[name='invoice[supply_date]'][aria-invalid=true]")
     assert {:ok, [%{number: nil}]} = Ash.read(Invoice, actor: admin)
     view |> form("#invoice-form", invoice: params()) |> render_change()
@@ -239,14 +235,13 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert number
   end
 
-  test "business issuance marks company fields and stops requiring the personal address", %{conn: conn} do
+  test "business issuance marks company fields", %{conn: conn} do
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
 
     input =
       params()
       |> Map.merge(%{
         "business_customer" => "true",
-        "buyer_address" => "",
         "company_name" => "",
         "business_id" => "",
         "billing_address" => ""
@@ -259,11 +254,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
       assert has_element?(view, "[name='invoice[#{field}]'][aria-invalid=true]")
     end
 
-    refute has_element?(view, "[name='invoice[buyer_address]'][aria-invalid=true]")
     input = Map.put(input, "business_customer", "false")
     render_change(view, "validate", %{"invoice" => input})
     refute has_element?(view, "[name='invoice[company_name]']")
-    assert has_element?(view, "[name='invoice[buyer_address]'][aria-invalid=true]")
+    refute has_element?(view, "[aria-invalid=true]")
   end
 
   test "failed credit submission preserves the reason", %{conn: conn, admin: admin} do
@@ -328,6 +322,18 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert render(view) =~ "Wedding Buyer"
   end
 
+  test "the register finds an invoice by its reference or number", %{conn: conn, admin: admin} do
+    {:ok, issued} = Payments.issue_invoice(draft(admin), actor: admin)
+    other = draft(admin)
+
+    {:ok, view, _} = live(conn, ~p"/admin/invoices?search=#{issued.reference_number}")
+    assert has_element?(view, "a[href='/admin/invoices/#{issued.id}']")
+    refute has_element?(view, "a[href='/admin/invoices/#{other.id}']")
+
+    {:ok, view, _} = live(conn, ~p"/admin/invoices?search=#{issued.number}")
+    assert has_element?(view, "a[href='/admin/invoices/#{issued.id}']")
+  end
+
   test "drafts have no downloadable document", %{conn: conn, admin: admin} do
     invoice = draft(admin)
     conn = get(conn, ~p"/admin/invoices/#{invoice.id}/pdf")
@@ -344,7 +350,9 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
       assert has_element?(view, "#line-0-quantity-error")
     end
 
-    assert {:ok, [_draft]} = Ash.read(Invoice, actor: admin)
+    assert {:ok, [draft]} = Ash.read(Invoice, actor: admin)
+    assert_patched(view, ~p"/admin/invoices/#{draft.id}")
+    assert page_title(view) =~ "Invoice draft"
   end
 
   test "email failure is visible and remains retryable on the issued invoice", %{conn: conn, admin: admin} do
@@ -426,44 +434,38 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert_no_email_sent()
   end
 
-  test "previous invoice customers are deduplicated and selection copies their latest details only", %{
-    conn: conn,
-    admin: admin
-  } do
-    {:ok, old} = Payments.issue_invoice(draft(admin), actor: admin)
-    Ash.Seed.update!(old, %{sent_at: ~U[2026-10-01 12:00:00Z]})
+  test "picking a customer fills the bill-to fields once, keeping edits made after", %{conn: conn, admin: admin} do
+    Payments.issue_invoice!(draft(admin), actor: admin)
 
-    {:ok, updated} =
+    {:ok, latest} =
       Payments.update_invoice_draft(
         draft(admin),
         %{
           buyer_name: "Updated Customer",
           buyer_email: "BUYER@example.com",
-          buyer_address: "Updated address",
           locale: "fi"
         },
         actor: admin
       )
 
-    {:ok, latest} = Payments.issue_invoice(updated, actor: admin)
-    latest = Ash.Seed.update!(latest, %{sent_at: ~U[2026-10-02 12:00:00Z]})
-    # Drafts and issued-but-unsent documents are not previous emailed customers.
-    draft(admin)
-    {:ok, _unsent} = Payments.issue_invoice(draft(admin), actor: admin)
-    assert [%{id: id}] = Payments.search_invoice_customers!("BUYER@EXAMPLE", actor: admin)
-    assert id == latest.id
+    latest = Payments.issue_invoice!(latest, actor: admin)
 
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
     view |> form("#invoice-form", invoice: params()) |> render_change()
-    view |> element("#invoice_previous_invoice_id_text_input") |> render_change(%{"text" => "buyer@example"})
+
+    # Focusing the empty search offers the latest customers straight away.
+    view |> element("#customer-select") |> render_hook("focus", %{})
+    render_hook(view, "customer_focus", %{"id" => "customer-select"})
+    render(view)
+    assert has_element?(view, "#customer-select ul", "Updated Customer · BUYER@example.com")
+
     render_hook(view, "live_select_change", %{"id" => "customer-select", "text" => "buyer@example"})
     render(view)
-    assert has_element?(view, "#customer-select ul", "Updated Customer")
     view |> element("#customer-select") |> render_hook("option_click", %{"idx" => "0"})
-    assert_push_event(view, "select", %{id: "customer-select", selection: [%{value: ^id}]})
-    view |> form("#invoice-form", invoice: %{previous_invoice_id: id}) |> render_change()
+    assert_push_event(view, "select", %{id: "customer-select", selection: [%{value: id}]})
+    assert id == latest.id
+    view |> form("#invoice-form", invoice: %{customer: id}) |> render_change()
     assert has_element?(view, "input[name='invoice[buyer_name]'][value='Updated Customer']")
-    assert has_element?(view, "textarea[name='invoice[buyer_address]']", "Updated address")
     assert has_element?(view, "select[name='invoice[locale]'] option[selected][value=fi]")
     assert has_element?(view, "#line-0-description[value='Wedding booking flowers']")
     assert has_element?(view, "input[name='invoice[payment_term_days]'][value='14']")
@@ -471,9 +473,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     view |> form("#invoice-form", invoice: %{buyer_name: "Manually edited"}) |> render_change()
     assert has_element?(view, "input[name='invoice[buyer_name]'][value='Manually edited']")
     view |> element("#customer-select button[phx-click=clear]") |> render_click()
-    view |> form("#invoice-form", invoice: %{previous_invoice_id: ""}) |> render_change()
+    view |> form("#invoice-form", invoice: %{customer: ""}) |> render_change()
     assert has_element?(view, "input[name='invoice[buyer_name]'][value='Manually edited']")
-    assert Ash.get!(Invoice, latest.id, actor: admin).buyer_name == "Updated Customer"
   end
 
   test "business customer selection fills company fields without copying invoice-specific references", %{
@@ -493,10 +494,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
         actor: admin
       )
 
-    {:ok, previous} = Payments.issue_invoice(previous, actor: admin)
-    previous = Ash.Seed.update!(previous, %{sent_at: ~U[2026-10-02 12:00:00Z]})
+    previous = Payments.issue_invoice!(previous, actor: admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
-    render_change(view, "validate", %{"invoice" => Map.put(params(), "previous_invoice_id", previous.id)})
+    render_hook(view, "live_select_change", %{"id" => "customer-select", "text" => "Example"})
+    render_change(view, "validate", %{"invoice" => Map.put(params(), "customer", previous.id)})
     assert has_element?(view, "input[name='invoice[business_customer]'][type=checkbox][checked]")
     assert has_element?(view, "input[name='invoice[company_name]'][value='Example Company']")
     assert has_element?(view, "input[name='invoice[business_id]'][value='2944459-6']")
@@ -504,18 +505,20 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     refute has_element?(view, "input[name='invoice[customer_reference]'][value='Old PO']")
   end
 
-  test "unsent invoices cannot be selected to prefill and no-match search is explained", %{conn: conn, admin: admin} do
+  test "only a customer the search offered fills the draft, and a search with no match says so", %{
+    conn: conn,
+    admin: admin
+  } do
     unsent = draft(admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
 
     render_change(view, "validate", %{
-      "invoice" => Map.put(params(), "previous_invoice_id", unsent.id) |> Map.put("buyer_name", "Keep this")
+      "invoice" => Map.put(params(), "customer", unsent.id) |> Map.put("buyer_name", "Keep this")
     })
 
     assert has_element?(view, "input[name='invoice[buyer_name]'][value='Keep this']")
     render_hook(view, "live_select_change", %{"id" => "customer-select", "text" => "No such customer"})
     assert has_element?(view, "#customer-results", "No customers found.")
-    assert {:error, _} = Payments.search_invoice_customers("buyer", actor: nil)
   end
 
   test "VAT uses the shared rate choices while a draft retains a historical percentage", %{conn: conn, admin: admin} do
@@ -564,6 +567,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, "#invoice-line-1")
     view |> element("#invoice-line-1 button") |> render_click()
     refute has_element?(view, "#invoice-line-1")
+    refute has_element?(view, "#invoice-line-0 button[phx-click=remove_line]")
     assert has_element?(view, "#invoice-totals", "15,02")
   end
 

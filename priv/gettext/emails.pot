@@ -1179,11 +1179,6 @@ msgstr ""
 msgid "A reminder about invoice %{number}"
 msgstr ""
 
-#: lib/edenflowers/email/templates/invoice.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "My invoice %{number} is attached."
-msgstr ""
-
 #: lib/edenflowers/email/templates/course_payment.text.eex:4
 #, elixir-autogen, elixir-format
 msgid "Please pay at the course."
@@ -1207,4 +1202,9 @@ msgstr ""
 #: lib/edenflowers/email/templates/order_payment.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "I'll send you an invoice."
+msgstr ""
+
+#: lib/edenflowers/email/templates/invoice.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Invoice %{number} is attached."
 msgstr ""

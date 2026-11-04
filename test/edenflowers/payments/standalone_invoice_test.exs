@@ -12,7 +12,6 @@ defmodule Edenflowers.Payments.StandaloneInvoiceTest do
     %{
       buyer_name: "Alice Buyer",
       buyer_email: "alice@example.com",
-      buyer_address: "Street 1, Vaasa",
       supply_date: ~D[2026-11-02],
       locale: "fi",
       lines: [

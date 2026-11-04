@@ -15,9 +15,9 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.InvoiceLog
   alias EdenflowersWeb.Admin.InvoicesLive
+  alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Layouts
 
-  @customer_fields ~w(buyer_name buyer_email buyer_address business_customer company_name business_id billing_address locale)
   @load [
     :editable?,
     :status,
@@ -42,6 +42,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
        submitted: false,
        issue_attempted: false,
        customer_search_empty?: false,
+       customer_term: "",
+       customers: %{},
        email_form: nil,
        email_kind: nil,
        preview: nil,
@@ -49,6 +51,9 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
        tax_rates: Pricing.list_selectable_tax_rates!(actor: socket.assigns.current_user)
      )}
   end
+
+  # Already showing it: a draft saved on the way to a failed issue moved here without reloading.
+  def handle_params(%{"id" => id}, _uri, %{assigns: %{invoice: %{id: id}}} = socket), do: {:noreply, socket}
 
   def handle_params(%{"id" => id}, _uri, socket) do
     case Payments.get_invoice(id, actor: socket.assigns.current_user, load: @load) do
@@ -79,14 +84,24 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       <.admin_page>
         <.admin_page_header title={@page_title} back={back(@invoice)} sticky={@editable}>
           <:subtitle :if={!@editable}>
-            <.badge tone={InvoicesLive.status_tone(@invoice.status, @invoice.overdue?)}>
-              {InvoicesLive.status_label(@invoice.status, @invoice.overdue?)}
-            </.badge>
-            <.badge :if={@invoice.sendable? && is_nil(@invoice.sent_at)} tone={:neutral}>{~t"Not sent"}</.badge>
-            <.badge :if={@invoice.status == :open} href="#invoice-totals" tone={:warning} class="tabular-nums xl:hidden">
-              {~t"To collect #{amount = Format.currency(@invoice.amount_unpaid, @locale)}"}
-              <.icon name="hero-arrow-down" class="h-3 w-3" />
-            </.badge>
+            <span class="block">
+              {@invoice.buyer} · <span class="tabular-nums">{Format.currency(@invoice.amount, @locale)}</span>
+            </span>
+            <span class="mt-2 flex flex-wrap items-center gap-1.5">
+              <.badge tone={InvoicesLive.status_tone(@invoice.status, @invoice.overdue?)}>
+                {InvoicesLive.status_label(@invoice.status, @invoice.overdue?)}
+              </.badge>
+              <.badge :if={@invoice.sendable? && is_nil(@invoice.sent_at)} tone={:neutral}>{~t"Not sent"}</.badge>
+              <.badge
+                :if={@invoice.status == :open}
+                href="#invoice-payment"
+                tone={:warning}
+                class="tabular-nums xl:hidden"
+              >
+                {~t"To collect #{amount = Format.currency(@invoice.amount_unpaid, @locale)}"}
+                <.icon name="hero-arrow-down" class="h-3 w-3" />
+              </.badge>
+            </span>
           </:subtitle>
           <:actions>
             <.button
@@ -112,13 +127,26 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
               data-confirm={~t"Issue this invoice? Its number, buyer details and amounts will be frozen."}
             >{~t"Issue invoice"}</.button>
             <.button
+              :if={!@editable && @invoice.sendable?}
+              type="button"
+              phx-click="open_email"
+              phx-value-kind="invoice"
+              variant={if @invoice.sent_at && !@invoice.overdue?, do: "secondary", else: "primary"}
+              size="sm"
+            >
+              <.icon name="hero-envelope" class="h-4 w-4" />
+              {send_label(@invoice)}
+            </.button>
+            <.button
               :if={!@editable}
               href={~p"/admin/invoices/#{@invoice.id}/pdf"}
               target="_blank"
               rel="noopener"
               variant="secondary"
               size="sm"
-            >{~t"Download PDF"}</.button>
+            >
+              <.icon name="hero-arrow-down-tray" class="h-4 w-4" /> {~t"Download PDF"}
+            </.button>
           </:actions>
         </.admin_page_header>
         <p :if={@error} id="invoice-error" role="alert" class="text-error mb-5 whitespace-pre-line">{@error}</p>
@@ -138,126 +166,57 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
           phx-change="validate"
           phx-submit="save"
           data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
-          class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start"
         >
-          <div class="min-w-0 space-y-6">
-            <.form_section title={~t"Customer"}>
-              <.customer_picker field={@form[:previous_invoice_id]} empty?={@customer_search_empty?} />
-              <div class="grid gap-4 sm:grid-cols-2">
-                <.input
-                  field={@form[:buyer_name]}
-                  label={~t"Name"}
-                  class="input w-full"
-                  autocomplete="off"
-                  autocapitalize="words"
+          <%!-- The same sheet the issued invoice shows, with fields where its values will be. --%>
+          <article id="invoice-sheet" class="admin-card min-w-0 p-4 sm:p-8">
+            <div class="grid grid-cols-1 gap-x-12 gap-y-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
+              <section id="invoice-customer" class="min-w-0" aria-labelledby="invoice-bill-to">
+                <h2 id="invoice-bill-to" class="text-base-content mb-4 text-base font-semibold">{~t"Bill to"}</h2>
+                <.customer_picker
+                  field={@form[:customer]}
+                  empty?={@customer_search_empty?}
+                  focus="customer_focus"
+                  help={~t"Search by name, company or email."}
                 />
-                <.input
-                  field={@form[:buyer_email]}
-                  type="email"
-                  label={~t"Email"}
-                  class="input w-full"
-                  autocomplete="off"
-                />
-              </div>
-              <div class="mt-4">
-                <.input field={@form[:business_customer]} type="checkbox" label={~t"Business customer"} />
-              </div>
-              <div :if={@form[:business_customer].value not in [true, "true"]} class="mt-4">
-                <.input
-                  field={@form[:buyer_address]}
-                  type="textarea"
-                  label={~t"Postal address"}
-                  class="textarea w-full"
-                  rows="3"
-                />
-              </div>
-              <.input :if={@form[:business_customer].value in [true, "true"]} field={@form[:buyer_address]} type="hidden" />
-              <div :if={@form[:business_customer].value in [true, "true"]} class="mt-4 grid gap-4 sm:grid-cols-2">
-                <.input field={@form[:company_name]} label={~t"Company name"} class="input w-full" />
-                <.input field={@form[:business_id]} label={~t"Y-tunnus"} class="input w-full" />
-                <div class="sm:col-span-2">
+                <div class="grid gap-4 sm:grid-cols-2">
                   <.input
-                    field={@form[:billing_address]}
-                    type="textarea"
-                    label={~t"Billing address"}
-                    class="textarea w-full"
-                    rows="3"
+                    field={@form[:buyer_name]}
+                    label={~t"Name"}
+                    class="input w-full"
+                    autocomplete="off"
+                    autocapitalize="words"
+                  />
+                  <.input
+                    field={@form[:buyer_email]}
+                    type="email"
+                    label={~t"Email"}
+                    class="input w-full"
+                    autocomplete="off"
                   />
                 </div>
-              </div>
-            </.form_section>
-            <.form_section title={~t"Items"}>
-              <:description>{~t"Prices include VAT."}</:description>
-              <div class="space-y-5">
-                <.inputs_for :let={line_form} field={@form[:lines]}>
-                  <fieldset
-                    id={"invoice-line-#{line_form.index}"}
-                    class="border-base-content/12 border-b pb-5 last:border-0"
-                  >
-                    <legend class="sr-only">{~t"Item"} {line_form.index + 1}</legend>
-                    <div class="flex items-start gap-3">
-                      <div class="min-w-0 flex-1">
-                        <.input
-                          field={line_form[:description]}
-                          id={"line-#{line_form.index}-description"}
-                          label={~t"Description"}
-                          class="input w-full"
-                        />
-                      </div>
-                      <.button
-                        type="button"
-                        phx-click="remove_line"
-                        phx-value-path={line_form.name}
-                        variant="ghost"
-                        size="sm"
-                        class="btn-square mt-6 shrink-0"
-                        aria-label={~t"Remove item #{number = line_form.index + 1}"}
-                      >
-                        <.icon name="hero-trash" class="h-4 w-4" />
-                      </.button>
-                    </div>
-                    <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      <.input
-                        field={line_form[:quantity]}
-                        value={decimal_comma(line_form[:quantity].value)}
-                        id={"line-#{line_form.index}-quantity"}
-                        label={~t"Qty"}
-                        inputmode="decimal"
-                        class="input w-full tabular-nums"
-                      />
-                      <.input
-                        field={line_form[:unit_price]}
-                        value={decimal_comma(line_form[:unit_price].value)}
-                        id={"line-#{line_form.index}-price"}
-                        label={~t"Price each (€)"}
-                        inputmode="decimal"
-                        class="input w-full tabular-nums"
-                      />
-                      <div class="col-span-2 sm:col-span-1">
-                        <.input
-                          field={line_form[:vat_rate]}
-                          id={"line-#{line_form.index}-vat"}
-                          type="select"
-                          label={~t"VAT"}
-                          value={normalize_decimal(line_form[:vat_rate].value)}
-                          options={vat_options(@tax_rates, line_form[:vat_rate].value, @locale)}
-                          class="select w-full"
-                        />
-                      </div>
-                    </div>
-                  </fieldset>
-                </.inputs_for>
-              </div>
-              <.button type="button" phx-click="add_line" variant="secondary" size="sm"><.icon
-                name="hero-plus"
-                class="h-4 w-4"
-              /> {~t"Add item"}</.button>
-            </.form_section>
-          </div>
-          <aside class="min-w-0 space-y-6">
-            <.form_section title={~t"Invoice details"}>
-              <div class="grid gap-4 sm:grid-cols-2">
-                <div class="sm:col-span-2">
+                <div class="mt-4">
+                  <.input field={@form[:business_customer]} type="checkbox" label={~t"Business customer"} />
+                </div>
+                <div :if={@form[:business_customer].value in [true, "true"]} class="mt-4 grid gap-4 sm:grid-cols-2">
+                  <.input field={@form[:company_name]} label={~t"Company name"} class="input w-full" />
+                  <.input field={@form[:business_id]} label={~t"Y-tunnus"} class="input w-full" />
+                  <div class="sm:col-span-2">
+                    <.input
+                      field={@form[:billing_address]}
+                      type="textarea"
+                      label={~t"Billing address"}
+                      class="textarea w-full"
+                      rows="3"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section id="invoice-details" class="min-w-0" aria-labelledby="invoice-details-heading">
+                <h2 id="invoice-details-heading" class="text-base-content mb-4 text-base font-semibold">
+                  {~t"Invoice details"}
+                </h2>
+                <div class="space-y-4">
                   <.input
                     field={@form[:payment_term_days]}
                     type="number"
@@ -266,20 +225,15 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                     label={~t"Payment term (days)"}
                     class="input w-full"
                     required
+                    help={issue_dates_hint(@form[:payment_term_days].value, @locale)}
                   />
-                  <p class="text-base-content/75 mt-1 text-sm">
-                    {issue_dates_hint(@form[:payment_term_days].value, @locale)}
-                  </p>
-                </div>
-                <div class="sm:col-span-2">
                   <.input
                     field={@form[:supply_date]}
                     type="date"
                     label={~t"Date of supply or advance payment"}
                     class="input w-full"
+                    help={~t"Needed to issue the invoice."}
                   />
-                </div>
-                <div class="sm:col-span-2">
                   <.input
                     field={@form[:locale]}
                     type="select"
@@ -288,111 +242,240 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                     class="select w-full"
                   />
                 </div>
-              </div>
-              <details
-                id="invoice-additional-details"
-                class="mt-5"
-                open={additional_details?(@form)}
-                phx-mounted={JS.ignore_attributes(["open"])}
+                <details
+                  id="invoice-additional-details"
+                  class="group mt-5"
+                  open={additional_details?(@form)}
+                  phx-mounted={JS.ignore_attributes(["open"])}
+                >
+                  <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-semibold">
+                    {~t"Additional details (optional)"}
+                    <.icon
+                      name="hero-chevron-right"
+                      class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
+                    />
+                  </summary>
+                  <div class="mt-4 space-y-4">
+                    <.input
+                      field={@form[:customer_reference]}
+                      label={~t"Customer reference (optional)"}
+                      class="input w-full"
+                    />
+                    <.input
+                      field={@form[:supply_description]}
+                      label={~t"Label for the date of supply (optional)"}
+                      placeholder={~t"Wedding date"}
+                      class="input w-full"
+                    />
+                  </div>
+                </details>
+              </section>
+            </div>
+
+            <section id="invoice-lines" class="mt-10" aria-labelledby="invoice-lines-heading">
+              <h2 id="invoice-lines-heading" class="text-base-content text-base font-semibold xl:sr-only">{~t"Items"}</h2>
+              <div
+                aria-hidden="true"
+                class={["text-base-content/75 border-base-content/12 hidden gap-3 border-b pb-2 text-xs font-semibold xl:grid", line_columns()]}
               >
-                <summary class="link link-primary cursor-pointer text-sm">{~t"Additional details (optional)"}</summary>
-                <div class="mt-4 space-y-4">
-                  <.input field={@form[:customer_reference]} label={~t"Customer reference (optional)"} class="input w-full" />
-                  <.input
-                    field={@form[:supply_description]}
-                    label={~t"Label for the date of supply (optional)"}
-                    placeholder={~t"Wedding date"}
-                    class="input w-full"
-                  />
+                <span>{~t"Description"}</span>
+                <span>{~t"Qty"}</span>
+                <span>{~t"Price each (€)"}</span>
+                <span>{~t"VAT"}</span>
+                <span class="text-right">{~t"Total"}</span>
+              </div>
+              <div class="divide-base-content/12 divide-y">
+                <.inputs_for :let={line_form} field={@form[:lines]}>
+                  <fieldset
+                    id={"invoice-line-#{line_form.index}"}
+                    class={["relative grid grid-cols-2 items-start gap-3 py-4 xl:[&_label>span:first-child]:sr-only", line_columns()]}
+                  >
+                    <legend class="sr-only">{~t"Item"} {line_form.index + 1}</legend>
+                    <div class="col-span-2 min-w-0 xl:col-span-1">
+                      <.input
+                        field={line_form[:description]}
+                        id={"line-#{line_form.index}-description"}
+                        label={~t"Description"}
+                        class="input w-full"
+                      />
+                    </div>
+                    <.input
+                      field={line_form[:quantity]}
+                      value={decimal_comma(line_form[:quantity].value)}
+                      id={"line-#{line_form.index}-quantity"}
+                      label={~t"Qty"}
+                      inputmode="decimal"
+                      class="input w-full tabular-nums"
+                    />
+                    <.input
+                      field={line_form[:unit_price]}
+                      value={decimal_comma(line_form[:unit_price].value)}
+                      id={"line-#{line_form.index}-price"}
+                      label={~t"Price each (€)"}
+                      inputmode="decimal"
+                      class="input w-full tabular-nums"
+                    />
+                    <.input
+                      field={line_form[:vat_rate]}
+                      id={"line-#{line_form.index}-vat"}
+                      type="select"
+                      label={~t"VAT"}
+                      value={normalize_decimal(line_form[:vat_rate].value)}
+                      options={vat_options(@tax_rates, line_form[:vat_rate].value)}
+                      class="select w-full"
+                    />
+                    <p class="text-base-content self-end pb-2.5 text-right tabular-nums xl:self-start xl:pt-2.5 xl:pb-0">
+                      <span class="sr-only">{~t"Total"}</span>
+                      {line_total(line_form, @locale)}
+                    </p>
+                    <.button
+                      :if={length(@form.source.forms[:lines]) > 1}
+                      type="button"
+                      phx-click="remove_line"
+                      phx-value-path={line_form.name}
+                      variant="ghost"
+                      size="sm"
+                      class="btn-square absolute top-2.5 right-0 xl:static xl:mt-1"
+                      aria-label={~t"Remove item #{number = line_form.index + 1}"}
+                    >
+                      <.icon name="hero-trash" class="h-4 w-4" />
+                    </.button>
+                  </fieldset>
+                </.inputs_for>
+              </div>
+              <div class="border-base-content/12 flex flex-col gap-6 border-t pt-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <.button type="button" phx-click="add_line" variant="secondary" size="sm">
+                    <.icon name="hero-plus" class="h-4 w-4" /> {~t"Add item"}
+                  </.button>
+                  <p class="text-base-content/75 mt-2 text-sm">{~t"Prices include VAT."}</p>
                 </div>
-              </details>
-            </.form_section>
-            <.totals snapshot={@totals_preview} locale={@locale} draft show_errors={@submitted} />
-          </aside>
+                <div id="invoice-totals" class="w-full sm:max-w-xs">
+                  <%= case @totals_preview do %>
+                    <% {:ok, snapshot} -> %>
+                      <.sheet_totals snapshot={snapshot} locale={@locale} />
+                    <% {:error, message} -> %>
+                      <p role="status" class="text-base-content/75 text-sm sm:text-right">
+                        {if @submitted, do: message, else: ~t"Complete the items to see the total."}
+                      </p>
+                  <% end %>
+                </div>
+              </div>
+            </section>
+          </article>
         </.form>
-        <div :if={@editable && @invoice} class="mt-6">
+        <div :if={@editable && @invoice && @log != []} class="mt-6">
           <.invoice_history log={@log} locale={@locale} />
         </div>
         <div :if={!@editable} class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
-          <div class="min-w-0 space-y-6">
-            <.widget title={@invoice.buyer}>
-              <div class="break-words">
-                <p>{@invoice.buyer_email}</p>
-                <p class="mt-2 whitespace-pre-line">
-                  {if @invoice.business_customer, do: @invoice.billing_address, else: @invoice.buyer_address}
+          <%!-- The invoice as the customer receives it, laid out like the PDF. --%>
+          <article id="invoice-sheet" class="admin-card min-w-0 p-4 sm:p-8">
+            <div class="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <section id="invoice-customer" class="min-w-0 text-sm">
+                <h2 class="text-base-content/75 mb-1.5">{~t"Bill to"}</h2>
+                <p class="text-base-content text-base font-semibold">{@invoice.buyer}</p>
+                <p
+                  :if={@invoice.business_customer}
+                  class="text-base-content/90 mt-1 whitespace-pre-line break-words"
+                  phx-no-format
+                >{@invoice.billing_address}</p>
+                <p :if={@invoice.business_customer && @invoice.business_id} class="text-base-content/90 mt-1">
+                  {~t"Y-tunnus"} {@invoice.business_id}
                 </p>
-                <p :if={@invoice.business_customer} class="mt-2">{@invoice.business_id}</p>
-                <p :if={@invoice.supply_date} class="mt-2">
-                  {@invoice.supply_description || ~t"Date of supply"}: {Format.date(@invoice.supply_date, @locale)}
-                </p>
-                <p :if={@invoice.customer_reference} class="mt-2">
-                  {~t"Customer reference"}: {@invoice.customer_reference}
-                </p>
-              </div>
-              <dl class="mt-5 grid grid-cols-2 gap-4">
-                <div>
-                  <dt class="text-base-content/75 text-sm">{~t"Invoice date"}</dt><dd class="tabular-nums">
-                    {Format.date(@invoice.invoice_date, @locale)}
-                  </dd>
-                </div>
-                <div>
-                  <dt class="text-base-content/75 text-sm">{~t"Due date"}</dt><dd class={["tabular-nums", @invoice.overdue? && "text-error font-semibold"]}>
-                    {Format.date(@invoice.due_date, @locale)}
-                  </dd>
-                </div>
+                <div :if={@invoice.buyer_email} class="mt-2"><.email_link email={@invoice.buyer_email} /></div>
+              </section>
+              <dl
+                id="invoice-details"
+                class="grid-cols-[auto_auto] grid content-start gap-x-6 gap-y-1.5 text-sm sm:justify-end"
+              >
+                <.sheet_fact label={~t"Invoice number"}>{@invoice.number}</.sheet_fact>
+                <.sheet_fact label={~t"Invoice date"}>{Format.date(@invoice.invoice_date, @locale)}</.sheet_fact>
+                <.sheet_fact label={~t"Due date"} class={@invoice.overdue? && "text-error font-semibold"}>
+                  {Format.date(@invoice.due_date, @locale)}
+                </.sheet_fact>
+                <.sheet_fact label={~t"Reference number"}>
+                  {Edenflowers.Payments.ReferenceNumber.format(@invoice.reference_number)}
+                </.sheet_fact>
+                <.sheet_fact :if={@invoice.supply_date} label={@invoice.supply_description || ~t"Date of supply"}>
+                  {Format.date(@invoice.supply_date, @locale)}
+                </.sheet_fact>
+                <.sheet_fact :if={@invoice.customer_reference} label={~t"Customer reference"}>
+                  {@invoice.customer_reference}
+                </.sheet_fact>
               </dl>
-            </.widget>
-            <.widget title={~t"Items"}>
-              <dl class="divide-base-content/12 divide-y">
-                <div :for={line <- @invoice.financial_snapshot["lines"]} class="flex justify-between gap-4 py-3">
-                  <div class="min-w-0 break-words">
-                    <dt>{line["description"]}</dt><dd class="text-base-content/75 text-sm tabular-nums">
+            </div>
+
+            <table id="invoice-lines" class="mt-8 w-full text-sm">
+              <thead class="text-base-content/75 border-base-content/12 border-b text-left text-xs">
+                <tr>
+                  <th scope="col" class="pb-2 font-semibold">{~t"Description"}</th>
+                  <th scope="col" class="pb-2 pl-4 text-right font-semibold max-sm:hidden">{~t"Qty"}</th>
+                  <th scope="col" class="pb-2 pl-4 text-right font-semibold max-sm:hidden">{~t"Price each"}</th>
+                  <th scope="col" class="pb-2 pl-4 text-right font-semibold max-sm:hidden">{~t"VAT"}</th>
+                  <th scope="col" class="pb-2 pl-4 text-right font-semibold">{~t"Total"}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-base-content/12 divide-y">
+                <tr :for={line <- @invoice.financial_snapshot["lines"]} class="align-top">
+                  <td class="text-base-content break-words py-3">
+                    {line["description"]}
+                    <span class="text-base-content/75 mt-0.5 block tabular-nums sm:hidden">
                       {line["quantity"]} × {Format.currency(Decimal.new(line["unit_price"]), @locale)} · {~t"VAT"} {line[
                         "vat_rate"
                       ]}%
-                    </dd>
-                  </div>
-                  <dd class="shrink-0 tabular-nums">{Format.currency(Decimal.new(line["gross"]), @locale)}</dd>
-                </div>
-              </dl>
-            </.widget>
-            <.totals snapshot={{:ok, @invoice.financial_snapshot}} locale={@locale} invoice={@invoice} />
-          </div>
+                    </span>
+                  </td>
+                  <td class="py-3 pl-4 text-right tabular-nums max-sm:hidden">{line["quantity"]}</td>
+                  <td class="whitespace-nowrap py-3 pl-4 text-right tabular-nums max-sm:hidden">
+                    {Format.currency(Decimal.new(line["unit_price"]), @locale)}
+                  </td>
+                  <td class="whitespace-nowrap py-3 pl-4 text-right tabular-nums max-sm:hidden">{line["vat_rate"]}%</td>
+                  <td class="whitespace-nowrap py-3 pl-4 text-right tabular-nums">
+                    {Format.currency(Decimal.new(line["gross"]), @locale)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <.sheet_totals
+              snapshot={@invoice.financial_snapshot}
+              locale={@locale}
+              class="border-base-content/12 ml-auto border-t pt-3 sm:max-w-xs"
+            />
+          </article>
+
           <aside class="min-w-0 space-y-6">
-            <.widget :if={@invoice.sendable?} title={~t"Email invoice"}>
-              <p class="text-base-content/75 mb-4 break-words text-sm">{@invoice.buyer_email}</p>
-              <p :if={@invoice.sent_at} class="mb-4 text-sm">
+            <.widget id="invoice-payment" title={~t"Payment"} class="scroll-mt-[calc(env(safe-area-inset-top)+6rem)]">
+              <dl class="text-sm">
+                <.money_row
+                  :if={@invoice.payments != []}
+                  label={~t"Invoice total"}
+                  amount={@invoice.amount}
+                  locale={@locale}
+                />
+                <.money_row
+                  :for={payment <- Enum.sort_by(@invoice.payments, & &1.paid_at, DateTime)}
+                  label={payment_label(payment, @locale)}
+                  amount={Decimal.negate(payment.amount)}
+                  locale={@locale}
+                />
+                <.money_row
+                  :if={@invoice.status in [:open, :paid]}
+                  strong
+                  label={~t"Balance due"}
+                  amount={@invoice.amount_unpaid}
+                  locale={@locale}
+                />
+              </dl>
+              <p
+                :if={@invoice.status == :open}
+                class={["mt-1 text-sm", if(@invoice.overdue?, do: "text-error font-semibold", else: "text-base-content/75")]}
+              >
+                {~t"Due #{date = Format.date(@invoice.due_date, @locale)}"}
+              </p>
+              <p :if={@invoice.sent_at} class="text-base-content/75 mt-1 text-sm">
                 {~t"Last sent"}: {Format.datetime(@invoice.sent_at, @locale)}
               </p>
-              <.button type="button" phx-click="open_email" phx-value-kind="invoice" variant="primary" size="sm">
-                <.icon name="hero-envelope" class="h-4 w-4" />
-                {if @invoice.overdue?,
-                  do: ~t"Send reminder",
-                  else: if(@invoice.sent_at, do: ~t"Resend invoice", else: ~t"Send invoice")}
-              </.button>
-            </.widget>
-            <.widget title={~t"Bank transfers"}>
-              <p :if={@invoice.payments == []} class="text-base-content/75">{~t"No payments recorded."}</p>
-              <ul class="divide-base-content/12 divide-y">
-                <li
-                  :for={payment <- Enum.sort_by(@invoice.payments, & &1.paid_at, {:desc, DateTime})}
-                  class="flex flex-wrap items-center justify-between gap-3 py-3"
-                >
-                  <span class="tabular-nums">
-                    {Format.date(payment.paid_at, @locale)} · {Format.currency(payment.amount, @locale)}
-                    <span :if={payment.reverses_payment_id}>{~t"Reversal"}</span>
-                  </span>
-                  <.button
-                    :if={payment.undoable? && @invoice.status != :cancelled}
-                    type="button"
-                    phx-click="undo_payment"
-                    phx-value-id={payment.id}
-                    variant="secondary"
-                    size="sm"
-                    data-confirm={~t"Reverse this mistaken payment entry? Its history will be preserved."}
-                  >{~t"Reverse payment"}</.button>
-                </li>
-              </ul>
               <.form
                 :if={@invoice.status == :open}
                 for={@payment_form}
@@ -400,19 +483,61 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 novalidate
                 phx-change="validate_payment"
                 phx-submit="record_payment"
-                class="scroll-mt-[calc(env(safe-area-inset-top)+6rem)] mt-5 space-y-4"
+                class="border-base-content/12 mt-4 border-t pt-4"
               >
-                <.input
-                  field={@payment_form[:amount]}
-                  value={@payment_form.source.raw_params["amount"]}
-                  label={~t"Amount (€)"}
-                  inputmode="decimal"
-                  class="input w-full tabular-nums"
-                  required
-                />
-                <.input field={@payment_form[:paid_on]} type="date" label={~t"Payment date"} class="input w-full" required />
-                <.button type="submit" variant="primary">{~t"Record bank transfer"}</.button>
+                <h3 class="text-base-content mb-3 text-sm font-semibold">{~t"Record bank transfer"}</h3>
+                <div class="grid grid-cols-2 gap-3">
+                  <.input
+                    field={@payment_form[:amount]}
+                    value={@payment_form.source.raw_params["amount"]}
+                    label={~t"Amount (€)"}
+                    inputmode="decimal"
+                    class="input w-full tabular-nums"
+                    required
+                  />
+                  <.input
+                    field={@payment_form[:paid_on]}
+                    type="date"
+                    label={~t"Payment date"}
+                    class="input w-full"
+                    required
+                  />
+                </div>
+                <.button
+                  type="submit"
+                  variant={if @invoice.sent_at, do: "primary", else: "secondary"}
+                  size="sm"
+                  class="mt-3"
+                >
+                  <.icon name="hero-banknotes" class="h-4 w-4" /> {~t"Record payment"}
+                </.button>
               </.form>
+              <div
+                :if={@invoice.status != :cancelled && Enum.any?(@invoice.payments, & &1.undoable?)}
+                class="border-base-content/12 mt-4 border-t pt-3 text-sm"
+              >
+                <p class="text-base-content/75 mb-2">{~t"Entered a transfer by mistake?"}</p>
+                <ul class="space-y-2">
+                  <li
+                    :for={payment <- Enum.filter(@invoice.payments, & &1.undoable?)}
+                    class="flex items-center justify-between gap-3"
+                  >
+                    <span class="tabular-nums">
+                      {payment_label(payment, @locale)} · {Format.currency(payment.amount, @locale)}
+                    </span>
+                    <.button
+                      type="button"
+                      phx-click="undo_payment"
+                      phx-value-id={payment.id}
+                      variant="secondary"
+                      size="sm"
+                      data-confirm={
+                        ~t"Undo the #{amount = Format.currency(payment.amount, @locale)} payment by #{how = OrderLog.payment_method_label(payment.method)}? This records the opposite amount."
+                      }
+                    >{~t"Undo"}</.button>
+                  </li>
+                </ul>
+              </div>
               <p
                 :if={@invoice.status in [:open, :paid] && !@invoice.cancellable?}
                 id="accountant-correction"
@@ -424,10 +549,16 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
             <details
               :if={@invoice.cancellable?}
               id="invoice-corrections"
-              class="admin-card p-4 sm:p-5"
+              class="admin-card group p-4 sm:p-5"
               phx-mounted={JS.ignore_attributes(["open"])}
             >
-              <summary class="cursor-pointer text-base font-semibold">{~t"Correct this invoice"}</summary>
+              <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-base font-semibold">
+                {~t"Correct this invoice"}
+                <.icon
+                  name="hero-chevron-right"
+                  class="text-base-content/50 h-4 w-4 transition-transform group-open:rotate-90"
+                />
+              </summary>
               <.form
                 for={@credit_form}
                 id="invoice-credit-form"
@@ -435,7 +566,9 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 phx-submit="credit"
                 class="mt-4 space-y-4"
               >
-                <p>{~t"A full credit note reverses this unpaid invoice and its VAT."}</p>
+                <p class="text-base-content/75 text-sm">
+                  {~t"A full credit note reverses this unpaid invoice and its VAT."}
+                </p>
                 <.input
                   field={@credit_form[:reason]}
                   type="textarea"
@@ -451,8 +584,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
               </.form>
             </details>
             <.widget :if={@invoice.credit_note} title={~t"Credit note"}>
-              <div :if={@invoice.credit_note} class="flex flex-wrap items-center gap-3">
-                <p class="w-full">
+              <div class="flex flex-wrap items-center gap-3">
+                <p class="w-full text-sm tabular-nums">
                   {~t"Credit note"} {@invoice.credit_note.number} · {Format.date(@invoice.credit_note.credit_date, @locale)}
                 </p>
                 <.button
@@ -503,82 +636,33 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     """
   end
 
-  attr :invoice, :any, default: nil
-  attr :snapshot, :any, required: true
+  attr :snapshot, :map, required: true
   attr :locale, :string, required: true
-  attr :draft, :boolean, default: false
-  attr :show_errors, :boolean, default: true
+  attr :class, :any, default: nil
 
-  defp totals(assigns) do
+  defp sheet_totals(assigns) do
     ~H"""
-    <.widget
-      id="invoice-totals"
-      title={if @draft, do: ~t"Draft totals", else: ~t"Invoice totals"}
-      class="scroll-mt-[calc(env(safe-area-inset-top)+6rem)]"
-    >
-      <%= case @snapshot do %>
-        <% {:ok, snapshot} -> %>
-          <dl class="space-y-3 tabular-nums">
-            <div :for={row <- snapshot["vat_breakdown"]} class="flex flex-wrap justify-between gap-x-6 gap-y-1">
-              <dt>{~t"VAT"} {row["rate"]}%</dt>
-              <dd>
-                {~t"Net"} {Format.currency(Decimal.new(row["base"]), @locale)} · {~t"VAT"} {Format.currency(
-                  Decimal.new(row["vat"]),
-                  @locale
-                )}
-              </dd>
-            </div>
-            <.money_row
-              label={~t"Total incl. VAT"}
-              amount={Decimal.new(snapshot["gross"])}
-              locale={@locale}
-              strong={is_nil(@invoice)}
-              ruled={!is_nil(@invoice)}
-            />
-            <.money_row
-              :if={@invoice && Decimal.positive?(@invoice.amount_paid)}
-              label={~t"Paid"}
-              amount={Decimal.negate(@invoice.amount_paid)}
-              locale={@locale}
-            />
-            <.money_row
-              :if={@invoice && @invoice.status in [:open, :paid]}
-              label={~t"Balance"}
-              amount={@invoice.amount_unpaid}
-              locale={@locale}
-              strong
-            />
-          </dl>
-          <.button
-            :if={@invoice && @invoice.status == :open}
-            href="#invoice-payment-form"
-            variant="secondary"
-            size="sm"
-            class="mt-4 xl:hidden"
-          >
-            <.icon name="hero-banknotes" class="h-4 w-4" /> {~t"Record payment"}
-          </.button>
-        <% {:error, message} -> %>
-          <p role="status" class="text-base-content/75">
-            {if @show_errors, do: message, else: ~t"Complete the items to see the total."}
-          </p>
-      <% end %>
-    </.widget>
+    <dl class={["text-sm", @class]}>
+      <.money_row label={~t"Total excl. VAT"} amount={Decimal.new(@snapshot["base"])} locale={@locale} />
+      <.money_row
+        :for={row <- @snapshot["vat_breakdown"]}
+        label={~t"VAT #{rate = row["rate"]}%"}
+        amount={Decimal.new(row["vat"])}
+        locale={@locale}
+      />
+      <.money_row strong label={~t"Total incl. VAT"} amount={Decimal.new(@snapshot["gross"])} locale={@locale} />
+    </dl>
     """
   end
 
-  def handle_event("live_select_change", %{"id" => "customer-select", "text" => term}, socket) do
-    term = String.trim(term)
+  def handle_event("live_select_change", %{"id" => "customer-select", "text" => term}, socket),
+    do: {:noreply, show_customers(socket, String.trim(term))}
 
-    customers =
-      if term == "",
-        do: [],
-        else: Payments.search_invoice_customers!(term, actor: socket.assigns.current_user, query: [limit: 10])
+  # An empty search lists the latest customers, so a repeat invoice is a click away.
+  def handle_event("customer_focus", _params, %{assigns: %{customer_term: ""}} = socket),
+    do: {:noreply, show_customers(socket, "")}
 
-    options = Enum.map(customers, &{"#{&1.buyer} · #{&1.buyer_email}", &1.id})
-    send_update(LiveSelect.Component, id: "customer-select", options: options)
-    {:noreply, assign(socket, customer_search_empty?: term != "" && customers == [])}
-  end
+  def handle_event("customer_focus", _params, socket), do: {:noreply, socket}
 
   def handle_event("validate", %{"invoice" => params}, socket) do
     params = prefill_customer(params, socket.assigns)
@@ -659,7 +743,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
         {:noreply,
          socket
          |> put_form(socket |> draft_form(socket.assigns.invoice) |> AshPhoenix.Form.validate(params))
-         |> assign(error: issue_message(issue_error))}
+         |> assign(error: issue_message(issue_error), page_title: ~t"Invoice draft")
+         |> push_patch(to: ~p"/admin/invoices/#{socket.assigns.invoice.id}", replace: true)}
     end
   end
 
@@ -719,6 +804,26 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       ~t"Credit note issued."
     )
   end
+
+  attr :label, :string, required: true
+  attr :class, :any, default: nil
+  slot :inner_block, required: true
+
+  defp sheet_fact(assigns) do
+    ~H"""
+    <dt class="text-base-content/75">{@label}</dt>
+    <dd class={["text-base-content break-words text-right tabular-nums", @class]}>{render_slot(@inner_block)}</dd>
+    """
+  end
+
+  defp send_label(%{overdue?: true}), do: ~t"Send reminder"
+  defp send_label(%{sent_at: nil}), do: ~t"Send invoice"
+  defp send_label(_invoice), do: ~t"Resend invoice"
+
+  defp payment_label(%{reverses_payment_id: nil} = payment, locale),
+    do: ~t"Paid #{date = Format.date(payment.paid_at, locale)}"
+
+  defp payment_label(payment, locale), do: ~t"Undone #{date = Format.date(payment.paid_at, locale)}"
 
   defp back(%{order: %Edenflowers.Orders.Order{} = order}),
     do: {~t"Order #{order.order_reference}", ~p"/admin/orders/#{order.id}"}
@@ -803,6 +908,18 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       else: InvoiceFinancials.build(Ash.Changeset.get_attribute(changeset, :lines))
   end
 
+  defp line_total(line_form, locale) do
+    case {line_form[:quantity].value, line_form[:unit_price].value} do
+      {%Decimal{} = quantity, %Decimal{} = unit_price} ->
+        Format.currency(InvoiceFinancials.line_gross(quantity, unit_price), locale)
+
+      _incomplete ->
+        nil
+    end
+  end
+
+  defp line_columns, do: "xl:grid-cols-[minmax(0,1fr)_4.5rem_7rem_9.5rem_6.5rem_2.5rem]"
+
   defp additional_details?(form),
     do: Enum.any?([:customer_reference, :supply_description], &(form[&1].value not in [nil, ""]))
 
@@ -823,33 +940,41 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   defp email_record(:credit_note, nil), do: nil
   defp email_record(:credit_note, invoice), do: invoice.credit_note
 
-  defp prefill_customer(%{"previous_invoice_id" => id} = params, assigns) when id not in [nil, ""] do
-    if id == assigns.form[:previous_invoice_id].value do
-      params
-    else
-      case Payments.get_invoice(id, actor: assigns.current_user) do
-        {:ok, %{sent_at: sent_at} = previous} when not is_nil(sent_at) ->
-          Map.merge(params, customer_params(previous))
+  defp show_customers(socket, term) do
+    customers =
+      Payments.find_invoice_customers!(if(term == "", do: nil, else: term), actor: socket.assigns.current_user)
 
-        _ ->
-          params
-      end
+    options = Enum.map(customers, &{customer_label(&1), &1.id})
+    send_update(LiveSelect.Component, id: "customer-select", options: options)
+
+    assign(socket,
+      customer_term: term,
+      customers: Map.new(customers, &{&1.id, &1.details}),
+      customer_search_empty?: term != "" && customers == []
+    )
+  end
+
+  defp customer_label(customer),
+    do: [customer.buyer, customer.buyer_email] |> Enum.reject(&(&1 in [nil, ""])) |> Enum.join(" · ")
+
+  # Fills the customer fields once, when a customer is picked; edits after that are kept.
+  defp prefill_customer(%{"customer" => id} = params, assigns) when id not in [nil, ""] do
+    picked = assigns.form[:customer].value
+
+    case assigns.customers do
+      %{^id => details} when id != picked -> Map.merge(params, customer_params(details))
+      _ -> params
     end
   end
 
   defp prefill_customer(params, _assigns), do: params
 
-  defp customer_params(previous) do
-    Map.new(@customer_fields, fn field ->
-      {field, form_value(Map.get(previous, String.to_existing_atom(field)))}
-    end)
-  end
+  defp customer_params(details), do: Map.new(details, fn {field, value} -> {to_string(field), form_value(value)} end)
 
-  defp vat_options(tax_rates, current, locale) do
+  defp vat_options(tax_rates, current) do
     options =
       Enum.map(tax_rates, fn rate ->
-        {"#{rate.name} (#{Format.percentage(rate.percentage, locale)})",
-         rate.percentage |> Decimal.mult(100) |> Decimal.normalize() |> Decimal.to_string(:normal)}
+        {rate.name, rate.percentage |> Decimal.mult(100) |> Decimal.normalize() |> Decimal.to_string(:normal)}
       end)
 
     current = normalize_decimal(current)

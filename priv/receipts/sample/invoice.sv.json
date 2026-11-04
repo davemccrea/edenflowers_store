@@ -1,7 +1,7 @@
 {
   "amount": "125,50 €",
   "buyer": {
-    "address": "Korsholmsesplanaden 12\n65100 Vasa",
+    "address": null,
     "business_id": null,
     "company_name": null,
     "name": "Emilia Virtanen"

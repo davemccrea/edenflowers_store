@@ -151,7 +151,6 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
         %{
           buyer_name: "Wedding buyer",
           buyer_email: "buyer@example.com",
-          buyer_address: "Street 1",
           supply_date: ~D[2026-08-01],
           lines: [
             %{description: "Flowers", quantity: "1", unit_price: "0.05", vat_rate: "25.5"},
@@ -424,7 +423,6 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
         %{
           buyer_name: "Ada Lovelace",
           buyer_email: "ada@example.com",
-          buyer_address: "Street 1",
           customer_reference: "Wedding 42",
           supply_date: invoice_date,
           lines: [%{description: "Flowers", quantity: "1", unit_price: amount, vat_rate: "25.5"}]

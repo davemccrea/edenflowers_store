@@ -705,8 +705,7 @@ defmodule Edenflowers.Email.Previews do
       buyer_name: "Maria Nyström",
       buyer_email: "maria@example.com",
       business_customer: false,
-      overdue?: false,
-      buyer_address: "Street 1"
+      overdue?: false
     }
     |> Map.merge(attrs)
     |> then(&%{&1 | amount_unpaid: Decimal.sub(&1.amount, &1.amount_paid)})

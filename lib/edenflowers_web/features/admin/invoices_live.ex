@@ -22,7 +22,9 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
       <.admin_page>
         <.admin_page_header title={~t"Invoices"}>
           <:actions>
-            <.button navigate={~p"/admin/invoices/new"} variant="primary" size="sm">{~t"New invoice"}</.button>
+            <.button navigate={~p"/admin/invoices/new"} variant="primary" size="sm">
+              <.icon name="hero-plus" class="h-4 w-4" /> {~t"New invoice"}
+            </.button>
           </:actions>
         </.admin_page_header>
         <Cinder.collection
@@ -31,13 +33,15 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
           action={:admin_list}
           actor={@current_user}
           query_opts={[load: [:status, :buyer, :overdue?, :amount_unpaid]]}
+          search={[label: ~t"Search", placeholder: ~t"Search customer or reference…", fn: &search_invoices/3]}
           url_state={@url_state}
+          sort_mode="exclusive"
           theme={EdenflowersWeb.Admin.CinderTheme}
           page_size={[default: 25, options: [10, 25, 50, 100]]}
           click={fn invoice -> JS.navigate(~p"/admin/invoices/#{invoice.id}") end}
         >
           <:col :let={invoice} field="number" sort label={~t"Invoice"}>
-            <.link navigate={~p"/admin/invoices/#{invoice.id}"} class="link font-semibold">
+            <.link navigate={~p"/admin/invoices/#{invoice.id}"} class="font-semibold hover:underline">
               {if invoice.number, do: to_string(invoice.number), else: ~t"Draft"}
             </.link>
           </:col>
@@ -71,7 +75,8 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
             <span class="tabular-nums">{Format.date(invoice.due_date, @locale)}</span>
           </:col>
           <:col :let={invoice} field="amount" sort label={~t"Amount"} class="text-right tabular-nums">
-            <span>{if invoice.status == :draft, do: "—", else: Format.currency(invoice.amount, @locale)}</span>
+            <.blank :if={invoice.status == :draft} />
+            <span :if={invoice.status != :draft}>{Format.currency(invoice.amount, @locale)}</span>
             <p
               :if={invoice.status == :open && Decimal.compare(invoice.amount_unpaid, invoice.amount) == :lt}
               class="text-base-content/75 mt-1 whitespace-normal text-xs sm:hidden"
@@ -80,12 +85,19 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
             </p>
           </:col>
           <:col :let={invoice} field="amount_unpaid" label={~t"Balance"} class="text-right tabular-nums max-sm:hidden">
-            {if invoice.status in [:draft, :cancelled], do: "—", else: Format.currency(invoice.amount_unpaid, @locale)}
+            <.blank :if={invoice.status in [:draft, :cancelled]} />
+            <span :if={invoice.status not in [:draft, :cancelled]}>{Format.currency(invoice.amount_unpaid, @locale)}</span>
           </:col>
         </Cinder.collection>
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  defp search_invoices(query, _searchable_columns, search_term) do
+    require Ash.Query
+    term = Ash.CiString.new(search_term)
+    Ash.Query.filter(query, matches?(term: ^term))
   end
 
   def status_label(:draft, _), do: ~t"Draft"

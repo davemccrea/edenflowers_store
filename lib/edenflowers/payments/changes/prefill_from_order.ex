@@ -3,21 +3,29 @@ defmodule Edenflowers.Payments.Changes.PrefillFromOrder do
   Fills a new draft from the `invoiceable?` order it bills, in the order's
   language: one line per order line at its own price and VAT rate, plus the
   fulfillment fee. A cancelled order bills its cancellation charge instead,
-  one line per VAT rate in proportion to the order's VAT breakdown.
+  one line per VAT rate in proportion to the order's VAT breakdown. When the
+  order's email has been invoiced before, the latest such invoice gives the
+  addresses and company details, so a regular business customer's are not
+  typed again; the order keeps its own name, email and language.
   Issuing checks the order again (`IssueInvoice`), so this only refuses what
   could never be issued.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
+  require Ash.Query
+
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Payments.Invoice
+
+  @previous_fields [:business_customer, :company_name, :business_id, :billing_address]
 
   @impl true
   def change(changeset, _opts, _context) do
     with id when not is_nil(id) <- Ash.Changeset.get_attribute(changeset, :order_id),
          %Order{invoiceable?: true} = order <- load(id) do
-      Ash.Changeset.change_attributes(changeset, prefill(order))
+      Ash.Changeset.change_attributes(changeset, Map.merge(previous_customer(order.customer_email), prefill(order)))
     else
       nil -> changeset
       _not_invoiceable -> Ash.Changeset.add_error(changeset, field: :order_id, message: not_invoiceable())
@@ -31,6 +39,21 @@ defmodule Edenflowers.Payments.Changes.PrefillFromOrder do
       {:ok, order} -> order
       _ -> nil
     end
+  end
+
+  defp previous_customer(nil), do: %{}
+
+  defp previous_customer(email) do
+    key = email |> to_string() |> String.downcase()
+
+    latest =
+      Invoice
+      |> Ash.Query.for_read(:previous_customers, %{}, authorize?: false)
+      |> Ash.Query.filter(buyer_email_key == ^key)
+      |> Ash.Query.limit(1)
+      |> Ash.read_one!()
+
+    if latest, do: Map.take(latest, @previous_fields), else: %{}
   end
 
   defp not_invoiceable,
