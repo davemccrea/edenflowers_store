@@ -57,9 +57,9 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
             </span>
           </:subtitle>
           <:actions>
-            <%!-- These submit the form, so corrections typed below are saved with the paid date. --%>
+            <%!-- These submit the form, so corrections typed below are saved with the paid date. Hidden until the figures are confirmed, since paying also marks them reviewed. --%>
             <.button
-              :if={is_nil(@expense.paid_on) and not is_nil(@expense.due_on)}
+              :if={is_nil(@expense.paid_on) and not is_nil(@expense.due_on) and not @expense.needs_review}
               type="submit"
               form="expense-form"
               name="scheduled_for_due_date"
@@ -70,7 +70,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               <.icon name="hero-calendar" class="h-4 w-4" /> {~t"Mark payment scheduled"}
             </.button>
             <.button
-              :if={is_nil(@expense.paid_on)}
+              :if={is_nil(@expense.paid_on) and not @expense.needs_review}
               type="submit"
               form="expense-form"
               name="paid_today"
@@ -145,8 +145,9 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
               </div>
             </.form_section>
             <div class="mt-6">
+              <%!-- Saving clears Needs review, so say so while the badge shows. --%>
               <.button type="submit" variant="primary" class="w-full sm:w-auto">
-                {~t"Save"}
+                {if @expense.needs_review, do: ~t"Confirm details", else: ~t"Save"}
               </.button>
             </div>
           </.form>
@@ -162,7 +163,11 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   {~t"No amount"}
                 </span>
               </p>
-              <p :if={@expense.confidence != :high} class="text-base-content/75 mt-3 flex items-center gap-2 text-sm">
+              <%!-- Claude's doubt stops mattering once Jennie has confirmed the figures. --%>
+              <p
+                :if={@expense.confidence != :high and is_nil(@expense.reviewed_at)}
+                class="text-base-content/75 mt-3 flex items-center gap-2 text-sm"
+              >
                 {~t"Confidence"} <.confidence_badge confidence={@expense.confidence} />
               </p>
             </.widget>
