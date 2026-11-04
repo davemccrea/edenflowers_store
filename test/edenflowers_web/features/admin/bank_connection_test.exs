@@ -28,8 +28,8 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
       end
     end)
 
-    {:ok, view, _html} = live(conn, ~p"/admin/expenses")
-    assert has_element?(view, "#bank-status", "Bank not connected")
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    assert has_element?(view, "#bank-status", "Not connected")
 
     assert {:error, {:redirect, %{to: @login_url}}} = view |> element("#bank-status button") |> render_click()
   end
@@ -44,29 +44,29 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
     end)
 
     conn = get(conn, ~p"/admin/bank/callback?#{[state: BankController.sign_state(user), code: "code-1"]}")
-    assert redirected_to(conn) == ~p"/admin/expenses"
+    assert redirected_to(conn) == ~p"/admin"
 
     assert [%{session_id: "session-1", account_ids: ["account-1"]}] = Ash.read!(Connection, authorize?: false)
 
-    {:ok, view, _html} = live(conn, ~p"/admin/expenses")
-    assert has_element?(view, "#bank-status", "Bank connected")
+    {:ok, view, _html} = live(conn, ~p"/admin")
+    assert has_element?(view, "#bank-status", "Connected")
     assert has_element?(view, "#bank-status", "Reconnect")
   end
 
   test "warns from two weeks before the consent ends", %{conn: conn} do
     seed_connection(DateTime.add(DateTime.utc_now(), 10, :day))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/expenses")
+    {:ok, view, _html} = live(conn, ~p"/admin")
 
-    assert has_element?(view, "#bank-status", "Bank connection ending")
+    assert has_element?(view, "#bank-status", "Ending soon")
   end
 
   test "an ended consent shows the bank as disconnected", %{conn: conn} do
     seed_connection(DateTime.add(DateTime.utc_now(), -1, :day))
 
-    {:ok, view, _html} = live(conn, ~p"/admin/expenses")
+    {:ok, view, _html} = live(conn, ~p"/admin")
 
-    assert has_element?(view, "#bank-status", "Bank disconnected")
+    assert has_element?(view, "#bank-status", "Disconnected")
   end
 
   test "a callback with someone else's state stores nothing", %{conn: conn} do
@@ -78,7 +78,7 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
 
     assert log =~ "The bank login was started by another user"
 
-    assert redirected_to(conn) == ~p"/admin/expenses"
+    assert redirected_to(conn) == ~p"/admin"
     assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "wasn't connected"
     assert Ash.read!(Connection, authorize?: false) == []
   end

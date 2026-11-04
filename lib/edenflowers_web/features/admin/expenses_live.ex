@@ -6,15 +6,10 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
   use Cinder.UrlSync
 
-  require Logger
-
   import EdenflowersWeb.Admin.Components
 
-  alias Edenflowers.Bank
   alias Edenflowers.Expenses.Expense
-  alias Edenflowers.External.EnableBankingAPI
   alias Edenflowers.Format
-  alias EdenflowersWeb.Admin.BankController
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
@@ -26,18 +21,7 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
     {:ok,
      socket
      |> assign(:page_title, ~t"Expenses")
-     |> assign(:locale, Localize.get_locale())
-     |> assign(:bank_connection, bank_connection(socket.assigns.current_user))}
-  end
-
-  # Only production can reach the bank, so elsewhere there's nothing to connect.
-  defp bank_connection(actor) do
-    if EnableBankingAPI.configured?() do
-      {:ok, connection} = Bank.current_bank_connection(actor: actor, load: [:expired, :renewal_due])
-      {:configured, connection}
-    else
-      :not_configured
-    end
+     |> assign(:locale, Localize.get_locale())}
   end
 
   @impl true
@@ -64,12 +48,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
             </.button>
           </:actions>
         </.admin_page_header>
-
-        <.bank_status
-          :if={@bank_connection != :not_configured}
-          connection={elem(@bank_connection, 1)}
-          locale={@locale}
-        />
 
         <Cinder.collection
           id="expenses-table"
@@ -150,56 +128,6 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
       </.admin_page>
     </Layouts.admin>
     """
-  end
-
-  attr :connection, :any, required: true
-  attr :locale, :any, required: true
-
-  defp bank_status(assigns) do
-    ~H"""
-    <div id="bank-status" role="status" class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-      <%= cond do %>
-        <% is_nil(@connection) -> %>
-          <.badge tone={:neutral} icon="hero-building-library">{~t"Bank not connected"}</.badge>
-          <span class="text-base-content/75">
-            {~t"Connect it to mark payments paid as they leave or arrive."}
-          </span>
-        <% @connection.expired -> %>
-          <.badge tone={:error} icon="hero-building-library">{~t"Bank disconnected"}</.badge>
-          <span>
-            {~t"The connection ended on #{date = Format.date(@connection.valid_until, @locale)}. Connect again to keep payments up to date."}
-          </span>
-        <% @connection.renewal_due -> %>
-          <.badge tone={:warning} icon="hero-building-library">{~t"Bank connection ending"}</.badge>
-          <span>
-            {~t"It ends on #{date = Format.date(@connection.valid_until, @locale)}. Connect again to keep payments up to date."}
-          </span>
-        <% true -> %>
-          <.badge tone={:success} icon="hero-building-library">{~t"Bank connected"}</.badge>
-          <span class="text-base-content/75">
-            {~t"Until #{date = Format.date(@connection.valid_until, @locale)}"}
-          </span>
-      <% end %>
-      <.button phx-click="connect_bank" variant="secondary" size="sm">
-        {if @connection, do: ~t"Reconnect", else: ~t"Connect bank"}
-      </.button>
-    </div>
-    """
-  end
-
-  @impl true
-  def handle_event("connect_bank", _params, socket) do
-    user = socket.assigns.current_user
-    state = BankController.sign_state(user)
-
-    case Bank.bank_authorization_url(state, url(~p"/admin/bank/callback"), actor: user) do
-      {:ok, url} ->
-        {:noreply, redirect(socket, external: url)}
-
-      {:error, error} ->
-        Logger.error("Starting a bank connection failed: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"The bank couldn't be reached. Please try again.")}
-    end
   end
 
   @impl true

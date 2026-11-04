@@ -41,7 +41,7 @@ defmodule EdenflowersWeb.Admin.BankController do
       {:ok, _connection} ->
         conn
         |> put_flash(:success, ~t"Bank connected.")
-        |> redirect(to: ~p"/admin/expenses")
+        |> redirect(to: ~p"/admin")
 
       {:error, error} ->
         Logger.error("Connecting the bank failed: #{inspect(error)}")
@@ -52,6 +52,6 @@ defmodule EdenflowersWeb.Admin.BankController do
   defp failed(conn) do
     conn
     |> put_flash(:error, ~t"The bank wasn't connected. Please try again.")
-    |> redirect(to: ~p"/admin/expenses")
+    |> redirect(to: ~p"/admin")
   end
 end
