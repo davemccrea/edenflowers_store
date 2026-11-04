@@ -4036,11 +4036,6 @@ msgstr "Näytetään kurssikuvan yhteydessä. Lisää verkkosivusto, niin valoku
 msgid "Stop orders for this day? Customers can't order for it until you reopen it."
 msgstr "Lopetetaanko tilaukset tälle päivälle? Asiakkaat eivät voi tilata sille ennen kuin avaat sen uudelleen."
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:110
-#, elixir-autogen, elixir-format
-msgid "Leave empty while it's unpaid. A future date means the payment is scheduled."
-msgstr "Jätä tyhjäksi, kun se on maksamatta. Tuleva päivämäärä tarkoittaa, että maksu on ajastettu."
-
 #: lib/edenflowers_web/features/admin/expense_detail_live.ex:70
 #, elixir-autogen, elixir-format
 msgid "Mark payment scheduled"
@@ -4677,11 +4672,6 @@ msgstr ""
 msgid "Until %{date}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/expense_detail_live.ex:119
-#, elixir-autogen, elixir-format
-msgid "Once the bank pays it with this reference, it's marked paid."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/overview_live.ex:532
 #, elixir-autogen, elixir-format
 msgid "Accounting"
@@ -4731,3 +4721,13 @@ msgstr "Ei valittu"
 #, elixir-autogen, elixir-format
 msgid "How to buy"
 msgstr "Ostotapa"
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:110
+#, elixir-autogen, elixir-format
+msgid "Leave empty if unpaid. A future date means it's scheduled."
+msgstr "Jätä tyhjäksi, jos maksamatta. Tuleva päivä tarkoittaa, että maksu on ajastettu."
+
+#: lib/edenflowers_web/features/admin/expense_detail_live.ex:119
+#, elixir-autogen, elixir-format
+msgid "Pay it with this reference and it's marked paid once the bank books the payment."
+msgstr "Maksa tällä viitenumerolla, niin se merkitään maksetuksi, kun pankki kirjaa maksun."

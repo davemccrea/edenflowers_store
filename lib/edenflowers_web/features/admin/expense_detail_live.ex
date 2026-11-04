@@ -107,7 +107,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   field={@form[:paid_on]}
                   type="date"
                   label={~t"Paid on"}
-                  help={~t"Leave empty while it's unpaid. A future date means the payment is scheduled."}
+                  help={~t"Leave empty if unpaid. A future date means it's scheduled."}
                   class="input w-full"
                 />
                 <.input field={@form[:due_on]} type="date" label={~t"Due date"} class="input w-full" />
@@ -116,7 +116,7 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
                   type="text"
                   inputmode="numeric"
                   label={~t"Reference number"}
-                  help={~t"Once the bank pays it with this reference, it's marked paid."}
+                  help={~t"Pay it with this reference and it's marked paid once the bank books the payment."}
                   class="input w-full"
                 />
                 <.input
