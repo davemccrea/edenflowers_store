@@ -6,9 +6,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
-  import EdenflowersWeb.Admin.Components
-
   require Logger
+
+  import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Bank
   alias Edenflowers.Courses
