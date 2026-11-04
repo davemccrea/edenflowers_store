@@ -172,14 +172,14 @@ msgstr ""
 msgid "This field is required"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:466
-#: lib/edenflowers_web/components/layouts.ex:688
+#: lib/edenflowers_web/components/layouts.ex:470
+#: lib/edenflowers_web/components/layouts.ex:692
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr ""
 
-#: lib/edenflowers_web/components/layouts.ex:322
-#: lib/edenflowers_web/components/layouts.ex:764
+#: lib/edenflowers_web/components/layouts.ex:324
+#: lib/edenflowers_web/components/layouts.ex:768
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr ""

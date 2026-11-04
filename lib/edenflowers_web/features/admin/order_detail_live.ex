@@ -351,9 +351,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                     </span>
                   </li>
                 </ul>
-                <p :if={@order.invoiced?} class="text-base-content/75 mt-2">
-                  {~t"While the invoice stands, edits must keep the date and the amount for each VAT rate, and the order can't be cancelled. Credit the invoice to change more."}
-                </p>
                 <.button
                   :if={@order.invoiceable?}
                   type="button"

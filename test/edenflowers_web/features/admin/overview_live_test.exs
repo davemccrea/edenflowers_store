@@ -304,8 +304,9 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin")
 
     to = Edenflowers.Format.day_month(same_day, Edenflowers.Format.locale())
-    assert has_element?(view, "#sales-last-month", "2 last month by #{to}")
-    assert has_element?(view, "#revenue-last-month", "50,00 € last month by #{to}")
+    assert has_element?(view, "#last-month", "Last month by #{to}")
+    assert has_element?(view, "#sales-last-month", "2")
+    assert has_element?(view, "#revenue-last-month", "50,00 €")
     assert has_element?(view, "#revenue-pace", "Last month")
   end
 end

@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
+    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user} search_term={@term}>
       <.admin_page>
         <.admin_page_header title={~t"Search"}>
           <:subtitle :if={@term != ""}>{~t"Results for “#{term = @term}”"}</:subtitle>
@@ -55,8 +55,12 @@ defmodule EdenflowersWeb.Admin.SearchLive do
           {~t"Search orders by name, reference, phone, email or delivery address, and customers by name or email."}
         </p>
 
-        <div :if={@term != ""} class="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
-          <.widget id="search-orders" title={~t"Orders"} count={length(@orders)}>
+        <p :if={@term != "" and @orders == [] and @customers == []} class="text-base-content/75 text-sm">
+          {~t"No orders or customers match “#{term = @term}”."}
+        </p>
+
+        <div :if={@orders != [] or @customers != []} class="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
+          <.widget id="search-orders" title={~t"Orders"} count={shown_count(@orders, @limit)}>
             <ul :if={@orders != []} class="divide-base-content/12 -my-2 divide-y">
               <li :for={order <- @orders}>
                 <.link
@@ -83,7 +87,7 @@ defmodule EdenflowersWeb.Admin.SearchLive do
             </.link>
           </.widget>
 
-          <.widget id="search-customers" title={~t"Customers"} count={length(@customers)}>
+          <.widget id="search-customers" title={~t"Customers"} count={shown_count(@customers, @limit)}>
             <ul :if={@customers != []} class="divide-base-content/12 -my-2 divide-y">
               <li :for={customer <- @customers}>
                 <.link navigate={~p"/admin/customers/#{customer.id}"} class="block py-2.5 hover:underline">
@@ -106,4 +110,8 @@ defmodule EdenflowersWeb.Admin.SearchLive do
     </Layouts.admin>
     """
   end
+
+  # At the limit the count is only the page size, and "See all" says there are more.
+  defp shown_count(results, limit) when length(results) < limit, do: length(results)
+  defp shown_count(_results, _limit), do: nil
 end
