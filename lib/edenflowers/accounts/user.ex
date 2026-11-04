@@ -178,10 +178,17 @@ defmodule Edenflowers.Accounts.User do
 
     read :search do
       description "Admin search for customers by name or email, latest order first. Users without a placed order " <>
-                    "are left out."
+                    "are left out. Without a term, every customer, so the most recent come first."
 
-      argument :term, :ci_string, allow_nil?: false
-      filter expr(exists(placed_orders, true) and (contains(name, ^arg(:term)) or contains(email, ^arg(:term))))
+      argument :term, :ci_string do
+        description "Part of the name or email, any case. Nil for every customer."
+      end
+
+      filter expr(
+               exists(placed_orders, true) and
+                 (is_nil(^arg(:term)) or contains(name, ^arg(:term)) or contains(email, ^arg(:term)))
+             )
+
       prepare build(sort: [last_ordered_at: :desc])
     end
 
@@ -381,6 +388,13 @@ defmodule Edenflowers.Accounts.User do
     first :phone_number, :placed_orders, :customer_phone_number do
       description "The phone number on their latest order. Users keep no phone number of their own, " <>
                     "and the latest order's is the freshest."
+
+      sort ordered_at: :desc
+    end
+
+    first :order_locale, :placed_orders, :locale do
+      description "The language of their latest order, which an invoice to them is written in. Users keep only " <>
+                    "a newsletter language of their own."
 
       sort ordered_at: :desc
     end

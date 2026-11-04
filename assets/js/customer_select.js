@@ -36,8 +36,18 @@ export const customerLiveSelect = {
   ...liveSelect.LiveSelect,
   mounted() {
     liveSelect.LiveSelect.mounted.call(this);
+    // LiveSelect empties the box on blur when nothing is picked; keep the search typed so far.
+    this.el.addEventListener("focusout", (event) => {
+      if (event.target.type === "text" && !this.selection?.length) {
+        this.textOnBlur = event.target.value;
+      }
+    });
     this.handleEvent("select", ({ id, selection }) => {
-      if (id === this.el.id) syncCustomerCombobox(this.el, selection);
+      if (id !== this.el.id) return;
+      if (this.textOnBlur && !selection.length)
+        this.setInputValue(this.textOnBlur);
+      this.textOnBlur = null;
+      syncCustomerCombobox(this.el, selection);
     });
     syncCustomerCombobox(this.el, this.selection);
   },

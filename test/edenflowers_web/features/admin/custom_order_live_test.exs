@@ -683,7 +683,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
     setup ctx do
       order = place_custom_order(ctx, %{payment_terms: :invoice, customer_email: "office@kukka.fi"})
       {:ok, draft} = Edenflowers.Payments.create_invoice_for_order(order.id, actor: ctx.admin)
-      {:ok, draft} = Edenflowers.Payments.update_invoice_draft(draft, %{buyer_address: "Street 1"}, actor: ctx.admin)
       {:ok, _invoice} = Edenflowers.Payments.issue_invoice(draft, actor: ctx.admin)
       %{order: order}
     end

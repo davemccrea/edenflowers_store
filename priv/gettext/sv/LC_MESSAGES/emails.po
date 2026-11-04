@@ -1174,11 +1174,6 @@ msgstr "Bara en vänlig påminnelse om att den skulle betalas senast %{date}, oc
 msgid "A reminder about invoice %{number}"
 msgstr "En påminnelse om faktura %{number}"
 
-#: lib/edenflowers/email/templates/invoice.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "My invoice %{number} is attached."
-msgstr "Min faktura %{number} finns bifogad."
-
 #: lib/edenflowers/email/templates/course_payment.text.eex:4
 #, elixir-autogen, elixir-format
 msgid "Please pay at the course."
@@ -1203,3 +1198,8 @@ msgstr "Jag skickar dig en faktura när du har hämtat din beställning."
 #, elixir-autogen, elixir-format
 msgid "I'll send you an invoice."
 msgstr "Jag skickar dig en faktura."
+
+#: lib/edenflowers/email/templates/invoice.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Invoice %{number} is attached."
+msgstr "Faktura %{number} finns bifogad."

@@ -32,6 +32,8 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :field, Phoenix.HTML.FormField, required: true
   attr :id, :string, default: "customer-select"
   attr :empty?, :boolean, default: false
+  attr :focus, :string, default: nil, doc: "Event sent to the LiveView when the search box gains focus."
+  attr :help, :string, default: nil, doc: "What the search matches. Defaults to name or email."
 
   @doc "The searchable customer picker shared by admin entry forms."
   def customer_picker(assigns) do
@@ -42,11 +44,12 @@ defmodule EdenflowersWeb.Admin.Components do
         field={@field}
         id={@id}
         allow_clear
+        phx-focus={@focus}
         debounce={300}
         update_min_len={0}
         style={:daisyui}
         container_class="relative"
-        dropdown_class="absolute z-10 mt-2 max-h-64 w-full overflow-y-auto menu bg-base-100 border-base-content/12 border p-1 shadow"
+        dropdown_class="absolute z-10 mt-2 max-h-64 w-full flex-nowrap overflow-y-auto menu bg-base-100 border-base-content/12 border p-1 shadow"
         option_class="break-words whitespace-normal pointer-coarse:min-h-11"
         active_option_class="bg-primary text-primary-content"
         available_option_class="cursor-pointer"
@@ -54,7 +57,7 @@ defmodule EdenflowersWeb.Admin.Components do
         text_input_class="input w-full pr-10 placeholder:text-base-content/75"
         text_input_selected_class=""
         no_basic_styles_for_clear_buttons
-        clear_button_class="btn btn-ghost btn-square absolute inset-y-0 right-0 h-full"
+        clear_button_class="btn btn-ghost btn-square absolute inset-y-0 right-0 z-10 h-full"
       >
         <:option :let={option}>
           <span data-selected={to_string(option.selected)}>{option.label}</span>
@@ -65,7 +68,7 @@ defmodule EdenflowersWeb.Admin.Components do
         </:clear_button>
       </LiveSelect.live_select>
       <p id="customer-search-help" class="text-base-content/75 mt-1.5 text-sm">
-        {~t"Search by name or email."}
+        {@help || ~t"Search by name or email."}
       </p>
       <div id="customer-results" role="status">
         <p :if={@empty?} class="text-base-content/75 mt-2 text-sm">
@@ -802,7 +805,7 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc "A label and an amount in a list of money, as the order page's Payment section shows them."
   def money_row(assigns) do
     ~H"""
-    <div class={["flex items-center justify-between gap-4 py-0.5", @ruled && "border-base-content/12 mt-1.5 border-t pt-2", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 font-semibold", @muted && "text-base-content/75"]}>
+    <div class={["flex items-center justify-between gap-4 py-0.5", @ruled && "border-base-content/12 mt-1.5 border-t pt-2", @strong && "border-base-content/12 text-base-content mt-1.5 border-t pt-3 font-semibold first:mt-0 first:border-t-0 first:pt-0.5", @muted && "text-base-content/75"]}>
       <dt class={money_row_tone(@strong, @muted, "text-base-content/75")}>
         {@label}
       </dt>

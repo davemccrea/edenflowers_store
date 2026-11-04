@@ -112,7 +112,6 @@ defmodule Edenflowers.Payments.InvoicePdfTest do
       due_date: ~D[2026-11-16],
       buyer_name: "Buyer",
       buyer_email: "buyer@example.com",
-      buyer_address: "Address",
       business_customer: false,
       financial_snapshot: snapshot,
       seller_snapshot: %{

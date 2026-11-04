@@ -15,7 +15,6 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
         %{
           buyer_name: "Emma Buyer",
           buyer_email: "emma@example.com",
-          buyer_address: "Street 1",
           supply_date: ~D[2026-11-02],
           locale: "en-GB",
           lines: [%{description: "Wedding booking advance", quantity: "1", unit_price: "300", vat_rate: "25.5"}]
@@ -38,7 +37,7 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
     email = invoice |> SendInvoice.load_for_email() |> Email.invoice("Thank you")
     assert email.to == [{"", "emma@example.com"}]
     assert email.subject == "Invoice #{invoice.number}"
-    assert email.text_body =~ "My invoice #{invoice.number} is attached."
+    assert email.text_body =~ "Invoice #{invoice.number} is attached."
     assert email.text_body =~ "Thank you"
     refute email.text_body =~ "Amount due"
     refute email.text_body =~ "Due date"

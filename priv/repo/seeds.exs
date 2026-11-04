@@ -137,8 +137,6 @@ create_product.(
   %{bouquet_details | large: %{height_cm: "50–60"}}
 )
 
-create_product.(%{product_category_id: bouquets_category.id, name: "Bouquet 3"}, bouquet_prices, bouquet_details)
-
 create_product.(
   %{product_category_id: category.("plants").id, name: "Plant"},
   [small: "18", medium: "32", large: "55"],
@@ -621,7 +619,7 @@ orders = [
     recipient_name: "Sofia Lindholm",
     recipient_phone_number: "050 9876543",
     card_message: "Happy birthday, with love.",
-    items: [line_item.("Bouquet 3", :large, 1), card_line_item.()]
+    items: [line_item.("Bouquet 2", :large, 1), card_line_item.()]
   }),
   # Cart total well above the promo's €30 minimum so the discount applies.
   Map.merge(nearby_address, %{
@@ -657,7 +655,7 @@ orders = [
     fulfillment_date: fulfillment_date_for.(-1),
     locale: "fi",
     promotion: promotion_by_code.("MOR10"),
-    items: [line_item.("Bouquet 3", :medium, 1)]
+    items: [line_item.("Bouquet 2", :medium, 1)]
   },
   # A large mixed cart with both VAT rates. The four below are changed after
   # placing, further down.
@@ -678,7 +676,7 @@ orders = [
     customer_email: "petra.holm@example.fi",
     fulfillment_option: store_pickup,
     fulfillment_date: fulfillment_date_for.(2),
-    items: [line_item.("Bouquet 3", :small, 1)]
+    items: [line_item.("Bouquet 1", :small, 1)]
   },
   %{
     customer_name: "Oskar Wikström",
@@ -724,7 +722,7 @@ orders = [
     fulfillment_date: Date.add(today, 1),
     gift: true,
     recipient_name: "Maja Björk",
-    items: [line_item.("Bouquet 3", :small, 1)]
+    items: [line_item.("Bouquet 2", :small, 1)]
   })
 ]
 
@@ -1006,7 +1004,7 @@ part_paid =
     customer_email: "johanna.lind@example.fi",
     locale: "en-GB",
     days_out: 6,
-    line_items: [catalogue_line.("Bouquet 3", :medium, 1)]
+    line_items: [catalogue_line.("Bouquet 1", :medium, 1)]
   })
 
 part_paid = Orders.get_order_for_admin!(part_paid.id, actor: jennie)
@@ -1083,6 +1081,112 @@ place_custom.(%{
   payment_terms: :on_fulfillment,
   florist_note: "Replaces her earlier delivery, which wilted the next day.",
   line_items: [custom_line.("Replacement bouquet", "0.00")]
+})
+
+# Invoices, one of each state the admin shows, through the real actions as
+# Jennie. Sending goes to the dev mailbox (/dev/mailbox), so each invoice's
+# history and email are the app's own. An invoice is dated the day it is issued,
+# so the overdue one is backdated afterwards: its PDF still shows today.
+invoice_line = fn description, unit_price, vat_rate ->
+  %{description: description, quantity: "1", unit_price: unit_price, vat_rate: vat_rate}
+end
+
+issue_and_send = fn attrs ->
+  attrs
+  |> Map.put_new(:supply_date, fulfillment_date_for.(-7))
+  |> Payments.create_invoice!(actor: jennie)
+  |> Payments.issue_invoice!(actor: jennie)
+  |> Payments.send_invoice!(actor: jennie)
+end
+
+# A wedding still being priced: a consumer draft, which needs no address.
+Payments.create_invoice!(
+  %{
+    buyer_name: "Anna Nyman",
+    buyer_email: "anna.nyman@example.fi",
+    locale: "sv-FI",
+    supply_date: fulfillment_date_for.(30),
+    supply_description: "Bröllop 12.12",
+    lines: [
+      invoice_line.("Brudbukett", "180.00", "25.5"),
+      invoice_line.("Bordsdekorationer, 10 st", "450.00", "25.5"),
+      %{description: "Kyrkans dekoration", quantity: "1", unit_price: nil, vat_rate: "25.5"}
+    ]
+  },
+  actor: jennie
+)
+
+# A company's standing order, a month late and paid in part by bank transfer.
+# Its sent invoice makes the next send a reminder.
+overdue =
+  issue_and_send.(%{
+    buyer_name: "Mikael Lindqvist",
+    buyer_email: "office@kukka.fi",
+    business_customer: true,
+    company_name: "Kukka Oy Ab",
+    business_id: "2944459-6",
+    billing_address: "Kauppakatu 1\n65100 Vaasa",
+    customer_reference: "PO 2026-114",
+    locale: "fi",
+    supply_date: fulfillment_date_for.(-40),
+    supply_description: "Aulan kukat, syyskuu",
+    lines: [invoice_line.("Aulan kukkasidonta, 4 viikkoa", "320.00", "25.5")]
+  })
+
+overdue = Ash.Seed.update!(overdue, %{invoice_date: Date.add(today, -38), due_date: Date.add(today, -24)})
+
+Payments.record_invoice_payment!(overdue, "120.00", %{paid_at: DateTime.add(DateTime.utc_now(), -20, :day)},
+  actor: jennie
+)
+
+# Paid in full by bank transfer.
+paid =
+  issue_and_send.(%{
+    buyer_name: "Henrik Söderberg",
+    buyer_email: "henrik.soderberg@example.fi",
+    locale: "en-GB",
+    lines: [invoice_line.("Wreath for the memorial, with a card", "95.00", "25.5")]
+  })
+
+Payments.record_invoice_payment!(paid, "95.00", actor: jennie)
+
+# Sent to the wrong buyer, so Jennie cancelled it with a credit note.
+credited =
+  issue_and_send.(%{
+    buyer_name: "Pirjo Laine",
+    buyer_email: "pirjo.laine@example.fi",
+    locale: "fi",
+    lines: [invoice_line.("Kranssikurssi", "65.00", "25.5")]
+  })
+
+Payments.cancel_invoice!(%{invoice_id: credited.id, reason: "Laskutettu väärälle asiakkaalle"}, actor: jennie)
+
+# Custom orders on invoice terms for the same company. Delivered today and
+# invoiced, so the order is locked until the invoice is credited.
+invoiced_order =
+  place_custom.(%{
+    customer_name: "Mikael Lindqvist",
+    customer_email: "office@kukka.fi",
+    locale: "fi",
+    days_out: 0,
+    payment_terms: :invoice,
+    line_items: [custom_line.("Vastaanoton kukat", "240.00")]
+  })
+  |> Orders.mark_order_fulfilled!(actor: jennie)
+
+Payments.create_invoice_for_order!(invoiced_order.id, actor: jennie)
+|> Payments.issue_invoice!(actor: jennie)
+|> Payments.send_invoice!(actor: jennie)
+
+# Next week's, not invoiced yet: Create invoice prefills the company from its
+# latest invoice.
+place_custom.(%{
+  customer_name: "Mikael Lindqvist",
+  customer_email: "office@kukka.fi",
+  locale: "fi",
+  days_out: 7,
+  payment_terms: :invoice,
+  line_items: [custom_line.("Joulujuhlan pöytäkukat", "380.00"), catalogue_line.("Bouquet 1", :large, 2)]
 })
 
 # Tags from links Jennie has shared, so the share drawer has chips to pick and

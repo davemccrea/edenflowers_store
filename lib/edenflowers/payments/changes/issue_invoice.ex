@@ -120,5 +120,5 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
   end
 
   defp address_fields(%{business_customer: true}), do: [:company_name, :business_id, :billing_address]
-  defp address_fields(_invoice), do: [:buyer_address]
+  defp address_fields(_invoice), do: []
 end

@@ -189,7 +189,7 @@ defmodule Edenflowers.Payments.InvoicePdf do
     }
 
   defp buyer(invoice),
-    do: %{company_name: nil, business_id: nil, name: invoice.buyer_name, address: invoice.buyer_address}
+    do: %{company_name: nil, business_id: nil, name: invoice.buyer_name, address: nil}
 
   defp language("sv-FI"), do: "sv"
   defp language("en-GB"), do: "en"

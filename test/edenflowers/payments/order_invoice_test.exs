@@ -50,7 +50,6 @@ defmodule Edenflowers.Payments.OrderInvoiceTest do
 
   defp draft(order, admin) do
     {:ok, draft} = Payments.create_invoice_for_order(order.id, actor: admin)
-    {:ok, draft} = Payments.update_invoice_draft(draft, %{buyer_address: "Kauppakatu 1, Vaasa"}, actor: admin)
     draft
   end
 
@@ -82,6 +81,35 @@ defmodule Edenflowers.Payments.OrderInvoiceTest do
              {"Chocolates", "1", "20.00", "14"},
              {_pickup_fee, "1", "8.00", "25.5"}
            ] = lines(draft)
+  end
+
+  test "a draft for an order takes the company details from the email's latest invoice, keeping the order's buyer",
+       ctx do
+    {:ok, earlier} =
+      Payments.create_invoice(
+        %{
+          buyer_name: "Someone Else",
+          buyer_email: "OFFICE@kukka.fi",
+          business_customer: true,
+          company_name: "Kukka Oy Ab",
+          business_id: "2944459-6",
+          billing_address: "Kauppakatu 1, Vaasa",
+          customer_reference: "PO 7",
+          locale: "en-GB",
+          supply_date: ~D[2026-11-02],
+          lines: [%{description: "Flowers", quantity: "1", unit_price: "10", vat_rate: "25.5"}]
+        },
+        actor: ctx.admin
+      )
+
+    {:ok, _} = Payments.issue_invoice(earlier, actor: ctx.admin)
+    {:ok, draft} = Payments.create_invoice_for_order(place(ctx).id, actor: ctx.admin)
+
+    assert {draft.buyer_name, draft.locale} == {"Kukka Oy", "fi"}
+    assert draft.business_customer
+    assert {draft.company_name, to_string(draft.business_id)} == {"Kukka Oy Ab", "2944459-6"}
+    assert draft.billing_address == "Kauppakatu 1, Vaasa"
+    assert draft.customer_reference == nil
   end
 
   defp edit(order, ctx, changes) do

@@ -1,6 +1,6 @@
 <%= if @first_name do %><%= dgettext("emails", "Hi %{name},", name: @first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= dgettext("emails", "My invoice %{number} is attached.", number: @invoice.number) %>
+<%= dgettext("emails", "Invoice %{number} is attached.", number: @invoice.number) %>
 
 <%= cond do %><% @reminder? and @part_paid? -> %><%= dgettext("emails", "Just a friendly reminder that it was due on %{date}, and %{amount} of it is still to pay. Thank you for what you've paid so far.", date: @format_weekday_date.(@invoice.due_date), amount: @format_currency.(@invoice.amount_unpaid)) %>
 

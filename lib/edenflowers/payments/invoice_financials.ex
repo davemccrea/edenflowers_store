@@ -47,13 +47,17 @@ defmodule Edenflowers.Payments.InvoiceFinancials do
       Enum.all?([line.quantity, line.unit_price, line.vat_rate], &is_struct(&1, Decimal))
   end
 
+  @doc "A line's gross: quantity times the VAT-inclusive unit price, rounded to cents half up."
+  def line_gross(%Decimal{} = quantity, %Decimal{} = unit_price),
+    do: quantity |> Decimal.mult(unit_price) |> Decimal.round(2, :half_up)
+
   defp line(line) do
     %{
       "description" => String.trim(line.description),
       "quantity" => value(line.quantity),
       "unit_price" => value(line.unit_price),
       "vat_rate" => value(line.vat_rate),
-      "gross" => line.quantity |> Decimal.mult(line.unit_price) |> Decimal.round(2, :half_up) |> value()
+      "gross" => line.quantity |> line_gross(line.unit_price) |> value()
     }
   end
 

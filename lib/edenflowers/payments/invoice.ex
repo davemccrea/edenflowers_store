@@ -77,21 +77,43 @@ defmodule Edenflowers.Payments.Invoice do
     end
 
     read :previous_customers do
-      description "Find previous invoice customers, using the latest emailed invoice for each email and business."
-      argument :term, :ci_string, allow_nil?: false
+      description "Each invoice customer's latest issued invoice, newest first. A customer is one email (any " <>
+                    "case) as a private customer, or that email for one business and Y-tunnus. The term is " <>
+                    "matched on that latest invoice only, so an outdated name or company finds nothing rather " <>
+                    "than prefilling stale details. Without a term, the most recent customers."
+
+      argument :term, :ci_string do
+        description "Part of the name, company name or email, any case. Nil for every customer."
+      end
 
       filter expr(
-               not is_nil(sent_at) and
-                 (contains(buyer_name, ^arg(:term)) or contains(buyer_email, ^arg(:term)) or
+               not is_nil(issued_at) and
+                 not exists(
+                   Edenflowers.Payments.Invoice,
+                   not is_nil(issued_at) and number > parent(number) and
+                     buyer_email_key == parent(buyer_email_key) and
+                     business_customer == parent(business_customer) and
+                     (business_id == parent(business_id) or (is_nil(business_id) and is_nil(parent(business_id))))
+                 ) and
+                 (is_nil(^arg(:term)) or contains(buyer_name, ^arg(:term)) or contains(buyer_email, ^arg(:term)) or
                     contains(company_name, ^arg(:term)))
              )
 
-      prepare build(
-                distinct: [:buyer_email_key, :business_customer, :business_id],
-                distinct_sort: [sent_at: :desc, inserted_at: :desc, id: :desc],
-                sort: [sent_at: :desc, inserted_at: :desc, id: :desc],
-                load: [:buyer]
-              )
+      prepare build(sort: [number: :desc], load: [:buyer])
+    end
+
+    action :find_customers, {:array, :map} do
+      description "The customer picker on an invoice draft: invoice customers (previous_customers) and shop " <>
+                    "customers with a placed order, most recently billed or ordered first, at most 10. A shop " <>
+                    "customer whose email already has an invoice is left out, as the invoice knows more. Each is " <>
+                    "a map of id, buyer (who it bills), buyer_email, and details: the customer fields a draft " <>
+                    "takes from it, every one present so picking someone else replaces them all."
+
+      argument :term, :ci_string do
+        description "Part of the name, company name or email, any case. Nil for the most recent customers."
+      end
+
+      run Edenflowers.Payments.Actions.FindInvoiceCustomers
     end
 
     read :open_at do
@@ -124,7 +146,6 @@ defmodule Edenflowers.Payments.Invoice do
       accept [
         :buyer_name,
         :buyer_email,
-        :buyer_address,
         :business_customer,
         :company_name,
         :business_id,
@@ -153,7 +174,6 @@ defmodule Edenflowers.Payments.Invoice do
       accept [
         :buyer_name,
         :buyer_email,
-        :buyer_address,
         :business_customer,
         :company_name,
         :business_id,
@@ -222,7 +242,7 @@ defmodule Edenflowers.Payments.Invoice do
 
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type([:read, :create])
-      authorize_if action([:send, :update_draft, :issue, :record_payment, :undo_payment])
+      authorize_if action([:send, :update_draft, :issue, :record_payment, :undo_payment, :find_customers])
     end
   end
 
@@ -279,11 +299,6 @@ defmodule Edenflowers.Payments.Invoice do
 
     attribute :buyer_email, Edenflowers.Types.Email do
       description "Where it is sent: the customer's email when invoiced."
-    end
-
-    attribute :buyer_address, :string do
-      description "The consumer's postal address, printed under their name. A business customer is billed at " <>
-                    "billing_address instead."
     end
 
     attribute :business_customer, :boolean do
@@ -443,6 +458,19 @@ defmodule Edenflowers.Payments.Invoice do
                     "cancelled invoices out."
 
       argument :date, :date, allow_nil?: false
+    end
+
+    calculate :matches?,
+              :boolean,
+              expr(
+                contains(buyer_name, ^arg(:term)) or contains(company_name, ^arg(:term)) or
+                  contains(buyer_email, ^arg(:term)) or contains(reference_number, ^arg(:term))
+              ) do
+      description "The admin invoices search, case-insensitive: whether the term appears in the customer's or " <>
+                    "company's name, the email, or the reference number. The reference starts with the invoice " <>
+                    "number, so searching an invoice number finds it too, as does the reference off a bank statement."
+
+      argument :term, :ci_string, allow_nil?: false
     end
 
     calculate :buyer, :string, expr(if business_customer, do: company_name, else: buyer_name) do

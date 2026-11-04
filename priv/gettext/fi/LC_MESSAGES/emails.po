@@ -1174,11 +1174,6 @@ msgstr "Ystävällinen muistutus: lasku erääntyi %{date}, ja siitä on vielä 
 msgid "A reminder about invoice %{number}"
 msgstr "Muistutus laskusta %{number}"
 
-#: lib/edenflowers/email/templates/invoice.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "My invoice %{number} is attached."
-msgstr "Laskuni %{number} on liitteenä."
-
 #: lib/edenflowers/email/templates/course_payment.text.eex:4
 #, elixir-autogen, elixir-format
 msgid "Please pay at the course."
@@ -1203,3 +1198,8 @@ msgstr "Lähetän sinulle laskun, kun olet noutanut tilauksesi."
 #, elixir-autogen, elixir-format
 msgid "I'll send you an invoice."
 msgstr "Lähetän sinulle laskun."
+
+#: lib/edenflowers/email/templates/invoice.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Invoice %{number} is attached."
+msgstr "Lasku %{number} on liitteenä."

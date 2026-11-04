@@ -43,7 +43,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert {:error, {:live_redirect, %{to: "/admin/invoices/" <> invoice_id}}} = render_click(view, "create_invoice")
 
     {:ok, draft} = Edenflowers.Payments.get_invoice(invoice_id, actor: admin)
-    {:ok, draft} = Edenflowers.Payments.update_invoice_draft(draft, %{buyer_address: "Kauppakatu 1"}, actor: admin)
     {:ok, invoice} = Edenflowers.Payments.issue_invoice(draft, actor: admin)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")

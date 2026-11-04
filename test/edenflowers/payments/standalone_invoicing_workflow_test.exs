@@ -54,7 +54,6 @@ defmodule Edenflowers.Payments.StandaloneInvoicingWorkflowTest do
         %{
           buyer_name: "Wedding couple",
           buyer_email: "couple@example.com",
-          buyer_address: "Street 1, Vaasa",
           customer_reference: "Wedding 2026",
           locale: "sv-FI",
           supply_date: date,
