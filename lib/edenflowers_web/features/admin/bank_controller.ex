@@ -15,15 +15,16 @@ defmodule EdenflowersWeb.Admin.BankController do
   def sign_state(user), do: Phoenix.Token.sign(EdenflowersWeb.Endpoint, @state_salt, user.id)
 
   def callback(%{assigns: %{current_user: %{admin: true} = user}} = conn, %{"state" => state, "code" => code}) do
-    with {:ok, user_id} when user_id == user.id <-
-           Phoenix.Token.verify(EdenflowersWeb.Endpoint, @state_salt, state, max_age: 3600),
-         {:ok, _connection} <- Edenflowers.Bank.connect_bank(code, actor: user) do
-      conn
-      |> put_flash(:success, ~t"Bank connected.")
-      |> redirect(to: ~p"/admin/expenses")
-    else
-      error ->
-        Logger.error("Connecting the bank failed: #{inspect(error)}")
+    case Phoenix.Token.verify(EdenflowersWeb.Endpoint, @state_salt, state, max_age: 3600) do
+      {:ok, user_id} when user_id == user.id ->
+        connect(conn, code, user)
+
+      {:ok, other_user_id} ->
+        Logger.error("The bank login was started by another user: #{other_user_id}")
+        failed(conn)
+
+      {:error, reason} ->
+        Logger.error("The bank login's state didn't verify: #{inspect(reason)}")
         failed(conn)
     end
   end
@@ -34,6 +35,19 @@ defmodule EdenflowersWeb.Admin.BankController do
   end
 
   def callback(conn, _params), do: send_resp(conn, :not_found, "Not found")
+
+  defp connect(conn, code, user) do
+    case Edenflowers.Bank.connect_bank(code, actor: user) do
+      {:ok, _connection} ->
+        conn
+        |> put_flash(:success, ~t"Bank connected.")
+        |> redirect(to: ~p"/admin/expenses")
+
+      {:error, error} ->
+        Logger.error("Connecting the bank failed: #{inspect(error)}")
+        failed(conn)
+    end
+  end
 
   defp failed(conn) do
     conn

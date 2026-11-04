@@ -69,12 +69,14 @@ defmodule EdenflowersWeb.Admin.BankConnectionTest do
     assert has_element?(view, "#bank-status", "Bank disconnected")
   end
 
-  @tag :capture_log
   test "a callback with someone else's state stores nothing", %{conn: conn} do
     Req.Test.stub(EnableBankingAPI, fn _conn -> flunk("Enable Banking was called") end)
     state = BankController.sign_state(%{id: Ash.UUID.generate()})
 
-    conn = get(conn, ~p"/admin/bank/callback?#{[state: state, code: "code-1"]}")
+    {conn, log} =
+      ExUnit.CaptureLog.with_log(fn -> get(conn, ~p"/admin/bank/callback?#{[state: state, code: "code-1"]}") end)
+
+    assert log =~ "The bank login was started by another user"
 
     assert redirected_to(conn) == ~p"/admin/expenses"
     assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "wasn't connected"
