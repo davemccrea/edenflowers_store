@@ -33,5 +33,5 @@ ordinal: 333000
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Edenflowers.Bank domain with Bank.Connection (newest row is current; expired and renewal_due calcs). External.EnableBankingAPI signs RS256 JWTs with JOSE; GET /aspsps for the longest consent, POST /auth (psu_type business), POST /sessions. Connect/Reconnect on the Expenses page status line; BankController.callback verifies a Phoenix.Token state for the same admin. Hidden where Enable Banking isn't configured. Tests stub with Req.Test using a throwaway key in test/support/fixtures.
+Edenflowers.Bank domain with Bank.Connection (newest row is current; expired and renewal_due calcs). External.EnableBankingAPI signs RS256 JWTs with JOSE; GET /aspsps for the longest consent, POST /auth (psu_type personal), POST /sessions. Connect/Reconnect on the Expenses page status line; BankController.callback verifies a Phoenix.Token state for the same admin. Hidden where Enable Banking isn't configured. Tests stub with Req.Test using a throwaway key in test/support/fixtures.
 <!-- SECTION:NOTES:END -->
