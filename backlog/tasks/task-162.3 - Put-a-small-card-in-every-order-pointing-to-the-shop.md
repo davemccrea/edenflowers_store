@@ -21,7 +21,7 @@ ordinal: 300000
 Decisions (grilled 2026-11-01):
 - Every gift delivery (the order's gift badge in admin) gets a card, except funeral and sympathy orders: Jennie leaves those out. Pickups and non-gift deliveries don't get one.
 - Each card has its own one-use code for 15% off, no end date, for anyone and any order. The 'pass it on' framing is the message, not a rule.
-- Cards are bilingual (sv, fi), 85x55 mm, double-sided. The first batch is about 100. Codes and print-ready PDF come from TASK-165. Their QR codes apply the code from a link (TASK-164).
+- Cards are bilingual (sv, fi), 85x55 mm, double-sided. The first batch is about 100. Codes and print-ready PDF come from TASK-165. Their QR codes open the shop and the recipient enters the printed code at checkout.
 - Results show in Umami under source card, campaign pass-it-on, and as uses of the batch's codes.
 
 Rollout:
