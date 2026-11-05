@@ -23,6 +23,7 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
          {"quality", ~t"Quality"},
          {"cancellation", ~t"Changes and cancellations"},
          {"subscriptions", ~t"Subscriptions"},
+         {"gift-vouchers", ~t"Gift vouchers"},
          {"weddings", ~t"Weddings"},
          {"courses", ~t"Courses"},
          {"seller", ~t"Seller and contact details"}
@@ -47,7 +48,7 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
         </h1>
 
         <p id="notice-updated" class="font-sans text-base-content/80 mb-16 max-w-3xl text-base leading-relaxed md:mb-20">
-          {~t"Updated 26 October 2026."}
+          {~t"Updated 5 November 2026."}
         </p>
 
         <div class="md:grid-cols-[11rem_minmax(0,1fr)] md:grid md:gap-16 lg:gap-24">
@@ -173,6 +174,20 @@ defmodule EdenflowersWeb.Marketing.TermsLive do
                   <a class="link-underline-static-body" href={~p"/account"}>{~t"Go to your account"}</a>
                 </p>
               </.terms_subsection>
+            </.terms_section>
+
+            <.terms_section id="gift-vouchers" title={~t"Gift vouchers"}>
+              <p>
+                {~t"A gift voucher is valid for one year from the day it's bought. It pays for flowers, subscriptions and courses, online or in my shop, and whatever isn't spent stays on it until then."}
+              </p>
+              <p>{~t"Anyone with the code can spend the voucher, so keep it safe."}</p>
+              <p>{~t"A gift voucher can't be refunded or exchanged for cash."}</p>
+              <p>
+                {~t"If you bought it online, you can still cancel the purchase within 14 days, as long as none of it has been spent."}
+                <a class="link-underline-static-body" href={~q"/#{language}/contact"}>
+                  {~t"Get in touch to cancel."}
+                </a>
+              </p>
             </.terms_section>
 
             <.terms_section id="weddings" title={~t"Weddings"}>

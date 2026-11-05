@@ -41,7 +41,19 @@ defmodule Edenflowers.Orders.ReceiptLabels do
         "method-klarna" => dgettext("receipts", "Klarna"),
         "method-cash" => dgettext("receipts", "Cash"),
         "method-zervant" => dgettext("receipts", "Bank transfer"),
-        "method-voucher" => dgettext("receipts", "Gift voucher")
+        "method-voucher" => dgettext("receipts", "Gift voucher"),
+        "gift-voucher" => dgettext("receipts", "Gift voucher"),
+        "valid-until" => dgettext("receipts", "Valid until"),
+        # Translators: Before the name of the person a gift voucher is for, as "For: Mia".
+        "voucher-for" => dgettext("receipts", "For"),
+        "voucher-emailed" => dgettext("receipts", "Emailed to you as a PDF"),
+        "voucher-collect" => dgettext("receipts", "Gift card to collect at Minimossen"),
+        # Translators: Heading for the buyer's message printed on a gift voucher.
+        "voucher-message" => dgettext("receipts", "Message on the voucher"),
+        # Translators: Under the totals of a receipt for a gift voucher. A multi-purpose voucher is outside VAT
+        # when sold (not taxed at 0 %): VAT is charged on what it buys.
+        "vat-note-gift-voucher" =>
+          dgettext("receipts", "A gift voucher is not subject to VAT. VAT is charged on what it's spent on.")
       }
     end)
   end

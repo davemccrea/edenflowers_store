@@ -33,6 +33,7 @@
   "recipient_name": null,
   "contact_phone_number": "+358 40 555 0123",
   "lang": "en",
+  "vat_note": null,
   "vat_breakdown": [
     {
       "base": "38,57 €",
@@ -80,11 +81,19 @@
     "method-klarna": "Klarna",
     "method-cash": "Cash",
     "method-zervant": "Bank transfer",
-    "method-voucher": "Gift voucher"
+    "method-voucher": "Gift voucher",
+    "gift-voucher": "Gift voucher",
+    "valid-until": "Valid until",
+    "vat-note-gift-voucher": "A gift voucher is not subject to VAT. VAT is charged on what it's spent on.",
+    "voucher-for": "For",
+    "voucher-emailed": "Emailed to you as a PDF",
+    "voucher-collect": "Gift card to collect at Minimossen",
+    "voucher-message": "Message on the voucher"
   },
   "seller": {
     "name": "Jennie McCrea",
     "business_id": "2944459-6",
     "address": "Stadsgatan 3, 65300 Vasa"
-  }
+  },
+  "collect_voucher_card": false
 }

@@ -1,0 +1,21 @@
+{
+  "lang": "fi",
+  "labels": {
+    "gift-voucher": "Lahjakortti",
+    "for": "Kenelle",
+    "code": "Koodi",
+    "valid-until": "Voimassa",
+    "how-to-use": "Käytä se kukkiin, tilauksiin ja kursseihin: syötä koodi kassalla osoitteessa edenflowers.fi tai näytä se myymälässä.",
+    "terms": "Voimassa vuoden. Käyttämättä jäänyt summa säilyy koodilla, eikä lahjakorttia voi vaihtaa rahaksi."
+  },
+  "seller": {
+    "name": "Eden Flowers",
+    "business_id": "1234567-8",
+    "address": "Myrvägen 1, 65230 Vasa"
+  },
+  "amount": "50 €",
+  "code": "7KQ2-M9XD-4HPT",
+  "expires_on": "5.11.2027",
+  "recipient_name": "Mia Lindqvist",
+  "message": "Hyvää syntymäpäivää! Valitse jotain, mikä ilahduttaa sinua. Halauksin, Anna"
+}

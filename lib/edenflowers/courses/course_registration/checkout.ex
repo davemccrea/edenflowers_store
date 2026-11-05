@@ -30,7 +30,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Checkout do
 
       get? true
       filter expr(status == :pending and is_nil(payment_link_token))
-      prepare build(load: [:voucher_amount, :voucher_left_after, :stripe_amount])
+      prepare build(load: [:voucher_amount, :voucher_left_after, :stripe_amount, :card_needed?])
     end
 
     action :prepare_checkout_payment, :map do

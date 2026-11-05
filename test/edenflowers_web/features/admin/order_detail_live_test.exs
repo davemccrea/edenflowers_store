@@ -236,6 +236,51 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert reloaded.fulfillment_status == :fulfilled
   end
 
+  test "a voucher to collect as a gift card shows what to write on it until it's collected", %{conn: conn} do
+    sale =
+      Orders.start_gift_voucher_sale!(
+        50,
+        %{
+          customer_name: "Anna Buyer",
+          customer_email: "anna@example.com",
+          recipient_name: "Mia",
+          collect_voucher_card: true,
+          locale: "sv-FI",
+          voucher_locale: "fi"
+        },
+        actor: nil
+      )
+
+    Mox.expect(StripeAPI.Mock, :create_payment_intent, fn 5000, _metadata, nil ->
+      {:ok, %{id: "pi_voucher", client_secret: "pi_secret", amount: 5000}}
+    end)
+
+    {:ok, _} = Orders.prepare_checkout_payment(sale.id, actor: nil)
+
+    {:ok, :completed} =
+      Edenflowers.Payments.complete(%{
+        id: "pi_voucher",
+        status: "succeeded",
+        metadata: %{"order_id" => sale.id},
+        amount_received: 5000
+      })
+
+    [%{gift_voucher: voucher}] = Ash.load!(sale, [line_items: :gift_voucher], authorize?: false).line_items
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders")
+    assert has_element?(view, "[data-item-id]", "Card to write")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{sale.id}")
+    assert has_element?(view, "#order-status", "Card to write")
+    assert has_element?(view, "#order-gift-voucher-code", Edenflowers.Payments.GiftVoucher.format_code(voucher.code))
+
+    view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+    view |> form("#confirm-fulfillment-form") |> render_submit()
+
+    assert has_element?(view, "#order-status", "Fulfilled")
+    refute has_element?(view, "#order-status", "Card to write")
+  end
+
   test "fulfills a pickup with no customer email", %{conn: conn} do
     order = placed_order(customer_email: nil, customer_phone_number: "044 222 3344")
 

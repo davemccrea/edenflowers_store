@@ -363,7 +363,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   <%!-- Closer together than the step's own gap: the voucher is part of paying. --%>
                   <div class="flex flex-col gap-6">
                     <.gift_voucher_field
-                      :if={not @order.subscription?}
+                      :if={@order.accepts_gift_voucher?}
                       id={"#{@id}-gift-voucher"}
                       payable={@order}
                       locale={@order.locale}
@@ -372,7 +372,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                     <%!-- Stripe can't take 0 €, so a voucher that pays it all is placed without the card form. --%>
                     <.form
-                      :if={not Decimal.positive?(@order.stripe_amount)}
+                      :if={not @order.card_needed?}
                       for={%{}}
                       id={"#{@id}-form-4"}
                       phx-submit="pay"
@@ -388,7 +388,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     </.form>
 
                     <.stripe_form
-                      :if={Decimal.positive?(@order.stripe_amount)}
+                      :if={@order.card_needed?}
                       id={"#{@id}-form-4"}
                       phx-submit={lock_while_paying() |> JS.push("pay")}
                       amount={StripeAPI.to_stripe_amount(@order.stripe_amount)}

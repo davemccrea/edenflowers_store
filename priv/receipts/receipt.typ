@@ -27,6 +27,7 @@
     "delivery_address", "delivery_instructions",
     "fulfillment_fee", "discount",
     "venue_name", "venue_address",
+    "vat_note",
   )
   for key in required {
     assert(key in order, message: "receipt: missing required key `" + key + "`")
@@ -59,6 +60,8 @@
     t("delivery")
   } else if order.fulfillment_method == "course" {
     t("course")
+  } else if order.fulfillment_method == "gift-voucher" {
+    t("gift-voucher")
   } else {
     t("pickup")
   }
@@ -124,6 +127,8 @@
     t("delivery-date")
   } else if order.fulfillment_method == "course" {
     t("course-date")
+  } else if order.fulfillment_method == "gift-voucher" {
+    t("valid-until")
   } else {
     t("pickup-date")
   }
@@ -146,6 +151,11 @@
       if order.delivery_instructions != none {
         text(font: fonts.serif, style: "italic")[#order.delivery_instructions]
       },
+    )
+  } else if order.fulfillment_method == "gift-voucher" {
+    (
+      [#t("voucher-for"): #text(weight: "semibold")[#order.recipient_name]],
+      if order.at("collect_voucher_card", default: false) { t("voucher-collect") } else { t("voucher-emailed") },
     )
   } else if order.fulfillment_method == "course" {
     // Courses move between venues, so the receipt says where this one is.
@@ -192,7 +202,8 @@
   // italic, no frame. Same voice as delivery instructions (also a
   // customer-authored aside).
   if order.card_message != none {
-    eyebrow(t("card-message"))
+    // A voucher's message goes on the voucher, not a greeting card.
+    eyebrow(if order.fulfillment_method == "gift-voucher" { t("voucher-message") } else { t("card-message") })
     v(5pt)
     text(font: fonts.serif, style: "italic")[#order.card_message]
     v(20pt)
@@ -282,7 +293,14 @@
 
       #v(14pt)
 
-      #vat-breakdown(order.vat_breakdown, t)
+      #if order.vat_breakdown.len() > 0 { vat-breakdown(order.vat_breakdown, t) }
+      #if order.vat_note != none {
+        // In this narrow column a lone last word is likely: weigh the breaks
+        // across the whole note to avoid one.
+        set par(linebreaks: "optimized")
+        set text(costs: (runt: 1000%))
+        align(left, text(size: type-scale.small, fill: colors.ink-muted)[#t("vat-note-" + order.vat_note)])
+      }
     ]
   ]
 

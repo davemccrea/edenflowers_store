@@ -4,6 +4,9 @@ defmodule Edenflowers.Payments.Validations.Refundable do
   not, with nothing left to collect, up to the money still held, and by
   Stripe only what was paid through it, onto the Gift voucher only what it
   paid, by another method only what was paid in person.
+
+  A Gift voucher sale is refunded only by cancelling it, which also stops
+  the voucher, so handing its money back can't leave the voucher spendable.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
@@ -37,6 +40,9 @@ defmodule Edenflowers.Payments.Validations.Refundable do
       )
 
     cond do
+      gift_voucher_sale?(record) ->
+        {:error, ~t"Cancel the order to refund a gift voucher. That also stops the voucher."}
+
       not record.committed? ->
         {:error, ~t"Nothing can be recorded until it's placed or confirmed."}
 
@@ -53,6 +59,11 @@ defmodule Edenflowers.Payments.Validations.Refundable do
         :ok
     end
   end
+
+  defp gift_voucher_sale?(%Edenflowers.Orders.Order{} = order),
+    do: Ash.load!(order, :gift_voucher_sale?, authorize?: false).gift_voucher_sale?
+
+  defp gift_voucher_sale?(_registration), do: false
 
   defp held_by(record, :stripe), do: record.paid_through_stripe
   defp held_by(record, :voucher), do: record.paid_by_voucher

@@ -1,0 +1,21 @@
+{
+  "lang": "en",
+  "labels": {
+    "gift-voucher": "Gift voucher",
+    "for": "For",
+    "code": "Code",
+    "valid-until": "Valid until",
+    "how-to-use": "Spend it on flowers, subscriptions and courses: enter the code at checkout on edenflowers.fi, or show it in the shop.",
+    "terms": "Valid for one year. What you don't spend stays on the code, and it can't be exchanged for cash."
+  },
+  "seller": {
+    "name": "Eden Flowers",
+    "business_id": "1234567-8",
+    "address": "Myrvägen 1, 65230 Vasa"
+  },
+  "amount": "50 €",
+  "code": "7KQ2-M9XD-4HPT",
+  "expires_on": "5.11.2027",
+  "recipient_name": "Mia Lindqvist",
+  "message": "Happy birthday! Choose something that makes you happy. Love, Anna"
+}

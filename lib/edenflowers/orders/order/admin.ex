@@ -18,6 +18,10 @@ defmodule Edenflowers.Orders.Order.Admin do
 
   @locales Edenflowers.Locales.all()
 
+  # The fulfil drawer offers the email on the same calculation.
+  @fulfillment_confirmation_applicable {Holds,
+                                        calculation: :fulfillment_confirmation_applicable?, message: "is not a delivery"}
+
   @custom_order_fields [
     :locale,
     :customer_name,
@@ -75,10 +79,13 @@ defmodule Edenflowers.Orders.Order.Admin do
     :invoiced?,
     :invoiceable?,
     :fulfillment_option,
+    :gift_voucher_sale?,
+    :voucher_card_to_hand_over?,
     promotion: [:gift_order],
     pass_it_on_card: [:placed_orders, :gift_order_linkable?, :card_status],
     invoices: [:status, :overdue?],
-    line_items: [:subtotal, :total]
+    line_items: [:subtotal, :total],
+    gift_voucher_line: [gift_voucher: [:code, :expires_on]]
   ]
 
   oban do
@@ -161,7 +168,9 @@ defmodule Edenflowers.Orders.Order.Admin do
                   :balance,
                   :payment_status,
                   :fulfillment_status,
-                  :overdue?
+                  :overdue?,
+                  :gift_voucher_sale?,
+                  :voucher_card_to_hand_over?
                 ]
               )
     end
@@ -446,15 +455,15 @@ defmodule Edenflowers.Orders.Order.Admin do
       validate present(:delivery_photo_slug),
         where: [
           argument_equals(:email_customer?, true),
-          attribute_equals(:fulfillment_method, :delivery),
+          @fulfillment_confirmation_applicable,
           attribute_equals(:email_delivery_photo, true)
         ]
 
-      # A collected order isn't emailed: the customer was there.
+      # A collected order or Gift voucher card isn't emailed: the customer was there.
       change {PaymentChanges.QueueEmail, trigger: :send_fulfillment_email},
         where: [
           argument_equals(:email_customer?, true),
-          attribute_equals(:fulfillment_method, :delivery),
+          @fulfillment_confirmation_applicable,
           present(:customer_email)
         ]
 

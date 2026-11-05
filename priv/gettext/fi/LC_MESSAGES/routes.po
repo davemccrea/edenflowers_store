@@ -34,101 +34,101 @@ msgstr "yhteystiedot"
 msgid "courses"
 msgstr "kurssit"
 
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "en"
 msgstr ""
 
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "faq"
 msgstr "ukk"
 
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "fi"
 msgstr ""
 
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "product"
 msgstr "tuote"
 
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "store"
 msgstr "kauppa"
 
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "sv"
 msgstr ""
 
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "weddings"
 msgstr "haat"
 
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "terms"
 msgstr "toimitusehdot"
 
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
-#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
 #, elixir-autogen, elixir-format
 msgid "privacy"
 msgstr "tietosuojaseloste"
@@ -139,3 +139,10 @@ msgstr "tietosuojaseloste"
 #, elixir-autogen, elixir-format
 msgid "pass-it-on"
 msgstr "anna-eteenpain"
+
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#: lib/edenflowers_web/router.ex:60
+#, elixir-autogen, elixir-format
+msgid "gift-voucher"
+msgstr "lahjakortti"

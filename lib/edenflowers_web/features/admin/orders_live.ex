@@ -79,6 +79,14 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
               {order.customer_name || ~t"Unnamed customer"}
             </.link>
             <.subscription_badge :if={order.origin == :subscription} class="ml-1.5 max-sm:hidden" />
+            <.badge
+              :if={order.voucher_card_to_hand_over?}
+              tone={:attention}
+              icon="hero-pencil-square"
+              class="ml-1.5 align-middle max-sm:hidden"
+            >
+              {~t"Card to write"}
+            </.badge>
           </:col>
           <:col
             :let={order}
@@ -86,7 +94,11 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             sort={[cycle: [:asc, :desc]]}
             label={~t"Fulfillment date"}
           >
-            <span class={["tabular-nums", order.overdue? && "max-sm:text-error max-sm:font-semibold"]}>
+            <span :if={order.gift_voucher_sale?} class="text-base-content/75">{~t"Gift voucher"}</span>
+            <span
+              :if={!order.gift_voucher_sale?}
+              class={["tabular-nums", order.overdue? && "max-sm:text-error max-sm:font-semibold"]}
+            >
               <span class="max-sm:hidden">{Format.date(order.fulfillment_date, @locale)}</span>
               <span class="sm:hidden">{Format.day_month(order.fulfillment_date, @locale)}</span>
               <span :if={order.overdue?} class="sr-only sm:hidden">{~t"Overdue"}</span>
@@ -134,7 +146,8 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             label={~t"Method"}
             class="max-sm:hidden"
           >
-            <.fulfillment_method method={order.fulfillment_method} />
+            <.fulfillment_method :if={order.fulfillment_method} method={order.fulfillment_method} />
+            <.blank :if={!order.fulfillment_method} />
           </:col>
         </Cinder.collection>
       </.admin_page>

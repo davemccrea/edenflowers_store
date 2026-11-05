@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.Calculations.Vat do
 
   @impl true
   def load(_query, _opts, _context) do
-    [:fulfillment_fee, :fulfillment_tax_rate, line_items: [:tax_rate, :total]]
+    [:fulfillment_fee, :fulfillment_tax_rate, line_items: [:tax_rate, :total, :is_gift_voucher]]
   end
 
   @impl true
@@ -30,10 +30,12 @@ defmodule Edenflowers.Orders.Calculations.Vat do
   @doc """
   The breakdown worked out from the order's lines and fee, ignoring any
   snapshot. What a snapshot is taken from, including when an unpaid custom
-  order is edited after it was placed.
+  order is edited after it was placed. Gift voucher lines have no row.
   """
   def compute_breakdown(order) do
     order.line_items
+    # A multi-purpose Gift voucher is outside VAT when sold. What it buys is taxed when it's spent.
+    |> Enum.reject(& &1.is_gift_voucher)
     |> Enum.map(&{&1.tax_rate, &1.total})
     |> Enum.concat(fulfillment_fee_entry(order))
     |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))

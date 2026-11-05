@@ -108,6 +108,15 @@ defmodule Edenflowers.Orders.LineItem do
       change Changes.SetTaxRate, where: [argument_equals(:kind, :custom)]
     end
 
+    create :sell_gift_voucher do
+      description "The one line of a Gift voucher sale: the voucher at its amount, outside VAT, which a " <>
+                    "multi-purpose voucher is until it's spent. Placing the order issues the voucher."
+
+      accept [:unit_price, :product_name]
+      change set_attribute(:is_gift_voucher, true)
+      change set_attribute(:tax_rate, Decimal.new("0"))
+    end
+
     # The destroy notification publishes to the removed item's order_id topic.
     destroy :remove_item do
       description "Removes a line from an order not yet placed, or one Jennie drops when editing an order."
@@ -185,6 +194,8 @@ defmodule Edenflowers.Orders.LineItem do
     # Nil for a custom item, which has no product photo.
     attribute :product_image_slug, :string
     attribute :is_card, :boolean, default: false, allow_nil?: false
+    # A Gift voucher sold: its unit price is the voucher's amount, and it is outside VAT.
+    attribute :is_gift_voucher, :boolean, default: false, allow_nil?: false
     # Snapshotted from the product, so unflagging it later leaves existing orders' fees alone.
     attribute :free_delivery, :boolean, default: false, allow_nil?: false
     # How often a subscription line is to be delivered, chosen on the product
@@ -206,6 +217,10 @@ defmodule Edenflowers.Orders.LineItem do
 
     belongs_to :product_variant, Edenflowers.Catalog.ProductVariant do
       description "The size sold, whose Stock the line takes once placed. Nil for a custom item."
+    end
+
+    has_one :gift_voucher, Edenflowers.Payments.GiftVoucher do
+      description "The Gift voucher a voucher line issued once its order was placed. Nil for any other line."
     end
   end
 

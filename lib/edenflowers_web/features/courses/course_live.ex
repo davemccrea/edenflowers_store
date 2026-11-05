@@ -225,7 +225,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
 
               <%!-- Stripe can't take 0 €, so a voucher that pays it all books without the card form. --%>
               <.form
-                :if={not Decimal.positive?(@registration.stripe_amount)}
+                :if={not @registration.card_needed?}
                 for={%{}}
                 id="course-payment-form"
                 phx-submit="pay"
@@ -237,7 +237,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
               </.form>
 
               <.stripe_form
-                :if={Decimal.positive?(@registration.stripe_amount)}
+                :if={@registration.card_needed?}
                 id="course-payment-form"
                 phx-submit="pay"
                 amount={StripeAPI.to_stripe_amount(@registration.stripe_amount)}
