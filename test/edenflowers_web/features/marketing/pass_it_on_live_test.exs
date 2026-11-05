@@ -39,4 +39,14 @@ defmodule EdenflowersWeb.Marketing.PassItOnLiveTest do
     refute has_element?(view, "#main-content", "% off")
     assert has_element?(view, ~s|a[href="/en/product/#{product.slug}"]|)
   end
+
+  test "a card linked to its gift order greets the recipient by first name", %{conn: conn} do
+    [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+    {:ok, card} = Edenflowers.Pricing.get_promotion_by_code(code)
+    gift = placed_order(gift: true, recipient_name: "Anna Virtanen")
+    Edenflowers.Pricing.link_card_to_gift_order!(card, gift.id, actor: generate(admin_user()))
+
+    {:ok, view, _html} = live(conn, "/en/pass-it-on?code=#{code}")
+    assert has_element?(view, "#main-content", "Hi Anna! Someone thought of you today.")
+  end
 end

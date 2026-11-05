@@ -23,6 +23,57 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, "#order-missing-phone")
   end
 
+  test "Jennie links a pass-it-on card to a gift order by typing its code, and can remove it", %{conn: conn} do
+    [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+    gift = placed_order(gift: true, recipient_name: "Anna")
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{placed_order().id}")
+    refute has_element?(view, "#link-card-form")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{gift.id}")
+    assert has_element?(view, "#order-card-missing", "No card linked to this gift")
+    view |> form("#link-card-form", %{code: "NOPE00"}) |> render_submit()
+    assert render(view) =~ "No pass-it-on card has the code NOPE00."
+
+    view |> form("#link-card-form", %{code: " #{String.downcase(code)} "}) |> render_submit()
+    assert has_element?(view, "#order-card-linked", code)
+    assert has_element?(view, "#order-card-linked", "Not opened yet")
+    refute has_element?(view, "#order-card-missing")
+    assert {:ok, %{gift_order_id: gift_id}} = Edenflowers.Pricing.get_promotion_by_code(code)
+    assert gift_id == gift.id
+    assert has_element?(view, "#order-log", "Pass it on card #{code} linked")
+
+    refute has_element?(view, "#order-pass-it-on button", "Remove")
+    remove = element(view, "#order-actions button[data-confirm]", "Remove Pass it on card")
+    render_click(remove)
+    assert has_element?(view, "#order-card-missing")
+    assert has_element?(view, "#order-log", "Pass it on card #{code} removed")
+  end
+
+  test "a delivered gift's card can no longer be linked", %{conn: conn, admin: admin} do
+    [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+    delivered = placed_order(gift: true, recipient_name: "Anna", fulfillment_status: :fulfilled)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{delivered.id}")
+    assert has_element?(view, "#order-card-none", "No card went with this gift.")
+    refute has_element?(view, "#link-card-form")
+
+    assert {:error, _too_late} = Orders.link_pass_it_on_card(delivered, code, actor: admin)
+  end
+
+  test "a gift order and the order its pass-it-on card brought in link to each other", %{conn: conn, admin: admin} do
+    [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+    {:ok, card} = Edenflowers.Pricing.get_promotion_by_code(code)
+    gift = placed_order(gift: true, recipient_name: "Anna")
+    Edenflowers.Pricing.link_card_to_gift_order!(card, gift.id, actor: admin)
+    brought_in = placed_order(promotion_id: card.id)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{gift.id}")
+    assert has_element?(view, ~s|#order-pass-it-on a[href="/admin/orders/#{brought_in.id}"]|)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{brought_in.id}")
+    assert has_element?(view, ~s|#order-pass-it-on a[href="/admin/orders/#{gift.id}"]|)
+  end
+
   test "custom and online orders offer cancellation, never deletion", %{conn: conn} do
     custom = placed_order(origin: :custom, payment_intent_id: nil)
     online = placed_order()

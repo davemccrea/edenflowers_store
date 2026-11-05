@@ -68,8 +68,8 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             type={:select}
             label={~t"Show"}
             prompt={~t"All orders"}
-            options={[{~t"Still to do", "true"}]}
-            fn={&open_orders/2}
+            options={[{~t"Still to do", "true"}, {~t"Gift orders", "gift"}]}
+            fn={&show_orders/2}
           />
           <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
             <.link
@@ -146,7 +146,13 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
     do: {:noreply, Cinder.refresh_table(socket, "orders-table")}
 
-  defp open_orders(query, _filter) do
+  # "true" means still to do, kept from when it was the only option, so saved links still work.
+  defp show_orders(query, %{value: "gift"}) do
+    require Ash.Query
+    Ash.Query.filter(query, gift)
+  end
+
+  defp show_orders(query, _filter) do
     require Ash.Query
     Ash.Query.filter(query, open?)
   end

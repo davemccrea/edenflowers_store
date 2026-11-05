@@ -21,6 +21,16 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     refute has_element?(view, "[data-item-id]", "Ada Lovelace")
   end
 
+  test "shows only gift orders, done or not", %{conn: conn} do
+    placed_order(customer_name: "Gift Giver", gift: true, recipient_name: "Anna", fulfillment_status: :fulfilled)
+    placed_order(customer_name: "For Myself")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders?open=gift")
+
+    assert has_element?(view, "[data-item-id]", "Gift Giver")
+    refute has_element?(view, "[data-item-id]", "For Myself")
+  end
+
   test "opens on the orders still to make or still to be paid for", %{conn: conn} do
     placed_order(customer_name: "To Make", paid: true, fulfillment_status: :pending)
     placed_order(customer_name: "Already Done", paid: true, fulfillment_status: :fulfilled)

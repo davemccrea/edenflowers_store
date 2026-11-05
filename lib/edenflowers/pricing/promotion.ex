@@ -10,12 +10,18 @@ defmodule Edenflowers.Pricing.Promotion do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshPaperTrail.Resource]
 
+  alias Edenflowers.Accounts.Calculations.FirstName
+  alias Edenflowers.Orders.Validations.Holds
   alias Edenflowers.Pricing.Changes
 
   postgres do
     table "promotions"
     repo Edenflowers.Repo
     migration_types minimum_cart_total: :decimal
+
+    references do
+      reference :gift_order, on_delete: :nilify
+    end
 
     check_constraints do
       check_constraint :minimum_cart_total, "promotions_valid_minimum_cart_total",
@@ -80,6 +86,26 @@ defmodule Edenflowers.Pricing.Promotion do
       end
 
       require_atomic? false
+    end
+
+    update :link_gift_order do
+      description "Jennie links a pass-it-on card to the gift order it goes out with, typing the card's code on " <>
+                    "the order's page. A nil `gift_order_id` unlinks it. Either only until the recipient first " <>
+                    "opens the card (`gift_order_linkable?`). One card per order."
+
+      accept [:gift_order_id]
+      validate {Holds, calculation: :gift_order_linkable?, message: "has already been opened by its recipient"}
+      # full_diff can't run atomically.
+      require_atomic? false
+    end
+
+    read :pass_it_on_card_by_code do
+      description "A pass-it-on card by the code printed on it, whether or not its code is still usable."
+
+      argument :code, :ci_string, allow_nil?: false
+      get? true
+
+      filter expr(kind == :pass_it_on and code == ^arg(:code))
     end
 
     read :by_code do
@@ -211,6 +237,16 @@ defmodule Edenflowers.Pricing.Promotion do
       description "Orders the code was applied to, carts included. See `usage` for the ones that count."
     end
 
+    has_many :placed_orders, Edenflowers.Orders.Order do
+      description "Placed orders the code was used on, cancelled ones included."
+      filter expr(state == :placed)
+    end
+
+    belongs_to :gift_order, Edenflowers.Orders.Order do
+      description "For a pass-it-on card: the gift delivery Jennie sent it out with. Nil for a card she didn't " <>
+                    "link, and for other codes."
+    end
+
     has_one :newsletter_subscriber, Edenflowers.Accounts.User do
       description "The subscriber this welcome code was generated for. Nil for codes Jennie made herself."
       destination_attribute :newsletter_promo_id
@@ -230,9 +266,40 @@ defmodule Edenflowers.Pricing.Promotion do
 
       argument :today, :date, allow_nil?: false, default: &Edenflowers.ShopTime.today/0
     end
+
+    calculate :gift_order_linkable?, :boolean, expr(kind == :pass_it_on and is_nil(expiration_date)) do
+      description "A pass-it-on card Jennie can still link to its gift delivery: its recipient hasn't opened it " <>
+                    "yet, which would have started its 30 days."
+    end
+
+    calculate :card_status,
+              :atom,
+              expr(
+                cond do
+                  usage > 0 -> :used
+                  not is_nil(expiration_date) -> :opened
+                  true -> :not_opened
+                end
+              ) do
+      description "Where a pass-it-on card is, for admin: `not_opened` until its recipient first opens its page " <>
+                    "or applies its code, `opened` once its 30 days run, `used` once an order placed with it " <>
+                    "counts."
+
+      constraints one_of: [:not_opened, :opened, :used]
+    end
+
+    calculate :recipient_first_name, :string, {FirstName, source: :gift_recipient_name} do
+      description "The first name the card's page greets its recipient by. Nil for a card not linked to a gift."
+    end
   end
 
   aggregates do
+    # Unauthorized so the card's page can greet a guest by name.
+    first :gift_recipient_name, :gift_order, :recipient_name do
+      description "The full name of the recipient of the gift the card came with. Only its first name is shown."
+      authorize? false
+    end
+
     # Unauthorized so a guest checking a code still counts everyone's orders.
     count :usage, :orders do
       description "How many placed orders used the code, leaving out cancelled ones. Counted against `usage_limit`."
@@ -243,6 +310,7 @@ defmodule Edenflowers.Pricing.Promotion do
 
   identities do
     identity :unique_code, [:code]
+    identity :one_card_per_gift_order, [:gift_order_id], message: "already has a card"
   end
 
   def generate_code, do: :crypto.strong_rand_bytes(3) |> Base.encode16()
