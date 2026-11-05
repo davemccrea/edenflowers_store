@@ -550,7 +550,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   def handle_event("link_card", %{"code" => code}, socket) do
     %{order: order, current_user: actor} = socket.assigns
 
-    case Orders.link_pass_it_on_card(order, String.trim(code), actor: actor) do
+    case Orders.link_pass_it_on_card(order, code, actor: actor) do
       {:ok, order} -> {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:success, ~t"Card linked.")}
       {:error, error} -> {:noreply, put_flash(socket, :error, card_error(error))}
     end

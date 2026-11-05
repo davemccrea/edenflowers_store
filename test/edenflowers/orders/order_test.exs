@@ -296,14 +296,14 @@ defmodule Edenflowers.Orders.OrderTest do
       assert Orders.get_storefront_cart!(visitor_id, actor: nil).promotion_code == "FIRST"
     end
 
-    test "changes nothing for an unknown or used-up code" do
+    test "an unknown or used-up code opens no cart" do
       visitor_id = Ecto.UUID.generate()
       used_up = generate(promotion(code: "USED", usage_limit: 1))
       use_promotion(used_up)
 
       refute Orders.open_cart_with_code!(visitor_id, "NOPE", actor: nil)
       refute Orders.open_cart_with_code!(visitor_id, "USED", actor: nil)
-      assert Orders.get_storefront_cart!(visitor_id, actor: nil).promotion_id == nil
+      assert Orders.get_storefront_cart!(visitor_id, actor: nil) == nil
     end
   end
 

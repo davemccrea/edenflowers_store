@@ -171,6 +171,21 @@ backup:
     mv "$file.partial" "$file"
     ls -lh "$file"
 
+# Create a batch of pass-it-on codes on production and render their cards as a print shop PDF in tmp/, e.g. `just print-cards "Skicka vidare 2026-11" 100`
+[group('production')]
+print-cards name count:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Checked before the codes exist, so a missing tool doesn't leave an unprinted batch behind
+    [ -f priv/receipts/icc/PSOcoated_v3.icc ] || { echo "No print profile. See \`mix help pass_it_on_cards\`." >&2; exit 1; }
+    command -v gs >/dev/null || { echo "Ghostscript is missing: brew install ghostscript" >&2; exit 1; }
+    just backup
+    slug=$(echo "{{ name }}" | tr '[:upper:] ' '[:lower:]-')
+    codes="tmp/codes-$slug.txt"
+    ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Edenflowers.Pricing.create_pass_it_on_batch!(\"{{ name }}\", {{ count }}, actor: Edenflowers.Actors.system_actor()) |> Enum.each(&IO.puts/1)'" > "$codes"
+    [ "$(wc -l < "$codes" | tr -d ' ')" = "{{ count }}" ] || { echo "Expected {{ count }} codes in $codes, see what came back there" >&2; exit 1; }
+    mix pass_it_on_cards "$codes" "tmp/pass-it-on-$slug.pdf"
+
 # Pull and restart production's other services (cloudflared, imgproxy, umami, papra). Restarting cloudflared drops the site for a few seconds
 [group('production')]
 update-services:

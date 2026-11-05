@@ -302,6 +302,7 @@ defmodule Edenflowers.Pricing.PromotionTest do
       right = placed_order(gift: true, recipient_name: "Bea Berg")
 
       card = Pricing.link_card_to_gift_order!(card, wrong.id, actor: admin)
+      card = Pricing.link_card_to_gift_order!(card, nil, actor: admin)
       card = Pricing.link_card_to_gift_order!(card, right.id, actor: admin, load: :recipient_first_name)
       assert card.recipient_first_name == "Bea"
 
@@ -314,6 +315,15 @@ defmodule Edenflowers.Pricing.PromotionTest do
       Pricing.link_card_to_gift_order!(card, order.id, actor: admin)
 
       assert {:error, _taken} = Pricing.link_card_to_gift_order(other_card, order.id, actor: admin)
+    end
+
+    test "a card stays with its gift when its code is typed on another", %{card: card, admin: admin} do
+      gift = placed_order(gift: true, recipient_name: "Anna")
+      other_gift = placed_order(gift: true, recipient_name: "Bea")
+      card = Pricing.link_card_to_gift_order!(card, gift.id, actor: admin)
+
+      assert {:error, _taken} = Pricing.link_card_to_gift_order(card, other_gift.id, actor: admin)
+      assert Ash.reload!(card, authorize?: false).gift_order_id == gift.id
     end
 
     test "only an admin links a card", %{card: card} do

@@ -14,10 +14,21 @@ defmodule EdenflowersWeb.Plugs.ApplyLinkPromotionTest do
     assert Orders.get_storefront_cart!(get_session(conn, :visitor_id), actor: nil).promotion_code == "AB12CD"
   end
 
-  test "an unknown code still shows the page, with no notice", %{conn: conn} do
+  test "an unknown code still shows the page, with no notice and no cart", %{conn: conn} do
     conn = get(conn, "/en", code: "NOPE")
 
     assert html_response(conn, 200)
     assert Phoenix.Flash.get(conn.assigns.flash, :success) == nil
+    assert Orders.get_storefront_cart!(get_session(conn, :visitor_id), actor: nil) == nil
+  end
+
+  test "Jennie scanning a card doesn't put its code on her cart", context do
+    %{conn: conn, admin: admin} = log_in_admin(context)
+    generate(promotion(code: "AB12CD"))
+
+    conn = get(conn, "/en", code: "AB12CD")
+
+    assert Phoenix.Flash.get(conn.assigns.flash, :success) == nil
+    assert Orders.get_storefront_cart!(get_session(conn, :visitor_id), actor: admin) == nil
   end
 end

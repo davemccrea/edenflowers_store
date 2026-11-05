@@ -520,7 +520,7 @@ msgstr ""
 msgid "Cart is empty"
 msgstr ""
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:48
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:52
 #, elixir-autogen, elixir-format
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr ""
@@ -1576,7 +1576,7 @@ msgstr ""
 msgid "Increment"
 msgstr ""
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:36
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:28
 #, elixir-autogen, elixir-format
 msgid "Invalid code"
 msgstr ""
@@ -2346,7 +2346,7 @@ msgstr ""
 msgid "Removing this empties your cart and clears the checkout details you've entered. Continue?"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:625
+#: lib/edenflowers_web/features/store/product_live.ex:619
 #, elixir-autogen, elixir-format
 msgid "Replaces the %{count} bouquets (%{amount}) in your cart."
 msgstr ""
@@ -2962,7 +2962,7 @@ msgstr ""
 msgid "This booking has been refunded, so there is nothing to pay. If you have any questions, just get in touch."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/product_live.ex:637
+#: lib/edenflowers_web/features/store/product_live.ex:631
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr ""
@@ -4112,7 +4112,7 @@ msgid "Thanks! Your %{percent} off code is on its way to your inbox."
 msgstr ""
 
 #. Over the product photo when it shows another size. %{size} is Small, Medium or Large.
-#: lib/edenflowers_web/features/store/product_live.ex:529
+#: lib/edenflowers_web/features/store/product_live.ex:523
 #, elixir-autogen, elixir-format
 msgid "Pictured: %{size}"
 msgstr ""

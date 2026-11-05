@@ -38,13 +38,7 @@ defmodule Edenflowers.Orders.Order.Changes.LinkPassItOnCard do
   defp remove(changeset, context) do
     order = Ash.load!(changeset.data, :pass_it_on_card, authorize?: false, reuse_values?: false)
 
-    with %{} = card <- order.pass_it_on_card,
-         {:ok, card} <- Pricing.link_card_to_gift_order(card, nil, actor: context.actor) do
-      log_card(changeset, card)
-    else
-      nil -> Ash.Changeset.add_error(changeset, message: ~t"This order has no pass-it-on card.")
-      {:error, _opened} -> Ash.Changeset.add_error(changeset, message: ~t"Its recipient has already opened the card.")
-    end
+    log_card(changeset, Pricing.link_card_to_gift_order!(order.pass_it_on_card, nil, actor: context.actor))
   end
 
   defp log_card(changeset, card),

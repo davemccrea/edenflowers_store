@@ -318,7 +318,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
     action :open_cart_with_code, :boolean do
       description "Puts a code from a link (`?code=` on any storefront page) on the browser's cart, opening the " <>
                     "cart if it has none yet. A code already on the cart is kept, and an unknown or used-up code " <>
-                    "changes nothing. Returns whether the cart now carries this code."
+                    "changes nothing, not even opening a cart. Does nothing for an admin, so Jennie scanning a card " <>
+                    "to check it doesn't put it on her own cart. Returns whether the cart now carries this code."
 
       argument :visitor_id, :uuid do
         allow_nil? false
@@ -330,19 +331,29 @@ defmodule Edenflowers.Orders.Order.Checkout do
       run fn input, context ->
         %{visitor_id: visitor_id, code: code} = input.arguments
         opts = Ash.Context.to_opts(context)
-        cart = Edenflowers.Orders.create_for_checkout!(%{visitor_id: visitor_id}, opts)
 
-        cart =
-          if is_nil(cart.promotion_id) do
-            case Edenflowers.Orders.add_promotion_from_link(cart, code, opts) do
-              {:ok, cart} -> cart
-              {:error, _invalid_code} -> cart
-            end
-          else
-            cart
-          end
+        cond do
+          match?(%{admin: true}, context.actor) ->
+            {:ok, false}
 
-        {:ok, String.downcase(cart.promotion_code || "") == String.downcase(code)}
+          match?({:error, _unusable}, Edenflowers.Pricing.get_promotion_by_code(code)) ->
+            {:ok, false}
+
+          true ->
+            cart = Edenflowers.Orders.create_for_checkout!(%{visitor_id: visitor_id}, opts)
+
+            cart =
+              if is_nil(cart.promotion_id) do
+                case Edenflowers.Orders.add_promotion_from_link(cart, code, opts) do
+                  {:ok, cart} -> cart
+                  {:error, _invalid_code} -> cart
+                end
+              else
+                cart
+              end
+
+            {:ok, String.downcase(cart.promotion_code || "") == String.downcase(code)}
+        end
       end
     end
 
