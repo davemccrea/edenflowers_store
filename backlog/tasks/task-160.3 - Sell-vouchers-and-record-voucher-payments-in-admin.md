@@ -4,6 +4,7 @@ title: Sell vouchers and record voucher payments in admin
 status: ready-for-agent
 assignee: []
 created_date: '2026-11-01 17:32'
+updated_date: '2026-11-05 20:09'
 labels: []
 dependencies:
   - TASK-160.1
@@ -26,3 +27,16 @@ ordinal: 309000
 - [ ] #1 Jennie can sell a voucher on a Custom Order and print its PDF
 - [ ] #2 Jennie can pay a Custom Order or course booking with a voucher code
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-05 20:09
+
+---
+
+The monthly report treats an order as a voucher sale only when it holds a voucher line and nothing else (gift_voucher_sale?, empty VAT breakdown). If a Custom Order can mix a voucher with flowers, its payments must be split between vouchers sold and sales, or keep vouchers on their own order.
+
+---
+<!-- COMMENTS:END -->

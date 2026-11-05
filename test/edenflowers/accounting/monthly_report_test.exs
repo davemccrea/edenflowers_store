@@ -154,6 +154,59 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              october |> unzip() |> Map.fetch!("rapport-2026-10.xlsx") |> read_sheet(1)
   end
 
+  test "voucher purchases go on their own sheet, and what a voucher pays for is a sale at its rates" do
+    sale = sales_order("1004", vat_breakdown: [])
+
+    Ash.Seed.seed!(Edenflowers.Orders.LineItem, %{
+      order_id: sale.id,
+      is_gift_voucher: true,
+      unit_price: Decimal.new("50.00"),
+      tax_rate: Decimal.new(0),
+      product_name: "Gift voucher"
+    })
+
+    generate(payment(order_id: sale.id, amount: Decimal.new("50.00"), paid_at: ~U[2026-09-02 08:00:00Z]))
+    generate(payment(order_id: sale.id, amount: Decimal.new("-50.00"), paid_at: ~U[2026-09-03 08:00:00Z]))
+    generate(payment(order_id: sale.id, amount: Decimal.new("30.00"), method: :cash, paid_at: ~U[2026-09-04 08:00:00Z]))
+
+    voucher = generate(gift_voucher())
+    spent_on = sales_order("1005")
+
+    for {amount, day} <- [{"85.00", 5}, {"-85.00", 6}] do
+      generate(
+        payment(
+          order_id: spent_on.id,
+          gift_voucher_id: voucher.id,
+          method: :voucher,
+          amount: Decimal.new(amount),
+          paid_at: DateTime.new!(Date.new!(2026, 9, day), ~T[08:00:00])
+        )
+      )
+    end
+
+    assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
+    xlsx = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx")
+
+    [_headings | sales] = read_sheet(xlsx, 1)
+
+    assert sales |> Enum.take(4) |> Enum.map(&Enum.drop(&1, 1)) == [
+             ["1005", "beställning", "Presentkort", "0.255", "63.75", "16.25", "80.0"],
+             ["1005", "beställning", "Presentkort", "0.135", "4.41", "0.59", "5.0"],
+             ["1005", "beställning", "Presentkort", "0.255", "-63.75", "-16.25", "-80.0"],
+             ["1005", "beställning", "Presentkort", "0.135", "-4.41", "-0.59", "-5.0"]
+           ]
+
+    assert [["Betalningsdag", "Referens", "Betalningssätt", "Belopp"] | rows] = read_sheet(xlsx, 2)
+
+    assert rows == [
+             [excel_date(~D[2026-09-02]), "1004", "Stripe", "50.0"],
+             [excel_date(~D[2026-09-03]), "1004", "Stripe", "-50.0"],
+             [excel_date(~D[2026-09-04]), "1004", "Kontant", "30.0"],
+             [],
+             [nil, nil, "Summa", "30.0"]
+           ]
+  end
+
   test "mixed-rate invoice cash is counted once with frozen cents across months and reversals" do
     admin = generate(admin_user())
 
@@ -217,7 +270,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
     assert files["kvitton/002_2026-09-11_Adobe.pdf"] == "%PDF doc-adobe"
 
-    [headings | rows] = read_sheet(files["rapport-2026-09.xlsx"], 2)
+    [headings | rows] = read_sheet(files["rapport-2026-09.xlsx"], 3)
 
     assert headings == [
              "Nr",
@@ -299,7 +352,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
              "rapport-2026-09.xlsx"
            ]
 
-    assert [_headings, found, missing_row | _] = read_sheet(files["rapport-2026-09.xlsx"], 2)
+    assert [_headings, found, missing_row | _] = read_sheet(files["rapport-2026-09.xlsx"], 3)
     assert List.last(found) == "001_2026-09-04_Found-Oy.pdf"
     assert List.last(missing_row) =~ "Papra"
   end
@@ -329,7 +382,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     end)
 
     assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
-    [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(3)
+    [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(4)
 
     assert headings == ["Created", "Type", "Description", "Amount", "Fee", "Net", "Payout"]
 
@@ -452,7 +505,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
 
     test "lists what was still owed on each invoice at month end", ctx do
       assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
-      [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(4)
+      [headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(5)
 
       assert headings == [
                "Fakturanummer",
@@ -534,7 +587,7 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
     stub(PapraAPI.Mock, :fetch_document, fn _, _ -> {:ok, %{body: "%PDF", content_type: "application/pdf"}} end)
 
     assert {:ok, _, zip, _} = MonthlyReport.build(2026, 9)
-    [_headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(5)
+    [_headings | rows] = zip |> unzip() |> Map.fetch!("rapport-2026-09.xlsx") |> read_sheet(6)
 
     {expenses, [[] | totals]} = Enum.split_while(rows, &(&1 != []))
     assert Enum.map(expenses, &Enum.at(&1, 1)) == ["Later Oy", "Unpaid Oy", "Scheduled Ab"]
