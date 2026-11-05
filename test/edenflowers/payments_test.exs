@@ -32,6 +32,7 @@ defmodule Edenflowers.PaymentsTest do
           payment_intent_id: "pi_course_#{System.unique_integer([:positive])}"
         )
       )
+      |> Ash.load!(:stripe_amount, authorize?: false)
 
     %{order: order, registration: registration, product_variant: product_variant}
   end
@@ -93,7 +94,7 @@ defmodule Edenflowers.PaymentsTest do
   describe "setup/2" do
     test "creates a PaymentIntent for an order's grand total and stores its id", %{order: order} do
       Edenflowers.Repo.query!("UPDATE orders SET payment_intent_id = NULL WHERE id = $1", [Ecto.UUID.dump!(order.id)])
-      order = Ash.get!(Order, order.id, load: [:grand_total], authorize?: false)
+      order = Ash.get!(Order, order.id, load: [:grand_total, :stripe_amount], authorize?: false)
       expected_cents = StripeAPI.to_stripe_amount(order.grand_total)
       order_id = order.id
 
@@ -235,6 +236,7 @@ defmodule Edenflowers.PaymentsTest do
 
     test "creates a PaymentIntent for a course booking's amount", %{registration: registration} do
       registration = generate(course_registration(amount: registration.amount, payment_intent_id: nil))
+      registration = Ash.load!(registration, :stripe_amount, authorize?: false)
       registration_id = registration.id
 
       expect(StripeAPI.Mock, :create_payment_intent, fn 17_000,
@@ -319,7 +321,7 @@ defmodule Edenflowers.PaymentsTest do
     end
 
     test "cancels the PaymentIntent when its id can't be stored" do
-      order = %{generate(order(state: :placed)) | grand_total: Decimal.new("50.00")}
+      order = %{generate(order(state: :placed)) | stripe_amount: Decimal.new("50.00")}
       payment_intent = %{id: "pi_orphan", client_secret: "pi_orphan_secret", amount: 0}
 
       expect(StripeAPI.Mock, :create_payment_intent, fn _amount, _metadata, _customer -> {:ok, payment_intent} end)

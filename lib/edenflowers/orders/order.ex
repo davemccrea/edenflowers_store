@@ -94,6 +94,7 @@ defmodule Edenflowers.Orders.Order do
       transition(:submit_delivery, from: :delivery, to: :payment)
       # The customer has paid, so any step they have since stepped back to still places the order.
       transition(:finalize_checkout, from: @checkout_states, to: :placed)
+      transition(:place_paid_by_voucher, from: :payment, to: :placed)
       transition(:place_unpaid_occurrence, from: :payment, to: :placed)
 
       transition(:return_to_contact_details, from: [:gift_options, :delivery, :payment], to: :contact_details)
@@ -137,6 +138,7 @@ defmodule Edenflowers.Orders.Order do
 
     on_actions [
       :finalize_checkout,
+      :place_paid_by_voucher,
       :place_unpaid_occurrence,
       :place_custom,
       :edit,
@@ -171,6 +173,7 @@ defmodule Edenflowers.Orders.Order do
     bypass actor_attribute_equals(:system, true) do
       authorize_if action([
                      :finalize_checkout,
+                     :place_paid_by_voucher,
                      :create_occurrence,
                      :place_unpaid_occurrence,
                      :start_subscription,
@@ -255,6 +258,7 @@ defmodule Edenflowers.Orders.Order do
 
     publish :restart_checkout, ["order", "checkout_restarted", :id]
     publish :finalize_checkout, ["order", "placed", :id]
+    publish :place_paid_by_voucher, ["order", "placed", :id]
     publish :record_link_payment, ["order", "paid", :id]
     # The admin is an installed app without pull to refresh, so every change
     # to a placed order, by anyone, refreshes the admin pages showing it.
@@ -265,6 +269,8 @@ defmodule Edenflowers.Orders.Order do
     publish :add_promotion_with_code, ["line_item", "changed", :id]
     publish :add_promotion_from_link, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
+    publish :add_gift_voucher_with_code, ["line_item", "changed", :id]
+    publish :clear_gift_voucher, ["line_item", "changed", :id]
   end
 
   # Every read and write returns the charged fee, so code that shows or totals

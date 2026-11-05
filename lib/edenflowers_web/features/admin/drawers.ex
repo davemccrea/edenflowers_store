@@ -333,10 +333,10 @@ defmodule EdenflowersWeb.Admin.Drawers do
     """
   end
 
-  @doc "Every way Jennie records money herself; Stripe records its own."
+  @doc "Every way Jennie records money herself; Stripe records its own, and checkout a Gift voucher's."
   def payment_method_options do
     Edenflowers.Payments.PaymentMethod.values()
-    |> List.delete(:stripe)
+    |> Kernel.--([:stripe, :voucher])
     |> Enum.map(&{OrderLog.payment_method_label(&1), &1})
   end
 

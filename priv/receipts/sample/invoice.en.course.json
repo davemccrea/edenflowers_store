@@ -42,6 +42,7 @@
     "gross": "Gross",
     "quantity": "Qty",
     "method-zervant": "Bank transfer",
+    "method-voucher": "Gift voucher",
     "supply-date": "Date of supply",
     "payment-details": "Payment details",
     "item": "Item",

@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
   import Edenflowers.Actors
   import EdenflowersWeb.Courses.Components
   import EdenflowersWeb.StripeForm, only: [stripe_form: 1]
+  import EdenflowersWeb.GiftVoucherField, only: [gift_voucher_field: 1]
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
@@ -39,6 +40,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
          )
          |> assign(booked_seats: booked_seats(socket.assigns.current_user, course))
          |> assign(registration: checkout(params["registration"], course), editing?: false, focus_booking?: false)
+         |> assign(gift_voucher_error: nil)
          |> assign_form()}
 
       {:error, _} ->
@@ -212,15 +214,38 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 {~t"Change booking"}
               </button>
 
-              <.stripe_form
+              <div class="mb-6">
+                <.gift_voucher_field
+                  id="course-gift-voucher"
+                  payable={@registration}
+                  locale={@locale}
+                  error={@gift_voucher_error}
+                />
+              </div>
+
+              <%!-- Stripe can't take 0 €, so a voucher that pays it all books without the card form. --%>
+              <.form
+                :if={not Decimal.positive?(@registration.stripe_amount)}
+                for={%{}}
                 id="course-payment-form"
                 phx-submit="pay"
-                amount={StripeAPI.to_stripe_amount(@registration.amount)}
+                class="flex flex-col"
+              >
+                <.button type="submit" variant="primary" size="lg" phx-disable-with={~t"Booking…"}>
+                  {~t"Book"}
+                </.button>
+              </.form>
+
+              <.stripe_form
+                :if={Decimal.positive?(@registration.stripe_amount)}
+                id="course-payment-form"
+                phx-submit="pay"
+                amount={StripeAPI.to_stripe_amount(@registration.stripe_amount)}
                 return_path={~p"/courses/bookings/#{@registration.id}"}
                 billing_name={@registration.name}
                 billing_email={@registration.email}
               >
-                {~t"Pay"} {Format.currency(@registration.amount, @locale)}
+                {~t"Pay"} {Format.currency(@registration.stripe_amount, @locale)}
               </.stripe_form>
             </section>
           </aside>
@@ -240,7 +265,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
       {:ok, registration} ->
         {:noreply,
          socket
-         |> assign(registration: registration, editing?: false)
+         |> assign(registration: checkout(registration.id, socket.assigns.course), editing?: false)
          |> EdenflowersWeb.Analytics.track("Course booking started", %{}, once: "course-booking:#{registration.id}")}
 
       {:error, form} ->
@@ -254,15 +279,40 @@ defmodule EdenflowersWeb.Courses.CourseLive do
     %{id: id, course_id: course_id} = socket.assigns.registration
 
     case Courses.prepare_registration_checkout_payment(id, course_id) do
-      {:ok, %{payable: registration, client_secret: client_secret}} ->
+      # Its gift voucher paid it all, and it's booked.
+      {:ok, %{client_secret: nil}} ->
+        {:noreply, push_navigate(socket, to: ~p"/courses/bookings/#{id}")}
+
+      {:ok, %{payable: %{payment_intent_id: payment_intent_id}, client_secret: client_secret}} ->
         {:noreply,
          socket
-         |> assign(registration: registration)
+         |> update(:registration, &%{&1 | payment_intent_id: payment_intent_id})
          |> push_event("stripe:process_payment", %{client_secret: client_secret})}
 
       {:error, error} ->
         pay_refused(socket, error)
     end
+  end
+
+  def handle_event("apply_gift_voucher", %{"gift_voucher" => %{"code" => code}}, socket) do
+    case Courses.add_registration_gift_voucher(socket.assigns.registration, code, actor: system_actor()) do
+      {:ok, registration} ->
+        {:noreply,
+         socket
+         |> assign(registration: checkout(registration.id, socket.assigns.course), gift_voucher_error: nil)
+         |> EdenflowersWeb.Analytics.track("Gift voucher applied")}
+
+      {:error, error} ->
+        {:noreply,
+         socket
+         |> assign(gift_voucher_error: EdenflowersWeb.GiftVoucherField.error_message(error))
+         |> EdenflowersWeb.Analytics.track("Gift voucher rejected")}
+    end
+  end
+
+  def handle_event("clear_gift_voucher", _params, socket) do
+    registration = Courses.clear_registration_gift_voucher!(socket.assigns.registration, actor: system_actor())
+    {:noreply, assign(socket, registration: checkout(registration.id, socket.assigns.course))}
   end
 
   def handle_event("change", _params, socket) do

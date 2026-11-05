@@ -95,7 +95,8 @@
     "method-mobilepay": "MobilePay",
     "method-klarna": "Klarna",
     "method-cash": "Kontant",
-    "method-zervant": "Banköverföring"
+    "method-zervant": "Banköverföring",
+    "method-voucher": "Presentkort"
   },
   "seller": {
     "name": "Jennie McCrea",

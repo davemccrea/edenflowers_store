@@ -393,6 +393,11 @@ defmodule Edenflowers.Email.Previews do
          order(Map.merge(paid, %{payments: [card_payment("34.00"), cash_payment("30.00")]}), locale),
          cancel_money(refunded: "34.00", to_return: "30.00")
        )},
+      {"Order cancelled", "part paid by card, part by gift voucher", :cancelled,
+       Email.cancelled(
+         order(Map.merge(paid, %{payments: [card_payment("34.00")]}), locale),
+         cancel_money(refunded: "34.00", back_on_voucher: "30.00")
+       )},
       {"Order cancelled", "paid by card, a cancellation charge kept and the rest refunded", :cancelled,
        Email.cancelled(
          order(Map.merge(paid, %{payments: [card_payment("64.00")]}), locale),
@@ -406,22 +411,25 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp cancel_money(given) do
-    Map.new([:charge, :refunded, :to_return, :to_collect], &{&1, Decimal.new(Keyword.get(given, &1, "0"))})
+    Map.new(
+      [:charge, :refunded, :back_on_voucher, :to_return, :to_collect],
+      &{&1, Decimal.new(Keyword.get(given, &1, "0"))}
+    )
   end
 
   defp cancellation_confirmed(locale) do
     paid = %{amount_paid: Decimal.new("64.00"), balance: Decimal.new(0)}
 
-    for {title, payments} <- [
-          {"refunded to a card", [card_payment("64.00")]},
-          {"refunded to MobilePay", [mobilepay_payment("64.00")]},
-          {"refunded, paid more than one way", [card_payment("34.00"), mobilepay_payment("30.00")]}
+    for {title, payments, money} <- [
+          {"refunded to a card", [card_payment("64.00")], cancel_money(refunded: "64.00")},
+          {"refunded to MobilePay", [mobilepay_payment("64.00")], cancel_money(refunded: "64.00")},
+          {"refunded, paid more than one way", [card_payment("34.00"), mobilepay_payment("30.00")],
+           cancel_money(refunded: "64.00")},
+          {"part paid by gift voucher", [card_payment("34.00")],
+           cancel_money(refunded: "34.00", back_on_voucher: "30.00")}
         ] do
       {"Cancellation confirmed", title, :cancellation_confirmed,
-       Email.cancellation_confirmed(
-         order(Map.merge(paid, %{payments: payments}), locale),
-         cancel_money(refunded: "64.00")
-       )}
+       Email.cancellation_confirmed(order(Map.merge(paid, %{payments: payments}), locale), money)}
     end
   end
 
@@ -513,7 +521,8 @@ defmodule Edenflowers.Email.Previews do
           {"handed back in cash", [], :cash},
           {"to a card on the card reader", [], :zettle},
           {"by MobilePay to the customer's number", [], :mobilepay},
-          {"to the customer's bank account", [], :zervant}
+          {"to the customer's bank account", [], :zervant},
+          {"back onto a gift voucher", [], :voucher}
         ] do
       refund = %{amount: Decimal.new("20.00"), payment_method: method}
       {"Order refunded", title, :refunded, Email.refunded(order(%{payments: payments}, locale), refund)}
@@ -549,6 +558,7 @@ defmodule Edenflowers.Email.Previews do
     for {title, attrs, money} <- [
           {"refunded to a card", %{payments: [card]}, cancel_money(refunded: "45.00")},
           {"paid in cash", %{payments: [cash]}, cancel_money(to_return: "45.00")},
+          {"paid by gift voucher", %{payments: []}, cancel_money(back_on_voucher: "45.00")},
           {"unpaid by bank transfer, cancellation charge outstanding", %{payments: [], payment_terms: :invoice},
            cancel_money(charge: "22.50", to_collect: "22.50")},
           {"part paid, the rest of a cancellation charge still to pay",

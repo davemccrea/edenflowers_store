@@ -95,7 +95,8 @@
     "method-mobilepay": "MobilePay",
     "method-klarna": "Klarna",
     "method-cash": "Cash",
-    "method-zervant": "Bank transfer"
+    "method-zervant": "Bank transfer",
+    "method-voucher": "Gift voucher"
   },
   "seller": {
     "name": "Jennie McCrea",

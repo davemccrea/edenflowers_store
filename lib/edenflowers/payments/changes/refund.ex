@@ -1,9 +1,9 @@
 defmodule Edenflowers.Payments.Changes.Refund do
   @moduledoc """
   Hands back `amount`. Through Stripe, before the change commits, and
-  `Payments.record_stripe_refund/1` records it. By any other method, Jennie
-  already handed it back: its negative goes in `refund` for
-  `SplitOffGoodwill` to split and `RecordPayment` to record.
+  `Payments.record_stripe_refund/1` records it. Onto a Gift voucher, or by
+  any other method Jennie already handed it back by: its negative goes in
+  `refund` for `SplitOffGoodwill` to split and `RecordPayment` to record.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
@@ -22,6 +22,12 @@ defmodule Edenflowers.Payments.Changes.Refund do
     case Ash.Changeset.get_argument(changeset, :payment_method) do
       :stripe ->
         Ash.Changeset.before_transaction(changeset, &refund_with_stripe(&1, amount, note))
+
+      # A purchase is paid by one Gift voucher at most: the one it holds.
+      :voucher ->
+        changeset
+        |> Ash.Changeset.set_argument(:refund, Decimal.negate(amount))
+        |> Ash.Changeset.set_argument(:gift_voucher_id, changeset.data.gift_voucher_id)
 
       _handed_back ->
         Ash.Changeset.set_argument(changeset, :refund, Decimal.negate(amount))

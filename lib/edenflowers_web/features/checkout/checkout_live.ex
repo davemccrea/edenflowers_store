@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   import EdenflowersWeb.CardDrawer, only: [card_drawer: 1]
   import EdenflowersWeb.StoreCalendar, only: [store_calendar: 1]
   import EdenflowersWeb.StripeForm, only: [stripe_form: 1]
+  import EdenflowersWeb.GiftVoucherField, only: [gift_voucher_field: 1]
 
   alias Edenflowers.Catalog.ProductVariantSize
 
@@ -81,6 +82,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
          build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user]), actor(socket))
        )
        |> assign(:customer_session_client_secret, nil)
+       |> assign(:gift_voucher_error, nil)
        |> ensure_customer_session(order, actor(socket))
        |> maybe_scroll_to_current_step()}
     else
@@ -358,28 +360,57 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                 </.checkout_step>
 
                 <.checkout_step order={@order} id={@id} state={:payment}>
-                  <.stripe_form
-                    id={"#{@id}-form-4"}
-                    phx-submit={lock_while_paying() |> JS.push("pay")}
-                    amount={StripeAPI.to_stripe_amount(@order.grand_total)}
-                    setup_future_usage={if @order.subscription?, do: "off_session"}
-                    customer_session_client_secret={@customer_session_client_secret}
-                    return_path={~p"/checkout/complete/#{@order.id}"}
-                    billing_name={@order.customer_name}
-                    billing_email={@order.customer_email}
-                    billing_phone={buyer_phone_number(@order)}
-                    on_loading={lock_while_paying()}
-                    on_ready={unlock_after_paying(%JS{})}
-                  >
-                    <:before_button>
-                      <.recurring_charge order={@order} fee={price(@order, @delivery_quote).fee} />
+                  <%!-- Closer together than the step's own gap: the voucher is part of paying. --%>
+                  <div class="flex flex-col gap-6">
+                    <.gift_voucher_field
+                      :if={not @order.subscription?}
+                      id={"#{@id}-gift-voucher"}
+                      payable={@order}
+                      locale={@order.locale}
+                      error={@gift_voucher_error}
+                    />
+
+                    <%!-- Stripe can't take 0 €, so a voucher that pays it all is placed without the card form. --%>
+                    <.form
+                      :if={not Decimal.positive?(@order.stripe_amount)}
+                      for={%{}}
+                      id={"#{@id}-form-4"}
+                      phx-submit="pay"
+                      class="flex flex-col gap-4"
+                    >
                       <p class="text-base-content/80 text-sm" data-testid="terms-acceptance">
                         {~t"By placing your order you accept the"}
                         <a href={~q"/#{language}/terms"} target="_blank" class="link-underline-static-body">{~t"terms of sale"}</a>.
                       </p>
-                    </:before_button>
-                    {~t"Pay"} {Edenflowers.Format.currency(@order.grand_total, @order.locale)}
-                  </.stripe_form>
+                      <.button type="submit" variant="primary" size="lg" class="mt-2" phx-disable-with={~t"Placing order…"}>
+                        {~t"Place order"}
+                      </.button>
+                    </.form>
+
+                    <.stripe_form
+                      :if={Decimal.positive?(@order.stripe_amount)}
+                      id={"#{@id}-form-4"}
+                      phx-submit={lock_while_paying() |> JS.push("pay")}
+                      amount={StripeAPI.to_stripe_amount(@order.stripe_amount)}
+                      setup_future_usage={if @order.subscription?, do: "off_session"}
+                      customer_session_client_secret={@customer_session_client_secret}
+                      return_path={~p"/checkout/complete/#{@order.id}"}
+                      billing_name={@order.customer_name}
+                      billing_email={@order.customer_email}
+                      billing_phone={buyer_phone_number(@order)}
+                      on_loading={lock_while_paying()}
+                      on_ready={unlock_after_paying(%JS{})}
+                    >
+                      <:before_button>
+                        <.recurring_charge order={@order} fee={price(@order, @delivery_quote).fee} />
+                        <p class="text-base-content/80 text-sm" data-testid="terms-acceptance">
+                          {~t"By placing your order you accept the"}
+                          <a href={~q"/#{language}/terms"} target="_blank" class="link-underline-static-body">{~t"terms of sale"}</a>.
+                        </p>
+                      </:before_button>
+                      {~t"Pay"} {Edenflowers.Format.currency(@order.stripe_amount, @order.locale)}
+                    </.stripe_form>
+                  </div>
                 </.checkout_step>
               </.steps>
             </div>
@@ -638,6 +669,25 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     {:noreply, reload_order(socket)}
   end
 
+  # Applying and clearing broadcast line_item:changed, which reloads the order.
+  def handle_event("apply_gift_voucher", %{"gift_voucher" => %{"code" => code}}, socket) do
+    case Orders.add_gift_voucher_with_code(socket.assigns.order, code, actor: actor(socket)) do
+      {:ok, _order} ->
+        {:noreply, socket |> assign(gift_voucher_error: nil) |> Analytics.track("Gift voucher applied")}
+
+      {:error, error} ->
+        {:noreply,
+         socket
+         |> assign(gift_voucher_error: EdenflowersWeb.GiftVoucherField.error_message(error))
+         |> Analytics.track("Gift voucher rejected")}
+    end
+  end
+
+  def handle_event("clear_gift_voucher", _params, socket) do
+    Orders.clear_gift_voucher!(socket.assigns.order, actor: actor(socket))
+    {:noreply, socket}
+  end
+
   def handle_event("stripe:error", %{"message" => message, "details" => details}, socket) do
     Logger.error("Stripe client error for order #{socket.assigns.order.id}: #{message}: #{inspect(details)}")
 
@@ -877,6 +927,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # amount. A retry after a declined card reuses it, at the current total.
   defp pay(%{assigns: %{order: order}} = socket) do
     case Orders.prepare_checkout_payment(order.id, actor: actor(socket)) do
+      # Its gift voucher paid it all, and it's placed: on to the order, as Stripe would send them.
+      {:ok, %{client_secret: nil}} ->
+        {:noreply, redirect(socket, to: ~p"/checkout/complete/#{order.id}")}
+
       {:ok, %{payable: %{payment_intent_id: payment_intent_id}, client_secret: client_secret}} ->
         {:noreply,
          socket

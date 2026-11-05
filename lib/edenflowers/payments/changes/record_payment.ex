@@ -28,6 +28,7 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
     :amount_paid,
     :amount_held,
     :paid_outside_stripe,
+    :paid_by_voucher,
     :balance,
     :refunded?,
     :settled?,
@@ -52,6 +53,7 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
             payment_intent_id: Map.get(changeset.arguments, :payment_intent_id),
             stripe_refund_id: Map.get(changeset.arguments, :stripe_refund_id),
             reverses_payment_id: Map.get(changeset.arguments, :reverses_payment_id),
+            gift_voucher_id: Map.get(changeset.arguments, :gift_voucher_id),
             goodwill: goodwill,
             note: Map.get(changeset.arguments, :note)
           })
@@ -65,10 +67,11 @@ defmodule Edenflowers.Payments.Changes.RecordPayment do
     end)
   end
 
-  defp reload(%Order{} = order),
+  @doc "Reloads what a new payment changed on an order or booking, so the caller doesn't read stale money."
+  def reload(%Order{} = order),
     do: Ash.load(order, [:payment_status | @payable_fields], authorize?: false, reuse_values?: false)
 
-  defp reload(registration), do: Ash.load(registration, @payable_fields, authorize?: false, reuse_values?: false)
+  def reload(registration), do: Ash.load(registration, @payable_fields, authorize?: false, reuse_values?: false)
 
   # A refund isn't something the customer paid with.
   defp paid_with(changeset, :stripe) do

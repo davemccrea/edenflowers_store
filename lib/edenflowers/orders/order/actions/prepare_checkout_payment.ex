@@ -8,9 +8,14 @@ defmodule Edenflowers.Orders.Order.Actions.PrepareCheckoutPayment do
 
   The actor decides the saved cards, so it must be the customer, or nil for a
   guest.
+
+  A cart its Gift voucher pays for in full has nothing for Stripe: it's
+  placed here, and the result has no client secret.
   """
 
   use Ash.Resource.Actions.Implementation
+
+  import Edenflowers.Actors
 
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
@@ -27,9 +32,21 @@ defmodule Edenflowers.Orders.Order.Actions.PrepareCheckoutPayment do
              load: [:checkout_ready?, line_items: [:over_stock?, :product_variant]]
            ),
          :ok <- payable(order),
-         :ok <- fulfillment_available(order),
-         {:ok, order, client_secret} <- Payments.prepare(order, context.actor) do
-      {:ok, %{payable: order, client_secret: client_secret}}
+         :ok <- fulfillment_available(order) do
+      pay(order, context.actor)
+    end
+  end
+
+  # Nothing left for Stripe: the voucher pays it all, and it's placed now.
+  defp pay(%{stripe_amount: stripe_amount} = order, actor) do
+    if Decimal.positive?(stripe_amount) do
+      with {:ok, order, client_secret} <- Payments.prepare(order, actor) do
+        {:ok, %{payable: order, client_secret: client_secret}}
+      end
+    else
+      with {:ok, order} <- Orders.place_paid_by_voucher(order, actor: system_actor()) do
+        {:ok, %{payable: order, client_secret: nil}}
+      end
     end
   end
 

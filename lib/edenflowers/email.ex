@@ -445,7 +445,8 @@ defmodule Edenflowers.Email do
   the cancellation charge Jennie keeps and what was refunded.
   Expects it read with `:for_customer_email`. `money` is
   `Payments.Changes.Cancel.money/2`: the `charge`, what went back through
-  Stripe (`refunded`), what Jennie still hands back herself (`to_return`)
+  Stripe (`refunded`), what went back onto a Gift voucher
+  (`back_on_voucher`), what Jennie still hands back herself (`to_return`)
   and what of the charge is still to pay (`to_collect`).
   """
   def cancelled(%Order{} = order, money) do
@@ -457,6 +458,7 @@ defmodule Edenflowers.Email do
           order: order,
           charge: money.charge,
           refunded: money.refunded,
+          back_on_voucher: money.back_on_voucher,
           to_return: money.to_return,
           to_collect: money.to_collect,
           refunded_to: refunded_to(order.payments),
@@ -476,6 +478,7 @@ defmodule Edenflowers.Email do
           registration: registration,
           charge: money.charge,
           refunded: money.refunded,
+          back_on_voucher: money.back_on_voucher,
           to_return: money.to_return,
           to_collect: money.to_collect,
           refunded_to: refunded_to(registration.payments),
@@ -499,6 +502,7 @@ defmodule Edenflowers.Email do
         Templates.cancellation_confirmed(%{
           order: order,
           refunded: money.refunded,
+          back_on_voucher: money.back_on_voucher,
           refunded_to: refunded_to(order.payments),
           format_currency: &Format.currency(&1, order.locale),
           format_date: &Format.weekday_date(&1, order.locale)

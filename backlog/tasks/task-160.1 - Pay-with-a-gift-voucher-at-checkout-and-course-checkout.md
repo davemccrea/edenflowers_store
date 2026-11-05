@@ -1,9 +1,10 @@
 ---
 id: TASK-160.1
 title: Pay with a gift voucher at checkout and course checkout
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-01 17:32'
+updated_date: '2026-11-05 10:43'
 labels: []
 dependencies: []
 parent_task_id: TASK-160
@@ -25,8 +26,14 @@ ordinal: 307000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A voucher pays part or all of an Online Order or course booking at checkout
-- [ ] #2 A purchase fully paid by voucher is placed without Stripe
-- [ ] #3 A cancelled or refunded purchase puts its voucher part back onto the voucher
-- [ ] #4 Voucher lookups are rate-limited
+- [x] #1 A voucher pays part or all of an Online Order or course booking at checkout
+- [x] #2 A purchase fully paid by voucher is placed without Stripe
+- [x] #3 A cancelled or refunded purchase puts its voucher part back onto the voucher
+- [x] #4 Voucher lookups are rate-limited
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-05: At checkout the voucher attaches to the cart or booking when the code is entered (as a promo does), and Stripe charges only the rest. The :voucher payment is recorded when the order is placed or the booking confirmed, with the voucher row locked. Fully covered purchases are placed the same way without Stripe. A voucher spent elsewhere in the meantime leaves the gap as a Balance (ADR 0002). Pay-from-voucher on committed purchases (admin, subscriptions) records min(what's left, Balance) directly.
+<!-- SECTION:NOTES:END -->

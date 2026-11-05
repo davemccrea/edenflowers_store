@@ -48,6 +48,13 @@ defmodule Edenflowers.Payments.Payable do
     end
   end
 
+  relationships do
+    belongs_to :gift_voucher, Edenflowers.Payments.GiftVoucher do
+      description "The Gift voucher the customer entered at checkout. It pays when the purchase is placed or " <>
+                    "confirmed; until then it only lowers what Stripe is asked to charge."
+    end
+  end
+
   actions do
     action :prepare_link_payment, :map do
       description "Readies the PaymentIntent behind a Payment Link for what is owed now and returns its client " <>
@@ -103,6 +110,7 @@ defmodule Edenflowers.Payments.Payable do
         description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
       validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
+      validate argument_does_not_equal(:payment_method, :voucher), message: "is paid from a Gift voucher's code"
       validate Validations.Recordable
       # A payment link charges the balance this changes; visiting it again
       # opens a PaymentIntent for whatever is left.
@@ -131,6 +139,7 @@ defmodule Edenflowers.Payments.Payable do
       argument :refund, :decimal, public?: false
       argument :owed_back, :decimal, public?: false
       argument :goodwill_refund, :decimal, public?: false
+      argument :gift_voucher_id, :uuid, public?: false
 
       validate Validations.Refundable
       change Changes.Refund
@@ -201,6 +210,34 @@ defmodule Edenflowers.Payments.Payable do
                     "paid, only money still held above it is owed back."
     end
 
+    # Stripe refuses to charge less than 0.50 €, so a voucher that nearly
+    # covers a purchase leaves that much for the card.
+    calculate :voucher_amount,
+              :decimal,
+              expr(
+                cond do
+                  is_nil(gift_voucher_id) or not gift_voucher.spendable? -> 0
+                  gift_voucher.remaining >= total_due -> total_due
+                  total_due - gift_voucher.remaining >= ^Decimal.new("0.50") -> gift_voucher.remaining
+                  total_due > ^Decimal.new("0.50") -> total_due - ^Decimal.new("0.50")
+                  true -> 0
+                end
+              ) do
+      description "At checkout, what the Gift voucher entered will pay in euros: all of the Total due if what's " <>
+                    "left covers it, else what's left, short of Stripe's 0.50 € minimum for the card. 0 with no " <>
+                    "voucher, or one expired or used up."
+    end
+
+    calculate :voucher_left_after, :decimal, expr(gift_voucher.remaining - voucher_amount) do
+      description "At checkout, what will be left on the Gift voucher entered once it has paid for this, in " <>
+                    "euros. Nil with no voucher."
+    end
+
+    calculate :stripe_amount, :decimal, expr(total_due - voucher_amount) do
+      description "At checkout, what Stripe is asked to charge in euros: the Total due less what the Gift voucher " <>
+                    "pays. 0 when the voucher covers it all, and it's placed without Stripe."
+    end
+
     calculate :refunded?,
               :boolean,
               expr(
@@ -234,8 +271,9 @@ defmodule Edenflowers.Payments.Payable do
     end
 
     calculate :refund_methods, {:array, Edenflowers.Payments.PaymentMethod}, Calculations.RefundMethods do
-      description "The methods Jennie can hand money back by: Stripe while money paid through it is held, and " <>
-                    "any other method while money paid outside it is. Empty when nothing is held."
+      description "The methods Jennie can hand money back by: Stripe while money paid through it is held, the " <>
+                    "Gift voucher while money it paid is, and any other method while money paid in person is. " <>
+                    "Empty when nothing is held."
     end
 
     calculate :default_refund_method, Edenflowers.Payments.PaymentMethod, Calculations.DefaultRefundMethod do
@@ -259,8 +297,16 @@ defmodule Edenflowers.Payments.Payable do
     end
 
     sum :paid_outside_stripe, :payments, :amount do
-      description "Money in euros held from methods other than Stripe, after refunds made the same way."
-      filter expr(method != :stripe)
+      description "Money in euros held from what Jennie took in person, after refunds made the same way: not " <>
+                    "Stripe, and not a Gift voucher, whose money only ever goes back onto the voucher."
+
+      filter expr(method not in [:stripe, :voucher])
+      default Decimal.new("0")
+    end
+
+    sum :paid_by_voucher, :payments, :amount do
+      description "Money in euros held from Gift vouchers, after what was handed back onto them."
+      filter expr(method == :voucher)
       default Decimal.new("0")
     end
 

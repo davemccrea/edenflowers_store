@@ -2,8 +2,8 @@ defmodule Edenflowers.Payments.Validations.Refundable do
   @moduledoc """
   What Jennie can hand back: on something placed or confirmed, cancelled or
   not, with nothing left to collect, up to the money still held, and by
-  Stripe only what was paid through it, by another method only what was
-  paid outside it.
+  Stripe only what was paid through it, onto the Gift voucher only what it
+  paid, by another method only what was paid in person.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
@@ -23,7 +23,15 @@ defmodule Edenflowers.Payments.Validations.Refundable do
     record =
       Ash.load!(
         record,
-        [:committed?, :balance, :amount_held, :paid_outside_stripe, :paid_through_stripe, :refund_methods],
+        [
+          :committed?,
+          :balance,
+          :amount_held,
+          :paid_outside_stripe,
+          :paid_through_stripe,
+          :paid_by_voucher,
+          :refund_methods
+        ],
         authorize?: false,
         reuse_values?: false
       )
@@ -47,8 +55,10 @@ defmodule Edenflowers.Payments.Validations.Refundable do
   end
 
   defp held_by(record, :stripe), do: record.paid_through_stripe
+  defp held_by(record, :voucher), do: record.paid_by_voucher
   defp held_by(record, _method), do: record.paid_outside_stripe
 
   defp over_held_by(:stripe), do: ~t"That's more than was paid through Stripe."
+  defp over_held_by(:voucher), do: ~t"That's more than the gift voucher paid."
   defp over_held_by(_method), do: ~t"That's more than was paid outside Stripe. Refund the rest with Stripe."
 end

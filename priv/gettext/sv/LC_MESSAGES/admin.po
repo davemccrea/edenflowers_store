@@ -4905,3 +4905,13 @@ msgstr "Inget att återbetala."
 #, elixir-autogen, elixir-format
 msgid "Paid %{paid} of %{total}."
 msgstr "Betalt %{paid} av %{total}."
+
+#: lib/edenflowers_web/features/admin/order_log.ex:43
+#, elixir-autogen, elixir-format
+msgid "Gift voucher"
+msgstr "Presentkort"
+
+#: lib/edenflowers/payments/validations/refundable.ex:62
+#, elixir-autogen, elixir-format
+msgid "That's more than the gift voucher paid."
+msgstr "Det är mer än presentkortet betalade."

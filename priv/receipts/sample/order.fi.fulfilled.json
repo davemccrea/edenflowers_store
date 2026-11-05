@@ -95,7 +95,8 @@
     "method-mobilepay": "MobilePay",
     "method-klarna": "Klarna",
     "method-cash": "Käteinen",
-    "method-zervant": "Tilisiirto"
+    "method-zervant": "Tilisiirto",
+    "method-voucher": "Lahjakortti"
   },
   "seller": {
     "name": "Jennie McCrea",

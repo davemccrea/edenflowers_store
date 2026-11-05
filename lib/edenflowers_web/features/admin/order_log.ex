@@ -40,6 +40,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   def payment_method_label(:mobilepay), do: ~t"MobilePay"
   def payment_method_label(:cash), do: ~t"Cash"
   def payment_method_label(:zervant), do: ~t"Bank transfer"
+  def payment_method_label(:voucher), do: ~t"Gift voucher"
   def payment_method_label(_method), do: ~t"Unknown"
 
   defp payment_entry(payment, locale) do
