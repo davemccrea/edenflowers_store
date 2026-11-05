@@ -184,7 +184,7 @@ print-cards name count:
     codes="tmp/codes-$slug.txt"
     ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec -T app /app/bin/edenflowers rpc 'Edenflowers.Pricing.create_pass_it_on_batch!(\"{{ name }}\", {{ count }}, actor: Edenflowers.Actors.system_actor()) |> Enum.each(&IO.puts/1)'" > "$codes"
     [ "$(wc -l < "$codes" | tr -d ' ')" = "{{ count }}" ] || { echo "Expected {{ count }} codes in $codes, see what came back there" >&2; exit 1; }
-    mix pass_it_on_cards "$codes" "tmp/pass-it-on-$slug.pdf"
+    mix pass_it_on_cards "$codes" "tmp/cards-$slug.pdf"
 
 # Pull and restart production's other services (cloudflared, imgproxy, umami, papra). Restarting cloudflared drops the site for a few seconds
 [group('production')]

@@ -5,7 +5,7 @@ defmodule Mix.Tasks.PassItOnCards do
 
   The codes are made on production, where they'll be used, and the PDF is
   rendered locally. `just print-cards "Skicka vidare 2026-11" 100` does both
-  (after `just backup`) and writes `tmp/pass-it-on-skicka-vidare-2026-11.pdf`
+  (after `just backup`) and writes `tmp/cards-skicka-vidare-2026-11.pdf`
   for the print shop. Run this task by hand only to re-render a batch from its
   saved codes file, e.g. `tmp/codes-skicka-vidare-2026-11.txt`.
 
