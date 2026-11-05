@@ -524,7 +524,7 @@ msgstr ""
 msgid "Cart is empty"
 msgstr ""
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:33
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:40
 #, elixir-autogen, elixir-format
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr ""
@@ -1580,7 +1580,7 @@ msgstr ""
 msgid "Increment"
 msgstr ""
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:21
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:28
 #, elixir-autogen, elixir-format
 msgid "Invalid code"
 msgstr ""
@@ -4152,4 +4152,9 @@ msgstr ""
 #: lib/edenflowers/courses/course.ex:203
 #, elixir-autogen, elixir-format
 msgid "Cancel at least %{days} days before the course at no cost."
+msgstr ""
+
+#: lib/edenflowers_web/plugs/apply_link_promotion.ex:22
+#, elixir-autogen, elixir-format
+msgid "Promo code %{code} is in your cart."
 msgstr ""

@@ -217,7 +217,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     # Guest checkout: creating an order does not require authentication.
-    policy action(:create_for_checkout) do
+    policy action([:create_for_checkout, :open_cart_with_code]) do
       authorize_if always()
     end
 
@@ -257,6 +257,7 @@ defmodule Edenflowers.Orders.Order do
     publish_all :update, ["admin", "orders"], filter: fn %{data: order} -> order.state == :placed end
     publish_all :update, ["order", "changed", :id], filter: fn %{data: order} -> order.state == :placed end
     publish :add_promotion_with_code, ["line_item", "changed", :id]
+    publish :add_promotion_from_link, ["line_item", "changed", :id]
     publish :clear_promotion, ["line_item", "changed", :id]
   end
 

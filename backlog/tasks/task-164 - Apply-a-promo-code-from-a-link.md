@@ -1,10 +1,10 @@
 ---
 id: TASK-164
 title: Apply a promo code from a link
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-01 16:22'
-updated_date: '2026-11-05 08:40'
+updated_date: '2026-11-05 11:25'
 labels:
   - customers
 dependencies: []
@@ -32,10 +32,16 @@ Open for implementation: where the code is held before a cart exists (session), 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Opening a storefront link with ?code= applies a usable code to the visitor's cart
-- [ ] #2 A code already on the cart is kept
-- [ ] #3 An unusable code fails quietly, with no error page
+- [x] #1 Opening a storefront link with ?code= applies a usable code to the visitor's cart
+- [x] #2 A code already on the cart is kept
+- [x] #3 An unusable code fails quietly, with no error page
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implemented 2026-11-05: any storefront request with ?code= opens the browser's cart (if needed) and puts a usable code on it (Plugs.ApplyLinkPromotion -> Order :open_cart_with_code), rather than holding it in the session, which LiveViews can't clear. The minimum cart total isn't checked on a link: the cart says 'spend at least' until it's reached. An empty cart holding a code is purged after 30 days instead of 1. A flash confirms the code; Umami's 'Promo code applied' fires once per browser per code from PutOrder.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 
