@@ -93,7 +93,7 @@ defmodule Edenflowers.Payments.GiftVoucher do
     uuid_primary_key :id
 
     attribute :code, :string do
-      description "What the holder enters to spend it: 12 characters, stored without the dashes it's printed with."
+      description "What the holder enters to spend it: 16 digits, stored without the spaces it's printed with."
       allow_nil? false
       sensitive? true
     end
@@ -190,6 +190,6 @@ defmodule Edenflowers.Payments.GiftVoucher do
     |> String.replace(~r/[^0-9]/, "")
   end
 
-  @doc "A code as it's printed: groups of four, easier to read out and type."
-  def format_code(code), do: code |> String.graphemes() |> Enum.chunk_every(4) |> Enum.join("-")
+  @doc "A code as it's printed: groups of four, like a card number. The checkout field spaces it the same way."
+  def format_code(code), do: code |> String.graphemes() |> Enum.chunk_every(4) |> Enum.join(" ")
 end

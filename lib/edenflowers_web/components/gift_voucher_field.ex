@@ -40,6 +40,7 @@ defmodule EdenflowersWeb.GiftVoucherField do
           aria-label={~t"Gift voucher code"}
           autocomplete="off"
           inputmode="numeric"
+          phx-hook="VoucherCode"
           spellcheck="false"
           class="tabular-nums"
         />
