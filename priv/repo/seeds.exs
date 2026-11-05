@@ -270,6 +270,10 @@ for attrs <- [
   |> Ash.create!(authorize?: false)
 end
 
+# The other sources the admin list filters by.
+Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare 2026-11", 3, actor: Edenflowers.Actors.system_actor())
+Edenflowers.Pricing.create_newsletter_promotion!(authorize?: false)
+
 # One per confidence level and payment state: unpaid, overdue and paid. The
 # last is from a vendor without a VAT number.
 for {document_id, vendor, vat, date, total, vat_amount, currency, category, description, confidence, paid_on, due_on} <-

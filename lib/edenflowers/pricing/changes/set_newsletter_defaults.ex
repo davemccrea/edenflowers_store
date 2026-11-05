@@ -11,6 +11,7 @@ defmodule Edenflowers.Pricing.Changes.SetNewsletterDefaults do
     offer = Edenflowers.Pricing.get_welcome_offer!(authorize?: false)
 
     Ash.Changeset.force_change_attributes(changeset,
+      kind: :newsletter,
       code: Edenflowers.Pricing.Promotion.generate_code(),
       name: "Newsletter Welcome",
       discount_rate: offer.discount_rate,

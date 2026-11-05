@@ -4,6 +4,7 @@ title: Start a pass-it-on code's 30 days at its first scan
 status: ready-for-agent
 assignee: []
 created_date: '2026-11-05 09:15'
+updated_date: '2026-11-05 10:47'
 labels: []
 dependencies: []
 parent_task_id: TASK-165
@@ -27,3 +28,16 @@ Decisions (grilled 2026-11-05):
 - [ ] #1 A card code's first customer scan or apply sets its expiry 30 days later; admin visits don't
 - [ ] #2 The page shows the valid-until date, and an expired code gets no discount
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-05 10:47
+
+---
+
+2026-11-05: Find card codes by Promotion kind pass_it_on (added in TASK-165), not by their batch name.
+
+---
+<!-- COMMENTS:END -->

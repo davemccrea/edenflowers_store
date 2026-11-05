@@ -123,6 +123,26 @@ defmodule Edenflowers.Pricing.PromotionTest do
     end
   end
 
+  describe "pass-it-on batches" do
+    test "make distinct one-use 15% codes that work on any cart, under the batch name" do
+      codes = Pricing.create_pass_it_on_batch!("Skicka vidare 2026-11", 3, actor: Edenflowers.Actors.system_actor())
+
+      assert length(Enum.uniq(codes)) == 3
+
+      for code <- codes do
+        promotion = Pricing.get_promotion_by_code!(code)
+        assert promotion.name == "Skicka vidare 2026-11"
+        assert Decimal.equal?(promotion.discount_rate, "0.15")
+        assert Decimal.equal?(promotion.minimum_cart_total, 0)
+        assert promotion.usage_limit == 1
+      end
+    end
+
+    test "can't be made by a customer" do
+      assert {:error, %Ash.Error.Forbidden{}} = Pricing.create_pass_it_on_batch("Skicka vidare", 1, actor: nil)
+    end
+  end
+
   describe "Promotion usage tracking" do
     import Generator
 
