@@ -12,6 +12,7 @@ defmodule Generator do
   alias Edenflowers.Orders.LineItem
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Subscription
+  alias Edenflowers.Payments.GiftVoucher
   alias Edenflowers.Pricing.Promotion
   alias Edenflowers.Pricing.TaxRate
 
@@ -245,7 +246,7 @@ defmodule Generator do
 
     order = generate(order(attrs))
     generate(line_item(order_id: order.id, product_variant_id: product_variant_id, quantity: 1))
-    Ash.load!(order, :grand_total, authorize?: false)
+    Ash.load!(order, [:grand_total, :stripe_amount], authorize?: false)
   end
 
   # seed_generator because a Subscription is only ever created by checkout.
@@ -267,6 +268,29 @@ defmodule Generator do
         locale: "en",
         stripe_customer_id: "cus_ada",
         stripe_payment_method_id: "pm_card"
+      },
+      overrides: opts,
+      authorize?: false
+    )
+  end
+
+  @doc """
+  A Gift voucher for 50.00, valid a year, sold on a line of a placed order of
+  its own. Its code is in `code`, as typed.
+  """
+  def gift_voucher(opts \\ []) do
+    opts =
+      Keyword.put_new_lazy(opts, :line_item_id, fn ->
+        order = generate(order(state: :placed))
+        variant = generate(product_variant(product_id: generate(product()).id))
+        generate(line_item(order_id: order.id, product_variant_id: variant.id)).id
+      end)
+
+    seed_generator(
+      %GiftVoucher{
+        code: StreamData.repeatedly(&GiftVoucher.generate_code/0),
+        amount: Decimal.new("50.00"),
+        expires_on: GiftVoucher.default_expiry()
       },
       overrides: opts,
       authorize?: false

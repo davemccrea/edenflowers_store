@@ -44,6 +44,9 @@ defmodule Edenflowers.Orders do
       define :add_promotion_from_link, action: :add_promotion_from_link, args: [:code]
       define :open_cart_with_code, action: :open_cart_with_code, args: [:visitor_id, :code]
       define :clear_promotion, action: :clear_promotion
+      define :add_gift_voucher_with_code, action: :add_gift_voucher_with_code, args: [:code]
+      define :clear_gift_voucher, action: :clear_gift_voucher
+      define :place_paid_by_voucher, action: :place_paid_by_voucher
       define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
       define :set_gift, action: :set_gift, args: [:gift]
       define :update_locale, action: :update_locale, args: [:locale]

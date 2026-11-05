@@ -22,6 +22,11 @@ defmodule Edenflowers.Payments do
   resources do
     resource Edenflowers.Payments.Payment
 
+    resource Edenflowers.Payments.GiftVoucher do
+      define :create_gift_voucher, action: :create
+      define :get_gift_voucher_by_code, action: :by_code, args: [:code]
+    end
+
     resource Edenflowers.Payments.Invoice do
       define :search_invoice_customers, action: :previous_customers, args: [{:optional, :term}]
       define :find_invoice_customers, action: :find_customers, args: [{:optional, :term}]
@@ -75,8 +80,8 @@ defmodule Edenflowers.Payments do
 
   @doc """
   Returns the PaymentIntent client secret for an order or course booking,
-  creating the PaymentIntent on first call. An order needs `balance` loaded,
-  or `grand_total` at checkout, before anything has been paid.
+  creating the PaymentIntent on first call. It needs `balance` loaded, or
+  `stripe_amount` at checkout, before anything has been paid.
   """
   def setup(%{payment_intent_id: nil} = payable, actor) do
     case create_payment_intent(payable, actor) do
@@ -616,11 +621,11 @@ defmodule Edenflowers.Payments do
   defp metadata_key(%Order{}), do: "order_id"
   defp metadata_key(%CourseRegistration{}), do: "course_registration_id"
 
-  # Checkout loads only the price; nothing is paid yet, so it is the balance.
   # A payment link loads the balance, so it charges what is still owed.
+  # Checkout loads what Stripe is to charge: the price less what a Gift
+  # voucher will pay once it's placed.
   defp expected_amount(%{balance: %Decimal{} = balance}), do: balance
-  defp expected_amount(%Order{grand_total: grand_total}), do: grand_total
-  defp expected_amount(%CourseRegistration{amount: amount}), do: amount
+  defp expected_amount(%{stripe_amount: %Decimal{} = stripe_amount}), do: stripe_amount
 
   # A recorded PaymentIntent is a redelivery. Otherwise a checkout payment
   # places the order or confirms the booking, and a payment link payment only

@@ -63,6 +63,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
 
     transitions do
       transition(:confirm_payment, from: :pending, to: :confirmed)
+      transition(:confirm_paid_by_voucher, from: :pending, to: :confirmed)
       transition(:cancel, from: :confirmed, to: :cancelled)
     end
   end
@@ -77,6 +78,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                      :add_payment_intent_id,
                      :mark_payment_cancelled,
                      :confirm_payment,
+                     :confirm_paid_by_voucher,
                      :record_link_payment,
                      :record_stripe_refund,
                      :send_confirmation_email,
@@ -95,8 +97,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     end
 
     # A checkout is reached by its unguessable id, as the bookings page is,
-    # and :revise only touches one still unpaid.
-    policy action([:register, :revise]) do
+    # and the updates only touch one still unpaid.
+    policy action([:register, :revise, :add_gift_voucher_with_code, :clear_gift_voucher]) do
       authorize_if always()
     end
 
@@ -118,6 +120,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     module EdenflowersWeb.Endpoint
 
     publish :confirm_payment, ["course_registration", "paid", :id]
+    publish :confirm_paid_by_voucher, ["course_registration", "paid", :id]
     publish :record_link_payment, ["course_registration", "paid", :id]
     # Refreshes the admin's Courses and Overview pages, which have no pull to refresh.
     publish_all :create, ["admin", "bookings"]

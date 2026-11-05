@@ -41,9 +41,14 @@ defmodule Edenflowers.Payments.Payment do
       check_constraint :order_id, "payments_one_parent",
         check: "num_nonnulls(order_id, course_registration_id, invoice_id) = 1",
         message: "must belong to exactly one order, course registration or invoice"
+
+      check_constraint :gift_voucher_id, "payments_voucher_names_its_voucher",
+        check: "(method = 'voucher') = (gift_voucher_id IS NOT NULL)",
+        message: "must name its gift voucher, and only a voucher payment can"
     end
 
     references do
+      reference :gift_voucher, on_delete: :restrict
       reference :order, on_delete: :restrict
       reference :course_registration, on_delete: :restrict
       reference :reverses_payment, on_delete: :delete
@@ -73,7 +78,8 @@ defmodule Edenflowers.Payments.Payment do
         :note,
         :invoice_id,
         :paid_at,
-        :bank_transaction_id
+        :bank_transaction_id,
+        :gift_voucher_id
       ]
 
       validate Edenflowers.Payments.Validations.InvoicePayment, before_action?: true
@@ -133,6 +139,10 @@ defmodule Edenflowers.Payments.Payment do
       description "The standalone invoice this bank transfer or reversal belongs to; never also a purchase."
     end
 
+    belongs_to :gift_voucher, Edenflowers.Payments.GiftVoucher do
+      description "On a :voucher payment, the Gift voucher it was paid from or handed back onto. Nil otherwise."
+    end
+
     has_one :reversal, __MODULE__ do
       description "The Undo that took this payment back, or nil."
       destination_attribute :reverses_payment_id
@@ -142,9 +152,9 @@ defmodule Edenflowers.Payments.Payment do
   calculations do
     calculate :undoable?,
               :boolean,
-              expr(method != :stripe and is_nil(reverses_payment_id) and not exists(reversal, true)) do
-      description "Whether Jennie can Undo it: one she recorded, not a Stripe one, that is neither an Undo " <>
-                    "itself nor already undone."
+              expr(method not in [:stripe, :voucher] and is_nil(reverses_payment_id) and not exists(reversal, true)) do
+      description "Whether Jennie can Undo it: one she recorded, not a Stripe or Gift voucher one, that is " <>
+                    "neither an Undo itself nor already undone."
     end
   end
 

@@ -6,6 +6,8 @@
 
 <% end %><%= if Decimal.positive?(@refunded) do %><%= refund_line(%{amount: @refunded, how: @refunded_to, format_currency: @format_currency}) %>
 
+<% end %><%= if Decimal.positive?(@back_on_voucher) do %><%= dgettext("emails", "I've put %{amount} back on your gift voucher.", amount: @format_currency.(@back_on_voucher)) %>
+
 <% end %><%= if Decimal.positive?(@to_return) do %><%= if Decimal.positive?(@refunded) do %><%= dgettext("emails", "I'll pay back the other %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% else %><%= dgettext("emails", "I'll pay back %{amount} the same way you paid it.", amount: @format_currency.(@to_return)) %><% end %>
 
 <% end %><%= dgettext("emails", "If you have any questions, just reply to this email.") %>

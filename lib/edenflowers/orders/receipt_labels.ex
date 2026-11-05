@@ -40,7 +40,8 @@ defmodule Edenflowers.Orders.ReceiptLabels do
         "method-mobilepay" => dgettext("receipts", "MobilePay"),
         "method-klarna" => dgettext("receipts", "Klarna"),
         "method-cash" => dgettext("receipts", "Cash"),
-        "method-zervant" => dgettext("receipts", "Bank transfer")
+        "method-zervant" => dgettext("receipts", "Bank transfer"),
+        "method-voucher" => dgettext("receipts", "Gift voucher")
       }
     end)
   end

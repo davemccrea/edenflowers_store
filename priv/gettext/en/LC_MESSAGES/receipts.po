@@ -135,7 +135,7 @@ msgstr ""
 msgid "Qty"
 msgstr ""
 
-#: lib/edenflowers/orders/receipt_labels.ex:60
+#: lib/edenflowers/orders/receipt_labels.ex:61
 #, elixir-autogen, elixir-format
 msgid "Questions or changes? Reply to your confirmation email and Jennie will get back to you."
 msgstr ""
@@ -272,7 +272,7 @@ msgstr ""
 msgid "Late payment interest"
 msgstr ""
 
-#: lib/edenflowers/orders/receipt_labels.ex:68
+#: lib/edenflowers/orders/receipt_labels.ex:69
 #, elixir-autogen, elixir-format
 msgid "Questions? Just reply to the email this came with, or write to info@edenflowers.fi."
 msgstr ""
@@ -311,4 +311,9 @@ msgstr ""
 #: lib/edenflowers/payments/changes/prefill_from_order.ex:69
 #, elixir-autogen, elixir-format
 msgid "Order #%{number}"
+msgstr ""
+
+#: lib/edenflowers/orders/receipt_labels.ex:44
+#, elixir-autogen, elixir-format
+msgid "Gift voucher"
 msgstr ""

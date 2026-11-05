@@ -135,7 +135,7 @@ msgstr "Noutomaksu"
 msgid "Qty"
 msgstr "Määrä"
 
-#: lib/edenflowers/orders/receipt_labels.ex:60
+#: lib/edenflowers/orders/receipt_labels.ex:61
 #, elixir-autogen, elixir-format
 msgid "Questions or changes? Reply to your confirmation email and Jennie will get back to you."
 msgstr "Kysymyksiä tai muutoksia? Vastaa vahvistussähköpostiin ja Jennie palaa asiaan."
@@ -272,7 +272,7 @@ msgstr "Syy"
 msgid "Late payment interest"
 msgstr "Viivästyskorko"
 
-#: lib/edenflowers/orders/receipt_labels.ex:68
+#: lib/edenflowers/orders/receipt_labels.ex:69
 #, elixir-autogen, elixir-format
 msgid "Questions? Just reply to the email this came with, or write to info@edenflowers.fi."
 msgstr "Kysyttävää? Vastaa sähköpostiin, jonka mukana sait kuitin, tai kirjoita osoitteeseen info@edenflowers.fi."
@@ -312,3 +312,8 @@ msgstr "Peruutusmaksu, tilaus #%{number}"
 #, elixir-autogen, elixir-format
 msgid "Order #%{number}"
 msgstr "Tilaus #%{number}"
+
+#: lib/edenflowers/orders/receipt_labels.ex:44
+#, elixir-autogen, elixir-format
+msgid "Gift voucher"
+msgstr "Lahjakortti"

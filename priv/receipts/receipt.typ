@@ -237,7 +237,7 @@
   // `method` is Stripe's payment method type or the in-person method. Stripe
   // can offer methods we have no label for, so those print as they come.
   let card-logos = ("visa", "mastercard", "amex")
-  let method-labels = ("card", "zettle", "mobilepay", "klarna", "cash", "zervant")
+  let method-labels = ("card", "zettle", "mobilepay", "klarna", "cash", "zervant", "voucher")
   let capitalized(name) = upper(name.first()) + name.slice(1).replace("_", " ")
   // The logo is sized to the cap height so a card row is no taller than the rest.
   let paid-with(payment) = if payment.card_brand in card-logos {

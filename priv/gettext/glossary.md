@@ -15,6 +15,7 @@ Unresolved terminology belongs in [the review queue](review-queue.md).
 | Value-added tax | moms | ALV | Working app terminology; receipt wording needs native/accounting review (R03). |
 | Swedish/Finnish shop address | Myrvägen 1 | Muurahaistie 1 | These name the same place. Align shop copy only, never customer-entered addresses (T09). |
 | Related information heading | Relaterad information | Lisätietoja | AI-reviewed correction T01; native approval outstanding. |
+| Gift voucher (prepaid money spent by code) | presentkort | lahjakortti | Agent wording, native approval outstanding. Never the greeting card that goes with flowers. |
 
 Bouquet size names, an admin-entered customer order, fulfillment states and
 wedding product/price terms remain decisions for Jennie and native editors

@@ -18,6 +18,7 @@ defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
       (Payments.parent_key(record) |> to_string()) => record.id,
       "charge" => Decimal.to_string(money.charge),
       "refunded_amount" => Decimal.to_string(money.refunded),
+      "back_on_voucher" => Decimal.to_string(money.back_on_voucher),
       "to_return" => Decimal.to_string(money.to_return),
       "to_collect" => Decimal.to_string(money.to_collect),
       "cancelled_by" => to_string(cancelled_by),
@@ -29,10 +30,11 @@ defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
   @impl true
   def perform(%Oban.Job{args: args}) do
     # Jobs queued before the cancellation charge carry no charge or to_collect,
-    # and before invoices nothing about them.
+    # and before Gift vouchers no back_on_voucher.
     money = %{
       charge: Decimal.new(args["charge"] || "0"),
       refunded: Decimal.new(args["refunded_amount"]),
+      back_on_voucher: Decimal.new(args["back_on_voucher"] || "0"),
       to_return: Decimal.new(args["to_return"]),
       to_collect: Decimal.new(args["to_collect"] || "0")
     }

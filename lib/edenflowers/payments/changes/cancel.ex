@@ -12,8 +12,9 @@ defmodule Edenflowers.Payments.Changes.Cancel do
 
   The refund happens before the cancel commits, so it is never cancelled
   while Stripe still holds money it should have handed back. Card payments
-  go back through Stripe first; whatever is left was paid in person, and
-  stays as a balance for Jennie to hand back. A refund Stripe refuses stops
+  go back through Stripe first, then what Gift vouchers paid goes back onto
+  them; whatever is left was paid in person, and stays as a balance for
+  Jennie to hand back. A refund Stripe refuses stops
   the cancel. As the refund is whatever is still held above the charge, a
   retry after Stripe refunded but the cancel failed refunds nothing twice.
   The cancelled email goes to `customer_email`, if there is one, unless the
@@ -36,6 +37,8 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   alias Edenflowers.Format
   alias Edenflowers.Payments
   alias Edenflowers.Payments.Changes.CancelOpenPaymentIntent
+  alias Edenflowers.Payments.Changes.RecordPayment
+  alias Edenflowers.Payments.Payment
   alias Edenflowers.Payments.Workers.SendCancelledEmail
 
   @impl true
@@ -48,7 +51,32 @@ defmodule Edenflowers.Payments.Changes.Cancel do
     |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(Edits.from_changeset(changeset))})
     |> CancelOpenPaymentIntent.change([], context)
     |> Ash.Changeset.before_transaction(&refund(&1, cancelled_by))
+    |> Ash.Changeset.after_action(&put_back_on_vouchers/2)
     |> Ash.Changeset.after_action(&queue_email(&1, &2, cancelled_by))
+  end
+
+  # Onto the purchase's one Gift voucher. Unlike Stripe's refund, nothing
+  # outside can refuse this, so it's in the cancel's own transaction.
+  defp put_back_on_vouchers(changeset, record) do
+    with %Decimal{} = amount <- changeset.context[:back_on_voucher],
+         true <- Decimal.positive?(amount),
+         {:ok, _payment} <- record_voucher_refund(record, amount) do
+      RecordPayment.reload(record)
+    else
+      {:error, _error} = error -> error
+      _nothing_back -> {:ok, record}
+    end
+  end
+
+  defp record_voucher_refund(record, amount) do
+    Payment
+    |> Ash.Changeset.for_create(:record, %{
+      Payments.parent_key(record) => record.id,
+      amount: Decimal.negate(amount),
+      method: :voucher,
+      gift_voucher_id: record.gift_voucher_id
+    })
+    |> Ash.create(authorize?: false)
   end
 
   defp refund(changeset, cancelled_by) do
@@ -82,27 +110,32 @@ defmodule Edenflowers.Payments.Changes.Cancel do
       :amount_held,
       :amount_paid,
       :paid_through_stripe,
+      :paid_by_voucher,
       :default_cancellation_charge,
       :customer_email
     ]
 
   @doc """
   What keeping `charge` on cancelling means for the money: what goes back
-  through Stripe (`refunded`), what Jennie hands back herself (`to_return`)
-  and what of the charge is still to collect (`to_collect`). Paid above the
-  charge is refunded; a Goodwill refund already given counts as paid, as it
-  does for the Balance.
+  through Stripe (`refunded`), what goes back onto the Gift vouchers that
+  paid (`back_on_voucher`), what Jennie hands back herself (`to_return`) and
+  what of the charge is still to collect (`to_collect`). Paid above the
+  charge is refunded, the card's first; a Goodwill refund already given
+  counts as paid, as it does for the Balance.
 
   """
   def money(record, charge) do
     to_refund = Decimal.max(Decimal.sub(record.amount_held, charge), 0)
     refunded = Decimal.min(to_refund, Decimal.max(record.paid_through_stripe, 0))
+    after_stripe = Decimal.sub(to_refund, refunded)
+    back_on_voucher = Decimal.min(after_stripe, Decimal.max(record.paid_by_voucher, 0))
     to_collect = Decimal.max(Decimal.sub(charge, record.amount_paid), 0)
 
     %{
       charge: charge,
       refunded: refunded,
-      to_return: Decimal.sub(to_refund, refunded),
+      back_on_voucher: back_on_voucher,
+      to_return: Decimal.sub(after_stripe, back_on_voucher),
       to_collect: to_collect
     }
   end

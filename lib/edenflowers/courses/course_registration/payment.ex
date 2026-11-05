@@ -79,9 +79,29 @@ defmodule Edenflowers.Courses.CourseRegistration.Payment do
       # cancelling the booking would ask Stripe to cancel a paid PaymentIntent.
       change set_attribute(:payment_intent_id, nil)
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
+      change PaymentChanges.PayFromVoucher
       change PaymentChanges.ReportAmountMismatch
       change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email}
 
+      require_atomic? false
+    end
+
+    # confirm_payment without Stripe; keep the two in step.
+    update :confirm_paid_by_voucher do
+      description "Confirms a pending checkout its Gift voucher pays for in full, as confirm_payment does once " <>
+                    "Stripe has charged a card: records the voucher payment and queues the confirmation email. " <>
+                    "Refused, and nothing confirmed, unless the voucher covers it. Run by the system once " <>
+                    "prepare_checkout_payment has checked the course has room."
+
+      validate Validations.NotAlreadyConfirmed
+      validate present(:gift_voucher_id)
+      change transition_state(:confirmed)
+      change set_attribute(:confirmed_at, &DateTime.utc_now/0)
+      # A PaymentIntent from paying by card before the voucher went on.
+      change PaymentChanges.CancelOpenPaymentIntent
+      change PaymentChanges.PayFromVoucher
+      change PaymentChanges.RequireSettled
+      change {PaymentChanges.QueueEmail, trigger: :send_confirmation_email}
       require_atomic? false
     end
 

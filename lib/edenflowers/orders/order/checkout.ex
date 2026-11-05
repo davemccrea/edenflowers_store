@@ -4,7 +4,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
   payment places it.
   """
 
-  use Spark.Dsl.Fragment, of: Ash.Resource, extensions: [AshStateMachine, AshOban]
+  use Spark.Dsl.Fragment, of: Ash.Resource, extensions: [AshStateMachine, AshOban, AshRateLimiter]
 
   import Ash.Expr, only: [expr: 1]
   import Edenflowers.Actors
@@ -36,6 +36,9 @@ defmodule Edenflowers.Orders.Order.Checkout do
     :newsletter_offer_hidden?,
     :promotion,
     :fulfillment_option,
+    :voucher_amount,
+    :voucher_left_after,
+    :stripe_amount,
     line_items: [:total, :product_slug]
   ]
 
@@ -60,6 +63,12 @@ defmodule Edenflowers.Orders.Order.Checkout do
               )
       end
     end
+  end
+
+  # Per cart. Codes are 60 random bits, so this is against hammering, not guessing.
+  rate_limit do
+    backend Edenflowers.RateLimiter
+    action :add_gift_voucher_with_code, limit: 10, per: :timer.minutes(15), on: :before_transaction
   end
 
   actions do
@@ -231,6 +240,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
+      change PaymentChanges.PayFromVoucher
       change {Changes.AdjustStock, direction: :take, report_oversell?: true}
       change PaymentChanges.ReportAmountMismatch
       change Changes.ReportPromotionOverused
@@ -255,6 +265,45 @@ defmodule Edenflowers.Orders.Order.Checkout do
              end)
 
       require_atomic? false
+    end
+
+    # finalize_checkout without Stripe; keep the two in step. A subscription
+    # cart can't hold a voucher, so there's no subscription to start.
+    update :place_paid_by_voucher do
+      description "Places a cart its Gift voucher pays for in full, as finalize_checkout does once Stripe " <>
+                    "has charged a card: records the voucher payment, takes stock, queues the receipt and " <>
+                    "notifies the shop. Refused, and nothing placed, unless the voucher covers the Balance. Run " <>
+                    "by the system once prepare_checkout_payment has checked the cart."
+
+      validate present(:gift_voucher_id)
+      change transition_state(:placed)
+      change set_attribute(:ordered_at, &DateTime.utc_now/0)
+      change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
+      change Changes.SnapshotVatBreakdown
+      # A PaymentIntent from paying by card before the voucher went on.
+      change PaymentChanges.CancelOpenPaymentIntent
+      change PaymentChanges.PayFromVoucher
+      change PaymentChanges.RequireSettled
+      change {Changes.AdjustStock, direction: :take, report_oversell?: true}
+      change Changes.ReportPromotionOverused
+      change {PaymentChanges.QueueEmail, trigger: :send_receipt_email}
+      change NotifyShop
+      require_atomic? false
+    end
+
+    update :add_gift_voucher_with_code do
+      description "Puts the Gift voucher with this code on the cart, so Stripe charges only what it doesn't " <>
+                    "cover. Nothing is spent until the order is placed. Fails on an unknown, expired or used-up " <>
+                    "voucher, and on a subscription cart. Rate-limited: a code is money."
+
+      argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
+      change PaymentChanges.ApplyGiftVoucher
+      require_atomic? false
+    end
+
+    update :clear_gift_voucher do
+      description "Takes the Gift voucher off the cart, so the card pays it all."
+      change set_attribute(:gift_voucher_id, nil)
     end
 
     update :update_fulfillment_option do

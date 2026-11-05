@@ -42,6 +42,7 @@
     "gross": "Verollinen",
     "quantity": "Määrä",
     "method-zervant": "Tilisiirto",
+    "method-voucher": "Lahjakortti",
     "supply-date": "Toimituspäivä",
     "payment-details": "Maksutiedot",
     "item": "Tuote",

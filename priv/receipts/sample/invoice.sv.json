@@ -42,6 +42,7 @@
     "gross": "Inkl. moms",
     "quantity": "Antal",
     "method-zervant": "Banköverföring",
+    "method-voucher": "Presentkort",
     "supply-date": "Leveransdatum",
     "payment-details": "Betalningsuppgifter",
     "item": "Produkt",
