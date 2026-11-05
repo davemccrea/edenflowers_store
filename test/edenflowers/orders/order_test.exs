@@ -277,6 +277,36 @@ defmodule Edenflowers.Orders.OrderTest do
     end
   end
 
+  describe "a code from a link" do
+    test "opens the browser's cart with the code, even under the code's minimum total" do
+      visitor_id = Ecto.UUID.generate()
+      generate(promotion(code: "LINK15", minimum_cart_total: "50"))
+
+      assert Orders.open_cart_with_code!(visitor_id, "link15", actor: nil)
+      assert Orders.get_storefront_cart!(visitor_id, actor: nil).promotion_code == "LINK15"
+    end
+
+    test "keeps a code already on the cart" do
+      visitor_id = Ecto.UUID.generate()
+      generate(promotion(code: "FIRST"))
+      generate(promotion(code: "SECOND"))
+      Orders.open_cart_with_code!(visitor_id, "FIRST", actor: nil)
+
+      refute Orders.open_cart_with_code!(visitor_id, "SECOND", actor: nil)
+      assert Orders.get_storefront_cart!(visitor_id, actor: nil).promotion_code == "FIRST"
+    end
+
+    test "changes nothing for an unknown or used-up code" do
+      visitor_id = Ecto.UUID.generate()
+      used_up = generate(promotion(code: "USED", usage_limit: 1))
+      use_promotion(used_up)
+
+      refute Orders.open_cart_with_code!(visitor_id, "NOPE", actor: nil)
+      refute Orders.open_cart_with_code!(visitor_id, "USED", actor: nil)
+      assert Orders.get_storefront_cart!(visitor_id, actor: nil).promotion_id == nil
+    end
+  end
+
   describe "Gift flow validation" do
     test "requires recipient_name when gift is true" do
       order = generate(order(state: :gift_options))

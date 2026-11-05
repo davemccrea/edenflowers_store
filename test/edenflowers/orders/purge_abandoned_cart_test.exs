@@ -26,6 +26,11 @@ defmodule Edenflowers.Orders.PurgeAbandonedCartTest do
 
     with_payment = generate(order(updated_at: days_ago(2), payment_intent_id: "pi_in_flight"))
 
+    # A code from a link waits on an empty cart for the visitor to choose flowers.
+    promotion = generate(promotion())
+    with_code = generate(order(updated_at: days_ago(2), promotion_id: promotion.id))
+    with_old_code = generate(order(updated_at: days_ago(31), promotion_id: promotion.id))
+
     assert :ok = perform_job(SchedulePurge, %{})
 
     for %{args: args} <- all_enqueued(worker: Purge), do: perform_job(Purge, args)
@@ -35,5 +40,7 @@ defmodule Edenflowers.Orders.PurgeAbandonedCartTest do
     assert fresh.id in ids
     assert with_items.id in ids
     assert with_payment.id in ids
+    assert with_code.id in ids
+    refute with_old_code.id in ids
   end
 end

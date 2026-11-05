@@ -56,7 +56,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
         where expr(
                 state != :placed and is_nil(payment_intent_id) and not exists(line_items, true) and
-                  updated_at < ago(1, :day)
+                  updated_at < ago(1, :day) and (is_nil(promotion_id) or updated_at < ago(30, :day))
               )
       end
     end
@@ -65,11 +65,11 @@ defmodule Edenflowers.Orders.Order.Checkout do
   actions do
     destroy :purge_abandoned_cart do
       description "Run nightly: deletes a cart that was never placed, has no lines or PaymentIntent and hasn't " <>
-                    "changed for a day."
+                    "changed for a day, or for 30 days if it holds a code from a link."
 
       change filter expr(
                       state != :placed and is_nil(payment_intent_id) and not exists(line_items, true) and
-                        updated_at < ago(1, :day)
+                        updated_at < ago(1, :day) and (is_nil(promotion_id) or updated_at < ago(30, :day))
                     )
     end
 
@@ -97,9 +97,9 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     create :create_for_checkout do
-      description "Opens a browser's cart at contact details on its first add to cart, guest or signed in, " <>
-                    "or returns the cart it already has, so two tabs adding at once share one. Without a " <>
-                    "visitor_id it always opens a new cart. Carts left empty for a day are purged nightly."
+      description "Opens a browser's cart at contact details on its first add to cart or code link, guest or " <>
+                    "signed in, or returns the cart it already has, so two tabs adding at once share one. Without " <>
+                    "a visitor_id it always opens a new cart. Carts left empty for a day are purged nightly."
 
       argument :visitor_id, :uuid do
         description "The visitor_id from the browser's signed session."
@@ -304,6 +304,46 @@ defmodule Edenflowers.Orders.Order.Checkout do
       argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
       change Changes.ApplyPromotion
       require_atomic? false
+    end
+
+    update :add_promotion_from_link do
+      description "Applies the promotion with this code from a link, even to a cart still under the promotion's " <>
+                    "minimum total: the cart says so until it reaches it. Fails on an unknown or unusable code."
+
+      argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
+      change {Changes.ApplyPromotion, check_minimum?: false}
+      require_atomic? false
+    end
+
+    action :open_cart_with_code, :boolean do
+      description "Puts a code from a link (`?code=` on any storefront page) on the browser's cart, opening the " <>
+                    "cart if it has none yet. A code already on the cart is kept, and an unknown or used-up code " <>
+                    "changes nothing. Returns whether the cart now carries this code."
+
+      argument :visitor_id, :uuid do
+        allow_nil? false
+        description "The visitor_id from the browser's signed session."
+      end
+
+      argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
+
+      run fn input, context ->
+        %{visitor_id: visitor_id, code: code} = input.arguments
+        opts = Ash.Context.to_opts(context)
+        cart = Edenflowers.Orders.create_for_checkout!(%{visitor_id: visitor_id}, opts)
+
+        cart =
+          if is_nil(cart.promotion_id) do
+            case Edenflowers.Orders.add_promotion_from_link(cart, code, opts) do
+              {:ok, cart} -> cart
+              {:error, _invalid_code} -> cart
+            end
+          else
+            cart
+          end
+
+        {:ok, String.downcase(cart.promotion_code || "") == String.downcase(code)}
+      end
     end
 
     update :clear_promotion do

@@ -41,6 +41,7 @@ defmodule EdenflowersWeb.Router do
 
   pipeline :store do
     plug EdenflowersWeb.Plugs.InitStore
+    plug EdenflowersWeb.Plugs.ApplyLinkPromotion
     plug EdenflowersWeb.Plugs.RedirectOldLinks
   end
 

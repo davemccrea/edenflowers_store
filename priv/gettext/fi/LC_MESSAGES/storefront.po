@@ -520,7 +520,7 @@ msgstr "Ostoskori"
 msgid "Cart is empty"
 msgstr "Ostoskori on tyhjä"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:33
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:40
 #, elixir-autogen, elixir-format
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr "Ostoskorin summan on oltava vähintään %{edenflowers_format_currency}, jotta kampanjaa voi käyttää"
@@ -1576,7 +1576,7 @@ msgstr "Sisältää ALV:n"
 msgid "Increment"
 msgstr "Lisää"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:21
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:28
 #, elixir-autogen, elixir-format
 msgid "Invalid code"
 msgstr "Virheellinen koodi"
@@ -4149,3 +4149,8 @@ msgstr "Sen jälkeen veloitetaan koko hinta."
 #, elixir-autogen, elixir-format
 msgid "Cancel at least %{days} days before the course at no cost."
 msgstr "Peru vähintään %{days} päivää ennen kurssia veloituksetta."
+
+#: lib/edenflowers_web/plugs/apply_link_promotion.ex:22
+#, elixir-autogen, elixir-format
+msgid "Promo code %{code} is in your cart."
+msgstr "Tarjouskoodi %{code} on ostoskorissa."

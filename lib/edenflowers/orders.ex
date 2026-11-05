@@ -41,6 +41,8 @@ defmodule Edenflowers.Orders do
       define :finalize_checkout, action: :finalize_checkout, args: [:payment_intent_id]
       define :prepare_checkout_payment, action: :prepare_checkout_payment, args: [:order_id]
       define :add_promotion_with_code, action: :add_promotion_with_code, args: [:code]
+      define :add_promotion_from_link, action: :add_promotion_from_link, args: [:code]
+      define :open_cart_with_code, action: :open_cart_with_code, args: [:visitor_id, :code]
       define :clear_promotion, action: :clear_promotion
       define :update_fulfillment_option, action: :update_fulfillment_option, args: [:fulfillment_option_id]
       define :set_gift, action: :set_gift, args: [:gift]
