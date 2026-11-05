@@ -7,7 +7,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   alias Edenflowers.Format
   alias Edenflowers.Locales
   alias Edenflowers.Payments
-  alias Edenflowers.Payments.Changes.IssueInvoice
   alias Edenflowers.Payments.Invoice
   alias Edenflowers.Payments.InvoiceFinancials
   alias Edenflowers.Pricing
@@ -726,7 +725,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     socket =
       case result do
         {:ok, draft} -> assign(socket, :invoice, draft)
-        {:error, form} -> put_form(socket, form)
+        {:error, form} -> put_form(socket, AshPhoenix.Form.validate(form, check_issue(socket, params)))
       end
 
     intent = input["intent"]
@@ -756,7 +755,11 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       {:error, issue_error} ->
         {:noreply,
          socket
-         |> put_form(socket |> draft_form(socket.assigns.invoice) |> AshPhoenix.Form.validate(params))
+         |> put_form(
+           socket
+           |> draft_form(socket.assigns.invoice)
+           |> AshPhoenix.Form.validate(check_issue(socket, params))
+         )
          |> assign(error: issue_message(issue_error), page_title: ~t"Invoice draft")
          |> push_patch(to: ~p"/admin/invoices/#{socket.assigns.invoice.id}", replace: true)}
     end
@@ -907,25 +910,16 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   defp draft_form(socket, invoice), do: AshPhoenix.Form.for_update(invoice, :update_draft, form_opts(socket, %{}))
 
-  defp validate_form(socket, params), do: put_form(socket, AshPhoenix.Form.validate(socket.assigns.form, params))
+  defp validate_form(socket, params),
+    do: put_form(socket, AshPhoenix.Form.validate(socket.assigns.form, check_issue(socket, params)))
+
+  # After a failed issue, the fields issuing needs stay marked as Jennie corrects them.
+  defp check_issue(%{assigns: %{issue_attempted: true}}, params), do: Map.put(params, "check_issue?", "true")
+  defp check_issue(_socket, params), do: params
 
   defp put_form(socket, %Phoenix.HTML.Form{source: form}), do: put_form(socket, form)
 
-  # After a failed issue, the fields issuing needs stay marked as Jennie corrects them.
-  defp put_form(socket, form) do
-    form =
-      if socket.assigns.issue_attempted do
-        form.source
-        |> Ash.Changeset.apply_attributes(force?: true)
-        |> elem(1)
-        |> IssueInvoice.field_errors()
-        |> Enum.reduce(form, &AshPhoenix.Form.add_error(&2, &1))
-      else
-        form
-      end
-
-    assign(socket, form: to_form(form), totals_preview: totals_preview(form.source))
-  end
+  defp put_form(socket, form), do: assign(socket, form: to_form(form), totals_preview: totals_preview(form.source))
 
   defp totals_preview(changeset) do
     if Enum.any?(changeset.errors, &(Map.get(&1, :field) == :lines or match?([:lines | _], Map.get(&1, :path)))),
