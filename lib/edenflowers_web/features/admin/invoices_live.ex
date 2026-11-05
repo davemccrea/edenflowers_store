@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
           resource={Invoice}
           action={:admin_list}
           actor={@current_user}
-          query_opts={[load: [:status, :buyer, :overdue?, :amount_unpaid]]}
+          query_opts={[load: [:status, :buyer, :overdue?, :payable?, :partly_paid?, :amount_unpaid]]}
           search={[label: ~t"Search", placeholder: ~t"Search customer or reference…", fn: &search_invoices/3]}
           url_state={@url_state}
           sort_mode="exclusive"
@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
             <div class="max-sm:max-w-40 max-sm:whitespace-normal">
               <p class="break-words">{invoice.buyer || ~t"Customer details needed"}</p>
               <p
-                :if={invoice.status == :open}
+                :if={invoice.payable?}
                 class={["mt-1 text-xs sm:hidden", if(invoice.overdue?, do: "text-error", else: "text-base-content/75")]}
               >
                 {~t"Due #{date = Format.date(invoice.due_date, @locale)}"}
@@ -78,7 +78,7 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
             <.blank :if={invoice.status == :draft} />
             <span :if={invoice.status != :draft}>{Format.currency(invoice.amount, @locale)}</span>
             <p
-              :if={invoice.status == :open && Decimal.compare(invoice.amount_unpaid, invoice.amount) == :lt}
+              :if={invoice.partly_paid?}
               class="text-base-content/75 mt-1 whitespace-normal text-xs sm:hidden"
             >
               {~t"To collect #{amount = Format.currency(invoice.amount_unpaid, @locale)}"}
