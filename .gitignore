@@ -54,3 +54,6 @@ images
 
 # Ansible vault password, never commit it.
 infra/.vault_pass
+
+# ICC colour profiles.
+*.icc
