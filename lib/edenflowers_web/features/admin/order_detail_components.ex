@@ -12,7 +12,44 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Payments.GiftVoucher
   alias EdenflowersWeb.Admin.OrderLog
+
+  attr :order, Order, required: true
+  attr :locale, :string, required: true
+
+  @doc """
+  What a Gift voucher sale sold, in place of the job a flower order shows: everything Jennie copies onto a
+  ready-printed card when the buyer collects one.
+  """
+  def gift_voucher_sold(assigns) do
+    ~H"""
+    <.widget id="order-gift-voucher" title={~t"Gift voucher"}>
+      <p :if={@order.voucher_card_to_hand_over?} class="text-base-content/75 mb-5 text-sm">
+        {~t"The buyer collects a gift card at the shop. Write these on one of your cards, then mark it collected."}
+      </p>
+      <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+        <.summary_fact label={~t"For"}>{@order.recipient_name}</.summary_fact>
+        <.summary_fact label={~t"Amount"}>
+          <span class="tabular-nums">{Format.currency(@order.gift_voucher_line.unit_price, @locale)}</span>
+        </.summary_fact>
+        <.summary_fact :if={@order.gift_voucher_line.gift_voucher} label={~t"Code"}>
+          <span id="order-gift-voucher-code" class="font-mono tracking-wider">
+            {GiftVoucher.format_code(@order.gift_voucher_line.gift_voucher.code)}
+          </span>
+        </.summary_fact>
+        <.summary_fact :if={@order.gift_voucher_line.gift_voucher} label={~t"Valid until"}>
+          <span class="tabular-nums">{Format.date(@order.gift_voucher_line.gift_voucher.expires_on, @locale)}</span>
+        </.summary_fact>
+      </div>
+      <blockquote
+        :if={present?(@order.card_message)}
+        phx-no-format
+        class="text-base-content font-serif mt-5 whitespace-pre-wrap break-words text-xl italic leading-relaxed"
+      >{@order.card_message}</blockquote>
+    </.widget>
+    """
+  end
 
   attr :order, Order, required: true
   attr :mode, :atom, required: true, values: [:settle, :refund]
@@ -110,7 +147,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
             <.photo_input field={@form[:photo]} uploads={@uploads} label={~t"Photo of where you left the order"} />
           </div>
           <.customer_email
-            :if={@order.fulfillment_method == :delivery and @order.customer_email}
+            :if={@order.fulfillment_confirmation_applicable? and @order.customer_email}
             id="fulfillment-email"
             send={@form[:email_customer]}
             label={~t"Email delivery confirmation"}
@@ -118,11 +155,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
             to={@order.customer_email}
             preview={@preview}
           />
-          <p :if={@order.fulfillment_method == :pickup} class="text-base-content/75 text-sm">
+          <p :if={!@order.fulfillment_confirmation_applicable?} class="text-base-content/75 text-sm">
             {~t"The customer collects it in person, so no confirmation is emailed."}
           </p>
           <div
-            :if={@order.fulfillment_method == :delivery and !@order.customer_email}
+            :if={@order.fulfillment_confirmation_applicable? and !@order.customer_email}
             class="text-base-content/75 space-y-2 text-sm"
           >
             <p>{~t"This order has no email address, so no confirmation will be emailed."}</p>
@@ -131,7 +168,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
             </.link>
           </div>
           <input
-            :if={@order.fulfillment_method == :pickup or !@order.customer_email}
+            :if={!@order.fulfillment_confirmation_applicable? or !@order.customer_email}
             type="hidden"
             name="fulfillment[email_customer]"
             value="false"

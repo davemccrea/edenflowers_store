@@ -17,6 +17,17 @@ defmodule Edenflowers.Orders.Order.Checkout do
   alias Edenflowers.Payments.Validations, as: PaymentValidations
 
   @locales Edenflowers.Locales.all()
+  # As long as the largest card's, and what fits on the voucher.
+  @voucher_message_length 200
+
+  # A round number on the card.
+  @voucher_amounts Enum.to_list(20..200//10)
+
+  @doc "The longest message a Gift voucher can carry."
+  def voucher_message_length, do: @voucher_message_length
+
+  @doc "The amounts a Gift voucher is sold for, in whole euros."
+  def voucher_amounts, do: @voucher_amounts
 
   @checkout_load [
     :payment_status,
@@ -39,6 +50,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
     :voucher_amount,
     :voucher_left_after,
     :stripe_amount,
+    :card_needed?,
+    :accepts_gift_voucher?,
     line_items: [:total, :product_slug]
   ]
 
@@ -105,6 +118,23 @@ defmodule Edenflowers.Orders.Order.Checkout do
       prepare build(load: @storefront_load)
     end
 
+    read :paid_with_payment_intent do
+      description "The order Stripe sent a customer back for, only if this PaymentIntent paid it, or is " <>
+                    "still attached to pay it. Stripe hands the id only to the browser that paid, so holding it " <>
+                    "is the access, as a cart's visitor_id is: a Gift voucher sale is no browser's cart. Read " <>
+                    "unauthorized, as the guest can't read Payments."
+
+      argument :id, :uuid, allow_nil?: false
+      argument :payment_intent_id, :string, allow_nil?: false
+      get? true
+
+      filter expr(
+               id == ^arg(:id) and
+                 (payment_intent_id == ^arg(:payment_intent_id) or
+                    exists(payments, payment_intent_id == ^arg(:payment_intent_id)))
+             )
+    end
+
     create :create_for_checkout do
       description "Opens a browser's cart at contact details on its first add to cart or code link, guest or " <>
                     "signed in, or returns the cart it already has, so two tabs adding at once share one. Without " <>
@@ -118,6 +148,60 @@ defmodule Edenflowers.Orders.Order.Checkout do
       upsert? true
       upsert_identity :unique_cart_per_visitor
       upsert_fields [:visitor_id]
+    end
+
+    create :start_gift_voucher_sale do
+      description "Starts the Gift voucher checkout: an order holding one voucher line for the amount, from 20 " <>
+                    "to 200 € in steps of 10, with who it's for, the buyer's message and the language of its PDF. It skips the cart's " <>
+                    "steps, starting at payment, and is never a browser's cart, so a voucher can't share one " <>
+                    "with flowers. Finds or creates the buyer's account by email."
+
+      accept [
+        :customer_name,
+        :customer_email,
+        :recipient_name,
+        :card_message,
+        :collect_voucher_card,
+        :voucher_locale,
+        :locale
+      ]
+
+      argument :amount, :integer do
+        allow_nil? false
+        description "The voucher's amount in whole euros."
+      end
+
+      require_attributes [:customer_name, :customer_email, :recipient_name, :voucher_locale]
+      validate attribute_in(:locale, @locales)
+      validate attribute_in(:voucher_locale, @locales)
+      validate string_length(:card_message, max: @voucher_message_length)
+      validate one_of(:amount, @voucher_amounts)
+      change set_attribute(:state, :payment)
+      change set_attribute(:gift, true)
+      change Changes.UpsertUserAndAssignToOrder
+      change Changes.SetGiftVoucherLine
+    end
+
+    update :revise_gift_voucher_sale do
+      description "Changes an unpaid Gift voucher checkout when the buyer goes back: the amount, the voucher's " <>
+                    "details or the buyer's. Any PaymentIntent it has is brought up to the new amount before " <>
+                    "paying. Refused once placed."
+
+      accept [:customer_name, :customer_email, :recipient_name, :card_message, :collect_voucher_card, :voucher_locale]
+
+      argument :amount, :integer do
+        allow_nil? false
+        description "The voucher's amount in whole euros."
+      end
+
+      change filter expr(state == :payment and gift_voucher_sale?)
+      require_attributes [:customer_name, :customer_email, :recipient_name, :voucher_locale]
+      validate attribute_in(:voucher_locale, @locales)
+      validate string_length(:card_message, max: @voucher_message_length)
+      validate one_of(:amount, @voucher_amounts)
+      change Changes.UpsertUserAndAssignToOrder
+      change Changes.SetGiftVoucherLine
+      require_atomic? false
     end
 
     update :release_cart do
@@ -220,7 +304,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
     update :finalize_checkout do
       description "Run by the system once Stripe reports a cart's PaymentIntent paid: places it from whichever " <>
                     "checkout step it is on, records the payment, takes stock, queues the receipt, notifies the " <>
-                    "shop and starts any subscription it set up. Also places a paid Occurrence."
+                    "shop and starts any subscription it set up. A Gift voucher sale issues its voucher, which " <>
+                    "the receipt email carries. Also places a paid Occurrence."
 
       argument :payment_intent_id, :string, allow_nil?: false
 
@@ -241,6 +326,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
       change Changes.SnapshotVatBreakdown
       change {PaymentChanges.RecordPayment, method: :stripe, amount: :amount_paid}
       change PaymentChanges.PayFromVoucher
+      change Changes.IssueGiftVouchers
       change {Changes.AdjustStock, direction: :take, report_oversell?: true}
       change PaymentChanges.ReportAmountMismatch
       change Changes.ReportPromotionOverused
@@ -268,7 +354,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
     end
 
     # finalize_checkout without Stripe; keep the two in step. A subscription
-    # cart can't hold a voucher, so there's no subscription to start.
+    # cart can't hold a voucher, so there's no subscription to start, nor can
+    # a voucher sale, so there's no voucher to issue.
     update :place_paid_by_voucher do
       description "Places a cart its Gift voucher pays for in full, as finalize_checkout does once Stripe " <>
                     "has charged a card: records the voucher payment, takes stock, queues the receipt and " <>

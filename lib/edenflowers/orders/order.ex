@@ -134,7 +134,7 @@ defmodule Edenflowers.Orders.Order do
     metadata :pass_it_on_card, :string
 
     # on_actions only filters updates; every create is versioned unless ignored.
-    ignore_actions [:create_for_checkout]
+    ignore_actions [:create_for_checkout, :start_gift_voucher_sale]
 
     on_actions [
       :finalize_checkout,
@@ -226,7 +226,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     # Guest checkout: creating an order does not require authentication.
-    policy action([:create_for_checkout, :open_cart_with_code]) do
+    policy action([:create_for_checkout, :open_cart_with_code, :start_gift_voucher_sale]) do
       authorize_if always()
     end
 
@@ -385,6 +385,14 @@ defmodule Edenflowers.Orders.Order do
     attribute :order_details_emailed_at, :utc_datetime
     attribute :order_details_email_failed_at, :utc_datetime
 
+    # A Gift voucher buyer asked to collect a gift card at the shop, so Jennie
+    # writes the recipient and code on one of her ready-printed cards, and the
+    # order stays open until it's collected.
+    attribute :collect_voucher_card, :boolean, allow_nil?: false, default: false
+    # The language a Gift voucher sale's PDF is in, chosen by the buyer for
+    # whoever receives it. Nil on any other order.
+    attribute :voucher_locale, :string
+
     # Jennie's own working note. Never shown to the customer.
     attribute :florist_note, :string
 
@@ -419,6 +427,13 @@ defmodule Edenflowers.Orders.Order do
 
     has_many :line_items, Edenflowers.Orders.LineItem do
       description "What the order is for: catalogue items, Jennie's own priced items on a Custom Order, and any card."
+    end
+
+    has_one :gift_voucher_line, Edenflowers.Orders.LineItem do
+      description "On a Gift voucher sale, its one line: the voucher's amount, and once placed the voucher it " <>
+                    "issued. Nil on any other order."
+
+      filter expr(is_gift_voucher == true)
     end
 
     has_many :payments, Edenflowers.Payments.Payment do
@@ -555,8 +570,16 @@ defmodule Edenflowers.Orders.Order do
       description "Cancelled by Jennie or by the Customer."
     end
 
-    calculate :cancellable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
-      description "Whether Jennie can cancel it now: placed and not yet fulfilled or cancelled."
+    calculate :cancellable?,
+              :boolean,
+              expr(
+                state == :placed and
+                  (fulfillment_status == :pending or (gift_voucher_sale? and fulfillment_status == :fulfilled)) and
+                  not gift_voucher_spent?
+              ) do
+      description "Whether Jennie can cancel it now: placed and not yet fulfilled or cancelled. A Gift voucher " <>
+                    "sale, which is fulfilled once its voucher is sent, can be cancelled for as long as none of " <>
+                    "the voucher is spent."
     end
 
     calculate :default_cancellation_charge, :decimal, expr(0) do
@@ -564,8 +587,25 @@ defmodule Edenflowers.Orders.Order do
                     "everything paid is refunded."
     end
 
-    calculate :editable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
-      description "Whether Jennie can still edit it in the admin: placed and still to make."
+    calculate :editable?,
+              :boolean,
+              expr(state == :placed and fulfillment_status == :pending and not gift_voucher_sale?) do
+      description "Whether Jennie can still edit it in the admin: placed and still to make. Never a Gift " <>
+                    "voucher sale, whose voucher is already out at its amount."
+    end
+
+    calculate :voucher_card_to_hand_over?,
+              :boolean,
+              expr(collect_voucher_card and fulfillment_status == :pending and state == :placed) do
+      description "A Gift voucher sale whose buyer collects a gift card at the shop and hasn't yet: Jennie " <>
+                    "writes the recipient and code on a ready-printed card, and marks the order fulfilled when " <>
+                    "it's collected. The admin shows a badge."
+    end
+
+    calculate :voucher_card_ready_on, :date, Calculations.VoucherCardReadyOn do
+      description "The day a Gift voucher sale's gift card is ready to collect at the shop: the first day it " <>
+                    "opens after the order. Nil unless the buyer chose to collect a card. The confirmation " <>
+                    "page and the voucher email both name it."
     end
 
     calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
@@ -582,6 +622,11 @@ defmodule Edenflowers.Orders.Order do
               expr(pass_it_on_card_changeable? and exists(pass_it_on_card, gift_order_linkable?)) do
       description "Whether Jennie can remove the gift's pass-it-on card, if she typed the wrong code: the gift is " <>
                     "still to deliver and its recipient hasn't opened the card."
+    end
+
+    calculate :accepts_gift_voucher?, :boolean, expr(not subscription? and not gift_voucher_sale?) do
+      description "Whether a Gift voucher can pay for the cart: not a subscription, whose later deliveries it " <>
+                    "can't pay for yet, nor a Gift voucher sale, as one voucher can't buy another."
     end
 
     calculate :open?,
@@ -680,9 +725,9 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :fulfillment_confirmation_applicable?,
               :boolean,
-              expr(committed? and not cancelled? and fulfillment_method == :delivery) do
+              expr(committed? and not cancelled? and not is_nil(fulfillment_method) and fulfillment_method == :delivery) do
       description "Whether a Delivered or Left at the door email makes sense for this order at all: a placed, " <>
-                    "uncancelled delivery. Pickups get none."
+                    "uncancelled delivery. Pickups and Gift voucher cards, collected in person, get none."
     end
 
     calculate :fulfillment_confirmation_sendable?,
@@ -822,6 +867,20 @@ defmodule Edenflowers.Orders.Order do
     exists :free_delivery?, :line_items do
       description "Whether any line's product gets free delivery, so the cart pays the quoted free-delivery fee."
       filter expr(free_delivery == true)
+    end
+
+    exists :gift_voucher_sale?, :line_items do
+      description "Whether the order sells a Gift voucher. It then holds nothing else and has no fulfillment."
+      filter expr(is_gift_voucher == true)
+    end
+
+    exists :gift_voucher_spent?, [:line_items, :gift_voucher] do
+      description "Whether any of a Gift voucher it sold has been spent, net of what was handed back onto it. " <>
+                    "A voucher with money spent can no longer be refunded."
+
+      filter expr(remaining < amount)
+      # Gift vouchers are readable only by the shop; whoever reads the order may know this.
+      authorize? false
     end
 
     exists :subscription?, :line_items do

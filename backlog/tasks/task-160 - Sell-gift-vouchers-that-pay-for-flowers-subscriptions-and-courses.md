@@ -44,14 +44,14 @@ Customers can buy an Eden Flowers gift voucher online or in the shop, and whoeve
 - Subscriptions: the voucher is stored on the subscription, and checkout still saves a card. Each order the subscription creates draws from the voucher first, then the card, with the usual heads-up email.
 
 **Refunds**
-- A bought voucher can be refunded while unspent, by Jennie cancelling its order. No cash once any of it is spent.
+- A voucher is not refundable and never paid out in cash (decided 2026-11-05). An online buyer keeps the 14-day right of withdrawal while it is unspent, which Jennie honours by cancelling its order.
 - When an order paid by voucher is cancelled or refunded, the voucher's part goes back onto the voucher as a negative `:voucher` payment.
 
 **VAT and report**
 - Designed as a multi-purpose voucher, as Shopify and WooCommerce do: no VAT when sold, and VAT on what it buys, at each item's rate (rates differ, e.g. chocolate). The accountant confirms.
 - The monthly report counts payments as sales, so payments for a voucher count as vouchers sold (held for later, not sales), and `:voucher` payments count as sales when spent.
 
-**Terms of sale:** a short voucher section (valid one year, refundable while unspent, no cash for a part-spent voucher) in sv/fi/en.
+**Terms of sale:** a short voucher section (valid one year, not refundable or exchangeable for cash, 14-day withdrawal for online purchases while unspent) in sv/fi/en.
 
 **Not now:** a public page showing what's left on a voucher (checkout and receipts show it), vouchers on Payment Links, emailing the recipient on a chosen day, 'outstanding' in the report (add when the accountant asks), corporate sales before Christmas.
 <!-- SECTION:DESCRIPTION:END -->

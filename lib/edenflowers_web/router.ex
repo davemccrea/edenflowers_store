@@ -71,6 +71,7 @@ defmodule EdenflowersWeb.Router do
         live "/#{language}/store", Store.StoreLive
         live "/#{language}/store/:category", Store.StoreLive
         live "/#{language}/product/:slug", Store.ProductLive
+        live "/#{language}/gift-voucher", Store.GiftVoucherLive
         live "/#{language}/courses", Courses.CoursesLive
         live "/#{language}/courses/:slug", Courses.CourseLive
       end

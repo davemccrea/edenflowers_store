@@ -238,6 +238,11 @@ defmodule Edenflowers.Payments.Payable do
                     "pays. 0 when the voucher covers it all, and it's placed without Stripe."
     end
 
+    calculate :card_needed?, :boolean, expr(stripe_amount > 0) do
+      description "At checkout, whether Stripe has anything to charge. False when the Gift voucher entered pays " <>
+                    "it all, so it's placed or confirmed without the card form."
+    end
+
     calculate :refunded?,
               :boolean,
               expr(

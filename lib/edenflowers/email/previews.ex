@@ -24,6 +24,7 @@ defmodule Edenflowers.Email.Previews do
   def all(locale) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       order_confirmation(locale) ++
+        gift_voucher_sold(locale) ++
         order_details(locale) ++
         order_updated(locale) ++
         payment_received(locale) ++
@@ -95,6 +96,22 @@ defmodule Edenflowers.Email.Previews do
            with_card(order(Map.merge(paid_in_full(), %{card_message: card_message(locale)}), locale))
          )}
       ]
+  end
+
+  defp gift_voucher_sold(locale) do
+    voucher = %Edenflowers.Payments.GiftVoucher{
+      code: "7KQ2M9XD4HPT",
+      amount: Decimal.new("50.00"),
+      expires_on: ~D[2027-11-05]
+    }
+
+    sale = order(%{gift_voucher_line: %{gift_voucher: voucher}, card_message: card_message(locale)}, locale)
+
+    [
+      {"Gift voucher", "emailed", :gift_voucher_sold, Email.gift_voucher_sold(sale, nil)},
+      {"Gift voucher", "collecting a gift card at the shop", :gift_voucher_sold,
+       Email.gift_voucher_sold(%{sale | collect_voucher_card: true}, ~D[2026-11-07])}
+    ]
   end
 
   # Checkout adds the card as its own line, named for its design alone.

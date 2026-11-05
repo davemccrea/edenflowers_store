@@ -46,12 +46,12 @@ defmodule Edenflowers.Fulfillment.Availability do
 
   @doc """
   The first date an order placed at `now` could be fulfilled, or nil when the
-  shop is closed for the next 60 days.
+  shop is closed for the next 60 days. `from` starts the search on a later
+  day, for what needs a day's work first, such as a Gift voucher card.
   """
-  @spec next_open_date(ShopCalendar.t(), DateTime.t()) :: Date.t() | nil
-  def next_open_date(%ShopCalendar{} = calendar, %DateTime{} = now) do
-    now
-    |> DateTime.to_date()
+  @spec next_open_date(ShopCalendar.t(), DateTime.t(), Date.t() | nil) :: Date.t() | nil
+  def next_open_date(%ShopCalendar{} = calendar, %DateTime{} = now, from \\ nil) do
+    (from || DateTime.to_date(now))
     |> Stream.iterate(&Date.add(&1, 1))
     |> Enum.take(60)
     |> Enum.find(&is_nil(unavailable_reason(calendar, &1, now)))

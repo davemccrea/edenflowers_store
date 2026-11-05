@@ -56,7 +56,7 @@ defmodule Edenflowers.Payments.GiftVoucher do
 
       argument :code, :string, allow_nil?: false
       get? true
-      prepare build(load: [:remaining, :expired?, :spendable?])
+      prepare build(load: [:remaining, :expired?, :cancelled?, :spendable?])
 
       prepare fn query, _context ->
         code = normalize_code(Ash.Query.get_argument(query, :code))
@@ -123,8 +123,12 @@ defmodule Edenflowers.Payments.GiftVoucher do
       description "Whether its last day has passed in Helsinki."
     end
 
-    calculate :spendable?, :boolean, expr(not expired? and remaining > 0) do
-      description "Whether it can pay for anything now: not expired and something left on it."
+    calculate :cancelled?, :boolean, expr(line_item.order.fulfillment_status == :cancelled) do
+      description "Whether the order that sold it was cancelled, refunding it, so it can no longer pay."
+    end
+
+    calculate :spendable?, :boolean, expr(not expired? and not cancelled? and remaining > 0) do
+      description "Whether it can pay for anything now: not expired, its sale not cancelled, and something left on it."
     end
   end
 
@@ -139,6 +143,7 @@ defmodule Edenflowers.Payments.GiftVoucher do
 
   identities do
     identity :unique_code, [:code]
+    identity :one_per_line, [:line_item_id]
   end
 
   @doc """

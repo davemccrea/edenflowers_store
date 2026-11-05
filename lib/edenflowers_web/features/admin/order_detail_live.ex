@@ -90,6 +90,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 </span>
                 <.gift_badge :if={@order.gift} recipient_name={presence(@order.recipient_name)} />
                 <.subscription_badge :if={@order.origin == :subscription} />
+                <.badge :if={@order.voucher_card_to_hand_over?} tone={:attention} icon="hero-pencil-square">
+                  {~t"Card to write"}
+                </.badge>
                 <%!-- The payment card sits below the job on narrow screens; this says money is waiting there. --%>
                 <.badge
                   :if={!@order.settled?}
@@ -166,7 +169,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <%!-- The job on the left, read at the bench; the money, people and history on the right, read at the desk. --%>
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <div class="space-y-6">
-            <.widget id="order-fulfillment-summary" title={~t"Fulfillment"}>
+            <.gift_voucher_sold :if={@order.gift_voucher_sale?} order={@order} locale={@locale} />
+
+            <.widget :if={!@order.gift_voucher_sale?} id="order-fulfillment-summary" title={~t"Fulfillment"}>
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
                 <.summary_fact label={~t"Date"}>
                   {Format.weekday_day_month(@order.fulfillment_date, @locale)}
@@ -242,12 +247,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </p>
             </.widget>
 
-            <.widget id="order-items" title={~t"To make"}>
+            <.widget :if={!@order.gift_voucher_sale?} id="order-items" title={~t"To make"}>
               <.readonly_line_items line_items={Enum.reject(@order.line_items, & &1.is_card)} />
             </.widget>
 
             <.widget
-              :if={present?(@order.card_message) or Enum.any?(@order.line_items, & &1.is_card)}
+              :if={
+                !@order.gift_voucher_sale? and
+                  (present?(@order.card_message) or Enum.any?(@order.line_items, & &1.is_card))
+              }
               id="order-card"
               title={~t"Card to write"}
             >

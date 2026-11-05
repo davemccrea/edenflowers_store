@@ -9,7 +9,7 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
   test "shows the last-updated date", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/terms")
 
-    assert has_element?(view, "#main-content #notice-updated", "Updated 26 October 2026.")
+    assert has_element?(view, "#main-content #notice-updated", "Updated 5 November 2026.")
   end
 
   test "reads the delivery distance and cancellation deadline live", %{conn: conn} do
@@ -226,6 +226,18 @@ defmodule EdenflowersWeb.Marketing.TermsLiveTest do
       assert has_element?(view, "[aria-labelledby=pickup]", page.pickup)
       assert has_element?(view, "[aria-labelledby=wedding-payment]", page.wedding)
     end
+  end
+
+  test "gift voucher terms give its validity, no refunds and the online withdrawal, where the voucher page links",
+       %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/gift-voucher")
+    assert has_element?(view, ~s|a[href="/en/terms#gift-vouchers"]|)
+
+    {:ok, view, _html} = live(conn, ~p"/en/terms")
+
+    assert has_element?(view, "[aria-labelledby=gift-vouchers]", "valid for one year from the day it's bought")
+    assert has_element?(view, "[aria-labelledby=gift-vouchers]", "can't be refunded or exchanged for cash")
+    assert has_element?(view, "[aria-labelledby=gift-vouchers]", "cancel the purchase within 14 days")
   end
 
   test "leaves out the distance when nothing is delivered by distance", %{conn: conn} do

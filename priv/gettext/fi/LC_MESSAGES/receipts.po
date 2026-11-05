@@ -135,7 +135,7 @@ msgstr "Noutomaksu"
 msgid "Qty"
 msgstr "Määrä"
 
-#: lib/edenflowers/orders/receipt_labels.ex:61
+#: lib/edenflowers/orders/receipt_labels.ex:73
 #, elixir-autogen, elixir-format
 msgid "Questions or changes? Reply to your confirmation email and Jennie will get back to you."
 msgstr "Kysymyksiä tai muutoksia? Vastaa vahvistussähköpostiin ja Jennie palaa asiaan."
@@ -272,7 +272,7 @@ msgstr "Syy"
 msgid "Late payment interest"
 msgstr "Viivästyskorko"
 
-#: lib/edenflowers/orders/receipt_labels.ex:69
+#: lib/edenflowers/orders/receipt_labels.ex:81
 #, elixir-autogen, elixir-format
 msgid "Questions? Just reply to the email this came with, or write to info@edenflowers.fi."
 msgstr "Kysyttävää? Vastaa sähköpostiin, jonka mukana sait kuitin, tai kirjoita osoitteeseen info@edenflowers.fi."
@@ -314,6 +314,55 @@ msgid "Order #%{number}"
 msgstr "Tilaus #%{number}"
 
 #: lib/edenflowers/orders/receipt_labels.ex:44
+#: lib/edenflowers/orders/receipt_labels.ex:45
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:41
 #, elixir-autogen, elixir-format
 msgid "Gift voucher"
 msgstr "Lahjakortti"
+
+#: lib/edenflowers/orders/receipt_labels.ex:56
+#, elixir-autogen, elixir-format
+msgid "A gift voucher is not subject to VAT. VAT is charged on what it's spent on."
+msgstr "Lahjakortti ei ole arvonlisäverollinen. Arvonlisävero peritään siitä, mihin lahjakortti käytetään."
+
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:44
+#, elixir-autogen, elixir-format
+msgid "Code"
+msgstr "Koodi"
+
+#: lib/edenflowers/orders/receipt_labels.ex:48
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:43
+#, elixir-autogen, elixir-format
+msgid "For"
+msgstr "Kenelle"
+
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:47
+#, elixir-autogen, elixir-format
+msgid "Spend it on flowers, subscriptions and courses: enter the code at checkout on edenflowers.fi, or show it in the shop."
+msgstr "Käytä se kukkiin, tilauksiin ja kursseihin: syötä koodi kassalla osoitteessa edenflowers.fi tai näytä se myymälässä."
+
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:52
+#, elixir-autogen, elixir-format
+msgid "Valid for one year. What you don't spend stays on the code, and it can't be exchanged for cash."
+msgstr "Voimassa vuoden. Käyttämättä jäänyt summa säilyy koodilla, eikä lahjakorttia voi vaihtaa rahaksi."
+
+#: lib/edenflowers/orders/receipt_labels.ex:46
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:45
+#, elixir-autogen, elixir-format
+msgid "Valid until"
+msgstr "Voimassa"
+
+#: lib/edenflowers/orders/receipt_labels.ex:49
+#, elixir-autogen, elixir-format
+msgid "Emailed to you as a PDF"
+msgstr "Lähetetty sinulle sähköpostitse pdf-tiedostona"
+
+#: lib/edenflowers/orders/receipt_labels.ex:50
+#, elixir-autogen, elixir-format
+msgid "Gift card to collect at Minimossen"
+msgstr "Kortti noudettavissa Minimossenista"
+
+#: lib/edenflowers/orders/receipt_labels.ex:52
+#, elixir-autogen, elixir-format
+msgid "Message on the voucher"
+msgstr "Tervehdys lahjakortissa"

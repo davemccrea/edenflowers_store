@@ -15,6 +15,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   alias Edenflowers.Email
   alias Edenflowers.Mailer
   alias Edenflowers.Orders.Receipt
+  alias Edenflowers.Payments.GiftVoucherPdf
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -22,9 +23,9 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
       order = load_for_send(changeset.data)
 
       with {:ok, pdf} <- Receipt.generate(order),
+           {:ok, email} <- with_voucher(email(order), order),
            {:ok, _result} <-
-             order
-             |> email()
+             email
              |> Swoosh.Email.attachment(Receipt.attachment(pdf, order.order_reference))
              |> Mailer.deliver() do
         Logger.info("Sent confirmation email for order #{order.id}")
@@ -40,7 +41,21 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
 
   # An Occurrence's charge is routine; the receipt with thanks is for an order the customer placed.
   defp email(%{origin: :subscription} = order), do: Email.subscription_charged(order)
+  defp email(%{gift_voucher_sale?: true} = order), do: Email.gift_voucher_sold(order, order.voucher_card_ready_on)
   defp email(order), do: Email.order_confirmation(order)
+
+  # A Gift voucher sale's one voucher, as a PDF beside the receipt.
+  defp with_voucher(email, order) do
+    case order.gift_voucher_line do
+      nil ->
+        {:ok, email}
+
+      %{gift_voucher: voucher} ->
+        with {:ok, pdf} <- GiftVoucherPdf.generate(%{voucher | line_item: %{order: order}}) do
+          {:ok, Swoosh.Email.attachment(email, GiftVoucherPdf.attachment(pdf, order.order_reference))}
+        end
+    end
+  end
 
   defp load_for_send(order) do
     Ash.load!(
@@ -54,6 +69,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
         :balance,
         :cancellable_by_customer?,
         :cancellable_until,
+        :voucher_card_ready_on,
         line_items: [:subtotal]
       ] ++ Receipt.order_load(),
       authorize?: false

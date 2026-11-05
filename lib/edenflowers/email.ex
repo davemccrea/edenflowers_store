@@ -45,6 +45,30 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
+  Thanks the buyer of a Gift voucher, with its code and expiry, and the
+  voucher PDF and receipt the sender attaches. `ready_on` is the day a
+  gift card can be collected at the shop, or nil when they didn't ask for
+  one. Expects `:customer_first_name` and `gift_voucher_line: :gift_voucher` loaded.
+  """
+  def gift_voucher_sold(order, ready_on) do
+    voucher = order.gift_voucher_line.gift_voucher
+
+    customer_email(order, from_address(), fn email ->
+      email
+      |> subject(~t"Your Eden Flowers gift voucher for #{recipient = order.recipient_name}")
+      |> text_body(
+        Templates.gift_voucher_sold(%{
+          order: order,
+          amount: Format.storefront_price(voucher.amount, order.locale),
+          code: Edenflowers.Payments.GiftVoucher.format_code(voucher.code),
+          expires_on: Format.date(voucher.expires_on, order.locale),
+          ready_on: ready_on && Format.weekday_date(ready_on, order.locale)
+        })
+      )
+    end)
+  end
+
+  @doc """
   Tells the customer their payment of `amount` arrived outside checkout,
   through a payment link or recorded by Jennie, with the receipt the
   sender attaches. Never asks for more, even if some is still owed. For an

@@ -69,10 +69,15 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             <h1 :if={!@first_name} class="page-title">{~t"Thank you for your order"}</h1>
 
             <p class="mt-6 leading-relaxed" data-testid="order-fulfillment">
-              <%= if @shown_order.fulfillment_method == :delivery do %>
-                {~t"I'll deliver your order on #{@date}."}
-              <% else %>
-                {~t"Your order will be ready to collect on #{@date}."}
+              <%= cond do %>
+                <% @shown_order.collect_voucher_card -> %>
+                  {~t"Your gift voucher for #{name = @shown_order.recipient_name} will be sent by email, ready to print or forward. A gift card with the voucher written on it can be collected at Minimossen from #{@date}."}
+                <% @shown_order.gift_voucher_sale? -> %>
+                  {~t"Your gift voucher for #{name = @shown_order.recipient_name} will be sent by email, ready for you to print or forward."}
+                <% @shown_order.fulfillment_method == :delivery -> %>
+                  {~t"I'll deliver your order on #{@date}."}
+                <% true -> %>
+                  {~t"Your order will be ready to collect on #{@date}."}
               <% end %>
             </p>
             <p
@@ -201,7 +206,17 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
   defp assign_order(socket, order) do
     {:ok, order} =
-      Ash.load(order, [:customer_first_name, :line_items, :fulfillment_fee, :grand_total, :subscription?],
+      Ash.load(
+        order,
+        [
+          :customer_first_name,
+          :line_items,
+          :fulfillment_fee,
+          :grand_total,
+          :subscription?,
+          :gift_voucher_sale?,
+          :voucher_card_ready_on
+        ],
         authorize?: false
       )
 
@@ -213,7 +228,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     |> assign(:shown_order, order)
     |> assign(:placed?, order.committed?)
     |> assign(:first_name, order.customer_first_name)
-    |> assign(:date, Format.weekday_date(order.fulfillment_date, Format.locale()))
+    |> assign(:date, Format.weekday_date(order.voucher_card_ready_on || order.fulfillment_date, Format.locale()))
     |> assign(:interval_weeks, subscription_line && subscription_line.interval_weeks)
     |> assign(:next_delivery, subscription_line && next_delivery(order, subscription_line))
   end

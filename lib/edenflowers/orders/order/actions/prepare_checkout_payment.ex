@@ -29,7 +29,7 @@ defmodule Edenflowers.Orders.Order.Actions.PrepareCheckoutPayment do
     with {:ok, order} <-
            Orders.get_order_for_checkout(input.arguments.order_id,
              actor: context.actor,
-             load: [:checkout_ready?, line_items: [:over_stock?, :product_variant]]
+             load: [:checkout_ready?, :gift_voucher_sale?, line_items: [:over_stock?, :product_variant]]
            ),
          :ok <- payable(order),
          :ok <- fulfillment_available(order) do
@@ -38,8 +38,8 @@ defmodule Edenflowers.Orders.Order.Actions.PrepareCheckoutPayment do
   end
 
   # Nothing left for Stripe: the voucher pays it all, and it's placed now.
-  defp pay(%{stripe_amount: stripe_amount} = order, actor) do
-    if Decimal.positive?(stripe_amount) do
+  defp pay(order, actor) do
+    if order.card_needed? do
       with {:ok, order, client_secret} <- Payments.prepare(order, actor) do
         {:ok, %{payable: order, client_secret: client_secret}}
       end
@@ -48,6 +48,11 @@ defmodule Edenflowers.Orders.Order.Actions.PrepareCheckoutPayment do
         {:ok, %{payable: order, client_secret: nil}}
       end
     end
+  end
+
+  # A voucher sale has no delivery and no Stock: its own checkout asked for all it needs.
+  defp payable(%{gift_voucher_sale?: true} = order) do
+    if order.state == :payment, do: :ok, else: {:error, NotPayable.exception(reason: :not_a_cart)}
   end
 
   defp payable(order) do
@@ -59,6 +64,8 @@ defmodule Edenflowers.Orders.Order.Actions.PrepareCheckoutPayment do
       true -> within_stock(order)
     end
   end
+
+  defp fulfillment_available(%{gift_voucher_sale?: true}), do: :ok
 
   defp fulfillment_available(order) do
     calendar = Fulfillment.get_shop_calendar!(authorize?: false)

@@ -41,6 +41,7 @@
   "recipient_name": "Margareta Lindqvist",
   "contact_phone_number": "+358 40 555 0123",
   "lang": "fi",
+  "vat_note": null,
   "vat_breakdown": [
     {
       "base": "51,20 €",
@@ -96,11 +97,19 @@
     "method-klarna": "Klarna",
     "method-cash": "Käteinen",
     "method-zervant": "Tilisiirto",
-    "method-voucher": "Lahjakortti"
+    "method-voucher": "Lahjakortti",
+    "gift-voucher": "Lahjakortti",
+    "valid-until": "Voimassa",
+    "vat-note-gift-voucher": "Lahjakortti ei ole arvonlisäverollinen. Arvonlisävero peritään siitä, mihin lahjakortti käytetään.",
+    "voucher-for": "Kenelle",
+    "voucher-emailed": "Lähetetty sinulle sähköpostitse pdf-tiedostona",
+    "voucher-collect": "Kortti noudettavissa Minimossenista",
+    "voucher-message": "Tervehdys lahjakortissa"
   },
   "seller": {
     "name": "Jennie McCrea",
     "business_id": "2944459-6",
     "address": "Stadsgatan 3, 65300 Vasa"
-  }
+  },
+  "collect_voucher_card": false
 }

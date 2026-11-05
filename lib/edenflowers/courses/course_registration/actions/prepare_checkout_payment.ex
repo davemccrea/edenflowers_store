@@ -26,7 +26,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Actions.PrepareCheckoutPayment 
     with {:ok, registration} <-
            Courses.get_checkout_registration(input.arguments.registration_id, input.arguments.course_id,
              actor: system_actor(),
-             load: [:stripe_amount, course: [:booking_open?, :seats_left]]
+             load: [:card_needed?, course: [:booking_open?, :seats_left]]
            ),
          :ok <- bookable(registration) do
       pay(registration)
@@ -42,7 +42,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Actions.PrepareCheckoutPayment 
   end
 
   defp pay(registration) do
-    if Decimal.positive?(registration.stripe_amount) do
+    if registration.card_needed? do
       with {:ok, registration, client_secret} <- Payments.prepare(registration, nil) do
         {:ok, %{payable: registration, client_secret: client_secret}}
       end

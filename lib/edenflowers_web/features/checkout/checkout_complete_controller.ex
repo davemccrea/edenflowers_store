@@ -25,18 +25,29 @@ defmodule EdenflowersWeb.Checkout.CheckoutCompleteController do
     |> redirect(to: ~p"/checkout")
   end
 
-  def index(conn, %{"id" => order_id}) do
+  def index(conn, %{"id" => order_id} = params) do
     conn
-    |> claim_cart(order_id)
+    |> claim_cart(order_id, params["payment_intent"])
     |> redirect(to: ~p"/order/#{order_id}")
   end
 
   # release_cart refuses an order that isn't this browser's cart, so a
-  # cross-site link here can't empty someone's cart.
-  defp claim_cart(conn, order_id) do
+  # cross-site link here can't empty someone's cart. A Gift voucher sale is
+  # no browser's cart: the PaymentIntent Stripe returns with is what shows
+  # the order is theirs.
+  defp claim_cart(conn, order_id, payment_intent_id) do
     case Orders.release_cart(order_id, get_session(conn, :visitor_id), actor: conn.assigns[:current_user]) do
       {:ok, _order} -> put_session(conn, :guest_order_id, order_id)
-      {:error, _error} -> conn
+      {:error, _error} -> claim_paid(conn, order_id, payment_intent_id)
     end
   end
+
+  defp claim_paid(conn, order_id, payment_intent_id) when is_binary(payment_intent_id) do
+    case Orders.get_order_paid_with_payment_intent(order_id, payment_intent_id, authorize?: false) do
+      {:ok, _order} -> put_session(conn, :guest_order_id, order_id)
+      {:error, _not_found} -> conn
+    end
+  end
+
+  defp claim_paid(conn, _order_id, nil), do: conn
 end

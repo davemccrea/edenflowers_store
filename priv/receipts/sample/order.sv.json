@@ -41,6 +41,7 @@
   "recipient_name": "Margareta Lindqvist",
   "contact_phone_number": "+358 40 555 0123",
   "lang": "sv",
+  "vat_note": null,
   "vat_breakdown": [
     {
       "base": "51,20 €",
@@ -96,11 +97,19 @@
     "method-klarna": "Klarna",
     "method-cash": "Kontant",
     "method-zervant": "Banköverföring",
-    "method-voucher": "Presentkort"
+    "method-voucher": "Presentkort",
+    "gift-voucher": "Presentkort",
+    "valid-until": "Giltigt till",
+    "vat-note-gift-voucher": "Ett presentkort är inte momspliktigt. Moms tas ut på det som presentkortet används till.",
+    "voucher-for": "Till",
+    "voucher-emailed": "Mejlat till dig som pdf",
+    "voucher-collect": "Kort att hämta i Minimossen",
+    "voucher-message": "Hälsning på presentkortet"
   },
   "seller": {
     "name": "Jennie McCrea",
     "business_id": "2944459-6",
     "address": "Stadsgatan 3, 65300 Vasa"
-  }
+  },
+  "collect_voucher_card": false
 }

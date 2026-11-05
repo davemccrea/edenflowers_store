@@ -24,8 +24,10 @@ defmodule Edenflowers.Orders.Receipt do
     :grand_total,
     :contact_phone_number,
     :upcoming?,
+    :gift_voucher_sale?,
     payments: [],
-    line_items: [:subtotal, :total, :unit_price_ex_tax]
+    line_items: [:subtotal, :total, :unit_price_ex_tax],
+    gift_voucher_line: :gift_voucher
   ]
 
   @registration_load [:course, :upcoming?, payments: []]
@@ -58,9 +60,11 @@ defmodule Edenflowers.Orders.Receipt do
       ordered_at: Format.datetime(order.ordered_at, locale),
       customer_name: order.customer_name,
       customer_email: order.customer_email,
-      fulfillment_method: to_string(order.fulfillment_method),
-      fulfillment_date: Format.weekday_date(order.fulfillment_date, locale),
+      fulfillment_method:
+        if(order.gift_voucher_sale? == true, do: "gift-voucher", else: to_string(order.fulfillment_method)),
+      fulfillment_date: fulfillment_date(order, locale),
       recipient_name: order.recipient_name,
+      collect_voucher_card: order.collect_voucher_card,
       contact_phone_number: order.contact_phone_number,
       # Customer's typed address, not `geocoded_address` — HERE strips flat numbers and stair codes.
       delivery_address: order.delivery_address,
@@ -73,6 +77,7 @@ defmodule Edenflowers.Orders.Receipt do
       fulfillment_fee: fulfillment_fee_payload(order, locale),
       discount: discount_payload(order, locale),
       vat_breakdown: vat_breakdown(order, locale),
+      vat_note: vat_note(order),
       grand_total: Format.currency(order.grand_total, locale),
       payments: payments_payload(order.payments, locale)
     }
@@ -102,6 +107,7 @@ defmodule Edenflowers.Orders.Receipt do
       venue_name: course.location_name,
       venue_address: course.location_address,
       recipient_name: nil,
+      collect_voucher_card: false,
       contact_phone_number: nil,
       delivery_address: nil,
       delivery_instructions: nil,
@@ -123,6 +129,7 @@ defmodule Edenflowers.Orders.Receipt do
       items_subtotal: amount,
       fulfillment_fee: nil,
       discount: nil,
+      vat_note: nil,
       vat_breakdown: [
         %{
           rate: Format.percentage(registration.tax_rate, locale),
@@ -135,6 +142,16 @@ defmodule Edenflowers.Orders.Receipt do
       payments: payments_payload(registration.payments, locale)
     }
   end
+
+  # A Gift voucher sale is dated by the voucher's expiry: it has no delivery.
+  defp fulfillment_date(%{gift_voucher_sale?: true} = order, locale) do
+    Format.date(order.gift_voucher_line.gift_voucher.expires_on, locale)
+  end
+
+  defp fulfillment_date(order, locale), do: Format.weekday_date(order.fulfillment_date, locale)
+
+  defp vat_note(%{gift_voucher_sale?: true}), do: "gift-voucher"
+  defp vat_note(_order), do: nil
 
   # Refunds aren't something the customer paid with, and payments recorded
   # before `payment_method_type` existed are left off so their receipts stay
@@ -168,7 +185,8 @@ defmodule Edenflowers.Orders.Receipt do
       variant_size: item.variant_size && size_label(item.variant_size, locale),
       quantity: item.quantity,
       unit_price_ex_tax: Format.currency(item.unit_price_ex_tax, locale),
-      tax_rate: Format.percentage(item.tax_rate, locale),
+      # Outside VAT, not taxed at 0 %.
+      tax_rate: if(item.is_gift_voucher, do: "–", else: Format.percentage(item.tax_rate, locale)),
       total: Format.currency(item.subtotal, locale)
     }
   end

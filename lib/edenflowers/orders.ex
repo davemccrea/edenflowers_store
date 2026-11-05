@@ -31,7 +31,10 @@ defmodule Edenflowers.Orders do
 
       # Checkout
       define :create_for_checkout, action: :create_for_checkout
+      define :start_gift_voucher_sale, action: :start_gift_voucher_sale, args: [:amount]
+      define :revise_gift_voucher_sale, action: :revise_gift_voucher_sale, args: [:amount]
       define :release_cart, action: :release_cart, get_by: [:id], args: [:visitor_id]
+      define :get_order_paid_with_payment_intent, action: :paid_with_payment_intent, args: [:id, :payment_intent_id]
       define :submit_contact_details, action: :submit_contact_details
       define :submit_gift_options, action: :submit_gift_options
       define :submit_delivery, action: :submit_delivery
