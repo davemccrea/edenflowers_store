@@ -189,19 +189,27 @@ create_product.(
   %{nil => %{weight_g: "120", pieces: "9"}}
 )
 
-# Left without products so the store's empty collection state can be seen.
-Ash.Changeset.for_create(ProductCategory, :create, %{
-  name: "Wreaths",
-  slug: "wreaths",
-  visibility: :public,
-  product_type: :flowers,
-  description: "Seasonal wreaths for doors and tables.",
-  translations: %{
-    "sv-FI": %{name: "Kransar", description: "Säsongens kransar för dörrar och bord."},
-    fi: %{name: "Seppeleet", description: "Kauden seppeleitä oviin ja pöydille."}
-  }
-})
-|> Ash.create!(authorize?: false)
+# Its one product is a draft, so the store shows an empty collection and the
+# admin a draft product.
+wreaths_category =
+  Ash.Changeset.for_create(ProductCategory, :create, %{
+    name: "Wreaths",
+    slug: "wreaths",
+    visibility: :public,
+    product_type: :flowers,
+    description: "Seasonal wreaths for doors and tables.",
+    translations: %{
+      "sv-FI": %{name: "Kransar", description: "Säsongens kransar för dörrar och bord."},
+      fi: %{name: "Seppeleet", description: "Kauden seppeleitä oviin ja pöydille."}
+    }
+  })
+  |> Ash.create!(authorize?: false)
+
+create_product.(
+  %{product_category_id: wreaths_category.id, name: "Advent Wreath", draft: true},
+  [medium: "65"],
+  %{}
+)
 
 create_product.(
   %{
@@ -307,12 +315,12 @@ for {document_id, vendor, vat, date, total, vat_amount, currency, category, desc
   |> Ash.create!(authorize?: false)
 end
 
-# Dates are relative to today so a fresh seed always has courses open for
-# booking, plus one that has already happened.
+# Dates are relative to today so a fresh seed always has one course filled by
+# the bookings below, one open, one already held, and a draft.
 now = DateTime.now!("Europe/Helsinki")
 today = DateTime.to_date(now)
 
-[autumn_wreath, _table_arrangement, midsummer_crown] =
+[autumn_wreath, table_arrangement, midsummer_crown, _spring_bulbs] =
   [
     %{
       name: "Autumn Wreath Workshop",
@@ -338,7 +346,7 @@ today = DateTime.to_date(now)
       start_time: ~T[10:00:00],
       end_time: ~T[13:00:00],
       register_before: Date.add(today, 11),
-      total_places: 8,
+      total_places: 7,
       price: "75.00"
     },
     %{
@@ -351,7 +359,9 @@ today = DateTime.to_date(now)
       end_time: ~T[20:00:00],
       register_before: Date.add(today, 71),
       total_places: 10,
-      price: "80.00"
+      price: "80.00",
+      language: :fi,
+      cancellation_fee_percent: 50
     },
     %{
       name: "Midsummer Flower Crown",
@@ -364,13 +374,25 @@ today = DateTime.to_date(now)
       register_before: Date.add(today, -97),
       total_places: 12,
       price: "45.00"
+    },
+    %{
+      name: "Spring Bulb Planters",
+      description: "Plant a pot of tulips, crocus and grape hyacinth to flower on your windowsill in spring.",
+      date: Date.add(today, 150),
+      start_time: ~T[17:30:00],
+      end_time: ~T[19:30:00],
+      register_before: Date.add(today, 143),
+      total_places: 8,
+      price: "55.00",
+      draft: true
     }
   ]
   |> Enum.map(fn attrs ->
     Course
     |> Ash.Changeset.for_create(
       :create,
-      Map.merge(attrs, %{
+      Map.merge(%{draft: false}, attrs)
+      |> Map.merge(%{
         location_name: "Minimossen",
         location_address: "Myrvägen 1, 65230 Vasa",
         image_slug: "https://placehold.co/1000x1250",
@@ -385,8 +407,7 @@ jennie = Ash.get!(User, %{email: "info@edenflowers.fi"}, authorize?: false)
 # Online course bookings. Ash.Seed for the same reason as orders below: checkout
 # confirms a booking only once Stripe has taken the money, and like a placed
 # order it keeps its PaymentIntent only on its Stripe payment. Elin cancelled
-# and was refunded. The Christmas course is left empty on purpose, and the past
-# one has its history.
+# and was refunded. The past course has its history.
 [
   {autumn_wreath, "Anna Svensson", "anna.svensson@example.com", 3, :confirmed, "sv-FI"},
   {autumn_wreath, "Elin Sjöberg", "elin.sjoberg@example.com", 1, :cancelled, "sv-FI"},
@@ -1106,6 +1127,67 @@ place_custom.(%{
   line_items: [custom_line.("Replacement bouquet", "0.00")]
 })
 
+# Gift vouchers, sold through their own checkout and placed as the Stripe
+# webhook would. One per state the order page shows: emailed and part spent on
+# a course booking, a gift card still to collect at the shop, and one that
+# expired with money left, so Jennie can give it more time.
+sell_gift_voucher = fn amount, attrs ->
+  sale =
+    amount
+    |> Orders.start_gift_voucher_sale!(Map.merge(%{locale: "sv-FI", voucher_locale: "sv-FI"}, attrs),
+      authorize?: false
+    )
+    |> Ash.load!(:stripe_amount, authorize?: false)
+
+  payment_intent = seed_payment_intent.(sale.stripe_amount, "visa", %{"order_id" => sale.id})
+  Ash.Seed.update!(sale, %{payment_intent_id: payment_intent.id})
+
+  {:ok, :completed} = Payments.complete(payment_intent)
+  Orders.get_order_for_admin!(sale.id, actor: jennie, load: [line_items: :gift_voucher])
+end
+
+part_spent =
+  sell_gift_voucher.(100, %{
+    customer_name: "Linnea Forsman",
+    customer_email: "linnea.forsman@example.fi",
+    recipient_name: "Mamma",
+    card_message: "Grattis på födelsedagen! Kram, Linnea"
+  })
+
+[%{gift_voucher: part_spent_voucher}] = part_spent.line_items
+
+%{
+  course_id: table_arrangement.id,
+  name: "Mamma Forsman",
+  email: "mamma.forsman@example.fi",
+  seats: 1,
+  locale: "fi",
+  payment_terms: :on_fulfillment,
+  email_customer?: false
+}
+|> Edenflowers.Courses.add_registration_manually!(actor: jennie)
+|> Edenflowers.Courses.pay_registration_with_gift_voucher!(part_spent_voucher.code, actor: jennie)
+
+sell_gift_voucher.(50, %{
+  customer_name: "Mats Holmberg",
+  customer_email: "mats.holmberg@example.fi",
+  recipient_name: "Kaisa",
+  collect_voucher_card: true,
+  locale: "fi",
+  voucher_locale: "fi"
+})
+
+expired =
+  sell_gift_voucher.(30, %{
+    customer_name: "Siv Engström",
+    customer_email: "siv.engstrom@example.fi",
+    recipient_name: "Siv"
+  })
+
+[%{gift_voucher: expired_voucher}] = expired.line_items
+Ash.Seed.update!(expired, %{ordered_at: DateTime.add(DateTime.utc_now(), -380, :day)})
+Ash.Seed.update!(expired_voucher, %{expires_on: Date.add(today, -15)})
+
 # Invoices, one of each state the admin shows, through the real actions as
 # Jennie. Sending goes to the dev mailbox (/dev/mailbox), so each invoice's
 # history and email are the app's own. An invoice is dated the day it is issued,
@@ -1158,9 +1240,7 @@ overdue =
 
 overdue = Ash.Seed.update!(overdue, %{invoice_date: Date.add(today, -38), due_date: Date.add(today, -24)})
 
-Payments.record_invoice_payment!(overdue, "120.00", %{paid_at: DateTime.add(DateTime.utc_now(), -20, :day)},
-  actor: jennie
-)
+Payments.record_invoice_payment!(overdue, "120.00", %{paid_on: Date.add(today, -20)}, actor: jennie)
 
 # Paid in full by bank transfer.
 paid =
