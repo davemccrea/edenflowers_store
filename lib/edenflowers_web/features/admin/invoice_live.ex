@@ -944,13 +944,16 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   # Issuing dates it today, so the due date shown is the one it gets if issued now.
   defp issue_dates_hint(term, locale) do
-    case Integer.parse(to_string(term)) do
-      {days, ""} when days in 0..365 ->
-        due = Date.add(ShopTime.today(), days)
-        ~t"Dated the day it is issued. Issued today, it is due #{date = Format.date(due, locale)}."
-
-      _invalid ->
-        ~t"Dated the day it is issued."
+    with {days, ""} when days in 0..365 <- Integer.parse(to_string(term)),
+         {:ok, due} <-
+           Ash.calculate(Invoice, :due_date_if_issued,
+             refs: %{payment_term_days: days},
+             args: %{issued_on: ShopTime.today()},
+             authorize?: false
+           ) do
+      ~t"Dated the day it is issued. Issued today, it is due #{date = Format.date(due, locale)}."
+    else
+      _invalid -> ~t"Dated the day it is issued."
     end
   end
 

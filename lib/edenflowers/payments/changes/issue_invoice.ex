@@ -51,7 +51,7 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
       |> Ash.Changeset.force_change_attributes(%{
         issued_at: DateTime.utc_now(),
         invoice_date: today,
-        due_date: Date.add(today, invoice.payment_term_days),
+        due_date: due_date_if_issued(invoice, today),
         number: number,
         reference_number: ReferenceNumber.from_invoice_number(number),
         amount: Decimal.new(snapshot["gross"]),
@@ -64,6 +64,9 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
       {:error, message} -> Ash.Changeset.add_error(changeset, message)
     end
   end
+
+  defp due_date_if_issued(invoice, today),
+    do: Ash.load!(invoice, [due_date_if_issued: %{issued_on: today}], authorize?: false).due_date_if_issued
 
   defp validate_order(nil, _amount), do: :ok
 

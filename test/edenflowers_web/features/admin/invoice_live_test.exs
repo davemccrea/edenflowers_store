@@ -11,6 +11,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
     view |> form("#invoice-form", invoice: params()) |> render_change()
     assert has_element?(view, "#invoice-totals", "15,02")
+    due = Edenflowers.ShopTime.today() |> Date.add(14) |> Edenflowers.Format.date("en")
+    assert render(view) =~ "Issued today, it is due #{due}."
     view |> form("#invoice-form", invoice: params()) |> render_submit()
     {path, _} = assert_redirect(view)
     {:ok, view, _} = live(conn, path)

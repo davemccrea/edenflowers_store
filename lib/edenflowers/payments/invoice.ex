@@ -501,6 +501,13 @@ defmodule Edenflowers.Payments.Invoice do
                     "reminder. Nothing is sent automatically: Jennie decides whether to nudge."
     end
 
+    calculate :due_date_if_issued, :date, expr(date_add(^arg(:issued_on), payment_term_days, :day)) do
+      description "The due_date it gets if issued on issued_on: its whole payment term later. Issuing sets it " <>
+                    "from the day of issue, and the editor shows it for today while Jennie sets the term."
+
+      argument :issued_on, :date, allow_nil?: false
+    end
+
     calculate :payable?, :boolean, expr(status == :open) do
       description "Whether it can take a Payment: open, with something left to pay. An Undo also works on a " <>
                     "paid invoice, which reopens it."
