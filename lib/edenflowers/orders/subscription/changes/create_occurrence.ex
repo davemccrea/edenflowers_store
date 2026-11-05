@@ -2,7 +2,8 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
   @moduledoc """
   Turns the Subscription's next date into an Occurrence: an ordinary Online
   Order, charged to the saved card and placed by `Payments.complete/1`, as a
-  checkout payment is. Then moves the Subscription on by one interval. A
+  checkout payment is. The Subscription's Gift voucher pays first, so the card
+  is charged only for the rest, and not at all when the voucher covers it. Then moves the Subscription on by one interval. A
   missed date makes no order and just moves it on. A refused card
   places the order unpaid with a payment link and holds the Subscription at
   `:payment_failed` until it is paid.
@@ -101,7 +102,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
 
   defp find_occurrence(subscription, date) do
     Orders.get_occurrence(subscription.id, date,
-      load: [:grand_total, :unpaid?],
+      load: [:stripe_amount, :unpaid?],
       not_found_error?: false,
       actor: system_actor()
     )
@@ -123,9 +124,10 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
         delivery_address: subscription.delivery_address,
         delivery_instructions: subscription.delivery_instructions,
         fulfillment_option_id: subscription.fulfillment_option_id,
-        fulfillment_date: fulfillment_date
+        fulfillment_date: fulfillment_date,
+        gift_voucher_id: subscription.gift_voucher_id
       },
-      load: [:grand_total],
+      load: [:stripe_amount],
       actor: system_actor()
     )
   end
@@ -141,6 +143,23 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
   end
 
   defp pay(%Order{payment_intent_id: nil} = order, subscription) do
+    if Decimal.positive?(order.stripe_amount),
+      do: charge_card(order, subscription),
+      else: place_paid_by_voucher(order)
+  end
+
+  # An earlier attempt charged the card but stopped before placing the order.
+  defp pay(order, subscription) do
+    with {:ok, payment_intent} <- StripeAPI.impl().retrieve_payment_intent(order) do
+      place(order, payment_intent, subscription)
+    end
+  end
+
+  defp place_paid_by_voucher(order) do
+    with {:ok, _order} <- Orders.place_paid_by_voucher(order, actor: system_actor()), do: :ok
+  end
+
+  defp charge_card(order, subscription) do
     case charge(order, subscription) do
       {:ok, payment_intent} ->
         with {:ok, order} <- keep_payment_intent(order, payment_intent) do
@@ -157,13 +176,6 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
     end
   end
 
-  # An earlier attempt charged the card but stopped before placing the order.
-  defp pay(order, subscription) do
-    with {:ok, payment_intent} <- StripeAPI.impl().retrieve_payment_intent(order) do
-      place(order, payment_intent, subscription)
-    end
-  end
-
   defp charge(order, subscription) do
     params = %{
       customer: subscription.stripe_customer_id,
@@ -173,7 +185,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
 
     key = "sub-#{subscription.id}-#{order.subscription_date}"
 
-    StripeAPI.impl().charge_off_session(StripeAPI.to_stripe_amount(order.grand_total), params, key)
+    StripeAPI.impl().charge_off_session(StripeAPI.to_stripe_amount(order.stripe_amount), params, key)
   end
 
   defp place_unpaid(order, subscription, message) do

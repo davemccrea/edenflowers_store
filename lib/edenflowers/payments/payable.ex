@@ -20,6 +20,8 @@ defmodule Edenflowers.Payments.Payable do
     * `calculate :committed?`: whether money is owed on it at all, so not an
       unplaced cart or a website course checkout still waiting for its payment.
     * `calculate :cancelled?`
+    * `calculate :saves_card?`: whether paying it saves the card for later
+      charges, so a Gift voucher must leave Stripe something to charge
     * `calculate :cancellable?`: whether it can be cancelled now
     * `calculate :default_cancellation_charge`: what cancelling it now keeps
       unless Jennie enters a charge. An order keeps nothing; a booking applies
@@ -211,21 +213,22 @@ defmodule Edenflowers.Payments.Payable do
     end
 
     # Stripe refuses to charge less than 0.50 €, so a voucher that nearly
-    # covers a purchase leaves that much for the card.
+    # covers a purchase leaves that much for the card. So does one that covers
+    # a purchase saving the card: Stripe only saves it with a charge.
     calculate :voucher_amount,
               :decimal,
               expr(
                 cond do
                   is_nil(gift_voucher_id) or not gift_voucher.spendable? -> 0
-                  gift_voucher.remaining >= total_due -> total_due
+                  gift_voucher.remaining >= total_due and not saves_card? -> total_due
                   total_due - gift_voucher.remaining >= ^Decimal.new("0.50") -> gift_voucher.remaining
                   total_due > ^Decimal.new("0.50") -> total_due - ^Decimal.new("0.50")
                   true -> 0
                 end
               ) do
       description "At checkout, what the Gift voucher entered will pay in euros: all of the Total due if what's " <>
-                    "left covers it, else what's left, short of Stripe's 0.50 € minimum for the card. 0 with no " <>
-                    "voucher, or one expired or used up."
+                    "left covers it, else what's left, short of Stripe's 0.50 € minimum for the card, which a " <>
+                    "purchase saving the card always pays. 0 with no voucher, or one expired or used up."
     end
 
     calculate :voucher_left_after, :decimal, expr(gift_voucher.remaining - voucher_amount) do

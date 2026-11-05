@@ -353,9 +353,11 @@ defmodule Edenflowers.Orders.Order.Checkout do
       require_atomic? false
     end
 
-    # finalize_checkout without Stripe; keep the two in step. A subscription
-    # cart can't hold a voucher, so there's no subscription to start, nor can
-    # a voucher sale, so there's no voucher to issue.
+    # finalize_checkout without Stripe; keep the two in step. A voucher always
+    # leaves a subscription cart something to charge, so the card is saved and
+    # there's no subscription to start here, and a voucher sale can't hold a
+    # voucher, so there's none to issue. Also places an Occurrence its
+    # Subscription's voucher pays in full.
     update :place_paid_by_voucher do
       description "Places a cart its Gift voucher pays for in full, as finalize_checkout does once Stripe " <>
                     "has charged a card: records the voucher payment, takes stock, queues the receipt and " <>

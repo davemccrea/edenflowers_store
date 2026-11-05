@@ -469,4 +469,68 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
       assert subscription.next_fulfillment_date == Date.add(passed, 14)
     end
   end
+
+  describe "with a Gift voucher" do
+    defp voucher(amount, opts \\ []), do: generate(gift_voucher([amount: Decimal.new(amount)] ++ opts))
+
+    test "the voucher pays first and the card is charged the rest", ctx do
+      voucher = voucher("20.00")
+      subscription = subscription_for(ctx, gift_voucher_id: voucher.id)
+      stub_geocoding()
+
+      expect(StripeAPI.Mock, :charge_off_session, fn 4000, params, _key -> succeeded(4000, params) end)
+
+      assert {:ok, _} = run(subscription)
+
+      assert [order] = occurrences(subscription)
+      assert order.state == :placed
+      assert %{stripe: stripe, voucher: from_voucher} = Map.new(order.payments, &{&1.method, &1.amount})
+      assert Decimal.equal?(stripe, "40.00")
+      assert Decimal.equal?(from_voucher, "20.00")
+    end
+
+    test "a voucher that covers the order places it without charging the card", ctx do
+      voucher = voucher("100.00")
+      subscription = subscription_for(ctx, gift_voucher_id: voucher.id)
+      stub_geocoding()
+
+      assert {:ok, _} = run(subscription)
+
+      assert [order] = occurrences(subscription)
+      assert order.state == :placed
+      assert [%Payment{method: :voucher} = payment] = order.payments
+      assert Decimal.equal?(payment.amount, "60.00")
+      assert_enqueued(worker: SendReceiptEmail, args: %{"primary_key" => %{"id" => order.id}})
+      assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 14)
+    end
+
+    test "an expired voucher leaves the whole order to the card", ctx do
+      voucher = voucher("100.00", expires_on: Date.add(ShopTime.today(), -1))
+      subscription = subscription_for(ctx, gift_voucher_id: voucher.id)
+      stub_geocoding()
+
+      expect(StripeAPI.Mock, :charge_off_session, fn 6000, params, _key -> succeeded(6000, params) end)
+
+      assert {:ok, _} = run(subscription)
+
+      assert [%{payments: [%Payment{method: :stripe}]}] = occurrences(subscription)
+    end
+
+    test "a refused card still takes the voucher's part, so the payment link asks for the rest", ctx do
+      voucher = voucher("20.00")
+      subscription = subscription_for(ctx, gift_voucher_id: voucher.id)
+      stub_geocoding()
+
+      expect(StripeAPI.Mock, :charge_off_session, fn 4000, _params, _key ->
+        {:error, %Stripe.Error{source: :stripe, code: :card_error, message: "Refused", extra: %{}}}
+      end)
+
+      capture_log(fn -> assert {:ok, _} = run(subscription) end)
+
+      assert [order] = occurrences(subscription)
+      assert [%Payment{method: :voucher}] = order.payments
+      assert Decimal.equal?(Ash.load!(order, :balance, authorize?: false).balance, "40.00")
+      assert reload(subscription).state == :payment_failed
+    end
+  end
 end

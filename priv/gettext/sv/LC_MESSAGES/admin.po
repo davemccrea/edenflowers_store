@@ -1807,7 +1807,7 @@ msgstr "Öppna Papra"
 msgid "Open directions in Google Maps"
 msgstr "Öppna vägbeskrivningen i Google Maps"
 
-#: lib/edenflowers/email.ex:744
+#: lib/edenflowers/email.ex:761
 #, elixir-autogen, elixir-format
 msgid "Open in the admin:"
 msgstr "Öppna i adminpanelen:"

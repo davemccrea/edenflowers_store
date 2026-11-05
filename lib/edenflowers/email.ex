@@ -394,6 +394,16 @@ defmodule Edenflowers.Email do
     delivery_on = subscription.next_fulfillment_date
     pickup? = subscription.fulfillment_option.fulfillment_method == :pickup
     day = Localize.Date.to_string!(delivery_on, locale: subscription.locale, format: "EEEE d.M.")
+    price = subscription_price(subscription)
+    voucher_amount = voucher_pays(subscription.gift_voucher, price)
+    card_amount = Decimal.sub(price, voucher_amount)
+
+    voucher_pays =
+      cond do
+        Decimal.eq?(voucher_amount, 0) -> :nothing
+        Decimal.eq?(card_amount, 0) -> :all
+        true -> :part
+      end
 
     customer_email(subscription, automated_from_address(), fn email ->
       email
@@ -407,7 +417,9 @@ defmodule Edenflowers.Email do
           subscription: subscription,
           product: subscription.product_variant.product.name,
           pickup?: pickup?,
-          price: Format.currency(subscription_price(subscription), subscription.locale),
+          price: Format.currency(card_amount, subscription.locale),
+          voucher_pays: voucher_pays,
+          voucher_amount: Format.currency(voucher_amount, subscription.locale),
           change_by: subscription.change_deadline,
           charged_on: subscription.charged_on,
           account_url: account_url(),
@@ -420,6 +432,11 @@ defmodule Edenflowers.Email do
   defp subscription_price(subscription) do
     Decimal.add(subscription.product_variant.price, subscription.first_order_fulfillment_fee || 0)
   end
+
+  # ponytail: ignores Stripe's 0.50 € card minimum, so a voucher a few cents
+  # short reads slightly high here; the charge itself follows Payable.voucher_amount.
+  defp voucher_pays(%{spendable?: true, remaining: remaining}, price), do: Decimal.min(remaining, price)
+  defp voucher_pays(_no_usable_voucher, _price), do: Decimal.new(0)
 
   @doc """
   Tells the customer their order was delivered. A collected order gets
