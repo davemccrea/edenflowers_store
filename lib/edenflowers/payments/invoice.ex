@@ -58,7 +58,7 @@ defmodule Edenflowers.Payments.Invoice do
     store_action_name? true
     ignore_attributes [:inserted_at, :updated_at]
     # Creating one is logged from the invoice itself; only sends are versioned.
-    ignore_actions [:create, :create_for_order]
+    ignore_actions [:create, :create_for_order, :destroy_draft]
     on_actions [:send]
     # sent_at is to the second, so a resend within the same second changes nothing but still went out.
     only_when_changed? false
@@ -190,6 +190,14 @@ defmodule Edenflowers.Payments.Invoice do
       change Changes.EditInvoiceDraft
     end
 
+    destroy :destroy_draft do
+      description "Deletes a draft Jennie no longer needs. Only a draft: it has no number yet, so the " <>
+                    "invoice series keeps no gap. An issued invoice is cancelled with a Credit note instead."
+
+      require_atomic? false
+      change Changes.EditInvoiceDraft
+    end
+
     update :issue do
       accept []
       require_atomic? false
@@ -275,7 +283,16 @@ defmodule Edenflowers.Payments.Invoice do
 
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action_type([:read, :create])
-      authorize_if action([:send, :update_draft, :issue, :record_payment, :undo_payment, :find_customers])
+
+      authorize_if action([
+                     :send,
+                     :update_draft,
+                     :destroy_draft,
+                     :issue,
+                     :record_payment,
+                     :undo_payment,
+                     :find_customers
+                   ])
     end
   end
 

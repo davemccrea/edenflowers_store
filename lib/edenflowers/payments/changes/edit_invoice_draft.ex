@@ -8,7 +8,7 @@ defmodule Edenflowers.Payments.Changes.EditInvoiceDraft do
 
       if invoice && is_nil(invoice.issued_at),
         do: changeset,
-        else: Ash.Changeset.add_error(changeset, "Issued invoices cannot be edited")
+        else: Ash.Changeset.add_error(changeset, "Issued invoices cannot be changed")
     end)
   end
 end

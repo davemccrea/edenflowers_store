@@ -105,6 +105,19 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
           </:subtitle>
           <:actions>
             <.button
+              :if={@editable && @invoice}
+              type="button"
+              phx-click="destroy_draft"
+              variant="secondary"
+              size="sm"
+              class="max-sm:btn-square"
+              aria-label={~t"Delete draft"}
+              data-confirm={~t"Delete this draft? This cannot be undone."}
+            >
+              <.icon name="hero-trash" class="h-4 w-4 sm:hidden" />
+              <span class="max-sm:sr-only">{~t"Delete draft"}</span>
+            </.button>
+            <.button
               :if={@editable}
               type="submit"
               form="invoice-form"
@@ -774,6 +787,17 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   end
 
   def handle_event("send_email", _params, socket), do: {:noreply, socket}
+
+  def handle_event("destroy_draft", _params, %{assigns: %{invoice: invoice}} = socket) do
+    case Payments.destroy_invoice_draft(invoice, actor: socket.assigns.current_user) do
+      :ok ->
+        {_label, path} = back(invoice)
+        {:noreply, socket |> put_flash(:info, ~t"Draft deleted.") |> push_navigate(to: path)}
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, ~t"This invoice is no longer a draft, so it can't be deleted.")}
+    end
+  end
 
   def handle_event("record_payment", %{"payment" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.payment_form, params: used_params(params)) do
