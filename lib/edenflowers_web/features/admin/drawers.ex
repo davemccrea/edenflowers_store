@@ -49,7 +49,19 @@ defmodule EdenflowersWeb.Admin.Drawers do
               class="input w-full tabular-nums"
             />
             <p class="text-base-content/75 text-sm">
-              {~t"Total #{total = Edenflowers.Format.currency(Decimal.new(@form[:total].value), @locale)}, paid #{paid = Edenflowers.Format.currency(Decimal.new(@form[:held].value), @locale)}. You keep the charge whether or not it was paid. Paid above it is refunded: card payments go back through Stripe, and anything paid in person you hand back yourself. Any of the charge not yet paid is left to collect."}
+              {~t"Paid #{paid = Edenflowers.Format.currency(Decimal.new(@form[:held].value), @locale)} of #{total = Edenflowers.Format.currency(Decimal.new(@form[:total].value), @locale)}."}
+              <%= case cancel_outcome(@form) do %>
+                <% {:refund, amount} -> %>
+                  {~t"#{amount = Edenflowers.Format.currency(amount, @locale)} will be refunded."}
+                <% {:collect, amount} -> %>
+                  {~t"#{amount = Edenflowers.Format.currency(amount, @locale)} left for the customer to pay."}
+                <% :settled -> %>
+                  {~t"Nothing to refund."}
+                <% nil -> %>
+              <% end %>
+            </p>
+            <p :if={match?({:refund, _}, cancel_outcome(@form))} class="text-base-content/75 text-sm">
+              {~t"Card payments are refunded through Stripe, and anything paid in person you hand back yourself."}
             </p>
           </div>
           <.input
@@ -84,6 +96,23 @@ defmodule EdenflowersWeb.Admin.Drawers do
       </.form>
     </.admin_drawer>
     """
+  end
+
+  # What the charge typed so far leaves to refund or collect, or nil while it isn't a number.
+  defp cancel_outcome(form) do
+    held = Decimal.new(form[:held].value)
+
+    case Decimal.parse(String.replace(form[:charge].value || "", ",", ".")) do
+      {charge, ""} ->
+        case Decimal.compare(held, charge) do
+          :gt -> {:refund, Decimal.sub(held, charge)}
+          :lt -> {:collect, Decimal.sub(charge, held)}
+          :eq -> :settled
+        end
+
+      _ ->
+        nil
+    end
   end
 
   attr :id, :string, required: true

@@ -926,7 +926,10 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|[phx-click="open_cancel"]|) |> render_click()
       assert has_element?(view, ~s|#cancel-form input[name="cancel[charge]"][value="0"]|)
-      assert has_element?(view, "#cancel-form", "Total 85,00 €, paid 50,00 €.")
+      assert has_element?(view, "#cancel-form", "Paid 50,00 € of 85,00 €. 50,00 € will be refunded.")
+
+      view |> form("#cancel-form", cancel: %{charge: "60,00"}) |> render_change()
+      assert has_element?(view, "#cancel-form", "10,00 € left for the customer to pay.")
 
       view |> form("#cancel-form", cancel: %{charge: "85.01", reason: "Ill that day"}) |> render_submit()
       assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from 0 € to 85,00 €.")
