@@ -663,6 +663,36 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, "#order-price", "193,50 €")
     end
 
+    test "a gift voucher's code shows what it pays, in the form and the email preview", ctx do
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="catalogue"]|) |> render_click()
+
+      enter = fn code ->
+        view
+        |> form("#order-form",
+          form: %{
+            locale: "en-GB",
+            customer_email: "son@example.com",
+            fulfillment_option_id: ctx.pickup.id,
+            fulfillment_date: tomorrow(),
+            gift_voucher_code: code,
+            line_items: %{"0" => %{"product_variant_id" => ctx.variant.id, "quantity" => "1"}}
+          }
+        )
+        |> render_change()
+      end
+
+      enter.(generate(gift_voucher(amount: Decimal.new("20.00"))).code)
+      assert has_element?(view, "#voucher-pays", "20,00 €")
+      assert has_element?(view, ~s|input[name="form[payment_terms]"]|)
+      assert has_element?(view, "#order-details-email-preview", "Left to pay")
+
+      enter.(generate(gift_voucher(amount: Decimal.new("100.00"))).code)
+      assert has_element?(view, "#voucher-pays", "pays it all")
+      refute has_element?(view, ~s|input[name="form[payment_terms]"]|)
+      assert has_element?(view, "#order-details-email-preview", "Paid in full")
+    end
+
     test "shows what is missing instead of saving", ctx do
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 

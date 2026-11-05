@@ -336,6 +336,37 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       end)
     end
 
+    test "a gift voucher handed over with it pays as soon as it's placed", ctx do
+      voucher = generate(gift_voucher(amount: Decimal.new("200.00")))
+
+      {:ok, order} =
+        place(ctx, %{customer_email: "son@example.com", locale: "en-GB", gift_voucher_code: voucher.code})
+
+      order = Ash.load!(order, :balance, authorize?: false, reuse_values?: false)
+      assert Decimal.eq?(order.balance, 0)
+
+      Oban.drain_queue(queue: :default)
+
+      assert_email_sent(fn email ->
+        refute email.text_body =~ "pay online"
+        assert email.text_body =~ "Paid in full"
+      end)
+    end
+
+    test "a voucher that doesn't cover it leaves the rest to pay on the chosen terms", ctx do
+      voucher = generate(gift_voucher(amount: Decimal.new("100.00")))
+
+      {:ok, order} = place(ctx, %{payment_terms: :on_fulfillment, gift_voucher_code: voucher.code})
+
+      assert Decimal.eq?(Ash.load!(order, :balance, authorize?: false, reuse_values?: false).balance, "34.00")
+    end
+
+    test "an unknown voucher code places nothing", ctx do
+      assert {:error, error} = place(ctx, %{gift_voucher_code: "NOPE-NOPE-NOPE"})
+      assert [%{field: :gift_voucher_code}] = Ash.Error.to_error_class(error).errors
+      assert Orders.Order |> Ash.read!(authorize?: false) == []
+    end
+
     test "sends nothing when Jennie chooses not to", ctx do
       {:ok, _order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false})
 

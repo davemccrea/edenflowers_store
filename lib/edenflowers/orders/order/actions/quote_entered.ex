@@ -13,7 +13,8 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
   is priced by the quote the form already looked up, so nothing is geocoded.
 
   A line that isn't filled in yet is left out. The fee is nil while it can't be
-  priced, and the total then leaves it out.
+  priced, and the total then leaves it out. `voucher_pays` is what a Gift
+  voucher whose code came with a new order would pay on placing it.
   """
   use Ash.Resource.Actions.Implementation
 
@@ -43,13 +44,16 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
         fulfillment_tax_rate: entered.fulfillment_tax_rate
       })
 
+    total = Decimal.add(sum(lines, :total), fee || 0)
+
     {:ok,
      %{
        lines: Enum.map(lines, &%{name: &1.product_name, quantity: &1.quantity, total: &1.total}),
        fulfillment_fee: fee,
        free_delivery?: free_delivery?,
        vat: sum(vat_rows, :vat),
-       total: Decimal.add(sum(lines, :total), fee || 0)
+       total: total,
+       voucher_pays: voucher_pays(changeset, total)
      }}
   end
 
@@ -142,6 +146,17 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
 
   defp located(delivery_quote),
     do: {:ok, %{fulfillment_fee: delivery_quote.fee, free_delivery_fee: delivery_quote.free_delivery_fee}}
+
+  # Placing pays what it can from the voucher whose code came with it (PayWithGiftVoucherCode).
+  defp voucher_pays(changeset, total) do
+    with code when is_binary(code) <- Ash.Changeset.get_argument(changeset, :gift_voucher_code),
+         {:ok, %{spendable?: true} = voucher} <-
+           Edenflowers.Payments.get_gift_voucher_by_code(code, not_found_error?: false, authorize?: false) do
+      Decimal.min(voucher.remaining, total)
+    else
+      _no_voucher -> Decimal.new(0)
+    end
+  end
 
   defp sum(rows, key), do: Enum.reduce(rows, Decimal.new(0), &Decimal.add(Map.fetch!(&1, key), &2))
 end

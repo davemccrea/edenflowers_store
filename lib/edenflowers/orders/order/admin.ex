@@ -249,8 +249,8 @@ defmodule Edenflowers.Orders.Order.Admin do
 
     create :place_custom do
       description "Jennie enters a Custom Order, placed at once and possibly unpaid: opens a payment link if " <>
-                    "its terms are a payment link, takes stock, and queues the Order details email unless " <>
-                    "`email_customer?` is false."
+                    "its terms are a payment link, takes stock, pays what it can from a Gift voucher whose code " <>
+                    "came with it, and queues the Order details email unless `email_customer?` is false."
 
       accept [:payment_terms | @custom_order_fields]
 
@@ -311,6 +311,14 @@ defmodule Edenflowers.Orders.Order.Admin do
 
       change Changes.RecordEnteredLineItems
       change {Changes.AdjustStock, direction: :take}
+
+      argument :gift_voucher_code, :string,
+        constraints: [trim?: true],
+        description:
+          "A Gift voucher handed over or read out with the order. Placing it pays what it can from " <>
+            "the voucher, and `payment_terms` then say how the customer pays any rest."
+
+      change PaymentChanges.PayWithGiftVoucherCode, where: [present(:gift_voucher_code)]
 
       change {PaymentChanges.QueueEmail, trigger: :send_order_details_email},
         where: [argument_equals(:email_customer?, true)]
