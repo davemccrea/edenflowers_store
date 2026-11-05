@@ -301,7 +301,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
       |> Map.merge(assigns.params)
       |> to_form(as: :payment)
 
-    assigns = assign(assigns, form: form)
+    assigns = assign(assigns, form: form, voucher?: form[:payment_method].value == "voucher")
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="space-y-4">
@@ -316,6 +316,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           options={payment_method_options()}
         />
         <.input
+          :if={not @voucher?}
           field={@form[:amount]}
           id={"#{@id}-amount"}
           type="text"
@@ -323,9 +324,23 @@ defmodule EdenflowersWeb.Admin.Drawers do
           label={~t"Amount received (€)"}
           class="input w-full tabular-nums"
         />
+        <.input
+          :if={@voucher?}
+          field={@form[:code]}
+          id={"#{@id}-code"}
+          type="text"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          label={~t"Gift voucher code"}
+          class="input font-mono w-full uppercase"
+        />
       </div>
+      <p :if={@voucher?} class="text-base-content/75 text-sm">
+        {~t"The voucher pays what's owed, as far as what's left on it goes."}
+      </p>
       <.customer_email
-        :if={@receipt_email?}
+        :if={@receipt_email? and not @voucher?}
         id={"#{@id}-email"}
         send={@form[:email_receipt]}
         label={~t"Email the customer a receipt"}
@@ -335,7 +350,11 @@ defmodule EdenflowersWeb.Admin.Drawers do
       <.button
         type="submit"
         variant="primary"
-        data-confirm={~t"Record this payment? A mistake can be undone afterwards."}
+        data-confirm={
+          if @voucher?,
+            do: ~t"Pay from this gift voucher? A voucher payment can't be undone.",
+            else: ~t"Record this payment? A mistake can be undone afterwards."
+        }
       >
         {~t"Record payment"}
       </.button>
@@ -343,10 +362,10 @@ defmodule EdenflowersWeb.Admin.Drawers do
     """
   end
 
-  @doc "Every way Jennie records money herself; Stripe records its own, and checkout a Gift voucher's."
+  @doc "Every way Jennie records money herself, a Gift voucher by its code; Stripe records its own."
   def payment_method_options do
     Edenflowers.Payments.PaymentMethod.values()
-    |> Kernel.--([:stripe, :voucher])
+    |> Kernel.--([:stripe])
     |> Enum.map(&{OrderLog.payment_method_label(&1), &1})
   end
 

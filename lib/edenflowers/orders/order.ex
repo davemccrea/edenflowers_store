@@ -217,6 +217,7 @@ defmodule Edenflowers.Orders.Order do
                      :remove_pass_it_on_card,
                      :cancel,
                      :record_payment,
+                     :pay_with_gift_voucher,
                      :undo_payment,
                      :refund,
                      :open_payment_link,

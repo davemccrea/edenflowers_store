@@ -201,6 +201,44 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
     end
   end
 
+  describe "paying in the shop" do
+    setup do
+      %{admin: generate(admin_user())}
+    end
+
+    test "a voucher pays what's left on it, and the rest stays to collect", %{admin: admin} do
+      order = placed_order(payment_intent_id: nil)
+      voucher = voucher("50.00")
+
+      assert {:ok, paid} = Orders.pay_with_gift_voucher(order, voucher.code, actor: admin)
+
+      assert voucher_payments(paid) == ["50.00"]
+      assert Decimal.eq?(money(paid).balance, "38.50")
+      assert Decimal.eq?(remaining(voucher), 0)
+    end
+
+    test "it pays only what's owed, and a second voucher is refused once one has paid", %{admin: admin} do
+      registration = generate(course_registration(status: :confirmed, amount: Decimal.new("85.00")))
+      voucher = voucher("100.00")
+
+      assert {:ok, paid} = Courses.pay_registration_with_gift_voucher(registration, voucher.code, actor: admin)
+      assert Decimal.eq?(money(paid).balance, 0)
+      assert Decimal.eq?(remaining(voucher), 15)
+
+      assert code_error(Courses.pay_registration_with_gift_voucher(paid, voucher("20.00").code, actor: admin)) =~
+               "Another gift voucher"
+    end
+
+    test "refuses unknown and used-up vouchers", %{admin: admin} do
+      order = placed_order(payment_intent_id: nil)
+      used_up = voucher("20.00")
+      generate(payment(order_id: order.id, gift_voucher_id: used_up.id, method: :voucher, amount: Decimal.new("20.00")))
+
+      assert code_error(Orders.pay_with_gift_voucher(order, "NOPE-NOPE-NOPE", actor: admin)) =~ "couldn't find"
+      assert code_error(Orders.pay_with_gift_voucher(order, used_up.code, actor: admin)) =~ "used up"
+    end
+  end
+
   describe "looking after a voucher" do
     test "Jennie gives it more time, even once expired, but never takes time away" do
       expired = voucher("50.00", expires_on: Date.add(Edenflowers.ShopTime.today(), -3))

@@ -1,10 +1,10 @@
 ---
 id: TASK-160.3
 title: Sell vouchers and record voucher payments in admin
-status: ready-for-agent
+status: in-progress
 assignee: []
 created_date: '2026-11-01 17:32'
-updated_date: '2026-11-05 20:09'
+updated_date: '2026-11-05 21:27'
 labels: []
 dependencies:
   - TASK-160.1
@@ -25,7 +25,7 @@ ordinal: 309000
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Jennie can sell a voucher on a Custom Order and print its PDF
-- [ ] #2 Jennie can pay a Custom Order or course booking with a voucher code
+- [x] #2 Jennie can pay a Custom Order or course booking with a voucher code
 <!-- AC:END -->
 
 ## Comments

@@ -90,6 +90,7 @@ defmodule Edenflowers.Courses do
       define :get_registration_by_payment_link_token, action: :by_payment_link_token, args: [:token]
       define :undo_registration_payment, action: :undo_payment, args: [:payment_id]
       define :record_registration_payment, action: :record_payment, args: [:amount, :payment_method]
+      define :pay_registration_with_gift_voucher, action: :pay_with_gift_voucher, args: [:code]
       define :remove_registration_seat, action: :remove_seat
       define :cancel_registration, action: :cancel
     end

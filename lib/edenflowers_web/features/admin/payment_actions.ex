@@ -49,6 +49,13 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
+  def record_payment(payable, %{"payment_method" => "voucher"} = params, actor) do
+    case Ash.update(payable, %{code: params["code"]}, action: :pay_with_gift_voucher, actor: actor) do
+      {:ok, _payable} -> {:success, ~t"Paid from the gift voucher."}
+      {:error, error} -> {:error, payment_error(error)}
+    end
+  end
+
   def record_payment(payable, %{"amount" => amount, "payment_method" => payment_method} = params, actor) do
     input =
       Map.merge(Drawers.email_edits(params), %{

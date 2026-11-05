@@ -6,10 +6,11 @@ defmodule Edenflowers.Payments.Changes.ApplyGiftVoucher do
   confirmed.
 
   Refuses an unknown code, a voucher that has expired, is used up or whose sale was
-  cancelled, and a voucher sale, as one voucher can't buy another.
+  cancelled, a voucher sale, as one voucher can't buy another, and a second
+  voucher on a purchase another voucher has already paid for.
   """
   use Ash.Resource.Change
-  use GettextSigils, backend: EdenflowersWeb.Gettext
+  use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [modifiers: [a: [domain: "admin"]]]
 
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments
@@ -37,7 +38,9 @@ defmodule Edenflowers.Payments.Changes.ApplyGiftVoucher do
   defp apply_code(changeset, code) do
     case Payments.get_gift_voucher_by_code(code, not_found_error?: false) do
       {:ok, %{spendable?: true} = voucher} ->
-        Ash.Changeset.force_change_attribute(changeset, :gift_voucher_id, voucher.id)
+        if another_voucher_paid?(changeset.data, voucher),
+          do: refuse(changeset, ~t"Another gift voucher has already paid for this, and only one can."a),
+          else: Ash.Changeset.force_change_attribute(changeset, :gift_voucher_id, voucher.id)
 
       {:ok, nil} ->
         refuse(changeset, ~t"We couldn't find that gift voucher. Check the code and try again.")
@@ -48,6 +51,15 @@ defmodule Edenflowers.Payments.Changes.ApplyGiftVoucher do
       {:error, error} ->
         Ash.Changeset.add_error(changeset, error)
     end
+  end
+
+  # Cancelling and refunding put money back onto the purchase's one voucher.
+  defp another_voucher_paid?(%{gift_voucher_id: nil}, _voucher), do: false
+  defp another_voucher_paid?(%{gift_voucher_id: id}, %{id: id}), do: false
+
+  defp another_voucher_paid?(record, _voucher) do
+    paid = Ash.load!(record, :paid_by_voucher, authorize?: false, reuse_values?: false).paid_by_voucher
+    not Decimal.eq?(paid, 0)
   end
 
   defp unspendable(voucher, record) do
