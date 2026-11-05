@@ -236,36 +236,44 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert reloaded.fulfillment_status == :fulfilled
   end
 
-  test "a voucher to collect as a gift card shows what to write on it until it's collected", %{conn: conn} do
+  # A 50 € voucher sale paid at checkout, and the voucher it issued.
+  defp paid_voucher_sale(attrs \\ %{}) do
     sale =
       Orders.start_gift_voucher_sale!(
         50,
-        %{
-          customer_name: "Anna Buyer",
-          customer_email: "anna@example.com",
-          recipient_name: "Mia",
-          collect_voucher_card: true,
-          locale: "sv-FI",
-          voucher_locale: "fi"
-        },
+        Map.merge(
+          %{
+            customer_name: "Anna Buyer",
+            customer_email: "anna@example.com",
+            recipient_name: "Mia",
+            locale: "sv-FI",
+            voucher_locale: "fi"
+          },
+          attrs
+        ),
         actor: nil
       )
 
     Mox.expect(StripeAPI.Mock, :create_payment_intent, fn 5000, _metadata, nil ->
-      {:ok, %{id: "pi_voucher", client_secret: "pi_secret", amount: 5000}}
+      {:ok, %{id: "pi_#{sale.id}", client_secret: "pi_secret", amount: 5000}}
     end)
 
     {:ok, _} = Orders.prepare_checkout_payment(sale.id, actor: nil)
 
     {:ok, :completed} =
       Edenflowers.Payments.complete(%{
-        id: "pi_voucher",
+        id: "pi_#{sale.id}",
         status: "succeeded",
         metadata: %{"order_id" => sale.id},
         amount_received: 5000
       })
 
     [%{gift_voucher: voucher}] = Ash.load!(sale, [line_items: :gift_voucher], authorize?: false).line_items
+    {sale, voucher}
+  end
+
+  test "a voucher to collect as a gift card shows what to write on it until it's collected", %{conn: conn} do
+    {sale, voucher} = paid_voucher_sale(%{collect_voucher_card: true})
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders")
     assert has_element?(view, "[data-item-id]", "Card to write")
@@ -279,6 +287,27 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     assert has_element?(view, "#order-status", "Fulfilled")
     refute has_element?(view, "#order-status", "Card to write")
+  end
+
+  test "a voucher's order shows what's left and where it went, and Jennie gives it more time", %{conn: conn} do
+    {sale, voucher} = paid_voucher_sale()
+    spent_on = placed_order(customer_name: "Bertil Ek")
+
+    generate(
+      payment(order_id: spent_on.id, gift_voucher_id: voucher.id, method: :voucher, amount: Decimal.new("20.00"))
+    )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{sale.id}")
+    assert has_element?(view, "#order-gift-voucher-remaining", "30,00")
+    assert has_element?(view, ~s|#order-gift-voucher-payments a[href="/admin/orders/#{spent_on.id}"]|, "Bertil Ek")
+
+    later = Date.add(voucher.expires_on, 90)
+
+    view
+    |> form("#gift-voucher-last-day", voucher: %{expires_on: Date.to_iso8601(later)})
+    |> render_submit()
+
+    assert Ash.reload!(voucher, authorize?: false).expires_on == later
   end
 
   test "fulfills a pickup with no customer email", %{conn: conn} do

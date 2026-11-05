@@ -129,6 +129,8 @@ defmodule Edenflowers.Orders.Order do
     # The subject and text she sent in place of the template's, if she rewrote
     # the email, set by its Send* change or Cancel.
     metadata :email_subject, :string
+    # Where Jennie sent an email, when she chose an address other than the customer's.
+    metadata :email_to, :string
     metadata :email_body, :string
     # The pass-it-on card linked or removed, set by LinkPassItOnCard: the link lives on the card.
     metadata :pass_it_on_card, :string
@@ -159,7 +161,8 @@ defmodule Edenflowers.Orders.Order do
       :record_fulfillment_email_failure,
       :record_receipt_email_failure,
       :record_order_details_email_failure,
-      :email_receipt
+      :email_receipt,
+      :email_gift_voucher
     ]
   end
 
@@ -219,7 +222,8 @@ defmodule Edenflowers.Orders.Order do
                      :open_payment_link,
                      :send_order_details_email,
                      :send_payment_reminder,
-                     :email_receipt
+                     :email_receipt,
+                     :email_gift_voucher
                    ])
 
       authorize_if action_type(:read)
@@ -629,6 +633,11 @@ defmodule Edenflowers.Orders.Order do
                     "buy another."
     end
 
+    calculate :refunded_only_by_cancelling?, :boolean, expr(gift_voucher_sale?) do
+      description "Whether its money goes back only by cancelling it: a Gift voucher sale, so refunding it " <>
+                    "always stops the voucher. The admin offers no Refund for it, only Cancel."
+    end
+
     calculate :saves_card?, :boolean, expr(subscription?) do
       description "Whether paying for the cart saves the card for the Subscription it starts, so a Gift " <>
                     "voucher leaves at least Stripe's 0.50 € minimum for the card."
@@ -684,10 +693,15 @@ defmodule Edenflowers.Orders.Order do
                 contains(customer_name, ^arg(:term)) or contains(order_reference, ^arg(:term)) or
                   contains(customer_phone_number, ^arg(:term)) or contains(customer_email, ^arg(:term)) or
                   contains(customer_instagram, ^arg(:term)) or
-                  contains(recipient_name, ^arg(:term)) or contains(delivery_address, ^arg(:term))
+                  contains(recipient_name, ^arg(:term)) or contains(delivery_address, ^arg(:term)) or
+                  exists(
+                    line_items.gift_voucher,
+                    code == fragment("upper(regexp_replace(?, '[^0-9A-Za-z]', '', 'g'))", ^arg(:term))
+                  )
               ) do
       description "The admin orders search, case-insensitive: whether the term appears in the Customer's name, " <>
-                    "email, phone or Instagram, the reference, the Recipient's name or the delivery address."
+                    "email, phone or Instagram, the reference, the Recipient's name or the delivery address, or " <>
+                    "is the whole code of a Gift voucher it sold, typed with or without its dashes."
 
       argument :term, :ci_string, allow_nil?: false
     end

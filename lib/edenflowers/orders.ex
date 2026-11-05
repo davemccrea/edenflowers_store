@@ -92,6 +92,7 @@ defmodule Edenflowers.Orders do
       # Emails
       define :send_order_details_email, action: :send_order_details_email
       define :email_receipt, action: :email_receipt
+      define :email_gift_voucher, action: :email_gift_voucher
       define :send_payment_reminder, action: :send_payment_reminder
 
       # The charged fee for a quote not yet on an order, by the order's own rule.

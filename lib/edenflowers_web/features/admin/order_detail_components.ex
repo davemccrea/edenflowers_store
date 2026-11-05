@@ -34,12 +34,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           <span class="tabular-nums">{Format.currency(@order.gift_voucher_line.unit_price, @locale)}</span>
         </.summary_fact>
         <.summary_fact :if={@order.gift_voucher_line.gift_voucher} label={~t"Code"}>
-          <span id="order-gift-voucher-code" class="font-mono tracking-wider">
+          <span id="order-gift-voucher-code" class="tabular-nums tracking-wider">
             {GiftVoucher.format_code(@order.gift_voucher_line.gift_voucher.code)}
           </span>
         </.summary_fact>
         <.summary_fact :if={@order.gift_voucher_line.gift_voucher} label={~t"Valid until"}>
-          <span class="tabular-nums">{Format.date(@order.gift_voucher_line.gift_voucher.expires_on, @locale)}</span>
+          <.gift_voucher_last_day voucher={@order.gift_voucher_line.gift_voucher} locale={@locale} />
         </.summary_fact>
       </div>
       <blockquote
@@ -47,9 +47,111 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         phx-no-format
         class="text-base-content font-serif mt-5 whitespace-pre-wrap break-words text-xl italic leading-relaxed"
       >{@order.card_message}</blockquote>
+      <.gift_voucher_spending
+        :if={@order.gift_voucher_line.gift_voucher && @order.gift_voucher_line.gift_voucher.payments != []}
+        voucher={@order.gift_voucher_line.gift_voucher}
+        locale={@locale}
+      />
     </.widget>
     """
   end
+
+  attr :voucher, GiftVoucher, required: true
+  attr :locale, :string, required: true
+
+  # The date, with Change beside it while the voucher can still be given time; the form opens in its place.
+  defp gift_voucher_last_day(assigns) do
+    ~H"""
+    <div id="gift-voucher-last-day-view" class="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <span class="tabular-nums">{Format.date(@voucher.expires_on, @locale)}</span>
+      <.button
+        :if={@voucher.last_day_changeable?}
+        id="gift-voucher-last-day-open"
+        type="button"
+        variant="ghost"
+        size="sm"
+        class="-my-1"
+        aria-label={~t"Change last day"}
+        phx-click={
+          JS.hide(to: "#gift-voucher-last-day-view")
+          |> JS.show(to: "#gift-voucher-last-day")
+          |> JS.focus(to: "#gift-voucher-expires-on")
+        }
+      >
+        <.icon name="hero-pencil-square" class="h-4 w-4" /> {~t"Change"}
+      </.button>
+    </div>
+    <.form
+      :if={@voucher.last_day_changeable?}
+      for={%{}}
+      as={:voucher}
+      id="gift-voucher-last-day"
+      phx-submit="change_voucher_last_day"
+      class="hidden"
+    >
+      <div class="flex flex-wrap items-center gap-2">
+        <input
+          type="date"
+          name="voucher[expires_on]"
+          id="gift-voucher-expires-on"
+          aria-label={~t"Last day"}
+          value={Date.to_iso8601(@voucher.expires_on)}
+          min={Date.to_iso8601(Date.add(@voucher.expires_on, 1))}
+          required
+          class="input input-sm w-auto tabular-nums"
+        />
+        <.button type="submit" variant="primary" size="sm">{~t"Save"}</.button>
+        <.button
+          type="button"
+          variant="ghost"
+          size="sm"
+          phx-click={JS.hide(to: "#gift-voucher-last-day") |> JS.show(to: "#gift-voucher-last-day-view")}
+        >
+          {~t"Cancel"}
+        </.button>
+      </div>
+    </.form>
+    """
+  end
+
+  attr :voucher, GiftVoucher, required: true
+  attr :locale, :string, required: true
+
+  # Once it's been spent: a small ledger, read like the Payment card, of what it paid for,
+  # what was handed back onto it, and what's left.
+  defp gift_voucher_spending(assigns) do
+    ~H"""
+    <dl id="order-gift-voucher-payments" class="border-base-content/12 mt-6 border-t pt-4 text-sm">
+      <div :for={payment <- @voucher.payments} class="flex items-baseline justify-between gap-4 py-0.5">
+        <dt class="text-base-content/75 min-w-0">
+          <.link navigate={spent_on_path(payment)} class="link link-primary">{spent_on(payment)}</.link>
+          ·
+          <time datetime={DateTime.to_iso8601(payment.paid_at)} title={Format.datetime(payment.paid_at, @locale)}>
+            {payment.paid_at
+            |> DateTime.shift_zone!(Edenflowers.ShopTime.timezone())
+            |> DateTime.to_date()
+            |> Format.day_month(@locale)}
+          </time>
+        </dt>
+        <dd class="text-base-content/90 shrink-0 tabular-nums">
+          {Format.currency(negate(payment.amount), @locale)}
+        </dd>
+      </div>
+      <div id="order-gift-voucher-remaining" class="border-base-content/12 mt-1.5 border-t pt-1.5">
+        <.money_row strong label={~t"Left"} amount={@voucher.remaining} locale={@locale} />
+      </div>
+    </dl>
+    """
+  end
+
+  defp spent_on(%{order: %{} = order}),
+    do: ~t"Order #{reference = order.order_reference} · #{name = order.customer_name}"
+
+  defp spent_on(%{course_registration: booking}),
+    do: ~t"Course #{reference = booking.reference} · #{name = booking.name}"
+
+  defp spent_on_path(%{order: %{} = order}), do: ~p"/admin/orders/#{order.id}"
+  defp spent_on_path(%{course_registration: booking}), do: ~p"/admin/courses/#{booking.course_id}"
 
   attr :order, Order, required: true
   attr :mode, :atom, required: true, values: [:settle, :refund]
@@ -534,8 +636,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     <.actions_menu id="order-actions" class="w-56">
       <%!-- One email at a time: the details carry how to pay, so once paid the receipt replaces them. --%>
       <%= if @paid? do %>
+        <%!-- A voucher's email carries its receipt too. --%>
         <.actions_menu_button
-          :if={!@no_email}
+          :if={!@no_email && @order.gift_voucher_sale?}
+          menu="order-actions"
+          phx-click="open_email"
+          phx-value-kind="gift_voucher"
+        >
+          {~t"Resend gift voucher"}
+        </.actions_menu_button>
+        <.actions_menu_button
+          :if={!@no_email && !@order.gift_voucher_sale?}
           menu="order-actions"
           phx-click="open_email"
           phx-value-kind="receipt"
@@ -668,6 +779,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   def cancel_unavailable(%{invoiced?: true}), do: ~t"Credit the invoice first"
   def cancel_unavailable(%{cancellable?: true}), do: nil
+  def cancel_unavailable(%{gift_voucher_spent?: true}), do: ~t"Some of the voucher is spent"
   def cancel_unavailable(%{fulfillment_status: :fulfilled}), do: ~t"Already fulfilled"
   def cancel_unavailable(%{fulfillment_status: :cancelled}), do: ~t"Already cancelled"
 
