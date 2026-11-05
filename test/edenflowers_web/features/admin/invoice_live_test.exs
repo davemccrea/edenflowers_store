@@ -310,6 +310,18 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
   end
 
   @tag :capture_log
+  test "a draft can be deleted from its page, an issued invoice can't", %{conn: conn, admin: admin} do
+    invoice = draft(admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    view |> element("button[phx-click=destroy_draft]") |> render_click()
+    assert_redirect(view, ~p"/admin/invoices")
+    assert {:ok, []} = Ash.read(Invoice, actor: admin)
+
+    {:ok, issued} = Payments.issue_invoice(draft(admin), actor: admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{issued.id}")
+    refute has_element?(view, "button[phx-click=destroy_draft]")
+  end
+
   test "drafts have no downloadable document", %{conn: conn, admin: admin} do
     invoice = draft(admin)
     conn = get(conn, ~p"/admin/invoices/#{invoice.id}/pdf")

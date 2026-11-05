@@ -28,6 +28,7 @@ defmodule Edenflowers.Payments do
       define :create_invoice, action: :create
       define :create_invoice_for_order, action: :create_for_order, args: [:order_id]
       define :update_invoice_draft, action: :update_draft
+      define :destroy_invoice_draft, action: :destroy_draft
       define :issue_invoice, action: :issue
       define :record_invoice_payment, action: :record_payment, args: [:amount]
       define :undo_invoice_payment, action: :undo_payment, args: [:payment_id]

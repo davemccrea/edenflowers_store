@@ -60,6 +60,17 @@ defmodule Edenflowers.Payments.StandaloneInvoiceTest do
     assert Ash.get!(Invoice, draft.id, authorize?: false).content == issued.content
   end
 
+  test "only a draft can be deleted", %{admin: admin} do
+    {:ok, draft} = Payments.create_invoice(attrs(), actor: admin)
+    assert :ok = Payments.destroy_invoice_draft(draft, actor: admin)
+    assert Ash.get(Invoice, draft.id, authorize?: false) |> elem(0) == :error
+
+    {:ok, draft} = Payments.create_invoice(attrs(), actor: admin)
+    {:ok, issued} = Payments.issue_invoice(draft, actor: admin)
+    assert {:error, _} = Payments.destroy_invoice_draft(draft, actor: admin)
+    assert Ash.get!(Invoice, issued.id, authorize?: false).number == issued.number
+  end
+
   test "failed issuance consumes no number and rejects unfinished, zero or empty financials", %{admin: admin} do
     for lines <- [
           [],
