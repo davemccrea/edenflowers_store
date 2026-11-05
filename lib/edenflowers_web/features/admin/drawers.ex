@@ -331,6 +331,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           type="text"
           autocomplete="off"
           inputmode="numeric"
+          phx-hook="VoucherCode"
           spellcheck="false"
           label={~t"Gift voucher code"}
           class="input w-full tabular-nums"

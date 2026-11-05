@@ -52,7 +52,7 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
     test "are 16 digits, found however they're typed" do
       assert GiftVoucher.generate_code() =~ ~r/\A[0-9]{16}\z/
 
-      assert GiftVoucher.format_code("1234567890123456") == "1234-5678-9012-3456"
+      assert GiftVoucher.format_code("1234567890123456") == "1234 5678 9012 3456"
       assert GiftVoucher.normalize_code(" 1234-5678 9012-3456") == "1234567890123456"
       assert GiftVoucher.normalize_code("l234 5678 9OI2 3456") == "1234567890123456"
     end

@@ -6,6 +6,7 @@ import { hooks as colocatedHooks } from "phoenix-colocated/edenflowers";
 import { hooks as cinderHooks } from "phoenix-colocated/cinder";
 import liveSelect from "live_select";
 import { customerLiveSelect } from "./customer_select";
+import { VoucherCode } from "./voucher_code.mjs";
 import { cinderDom } from "./cinder_a11y";
 import { onDocumentPatch } from "./admin_transitions";
 import "./unsaved_forms";
@@ -32,6 +33,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
     ...colocatedHooks,
     ...liveSelect,
     LiveSelect: customerLiveSelect,
+    VoucherCode,
   },
   dom: {
     onDocumentPatch,

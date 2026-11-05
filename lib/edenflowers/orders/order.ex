@@ -706,7 +706,7 @@ defmodule Edenflowers.Orders.Order do
               ) do
       description "The admin orders search, case-insensitive: whether the term appears in the Customer's name, " <>
                     "email, phone or Instagram, the reference, the Recipient's name or the delivery address, or " <>
-                    "is the whole code of a Gift voucher it sold, typed with or without its dashes."
+                    "is the whole code of a Gift voucher it sold, typed with or without its spaces."
 
       argument :term, :ci_string, allow_nil?: false
     end
