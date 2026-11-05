@@ -697,7 +697,11 @@ defmodule Edenflowers.Orders.Order do
                   contains(recipient_name, ^arg(:term)) or contains(delivery_address, ^arg(:term)) or
                   exists(
                     line_items.gift_voucher,
-                    code == fragment("upper(regexp_replace(?, '[^0-9A-Za-z]', '', 'g'))", ^arg(:term))
+                    code ==
+                      fragment(
+                        "translate(upper(regexp_replace(?, '[^0-9A-Za-z]', '', 'g')), 'OIL', '011')",
+                        ^arg(:term)
+                      )
                   )
               ) do
       description "The admin orders search, case-insensitive: whether the term appears in the Customer's name, " <>

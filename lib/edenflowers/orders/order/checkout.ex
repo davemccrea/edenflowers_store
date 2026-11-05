@@ -383,7 +383,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
     update :add_gift_voucher_with_code do
       description "Puts the Gift voucher with this code on the cart, so Stripe charges only what it doesn't " <>
                     "cover. Nothing is spent until the order is placed. Fails on an unknown, expired or used-up " <>
-                    "voucher, and on a subscription cart. Rate-limited: a code is money."
+                    "voucher, and on a Gift voucher sale. Rate-limited: a code is money."
 
       argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
       change PaymentChanges.ApplyGiftVoucher

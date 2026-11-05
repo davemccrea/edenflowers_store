@@ -26,6 +26,8 @@ defmodule Edenflowers.Orders.Order.Changes.IssueGiftVouchers do
         do: changeset,
         else: Ash.Changeset.force_change_attribute(changeset, :fulfillment_status, :fulfilled)
 
+    # ponytail: issued at the line's amount, not what Stripe took, so a sale revised while its payment was
+    # in flight issues more than was paid (ReportAmountMismatch logs it). Fix: min(unit_price, amount_paid).
     Ash.Changeset.after_action(changeset, fn _changeset, order ->
       Payments.create_gift_voucher!(%{amount: line.unit_price, line_item_id: line.id}, authorize?: false)
       {:ok, order}
