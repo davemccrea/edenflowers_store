@@ -1,10 +1,10 @@
 ---
 id: TASK-165.2
 title: Start a pass-it-on code's 30 days at its first scan
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-05 09:15'
-updated_date: '2026-11-05 10:47'
+updated_date: '2026-11-05 16:35'
 labels: []
 dependencies: []
 parent_task_id: TASK-165
@@ -25,9 +25,15 @@ Decisions (grilled 2026-11-05):
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A card code's first customer scan or apply sets its expiry 30 days later; admin visits don't
-- [ ] #2 The page shows the valid-until date, and an expired code gets no discount
+- [x] #1 A card code's first customer scan or apply sets its expiry 30 days later; admin visits don't
+- [x] #2 The page shows the valid-until date, and an expired code gets no discount
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Promotion.start_validity sets a pass_it_on code's expiration_date to today + 30 when unset; skipped for admin actors. Called from ApplyPromotion (any apply: link, typed code) and PassItOnLive mount. Not recorded in paper trail.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 

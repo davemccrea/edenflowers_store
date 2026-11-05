@@ -244,4 +244,44 @@ defmodule Edenflowers.Pricing.PromotionTest do
       assert {:error, %Ash.Error.Invalid{}} = Orders.add_promotion_with_code(order, "MAXED", authorize?: false)
     end
   end
+
+  describe "a pass-it-on code's 30 days" do
+    import Generator
+
+    setup do
+      [code] = Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+      {:ok, promotion} = Pricing.get_promotion_by_code(code)
+      %{code: code, promotion: promotion}
+    end
+
+    test "start at the first customer scan and don't move after", %{promotion: promotion} do
+      assert is_nil(promotion.expiration_date)
+
+      promotion = Pricing.start_promotion_validity!(promotion, %{today: ~D[2026-11-05]}, actor: nil)
+      assert promotion.expiration_date == ~D[2026-12-05]
+
+      promotion = Pricing.start_promotion_validity!(promotion, %{today: ~D[2026-11-20]}, actor: nil)
+      assert promotion.expiration_date == ~D[2026-12-05]
+
+      assert {:error, _expired} = Pricing.get_promotion_by_code(promotion.code, ~D[2026-12-06])
+    end
+
+    test "don't start when an admin opens the card", %{promotion: promotion} do
+      promotion = Pricing.start_promotion_validity!(promotion, actor: generate(admin_user()))
+      assert is_nil(promotion.expiration_date)
+    end
+
+    test "start when a customer applies the code", %{code: code, promotion: promotion} do
+      order = Orders.create_for_checkout!(authorize?: false)
+      Orders.add_promotion_from_link!(order, code, actor: nil)
+
+      assert Ash.reload!(promotion, authorize?: false).expiration_date ==
+               Date.add(Edenflowers.ShopTime.today(), 30)
+    end
+
+    test "leave other codes' dates alone" do
+      manual = generate(promotion(code: "MANUAL1"))
+      assert Pricing.start_promotion_validity!(manual, actor: nil).expiration_date == manual.expiration_date
+    end
+  end
 end
