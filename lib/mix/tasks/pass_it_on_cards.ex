@@ -4,11 +4,14 @@ defmodule Mix.Tasks.PassItOnCards do
   code per line in `codes_file`.
 
   The codes are made on production, where they'll be used, and the PDF is
-  rendered locally:
+  rendered locally. `just print-cards "Skicka vidare 2026-11" 100` does both
+  (after `just backup`) and writes `tmp/pass-it-on-skicka-vidare-2026-11.pdf`
+  for the print shop. Run this task by hand only to re-render a batch from its
+  saved codes file, e.g. `tmp/codes-skicka-vidare-2026-11.txt`.
 
-      ssh … rpc 'Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare 2026-11", 100,
-        actor: Edenflowers.Actors.system_actor()) |> Enum.each(&IO.puts/1)' > tmp/codes.txt
-      mix pass_it_on_cards tmp/codes.txt tmp/pass-it-on.pdf
+  Before the first print run, Jennie approves the card's wording in
+  `priv/receipts/pass-it-on.typ`. Open the PDF and check a card or two before
+  sending it.
 
   Print shops (MEB's specs, for one) want CMYK in the PSO Coated v3
   (FOGRA51) profile and text converted to outlines, which Typst can't
@@ -24,6 +27,9 @@ defmodule Mix.Tasks.PassItOnCards do
 
   @profile "priv/receipts/icc/PSOcoated_v3.icc"
 
+  # Printed on the cards, so it must outlive any change to the site's routes.
+  @landing_url "https://edenflowers.fi/pass-it-on"
+
   @impl Mix.Task
   def run([codes_file, out]) do
     if !File.exists?(@profile), do: Mix.raise("No print profile at #{@profile}. See `mix help pass_it_on_cards`.")
@@ -35,7 +41,9 @@ defmodule Mix.Tasks.PassItOnCards do
 
     rgb = Path.join(System.tmp_dir!(), "pass-it-on-rgb.pdf")
 
-    case Edenflowers.Pricing.PassItOnCards.render(codes) do
+    cards = Enum.map(codes, &%{code: &1, url: url(&1)})
+
+    case Edenflowers.Typst.render("pass-it-on-main.typ", "cards", %{cards: cards}) do
       {:ok, pdf} -> File.write!(rgb, pdf)
       {:error, error} -> Mix.raise("Rendering failed: #{inspect(error)}")
     end
@@ -46,6 +54,11 @@ defmodule Mix.Tasks.PassItOnCards do
   end
 
   def run(_), do: Mix.raise("Usage: mix pass_it_on_cards CODES_FILE OUT_PDF")
+
+  defp url(code) do
+    query = URI.encode_query(code: code, utm_source: "card", utm_medium: "print", utm_campaign: "pass-it-on")
+    @landing_url <> "?" <> query
+  end
 
   defp to_print_ready(source, out) do
     profile = Path.expand(@profile)

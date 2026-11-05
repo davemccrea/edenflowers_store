@@ -520,7 +520,7 @@ msgstr "Ostoskori"
 msgid "Cart is empty"
 msgstr "Ostoskori on tyhjä"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:48
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:52
 #, elixir-autogen, elixir-format
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr "Ostoskorin summan on oltava vähintään %{edenflowers_format_currency}, jotta kampanjaa voi käyttää"
@@ -1576,7 +1576,7 @@ msgstr "Sisältää ALV:n"
 msgid "Increment"
 msgstr "Lisää"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:36
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:28
 #, elixir-autogen, elixir-format
 msgid "Invalid code"
 msgstr "Virheellinen koodi"
@@ -2346,7 +2346,7 @@ msgstr "Yksi vähemmän: %{item_label}"
 msgid "Removing this empties your cart and clears the checkout details you've entered. Continue?"
 msgstr "Tämän poistaminen tyhjentää ostoskorisi ja poistaa syöttämäsi kassatiedot. Jatketaanko?"
 
-#: lib/edenflowers_web/features/store/product_live.ex:625
+#: lib/edenflowers_web/features/store/product_live.ex:619
 #, elixir-autogen, elixir-format
 msgid "Replaces the %{count} bouquets (%{amount}) in your cart."
 msgstr "Korvaa ostoskorisi %{count} kimppua (%{amount})."
@@ -2962,7 +2962,7 @@ msgstr "Tämä varaus on peruttu. Jos sinulla on kysyttävää, ota yhteyttä."
 msgid "This booking has been refunded, so there is nothing to pay. If you have any questions, just get in touch."
 msgstr "Varauksen maksu on palautettu, joten maksettavaa ei ole. Jos sinulla on kysyttävää, ota yhteyttä."
 
-#: lib/edenflowers_web/features/store/product_live.ex:637
+#: lib/edenflowers_web/features/store/product_live.ex:631
 #, elixir-autogen, elixir-format
 msgid "This couldn't be added to your cart."
 msgstr "Tätä ei voitu lisätä ostoskoriin."
@@ -4112,7 +4112,7 @@ msgid "Thanks! Your %{percent} off code is on its way to your inbox."
 msgstr "Kiitos! %{percent}:n alennuskoodisi on matkalla sähköpostiisi."
 
 #. Over the product photo when it shows another size. %{size} is Small, Medium or Large.
-#: lib/edenflowers_web/features/store/product_live.ex:529
+#: lib/edenflowers_web/features/store/product_live.ex:523
 #, elixir-autogen, elixir-format
 msgid "Pictured: %{size}"
 msgstr "Kuvassa: %{size}"

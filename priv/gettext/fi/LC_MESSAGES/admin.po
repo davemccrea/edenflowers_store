@@ -1840,7 +1840,7 @@ msgstr "Vaihtoehdot"
 msgid "Or none, if you write a card or ribbon of your own."
 msgstr "Tai ei korttia, jos kirjoitat oman kortin tai nauhan."
 
-#: lib/edenflowers_web/features/admin/invoice_live.ex:853
+#: lib/edenflowers_web/features/admin/invoice_live.ex:857
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:42
 #, elixir-autogen, elixir-format
 msgid "Order %{order_order_reference}"
@@ -4057,7 +4057,7 @@ msgstr "Y-tunnus"
 msgid "Business details changed"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/invoice_live.ex:891
+#: lib/edenflowers_web/features/admin/invoice_live.ex:895
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:343
 #, elixir-autogen, elixir-format
 msgid "Invoice %{number}"
@@ -4246,8 +4246,8 @@ msgstr ""
 msgid "Invoice date"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/invoice_live.ex:759
-#: lib/edenflowers_web/features/admin/invoice_live.ex:891
+#: lib/edenflowers_web/features/admin/invoice_live.ex:763
+#: lib/edenflowers_web/features/admin/invoice_live.ex:895
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:343
 #, elixir-autogen, elixir-format
 msgid "Invoice draft"
@@ -4825,11 +4825,6 @@ msgstr ""
 msgid "Code on the card"
 msgstr ""
 
-#: lib/edenflowers/orders/order/changes/link_pass_it_on_card.ex:46
-#, elixir-autogen, elixir-format
-msgid "Its recipient has already opened the card."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:764
 #, elixir-autogen, elixir-format
 msgid "Link card"
@@ -4908,9 +4903,4 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:815
 #, elixir-autogen, elixir-format
 msgid "The card can't change now: the gift has been delivered or cancelled, or its recipient opened the card."
-msgstr ""
-
-#: lib/edenflowers/orders/order/changes/link_pass_it_on_card.ex:45
-#, elixir-autogen, elixir-format
-msgid "This order has no pass-it-on card."
 msgstr ""

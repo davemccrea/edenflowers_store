@@ -91,10 +91,25 @@ defmodule Edenflowers.Pricing.Promotion do
     update :link_gift_order do
       description "Jennie links a pass-it-on card to the gift order it goes out with, typing the card's code on " <>
                     "the order's page. A nil `gift_order_id` unlinks it. Either only until the recipient first " <>
-                    "opens the card (`gift_order_linkable?`). One card per order."
+                    "opens the card (`gift_order_linkable?`). One card per order, and one order per card: a card " <>
+                    "already linked is unlinked before it can go with another order."
 
       accept [:gift_order_id]
       validate {Holds, calculation: :gift_order_linkable?, message: "has already been opened by its recipient"}
+
+      # So a mistyped code can't take a card off the gift it went with.
+      validate fn changeset, _context ->
+        if is_nil(changeset.data.gift_order_id) or is_nil(Ash.Changeset.get_attribute(changeset, :gift_order_id)) do
+          :ok
+        else
+          {:error,
+           Ash.Error.Changes.InvalidAttribute.exception(
+             field: :gift_order_id,
+             message: "already went with another order"
+           )}
+        end
+      end
+
       # full_diff can't run atomically.
       require_atomic? false
     end

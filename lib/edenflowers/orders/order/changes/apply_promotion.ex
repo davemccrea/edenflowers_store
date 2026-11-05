@@ -22,19 +22,23 @@ defmodule Edenflowers.Orders.Order.Changes.ApplyPromotion do
 
       case Pricing.get_promotion_by_code(code) do
         {:ok, promotion} ->
-          changeset =
-            if Keyword.get(opts, :check_minimum?, true),
-              do: apply_promotion(changeset, promotion),
-              else: copy_terms(changeset, promotion)
-
-          Ash.Changeset.after_action(changeset, fn _changeset, order ->
-            Pricing.start_promotion_validity!(promotion, actor: context.actor)
-            {:ok, order}
-          end)
+          apply_and_start_validity(changeset, promotion, Keyword.get(opts, :check_minimum?, true), context.actor)
 
         {:error, _error} ->
           Ash.Changeset.add_error(changeset, field: :code, message: ~t"Invalid code")
       end
+    end)
+  end
+
+  defp apply_and_start_validity(changeset, promotion, check_minimum?, actor) do
+    changeset =
+      if check_minimum?,
+        do: apply_promotion(changeset, promotion),
+        else: copy_terms(changeset, promotion)
+
+    Ash.Changeset.after_action(changeset, fn _changeset, order ->
+      Pricing.start_promotion_validity!(promotion, actor: actor)
+      {:ok, order}
     end)
   end
 
