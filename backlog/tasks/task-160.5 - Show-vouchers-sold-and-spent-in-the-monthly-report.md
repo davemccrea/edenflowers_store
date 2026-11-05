@@ -1,9 +1,10 @@
 ---
 id: TASK-160.5
 title: Show vouchers sold and spent in the monthly report
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-01 17:32'
+updated_date: '2026-11-05 20:09'
 labels: []
 dependencies:
   - TASK-160.1
@@ -24,6 +25,12 @@ ordinal: 311000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Voucher purchases are not counted as sales
-- [ ] #2 Spent voucher amounts are counted as sales at the bought items' VAT rates
+- [x] #1 Voucher purchases are not counted as sales
+- [x] #2 Spent voucher amounts are counted as sales at the bought items' VAT rates
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-05: Payments for a Gift voucher sale (whose VAT breakdown is empty, so they used to drop out of the report entirely) now go on a 'Sålda presentkort' sheet after sales, with their sum. :voucher payments were already split at the bought order's rates, or a course's rate, like any payment; the test pins both.
+<!-- SECTION:NOTES:END -->

@@ -9,6 +9,11 @@ defmodule Edenflowers.Accounting.MonthlyReport do
   unpaid ones wait until Jennie marks them paid. The sales sheet combines purchase
   receipts and standalone invoice receipts (ADR 0004), so every payment method counts.
 
+  Gift vouchers are multi-purpose vouchers: money paid for one isn't a sale
+  until it's spent. Payments for a Gift voucher sale go on their own sheet,
+  outside sales, and `:voucher` payments are sales at the VAT rates of what
+  they paid for, like any other payment.
+
   The receivables sheet lists the invoices still owed at month end, for the
   accountant to book what replaced Zervant's receivables list. Issued invoices
   freeze their own sale and VAT; only receipts enter the cash sales sheet, so
@@ -90,8 +95,10 @@ defmodule Edenflowers.Accounting.MonthlyReport do
          {:ok, transactions} <-
            StripeAPI.list_balance_transactions(helsinki_midnight_utc(first), helsinki_midnight_utc(Date.add(last, 1))),
          invoice_documents = invoice_documents(payments, credit_notes),
+         {voucher_sales, sales} = Enum.split_with(payments, &voucher_sale?/1),
          sheets = [
-           sales_sheet(payments),
+           sales_sheet(sales),
+           vouchers_sold_sheet(voucher_sales),
            expenses_sheet(rows),
            stripe_sheet(transactions),
            receivables_sheet(open_invoices),
@@ -167,12 +174,15 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     |> Ash.Query.filter(paid_at >= ^from and paid_at < ^until)
     |> Ash.Query.sort(paid_at: :asc)
     |> Ash.Query.load(
-      order: [:order_reference, :vat_breakdown],
+      order: [:order_reference, :vat_breakdown, :gift_voucher_sale?],
       course_registration: [:reference, :tax_rate],
       invoice: [:payments, :buyer, :pdf]
     )
     |> Ash.read(authorize?: false)
   end
+
+  defp voucher_sale?(%Payment{order: %{gift_voucher_sale?: true}}), do: true
+  defp voucher_sale?(_payment), do: false
 
   defp invoice_documents(payments, credit_notes) do
     paid_invoices = for %{invoice: %Invoice{} = invoice} <- payments, do: invoice
@@ -304,6 +314,29 @@ defmodule Edenflowers.Accounting.MonthlyReport do
     for field <- [:net, :vat, :gross] do
       rows |> Enum.map(&Map.fetch!(&1, field)) |> Enum.reduce(Decimal.new("0.00"), &Decimal.add/2) |> amount_cell()
     end
+  end
+
+  # Outside VAT when sold; the accountant books them as a liability until spent.
+  defp vouchers_sold_sheet(payments) do
+    headings = [~t"Paid date", ~t"Reference", ~t"Payment method", ~t"Amount"]
+
+    rows =
+      Enum.map(payments, fn payment ->
+        [
+          payment.paid_at |> DateTime.shift_zone!(ShopTime.timezone()) |> DateTime.to_date() |> date_cell(),
+          payment.order.order_reference,
+          OrderLog.payment_method_label(payment.method),
+          amount_cell(payment.amount)
+        ]
+      end)
+
+    total = payments |> Enum.map(& &1.amount) |> Enum.reduce(Decimal.new("0.00"), &Decimal.add/2)
+
+    %Sheet{
+      name: "Sålda presentkort",
+      rows:
+        [Enum.map(headings, &[&1, bold: true]) | rows] ++ [[], [nil, nil, [~t"Sum", bold: true], amount_cell(total)]]
+    }
   end
 
   defp rate_cell(rate), do: [Decimal.to_float(rate), num_format: "0.0%"]
