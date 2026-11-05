@@ -297,6 +297,27 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     assert_no_email_sent()
   end
 
+  test "choosing Gift voucher asks for its code in place of an amount, and the voucher pays", %{conn: conn} do
+    order = build(:order)
+    voucher = generate(gift_voucher(amount: Decimal.new("50.00")))
+    {view, _panel} = open(conn, :order, order)
+
+    view
+    |> element("#order-balance-form")
+    |> render_change(%{"_target" => ["payment", "payment_method"], "payment" => %{"payment_method" => "voucher"}})
+
+    refute has_element?(view, ~s|#order-balance-form input[name="payment[amount]"]|)
+    refute has_element?(view, "#order-balance-email-send")
+
+    assert view |> form("#order-balance-form", payment: %{code: "WRONG"}) |> render_submit() =~ "find that gift voucher"
+    assert Decimal.eq?(balance(order), "88.50")
+
+    assert view |> form("#order-balance-form", payment: %{code: voucher.code}) |> render_submit() =~
+             "Paid from the gift voucher."
+
+    assert Decimal.eq?(balance(order), "38.50")
+  end
+
   defp record_cash_payment(view, email_receipt) do
     view
     |> form("#order-balance-form", payment: %{payment_method: "cash", email_receipt: email_receipt})

@@ -489,6 +489,16 @@ defmodule Edenflowers.PoliciesTest do
       assert {:ok, _record} = record(order, :record_payment, payment, %{admin: true})
     end
 
+    test "only the admin pays with a gift voucher's code", %{records: records, customer: customer} do
+      for record <- records do
+        code = %{code: generate(gift_voucher(amount: Decimal.new("1.00"))).code}
+
+        assert {:error, %Ash.Error.Forbidden{}} = record(record, :pay_with_gift_voucher, code, customer)
+        assert {:error, %Ash.Error.Forbidden{}} = record(record, :pay_with_gift_voucher, code, %{system: true})
+        assert {:ok, _record} = record(record, :pay_with_gift_voucher, code, %{admin: true})
+      end
+    end
+
     test "only the admin undoes a payment", %{records: records, customer: customer} do
       for record <- records do
         key = Edenflowers.Payments.parent_key(record)

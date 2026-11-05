@@ -83,6 +83,7 @@ defmodule Edenflowers.Orders do
       define :mark_payment_cancelled, action: :mark_payment_cancelled, args: [:payment_intent_id]
       define :prepare_order_link_payment, action: :prepare_link_payment, args: [:token, :shown_balance]
       define :record_payment, action: :record_payment, args: [:amount, :payment_method]
+      define :pay_with_gift_voucher, action: :pay_with_gift_voucher, args: [:code]
       define :undo_payment, action: :undo_payment, args: [:payment_id]
       define :add_customer_email, action: :add_customer_email, args: [:customer_email]
       define :record_link_payment, action: :record_link_payment, args: [:payment_intent_id]

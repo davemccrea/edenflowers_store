@@ -209,7 +209,7 @@ msgstr ""
 msgid "Amount"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:367
+#: lib/edenflowers_web/features/admin/drawers.ex:386
 #: lib/edenflowers_web/features/admin/invoice_live.ex:506
 #, elixir-autogen, elixir-format
 msgid "Amount (€)"
@@ -220,7 +220,7 @@ msgstr ""
 msgid "Amount due"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:294
+#: lib/edenflowers_web/features/admin/drawers.ex:295
 #, elixir-autogen, elixir-format
 msgid "Amount received (€)"
 msgstr ""
@@ -476,7 +476,7 @@ msgstr ""
 msgid "Clear customer selection"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:461
+#: lib/edenflowers_web/features/admin/drawers.ex:480
 #, elixir-autogen, elixir-format
 msgid "Close"
 msgstr ""
@@ -565,7 +565,7 @@ msgstr ""
 msgid "Could not change the subscription."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:114
+#: lib/edenflowers_web/features/admin/payment_actions.ex:133
 #, elixir-autogen, elixir-format
 msgid "Could not create a payment link."
 msgstr ""
@@ -575,7 +575,7 @@ msgstr ""
 msgid "Could not email the confirmation."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:120
+#: lib/edenflowers_web/features/admin/payment_actions.ex:144
 #, elixir-autogen, elixir-format
 msgid "Could not email the payment link."
 msgstr ""
@@ -590,7 +590,7 @@ msgstr ""
 msgid "Could not queue the confirmation."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:136
+#: lib/edenflowers_web/features/admin/payment_actions.ex:154
 #, elixir-autogen, elixir-format
 msgid "Could not record it. Check the amount."
 msgstr ""
@@ -638,7 +638,7 @@ msgstr ""
 msgid "Could not translate. Try again in a moment."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:73
+#: lib/edenflowers_web/features/admin/payment_actions.ex:87
 #, elixir-autogen, elixir-format
 msgid "Could not undo the payment."
 msgstr ""
@@ -1015,13 +1015,13 @@ msgid "Email receipt"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/drawers.ex:67
-#: lib/edenflowers_web/features/admin/drawers.ex:393
+#: lib/edenflowers_web/features/admin/drawers.ex:412
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "Email the customer"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:302
+#: lib/edenflowers_web/features/admin/drawers.ex:317
 #, elixir-autogen, elixir-format
 msgid "Email the customer a receipt"
 msgstr ""
@@ -1320,7 +1320,7 @@ msgstr ""
 msgid "History"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:374
+#: lib/edenflowers_web/features/admin/drawers.ex:393
 #, elixir-autogen, elixir-format
 msgid "How"
 msgstr ""
@@ -2003,12 +2003,12 @@ msgstr ""
 msgid "Payment link created"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:114
+#: lib/edenflowers_web/features/admin/payment_actions.ex:129
 #, elixir-autogen, elixir-format
 msgid "Payment link created."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:120
+#: lib/edenflowers_web/features/admin/payment_actions.ex:140
 #, elixir-autogen, elixir-format
 msgid "Payment link emailed."
 msgstr ""
@@ -2038,17 +2038,17 @@ msgstr ""
 msgid "Payment received, deliveries restarted"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:66
+#: lib/edenflowers_web/features/admin/payment_actions.ex:73
 #, elixir-autogen, elixir-format
 msgid "Payment recorded and receipt emailed."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:67
+#: lib/edenflowers_web/features/admin/payment_actions.ex:74
 #, elixir-autogen, elixir-format
 msgid "Payment recorded, but the receipt could not be emailed."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:68
+#: lib/edenflowers_web/features/admin/payment_actions.ex:75
 #, elixir-autogen, elixir-format
 msgid "Payment recorded."
 msgstr ""
@@ -2065,7 +2065,7 @@ msgstr ""
 msgid "Payment reminder sent."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:73
+#: lib/edenflowers_web/features/admin/payment_actions.ex:80
 #, elixir-autogen, elixir-format
 msgid "Payment undone."
 msgstr ""
@@ -2350,26 +2350,26 @@ msgstr ""
 msgid "Recipient phone (for the delivery)"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:431
+#: lib/edenflowers_web/features/admin/drawers.ex:450
 #, elixir-autogen, elixir-format
 msgid "Record %{amount} handed back to the customer?"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/components.ex:564
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:47
-#: lib/edenflowers_web/features/admin/drawers.ex:311
+#: lib/edenflowers_web/features/admin/drawers.ex:330
 #: lib/edenflowers_web/features/admin/invoice_live.ex:525
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:214
 #, elixir-autogen, elixir-format
 msgid "Record payment"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:309
+#: lib/edenflowers_web/features/admin/drawers.ex:327
 #, elixir-autogen, elixir-format
 msgid "Record this payment? A mistake can be undone afterwards."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:380
+#: lib/edenflowers_web/features/admin/drawers.ex:399
 #, elixir-autogen, elixir-format
 msgid "Records money you have already handed back."
 msgstr ""
@@ -2383,19 +2383,19 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/components/components.ex:564
 #: lib/edenflowers_web/features/admin/course_booking_drawers.ex:66
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:609
-#: lib/edenflowers_web/features/admin/drawers.ex:403
+#: lib/edenflowers_web/features/admin/drawers.ex:422
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:213
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:715
 #, elixir-autogen, elixir-format
 msgid "Refund"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:430
+#: lib/edenflowers_web/features/admin/drawers.ex:449
 #, elixir-autogen, elixir-format
 msgid "Refund %{amount} to the customer's card with Stripe?"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:87
+#: lib/edenflowers_web/features/admin/payment_actions.ex:102
 #, elixir-autogen, elixir-format
 msgid "Refund recorded."
 msgstr ""
@@ -2416,7 +2416,7 @@ msgstr ""
 msgid "Refunded %{amount} · %{how}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/payment_actions.ex:86
+#: lib/edenflowers_web/features/admin/payment_actions.ex:101
 #, elixir-autogen, elixir-format
 msgid "Refunded with Stripe."
 msgstr ""
@@ -3243,13 +3243,13 @@ msgstr ""
 msgid "Undo %{amount} refund"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:331
+#: lib/edenflowers_web/features/admin/drawers.ex:350
 #: lib/edenflowers_web/features/admin/invoice_live.ex:548
 #, elixir-autogen, elixir-format
 msgid "Undo the %{amount} payment by %{how}? This records the opposite amount."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:330
+#: lib/edenflowers_web/features/admin/drawers.ex:349
 #, elixir-autogen, elixir-format
 msgid "Undo the %{amount} refund by %{how}? This records the opposite amount."
 msgstr ""
@@ -4769,7 +4769,7 @@ msgstr ""
 msgid "Email as sent"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/drawers.ex:386
+#: lib/edenflowers_web/features/admin/drawers.ex:405
 #, elixir-autogen, elixir-format
 msgid "Note (for your records)"
 msgstr ""
@@ -5035,4 +5035,29 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:141
 #, elixir-autogen, elixir-format
 msgid "Left"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/drawers.ex:306
+#, elixir-autogen, elixir-format
+msgid "Gift voucher code"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/payment_actions.ex:54
+#, elixir-autogen, elixir-format
+msgid "Paid from the gift voucher."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/drawers.ex:311
+#, elixir-autogen, elixir-format
+msgid "The voucher pays what's owed, as far as what's left on it goes."
+msgstr ""
+
+#: lib/edenflowers/payments/changes/apply_gift_voucher.ex:42
+#, elixir-autogen, elixir-format
+msgid "Another gift voucher has already paid for this, and only one can."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/drawers.ex:326
+#, elixir-autogen, elixir-format
+msgid "Pay from this gift voucher? A voucher payment can't be undone."
 msgstr ""

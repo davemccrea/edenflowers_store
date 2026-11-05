@@ -125,6 +125,21 @@ defmodule Edenflowers.Payments.Payable do
       require_atomic? false
     end
 
+    update :pay_with_gift_voucher do
+      description "Pays what's owed from the Gift voucher with this code, for a voucher handed over in the shop " <>
+                    "or read out on the phone: min(what's left on it, Balance), as at checkout. It becomes the " <>
+                    "purchase's one voucher, so cancelling or refunding puts its part back. Refuses an unknown, " <>
+                    "expired or used-up voucher, a Gift voucher sale, and a second voucher once another has paid."
+
+      argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
+
+      validate Validations.Recordable
+      change Changes.ApplyGiftVoucher
+      change Changes.CancelOpenPaymentIntent
+      change Changes.PayFromVoucher
+      require_atomic? false
+    end
+
     update :refund do
       description "Money Jennie hands back, by any method, with or without cancelling: through Stripe at once, or " <>
                     "recorded as handed back. What was owed back is an ordinary refund and the rest a Goodwill " <>
