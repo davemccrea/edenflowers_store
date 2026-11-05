@@ -4465,12 +4465,12 @@ msgstr ""
 msgid "Date of supply or advance payment"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/invoice_live.ex:953
+#: lib/edenflowers_web/features/admin/invoice_live.ex:956
 #, elixir-autogen, elixir-format
 msgid "Dated the day it is issued."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/invoice_live.ex:950
+#: lib/edenflowers_web/features/admin/invoice_live.ex:954
 #, elixir-autogen, elixir-format
 msgid "Dated the day it is issued. Issued today, it is due %{date}."
 msgstr ""
@@ -4522,12 +4522,12 @@ msgstr ""
 msgid "This order can't be invoiced now."
 msgstr ""
 
-#: lib/edenflowers/payments/changes/issue_invoice.ex:80
+#: lib/edenflowers/payments/changes/issue_invoice.ex:83
 #, elixir-autogen, elixir-format
 msgid "This order can't be invoiced now: it has a payment or an invoice, or isn't on invoice terms."
 msgstr ""
 
-#: lib/edenflowers/payments/changes/issue_invoice.ex:84
+#: lib/edenflowers/payments/changes/issue_invoice.ex:87
 #, elixir-autogen, elixir-format
 msgid "The invoice comes to %{invoiced}, but the order has %{balance} to collect. Make them match."
 msgstr ""
