@@ -66,7 +66,7 @@ defmodule Edenflowers.Email.Preview do
   """
   def build_entered(kind, changeset, price, order) do
     {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
-    paid = if order, do: order.amount_paid, else: Decimal.new(0)
+    paid = if order, do: order.amount_paid, else: price.voucher_pays
     balance = Decimal.sub(price.total, paid)
 
     entered = %{
