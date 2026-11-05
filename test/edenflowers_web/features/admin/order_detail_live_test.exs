@@ -498,24 +498,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "header", "Grace Hopper")
   end
 
-  test "fetches a refund from Stripe whose webhook never arrived", %{conn: conn} do
-    order = placed_order()
-    generate(payment(order_id: order.id, amount: Decimal.new("46.50"), payment_intent_id: "pi_missed_refund"))
-
-    Mox.expect(StripeAPI.Mock, :list_refunds, 2, fn "pi_missed_refund" ->
-      {:ok, [%{id: "re_missed", payment_intent: "pi_missed_refund", amount: 1000, status: "succeeded"}]}
-    end)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-
-    assert has_element?(view, "#order-log", "Paid 46,50 € · Stripe")
-    view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click()
-    assert has_element?(view, "#order-log", "Refunded 10,00 € · Stripe")
-
-    assert view |> element(~s|button[phx-click="fetch_stripe_refunds"]|) |> render_click() =~
-             "No new refunds in Stripe."
-  end
-
   defp refund_from_page(view, params) do
     view |> element("#order-actions button", "Refund") |> render_click()
     view |> form("#order-refund-form", refund: params) |> render_submit()

@@ -416,17 +416,6 @@ defmodule Edenflowers.Payments do
       else: {:error, {:refund_record_failed, refund_id, error}}
   end
 
-  @doc """
-  Asks Stripe for the refunds on an order's or course booking's Stripe
-  payments and records any whose webhook never arrived. Returns how many were
-  newly recorded.
-  """
-  def sync_refunds(payable) do
-    with {:ok, refunds_by_payment} <- stripe_refunds(payable) do
-      record_refunds(refunds_by_payment)
-    end
-  end
-
   defp stripe_refunds(payable) do
     payable
     |> payments_query()

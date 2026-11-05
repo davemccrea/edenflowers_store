@@ -613,28 +613,6 @@ defmodule Edenflowers.PaymentsTest do
     end
   end
 
-  describe "sync_refunds/1" do
-    test "records a course booking's refund whose webhook never arrived, once", %{registration: registration} do
-      assert {:ok, :completed} = Payments.complete(course_intent(registration))
-      payment_intent_id = registration.payment_intent_id
-
-      stub(StripeAPI.Mock, :list_refunds, fn ^payment_intent_id ->
-        {:ok, [%{id: "re_missed", payment_intent: payment_intent_id, amount: 8_500, status: "succeeded"}]}
-      end)
-
-      assert {:ok, 1} = Payments.sync_refunds(registration)
-      assert {:ok, 0} = Payments.sync_refunds(registration)
-
-      assert [_payment, %{stripe_refund_id: "re_missed", amount: amount}] =
-               Courses.get_registration_by_id!(registration.id,
-                 authorize?: false,
-                 load: [payments: Ash.Query.sort(Edenflowers.Payments.Payment, amount: :desc)]
-               ).payments
-
-      assert Decimal.equal?(amount, "-85.00")
-    end
-  end
-
   describe "refunding a course booking through Stripe" do
     setup %{registration: registration} do
       assert {:ok, :completed} = Payments.complete(course_intent(registration))

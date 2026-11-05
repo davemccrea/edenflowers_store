@@ -478,12 +478,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   end
 
   attr :order, :map, required: true
-  attr :payments, :list, required: true
   attr :locale, :string, required: true
 
   # Always there, so Jennie finds it in the same place on every order. An item
-  # that doesn't apply yet says why; one that never could, like fetching Stripe
-  # refunds for an order Stripe never charged, is left out.
+  # that doesn't apply yet says why; one that never could, like removing a
+  # Pass it on card from an order without one, is left out.
   def order_menu(assigns) do
     assigns =
       assigns
@@ -492,7 +491,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       |> assign(:no_email, no_email(assigns.order))
       |> assign(:receipt_unavailable, receipt_unavailable(assigns.order))
       |> assign(:confirmation_unavailable, confirmation_unavailable(assigns.order))
-      |> assign(:paid_through_stripe?, paid_through_stripe?(assigns.payments))
       |> assign(:cancel_unavailable, cancel_unavailable(assigns.order))
 
     ~H"""
@@ -567,11 +565,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         {~t"Refund"}
       </.actions_menu_button>
 
-      <%!-- Refunds arrive by webhook; this catches one that never did. --%>
-      <.actions_menu_button :if={@paid_through_stripe?} menu="order-actions" phx-click="fetch_stripe_refunds">
-        {~t"Fetch refunds from Stripe"}
-      </.actions_menu_button>
-
       <%!-- In the menu, behind a confirmation, so a linked card isn't removed by a stray tap. --%>
       <.actions_menu_button
         :if={@order.pass_it_on_card_removable?}
@@ -632,8 +625,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       do: ~t"Refund · #{how = OrderLog.payment_method_label(method)}",
       else: OrderLog.payment_method_label(method)
   end
-
-  def paid_through_stripe?(payments), do: Enum.any?(payments, & &1.payment_intent_id)
 
   def no_email(%{customer_email: nil}), do: ~t"No email address"
   def no_email(_order), do: nil

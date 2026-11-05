@@ -125,7 +125,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.button>
           </:actions>
           <:menu>
-            <.order_menu order={@order} payments={@payments} locale={@locale} />
+            <.order_menu order={@order} locale={@locale} />
           </:menu>
         </.admin_page_header>
 
@@ -686,23 +686,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
      |> EmailDrawer.close()
      |> assign_order(reload(order, socket))
      |> put_flash(flash, text)}
-  end
-
-  def handle_event("fetch_stripe_refunds", _params, socket) do
-    case Edenflowers.Payments.sync_refunds(socket.assigns.order) do
-      {:ok, 0} ->
-        {:noreply, put_flash(socket, :info, ~t"No new refunds in Stripe.")}
-
-      {:ok, _recorded} ->
-        {:noreply,
-         socket
-         |> assign_order(reload(socket.assigns.order, socket))
-         |> put_flash(:success, ~t"Refunds from Stripe recorded.")}
-
-      {:error, reason} ->
-        Logger.error("Fetching Stripe refunds for order #{socket.assigns.order.id} failed: #{inspect(reason)}")
-        {:noreply, put_flash(socket, :error, ~t"Could not fetch refunds from Stripe. Try again in a moment.")}
-    end
   end
 
   @impl true
