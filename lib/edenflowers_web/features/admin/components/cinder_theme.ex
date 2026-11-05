@@ -37,9 +37,9 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   set :filter_container_class, "card-body px-3 py-1.5 sm:p-5"
   # The gap sits on the inputs, not the header, so a collapsed panel has no dead space under its title.
   # Phones get two columns of selects under a full-width search (Cinder renders it first);
-  # a lone select left over at the end takes the whole row.
+  # a lone select left over at the end takes the whole row. Wider screens get equal columns, so rows line up.
   set :filter_inputs_class,
-      "fieldset mt-1 mb-1.5 grid grid-cols-2 gap-x-2 gap-y-3 max-sm:*:first:col-span-2 max-sm:*:last:even:col-span-2 sm:my-0 sm:mt-4 sm:gap-4 lg:flex lg:flex-wrap"
+      "fieldset mt-1 mb-1.5 grid grid-cols-2 gap-x-2 gap-y-3 max-sm:*:first:col-span-2 max-sm:*:last:even:col-span-2 sm:my-0 sm:mt-4 sm:grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] sm:gap-4"
 
   set :filter_input_wrapper_class, "form-control min-w-0"
 
