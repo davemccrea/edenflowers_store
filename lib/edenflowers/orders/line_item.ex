@@ -127,6 +127,11 @@ defmodule Edenflowers.Orders.LineItem do
       change atomic_update(:quantity, expr(if(quantity > 1, quantity - 1, quantity)))
     end
 
+    update :rename do
+      description "Renames a cart line in the language its cart has switched to, as the cart's update_locale does."
+      accept [:product_name]
+    end
+
     update :set_quantity do
       description "Sets the quantity of a line Jennie keeps when editing an order, unchecked against Stock."
       accept [:quantity]
