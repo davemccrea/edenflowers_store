@@ -448,7 +448,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       assert ids == [active.id, finishing.id]
     end
 
-    test "points to the subscription product without a subscription", %{conn: conn} do
+    test "points to the subscription product, set to every 4 weeks, without a subscription", %{conn: conn} do
       category = generate(product_category(visibility: :public))
 
       product =
@@ -458,7 +458,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(view, "[data-testid=no-subscriptions]", "No subscriptions yet.")
-      assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/en/product/#{product.slug}"]|)
+      assert has_element?(view, ~s|[data-testid=no-subscriptions] a[href="/en/product/#{product.slug}?every=4"]|)
     end
 
     test "shows who a subscription delivers to", %{conn: conn, user: user} do
