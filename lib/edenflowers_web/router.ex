@@ -62,6 +62,7 @@ defmodule EdenflowersWeb.Router do
         live "/#{language}", Marketing.HomeLive
         live "/#{language}/weddings", Marketing.WeddingsLive
         live "/#{language}/condolences", Marketing.CondolencesLive
+        live "/#{language}/pass-it-on", Marketing.PassItOnLive
         live "/#{language}/about", Marketing.AboutLive
         live "/#{language}/contact", Marketing.ContactLive
         live "/#{language}/faq", Marketing.FaqLive
@@ -112,6 +113,8 @@ defmodule EdenflowersWeb.Router do
     get "/courses", Marketing.LocalizedRedirectController, :courses
     get "/courses/:slug", Marketing.LocalizedRedirectController, :course
     get "/weddings", Marketing.LocalizedRedirectController, :weddings
+    # Printed on the bilingual pass-it-on cards, so it can never change.
+    get "/pass-it-on", Marketing.LocalizedRedirectController, :pass_it_on
   end
 
   scope "/", EdenflowersWeb do

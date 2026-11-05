@@ -47,6 +47,7 @@ msgstr "kurser"
 #: lib/edenflowers_web/router.ex:61
 #: lib/edenflowers_web/router.ex:61
 #: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:61
 #, elixir-autogen, elixir-format
 msgid "en"
 msgstr ""
@@ -58,6 +59,7 @@ msgstr ""
 msgid "faq"
 msgstr "vanliga-fragor"
 
+#: lib/edenflowers_web/router.ex:61
 #: lib/edenflowers_web/router.ex:61
 #: lib/edenflowers_web/router.ex:61
 #: lib/edenflowers_web/router.ex:61
@@ -105,6 +107,7 @@ msgstr "butik"
 #: lib/edenflowers_web/router.ex:61
 #: lib/edenflowers_web/router.ex:61
 #: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:61
 #, elixir-autogen, elixir-format
 msgid "sv"
 msgstr ""
@@ -129,3 +132,10 @@ msgstr "kopvillkor"
 #, elixir-autogen, elixir-format
 msgid "privacy"
 msgstr "integritetspolicy"
+
+#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:61
+#: lib/edenflowers_web/router.ex:61
+#, elixir-autogen, elixir-format
+msgid "pass-it-on"
+msgstr "skicka-vidare"

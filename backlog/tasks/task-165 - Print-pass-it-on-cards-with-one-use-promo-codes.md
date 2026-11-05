@@ -1,10 +1,10 @@
 ---
 id: TASK-165
 title: Print pass-it-on cards with one-use promo codes
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-11-01 16:22'
-updated_date: '2026-11-05 11:15'
+updated_date: '2026-11-05 11:36'
 labels:
   - customers
   - admin
@@ -51,9 +51,9 @@ Joku ajatteli sinua tänään. Anna ilo eteenpäin: lähetä kukkia jollekulle t
 <!-- AC:BEGIN -->
 - [x] #1 One run creates the requested number of one-use 15% codes under a batch name
 - [x] #2 It produces a print shop PDF of 85x55 mm double-sided cards: two pages per card with 3 mm bleed, CMYK (FOGRA51) and text as outlines
-- [ ] #3 Each card's QR code opens the 'Pass it on' page with its own code and the pass-it-on UTM tags, and the code is also printed on the card
-- [ ] #4 The 'Pass it on' page shows the visitor's code and Jennie's first Favourite product, and a used or unknown code shows no discount
-- [ ] #5 The page opens on the gift moment, links its suggestion straight to the product with a 'see all bouquets' link below, and states the one-code-per-order terms
+- [x] #3 Each card's QR code opens the 'Pass it on' page with its own code and the pass-it-on UTM tags, and the code is also printed on the card
+- [x] #4 The 'Pass it on' page shows the visitor's code and Jennie's first Favourite product, and a used or unknown code shows no discount
+- [x] #5 The page opens on the gift moment, links its suggestion straight to the product with a 'see all bouquets' link below, and states the one-code-per-order terms
 - [x] #6 Card codes are created with kind pass_it_on, other codes default to manual, and the admin promotions list shows each code's kind
 <!-- AC:END -->
 
@@ -63,6 +63,8 @@ Joku ajatteli sinua tänään. Anna ilo eteenpäin: lähetä kukkia jollekulle t
 Deploy step for kind (2026-11-05): production newsletter codes made before the kind column are 'manual'. After deploying, run `just backup`, then once:
 Dry run: rpc 'IO.inspect(Edenflowers.Repo.query!("SELECT count(*) FROM promotions WHERE id IN (SELECT newsletter_promo_id FROM users WHERE newsletter_promo_id IS NOT NULL) AND kind <> '\''newsletter'\''").rows)'
 Write: rpc 'IO.inspect(Edenflowers.Repo.query!("UPDATE promotions SET kind = '\''newsletter'\'' WHERE id IN (SELECT newsletter_promo_id FROM users WHERE newsletter_promo_id IS NOT NULL)").num_rows)'
+
+Landing page done 2026-11-05: printed /pass-it-on redirects (keeping ?code= and UTM) to /en/pass-it-on, /sv/skicka-vidare, /fi/anna-eteenpain. noindex, not in the sitemap. Its sv/fi/en copy is agent-written in Jennie's voice and needs her approval with the card text (TASK-162.3 step 1).
 <!-- SECTION:NOTES:END -->
 
 ## Comments

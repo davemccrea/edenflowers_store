@@ -13,6 +13,7 @@ defmodule EdenflowersWeb.Marketing.LocalizedRedirectController do
   def courses(conn, _params), do: localized_redirect(conn, ~q"/#{language}/courses")
   def course(conn, %{"slug" => slug}), do: localized_redirect(conn, ~q"/#{language}/courses/#{slug}")
   def weddings(conn, _params), do: localized_redirect(conn, ~q"/#{language}/weddings")
+  def pass_it_on(conn, _params), do: localized_redirect(conn, ~q"/#{language}/pass-it-on")
 
   defp localized_redirect(conn, path) do
     path = if conn.query_string == "", do: path, else: path <> "?" <> conn.query_string

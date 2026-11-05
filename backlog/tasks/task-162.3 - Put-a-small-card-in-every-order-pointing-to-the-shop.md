@@ -4,7 +4,7 @@ title: Put a pass-it-on card in every gift delivery
 status: ready-for-human
 assignee: []
 created_date: '2026-11-01 14:07'
-updated_date: '2026-11-05 08:40'
+updated_date: '2026-11-05 11:36'
 labels: []
 dependencies:
   - TASK-164
@@ -38,6 +38,12 @@ Rollout:
 - [ ] #2 The first batch is printed and cut
 - [ ] #3 Cards go into gift deliveries, except funerals
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-05: Jennie's approval (step 1) also covers the 'Pass it on' page copy (/sv/skicka-vidare).
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 
