@@ -1,13 +1,12 @@
 ---
 id: TASK-164
 title: Apply a promo code from a link
-status: done
+status: ready-for-agent
 assignee: []
 created_date: '2026-11-01 16:22'
-updated_date: '2026-11-05 07:56'
+updated_date: '2026-11-05 08:40'
 labels:
   - customers
-  - wontfix
 dependencies: []
 priority: medium
 type: feature
@@ -47,6 +46,15 @@ created: 2026-11-05 07:56
 ---
 
 Closed by David on 2026-11-05 without implementing.
+
+---
+
+author: @claude
+created: 2026-11-05 08:40
+
+---
+
+Reopened 2026-11-05: closing it was accidental. The pass-it-on card QRs carry the code (TASK-165).
 
 ---
 <!-- COMMENTS:END -->

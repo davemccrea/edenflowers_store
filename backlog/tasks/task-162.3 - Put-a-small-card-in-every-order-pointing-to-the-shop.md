@@ -4,9 +4,10 @@ title: Put a pass-it-on card in every gift delivery
 status: ready-for-human
 assignee: []
 created_date: '2026-11-01 14:07'
-updated_date: '2026-11-05 08:18'
+updated_date: '2026-11-05 08:40'
 labels: []
 dependencies:
+  - TASK-164
   - TASK-165
 parent_task_id: TASK-162
 type: task
@@ -21,14 +22,14 @@ ordinal: 300000
 Decisions (grilled 2026-11-01):
 - Every gift delivery (the order's gift badge in admin) gets a card, except funeral and sympathy orders: Jennie leaves those out. Pickups and non-gift deliveries don't get one.
 - Each card has its own one-use code for 15% off, no end date, for anyone and any order. The 'pass it on' framing is the message, not a rule.
-- Cards are bilingual (sv, fi), 85x55 mm, double-sided. The first batch is about 100. Codes and print-ready PDF come from TASK-165. Their QR codes open the shop and the recipient enters the printed code at checkout.
+- Cards are bilingual (sv, fi), 85x55 mm, double-sided. The first batch is about 100. Codes and print-ready PDF come from TASK-165. Their QR codes open the shop with the card's code on the cart (TASK-164); the code is also printed for typing.
 - Results show in Umami under source card, campaign pass-it-on, and as uses of the batch's codes.
 
 Rollout:
 1. Jennie approves or rewrites the card text (draft in TASK-165).
 2. David runs the batch and sends the PDF.
 3. Print on thick paper (about 300 g), double-sided, and cut.
-4. Jennie tucks one into every gift delivery.
+4. Jennie scans each card to link it to its order (TASK-165.1), then tucks it into the gift delivery.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -83,6 +84,15 @@ created: 2026-11-05 08:18
 ---
 
 TASK-164 closed without implementing on 2026-11-05; dependency removed.
+
+---
+
+author: @claude
+created: 2026-11-05 08:40
+
+---
+
+2026-11-05: TASK-164 reopened; dependency restored.
 
 ---
 <!-- COMMENTS:END -->
