@@ -17,7 +17,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
   attr :preview, Swoosh.Email, default: nil
-  attr :swedish_toggle?, :boolean, default: false, doc: "whether the customer reads something other than Swedish"
 
   @doc """
   Cancels an order or a booking: the cancellation charge to keep, and whether to email
@@ -60,7 +59,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
             message={@form[:message]}
             to={@email}
             preview={@preview}
-            in_swedish={@swedish_toggle? && @form[:in_swedish]}
           />
           <p :if={!@email} class="text-base-content/75 text-sm">
             {~t"There's no email address, so the customer won't be emailed."}
@@ -85,7 +83,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :message, Phoenix.HTML.FormField, required: true
   attr :to, :string, default: nil, doc: "the customer's address, when the form already knows it"
   attr :preview, Swoosh.Email, default: nil, doc: "what would be sent, from `Edenflowers.Email.Preview`"
-  attr :in_swedish, Phoenix.HTML.FormField, default: nil, doc: "the toggle to preview it in Swedish, if not already"
   attr :collapse_preview?, :boolean, default: false
   slot :inner_block, doc: "more choices about the email, like whether to attach the photo"
 
@@ -114,13 +111,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
           class="textarea w-full"
         />
         <%= if @preview && @sending? do %>
-          <.input
-            :if={@in_swedish}
-            field={@in_swedish}
-            id={"#{@id}-in-swedish"}
-            type="checkbox"
-            label={~t"Preview in Swedish"}
-          />
           <details
             id={"#{@id}-preview-toggle"}
             phx-mounted={JS.ignore_attributes(["open"])}
@@ -162,7 +152,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :to, :string, default: nil
   attr :last_sent, :string, default: nil, doc: "when this email last went, if it has"
   attr :preview, Swoosh.Email, default: nil
-  attr :swedish_toggle?, :boolean, default: false, doc: "whether the customer reads something other than Swedish"
 
   @doc """
   Sends one email from a menu item or button, with Jennie's message. Sends
@@ -187,7 +176,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
             message={@form[:message]}
             to={@to}
             preview={@preview}
-            in_swedish={@swedish_toggle? && @form[:in_swedish]}
           />
         </.drawer_body>
         <.drawer_footer>
@@ -215,7 +203,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :params, :map, default: %{}, doc: "the payment form as Jennie has filled it in so far"
   attr :receipt_email?, :boolean, default: false, doc: "whether the customer can be emailed a receipt"
   attr :preview, Swoosh.Email, default: nil
-  attr :swedish_toggle?, :boolean, default: false, doc: "whether the customer reads something other than Swedish"
 
   @doc """
   Records money Jennie took herself. Sends `record_payment` with `payment`
@@ -263,7 +250,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
         label={~t"Email the customer a receipt"}
         message={@form[:message]}
         preview={@preview}
-        in_swedish={@swedish_toggle? && @form[:in_swedish]}
       />
       <.button
         type="submit"
@@ -303,7 +289,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :locale, :string, required: true
   attr :params, :map, default: %{}, doc: "the form as Jennie has filled it in so far"
   attr :preview, Swoosh.Email, default: nil
-  attr :swedish_toggle?, :boolean, default: false, doc: "whether the customer reads something other than Swedish"
 
   @doc """
   Hands money back, with or without cancelling: what's owed back, or more for
@@ -350,7 +335,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
         message={@form[:note]}
         to={@email}
         preview={@preview}
-        in_swedish={@swedish_toggle? && @form[:in_swedish]}
       />
       <.button
         type="submit"

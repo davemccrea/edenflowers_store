@@ -53,7 +53,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           locale={@locale}
           params={@refund_params}
           preview={@preview}
-          swedish_toggle?={swedish_toggle?(@order)}
         />
         <.record_payment_form
           :if={@mode == :settle and @order.to_collect?}
@@ -63,7 +62,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           params={@payment_params}
           receipt_email?={!!@order.customer_email}
           preview={@preview}
-          swedish_toggle?={swedish_toggle?(@order)}
         />
         <p :if={nothing_to_settle?(@order, @mode)} class="text-base-content/75 text-sm">
           {~t"Nothing left to settle on this order."}
@@ -119,7 +117,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
             message={@form[:message]}
             to={@order.customer_email}
             preview={@preview}
-            in_swedish={swedish_toggle?(@order) && @form[:in_swedish]}
           />
           <p :if={@order.fulfillment_method == :pickup} class="text-base-content/75 text-sm">
             {~t"The customer collects it in person, so no confirmation is emailed."}
@@ -627,8 +624,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   end
 
   def paid_through_stripe?(payments), do: Enum.any?(payments, & &1.payment_intent_id)
-
-  def swedish_toggle?(order), do: order.locale != "sv-FI"
 
   def no_email(%{customer_email: nil}), do: ~t"No email address"
   def no_email(_order), do: nil

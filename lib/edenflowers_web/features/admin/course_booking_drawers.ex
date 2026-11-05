@@ -32,7 +32,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           locale={@locale}
           params={Map.get(@refund_params, @registration.id, %{})}
           preview={@preview}
-          swedish_toggle?={@registration.locale != "sv-FI"}
         />
         <.collect_payment
           :if={@mode == :settle and @registration.to_collect?}
@@ -53,7 +52,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
             locale={@locale}
             params={Map.get(@payment_params, @registration.id, %{})}
             receipt_email?={true}
-            swedish_toggle?={@registration.locale != "sv-FI"}
             preview={@preview}
           />
         </section>

@@ -228,12 +228,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         email={@cancelling && @cancelling.email}
         locale={@locale}
         preview={@preview}
-        swedish_toggle?={@cancelling && @cancelling.locale != "sv-FI"}
       />
       <.email_drawer
         form={@email_form}
         preview={@preview}
-        swedish_toggle?={@emailing_id && booking(@course, @emailing_id).locale != "sv-FI"}
         {EmailDrawer.text(@email_kind, @emailing_id && booking(@course, @emailing_id), @locale)}
       />
       <.settlement_drawer

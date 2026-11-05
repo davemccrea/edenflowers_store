@@ -26,29 +26,23 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Translations
 
   @doc """
-  The email `kind` would send for `record`, in `locale` or else the
-  customer's own. `inputs` holds what Jennie has entered so far: her
+  The email `kind` would send for `record`, in the customer's language.
+  `inputs` holds what Jennie has entered so far: her
   `message`, and for some kinds the `refund` amount, the cancellation
   `charge`, the `payment_method` or whether the `photo?` goes with it (else what `:mark_fulfilled` stored).
   """
-  def build(kind, record, inputs, locale \\ nil)
+  def build(:invoice, %Invoice{} = invoice, inputs), do: build_invoice(invoice, inputs[:message])
 
-  def build(:invoice, %Invoice{} = invoice, inputs, locale),
-    do: build_invoice(%{invoice | locale: locale || invoice.locale}, inputs[:message])
+  def build(:credit_note, %CreditNote{} = credit_note, inputs),
+    do: credit_note |> Ash.load!(:invoice, authorize?: false) |> build_credit_note(inputs[:message])
 
-  def build(:credit_note, %CreditNote{} = credit_note, inputs, locale) do
-    credit_note = Ash.load!(credit_note, :invoice, authorize?: false)
-    invoice = %{credit_note.invoice | locale: locale || credit_note.invoice.locale}
-    build_credit_note(%{credit_note | invoice: invoice}, inputs[:message])
-  end
-
-  def build(kind, %Order{} = order, inputs, locale) do
-    order = order |> Ash.load!(order_load(kind), authorize?: false, reuse_values?: false) |> in_locale(locale)
+  def build(kind, %Order{} = order, inputs) do
+    order = Ash.load!(order, order_load(kind), authorize?: false, reuse_values?: false)
     order_email(kind, order, inputs)
   end
 
-  def build(:subscription_cancelled, %Subscription{} = subscription, inputs, locale) do
-    subscription = SendSubscriptionCancelledEmail.load_for_send(%{subscription | locale: locale || subscription.locale})
+  def build(:subscription_cancelled, %Subscription{} = subscription, inputs) do
+    subscription = SendSubscriptionCancelledEmail.load_for_send(subscription)
 
     Email.subscription_cancelled(
       subscription,
@@ -57,10 +51,10 @@ defmodule Edenflowers.Email.Preview do
     )
   end
 
-  def build(kind, %CourseRegistration{} = registration, inputs, locale) do
+  def build(kind, %CourseRegistration{} = registration, inputs) do
     registration
     |> Ash.load!(booking_load(kind), actor: system_actor(), reuse_values?: false)
-    |> in_locale(locale)
+    |> translated()
     |> then(&booking_email(kind, &1, inputs))
   end
 
@@ -70,15 +64,14 @@ defmodule Edenflowers.Email.Preview do
   `Edenflowers.Orders.quote_entered_order/3`, before anything is saved. `order` is the
   order being edited, or nil.
   """
-  def build_entered(kind, changeset, price, order, inputs, locale \\ nil) do
+  def build_entered(kind, changeset, price, order, inputs) do
     {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
     paid = if order, do: order.amount_paid, else: Decimal.new(0)
     balance = Decimal.sub(price.total, paid)
 
     entered = %{
       entered
-      | locale: locale || entered.locale,
-        customer_first_name: FirstName.extract(entered.customer_name),
+      | customer_first_name: FirstName.extract(entered.customer_name),
         line_items: Enum.map(price.lines, &%{quantity: &1.quantity, product_name: &1.name, subtotal: &1.total}),
         fulfillment_fee: price.fulfillment_fee,
         grand_total: price.total,
@@ -98,7 +91,7 @@ defmodule Edenflowers.Email.Preview do
    The confirmation email for a booking Jennie is entering for `course`, from
   the form's `changeset`, before anything is saved.
   """
-  def build_entered_booking(changeset, course, inputs, locale \\ nil) do
+  def build_entered_booking(changeset, course, inputs) do
     {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
     seats = entered.seats || 1
     amount_paid = Ash.Changeset.get_argument(changeset, :amount) || Decimal.new(0)
@@ -106,8 +99,7 @@ defmodule Edenflowers.Email.Preview do
     entered =
       %{
         entered
-        | locale: locale || entered.locale,
-          course: course,
+        | course: course,
           first_name: FirstName.extract(entered.name),
           seats: seats,
           amount_paid: amount_paid,
@@ -263,9 +255,6 @@ defmodule Edenflowers.Email.Preview do
       _ -> nil
     end
   end
-
-  defp in_locale(record, nil), do: translated(record)
-  defp in_locale(record, locale), do: translated(%{record | locale: locale})
 
   defp translated(%CourseRegistration{} = registration), do: Translations.in_own_locale(registration)
 
