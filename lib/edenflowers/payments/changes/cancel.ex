@@ -88,6 +88,9 @@ defmodule Edenflowers.Payments.Changes.Cancel do
         reuse_values?: false
       )
 
+    # ponytail: a Gift voucher sale's "none spent" check runs here, outside the transaction and before
+    # the Stripe refund, without locking the voucher, so a spend during the refund call slips through.
+    # Fix: lock the voucher FOR UPDATE and recheck in a before_action, refunding a voucher sale after commit.
     with true <- record.cancellable? || {:error, changed_message(cancelled_by)},
          {:ok, charge} <- charge(changeset, record) do
       money = money(record, charge)
