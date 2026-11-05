@@ -14,9 +14,18 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
   # Complete-sentence excerpts from feedback.md, preserving the customer's wording and emojis.
   # `en` is shown beneath the original on /en only. `occasion` is set only where the message names it.
-  # Everyday bouquets come first, so the opening quotes speak to most visitors.
+  # Fanny's wedding quote opens, as Jennie asked; everyday bouquets follow it.
   @review_pages [
     [
+      %{
+        quote:
+          "Vi var såååå nöjda med både arrangemangen och speciellt av allt brudbuketten! Också kostymblommorna, hårbanden o tärnbuketterna var fantstiska! 💐😍 Buketten lyfte liksom bilderna, och det blev bättre än vad vi hade hoppats på!",
+        en:
+          "We were soooo happy with both the arrangements and especially the bridal bouquet! The buttonholes, hairbands and bridesmaids' bouquets were fantastic too! 💐😍 The bouquet really lifted the photos, and it turned out better than we'd hoped!",
+        name: "Fanny",
+        occasion: :wedding,
+        lang: "sv"
+      },
       %{
         quote:
           "Ville bara berätta hur prisvärda och fina dina buketter är jämfört med konkurrenterna. Dina är ju superfina och unika och enligt mamma och pappa så håller dom jättebra!",
@@ -29,14 +38,6 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
         quote: "Så fint att du finns - du är en riktig räddare i nöden👍",
         en: "So glad you're here - you're a real lifesaver👍",
         name: "Elinor",
-        lang: "sv"
-      },
-      %{
-        quote:
-          "Tack till dej för underbara buketter! Vi var verkligen så nöjda! Och gästerna frågade också varifrån de var! 😉😘 Tack!",
-        en:
-          "Thank you for the wonderful bouquets! We were so happy! And the guests also asked where they were from! 😉😘 Thank you!",
-        name: "Anna",
         lang: "sv"
       }
     ],
@@ -52,11 +53,10 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
       },
       %{
         quote:
-          "Vi var såååå nöjda med både arrangemangen och speciellt av allt brudbuketten! Också kostymblommorna, hårbanden o tärnbuketterna var fantstiska! 💐😍 Buketten lyfte liksom bilderna, och det blev bättre än vad vi hade hoppats på!",
+          "Tack till dej för underbara buketter! Vi var verkligen så nöjda! Och gästerna frågade också varifrån de var! 😉😘 Tack!",
         en:
-          "We were soooo happy with both the arrangements and especially the bridal bouquet! The buttonholes, hairbands and bridesmaids' bouquets were fantastic too! 💐😍 The bouquet really lifted the photos, and it turned out better than we'd hoped!",
-        name: "Fanny",
-        occasion: :wedding,
+          "Thank you for the wonderful bouquets! We were so happy! And the guests also asked where they were from! 😉😘 Thank you!",
+        name: "Anna",
         lang: "sv"
       },
       %{

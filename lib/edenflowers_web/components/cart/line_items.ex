@@ -39,14 +39,14 @@ defmodule EdenflowersWeb.Cart.LineItems do
                 />
               </.link>
             <% else %>
-              <%!-- The name below is the button screen readers reach. --%>
+              <%!-- The name below is the button screen readers and keyboards reach. Safari rings this one when the drawer hands focus back. --%>
               <button
                 :if={@card_picker?}
                 type="button"
                 tabindex="-1"
                 aria-hidden="true"
                 phx-click={JS.exec("phx-show", to: "#card-drawer")}
-                class="shrink-0 cursor-pointer transition-opacity hover:opacity-70"
+                class="shrink-0 cursor-pointer outline-hidden transition-opacity hover:opacity-70"
               >
                 <.card_image line_item={line_item} />
               </button>
