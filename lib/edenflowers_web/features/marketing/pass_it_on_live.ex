@@ -2,7 +2,8 @@ defmodule EdenflowersWeb.Marketing.PassItOnLive do
   @moduledoc """
   Where a pass-it-on card's QR code leads: the recipient's discount and one of Jennie's Favourites to send on.
   `Plugs.ApplyLinkPromotion` has already put the code on the cart. A used or unknown code still shows the page,
-  without the discount. A customer opening a card's page starts its code's 30 days.
+  without the discount. A customer opening a card's page starts its code's 30 days. A card linked to its gift order
+  greets the recipient by first name.
   """
 
   use EdenflowersWeb, :live_view
@@ -31,6 +32,7 @@ defmodule EdenflowersWeb.Marketing.PassItOnLive do
      |> clear_flash(:success)
      |> assign(
        page_title: ~t"Pass it on",
+       greeting: greeting(promotion),
        page_robots: "noindex",
        alternates: alternates("/#{language}/pass-it-on"),
        code: code,
@@ -62,7 +64,7 @@ defmodule EdenflowersWeb.Marketing.PassItOnLive do
           />
           <h1 class="page-title relative mb-6">{~t"Pass it on"}</h1>
           <p class="text-base-content/80 max-w-prose text-lg leading-relaxed">
-            {~t"Someone thought of you today. Now you can do the same for someone you care about 💛"}
+            {@greeting} {~t"Someone thought of you today. Now you can do the same for someone you care about 💛"}
           </p>
 
           <div :if={@promotion} id="pass-it-on-code" class="bg-cream text-cream-content mt-8 max-w-sm px-7 py-6">
@@ -169,5 +171,14 @@ defmodule EdenflowersWeb.Marketing.PassItOnLive do
   defp usable_promotion(_code), do: nil
 
   defp start_validity(nil, _actor), do: nil
-  defp start_validity(promotion, actor), do: Pricing.start_promotion_validity!(promotion, actor: actor)
+
+  defp start_validity(promotion, actor),
+    do: Pricing.start_promotion_validity!(promotion, actor: actor, load: [:recipient_first_name])
+
+  defp greeting(%{recipient_first_name: name}) when is_binary(name) do
+    gettext_comment("Opens a linked pass-it-on card's page, before 'Someone thought of you today.' e.g. 'Hi Anna!'")
+    ~t"Hi #{name}!"
+  end
+
+  defp greeting(_promotion), do: nil
 end

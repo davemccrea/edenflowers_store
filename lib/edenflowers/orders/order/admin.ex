@@ -65,6 +65,8 @@ defmodule Edenflowers.Orders.Order.Admin do
     :cancelled?,
     :editable?,
     :fulfillable?,
+    :pass_it_on_card_changeable?,
+    :pass_it_on_card_removable?,
     :payment_reminder_sendable?,
     :receipt_available?,
     :details_emailable?,
@@ -72,8 +74,9 @@ defmodule Edenflowers.Orders.Order.Admin do
     :fulfillment_confirmation_sendable?,
     :invoiced?,
     :invoiceable?,
-    :promotion,
     :fulfillment_option,
+    promotion: [:gift_order],
+    pass_it_on_card: [:placed_orders, :gift_order_linkable?, :card_status],
     invoices: [:status, :overdue?],
     line_items: [:subtotal, :total]
   ]
@@ -398,6 +401,29 @@ defmodule Edenflowers.Orders.Order.Admin do
       description "Saves Jennie's private Florist Note on any order, logged only when it changed."
       accept [:florist_note]
       change set_context(%{skip_version_when_unchanged?: true})
+    end
+
+    update :link_pass_it_on_card do
+      description "Jennie links the pass-it-on card going out with a gift order by typing the `code` printed on " <>
+                    "it. Logged with the card's code. Refused for a card its recipient has opened or that went " <>
+                    "with another order."
+
+      argument :code, :ci_string, allow_nil?: false, description: "The code printed under the card's QR code."
+      validate {Holds, calculation: :pass_it_on_card_changeable?, message: "is not a gift still to deliver"}
+      change Changes.LinkPassItOnCard
+      require_atomic? false
+    end
+
+    update :remove_pass_it_on_card do
+      description "Unlinks the gift order's pass-it-on card, in case Jennie typed the wrong code, until its " <>
+                    "recipient opens it. Logged with the card's code."
+
+      validate {Holds,
+                calculation: :pass_it_on_card_removable?,
+                message: "has no card to remove, or its recipient has opened it"}
+
+      change {Changes.LinkPassItOnCard, remove?: true}
+      require_atomic? false
     end
 
     update :mark_fulfilled do

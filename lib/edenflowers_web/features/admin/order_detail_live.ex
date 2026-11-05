@@ -434,6 +434,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </div>
             </.widget>
 
+            <.pass_it_on_card
+              :if={@order.gift || (@order.promotion && @order.promotion.gift_order)}
+              order={@order}
+              locale={@locale}
+            />
+
             <.widget id="order-log" title={~t"History"}>
               <ol class="divide-base-content/12 divide-y text-sm">
                 <.history_entry
@@ -538,6 +544,27 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:error, error} ->
         Logger.error("Florist note for order #{socket.assigns.order.id} not saved: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, ~t"Could not save the note.")}
+    end
+  end
+
+  def handle_event("link_card", %{"code" => code}, socket) do
+    %{order: order, current_user: actor} = socket.assigns
+
+    case Orders.link_pass_it_on_card(order, String.trim(code), actor: actor) do
+      {:ok, order} -> {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:success, ~t"Card linked.")}
+      {:error, error} -> {:noreply, put_flash(socket, :error, card_error(error))}
+    end
+  end
+
+  def handle_event("unlink_card", _params, socket) do
+    %{order: order, current_user: actor} = socket.assigns
+
+    case Orders.remove_pass_it_on_card(order, actor: actor) do
+      {:ok, order} ->
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:success, ~t"Card removed.")}
+
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, card_error(error))}
     end
   end
 
@@ -780,6 +807,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)
+
+  # LinkPassItOnCard words its own errors about the card; the rest are the order's state.
+  defp card_error(%{errors: [%{field: :code, message: message} | _]}), do: message
+
+  defp card_error(_error),
+    do: ~t"The card can't change now: the gift has been delivered or cancelled, or its recipient opened the card."
 
   # Says when it last went out, so a resend nobody needed is caught before it's sent.
   defp send_email(:order_details, order, edits, actor) do

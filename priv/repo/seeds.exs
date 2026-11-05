@@ -270,8 +270,12 @@ for attrs <- [
   |> Ash.create!(authorize?: false)
 end
 
-# The other sources the admin list filters by.
-Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare 2026-11", 3, actor: Edenflowers.Actors.system_actor())
+# The other sources the admin list filters by. One card per state: linked to
+# Mikael's gift and not opened yet, linked to Hanna's and used on Karin's
+# order (so the two orders link to each other), and a spare to scan.
+[linked_card_code, used_card_code, _spare_card_code] =
+  Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare 2026-11", 3, actor: Edenflowers.Actors.system_actor())
+
 Edenflowers.Pricing.create_newsletter_promotion!(authorize?: false)
 
 # One per confidence level and payment state: unpaid, overdue and paid. The
@@ -638,14 +642,17 @@ orders = [
     items: [line_item.("Bouquet 2", :large, 2), line_item.("Plant", :medium, 1)]
   }),
   # Ordered a few days back and already delivered, so it lands in the Overview's
-  # completed side. Both dates sit in the past, in order.
+  # completed side. Both dates sit in the past, in order. Its pass-it-on card
+  # brought in Karin's order.
   Map.merge(nearby_address, %{
     customer_name: "Hanna Järvinen",
     customer_email: "hanna.jarvinen@example.fi",
     fulfillment_option: home_delivery,
     ordered_at: DateTime.add(DateTime.utc_now(), -6, :day),
     fulfillment_date: fulfillment_date_for.(-2),
-    recipient_name: "Hanna Järvinen",
+    gift: true,
+    recipient_name: "Elin Järvinen",
+    recipient_phone_number: "045 3217655",
     customer_phone_number: "045 3217654",
     fulfillment_status: :fulfilled,
     items: [line_item.("Bouquet 2", :medium, 1)]
@@ -698,8 +705,9 @@ orders = [
     items: [line_item.("Bouquet 1", :small, 1), line_item.("Plant", :medium, 1)]
   },
   # With Mikael's, today's Overview has a timed delivery ahead of an untimed one,
-  # and a pickup.
+  # and a pickup. Karin got Hanna's gift and passed its card on.
   Map.merge(nearby_address, %{
+    promotion: promotion_by_code.(used_card_code),
     customer_name: "Karin Öst",
     customer_email: "karin.ost@example.fi",
     fulfillment_option: home_delivery,
@@ -990,6 +998,17 @@ online_order = fn customer_name ->
   |> Ash.Query.load([:line_items, :payments])
   |> Ash.read_one!(authorize?: false)
 end
+
+Orders.link_pass_it_on_card!(online_order.("Mikael Lindholm"), linked_card_code, actor: jennie)
+
+# Hanna's gift is seeded already delivered, too late for the order action, so
+# the card is linked directly, then scanned, which stops it moving.
+used_card = promotion_by_code.(used_card_code)
+Edenflowers.Pricing.link_card_to_gift_order!(used_card, online_order.("Hanna Järvinen").id, actor: jennie)
+
+Edenflowers.Pricing.start_promotion_validity!(used_card, %{today: fulfillment_date_for.(-2)},
+  actor: Actors.system_actor()
+)
 
 # An online order the customer asked to add to by email after paying: it now
 # has a balance to collect and a payment link for just that.

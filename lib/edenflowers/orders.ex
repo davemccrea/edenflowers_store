@@ -64,6 +64,8 @@ defmodule Edenflowers.Orders do
       define :edit_order, action: :edit
       define :quote_entered_order, action: :quote_entered, args: [:order, :params, :delivery_quote]
       define :update_florist_note, action: :update_florist_note
+      define :link_pass_it_on_card, action: :link_pass_it_on_card, args: [:code]
+      define :remove_pass_it_on_card, action: :remove_pass_it_on_card
       define :cancel_order, action: :cancel
       define :refresh_vat_breakdown, action: :refresh_vat_breakdown
 

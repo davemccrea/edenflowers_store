@@ -284,4 +284,41 @@ defmodule Edenflowers.Pricing.PromotionTest do
       assert Pricing.start_promotion_validity!(manual, actor: nil).expiration_date == manual.expiration_date
     end
   end
+
+  describe "linking a pass-it-on card to its gift order" do
+    import Generator
+
+    setup do
+      [code, other_code] =
+        Pricing.create_pass_it_on_batch!("Skicka vidare", 2, actor: Edenflowers.Actors.system_actor())
+
+      {:ok, card} = Pricing.get_promotion_by_code(code)
+      {:ok, other_card} = Pricing.get_promotion_by_code(other_code)
+      %{card: card, other_card: other_card, admin: generate(admin_user())}
+    end
+
+    test "can be re-picked until the recipient opens the card", %{card: card, admin: admin} do
+      wrong = placed_order(gift: true, recipient_name: "Anna Virtanen")
+      right = placed_order(gift: true, recipient_name: "Bea Berg")
+
+      card = Pricing.link_card_to_gift_order!(card, wrong.id, actor: admin)
+      card = Pricing.link_card_to_gift_order!(card, right.id, actor: admin, load: :recipient_first_name)
+      assert card.recipient_first_name == "Bea"
+
+      card = Pricing.start_promotion_validity!(card, actor: nil)
+      assert {:error, _opened} = Pricing.link_card_to_gift_order(card, wrong.id, actor: admin)
+    end
+
+    test "one card per order", %{card: card, other_card: other_card, admin: admin} do
+      order = placed_order(gift: true, recipient_name: "Anna")
+      Pricing.link_card_to_gift_order!(card, order.id, actor: admin)
+
+      assert {:error, _taken} = Pricing.link_card_to_gift_order(other_card, order.id, actor: admin)
+    end
+
+    test "only an admin links a card", %{card: card} do
+      order = placed_order(gift: true, recipient_name: "Anna")
+      assert {:error, %Ash.Error.Forbidden{}} = Pricing.link_card_to_gift_order(card, order.id, actor: nil)
+    end
+  end
 end

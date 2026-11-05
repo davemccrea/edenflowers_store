@@ -129,6 +129,8 @@ defmodule Edenflowers.Orders.Order do
     # the email, set by its Send* change or Cancel.
     metadata :email_subject, :string
     metadata :email_body, :string
+    # The pass-it-on card linked or removed, set by LinkPassItOnCard: the link lives on the card.
+    metadata :pass_it_on_card, :string
 
     # on_actions only filters updates; every create is versioned unless ignored.
     ignore_actions [:create_for_checkout]
@@ -139,6 +141,8 @@ defmodule Edenflowers.Orders.Order do
       :place_custom,
       :edit,
       :update_florist_note,
+      :link_pass_it_on_card,
+      :remove_pass_it_on_card,
       :cancel,
       :cancel_by_customer,
       :mark_fulfilled,
@@ -203,6 +207,8 @@ defmodule Edenflowers.Orders.Order do
                      :edit,
                      :quote_entered,
                      :update_florist_note,
+                     :link_pass_it_on_card,
+                     :remove_pass_it_on_card,
                      :cancel,
                      :record_payment,
                      :undo_payment,
@@ -396,6 +402,11 @@ defmodule Edenflowers.Orders.Order do
                     "the order; see promotion_applied? for whether it discounts the cart."
     end
 
+    has_one :pass_it_on_card, Edenflowers.Pricing.Promotion do
+      description "The pass-it-on card Jennie linked to this gift delivery, if any."
+      destination_attribute :gift_order_id
+    end
+
     belongs_to :subscription, Edenflowers.Orders.Subscription do
       description "The Subscription this order started, or created it as an Occurrence. Nil for a one-off order."
     end
@@ -553,6 +564,18 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
       description "Whether Jennie can mark it fulfilled: placed and still to make."
+    end
+
+    calculate :pass_it_on_card_changeable?, :boolean, expr(gift and fulfillable?) do
+      description "Whether Jennie can still link or remove the gift's pass-it-on card: the card goes out with " <>
+                    "the flowers, so only a gift still to deliver, not one fulfilled or cancelled."
+    end
+
+    calculate :pass_it_on_card_removable?,
+              :boolean,
+              expr(pass_it_on_card_changeable? and exists(pass_it_on_card, gift_order_linkable?)) do
+      description "Whether Jennie can remove the gift's pass-it-on card, if she typed the wrong code: the gift is " <>
+                    "still to deliver and its recipient hasn't opened the card."
     end
 
     calculate :open?,

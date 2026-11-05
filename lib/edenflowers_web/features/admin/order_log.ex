@@ -69,6 +69,13 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :place_unpaid_occurrence}), do: ~t"Placed, but the saved card was refused"
   defp title(%{version_action_name: :edit}), do: ~t"Edited"
   defp title(%{version_action_name: :update_florist_note}), do: ~t"Florist note changed"
+
+  defp title(%{version_action_name: :link_pass_it_on_card} = version),
+    do: ~t"Pass it on card #{code = version.pass_it_on_card} linked"
+
+  defp title(%{version_action_name: :remove_pass_it_on_card} = version),
+    do: ~t"Pass it on card #{code = version.pass_it_on_card} removed"
+
   defp title(%{version_action_name: :update_business_details}), do: ~t"Business details changed"
   defp title(%{version_action_name: :cancel}), do: ~t"Cancelled"
   defp title(%{version_action_name: :cancel_by_customer}), do: ~t"Cancelled by the customer"
