@@ -167,7 +167,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
           :if={!@editable}
           form={@email_form}
           preview={@preview}
-          swedish_toggle?={@invoice.locale != "sv-FI"}
           {EmailDrawer.text(@email_kind, email_record(@email_kind, @invoice), @locale)}
         />
         <.form

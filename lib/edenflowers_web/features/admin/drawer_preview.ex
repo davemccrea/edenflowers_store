@@ -28,11 +28,11 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
     # The entered amount distinguishes a new payment from a neutral receipt copy.
     kind = if kind == :payment, do: :receipt, else: kind
 
-    Preview.build(kind, record, inputs, if(params["in_swedish"] == "true", do: "sv-FI"))
+    Preview.build(kind, record, inputs)
   end
 
   defp document_preview(kind, document, params) do
-    Preview.build(kind, document, %{message: params["message"]}, if(params["in_swedish"] == "true", do: "sv-FI"))
+    Preview.build(kind, document, %{message: params["message"]})
   end
 
   # The refund form fills itself in from what's owed back, so an empty amount

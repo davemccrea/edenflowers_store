@@ -106,9 +106,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     view |> form("#email-form", email: %{message: "Thank you for coming in."}) |> render_change()
     assert has_element?(view, "#email-drawer-email-preview", "Thank you for coming in.")
 
-    view |> form("#email-form", email: %{message: "Tack!", in_swedish: "true"}) |> render_change()
-    assert has_element?(view, "#email-drawer-email-preview", "Ditt kvitto")
-
     assert_no_email_sent()
     refute_enqueued(worker: Edenflowers.Orders.Workers.SendReceiptEmail)
   end

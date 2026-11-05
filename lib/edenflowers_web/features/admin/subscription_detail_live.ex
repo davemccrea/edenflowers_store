@@ -252,7 +252,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               message={@cancel_form[:message]}
               to={to_string(@subscription.user.email)}
               preview={@preview}
-              in_swedish={@subscription.locale != "sv-FI" && @cancel_form[:in_swedish]}
             />
           </.drawer_body>
           <.drawer_footer>
@@ -334,8 +333,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   end
 
   defp assign_preview(socket, params) do
-    locale = if params["in_swedish"] == "true", do: "sv-FI"
-    preview = Preview.build(:subscription_cancelled, socket.assigns.subscription, %{message: params["message"]}, locale)
+    preview = Preview.build(:subscription_cancelled, socket.assigns.subscription, %{message: params["message"]})
     assign(socket, :preview, preview)
   end
 

@@ -379,7 +379,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                 label={~t"Email the order details to the customer (needs an email)"}
                 message={@form[:message]}
                 preview={@preview}
-                in_swedish={@form[:locale].value != "sv-FI" && @form[:in_swedish]}
               />
             </div>
           </.form_section>
@@ -401,7 +400,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               label={~t"Email the updated order to the customer"}
               message={@form[:message]}
               preview={@preview}
-              in_swedish={@form[:locale].value != "sv-FI" && @form[:in_swedish]}
             />
           </.form_section>
         </.form>
@@ -839,8 +837,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     if form[:email_customer?].value in [true, "true"] and form[:customer_email].value not in [nil, ""] and
          form[:fulfillment_date].value not in [nil, ""] do
       kind = if assigns.mode == :new, do: :order_details, else: :order_updated
-      locale = if form[:in_swedish].value == "true", do: "sv-FI"
-      Preview.build_entered(kind, form.source.source, price, assigns.order, %{message: form[:message].value}, locale)
+      Preview.build_entered(kind, form.source.source, price, assigns.order, %{message: form[:message].value})
     end
   end
 

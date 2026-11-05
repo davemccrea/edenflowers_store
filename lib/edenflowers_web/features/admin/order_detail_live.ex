@@ -146,12 +146,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           email={@order.customer_email}
           locale={@locale}
           preview={@preview}
-          swedish_toggle?={swedish_toggle?(@order)}
         />
         <.email_drawer
           form={@email_form}
           preview={@preview}
-          swedish_toggle?={swedish_toggle?(@order)}
           {EmailDrawer.text(@email_kind, @order, @locale)}
         />
         <.settlement_drawer
@@ -832,8 +830,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp assign_fulfillment_preview(socket, params) do
     order = socket.assigns.order
     photo? = params["customer_home"] == "false"
-    locale = if params["in_swedish"] == "true", do: "sv-FI"
-    preview = Preview.build(:fulfillment, order, %{message: params["message"], photo?: photo?}, locale)
+    preview = Preview.build(:fulfillment, order, %{message: params["message"], photo?: photo?})
     assign(socket, :preview, preview)
   end
 

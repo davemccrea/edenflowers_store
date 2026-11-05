@@ -120,7 +120,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
               message={@form[:message]}
               preview={@preview}
               collapse_preview?={true}
-              in_swedish={@form[:locale].value != "sv-FI" && @form[:in_swedish]}
             />
           </.form_section>
         </.form>
@@ -152,13 +151,10 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
 
     preview =
       if form[:email_customer?].value in [true, "true"] and form[:email].value not in [nil, ""] do
-        locale = if form[:in_swedish].value == "true", do: "sv-FI"
-
         Preview.build_entered_booking(
           form.source.source,
           socket.assigns.course,
-          %{message: form[:message].value},
-          locale
+          %{message: form[:message].value}
         )
       end
 
