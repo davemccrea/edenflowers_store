@@ -624,9 +624,14 @@ defmodule Edenflowers.Orders.Order do
                     "still to deliver and its recipient hasn't opened the card."
     end
 
-    calculate :accepts_gift_voucher?, :boolean, expr(not subscription? and not gift_voucher_sale?) do
-      description "Whether a Gift voucher can pay for the cart: not a subscription, whose later deliveries it " <>
-                    "can't pay for yet, nor a Gift voucher sale, as one voucher can't buy another."
+    calculate :accepts_gift_voucher?, :boolean, expr(not gift_voucher_sale?) do
+      description "Whether a Gift voucher can pay for the cart: not a Gift voucher sale, as one voucher can't " <>
+                    "buy another."
+    end
+
+    calculate :saves_card?, :boolean, expr(subscription?) do
+      description "Whether paying for the cart saves the card for the Subscription it starts, so a Gift " <>
+                    "voucher leaves at least Stripe's 0.50 € minimum for the card."
     end
 
     calculate :open?,

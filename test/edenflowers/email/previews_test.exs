@@ -20,7 +20,7 @@ defmodule Edenflowers.Email.PreviewsTest do
     assert email.text_body =~ "lauantaina 14.11.2026"
     assert email.subject == "Eden Flowers -tilauksesi: lauantai 14.11."
 
-    subjects = for {"Subscription heads-up", _, _, email} <- previews, do: email.subject
+    subjects = for {"Subscription heads-up", _, _, email} <- previews, uniq: true, do: email.subject
 
     assert subjects == [
              "Seuraavat kukkasi tulevat lauantaina 28.11.",

@@ -1,8 +1,8 @@
 defmodule Edenflowers.Orders.Order.Changes.ActivateSubscription do
   @moduledoc """
   Starts the Subscription a paid subscription cart asked for, from the order's
-  delivery details and the card Stripe saved, and links the order to it as its
-  first delivery.
+  delivery details, the card Stripe saved and any Gift voucher, and links the
+  order to it as its first delivery.
 
   Run by the `:start_subscription` trigger once the order is placed, so a
   failure fails the job, which retries, and the order stays placed.
@@ -40,7 +40,8 @@ defmodule Edenflowers.Orders.Order.Changes.ActivateSubscription do
       card_message: order.card_message,
       locale: order.locale,
       stripe_customer_id: order.stripe_customer_id,
-      stripe_payment_method_id: order.stripe_payment_method_id
+      stripe_payment_method_id: order.stripe_payment_method_id,
+      gift_voucher_id: order.gift_voucher_id
     }
   end
 end

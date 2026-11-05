@@ -57,6 +57,10 @@ defmodule Edenflowers.Orders.Subscription do
   postgres do
     repo Edenflowers.Repo
     table "subscriptions"
+
+    references do
+      reference :gift_voucher, on_delete: :restrict
+    end
   end
 
   # Created only once the first order is paid, so it starts active.
@@ -200,8 +204,9 @@ defmodule Edenflowers.Orders.Subscription do
     end
 
     create :activate do
-      description "Starts an active subscription from its first order once that is paid, snapshotting the card, " <>
-                    "and queues the set-up email and a shop notice. System only."
+      description "Starts an active subscription from its first order once that is paid, snapshotting the card " <>
+                    "and keeping the order's Gift voucher to pay later Occurrences, and queues the set-up email " <>
+                    "and a shop notice. System only."
 
       accept [
         :user_id,
@@ -217,7 +222,8 @@ defmodule Edenflowers.Orders.Subscription do
         :card_message,
         :locale,
         :stripe_customer_id,
-        :stripe_payment_method_id
+        :stripe_payment_method_id,
+        :gift_voucher_id
       ]
 
       validate attribute_in(:interval_weeks, @intervals)
@@ -463,6 +469,11 @@ defmodule Edenflowers.Orders.Subscription do
     belongs_to :fulfillment_option, Edenflowers.Fulfillment.FulfillmentOption do
       description "Delivery or pickup for every Occurrence, copied from the first order."
       allow_nil? false
+    end
+
+    belongs_to :gift_voucher, Edenflowers.Payments.GiftVoucher do
+      description "The Gift voucher the first order was paid with. Each Occurrence draws from it before the " <>
+                    "card, until it runs out or expires."
     end
 
     has_many :orders, Edenflowers.Orders.Order do

@@ -52,7 +52,8 @@ defmodule Edenflowers.Orders.Order.Occurrences do
         :delivery_address,
         :delivery_instructions,
         :fulfillment_option_id,
-        :fulfillment_date
+        :fulfillment_date,
+        :gift_voucher_id
       ]
 
       argument :product_variant_id, :uuid, allow_nil?: false
@@ -86,13 +87,14 @@ defmodule Edenflowers.Orders.Order.Occurrences do
     # is placed all the same (ADR 0001), and the customer is emailed a payment
     # link for it.
     update :place_unpaid_occurrence do
-      description "Places an Occurrence whose card was refused, unpaid: opens a payment link, queues the payment " <>
-                    "failed email and notifies the shop."
+      description "Places an Occurrence whose card was refused: its Gift voucher pays what it can, and a payment " <>
+                    "link is opened for the rest. Queues the payment failed email and notifies the shop."
 
       change transition_state(:placed)
       change set_attribute(:ordered_at, &DateTime.utc_now/0)
       change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
       change Changes.SnapshotVatBreakdown
+      change PaymentChanges.PayFromVoucher
       change PaymentChanges.OpenPaymentLink
       change {PaymentChanges.QueueEmail, trigger: :send_payment_failed_email}
       # A paid Occurrence notifies the shop through :finalize_checkout.

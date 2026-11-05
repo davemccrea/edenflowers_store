@@ -6,8 +6,7 @@ defmodule Edenflowers.Payments.Changes.ApplyGiftVoucher do
   confirmed.
 
   Refuses an unknown code, a voucher that has expired, is used up or whose sale was
-  cancelled, a subscription cart, whose later deliveries a voucher can't pay
-  for yet, and a voucher sale, as one voucher can't buy another.
+  cancelled, and a voucher sale, as one voucher can't buy another.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -27,9 +26,8 @@ defmodule Edenflowers.Payments.Changes.ApplyGiftVoucher do
 
   # The checkout hides the field on the same calculation.
   defp refusal(%Order{} = order) do
-    case Ash.load!(order, [:accepts_gift_voucher?, :subscription?], authorize?: false, reuse_values?: false) do
+    case Ash.load!(order, :accepts_gift_voucher?, authorize?: false, reuse_values?: false) do
       %{accepts_gift_voucher?: true} -> nil
-      %{subscription?: true} -> ~t"A gift voucher can't pay for a subscription yet."
       _voucher_sale -> ~t"A gift voucher can't pay for another one."
     end
   end

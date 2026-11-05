@@ -205,7 +205,30 @@ defmodule Edenflowers.Orders.SubscriptionTest do
     assert {:ok, _order, "pi_sub_secret"} = Payments.setup(order, nil)
   end
 
+  test "a Gift voucher covering a subscription cart still leaves the card a charge, so it is saved", ctx do
+    voucher = generate(gift_voucher(amount: Decimal.new("200.00")))
+    order = subscription_cart(ctx, state: :payment, gift_voucher_id: voucher.id)
+
+    order = Ash.load!(order, [:grand_total, :voucher_amount, :stripe_amount], authorize?: false)
+
+    assert Decimal.equal?(order.stripe_amount, "0.50")
+    assert Decimal.equal?(Decimal.add(order.voucher_amount, order.stripe_amount), order.grand_total)
+  end
+
   describe "when the first order is paid" do
+    test "the subscription keeps the Gift voucher the order was paid with", ctx do
+      voucher = generate(gift_voucher(amount: Decimal.new("200.00")))
+      order = subscription_cart(ctx, state: :payment, gift_voucher_id: voucher.id)
+      order = Ash.load!(order, :stripe_amount, authorize?: false)
+
+      paid = %{payment_intent(order) | amount_received: StripeAPI.to_stripe_amount(order.stripe_amount)}
+      assert {:ok, :completed} = Payments.complete(paid)
+      start_subscriptions()
+
+      order = Ash.get!(Order, order.id, authorize?: false)
+      assert Ash.get!(Subscription, order.subscription_id, authorize?: false).gift_voucher_id == voucher.id
+    end
+
     test "the subscription is queued to start straight away", ctx do
       order = subscription_cart(ctx, state: :payment)
 

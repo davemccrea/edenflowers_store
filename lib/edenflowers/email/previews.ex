@@ -369,7 +369,9 @@ defmodule Edenflowers.Email.Previews do
              delivery_address: nil,
              interval_weeks: 4,
              first_order_fulfillment_fee: Decimal.new(0)
-           }}
+           }},
+          {"gift voucher pays part", %{gift_voucher: %{spendable?: true, remaining: Decimal.new("20.00")}}},
+          {"gift voucher pays it all", %{gift_voucher: %{spendable?: true, remaining: Decimal.new("150.00")}}}
         ] do
       {"Subscription heads-up", title, :subscription_heads_up, Email.subscription_heads_up(subscription(attrs, locale))}
     end
@@ -771,7 +773,8 @@ defmodule Edenflowers.Email.Previews do
         charged_on: ~D[2026-11-26],
         change_deadline: ~D[2026-11-25],
         first_order_discounted?: true,
-        card_message: "Happy birthday!"
+        card_message: "Happy birthday!",
+        gift_voucher: nil
       },
       attrs
     )
