@@ -4154,3 +4154,68 @@ msgstr "Avboka minst %{days} dagar före kursen utan kostnad."
 #, elixir-autogen, elixir-format
 msgid "Promo code %{code} is in your cart."
 msgstr "Kampanjkoden %{code} finns i varukorgen."
+
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:33
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:63
+#, elixir-autogen, elixir-format
+msgid "Pass it on"
+msgstr "Skicka vidare"
+
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:112
+#, elixir-autogen, elixir-format
+msgid "See all bouquets"
+msgstr "Se alla buketter"
+
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:110
+#, elixir-autogen, elixir-format
+msgid "Send these flowers"
+msgstr "Skicka de här blommorna"
+
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:74
+#, elixir-autogen, elixir-format
+msgid "This code has already been used or is no longer valid."
+msgstr "Koden har redan använts eller gäller inte längre."
+
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:69
+#, elixir-autogen, elixir-format
+msgid "%{rate} off"
+msgstr "%{rate} rabatt"
+
+#. Split around the promo code, shown in bold: 'Enter the code ABC123 at checkout.'
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:133
+#, elixir-autogen, elixir-format
+msgid "Enter the code"
+msgstr "Skriv in koden"
+
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:101
+#, elixir-autogen, elixir-format
+msgid "Popular"
+msgstr "Populär"
+
+#. Split around the promo code, shown in bold: 'The code ABC123 is already in your cart.'
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:125
+#, elixir-autogen, elixir-format
+msgid "The code"
+msgstr "Koden"
+
+#. Follows the promo code in bold: 'Enter the code ABC123 at checkout.'
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:135
+#, elixir-autogen, elixir-format
+msgid "at checkout."
+msgstr "i kassan."
+
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:105
+#, elixir-autogen, elixir-format
+msgid "from"
+msgstr "från"
+
+#. Follows the promo code in bold: 'The code ABC123 is already in your cart.'
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:127
+#, elixir-autogen, elixir-format
+msgid "is already in your cart."
+msgstr "ligger redan i varukorgen."
+
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:65
+#, elixir-autogen, elixir-format
+msgid "Someone thought of you today. Now you can do the same for someone you care about 💛"
+msgstr "Någon tänkte på dig idag. Nu kan du göra samma sak för någon du tycker om 💛"

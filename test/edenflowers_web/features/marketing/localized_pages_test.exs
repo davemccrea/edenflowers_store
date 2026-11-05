@@ -85,6 +85,9 @@ defmodule EdenflowersWeb.Marketing.LocalizedPagesTest do
       assert conn |> get("/courses/#{id}") |> redirected_to(302) == "/fi/kurssit/#{id}"
       assert conn |> get("/courses") |> redirected_to(302) == "/fi/kurssit"
       assert conn |> get("/weddings") |> redirected_to(302) == "/fi/haat"
+
+      assert conn |> get("/pass-it-on?code=AB12CD&utm_source=card") |> redirected_to(302) ==
+               "/fi/anna-eteenpain?code=AB12CD&utm_source=card"
     end
   end
 

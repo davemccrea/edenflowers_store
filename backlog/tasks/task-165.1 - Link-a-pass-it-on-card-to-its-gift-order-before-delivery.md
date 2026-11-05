@@ -4,6 +4,7 @@ title: Link a pass-it-on card to its gift order before delivery
 status: ready-for-agent
 assignee: []
 created_date: '2026-11-05 09:15'
+updated_date: '2026-11-05 16:14'
 labels: []
 dependencies: []
 parent_task_id: TASK-165
@@ -32,3 +33,9 @@ Decisions (grilled 2026-11-05):
 - [ ] #2 A linked card's page greets the recipient by first name; an unlinked card's page has no name
 - [ ] #3 An order that used a card's code and the gift order it came with link to each other in admin
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-05: The 'Pass it on' page (prototype E) greets a linked card's recipient at the start of the message: 'Hej Anna! Någon tänkte på dig idag. Nu kan du göra samma sak för någon du tycker om.' An unlinked card keeps the line without the greeting.
+<!-- SECTION:NOTES:END -->
