@@ -113,13 +113,27 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
     update :email_course_reminder do
       description "Jennie explicitly queues a course reminder for a confirmed booking."
       accept []
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       change {PaymentChanges.QueueEmail, trigger: :send_reminder_email}
     end
 
     update :send_reminder_email do
-      description "Sends the course reminder Jennie queued, in the booking's language."
+      description "Sends the course reminder Jennie queued, in the booking's language, as she rewrote it if she did."
       accept []
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       transaction? false
       require_atomic? false
