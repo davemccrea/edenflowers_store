@@ -279,10 +279,13 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
     update :update_locale do
       description "Keeps a cart's locale in step with the language the customer is browsing in, so its emails go " <>
-                    "out in it."
+                    "out in it, and renames its catalogue lines in it, so its receipt names them as the " <>
+                    "customer last read them."
 
       accept [:locale]
+      require_atomic? false
       validate attribute_in(:locale, @locales)
+      change Changes.RenameLinesInLocale, where: [changing(:locale)]
     end
 
     action :prepare_checkout_payment, :map do

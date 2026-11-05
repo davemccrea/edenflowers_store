@@ -1271,6 +1271,29 @@ defmodule Edenflowers.Orders.OrderTest do
       assert {:error, error} = Orders.update_locale(order, "en-US", authorize?: false)
       assert %Ash.Error.Invalid{} = error
     end
+
+    test "renames the cart's lines in the new locale" do
+      order = Orders.create_for_checkout!(authorize?: false)
+
+      product =
+        generate(
+          product(
+            name: "Bouquet of the week",
+            translations: %{"sv-FI": %{name: "Veckans bukett"}, fi: %{name: "Viikon kimppu"}}
+          )
+        )
+
+      variant = generate(product_variant(product_id: product.id))
+      line = Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+      assert line.product_name == "Veckans bukett"
+
+      Orders.update_locale!(order, "fi", authorize?: false)
+
+      assert Ash.reload!(line, authorize?: false).product_name == "Viikon kimppu"
+
+      Orders.update_locale!(order, "en-GB", authorize?: false)
+      assert Ash.reload!(line, authorize?: false).product_name == "Bouquet of the week"
+    end
   end
 
   describe "Card line items via Order" do
