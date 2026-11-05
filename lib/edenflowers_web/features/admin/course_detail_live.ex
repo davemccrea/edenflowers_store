@@ -181,6 +181,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           :if={@reminder_form}
           for={@reminder_form}
           id="course-reminder-form"
+          phx-change="validate_course_reminders"
           phx-submit="send_course_reminders"
           class="flex min-h-0 flex-1 flex-col"
         >
@@ -189,15 +190,25 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               {~t"Each confirmed booking receives a reminder in the customer's language."}
             </p>
             <p :if={@reminder_error} role="alert" class="text-error text-sm">{@reminder_error}</p>
-            <details :for={{registration, email} <- @reminder_previews}>
-              <summary class="link link-primary text-sm">
-                {registration.name} · {registration.email}
+            <div
+              :for={{registration, email} <- @reminder_previews}
+              id={"reminder-#{registration.id}"}
+              class="border-base-content/12 space-y-2 border-t pt-4"
+            >
+              <p class="text-sm">
+                <span class="font-semibold">{registration.name}</span>
+                <span class="text-base-content/75 break-all">· {registration.email}</span>
                 <span :if={registration.reminder_emailed_at} class="text-base-content/75 block">
                   {~t"Last sent #{time = Format.datetime(registration.reminder_emailed_at, @locale)}."}
                 </span>
-              </summary>
-              <.email_preview email={email} />
-            </details>
+              </p>
+              <.customer_email
+                id={"reminder-#{registration.id}-email"}
+                form={booking_reminder_form(@reminder_form, registration)}
+                preview={email}
+                collapse_preview?={true}
+              />
+            </div>
           </.drawer_body>
           <.drawer_footer>
             <.button type="submit" variant="primary" disabled={@reminder_previews == []}>
@@ -311,8 +322,19 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply, assign(socket, reminder_form: nil, reminder_previews: [], reminder_error: nil)}
   end
 
-  def handle_event("send_course_reminders", _params, socket) do
-    case Courses.send_course_reminders(socket.assigns.course.id, socket.assigns.current_user) do
+  def handle_event("validate_course_reminders", params, socket) do
+    {:noreply, assign(socket, :reminder_form, to_form(Map.get(params, "reminder", %{}), as: :reminder))}
+  end
+
+  def handle_event("send_course_reminders", params, socket) do
+    edits =
+      for {id, booking_params} <- Map.get(params, "reminder", %{}),
+          edits = Drawers.email_edits(booking_params),
+          edits != %{},
+          into: %{},
+          do: {id, edits}
+
+    case Courses.send_course_reminders(socket.assigns.course.id, edits, socket.assigns.current_user) do
       {:ok, _count} ->
         {:noreply,
          socket
@@ -488,6 +510,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:ok, socket} = load_course(socket, socket.assigns.course.id)
     socket
   end
+
+  # Each booking's reminder is its own email, rewritten or not on its own.
+  defp booking_reminder_form(form, registration),
+    do: to_form(Map.get(form.params, registration.id, %{}), as: "reminder[#{registration.id}]")
 
   defp assign_reminder_previews(socket) do
     previews =

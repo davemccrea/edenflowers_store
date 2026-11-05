@@ -36,6 +36,21 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
     assert Ash.get!(CourseRegistration, confirmed.id, authorize?: false).reminder_emailed_at
   end
 
+  test "a reminder Jennie rewrote goes out as she wrote it" do
+    admin = generate(admin_user())
+    registration = generate(course_registration(status: :confirmed, locale: "en-GB"))
+    edits = %{registration.id => %{subject: "See you Saturday", body: "Bring an apron."}}
+
+    assert {:ok, 1} = Courses.send_course_reminders(registration.course_id, edits, admin)
+    assert [%{args: args}] = all_enqueued(worker: SendReminderEmail)
+    assert {:ok, _registration} = perform_job(SendReminderEmail, args)
+
+    assert_email_sent(fn email ->
+      assert email.subject == "See you Saturday"
+      assert email.text_body == "Bring an apron."
+    end)
+  end
+
   test "a cancellation after queueing prevents the reminder from being sent" do
     registration = generate(course_registration(status: :cancelled))
 

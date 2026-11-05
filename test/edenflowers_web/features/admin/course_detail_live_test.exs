@@ -23,25 +23,41 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
   test "Jennie previews and manually sends course reminders in each booking's language", %{conn: conn} do
     course = generate(course(name: "Autumn wreaths"))
     anna = generate(course_registration(course_id: course.id, status: :confirmed, name: "Anna", locale: "en-GB"))
-    generate(course_registration(course_id: course.id, status: :confirmed, name: "Birgitta", locale: "sv-FI"))
+
+    birgitta =
+      generate(course_registration(course_id: course.id, status: :confirmed, name: "Birgitta", locale: "sv-FI"))
+
     generate(course_registration(course_id: course.id, status: :cancelled, name: "Cancelled Carl"))
 
     {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
     refute_enqueued(worker: Edenflowers.Courses.Workers.SendReminderEmail)
 
     view |> element("button[phx-click=open_course_reminders]") |> render_click()
-    assert has_element?(view, "#course-reminder-drawer summary", "Anna")
-    assert has_element?(view, "#course-reminder-drawer summary", "Birgitta")
-    refute has_element?(view, "#course-reminder-drawer summary", "Cancelled Carl")
-    assert has_element?(view, "#course-reminder-drawer", "A reminder about Autumn wreaths")
+    assert has_element?(view, "#reminder-#{anna.id}", "Anna")
+    assert has_element?(view, "#reminder-#{birgitta.id}", "Birgitta")
+    refute has_element?(view, "#course-reminder-drawer", "Cancelled Carl")
+    assert has_element?(view, "#reminder-#{anna.id}-email-preview-toggle", "A reminder about Autumn wreaths")
+
+    # Each reminder is its own email: rewriting Anna's leaves Birgitta's as built.
+    view |> form("#course-reminder-form", reminder: %{anna.id => %{edit_email: "true"}}) |> render_change()
+    assert has_element?(view, "#reminder-#{anna.id}-email-body", "Hi Anna,")
+    refute has_element?(view, "#reminder-#{birgitta.id}-email-editor")
 
     assert_no_email_sent()
 
-    view |> form("#course-reminder-form") |> render_submit()
+    view
+    |> form("#course-reminder-form",
+      reminder: %{anna.id => %{edit_email: "true", subject: "Saturday", body: "Bring an apron."}}
+    )
+    |> render_submit()
+
     assert render(view) =~ "Course reminders queued."
     jobs = all_enqueued(worker: Edenflowers.Courses.Workers.SendReminderEmail)
     assert length(jobs) == 2
-    assert Enum.any?(jobs, &(&1.args["primary_key"]["id"] == anna.id))
+
+    arguments = Map.new(jobs, &{&1.args["primary_key"]["id"], &1.args["action_arguments"]})
+    assert arguments[anna.id] == %{"subject" => "Saturday", "body" => "Bring an apron."}
+    assert arguments[birgitta.id] == %{}
   end
 
   test "lists confirmed bookings with seat counts, hides unpaid ones and shows cancelled ones apart", %{conn: conn} do
