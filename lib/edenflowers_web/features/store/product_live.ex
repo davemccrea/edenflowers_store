@@ -446,13 +446,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
   @impl true
   def handle_event("change", %{"product_variant_id" => id} = params, socket) do
-    subscribe? = params["subscribe"] == "true"
-
-    # Switching between buying once and subscribing moves to that way of buying's default size.
-    variant =
-      if subscribe? == socket.assigns.subscribe?,
-        do: Enum.find(socket.assigns.product_variants, &(&1.id == id)),
-        else: default_variant(subscribe?, selectable_variants(socket.assigns.product_variants))
+    variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
 
     # Toggling a subscription also sends the size, which mustn't undo a thumbnail pick.
     photo_slug =
@@ -462,7 +456,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      assign(socket,
        selected_variant: variant,
        photo_slug: photo_slug,
-       subscribe?: subscribe?,
+       subscribe?: params["subscribe"] == "true",
        interval_weeks: params["interval_weeks"] || socket.assigns.interval_weeks
      )}
   end
