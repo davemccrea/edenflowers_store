@@ -24,7 +24,8 @@
 #let message(lang) = [
   #eyebrow(lang.heading, fill: colors.primary)
   #v(1.2mm, weak: true)
-  #text(size: 7.5pt, fill: colors.ink, lang.body)
+  // Black ink only: small text printed in four inks blurs if the plates are slightly out of register.
+  #text(size: 7.5pt, fill: cmyk(0%, 0%, 0%, 100%), lang.body)
 ]
 
 // The logo is drawn in one green; it's swapped for white on the green side.
