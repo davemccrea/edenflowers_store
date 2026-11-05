@@ -4,10 +4,9 @@ title: Put a pass-it-on card in every gift delivery
 status: ready-for-human
 assignee: []
 created_date: '2026-11-01 14:07'
-updated_date: '2026-11-01 16:22'
+updated_date: '2026-11-05 08:18'
 labels: []
 dependencies:
-  - TASK-164
   - TASK-165
 parent_task_id: TASK-162
 type: task
@@ -75,6 +74,15 @@ created: 2026-11-01 16:22
 ---
 
 2026-11-01: Grilled and agreed with David. The code-from-link feature is TASK-164 and the card batch is TASK-165, both ready-for-agent. This task is the rollout.
+
+---
+
+author: @claude
+created: 2026-11-05 08:18
+
+---
+
+TASK-164 closed without implementing on 2026-11-05; dependency removed.
 
 ---
 <!-- COMMENTS:END -->

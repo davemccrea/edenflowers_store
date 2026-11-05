@@ -4,11 +4,11 @@ title: Print pass-it-on cards with one-use promo codes
 status: ready-for-agent
 assignee: []
 created_date: '2026-11-01 16:22'
+updated_date: '2026-11-05 08:18'
 labels:
   - customers
   - admin
-dependencies:
-  - TASK-164
+dependencies: []
 priority: medium
 type: feature
 ordinal: 305000
@@ -44,3 +44,16 @@ Joku ajatteli sinua tänään. Anna ilo eteenpäin: lähetä kukkia jollekulle t
 - [ ] #2 It produces an A4 PDF of 85x55 mm double-sided cards, 10 per sheet, with crop marks
 - [ ] #3 Each card's QR code opens the site with its own code and the pass-it-on UTM tags
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-05 08:18
+
+---
+
+TASK-164 (apply a promo code from a link) was closed without implementing on 2026-11-05, so the QR's ?code= no longer applies the code by itself.
+
+---
+<!-- COMMENTS:END -->
