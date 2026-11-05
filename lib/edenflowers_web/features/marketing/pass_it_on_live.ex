@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.Marketing.PassItOnLive do
   @moduledoc """
   Where a pass-it-on card's QR code leads: the recipient's discount and one of Jennie's Favourites to send on.
   `Plugs.ApplyLinkPromotion` has already put the code on the cart. A used or unknown code still shows the page,
-  without the discount.
+  without the discount. A customer opening a card's page starts its code's 30 days.
   """
 
   use EdenflowersWeb, :live_view
@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Marketing.PassItOnLive do
   @impl true
   def mount(params, _session, socket) do
     code = params["code"]
-    promotion = usable_promotion(code)
+    promotion = code |> usable_promotion() |> start_validity(socket.assigns.current_user)
 
     product =
       Catalog.list_featured_products!()
@@ -68,6 +68,7 @@ defmodule EdenflowersWeb.Marketing.PassItOnLive do
           <div :if={@promotion} id="pass-it-on-code" class="bg-cream text-cream-content mt-8 max-w-sm px-7 py-6">
             <p class="font-serif text-4xl leading-tight">{~t"#{@rate} off"}</p>
             <.code_line code={@promotion.code} in_cart?={@in_cart?} />
+            <.valid_until date={@promotion.expiration_date} />
           </div>
 
           <p :if={@code && !@promotion} id="pass-it-on-code-unusable" class="text-base-content/65 mt-6">
@@ -136,6 +137,20 @@ defmodule EdenflowersWeb.Marketing.PassItOnLive do
     code_sentence(assigns)
   end
 
+  attr :date, Date, default: nil
+
+  defp valid_until(%{date: nil} = assigns), do: ~H""
+
+  defp valid_until(assigns) do
+    valid_until = Format.date(assigns.date, Format.locale())
+    gettext_comment("Last day a pass-it-on card's code works, e.g. 'Valid until 5.12.2026.'")
+    assigns = assign(assigns, text: ~t"Valid until #{valid_until}.")
+
+    ~H"""
+    <p class="text-cream-content/70 mt-3 text-sm">{@text}</p>
+    """
+  end
+
   defp code_sentence(assigns) do
     ~H"""
     <p class="text-cream-content/85 mt-2">
@@ -152,4 +167,7 @@ defmodule EdenflowersWeb.Marketing.PassItOnLive do
   end
 
   defp usable_promotion(_code), do: nil
+
+  defp start_validity(nil, _actor), do: nil
+  defp start_validity(promotion, actor), do: Pricing.start_promotion_validity!(promotion, actor: actor)
 end

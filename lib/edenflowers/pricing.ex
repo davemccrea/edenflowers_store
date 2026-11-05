@@ -25,6 +25,7 @@ defmodule Edenflowers.Pricing do
       define :get_promotion_by_id, action: :read, get_by: [:id]
       define :get_promotion_by_code, action: :by_code, args: [:code, {:optional, :today}], get?: true
       define :create_newsletter_promotion, action: :create_for_newsletter
+      define :start_promotion_validity, action: :start_validity
       define :create_pass_it_on_batch, action: :create_pass_it_on_batch, args: [:name, :count]
     end
 

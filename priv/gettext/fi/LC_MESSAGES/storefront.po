@@ -520,7 +520,7 @@ msgstr "Ostoskori"
 msgid "Cart is empty"
 msgstr "Ostoskori on tyhjä"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:40
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:48
 #, elixir-autogen, elixir-format
 msgid "Cart total must be at least %{edenflowers_format_currency} to use this promotion"
 msgstr "Ostoskorin summan on oltava vähintään %{edenflowers_format_currency}, jotta kampanjaa voi käyttää"
@@ -1576,7 +1576,7 @@ msgstr "Sisältää ALV:n"
 msgid "Increment"
 msgstr "Lisää"
 
-#: lib/edenflowers/orders/order/changes/apply_promotion.ex:28
+#: lib/edenflowers/orders/order/changes/apply_promotion.ex:36
 #, elixir-autogen, elixir-format
 msgid "Invalid code"
 msgstr "Virheellinen koodi"
@@ -4161,17 +4161,17 @@ msgstr "Tarjouskoodi %{code} on ostoskorissa."
 msgid "Pass it on"
 msgstr "Anna eteenpäin"
 
-#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:112
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "See all bouquets"
 msgstr "Katso kaikki kimput"
 
-#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:110
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Send these flowers"
 msgstr "Lähetä nämä kukat"
 
-#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:74
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:75
 #, elixir-autogen, elixir-format
 msgid "This code has already been used or is no longer valid."
 msgstr "Koodi on jo käytetty tai se ei ole enää voimassa."
@@ -4182,35 +4182,35 @@ msgid "%{rate} off"
 msgstr "%{rate}:n alennus"
 
 #. Split around the promo code, shown in bold: 'Enter the code ABC123 at checkout.'
-#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:133
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:134
 #, elixir-autogen, elixir-format
 msgid "Enter the code"
 msgstr "Syötä koodi"
 
-#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:101
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:102
 #, elixir-autogen, elixir-format
 msgid "Popular"
 msgstr "Suosittu"
 
 #. Split around the promo code, shown in bold: 'The code ABC123 is already in your cart.'
-#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:125
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:126
 #, elixir-autogen, elixir-format
 msgid "The code"
 msgstr "Koodi"
 
 #. Follows the promo code in bold: 'Enter the code ABC123 at checkout.'
-#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:135
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:136
 #, elixir-autogen, elixir-format
 msgid "at checkout."
 msgstr "kassalla."
 
-#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:105
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:106
 #, elixir-autogen, elixir-format
 msgid "from"
 msgstr "alkaen"
 
 #. Follows the promo code in bold: 'The code ABC123 is already in your cart.'
-#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:127
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:128
 #, elixir-autogen, elixir-format
 msgid "is already in your cart."
 msgstr "on jo ostoskorissa."
@@ -4219,3 +4219,9 @@ msgstr "on jo ostoskorissa."
 #, elixir-autogen, elixir-format
 msgid "Someone thought of you today. Now you can do the same for someone you care about 💛"
 msgstr "Joku ajatteli sinua tänään. Nyt voit tehdä saman jollekulle tärkeälle 💛"
+
+#. Last day a pass-it-on card's code works, e.g. 'Valid until 5.12.2026.'
+#: lib/edenflowers_web/features/marketing/pass_it_on_live.ex:147
+#, elixir-autogen, elixir-format
+msgid "Valid until %{valid_until}."
+msgstr "Voimassa %{valid_until} asti."

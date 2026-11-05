@@ -7,6 +7,8 @@ defmodule Edenflowers.Orders.Order.Changes.ApplyPromotion do
   applying the code. `promotion_applied?` checks it again as the cart changes.
   With `check_minimum?: false` (a code from a link, before anything is in the
   cart) only that later check applies.
+
+  Applying a pass-it-on card's code starts its 30 days (`Promotion.start_validity`).
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext
@@ -14,15 +16,21 @@ defmodule Edenflowers.Orders.Order.Changes.ApplyPromotion do
   alias Edenflowers.Pricing
 
   @impl true
-  def change(changeset, opts, _context) do
+  def change(changeset, opts, context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       code = Ash.Changeset.get_argument(changeset, :code)
 
       case Pricing.get_promotion_by_code(code) do
         {:ok, promotion} ->
-          if Keyword.get(opts, :check_minimum?, true),
-            do: apply_promotion(changeset, promotion),
-            else: copy_terms(changeset, promotion)
+          changeset =
+            if Keyword.get(opts, :check_minimum?, true),
+              do: apply_promotion(changeset, promotion),
+              else: copy_terms(changeset, promotion)
+
+          Ash.Changeset.after_action(changeset, fn _changeset, order ->
+            Pricing.start_promotion_validity!(promotion, actor: context.actor)
+            {:ok, order}
+          end)
 
         {:error, _error} ->
           Ash.Changeset.add_error(changeset, field: :code, message: ~t"Invalid code")

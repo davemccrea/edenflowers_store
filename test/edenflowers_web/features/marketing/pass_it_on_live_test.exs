@@ -23,6 +23,8 @@ defmodule EdenflowersWeb.Marketing.PassItOnLiveTest do
     assert has_element?(view, "#pass-it-on-code", code)
     assert has_element?(view, "#pass-it-on-code", "already in your cart")
     assert has_element?(view, "#pass-it-on-code", "15% off")
+    valid_until = Edenflowers.ShopTime.today() |> Date.add(30) |> Edenflowers.Format.date("en")
+    assert has_element?(view, "#pass-it-on-code", "Valid until #{valid_until}")
     assert has_element?(view, ~s|a[href="/en/product/#{product.slug}"]|, "Send these flowers")
   end
 

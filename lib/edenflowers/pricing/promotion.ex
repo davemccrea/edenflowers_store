@@ -33,7 +33,7 @@ defmodule Edenflowers.Pricing.Promotion do
     reference_source? false
     store_action_name? true
     # One per subscriber, never edited by hand.
-    ignore_actions [:create_for_newsletter]
+    ignore_actions [:create_for_newsletter, :start_validity]
   end
 
   actions do
@@ -47,6 +47,38 @@ defmodule Edenflowers.Pricing.Promotion do
       primary? true
       accept [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
       # full_diff can't run atomically.
+      require_atomic? false
+    end
+
+    update :start_validity do
+      description "Starts a pass-it-on code's 30 days: the first time a customer opens its 'Pass it on' page or " <>
+                    "applies it, it gets an expiration date 30 days from `today`. Does nothing for other codes, " <>
+                    "once the 30 days have started, or when an admin is the actor (Jennie scanning a card)."
+
+      argument :today, :date do
+        allow_nil? false
+        default &Edenflowers.ShopTime.today/0
+        description "The day the 30 days count from. Defaults to today in Helsinki."
+      end
+
+      change fn changeset, context ->
+        if match?(%{admin: true}, context.actor) do
+          changeset
+        else
+          Ash.Changeset.atomic_update(
+            changeset,
+            :expiration_date,
+            expr(
+              if kind == :pass_it_on and is_nil(expiration_date) do
+                date_add(^arg(:today), 30, :day)
+              else
+                expiration_date
+              end
+            )
+          )
+        end
+      end
+
       require_atomic? false
     end
 
@@ -121,6 +153,11 @@ defmodule Edenflowers.Pricing.Promotion do
     end
 
     bypass actor_attribute_equals(:admin, true) do
+      authorize_if always()
+    end
+
+    # Any visitor opening a card's page or applying its code starts its 30 days.
+    bypass action(:start_validity) do
       authorize_if always()
     end
 
