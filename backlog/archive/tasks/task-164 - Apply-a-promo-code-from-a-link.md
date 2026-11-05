@@ -1,11 +1,13 @@
 ---
 id: TASK-164
 title: Apply a promo code from a link
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-01 16:22'
+updated_date: '2026-11-05 07:56'
 labels:
   - customers
+  - wontfix
 dependencies: []
 priority: medium
 type: feature
@@ -35,3 +37,16 @@ Open for implementation: where the code is held before a cart exists (session), 
 - [ ] #2 A code already on the cart is kept
 - [ ] #3 An unusable code fails quietly, with no error page
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-05 07:56
+
+---
+
+Closed by David on 2026-11-05 without implementing.
+
+---
+<!-- COMMENTS:END -->
