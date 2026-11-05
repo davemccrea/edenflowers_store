@@ -1,9 +1,10 @@
 ---
 id: TASK-169.3
 title: Make course and product slugs required
-status: ready-for-agent
+status: done
 assignee: []
 created_date: '2026-11-01 21:15'
+updated_date: '2026-11-05 08:11'
 labels: []
 dependencies:
   - TASK-169.1
@@ -23,6 +24,6 @@ Ships as a second deploy after TASK-169.1 and TASK-169.2 are live and backfilled
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 slug is allow_nil? false on Course and Product, with a generated migration
-- [ ] #2 The backfill step in Release.migrate is removed
+- [x] #1 slug is allow_nil? false on Course and Product, with a generated migration
+- [x] #2 The backfill step in Release.migrate is removed
 <!-- AC:END -->
