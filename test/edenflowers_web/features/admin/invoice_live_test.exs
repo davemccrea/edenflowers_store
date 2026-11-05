@@ -99,14 +99,18 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, "#invoice-credit-form button[data-confirm]")
   end
 
-  test "invalid line inputs block issuance and show a useful error", %{conn: conn, admin: admin} do
+  test "invalid line inputs block issuance and show a useful error, beside what issuing needs", %{
+    conn: conn,
+    admin: admin
+  } do
     invoice = draft(admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
-    invalid = put_in(params(), ["lines", "0", "quantity"], "0")
+    invalid = params() |> put_in(["lines", "0", "quantity"], "0") |> Map.put("buyer_name", "")
     view |> form("#invoice-form", invoice: invalid) |> render_change()
     view |> form("#invoice-form") |> render_submit(%{"intent" => "issue"})
     assert has_element?(view, "#line-0-quantity[aria-invalid=true]")
     assert has_element?(view, "#line-0-quantity-error", "must be greater than 0")
+    assert has_element?(view, "input[name='invoice[buyer_name]'][aria-invalid=true]")
     assert Ash.get!(Invoice, invoice.id, actor: admin).number == nil
   end
 

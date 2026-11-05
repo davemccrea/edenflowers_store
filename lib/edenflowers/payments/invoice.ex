@@ -161,6 +161,14 @@ defmodule Edenflowers.Payments.Invoice do
         :supply_date,
         :supply_description
       ]
+
+      argument :check_issue?, :boolean,
+        default: false,
+        description:
+          "Also refuse the blank fields that would stop it being issued. The editor validates with it " <>
+            "after a failed issue, to mark those fields as Jennie corrects them, but saves without it."
+
+      validate Validations.Issuable, where: argument_equals(:check_issue?, true)
     end
 
     create :create_for_order do
@@ -192,6 +200,14 @@ defmodule Edenflowers.Payments.Invoice do
 
       require_atomic? false
       change Changes.EditInvoiceDraft
+
+      argument :check_issue?, :boolean,
+        default: false,
+        description:
+          "Also refuse the blank fields that would stop it being issued. The editor validates with it " <>
+            "after a failed issue, to mark those fields as Jennie corrects them, but saves without it."
+
+      validate Validations.Issuable, where: argument_equals(:check_issue?, true)
     end
 
     destroy :destroy_draft do

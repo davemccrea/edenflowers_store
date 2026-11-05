@@ -22,6 +22,7 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
   alias Edenflowers.Payments.InvoiceFinancials
   alias Edenflowers.Payments.NumberSeries
   alias Edenflowers.Payments.ReferenceNumber
+  alias Edenflowers.Payments.Validations.Issuable
   alias Edenflowers.ShopTime
 
   def change(changeset, _opts, _context) do
@@ -39,7 +40,7 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
   end
 
   defp freeze(changeset, invoice) do
-    with :ok <- validate_fields(invoice),
+    with [] <- Issuable.errors(invoice),
          {:ok, snapshot} <- InvoiceFinancials.build(invoice.lines),
          :ok <- validate_order(invoice.order_id, Decimal.new(snapshot["gross"])) do
       number = NumberSeries.take()
@@ -59,40 +60,8 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
         seller_snapshot: Map.put(seller, "late_interest_rate", Decimal.to_string(Invoice.late_interest_rate(), :normal))
       })
     else
+      [_ | _] = field_errors -> Ash.Changeset.add_error(changeset, field_errors)
       {:error, message} -> Ash.Changeset.add_error(changeset, message)
-    end
-  end
-
-  @doc "Field errors for issuance, also shown by the admin editor after a failed issue."
-  def field_errors(invoice) do
-    required = [:buyer_name, :buyer_email] ++ address_fields(invoice) ++ [:supply_date]
-
-    field_errors =
-      for field <- required,
-          blank?(Map.get(invoice, field)),
-          do: [field: field, message: "can't be blank"]
-
-    Enum.map(field_errors ++ line_errors(invoice.lines), &Ash.Error.Changes.InvalidAttribute.exception/1)
-  end
-
-  # A draft's line may be unfinished; an issued one prints every field.
-  defp line_errors(lines) do
-    lines
-    |> Enum.with_index()
-    |> Enum.flat_map(fn {line, index} ->
-      for field <- [:description, :quantity, :unit_price, :vat_rate],
-          blank?(Map.get(line, field)),
-          do: [field: field, path: [:lines, index], message: "can't be blank"]
-    end)
-  end
-
-  defp blank?(value) when is_binary(value), do: String.trim(value) == ""
-  defp blank?(value), do: is_nil(value)
-
-  defp validate_fields(invoice) do
-    case field_errors(invoice) do
-      [] -> :ok
-      errors -> {:error, errors}
     end
   end
 
@@ -118,7 +87,4 @@ defmodule Edenflowers.Payments.Changes.IssueInvoice do
         :ok
     end
   end
-
-  defp address_fields(%{business_customer: true}), do: [:company_name, :business_id, :billing_address]
-  defp address_fields(_invoice), do: []
 end
