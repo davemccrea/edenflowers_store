@@ -59,21 +59,14 @@ defmodule Edenflowers.Courses.Course do
     create :create do
       description "Creates a course from the admin form."
       primary? true
+      # SetSlug makes one from the name when the form leaves it blank.
+      allow_nil_input [:slug]
       change {Edenflowers.Slug.SetSlug, @slug_options}
     end
 
     update :update do
       description "Saves the admin course form."
       primary? true
-      require_atomic? false
-      change {Edenflowers.Slug.SetSlug, @slug_options}
-    end
-
-    update :assign_slug do
-      description "Gives a course that has no slug one made from its name. `Edenflowers.Release.migrate` " <>
-                    "runs it over courses saved before slugs existed."
-
-      accept []
       require_atomic? false
       change {Edenflowers.Slug.SetSlug, @slug_options}
     end
@@ -149,8 +142,9 @@ defmodule Edenflowers.Courses.Course do
     attribute :slug, :string do
       description "Where the course's page lives, as in /courses/spring-wreath-workshop. Made from the English " <>
                     "name when the course is created and kept when it is renamed; Jennie can edit it in the " <>
-                    "course form. Nil only for courses saved before slugs existed, until `assign_slug` runs."
+                    "course form."
 
+      allow_nil? false
       public? true
     end
 

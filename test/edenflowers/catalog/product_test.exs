@@ -319,15 +319,6 @@ defmodule Edenflowers.Catalog.ProductTest do
       assert product.slug == "red-roses"
       assert Catalog.current_product_slug!("roses") == "red-roses"
     end
-
-    test "is given to products saved before slugs existed" do
-      product = generate(product(name: "Red roses"))
-      Edenflowers.Repo.update_all(Catalog.Product, set: [slug: nil])
-
-      Edenflowers.Release.assign_missing_slugs!()
-
-      assert Ash.reload!(product, authorize?: false).slug == "red-roses"
-    end
   end
 
   defp update(product, params),

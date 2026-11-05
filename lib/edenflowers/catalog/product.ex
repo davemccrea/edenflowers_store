@@ -59,15 +59,6 @@ defmodule Edenflowers.Catalog.Product do
       run {Edenflowers.Slug.CurrentSlug, @slug_options}
     end
 
-    update :assign_slug do
-      description "Gives a product that has no slug one made from its name. `Edenflowers.Release.migrate` " <>
-                    "runs it over products saved before slugs existed."
-
-      accept []
-      require_atomic? false
-      change {Edenflowers.Slug.SetSlug, @slug_options}
-    end
-
     read :for_store do
       description "Every product the store shows: published, in a public category, with at least one size. Sold-out " <>
                     "products are included and marked by `sold_out?`."
@@ -127,6 +118,9 @@ defmodule Edenflowers.Catalog.Product do
 
     create :create do
       description "Creates a product from the admin form, with its sizes given as `product_variants`."
+
+      # SetSlug makes one from the name when the form leaves it blank.
+      allow_nil_input [:slug]
 
       accept [
         :name,
@@ -230,8 +224,9 @@ defmodule Edenflowers.Catalog.Product do
     attribute :slug, :string do
       description "Where the product's page lives, as in /product/red-rose-bouquet. Made from the English name " <>
                     "when the product is created and kept when it is renamed; Jennie can edit it in the product " <>
-                    "form. Nil only for products saved before slugs existed, until `assign_slug` runs."
+                    "form."
 
+      allow_nil? false
       public? true
     end
 

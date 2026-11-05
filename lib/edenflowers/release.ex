@@ -13,7 +13,6 @@ defmodule Edenflowers.Release do
         Ecto.Migrator.with_repo(repo, fn repo ->
           Ecto.Migrator.run(repo, :up, all: true)
           check_course_registration_states!(repo)
-          assign_missing_slugs!()
         end)
     end
   end
@@ -28,18 +27,6 @@ defmodule Edenflowers.Release do
     end
 
     :ok
-  end
-
-  # One at a time, so two names that slugify alike (Rosé, Rose) see each other's slug.
-  def assign_missing_slugs! do
-    require Ash.Query
-
-    for resource <- [Edenflowers.Catalog.Product, Edenflowers.Courses.Course] do
-      resource
-      |> Ash.Query.filter(is_nil(slug))
-      |> Ash.read!(authorize?: false)
-      |> Enum.each(&Ash.update!(&1, %{}, action: :assign_slug, authorize?: false))
-    end
   end
 
   def rollback(repo, version) do

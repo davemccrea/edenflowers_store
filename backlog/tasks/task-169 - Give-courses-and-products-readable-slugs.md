@@ -1,10 +1,10 @@
 ---
 id: TASK-169
 title: Give courses and products readable slugs
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-11-01 21:00'
-updated_date: '2026-11-02 11:34'
+updated_date: '2026-11-05 08:11'
 labels:
   - spec
   - customers
@@ -38,7 +38,7 @@ Decisions (grilled 2026-11-01):
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Course and product pages are reachable at a readable slug URL
-- [ ] #2 Links already shared with a UUID still land on the right page
-- [ ] #3 The admin share drawer copies the slug URL
+- [x] #1 Course and product pages are reachable at a readable slug URL
+- [x] #2 Links already shared with a UUID still land on the right page
+- [x] #3 The admin share drawer copies the slug URL
 <!-- AC:END -->

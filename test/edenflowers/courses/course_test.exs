@@ -47,15 +47,6 @@ defmodule Edenflowers.Courses.CourseTest do
       assert Edenflowers.Courses.current_course_slug!(course.id) == "wreaths-2027"
     end
 
-    test "is given to courses saved before slugs existed" do
-      course = generate(course(name: "Spring wreaths"))
-      Edenflowers.Repo.update_all(Edenflowers.Courses.Course, set: [slug: nil])
-
-      Edenflowers.Release.assign_missing_slugs!()
-
-      assert Ash.reload!(course, authorize?: false).slug == "spring-wreaths"
-    end
-
     for slug_input <- [:omitted, :unchanged, :normalized] do
       test "a stale unrelated save preserves redirects with #{slug_input} slug input" do
         stale = generate(course(name: "Spring wreaths"))
