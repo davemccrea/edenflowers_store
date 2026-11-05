@@ -159,7 +159,8 @@ config :tailwind,
 config :error_tracker,
   repo: Edenflowers.Repo,
   otp_app: :edenflowers,
-  enabled: true
+  enabled: true,
+  ignorer: Edenflowers.ErrorTrackerIgnorer
 
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
