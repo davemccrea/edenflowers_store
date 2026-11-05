@@ -36,6 +36,13 @@
 .hero-rotator {
   display: grid;
 }
+/* iOS draws a blurring element into a layer clipped to its box, and at this line
+   height the italic letters reach past it. The padding takes the layer out to the
+   letters; the matching negative margin keeps the layout where it was. */
+:is(.hero-focus, .hero-rotator > *) {
+  padding: 0.2em 0.2em 0.25em 0;
+  margin: -0.2em -0.2em -0.25em 0;
+}
 .hero-rotator > * {
   grid-area: 1 / 1;
 }
