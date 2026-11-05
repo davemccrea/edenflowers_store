@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
+  alias EdenflowersWeb.Admin.Drawers
 
   @doc """
   The cancel drawer's form for an order or a booking. The cancellation charge
@@ -25,7 +26,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
         "charge" => Decimal.to_string(payable.default_cancellation_charge, :normal),
         "held" => Decimal.to_string(Decimal.max(payable.amount_held, 0), :normal),
         "total" => Decimal.to_string(Decimal.max(payable.total_due, 0), :normal),
-        "message" => "",
+        "reason" => "",
         "email_customer" => "true"
       },
       as: :cancel
@@ -33,11 +34,12 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   end
 
   def cancel(payable, params, actor) do
-    input = %{
-      cancellation_charge: params["charge"] && String.replace(params["charge"], ",", "."),
-      cancellation_reason: params["message"],
-      email_customer?: params["email_customer"] != "false"
-    }
+    input =
+      Map.merge(Drawers.email_edits(params), %{
+        cancellation_charge: params["charge"] && String.replace(params["charge"], ",", "."),
+        cancellation_reason: params["reason"],
+        email_customer?: params["email_customer"] != "false"
+      })
 
     with {:error, error} <- Ash.update(payable, input, action: :cancel, actor: actor) do
       unless match?(%Ash.Error.Invalid{}, error),
@@ -48,12 +50,12 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   end
 
   def record_payment(payable, %{"amount" => amount, "payment_method" => payment_method} = params, actor) do
-    input = %{
-      amount: String.replace(amount, ",", "."),
-      payment_method: payment_method,
-      email_receipt?: params["email_receipt"] == "true",
-      message: params["message"]
-    }
+    input =
+      Map.merge(Drawers.email_edits(params), %{
+        amount: String.replace(amount, ",", "."),
+        payment_method: payment_method,
+        email_receipt?: params["email_receipt"] == "true"
+      })
 
     case Ash.update(payable, input, action: :record_payment, actor: actor) do
       {:ok, payable} -> {:ok, recorded_message(payable.__metadata__[:receipt_emailed?])}
@@ -80,12 +82,13 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   end
 
   def refund(payable, %{"amount" => amount, "how" => how} = params, actor) do
-    input = %{
-      amount: String.replace(amount, ",", "."),
-      payment_method: how,
-      note: params["note"],
-      email_customer?: params["email_customer"] != "false"
-    }
+    input =
+      Map.merge(Drawers.email_edits(params), %{
+        amount: String.replace(amount, ",", "."),
+        payment_method: how,
+        note: params["note"],
+        email_customer?: params["email_customer"] != "false"
+      })
 
     case Ash.update(payable, input, action: :refund, actor: actor) do
       {:ok, _payable} when how == "stripe" -> {:success, ~t"Refunded with Stripe."}
@@ -124,8 +127,8 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
-  def email_payment_link(payable, message, actor) do
-    case send_payment_link(payable, message, actor) do
+  def email_payment_link(payable, edits, actor) do
+    case send_payment_link(payable, edits, actor) do
       {:ok, _payable} ->
         {:success, ~t"Payment link emailed."}
 
@@ -136,8 +139,8 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   end
 
   # Orders send theirs in a Payment reminder.
-  defp send_payment_link(%CourseRegistration{} = registration, message, actor),
-    do: Courses.email_registration_payment_link(registration, %{message: message}, actor: actor)
+  defp send_payment_link(%CourseRegistration{} = registration, edits, actor),
+    do: Courses.email_registration_payment_link(registration, edits, actor: actor)
 
   @doc "Why recording money was refused, in the action's own words."
   def payment_error(%{errors: [%{message: message} | _]}) when is_binary(message), do: message

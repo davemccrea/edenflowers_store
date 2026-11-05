@@ -124,7 +124,13 @@ defmodule Edenflowers.Orders.Order.Emails do
 
       accept []
       validate {Holds, calculation: :details_emailable?, message: "can't be emailed order details"}
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       transaction? false
       require_atomic? false
       change {Changes.SendOrderDetailsEmail, email: :order_details}
@@ -132,10 +138,16 @@ defmodule Edenflowers.Orders.Order.Emails do
 
     update :send_order_updated_email do
       description "Run by its job after Jennie edits a placed order and ticks to email the customer: the order " <>
-                    "as it now stands, with its payment link when one is open, and her optional message."
+                    "as it now stands, with its payment link when one is open, as she rewrote it if she did."
 
       accept []
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       transaction? false
       require_atomic? false
       change {Changes.SendOrderDetailsEmail, email: :order_updated}
@@ -158,7 +170,13 @@ defmodule Edenflowers.Orders.Order.Emails do
 
       accept []
       argument :amount, :decimal
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       transaction? false
       require_atomic? false
       change PaymentChanges.SendPaymentReceivedEmail
@@ -166,10 +184,16 @@ defmodule Edenflowers.Orders.Order.Emails do
 
     update :send_fulfillment_email do
       description "Run by its job: emails the customer Delivered, or Left at the door with the delivery photo when " <>
-                    "Jennie chose to send it, with her optional message."
+                    "Jennie chose to send it, as she rewrote it if she did."
 
       accept []
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       transaction? false
       require_atomic? false
       change Changes.SendFulfillmentEmail
@@ -180,7 +204,13 @@ defmodule Edenflowers.Orders.Order.Emails do
       description "Jennie sends a paid order's receipt from the order's menu without announcing a new payment."
 
       accept []
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       validate {Holds, calculation: :receipt_available?, message: "is not paid yet"}
       validate present(:customer_email), message: "has no email address"
       transaction? false
@@ -193,7 +223,11 @@ defmodule Edenflowers.Orders.Order.Emails do
       description "Jennie emails a Payment reminder with the order's payment link, opening one if needed. Never " <>
                     "for a cancelled order or one with nothing to collect."
 
-      argument :message, :string
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
       validate {Holds, calculation: :payment_reminder_sendable?, message: "can't be sent a payment reminder"}
 
@@ -213,7 +247,12 @@ defmodule Edenflowers.Orders.Order.Emails do
       validate {Holds,
                 calculation: :fulfillment_confirmation_sendable?, message: "can't be emailed a fulfillment confirmation"}
 
-      argument :message, :string
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       change {PaymentChanges.QueueEmail, trigger: :send_fulfillment_email}
     end
 

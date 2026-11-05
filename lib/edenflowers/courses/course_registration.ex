@@ -159,7 +159,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     attribute :payment_link_emailed_at, :utc_datetime
     attribute :confirmed_at, :utc_datetime
     attribute :confirmation_emailed_at, :utc_datetime
-    # Why Jennie cancelled, for the customer's email and the courses page.
+    # Why Jennie cancelled, for her own record on the courses page.
     attribute :cancellation_reason, :string
     attribute :cancelled_at, :utc_datetime
     # The customer's email can change later; this names who was told.

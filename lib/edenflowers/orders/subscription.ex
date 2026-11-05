@@ -227,11 +227,17 @@ defmodule Edenflowers.Orders.Subscription do
     end
 
     update :send_cancelled_email do
-      description "Emails the customer Subscription cancelled with Jennie's message, naming an already-charged " <>
+      description "Emails the customer Subscription cancelled, as Jennie rewrote it if she did, naming an already-charged " <>
                     "delivery that still comes. Queued by :cancel when Jennie ticks to email the customer."
 
       accept []
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       transaction? false
       require_atomic? false
       change {Changes.SendSubscriptionCancelledEmail, email: :cancelled}
@@ -363,7 +369,12 @@ defmodule Edenflowers.Orders.Subscription do
         default: true,
         description: "Whether Jennie's cancel emails the customer. A customer's own cancel always confirms by email."
 
-      argument :message, :string, description: "Jennie's note in the cancelled email."
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       change transition_state(:cancelled)
       change Changes.CancelOpenOccurrences
       change Changes.QueueSubscriptionCancelledEmail

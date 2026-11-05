@@ -2,7 +2,7 @@
 
 <%= refund_line(%{amount: @refund.amount, how: @refunded_to, format_currency: @format_currency}) %>
 
-<%= message(@refund.note) %><%= dgettext("emails", "Booking %{reference}: %{course}, %{date}", reference: @registration.reference, course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
+<%= dgettext("emails", "Booking %{reference}: %{course}, %{date}", reference: @registration.reference, course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
 
 <%= dgettext("emails", "If you have any questions, just reply to this email.") %>
 

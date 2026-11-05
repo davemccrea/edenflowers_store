@@ -2,7 +2,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   @moduledoc """
   Emails the customer that their subscription is cancelled, naming the
   already-charged delivery that still comes, if there is one: Subscription
-  cancelled with Jennie's message when she cancelled it (`email: :cancelled`),
+  cancelled, as Jennie rewrote it if she did, when she cancelled it (`email: :cancelled`),
   or the matter-of-fact confirmation when they did (`:cancellation_confirmed`).
   """
 
@@ -11,15 +11,15 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   require Logger
 
   alias Edenflowers.Email
+  alias Edenflowers.Email.Edits
   alias Edenflowers.Mailer
 
   @impl true
   def change(changeset, opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       subscription = load_for_send(changeset.data)
-      message = Ash.Changeset.get_argument(changeset, :message)
 
-      case subscription |> email(opts[:email], message) |> Mailer.deliver() do
+      case subscription |> email(opts[:email]) |> Edits.apply_to(Edits.from_changeset(changeset)) |> Mailer.deliver() do
         {:ok, _result} ->
           Logger.info("Sent cancelled email for subscription #{subscription.id}")
           changeset
@@ -30,13 +30,13 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
     end)
   end
 
-  defp email(subscription, :cancelled, message),
-    do: Email.subscription_cancelled(subscription, charged_on(subscription), message)
+  defp email(subscription, :cancelled),
+    do: Email.subscription_cancelled(subscription, charged_on(subscription))
 
-  defp email(subscription, :cancellation_confirmed, _message),
+  defp email(subscription, :cancellation_confirmed),
     do: Email.subscription_cancellation_confirmed(subscription, charged_on(subscription))
 
-  @doc "Loads what `Email.subscription_cancelled/3` needs, with the product in the customer's language."
+  @doc "Loads what `Email.subscription_cancelled/2` needs, with the product in the customer's language."
   def load_for_send(subscription) do
     subscription
     |> Ash.load!([:fulfillment_option, product_variant: :product, user: [:first_name]], authorize?: false)

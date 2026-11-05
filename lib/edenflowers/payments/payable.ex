@@ -10,7 +10,7 @@ defmodule Edenflowers.Payments.Payable do
       the token is the access
 
     * a `:send_payment_received_email` update action, taking `amount` and
-      `message`, that emails the customer Payment received
+      `subject` and `body`, that emails the customer Payment received
 
     * `has_many :payments`
     * `calculate :total_due`: what it's still to be paid for. Once cancelled,
@@ -95,7 +95,12 @@ defmodule Edenflowers.Payments.Payable do
       argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :email_receipt?, :boolean, default: false
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
       validate argument_does_not_equal(:payment_method, :stripe), message: "is recorded from Stripe"
       validate Validations.Recordable
@@ -114,8 +119,15 @@ defmodule Edenflowers.Payments.Payable do
 
       argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
-      argument :note, :string
+      argument :note, :string, description: "Jennie's note on the refund, for her own records and Stripe's."
       argument :email_customer?, :boolean, default: true
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       argument :refund, :decimal, public?: false
       argument :owed_back, :decimal, public?: false
       argument :goodwill_refund, :decimal, public?: false

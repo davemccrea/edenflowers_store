@@ -2,7 +2,7 @@
 
 <%= dgettext("emails", "I've updated your order.") %>
 
-<%= message(@message) %><%= order_totals(assigns) %>
+<%= order_totals(assigns) %>
 <%= order_fulfillment(assigns) %><%= if Decimal.positive?(@order.balance) do %><%= order_payment(assigns) %><% end %><%= dgettext("emails", "If anything doesn't look right, just reply.") %>
 
 <%= dgettext("emails", "Warm wishes,") %>

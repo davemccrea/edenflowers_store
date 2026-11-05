@@ -15,6 +15,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Admin.Drawers
   alias EdenflowersWeb.Admin.SubscriptionLog
   alias EdenflowersWeb.Checkout.Fields
   alias EdenflowersWeb.Layouts
@@ -249,7 +250,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               id="cancel-subscription-email"
               send={@cancel_form[:email_customer]}
               label={~t"Email the customer"}
-              message={@cancel_form[:message]}
+              form={@cancel_form}
               to={to_string(@subscription.user.email)}
               preview={@preview}
             />
@@ -278,12 +279,12 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   end
 
   def handle_event("open_cancel", _params, socket) do
-    params = %{"email_customer" => "true", "message" => ""}
+    params = %{"email_customer" => "true"}
 
     {:noreply,
      socket
      |> assign(:cancel_form, to_form(params, as: :cancel))
-     |> assign_preview(params)
+     |> assign(:preview, Preview.build(:subscription_cancelled, socket.assigns.subscription, %{}))
      |> push_event("js-exec", %{to: "#cancel-subscription", attr: "phx-show"})}
   end
 
@@ -292,11 +293,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   end
 
   def handle_event("validate_cancel", %{"cancel" => params}, socket) do
-    {:noreply, socket |> assign(:cancel_form, to_form(params, as: :cancel)) |> assign_preview(params)}
+    {:noreply, assign(socket, :cancel_form, to_form(params, as: :cancel))}
   end
 
   def handle_event("cancel", %{"cancel" => params}, socket) do
-    input = %{email_customer?: params["email_customer"] != "false", message: params["message"]}
+    input = Map.put(Drawers.email_edits(params), :email_customer?, params["email_customer"] != "false")
     cancel = &Orders.cancel_subscription(&1, input, &2)
 
     {:noreply,
@@ -330,11 +331,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
     else
       _ -> put_flash(socket, :error, ~t"Could not change the subscription.")
     end
-  end
-
-  defp assign_preview(socket, params) do
-    preview = Preview.build(:subscription_cancelled, socket.assigns.subscription, %{message: params["message"]})
-    assign(socket, :preview, preview)
   end
 
   defp get_subscription(id, actor) do

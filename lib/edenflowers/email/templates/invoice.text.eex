@@ -8,7 +8,7 @@
 
 <% @part_paid? -> %><%= dgettext("emails", "Thank you for your payment. There is %{amount} still to pay.", amount: @format_currency.(@invoice.amount_unpaid)) %>
 
-<% true -> %><% end %><%= message(@message) %><%= dgettext("emails", "If anything on it looks wrong, just reply to this email.") %>
+<% true -> %><% end %><%= dgettext("emails", "If anything on it looks wrong, just reply to this email.") %>
 
 <%= dgettext("emails", "Warm wishes,") %>
 

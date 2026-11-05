@@ -1,6 +1,6 @@
 <%= if @order.customer_first_name do %><%= dgettext("emails", "Hi %{name},", name: @order.customer_first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= message(@message) %><%= dgettext("emails", "Thank you for your order. Here is what we agreed:") %>
+<%= dgettext("emails", "Thank you for your order. Here is what we agreed:") %>
 
 <%= order_totals(assigns) %>
 <%= order_fulfillment(assigns) %><%= order_payment(assigns) %><%= dgettext("emails", "If you need to change anything, reply and I'll let you know what's possible.") %>

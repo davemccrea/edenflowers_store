@@ -19,8 +19,9 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :preview, Swoosh.Email, default: nil
 
   @doc """
-  Cancels an order or a booking: the cancellation charge to keep, and whether to email
-  the customer, with an optional message. Takes `PaymentActions.cancel_form/1`. Sends
+  Cancels an order or a booking: the cancellation charge to keep, Jennie's
+  reason for her records, and whether to email the customer, as she
+  rewrites it if she likes. Takes `PaymentActions.cancel_form/1`. Sends
   `validate_cancel` and `submit_cancel` with `cancel` params, and
   `close_cancel` when it closes.
   """
@@ -51,12 +52,20 @@ defmodule EdenflowersWeb.Admin.Drawers do
               {~t"Total #{total = Edenflowers.Format.currency(Decimal.new(@form[:total].value), @locale)}, paid #{paid = Edenflowers.Format.currency(Decimal.new(@form[:held].value), @locale)}. You keep the charge whether or not it was paid. Paid above it is refunded: card payments go back through Stripe, and anything paid in person you hand back yourself. Any of the charge not yet paid is left to collect."}
             </p>
           </div>
+          <.input
+            field={@form[:reason]}
+            id="cancel-reason"
+            type="textarea"
+            rows="2"
+            label={~t"Reason (for your records)"}
+            class="textarea w-full"
+          />
           <.customer_email
             :if={@email}
             id="cancel-email"
             send={@form[:email_customer]}
             label={~t"Email the customer"}
-            message={@form[:message]}
+            form={@form}
             to={@email}
             preview={@preview}
           />
@@ -80,19 +89,25 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :id, :string, required: true
   attr :send, Phoenix.HTML.FormField, default: nil, doc: "the tick box, or nil when sending is the form's whole job"
   attr :label, :string, default: nil, doc: "the tick box's label"
-  attr :message, Phoenix.HTML.FormField, required: true
+  attr :form, Phoenix.HTML.Form, required: true, doc: "the form holding `edit_email`, `subject` and `body`"
   attr :to, :string, default: nil, doc: "the customer's address, when the form already knows it"
   attr :preview, Swoosh.Email, default: nil, doc: "what would be sent, from `Edenflowers.Email.Preview`"
   attr :collapse_preview?, :boolean, default: false
   slot :inner_block, doc: "more choices about the email, like whether to attach the photo"
 
   @doc """
-  The tick box, message box and preview beside every email one of Jennie's
-  actions sends (ADR 0006). The message box and preview show only while the
-  email is ticked.
+  The tick box and preview beside every email one of Jennie's actions sends
+  (ADR 0006), and the tick box to rewrite it. Rewriting swaps the preview
+  for its subject and text to edit; unticking
+  it goes back to the email as built. Read what she wrote with
+  `email_edits/1`. The preview shows only while the email is ticked.
   """
   def customer_email(assigns) do
-    assigns = assign(assigns, :sending?, is_nil(assigns.send) or assigns.send.value in [true, "true"])
+    assigns =
+      assign(assigns,
+        sending?: is_nil(assigns.send) or assigns.send.value in [true, "true"],
+        editing?: assigns.form[:edit_email].value in [true, "true"]
+      )
 
     ~H"""
     <div id={@id} class="space-y-2">
@@ -101,16 +116,35 @@ defmodule EdenflowersWeb.Admin.Drawers do
         <p :if={@to} class="text-base-content/75 break-all text-sm">{~t"To: #{email = @to}"}</p>
         {render_slot(@inner_block)}
         <.input
-          :if={@sending?}
-          field={@message}
-          id={"#{@id}-message"}
-          type="textarea"
-          rows="3"
-          label={~t"Message to the customer (optional)"}
-          placeholder={~t"Goes after the first line of the email."}
-          class="textarea w-full"
+          :if={@preview && @sending?}
+          field={@form[:edit_email]}
+          id={"#{@id}-edit"}
+          type="checkbox"
+          label={~t"Edit the email"}
         />
-        <%= if @preview && @sending? do %>
+        <div :if={@preview && @sending? && @editing?} id={"#{@id}-editor"} class="space-y-3">
+          <.input
+            field={@form[:subject]}
+            id={"#{@id}-subject"}
+            value={@form[:subject].value || @preview.subject}
+            type="text"
+            label={~t"Subject"}
+            class="input w-full"
+          />
+          <.input
+            field={@form[:body]}
+            id={"#{@id}-body"}
+            value={@form[:body].value || @preview.text_body}
+            type="textarea"
+            rows="16"
+            label={~t"Email"}
+            class="textarea w-full"
+          />
+          <p :if={@preview.attachments != []} class="text-base-content/75 text-sm">
+            {~t"Attached: #{files = Enum.map_join(@preview.attachments, ", ", & &1.filename)}"}
+          </p>
+        </div>
+        <%= if @preview && @sending? && !@editing? do %>
           <details
             id={"#{@id}-preview-toggle"}
             phx-mounted={JS.ignore_attributes(["open"])}
@@ -127,6 +161,14 @@ defmodule EdenflowersWeb.Admin.Drawers do
     </div>
     """
   end
+
+  @doc """
+  The subject and text Jennie rewrote in a `customer_email`, as the
+  `subject` and `body` arguments of the action that sends it, or nothing to
+  send it as built.
+  """
+  def email_edits(%{"edit_email" => "true"} = params), do: %{subject: params["subject"], body: params["body"]}
+  def email_edits(_params), do: %{}
 
   attr :email, Swoosh.Email, required: true
 
@@ -154,7 +196,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :preview, Swoosh.Email, default: nil
 
   @doc """
-  Sends one email from a menu item or button, with Jennie's message. Sends
+  Sends one email from a menu item or button, as Jennie rewrites it if she likes. Sends
   `validate_email` and `send_email` with `email` params, and `close_email`
   when it closes.
   """
@@ -173,7 +215,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           <p :if={@last_sent} class="text-base-content/75 text-sm">{~t"Last sent #{time = @last_sent}."}</p>
           <.customer_email
             id="email-drawer-email"
-            message={@form[:message]}
+            form={@form}
             to={@to}
             preview={@preview}
           />
@@ -248,7 +290,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
         id={"#{@id}-email"}
         send={@form[:email_receipt]}
         label={~t"Email the customer a receipt"}
-        message={@form[:message]}
+        form={@form}
         preview={@preview}
       />
       <.button
@@ -327,12 +369,19 @@ defmodule EdenflowersWeb.Admin.Drawers do
       <p :if={@form[:how].value != "stripe"} class="text-base-content/75 text-sm">
         {~t"Records money you have already handed back."}
       </p>
+      <.input
+        field={@form[:note]}
+        id={"#{@id}-note"}
+        type="text"
+        label={~t"Note (for your records)"}
+        class="input w-full"
+      />
       <.customer_email
         :if={@email}
         id={"#{@id}-email"}
         send={@form[:email_customer]}
         label={~t"Email the customer"}
-        message={@form[:note]}
+        form={@form}
         to={@email}
         preview={@preview}
       />

@@ -2,7 +2,7 @@
 
 <%= dgettext("emails", "Your booking on %{course} on %{date} is cancelled.", course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
 
-<%= message(@message) %><%= if Decimal.positive?(@charge) do %><%= cancellation_charge(assigns) %>
+<%= if Decimal.positive?(@charge) do %><%= cancellation_charge(assigns) %>
 
 <% end %><%= if Decimal.positive?(@refunded) do %><%= refund_line(%{amount: @refunded, how: @refunded_to, format_currency: @format_currency}) %>
 

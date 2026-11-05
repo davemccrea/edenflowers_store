@@ -239,7 +239,13 @@ defmodule Edenflowers.Orders.Order.Admin do
       argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
       argument :card_variant_id, :uuid
       argument :email_customer?, :boolean, default: true
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       argument :customer_id, :uuid
 
       change set_attribute(:state, :placed)
@@ -302,7 +308,12 @@ defmodule Edenflowers.Orders.Order.Admin do
       argument :fulfillment_time, :atom, constraints: [one_of: [:any, :at, :between]]
       argument :card_variant_id, :uuid
       argument :email_customer?, :boolean, default: false
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
       validate {Holds, calculation: :editable?, message: "is no longer open"}
 
@@ -395,7 +406,13 @@ defmodule Edenflowers.Orders.Order.Admin do
 
       accept [:delivery_photo_slug, :email_delivery_photo]
       argument :email_customer?, :boolean, default: true
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       validate {Holds, calculation: :fulfillable?, message: "is no longer open"}
       change set_attribute(:fulfillment_status, :fulfilled)
       change set_attribute(:email_delivery_photo, false), where: [argument_equals(:email_customer?, false)]
@@ -445,6 +462,13 @@ defmodule Edenflowers.Orders.Order.Admin do
             "becomes the Total due. Without it, nothing is kept and everything paid is refunded."
 
       argument :email_customer?, :boolean, default: true
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       # A subscription cancelled by its customer cancels its occurrences as them.
       argument :cancelled_by, :atom, default: :shop, constraints: [one_of: [:shop, :customer]]
       validate Validations.NotInvoiced

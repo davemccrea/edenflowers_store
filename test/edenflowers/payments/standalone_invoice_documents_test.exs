@@ -34,19 +34,18 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
 
   test "standalone email and preview use invoice buyer and own amount", %{admin: admin, draft: draft} do
     {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
-    email = invoice |> SendInvoice.load_for_email() |> Email.invoice("Thank you")
+    email = invoice |> SendInvoice.load_for_email() |> Email.invoice()
     assert email.to == [{"", "emma@example.com"}]
     assert email.subject == "Invoice #{invoice.number}"
     assert email.text_body =~ "Invoice #{invoice.number} is attached."
-    assert email.text_body =~ "Thank you"
     refute email.text_body =~ "Amount due"
     refute email.text_body =~ "Due date"
     refute email.text_body =~ "IBAN"
     refute email.text_body =~ "Reference number"
     refute email.text_body =~ "of the"
-    preview = Edenflowers.Email.Preview.build_invoice(invoice, "Preview")
+    preview = Edenflowers.Email.Preview.build_invoice(invoice)
     assert preview.subject == email.subject
-    assert preview.text_body =~ "Preview"
+    assert preview.text_body == email.text_body
   end
 
   test "a partly paid invoice still states the outstanding balance", %{admin: admin, draft: draft} do
@@ -70,7 +69,7 @@ defmodule Edenflowers.Payments.StandaloneInvoiceDocumentsTest do
     assert persisted.number == invoice.number
     assert persisted.sent_at == nil
     restored = Ash.Seed.update!(persisted, %{pdf: original})
-    assert {:ok, sent} = Payments.send_invoice(restored, %{message: "Reminder"}, actor: admin)
+    assert {:ok, sent} = Payments.send_invoice(restored, %{}, actor: admin)
     assert sent.sent_at
 
     Swoosh.TestAssertions.assert_email_sent(fn email ->

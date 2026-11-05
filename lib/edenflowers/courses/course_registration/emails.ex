@@ -61,7 +61,12 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
       description "Jennie emails the customer of a confirmed booking a Payment reminder for its Balance, " <>
                     "opening its Payment Link if need be."
 
-      argument :message, :string
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       change PaymentChanges.OpenPaymentLink
       change {Changes.SendPaymentLinkEmail, email: :payment_reminder}
@@ -75,7 +80,13 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
 
       accept []
       argument :amount, :decimal
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       transaction? false
       require_atomic? false
       change PaymentChanges.SendPaymentReceivedEmail
@@ -86,7 +97,13 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
                     "Queued by confirm_payment or manual entry."
 
       accept []
-      argument :message, :string
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       transaction? false
       require_atomic? false
@@ -96,7 +113,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
     update :email_course_reminder do
       description "Jennie explicitly queues a course reminder for a confirmed booking."
       accept []
-      argument :message, :string
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       change {PaymentChanges.QueueEmail, trigger: :send_reminder_email}
     end
@@ -104,7 +120,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
     update :send_reminder_email do
       description "Sends the course reminder Jennie queued, in the booking's language."
       accept []
-      argument :message, :string
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       transaction? false
       require_atomic? false
@@ -115,7 +130,13 @@ defmodule Edenflowers.Courses.CourseRegistration.Emails do
     update :email_receipt do
       description "Jennie sends a confirmed booking's confirmation email, with its receipt, again."
       accept []
-      argument :message, :string, description: "Jennie's note in the email."
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       transaction? false
       require_atomic? false

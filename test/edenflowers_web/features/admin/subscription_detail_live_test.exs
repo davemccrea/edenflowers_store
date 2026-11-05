@@ -61,7 +61,12 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
 
     view |> element(~s|button[phx-click="open_cancel"]|) |> render_click()
     assert has_element?(view, "#cancel-subscription-email-send[checked]")
-    view |> form("#cancel-subscription-form", cancel: %{message: "Thank you for a lovely year."}) |> render_submit()
+    view |> form("#cancel-subscription-form", cancel: %{edit_email: "true"}) |> render_change()
+
+    view
+    |> form("#cancel-subscription-form", cancel: %{edit_email: "true", body: "Thank you for a lovely year."})
+    |> render_submit()
+
     assert reload(subscription).state == :cancelled
     refute has_element?(view, ~s|button[phx-click="open_cancel"]|)
 
@@ -69,7 +74,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
       worker: Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail,
       args: %{
         "primary_key" => %{"id" => subscription.id},
-        "action_arguments" => %{"message" => "Thank you for a lovely year."}
+        "action_arguments" => %{"body" => "Thank you for a lovely year."}
       }
     )
   end

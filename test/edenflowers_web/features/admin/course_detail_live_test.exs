@@ -35,8 +35,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
     refute has_element?(view, "#course-reminder-drawer summary", "Cancelled Carl")
     assert has_element?(view, "#course-reminder-drawer", "A reminder about Autumn wreaths")
 
-    view |> form("#course-reminder-form", reminder: %{message: "Bring an apron."}) |> render_change()
-    assert has_element?(view, "#course-reminder-drawer", "Bring an apron.")
     assert_no_email_sent()
 
     view |> form("#course-reminder-form") |> render_submit()
@@ -44,7 +42,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
     jobs = all_enqueued(worker: Edenflowers.Courses.Workers.SendReminderEmail)
     assert length(jobs) == 2
     assert Enum.any?(jobs, &(&1.args["primary_key"]["id"] == anna.id))
-    assert Enum.all?(jobs, &(&1.args["action_arguments"]["message"] == "Bring an apron."))
   end
 
   test "lists confirmed bookings with seat counts, hides unpaid ones and shows cancelled ones apart", %{conn: conn} do
@@ -203,7 +200,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
       open_cancel(view, registration)
 
-      view |> form("#cancel-form", cancel: %{charge: "35,00", message: "Ill that day"}) |> render_submit()
+      view |> form("#cancel-form", cancel: %{charge: "35,00", reason: "Ill that day"}) |> render_submit()
 
       assert has_element?(view, "#registration-#{registration.id}", "To refund 50,00 €")
 
@@ -289,11 +286,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert has_element?(view, "#booking-email-preview-toggle", "Please pay at the course.")
 
       view
-      |> form("#booking-form", form: %{payment_terms: "payment_link", message: "See you soon!"})
+      |> form("#booking-form", form: %{payment_terms: "payment_link"})
       |> render_change()
 
       assert has_element?(view, "#booking-email-preview-toggle", "You can pay online here:")
-      assert has_element?(view, "#booking-email-preview-toggle", "See you soon!")
       refute has_element?(view, "#booking-email-preview-toggle", "Please pay at the course.")
     end
 

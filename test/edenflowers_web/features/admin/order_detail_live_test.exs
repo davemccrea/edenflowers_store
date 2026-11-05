@@ -103,8 +103,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#email-drawer-email-preview", "Your receipt from Eden Flowers")
     assert has_element?(view, "#email-drawer-email-preview", "Attached: eden-flowers-#{order.order_reference}.pdf")
 
-    view |> form("#email-form", email: %{message: "Thank you for coming in."}) |> render_change()
-    assert has_element?(view, "#email-drawer-email-preview", "Thank you for coming in.")
+    view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
+    assert has_element?(view, "#email-drawer-email-subject[value^='Your receipt from Eden Flowers']")
+    assert has_element?(view, "#email-drawer-email-body", "Hi Ada,")
+
+    view |> form("#email-form", email: %{edit_email: "false"}) |> render_change()
+    refute has_element?(view, "#email-drawer-email-editor")
+    assert has_element?(view, "#email-drawer-email-preview", "Your receipt from Eden Flowers")
 
     assert_no_email_sent()
     refute_enqueued(worker: Edenflowers.Orders.Workers.SendReceiptEmail)
@@ -200,12 +205,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     view |> element(~s|button[phx-value-kind="fulfillment"]|, "Email confirmation") |> render_click()
 
-    assert view |> form("#email-form", email: %{message: "Thank you for choosing us."}) |> render_submit() =~
-             "Confirmation queued."
+    view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
+
+    edited = %{edit_email: "true", subject: "Your flowers arrived", body: "Thank you for choosing us."}
+    assert view |> form("#email-form", email: edited) |> render_submit() =~ "Confirmation queued."
 
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :default)
-    assert_email_sent(fn email -> assert email.text_body =~ "Thank you for choosing us." end)
 
+    assert_email_sent(fn email ->
+      assert email.subject == "Your flowers arrived"
+      assert email.text_body == "Thank you for choosing us."
+    end)
+
+    assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*Your flowers arrived/s)
     assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*Thank you for choosing us\./s)
     assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
     assert has_element?(view, ~s|button[phx-value-kind="fulfillment"]|, "Resend confirmation")

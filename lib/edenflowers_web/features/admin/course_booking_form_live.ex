@@ -117,7 +117,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
               id="booking-email"
               send={@form[:email_customer?]}
               label={~t"Email booking confirmation to the customer"}
-              message={@form[:message]}
+              form={@form}
               preview={@preview}
               collapse_preview?={true}
             />
@@ -151,11 +151,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
 
     preview =
       if form[:email_customer?].value in [true, "true"] and form[:email].value not in [nil, ""] do
-        Preview.build_entered_booking(
-          form.source.source,
-          socket.assigns.course,
-          %{message: form[:message].value}
-        )
+        Preview.build_entered_booking(form.source.source, socket.assigns.course)
       end
 
     assign(socket, form: form, preview: preview)

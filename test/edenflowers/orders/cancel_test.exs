@@ -38,21 +38,17 @@ defmodule Edenflowers.Orders.CancelTest do
     email
   end
 
-  test "refunds all but the cancellation charge, and emails the charge and the reason", %{admin: admin} do
+  test "refunds all but the cancellation charge, and emails the charge", %{admin: admin} do
     order = order_paid_by_card()
     expect_refund(order, 6850)
 
-    assert {:ok, cancelled} =
-             Orders.cancel_order(order, %{cancellation_charge: "20.00", cancellation_reason: "I'm ill that day."},
-               actor: admin
-             )
+    assert {:ok, cancelled} = Orders.cancel_order(order, %{cancellation_charge: "20.00"}, actor: admin)
 
     assert cancelled.fulfillment_status == :cancelled
     assert Decimal.equal?(balance(cancelled), 0)
     assert cancelled.cancellation_emailed_to == order.customer_email
 
     email = sent_email()
-    assert email.text_body =~ "I'm ill that day."
     assert email.text_body =~ "I've kept 20,00 € as a cancellation charge."
     assert email.text_body =~ "68,50 €"
     assert email.text_body =~ "If you have any questions"

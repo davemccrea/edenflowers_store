@@ -11,7 +11,7 @@ An order the shop has committed to make. An Online Order is placed when its paym
 _Avoid_: Confirmed, submitted
 
 **Cancelled**:
-A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to keep as a cancellation charge, from nothing up to its Total due, whether or not anything was paid, and refunds what was paid above it: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. Any of the charge not yet paid is left as a Balance to collect, to settle with the customer; cancelling never creates an invoice. A course booking's charge starts at its course's cancellation terms, an order's at nothing. The customer is emailed unless she unticks it, with a message from her if she writes one. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 3 days before its fulfillment date (the Change deadline), which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
+A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to keep as a cancellation charge, from nothing up to its Total due, whether or not anything was paid, and refunds what was paid above it: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. Any of the charge not yet paid is left as a Balance to collect, to settle with the customer; cancelling never creates an invoice. A course booking's charge starts at its course's cancellation terms, an order's at nothing. The customer is emailed unless she unticks it, as she rewrites the email if she likes; her reason for cancelling is for her own record. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 3 days before its fulfillment date (the Change deadline), which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)
 
 **Course booking**:
@@ -108,7 +108,7 @@ _Avoid_: Amount due, outstanding
 Nothing is owed either way according to the money recorded now, or everything taken was handed back. This is not a promise that no payment is still processing or could arrive later.
 
 **Refund**:
-Money Jennie hands back on a placed order or confirmed course booking, cancelled or not, once nothing is left to collect, up to what's still held: by card through Stripe, or by recording money she handed back herself. The customer is emailed unless she unticks it, with a message from her if she writes one. What was owed back is an ordinary refund; any more is a Goodwill refund.
+Money Jennie hands back on a placed order or confirmed course booking, cancelled or not, once nothing is left to collect, up to what's still held: by card through Stripe, or by recording money she handed back herself. The customer is emailed unless she unticks it, as she rewrites the email if she likes; her note on the refund is for her own record. What was owed back is an ordinary refund; any more is a Goodwill refund.
 _Avoid_: Credit, reimbursement
 
 **Goodwill refund**:

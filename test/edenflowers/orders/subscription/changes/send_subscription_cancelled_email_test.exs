@@ -7,7 +7,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail
 
-  test "names the delivery already charged that still comes, with Jennie's message" do
+  test "names the delivery already charged that still comes" do
     {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
     subscription = generate(subscription(user_id: customer.id, locale: "en-GB"))
     charged_for = Date.add(Edenflowers.ShopTime.today(), 2)
@@ -19,19 +19,30 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
       paid: true
     )
 
-    {:ok, _cancelled} =
-      Orders.cancel_subscription(subscription, %{message: "Thank you for a lovely year."},
-        actor: generate(admin_user())
-      )
+    {:ok, _cancelled} = Orders.cancel_subscription(subscription, actor: generate(admin_user()))
 
     assert %{success: 1} = Oban.drain_queue(queue: :default, with_scheduled: true)
 
     assert_email_sent(fn email ->
       assert email.subject =~ "subscription is cancelled"
-      assert email.text_body =~ "You won't be charged again.\n\nThank you for a lovely year.\n\n"
 
       assert email.text_body =~
                "Any delivery already charged will still come on #{Edenflowers.Format.weekday_date(charged_for, "en-GB")}."
+    end)
+  end
+
+  test "Jennie's rewrite of the email goes out from the queued job" do
+    {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
+    subscription = generate(subscription(user_id: customer.id, locale: "en-GB"))
+    edits = %{subject: "Thank you, Ada", body: "Thank you for a lovely year.\n\nJennie"}
+
+    {:ok, _cancelled} = Orders.cancel_subscription(subscription, edits, actor: generate(admin_user()))
+
+    assert %{success: 1} = Oban.drain_queue(queue: :default, with_scheduled: true)
+
+    assert_email_sent(fn email ->
+      assert email.subject == "Thank you, Ada"
+      assert email.text_body == "Thank you for a lovely year.\n\nJennie"
     end)
   end
 

@@ -40,7 +40,11 @@ defmodule Edenflowers.Payments.CreditNote do
     ignore_actions [:create]
     on_actions [:send]
     only_when_changed? false
+    # Jennie's note in the email, from before she could rewrite the whole of it.
     metadata :email_message, :string
+    # The subject and text she sent in place of the template's, if she rewrote it.
+    metadata :email_subject, :string
+    metadata :email_body, :string
   end
 
   actions do
@@ -73,9 +77,11 @@ defmodule Edenflowers.Payments.CreditNote do
         default false
       end
 
-      argument :message, :string do
-        description "Jennie's own words for the email, after its first line. Only used when email_customer? is true."
-      end
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
       validate Validations.Cancellable, before_action?: true
       change Changes.IssueCreditNote
@@ -84,14 +90,16 @@ defmodule Edenflowers.Payments.CreditNote do
 
     update :send do
       description "Jennie emails the credit note to the buyer of the Invoice it cancels, in that Invoice's " <>
-                    "language, with its PDF attached and her optional message, and sent_at is stamped. Nothing " <>
+                    "language, with its PDF attached, as she rewrote it if she did, and sent_at is stamped. Nothing " <>
                     "else changes. Sent by hand only, and it can be sent again."
 
       accept []
 
-      argument :message, :string do
-        description "Jennie's own words for the email, after its first line."
-      end
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
       transaction? false
       require_atomic? false
