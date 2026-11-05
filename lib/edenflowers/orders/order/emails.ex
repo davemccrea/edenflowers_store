@@ -118,6 +118,28 @@ defmodule Edenflowers.Orders.Order.Emails do
       change Changes.SendReceiptEmail
     end
 
+    update :email_gift_voucher do
+      description "Jennie sends a Gift voucher sale's email again from the order's menu, with the voucher PDF and " <>
+                    "the receipt: to the buyer, or another address, such as the recipient's, if the buyer asks."
+
+      accept []
+
+      argument :to, Edenflowers.Types.Email,
+        description: "Where to send it, in place of the buyer's address. The log records where it went."
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
+      validate {Holds, calculation: :gift_voucher_sale?, message: "doesn't sell a gift voucher"}
+      validate {Holds, calculation: :receipt_available?, message: "is not paid yet"}
+      transaction? false
+      require_atomic? false
+      change Changes.SendReceiptEmail
+    end
+
     update :send_order_details_email do
       description "Emails a placed order's details, with its payment link when open: queued by place_custom, or " <>
                     "sent again by Jennie from the order's menu."

@@ -201,6 +201,41 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
     end
   end
 
+  describe "looking after a voucher" do
+    test "Jennie gives it more time, even once expired, but never takes time away" do
+      expired = voucher("50.00", expires_on: Date.add(Edenflowers.ShopTime.today(), -3))
+      later = Date.add(Edenflowers.ShopTime.today(), 30)
+
+      assert {:ok, %{expires_on: ^later} = extended} =
+               Payments.change_gift_voucher_last_day(expired, later, authorize?: false)
+
+      # Even from a page still showing the old date.
+      assert {:error, _} = Payments.change_gift_voucher_last_day(expired, later, authorize?: false)
+      assert {:error, _} = Payments.change_gift_voucher_last_day(expired, Date.add(later, -1), authorize?: false)
+      assert Ash.reload!(extended, authorize?: false).expires_on == later
+    end
+
+    test "a used-up voucher's last day stays put" do
+      used_up = voucher("20.00")
+      order = generate(order(state: :placed))
+      generate(payment(order_id: order.id, gift_voucher_id: used_up.id, method: :voucher, amount: Decimal.new("20.00")))
+
+      assert {:error, _} =
+               Payments.change_gift_voucher_last_day(used_up, Date.add(used_up.expires_on, 30), authorize?: false)
+    end
+
+    test "searching orders by a voucher's whole code finds the order that sold it, however it's typed" do
+      admin = generate(admin_user())
+      sold = voucher("50.00")
+      sale = Ash.load!(sold, [line_item: :order], authorize?: false).line_item.order
+      typed = sold.code |> GiftVoucher.format_code() |> String.downcase()
+
+      assert [%{id: id}] = Orders.search_orders!(typed, actor: admin)
+      assert id == sale.id
+      assert Orders.search_orders!(String.slice(sold.code, 0, 4), actor: admin) == []
+    end
+  end
+
   describe "handing back" do
     setup do
       %{admin: generate(admin_user())}

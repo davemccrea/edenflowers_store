@@ -230,6 +230,10 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Whether places were committed by Jennie or successful website checkout, including cancelled history."
     end
 
+    calculate :refunded_only_by_cancelling?, :boolean, expr(false) do
+      description "Whether its money goes back only by cancelling it: never for a course booking."
+    end
+
     calculate :saves_card?, :boolean, expr(false) do
       description "Whether paying for it saves the card for later charges: never for a course booking."
     end

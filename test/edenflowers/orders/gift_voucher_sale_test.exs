@@ -60,6 +60,9 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
     test "placing the sale issues a voucher for its amount, outside VAT, handed over by email" do
       order = buy(50)
 
+      refute Ash.load!(order, :refundable?, authorize?: false).refundable?,
+             "its money goes back only by cancelling, which also stops the voucher"
+
       assert order.state == :placed
       assert order.fulfillment_status == :fulfilled
       assert order.vat_breakdown == []
@@ -86,6 +89,24 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
         assert email.attachments |> Enum.map(& &1.filename) |> Enum.sort() ==
                  ["eden-flowers-#{order.order_reference}.pdf", "eden-flowers-gift-voucher-#{order.order_reference}.pdf"]
       end)
+    end
+
+    test "Jennie resends the voucher where the buyer asks, and the log says where it went" do
+      order = buy(50)
+      admin = generate(admin_user())
+
+      assert {:ok, _order} =
+               Orders.email_gift_voucher(order, %{to: "mia@example.com", subject: "Your voucher"}, actor: admin)
+
+      assert_email_sent(fn email ->
+        assert email.to == [{"", "mia@example.com"}]
+        assert email.subject == "Your voucher"
+        assert email.text_body =~ GiftVoucher.format_code(voucher(order).code)
+        assert length(email.attachments) == 2
+      end)
+
+      versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
+      assert %{email_to: "mia@example.com"} = Enum.find(versions, &(&1.version_action_name == :email_gift_voucher))
     end
 
     test "a buyer collecting a gift card is told it's ready from the shop's next open day" do

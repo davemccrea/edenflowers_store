@@ -222,6 +222,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :submit_label, :string, default: nil
   attr :to, :string, default: nil
   attr :last_sent, :string, default: nil, doc: "when this email last went, if it has"
+  attr :change_to?, :boolean, default: false, doc: "lets Jennie send it to another address than `to`"
   attr :preview, Swoosh.Email, default: nil
 
   @doc """
@@ -242,10 +243,19 @@ defmodule EdenflowersWeb.Admin.Drawers do
       >
         <.drawer_body>
           <p :if={@last_sent} class="text-base-content/75 text-sm">{~t"Last sent #{time = @last_sent}."}</p>
+          <.input
+            :if={@change_to?}
+            field={@form[:to]}
+            id="email-drawer-to"
+            value={@form[:to].value || @to}
+            type="email"
+            label={~t"To"}
+            class="input w-full"
+          />
           <.customer_email
             id="email-drawer-email"
             form={@form}
-            to={@to}
+            to={if !@change_to?, do: @to}
             preview={@preview}
           />
         </.drawer_body>

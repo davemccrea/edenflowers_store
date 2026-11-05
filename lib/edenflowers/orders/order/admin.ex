@@ -80,12 +80,21 @@ defmodule Edenflowers.Orders.Order.Admin do
     :invoiceable?,
     :fulfillment_option,
     :gift_voucher_sale?,
+    :gift_voucher_spent?,
     :voucher_card_to_hand_over?,
     promotion: [:gift_order],
     pass_it_on_card: [:placed_orders, :gift_order_linkable?, :card_status],
     invoices: [:status, :overdue?],
     line_items: [:subtotal, :total],
-    gift_voucher_line: [gift_voucher: [:code, :expires_on]]
+    gift_voucher_line: [
+      gift_voucher: [
+        :code,
+        :expires_on,
+        :remaining,
+        :last_day_changeable?,
+        payments: [order: [:order_reference, :customer_name], course_registration: [:reference, :name, :course_id]]
+      ]
+    ]
   ]
 
   oban do
@@ -176,8 +185,8 @@ defmodule Edenflowers.Orders.Order.Admin do
     end
 
     read :search do
-      description "Jennie's search of placed orders by customer, reference, phone, email, Instagram, recipient or " <>
-                    "address, newest first."
+      description "Jennie's search of placed orders by customer, reference, phone, email, Instagram, recipient, " <>
+                    "address or Gift voucher code, newest first."
 
       argument :term, :ci_string,
         allow_nil?: false,

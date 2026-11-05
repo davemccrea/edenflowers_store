@@ -30,8 +30,9 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     :florist_note
   ]
 
-  def entries(versions, payments, locale) do
-    (Enum.map(versions, &entry(&1, locale)) ++ Enum.map(payments, &payment_entry(&1, locale)))
+  # A Gift voucher sale's checkout email is the voucher itself, its receipt attached.
+  def entries(versions, payments, locale, gift_voucher_sale? \\ false) do
+    (Enum.map(versions, &entry(&1, locale, gift_voucher_sale?)) ++ Enum.map(payments, &payment_entry(&1, locale)))
     |> Enum.sort_by(& &1.at, {:desc, DateTime})
   end
 
@@ -57,7 +58,10 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     %{at: payment.paid_at, title: title, details: if(payment.note, do: [{nil, payment.note}], else: [])}
   end
 
-  defp entry(version, locale) do
+  defp entry(%{version_action_name: :send_receipt_email} = version, locale, true = _gift_voucher_sale?),
+    do: %{entry(version, locale, false) | title: ~t"Gift voucher emailed"}
+
+  defp entry(version, locale, _gift_voucher_sale?) do
     %{
       at: version.version_inserted_at,
       title: title(version),
@@ -87,6 +91,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :send_payment_reminder}), do: ~t"Payment reminder emailed"
   defp title(%{version_action_name: :send_payment_failed_email}), do: ~t"Payment needed emailed"
   defp title(%{version_action_name: :send_receipt_email}), do: ~t"Receipt emailed"
+  defp title(%{version_action_name: :email_gift_voucher}), do: ~t"Gift voucher emailed"
 
   defp title(%{version_action_name: action}) when action in [:email_receipt, :send_payment_received_email],
     do: ~t"Payment received emailed"
@@ -115,6 +120,10 @@ defmodule EdenflowersWeb.Admin.OrderLog do
 
   defp field_details(%{version_action_name: :send_fulfillment_email} = version, _locale) do
     [{~t"Sent to", version.changes["fulfillment_emailed_to"]}]
+  end
+
+  defp field_details(%{version_action_name: :email_gift_voucher} = version, _locale) do
+    if to = Map.get(version, :email_to), do: [{~t"Sent to", to}], else: []
   end
 
   defp field_details(version, locale) do

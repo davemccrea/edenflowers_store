@@ -76,12 +76,15 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
         :receipt -> {~t"Email receipt", ~t"Send receipt", order.receipt_emailed_at}
         :fulfillment -> {~t"Email confirmation", ~t"Send confirmation", order.fulfillment_emailed_at}
         :payment_reminder -> {~t"Send payment reminder", ~t"Send reminder", nil}
+        :gift_voucher -> {~t"Email gift voucher", ~t"Send gift voucher", order.receipt_emailed_at}
       end
 
     %{
       title: title,
       submit_label: submit_label,
       to: order.customer_email,
+      # The buyer may ask for it to go straight to whoever it's for.
+      change_to?: kind == :gift_voucher,
       last_sent: last_sent_at && Format.datetime(last_sent_at, locale)
     }
   end

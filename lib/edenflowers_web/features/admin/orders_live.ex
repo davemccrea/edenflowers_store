@@ -71,6 +71,14 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             options={[{~t"Still to do", "true"}, {~t"Gift orders", "gift"}]}
             fn={&show_orders/2}
           />
+          <:filter
+            field="kind"
+            type={:select}
+            label={~t"Kind"}
+            prompt={~t"All"}
+            options={[{~t"Flowers", "flowers"}, {~t"Gift vouchers", "gift_vouchers"}]}
+            fn={&order_kind/2}
+          />
           <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
             <.link
               navigate={~p"/admin/orders/#{order.id}"}
@@ -168,6 +176,16 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   defp show_orders(query, _filter) do
     require Ash.Query
     Ash.Query.filter(query, open?)
+  end
+
+  defp order_kind(query, %{value: "gift_vouchers"}) do
+    require Ash.Query
+    Ash.Query.filter(query, gift_voucher_sale?)
+  end
+
+  defp order_kind(query, %{value: "flowers"}) do
+    require Ash.Query
+    Ash.Query.filter(query, not gift_voucher_sale?)
   end
 
   defp search_orders(query, _searchable_columns, search_term) do

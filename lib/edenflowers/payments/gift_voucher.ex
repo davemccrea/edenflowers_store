@@ -50,6 +50,16 @@ defmodule Edenflowers.Payments.GiftVoucher do
       change set_attribute(:expires_on, &__MODULE__.default_expiry/0)
     end
 
+    update :change_last_day do
+      description "Gives a voucher more time: Jennie moves its last day later, say for a customer who missed it. " <>
+                    "Only while it isn't cancelled or used up, and never earlier. No history is kept; the order " <>
+                    "page shows the current date."
+
+      accept [:expires_on]
+      require_atomic? false
+      validate __MODULE__.LaterLastDay
+    end
+
     read :by_code do
       description "The voucher with this code, however the customer typed it: spaces, dashes and case are " <>
                     "ignored. Found whether or not it can still pay, so the customer is told why not."
@@ -110,7 +120,8 @@ defmodule Edenflowers.Payments.GiftVoucher do
     end
 
     has_many :payments, Edenflowers.Payments.Payment do
-      description "What it paid, positive, and what was handed back onto it, negative."
+      description "What it paid, positive, and what was handed back onto it, negative, oldest first."
+      sort paid_at: :asc
     end
   end
 
@@ -129,6 +140,11 @@ defmodule Edenflowers.Payments.GiftVoucher do
 
     calculate :spendable?, :boolean, expr(not expired? and not cancelled? and remaining > 0) do
       description "Whether it can pay for anything now: not expired, its sale not cancelled, and something left on it."
+    end
+
+    calculate :last_day_changeable?, :boolean, expr(not cancelled? and remaining > 0) do
+      description "Whether Jennie can give it more time: its sale not cancelled and something left on it, " <>
+                    "expired or not. The order page offers Change last day only then, and the action checks it."
     end
   end
 

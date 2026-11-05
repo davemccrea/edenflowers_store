@@ -88,7 +88,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <span class="sr-only">{~t"Fulfillment:"}</span>
                   <.fulfillment_status_badge status={@order.fulfillment_status} />
                 </span>
-                <.gift_badge :if={@order.gift} recipient_name={presence(@order.recipient_name)} />
+                <.gift_badge
+                  :if={@order.gift && !@order.gift_voucher_sale?}
+                  recipient_name={presence(@order.recipient_name)}
+                />
                 <.subscription_badge :if={@order.origin == :subscription} />
                 <.badge :if={@order.voucher_card_to_hand_over?} tone={:attention} icon="hero-pencil-square">
                   {~t"Card to write"}
@@ -315,6 +318,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   locale={@locale}
                 />
                 <.money_row
+                  :if={!@order.gift_voucher_sale?}
                   label={~t"Fulfillment fee"}
                   amount={@order.fulfillment_fee}
                   locale={@locale}
@@ -422,7 +426,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.widget>
 
             <.widget
-              :if={(@order.gift && present?(@order.recipient_name)) || @order.missing_delivery_phone?}
+              :if={
+                (@order.gift && !@order.gift_voucher_sale? && present?(@order.recipient_name)) ||
+                  @order.missing_delivery_phone?
+              }
               id="order-recipient"
               title={~t"Recipient"}
             >
@@ -672,6 +679,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
+  def handle_event("change_voucher_last_day", %{"voucher" => %{"expires_on" => expires_on}}, socket) do
+    %{order: order, current_user: actor} = socket.assigns
+
+    case Edenflowers.Payments.change_gift_voucher_last_day(order.gift_voucher_line.gift_voucher, expires_on,
+           actor: actor
+         ) do
+      {:ok, _voucher} ->
+        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:success, ~t"Last day changed.")}
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, ~t"Choose a day after the current last day.")}
+    end
+  end
+
   def handle_event("open_email", %{"kind" => kind}, socket) do
     {:noreply, EmailDrawer.open(socket, kind, socket.assigns.order)}
   end
@@ -687,7 +708,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   def handle_event("send_email", %{"email" => params}, socket) do
     %{order: order, email_kind: kind, current_user: actor} = socket.assigns
 
-    {flash, text} = send_email(kind, order, Drawers.email_edits(params), actor)
+    edits = Drawers.email_edits(params)
+    # Only an address Jennie changed is passed on, so the log names it.
+    edits = if params["to"] not in [nil, "", order.customer_email], do: Map.put(edits, :to, params["to"]), else: edits
+
+    {flash, text} = send_email(kind, order, edits, actor)
 
     {:noreply,
      socket
@@ -794,7 +819,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     order =
       Ash.load!(order, :paper_trail_versions, authorize?: false)
 
-    OrderLog.entries(order.paper_trail_versions, payments, locale)
+    OrderLog.entries(order.paper_trail_versions, payments, locale, order.gift_voucher_sale?)
   end
 
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)
@@ -814,6 +839,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
       {:error, error} ->
         Logger.error("Order details for order #{order.id} not sent: #{inspect(error)}")
         {:error, ~t"Could not send the email. Try again in a moment."}
+    end
+  end
+
+  defp send_email(:gift_voucher, order, edits, actor) do
+    case Orders.email_gift_voucher(order, edits, actor: actor) do
+      {:ok, _order} ->
+        {:success, ~t"Gift voucher sent."}
+
+      {:error, error} ->
+        Logger.error("Gift voucher for order #{order.id} not sent: #{inspect(error)}")
+        {:error, ~t"Could not send the gift voucher. Check the address and try again."}
     end
   end
 

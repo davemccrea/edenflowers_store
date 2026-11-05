@@ -33,14 +33,15 @@ defmodule Edenflowers.Payments.Validations.Refundable do
           :paid_outside_stripe,
           :paid_through_stripe,
           :paid_by_voucher,
-          :refund_methods
+          :refund_methods,
+          :refunded_only_by_cancelling?
         ],
         authorize?: false,
         reuse_values?: false
       )
 
     cond do
-      gift_voucher_sale?(record) ->
+      record.refunded_only_by_cancelling? ->
         {:error, ~t"Cancel the order to refund a gift voucher. That also stops the voucher."}
 
       not record.committed? ->
@@ -59,11 +60,6 @@ defmodule Edenflowers.Payments.Validations.Refundable do
         :ok
     end
   end
-
-  defp gift_voucher_sale?(%Edenflowers.Orders.Order{} = order),
-    do: Ash.load!(order, :gift_voucher_sale?, authorize?: false).gift_voucher_sale?
-
-  defp gift_voucher_sale?(_registration), do: false
 
   defp held_by(record, :stripe), do: record.paid_through_stripe
   defp held_by(record, :voucher), do: record.paid_by_voucher

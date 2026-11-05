@@ -6,6 +6,27 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
 
   setup :log_in_admin
 
+  test "shows flowers or gift vouchers alone", %{conn: conn} do
+    placed_order(customer_name: "Ada Lovelace")
+    voucher_sale = placed_order(customer_name: "Grace Hopper")
+
+    Ash.Seed.seed!(Edenflowers.Orders.LineItem, %{
+      order_id: voucher_sale.id,
+      is_gift_voucher: true,
+      unit_price: Decimal.new("50.00"),
+      tax_rate: Decimal.new(0),
+      product_name: "Gift voucher"
+    })
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders?kind=gift_vouchers")
+    assert has_element?(view, "[data-item-id]", "Grace Hopper")
+    refute has_element?(view, "[data-item-id]", "Ada Lovelace")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders?kind=flowers")
+    assert has_element?(view, "[data-item-id]", "Ada Lovelace")
+    refute has_element?(view, "[data-item-id]", "Grace Hopper")
+  end
+
   test "searches orders by order reference as well as customer name", %{conn: conn} do
     placed_order(order_reference: "ABC123", customer_name: "Ada Lovelace")
     placed_order(order_reference: "XYZ789", customer_name: "Grace Hopper")

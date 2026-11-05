@@ -6,6 +6,10 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   send fails the action, so the AshOban trigger retries it and, once attempts
   run out, `record_receipt_email_failure` stamps `receipt_email_failed_at` for
   the admin to see.
+
+  Jennie's `email_gift_voucher` resends a Gift voucher sale's email the same
+  way, to its `to` argument if she changed the address, with her rewrite if
+  she made one; the log records both.
   """
 
   use Ash.Resource.Change
@@ -13,6 +17,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   require Logger
 
   alias Edenflowers.Email
+  alias Edenflowers.Email.Edits
   alias Edenflowers.Mailer
   alias Edenflowers.Orders.Receipt
   alias Edenflowers.Payments.GiftVoucherPdf
@@ -21,17 +26,22 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       order = load_for_send(changeset.data)
+      to = Ash.Changeset.get_argument(changeset, :to)
+      edits = Edits.from_changeset(changeset)
 
       with {:ok, pdf} <- Receipt.generate(order),
            {:ok, email} <- with_voucher(email(order), order),
            {:ok, _result} <-
              email
+             |> Edits.apply_to(edits)
+             |> send_to(to)
              |> Swoosh.Email.attachment(Receipt.attachment(pdf, order.order_reference))
              |> Mailer.deliver() do
         Logger.info("Sent confirmation email for order #{order.id}")
 
         changeset
         |> Ash.Changeset.force_change_attribute(:receipt_emailed_at, DateTime.utc_now())
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: Map.put(Edits.for_log(edits), :email_to, to)})
         |> clear_failure()
       else
         {:error, error} -> Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")
@@ -41,8 +51,20 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
 
   # An Occurrence's charge is routine; the receipt with thanks is for an order the customer placed.
   defp email(%{origin: :subscription} = order), do: Email.subscription_charged(order)
-  defp email(%{gift_voucher_sale?: true} = order), do: Email.gift_voucher_sold(order, order.voucher_card_ready_on)
+  defp email(%{gift_voucher_sale?: true} = order), do: gift_voucher_email(order)
   defp email(order), do: Email.order_confirmation(order)
+
+  @doc """
+  A Gift voucher sale's email, without its attachments. It names the day the
+  gift card is ready only while the card is still to collect, so a resend
+  after the buyer collected it doesn't promise it again.
+  """
+  def gift_voucher_email(order) do
+    Email.gift_voucher_sold(order, if(order.voucher_card_to_hand_over?, do: order.voucher_card_ready_on))
+  end
+
+  defp send_to(email, nil), do: email
+  defp send_to(email, to), do: %{email | to: [{"", to}]}
 
   # A Gift voucher sale's one voucher, as a PDF beside the receipt.
   defp with_voucher(email, order) do
@@ -70,6 +92,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
         :cancellable_by_customer?,
         :cancellable_until,
         :voucher_card_ready_on,
+        :voucher_card_to_hand_over?,
         line_items: [:subtotal]
       ] ++ Receipt.order_load(),
       authorize?: false

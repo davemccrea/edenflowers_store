@@ -25,6 +25,7 @@ defmodule Edenflowers.Payments do
     resource Edenflowers.Payments.GiftVoucher do
       define :create_gift_voucher, action: :create
       define :get_gift_voucher_by_code, action: :by_code, args: [:code]
+      define :change_gift_voucher_last_day, action: :change_last_day, args: [:expires_on]
     end
 
     resource Edenflowers.Payments.Invoice do

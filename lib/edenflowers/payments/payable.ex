@@ -22,6 +22,9 @@ defmodule Edenflowers.Payments.Payable do
     * `calculate :cancelled?`
     * `calculate :saves_card?`: whether paying it saves the card for later
       charges, so a Gift voucher must leave Stripe something to charge
+    * `calculate :refunded_only_by_cancelling?`: whether its money goes back
+      only by cancelling it, never by a refund on its own: a Gift voucher sale,
+      so handing the money back always stops the voucher
     * `calculate :cancellable?`: whether it can be cancelled now
     * `calculate :default_cancellation_charge`: what cancelling it now keeps
       unless Jennie enters a charge. An order keeps nothing; a booking applies
@@ -273,9 +276,12 @@ defmodule Edenflowers.Payments.Payable do
       description "Whether money is owed back to the customer."
     end
 
-    calculate :refundable?, :boolean, expr(committed? and balance <= 0 and amount_held > 0) do
-      description "Whether Jennie can hand money back now: committed, nothing left to collect and money still " <>
-                    "held. Validations.Refundable applies the same rules."
+    calculate :refundable?,
+              :boolean,
+              expr(committed? and balance <= 0 and amount_held > 0 and not refunded_only_by_cancelling?) do
+      description "Whether Jennie can hand money back now: committed, nothing left to collect, money still " <>
+                    "held, and not something refunded only by cancelling it. Validations.Refundable applies the " <>
+                    "same rules."
     end
 
     calculate :refund_methods, {:array, Edenflowers.Payments.PaymentMethod}, Calculations.RefundMethods do
