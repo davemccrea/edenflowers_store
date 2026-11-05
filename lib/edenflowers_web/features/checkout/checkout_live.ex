@@ -82,7 +82,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
          build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user]), actor(socket))
        )
        |> assign(:customer_session_client_secret, nil)
-       |> assign(:gift_voucher_error, nil)
+       |> assign(gift_voucher_error: nil, gift_voucher_code: nil)
        |> ensure_customer_session(order, actor(socket))
        |> maybe_scroll_to_current_step()}
     else
@@ -368,6 +368,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                       payable={@order}
                       locale={@order.locale}
                       error={@gift_voucher_error}
+                      code={@gift_voucher_code}
                     />
 
                     <%!-- Stripe can't take 0 €, so a voucher that pays it all is placed without the card form. --%>
@@ -678,7 +679,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       {:error, error} ->
         {:noreply,
          socket
-         |> assign(gift_voucher_error: EdenflowersWeb.GiftVoucherField.error_message(error))
+         |> assign(gift_voucher_error: EdenflowersWeb.GiftVoucherField.error_message(error), gift_voucher_code: code)
          |> Analytics.track("Gift voucher rejected")}
     end
   end

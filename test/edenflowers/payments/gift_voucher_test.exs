@@ -49,13 +49,12 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
   end
 
   describe "codes" do
-    test "are 12 characters that can't be misread, and are found however they're typed" do
-      code = GiftVoucher.generate_code()
-      assert code =~ ~r/\A[0-9A-HJKMNP-TV-Z]{12}\z/
+    test "are 16 digits, found however they're typed" do
+      assert GiftVoucher.generate_code() =~ ~r/\A[0-9]{16}\z/
 
-      assert GiftVoucher.format_code("A0B1C2D3E4F5") == "A0B1-C2D3-E4F5"
-      assert GiftVoucher.normalize_code(" aOb-ic2d 3e4f5") == "A0B1C2D3E4F5"
-      assert GiftVoucher.normalize_code("a0blc2d3e4f5") == "A0B1C2D3E4F5"
+      assert GiftVoucher.format_code("1234567890123456") == "1234-5678-9012-3456"
+      assert GiftVoucher.normalize_code(" 1234-5678 9012-3456") == "1234567890123456"
+      assert GiftVoucher.normalize_code("l234 5678 9OI2 3456") == "1234567890123456"
     end
   end
 

@@ -32,6 +32,7 @@ defmodule EdenflowersWeb.Checkout.GiftVoucherCheckoutTest do
       {:ok, view, _html} = live(with_cart(conn, order), ~p"/checkout")
 
       assert apply_code(view, "#checkout-gift-voucher-form", "WRONG") =~ "couldn&#39;t find that gift voucher"
+      assert has_element?(view, ~s|#checkout-gift-voucher-form input[value="WRONG"]|)
 
       apply_code(view, "#checkout-gift-voucher-form", voucher.code)
       to_pay = Edenflowers.Format.currency(Decimal.sub(order.grand_total, 10), order.locale)

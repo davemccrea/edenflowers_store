@@ -40,7 +40,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
          )
          |> assign(booked_seats: booked_seats(socket.assigns.current_user, course))
          |> assign(registration: checkout(params["registration"], course), editing?: false, focus_booking?: false)
-         |> assign(gift_voucher_error: nil)
+         |> assign(gift_voucher_error: nil, gift_voucher_code: nil)
          |> assign_form()}
 
       {:error, _} ->
@@ -220,6 +220,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                   payable={@registration}
                   locale={@locale}
                   error={@gift_voucher_error}
+                  code={@gift_voucher_code}
                 />
               </div>
 
@@ -305,7 +306,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
       {:error, error} ->
         {:noreply,
          socket
-         |> assign(gift_voucher_error: EdenflowersWeb.GiftVoucherField.error_message(error))
+         |> assign(gift_voucher_error: EdenflowersWeb.GiftVoucherField.error_message(error), gift_voucher_code: code)
          |> EdenflowersWeb.Analytics.track("Gift voucher rejected")}
     end
   end

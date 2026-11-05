@@ -100,7 +100,7 @@ defmodule Edenflowers.Email.Previews do
 
   defp gift_voucher_sold(locale) do
     voucher = %Edenflowers.Payments.GiftVoucher{
-      code: "7KQ2M9XD4HPT",
+      code: "4829061753318407",
       amount: Decimal.new("50.00"),
       expires_on: ~D[2027-11-05]
     }

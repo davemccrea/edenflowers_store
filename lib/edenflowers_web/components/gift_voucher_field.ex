@@ -18,9 +18,10 @@ defmodule EdenflowersWeb.GiftVoucherField do
 
   attr :locale, :any, required: true
   attr :error, :string, default: nil, doc: "why the code entered was refused"
+  attr :code, :string, default: nil, doc: "the refused code, left in the box so a typo can be corrected"
 
   def gift_voucher_field(%{payable: %{gift_voucher_id: nil}} = assigns) do
-    assigns = assign(assigns, :form, code_form(assigns.error))
+    assigns = assign(assigns, :form, code_form(assigns.error, assigns.code))
 
     ~H"""
     <details id={@id} open={@error != nil} data-testid="gift-voucher">
@@ -38,8 +39,9 @@ defmodule EdenflowersWeb.GiftVoucherField do
           placeholder={~t"Gift voucher code"}
           aria-label={~t"Gift voucher code"}
           autocomplete="off"
-          autocapitalize="characters"
+          inputmode="numeric"
           spellcheck="false"
+          class="tabular-nums"
         />
       </.form>
     </details>
@@ -78,6 +80,6 @@ defmodule EdenflowersWeb.GiftVoucherField do
 
   def error_message(_error), do: ~t"Something went wrong. Please try again."
 
-  defp code_form(nil), do: to_form(%{}, as: "gift_voucher")
-  defp code_form(error), do: to_form(%{"code" => ""}, as: "gift_voucher", errors: [code: {error, []}])
+  defp code_form(nil, _code), do: to_form(%{}, as: "gift_voucher")
+  defp code_form(error, code), do: to_form(%{"code" => code}, as: "gift_voucher", errors: [code: {error, []}])
 end
