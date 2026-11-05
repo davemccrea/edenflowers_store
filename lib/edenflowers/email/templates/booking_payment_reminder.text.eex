@@ -2,7 +2,7 @@
 
 <%= dgettext("emails", "A friendly reminder that %{amount} is still to pay for your booking on %{course}.", amount: @format_currency.(@registration.balance), course: @registration.course.name) %>
 
-<%= message(@message) %><%= dngettext("emails", "1 place on %{course}, %{date}", "%{count} places on %{course}, %{date}", @registration.seats, course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
+<%= dngettext("emails", "1 place on %{course}, %{date}", "%{count} places on %{course}, %{date}", @registration.seats, course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
 <%= dgettext("emails", "Left to pay") %>  <%= @format_currency.(@registration.balance) %>
 
 <%= dgettext("emails", "You can pay online here:") %>

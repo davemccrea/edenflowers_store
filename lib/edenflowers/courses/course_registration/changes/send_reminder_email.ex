@@ -15,7 +15,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail do
     Ash.Changeset.before_action(changeset, fn changeset ->
       registration = load_for_send(changeset.data)
 
-      case registration |> Email.course_reminder(Ash.Changeset.get_argument(changeset, :message)) |> Mailer.deliver() do
+      case registration |> Email.course_reminder() |> Mailer.deliver() do
         {:ok, _result} ->
           Logger.info("Sent reminder email for course registration #{registration.id}")
           Ash.Changeset.force_change_attribute(changeset, :reminder_emailed_at, DateTime.utc_now())

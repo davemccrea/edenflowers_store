@@ -238,7 +238,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       end)
     end
 
-    test "an edit emails Order updated only when Jennie ticks it, with her message", ctx do
+    test "an edit emails Order updated only when Jennie ticks it, as she rewrote it", ctx do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", locale: "en-GB"})
       Oban.drain_queue(queue: :default)
       assert_email_sent(fn email -> assert email.text_body =~ "Here is what we agreed" end)
@@ -255,8 +255,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
           params(ctx, %{
             customer_email: "son@example.com",
             locale: "en-GB",
-            email_customer?: true,
-            message: "Lilies instead, as agreed."
+            email_customer?: true
           }),
           actor: ctx.admin
         )
@@ -265,10 +264,35 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       assert_email_sent(fn email ->
         assert email.subject =~ "Your updated Eden Flowers order for"
-        assert email.text_body =~ ~r/I've updated your order\.\n\nLilies instead, as agreed\.\n\n/
+        assert email.text_body =~ "I've updated your order."
         refute email.text_body =~ "Here is what we agreed"
         assert email.text_body =~ "If anything doesn't look right, just reply."
       end)
+
+      {:ok, order} =
+        Orders.edit_order(
+          order,
+          params(ctx, %{
+            customer_email: "son@example.com",
+            locale: "en-GB",
+            email_customer?: true,
+            subject: "Lilies instead",
+            body: "Lilies instead, as agreed."
+          }),
+          actor: ctx.admin
+        )
+
+      Oban.drain_queue(queue: :default)
+
+      assert_email_sent(fn email ->
+        assert email.subject == "Lilies instead"
+        assert email.text_body == "Lilies instead, as agreed."
+      end)
+
+      logged = order |> Ash.load!(:paper_trail_versions, authorize?: false) |> Map.fetch!(:paper_trail_versions)
+      sent = Enum.find(logged, &(&1.version_action_name == :send_order_updated_email and &1.email_body))
+      assert sent.email_subject == "Lilies instead"
+      assert sent.email_body == "Lilies instead, as agreed."
     end
 
     test "sent after pickup, leaves out when to collect", ctx do

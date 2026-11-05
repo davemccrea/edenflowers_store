@@ -43,8 +43,7 @@ defmodule Edenflowers.Email.PreviewsTest do
     bodies =
       for {"Order refunded", scenario, _, email} <- Previews.all("en-GB"), into: %{}, do: {scenario, email.text_body}
 
-    assert bodies["to a card through Stripe, with a message from Jennie"] =~
-             ~r/ending in 4242\. It can take a few days to show on your statement\.\n\nI'm so sorry/
+    assert bodies["to a card through Stripe"] =~ "ending in 4242. It can take a few days to show on your statement."
 
     assert bodies["handed back in cash"] =~ "I've refunded 20,00 € in cash."
     refute bodies["handed back in cash"] =~ "statement"

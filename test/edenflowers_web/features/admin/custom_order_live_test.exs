@@ -753,10 +753,11 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       refute has_element?(view, "#order-updated-email-preview")
 
       view |> form("#order-form", form: %{email_customer?: "true"}) |> render_change()
-      view |> form("#order-form", form: %{message: "Lilies, as agreed."}) |> render_change()
-
       assert has_element?(view, "#order-updated-email-preview", "Your updated Eden Flowers order for")
-      assert has_element?(view, "#order-updated-email-preview", "Lilies, as agreed.")
+
+      view |> form("#order-form", form: %{edit_email: "true"}) |> render_change()
+      assert has_element?(view, "#order-updated-email-subject[value^='Your updated Eden Flowers order for']")
+      assert has_element?(view, "#order-updated-email-body", "I've updated your order.")
     end
 
     test "a paid order can change too, and its page shows what is left to collect", ctx do
@@ -916,7 +917,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
     end
 
-    test "the cancel drawer keeps the charge Jennie enters, refunds the rest and logs her message", ctx do
+    test "the cancel drawer keeps the charge Jennie enters, refunds the rest and logs her reason", ctx do
       {:ok, order} =
         ctx
         |> place_custom_order(%{customer_email: "son@example.com"})
@@ -927,10 +928,10 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert has_element?(view, ~s|#cancel-form input[name="cancel[charge]"][value="0"]|)
       assert has_element?(view, "#cancel-form", "Total 85,00 €, paid 50,00 €.")
 
-      view |> form("#cancel-form", cancel: %{charge: "85.01", message: "Ill that day"}) |> render_submit()
+      view |> form("#cancel-form", cancel: %{charge: "85.01", reason: "Ill that day"}) |> render_submit()
       assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from 0 € to 85,00 €.")
 
-      view |> form("#cancel-form", cancel: %{charge: "20,00", message: "Ill that day"}) |> render_submit()
+      view |> form("#cancel-form", cancel: %{charge: "20,00", reason: "Ill that day"}) |> render_submit()
 
       assert has_element?(view, "header", "Cancelled")
       assert has_element?(view, "#order-log", "Ill that day")

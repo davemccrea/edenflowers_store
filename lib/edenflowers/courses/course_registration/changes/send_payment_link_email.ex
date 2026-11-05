@@ -11,6 +11,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendPaymentLinkEmail do
 
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email
+  alias Edenflowers.Email.Edits
   alias Edenflowers.Mailer
   alias Edenflowers.Translations
 
@@ -28,9 +29,10 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendPaymentLinkEmail do
   end
 
   defp deliver(changeset, registration, url) do
-    message = Ash.Changeset.get_argument(changeset, :message)
-
-    case registration |> Email.payment_reminder(url, message) |> Mailer.deliver() do
+    case registration
+         |> Email.payment_reminder(url)
+         |> Edits.apply_to(Edits.from_changeset(changeset), url)
+         |> Mailer.deliver() do
       {:ok, _result} ->
         Logger.info("Sent payment link email for course registration #{registration.id}")
         Ash.Changeset.force_change_attribute(changeset, :payment_link_emailed_at, DateTime.utc_now())

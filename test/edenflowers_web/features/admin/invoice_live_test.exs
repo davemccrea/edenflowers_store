@@ -39,13 +39,13 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, "#invoice-log time[datetime]")
   end
 
-  test "history preserves every invoice email, reminder and message", %{conn: conn, admin: admin} do
+  test "history preserves every invoice email, reminder and rewrite", %{conn: conn, admin: admin} do
     {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
-    {:ok, _} = Payments.send_invoice(invoice, %{message: "First email"}, actor: admin)
-    {:ok, _} = Payments.send_invoice(invoice, %{message: "A second copy"}, actor: admin)
+    {:ok, _} = Payments.send_invoice(invoice, %{body: "First email"}, actor: admin)
+    {:ok, _} = Payments.send_invoice(invoice, %{body: "A second copy"}, actor: admin)
     # Moving the business date makes the next send a reminder without changing earlier send metadata.
     invoice = Ash.Seed.update!(invoice, %{invoice_date: ~D[2025-01-01], due_date: ~D[2025-01-15]})
-    {:ok, _} = Payments.send_invoice(invoice, %{message: "Reminder message"}, actor: admin)
+    {:ok, _} = Payments.send_invoice(invoice, %{body: "Reminder message"}, actor: admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
     assert has_element?(view, "#invoice-log", "First email")
     assert has_element?(view, "#invoice-log", "A second copy")
@@ -69,9 +69,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, "#invoice-log", "Credit note #{note.number} issued")
     assert has_element?(view, "#invoice-log", "Replace incorrect details")
 
-    for message <- ["First credit email", "Second credit email"] do
+    for body <- ["First credit email", "Second credit email"] do
       view |> element("button[phx-click=open_email][phx-value-kind=credit_note]") |> render_click()
-      view |> form("#email-form", email: %{message: message}) |> render_submit()
+      view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
+      view |> form("#email-form", email: %{edit_email: "true", body: body}) |> render_submit()
     end
 
     assert has_element?(view, "#invoice-log", "First credit email")
@@ -350,7 +351,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
     assert has_element?(view, "button", "Send invoice")
     view |> element("button[phx-click=open_email][phx-value-kind=invoice]") |> render_click()
-    view |> form("#email-form", email: %{message: "Please check"}) |> render_submit()
+    view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
+    view |> form("#email-form", email: %{edit_email: "true", body: "Please check"}) |> render_submit()
     assert render(view) =~ "It remains issued"
     assert has_element?(view, "#email-form")
     assert has_element?(view, "#email-form textarea", "Please check")
@@ -361,7 +363,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     Ash.Seed.update!(persisted, %{pdf: original})
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
     view |> element("button[phx-click=open_email][phx-value-kind=invoice]") |> render_click()
-    view |> form("#email-form", email: %{message: "Please check"}) |> render_submit()
+    view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
+    view |> form("#email-form", email: %{edit_email: "true", body: "Please check"}) |> render_submit()
     assert Ash.get!(Invoice, invoice.id, actor: admin).sent_at
     assert render(view) =~ "Invoice emailed"
   end
@@ -370,7 +373,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
     refute has_element?(view, "#email-form")
-    render_hook(view, "send_email", %{"email" => %{"message" => "Bypass"}})
+    render_hook(view, "send_email", %{"email" => %{"edit_email" => "true", "body" => "Bypass"}})
     assert Ash.get!(Invoice, invoice.id, actor: admin).sent_at == nil
     assert_no_email_sent()
 
@@ -380,16 +383,14 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, "#email-drawer [aria-label='Email preview']", "Invoice #{invoice.number}")
     assert has_element?(view, "#email-drawer", "buyer@example.com")
     assert has_element?(view, "#email-drawer", "#{invoice.number}.pdf")
-    view |> form("#email-form", email: %{message: "Please read this before paying."}) |> render_change()
-    assert has_element?(view, "#email-drawer [aria-label='Email preview']", "Please read this before paying.")
     render_hook(view, "close_email", %{})
     refute has_element?(view, "#email-form")
-    render_hook(view, "send_email", %{"email" => %{"message" => "After closing"}})
+    render_hook(view, "send_email", %{"email" => %{"edit_email" => "true", "body" => "After closing"}})
     assert Ash.get!(Invoice, invoice.id, actor: admin).sent_at == nil
     assert_no_email_sent()
   end
 
-  test "credit note emails preview the attachment and custom message before sending", %{conn: conn, admin: admin} do
+  test "credit note emails preview the attachment and Jennie's rewrite before sending", %{conn: conn, admin: admin} do
     {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
     {:ok, note} = Payments.cancel_invoice(%{invoice_id: invoice.id}, actor: admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
@@ -397,10 +398,13 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     view |> element("button[phx-click=open_email][phx-value-kind=credit_note]") |> render_click()
     assert_push_event(view, "js-exec", %{to: "#email-drawer", attr: "phx-show"})
     assert has_element?(view, "#email-drawer [aria-label='Email preview']", "#{note.number}.pdf")
-    view |> form("#email-form", email: %{message: "Your replacement will follow."}) |> render_change()
-    assert has_element?(view, "#email-drawer [aria-label='Email preview']", "Your replacement will follow.")
+    view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
+    assert has_element?(view, "#email-drawer-email-editor", "#{note.number}.pdf")
+    edited = %{edit_email: "true", body: "Your replacement will follow."}
+    view |> form("#email-form", email: edited) |> render_change()
+    assert has_element?(view, "#email-drawer-email-body", "Your replacement will follow.")
     assert_no_email_sent()
-    view |> form("#email-form") |> render_submit()
+    view |> form("#email-form", email: edited) |> render_submit()
     assert render(view) =~ "Credit note emailed."
     assert_push_event(view, "js-exec", %{to: "#email-drawer", attr: "phx-hide"})
     refute has_element?(view, "#email-form")

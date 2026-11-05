@@ -2,7 +2,7 @@
 
 <%= dgettext("emails", "I've received your payment of %{amount}. Your receipt is attached.", amount: @format_currency.(@amount)) %>
 
-<%= message(@message) %><%= dgettext("emails", "Order %{reference}", reference: @order.order_reference) %>
+<%= dgettext("emails", "Order %{reference}", reference: @order.order_reference) %>
 
 <%= order_totals(assigns) %>
 <%= dgettext("emails", "Warm wishes,") %>

@@ -2,7 +2,7 @@
 
 <%= dgettext("emails", "A friendly reminder that %{amount} is still to pay for your order for %{date}.", amount: @format_currency.(@order.balance), date: @date) %>
 
-<%= message(@message) %><%= order_totals(assigns) %>
+<%= order_totals(assigns) %>
 <%= dgettext("emails", "You can pay online here:") %>
 <%= @payment_link_url %>
 

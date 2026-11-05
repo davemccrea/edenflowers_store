@@ -603,8 +603,27 @@ defmodule Edenflowers.Payments.PayableTest do
 
         {:ok, _record} = refund(record, "10.00", :cash, "Sorry")
         [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
-        assert %{"amount" => "10.00", "payment_method" => "cash", "note" => "Sorry"} = job.args
+        assert %{"amount" => "10.00", "payment_method" => "cash"} = job.args
         assert :ok = perform_job(Edenflowers.Payments.Workers.SendRefundedEmail, job.args)
+        Swoosh.TestAssertions.assert_email_sent(fn email -> not (email.text_body =~ "Sorry") end)
+      end
+
+      test "a refund emails Jennie's rewrite in place of the template's" do
+        record = build(@parent, payments: [cash: "80.00"])
+
+        record =
+          if @parent == :order, do: Ash.Seed.update!(record, %{customer_email: "maria@example.com"}), else: record
+
+        edits = %{amount: "10.00", payment_method: :cash, subject: "Your refund", body: "Here's 10 € back."}
+        record |> Ash.Changeset.for_update(:refund, edits, authorize?: false) |> Ash.update!()
+
+        [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
+        assert :ok = perform_job(Edenflowers.Payments.Workers.SendRefundedEmail, job.args)
+
+        Swoosh.TestAssertions.assert_email_sent(fn email ->
+          assert email.subject == "Your refund"
+          assert email.text_body == "Here's 10 € back."
+        end)
       end
 
       test "cancelling refunds through Stripe all but the cancellation charge, and emails the customer" do

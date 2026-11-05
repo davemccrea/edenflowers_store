@@ -13,6 +13,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
   require Logger
 
   alias Edenflowers.Email
+  alias Edenflowers.Email.Edits
   alias Edenflowers.Mailer
 
   @impl true
@@ -22,13 +23,13 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
 
   defp send_email(changeset) do
     order = Ash.load!(changeset.data, [:customer_first_name, :recipient_first_name], authorize?: false)
-    message = Ash.Changeset.get_argument(changeset, :message)
+    edits = Edits.from_changeset(changeset)
 
-    case email(order, message) do
+    case email(order) do
       {:ok, email} ->
         changeset
-        |> Ash.Changeset.set_context(%{paper_trail_metadata: %{email_message: message}})
-        |> deliver(order, email)
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})
+        |> deliver(order, Edits.apply_to(email, edits))
 
       {:error, error} ->
         Ash.Changeset.add_error(changeset, field: :delivery_photo_slug, message: email_error(error))
@@ -54,15 +55,15 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
 
   defp email_error(error), do: ~t"Failed to send fulfillment email: #{error = inspect(error)}"
 
-  defp email(%{email_delivery_photo: true, delivery_photo_slug: slug} = order, message)
+  defp email(%{email_delivery_photo: true, delivery_photo_slug: slug} = order)
        when is_binary(slug) and byte_size(slug) > 0 do
-    with {:ok, jpeg} <- fetch_small_photo(slug), do: {:ok, Email.order_left_at_door(order, jpeg, message)}
+    with {:ok, jpeg} <- fetch_small_photo(slug), do: {:ok, Email.order_left_at_door(order, jpeg)}
   end
 
-  defp email(%{email_delivery_photo: true}, _message),
+  defp email(%{email_delivery_photo: true}),
     do: {:error, ~t"Delivery photo is missing."}
 
-  defp email(order, message), do: {:ok, Email.order_delivered(order, message)}
+  defp email(order), do: {:ok, Email.order_delivered(order)}
 
   # A phone photo can be 10 MB or more. 1600 px at quality 80 comes to a few
   # hundred KB: small enough for any inbox, sharp enough to spot a doorstep.

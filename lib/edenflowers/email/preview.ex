@@ -13,6 +13,7 @@ defmodule Edenflowers.Email.Preview do
   alias Edenflowers.Accounts.Calculations.FirstName
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email
+  alias Edenflowers.Email.Edits
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Receipt
   alias Edenflowers.Orders.Subscription
@@ -27,28 +28,25 @@ defmodule Edenflowers.Email.Preview do
 
   @doc """
   The email `kind` would send for `record`, in the customer's language.
-  `inputs` holds what Jennie has entered so far: her
-  `message`, and for some kinds the `refund` amount, the cancellation
-  `charge`, the `payment_method` or whether the `photo?` goes with it (else what `:mark_fulfilled` stored).
+  `inputs` holds what Jennie has entered so far, for some
+  kinds: the `refund` amount, the cancellation `charge`, the
+  `payment_method` or whether the `photo?` goes with it (else what
+  `:mark_fulfilled` stored). A payment link that sending opens shows
+  `Edits.placeholder_token/0` as its token.
   """
-  def build(:invoice, %Invoice{} = invoice, inputs), do: build_invoice(invoice, inputs[:message])
+  def build(:invoice, %Invoice{} = invoice, _inputs), do: build_invoice(invoice)
 
-  def build(:credit_note, %CreditNote{} = credit_note, inputs),
-    do: credit_note |> Ash.load!(:invoice, authorize?: false) |> build_credit_note(inputs[:message])
+  def build(:credit_note, %CreditNote{} = credit_note, _inputs),
+    do: credit_note |> Ash.load!(:invoice, authorize?: false) |> build_credit_note()
 
   def build(kind, %Order{} = order, inputs) do
     order = Ash.load!(order, order_load(kind), authorize?: false, reuse_values?: false)
     order_email(kind, order, inputs)
   end
 
-  def build(:subscription_cancelled, %Subscription{} = subscription, inputs) do
+  def build(:subscription_cancelled, %Subscription{} = subscription, _inputs) do
     subscription = SendSubscriptionCancelledEmail.load_for_send(subscription)
-
-    Email.subscription_cancelled(
-      subscription,
-      SendSubscriptionCancelledEmail.charged_on(subscription),
-      inputs[:message]
-    )
+    Email.subscription_cancelled(subscription, SendSubscriptionCancelledEmail.charged_on(subscription))
   end
 
   def build(kind, %CourseRegistration{} = registration, inputs) do
@@ -64,7 +62,7 @@ defmodule Edenflowers.Email.Preview do
   `Edenflowers.Orders.quote_entered_order/3`, before anything is saved. `order` is the
   order being edited, or nil.
   """
-  def build_entered(kind, changeset, price, order, inputs) do
+  def build_entered(kind, changeset, price, order) do
     {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
     paid = if order, do: order.amount_paid, else: Decimal.new(0)
     balance = Decimal.sub(price.total, paid)
@@ -82,8 +80,8 @@ defmodule Edenflowers.Email.Preview do
     url = if entered_link?(entered, order), do: link_url(entered)
 
     case kind do
-      :order_details -> Email.order_details(entered, url, inputs[:message])
-      :order_updated -> Email.order_updated(entered, url, inputs[:message])
+      :order_details -> Email.order_details(entered, url)
+      :order_updated -> Email.order_updated(entered, url)
     end
   end
 
@@ -91,7 +89,7 @@ defmodule Edenflowers.Email.Preview do
    The confirmation email for a booking Jennie is entering for `course`, from
   the form's `changeset`, before anything is saved.
   """
-  def build_entered_booking(changeset, course, inputs) do
+  def build_entered_booking(changeset, course) do
     {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
     seats = entered.seats || 1
     amount_paid = Ash.Changeset.get_argument(changeset, :amount) || Decimal.new(0)
@@ -104,25 +102,25 @@ defmodule Edenflowers.Email.Preview do
           seats: seats,
           amount_paid: amount_paid,
           balance: Decimal.sub(Decimal.mult(course.price, seats), amount_paid),
-          payment_link_token: if(entered.payment_terms == :payment_link, do: "preview")
+          payment_link_token: if(entered.payment_terms == :payment_link, do: Edits.placeholder_token())
       }
       |> translated()
 
-    booking_email(:confirmation, entered, inputs)
+    booking_email(:confirmation, entered, %{})
   end
 
-  @doc "The Credit note email for `credit_note` (with its `invoice` loaded) with Jennie's `message`."
-  def build_credit_note(%CreditNote{} = credit_note, message) do
+  @doc "The Credit note email for `credit_note` (with its `invoice` loaded)."
+  def build_credit_note(%CreditNote{} = credit_note) do
     credit_note
-    |> Email.credit_note(message)
+    |> Email.credit_note()
     |> Swoosh.Email.attachment(InvoicePdf.attachment("", credit_note))
   end
 
-  @doc "The Invoice email `:send` would send for `invoice` now, with Jennie's `message`."
-  def build_invoice(%Invoice{} = invoice, message) do
+  @doc "The Invoice email `:send` would send for `invoice` now."
+  def build_invoice(%Invoice{} = invoice) do
     invoice
     |> SendInvoice.load_for_email()
-    |> Email.invoice(message)
+    |> Email.invoice()
     |> Swoosh.Email.attachment(InvoicePdf.attachment("", invoice))
   end
 
@@ -146,26 +144,26 @@ defmodule Edenflowers.Email.Preview do
       line_items: [:subtotal]
     ]
 
-  defp order_email(:order_details, order, inputs),
-    do: Email.order_details(order, EdenflowersWeb.PaymentLink.url_if_open(order), inputs[:message])
+  defp order_email(:order_details, order, _inputs),
+    do: Email.order_details(order, EdenflowersWeb.PaymentLink.url_if_open(order))
 
   # Sending it opens the link, so it reads as it will once open.
-  defp order_email(:payment_link, order, inputs),
-    do: Email.order_details(order, link_url(order), inputs[:message])
+  defp order_email(:payment_link, order, _inputs),
+    do: Email.order_details(order, link_url(order))
 
-  defp order_email(:payment_reminder, order, inputs),
-    do: Email.payment_reminder(order, link_url(order), inputs[:message])
+  defp order_email(:payment_reminder, order, _inputs),
+    do: Email.payment_reminder(order, link_url(order))
 
   defp order_email(:receipt, order, inputs), do: payment_receipt(order, inputs, order.order_reference)
 
   defp order_email(:fulfillment, order, inputs) do
     if Map.get(inputs, :photo?, order.email_delivery_photo),
-      do: Email.order_left_at_door(order, "", inputs[:message]),
-      else: Email.order_delivered(order, inputs[:message])
+      do: Email.order_left_at_door(order, ""),
+      else: Email.order_delivered(order)
   end
 
   defp order_email(:cancelled, order, inputs) do
-    Email.cancelled(%{order | cancellation_reason: inputs[:message]}, Cancel.money(order, charge(order, inputs)))
+    Email.cancelled(order, Cancel.money(order, charge(order, inputs)))
   end
 
   defp order_email(:refunded, order, inputs), do: Email.refunded(order, refund_details(inputs))
@@ -183,29 +181,29 @@ defmodule Edenflowers.Email.Preview do
       :payment_link_open?
     ]
 
-  defp booking_email(:confirmation, registration, inputs) do
-    email = Email.course_confirmation(registration, inputs[:message])
+  defp booking_email(:confirmation, registration, _inputs) do
+    email = Email.course_confirmation(registration)
 
     if Decimal.positive?(registration.amount_paid),
       do: Swoosh.Email.attachment(email, Receipt.attachment("", registration.reference)),
       else: email
   end
 
-  defp booking_email(:course_reminder, registration, inputs),
-    do: Email.course_reminder(registration, inputs[:message])
+  defp booking_email(:course_reminder, registration, _inputs),
+    do: Email.course_reminder(registration)
 
-  defp booking_email(:payment_link, registration, inputs) do
-    Email.payment_reminder(registration, link_url(registration), inputs[:message])
+  defp booking_email(:payment_link, registration, _inputs) do
+    Email.payment_reminder(registration, link_url(registration))
   end
 
-  defp booking_email(:payment_reminder, registration, inputs),
-    do: Email.payment_reminder(registration, link_url(registration), inputs[:message])
+  defp booking_email(:payment_reminder, registration, _inputs),
+    do: Email.payment_reminder(registration, link_url(registration))
 
   defp booking_email(:receipt, registration, inputs), do: payment_receipt(registration, inputs, registration.reference)
 
   defp booking_email(:cancelled, registration, inputs) do
     money = Cancel.money(registration, charge(registration, inputs))
-    Email.cancelled(%{registration | cancellation_reason: inputs[:message]}, money)
+    Email.cancelled(registration, money)
   end
 
   defp booking_email(:refunded, registration, inputs), do: Email.refunded(registration, refund_details(inputs))
@@ -226,20 +224,20 @@ defmodule Edenflowers.Email.Preview do
 
     email =
       if match?(%Order{}, record) and is_nil(inputs[:amount]),
-        do: Email.purchase_receipt(record, inputs[:message]),
-        else: SendPaymentReceivedEmail.email(record, amount, inputs[:message])
+        do: Email.purchase_receipt(record),
+        else: SendPaymentReceivedEmail.email(record, amount)
 
     Swoosh.Email.attachment(email, Receipt.attachment("", reference))
   end
 
   # A link not yet opened has no token until sending opens it.
   defp link_url(%{payment_link_token: nil} = payable),
-    do: EdenflowersWeb.PaymentLink.url_for(%{payable | payment_link_token: "…"})
+    do: EdenflowersWeb.PaymentLink.url_for(%{payable | payment_link_token: Edits.placeholder_token()})
 
   defp link_url(payable), do: EdenflowersWeb.PaymentLink.url_for(payable)
 
   defp refund_details(inputs),
-    do: %{amount: refund(inputs), payment_method: inputs[:payment_method] || :stripe, note: inputs[:message]}
+    do: %{amount: refund(inputs), payment_method: inputs[:payment_method] || :stripe}
 
   # An empty charge cancels with the default, so it reads as that.
   defp charge(record, inputs), do: decimal(inputs[:charge]) || record.default_cancellation_charge

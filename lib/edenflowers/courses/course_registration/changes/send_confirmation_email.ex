@@ -9,6 +9,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
   import Edenflowers.Actors
 
   alias Edenflowers.Email
+  alias Edenflowers.Email.Edits
   alias Edenflowers.Mailer
   alias Edenflowers.Orders.Receipt
   alias Edenflowers.Translations
@@ -18,7 +19,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
     Ash.Changeset.before_action(changeset, fn changeset ->
       registration = load_for_send(changeset.data)
 
-      case deliver(registration, Ash.Changeset.get_argument(changeset, :message)) do
+      case deliver(registration, Edits.from_changeset(changeset)) do
         :ok ->
           Logger.info("Sent confirmation email for course registration #{registration.id}")
           stamp_sent(changeset, registration)
@@ -43,8 +44,10 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendConfirmationEmail d
       else: changeset
   end
 
-  defp deliver(registration, message) do
-    email = Email.course_confirmation(registration, message)
+  defp deliver(registration, edits) do
+    # A booking Jennie enters opens its link as it is saved, after the preview she edited.
+    url = if registration.payment_link_token, do: EdenflowersWeb.PaymentLink.url_for(registration)
+    email = registration |> Email.course_confirmation() |> Edits.apply_to(edits, url)
 
     if Decimal.positive?(registration.amount_paid),
       do: deliver_with_receipt(email, registration),

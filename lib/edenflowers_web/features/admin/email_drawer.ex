@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
 
     socket
     |> assign(assigns)
-    |> assign(email_kind: kind, email_form: to_form(%{"message" => ""}, as: :email))
+    |> assign(email_kind: kind, email_form: to_form(%{}, as: :email))
     |> assign(:preview, DrawerPreview.build(kind, record, %{}))
     |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-show"})
   end

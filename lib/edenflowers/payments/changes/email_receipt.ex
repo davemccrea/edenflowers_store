@@ -17,7 +17,7 @@ defmodule Edenflowers.Payments.Changes.EmailReceipt do
   end
 
   defp email(record, changeset) do
-    arguments = %{amount: changeset.arguments.amount, message: changeset.arguments[:message]}
+    arguments = Map.put(Edenflowers.Email.Edits.from_changeset(changeset), :amount, changeset.arguments.amount)
 
     case Ash.update(record, arguments, action: :send_payment_received_email, authorize?: false) do
       {:ok, _emailed} ->

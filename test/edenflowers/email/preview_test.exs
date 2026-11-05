@@ -21,8 +21,7 @@ defmodule Edenflowers.Email.PreviewTest do
         course_id: course.id,
         seats: 1,
         locale: "en-GB",
-        email_customer?: false,
-        message: "See you soon."
+        email_customer?: false
       }
 
       input =
@@ -31,11 +30,11 @@ defmodule Edenflowers.Email.PreviewTest do
           else: input
 
       changeset = Ash.Changeset.for_create(CourseRegistration, :add_manually, input, actor: admin)
-      preview = Preview.build_entered_booking(changeset, course, %{message: input.message})
+      preview = Preview.build_entered_booking(changeset, course)
       registration = Ash.create!(changeset)
 
       assert {:ok, sent} =
-               Courses.email_registration_confirmation(registration, %{message: input.message}, actor: admin)
+               Courses.email_registration_confirmation(registration, actor: admin)
 
       assert_email_sent(fn email ->
         assert email.text_body == preview.text_body
@@ -77,14 +76,26 @@ defmodule Edenflowers.Email.PreviewTest do
         actor: admin
       )
 
-    preview = Preview.build_entered_booking(changeset, course, %{})
+    preview = Preview.build_entered_booking(changeset, course)
     registration = Ash.create!(changeset)
-    assert {:ok, _sent} = Courses.email_registration_confirmation(registration, %{}, actor: admin)
 
     expected =
-      String.replace(preview.text_body, "/pay/courses/preview", "/pay/courses/#{registration.payment_link_token}")
+      String.replace(
+        preview.text_body,
+        "/pay/courses/#{Edenflowers.Email.Edits.placeholder_token()}",
+        "/pay/courses/#{registration.payment_link_token}"
+      )
 
+    assert {:ok, _sent} = Courses.email_registration_confirmation(registration, %{}, actor: admin)
     assert_email_sent(fn email -> assert email.text_body == expected end)
+
+    # Jennie's rewrite starts from the preview, so it gets the link saving opened.
+    edits = %{body: "Lovely to have you.\n\n" <> preview.text_body}
+    assert {:ok, _sent} = Courses.email_registration_confirmation(registration, edits, actor: admin)
+
+    assert_email_sent(fn email ->
+      assert email.text_body == String.trim_trailing("Lovely to have you.\n\n" <> expected)
+    end)
 
     reminder = reminder(registration)
     refute reminder.text_body =~ "Please pay at the course."

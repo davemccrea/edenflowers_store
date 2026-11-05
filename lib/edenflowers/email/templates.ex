@@ -61,14 +61,6 @@ defmodule Edenflowers.Email.Templates do
   @doc "Jennie's shop, where pickup orders are collected."
   def shop_address, do: "Minimossen, #{~t"Myrvägen 1"}, #{~t"65230 Vasa"}"
 
-  @doc """
-  Jennie's own words for this email, as a paragraph after the line saying
-  what happened, or nothing.
-  """
-  def message(nil), do: ""
-  def message(""), do: ""
-  def message(text), do: String.trim(text) <> "\n\n"
-
   def collect_line(_assigns), do: ~t"I'll be in touch about how to pay it."
 
   @doc "How the emails Jennie sends are signed."

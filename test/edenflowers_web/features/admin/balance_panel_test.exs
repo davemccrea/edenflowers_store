@@ -167,14 +167,15 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         |> render_change()
 
         assert has_element?(view, preview, "20,00 € in cash")
-        assert has_element?(view, preview, "A small apology")
+        refute has_element?(view, preview, "A small apology")
 
         render_click(view, "open_settlement", %{"id" => record.id, "mode" => "refund"})
 
         assert has_element?(view, ~s|#{selector} input[name="refund[amount]"][value="20"]|)
         assert has_element?(view, ~s|#{selector} option[value="cash"][selected]|)
+        assert has_element?(view, ~s|#{selector} input[name="refund[note]"][value="A small apology"]|)
         assert has_element?(view, preview, "20,00 € in cash")
-        assert has_element?(view, preview, "A small apology")
+        refute has_element?(view, preview, "A small apology")
       end
 
       test "a payment recorded by mistake is undone, once", %{conn: conn} do

@@ -9,17 +9,20 @@ defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
   require Logger
 
   alias Edenflowers.Email
+  alias Edenflowers.Email.Edits
   alias Edenflowers.Mailer
   alias Edenflowers.Payments
 
-  def new_for(record, money, cancelled_by) do
+  def new_for(record, money, cancelled_by, edits) do
     new(%{
       (Payments.parent_key(record) |> to_string()) => record.id,
       "charge" => Decimal.to_string(money.charge),
       "refunded_amount" => Decimal.to_string(money.refunded),
       "to_return" => Decimal.to_string(money.to_return),
       "to_collect" => Decimal.to_string(money.to_collect),
-      "cancelled_by" => to_string(cancelled_by)
+      "cancelled_by" => to_string(cancelled_by),
+      "subject" => edits[:subject],
+      "body" => edits[:body]
     })
   end
 
@@ -43,8 +46,8 @@ defmodule Edenflowers.Payments.Workers.SendCancelledEmail do
         "shop" -> Email.cancelled(record, money)
       end
 
-    with {:ok, _result} <- Mailer.deliver(email) do
-      Logger.info("Sent cancelled email for #{inspect(args)}")
+    with {:ok, _result} <- email |> Edits.apply_to(%{subject: args["subject"], body: args["body"]}) |> Mailer.deliver() do
+      Logger.info("Sent cancelled email for #{inspect(Map.drop(args, ["subject", "body"]))}")
       :ok
     end
   end

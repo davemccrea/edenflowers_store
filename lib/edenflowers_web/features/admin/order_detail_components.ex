@@ -114,7 +114,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
             id="fulfillment-email"
             send={@form[:email_customer]}
             label={~t"Email delivery confirmation"}
-            message={@form[:message]}
+            form={@form}
             to={@order.customer_email}
             preview={@preview}
           />

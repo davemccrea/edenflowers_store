@@ -142,13 +142,30 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
         |> Ash.Seed.update!(%{status: :confirmed, payment_link_token: nil})
         |> pay_in_person("30.00")
 
-      {:ok, reminded} =
-        Courses.send_registration_payment_reminder(confirmed, %{message: "See you soon."}, actor: ctx.admin)
+      {:ok, reminded} = Courses.send_registration_payment_reminder(confirmed, actor: ctx.admin)
 
       assert reload(reminded).payment_link_open?
 
       assert_email_sent(fn email ->
+        assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(reload(reminded))
+      end)
+    end
+
+    test "sends Jennie's rewrite, with the link it opened in place of the preview's", ctx do
+      confirmed =
+        ctx.registration
+        |> Ash.Seed.update!(%{status: :confirmed, payment_link_token: nil})
+        |> pay_in_person("30.00")
+
+      preview = Preview.build(:payment_reminder, confirmed, %{})
+      edits = %{subject: "About Saturday", body: "See you soon.\n\n" <> preview.text_body}
+
+      {:ok, reminded} = Courses.send_registration_payment_reminder(confirmed, edits, actor: ctx.admin)
+
+      assert_email_sent(fn email ->
+        assert email.subject == "About Saturday"
         assert email.text_body =~ "See you soon."
+        refute email.text_body =~ Edenflowers.Email.Edits.placeholder_token()
         assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(reload(reminded))
       end)
     end
@@ -163,10 +180,9 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
 
       {:ok, confirmed} = Courses.open_registration_payment_link(confirmed, actor: ctx.admin)
 
-      preview = Preview.build(:payment_link, confirmed, %{message: "See you soon."})
+      preview = Preview.build(:payment_link, confirmed, %{})
 
-      {:ok, _emailed} =
-        Courses.email_registration_payment_link(confirmed, %{message: "See you soon."}, actor: ctx.admin)
+      {:ok, _emailed} = Courses.email_registration_payment_link(confirmed, actor: ctx.admin)
 
       assert_email_sent(fn email ->
         assert email.subject == preview.subject

@@ -54,6 +54,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLog do
   end
 
   defp email_details(version, email) do
-    [{~t"Sent to", email}] ++ if(version.email_message, do: [{~t"Message", version.email_message}], else: [])
+    [{~t"Sent to", email}] ++ EdenflowersWeb.Admin.OrderLog.message_details(version)
   end
 end

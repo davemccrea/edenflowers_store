@@ -52,9 +52,9 @@ defmodule Edenflowers.Email do
   `:balance` and `line_items: [:subtotal]` loaded; for a booking,
   `:course` (translated), `:first_name`, `:amount_paid` and `:balance`.
   """
-  def payment_received(record, amount, message \\ nil)
+  def payment_received(record, amount)
 
-  def payment_received(%Order{} = order, amount, message) do
+  def payment_received(%Order{} = order, amount) do
     customer_email(order, from_address(), fn email ->
       email
       |> subject(~t"Payment received for your order for #{date = short_date(order)}")
@@ -62,14 +62,13 @@ defmodule Edenflowers.Email do
         Templates.payment_received(%{
           order: order,
           amount: amount,
-          message: message,
           format_currency: &Format.currency(&1, order.locale)
         })
       )
     end)
   end
 
-  def payment_received(%CourseRegistration{} = registration, amount, message) do
+  def payment_received(%CourseRegistration{} = registration, amount) do
     customer_email(registration, from_address(), fn email ->
       email
       |> subject(
@@ -79,7 +78,6 @@ defmodule Edenflowers.Email do
         Templates.booking_payment_received(%{
           registration: registration,
           amount: amount,
-          message: message,
           format_date: &Format.weekday_date(&1, registration.locale),
           format_currency: &Format.currency(&1, registration.locale)
         })
@@ -91,14 +89,13 @@ defmodule Edenflowers.Email do
   A copy of an order's receipt, with the PDF the sender attaches. Does not
   announce a new payment or imply fulfillment. Loads as `payment_received/3`.
   """
-  def purchase_receipt(%Order{} = order, message \\ nil) do
+  def purchase_receipt(%Order{} = order) do
     customer_email(order, from_address(), fn email ->
       email
       |> subject(~t"Your receipt from Eden Flowers · #{reference = order.order_reference}")
       |> text_body(
         Templates.purchase_receipt(%{
           order: order,
-          message: message,
           format_currency: &Format.currency(&1, order.locale)
         })
       )
@@ -106,12 +103,9 @@ defmodule Edenflowers.Email do
   end
 
   @doc "The standalone invoice email, naming its attachment and any outstanding balance."
-  def invoice(invoice, message \\ nil)
+  def invoice(invoice)
 
-  def invoice(
-        %Invoice{overdue?: reminder?, amount_paid: %Decimal{} = paid, amount_unpaid: %Decimal{}} = invoice,
-        message
-      )
+  def invoice(%Invoice{overdue?: reminder?, amount_paid: %Decimal{} = paid, amount_unpaid: %Decimal{}} = invoice)
       when is_boolean(reminder?) do
     locale = invoice.locale
 
@@ -126,7 +120,6 @@ defmodule Edenflowers.Email do
         Templates.invoice(%{
           invoice: invoice,
           first_name: FirstName.extract(invoice.buyer_name),
-          message: message,
           reminder?: reminder?,
           part_paid?: Decimal.positive?(paid),
           format_weekday_date: &Format.weekday_date(&1, locale),
@@ -142,7 +135,7 @@ defmodule Edenflowers.Email do
   is still owed. To the Invoice's buyer, in its language. Expects `invoice`
   loaded.
   """
-  def credit_note(%CreditNote{invoice: %Invoice{} = invoice} = credit_note, message \\ nil) do
+  def credit_note(%CreditNote{invoice: %Invoice{} = invoice} = credit_note) do
     customer_email(invoice, from_address(), fn email ->
       email
       |> subject(~t"Invoice #{number = invoice.number} is cancelled")
@@ -151,7 +144,6 @@ defmodule Edenflowers.Email do
           invoice: invoice,
           credit_note: credit_note,
           first_name: FirstName.extract(invoice.buyer_name),
-          message: message,
           invoice_date: Format.date(invoice.invoice_date, invoice.locale)
         })
       )
@@ -163,9 +155,9 @@ defmodule Edenflowers.Email do
   payment link to pay it. Only ever sent by hand. Loads as
   `payment_received/3`.
   """
-  def payment_reminder(record, payment_link_url, message \\ nil)
+  def payment_reminder(record, payment_link_url)
 
-  def payment_reminder(%Order{} = order, payment_link_url, message) do
+  def payment_reminder(%Order{} = order, payment_link_url) do
     customer_email(order, from_address(), fn email ->
       email
       |> subject(~t"A reminder about your order for #{date = short_date(order)}")
@@ -173,7 +165,6 @@ defmodule Edenflowers.Email do
         Templates.payment_reminder(%{
           order: order,
           date: Format.weekday_date(order.fulfillment_date, order.locale),
-          message: message,
           payment_link_url: payment_link_url,
           format_currency: &Format.currency(&1, order.locale)
         })
@@ -181,14 +172,13 @@ defmodule Edenflowers.Email do
     end)
   end
 
-  def payment_reminder(%CourseRegistration{} = registration, payment_link_url, message) do
+  def payment_reminder(%CourseRegistration{} = registration, payment_link_url) do
     customer_email(registration, from_address(), fn email ->
       email
       |> subject(~t"A reminder about your booking on #{course = registration.course.name}")
       |> text_body(
         Templates.booking_payment_reminder(%{
           registration: registration,
-          message: message,
           payment_link_url: payment_link_url,
           format_date: &Format.weekday_date(&1, registration.locale),
           format_currency: &Format.currency(&1, registration.locale)
@@ -205,11 +195,11 @@ defmodule Edenflowers.Email do
   `:balance` and
   `line_items: [:subtotal]` loaded.
   """
-  def order_details(order, payment_link_url, message \\ nil) do
+  def order_details(order, payment_link_url) do
     customer_email(order, from_address(), fn email ->
       email
       |> subject(~t"Your Eden Flowers order for #{date = short_date(order)}")
-      |> text_body(Templates.order_details(order_assigns(order, payment_link_url, message)))
+      |> text_body(Templates.order_details(order_assigns(order, payment_link_url)))
     end)
   end
 
@@ -218,18 +208,17 @@ defmodule Edenflowers.Email do
   customer pays against the whole. How to pay only while something is owed.
   Loads as `order_details/3`.
   """
-  def order_updated(order, payment_link_url, message \\ nil) do
+  def order_updated(order, payment_link_url) do
     customer_email(order, from_address(), fn email ->
       email
       |> subject(~t"Your updated Eden Flowers order for #{date = short_date(order)}")
-      |> text_body(Templates.order_updated(order_assigns(order, payment_link_url, message)))
+      |> text_body(Templates.order_updated(order_assigns(order, payment_link_url)))
     end)
   end
 
-  defp order_assigns(order, payment_link_url, message) do
+  defp order_assigns(order, payment_link_url) do
     %{
       order: order,
-      message: message,
       payment_link_url: payment_link_url,
       fulfillment_on: fulfillment_on(order),
       format_date: &Format.weekday_date(&1, order.locale),
@@ -328,11 +317,10 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Tells the customer Jennie cancelled their subscription, with her message,
-  and `charged_on`, the day of a delivery already charged that still comes,
+  Tells the customer Jennie cancelled their subscription, and `charged_on`, the day of a delivery already charged that still comes,
   if there is one. Loads as `Changes.SendSubscriptionCancelledEmail` loads it.
   """
-  def subscription_cancelled(subscription, charged_on, message \\ nil) do
+  def subscription_cancelled(subscription, charged_on) do
     product = subscription.product_variant.product.name
 
     customer_email(subscription, from_address(), fn email ->
@@ -342,7 +330,6 @@ defmodule Edenflowers.Email do
         Templates.subscription_cancelled(%{
           subscription: subscription,
           product: product,
-          message: message,
           charged_on: charged_on,
           pickup?: subscription.fulfillment_option.fulfillment_method == :pickup,
           format_date: &Format.weekday_date(&1, subscription.locale)
@@ -415,11 +402,11 @@ defmodule Edenflowers.Email do
   none: the customer was there. Expects `:customer_first_name` and
   `:recipient_first_name` loaded.
   """
-  def order_delivered(order, message \\ nil) do
+  def order_delivered(order) do
     customer_email(order, from_address(), fn email ->
       email
       |> subject(delivered_subject(order))
-      |> text_body(Templates.order_delivered(%{order: order, message: message}))
+      |> text_body(Templates.order_delivered(%{order: order}))
     end)
   end
 
@@ -432,11 +419,11 @@ defmodule Edenflowers.Email do
   Tells the customer nobody was home, with the photo of where the order was
   left, so they can go and look. Loads as `order_delivered/2`.
   """
-  def order_left_at_door(order, photo_jpeg, message \\ nil) do
+  def order_left_at_door(order, photo_jpeg) do
     customer_email(order, from_address(), fn email ->
       email
       |> subject(left_at_door_subject(order))
-      |> text_body(Templates.order_left_at_door(%{order: order, message: message}))
+      |> text_body(Templates.order_left_at_door(%{order: order}))
       |> attach_delivery_photo(photo_jpeg)
     end)
   end
@@ -455,7 +442,7 @@ defmodule Edenflowers.Email do
 
   @doc """
   Tells the customer the shop cancelled their order or course booking, with
-  Jennie's message, the cancellation charge she keeps and what was refunded.
+  the cancellation charge Jennie keeps and what was refunded.
   Expects it read with `:for_customer_email`. `money` is
   `Payments.Changes.Cancel.money/2`: the `charge`, what went back through
   Stripe (`refunded`), what Jennie still hands back herself (`to_return`)
@@ -468,7 +455,6 @@ defmodule Edenflowers.Email do
       |> text_body(
         Templates.order_cancelled(%{
           order: order,
-          message: order.cancellation_reason,
           charge: money.charge,
           refunded: money.refunded,
           to_return: money.to_return,
@@ -488,7 +474,6 @@ defmodule Edenflowers.Email do
       |> text_body(
         Templates.booking_cancelled(%{
           registration: registration,
-          message: registration.cancellation_reason,
           charge: money.charge,
           refunded: money.refunded,
           to_return: money.to_return,
@@ -523,9 +508,9 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  Tells the customer what Jennie refunded on their order or course booking,
-  then her message. Expects it read with `:for_customer_email`. `refund`
-  holds the `amount`, the `payment_method` it went back by, and her `note`.
+  Tells the customer what Jennie refunded on their order or course booking.
+  Expects it read with `:for_customer_email`. `refund` holds the `amount`
+  and the `payment_method` it went back by.
   """
   def refunded(%Order{} = order, refund) do
     customer_email(order, from_address(), fn email ->
@@ -586,7 +571,7 @@ defmodule Edenflowers.Email do
   charges. Expects `:course` translated, `:first_name`, `:amount_paid` and
   what `course_reminder/1` needs loaded.
   """
-  def course_confirmation(registration, message \\ nil) do
+  def course_confirmation(registration) do
     terms =
       if Decimal.positive?(registration.amount_paid),
         do: Course.cancellation_terms(registration.course),
@@ -595,9 +580,7 @@ defmodule Edenflowers.Email do
     customer_email(registration, from_address(), fn email ->
       email
       |> subject(~t"You're booked on #{course = registration.course.name}, #{date = course_day(registration)}")
-      |> text_body(
-        Templates.course_confirmation(Map.put(course_assigns(registration, message), :cancellation_terms, terms))
-      )
+      |> text_body(Templates.course_confirmation(Map.put(course_assigns(registration), :cancellation_terms, terms)))
     end)
   end
 
@@ -605,20 +588,19 @@ defmodule Edenflowers.Email do
   Jennie's manual reminder of when and where a course is. Expects `:course`
   translated, `:first_name` and `:balance` loaded.
   """
-  def course_reminder(registration, message \\ nil) do
+  def course_reminder(registration) do
     customer_email(registration, from_address(), fn email ->
       email
       |> subject(~t"A reminder about #{course = registration.course.name}")
-      |> text_body(Templates.course_reminder(course_assigns(registration, message)))
+      |> text_body(Templates.course_reminder(course_assigns(registration)))
     end)
   end
 
-  defp course_assigns(registration, message) do
+  defp course_assigns(registration) do
     %{
       registration: registration,
       payment_link_url:
         if(is_binary(registration.payment_link_token), do: EdenflowersWeb.PaymentLink.url_for(registration)),
-      message: message,
       format_date: &Format.weekday_date(&1, registration.locale),
       format_time: &Format.time(&1, registration.locale),
       format_currency: &Format.currency(&1, registration.locale)

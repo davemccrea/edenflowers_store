@@ -19,6 +19,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias Edenflowers.PhoneNumber
   alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.DrawerPreview
+  alias EdenflowersWeb.Admin.Drawers
   alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.InvoicesLive
   alias EdenflowersWeb.Admin.OrderLog
@@ -514,17 +515,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {:noreply, assign(socket, :fulfillment_error, ~t"Take a photo of where you left the order.")}
 
       slug ->
-        mark_fulfilled(socket, %{
-          delivery_photo_slug: slug,
-          email_delivery_photo: true,
-          email_customer?: params["email_customer"] != "false",
-          message: params["message"]
-        })
+        mark_fulfilled(
+          socket,
+          Map.merge(Drawers.email_edits(params), %{
+            delivery_photo_slug: slug,
+            email_delivery_photo: true,
+            email_customer?: params["email_customer"] != "false"
+          })
+        )
     end
   end
 
   def handle_event("mark_fulfilled", %{"fulfillment" => params}, socket) do
-    mark_fulfilled(socket, %{email_customer?: params["email_customer"] != "false", message: params["message"]})
+    mark_fulfilled(socket, Map.put(Drawers.email_edits(params), :email_customer?, params["email_customer"] != "false"))
   end
 
   def handle_event("save_florist_note", %{"note" => %{"florist_note" => note}}, socket) do
@@ -646,10 +649,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     {:noreply, EmailDrawer.validate(socket, params, socket.assigns.order)}
   end
 
-  def handle_event("send_email", %{"email" => %{"message" => message}}, socket) do
+  def handle_event("send_email", %{"email" => params}, socket) do
     %{order: order, email_kind: kind, current_user: actor} = socket.assigns
 
-    {flash, text} = send_email(kind, order, message, actor)
+    {flash, text} = send_email(kind, order, Drawers.email_edits(params), actor)
 
     {:noreply,
      socket
@@ -779,8 +782,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)
 
   # Says when it last went out, so a resend nobody needed is caught before it's sent.
-  defp send_email(:order_details, order, message, actor) do
-    case Orders.send_order_details_email(order, %{message: message}, actor: actor) do
+  defp send_email(:order_details, order, edits, actor) do
+    case Orders.send_order_details_email(order, edits, actor: actor) do
       {:ok, _order} ->
         {:success, ~t"Order details sent."}
 
@@ -790,8 +793,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  defp send_email(:receipt, order, message, actor) do
-    case Orders.email_receipt(order, %{message: message}, actor: actor) do
+  defp send_email(:receipt, order, edits, actor) do
+    case Orders.email_receipt(order, edits, actor: actor) do
       {:ok, _order} ->
         {:success, ~t"Receipt sent."}
 
@@ -801,8 +804,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  defp send_email(:fulfillment, order, message, actor) do
-    case Orders.email_fulfillment_confirmation(order, %{message: message}, actor: actor) do
+  defp send_email(:fulfillment, order, edits, actor) do
+    case Orders.email_fulfillment_confirmation(order, edits, actor: actor) do
       {:ok, _order} ->
         {:success, ~t"Confirmation queued."}
 
@@ -812,8 +815,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  defp send_email(:payment_reminder, order, message, actor) do
-    case Orders.send_payment_reminder(order, %{message: message}, actor: actor) do
+  defp send_email(:payment_reminder, order, edits, actor) do
+    case Orders.send_payment_reminder(order, edits, actor: actor) do
       {:ok, _order} ->
         {:success, ~t"Payment reminder sent."}
 
@@ -830,7 +833,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp assign_fulfillment_preview(socket, params) do
     order = socket.assigns.order
     photo? = params["customer_home"] == "false"
-    preview = Preview.build(:fulfillment, order, %{message: params["message"], photo?: photo?})
+    preview = Preview.build(:fulfillment, order, %{photo?: photo?})
     assign(socket, :preview, preview)
   end
 

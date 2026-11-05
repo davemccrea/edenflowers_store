@@ -52,7 +52,13 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
       ]
 
       argument :email_customer?, :boolean, default: true
-      argument :message, :string, description: "Jennie's note in the booking confirmation."
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       argument :amount, :decimal, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod
       validate present(:payment_method), where: [present(:amount)]
@@ -95,7 +101,12 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
     update :email_payment_link do
       description "Emails a confirmed booking's Balance collection link, opening it if needed. Jennie sends it explicitly."
 
-      argument :message, :string, description: "Jennie's note in the email."
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       validate attribute_equals(:status, :confirmed), message: "is not confirmed"
       change PaymentChanges.OpenPaymentLink
       change Changes.SendPaymentLinkEmail
@@ -143,6 +154,13 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
             "(default_cancellation_charge)."
 
       argument :email_customer?, :boolean, default: true
+
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
+
       change transition_state(:cancelled)
       change {PaymentChanges.Cancel, cancelled_by: :shop}
       require_atomic? false

@@ -2984,7 +2984,7 @@ msgid "This date is no longer available, please choose another"
 msgstr ""
 
 #: lib/edenflowers/orders/order/validations/cancellable_by_customer.ex:12
-#: lib/edenflowers/payments/changes/cancel.ex:157
+#: lib/edenflowers/payments/changes/cancel.ex:160
 #, elixir-autogen, elixir-format
 msgid "This order can no longer be cancelled online. Please contact us."
 msgstr ""
@@ -3178,7 +3178,7 @@ msgstr ""
 msgid "We couldn't charge your card for %{date} (%{amount})."
 msgstr ""
 
-#: lib/edenflowers/payments/changes/cancel.ex:160
+#: lib/edenflowers/payments/changes/cancel.ex:163
 #, elixir-autogen, elixir-format
 msgid "We couldn't refund your order. Please contact us to cancel it."
 msgstr ""

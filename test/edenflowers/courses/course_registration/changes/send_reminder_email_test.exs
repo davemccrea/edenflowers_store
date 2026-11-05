@@ -7,7 +7,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Courses.Workers.SendReminderEmail
 
-  test "manual reminders queue only confirmed bookings and preserve Jennie's message" do
+  test "manual reminders queue only confirmed bookings" do
     admin = generate(admin_user())
     course = generate(course(date: Date.add(Edenflowers.ShopTime.today(), 5)))
     confirmed = generate(course_registration(course_id: course.id, status: :confirmed, locale: "en-GB"))
@@ -16,11 +16,10 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
     generate(course_registration(status: :confirmed))
 
     refute_enqueued(worker: SendReminderEmail)
-    assert {:ok, 1} = Courses.send_course_reminders(course.id, "Bring an apron.", admin)
+    assert {:ok, 1} = Courses.send_course_reminders(course.id, admin)
 
     assert [%{args: args}] = all_enqueued(worker: SendReminderEmail)
     assert args["primary_key"]["id"] == confirmed.id
-    assert args["action_arguments"]["message"] == "Bring an apron."
 
     assert {:ok, _registration} = perform_job(SendReminderEmail, args)
 
@@ -28,7 +27,6 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
       refute email.text_body =~ "Amount due"
       assert email.to == [{"", confirmed.email}]
       assert email.subject == "A reminder about #{course.name}"
-      assert email.text_body =~ "Bring an apron."
       assert email.text_body =~ "When:"
       assert email.text_body =~ "Where:"
       assert email.text_body =~ "Please pay at the course."
@@ -53,7 +51,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmailTest d
 
     trigger = AshOban.Info.oban_trigger(CourseRegistration, :send_reminder_email)
     assert trigger.scheduler_cron == false
-    assert {:ok, 1} = Courses.send_course_reminders(registration.course_id, nil, admin)
+    assert {:ok, 1} = Courses.send_course_reminders(registration.course_id, admin)
     assert_enqueued(worker: SendReminderEmail)
   end
 end

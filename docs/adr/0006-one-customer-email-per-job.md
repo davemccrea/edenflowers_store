@@ -4,7 +4,7 @@ Each customer email does one job and says what happened before anything else. Wh
 
 Emails are in Jennie's voice and signed by her, unless they only confirm something routine the customer did themselves or are a routine notice. Those are matter-of-fact, signed "Eden Flowers" and sent from the automated address: the customer's own cancellation, Subscription delivery charged, the subscription heads-up, Already subscribed, and sign-in and email-change codes. An automatic email in Jennie's voice never pretends she did something by hand.
 
-Every email that one of Jennie's actions sends has a tick box and a message box beside it, and a live preview of what the customer will get. Her message goes after the line saying what happened and before the details, and the order log keeps it with the email it went in. A cancellation reason and a refund note are that message, not fields of their own.
+Every email that one of Jennie's actions sends has a tick box beside it and a live preview of what the customer will get. She can tick Edit the email to rewrite the whole of it, subject and text, starting from the preview in the customer's language; what she writes goes in place of the template's, with the same recipient and attachments. A payment link that sending opens shows a placeholder in the preview, and sending swaps in the real link. The log keeps a rewritten email's subject and text with the send that carried it. A cancellation reason and a refund note are Jennie's own record, kept out of the email. The bulk course reminder can't be rewritten, as each customer gets their own.
 
 Jennie's inbox receives only shop notices. Every customer email is copied to info+copy@, which Fastmail files out of her inbox, including the ones a customer's own action sends. When she needs to act on what a customer did, she gets a shop notice.
 
@@ -18,5 +18,5 @@ ADR 0005 still says how each email is queued and sent once.
 ## Consequences
 
 - A new kind of news is a new email with its own builder, template and scenarios on the admin Emails page.
-- Every action that emails a customer for Jennie takes a message argument as well as `email_customer?`.
+- Every action that emails a customer for Jennie takes `subject` and `body` arguments, her rewrite, as well as `email_customer?`. Templates have no slot for a note of hers.
 - A booking confirmation is one email whether or not it's paid: the news is that places are booked. A Balance still owed is a detail of it, and a receipt is attached only for money actually received. A later payment is different news, so it gets Payment received.

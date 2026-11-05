@@ -123,8 +123,12 @@ defmodule Edenflowers.Orders.Order do
     # Set by RecordEnteredLineItems when the lines change: what they now are,
     # since changes_only can't see into another resource.
     metadata :items, :string
-    # Jennie's message in the email an action sent, set by its Send* change.
+    # Jennie's note in the email an action sent, from before she could rewrite the whole of it.
     metadata :email_message, :string
+    # The subject and text she sent in place of the template's, if she rewrote
+    # the email, set by its Send* change or Cancel.
+    metadata :email_subject, :string
+    metadata :email_body, :string
 
     # on_actions only filters updates; every create is versioned unless ignored.
     ignore_actions [:create_for_checkout]
@@ -275,7 +279,7 @@ defmodule Edenflowers.Orders.Order do
 
     attribute :fulfillment_status, __MODULE__.Types.FulfillmentStatus, allow_nil?: false, default: :pending
     attribute :cancelled_at, :utc_datetime
-    # Why Jennie cancelled, for the customer's email and the log.
+    # Why Jennie cancelled, for her own record in the log.
     attribute :cancellation_reason, :string
     # The customer's email can change later; the log names who was told.
     attribute :cancellation_emailed_to, :string

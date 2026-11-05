@@ -322,17 +322,23 @@ defmodule Edenflowers.Courses.CourseRegistrationTest do
       assert Decimal.equal?(balance(cancelled), "42.50")
     end
 
-    test "emails the customer the reason, unless Jennie unticks it", %{admin: admin} do
+    test "emails the customer Jennie's rewrite, keeps her reason to herself, unless she unticks it", %{admin: admin} do
       {:ok, registration} =
-        Courses.cancel_registration(paid_booking(1, admin), %{cancellation_reason: "Jag är sjuk."}, actor: admin)
+        Courses.cancel_registration(
+          paid_booking(1, admin),
+          %{cancellation_reason: "Jag är sjuk.", subject: "Kursen är inställd", body: "Förlåt, jag måste ställa in."},
+          actor: admin
+        )
 
+      assert registration.cancellation_reason == "Jag är sjuk."
       assert registration.cancellation_emailed_to == "ada@example.com"
       [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
       assert :ok = perform_job(Edenflowers.Payments.Workers.SendCancelledEmail, job.args)
 
       Swoosh.TestAssertions.assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
-        assert email.text_body =~ "Jag är sjuk."
+        assert email.subject == "Kursen är inställd"
+        assert email.text_body == "Förlåt, jag måste ställa in."
       end)
 
       {:ok, quiet} = Courses.cancel_registration(paid_booking(1, admin), %{email_customer?: false}, actor: admin)

@@ -17,7 +17,8 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   the cancel. As the refund is whatever is still held above the charge, a
   retry after Stripe refunded but the cancel failed refunds nothing twice.
   The cancelled email goes to `customer_email`, if there is one, unless the
-  `email_customer?` argument is false.
+  `email_customer?` argument is false, as Jennie rewrote it in the `subject`
+  and `body` arguments if she did.
 
   `cancelled_by` (`:customer` or `:shop`) picks who the errors and the email
   speak to, from the option or else the action's `cancelled_by` argument.
@@ -31,6 +32,7 @@ defmodule Edenflowers.Payments.Changes.Cancel do
   require Ash.Expr
   require Logger
 
+  alias Edenflowers.Email.Edits
   alias Edenflowers.Format
   alias Edenflowers.Payments
   alias Edenflowers.Payments.Changes.CancelOpenPaymentIntent
@@ -43,6 +45,7 @@ defmodule Edenflowers.Payments.Changes.Cancel do
     changeset
     |> Ash.Changeset.filter(Ash.Expr.expr(cancellable?))
     |> Ash.Changeset.force_change_attribute(:cancelled_at, DateTime.utc_now())
+    |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(Edits.from_changeset(changeset))})
     |> CancelOpenPaymentIntent.change([], context)
     |> Ash.Changeset.before_transaction(&refund(&1, cancelled_by))
     |> Ash.Changeset.after_action(&queue_email(&1, &2, cancelled_by))
@@ -144,7 +147,7 @@ defmodule Edenflowers.Payments.Changes.Cancel do
 
   defp queue_email(changeset, record, cancelled_by) do
     if Ash.Changeset.changing_attribute?(changeset, :cancellation_emailed_to) do
-      job = SendCancelledEmail.new_for(record, changeset.context, cancelled_by)
+      job = SendCancelledEmail.new_for(record, changeset.context, cancelled_by, Edits.from_changeset(changeset))
 
       with {:ok, _job} <- Oban.insert(job) do
         {:ok, record}

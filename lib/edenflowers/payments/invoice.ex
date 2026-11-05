@@ -63,8 +63,12 @@ defmodule Edenflowers.Payments.Invoice do
     # sent_at is to the second, so a resend within the same second changes nothing but still went out.
     only_when_changed? false
 
-    # Jennie's message in the email, and whether it went as an overdue reminder.
+    # Jennie's note in the email, from before she could rewrite the whole of it.
     metadata :email_message, :string
+    # The subject and text she sent in place of the template's, if she rewrote it.
+    metadata :email_subject, :string
+    metadata :email_body, :string
+    # Whether it went as an overdue reminder.
     metadata :reminder, :boolean
   end
 
@@ -256,16 +260,18 @@ defmodule Edenflowers.Payments.Invoice do
 
     update :send do
       description "Jennie emails the invoice to its buyer's email, in its own language, with its PDF attached and " <>
-                    "her optional message, and sent_at is stamped. Nothing else about the invoice changes. Sent " <>
+                    "as she rewrote it if she did, and sent_at is stamped. Nothing else about the invoice changes. Sent " <>
                     "by hand only, and only while it is open (sendable?), as often as she likes. Sent while it " <>
                     "is overdue?, the email becomes a friendly reminder with a gentler subject and the same PDF. " <>
-                    "Each send is recorded as a version, with her message and whether it was a reminder."
+                    "Each send is recorded as a version, with her rewrite of the email, if any, and whether it was a reminder."
 
       accept []
 
-      argument :message, :string do
-        description "Jennie's own words for the email, after its first line."
-      end
+      argument :subject, :string,
+        description: "Jennie's own subject for the email, in place of the template's, if she rewrote it."
+
+      argument :body, :string,
+        description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
       transaction? false
       require_atomic? false

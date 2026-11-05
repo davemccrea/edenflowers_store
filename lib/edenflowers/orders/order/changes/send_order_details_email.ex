@@ -13,6 +13,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
   require Logger
 
   alias Edenflowers.Email
+  alias Edenflowers.Email.Edits
   alias Edenflowers.Mailer
 
   @impl true
@@ -46,15 +47,16 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
   end
 
   defp deliver(changeset, order, kind) do
-    message = Ash.Changeset.get_argument(changeset, :message)
+    edits = Edits.from_changeset(changeset)
+    url = payment_link_url(changeset, order, kind)
 
-    case order |> email(kind, payment_link_url(changeset, order, kind), message) |> Mailer.deliver() do
+    case order |> email(kind, url) |> Edits.apply_to(edits, url) |> Mailer.deliver() do
       {:ok, _result} ->
         Logger.info("Sent #{kind} email for order #{order.id}")
 
         changeset
         |> stamp(kind)
-        |> Ash.Changeset.set_context(%{paper_trail_metadata: %{email_message: message}})
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})
         |> clear_failure()
 
       {:error, error} ->
@@ -62,10 +64,10 @@ defmodule Edenflowers.Orders.Order.Changes.SendOrderDetailsEmail do
     end
   end
 
-  defp email(order, :order_details, url, message), do: Email.order_details(order, url, message)
-  defp email(order, :order_updated, url, message), do: Email.order_updated(order, url, message)
-  defp email(order, :subscription_payment_failed, url, _message), do: Email.subscription_payment_failed(order, url)
-  defp email(order, :payment_reminder, url, message), do: Email.payment_reminder(order, url, message)
+  defp email(order, :order_details, url), do: Email.order_details(order, url)
+  defp email(order, :order_updated, url), do: Email.order_updated(order, url)
+  defp email(order, :subscription_payment_failed, url), do: Email.subscription_payment_failed(order, url)
+  defp email(order, :payment_reminder, url), do: Email.payment_reminder(order, url)
 
   # A reminder isn't the order's details, so the menu still offers to send them.
   defp stamp(changeset, :payment_reminder), do: changeset

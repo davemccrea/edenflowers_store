@@ -2980,7 +2980,7 @@ msgid "This date is no longer available, please choose another"
 msgstr "Tämä päivä ei ole enää saatavilla, valitse toinen"
 
 #: lib/edenflowers/orders/order/validations/cancellable_by_customer.ex:12
-#: lib/edenflowers/payments/changes/cancel.ex:157
+#: lib/edenflowers/payments/changes/cancel.ex:160
 #, elixir-autogen, elixir-format
 msgid "This order can no longer be cancelled online. Please contact us."
 msgstr "Tätä tilausta ei voi enää perua verkossa. Ota meihin yhteyttä."
@@ -3174,7 +3174,7 @@ msgstr "Emme voi toteuttaa ostoja ilman tarvittavia yhteys- ja toimitustietoja. 
 msgid "We couldn't charge your card for %{date} (%{amount})."
 msgstr "Emme voineet veloittaa korttiasi toimituksesta %{date} (%{amount})."
 
-#: lib/edenflowers/payments/changes/cancel.ex:160
+#: lib/edenflowers/payments/changes/cancel.ex:163
 #, elixir-autogen, elixir-format
 msgid "We couldn't refund your order. Please contact us to cancel it."
 msgstr "Emme pystyneet palauttamaan maksua. Ota meihin yhteyttä tilauksen perumiseksi."

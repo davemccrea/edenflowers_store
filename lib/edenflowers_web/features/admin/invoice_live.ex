@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   alias Edenflowers.Payments.InvoiceFinancials
   alias Edenflowers.Pricing
   alias Edenflowers.ShopTime
+  alias EdenflowersWeb.Admin.Drawers
   alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.InvoiceLog
   alias EdenflowersWeb.Admin.InvoicesLive
@@ -766,8 +767,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
     result =
       case kind do
-        :invoice -> Payments.send_invoice(invoice, Map.take(params, ["message"]), actor: actor)
-        :credit_note -> Payments.send_credit_note(invoice.credit_note, Map.take(params, ["message"]), actor: actor)
+        :invoice -> Payments.send_invoice(invoice, Drawers.email_edits(params), actor: actor)
+        :credit_note -> Payments.send_credit_note(invoice.credit_note, Drawers.email_edits(params), actor: actor)
       end
 
     case result do

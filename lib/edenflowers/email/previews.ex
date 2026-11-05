@@ -141,18 +141,14 @@ defmodule Edenflowers.Email.Previews do
           {"no customer first name", %{customer_first_name: nil}, @payment_link}
         ] do
       {"Order details", title, :order_details, Email.order_details(order(attrs, locale), link)}
-    end ++
-      [
-        {"Order details", "with a message from Jennie", :order_details,
-         Email.order_details(order(%{}, locale), @payment_link, message(locale))}
-      ]
+    end
   end
 
   defp order_updated(locale) do
-    for {title, attrs, link, message} <- [
-          {"unpaid, payment link", %{}, @payment_link, nil},
-          {"paid, now owes more, payment link", part_paid(), @payment_link, nil},
-          {"paid in full, nothing owed", paid_in_full(), nil, nil},
+    for {title, attrs, link} <- [
+          {"unpaid, payment link", %{}, @payment_link},
+          {"paid, now owes more, payment link", part_paid(), @payment_link},
+          {"paid in full, nothing owed", paid_in_full(), nil},
           {"paid, now owes less",
            %{
              amount_paid: Decimal.new("70.00"),
@@ -160,28 +156,26 @@ defmodule Edenflowers.Email.Previews do
              payments: [
                %{amount: Decimal.new("70.00"), payment_method_type: "card", card_brand: "visa", card_last4: "4242"}
              ]
-           }, nil, nil},
-          {"pickup, bank transfer after pickup", Map.put(pickup(), :payment_terms, :invoice), nil, nil},
+           }, nil},
+          {"pickup, bank transfer after pickup", Map.put(pickup(), :payment_terms, :invoice), nil},
           {"edited after it was handed over, bank transfer", %{fulfillment_status: :fulfilled, payment_terms: :invoice},
-           nil, nil},
+           nil},
           {"edited after it was handed over, payment still due",
-           %{fulfillment_status: :fulfilled, payment_terms: :on_fulfillment}, nil, nil},
-          {"bank transfer after pickup", Map.put(pickup(), :payment_terms, :invoice), nil, nil},
-          {"with a message from Jennie", %{}, @payment_link, message(locale)}
+           %{fulfillment_status: :fulfilled, payment_terms: :on_fulfillment}, nil},
+          {"bank transfer after pickup", Map.put(pickup(), :payment_terms, :invoice), nil}
         ] do
-      {"Order updated", title, :order_updated, Email.order_updated(order(attrs, locale), link, message)}
+      {"Order updated", title, :order_updated, Email.order_updated(order(attrs, locale), link)}
     end
   end
 
   defp payment_received(locale) do
     orders =
-      for {title, attrs, amount, message} <- [
-            {"order paid in full through the payment link", paid_in_full(), "64.00", nil},
-            {"order part paid, some still owed", part_paid(), "20.00", nil},
-            {"order, with a message from Jennie", paid_in_full(), "64.00", message(locale)}
+      for {title, attrs, amount} <- [
+            {"order paid in full through the payment link", paid_in_full(), "64.00"},
+            {"order part paid, some still owed", part_paid(), "20.00"}
           ] do
         {"Payment received", title, :payment_received,
-         Email.payment_received(order(attrs, locale), Decimal.new(amount), message)}
+         Email.payment_received(order(attrs, locale), Decimal.new(amount))}
       end
 
     bookings =
@@ -204,8 +198,8 @@ defmodule Edenflowers.Email.Previews do
 
     [
       {"Purchase receipt", "paid, before fulfillment", :purchase_receipt, Email.purchase_receipt(order(paid, locale))},
-      {"Purchase receipt", "with a message from Jennie, no customer first name", :purchase_receipt,
-       Email.purchase_receipt(order(Map.put(paid, :customer_first_name, nil), locale), message(locale))}
+      {"Purchase receipt", "no customer first name", :purchase_receipt,
+       Email.purchase_receipt(order(Map.put(paid, :customer_first_name, nil), locale))}
     ]
   end
 
@@ -213,8 +207,8 @@ defmodule Edenflowers.Email.Previews do
     [
       {"Payment reminder", "order, unpaid", :payment_reminder,
        Email.payment_reminder(order(%{}, locale), @payment_link)},
-      {"Payment reminder", "order part paid, with a message from Jennie", :payment_reminder,
-       Email.payment_reminder(order(part_paid(), locale), @payment_link, message(locale))},
+      {"Payment reminder", "order part paid", :payment_reminder,
+       Email.payment_reminder(order(part_paid(), locale), @payment_link)},
       {"Payment reminder", "confirmed booking, part paid before the course", :payment_reminder,
        Email.payment_reminder(
          registration(%{status: :confirmed, amount_paid: Decimal.new("30.00"), balance: Decimal.new("55.00")}, locale),
@@ -326,15 +320,15 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp subscription_cancelled(locale) do
-    for {title, attrs, charged_on, message} <- [
-          {"a delivery already charged still comes", %{}, ~D[2026-11-14], nil},
-          {"nothing charged yet, with a message from Jennie", %{}, nil, message(locale)},
+    for {title, attrs, charged_on} <- [
+          {"a delivery already charged still comes", %{}, ~D[2026-11-14]},
+          {"nothing charged yet", %{}, nil},
           {"pickup already charged, no first name",
            %{fulfillment_option: %{fulfillment_method: :pickup}, user: %{email: "maria@example.com", first_name: nil}},
-           ~D[2026-11-14], nil}
+           ~D[2026-11-14]}
         ] do
       {"Subscription cancelled", title, :subscription_cancelled,
-       Email.subscription_cancelled(subscription(attrs, locale), charged_on, message)}
+       Email.subscription_cancelled(subscription(attrs, locale), charged_on)}
     end
   end
 
@@ -372,11 +366,7 @@ defmodule Edenflowers.Email.Previews do
           {"no customer first name", %{customer_first_name: nil}}
         ] do
       {"Delivered", title, :order_delivered, Email.order_delivered(order(attrs, locale))}
-    end ++
-      [
-        {"Delivered", "with a message from Jennie", :order_delivered,
-         Email.order_delivered(order(%{}, locale), message(locale))}
-      ]
+    end
   end
 
   defp order_left_at_door(locale) do
@@ -393,9 +383,9 @@ defmodule Edenflowers.Email.Previews do
     paid = %{amount_paid: Decimal.new("64.00"), balance: Decimal.new(0)}
 
     [
-      {"Order cancelled", "refunded to a card, with a message from Jennie", :cancelled,
+      {"Order cancelled", "refunded to a card", :cancelled,
        Email.cancelled(
-         order(Map.merge(paid, %{payments: [card_payment("64.00")], cancellation_reason: reason(locale)}), locale),
+         order(Map.merge(paid, %{payments: [card_payment("64.00")]}), locale),
          cancel_money(refunded: "64.00")
        )},
       {"Order cancelled", "part paid by card, part in cash", :cancelled,
@@ -517,15 +507,15 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp order_refunded(locale) do
-    for {title, payments, method, note} <- [
-          {"to a card through Stripe, with a message from Jennie", [card_payment("64.00")], :stripe, reason(locale)},
-          {"to MobilePay through Stripe", [mobilepay_payment("64.00")], :stripe, nil},
-          {"handed back in cash", [], :cash, nil},
-          {"to a card on the card reader", [], :zettle, nil},
-          {"by MobilePay to the customer's number", [], :mobilepay, nil},
-          {"to the customer's bank account", [], :zervant, nil}
+    for {title, payments, method} <- [
+          {"to a card through Stripe", [card_payment("64.00")], :stripe},
+          {"to MobilePay through Stripe", [mobilepay_payment("64.00")], :stripe},
+          {"handed back in cash", [], :cash},
+          {"to a card on the card reader", [], :zettle},
+          {"by MobilePay to the customer's number", [], :mobilepay},
+          {"to the customer's bank account", [], :zervant}
         ] do
-      refund = %{amount: Decimal.new("20.00"), payment_method: method, note: note}
+      refund = %{amount: Decimal.new("20.00"), payment_method: method}
       {"Order refunded", title, :refunded, Email.refunded(order(%{payments: payments}, locale), refund)}
     end
   end
@@ -535,12 +525,12 @@ defmodule Edenflowers.Email.Previews do
       {"Booking refunded", "to a card through Stripe", :refunded,
        Email.refunded(
          registration(%{payments: [card_payment("45.00")]}, locale),
-         %{amount: Decimal.new("45.00"), payment_method: :stripe, note: nil}
+         %{amount: Decimal.new("45.00"), payment_method: :stripe}
        )},
-      {"Booking refunded", "handed back in cash, with a message from Jennie", :refunded,
+      {"Booking refunded", "handed back in cash", :refunded,
        Email.refunded(
          registration(%{payments: []}, locale),
-         %{amount: Decimal.new("45.00"), payment_method: :cash, note: reason(locale)}
+         %{amount: Decimal.new("45.00"), payment_method: :cash}
        )}
     ]
   end
@@ -558,8 +548,7 @@ defmodule Edenflowers.Email.Previews do
 
     for {title, attrs, money} <- [
           {"refunded to a card", %{payments: [card]}, cancel_money(refunded: "45.00")},
-          {"with a reason, paid in cash", %{payments: [cash], cancellation_reason: reason(locale)},
-           cancel_money(to_return: "45.00")},
+          {"paid in cash", %{payments: [cash]}, cancel_money(to_return: "45.00")},
           {"unpaid by bank transfer, cancellation charge outstanding", %{payments: [], payment_terms: :invoice},
            cancel_money(charge: "22.50", to_collect: "22.50")},
           {"part paid, the rest of a cancellation charge still to pay",
@@ -659,37 +648,14 @@ defmodule Edenflowers.Email.Previews do
       {"Invoice", "independent wedding remainder", :invoice,
        Email.invoice(invoice_for(%{amount: Decimal.new("780.00")}, locale))},
       {"Invoice", "reminder, part paid", :invoice,
-       Email.invoice(
-         invoice_for(%{overdue?: true, amount_paid: Decimal.new("20.00")}, locale),
-         reminder_message(locale)
-       )}
+       Email.invoice(invoice_for(%{overdue?: true, amount_paid: Decimal.new("20.00")}, locale))}
     ]
   end
 
-  defp reminder_message(locale) do
-    cond do
-      String.starts_with?(locale, "fi") -> "Toivottavasti kurssi oli mukava!"
-      String.starts_with?(locale, "sv") -> "Hoppas att du trivdes på kursen!"
-      true -> "I hope you enjoyed the course!"
-    end
-  end
-
   defp credit_note(locale) do
-    wrong_amount =
-      cond do
-        String.starts_with?(locale, "fi") -> "Anteeksi, summa meni minulta väärin."
-        String.starts_with?(locale, "sv") -> "Förlåt, jag skrev fel summa."
-        true -> "Sorry, I got the amount wrong."
-      end
-
     [
       {"Credit note", "cancelling an invoice", :credit_note,
-       Email.credit_note(%Edenflowers.Payments.CreditNote{number: 1043, invoice: invoice_for(%{}, locale)})},
-      {"Credit note", "with a message from Jennie", :credit_note,
-       Email.credit_note(
-         %Edenflowers.Payments.CreditNote{number: 1043, invoice: invoice_for(%{}, locale)},
-         wrong_amount
-       )}
+       Email.credit_note(%Edenflowers.Payments.CreditNote{number: 1043, invoice: invoice_for(%{}, locale)})}
     ]
   end
 
@@ -709,23 +675,6 @@ defmodule Edenflowers.Email.Previews do
     }
     |> Map.merge(attrs)
     |> then(&%{&1 | amount_unpaid: Decimal.sub(&1.amount, &1.amount_paid)})
-  end
-
-  # Jennie writes the reason herself, in the customer's language.
-  defp reason(locale) do
-    cond do
-      String.starts_with?(locale, "fi") -> "Olen pahoillani, mutta olen sairaana sinä päivänä."
-      String.starts_with?(locale, "sv") -> "Jag är ledsen, men jag är sjuk den dagen."
-      true -> "I'm so sorry, but I'm ill that day."
-    end
-  end
-
-  defp message(locale) do
-    cond do
-      String.starts_with?(locale, "fi") -> "Pionit ovat ihania tällä viikolla, joten lisäsin muutaman."
-      String.starts_with?(locale, "sv") -> "Pionerna är så fina den här veckan, så jag lade till några."
-      true -> "The peonies are lovely this week, so I've added a few."
-    end
   end
 
   defp order(attrs, locale) do

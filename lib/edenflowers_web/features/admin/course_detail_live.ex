@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   alias Edenflowers.Format
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.DrawerPreview
+  alias EdenflowersWeb.Admin.Drawers
   alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
@@ -180,7 +181,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           :if={@reminder_form}
           for={@reminder_form}
           id="course-reminder-form"
-          phx-change="validate_course_reminders"
           phx-submit="send_course_reminders"
           class="flex min-h-0 flex-1 flex-col"
         >
@@ -189,12 +189,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               {~t"Each confirmed booking receives a reminder in the customer's language."}
             </p>
             <p :if={@reminder_error} role="alert" class="text-error text-sm">{@reminder_error}</p>
-            <.input
-              field={@reminder_form[:message]}
-              type="textarea"
-              label={~t"Message to the customer (optional)"}
-              rows="3"
-            />
             <details :for={{registration, email} <- @reminder_previews}>
               <summary class="link link-primary text-sm">
                 {registration.name} · {registration.email}
@@ -308,8 +302,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply,
      socket
      |> reload_course()
-     |> assign(reminder_form: to_form(%{"message" => ""}, as: :reminder), reminder_error: nil)
-     |> assign_reminder_previews("")
+     |> assign(reminder_form: to_form(%{}, as: :reminder), reminder_error: nil)
+     |> assign_reminder_previews()
      |> push_event("js-exec", %{to: "#course-reminder-drawer", attr: "phx-show"})}
   end
 
@@ -317,15 +311,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply, assign(socket, reminder_form: nil, reminder_previews: [], reminder_error: nil)}
   end
 
-  def handle_event("validate_course_reminders", %{"reminder" => params}, socket) do
-    {:noreply,
-     socket
-     |> assign(:reminder_form, to_form(params, as: :reminder))
-     |> assign_reminder_previews(params["message"])}
-  end
-
-  def handle_event("send_course_reminders", %{"reminder" => %{"message" => message}}, socket) do
-    case Courses.send_course_reminders(socket.assigns.course.id, message, socket.assigns.current_user) do
+  def handle_event("send_course_reminders", _params, socket) do
+    case Courses.send_course_reminders(socket.assigns.course.id, socket.assigns.current_user) do
       {:ok, _count} ->
         {:noreply,
          socket
@@ -358,12 +345,12 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply, EmailDrawer.validate(socket, params, booking(course, id))}
   end
 
-  def handle_event("send_email", %{"email" => %{"message" => message}}, socket) do
+  def handle_event("send_email", %{"email" => params}, socket) do
     %{email_kind: kind, emailing_id: id, current_user: actor} = socket.assigns
 
     socket
     |> EmailDrawer.close(emailing_id: nil)
-    |> with_registration(id, &send_email(kind, &1, message, actor))
+    |> with_registration(id, &send_email(kind, &1, Drawers.email_edits(params), actor))
   end
 
   def handle_event("remove_seat", %{"id" => id}, socket) do
@@ -472,8 +459,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-hide"})
   end
 
-  defp send_email(:payment_reminder, registration, message, actor) do
-    case Courses.send_registration_payment_reminder(registration, %{message: message}, actor: actor) do
+  defp send_email(:payment_reminder, registration, edits, actor) do
+    case Courses.send_registration_payment_reminder(registration, edits, actor: actor) do
       {:ok, _registration} ->
         {:success, ~t"Payment reminder sent."}
 
@@ -483,11 +470,11 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     end
   end
 
-  defp send_email(:payment_link, registration, message, actor),
-    do: PaymentActions.email_payment_link(registration, message, actor)
+  defp send_email(:payment_link, registration, edits, actor),
+    do: PaymentActions.email_payment_link(registration, edits, actor)
 
-  defp send_email(:confirmation, registration, message, actor) do
-    case Courses.email_registration_confirmation(registration, %{message: message}, actor: actor) do
+  defp send_email(:confirmation, registration, edits, actor) do
+    case Courses.email_registration_confirmation(registration, edits, actor: actor) do
       {:ok, _registration} ->
         {:success, ~t"Confirmation emailed."}
 
@@ -502,10 +489,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     socket
   end
 
-  defp assign_reminder_previews(socket, message) do
+  defp assign_reminder_previews(socket) do
     previews =
       for registration <- socket.assigns.registrations do
-        {registration, Preview.build(:course_reminder, registration, %{message: message})}
+        {registration, Preview.build(:course_reminder, registration, %{})}
       end
 
     assign(socket, :reminder_previews, previews)

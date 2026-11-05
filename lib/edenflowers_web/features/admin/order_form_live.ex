@@ -377,7 +377,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                 id="order-details-email"
                 send={@form[:email_customer?]}
                 label={~t"Email the order details to the customer (needs an email)"}
-                message={@form[:message]}
+                form={@form}
                 preview={@preview}
               />
             </div>
@@ -398,7 +398,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
               id="order-updated-email"
               send={@form[:email_customer?]}
               label={~t"Email the updated order to the customer"}
-              message={@form[:message]}
+              form={@form}
               preview={@preview}
             />
           </.form_section>
@@ -837,7 +837,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     if form[:email_customer?].value in [true, "true"] and form[:customer_email].value not in [nil, ""] and
          form[:fulfillment_date].value not in [nil, ""] do
       kind = if assigns.mode == :new, do: :order_details, else: :order_updated
-      Preview.build_entered(kind, form.source.source, price, assigns.order, %{message: form[:message].value})
+      Preview.build_entered(kind, form.source.source, price, assigns.order)
     end
   end
 

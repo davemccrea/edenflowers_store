@@ -13,8 +13,8 @@ defmodule Edenflowers.Courses do
   require Ash.Query
 
   @doc "Queues reminders for the course's current confirmed bookings only, in one transaction."
-  def send_course_reminders(course_id, message, actor) do
-    case Edenflowers.Repo.transaction(fn -> queue_reminders(course_id, message, actor) end) do
+  def send_course_reminders(course_id, actor) do
+    case Edenflowers.Repo.transaction(fn -> queue_reminders(course_id, actor) end) do
       {:ok, {count, notifications}} ->
         Ash.Notifier.notify(notifications)
         {:ok, count}
@@ -24,7 +24,7 @@ defmodule Edenflowers.Courses do
     end
   end
 
-  defp queue_reminders(course_id, message, actor) do
+  defp queue_reminders(course_id, actor) do
     registrations =
       Edenflowers.Courses.CourseRegistration
       |> Ash.Query.filter(course_id == ^course_id and status == :confirmed)
@@ -32,7 +32,7 @@ defmodule Edenflowers.Courses do
 
     notifications =
       Enum.flat_map(registrations, fn registration ->
-        case Ash.update(registration, %{message: message},
+        case Ash.update(registration, %{},
                action: :email_course_reminder,
                actor: actor,
                return_notifications?: true

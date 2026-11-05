@@ -113,7 +113,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
     </dl>
     <div :if={@registration.status == :cancelled} class="space-y-2 text-sm">
       <p :if={@registration.cancellation_reason} class="whitespace-pre-line">
-        <span class="text-base-content/75">{~t"Message"}:</span> {@registration.cancellation_reason}
+        <span class="text-base-content/75">{~t"Reason"}:</span> {@registration.cancellation_reason}
       </p>
       <p class="text-base-content/75 break-all">
         {if @registration.cancellation_emailed_to,
