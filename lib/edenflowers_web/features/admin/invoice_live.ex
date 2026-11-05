@@ -27,6 +27,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     :amount_paid,
     :amount_unpaid,
     :sendable?,
+    :payable?,
     :cancellable?,
     :paper_trail_versions,
     :order,
@@ -94,7 +95,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
               </.badge>
               <.badge :if={@invoice.sendable? && is_nil(@invoice.sent_at)} tone={:neutral}>{~t"Not sent"}</.badge>
               <.badge
-                :if={@invoice.status == :open}
+                :if={@invoice.payable?}
                 href="#invoice-payment"
                 tone={:warning}
                 class="tabular-nums xl:hidden"
@@ -481,7 +482,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 />
               </dl>
               <p
-                :if={@invoice.status == :open}
+                :if={@invoice.payable?}
                 class={["mt-1 text-sm", if(@invoice.overdue?, do: "text-error font-semibold", else: "text-base-content/75")]}
               >
                 {~t"Due #{date = Format.date(@invoice.due_date, @locale)}"}
@@ -490,7 +491,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 {~t"Last sent"}: {Format.datetime(@invoice.sent_at, @locale)}
               </p>
               <.form
-                :if={@invoice.status == :open}
+                :if={@invoice.payable?}
                 for={@payment_form}
                 id="invoice-payment-form"
                 novalidate
@@ -997,9 +998,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   defp vat_options(tax_rates, current) do
     options =
-      Enum.map(tax_rates, fn rate ->
-        {rate.name, rate.percentage |> Decimal.mult(100) |> Decimal.normalize() |> Decimal.to_string(:normal)}
-      end)
+      Enum.map(tax_rates, &{&1.name, percent(&1)})
 
     current = normalize_decimal(current)
 
@@ -1017,11 +1016,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
         "amount" => Decimal.to_string(invoice.amount_unpaid, :normal),
         "paid_on" => Date.to_iso8601(ShopTime.today())
       },
-      transform_params: fn params, _type -> payment_params(params) end,
-      transform_errors: fn
-        _source, %{field: :paid_at} = error -> %{error | field: :paid_on}
-        _source, error -> error
-      end
+      transform_params: fn params, _type -> Map.update(params, "amount", nil, &normalize_decimal/1) end
     )
     |> to_form()
   end
@@ -1034,20 +1029,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   defp used_params(value), do: value
 
-  defp payment_params(%{"paid_at" => _} = params), do: params
-
-  defp payment_params(params) do
-    paid_at =
-      with {:ok, date} <- Date.from_iso8601(params["paid_on"] || ""),
-           {:ok, datetime} <- DateTime.new(date, ~T[12:00:00], ShopTime.timezone()) do
-        datetime
-      else
-        _ -> params["paid_on"]
-      end
-
-    Map.merge(params, %{"amount" => normalize_decimal(params["amount"]), "paid_at" => paid_at})
-  end
-
   defp normalize_decimal(value) when is_binary(value), do: value |> String.trim() |> String.replace(",", ".")
   defp normalize_decimal(%Decimal{} = value), do: value |> Decimal.normalize() |> Decimal.to_string(:normal)
   defp normalize_decimal(value), do: value
@@ -1057,15 +1038,13 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   defp decimal_comma(value), do: value
 
   defp empty_line(tax_rates) do
-    rate =
-      case tax_rates do
-        [rate | _] -> rate.percentage |> Decimal.mult(100) |> Decimal.normalize() |> Decimal.to_string(:normal)
-        [] -> "25.5"
-      end
+    rate = if tax_rates == [], do: "25.5", else: percent(hd(tax_rates))
 
     %{"description" => "", "quantity" => "1", "unit_price" => "", "vat_rate" => rate}
     |> Map.merge(Map.new(~w(description quantity unit_price vat_rate), &{"_unused_" <> &1, ""}))
   end
+
+  defp percent(tax_rate), do: tax_rate.percentage |> Decimal.mult(100) |> normalize_decimal()
 
   defp form_value(%Date{} = date), do: Date.to_iso8601(date)
   defp form_value(nil), do: ""

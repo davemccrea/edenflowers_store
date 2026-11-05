@@ -213,7 +213,13 @@ defmodule Edenflowers.Payments.Invoice do
       description "Records a bank transfer received for this issued invoice, without sending an email."
       accept []
       argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
-      argument :paid_at, :utc_datetime, allow_nil?: false, default: &DateTime.utc_now/0
+
+      argument :paid_on, :date,
+        allow_nil?: false,
+        default: &Edenflowers.ShopTime.today/0,
+        description:
+          "The Helsinki day the money arrived. Recorded at midday that day, as Jennie and the bank " <>
+            "only know the day, and the monthly report files a payment by its Helsinki day."
 
       argument :bank_transaction_id, :string do
         description "Set when the bank sync records the transfer, so the same transfer is never recorded twice."
@@ -477,6 +483,15 @@ defmodule Edenflowers.Payments.Invoice do
                     "overdue the day after the due date. A paid or cancelled invoice is never overdue; one " <>
                     "paid only in part still is. Admin flags it, and sending it again makes the email a friendly " <>
                     "reminder. Nothing is sent automatically: Jennie decides whether to nudge."
+    end
+
+    calculate :payable?, :boolean, expr(status == :open) do
+      description "Whether it can take a Payment: open, with something left to pay. An Undo also works on a " <>
+                    "paid invoice, which reopens it."
+    end
+
+    calculate :partly_paid?, :boolean, expr(status == :open and amount_paid > 0) do
+      description "Whether it is open with some of its amount already paid, so what is left differs from its total."
     end
 
     calculate :sendable?, :boolean, expr(status == :open) do

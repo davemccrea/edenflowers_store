@@ -10,7 +10,6 @@ defmodule Edenflowers.Payments.Actions.SettleInvoiceFromBank do
   alias Edenflowers.Payments
   alias Edenflowers.Payments.Payment
   alias Edenflowers.Payments.ReferenceNumber
-  alias Edenflowers.ShopTime
 
   @impl true
   def run(input, _opts, context) do
@@ -32,7 +31,7 @@ defmodule Edenflowers.Payments.Actions.SettleInvoiceFromBank do
            Payments.record_invoice_payment(
              invoice,
              amount,
-             %{paid_at: midday_on(booked_on), bank_transaction_id: transaction_id},
+             %{paid_on: booked_on, bank_transaction_id: transaction_id},
              opts
            ) do
       {:ok, true}
@@ -47,7 +46,4 @@ defmodule Edenflowers.Payments.Actions.SettleInvoiceFromBank do
     |> Ash.Query.filter(bank_transaction_id == ^transaction_id)
     |> Ash.exists?(authorize?: false)
   end
-
-  # The bank gives a day; the monthly report files a payment by its Helsinki day.
-  defp midday_on(date), do: date |> DateTime.new!(~T[12:00:00], ShopTime.timezone()) |> DateTime.shift_zone!("Etc/UTC")
 end

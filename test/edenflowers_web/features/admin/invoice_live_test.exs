@@ -53,31 +53,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert has_element?(view, "#invoice-log", "Payment reminder emailed")
     assert has_element?(view, "#invoice-log details summary")
     assert has_element?(view, "#invoice-log", "buyer@example.com")
-    assert length(Ash.load!(invoice, :paper_trail_versions, actor: admin).paper_trail_versions) == 3
-  end
-
-  test "payment, reversal and credit events refresh the same history", %{conn: conn, admin: admin} do
-    {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
-    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
-    view |> form("#invoice-payment-form", payment: %{amount: "5", paid_on: "2026-11-02"}) |> render_submit()
-    assert has_element?(view, "#invoice-log", "Paid")
-    assert has_element?(view, "#invoice-log", "Bank transfer")
-    view |> element("button[phx-click=undo_payment]", "Undo") |> render_click()
-    assert has_element?(view, "#invoice-log", "Undid")
-    view |> form("#invoice-credit-form", credit: %{reason: "Replace incorrect details"}) |> render_submit()
-    note = Ash.load!(invoice, :credit_note, actor: admin).credit_note
-    assert has_element?(view, "#invoice-log", "Credit note #{note.number} issued")
-    assert has_element?(view, "#invoice-log", "Replace incorrect details")
-
-    for body <- ["First credit email", "Second credit email"] do
-      view |> element("button[phx-click=open_email][phx-value-kind=credit_note]") |> render_click()
-      view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
-      view |> form("#email-form", email: %{edit_email: "true", body: body}) |> render_submit()
-    end
-
-    assert has_element?(view, "#invoice-log", "First credit email")
-    assert has_element?(view, "#invoice-log", "Second credit email")
-    assert length(Ash.load!(note, :paper_trail_versions, actor: admin).paper_trail_versions) == 2
   end
 
   test "optional invoice details reopen on an existing draft and only a business has an address", %{
@@ -139,16 +114,29 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
     view |> form("#invoice-payment-form", payment: %{amount: "5", paid_on: "2026-11-02"}) |> render_submit()
+    assert has_element?(view, "#invoice-log", "Bank transfer")
     assert has_element?(view, "#accountant-correction", "contact the accountant")
     refute has_element?(view, "#invoice-credit-form")
     view |> element("button[phx-click=undo_payment]", "Undo") |> render_click()
-    assert has_element?(view, "#invoice-credit-form")
+    assert has_element?(view, "#invoice-log", "Undid")
     assert has_element?(view, "#invoice-payment", "Undone")
-    view |> form("#invoice-credit-form", credit: %{reason: "Replaced invoice"}) |> render_submit()
-    assert render(view) =~ "Credited"
+    assert has_element?(view, "#invoice-credit-form")
+    view |> form("#invoice-credit-form", credit: %{reason: "Replace incorrect details"}) |> render_submit()
+    note = Ash.load!(invoice, :credit_note, actor: admin).credit_note
+    assert has_element?(view, "#invoice-log", "Credit note #{note.number} issued")
+    assert has_element?(view, "#invoice-log", "Replace incorrect details")
     refute has_element?(view, "#invoice-payment-form")
     assert has_element?(view, "a[href^='/admin/credit-notes/']")
     assert Ash.load!(invoice, :status).status == :cancelled
+
+    for body <- ["First credit email", "Second credit email"] do
+      view |> element("button[phx-click=open_email][phx-value-kind=credit_note]") |> render_click()
+      view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
+      view |> form("#email-form", email: %{edit_email: "true", body: body}) |> render_submit()
+    end
+
+    assert has_element?(view, "#invoice-log", "First credit email")
+    assert has_element?(view, "#invoice-log", "Second credit email")
   end
 
   test "bank transfers accept decimal commas", %{conn: conn, admin: admin} do

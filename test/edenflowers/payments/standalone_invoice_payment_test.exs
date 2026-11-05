@@ -28,7 +28,7 @@ defmodule Edenflowers.Payments.StandaloneInvoicePaymentTest do
     booking = generate(course_registration())
 
     {:ok, partial} =
-      Payments.record_invoice_payment(ctx.invoice, "40", %{paid_at: ~U[2026-09-01 08:00:00Z]}, actor: ctx.admin)
+      Payments.record_invoice_payment(ctx.invoice, "40", %{paid_on: ~D[2026-09-01]}, actor: ctx.admin)
 
     assert Decimal.equal?(partial.amount_paid, "40")
     assert Decimal.equal?(partial.amount_unpaid, "60")
@@ -36,7 +36,8 @@ defmodule Edenflowers.Payments.StandaloneInvoicePaymentTest do
     [receipt] = partial.payments
     assert receipt.order_id == nil
     assert receipt.course_registration_id == nil
-    assert receipt.paid_at == ~U[2026-09-01 08:00:00Z]
+    # Midday in Helsinki, so the monthly report files it on the day given.
+    assert receipt.paid_at == ~U[2026-09-01 09:00:00Z]
     assert receipt.method == :zervant
     {:ok, paid} = Payments.record_invoice_payment(partial, "60", actor: ctx.admin)
     assert paid.status == :paid

@@ -172,8 +172,8 @@ defmodule Edenflowers.Accounting.MonthlyReportTest do
       )
 
     {:ok, invoice} = Payments.issue_invoice(draft, actor: admin)
-    {:ok, _} = Payments.record_invoice_payment(invoice, "0.03", %{paid_at: ~U[2026-08-31 20:00:00Z]}, actor: admin)
-    {:ok, paid} = Payments.record_invoice_payment(invoice, "0.07", %{paid_at: ~U[2026-09-30 20:59:00Z]}, actor: admin)
+    {:ok, _} = Payments.record_invoice_payment(invoice, "0.03", %{paid_on: ~D[2026-08-31]}, actor: admin)
+    {:ok, paid} = Payments.record_invoice_payment(invoice, "0.07", %{paid_on: ~D[2026-09-30]}, actor: admin)
     receipt = Enum.find(paid.payments, &Decimal.equal?(&1.amount, "0.07"))
     {:ok, _} = Payments.undo_invoice_payment(paid, receipt.id, %{paid_at: ~U[2026-09-30 21:00:00Z]}, actor: admin)
     order = sales_order("ordinary-order")

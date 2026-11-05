@@ -16,12 +16,12 @@ defmodule Edenflowers.Payments.StandaloneInvoicingWorkflowTest do
     assert advance.number + 1 == remainder.number
     assert advance.financial_snapshot["vat"] == "20.32"
     assert remainder.financial_snapshot["vat"] == "36.84"
-    {:ok, settled} = Payments.record_invoice_payment(advance, "100", %{paid_at: ~U[2026-09-10 08:00:00Z]}, actor: admin)
+    {:ok, settled} = Payments.record_invoice_payment(advance, "100", %{paid_on: ~D[2026-09-10]}, actor: admin)
     assert settled.status == :paid
     assert Decimal.equal?(Ash.load!(remainder, :amount_unpaid, authorize?: false).amount_unpaid, "300")
 
     {:ok, partly_paid} =
-      Payments.record_invoice_payment(remainder, "60", %{paid_at: ~U[2026-09-30 20:59:00Z]}, actor: admin)
+      Payments.record_invoice_payment(remainder, "60", %{paid_on: ~D[2026-09-30]}, actor: admin)
 
     assert {:error, _} = Payments.cancel_invoice(%{invoice_id: remainder.id}, actor: admin)
     [receipt] = partly_paid.payments
