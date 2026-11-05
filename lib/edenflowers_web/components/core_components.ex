@@ -505,7 +505,7 @@ defmodule EdenflowersWeb.CoreComponents do
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class="grow"
+        class={["grow", @class]}
         aria-invalid={@errors != [] && "true"}
         aria-describedby={@errors != [] && "#{@id}-error"}
         {@rest}

@@ -19,8 +19,7 @@ defmodule Edenflowers.Payments.GiftVoucher do
   import Ash.Expr, only: [expr: 1]
 
   @valid_for_years 1
-  @code_length 12
-  @alphabet "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+  @code_digits 16
 
   postgres do
     repo Edenflowers.Repo
@@ -61,7 +60,7 @@ defmodule Edenflowers.Payments.GiftVoucher do
     end
 
     read :by_code do
-      description "The voucher with this code, however the customer typed it: spaces, dashes and case are " <>
+      description "The voucher with this code, however the customer typed it: spaces and dashes are " <>
                     "ignored. Found whether or not it can still pay, so the customer is told why not."
 
       argument :code, :string, allow_nil?: false
@@ -163,29 +162,32 @@ defmodule Edenflowers.Payments.GiftVoucher do
   end
 
   @doc """
-  A new code: 12 random characters of Crockford's base32, 60 bits, so
-  guessing one is hopeless. The alphabet leaves out I, L, O and U, which
-  are misread as 1 and 0 or spell words.
+  A new code: 16 random digits, about 53 bits, so guessing one is hopeless.
+  Digits only, so phones open the number pad and the code reads out easily.
   """
   def generate_code do
-    # 256 is a multiple of 32, so each byte picks a character without bias.
-    for <<byte <- :crypto.strong_rand_bytes(@code_length)>>, into: "", do: <<:binary.at(@alphabet, rem(byte, 32))>>
+    # 128 random bits reduced to 16 digits leaves no bias worth counting.
+    :crypto.strong_rand_bytes(16)
+    |> :binary.decode_unsigned()
+    |> rem(10 ** @code_digits)
+    |> Integer.to_string()
+    |> String.pad_leading(@code_digits, "0")
   end
 
   @doc "The expiry of a voucher bought today."
   def default_expiry, do: Date.shift(Edenflowers.ShopTime.today(), year: @valid_for_years)
 
   @doc """
-  A code as the customer might type it, reduced to how it's stored: case,
-  spaces and dashes ignored, and the letters left out of codes read as the
-  digits they're mistaken for.
+  A code as the customer might type it, reduced to how it's stored: spaces
+  and dashes ignored, and the letters O, I and L read as the digits they're
+  mistaken for.
   """
   def normalize_code(code) do
     code
     |> String.upcase()
-    |> String.replace(~r/[^0-9A-Z]/, "")
     |> String.replace("O", "0")
     |> String.replace(["I", "L"], "1")
+    |> String.replace(~r/[^0-9]/, "")
   end
 
   @doc "A code as it's printed: groups of four, easier to read out and type."

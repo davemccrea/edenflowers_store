@@ -330,10 +330,10 @@ defmodule EdenflowersWeb.Admin.Drawers do
           id={"#{@id}-code"}
           type="text"
           autocomplete="off"
-          autocapitalize="characters"
+          inputmode="numeric"
           spellcheck="false"
           label={~t"Gift voucher code"}
-          class="input font-mono w-full uppercase"
+          class="input w-full tabular-nums"
         />
       </div>
       <p :if={@voucher?} class="text-base-content/75 text-sm">
