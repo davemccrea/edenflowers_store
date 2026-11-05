@@ -19,6 +19,10 @@ erl_crash.dump
 # Temporary files, for example, from tests.
 /tmp/
 
+# ECI's print profile may be used but not redistributed, so it isn't committed.
+# See `mix help pass_it_on_cards`.
+/priv/receipts/icc/
+
 # Ignore package tarball (built via "mix hex.build").
 edenflowers-*.tar
 
