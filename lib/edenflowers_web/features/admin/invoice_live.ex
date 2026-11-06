@@ -11,7 +11,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   alias Edenflowers.Payments.InvoiceFinancials
   alias Edenflowers.Pricing
   alias Edenflowers.ShopTime
-  alias EdenflowersWeb.Admin.Drawers
   alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.InvoiceLog
   alias EdenflowersWeb.Admin.InvoicesLive
@@ -771,26 +770,18 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   def handle_event("send_email", %{"email" => params}, %{assigns: %{email_form: form, preview: preview}} = socket)
       when not is_nil(form) and not is_nil(preview) do
-    %{invoice: invoice, email_kind: kind, current_user: actor} = socket.assigns
+    case EmailDrawer.submit(socket, params) do
+      {:ok, socket} ->
+        message = if socket.assigns.email_kind == :invoice, do: ~t"Invoice emailed.", else: ~t"Credit note emailed."
+        {:noreply, socket |> put_flash(:info, message) |> EmailDrawer.close() |> refresh()}
 
-    result =
-      case kind do
-        :invoice -> Payments.send_invoice(invoice, Drawers.email_edits(params), actor: actor)
-        :credit_note -> Payments.send_credit_note(invoice.credit_note, Drawers.email_edits(params), actor: actor)
-      end
-
-    case result do
-      {:ok, _} ->
-        message = if kind == :invoice, do: ~t"Invoice emailed.", else: ~t"Credit note emailed."
-        {:noreply, socket |> EmailDrawer.close() |> refresh() |> put_flash(:info, message)}
-
-      {:error, _} ->
+      {:error, socket} ->
         message =
-          if kind == :invoice,
+          if socket.assigns.email_kind == :invoice,
             do: ~t"Could not email the invoice. It remains issued; try sending again.",
             else: ~t"Could not email the credit note. Try again in a moment."
 
-        {:noreply, socket |> EmailDrawer.validate(params, email_record(kind, invoice)) |> put_flash(:error, message)}
+        {:noreply, put_flash(socket, :error, message)}
     end
   end
 

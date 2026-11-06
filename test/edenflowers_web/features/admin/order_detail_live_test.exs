@@ -265,6 +265,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-gift-voucher-remaining", "30,00")
     assert has_element?(view, ~s|#order-gift-voucher-payments a[href="/admin/orders/#{spent_on.id}"]|, "Bertil Ek")
 
+    earlier = Date.add(voucher.expires_on, -1)
+
+    view
+    |> form("#gift-voucher-last-day", voucher: %{expires_on: Date.to_iso8601(earlier)})
+    |> render_submit()
+
+    assert has_element?(view, "#gift-voucher-last-day", "must be later than the current last day")
+
     later = Date.add(voucher.expires_on, 90)
 
     view

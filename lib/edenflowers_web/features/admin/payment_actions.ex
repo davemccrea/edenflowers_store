@@ -10,8 +10,6 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
 
   require Logger
 
-  alias Edenflowers.Courses
-  alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Payments.Changes.Cancel
   alias EdenflowersWeb.Admin.Drawers
 
@@ -135,20 +133,10 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     |> logged(payable, "Creating a payment link", ~t"Payment link created.", ~t"Could not create a payment link.")
   end
 
-  def email_payment_link(payable, edits, actor) do
-    payable
-    |> send_payment_link(edits, actor)
-    |> logged(payable, "Emailing a payment link", ~t"Payment link emailed.", ~t"Could not email the payment link.")
-  end
-
   defp logged({:ok, _payable}, _payable_before, _what, success, _failure), do: {:success, success}
 
   defp logged({:error, error}, payable, what, _success, failure) do
     Logger.error("#{what} for #{inspect(payable.__struct__)} #{payable.id} failed: #{inspect(error)}")
-    {:error, failure}
+    {:error, Drawers.refusal_text(error, failure)}
   end
-
-  # Orders send theirs in a Payment reminder.
-  defp send_payment_link(%CourseRegistration{} = registration, edits, actor),
-    do: Courses.email_registration_payment_link(registration, edits, actor: actor)
 end

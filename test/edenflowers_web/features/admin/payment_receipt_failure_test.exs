@@ -43,4 +43,24 @@ defmodule EdenflowersWeb.Admin.PaymentReceiptFailureTest do
     assert has_element?(view, ~s|input[name="payment[amount]"][value="68.50"]|)
     assert_no_email_sent()
   end
+
+  test "a receipt that fails to send keeps the email drawer open with Jennie's rewrite", %{conn: conn} do
+    config = Application.fetch_env!(:edenflowers, Edenflowers.Mailer)
+    Application.put_env(:edenflowers, Edenflowers.Mailer, adapter: FailingAdapter)
+    on_exit(fn -> Application.put_env(:edenflowers, Edenflowers.Mailer, config) end)
+
+    order = placed_order(paid: true, locale: "en-GB")
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    view |> element(~s|button[phx-value-kind="receipt"]|) |> render_click()
+    view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
+
+    html =
+      view
+      |> form("#email-form", email: %{edit_email: "true", subject: "Your receipt", body: "Thank you, Ada"})
+      |> render_submit()
+
+    assert html =~ "Could not send the receipt."
+    assert has_element?(view, "#email-drawer-email-body", "Thank you, Ada")
+    assert Ash.reload!(order, authorize?: false).receipt_emailed_at == nil
+  end
 end

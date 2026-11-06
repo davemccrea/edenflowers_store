@@ -258,6 +258,37 @@ defmodule EdenflowersWeb.Admin.Drawers do
     end)
   end
 
+  @doc """
+  `failure`, the flash for an action Jennie ran from a button, followed by
+  why the action refused in its own words, when it has some for her: a
+  database failure has none.
+  """
+  def refusal_text(error, failure) do
+    case error |> Ash.Error.to_error_class() |> Map.get(:errors, []) |> Enum.find_value(&error_text/1) do
+      nil ->
+        failure
+
+      reason ->
+        gettext_comment(
+          "%{failure} is a line like \"Could not remove the seat\", its period dropped. %{reason} is the " <>
+            "refusal in English, like \"cancel the booking to remove its last seat\"."
+        )
+
+        ~t"#{failure = String.trim_trailing(failure, ".")}: #{reason}."
+    end
+  end
+
+  defp error_text(%Ash.Error.Changes.InvalidChanges{message: message}) when is_binary(message), do: message
+
+  defp error_text(error) do
+    with impl when impl != nil <- AshPhoenix.FormData.Error.impl_for(error),
+         [{_field, message, vars} | _] <- error |> AshPhoenix.FormData.Error.to_form_error() |> List.wrap() do
+      translate_error({message, vars})
+    else
+      _no_words -> nil
+    end
+  end
+
   attr :email, Swoosh.Email, required: true
 
   def email_preview(assigns) do
@@ -307,7 +338,9 @@ defmodule EdenflowersWeb.Admin.Drawers do
             field={@form[:to]}
             id="email-drawer-to"
             value={@form[:to].value || @to}
-            type="email"
+            type="text"
+            inputmode="email"
+            autocomplete="off"
             label={~t"To"}
             class="input w-full"
           />

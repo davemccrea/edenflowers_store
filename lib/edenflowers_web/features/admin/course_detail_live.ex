@@ -367,11 +367,17 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("send_email", %{"email" => params}, socket) do
-    %{email_kind: kind, emailing_id: id, current_user: actor} = socket.assigns
+    case EmailDrawer.submit(socket, params) do
+      {:ok, socket} ->
+        {:noreply,
+         socket
+         |> put_flash(:success, sent_message(socket.assigns.email_kind))
+         |> EmailDrawer.close(emailing_id: nil)
+         |> reload_course()}
 
-    socket
-    |> EmailDrawer.close(emailing_id: nil)
-    |> with_registration(id, &send_email(kind, &1, Drawers.email_edits(params), actor))
+      {:error, socket} ->
+        {:noreply, put_flash(socket, :error, failed_message(socket.assigns.email_kind))}
+    end
   end
 
   def handle_event("remove_seat", %{"id" => id}, socket) do
@@ -382,7 +388,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
            {:ok, _} <- Courses.remove_registration_seat(registration, actor: actor) do
         put_flash(socket, :success, ~t"Seat removed.")
       else
-        _ -> put_flash(socket, :error, ~t"Could not remove the seat.")
+        {:error, error} -> put_flash(socket, :error, Drawers.refusal_text(error, ~t"Could not remove the seat."))
       end
 
     {:noreply, reload_course(socket)}
@@ -468,30 +474,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   defp booking(course, id), do: Enum.find(course.bookings, &(&1.id == id))
 
-  defp send_email(:payment_reminder, registration, edits, actor) do
-    case Courses.send_registration_payment_reminder(registration, edits, actor: actor) do
-      {:ok, _registration} ->
-        {:success, ~t"Payment reminder sent."}
+  defp sent_message(:payment_reminder), do: ~t"Payment reminder sent."
+  defp sent_message(:payment_link), do: ~t"Payment link emailed."
+  defp sent_message(:confirmation), do: ~t"Confirmation emailed."
 
-      {:error, error} ->
-        Logger.error("Payment reminder for course registration #{registration.id} not sent: #{inspect(error)}")
-        {:error, ~t"Could not send the email. Try again in a moment."}
-    end
-  end
-
-  defp send_email(:payment_link, registration, edits, actor),
-    do: PaymentActions.email_payment_link(registration, edits, actor)
-
-  defp send_email(:confirmation, registration, edits, actor) do
-    case Courses.email_registration_confirmation(registration, edits, actor: actor) do
-      {:ok, _registration} ->
-        {:success, ~t"Confirmation emailed."}
-
-      {:error, error} ->
-        Logger.error("Confirmation for course registration #{registration.id} not emailed: #{inspect(error)}")
-        {:error, ~t"Could not email the confirmation."}
-    end
-  end
+  defp failed_message(:payment_reminder), do: ~t"Could not send the email. Try again in a moment."
+  defp failed_message(:payment_link), do: ~t"Could not email the payment link."
+  defp failed_message(:confirmation), do: ~t"Could not email the confirmation."
 
   defp reload_course(socket) do
     {:ok, socket} = load_course(socket, socket.assigns.course.id)

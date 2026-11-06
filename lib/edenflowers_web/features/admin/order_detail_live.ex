@@ -5,8 +5,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
-  require Logger
-
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.Drawers
   import EdenflowersWeb.Admin.OrderDetailComponents
@@ -170,7 +168,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <%!-- The job on the left, read at the bench; the money, people and history on the right, read at the desk. --%>
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
           <div class="space-y-6">
-            <.gift_voucher_sold :if={@order.gift_voucher_sale?} order={@order} locale={@locale} />
+            <.gift_voucher_sold
+              :if={@order.gift_voucher_sale?}
+              order={@order}
+              voucher_form={@voucher_form}
+              locale={@locale}
+            />
 
             <.widget :if={!@order.gift_voucher_sale?} id="order-fulfillment-summary" title={~t"Fulfillment"}>
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
@@ -662,17 +665,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  def handle_event("change_voucher_last_day", %{"voucher" => %{"expires_on" => expires_on}}, socket) do
-    %{order: order, current_user: actor} = socket.assigns
-
-    case Edenflowers.Payments.change_gift_voucher_last_day(order.gift_voucher_line.gift_voucher, expires_on,
-           actor: actor
-         ) do
+  def handle_event("change_voucher_last_day", %{"voucher" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.voucher_form, params: params) do
       {:ok, _voucher} ->
-        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:success, ~t"Last day changed.")}
+        {:noreply,
+         socket |> assign_order(reload(socket.assigns.order, socket)) |> put_flash(:success, ~t"Last day changed.")}
 
-      {:error, _error} ->
-        {:noreply, put_flash(socket, :error, ~t"Choose a day after the current last day.")}
+      {:error, form} ->
+        {:noreply, assign(socket, :voucher_form, form)}
     end
   end
 
@@ -689,19 +689,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("send_email", %{"email" => params}, socket) do
-    %{order: order, email_kind: kind, current_user: actor} = socket.assigns
+    case EmailDrawer.submit(socket, params) do
+      {:ok, socket} ->
+        {:noreply,
+         socket
+         |> put_flash(:success, sent_message(socket.assigns.email_kind))
+         |> EmailDrawer.close()
+         |> assign_order(reload(socket.assigns.order, socket))}
 
-    edits = Drawers.email_edits(params)
-    # Only an address Jennie changed is passed on, so the log names it.
-    edits = if params["to"] in [nil, "", order.customer_email], do: edits, else: Map.put(edits, :to, params["to"])
-
-    {flash, text} = send_email(kind, order, edits, actor)
-
-    {:noreply,
-     socket
-     |> EmailDrawer.close()
-     |> assign_order(reload(order, socket))
-     |> put_flash(flash, text)}
+      {:error, socket} ->
+        {:noreply, put_flash(socket, :error, failed_message(socket.assigns.email_kind))}
+    end
   end
 
   @impl true
@@ -789,9 +787,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     )
     |> assign(:payment_form, if(order.to_collect?, do: PaymentActions.payment_form(order, actor)))
     |> assign(:refund_form, if(order.refundable?, do: PaymentActions.refund_form(order, actor)))
+    |> assign(:voucher_form, voucher_form(order, actor))
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
   end
+
+  defp voucher_form(%{gift_voucher_line: %{gift_voucher: %{last_day_changeable?: true} = voucher}}, actor),
+    do: voucher |> AshPhoenix.Form.for_update(:change_last_day, as: "voucher", actor: actor) |> to_form()
+
+  defp voucher_form(_order, _actor), do: nil
 
   defp payments(order) do
     order
@@ -814,61 +818,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp card_error(_error),
     do: ~t"The card can't change now: the gift has been delivered or cancelled, or its recipient opened the card."
 
-  # Says when it last went out, so a resend nobody needed is caught before it's sent.
-  defp send_email(:order_details, order, edits, actor) do
-    case Orders.send_order_details_email(order, edits, actor: actor) do
-      {:ok, _order} ->
-        {:success, ~t"Order details sent."}
+  defp sent_message(:order_details), do: ~t"Order details sent."
+  defp sent_message(:gift_voucher), do: ~t"Gift voucher sent."
+  defp sent_message(:receipt), do: ~t"Receipt sent."
+  defp sent_message(:fulfillment), do: ~t"Confirmation queued."
+  defp sent_message(:payment_reminder), do: ~t"Payment reminder sent."
 
-      {:error, error} ->
-        Logger.error("Order details for order #{order.id} not sent: #{inspect(error)}")
-        {:error, ~t"Could not send the email. Try again in a moment."}
-    end
-  end
-
-  defp send_email(:gift_voucher, order, edits, actor) do
-    case Orders.email_gift_voucher(order, edits, actor: actor) do
-      {:ok, _order} ->
-        {:success, ~t"Gift voucher sent."}
-
-      {:error, error} ->
-        Logger.error("Gift voucher for order #{order.id} not sent: #{inspect(error)}")
-        {:error, ~t"Could not send the gift voucher. Check the address and try again."}
-    end
-  end
-
-  defp send_email(:receipt, order, edits, actor) do
-    case Orders.email_receipt(order, edits, actor: actor) do
-      {:ok, _order} ->
-        {:success, ~t"Receipt sent."}
-
-      {:error, error} ->
-        Logger.error("Receipt for order #{order.id} not sent: #{inspect(error)}")
-        {:error, ~t"Could not send the receipt. Try again in a moment."}
-    end
-  end
-
-  defp send_email(:fulfillment, order, edits, actor) do
-    case Orders.email_fulfillment_confirmation(order, edits, actor: actor) do
-      {:ok, _order} ->
-        {:success, ~t"Confirmation queued."}
-
-      {:error, error} ->
-        Logger.error("Fulfillment confirmation for order #{order.id} not queued: #{inspect(error)}")
-        {:error, ~t"Could not queue the confirmation."}
-    end
-  end
-
-  defp send_email(:payment_reminder, order, edits, actor) do
-    case Orders.send_payment_reminder(order, edits, actor: actor) do
-      {:ok, _order} ->
-        {:success, ~t"Payment reminder sent."}
-
-      {:error, error} ->
-        Logger.error("Payment reminder for order #{order.id} not sent: #{inspect(error)}")
-        {:error, ~t"Could not send the email. Try again in a moment."}
-    end
-  end
+  defp failed_message(:gift_voucher), do: ~t"Could not send the gift voucher. Check the address and try again."
+  defp failed_message(:receipt), do: ~t"Could not send the receipt. Try again in a moment."
+  defp failed_message(:fulfillment), do: ~t"Could not queue the confirmation."
+  defp failed_message(_kind), do: ~t"Could not send the email. Try again in a moment."
 
   # Nothing to preview when the order has nothing to settle that way.
   defp assign_preview(socket, _kind, nil), do: assign(socket, :preview, nil)
