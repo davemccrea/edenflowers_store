@@ -85,6 +85,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
       order,
       [
         :customer_first_name,
+        :recipient_first_name,
         :vat,
         :grand_total,
         :discount,
