@@ -425,6 +425,11 @@
   }
 }
 
+/* The flower opens once a session, like the home hero (the Petals hook), then stays open. */
+:root.order-bloomed .flower-bloom {
+  animation: none;
+}
+
 /* Empty cart: a quieter bloom than the thank-you page's, since it's no celebration. */
 @keyframes flower-bloom-soft {
   from {
