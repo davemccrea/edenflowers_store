@@ -53,16 +53,6 @@ msgid_plural "%{count} place(s) left"
 msgstr[0] ""
 msgstr[1] ""
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1062
-#, elixir-autogen, elixir-format
-msgid "%{name}'s address *"
-msgstr ""
-
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1063
-#, elixir-autogen, elixir-format
-msgid "%{name}'s phone number *"
-msgstr ""
-
 #: lib/edenflowers_web/features/account/subscription_manager.ex:507
 #, elixir-autogen, elixir-format
 msgid "%{price} per delivery"
@@ -180,14 +170,10 @@ msgid "Add-ons are sold with flowers. Add a bouquet to check out."
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:930
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1069
 #: lib/edenflowers_web/features/marketing/contact_live.ex:76
 #, elixir-autogen, elixir-format
 msgid "Address"
-msgstr ""
-
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1069
-#, elixir-autogen, elixir-format
-msgid "Address *"
 msgstr ""
 
 #: lib/edenflowers_web/features/account/subscription_manager.ex:368
@@ -2131,11 +2117,6 @@ msgstr ""
 #: lib/edenflowers_web/features/marketing/contact_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Phone"
-msgstr ""
-
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1070
-#, elixir-autogen, elixir-format
-msgid "Phone number *"
 msgstr ""
 
 #: lib/edenflowers_web/features/store/product_live.ex:181
@@ -4444,4 +4425,19 @@ msgstr ""
 #: lib/edenflowers_web/features/store/gift_voucher_live.ex:120
 #, elixir-autogen, elixir-format
 msgid "Your name"
+msgstr ""
+
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1062
+#, elixir-autogen, elixir-format
+msgid "%{name}'s address"
+msgstr ""
+
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1063
+#, elixir-autogen, elixir-format
+msgid "%{name}'s phone number"
+msgstr ""
+
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1070
+#, elixir-autogen, elixir-format
+msgid "Phone number"
 msgstr ""

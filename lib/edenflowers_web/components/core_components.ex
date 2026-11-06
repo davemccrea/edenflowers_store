@@ -589,11 +589,23 @@ defmodule EdenflowersWeb.CoreComponents do
 
   # A checkbox that has to be ticked is never what a non-nil boolean means.
   defp required?(%{required: nil, type: type}, field) when type not in ["checkbox", "hidden"] do
-    Keyword.get(Phoenix.HTML.Form.input_validations(field.form, field.field), :required, false) or
-      validated_present?(field.form.source, field.field)
+    not_nil?(field) or validated_present?(field.form.source, field.field)
   end
 
   defp required?(assigns, _field), do: assigns.required || false
+
+  # AshPhoenix looks up the attribute before the action's argument, so an argument that shares
+  # an attribute's name (Invoice's `record_payment` `amount`) would take the attribute's allow_nil?.
+  defp not_nil?(%{form: %{source: %AshPhoenix.Form{source: %Ash.Changeset{} = changeset}}, field: name})
+       when is_atom(name) do
+    input =
+      Enum.find(changeset.action.arguments, &(&1.name == name)) ||
+        Ash.Resource.Info.attribute(changeset.resource, name)
+
+    input != nil and not input.allow_nil?
+  end
+
+  defp not_nil?(field), do: Keyword.get(Phoenix.HTML.Form.input_validations(field.form, field.field), :required, false)
 
   # AshPhoenix only reports `allow_nil? false`. This adds the action's `present/1` validations
   # that always apply, so a field required only that way is marked too. Conditional ones

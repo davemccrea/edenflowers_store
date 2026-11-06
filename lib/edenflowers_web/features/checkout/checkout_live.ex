@@ -1059,15 +1059,15 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp recipient_label(%{gift: true, fulfillment_method: :delivery, recipient_first_name: first_name}, field)
        when is_binary(first_name) do
     case field do
-      :address -> gettext("%{name}'s address *", name: first_name)
-      :phone -> gettext("%{name}'s phone number *", name: first_name)
+      :address -> gettext("%{name}'s address", name: first_name)
+      :phone -> gettext("%{name}'s phone number", name: first_name)
     end
   end
 
   defp recipient_label(order, field) do
     case {field, order.fulfillment_method} do
-      {:address, _} -> gettext("Address *")
-      {:phone, _} -> gettext("Phone number *")
+      {:address, _} -> gettext("Address")
+      {:phone, _} -> gettext("Phone number")
     end
   end
 
