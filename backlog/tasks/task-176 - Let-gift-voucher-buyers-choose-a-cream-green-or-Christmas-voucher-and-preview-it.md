@@ -3,10 +3,10 @@ id: TASK-176
 title: >-
   Let gift voucher buyers choose a cream, green or Christmas voucher and preview
   it
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-11-06 13:43'
-updated_date: '2026-11-06 13:45'
+updated_date: '2026-11-06 16:26'
 labels:
   - customers
   - admin

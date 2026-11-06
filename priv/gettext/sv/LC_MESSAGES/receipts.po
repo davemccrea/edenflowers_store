@@ -385,3 +385,8 @@ msgstr "Namn här"
 #, elixir-autogen, elixir-format
 msgid "Your message here"
 msgstr "Ditt meddelande här"
+
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:110
+#, elixir-autogen, elixir-format
+msgid "Photo:"
+msgstr "Foto:"

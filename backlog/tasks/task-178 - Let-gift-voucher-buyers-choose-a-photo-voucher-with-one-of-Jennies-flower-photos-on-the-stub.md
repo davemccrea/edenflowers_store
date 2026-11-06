@@ -3,10 +3,10 @@ id: TASK-178
 title: >-
   Let gift voucher buyers choose a Golden hour voucher, with a flower photo on
   the stub
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-11-06 15:48'
-updated_date: '2026-11-06 16:16'
+updated_date: '2026-11-06 16:26'
 labels:
   - customers
   - admin

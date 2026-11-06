@@ -30,9 +30,10 @@
 
 // Photo styles: the stub is a flower photo instead of green, cropped
 // to the stub's shape. Darkened at the top and bottom, and a little in the
-// middle, so the logo, amount and code still read in cream over it.
+// middle, so the logo, amount and code still read in cream over it. Each
+// photo is credited to its photographer at the foot of the stub.
 #let stub-photos = (
-  golden_hour: "assets/photos/golden-hour.jpg",
+  golden_hour: (path: "assets/photos/golden-hour.jpg", photographer: "Marie Lillhannus"),
 )
 #let photo-shade = gradient.linear(
   (black.transparentize(35%), 0%),
@@ -107,7 +108,7 @@
   for key in ("lang", "labels", "seller", "style", "snow_seed", "amount", "code", "expires_on", "recipient_name", "message") {
     assert(key in voucher, message: "voucher: missing key `" + key + "` (set to none if absent)")
   }
-  for key in ("gift-voucher", "to", "code", "valid-until", "how-to-use", "terms") {
+  for key in ("gift-voucher", "to", "code", "valid-until", "how-to-use", "terms", "photo-by") {
     assert(key in voucher.labels, message: "voucher: missing label `" + key + "`")
   }
   assert(voucher.style == "cream" or voucher.style in christmas-accents or voucher.style in stub-photos, message: "voucher: unknown style `" + voucher.style + "`")
@@ -130,8 +131,14 @@
     // The stub's green is drawn here, under the snow, so flakes fall behind its text too.
     background: {
       if voucher.style in stub-photos {
-        place(top + right, image(stub-photos.at(voucher.style), width: stub-width, height: 100%, fit: "cover"))
+        let photo = stub-photos.at(voucher.style)
+        place(top + right, image(photo.path, width: stub-width, height: 100%, fit: "cover"))
         place(top + right, rect(width: stub-width, height: 100%, fill: photo-shade))
+        place(bottom + right, dx: -4mm, dy: -4mm, text(
+          font: fonts.sans,
+          size: 6pt,
+          fill: ink.stub-muted,
+        )[#voucher.labels.at("photo-by") #photo.photographer])
       } else {
         place(top + right, rect(width: stub-width, height: 100%, fill: if christmas { accent } else { ink.stub }))
       }
