@@ -1,8 +1,8 @@
 defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
   @moduledoc """
-  Where Jennie sells a Gift voucher in the shop, paid there and then. She
-  lands on the sale's order page, whose Gift voucher card shows the code to
-  write onto the gift card.
+  Where Jennie sells a Gift voucher in the shop. She lands on the sale's
+  order page, whose Gift voucher card shows the code to write onto the gift
+  card, and records the buyer's payment there.
   """
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
 
@@ -10,7 +10,6 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
 
   alias Edenflowers.Orders.Order
   alias EdenflowersWeb.Admin.CustomerSearch
-  alias EdenflowersWeb.Admin.OrderLog
 
   @impl true
   def mount(_params, _session, socket) do
@@ -18,7 +17,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
       Order
       |> AshPhoenix.Form.for_create(:sell_gift_voucher,
         actor: socket.assigns.current_user,
-        params: %{"locale" => "sv-FI", "payment_method" => "zettle"}
+        params: %{"locale" => "sv-FI"}
       )
       |> to_form()
 
@@ -99,22 +98,14 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 class="input w-full"
                 autocomplete="off"
               />
-              <div class="space-y-2">
-                <.input
-                  field={@form[:customer_email]}
-                  type="email"
-                  label={~t"Email"}
-                  help={~t"A phone or an email is needed."}
-                  class="input w-full"
-                  autocomplete="off"
-                />
-                <.input
-                  :if={not blank?(@form[:customer_email])}
-                  field={@form[:email_buyer?]}
-                  type="checkbox"
-                  label={~t"Email the voucher with the receipt"}
-                />
-              </div>
+              <.input
+                field={@form[:customer_email]}
+                type="email"
+                label={~t"Email"}
+                help={~t"A phone or an email is needed."}
+                class="input w-full"
+                autocomplete="off"
+              />
             </div>
           </.form_section>
 
@@ -124,7 +115,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 field={@form[:recipient_name]}
                 type="text"
                 label={~t"Full name"}
-                help={~t"Printed on the voucher. Leave blank if the buyer doesn't say."}
+                help={~t"Printed on the voucher."}
                 class="input w-full"
                 autocapitalize="words"
               />
@@ -144,12 +135,6 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 />
               </div>
             </div>
-          </.form_section>
-
-          <.form_section title={~t"Payment"}>
-            <.input :let={option} field={@form[:payment_method]} type="radio-card" options={payment_options()}>
-              {option.name}
-            </.input>
           </.form_section>
         </.form>
       </.admin_page>
@@ -186,8 +171,4 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
   end
 
   defp blank?(field), do: field.value in [nil, ""]
-
-  defp payment_options do
-    for method <- [:zettle, :cash], do: %{name: OrderLog.payment_method_label(method), value: to_string(method)}
-  end
 end

@@ -8,17 +8,16 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLiveTest do
     %{conn: log_in(conn, generate(admin_user()) |> with_token())}
   end
 
-  test "Jennie sells a voucher paid in cash and lands on its order, with the code to copy", %{conn: conn} do
+  test "Jennie sells a voucher and lands on its order, with the code to copy", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/new-gift-voucher")
 
-    refute has_element?(view, ~s|input[name="form[email_buyer?]"][type=checkbox]|)
+    refute has_element?(view, ~s|input[name="form[email_recipient?]"][type=checkbox]|)
 
     view
-    |> form("#gift-voucher-form", form: %{customer_name: "Anna Holm", customer_email: "anna@example.com"})
+    |> form("#gift-voucher-form", form: %{customer_name: "Anna Holm", recipient_email: "maria@example.com"})
     |> render_change()
 
-    assert has_element?(view, ~s|input[name="form[email_buyer?]"][type=checkbox]|)
-    refute has_element?(view, ~s|input[name="form[email_recipient?]"][type=checkbox]|)
+    assert has_element?(view, ~s|input[name="form[email_recipient?]"][type=checkbox]|)
 
     {:error, {:live_redirect, %{to: path}}} =
       view
@@ -27,8 +26,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLiveTest do
           customer_name: "Anna Holm",
           customer_email: "anna@example.com",
           recipient_name: "Maria Lind",
-          amount: "35",
-          payment_method: "cash"
+          amount: "35"
         }
       )
       |> render_submit()
