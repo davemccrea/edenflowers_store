@@ -71,9 +71,10 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
             <%!-- The fields run down the left, and the preview sticks beside them while they're
                  filled in. On a phone the preview follows the style choice, before the words,
                  and sticks to the top of the screen above them, over the header, so the header
-                 coming and going leaves it where it is. --%>
+                 coming and going leaves it where it is. While the keyboard is up it drops back
+                 into the page: iOS scrolls the page under the keyboard and would hide it. --%>
             <%!-- A field scrolled into view stops below the sticky preview, not under it. --%>
-            <div class="grid gap-10 max-lg:[&_:is(input,textarea,select)]:scroll-mt-[calc((100vw-2rem)*148/210+5rem)] lg:grid-cols-2 lg:items-start lg:gap-x-16">
+            <div class="group/voucher grid gap-10 max-lg:[&_:is(input,textarea,select)]:scroll-mt-[calc((100vw-2rem)*148/210+5rem)] lg:grid-cols-2 lg:items-start lg:gap-x-16">
               <fieldset class="flex flex-col lg:col-start-1 lg:row-start-1">
                 <legend class="eyebrow text-base-content/70 mb-5">{~t"Make it personal"}</legend>
                 <%!-- Two styles to a row, everyday above Christmas. --%>
@@ -91,7 +92,63 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                 </div>
               </fieldset>
 
-              <div class="bg-base-100 z-60 sticky top-0 -mx-4 min-w-0 px-4 py-3 after:bg-linear-to-b after:from-base-100 after:absolute after:inset-x-0 after:top-full after:h-8 after:to-transparent lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:z-auto lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:after:hidden">
+              <script :type={Phoenix.LiveView.ColocatedHook} name=".PreviewSlidesBack">
+                // When the keyboard closes, the preview slides back down to the top of the
+                // screen, instead of appearing there at once. iOS's Done closes the keyboard
+                // but leaves the field focused, so the preview would stay out of the way until
+                // the next scroll: when the screen grows back, the field lets go of focus.
+                const TYPING = "textarea, input[type=text], input[type=email]";
+
+                export default {
+                  mounted() {
+                    this.onFocusOut = (event) => {
+                      if (!event.target.matches(TYPING)) return;
+                      setTimeout(() => {
+                        if (document.activeElement?.matches(TYPING)) return;
+                        if (
+                          window.matchMedia(
+                            "(min-width: 64rem), (prefers-reduced-motion: reduce)",
+                          ).matches
+                        )
+                          return;
+                        if (this.el.getBoundingClientRect().top > 1) return;
+                        this.el.animate(
+                          [{ transform: "translateY(-100%)" }, { transform: "translateY(0)" }],
+                          { duration: 300, easing: "ease-out" },
+                        );
+                      });
+                    };
+                    this.el.closest("form").addEventListener("focusout", this.onFocusOut);
+
+                    const viewport = window.visualViewport;
+                    if (!viewport) return;
+                    let height = viewport.height;
+                    this.onResize = () => {
+                      const keyboardClosed = viewport.height > height + 100;
+                      height = viewport.height;
+                      const field = document.activeElement;
+                      if (
+                        keyboardClosed &&
+                        field?.matches(TYPING) &&
+                        this.el.closest("form").contains(field)
+                      ) {
+                        field.blur();
+                      }
+                    };
+                    viewport.addEventListener("resize", this.onResize);
+                  },
+
+                  destroyed() {
+                    this.el.closest("form")?.removeEventListener("focusout", this.onFocusOut);
+                    window.visualViewport?.removeEventListener("resize", this.onResize);
+                  },
+                };
+              </script>
+              <div
+                id="voucher-preview-band"
+                phx-hook=".PreviewSlidesBack"
+                class="bg-base-100 z-60 sticky top-0 -mx-4 min-w-0 px-4 py-3 max-lg:group-has-[:is(textarea,input[type=text],input[type=email]):focus]/voucher:static after:bg-linear-to-b after:from-base-100 after:absolute after:inset-x-0 after:top-full after:h-8 after:to-transparent after:max-lg:group-has-[:is(textarea,input[type=text],input[type=email]):focus]/voucher:hidden lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:z-auto lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:after:hidden"
+              >
                 <%!-- Tapping a Christmas voucher shuffles its snow. --%>
                 <button
                   :if={GiftVoucherStyle.christmas?(@form[:voucher_style].value)}
