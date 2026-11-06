@@ -98,7 +98,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                     JS.push("shuffle_snow", loading: "#gift-voucher-form")
                     |> JS.transition("motion-safe:animate-[snow-pulse_500ms_ease-in-out]",
                       to: "#shuffle-snowflake",
-                      time: 500
+                      time: 500,
+                      blocking: false
                     )
                   }
                   class="mt-3 inline-flex items-center gap-2 py-2.5"
