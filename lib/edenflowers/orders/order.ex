@@ -376,6 +376,10 @@ defmodule Edenflowers.Orders.Order do
     # Cleared when Stripe hands the customer back, so their next add opens a new cart.
     attribute :visitor_id, :uuid
 
+    # The browser that started this Gift voucher sale, so it can resume it after a
+    # reload or reconnect. Kept apart from visitor_id, as a voucher sale is no cart.
+    attribute :voucher_visitor_id, :uuid
+
     attribute :receipt_emailed_at, :utc_datetime
     attribute :shop_reminded_at, :utc_datetime
     # The last queued receipt ran out of attempts. Cleared by a successful send.

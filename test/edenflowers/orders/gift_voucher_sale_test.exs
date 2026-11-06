@@ -206,6 +206,23 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
     end
   end
 
+  describe "resuming a voucher" do
+    test "only the browser that started it resumes it, unpaid and within a day" do
+      visitor_id = Ecto.UUID.generate()
+      %{id: id} = sale = start_sale(50, %{visitor_id: visitor_id})
+
+      assert %{id: ^id} = Orders.get_resumable_gift_voucher_sale!(visitor_id, actor: nil)
+      assert Orders.get_resumable_gift_voucher_sale!(Ecto.UUID.generate(), actor: nil) == nil
+
+      Ash.Seed.update!(sale, %{updated_at: DateTime.add(DateTime.utc_now(), -25, :hour)})
+      assert Orders.get_resumable_gift_voucher_sale!(visitor_id, actor: nil) == nil
+
+      paid_visitor_id = Ecto.UUID.generate()
+      buy(50, %{visitor_id: paid_visitor_id})
+      assert Orders.get_resumable_gift_voucher_sale!(paid_visitor_id, actor: nil) == nil
+    end
+  end
+
   describe "refunding a voucher" do
     setup do
       %{admin: generate(admin_user())}
