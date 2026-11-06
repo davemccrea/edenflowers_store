@@ -46,6 +46,24 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   def render(assigns) do
     ~H"""
     <style :type={EdenflowersWeb.ColocatedCSS}>
+      #voucher-preview:has(> .voucher-shuffle:active) {
+        box-shadow: var(--shadow-sm);
+        transition: none;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        #voucher-preview:has(> .voucher-shuffle) {
+          transition:
+            transform 150ms ease-out,
+            box-shadow 150ms ease-out;
+        }
+
+        #voucher-preview:has(> .voucher-shuffle:active) {
+          transform: translateY(1px) scale(0.985);
+          transition: none;
+        }
+      }
+
       /* Reserve space for both the voucher and its snow hint without covering the form.
          Short screens keep the full preview in normal flow instead. */
       .voucher-form-fields fieldset {
@@ -328,7 +346,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           phx-click={JS.push("shuffle_snow", loading: "#gift-voucher-form")}
           aria-label={~t"Shuffle the snow on the voucher"}
           aria-describedby="voucher-snow-hint"
-          class="absolute inset-0 cursor-pointer"
+          class="voucher-shuffle absolute inset-0 cursor-pointer"
           data-testid="shuffle-snow"
         ></button>
         <div
