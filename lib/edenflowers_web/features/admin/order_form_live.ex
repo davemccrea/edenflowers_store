@@ -375,10 +375,11 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   field={@form[:gift_voucher_code]}
                   type="text"
                   autocomplete="off"
-                  autocapitalize="characters"
+                  inputmode="numeric"
+                  phx-hook="VoucherCode"
                   spellcheck="false"
                   label={~t"Gift voucher code (optional)"}
-                  class="input font-mono w-full uppercase sm:max-w-xs"
+                  class="input w-full tabular-nums sm:max-w-xs"
                 />
                 <p
                   :if={Decimal.positive?(@price.voucher_pays)}

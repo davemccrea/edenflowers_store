@@ -15,8 +15,11 @@ export function formatVoucherCode(value, caret, backspacedSpace = false) {
   let before = digitsOf(value.slice(0, caret));
   let after = digitsOf(value.slice(caret));
   if (backspacedSpace) before = before.slice(0, -1);
+  // A code is 16 digits, so typing stops there and a longer paste is cut.
+  const digits = (before + after).slice(0, 16);
+  before = before.slice(0, 16);
 
-  const formatted = (before + after).replace(/(\d{4})(?=\d)/g, "$1 ");
+  const formatted = digits.replace(/(\d{4})(?=\d)/g, "$1 ");
   const spacesBefore =
     before.length > 0 ? Math.floor((before.length - 1) / 4) : 0;
   return { value: formatted, caret: before.length + spacesBefore };
