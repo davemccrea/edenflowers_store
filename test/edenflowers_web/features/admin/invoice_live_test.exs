@@ -317,6 +317,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     refute has_element?(view, "button[phx-click=destroy_draft]")
   end
 
+  @tag :capture_log
   test "drafts have no downloadable document", %{conn: conn, admin: admin} do
     invoice = draft(admin)
     conn = get(conn, ~p"/admin/invoices/#{invoice.id}/pdf")
@@ -338,6 +339,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert page_title(view) =~ "Invoice draft"
   end
 
+  @tag :capture_log
   test "email failure is visible and remains retryable on the issued invoice", %{conn: conn, admin: admin} do
     {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
     original = Ash.load!(invoice, :pdf, authorize?: false).pdf
