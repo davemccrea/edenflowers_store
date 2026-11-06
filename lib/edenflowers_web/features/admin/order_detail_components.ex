@@ -29,7 +29,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         {~t"The buyer collects a gift card at the shop. Write these on one of your cards, then mark it collected."}
       </p>
       <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
-        <.summary_fact label={~t"For"}>{@order.recipient_name}</.summary_fact>
+        <.summary_fact label={~t"For"}>{@order.recipient_name || "—"}</.summary_fact>
         <.summary_fact label={~t"Amount"}>
           <span class="tabular-nums">{Format.currency(@order.gift_voucher_line.unit_price, @locale)}</span>
         </.summary_fact>

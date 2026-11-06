@@ -13,6 +13,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
 
   alias Edenflowers.Format
   alias Edenflowers.Orders
+  alias Edenflowers.ShopTime
   alias EdenflowersWeb.PaymentLink
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -108,10 +109,8 @@ defmodule EdenflowersWeb.Checkout.PayLive do
                   {~t"Your order has been delivered. I hope you're happy with it."}
                 <% @payable.fulfillment_status == :fulfilled -> %>
                   {~t"Your order has been collected. I hope you're happy with it."}
-                <% @payable.fulfillment_method == :delivery -> %>
-                  {~t"Delivery on #{date = Format.weekday_date(@payable.fulfillment_date, @locale)} to #{address = @payable.delivery_address}"}
                 <% true -> %>
-                  {~t"Ready to collect on #{date = Format.weekday_date(@payable.fulfillment_date, @locale)}"}
+                  {fulfillment_line(@payable, @locale)}
               <% end %>
               <span :if={@payable.gift && @payable.recipient_name} class="block">
                 {~t"For #{recipient = @payable.recipient_name}"}
@@ -232,6 +231,27 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   end
 
   defp email_form(_order), do: nil
+
+  defp fulfillment_line(%{fulfillment_method: :delivery} = order, locale) do
+    case Date.diff(order.fulfillment_date, ShopTime.today()) do
+      0 ->
+        ~t"Delivery today to #{address = order.delivery_address}"
+
+      1 ->
+        ~t"Delivery tomorrow to #{address = order.delivery_address}"
+
+      _ ->
+        ~t"Delivery on #{date = Format.weekday_date(order.fulfillment_date, locale)} to #{address = order.delivery_address}"
+    end
+  end
+
+  defp fulfillment_line(order, locale) do
+    case Date.diff(order.fulfillment_date, ShopTime.today()) do
+      0 -> ~t"Ready to collect today"
+      1 -> ~t"Ready to collect tomorrow"
+      _ -> ~t"Ready to collect on #{date = Format.weekday_date(order.fulfillment_date, locale)}"
+    end
+  end
 
   defp load_order(token), do: Orders.get_order_by_payment_link_token(token, authorize?: false)
 end

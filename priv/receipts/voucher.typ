@@ -70,7 +70,7 @@
       column-gutter: 12mm,
       [
         #label("code")
-        #text(size: 14pt, weight: "semibold", tracking: 1.6pt, features: ("tnum",), fill: colors.primary)[#voucher.code]
+        #text(size: 14pt, weight: "semibold", tracking: 1.6pt, features: ("tnum",), fill: colors.ink)[#voucher.code]
       ],
       [
         #label("valid-until")
