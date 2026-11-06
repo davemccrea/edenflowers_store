@@ -5143,8 +5143,6 @@ msgid "Printed on the voucher. Leave blank if the buyer doesn't say."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:24
-#: lib/edenflowers_web/features/admin/orders_live.ex:45
-#: lib/edenflowers_web/features/admin/overview_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "Sell gift voucher"
 msgstr ""
@@ -5182,4 +5180,10 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:96
 #, elixir-autogen, elixir-format
 msgid "Voucher"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/orders_live.ex:45
+#: lib/edenflowers_web/features/admin/overview_live.ex:57
+#, elixir-autogen, elixir-format
+msgid "New voucher"
 msgstr ""
