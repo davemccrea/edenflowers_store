@@ -663,6 +663,12 @@ defmodule Edenflowers.Orders.Order do
                     "buy another."
     end
 
+    calculate :celebrated?, :boolean, expr(gift_voucher_sale? or (subscription? and not gift)) do
+      description "Whether the thank-you page lets petals fall: a Gift voucher sale, or a Subscription the " <>
+                    "Customer starts for themselves. Gifts stay calm, since flowers for somebody else may be " <>
+                    "condolence flowers."
+    end
+
     calculate :refunded_only_by_cancelling?, :boolean, expr(gift_voucher_sale?) do
       description "Whether its money goes back only by cancelling it: a Gift voucher sale, so refunding it " <>
                     "always stops the voucher. The admin offers no Refund for it, only Cancel."
