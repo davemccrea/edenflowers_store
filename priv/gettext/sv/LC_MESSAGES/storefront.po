@@ -4520,3 +4520,8 @@ msgstr "Du har osparade ändringar. Vill du lämna sidan utan att spara?"
 #, elixir-autogen, elixir-format
 msgid "See Gift voucher terms"
 msgstr "Se villkor för presentkort"
+
+#: lib/edenflowers_web/features/store/store_live.ex:143
+#, elixir-autogen, elixir-format
+msgid "New"
+msgstr "Nytt"

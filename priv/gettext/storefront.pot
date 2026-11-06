@@ -4524,3 +4524,8 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "See Gift voucher terms"
 msgstr ""
+
+#: lib/edenflowers_web/features/store/store_live.ex:143
+#, elixir-autogen, elixir-format
+msgid "New"
+msgstr ""
