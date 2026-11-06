@@ -51,11 +51,12 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
       alternates={@alternates}
     >
       <.container>
-        <div class="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_34rem] lg:gap-16">
-          <div class="min-w-0 max-w-prose">
+        <%!-- The preview stands in for a product photo: beside the form on a wide screen, between the intro and the form on a phone. --%>
+        <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-16">
+          <header class="min-w-0 lg:col-start-2 lg:row-start-1">
             <h1 class="page-title">{~t"Gift voucher"}</h1>
             <p class="mt-6 text-lg leading-relaxed">
-              {~t"Not sure which flowers they'd love? Let them choose. A gift voucher from me can be spent on a bouquet, a flower subscription or one of my courses, here online or in my shop at Minimossen."}
+              {~t"Give them flowers on their own terms: a bouquet when they need one, fresh flowers every few weeks with a subscription, or an evening on one of my courses. They can spend it here online or in my shop at Minimossen."}
             </p>
 
             <dl class="border-base-content/12 grid-cols-[auto_minmax(0,1fr)] mt-8 grid items-baseline gap-x-6 gap-y-3 border-t pt-6">
@@ -70,29 +71,26 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                 {~t"I email you the voucher as a PDF, in Swedish, Finnish or English, to print or forward. You can also collect a gift card at Minimossen, with the voucher written on it."}
               </dd>
             </dl>
+          </header>
 
-            <p class="text-base-content/70 mt-6">
-              <.link navigate={~q"/#{language}/terms" <> "#gift-vouchers"} class="link-underline-hover">
-                {~t"Gift voucher terms"}
-              </.link>
-            </p>
+          <div class="min-w-0 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky lg:col-start-1 lg:row-span-2 lg:row-start-1">
+            <.voucher_preview preview={@preview} />
           </div>
 
-          <aside
-            class="bg-cream text-cream-content -mx-4 min-w-0 px-4 py-8 sm:mx-0 sm:p-9 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky"
+          <div
+            class="border-base-content/12 min-w-0 lg:col-start-2 lg:row-start-2 lg:border-t lg:pt-8"
             data-testid="gift-voucher-checkout"
           >
-            <section :if={is_nil(@sale) || @editing?} aria-labelledby="voucher-details">
-              <h2 id="voucher-details" class="section-title mb-6">{~t"Your gift voucher"}</h2>
-              <.voucher_preview preview={@preview} />
-
-              <.form
-                id="gift-voucher-form"
-                for={@form}
-                phx-change="validate"
-                phx-submit="continue"
-                class="flex flex-col gap-6"
-              >
+            <.form
+              :if={is_nil(@sale) || @editing?}
+              id="gift-voucher-form"
+              for={@form}
+              phx-change="validate"
+              phx-submit="continue"
+              class="flex flex-col gap-10"
+            >
+              <fieldset class="flex flex-col gap-6">
+                <legend class="eyebrow text-base-content/70 mb-5">{~t"Voucher"}</legend>
                 <div class="grid gap-6 sm:grid-cols-2">
                   <.input
                     label={~t"Amount"}
@@ -109,13 +107,19 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                 </div>
                 <.input
                   :let={option}
+                  :if={@christmas_offered?}
                   label={~t"Style"}
                   field={@form[:voucher_style]}
                   type="radio-card"
-                  options={style_options(@christmas_offered?)}
+                  options={[%{value: "cream", label: ~t"Regular"}, %{value: "christmas", label: ~t"Christmas"}]}
                 >
                   {option.label}
                 </.input>
+                <.input :if={!@christmas_offered?} field={@form[:voucher_style]} type="hidden" />
+              </fieldset>
+
+              <fieldset class="flex flex-col gap-6">
+                <legend class="eyebrow text-base-content/70 mb-5">{~t"Written on it"}</legend>
                 <.input
                   label={~t"Who is it for?"}
                   field={@form[:recipient_name]}
@@ -131,6 +135,10 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   phx-debounce="400"
                   rows="3"
                 />
+              </fieldset>
+
+              <fieldset class="flex flex-col gap-6">
+                <legend class="eyebrow text-base-content/70 mb-5">{~t"Your details"}</legend>
                 <div class="grid gap-6 sm:grid-cols-2">
                   <.input
                     label={~t"Your name"}
@@ -147,17 +155,19 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                     required
                   />
                 </div>
-                <.input
-                  label={~t"I'd also like to collect a gift card at Minimossen"}
-                  field={@form[:collect_voucher_card]}
-                  type="checkbox"
-                />
+              </fieldset>
 
-                <.button type="submit" variant="primary" size="lg" class="mt-2" data-testid="continue-to-payment">
+              <div>
+                <.button type="submit" variant="primary" size="lg" class="w-full" data-testid="continue-to-payment">
                   {~t"Continue to payment"}
                 </.button>
-              </.form>
-            </section>
+                <p class="text-base-content/70 mt-4">
+                  <.link navigate={~q"/#{language}/terms" <> "#gift-vouchers"} class="link-underline-hover">
+                    {~t"Gift voucher terms"}
+                  </.link>
+                </p>
+              </div>
+            </.form>
 
             <section :if={@sale && !@editing?} aria-labelledby="pay-heading" data-testid="payment-section">
               <%!-- The form, and the button that submitted it, are gone: focus lands here instead of on <body>. --%>
@@ -169,7 +179,6 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
               >
                 {~t"Payment"}
               </h2>
-              <.voucher_preview preview={@preview} />
               <p>
                 {~t"Gift voucher of #{amount = Format.storefront_price(@sale.grand_total, @locale)} for #{name = @sale.recipient_name}"}
               </p>
@@ -188,7 +197,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                 {~t"Pay"} {Format.currency(@sale.grand_total, @locale)}
               </.stripe_form>
             </section>
-          </aside>
+          </div>
         </div>
       </.container>
     </Layouts.app>
@@ -200,7 +209,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   # Sized before the image arrives, so the form below doesn't jump.
   defp voucher_preview(assigns) do
     ~H"""
-    <div class="bg-base-100 aspect-[210/148] mb-6 shadow-sm">
+    <div class="bg-base-100 aspect-[210/148] shadow-lg">
       <img
         :if={@preview}
         src={"data:image/png;base64," <> @preview}
@@ -210,15 +219,6 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
       />
     </div>
     """
-  end
-
-  defp style_options(christmas_offered?) do
-    [
-      %{value: "cream", label: ~t"Cream"},
-      %{value: "green", label: ~t"Green"},
-      christmas_offered? && %{value: "christmas", label: ~t"Christmas"}
-    ]
-    |> Enum.filter(& &1)
   end
 
   @impl true
