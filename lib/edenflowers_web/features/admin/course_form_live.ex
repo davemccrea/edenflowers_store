@@ -185,13 +185,13 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                   <.input
                     field={@form[:photo_credit_name]}
                     type="text"
-                    label={~t"Photographer (optional)"}
+                    label={~t"Photographer"}
                     class="input w-full"
                   />
                   <.input
                     field={@form[:photo_credit_url]}
                     type="url"
-                    label={~t"Photographer website (optional)"}
+                    label={~t"Photographer website"}
                     placeholder="https://example.com"
                     class="input w-full"
                   />

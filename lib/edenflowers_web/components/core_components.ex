@@ -313,6 +313,13 @@ defmodule EdenflowersWeb.CoreComponents do
   attr :button_text, :string, default: nil
   attr :hidden, :boolean, default: false
 
+  attr :required, :boolean,
+    default: nil,
+    doc:
+      "marks the field required with a * after the label and aria-required, leaving the browser's own " <>
+        "check out so Ash's errors show instead. With a :field it defaults to " <>
+        "what the form's source says, e.g. an Ash attribute or argument with `allow_nil? false`"
+
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file month number password
@@ -350,7 +357,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
   attr :rest, :global,
     include: ~w(accept autocomplete autocorrect capture cols disabled form inputmode list max maxlength min minlength
-                multiple pattern placeholder readonly required rows size step
+                multiple pattern placeholder readonly rows size step
                 phx-blur phx-debounce phx-focus phx-change)
 
   slot :inner_block
@@ -368,6 +375,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
     assigns
     |> assign(field: nil, id: assigns.id || field.id)
+    |> assign(:required, required?(assigns, field))
     |> assign(:errors, Enum.map(errors, &translate_error(&1)))
     |> assign(:used?, used?)
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
@@ -401,6 +409,7 @@ defmodule EdenflowersWeb.CoreComponents do
             class={@class || "checkbox checkbox-sm"}
             aria-invalid={@errors != [] && "true"}
             aria-describedby={describedby(@id, @errors, @help)}
+            aria-required={@required && "true"}
             {@rest}
           /><span class={@label_class}>{@label} {render_slot(@inner_block)}</span>
         </span>
@@ -417,7 +426,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
-        <span :if={@label} class="mb-1">{@label}</span>
+        <span :if={@label} class="mb-1">{@label}<.required_mark :if={@required} /></span>
         <select
           id={@id}
           name={@name}
@@ -425,6 +434,7 @@ defmodule EdenflowersWeb.CoreComponents do
           multiple={@multiple}
           aria-invalid={@errors != [] && "true"}
           aria-describedby={describedby(@id, @errors, @help)}
+          aria-required={@required && "true"}
           {@rest}
         >
           <option :if={@prompt} value="">{@prompt}</option>
@@ -443,13 +453,14 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
-        <span :if={@label} class="mb-1">{@label}</span>
+        <span :if={@label} class="mb-1">{@label}<.required_mark :if={@required} /></span>
         <textarea
           id={@id}
           name={@name}
           class={[@class || "textarea textarea-lg w-full text-base", @errors != [] && (@error_class || "textarea-error")]}
           aria-invalid={@errors != [] && "true"}
           aria-describedby={describedby(@id, @errors, @help)}
+          aria-required={@required && "true"}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
@@ -470,7 +481,7 @@ defmodule EdenflowersWeb.CoreComponents do
 
     ~H"""
     <fieldset class={["flex flex-col", @hidden && "hidden"]}>
-      <legend :if={@label} class="mb-1">{@label}</legend>
+      <legend :if={@label} class="mb-1">{@label}<.required_mark :if={@required} /></legend>
       <div class="flex flex-col flex-wrap gap-2 md:flex-row">
         <input type="hidden" name={@name} value="" />
         <%= for option <- @options do %>
@@ -485,6 +496,7 @@ defmodule EdenflowersWeb.CoreComponents do
               value={option[:value]}
               checked={option[:value] == to_string(@value)}
               class="radio radio-xs radio-primary"
+              aria-required={@required && "true"}
               {@rest}
             />
             <span>
@@ -508,6 +520,7 @@ defmodule EdenflowersWeb.CoreComponents do
         class={["grow", @class]}
         aria-invalid={@errors != [] && "true"}
         aria-describedby={@errors != [] && "#{@id}-error"}
+        aria-required={@required && "true"}
         {@rest}
       />
       <button
@@ -528,7 +541,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <fieldset class={@hidden && "hidden"}>
       <label class="flex flex-col">
-        <span :if={@label} class="mb-1">{@label}</span>
+        <span :if={@label} class="mb-1">{@label}<.required_mark :if={@required} /></span>
         <div class="relative">
           <span
             :if={@leading != []}
@@ -546,6 +559,7 @@ defmodule EdenflowersWeb.CoreComponents do
             aria-describedby={describedby(@id, @errors, @help)}
             phx-debounce={if not @used? and not @validate_live?, do: "blur"}
             inputmode={if @type == "number", do: "numeric"}
+            aria-required={@required && "true"}
             {@rest}
           />
           <div
@@ -570,6 +584,47 @@ defmodule EdenflowersWeb.CoreComponents do
         <.error :for={msg <- @errors}>{msg}</.error>
       </div>
     </fieldset>
+    """
+  end
+
+  # A checkbox that has to be ticked is never what a non-nil boolean means.
+  defp required?(%{required: nil, type: type}, field) when type not in ["checkbox", "hidden"] do
+    Keyword.get(Phoenix.HTML.Form.input_validations(field.form, field.field), :required, false) or
+      validated_present?(field.form.source, field.field)
+  end
+
+  defp required?(assigns, _field), do: assigns.required || false
+
+  # AshPhoenix only reports `allow_nil? false`. This adds the action's `present/1` validations
+  # that always apply, so a field required only that way is marked too. Conditional ones
+  # (another `where`, or `at_least`) can't be known here: pass `required`.
+  defp validated_present?(%AshPhoenix.Form{source: %Ash.Changeset{action: action, resource: resource}}, field)
+       when is_atom(field) do
+    validations =
+      Enum.filter(action.changes, &is_struct(&1, Ash.Resource.Validation)) ++
+        Ash.Resource.Info.validations(resource, action.type)
+
+    Enum.any?(validations, fn
+      %{validation: {Ash.Resource.Validation.Present, opts}, where: where} ->
+        attributes = List.wrap(opts[:attributes])
+
+        field in attributes and opts[:exactly] in [nil, length(attributes)] and
+          not Keyword.has_key?(opts, :at_least) and not Keyword.has_key?(opts, :at_most) and
+          Enum.all?(where, &action_is?(&1, action.name))
+
+      _ ->
+        false
+    end)
+  end
+
+  defp validated_present?(_source, _field), do: false
+
+  defp action_is?({Ash.Resource.Validation.ActionIs, opts}, name), do: name in List.wrap(opts[:action])
+  defp action_is?(_, _), do: false
+
+  defp required_mark(assigns) do
+    ~H"""
+    <span aria-hidden="true"> *</span>
     """
   end
 

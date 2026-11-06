@@ -199,19 +199,19 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     data-testid="checkout-form-1"
                   >
                     <.input
-                      label={~t"Your name *"}
+                      label={~t"Your name"}
                       field={@form[:customer_name]}
                       type="text"
                       autocomplete="name"
-                      aria-required="true"
+                      required
                       data-testid="customer-name-input"
                     />
                     <.input
-                      label={~t"Email *"}
+                      label={~t"Email"}
                       field={@form[:customer_email]}
                       type="email"
                       autocomplete="email"
-                      aria-required="true"
+                      required
                       data-testid="customer-email-input"
                     />
                     <p
@@ -250,7 +250,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     <.input
                       :let={option}
                       type="radio-card"
-                      label={~t"Recipient *"}
+                      label={~t"Recipient"}
+                      required
                       field={@form[:gift]}
                       options={[%{name: ~t"For me", value: "false"}, %{name: ~t"For somebody else", value: "true"}]}
                       phx-change="set_gift"
@@ -261,10 +262,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                     <.input
                       hidden={not @order.gift}
-                      label={~t"Recipient name *"}
+                      label={~t"Recipient name"}
                       field={@form[:recipient_name]}
                       type="text"
-                      aria-required="true"
+                      required
                       data-testid="recipient-name-input"
                     />
 
@@ -285,7 +286,8 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                           %{name: name, value: id}
                         end)
                       }
-                      label={~t"Delivery method *"}
+                      label={~t"Delivery method"}
+                      required
                     >
                       {option.name}
                     </.input>
@@ -327,7 +329,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                         phx-blur="format_phone_number"
                         type="tel"
                         autocomplete={own_details_autocomplete(@order, "tel")}
-                        aria-required="true"
+                        required
                       />
 
                       <fieldset class="flex flex-col">

@@ -239,6 +239,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                     field={@form[:delivery_address]}
                     type="text"
                     label={~t"Delivery address"}
+                    required
                     class="input w-full"
                     autocomplete="off"
                     phx-blur="quote_delivery"
@@ -384,7 +385,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   inputmode="numeric"
                   phx-hook="VoucherCode"
                   spellcheck="false"
-                  label={~t"Gift voucher code (optional)"}
+                  label={~t"Gift voucher code"}
                   class="input w-full tabular-nums sm:max-w-xs"
                 />
                 <p
@@ -939,7 +940,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         <p class="flex h-10 items-center text-base font-semibold">{existing_line_name(@line.data)}</p>
       </div>
       <div class="w-20">
-        <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} class="input w-full tabular-nums" />
+        <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} required class="input w-full tabular-nums" />
       </div>
     </.line_row>
     """
@@ -954,13 +955,14 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           field={@line[:product_variant_id]}
           type="select"
           label={~t"Product"}
+          required
           prompt={~t"Choose…"}
           options={@variant_options}
           class="select w-full"
         />
       </div>
       <div class="w-20">
-        <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} class="input w-full tabular-nums" />
+        <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} required class="input w-full tabular-nums" />
       </div>
     </.line_row>
     """
@@ -975,6 +977,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           field={@line[:product_name]}
           type="text"
           label={~t"Description"}
+          required
           placeholder={~t"e.g. Funeral spray, white roses"}
           class="input w-full"
         />
@@ -985,14 +988,22 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           type="text"
           inputmode="decimal"
           label={~t"Price each (€)"}
+          required
           class="input w-full tabular-nums"
         />
       </div>
       <div class="min-w-0 flex-1 basis-40">
-        <.input field={@line[:tax_rate_id]} type="select" label={~t"VAT"} options={@tax_rate_options} class="select w-full" />
+        <.input
+          field={@line[:tax_rate_id]}
+          type="select"
+          label={~t"VAT"}
+          required
+          options={@tax_rate_options}
+          class="select w-full"
+        />
       </div>
       <div class="w-20">
-        <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} class="input w-full tabular-nums" />
+        <.input field={@line[:quantity]} type="number" min="1" label={~t"Qty"} required class="input w-full tabular-nums" />
       </div>
     </.line_row>
     """

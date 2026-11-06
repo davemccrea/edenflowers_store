@@ -195,6 +195,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   <.input
                     field={@form[:buyer_name]}
                     label={~t"Name"}
+                    required
                     class="input w-full"
                     autocomplete="off"
                     autocapitalize="words"
@@ -203,6 +204,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                     field={@form[:buyer_email]}
                     type="email"
                     label={~t"Email"}
+                    required
                     class="input w-full"
                     autocomplete="off"
                   />
@@ -211,13 +213,14 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   <.input field={@form[:business_customer]} type="checkbox" label={~t"Business customer"} />
                 </div>
                 <div :if={@form[:business_customer].value in [true, "true"]} class="mt-4 grid gap-4 sm:grid-cols-2">
-                  <.input field={@form[:company_name]} label={~t"Company name"} class="input w-full" />
-                  <.input field={@form[:business_id]} label={~t"Y-tunnus"} class="input w-full" />
+                  <.input field={@form[:company_name]} label={~t"Company name"} required class="input w-full" />
+                  <.input field={@form[:business_id]} label={~t"Y-tunnus"} required class="input w-full" />
                   <div class="sm:col-span-2">
                     <.input
                       field={@form[:billing_address]}
                       type="textarea"
                       label={~t"Billing address"}
+                      required
                       class="textarea w-full"
                       rows="3"
                     />
@@ -237,13 +240,13 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                     max="365"
                     label={~t"Payment term (days)"}
                     class="input w-full"
-                    required
                     help={issue_dates_hint(@form[:payment_term_days].value, @locale)}
                   />
                   <.input
                     field={@form[:supply_date]}
                     type="date"
                     label={~t"Date of supply or advance payment"}
+                    required
                     class="input w-full"
                     help={~t"Needed to issue the invoice."}
                   />
@@ -262,7 +265,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   phx-mounted={JS.ignore_attributes(["open"])}
                 >
                   <summary class="text-base-content flex cursor-pointer list-none items-center gap-1 text-sm font-semibold">
-                    {~t"Additional details (optional)"}
+                    {~t"Additional details"}
                     <.icon
                       name="hero-chevron-right"
                       class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
@@ -271,12 +274,12 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   <div class="mt-4 space-y-4">
                     <.input
                       field={@form[:customer_reference]}
-                      label={~t"Customer reference (optional)"}
+                      label={~t"Customer reference"}
                       class="input w-full"
                     />
                     <.input
                       field={@form[:supply_description]}
-                      label={~t"Label for the date of supply (optional)"}
+                      label={~t"Label for the date of supply"}
                       placeholder={~t"Wedding date"}
                       class="input w-full"
                     />
@@ -291,10 +294,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 aria-hidden="true"
                 class={["text-base-content/75 border-base-content/12 hidden gap-3 border-b pb-2 text-xs font-semibold xl:grid", line_columns()]}
               >
-                <span>{~t"Description"}</span>
-                <span>{~t"Qty"}</span>
-                <span>{~t"Price each (€)"}</span>
-                <span>{~t"VAT"}</span>
+                <span>{~t"Description"} *</span>
+                <span>{~t"Qty"} *</span>
+                <span>{~t"Price each (€)"} *</span>
+                <span>{~t"VAT"} *</span>
                 <span class="text-right">{~t"Total"}</span>
               </div>
               <div class="divide-base-content/12 divide-y">
@@ -309,6 +312,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                         field={line_form[:description]}
                         id={"line-#{line_form.index}-description"}
                         label={~t"Description"}
+                        required
                         class="input w-full"
                       />
                     </div>
@@ -317,6 +321,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                       value={decimal_comma(line_form[:quantity].value)}
                       id={"line-#{line_form.index}-quantity"}
                       label={~t"Qty"}
+                      required
                       inputmode="decimal"
                       class="input w-full tabular-nums"
                     />
@@ -325,6 +330,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                       value={decimal_comma(line_form[:unit_price].value)}
                       id={"line-#{line_form.index}-price"}
                       label={~t"Price each (€)"}
+                      required
                       inputmode="decimal"
                       class="input w-full tabular-nums"
                     />
@@ -333,6 +339,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                       id={"line-#{line_form.index}-vat"}
                       type="select"
                       label={~t"VAT"}
+                      required
                       value={normalize_decimal(line_form[:vat_rate].value)}
                       options={vat_options(@tax_rates, line_form[:vat_rate].value)}
                       class="select w-full"
@@ -506,14 +513,12 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                     label={~t"Amount (€)"}
                     inputmode="decimal"
                     class="input w-full tabular-nums"
-                    required
                   />
                   <.input
                     field={@payment_form[:paid_on]}
                     type="date"
                     label={~t"Payment date"}
                     class="input w-full"
-                    required
                   />
                 </div>
                 <.button
@@ -585,7 +590,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 <.input
                   field={@credit_form[:reason]}
                   type="textarea"
-                  label={~t"Reason (optional)"}
+                  label={~t"Reason"}
                   class="textarea w-full"
                   rows="2"
                 />
