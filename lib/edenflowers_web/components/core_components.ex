@@ -1029,7 +1029,8 @@ defmodule EdenflowersWeb.CoreComponents do
   """
   attr :product, :map,
     required: true,
-    doc: "must respond to :name, :main_photo_slug, :cheapest_price, :free_delivery, :sold_out?, :waiting_until"
+    doc:
+      "must respond to :name, :main_photo_slug, :cheapest_price, :free_delivery, :sold_out?, :waiting_until, :first_open_day"
 
   attr :navigate, :string, required: true
   attr :locale, :string, required: true
@@ -1086,7 +1087,7 @@ defmodule EdenflowersWeb.CoreComponents do
           class="text-base-content/80 text-sm font-semibold"
           data-testid="available-from"
         >
-          {Edenflowers.Format.available_from(@product.waiting_until, @locale)}
+          {Edenflowers.Format.available_from(@product.first_open_day, @locale)}
         </p>
       </div>
     </.link>

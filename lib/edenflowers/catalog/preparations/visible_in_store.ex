@@ -21,6 +21,7 @@ defmodule Edenflowers.Catalog.Preparations.VisibleInStore do
       :cheapest_price,
       :sold_out?,
       :waiting_until,
+      :first_open_day,
       :product_variants,
       :product_category
     ])

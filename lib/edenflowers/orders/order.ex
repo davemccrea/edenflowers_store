@@ -611,6 +611,12 @@ defmodule Edenflowers.Orders.Order do
                     "it's collected. The admin shows a badge."
     end
 
+    calculate :first_open_day, :date, {Edenflowers.Fulfillment.Calculations.FirstOpenDay, from: :available_from} do
+      description "The first day on or after its Available from that the shop calendar is open, else nil. " <>
+                    "Checkout names this day as when the order's products are available, since the calendar " <>
+                    "can't be booked on a closed day anyway."
+    end
+
     calculate :voucher_card_ready_on, :date, Calculations.VoucherCardReadyOn do
       description "The day a Gift voucher sale's gift card is ready to collect at the shop: the first day it " <>
                     "opens after the order. Nil unless the buyer chose to collect a card. The confirmation " <>
