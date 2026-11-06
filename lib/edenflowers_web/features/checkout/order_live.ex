@@ -71,9 +71,9 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             <p class="mt-6 leading-relaxed" data-testid="order-fulfillment">
               <%= cond do %>
                 <% @shown_order.collect_voucher_card -> %>
-                  {~t"Your gift voucher for #{name = @shown_order.recipient_name} will be sent by email, ready to print or forward. A gift card with the voucher written on it can be collected at Minimossen from #{@date}."}
+                  {~t"Your gift voucher for #{name = @shown_order.recipient_name} will be emailed to you at #{email = @shown_order.customer_email}, ready to print or forward. A gift card with the voucher written on it can be collected at Minimossen from #{@date}."}
                 <% @shown_order.gift_voucher_sale? -> %>
-                  {~t"Your gift voucher for #{name = @shown_order.recipient_name} will be sent by email, ready for you to print or forward."}
+                  {~t"Your gift voucher for #{name = @shown_order.recipient_name} will be emailed to you at #{email = @shown_order.customer_email}, ready for you to print or forward."}
                 <% @shown_order.fulfillment_method == :delivery -> %>
                   {~t"I'll deliver your order on #{@date}."}
                 <% true -> %>
