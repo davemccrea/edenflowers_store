@@ -112,6 +112,15 @@ defmodule EdenflowersWeb.Checkout.PayLive do
                 <% true -> %>
                   {fulfillment_line(@payable, @locale)}
               <% end %>
+              <span
+                :if={
+                  @payable.fulfillment_method == :pickup and @payable.fulfillment_status == :pending and
+                    not is_nil(@payable.customer_phone_number)
+                }
+                class="block"
+              >
+                {~t"I'll send a message when your order is ready for pick up."}
+              </span>
               <span :if={@payable.gift && @payable.recipient_name} class="block">
                 {~t"For #{recipient = @payable.recipient_name}"}
               </span>

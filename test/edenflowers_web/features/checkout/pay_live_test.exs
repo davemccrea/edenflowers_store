@@ -20,6 +20,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
         %{
           customer_name: "Anna Holm",
           customer_email: "anna@example.com",
+          customer_phone_number: "040 123 4567",
           fulfillment_option_id: pickup.id,
           fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 1),
           locale: "en-GB",
@@ -47,6 +48,13 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     assert has_element?(view, "h1", "Pay for your order")
     assert has_element?(view, "hgroup p", "Order #{order.order_reference}")
     assert has_element?(view, "[data-testid=pay-fulfillment]", "Ready to collect tomorrow")
+
+    assert has_element?(
+             view,
+             "[data-testid=pay-fulfillment]",
+             "I'll send a message when your order is ready for pick up."
+           )
+
     assert has_element?(view, "dl", "Funeral spray")
     assert has_element?(view, "[data-testid=pay-total]", "85,00")
     refute has_element?(view, "[data-testid=pay-balance]")
