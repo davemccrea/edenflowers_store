@@ -36,6 +36,16 @@ defmodule EdenflowersWeb.Endpoint do
     only: ~w(admin-sw.js),
     cache_control_for_etags: "no-cache"
 
+  # app.js imports its esbuild chunks without ?vsn, so Plug.Static would send them
+  # without a max-age and Cloudflare would cap them at four hours. Their names carry
+  # a content hash (--chunk-names in config.exs), so they never change in place.
+  plug Plug.Static,
+    at: "/assets/js/chunks",
+    from: {:edenflowers, "priv/static/assets/js/chunks"},
+    gzip: not code_reloading?,
+    brotli: not code_reloading?,
+    cache_control_for_etags: "public, max-age=31536000, immutable"
+
   plug Plug.Static,
     at: "/",
     from: :edenflowers,
