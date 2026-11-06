@@ -62,6 +62,22 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           <.same_day_form form={@same_day_form} />
         </.form_section>
 
+        <.form_section title={~t"Gift vouchers"} class="mt-6">
+          <label class="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              class="toggle toggle-primary"
+              checked={@calendar.christmas_vouchers_online}
+              phx-click="toggle-christmas-vouchers"
+              data-testid="christmas-vouchers-toggle"
+            />
+            {~t"Offer the Christmas voucher online"}
+          </label>
+          <p class="text-base-content/70 mt-2 text-sm">
+            {~t"You can choose it for a voucher you sell in the shop either way."}
+          </p>
+        </.form_section>
+
         <.form_section title={~t"Options"} class="mt-6">
           <Cinder.collection
             id="fulfillment-options"
@@ -156,6 +172,14 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
          |> assign(:same_day_form, form)
          |> put_flash(:error, ~t"Not saved. Check the fields marked below.")}
     end
+  end
+
+  def handle_event("toggle-christmas-vouchers", _, socket) do
+    {:noreply,
+     update_calendar(
+       socket,
+       &Fulfillment.set_christmas_vouchers_online!(&1, not &1.christmas_vouchers_online, actor: &2)
+     )}
   end
 
   def handle_event("reset-calendar", _, socket) do

@@ -14,6 +14,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Payments.GiftVoucherPdf
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -30,9 +31,12 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
          ~t"An Eden Flowers gift voucher, from 20 to 200 €, to spend on flowers, subscriptions and courses in Vaasa.",
        locale: Format.locale(),
        sale: nil,
-       editing?: false
+       editing?: false,
+       christmas_offered?: Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false).christmas_vouchers_online,
+       preview: nil
      )
-     |> assign_form()}
+     |> assign_form()
+     |> render_preview()}
   end
 
   @impl true
@@ -80,6 +84,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           >
             <section :if={is_nil(@sale) || @editing?} aria-labelledby="voucher-details">
               <h2 id="voucher-details" class="section-title mb-6">{~t"Your gift voucher"}</h2>
+              <.voucher_preview preview={@preview} />
 
               <.form
                 id="gift-voucher-form"
@@ -103,9 +108,19 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   />
                 </div>
                 <.input
+                  :let={option}
+                  label={~t"Style"}
+                  field={@form[:voucher_style]}
+                  type="radio-card"
+                  options={style_options(@christmas_offered?)}
+                >
+                  {option.label}
+                </.input>
+                <.input
                   label={~t"Who is it for?"}
                   field={@form[:recipient_name]}
                   type="text"
+                  phx-debounce="400"
                   required
                 />
                 <.input
@@ -113,6 +128,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   field={@form[:card_message]}
                   type="textarea"
                   maxlength={Order.Checkout.voucher_message_length()}
+                  phx-debounce="400"
                   rows="3"
                 />
                 <div class="grid gap-6 sm:grid-cols-2">
@@ -153,6 +169,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
               >
                 {~t"Payment"}
               </h2>
+              <.voucher_preview preview={@preview} />
               <p>
                 {~t"Gift voucher of #{amount = Format.storefront_price(@sale.grand_total, @locale)} for #{name = @sale.recipient_name}"}
               </p>
@@ -178,9 +195,35 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
     """
   end
 
+  attr :preview, :string, required: true
+
+  # Sized before the image arrives, so the form below doesn't jump.
+  defp voucher_preview(assigns) do
+    ~H"""
+    <div class="bg-base-100 aspect-[210/148] mb-6 shadow-sm">
+      <img
+        :if={@preview}
+        src={"data:image/png;base64," <> @preview}
+        alt={~t"Preview of your gift voucher"}
+        class="block h-full w-full"
+        data-testid="voucher-preview"
+      />
+    </div>
+    """
+  end
+
+  defp style_options(christmas_offered?) do
+    [
+      %{value: "cream", label: ~t"Cream"},
+      %{value: "green", label: ~t"Green"},
+      christmas_offered? && %{value: "christmas", label: ~t"Christmas"}
+    ]
+    |> Enum.filter(& &1)
+  end
+
   @impl true
   def handle_event("validate", %{"form" => params}, socket) do
-    {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
+    {:noreply, socket |> assign(form: AshPhoenix.Form.validate(socket.assigns.form, params)) |> render_preview()}
   end
 
   def handle_event("continue", %{"form" => params}, socket) do
@@ -189,6 +232,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
         {:noreply,
          socket
          |> assign(sale: load_sale(sale), editing?: false)
+         |> render_preview()
          |> EdenflowersWeb.Analytics.track("Gift voucher checkout started", %{}, once: "gift-voucher:#{sale.id}")}
 
       {:error, form} ->
@@ -227,6 +271,54 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
      put_flash(socket, :error, ~t"Payment is temporarily unavailable. Please refresh the page and try again.")}
   end
 
+  @impl true
+  def handle_async(:preview, {:ok, {:ok, png}}, socket), do: {:noreply, assign(socket, preview: Base.encode64(png))}
+
+  # A preview that fails to render keeps the last one; the voucher itself is unaffected.
+  def handle_async(:preview, result, socket) do
+    Logger.warning("Gift voucher preview failed: #{inspect(result)}")
+    {:noreply, socket}
+  end
+
+  # Rendered in a task, as Typst takes a moment. Only the latest render is shown.
+  defp render_preview(socket) do
+    voucher = preview_voucher(socket.assigns)
+    start_async(socket, :preview, fn -> GiftVoucherPdf.preview(voucher) end)
+  end
+
+  defp preview_voucher(%{sale: sale, editing?: false}) when not is_nil(sale) do
+    %{
+      amount: sale.grand_total,
+      locale: sale.voucher_locale,
+      style: sale.voucher_style,
+      recipient_name: sale.recipient_name,
+      message: sale.card_message
+    }
+  end
+
+  defp preview_voucher(%{form: form}) do
+    amount =
+      case Integer.parse(to_string(form[:amount].value)) do
+        {amount, ""} -> amount
+        _ -> @default_amount
+      end
+
+    %{
+      amount: amount,
+      locale: to_string(form[:voucher_locale].value),
+      style: to_string(form[:voucher_style].value),
+      recipient_name: presence(form[:recipient_name].value),
+      message: presence(form[:card_message].value)
+    }
+  end
+
+  defp presence(value) do
+    case value && String.trim(value) do
+      "" -> nil
+      trimmed -> trimmed
+    end
+  end
+
   defp load_sale(sale), do: Ash.load!(sale, [:grand_total, :gift_voucher_line], authorize?: false)
 
   defp assign_form(%{assigns: %{editing?: true, sale: sale}} = socket) do
@@ -254,6 +346,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
         params: %{
           "amount" => to_string(@default_amount),
           "voucher_locale" => locale,
+          "voucher_style" => "cream",
           "customer_name" => user && user.name,
           "customer_email" => user && to_string(user.email)
         },

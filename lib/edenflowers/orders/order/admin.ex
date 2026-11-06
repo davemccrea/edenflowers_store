@@ -330,9 +330,17 @@ defmodule Edenflowers.Orders.Order.Admin do
                     "online voucher checkout makes, with its voucher issued at once. The buyer pays in person, and " <>
                     "Jennie records the payment on the order page, from where she can email the buyer the voucher " <>
                     "with its receipt. It's fulfilled as she writes the voucher onto a gift card. Any amount from " <>
-                    "20 €. The voucher PDF goes to the recipient if she ticks it."
+                    "20 €, in any style, Christmas included. The voucher PDF goes to the recipient if she ticks it."
 
-      accept [:locale, :customer_name, :customer_email, :customer_phone_number, :recipient_name, :card_message]
+      accept [
+        :locale,
+        :voucher_style,
+        :customer_name,
+        :customer_email,
+        :customer_phone_number,
+        :recipient_name,
+        :card_message
+      ]
 
       argument :amount, :integer,
         allow_nil?: false,
@@ -355,6 +363,7 @@ defmodule Edenflowers.Orders.Order.Admin do
       change set_attribute(:state, :placed)
       change set_attribute(:origin, :custom)
       change set_attribute(:gift, true)
+      change set_new_attribute(:voucher_style, :cream)
       change set_attribute(:payment_terms, :on_fulfillment)
       change set_attribute(:fulfillment_status, :fulfilled)
       # A voucher's VAT is due when it's spent, at the rates of what it buys.

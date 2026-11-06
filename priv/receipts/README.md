@@ -13,13 +13,18 @@ typst compile main.typ preview.pdf --font-path fonts --input fixture=en.pickup
 typst compile invoice-main.typ preview.pdf --font-path fonts --package-path packages --input fixture=fi.final
 typst compile credit-note-main.typ preview.pdf --font-path fonts --input fixture=sv
 typst compile pass-it-on-main.typ preview.pdf --font-path fonts --package-path packages
+typst compile voucher-main.typ preview.pdf --font-path fonts --input fixture=fi --input style=christmas
 ```
 
 Fixtures are the files in `sample/` (`order.<fixture>.json`, `invoice.<fixture>.json`, `credit-note.<fixture>.json`), which also show the payload shape. Money, dates and VAT arrive pre-formatted as strings. The `lang` field sets Typst's text language. The `labels` dictionary arrives translated from the `receipts` Gettext domain, using the order, booking or invoice locale. Sample labels are snapshots for standalone Typst previews; update them alongside receipt and invoice translations.
 
 ## Fonts
 
-Open Sans, Crimson Text and Noto Color Emoji are bundled under `fonts/` (SIL Open Font License 1.1, `fonts/OFL.txt`).
+Open Sans, Crimson Text and Noto Color Emoji are bundled under `fonts/` (SIL Open Font License 1.1, `fonts/OFL.txt`). Great Vibes, the Christmas voucher's greeting, is too (`fonts/OFL-GreatVibes.txt`).
+
+## Voucher styles
+
+`voucher.typ` prints a Gift voucher in cream, green or christmas (`style` in the payload). The Christmas snowflakes in `assets/snowflakes/` are one-colour SVGs from World of Printables, saved with `fill="#294735"` on the root so the template can recolour them. Their licence doesn't cover selling them on a voucher yet: see TASK-177 before deploying.
 
 ## Packages
 

@@ -154,7 +154,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
     create :start_gift_voucher_sale do
       description "Starts the Gift voucher checkout: an order holding one voucher line for the amount, from 20 " <>
-                    "to 200 € in steps of 10, with who it's for, the buyer's message and the language of its PDF. It skips the cart's " <>
+                    "to 200 € in steps of 10, with who it's for, the buyer's message and the language and style of its PDF. It skips the cart's " <>
                     "steps, starting at payment, and is never a browser's cart, so a voucher can't share one " <>
                     "with flowers. Finds or creates the buyer's account by email."
 
@@ -165,6 +165,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
         :card_message,
         :collect_voucher_card,
         :voucher_locale,
+        :voucher_style,
         :locale
       ]
 
@@ -176,8 +177,10 @@ defmodule Edenflowers.Orders.Order.Checkout do
       require_attributes [:customer_name, :customer_email, :recipient_name, :voucher_locale]
       validate attribute_in(:locale, @locales)
       validate attribute_in(:voucher_locale, @locales)
+      validate Validations.VoucherStyleOffered
       validate string_length(:card_message, max: @voucher_message_length)
       validate one_of(:amount, @voucher_amounts)
+      change set_new_attribute(:voucher_style, :cream)
       change set_attribute(:state, :payment)
       change set_attribute(:gift, true)
       change Changes.UpsertUserAndAssignToOrder
@@ -189,7 +192,15 @@ defmodule Edenflowers.Orders.Order.Checkout do
                     "details or the buyer's. Any PaymentIntent it has is brought up to the new amount before " <>
                     "paying. Refused once placed."
 
-      accept [:customer_name, :customer_email, :recipient_name, :card_message, :collect_voucher_card, :voucher_locale]
+      accept [
+        :customer_name,
+        :customer_email,
+        :recipient_name,
+        :card_message,
+        :collect_voucher_card,
+        :voucher_locale,
+        :voucher_style
+      ]
 
       argument :amount, :integer do
         allow_nil? false
@@ -197,8 +208,9 @@ defmodule Edenflowers.Orders.Order.Checkout do
       end
 
       change filter expr(state == :payment and gift_voucher_sale?)
-      require_attributes [:customer_name, :customer_email, :recipient_name, :voucher_locale]
+      require_attributes [:customer_name, :customer_email, :recipient_name, :voucher_locale, :voucher_style]
       validate attribute_in(:voucher_locale, @locales)
+      validate Validations.VoucherStyleOffered
       validate string_length(:card_message, max: @voucher_message_length)
       validate one_of(:amount, @voucher_amounts)
       change Changes.UpsertUserAndAssignToOrder
