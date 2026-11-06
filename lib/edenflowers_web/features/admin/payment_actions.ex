@@ -56,16 +56,15 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   hear nothing; any other method unticks it, as she was there in person.
   Choosing or leaving Gift voucher swaps the form's action.
   """
-  def change_payment_form(form, params, target, actor) do
-    params =
-      if target == ["payment", "payment_method"],
-        do: Map.put(params, "email_receipt?", to_string(params["payment_method"] == "zervant")),
-        else: params
+  def change_payment_form(form, params, ["payment", "payment_method"], actor),
+    do:
+      payment_form(
+        form.source.data,
+        actor,
+        Map.put(params, "email_receipt?", to_string(params["payment_method"] == "zervant"))
+      )
 
-    if target == ["payment", "payment_method"],
-      do: payment_form(form.source.data, actor, params),
-      else: validate(form, params)
-  end
+  def change_payment_form(form, params, _target, _actor), do: AshPhoenix.Form.validate(form, params)
 
   @doc """
   The refund form on the `refund` action: what's owed back, if anything, the
@@ -86,9 +85,10 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   since she hands that back in person; any other way ticks it again.
   """
   def change_refund_form(form, params, ["refund", "payment_method"]),
-    do: validate(form, Map.put(params, "email_customer?", to_string(params["payment_method"] != "cash")))
+    do:
+      AshPhoenix.Form.validate(form, Map.put(params, "email_customer?", to_string(params["payment_method"] != "cash")))
 
-  def change_refund_form(form, params, _target), do: validate(form, params)
+  def change_refund_form(form, params, _target), do: AshPhoenix.Form.validate(form, params)
 
   @doc """
   Submits a record payment or refund form: `{:ok, {kind, flash}}` once the
@@ -122,8 +122,6 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     )
     |> Phoenix.Component.to_form()
   end
-
-  defp validate(form, params), do: AshPhoenix.Form.validate(form, params)
 
   def undo_payment(payable, payment_id, actor) do
     payable

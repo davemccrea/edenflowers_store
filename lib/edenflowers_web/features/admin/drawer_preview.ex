@@ -7,11 +7,6 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
   """
 
   alias Edenflowers.Email.Preview
-  alias Edenflowers.Payments.CreditNote
-  alias Edenflowers.Payments.Invoice
-
-  def build(:invoice, %Invoice{} = invoice, _form), do: Preview.build(:invoice, invoice, %{})
-  def build(:credit_note, %CreditNote{} = credit_note, _form), do: Preview.build(:credit_note, credit_note, %{})
 
   # The entered amount distinguishes a new payment from a neutral receipt copy.
   def build(:payment, record, %Phoenix.HTML.Form{} = form),
