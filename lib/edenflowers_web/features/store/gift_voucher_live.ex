@@ -306,16 +306,13 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   attr :error?, :boolean, required: true
   attr :shuffle?, :boolean, default: false
 
-  # Sized before the image arrives, so the fields beside it don't jump. Dims
-  # gently while a new preview renders, so only changes to the voucher dim it.
+  # Sized before the image arrives, so the fields beside it don't jump.
   defp voucher_preview(assigns) do
     ~H"""
     <div class="voucher-preview">
       <div
         id="voucher-preview"
-        class={["bg-base-100 relative shadow-md lg:shadow-xl", !@error? && "aspect-[210/148]", if(@loading?,
-    do: "opacity-70 transition-opacity duration-150 ease-out",
-    else: "transition-opacity duration-500 ease-out")]}
+        class={["bg-base-100 relative shadow-md lg:shadow-xl", !@error? && "aspect-[210/148]"]}
         aria-busy={to_string(@loading?)}
       >
         <img
