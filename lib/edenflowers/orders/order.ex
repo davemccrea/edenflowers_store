@@ -760,7 +760,10 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :fulfillment_confirmation_applicable?,
               :boolean,
-              expr(committed? and not cancelled? and not is_nil(fulfillment_method) and fulfillment_method == :delivery) do
+              expr(
+                committed? and not cancelled? and not is_nil(fulfillment_method) and
+                  fulfillment_method == :delivery
+              ) do
       description "Whether a Delivered or Left at the door email makes sense for this order at all: a placed, " <>
                     "uncancelled delivery. Pickups and Gift voucher cards, collected in person, get none."
     end

@@ -710,7 +710,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
     edits = Drawers.email_edits(params)
     # Only an address Jennie changed is passed on, so the log names it.
-    edits = if params["to"] not in [nil, "", order.customer_email], do: Map.put(edits, :to, params["to"]), else: edits
+    edits = if params["to"] in [nil, "", order.customer_email], do: edits, else: Map.put(edits, :to, params["to"])
 
     {flash, text} = send_email(kind, order, edits, actor)
 
