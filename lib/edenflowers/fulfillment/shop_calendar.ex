@@ -188,11 +188,11 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
               fn calendars, _context ->
                 Enum.map(calendars, fn
                   %{christmas_vouchers_online: true} -> Edenflowers.Payments.GiftVoucherStyle.values()
-                  _ -> [:cream, :golden_hour]
+                  _ -> [:cream]
                 end)
               end,
               description:
-                "The Gift voucher styles customers can choose online: Signature and Golden hour always, and the " <>
+                "The Gift voucher styles customers can choose online: Signature always, and the " <>
                   "Christmas ones while `christmas_vouchers_online` is on. The voucher page offers these, and " <>
                   "the online checkout refuses any other."
   end

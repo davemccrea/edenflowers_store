@@ -105,9 +105,7 @@ defmodule Edenflowers.Payments.GiftVoucherPdf do
           dgettext(
             "receipts",
             "Valid for one year. What you don't spend stays on the code, and it can't be exchanged for cash."
-          ),
-        # Translators: Credit before the photographer's name, in small print on a gift voucher with a flower photo: "Photo: Marie Lillhannus".
-        "photo-by" => dgettext("receipts", "Photo:")
+          )
       }
     end)
   end

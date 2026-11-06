@@ -28,23 +28,6 @@
   christmas_green: colors.primary,
 )
 
-// Photo styles: the stub is a flower photo instead of green, cropped
-// to the stub's shape. Darkened at the top and bottom, and a little in the
-// middle, so the logo, amount and code still read in cream over it. Each
-// photo is credited to its photographer at the foot of the stub.
-#let stub-photos = (
-  golden_hour: (path: "assets/photos/golden-hour.jpg", photographer: "Marie Lillhannus"),
-)
-#let photo-shade = gradient.linear(
-  (black.transparentize(35%), 0%),
-  (black.transparentize(55%), 18%),
-  (black.transparentize(80%), 30%),
-  (black.transparentize(50%), 50%),
-  (black.transparentize(80%), 68%),
-  (black.transparentize(35%), 100%),
-  angle: 90deg,
-)
-
 // Small print that snow would make hard to read: (left, top, right, bottom)
 // from the page's top left, with a little room around each.
 #let small-print = (
@@ -108,10 +91,10 @@
   for key in ("lang", "labels", "seller", "style", "snow_seed", "amount", "code", "expires_on", "recipient_name", "message") {
     assert(key in voucher, message: "voucher: missing key `" + key + "` (set to none if absent)")
   }
-  for key in ("gift-voucher", "to", "code", "valid-until", "how-to-use", "terms", "photo-by") {
+  for key in ("gift-voucher", "to", "code", "valid-until", "how-to-use", "terms") {
     assert(key in voucher.labels, message: "voucher: missing label `" + key + "`")
   }
-  assert(voucher.style == "cream" or voucher.style in christmas-accents or voucher.style in stub-photos, message: "voucher: unknown style `" + voucher.style + "`")
+  assert(voucher.style == "cream" or voucher.style in christmas-accents, message: "voucher: unknown style `" + voucher.style + "`")
   let christmas = voucher.style in christmas-accents
   let accent = christmas-accents.at(voucher.style, default: none)
   // Vouchers sold without a seed, such as in the shop, all get the same snow.
@@ -130,18 +113,7 @@
     fill: ink.page,
     // The stub's green is drawn here, under the snow, so flakes fall behind its text too.
     background: {
-      if voucher.style in stub-photos {
-        let photo = stub-photos.at(voucher.style)
-        place(top + right, image(photo.path, width: stub-width, height: 100%, fit: "cover"))
-        place(top + right, rect(width: stub-width, height: 100%, fill: photo-shade))
-        place(bottom + right, dx: -4mm, dy: -4mm, text(
-          font: fonts.sans,
-          size: 6pt,
-          fill: ink.stub-muted,
-        )[#voucher.labels.at("photo-by") #photo.photographer])
-      } else {
-        place(top + right, rect(width: stub-width, height: 100%, fill: if christmas { accent } else { ink.stub }))
-      }
+      place(top + right, rect(width: stub-width, height: 100%, fill: if christmas { accent } else { ink.stub }))
       if christmas {
         for (n, x, y, size, fill) in snowfall(seed, accent) {
           place(top + left, dx: x, dy: y, snowflake(n, size, fill))

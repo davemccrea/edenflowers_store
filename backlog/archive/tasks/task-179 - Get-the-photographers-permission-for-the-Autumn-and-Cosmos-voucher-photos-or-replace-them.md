@@ -3,12 +3,12 @@ id: TASK-179
 title: >-
   Get Marie Lillhannus's permission for the Golden hour voucher photo, or
   replace it
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-11-06 15:48'
-updated_date: '2026-11-06 16:06'
+updated_date: '2026-11-06 18:43'
 labels:
-  - customers
+  - wontfix
 dependencies: []
 priority: high
 type: chore
@@ -29,3 +29,16 @@ Either Jennie gets Marie's written OK for this use, or the photo is swapped for 
 <!-- AC:BEGIN -->
 - [ ] #1 Marie Lillhannus has agreed in writing to the Golden hour photo on sold vouchers, or it's replaced with Jennie's own
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-06 18:43
+
+---
+
+Golden hour voucher style removed, so the photo no longer ships.
+
+---
+<!-- COMMENTS:END -->
