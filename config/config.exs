@@ -146,14 +146,15 @@ config :esbuild,
   ]
 
 config :tailwind,
-  version: "4.1.12",
+  version: "4.2.3",
   edenflowers: [
     args: ~w(
 
       --input=assets/css/app.css
       --output=priv/static/assets/css/app.css
     ),
-    cd: Path.expand("..", __DIR__)
+    cd: Path.expand("..", __DIR__),
+    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
 
 config :error_tracker,

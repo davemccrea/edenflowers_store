@@ -104,7 +104,7 @@ defmodule Edenflowers.MixProject do
       {:heroicons,
        github: "tailwindlabs/heroicons", tag: "v2.2.0", sparse: "optimized", app: false, compile: false, depth: 1},
       {:imgproxy, "~> 3.1"},
-      {:tailwind, "~> 0.4", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.5", runtime: Mix.env() == :dev},
       # Internationalisation
       {:gettext, "~> 1.0"},
       {:gettext_sigils, "~> 0.5"},
