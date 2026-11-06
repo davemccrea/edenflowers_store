@@ -52,14 +52,14 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
         <.admin_page_header title={greeting(@current_user)}>
-          <:menu>
+          <:actions>
             <.button navigate={~p"/admin/orders/new-gift-voucher"} variant="secondary" size="sm">
-              <.icon name="hero-gift" class="h-4 w-4" /> {~t"Sell gift voucher"}
+              <.icon name="hero-plus" class="h-4 w-4" /> {~t"New voucher"}
             </.button>
             <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
             </.button>
-          </:menu>
+          </:actions>
         </.admin_page_header>
 
         <.notifications_offer :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
