@@ -45,7 +45,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           class="border-base-content/12 space-y-3 border-t pt-5"
         >
           <h3 id="record-payment-heading" class="text-base font-semibold">{~t"Record payment"}</h3>
-          <p class="text-base-content/75 text-sm">{~t"For money you’ve already received."}</p>
           <.record_payment_form
             id={"payment-#{@registration.id}"}
             record={@registration}
@@ -134,7 +133,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
     ~H"""
     <section aria-labelledby="payment-link-heading" class="space-y-3">
       <h3 id="payment-link-heading" class="text-base font-semibold">{~t"Payment link"}</h3>
-      <p class="text-base-content/75 text-sm">{~t"Let the customer pay online."}</p>
       <div :if={@registration.payment_link_open?} class="flex gap-2">
         <input
           id={"payment-link-url-#{@registration.id}"}

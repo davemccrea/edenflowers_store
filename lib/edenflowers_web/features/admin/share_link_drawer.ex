@@ -75,9 +75,6 @@ defmodule EdenflowersWeb.Admin.ShareLinkDrawer do
               options={options}
               class="select w-full"
             />
-            <p class="text-base-content/75 text-sm">
-              {~t"Tags tell Umami where a visitor came from, so you can see which posts bring orders. Leave them empty for a plain link."}
-            </p>
             <div :for={{parameter, label, hint} <- fields()} class="space-y-1">
               <.input
                 field={@form[parameter]}

@@ -139,9 +139,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   field={@form[:customer_instagram]}
                   type="text"
                   label={~t"Instagram"}
-                  help={
-                    ~t"A phone, an email or an Instagram handle is needed. With an email, the order shows in their account."
-                  }
                   class="input w-full"
                   autocomplete="off"
                   autocapitalize="none"
@@ -152,7 +149,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   field={@form[:locale]}
                   type="select"
                   label={~t"Language"}
-                  help={~t"Used for their emails and the payment page."}
                   options={locale_options()}
                   class="select w-full"
                 />
@@ -336,9 +332,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   >
                     <.icon name="hero-gift" class="h-4 w-4" /> {~t"Choose a card"}
                   </.button>
-                  <p :if={is_nil(@card)} class="text-base-content/75 mt-1 text-sm">
-                    {~t"Or none, if you write a card or ribbon of your own."}
-                  </p>
                 </div>
                 <div :if={@gift?} id="card-message-field" class="sm:col-span-2">
                   <.input

@@ -54,14 +54,12 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 step="1"
                 inputmode="numeric"
                 label={~t"Amount (€)"}
-                help={~t"20 € or more."}
                 class="input w-full tabular-nums"
               />
               <.input
                 field={@form[:locale]}
                 type="select"
                 label={~t"Language"}
-                help={~t"Of the voucher and its emails."}
                 options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
                 class="select w-full"
               />
@@ -69,7 +67,6 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 field={@form[:voucher_style]}
                 type="select"
                 label={~t"Style"}
-                help={~t"Of the voucher PDF."}
                 options={[
                   {~t"Signature", "cream"},
                   {~t"Golden hour", "golden_hour"},
@@ -84,7 +81,6 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                   type="textarea"
                   rows="3"
                   label={~t"Message"}
-                  help={~t"Printed on the emailed voucher."}
                   maxlength={Edenflowers.Orders.Order.Checkout.voucher_message_length()}
                   class="textarea w-full"
                 />
@@ -115,7 +111,6 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 field={@form[:customer_email]}
                 type="email"
                 label={~t"Email"}
-                help={~t"A phone or an email is needed."}
                 class="input w-full"
                 autocomplete="off"
               />
@@ -128,7 +123,6 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 field={@form[:recipient_name]}
                 type="text"
                 label={~t"Full name"}
-                help={~t"Printed on the voucher."}
                 class="input w-full"
                 autocapitalize="words"
               />

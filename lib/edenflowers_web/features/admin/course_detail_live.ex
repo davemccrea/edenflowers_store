@@ -186,9 +186,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
           class="flex min-h-0 flex-1 flex-col"
         >
           <.drawer_body>
-            <p class="text-base-content/75 text-sm">
-              {~t"Each confirmed booking receives a reminder in the customer's language."}
-            </p>
             <p :if={@reminder_error} role="alert" class="text-error text-sm">{@reminder_error}</p>
             <div
               :for={{registration, email} <- @reminder_previews}
