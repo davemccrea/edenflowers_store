@@ -29,6 +29,18 @@
         ],
         "createdAt": "2026-11-01T19:28:58.393Z",
         "reason": "DESIGN.md sets the warm oat neutrals (base-200, hue 75) as the Eden Flowers palette"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "createdAt": "2026-11-06T19:40:53.999Z",
+        "reason": "Agent review: existing flower-bloom animation deliberately opens a celebratory flower; its source comment explicitly assigns overshoot to this curve. Present in HEAD before the voucher changes."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.3, 1.15, 0.5, 1)",
+        "createdAt": "2026-11-06T19:40:54.101Z",
+        "reason": "Agent review: existing homepage card fan models a physical hand of playing cards, as documented above .card-fan; slight rotational overshoot belongs to that motion. Present in HEAD before the voucher changes."
       }
     ]
   }

@@ -6,6 +6,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
 
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders.Order
+  alias EdenflowersWeb.Store.GiftVoucherLive
 
   setup :verify_on_exit!
 
@@ -83,6 +84,68 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
 
     refute has_element?(view, "[data-testid=payment-section]")
     assert has_element?(view, "#gift-voucher-form", "This field is required")
+    assert_push_event(view, "focus-first-error", %{})
     assert Ash.read!(Order, authorize?: false) == []
+  end
+
+  test "explains when the chosen style stops being offered while the form is open", %{conn: conn} do
+    calendar = Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
+    Edenflowers.Fulfillment.set_christmas_vouchers_online!(calendar, true, authorize?: false)
+    {:ok, view, _html} = live(conn, "/en/gift-voucher")
+
+    Edenflowers.Fulfillment.set_christmas_vouchers_online!(calendar, false, authorize?: false)
+    view |> form("#gift-voucher-form", form: Map.put(@details, "voucher_style", "christmas")) |> render_submit()
+
+    assert has_element?(view, "#form_voucher_style-error", "The Christmas voucher isn't available right now.")
+    assert has_element?(view, "input[value=christmas][aria-invalid=true][aria-describedby=form_voucher_style-error]")
+    assert_push_event(view, "focus-first-error", %{})
+    refute has_element?(view, "[data-testid=payment-section]")
+  end
+
+  test "a failed preview is marked unavailable and the same voucher can be retried" do
+    voucher = %{
+      amount: Decimal.new(50),
+      locale: "en-GB",
+      style: :cream,
+      snow_seed: 123,
+      recipient_name: "Mia",
+      message: "Grattis!"
+    }
+
+    socket = %Phoenix.LiveView.Socket{
+      assigns: %{
+        __changed__: %{},
+        sale: %{
+          grand_total: voucher.amount,
+          voucher_locale: voucher.locale,
+          voucher_style: voucher.style,
+          voucher_snow_seed: voucher.snow_seed,
+          recipient_name: voucher.recipient_name,
+          card_message: voucher.message
+        },
+        editing?: false,
+        preview: "old-image",
+        previewed: voucher,
+        preview_loading?: true,
+        preview_error?: false
+      }
+    }
+
+    ExUnit.CaptureLog.capture_log(fn ->
+      {:noreply, failed} = GiftVoucherLive.handle_async(:preview, {:ok, {:error, :unavailable}}, socket)
+      assert failed.assigns.preview_error?
+      refute failed.assigns.preview_loading?
+      assert is_nil(failed.assigns.previewed)
+
+      {:noreply, retrying} = GiftVoucherLive.handle_event("retry_preview", %{}, failed)
+      assert retrying.assigns.preview_loading?
+      refute retrying.assigns.preview_error?
+      assert retrying.assigns.previewed == voucher
+
+      {:noreply, loaded} = GiftVoucherLive.handle_async(:preview, {:ok, {:ok, "new-image"}}, retrying)
+      assert loaded.assigns.preview == Base.encode64("new-image")
+      refute loaded.assigns.preview_loading?
+      refute loaded.assigns.preview_error?
+    end)
   end
 end

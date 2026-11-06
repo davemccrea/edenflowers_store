@@ -498,6 +498,8 @@ defmodule EdenflowersWeb.CoreComponents do
               checked={option[:value] == to_string(@value)}
               class="radio radio-xs radio-primary shrink-0"
               aria-required={@required && "true"}
+              aria-invalid={@errors != [] && "true"}
+              aria-describedby={describedby(@id, @errors, @help)}
               {@rest}
             />
             <span>
@@ -505,6 +507,10 @@ defmodule EdenflowersWeb.CoreComponents do
             </span>
           </label>
         <% end %>
+      </div>
+      <p :if={@help} id={"#{@id}-help"} class="text-base-content/75 mt-1.5 text-sm">{@help}</p>
+      <div :if={@errors != []} id={"#{@id}-error"}>
+        <.error :for={msg <- @errors}>{msg}</.error>
       </div>
     </fieldset>
     """
