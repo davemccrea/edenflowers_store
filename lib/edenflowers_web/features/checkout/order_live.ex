@@ -190,7 +190,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
           </div>
 
           <div
-            :if={@shown_order.gift_voucher_sale? && !@voucher_preview_error?}
+            :if={@shown_order.gift_voucher_sale? && @voucher_preview != :error}
             class="aspect-[210/148] relative mt-8 max-w-md shadow-sm"
             aria-busy={to_string(!@voucher_preview)}
             data-testid="order-voucher"
@@ -336,7 +336,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
   defp render_voucher_preview(socket, %{gift_voucher_sale?: true} = order) do
     socket
-    |> assign(voucher_preview: nil, voucher_preview_error?: false)
+    |> assign(voucher_preview: nil)
     |> start_async(:voucher_preview, fn ->
       GiftVoucherPdf.preview(%{
         amount: order.grand_total,
@@ -359,7 +359,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   # The confirmation text already says the voucher is on its way, so it stands alone.
   def handle_async(:voucher_preview, result, socket) do
     Logger.warning("Order voucher preview failed: #{inspect(result)}")
-    {:noreply, assign(socket, voucher_preview_error?: true)}
+    {:noreply, assign(socket, voucher_preview: :error)}
   end
 
   # Each later delivery is priced afresh, so this is today's price for it.
