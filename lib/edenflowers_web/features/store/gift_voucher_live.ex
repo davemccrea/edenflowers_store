@@ -45,6 +45,80 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <style :type={EdenflowersWeb.ColocatedCSS}>
+      /* Reserve space for both the voucher and its snow hint without covering the form.
+         Short screens keep the full preview in normal flow instead. */
+      .voucher-form-fields fieldset {
+        /* Scrolling to an error can reveal the shy header, so reserve its full height. */
+        scroll-margin-top: calc(
+          var(--header-height) + var(--spacing) * 4 + env(safe-area-inset-top)
+        );
+      }
+
+      @media (width < 64rem) and (height >= 40rem) {
+        .voucher-form-fields {
+          --voucher-preview-height: min(calc((100vw - 2rem) * 148 / 210), 32svh);
+        }
+
+        .voucher-form-fields:has(
+            #voucher-preview-band:not([data-keyboard-open]):not([data-field-too-tall])
+          )
+          fieldset {
+          scroll-margin-top: calc(var(--voucher-preview-height) + 6rem);
+        }
+
+        #voucher-preview-band {
+          position: sticky;
+          top: 0;
+          padding-top: max(0.75rem, env(safe-area-inset-top));
+        }
+
+        #voucher-preview-band > .voucher-preview {
+          max-width: calc(var(--voucher-preview-height) * 210 / 148);
+          margin-inline: auto;
+        }
+
+        #voucher-preview-band::after {
+          content: "";
+          position: absolute;
+          inset-inline: 0;
+          top: 100%;
+          height: 2rem;
+          background: linear-gradient(var(--color-base-100), transparent);
+          pointer-events: none;
+        }
+
+        #voucher-preview-band:is([data-keyboard-open], [data-field-too-tall]) {
+          position: relative;
+        }
+
+        #voucher-preview-band:is([data-keyboard-open], [data-field-too-tall])::after {
+          display: none;
+        }
+
+        /* The preview owns the header area, including its small top inset. Suppress
+           the shy header rather than letting an upward correction reveal it behind. */
+        body:has(#voucher-preview-band[data-preview-owns-top]) #hotfx-shy-header {
+          visibility: hidden;
+          opacity: 0;
+          pointer-events: none;
+          transition: none;
+        }
+      }
+
+      @keyframes voucher-preview-return {
+        from {
+          transform: translateY(-0.5rem);
+        }
+      }
+
+      @media (width < 64rem) and (height >= 40rem) and (prefers-reduced-motion: no-preference) {
+        #voucher-preview-band[data-preview-returning]:not([data-field-too-tall]) {
+          animation: voucher-preview-return 150ms ease-out;
+        }
+      }
+    </style>
+
     <Layouts.app
       current_user={@current_user}
       order={@order}
