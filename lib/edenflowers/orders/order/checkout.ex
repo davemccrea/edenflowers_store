@@ -47,6 +47,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
     :card_needed?,
     :accepts_gift_voucher?,
     :available_from,
+    :first_open_day,
     line_items: [:total, :product_slug, :available_from]
   ]
 

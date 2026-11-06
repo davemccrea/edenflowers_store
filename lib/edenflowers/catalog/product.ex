@@ -46,6 +46,7 @@ defmodule Edenflowers.Catalog.Product do
                   :product_category,
                   :tax_rate,
                   :waiting_until,
+                  :first_open_day,
                   product_variants: [:photo_slug]
                 ]
               )
@@ -335,6 +336,13 @@ defmodule Edenflowers.Catalog.Product do
     calculate :waiting_until, :date, expr(if(available_from > helsinki_today(), do: available_from, else: nil)) do
       description "Its Available from while that day is still ahead, else nil. The store shows it as " <>
                     "\"Available from\" in place of Sold out."
+    end
+
+    calculate :first_open_day,
+              :date,
+              {Edenflowers.Fulfillment.Calculations.FirstOpenDay, from: :waiting_until} do
+      description "The first day on or after its Available from that the shop calendar is open, else nil. " <>
+                    "The store names this day as \"Available from\", so it never names a day Jennie has closed."
     end
   end
 

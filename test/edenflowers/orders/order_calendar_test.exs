@@ -54,5 +54,19 @@ defmodule Edenflowers.Orders.OrderCalendarTest do
       assert Enum.any?(errors, &(&1.field == :fulfillment_date))
       assert {:ok, _order} = submit.(available_from)
     end
+
+    test "Available from names the first open day when the shop is closed on it" do
+      available_from = Date.add(Edenflowers.ShopTime.today(), 3)
+      shop_calendar(disabled_dates: [available_from, Date.add(available_from, 1)])
+      first_open_day = Date.add(available_from, 2)
+
+      product = generate(product(available_from: available_from))
+      variant = generate(product_variant(product_id: product.id))
+      order = generate(order(state: :delivery))
+      Edenflowers.Orders.add_line_item!(order.id, variant.id, 1, authorize?: false)
+
+      assert Ash.load!(product, :first_open_day, authorize?: false).first_open_day == first_open_day
+      assert Ash.load!(order, :first_open_day, authorize?: false).first_open_day == first_open_day
+    end
   end
 end

@@ -393,7 +393,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
                     class="text-base-content/80 text-base"
                     data-testid="available-from"
                   >
-                    {Edenflowers.Format.available_from(@product.waiting_until)}
+                    {Edenflowers.Format.available_from(@product.first_open_day)}
                   </p>
                   <.button
                     :if={sold_out?(@selected_variant)}
@@ -589,7 +589,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
       product.waiting_until ->
         %{
           "availability" => "https://schema.org/PreOrder",
-          "availabilityStarts" => Date.to_iso8601(product.waiting_until)
+          "availabilityStarts" => Date.to_iso8601(product.first_open_day)
         }
 
       true ->

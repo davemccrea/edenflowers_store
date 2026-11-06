@@ -20,11 +20,11 @@ defmodule Edenflowers.Orders.Order.Validations.FulfillmentDate do
 
   defp check_availability(order, date) do
     calendar = Fulfillment.get_shop_calendar!(authorize?: false)
-    available_from = Ash.load!(order, :available_from, authorize?: false, reuse_values?: false).available_from
+    order = Ash.load!(order, [:available_from, :first_open_day], authorize?: false, reuse_values?: false)
 
-    case Availability.unavailable_reason(calendar, date, Edenflowers.ShopTime.now(), available_from) do
+    case Availability.unavailable_reason(calendar, date, Edenflowers.ShopTime.now(), order.available_from) do
       nil -> :ok
-      reason -> {:error, field: :fulfillment_date, message: unavailable_message(reason, available_from)}
+      reason -> {:error, field: :fulfillment_date, message: unavailable_message(reason, order.first_open_day)}
     end
   end
 
@@ -32,8 +32,8 @@ defmodule Edenflowers.Orders.Order.Validations.FulfillmentDate do
   defp unavailable_message(:same_day_delivery_disabled, _), do: ~t"Same-day fulfillment is not available"
   defp unavailable_message(:order_deadline_passed, _), do: ~t"The order deadline for today has passed"
 
-  defp unavailable_message(:before_available_from, available_from),
-    do: Edenflowers.Format.available_from(available_from)
+  defp unavailable_message(:before_available_from, first_open_day),
+    do: Edenflowers.Format.available_from(first_open_day)
 
   defp unavailable_message(_, _), do: ~t"This date is no longer available, please choose another"
 end

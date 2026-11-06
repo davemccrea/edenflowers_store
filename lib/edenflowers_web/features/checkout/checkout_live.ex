@@ -1019,7 +1019,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp available_from_note(order) do
     product = Enum.find_value(order.line_items, &(&1.available_from == order.available_from && &1.product_name))
-    date = Edenflowers.Format.weekday_day_month(order.available_from, Edenflowers.Format.locale())
+    date = Edenflowers.Format.weekday_day_month(order.first_open_day, Edenflowers.Format.locale())
     gettext_comment("%{date} is like \"Monday 9.11.\" and already ends in a period, so add none after it.")
     ~t"#{product} is available from #{date}"
   end
