@@ -4285,8 +4285,8 @@ msgstr "Lahjakortin ehdot"
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:76
 #, elixir-autogen, elixir-format
-msgid "Your gift voucher for %{name} will be sent by email, ready for you to print or forward."
-msgstr "Lahjakorttisi henkilölle %{name} lähetetään sähköpostitse, valmiina tulostettavaksi tai edelleen lähetettäväksi."
+msgid "Your gift voucher for %{name} will be emailed to you at %{email}, ready for you to print or forward."
+msgstr "Lahjakorttisi henkilölle %{name} lähetetään sinulle sähköpostitse osoitteeseen %{email}, valmiina tulostettavaksi tai edelleen lähetettäväksi."
 
 #: lib/edenflowers/payments/changes/apply_gift_voucher.ex:68
 #, elixir-autogen, elixir-format
@@ -4341,8 +4341,8 @@ msgstr "Jos ostit sen verkosta, voit silti perua oston 14 päivän kuluessa, kun
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:74
 #, elixir-autogen, elixir-format
-msgid "Your gift voucher for %{name} will be sent by email, ready to print or forward. A gift card with the voucher written on it can be collected at Minimossen from %{date}."
-msgstr "Lahjakorttisi henkilölle %{name} lähetetään sähköpostitse, valmiina tulostettavaksi tai edelleen lähetettäväksi. Käsin kirjoitetun kortin, jossa on lahjakortin tiedot, voi noutaa Minimossenista %{date} alkaen."
+msgid "Your gift voucher for %{name} will be emailed to you at %{email}, ready to print or forward. A gift card with the voucher written on it can be collected at Minimossen from %{date}."
+msgstr "Lahjakorttisi henkilölle %{name} lähetetään sinulle sähköpostitse osoitteeseen %{email}, valmiina tulostettavaksi tai edelleen lähetettäväksi. Käsin kirjoitetun kortin, jossa on lahjakortin tiedot, voi noutaa Minimossenista %{date} alkaen."
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:289
 #, elixir-autogen, elixir-format

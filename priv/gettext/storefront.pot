@@ -4289,7 +4289,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:76
 #, elixir-autogen, elixir-format
-msgid "Your gift voucher for %{name} will be sent by email, ready for you to print or forward."
+msgid "Your gift voucher for %{name} will be emailed to you at %{email}, ready for you to print or forward."
 msgstr ""
 
 #: lib/edenflowers/payments/changes/apply_gift_voucher.ex:68
@@ -4345,7 +4345,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:74
 #, elixir-autogen, elixir-format
-msgid "Your gift voucher for %{name} will be sent by email, ready to print or forward. A gift card with the voucher written on it can be collected at Minimossen from %{date}."
+msgid "Your gift voucher for %{name} will be emailed to you at %{email}, ready to print or forward. A gift card with the voucher written on it can be collected at Minimossen from %{date}."
 msgstr ""
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:289

@@ -4285,8 +4285,8 @@ msgstr "Villkor för presentkort"
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:76
 #, elixir-autogen, elixir-format
-msgid "Your gift voucher for %{name} will be sent by email, ready for you to print or forward."
-msgstr "Ditt presentkort till %{name} skickas per e-post, klart för dig att skriva ut eller skicka vidare."
+msgid "Your gift voucher for %{name} will be emailed to you at %{email}, ready for you to print or forward."
+msgstr "Ditt presentkort till %{name} mejlas till dig på %{email}, klart för dig att skriva ut eller skicka vidare."
 
 #: lib/edenflowers/payments/changes/apply_gift_voucher.ex:68
 #, elixir-autogen, elixir-format
@@ -4341,8 +4341,8 @@ msgstr "Om du köpte det på webben kan du ändå ångra köpet inom 14 dagar, s
 
 #: lib/edenflowers_web/features/checkout/order_live.ex:74
 #, elixir-autogen, elixir-format
-msgid "Your gift voucher for %{name} will be sent by email, ready to print or forward. A gift card with the voucher written on it can be collected at Minimossen from %{date}."
-msgstr "Ditt presentkort till %{name} skickas per e-post, klart att skriva ut eller skicka vidare. Ett handskrivet kort med presentkortet kan hämtas i Minimossen från %{date}."
+msgid "Your gift voucher for %{name} will be emailed to you at %{email}, ready to print or forward. A gift card with the voucher written on it can be collected at Minimossen from %{date}."
+msgstr "Ditt presentkort till %{name} mejlas till dig på %{email}, klart att skriva ut eller skicka vidare. Ett handskrivet kort med presentkortet kan hämtas i Minimossen från %{date}."
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:289
 #, elixir-autogen, elixir-format
