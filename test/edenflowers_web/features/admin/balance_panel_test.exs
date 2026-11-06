@@ -101,7 +101,11 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         change = fn how ->
           view
           |> element(form)
-          |> render_change(%{"_target" => ["refund", "how"], "record_id" => record.id, "refund" => %{"how" => how}})
+          |> render_change(%{
+            "_target" => ["refund", "payment_method"],
+            "record_id" => record.id,
+            "refund" => %{"payment_method" => how}
+          })
         end
 
         change.("cash")
@@ -132,7 +136,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
         assert has_element?(view, panel, "To refund 88,50 €")
         refute has_element?(view, ~s|#{refund_form(@parent, record)} select option[value="cash"]|)
-        assert refund(view, @parent, record, %{how: "stripe"}) =~ "Refunded with Stripe."
+        assert refund(view, @parent, record, %{payment_method: "stripe"}) =~ "Refunded with Stripe."
 
         refute has_element?(view, panel, "To refund")
       end
@@ -150,7 +154,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
                  "in cash"
                )
 
-        refund(view, @parent, record, %{how: "cash"})
+        refund(view, @parent, record, %{payment_method: "cash"})
 
         refute has_element?(view, panel, "To refund")
         assert Decimal.eq?(balance(record), 0)
@@ -163,7 +167,9 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
         preview = String.replace_suffix(selector, "-form", "-email-preview")
 
         view
-        |> form(selector, refund: %{amount: "20", how: "cash", note: "A small apology", email_customer: "true"})
+        |> form(selector,
+          refund: %{amount: "20", payment_method: "cash", note: "A small apology", email_customer?: "true"}
+        )
         |> render_change()
 
         assert has_element?(view, preview, "20,00 € in cash")
@@ -220,7 +226,9 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     order = build(:order, cancelled: true, payments: [cash: "88.50"])
     {view, _panel} = open(conn, :order, order)
 
-    assert refund(view, :order, order, %{amount: "100,00", how: "cash"}) =~ "That&#39;s more than was received"
+    assert refund(view, :order, order, %{amount: "100,00", payment_method: "cash"}) =~
+             "That&#39;s more than was received"
+
     assert has_element?(view, ~s|#order-refund-form input[name="refund[amount]"][value="100,00"]|)
 
     assert Decimal.equal?(balance(order), "-88.50")
@@ -231,7 +239,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     {view, panel} = open(conn, :order, order)
 
     view
-    |> form("#{panel}-form", payment: %{amount: "50,00", payment_method: "cash", email_receipt: "true"})
+    |> form("#{panel}-form", payment: %{amount: "50,00", payment_method: "cash", email_receipt?: "true"})
     |> render_submit()
 
     assert Decimal.equal?(balance(order), "38.50")
@@ -249,7 +257,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     assert view |> form("#{panel}-form", payment: %{amount: "100,00"}) |> render_submit() =~
              "That&#39;s more than is owed"
 
-    assert has_element?(view, "#settlement-drawer [role=alert]", "more than is owed")
+    assert has_element?(view, "#order-balance-amount-error", "more than is owed")
     assert has_element?(view, ~s|#order-balance-form input[name="payment[amount]"][value="100,00"]|)
     assert Decimal.equal?(balance(order), "88.50")
   end
@@ -320,7 +328,7 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
 
   defp record_cash_payment(view, email_receipt) do
     view
-    |> form("#order-balance-form", payment: %{payment_method: "cash", email_receipt: email_receipt})
+    |> form("#order-balance-form", payment: %{payment_method: "cash", email_receipt?: email_receipt})
     |> render_submit()
   end
 

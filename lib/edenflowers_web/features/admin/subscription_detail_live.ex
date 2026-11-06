@@ -245,10 +245,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
           class="flex min-h-0 flex-1 flex-col"
         >
           <.drawer_body>
+            <.refusal form={@cancel_form} />
             <p class="text-base-content/75 text-sm">{~t"No more orders are made or charged. This can't be undone."}</p>
             <.customer_email
               id="cancel-subscription-email"
-              send={@cancel_form[:email_customer]}
+              send={@cancel_form[:email_customer?]}
               label={~t"Email the customer"}
               form={@cancel_form}
               to={to_string(@subscription.user.email)}
@@ -279,11 +280,19 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   end
 
   def handle_event("open_cancel", _params, socket) do
-    params = %{"email_customer" => "true"}
+    form =
+      socket.assigns.subscription
+      |> AshPhoenix.Form.for_update(:cancel,
+        as: "cancel",
+        actor: socket.assigns.current_user,
+        params: %{"email_customer?" => "true"},
+        transform_params: &Drawers.keep_email_edits/3
+      )
+      |> to_form()
 
     {:noreply,
      socket
-     |> assign(:cancel_form, to_form(params, as: :cancel))
+     |> assign(:cancel_form, form)
      |> assign(:preview, Preview.build(:subscription_cancelled, socket.assigns.subscription, %{}))
      |> push_event("js-exec", %{to: "#cancel-subscription", attr: "phx-show"})}
   end
@@ -293,18 +302,25 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   end
 
   def handle_event("validate_cancel", %{"cancel" => params}, socket) do
-    {:noreply, assign(socket, :cancel_form, to_form(params, as: :cancel))}
+    {:noreply, assign(socket, :cancel_form, AshPhoenix.Form.validate(socket.assigns.cancel_form, params))}
   end
 
   def handle_event("cancel", %{"cancel" => params}, socket) do
-    input = Map.put(Drawers.email_edits(params), :email_customer?, params["email_customer"] != "false")
-    cancel = &Orders.cancel_subscription(&1, input, &2)
+    case AshPhoenix.Form.submit(socket.assigns.cancel_form, params: params) do
+      {:ok, _subscription} ->
+        {:ok, subscription} = get_subscription(socket.assigns.subscription.id, socket.assigns.current_user)
 
-    {:noreply,
-     socket
-     |> change_subscription(cancel, ~t"Subscription cancelled.")
-     |> assign(cancel_form: nil, preview: nil)
-     |> push_event("js-exec", %{to: "#cancel-subscription", attr: "phx-hide"})}
+        {:noreply,
+         socket
+         |> assign_subscription(subscription)
+         |> put_flash(:success, ~t"Subscription cancelled.")
+         |> Cinder.refresh_table("subscription-orders-table")
+         |> assign(cancel_form: nil, preview: nil)
+         |> push_event("js-exec", %{to: "#cancel-subscription", attr: "phx-hide"})}
+
+      {:error, form} ->
+        {:noreply, assign(socket, :cancel_form, form)}
+    end
   end
 
   @impl true

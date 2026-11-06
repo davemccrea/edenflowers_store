@@ -397,7 +397,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert has_element?(view, "#confirm-fulfillment-form label", "Email delivery confirmation")
       assert has_element?(view, "#confirm-fulfillment-form", "To: ada@example.com")
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_change()
-      refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
+      refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer?]"][checked]|)
       refute has_element?(view, "#confirm-fulfillment-form input[type=file]")
       view |> form("#confirm-fulfillment-form") |> render_submit()
 
@@ -423,7 +423,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       ])
       |> render_upload("IMG_0001.JPG")
 
-      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "false"}) |> render_submit()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer?: "false"}) |> render_submit()
 
       assert has_element?(view, "#order-status", "Fulfilled")
       assert has_element?(view, "#order-delivery-photo a", "View photo")
@@ -444,7 +444,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert has_element?(view, "#fulfillment-email-preview", "was left at the door")
       assert has_element?(view, "#fulfillment-email-preview", "Attached: eden-flowers-delivery.jpg")
 
-      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "false"}) |> render_change()
+      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer?: "false"}) |> render_change()
       refute has_element?(view, "#fulfillment-email-preview")
 
       view
@@ -467,18 +467,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       assert_push_event(view, "js-exec", %{to: "#confirm-fulfillment", attr: "phx-show"})
       assert has_element?(view, "#confirm-fulfillment-form label", "Email delivery confirmation")
-      refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
+      refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer?]"][checked]|)
 
-      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer: "true"}) |> render_change()
-      assert has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
+      view |> form("#confirm-fulfillment-form", fulfillment: %{email_customer?: "true"}) |> render_change()
+      assert has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer?]"][checked]|)
 
       view |> element("#confirm-fulfillment-form button", "Cancel") |> render_click()
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
-      refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|)
+      refute has_element?(view, ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer?]"][checked]|)
     end
 
     test "a gift, or a delivery left while nobody was home, starts ticked", %{conn: conn} do
-      checked = ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer]"][checked]|
+      checked = ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer?]"][checked]|
 
       gift = placed_order(fulfillment_method: :delivery, gift: true, recipient_name: "Grace Hopper")
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{gift.id}")
@@ -504,7 +504,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_change()
 
       view
-      |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true", email_customer: "false"})
+      |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true", email_customer?: "false"})
       |> render_change()
 
       view |> form("#confirm-fulfillment-form") |> render_submit()
@@ -599,7 +599,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    {html, log} = ExUnit.CaptureLog.with_log(fn -> refund_from_page(view, %{amount: "100", how: "stripe"}) end)
+    {html, log} =
+      ExUnit.CaptureLog.with_log(fn -> refund_from_page(view, %{amount: "100", payment_method: "stripe"}) end)
 
     assert html =~ "Could not refund with Stripe."
     assert log =~ ":card_declined"
@@ -621,7 +622,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     end)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    refund_from_page(view, %{amount: "20", how: "stripe"})
+    refund_from_page(view, %{amount: "20", payment_method: "stripe"})
 
     assert has_element?(view, "#order-log", "Refunded 10,00 € · Stripe")
     assert has_element?(view, "#order-log", "Refunded 20,00 € · Stripe")
@@ -756,7 +757,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       generate(payment(order_id: order.id, method: :cash, amount: Decimal.new("88.50")))
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-      refund_from_page(view, %{amount: "20,00", how: "cash", note: "Wilted early"})
+      refund_from_page(view, %{amount: "20,00", payment_method: "cash", note: "Wilted early"})
 
       assert has_element?(view, "#order-log", "Refunded 20,00 € · Cash")
       assert has_element?(view, "#order-log", "Wilted early")
@@ -780,7 +781,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert has_element?(view, ~s|#order-refund-how option[value="stripe"][selected]|)
 
       assert view
-             |> form("#order-refund-form", refund: %{amount: "20.00", how: "stripe", email_customer: "false"})
+             |> form("#order-refund-form",
+               refund: %{amount: "20.00", payment_method: "stripe", email_customer?: "false"}
+             )
              |> render_submit() =~ "Refunded with Stripe."
 
       assert has_element?(view, "#order-log", "Refunded 20,00 € · Stripe")

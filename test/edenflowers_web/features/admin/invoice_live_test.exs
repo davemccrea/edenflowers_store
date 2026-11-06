@@ -236,7 +236,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     # Another session records money after this page was loaded.
     {:ok, _} = Payments.record_invoice_payment(invoice, "1", %{}, actor: admin)
     view |> form("#invoice-credit-form", credit: %{reason: "Customer requested a correction"}) |> render_submit()
-    assert has_element?(view, "#invoice-error")
+    assert has_element?(view, "#invoice-credit-form [role=alert]", "Payments are recorded against this invoice.")
     assert has_element?(view, "#invoice-credit-form textarea", "Customer requested a correction")
     assert Ash.load!(invoice, :credit_note, actor: admin).credit_note == nil
   end

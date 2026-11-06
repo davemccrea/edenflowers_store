@@ -1,8 +1,10 @@
 defmodule EdenflowersWeb.Admin.PaymentActions do
   @moduledoc """
   Jennie's payment controls on an order or a course booking, shared by the
-  order page and the courses page. Returns the flash to show, keeping a
-  committed payment distinct from a receipt failure. The page reloads what it shows.
+  order page and the courses page: the AshPhoenix forms behind the cancel,
+  record payment and refund drawers, and the flash for what each did, keeping
+  a committed payment distinct from a receipt failure. The page reloads what
+  it shows.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
@@ -17,101 +19,117 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   def load_for_cancel(payable), do: Ash.load!(payable, Cancel.load(), authorize?: false)
 
   @doc """
-  The cancel drawer's form for a payable from `load_for_cancel/1`. The
-  cancellation charge starts at `default_cancellation_charge`.
+  The cancel drawer's form on the payable's `cancel` action, for a payable
+  from `load_for_cancel/1`. The cancellation charge starts at
+  `default_cancellation_charge`.
   """
-  def cancel_form(payable) do
-    Phoenix.Component.to_form(
-      %{
-        "charge" => Decimal.to_string(payable.default_cancellation_charge, :normal),
-        "reason" => "",
-        "email_customer" => "true"
-      },
-      as: :cancel
-    )
+  def cancel_form(payable, actor) do
+    form(payable, :cancel, "cancel", actor, %{
+      "cancellation_charge" => Decimal.to_string(payable.default_cancellation_charge, :normal),
+      "email_customer?" => "true"
+    })
   end
 
-  def cancel(payable, params, actor) do
-    input =
-      Map.merge(Drawers.email_edits(params), %{
-        cancellation_charge: params["charge"],
-        cancellation_reason: params["reason"],
-        email_customer?: params["email_customer"] != "false"
-      })
+  @doc """
+  The record payment form, on `record_payment`, or on `pay_with_gift_voucher`
+  once Jennie picks Gift voucher. Starts at a card payment in the shop for the
+  whole balance, without a receipt.
+  """
+  def payment_form(payable, actor, params \\ %{}) do
+    params =
+      Map.merge(
+        %{
+          "payment_method" => "zettle",
+          "amount" => Decimal.to_string(payable.balance, :normal),
+          "email_receipt?" => "false"
+        },
+        params
+      )
 
-    with {:error, error} <- Ash.update(payable, input, action: :cancel, actor: actor) do
-      unless match?(%Ash.Error.Invalid{}, error),
-        do: Logger.error("#{inspect(payable.__struct__)} #{payable.id} not cancelled: #{inspect(error)}")
-
-      {:error, payment_error(error)}
-    end
+    action = if params["payment_method"] == "voucher", do: :pay_with_gift_voucher, else: :record_payment
+    form(payable, action, "payment", actor, params)
   end
 
-  def record_payment(payable, %{"payment_method" => "voucher"} = params, actor) do
-    case Ash.update(payable, %{code: params["code"]}, action: :pay_with_gift_voucher, actor: actor) do
-      {:ok, _payable} -> {:success, ~t"Paid from the gift voucher."}
-      {:error, error} -> {:error, payment_error(error)}
-    end
+  @doc """
+  The record payment form as Jennie changes it. Choosing a bank transfer ticks
+  the receipt email, since the customer paid from home and would otherwise
+  hear nothing; any other method unticks it, as she was there in person.
+  Choosing or leaving Gift voucher swaps the form's action.
+  """
+  def change_payment_form(form, params, target, actor) do
+    params =
+      if target == ["payment", "payment_method"],
+        do: Map.put(params, "email_receipt?", to_string(params["payment_method"] == "zervant")),
+        else: params
+
+    if target == ["payment", "payment_method"],
+      do: payment_form(form.source.data, actor, params),
+      else: validate(form, params)
   end
 
-  def record_payment(payable, %{"amount" => amount, "payment_method" => payment_method} = params, actor) do
-    input =
-      Map.merge(Drawers.email_edits(params), %{
-        amount: amount,
-        payment_method: payment_method,
-        email_receipt?: params["email_receipt"] == "true"
-      })
+  @doc """
+  The refund form on the `refund` action: what's owed back, if anything, the
+  way the record was paid, and an email to the customer.
+  """
+  def refund_form(record, actor) do
+    owed_back = Decimal.max(Decimal.negate(record.balance), 0)
 
-    case Ash.update(payable, input, action: :record_payment, actor: actor) do
-      {:ok, payable} -> {:ok, recorded_message(payable.__metadata__[:receipt_emailed?])}
-      {:error, error} -> {:error, payment_error(error)}
-    end
-  end
-
-  defp recorded_message(true), do: {:success, ~t"Payment recorded and receipt emailed."}
-  defp recorded_message(false), do: {:error, ~t"Payment recorded, but the receipt could not be emailed."}
-  defp recorded_message(nil), do: {:success, ~t"Payment recorded."}
-
-  def undo_payment(payable, payment_id, actor) do
-    payable
-    |> Ash.update(%{payment_id: payment_id}, action: :undo_payment, actor: actor)
-    |> logged(payable, "Undoing payment #{payment_id}", ~t"Payment undone.", ~t"Could not undo the payment.")
-  end
-
-  def refund(payable, %{"amount" => amount, "how" => how} = params, actor) do
-    input =
-      Map.merge(Drawers.email_edits(params), %{
-        amount: amount,
-        payment_method: how,
-        note: params["note"],
-        email_customer?: params["email_customer"] != "false"
-      })
-
-    case Ash.update(payable, input, action: :refund, actor: actor) do
-      {:ok, _payable} when how == "stripe" -> {:success, ~t"Refunded with Stripe."}
-      {:ok, _payable} -> {:success, ~t"Refund recorded."}
-      {:error, error} -> {:error, payment_error(error)}
-    end
+    form(record, :refund, "refund", actor, %{
+      "payment_method" => to_string(record.default_refund_method),
+      "amount" => if(Decimal.positive?(owed_back), do: Decimal.to_string(owed_back, :normal), else: ""),
+      "email_customer?" => "true"
+    })
   end
 
   @doc """
   The refund form as Jennie changes it. Choosing cash unticks the email,
   since she hands that back in person; any other way ticks it again.
   """
-  def refund_params(params, ["refund", "how"]),
-    do: Map.put(params, "email_customer", if(params["how"] == "cash", do: "false", else: "true"))
+  def change_refund_form(form, params, ["refund", "payment_method"]),
+    do: validate(form, Map.put(params, "email_customer?", to_string(params["payment_method"] != "cash")))
 
-  def refund_params(params, _target), do: params
+  def change_refund_form(form, params, _target), do: validate(form, params)
 
   @doc """
-  The record payment form as Jennie changes it. Choosing a bank transfer ticks
-  the receipt email, since the customer paid from home and would otherwise
-  hear nothing; any other method unticks it, as she was there in person.
+  Submits a record payment or refund form: `{:ok, {kind, flash}}` once the
+  money is recorded, or `{:error, form}` with the refusal on its fields.
   """
-  def payment_params(params, ["payment", "payment_method"]),
-    do: Map.put(params, "email_receipt", to_string(params["payment_method"] == "zervant"))
+  def submit(form, params) do
+    with {:ok, payable} <- AshPhoenix.Form.submit(form, params: params) do
+      {:ok, recorded(form.source.action, payable, params)}
+    end
+  end
 
-  def payment_params(params, _target), do: params
+  defp recorded(:pay_with_gift_voucher, _payable, _params), do: {:success, ~t"Paid from the gift voucher."}
+  defp recorded(:refund, _payable, %{"payment_method" => "stripe"}), do: {:success, ~t"Refunded with Stripe."}
+  defp recorded(:refund, _payable, _params), do: {:success, ~t"Refund recorded."}
+
+  defp recorded(:record_payment, payable, _params) do
+    case payable.__metadata__[:receipt_emailed?] do
+      true -> {:success, ~t"Payment recorded and receipt emailed."}
+      false -> {:error, ~t"Payment recorded, but the receipt could not be emailed."}
+      nil -> {:success, ~t"Payment recorded."}
+    end
+  end
+
+  defp form(record, action, as, actor, params) do
+    record
+    |> AshPhoenix.Form.for_update(action,
+      as: as,
+      actor: actor,
+      params: params,
+      transform_params: &Drawers.keep_email_edits/3
+    )
+    |> Phoenix.Component.to_form()
+  end
+
+  defp validate(form, params), do: AshPhoenix.Form.validate(form, params)
+
+  def undo_payment(payable, payment_id, actor) do
+    payable
+    |> Ash.update(%{payment_id: payment_id}, action: :undo_payment, actor: actor)
+    |> logged(payable, "Undoing payment #{payment_id}", ~t"Payment undone.", ~t"Could not undo the payment.")
+  end
 
   def open_payment_link(payable, actor) do
     payable
@@ -135,8 +153,4 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   # Orders send theirs in a Payment reminder.
   defp send_payment_link(%CourseRegistration{} = registration, edits, actor),
     do: Courses.email_registration_payment_link(registration, edits, actor: actor)
-
-  @doc "Why recording money was refused, in the action's own words."
-  def payment_error(%{errors: [%{message: message} | _]}) when is_binary(message), do: message
-  def payment_error(_error), do: ~t"Could not record it. Check the amount."
 end

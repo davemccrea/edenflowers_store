@@ -161,7 +161,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
 
     view |> element(~s|button[phx-click="open_cancel"][phx-value-id="#{registration.id}"]|) |> render_click()
-    assert has_element?(view, ~s|#cancel-form input[name="cancel[charge]"][value="0"]|)
+    assert has_element?(view, ~s|#cancel-form input[name="cancel[cancellation_charge]"][value="0"]|)
     view |> form("#cancel-form") |> render_submit()
 
     assert has_element?(view, "[data-status=cancelled]", "Anna")
@@ -198,7 +198,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
       open_cancel(view, registration)
 
-      assert has_element?(view, ~s|#cancel-form input[name="cancel[charge]"][value="42.50"]|)
+      assert has_element?(view, ~s|#cancel-form input[name="cancel[cancellation_charge]"][value="42.50"]|)
     end
 
     test "before the course's deadline, prefills no charge", %{conn: conn, registration: registration} do
@@ -209,14 +209,16 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
       open_cancel(view, registration)
 
-      assert has_element?(view, ~s|#cancel-form input[name="cancel[charge]"][value="0"]|)
+      assert has_element?(view, ~s|#cancel-form input[name="cancel[cancellation_charge]"][value="0"]|)
     end
 
     test "keeps the charge Jennie enters and leaves the rest to hand back", %{conn: conn, registration: registration} do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
       open_cancel(view, registration)
 
-      view |> form("#cancel-form", cancel: %{charge: "35,00", reason: "Ill that day"}) |> render_submit()
+      view
+      |> form("#cancel-form", cancel: %{cancellation_charge: "35,00", cancellation_reason: "Ill that day"})
+      |> render_submit()
 
       assert has_element?(view, "#registration-#{registration.id}", "To refund 50,00 €")
 
@@ -226,7 +228,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       assert has_element?(view, "#settlement-drawer", "Ill that day")
       assert has_element?(view, "#settlement-drawer", "Cancellation emailed to #{registration.email}.")
 
-      view |> form("#refund-#{registration.id}-form", refund: %{how: "cash"}) |> render_submit()
+      view |> form("#refund-#{registration.id}-form", refund: %{payment_method: "cash"}) |> render_submit()
 
       refute has_element?(view, "#registration-#{registration.id}", "To refund")
       registration = Ash.load!(registration, [:amount_paid], authorize?: false, reuse_values?: false)
@@ -240,9 +242,9 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
       open_cancel(view, registration)
 
-      view |> form("#cancel-form", cancel: %{charge: "90"}) |> render_submit()
+      view |> form("#cancel-form", cancel: %{cancellation_charge: "90"}) |> render_submit()
 
-      assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from 0 € to 85,00 €.")
+      assert has_element?(view, "#cancel_cancellation_charge-error", "Enter an amount from 0 € to 85,00 €.")
       assert Ash.get!(Edenflowers.Courses.CourseRegistration, registration.id, authorize?: false).status == :confirmed
     end
   end
@@ -330,7 +332,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       view
       |> form("#payment-#{booking.id}-form",
-        payment: %{amount: "30,00", payment_method: "cash", email_receipt: "false"}
+        payment: %{amount: "30,00", payment_method: "cash", email_receipt?: "false"}
       )
       |> render_change()
 
@@ -338,7 +340,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
       view
       |> form("#payment-#{booking.id}-form",
-        payment: %{amount: "30,00", payment_method: "cash", email_receipt: "false"}
+        payment: %{amount: "30,00", payment_method: "cash", email_receipt?: "false"}
       )
       |> render_submit()
 
@@ -628,7 +630,9 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       view |> element(refund_menu_item(registration), "Refund") |> render_click()
 
       view
-      |> form("#refund-#{registration.id}-form", refund: %{amount: "20", how: "cash", note: "Ran short of moss"})
+      |> form("#refund-#{registration.id}-form",
+        refund: %{amount: "20", payment_method: "cash", note: "Ran short of moss"}
+      )
       |> render_submit()
 
       assert has_element?(view, "#registration-#{registration.id}", "Refunded 20,00 € · Cash")
@@ -651,7 +655,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
       view |> element(refund_menu_item(registration), "Refund") |> render_click()
 
       view
-      |> form("#refund-#{registration.id}-form", refund: %{amount: "20.00", how: "stripe"})
+      |> form("#refund-#{registration.id}-form", refund: %{amount: "20.00", payment_method: "stripe"})
       |> render_submit()
 
       assert has_element?(view, "#registration-#{registration.id}", "Refunded 20,00 € · Stripe")

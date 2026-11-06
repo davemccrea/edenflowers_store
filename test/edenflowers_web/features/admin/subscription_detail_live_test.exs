@@ -84,7 +84,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
     view |> element(~s|button[phx-click="open_cancel"]|) |> render_click()
-    view |> form("#cancel-subscription-form", cancel: %{email_customer: "false"}) |> render_submit()
+    view |> form("#cancel-subscription-form", cancel: %{email_customer?: "false"}) |> render_submit()
 
     assert reload(subscription).state == :cancelled
     refute_enqueued(worker: Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail)

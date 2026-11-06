@@ -43,11 +43,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:locale, Localize.get_locale())
          |> assign(:mapbox_token, Application.get_env(:edenflowers, :mapbox_token))
          |> assign_order(order)
-         |> assign(:fulfillment_form, nil)
-         |> assign(:fulfillment_error, nil)
-         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
+         |> assign(fulfillment_form: nil, photo_error: nil)
+         |> assign(cancelling: nil, cancel_form: nil)
          |> assign(email_form: nil, email_kind: nil, preview: nil)
-         |> assign(settlement_mode: :settle, settlement_error: nil)
+         |> assign(:settlement_mode, :settle)
          |> PhotoUpload.allow([@photo_field])
          |> assign(:queue, queue_position(order, socket.assigns.current_user))}
 
@@ -138,7 +137,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <.confirm_fulfillment
           :if={@order.fulfillable?}
           form={@fulfillment_form}
-          error={@fulfillment_error}
+          photo_error={@photo_error}
           order={@order}
           uploads={@uploads}
           preview={@preview}
@@ -150,7 +149,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           keep_label={~t"Keep order"}
           form={@cancel_form}
           payable={@cancelling}
-          error={@cancel_error}
           email={@order.customer_email}
           locale={@locale}
           preview={@preview}
@@ -163,9 +161,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         <.settlement_drawer
           order={@order}
           mode={@settlement_mode}
-          error={@settlement_error}
-          payment_params={@payment_params}
-          refund_params={@refund_params}
+          payment_form={@payment_form}
+          refund_form={@refund_form}
           locale={@locale}
           preview={@preview}
         />
@@ -275,6 +272,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
             <.widget id="order-florist-note" title={~t"Florist note"}>
               <.form for={@note_form} id="florist-note-form" phx-submit="save_florist_note" class="space-y-3">
+                <.refusal form={@note_form} />
                 <.input
                   field={@note_form[:florist_note]}
                   type="textarea"
@@ -493,20 +491,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     # "customer_home" starts as the unanswered radio posts it, so ticking
     # the email box first isn't taken for an answer.
     form =
-      to_form(
-        %{
-          "customer_home" => "",
-          "email_customer" => email_by_default(socket.assigns.order, nil)
-        },
-        as: :fulfillment
+      socket.assigns.order
+      |> AshPhoenix.Form.for_update(:mark_fulfilled,
+        as: "fulfillment",
+        actor: socket.assigns.current_user,
+        params: %{"customer_home" => "", "email_customer?" => email_by_default(socket.assigns.order, nil)},
+        transform_params: &fulfillment_params/3
       )
+      |> to_form()
 
     {:noreply,
      socket
      |> PhotoUpload.forget([@photo_field])
-     |> assign(:fulfillment_form, form)
-     |> assign(:fulfillment_error, nil)
-     |> assign_fulfillment_preview(form.params)
+     |> assign(fulfillment_form: form, photo_error: nil)
+     |> assign_fulfillment_preview()
      |> push_event("js-exec", %{to: "#confirm-fulfillment", attr: "phx-show"})}
   end
 
@@ -520,12 +518,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     params =
       if params["customer_home"] == socket.assigns.fulfillment_form[:customer_home].value,
         do: params,
-        else: Map.put(params, "email_customer", email_by_default(socket.assigns.order, params["customer_home"]))
+        else: Map.put(params, "email_customer?", email_by_default(socket.assigns.order, params["customer_home"]))
 
     {:noreply,
      socket
-     |> assign(:fulfillment_form, to_form(params, as: :fulfillment))
-     |> assign_fulfillment_preview(params)}
+     |> assign(:fulfillment_form, AshPhoenix.Form.validate(socket.assigns.fulfillment_form, params))
+     |> assign_fulfillment_preview()}
   end
 
   def handle_event("mark_fulfilled", %{"fulfillment" => %{"customer_home" => "false"} = params}, socket) do
@@ -533,33 +531,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     socket = PhotoUpload.store_uploads(socket, [@photo_field], basename)
 
     case socket.assigns.photo_slugs[@photo_field] do
-      nil ->
-        {:noreply, assign(socket, :fulfillment_error, ~t"Take a photo of where you left the order.")}
-
-      slug ->
-        mark_fulfilled(
-          socket,
-          Map.merge(Drawers.email_edits(params), %{
-            delivery_photo_slug: slug,
-            email_delivery_photo: true,
-            email_customer?: params["email_customer"] != "false"
-          })
-        )
+      nil -> {:noreply, assign(socket, :photo_error, ~t"Take a photo of where you left the order.")}
+      slug -> mark_fulfilled(socket, Map.put(params, "delivery_photo_slug", slug))
     end
   end
 
-  def handle_event("mark_fulfilled", %{"fulfillment" => params}, socket) do
-    mark_fulfilled(socket, Map.put(Drawers.email_edits(params), :email_customer?, params["email_customer"] != "false"))
-  end
+  def handle_event("mark_fulfilled", %{"fulfillment" => params}, socket), do: mark_fulfilled(socket, params)
 
-  def handle_event("save_florist_note", %{"note" => %{"florist_note" => note}}, socket) do
-    case Orders.update_florist_note(socket.assigns.order, %{florist_note: note}, actor: socket.assigns.current_user) do
-      {:ok, order} ->
-        {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:success, ~t"Note saved.")}
-
-      {:error, error} ->
-        Logger.error("Florist note for order #{socket.assigns.order.id} not saved: #{inspect(error)}")
-        {:noreply, put_flash(socket, :error, ~t"Could not save the note.")}
+  def handle_event("save_florist_note", %{"note" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.note_form, params: params) do
+      {:ok, order} -> {:noreply, socket |> assign_order(reload(order, socket)) |> put_flash(:success, ~t"Note saved.")}
+      {:error, form} -> {:noreply, assign(socket, :note_form, form)}
     end
   end
 
@@ -586,43 +568,43 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   def handle_event("open_cancel", _params, socket) do
     order = PaymentActions.load_for_cancel(socket.assigns.order)
-    form = PaymentActions.cancel_form(order)
+    form = PaymentActions.cancel_form(order, socket.assigns.current_user)
 
     {:noreply,
      socket
-     |> assign(cancelling: order, cancel_form: form, cancel_error: nil)
-     |> assign_preview(:cancelled, form.params)
+     |> assign(cancelling: order, cancel_form: form)
+     |> assign_preview(:cancelled, form)
      |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
 
   def handle_event("close_cancel", _params, socket) do
-    {:noreply, assign(socket, cancelling: nil, cancel_form: nil, cancel_error: nil)}
+    {:noreply, assign(socket, cancelling: nil, cancel_form: nil)}
   end
 
   def handle_event("validate_cancel", %{"cancel" => params}, socket) do
-    {:noreply, socket |> assign(:cancel_form, to_form(params, as: :cancel)) |> assign_preview(:cancelled, params)}
+    form = AshPhoenix.Form.validate(socket.assigns.cancel_form, params)
+    {:noreply, socket |> assign(:cancel_form, form) |> assign_preview(:cancelled, form)}
   end
 
   def handle_event("submit_cancel", %{"cancel" => params}, socket) do
-    socket = assign(socket, :cancel_form, to_form(params, as: :cancel))
-
-    case PaymentActions.cancel(socket.assigns.order, params, socket.assigns.current_user) do
+    case AshPhoenix.Form.submit(socket.assigns.cancel_form, params: params) do
       {:ok, order} ->
         {:noreply,
          socket
          |> assign_order(reload(order, socket))
-         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
+         |> assign(cancelling: nil, cancel_form: nil)
          |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
          |> put_flash(:success, ~t"Order cancelled.")}
 
-      {:error, message} ->
-        {:noreply, assign(socket, :cancel_error, message)}
+      {:error, form} ->
+        {:noreply, assign(socket, :cancel_form, form)}
     end
   end
 
   def handle_event("change_payment", %{"payment" => params} = event, socket) do
-    params = PaymentActions.payment_params(params, event["_target"])
-    {:noreply, socket |> assign(:payment_params, params) |> assign_preview(:payment, params)}
+    %{payment_form: form, current_user: actor} = socket.assigns
+    form = PaymentActions.change_payment_form(form, params, event["_target"], actor)
+    {:noreply, socket |> assign(:payment_form, form) |> assign_preview(:payment, form)}
   end
 
   # Money owed back, or the menu's Refund, opens the refund form.
@@ -634,28 +616,29 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
     {:noreply,
      socket
-     |> assign(settlement_mode: mode, settlement_error: nil)
+     |> assign(:settlement_mode, mode)
      |> assign_preview(
        if(mode == :refund, do: :refunded, else: :payment),
-       if(mode == :refund, do: socket.assigns.refund_params, else: socket.assigns.payment_params)
+       if(mode == :refund, do: socket.assigns.refund_form, else: socket.assigns.payment_form)
      )
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
   end
 
   def handle_event("record_payment", %{"payment" => params}, socket) do
-    result = PaymentActions.record_payment(socket.assigns.order, params, socket.assigns.current_user)
-    {:noreply, socket |> assign(:payment_params, params) |> settlement_result(result)}
+    # A submit without the change that picks the method still runs the action for it.
+    %{order: order, current_user: actor} = socket.assigns
+    form = PaymentActions.payment_form(order, actor, params)
+    {:noreply, socket |> settlement_result(:payment_form, PaymentActions.submit(form, params))}
   end
 
   def handle_event("change_refund", %{"refund" => params} = event, socket) do
-    params = PaymentActions.refund_params(params, event["_target"])
-
-    {:noreply, socket |> assign(:refund_params, params) |> assign_preview(:refunded, params)}
+    form = PaymentActions.change_refund_form(socket.assigns.refund_form, params, event["_target"])
+    {:noreply, socket |> assign(:refund_form, form) |> assign_preview(:refunded, form)}
   end
 
   def handle_event("refund", %{"refund" => params}, socket) do
-    result = PaymentActions.refund(socket.assigns.order, params, socket.assigns.current_user)
-    {:noreply, socket |> assign(:refund_params, params) |> settlement_result(result)}
+    result = PaymentActions.submit(socket.assigns.refund_form, params)
+    {:noreply, settlement_result(socket, :refund_form, result)}
   end
 
   def handle_event("undo_payment", %{"id" => payment_id}, socket) do
@@ -743,23 +726,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   # The drawer closes once the money is recorded. On an error it stays open with
-  # the message and the forms as Jennie filled them in, which reloading would clear.
-  defp settlement_result(socket, {:success, _message} = result), do: settlement_result(socket, {:ok, result})
-
-  defp settlement_result(socket, {:ok, result}) do
+  # the form as Jennie filled it in and the refusal on its fields.
+  defp settlement_result(socket, _form, {:ok, result}) do
     socket
     |> flash_payment_result(result)
-    |> assign(:settlement_error, nil)
     |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-hide"})
   end
 
-  defp settlement_result(socket, {:error, message}) do
-    %{payment_params: payment_params, refund_params: refund_params} = socket.assigns
-
-    socket
-    |> assign_order(reload(socket.assigns.order, socket))
-    |> assign(payment_params: payment_params, refund_params: refund_params, settlement_error: message)
-  end
+  defp settlement_result(socket, form_key, {:error, form}), do: assign(socket, form_key, form)
 
   defp email_failed_message("record_fulfillment_email_failure"), do: ~t"Couldn't email the confirmation."
   defp email_failed_message("record_receipt_email_failure"), do: ~t"Couldn't email the receipt."
@@ -772,8 +746,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   defp email_by_default(_order, "false"), do: "true"
   defp email_by_default(_order, _customer_home), do: "false"
 
-  defp mark_fulfilled(socket, attrs) do
-    case Orders.mark_order_fulfilled(socket.assigns.order, attrs, actor: socket.assigns.current_user) do
+  defp mark_fulfilled(socket, params) do
+    case AshPhoenix.Form.submit(socket.assigns.fulfillment_form, params: params) do
       {:ok, order} ->
         message =
           if order.fulfillment_method == :delivery,
@@ -781,7 +755,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             else: ~t"Order marked as collected."
 
         message =
-          if attrs.email_customer? && order.customer_email,
+          if params["email_customer?"] != "false" && order.customer_email,
             do: message <> " " <> ~t"Confirmation queued.",
             else: message
 
@@ -791,22 +765,32 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign(:fulfillment_form, nil)
          |> put_flash(:success, message)}
 
-      {:error, error} ->
-        Logger.error("Order #{socket.assigns.order.id} not marked fulfilled: #{inspect(error)}")
-        {:noreply, assign(socket, :fulfillment_error, ~t"Could not mark order as fulfilled.")}
+      {:error, form} ->
+        {:noreply, assign(socket, :fulfillment_form, form)}
     end
   end
 
+  # Left where nobody was home, the order is photographed and the photo goes
+  # with the email. "customer_home" itself is the drawer's alone.
+  defp fulfillment_params(form, %{"customer_home" => "false"} = params, action),
+    do: Drawers.keep_email_edits(form, Map.put(params, "email_delivery_photo", "true"), action)
+
+  defp fulfillment_params(form, params, action), do: Drawers.keep_email_edits(form, params, action)
+
   defp assign_order(socket, order) do
     payments = payments(order)
+    actor = socket.assigns.current_user
 
     socket
     |> assign(:order, order)
     |> assign(:pickup_message_urls, pickup_message_urls(order))
     |> assign(:payment_message_urls, payment_message_urls(order))
-    |> assign(:note_form, to_form(%{"florist_note" => order.florist_note}, as: :note))
-    |> assign(:payment_params, %{})
-    |> assign(:refund_params, %{})
+    |> assign(
+      :note_form,
+      order |> AshPhoenix.Form.for_update(:update_florist_note, as: "note", actor: actor) |> to_form()
+    )
+    |> assign(:payment_form, if(order.to_collect?, do: PaymentActions.payment_form(order, actor)))
+    |> assign(:refund_form, if(order.refundable?, do: PaymentActions.refund_form(order, actor)))
     |> assign(:payments, payments)
     |> assign(:log, order_log(order, payments, socket.assigns.locale))
   end
@@ -888,15 +872,15 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  defp assign_preview(socket, kind, params) do
-    assign(socket, :preview, DrawerPreview.build(kind, socket.assigns.order, params))
-  end
+  # Nothing to preview when the order has nothing to settle that way.
+  defp assign_preview(socket, _kind, nil), do: assign(socket, :preview, nil)
 
-  defp assign_fulfillment_preview(socket, params) do
-    order = socket.assigns.order
-    photo? = params["customer_home"] == "false"
-    preview = Preview.build(:fulfillment, order, %{photo?: photo?})
-    assign(socket, :preview, preview)
+  defp assign_preview(socket, kind, form),
+    do: assign(socket, :preview, DrawerPreview.build(kind, socket.assigns.order, form))
+
+  defp assign_fulfillment_preview(socket) do
+    photo? = socket.assigns.fulfillment_form[:customer_home].value == "false"
+    assign(socket, :preview, Preview.build(:fulfillment, socket.assigns.order, %{photo?: photo?}))
   end
 
   # Muted rows inherit the row's own muted tone.

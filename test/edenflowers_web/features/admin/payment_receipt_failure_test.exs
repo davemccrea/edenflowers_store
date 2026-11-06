@@ -27,7 +27,7 @@ defmodule EdenflowersWeb.Admin.PaymentReceiptFailureTest do
 
     html =
       view
-      |> form("#order-balance-form", payment: %{amount: "20.00", payment_method: "cash", email_receipt: "true"})
+      |> form("#order-balance-form", payment: %{amount: "20.00", payment_method: "cash", email_receipt?: "true"})
       |> render_submit()
 
     assert html =~ "Payment recorded, but the receipt could not be emailed."

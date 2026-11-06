@@ -9,33 +9,22 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
   alias Edenflowers.Email.Preview
   alias Edenflowers.Payments.CreditNote
   alias Edenflowers.Payments.Invoice
-  alias EdenflowersWeb.Admin.Drawers
 
-  def build(:invoice, %Invoice{} = invoice, _params), do: Preview.build(:invoice, invoice, %{})
-  def build(:credit_note, %CreditNote{} = credit_note, _params), do: Preview.build(:credit_note, credit_note, %{})
+  def build(:invoice, %Invoice{} = invoice, _form), do: Preview.build(:invoice, invoice, %{})
+  def build(:credit_note, %CreditNote{} = credit_note, _form), do: Preview.build(:credit_note, credit_note, %{})
 
-  def build(kind, record, params) do
-    params = if kind == :refunded, do: Drawers.refund_form_params(record, params), else: params
+  # The entered amount distinguishes a new payment from a neutral receipt copy.
+  def build(:payment, record, %Phoenix.HTML.Form{} = form),
+    do: Preview.build(:receipt, record, %{amount: form[:amount].value})
 
-    inputs = %{
-      refund: params["amount"] || owed_back(record),
-      charge: params["charge"],
-      amount: if(kind == :payment, do: params["amount"] || balance(record)),
-      payment_method: payment_method(params["how"])
-    }
-
-    # The entered amount distinguishes a new payment from a neutral receipt copy.
-    kind = if kind == :payment, do: :receipt, else: kind
-
-    Preview.build(kind, record, inputs)
+  def build(:refunded, record, %Phoenix.HTML.Form{} = form) do
+    method = form[:payment_method].value
+    Preview.build(:refunded, record, %{refund: form[:amount].value, payment_method: if(is_atom(method), do: method)})
   end
 
-  # The refund form fills itself in from what's owed back, so an empty amount
-  # reads as that until Jennie changes it.
-  defp owed_back(record), do: record.balance |> Decimal.negate() |> Decimal.max(0) |> Decimal.to_string(:normal)
+  def build(:cancelled, record, %Phoenix.HTML.Form{} = form),
+    do: Preview.build(:cancelled, record, %{charge: form[:cancellation_charge].value})
 
-  defp balance(record), do: Decimal.to_string(record.balance, :normal)
-
-  defp payment_method(how) when how in [nil, ""], do: :stripe
-  defp payment_method(how) when is_binary(how), do: String.to_existing_atom(how)
+  # The email drawer's kinds have nothing to enter but the email itself.
+  def build(kind, record, _params), do: Preview.build(kind, record, %{})
 end

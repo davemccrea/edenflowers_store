@@ -155,9 +155,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   attr :order, Order, required: true
   attr :mode, :atom, required: true, values: [:settle, :refund]
-  attr :error, :string, default: nil
-  attr :payment_params, :map, required: true
-  attr :refund_params, :map, required: true
+  attr :payment_form, Phoenix.HTML.Form, default: nil, doc: "nil when there is nothing to collect"
+  attr :refund_form, Phoenix.HTML.Form, default: nil, doc: "nil when there is nothing to refund"
   attr :locale, :string, required: true
   attr :preview, Swoosh.Email, default: nil
 
@@ -183,14 +182,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
             <dd class="font-semibold">{Format.currency(Decimal.abs(@order.balance), @locale)}</dd>
           </div>
         </dl>
-        <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
         <.refund_form
           :if={@mode == :refund and @order.refundable?}
           id="order-refund"
           record={@order}
           email={@order.customer_email}
           locale={@locale}
-          params={@refund_params}
+          form={@refund_form}
           preview={@preview}
         />
         <.record_payment_form
@@ -198,7 +196,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           id="order-balance"
           record={@order}
           locale={@locale}
-          params={@payment_params}
+          form={@payment_form}
           receipt_email?={!!@order.customer_email}
           preview={@preview}
         />
@@ -217,7 +215,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   def nothing_to_settle?(order, :settle), do: not order.to_collect?
 
   attr :form, :any, default: nil
-  attr :error, :string, default: nil
+  attr :photo_error, :string, default: nil
   attr :order, Order, required: true
   attr :uploads, :map, required: true
   attr :preview, Swoosh.Email, default: nil
@@ -234,7 +232,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         class="flex min-h-0 flex-1 flex-col"
       >
         <.drawer_body>
-          <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
+          <.refusal form={@form} />
+          <p :if={@photo_error} role="alert" class="text-error text-sm">{@photo_error}</p>
           <.input
             :let={option}
             :if={@order.fulfillment_method == :delivery}
@@ -251,7 +250,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           <.customer_email
             :if={@order.fulfillment_confirmation_applicable? and @order.customer_email}
             id="fulfillment-email"
-            send={@form[:email_customer]}
+            send={@form[:email_customer?]}
             label={~t"Email delivery confirmation"}
             form={@form}
             to={@order.customer_email}
@@ -272,7 +271,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           <input
             :if={!@order.fulfillment_confirmation_applicable? or !@order.customer_email}
             type="hidden"
-            name="fulfillment[email_customer]"
+            name="fulfillment[email_customer?]"
             value="false"
           />
           <p :if={@order.unpaid?} class="text-warning-content text-sm font-semibold">
