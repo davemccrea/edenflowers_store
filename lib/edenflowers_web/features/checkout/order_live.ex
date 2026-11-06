@@ -5,8 +5,13 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
   use EdenflowersWeb, :live_view
 
+  require Logger
+
+  import EdenflowersWeb.VoucherSkeleton, only: [voucher_skeleton: 1]
+
   alias Edenflowers.Format
   alias Edenflowers.Orders
+  alias Edenflowers.Payments.GiftVoucherPdf
   alias EdenflowersWeb.Analytics
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -183,8 +188,24 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             </p>
           </div>
 
+          <div
+            :if={@shown_order.gift_voucher_sale? && !@voucher_preview_error?}
+            class="aspect-[210/148] relative mt-8 max-w-md shadow-sm"
+            aria-busy={to_string(!@voucher_preview)}
+            data-testid="order-voucher"
+          >
+            <.voucher_skeleton :if={!@voucher_preview} />
+            <p :if={!@voucher_preview} class="sr-only" role="status">{~t"Loading preview…"}</p>
+            <img
+              :if={@voucher_preview}
+              src={"data:image/png;base64," <> @voucher_preview}
+              alt={~t"Preview of your gift voucher"}
+              class="block h-full w-full"
+            />
+          </div>
+
           <figure
-            :if={@shown_order.card_message}
+            :if={@shown_order.card_message && !@shown_order.gift_voucher_sale?}
             class="bg-cream text-cream-content mt-8 max-w-sm px-7 py-6"
             data-testid="order-card"
           >
@@ -289,7 +310,8 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
           :subscription?,
           :gift_voucher_sale?,
           :celebrated?,
-          :voucher_card_ready_on
+          :voucher_card_ready_on,
+          gift_voucher_line: :gift_voucher
         ],
         authorize?: false
       )
@@ -305,6 +327,38 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     |> assign(:date, Format.weekday_date(order.voucher_card_ready_on || order.fulfillment_date, Format.locale()))
     |> assign(:interval_weeks, subscription_line && subscription_line.interval_weeks)
     |> assign(:next_delivery, subscription_line && next_delivery(order, subscription_line))
+    |> render_voucher_preview(order)
+  end
+
+  # The voucher is issued once the order is placed, so until then it shows a year from today.
+  defp render_voucher_preview(%{assigns: %{voucher_preview: _}} = socket, _order), do: socket
+
+  defp render_voucher_preview(socket, %{gift_voucher_sale?: true} = order) do
+    socket
+    |> assign(voucher_preview: nil, voucher_preview_error?: false)
+    |> start_async(:voucher_preview, fn ->
+      GiftVoucherPdf.preview(%{
+        amount: order.grand_total,
+        locale: order.voucher_locale,
+        style: order.voucher_style,
+        snow_seed: order.voucher_snow_seed,
+        recipient_name: order.recipient_name,
+        message: order.card_message || "",
+        expires_on: order.gift_voucher_line.gift_voucher && order.gift_voucher_line.gift_voucher.expires_on
+      })
+    end)
+  end
+
+  defp render_voucher_preview(socket, _order), do: socket
+
+  @impl true
+  def handle_async(:voucher_preview, {:ok, {:ok, png}}, socket),
+    do: {:noreply, assign(socket, voucher_preview: Base.encode64(png))}
+
+  # The confirmation text already says the voucher is on its way, so it stands alone.
+  def handle_async(:voucher_preview, result, socket) do
+    Logger.warning("Order voucher preview failed: #{inspect(result)}")
+    {:noreply, assign(socket, voucher_preview_error?: true)}
   end
 
   # Each later delivery is priced afresh, so this is today's price for it.

@@ -13,26 +13,29 @@ defmodule Edenflowers.Payments.GiftVoucherPdf do
   def generate(voucher), do: Edenflowers.Typst.render("voucher-main.typ", "voucher", build_payload(voucher))
 
   @doc """
-  A PNG of the voucher a buyer is still choosing, for the checkout's preview:
-  what they've entered so far, with a placeholder code and a year's validity
-  from today. Until they write a name or message, placeholders show where
-  each goes, in the voucher's language.
+  A PNG of the voucher a buyer is still choosing, for the checkout's preview,
+  or has bought, for their order page: what they've entered, with a placeholder
+  code, as the real one is only emailed. It's valid for a year from today unless
+  `expires_on` gives the issued voucher's date. Until they write a name or
+  message, placeholders show where each goes, in the voucher's language.
   """
-  def preview(%{
-        amount: amount,
-        locale: locale,
-        style: style,
-        snow_seed: snow_seed,
-        recipient_name: recipient_name,
-        message: message
-      }) do
+  def preview(
+        %{
+          amount: amount,
+          locale: locale,
+          style: style,
+          snow_seed: snow_seed,
+          recipient_name: recipient_name,
+          message: message
+        } = voucher
+      ) do
     payload =
       payload(locale,
         style: style,
         snow_seed: snow_seed,
         amount: amount,
         code: "XXXX XXXX XXXX XXXX",
-        expires_on: Date.shift(Edenflowers.ShopTime.today(), year: 1),
+        expires_on: voucher[:expires_on] || Date.shift(Edenflowers.ShopTime.today(), year: 1),
         recipient_name: recipient_name || placeholder(locale, :recipient_name),
         message: message || placeholder(locale, :message)
       )
