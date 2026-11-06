@@ -64,12 +64,11 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             name="flower-30"
             class={["text-primary/70 mb-6 h-12 w-12", if(@placed?, do: "flower-bloom", else: "flower-waiting")]}
           />
-          <%!-- Petals only for gift vouchers: "For somebody else" orders include condolence flowers. --%>
           <div
             :if={@placed?}
             id={"petals-#{@shown_order.id}"}
             phx-hook=".Petals"
-            data-petals={@shown_order.gift_voucher_sale?}
+            data-petals={@shown_order.celebrated?}
             aria-hidden="true"
           >
           </div>
@@ -282,6 +281,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
           :grand_total,
           :subscription?,
           :gift_voucher_sale?,
+          :celebrated?,
           :voucher_card_ready_on
         ],
         authorize?: false
