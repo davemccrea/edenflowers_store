@@ -496,7 +496,7 @@ defmodule EdenflowersWeb.CoreComponents do
               id={"#{@id_prefix}_#{option[:value]}"}
               value={option[:value]}
               checked={option[:value] == to_string(@value)}
-              class="radio radio-xs radio-primary"
+              class="radio radio-xs radio-primary shrink-0"
               aria-required={@required && "true"}
               {@rest}
             />

@@ -74,7 +74,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
               <fieldset class="flex flex-col lg:col-start-1 lg:row-start-1">
                 <legend class="eyebrow text-base-content/70 mb-5">{~t"Make it personal"}</legend>
                 <%!-- Two styles to a row, everyday above Christmas. --%>
-                <div class="[&_fieldset>div]:grid [&_fieldset>div]:grid-cols-2">
+                <div class="[&_fieldset>div]:grid [&_fieldset>div]:auto-rows-fr [&_fieldset>div]:grid-cols-2">
                   <.input
                     :let={option}
                     label={~t"Style"}
