@@ -33,3 +33,15 @@ test("backspace after a space takes the digit before it", () => {
     caret: 3,
   });
 });
+
+test("stops at 16 digits, typed or pasted", () => {
+  assert.deepEqual(formatVoucherCode("4829 0617 5331 84075", 20), {
+    value: "4829 0617 5331 8407",
+    caret: 19,
+  });
+  const pasted = "4829-0617-5331-8407-99";
+  assert.equal(
+    formatVoucherCode(pasted, pasted.length).value,
+    "4829 0617 5331 8407",
+  );
+});
