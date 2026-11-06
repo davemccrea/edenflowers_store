@@ -21,6 +21,76 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
 
   defp sale(id), do: Ash.get!(Order, id, load: [:grand_total], authorize?: false)
 
+  test "shows a voucher skeleton until the first preview is ready", %{conn: conn} do
+    html = conn |> get("/en/gift-voucher") |> html_response(200)
+    assert html =~ ~s(data-testid="voucher-preview-skeleton")
+    assert html =~ "Loading preview…"
+
+    {:ok, view, _html} = live(conn, "/en/gift-voucher")
+    render_async(view, 5_000)
+
+    assert has_element?(view, "#voucher-preview[aria-busy=false] img[data-testid=voucher-preview]")
+    refute has_element?(view, "[data-testid=voucher-preview-skeleton]")
+  end
+
+  for path <- ["/sv/presentkort", "/fi/lahjakortti", "/en/gift-voucher"] do
+    @path path
+    test "browser Back from payment restores the voucher form at #{path}", %{conn: conn} do
+      path = @path
+      {:ok, view, _html} = live(conn, path)
+      details = Map.put(@details, "voucher_style", "cream")
+      seed = snow_seed(view)
+
+      view |> form("#gift-voucher-form", form: details) |> render_submit()
+      assert_patch(view, path <> "?step=payment")
+      assert has_element?(view, "[data-testid=payment-section]")
+      [%{id: id}] = Ash.read!(Order, authorize?: false)
+
+      render_patch(view, path)
+      refute has_element?(view, "[data-testid=payment-section]")
+
+      for field <- ~w(recipient_name customer_name customer_email) do
+        assert has_element?(view, "#gift-voucher-form input[name='form[#{field}]'][value='#{details[field]}']")
+      end
+
+      for field <- ~w(amount voucher_locale) do
+        assert has_element?(view, "select[name='form[#{field}]'] option[selected][value='#{details[field]}']")
+      end
+
+      assert has_element?(view, "textarea[name='form[card_message]']", details["card_message"])
+      assert has_element?(view, "input[name='form[voucher_style]'][value=cream][checked]")
+      assert snow_seed(view) == seed
+
+      render_patch(view, path <> "?step=payment")
+      assert has_element?(view, "[data-testid=payment-section]")
+      render_patch(view, path)
+      assert has_element?(view, "#gift-voucher-form")
+
+      revised = %{details | "amount" => "40", "recipient_name" => "Ella"}
+      view |> form("#gift-voucher-form", form: revised) |> render_submit()
+      assert_patch(view, path <> "?step=payment")
+      assert has_element?(view, "[data-testid=payment-section]", "Ella")
+      assert [%{id: ^id}] = Ash.read!(Order, authorize?: false)
+      assert Decimal.eq?(sale(id).grand_total, 40)
+
+      expect(StripeAPI.Mock, :create_payment_intent, fn 4000, %{"order_id" => ^id}, nil ->
+        {:ok, %{id: "pi_voucher_back", client_secret: "pi_back_secret", amount: 4000}}
+      end)
+
+      view |> element("#gift-voucher-payment-form") |> render_submit()
+      assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_back_secret"})
+    end
+  end
+
+  test "a payment URL without a voucher returns to the form", %{conn: conn} do
+    assert {:error, {:live_redirect, %{to: "/en/gift-voucher"}}} = live(conn, "/en/gift-voucher?step=payment")
+    {:ok, view, _html} = live(conn, "/en/gift-voucher")
+
+    assert has_element?(view, "#gift-voucher-form")
+    refute has_element?(view, "[data-testid=payment-section]")
+    assert Ash.read!(Order, authorize?: false) == []
+  end
+
   test "a guest buys a voucher in Swedish, changes the amount, then pays by card", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/sv/presentkort")
 

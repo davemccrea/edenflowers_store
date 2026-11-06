@@ -4450,7 +4450,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/store/gift_voucher_live.ex:60
 #, elixir-autogen, elixir-format
-msgid "Give them flowers on their own terms: a bouquet when they need one, fresh flowers every few weeks with a subscription, or an evening on one of my courses. They can spend it here online or in my shop at Minimossen."
+msgid "Let them choose flowers, a subscription or a course. Valid online and in my shop at Minimossen."
 msgstr ""
 
 #: lib/edenflowers_web/features/store/gift_voucher_live.ex:174
@@ -4511,4 +4511,14 @@ msgstr ""
 #: lib/edenflowers_web/features/store/gift_voucher_live.ex:120
 #, elixir-autogen, elixir-format
 msgid "Up to %{count} characters."
+msgstr ""
+
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:172
+#, elixir-autogen, elixir-format
+msgid "You have unsaved changes. Leave without saving?"
+msgstr ""
+
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:165
+#, elixir-autogen, elixir-format
+msgid "See Gift voucher terms"
 msgstr ""

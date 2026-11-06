@@ -42,12 +42,29 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
      |> render_preview()}
   end
 
+  # Keep payment in browser history so Back returns to the editable voucher.
+  # The sale stays in this LiveView; a URL alone cannot start a payment.
+  @impl true
+  def handle_params(%{"step" => "payment"}, _uri, %{assigns: %{sale: nil}} = socket) do
+    {:noreply, push_patch(socket, to: ~q"/#{language}/gift-voucher", replace: true)}
+  end
+
+  def handle_params(%{"step" => "payment"}, _uri, socket) do
+    {:noreply, socket |> assign(editing?: false) |> render_preview()}
+  end
+
+  def handle_params(_params, _uri, %{assigns: %{sale: sale, editing?: false}} = socket) when not is_nil(sale) do
+    {:noreply, socket |> assign(editing?: true) |> assign_form() |> render_preview()}
+  end
+
+  def handle_params(_params, _uri, socket), do: {:noreply, socket}
+
   @impl true
   def render(assigns) do
     ~H"""
     <style :type={EdenflowersWeb.ColocatedCSS}>
       #voucher-preview:has(> .voucher-shuffle:active) {
-        box-shadow: var(--shadow-sm);
+        box-shadow: var(--shadow-xs);
         transition: none;
       }
 
@@ -143,7 +160,10 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
         <header class="max-w-prose">
           <h1 class="page-title">{~t"Give a gift voucher"}</h1>
           <p class="mt-6 text-lg leading-relaxed">
-            {~t"Give them flowers on their own terms: a bouquet when they need one, fresh flowers every few weeks with a subscription, or an evening on one of my courses. They can spend it here online or in my shop at Minimossen."}
+            {~t"Let them choose flowers, a subscription or a course. Valid online and in my shop at Minimossen."}
+            <.link navigate={~q"/#{language}/terms" <> "#gift-vouchers"} class="link-underline-static-body">
+              {~t"See Gift voucher terms"}
+            </.link>
           </p>
         </header>
 
@@ -152,6 +172,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
             :if={is_nil(@sale) || @editing?}
             id="gift-voucher-form"
             for={@form}
+            data-warn-unsaved={~t"You have unsaved changes. Leave without saving?"}
             phx-change="validate"
             phx-submit="continue"
           >
@@ -270,7 +291,12 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
 
           <%!-- The preview comes first, so it's above the payment on a phone; on a wide
                screen it moves to the right of it. --%>
-          <div :if={@sale && !@editing?} class="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-x-16">
+          <div
+            :if={@sale && !@editing?}
+            id="gift-voucher-payment"
+            phx-hook=".VoucherPayment"
+            class="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-x-16"
+          >
             <div class="min-w-0 lg:col-start-2 lg:row-start-1">
               <.voucher_preview preview={@preview} loading?={@preview_loading?} error?={@preview_error?} />
             </div>
@@ -279,7 +305,6 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
               <h2
                 id="pay-heading"
                 tabindex="-1"
-                phx-mounted={JS.focus()}
                 class="section-title mb-4 focus-visible:outline-none"
               >
                 {~t"Payment"}
@@ -303,6 +328,29 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
               </.stripe_form>
             </section>
           </div>
+          <script :type={Phoenix.LiveView.ColocatedHook} name=".VoucherPayment">
+            export default {
+              mounted() {
+                this.frame = requestAnimationFrame(() => {
+                  // Focus announces Payment without scrolling past the preview on phones.
+                  this.el.querySelector("#pay-heading").focus({ preventScroll: true });
+                  // Scrolling up reveals the fixed header, including any shop notice.
+                  const headerHeight =
+                    document.getElementById("hotfx-shy-header")?.offsetHeight ?? 0;
+                  this.el.style.scrollMarginTop = `${headerHeight}px`;
+                  this.el.scrollIntoView({
+                    block: "start",
+                    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                      ? "instant"
+                      : "smooth",
+                  });
+                });
+              },
+              destroyed() {
+                cancelAnimationFrame(this.frame);
+              },
+            };
+          </script>
         </div>
       </.container>
     </Layouts.app>
@@ -330,9 +378,39 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
     <div class="voucher-preview">
       <div
         id="voucher-preview"
-        class={["bg-base-100 relative shadow-md lg:shadow-xl", !@error? && "aspect-[210/148]"]}
+        class={["bg-base-100 relative shadow-sm lg:shadow-lg", !@error? && "aspect-[210/148]"]}
         aria-busy={to_string(@loading?)}
       >
+        <div
+          :if={!@preview && !@error?}
+          class="grid-cols-[136fr_74fr] absolute inset-0 grid motion-safe:animate-pulse"
+          aria-hidden="true"
+          data-testid="voucher-preview-skeleton"
+        >
+          <div class="bg-cream p-[9%] pb-[26%] flex flex-col justify-between">
+            <div class="bg-cream-content/10 h-1.5 w-1/3"></div>
+            <div class="flex flex-col gap-3">
+              <div class="bg-cream-content/10 h-2 w-2/3"></div>
+              <div class="bg-cream-content/10 h-1.5 w-4/5"></div>
+              <div class="bg-cream-content/10 h-1.5 w-1/2"></div>
+            </div>
+          </div>
+          <div class="bg-primary/15 px-[14%] py-[18%] flex flex-col items-center justify-between">
+            <.flower name="flower-30" class="text-primary/20 h-1/4 w-auto" />
+            <div class="bg-primary/15 h-4 w-2/3"></div>
+            <div class="flex w-full flex-col gap-2">
+              <div class="bg-primary/15 h-1.5 w-4/5"></div>
+              <div class="bg-primary/15 h-1.5 w-1/2"></div>
+            </div>
+          </div>
+        </div>
+        <p
+          :if={!@preview && !@error?}
+          class="text-cream-content bottom-[10%] left-[6%] max-w-1/2 absolute text-sm"
+          role="status"
+        >
+          {~t"Loading preview…"}
+        </p>
         <img
           :if={@preview && !@error?}
           src={"data:image/png;base64," <> @preview}
@@ -350,12 +428,19 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           data-testid="shuffle-snow"
         ></button>
         <div
-          :if={@error? || !@preview}
-          class={["flex flex-col items-center justify-center gap-3 p-4 text-center", !@error? && "absolute inset-0"]}
+          :if={@loading? && @preview && !@error?}
+          class="bg-primary/30 pointer-events-none absolute inset-x-0 bottom-0 h-0.5 motion-safe:animate-pulse"
           role="status"
         >
-          <p>{if @error?, do: ~t"The preview couldn't load. Please try again.", else: ~t"Loading preview…"}</p>
-          <button :if={@error?} type="button" phx-click="retry_preview" class="link-underline-hover min-h-11 px-3">
+          <span class="sr-only">{~t"Loading preview…"}</span>
+        </div>
+        <div
+          :if={@error?}
+          class="flex flex-col items-center justify-center gap-3 p-4 text-center"
+          role="status"
+        >
+          <p>{~t"The preview couldn't load. Please try again."}</p>
+          <button type="button" phx-click="retry_preview" class="link-underline-hover min-h-11 px-3">
             {~t"Retry preview"}
           </button>
         </div>
@@ -379,6 +464,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
          socket
          |> assign(sale: load_sale(sale), editing?: false)
          |> render_preview()
+         |> push_patch(to: ~q"/#{language}/gift-voucher?step=payment")
          |> EdenflowersWeb.Analytics.track("Gift voucher checkout started", %{}, once: "gift-voucher:#{sale.id}")}
 
       {:error, form} ->
@@ -394,7 +480,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   def handle_event("retry_preview", _params, socket), do: {:noreply, render_preview(socket)}
 
   def handle_event("change", _params, socket) do
-    {:noreply, socket |> assign(editing?: true) |> assign_form()}
+    {:noreply, push_patch(socket, to: ~q"/#{language}/gift-voucher")}
   end
 
   # A retry after a declined card, or after changing the voucher, reuses the
