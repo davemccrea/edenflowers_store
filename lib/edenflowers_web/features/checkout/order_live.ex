@@ -69,13 +69,14 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             name="flower-30"
             class={["text-primary/70 mb-6 h-12 w-12", if(@placed?, do: "flower-bloom", else: "flower-waiting")]}
           />
-          <%!-- Covers <main>, so petals scroll with the page and stop at the footer. Under the fixed header. --%>
+          <%!-- Covers <main>, so petals scroll with the page and stop at the footer. Under the fixed header.
+               Petals are paused for now: restore data-petals={@shown_order.celebrated?} to bring them back. --%>
           <canvas
             :if={@placed?}
             id={"petals-#{@shown_order.id}"}
             phx-hook=".Petals"
             phx-update="ignore"
-            data-petals={@shown_order.celebrated?}
+            data-petals={false}
             class="size-full pointer-events-none absolute inset-0 z-10"
             aria-hidden="true"
           ></canvas>
