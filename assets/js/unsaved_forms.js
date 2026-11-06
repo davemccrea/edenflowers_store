@@ -1,4 +1,4 @@
-// Admin forms marked data-warn-unsaved (holding the warning text) ask before a
+// Forms marked data-warn-unsaved (holding the warning text) ask before a
 // link leaves them with edits. Kept in a WeakSet rather than an attribute, which
 // LiveView would strip on the next patch. A save navigates from the server, so
 // it never asks; a failed save stays flagged.
