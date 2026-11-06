@@ -18,11 +18,12 @@ defmodule EdenflowersWeb.Checkout.CheckoutCompleteController do
   #
   # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
   # when the customer cancels or is declined in the app. The PaymentIntent is
-  # reusable, so the cart stays theirs and checkout picks it up again.
-  def index(conn, %{"redirect_status" => "failed"}) do
+  # reusable, so the cart stays theirs and checkout picks it up again. A Gift
+  # voucher sale goes back to its own payment step, which this browser resumes.
+  def index(conn, %{"id" => order_id, "redirect_status" => "failed"}) do
     conn
     |> put_flash(:error, ~t"Your payment didn't go through. Please try again or choose another payment method.")
-    |> redirect(to: ~p"/checkout")
+    |> redirect(to: retry_path(order_id, conn.assigns[:current_user]))
   end
 
   def index(conn, %{"id" => order_id} = params) do
@@ -50,4 +51,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutCompleteController do
   end
 
   defp claim_paid(conn, _order_id, nil), do: conn
+
+  defp retry_path(order_id, actor) do
+    case Orders.get_order_by_id(order_id, load: [:gift_voucher_sale?], actor: actor) do
+      {:ok, %{gift_voucher_sale?: true}} -> ~q"/#{language}/gift-voucher?step=payment"
+      _ -> ~p"/checkout"
+    end
+  end
 end

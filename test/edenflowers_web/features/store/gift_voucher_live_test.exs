@@ -99,6 +99,19 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
     assert [%{recipient_name: "Ella"}] = Ash.read!(Order, authorize?: false)
   end
 
+  test "a cancelled MobilePay payment returns to the voucher's payment step", %{conn: conn} do
+    conn = get(conn, "/en/gift-voucher")
+    {:ok, view, _html} = live(conn)
+    view |> form("#gift-voucher-form", form: @details) |> render_submit()
+    [%{id: id}] = Ash.read!(Order, authorize?: false)
+
+    conn = get(conn, "/checkout/complete/#{id}?redirect_status=failed")
+
+    {:ok, view, _html} = live(conn, redirected_to(conn))
+    assert has_element?(view, "[data-testid=payment-section]", "Mia")
+    assert render(view) =~ "didn&#39;t go through"
+  end
+
   test "a payment URL without a voucher returns to the form", %{conn: conn} do
     assert {:error, {:live_redirect, %{to: "/en/gift-voucher"}}} = live(conn, "/en/gift-voucher?step=payment")
     {:ok, view, _html} = live(conn, "/en/gift-voucher")
