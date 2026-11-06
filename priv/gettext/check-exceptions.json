@@ -7,12 +7,12 @@
   },
   {
     "kind": "placeholders", "locale": "fi", "domain": "storefront", "context": "", "form": null,
-    "source": "%{name}'s address *", "translation": "Vastaanottajan osoite *",
+    "source": "%{name}'s address", "translation": "Vastaanottajan osoite",
     "reason": "Audit T17: generic recipient avoids inflecting arbitrary names. Retain pending native review."
   },
   {
     "kind": "placeholders", "locale": "fi", "domain": "storefront", "context": "", "form": null,
-    "source": "%{name}'s phone number *", "translation": "Vastaanottajan puhelinnumero *",
+    "source": "%{name}'s phone number", "translation": "Vastaanottajan puhelinnumero",
     "reason": "Audit T17: generic recipient avoids inflecting arbitrary names. Retain pending native review."
   },
   {

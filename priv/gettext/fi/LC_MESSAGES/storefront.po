@@ -49,16 +49,6 @@ msgid_plural "%{count} place(s) left"
 msgstr[0] "%{count} paikka jäljellä"
 msgstr[1] "%{count} paikkaa jäljellä"
 
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1062
-#, elixir-autogen, elixir-format
-msgid "%{name}'s address *"
-msgstr "Vastaanottajan osoite *"
-
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1063
-#, elixir-autogen, elixir-format
-msgid "%{name}'s phone number *"
-msgstr "Vastaanottajan puhelinnumero *"
-
 #: lib/edenflowers_web/features/account/subscription_manager.ex:507
 #, elixir-autogen, elixir-format
 msgid "%{price} per delivery"
@@ -176,15 +166,11 @@ msgid "Add-ons are sold with flowers. Add a bouquet to check out."
 msgstr "Lisätuotteita myydään vain kukkien kanssa. Lisää kimppu ostoskoriin jatkaaksesi kassalle."
 
 #: lib/edenflowers_web/components/layouts.ex:930
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1069
 #: lib/edenflowers_web/features/marketing/contact_live.ex:76
 #, elixir-autogen, elixir-format
 msgid "Address"
 msgstr "Osoite"
-
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1069
-#, elixir-autogen, elixir-format
-msgid "Address *"
-msgstr "Osoite *"
 
 #: lib/edenflowers_web/features/account/subscription_manager.ex:368
 #, elixir-autogen, elixir-format
@@ -2128,11 +2114,6 @@ msgstr "Persikanvärinen, oranssi ja valkoinen kimppu pitsipukua vasten"
 #, elixir-autogen, elixir-format
 msgid "Phone"
 msgstr "Puhelinnumero"
-
-#: lib/edenflowers_web/features/checkout/checkout_live.ex:1070
-#, elixir-autogen, elixir-format
-msgid "Phone number *"
-msgstr "Puhelinnumero *"
 
 #: lib/edenflowers_web/features/store/product_live.ex:181
 #, elixir-autogen, elixir-format
@@ -4441,3 +4422,18 @@ msgstr "Sähköpostisi"
 #, elixir-autogen, elixir-format
 msgid "Your name"
 msgstr "Nimesi"
+
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1062
+#, elixir-autogen, elixir-format
+msgid "%{name}'s address"
+msgstr "Vastaanottajan osoite"
+
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1063
+#, elixir-autogen, elixir-format
+msgid "%{name}'s phone number"
+msgstr "Vastaanottajan puhelinnumero"
+
+#: lib/edenflowers_web/features/checkout/checkout_live.ex:1070
+#, elixir-autogen, elixir-format
+msgid "Phone number"
+msgstr "Puhelinnumero"

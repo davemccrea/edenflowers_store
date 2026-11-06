@@ -72,6 +72,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
               autofocus
               field={@sign_in_form[:otp]}
               label={~t"Sign-in code"}
+              required={false}
               autocomplete="one-time-code"
               inputmode="numeric"
               maxlength="6"
@@ -119,6 +120,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
               autofocus
               field={@request_form[:email]}
               label={~t"Email"}
+              required={false}
               type="email"
               autocomplete="email"
             />

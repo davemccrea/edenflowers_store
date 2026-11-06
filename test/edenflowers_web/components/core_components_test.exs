@@ -207,6 +207,15 @@ defmodule EdenflowersWeb.CoreComponentsTest do
     refute required?.(:delivery_address), "only needed for a delivery"
   end
 
+  test "an action's argument decides, not the attribute it shares a name with" do
+    form =
+      %Edenflowers.Payments.Invoice{}
+      |> AshPhoenix.Form.for_update(:record_payment)
+      |> Phoenix.Component.to_form()
+
+    assert render_component(&CoreComponents.input/1, field: form[:amount], label: "L") =~ "required"
+  end
+
   test "help and errors describe each supported input" do
     for type <- ~w(text select textarea checkbox) do
       html =
