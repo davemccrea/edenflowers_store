@@ -166,6 +166,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
         :collect_voucher_card,
         :voucher_locale,
         :voucher_style,
+        :voucher_snow_seed,
         :locale
       ]
 
@@ -199,7 +200,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
         :card_message,
         :collect_voucher_card,
         :voucher_locale,
-        :voucher_style
+        :voucher_style,
+        :voucher_snow_seed
       ]
 
       argument :amount, :integer do

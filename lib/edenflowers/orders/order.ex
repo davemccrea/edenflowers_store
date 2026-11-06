@@ -407,6 +407,13 @@ defmodule Edenflowers.Orders.Order do
                     "made before there was a choice, which print in cream."
     end
 
+    attribute :voucher_snow_seed, :integer do
+      constraints min: 0
+
+      description "Scatters the snowflakes on a Christmas Gift voucher's PDF, so the PDF shows the snow the " <>
+                    "buyer last saw in the preview. Nil on sales made without one, which all get the same snow."
+    end
+
     # Jennie's own working note. Never shown to the customer.
     attribute :florist_note, :string
 
