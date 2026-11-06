@@ -6,7 +6,7 @@ title: >-
 status: done
 assignee: []
 created_date: '2026-11-06 13:43'
-updated_date: '2026-11-06 20:34'
+updated_date: '2026-11-06 20:36'
 labels:
   - customers
   - admin
@@ -57,6 +57,15 @@ created: 2026-11-06 20:34
 ---
 
 Mobile preview refined after code review and an agreed keyboard interaction: keep the edited field, label and help/errors visible with the minimum scroll; respect the next tap and preserve focus; let the preview scroll normally on short screens or when the field will not fit. A physical iPhone Safari trace identified delayed viewport reporting after Done; start positioning on Safari's native blur during dismissal, then restore the preview when the keyboard is gone. David confirmed the delay was resolved. Header flashing is suppressed and the reveal is 150 ms. Preview failures now show retry; radio-card validation errors are visible and accessible; new UI text is translated into Swedish and Finnish. Temporary diagnostics removed. Regression coverage includes keyboard dismissal, late viewport updates, reduced motion, next-tap priority, unavailable styles and preview retry.
+
+---
+
+author: @codex
+created: 2026-11-06 20:36
+
+---
+
+Follow-up requested by David: update the recipient name and personal message in the voucher preview on blur, instead of a typing debounce. Style, amount and voucher language still update immediately.
 
 ---
 <!-- COMMENTS:END -->
