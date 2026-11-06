@@ -3,7 +3,7 @@
 
 #let colors = (
   primary: rgb("#294735"),         // --color-primary
-  cream: rgb("#f4ebd9"),           // --color-cream
+  cream: rgb("#f9eddd"),           // --color-cream: oklch(95% 0.025 75) in sRGB
   cream-content: rgb("#4d3c2c"),   // --color-cream-content
   rule: rgb("#e3dccb"),            // --color-base-300
   ink: rgb("#322c20"),             // --color-base-content
