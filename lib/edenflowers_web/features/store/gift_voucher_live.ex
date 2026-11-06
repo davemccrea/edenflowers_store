@@ -63,24 +63,6 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   def render(assigns) do
     ~H"""
     <style :type={EdenflowersWeb.ColocatedCSS}>
-      #voucher-preview:has(> .voucher-shuffle:active) {
-        box-shadow: var(--shadow-xs);
-        transition: none;
-      }
-
-      @media (prefers-reduced-motion: no-preference) {
-        #voucher-preview:has(> .voucher-shuffle) {
-          transition:
-            transform 150ms ease-out,
-            box-shadow 150ms ease-out;
-        }
-
-        #voucher-preview:has(> .voucher-shuffle:active) {
-          transform: translateY(1px) scale(0.985);
-          transition: none;
-        }
-      }
-
       /* Reserve space for both the voucher and its snow hint without covering the form.
          Short screens keep the full preview in normal flow instead. */
       .voucher-form-fields fieldset {
@@ -405,11 +387,69 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
         </p>
         <img
           :if={@preview && !@error?}
+          id="voucher-preview-image"
+          phx-hook=".PreviewCrossfade"
           src={"data:image/png;base64," <> @preview}
           alt={~t"Preview of your gift voucher"}
           class="block h-full w-full"
           data-testid="voucher-preview"
         />
+        <img
+          :if={@preview && !@error?}
+          id="voucher-preview-previous"
+          phx-update="ignore"
+          alt=""
+          class="pointer-events-none absolute inset-0 h-full w-full opacity-0"
+        />
+        <script :type={Phoenix.LiveView.ColocatedHook} name=".PreviewCrossfade">
+          /**
+           * When a snow shuffle's preview arrives, the old one is laid over it in
+           * #voucher-preview-previous and fades out, so the snow resettles instead of
+           * cutting. Other changes (style, fields) still swap at once. That img is
+           * phx-update="ignore", so patches leave the opacity and src set here alone.
+           */
+          export default {
+            mounted() {
+              this.onClick = (event) => {
+                if (event.target.closest(".voucher-shuffle")) this.shuffled = true;
+              };
+              this.container = this.el.parentElement;
+              this.container.addEventListener("click", this.onClick);
+            },
+
+            destroyed() {
+              this.container.removeEventListener("click", this.onClick);
+            },
+
+            beforeUpdate() {
+              this.previousSrc = this.el.src;
+            },
+
+            async updated() {
+              const previous = document.getElementById("voucher-preview-previous");
+              if (!previous || this.el.src === this.previousSrc) return;
+              if (!this.shuffled) return;
+              this.shuffled = false;
+              if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+              previous.getAnimations().forEach((animation) => animation.cancel());
+              previous.src = this.previousSrc;
+
+              // Held at full opacity until the new image can paint, then faded out.
+              const fade = previous.animate([{ opacity: 1 }, { opacity: 0 }], {
+                duration: 220,
+                easing: "ease-out",
+                fill: "both",
+              });
+              fade.pause();
+
+              await this.el.decode().catch(() => {});
+              // A quicker shuffle cancelled this fade and started its own.
+              if (fade.playState === "idle") return;
+              fade.play();
+            },
+          };
+        </script>
         <button
           :if={@shuffle? && !@error?}
           type="button"
