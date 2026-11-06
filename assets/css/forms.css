@@ -99,7 +99,7 @@ button.phx-click-loading {
 /* The gift voucher's "Let it snow" snowflake, once per click. */
 @keyframes snow-pulse {
   50% {
-    transform: scale(1.5);
+    transform: scale(1.15);
   }
 }
 
