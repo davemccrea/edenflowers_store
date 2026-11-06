@@ -342,6 +342,7 @@ defmodule Edenflowers.Orders.Order.Admin do
       argument :email_buyer?, :boolean, default: false, description: "Email the voucher and receipt to the buyer."
       argument :email_recipient?, :boolean, default: false, description: "Email the voucher to the recipient."
       argument :recipient_email, Edenflowers.Types.Email, description: "Where the recipient's voucher goes."
+      argument :customer_id, :uuid, description: "The existing customer Jennie picked, if she searched for one."
 
       validate present(:customer_name)
 
@@ -372,7 +373,11 @@ defmodule Edenflowers.Orders.Order.Admin do
       end
 
       change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
-      change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
+      change manage_relationship(:customer_id, :user, type: :append)
+
+      change Changes.UpsertUserAndAssignToOrder,
+        where: [present(:customer_email), argument_equals(:customer_id, nil)]
+
       change {Changes.SetGiftVoucherLine, authorize?: false}
       change {PaymentChanges.RecordPayment, amount: :amount}
       change Changes.IssueGiftVouchers
