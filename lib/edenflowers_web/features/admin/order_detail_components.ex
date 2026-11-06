@@ -854,9 +854,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   def directions_url(_position, _address), do: nil
 
+  # No origin, so Google Maps starts from the device's current location.
   def maps_dir_url(destination) do
     "https://www.google.com/maps/dir/?api=1" <>
-      "&origin=#{URI.encode_www_form(Edenflowers.Fulfillment.shop_address())}" <>
       "&destination=#{URI.encode_www_form(destination)}" <>
       "&travelmode=driving"
   end
