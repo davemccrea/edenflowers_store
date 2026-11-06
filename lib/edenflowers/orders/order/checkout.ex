@@ -175,6 +175,11 @@ defmodule Edenflowers.Orders.Order.Checkout do
         description "The voucher's amount in whole euros."
       end
 
+      argument :visitor_id, :uuid do
+        description "The visitor_id from the browser's signed session, so that browser can resume the sale."
+      end
+
+      change set_attribute(:voucher_visitor_id, arg(:visitor_id))
       require_attributes [:customer_name, :customer_email, :recipient_name, :voucher_locale]
       validate attribute_in(:locale, @locales)
       validate attribute_in(:voucher_locale, @locales)
@@ -218,6 +223,26 @@ defmodule Edenflowers.Orders.Order.Checkout do
       change Changes.UpsertUserAndAssignToOrder
       change Changes.SetGiftVoucherLine
       require_atomic? false
+    end
+
+    read :resumable_gift_voucher_sale do
+      description "The unpaid Gift voucher sale this browser started, changed within the last day, so a reload " <>
+                    "or reconnect picks it up instead of starting over. Older ones start fresh, as a buyer " <>
+                    "coming back next week means to give a new voucher."
+
+      argument :visitor_id, :uuid do
+        allow_nil? false
+        description "The visitor_id from the browser's signed session."
+      end
+
+      get? true
+
+      filter expr(
+               voucher_visitor_id == ^arg(:visitor_id) and state == :payment and
+                 updated_at > ago(1, :day)
+             )
+
+      prepare build(sort: [updated_at: :desc], limit: 1)
     end
 
     update :release_cart do

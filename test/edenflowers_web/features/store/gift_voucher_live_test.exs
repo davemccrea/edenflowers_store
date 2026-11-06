@@ -82,6 +82,23 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
     end
   end
 
+  test "a reload resumes the voucher at payment and on the form", %{conn: conn} do
+    conn = get(conn, "/en/gift-voucher")
+    {:ok, view, _html} = live(conn)
+    view |> form("#gift-voucher-form", form: @details) |> render_submit()
+    assert_patch(view, "/en/gift-voucher?step=payment")
+
+    {:ok, view, _html} = live(conn, "/en/gift-voucher?step=payment")
+    assert has_element?(view, "[data-testid=payment-section]", "Mia")
+
+    {:ok, view, _html} = live(conn, "/en/gift-voucher")
+    assert has_element?(view, "#gift-voucher-form input[name='form[recipient_name]'][value=Mia]")
+
+    view |> form("#gift-voucher-form", form: %{@details | "recipient_name" => "Ella"}) |> render_submit()
+    assert has_element?(view, "[data-testid=payment-section]", "Ella")
+    assert [%{recipient_name: "Ella"}] = Ash.read!(Order, authorize?: false)
+  end
+
   test "a payment URL without a voucher returns to the form", %{conn: conn} do
     assert {:error, {:live_redirect, %{to: "/en/gift-voucher"}}} = live(conn, "/en/gift-voucher?step=payment")
     {:ok, view, _html} = live(conn, "/en/gift-voucher")

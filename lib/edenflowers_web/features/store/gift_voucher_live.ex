@@ -23,6 +23,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    sale = Orders.get_resumable_gift_voucher_sale!(socket.assigns.visitor_id, actor: socket.assigns.current_user)
+
     {:ok,
      socket
      |> assign(
@@ -31,8 +33,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
        page_description:
          ~t"An Eden Flowers gift voucher, from 20 to 200 €, to spend on flowers, subscriptions and courses in Vaasa.",
        locale: Format.locale(),
-       sale: nil,
-       editing?: false,
+       sale: sale && load_sale(sale),
+       editing?: sale != nil,
        voucher_styles: online_voucher_styles(),
        preview: nil,
        preview_error?: false,
@@ -43,7 +45,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   end
 
   # Keep payment in browser history so Back returns to the editable voucher.
-  # The sale stays in this LiveView; a URL alone cannot start a payment.
+  # A reload or reconnect resumes this browser's sale; a URL alone can't open one.
   @impl true
   def handle_params(%{"step" => "payment"}, _uri, %{assigns: %{sale: nil}} = socket) do
     {:noreply, push_patch(socket, to: ~q"/#{language}/gift-voucher", replace: true)}
@@ -617,7 +619,9 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           "customer_name" => user && user.name,
           "customer_email" => user && to_string(user.email)
         },
-        transform_params: fn _form, params, _action -> Map.put(params, "locale", locale) end
+        transform_params: fn _form, params, _action ->
+          Map.merge(params, %{"locale" => locale, "visitor_id" => socket.assigns.visitor_id})
+        end
       )
       |> to_form()
 
