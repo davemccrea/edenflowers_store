@@ -99,30 +99,33 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
                       path: "M0 16C-9 12-10 2-5-2C-2-4 2-4 5-2C10 2 9 12 0 16Z",
                     }),
                   ];
-                  const colors = ["#f6cdd3", "#eea7b2", "#e08896", "#fbe9ec", "#f3c09c"];
+                  const colors = ["#f2b8c1", "#eea7b2", "#e08896", "#d46f80", "#f0b088"];
 
-                  // Small waves from random points along the top, so they fall rather than burst.
-                  for (let wave = 0; wave < 8; wave++) {
+                  // One petal at a time, each from its own slot across the top in shuffled order,
+                  // over a few seconds and at varied speeds, so they fall apart rather than as one band.
+                  const count = 36;
+                  const slots = [...Array(count).keys()].sort(() => Math.random() - 0.5);
+                  slots.forEach((slot, i) => {
                     setTimeout(() => {
                       confetti({
-                        particleCount: 3,
-                        origin: { x: Math.random(), y: -0.05 },
+                        particleCount: 1,
+                        origin: { x: (slot + Math.random()) / count, y: -0.05 },
                         angle: 270,
                         spread: 70,
                         startVelocity: 4,
-                        gravity: 0.45,
+                        gravity: 0.35 + Math.random() * 0.2,
                         drift: Math.random() - 0.5,
                         decay: 0.96,
                         ticks: 600,
-                        scalar: 1.2 + Math.random() * 0.6,
+                        scalar: 1.4 + Math.random() * 0.7,
                         shapes,
                         colors,
                         disableForReducedMotion: true,
                         // Below the fixed header (z-50) and the footer (z-10), so petals fall from under one and into the other.
                         zIndex: 0,
                       });
-                    }, wave * 160);
-                  }
+                    }, i * 170);
+                  });
                 });
               },
               destroyed() {
