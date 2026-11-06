@@ -379,7 +379,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           </div>
         </div>
         <p
-          :if={!@preview && !@error?}
+          :if={@loading? && !@error?}
           class="sr-only"
           role="status"
         >
@@ -459,13 +459,6 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           class="voucher-shuffle absolute inset-0 cursor-pointer"
           data-testid="shuffle-snow"
         ></button>
-        <div
-          :if={@loading? && @preview && !@error?}
-          class="bg-primary/30 pointer-events-none absolute inset-x-0 bottom-0 h-0.5 motion-safe:animate-pulse"
-          role="status"
-        >
-          <span class="sr-only">{~t"Loading preview…"}</span>
-        </div>
         <div
           :if={@error?}
           class="flex flex-col items-center justify-center gap-3 p-4 text-center"
