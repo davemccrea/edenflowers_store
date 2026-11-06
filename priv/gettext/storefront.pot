@@ -533,7 +533,7 @@ msgid "Categories"
 msgstr ""
 
 #: lib/edenflowers_web/features/account/subscription_manager.ex:522
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:211
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:212
 #, elixir-autogen, elixir-format
 msgid "Change"
 msgstr ""
@@ -731,7 +731,7 @@ msgid "Continue checkout"
 msgstr ""
 
 #: lib/edenflowers_web/features/courses/course_live.ex:189
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:176
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:177
 #, elixir-autogen, elixir-format
 msgid "Continue to payment"
 msgstr ""
@@ -2012,7 +2012,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:422
 #: lib/edenflowers_web/features/courses/course_live.ex:249
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:222
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:223
 #: lib/edenflowers_web/payment_link.ex:133
 #, elixir-autogen, elixir-format
 msgid "Pay"
@@ -2070,7 +2070,7 @@ msgstr ""
 #: lib/edenflowers_web/features/courses/course_live.ex:206
 #: lib/edenflowers_web/features/marketing/faq_live.ex:207
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:478
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:205
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:206
 #: lib/edenflowers_web/payment_link.ex:112
 #, elixir-autogen, elixir-format
 msgid "Payment"
@@ -2084,7 +2084,7 @@ msgstr ""
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:118
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:715
 #: lib/edenflowers_web/features/courses/course_live.ex:329
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:319
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:320
 #: lib/edenflowers_web/payment_link.ex:90
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please refresh the page and try again."
@@ -2092,7 +2092,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:83
 #: lib/edenflowers_web/features/courses/course_live.ex:346
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:310
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:311
 #: lib/edenflowers_web/payment_link.ex:73
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please try again in a moment."
@@ -3528,7 +3528,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/account/account_live.ex:131
 #: lib/edenflowers_web/features/checkout/components/fields.ex:129
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:151
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:152
 #, elixir-autogen, elixir-format
 msgid "Your details"
 msgstr ""
@@ -4267,7 +4267,7 @@ msgstr ""
 msgid "A gift voucher can't pay for another one."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:136
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:137
 #, elixir-autogen, elixir-format
 msgid "Amount"
 msgstr ""
@@ -4277,12 +4277,12 @@ msgstr ""
 msgid "An Eden Flowers gift voucher, from 20 to 200 €, to spend on flowers, subscriptions and courses in Vaasa."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:208
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "Gift voucher of %{amount} for %{name}"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:183
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "Gift voucher terms"
 msgstr ""
@@ -4297,12 +4297,12 @@ msgstr ""
 msgid "This gift voucher was cancelled."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:142
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:143
 #, elixir-autogen, elixir-format
 msgid "Voucher language"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:123
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:124
 #, elixir-autogen, elixir-format
 msgid "Your message"
 msgstr ""
@@ -4373,12 +4373,12 @@ msgstr ""
 msgid "Wedding date"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:115
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:116
 #, elixir-autogen, elixir-format
 msgid "Who is it for?"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:162
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "Your email"
 msgstr ""
@@ -4387,7 +4387,7 @@ msgstr ""
 #: lib/edenflowers_web/features/courses/course_live.ex:175
 #: lib/edenflowers_web/features/marketing/components/contact_drawer.ex:48
 #: lib/edenflowers_web/features/marketing/weddings_live.ex:537
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:154
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:155
 #, elixir-autogen, elixir-format
 msgid "Your name"
 msgstr ""
@@ -4428,12 +4428,12 @@ msgstr ""
 msgid "%{product} is available from %{date}"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:259
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:260
 #, elixir-autogen, elixir-format
 msgid "Preview of your gift voucher"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:80
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:83
 #, elixir-autogen, elixir-format
 msgid "Style"
 msgstr ""
@@ -4443,7 +4443,7 @@ msgstr ""
 msgid "The Christmas voucher isn't available right now."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:133
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:134
 #, elixir-autogen, elixir-format
 msgid "Voucher"
 msgstr ""
@@ -4453,12 +4453,7 @@ msgstr ""
 msgid "Give them flowers on their own terms: a bouquet when they need one, fresh flowers every few weeks with a subscription, or an evening on one of my courses. They can spend it here online or in my shop at Minimossen."
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:109
-#, elixir-autogen, elixir-format
-msgid "Let it snow"
-msgstr ""
-
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:180
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:181
 #, elixir-autogen, elixir-format
 msgid "You'll receive an email with a PDF, to print or forward on. The voucher is valid for a year from the day you buy it."
 msgstr ""
@@ -4468,22 +4463,27 @@ msgstr ""
 msgid "Give a gift voucher"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:75
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:78
 #, elixir-autogen, elixir-format
 msgid "Make it personal"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:238
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:239
 #, elixir-autogen, elixir-format
 msgid "Signature"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:240
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:241
 #, elixir-autogen, elixir-format
 msgid "Christmas green"
 msgstr ""
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:239
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:240
 #, elixir-autogen, elixir-format
 msgid "Christmas red"
+msgstr ""
+
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:100
+#, elixir-autogen, elixir-format
+msgid "Shuffle the snow on the voucher"
 msgstr ""

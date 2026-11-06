@@ -70,9 +70,10 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           >
             <%!-- The fields run down the left, and the preview sticks beside them while they're
                  filled in. On a phone the preview follows the style choice, before the words,
-                 and sticks to the top of the screen above them. --%>
+                 and sticks to the top of the screen above them, over the header, so the header
+                 coming and going leaves it where it is. --%>
             <%!-- A field scrolled into view stops below the sticky preview, not under it. --%>
-            <div class="grid gap-10 max-lg:[&_:is(input,textarea,select)]:scroll-mt-[calc(var(--shy-header-offset,0px)+(100vw-2rem)*148/210+5rem)] lg:grid-cols-2 lg:items-start lg:gap-x-16">
+            <div class="grid gap-10 max-lg:[&_:is(input,textarea,select)]:scroll-mt-[calc((100vw-2rem)*148/210+5rem)] lg:grid-cols-2 lg:items-start lg:gap-x-16">
               <fieldset class="flex flex-col lg:col-start-1 lg:row-start-1">
                 <legend class="eyebrow text-base-content/70 mb-5">{~t"Make it personal"}</legend>
                 <%!-- Two styles to a row, everyday above Christmas. --%>
@@ -90,26 +91,24 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                 </div>
               </fieldset>
 
-              <div class="bg-base-100 top-[var(--shy-header-offset,0px)] sticky z-10 -mx-4 min-w-0 px-4 py-3 after:bg-linear-to-b after:from-base-100 after:absolute after:inset-x-0 after:top-full after:h-8 after:to-transparent lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:z-auto lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:after:hidden">
-                <.voucher_preview preview={@preview} loading?={@preview_loading?} />
-                <.input field={@form[:voucher_snow_seed]} type="hidden" />
+              <div class="bg-base-100 z-60 sticky top-0 -mx-4 min-w-0 px-4 py-3 after:bg-linear-to-b after:from-base-100 after:absolute after:inset-x-0 after:top-full after:h-8 after:to-transparent lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:z-auto lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:after:hidden">
+                <%!-- Tapping a Christmas voucher shuffles its snow. --%>
                 <button
                   :if={GiftVoucherStyle.christmas?(@form[:voucher_style].value)}
                   type="button"
-                  phx-click={
-                    JS.push("shuffle_snow", loading: "#gift-voucher-form")
-                    |> JS.transition("motion-safe:animate-[snow-pulse_500ms_ease-in-out]",
-                      to: "#shuffle-snowflake",
-                      time: 500,
-                      blocking: false
-                    )
-                  }
-                  class="mt-3 inline-flex items-center gap-2 py-2.5"
+                  phx-click={JS.push("shuffle_snow", loading: "#gift-voucher-form")}
+                  aria-label={~t"Shuffle the snow on the voucher"}
+                  class="block w-full cursor-pointer"
                   data-testid="shuffle-snow"
                 >
-                  <span id="shuffle-snowflake" class="inline-block" aria-hidden="true">❄️</span>
-                  <span class="link-underline-hover">{~t"Let it snow"}</span>
+                  <.voucher_preview preview={@preview} loading?={@preview_loading?} />
                 </button>
+                <.voucher_preview
+                  :if={!GiftVoucherStyle.christmas?(@form[:voucher_style].value)}
+                  preview={@preview}
+                  loading?={@preview_loading?}
+                />
+                <.input field={@form[:voucher_snow_seed]} type="hidden" />
               </div>
 
               <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2 lg:-mt-4">
