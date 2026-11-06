@@ -17,10 +17,18 @@ defmodule Edenflowers.Payments.GiftVoucherPdf do
   what they've entered so far, with a placeholder code and a year's validity
   from today.
   """
-  def preview(%{amount: amount, locale: locale, style: style, recipient_name: recipient_name, message: message}) do
+  def preview(%{
+        amount: amount,
+        locale: locale,
+        style: style,
+        snow_seed: snow_seed,
+        recipient_name: recipient_name,
+        message: message
+      }) do
     payload =
       payload(locale,
         style: style,
+        snow_seed: snow_seed,
         amount: amount,
         code: "XXXX XXXX XXXX XXXX",
         expires_on: Date.shift(Edenflowers.ShopTime.today(), year: 1),
@@ -42,6 +50,7 @@ defmodule Edenflowers.Payments.GiftVoucherPdf do
   def build_payload(%GiftVoucher{line_item: %{order: order}} = voucher) do
     payload(order.voucher_locale || order.locale,
       style: order.voucher_style || :cream,
+      snow_seed: order.voucher_snow_seed,
       amount: voucher.amount,
       code: GiftVoucher.format_code(voucher.code),
       expires_on: voucher.expires_on,
@@ -56,6 +65,7 @@ defmodule Edenflowers.Payments.GiftVoucherPdf do
       labels: labels(locale),
       seller: Map.take(Application.fetch_env!(:edenflowers, :seller), [:name, :business_id, :address]),
       style: voucher[:style],
+      snow_seed: voucher[:snow_seed],
       amount: Format.storefront_price(voucher[:amount], locale),
       code: voucher[:code],
       expires_on: Format.date(voucher[:expires_on], locale),

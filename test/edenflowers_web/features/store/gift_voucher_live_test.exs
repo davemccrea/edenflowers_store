@@ -45,7 +45,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
     assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_secret"})
   end
 
-  test "previews the voucher as it's filled in, and offers Christmas only while Jennie does", %{conn: conn} do
+  test "previews the voucher as it's filled in, and offers Christmas, with its snow shuffled, only while Jennie does",
+       %{conn: conn} do
     {:ok, view, _html} = live(conn, "/en/gift-voucher")
     render_async(view)
     assert has_element?(view, "img[data-testid=voucher-preview]")
@@ -55,10 +56,23 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
     Edenflowers.Fulfillment.set_christmas_vouchers_online!(calendar, true, authorize?: false)
 
     {:ok, view, _html} = live(conn, "/en/gift-voucher")
+    view |> form("#gift-voucher-form", form: %{"voucher_style" => "christmas"}) |> render_change()
+    seed = snow_seed(view)
+    view |> element("[data-testid=shuffle-snow]") |> render_click()
+    assert snow_seed(view) != seed
+
+    shuffled = snow_seed(view)
     view |> form("#gift-voucher-form", form: Map.put(@details, "voucher_style", "christmas")) |> render_submit()
 
     [%{id: id}] = Ash.read!(Order, authorize?: false)
-    assert sale(id).voucher_style == :christmas
+    assert %{voucher_style: :christmas, voucher_snow_seed: ^shuffled} = sale(id)
+  end
+
+  # The PDF is printed with the snow the buyer last saw in the preview.
+  defp snow_seed(view) do
+    html = view |> element("input[name='form[voucher_snow_seed]']") |> render()
+    [_, seed] = Regex.run(~r/value="(\d+)"/, html)
+    String.to_integer(seed)
   end
 
   test "asks who the voucher is for before taking payment", %{conn: conn} do

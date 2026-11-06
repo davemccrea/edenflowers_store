@@ -315,7 +315,7 @@ msgstr ""
 
 #: lib/edenflowers/orders/receipt_labels.ex:44
 #: lib/edenflowers/orders/receipt_labels.ex:45
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:70
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:80
 #, elixir-autogen, elixir-format
 msgid "Gift voucher"
 msgstr ""
@@ -325,7 +325,7 @@ msgstr ""
 msgid "A gift voucher is not subject to VAT. VAT is charged on what it's spent on."
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:73
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:83
 #, elixir-autogen, elixir-format
 msgid "Code"
 msgstr ""
@@ -335,18 +335,18 @@ msgstr ""
 msgid "For"
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:78
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:88
 #, elixir-autogen, elixir-format
 msgid "Spend it on flowers, subscriptions and courses: enter the code at checkout on edenflowers.fi, or show it in the shop."
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:83
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:93
 #, elixir-autogen, elixir-format
 msgid "Valid for one year. What you don't spend stays on the code, and it can't be exchanged for cash."
 msgstr ""
 
 #: lib/edenflowers/orders/receipt_labels.ex:46
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:74
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:84
 #, elixir-autogen, elixir-format
 msgid "Valid until"
 msgstr ""
@@ -366,12 +366,12 @@ msgstr ""
 msgid "Message on the voucher"
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:76
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:86
 #, elixir-autogen, elixir-format
 msgid "Merry Christmas"
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:72
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:82
 #, elixir-autogen, elixir-format
 msgid "To"
 msgstr ""

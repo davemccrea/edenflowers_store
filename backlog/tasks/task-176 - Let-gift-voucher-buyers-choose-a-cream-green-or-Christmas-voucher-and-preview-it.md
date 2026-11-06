@@ -27,8 +27,8 @@ Gift voucher buyers choose the look of their voucher PDF (Regular, the cream one
 Decisions (grilled 2026-11-06):
 - The style is stored on the sale order (voucher_style), set at sale, never changed after. Older sales and other orders print in cream.
 - Cream, shown to customers as Regular, stays the default, as it prints well at home. A green style was tried and dropped.
-- Christmas is cream with a light fall of small, pale snowflakes and a Great Vibes greeting (God Jul / Hyvää joulua / Merry Christmas) above the Gift voucher label.
-- Jennie offers Christmas online with a switch on the shop calendar row (Fulfillments page). The admin form always offers all three.
+- Christmas is cream with pale snowflakes over the whole card, clear of the small print, and a Great Vibes greeting (God Jul / Hyvää joulua / Merry Christmas) above the Gift voucher label. The buyer can reshuffle the snow ("Let it snow"); the order keeps its voucher_snow_seed so the PDF matches the preview.
+- Jennie offers Christmas online with a switch on the shop calendar row (Fulfillments page). The admin form always offers both.
 - The preview is the real Typst template rendered as a PNG, with a placeholder code and a year's validity from today. Customers only; the admin form has a style select and no preview.
 - The style changes only the PDF, not the handwritten gift card at Minimossen.
 <!-- SECTION:DESCRIPTION:END -->

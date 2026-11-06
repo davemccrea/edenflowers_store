@@ -24,7 +24,7 @@ Open Sans, Crimson Text and Noto Color Emoji are bundled under `fonts/` (SIL Ope
 
 ## Voucher styles
 
-`voucher.typ` prints a Gift voucher in cream or christmas (`style` in the payload). The Christmas snowflakes in `assets/snowflakes/` are one-colour SVGs from World of Printables, saved with `fill="#294735"` on the root so the template can recolour them. Their licence doesn't cover selling them on a voucher yet: see TASK-177 before deploying.
+`voucher.typ` prints a Gift voucher in cream or christmas (`style` in the payload). The Christmas snowflakes in `assets/snowflakes/` are one-colour SVGs from World of Printables, saved with `fill="#294735"` on the root so the template can recolour them. `snow_seed` scatters them over the card, clear of the small print, so the PDF matches the snow the buyer shuffled to in the preview (`--input seed=…` locally). Their licence doesn't cover selling them on a voucher yet: see TASK-177 before deploying.
 
 ## Packages
 

@@ -15,6 +15,7 @@
     "address": "Myrvägen 1, 65230 Vasa"
   },
   "style": "cream",
+  "snow_seed": null,
   "amount": "50 €",
   "code": "4829 0617 5331 8407",
   "expires_on": "5.11.2027",
