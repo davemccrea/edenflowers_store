@@ -3809,7 +3809,7 @@ msgstr "sinun@sahkoposti.fi"
 msgid "•••• %{last4}, expires %{expiry}"
 msgstr "•••• %{last4}, voimassa %{expiry}"
 
-#: lib/edenflowers_web/components/core_components.ex:1176
+#: lib/edenflowers_web/components/core_components.ex:1177
 #, elixir-autogen, elixir-format
 msgid "Cart, %{count} item"
 msgid_plural "Cart, %{count} items"
