@@ -33,8 +33,9 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
        locale: Format.locale(),
        sale: nil,
        editing?: false,
-       christmas_offered?: Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false).christmas_vouchers_online,
-       preview: nil
+       voucher_styles: online_voucher_styles(),
+       preview: nil,
+       previewed: nil
      )
      |> assign_form()
      |> render_preview()}
@@ -79,7 +80,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                     label={~t"Style"}
                     field={@form[:voucher_style]}
                     type="radio-card"
-                    options={style_options(@christmas_offered?)}
+                    options={Enum.map(@voucher_styles, &style_option/1)}
                   >
                     {option.label}
                     <span :if={option[:emoji]} aria-hidden="true">{option.emoji}</span>
@@ -153,6 +154,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                     field={@form[:customer_name]}
                     type="text"
                     autocomplete="name"
+                    phx-debounce="400"
                     required
                   />
                   <.input
@@ -160,6 +162,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                     field={@form[:customer_email]}
                     type="email"
                     autocomplete="email"
+                    phx-debounce="400"
                     required
                   />
                   <.button
@@ -184,7 +187,9 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
             </div>
           </.form>
 
-          <div :if={@sale && !@editing?} class={beside_preview_grid()}>
+          <%!-- The preview comes first, so it's above the payment on a phone; on a wide
+               screen it moves to the right of it. --%>
+          <div :if={@sale && !@editing?} class="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-x-16">
             <div class="min-w-0 lg:col-start-2 lg:row-start-1">
               <.voucher_preview preview={@preview} loading?={@preview_loading?} />
             </div>
@@ -223,20 +228,16 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
     """
   end
 
-  defp style_options(christmas_offered?) do
-    [
-      %{value: "cream", label: ~t"Signature"},
-      %{value: "golden_hour", label: ~t"Golden hour"},
-      christmas_offered? && %{value: "christmas", label: ~t"Christmas red", emoji: "🎁"},
-      christmas_offered? && %{value: "christmas_green", label: ~t"Christmas green", emoji: "🎄"}
-    ]
-    |> Enum.filter(& &1)
+  defp online_voucher_styles do
+    Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
+    |> Ash.load!(:online_voucher_styles, authorize?: false)
+    |> Map.fetch!(:online_voucher_styles)
   end
 
-  # The preview comes first, so it's above the fields on a phone; on a wide
-  # screen it moves to the right of them.
-  defp beside_preview_grid,
-    do: "grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-x-16"
+  defp style_option(:cream), do: %{value: "cream", label: ~t"Signature"}
+  defp style_option(:golden_hour), do: %{value: "golden_hour", label: ~t"Golden hour"}
+  defp style_option(:christmas), do: %{value: "christmas", label: ~t"Christmas red", emoji: "🎁"}
+  defp style_option(:christmas_green), do: %{value: "christmas_green", label: ~t"Christmas green", emoji: "🎄"}
 
   attr :preview, :string, required: true
   attr :loading?, :boolean, required: true
@@ -245,22 +246,20 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   # gently while a change is sent and the new preview renders, then fades back in.
   defp voucher_preview(assigns) do
     ~H"""
-    <div class="min-w-0">
-      <div
-        id="voucher-preview"
-        class={["bg-base-100 aspect-[210/148] shadow-xl", "in-[.phx-change-loading]:opacity-70 in-[.phx-change-loading]:duration-150", "in-[.phx-click-loading]:opacity-70 in-[.phx-click-loading]:duration-150", if(@loading?,
+    <div
+      id="voucher-preview"
+      class={["bg-base-100 aspect-[210/148] shadow-xl", "in-[.phx-change-loading]:opacity-70 in-[.phx-change-loading]:duration-150", "in-[.phx-click-loading]:opacity-70 in-[.phx-click-loading]:duration-150", if(@loading?,
     do: "opacity-70 transition-opacity duration-150 ease-out",
     else: "transition-opacity duration-500 ease-out")]}
-        aria-busy={to_string(@loading?)}
-      >
-        <img
-          :if={@preview}
-          src={"data:image/png;base64," <> @preview}
-          alt={~t"Preview of your gift voucher"}
-          class="block h-full w-full"
-          data-testid="voucher-preview"
-        />
-      </div>
+      aria-busy={to_string(@loading?)}
+    >
+      <img
+        :if={@preview}
+        src={"data:image/png;base64," <> @preview}
+        alt={~t"Preview of your gift voucher"}
+        class="block h-full w-full"
+        data-testid="voucher-preview"
+      />
     </div>
     """
   end
@@ -285,9 +284,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   end
 
   def handle_event("shuffle_snow", _params, socket) do
-    form = socket.assigns.form
-    params = Map.put(form.source.params, "voucher_snow_seed", to_string(snow_seed()))
-    {:noreply, socket |> assign(form: AshPhoenix.Form.validate(form, params)) |> render_preview()}
+    form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "voucher_snow_seed", to_string(snow_seed())))
+    {:noreply, socket |> assign(form: form) |> render_preview()}
   end
 
   def handle_event("change", _params, socket) do
@@ -331,13 +329,18 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
     {:noreply, assign(socket, preview_loading?: false)}
   end
 
-  # Rendered in a task, as Typst takes a moment. Only the latest render is shown.
+  # Rendered in a task, as Typst takes a moment. Only the latest render is shown,
+  # and a change that doesn't touch the voucher, like the buyer's email, skips it.
   defp render_preview(socket) do
-    voucher = preview_voucher(socket.assigns)
+    case preview_voucher(socket.assigns) do
+      voucher when voucher == socket.assigns.previewed ->
+        socket
 
-    socket
-    |> assign(preview_loading?: true)
-    |> start_async(:preview, fn -> GiftVoucherPdf.preview(voucher) end)
+      voucher ->
+        socket
+        |> assign(previewed: voucher, preview_loading?: true)
+        |> start_async(:preview, fn -> GiftVoucherPdf.preview(voucher) end)
+    end
   end
 
   defp preview_voucher(%{sale: sale, editing?: false}) when not is_nil(sale) do
@@ -352,31 +355,19 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   end
 
   defp preview_voucher(%{form: form}) do
+    changeset = form.source.source
+
     %{
-      amount: integer_or_nil(form[:amount].value) || @default_amount,
-      locale: to_string(form[:voucher_locale].value),
-      style: to_string(form[:voucher_style].value),
-      snow_seed: integer_or_nil(form[:voucher_snow_seed].value),
-      recipient_name: presence(form[:recipient_name].value),
-      message: presence(form[:card_message].value)
+      amount: Ash.Changeset.get_argument(changeset, :amount) || @default_amount,
+      locale: Ash.Changeset.get_attribute(changeset, :voucher_locale),
+      style: Ash.Changeset.get_attribute(changeset, :voucher_style),
+      snow_seed: Ash.Changeset.get_attribute(changeset, :voucher_snow_seed),
+      recipient_name: Ash.Changeset.get_attribute(changeset, :recipient_name),
+      message: Ash.Changeset.get_attribute(changeset, :card_message)
     }
   end
 
-  defp integer_or_nil(value) do
-    case Integer.parse(to_string(value)) do
-      {integer, ""} -> integer
-      _ -> nil
-    end
-  end
-
   defp snow_seed, do: :rand.uniform(1_000_000)
-
-  defp presence(value) do
-    case value && String.trim(value) do
-      "" -> nil
-      trimmed -> trimmed
-    end
-  end
 
   defp load_sale(sale), do: Ash.load!(sale, [:grand_total, :gift_voucher_line], authorize?: false)
 

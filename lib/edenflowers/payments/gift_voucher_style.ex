@@ -5,7 +5,7 @@ defmodule Edenflowers.Payments.GiftVoucherStyle do
   instead of green. `:christmas` (Christmas red) and `:christmas_green` are cream
   with snowflakes and a Christmas greeting, in one cranberry or green accent;
   customers can only choose them online while Jennie offers them
-  (`ShopCalendar.christmas_vouchers_online`).
+  (`ShopCalendar.online_voucher_styles`).
   """
   use Ash.Type.Enum, values: [:cream, :golden_hour, :christmas, :christmas_green]
 
