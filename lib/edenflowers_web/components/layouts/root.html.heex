@@ -76,11 +76,13 @@
       <link rel="manifest" href="/site.webmanifest?v=20261015" />
     <% end %>
 
-    <%!-- Runs before first paint so a reload doesn't start the home hero's animations it then skips. See the HomeHero hook. --%>
+    <%!-- Runs before first paint so a reload doesn't start the home hero's animations or the thank-you flower's bloom it then skips. See the HomeHero and Petals hooks. --%>
     <script>
       try {
         if (sessionStorage.getItem("hero-seen"))
           document.documentElement.classList.add("hero-seen");
+        if (sessionStorage.getItem("order-bloomed"))
+          document.documentElement.classList.add("order-bloomed");
       } catch {}
     </script>
     <%!-- Photos come from imgproxy on another host; opening that connection now saves a first visit's LCP photo the wait. --%>
