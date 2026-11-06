@@ -76,7 +76,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             phx-hook=".Petals"
             phx-update="ignore"
             data-petals={@shown_order.celebrated?}
-            class="size-full pointer-events-none absolute inset-0"
+            class="size-full pointer-events-none absolute inset-0 z-10"
             aria-hidden="true"
           ></canvas>
           <script :type={Phoenix.LiveView.ColocatedHook} name=".Petals">
