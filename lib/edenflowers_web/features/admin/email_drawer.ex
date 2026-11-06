@@ -10,6 +10,8 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
 
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
+  require Logger
+
   import Phoenix.Component, only: [assign: 2, assign: 3, to_form: 1]
   import Phoenix.LiveView, only: [clear_flash: 2, push_event: 3]
 
@@ -20,8 +22,6 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
   alias Edenflowers.Payments.Invoice
   alias EdenflowersWeb.Admin.DrawerPreview
   alias EdenflowersWeb.Admin.Drawers
-
-  require Logger
 
   @doc """
   Opens the drawer for `kind`, previewing the email as it would go now.
