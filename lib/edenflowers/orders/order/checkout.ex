@@ -23,12 +23,6 @@ defmodule Edenflowers.Orders.Order.Checkout do
   # A round number on the card.
   @voucher_amounts Enum.to_list(20..200//10)
 
-  @doc "The longest message a Gift voucher can carry."
-  def voucher_message_length, do: @voucher_message_length
-
-  @doc "The amounts a Gift voucher is sold for, in whole euros."
-  def voucher_amounts, do: @voucher_amounts
-
   @checkout_load [
     :payment_status,
     :recipient_first_name,
@@ -56,6 +50,12 @@ defmodule Edenflowers.Orders.Order.Checkout do
   ]
 
   @storefront_load [:total_items_in_cart, :add_ons_only?, :promotion_applied?, line_items: [:product_slug]]
+
+  @doc "The longest message a Gift voucher can carry."
+  def voucher_message_length, do: @voucher_message_length
+
+  @doc "The amounts a Gift voucher is sold for, in whole euros."
+  def voucher_amounts, do: @voucher_amounts
 
   oban do
     triggers do

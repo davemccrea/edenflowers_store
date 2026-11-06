@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.CoreComponents do
   use Phoenix.Component
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "shared"]
 
+  alias Ash.Resource.Info, as: ResourceInfo
   alias Phoenix.LiveView.JS
 
   @image_quality 80
@@ -600,7 +601,7 @@ defmodule EdenflowersWeb.CoreComponents do
        when is_atom(name) do
     input =
       Enum.find(changeset.action.arguments, &(&1.name == name)) ||
-        Ash.Resource.Info.attribute(changeset.resource, name)
+        ResourceInfo.attribute(changeset.resource, name)
 
     input != nil and not input.allow_nil?
   end
@@ -614,7 +615,7 @@ defmodule EdenflowersWeb.CoreComponents do
        when is_atom(field) do
     validations =
       Enum.filter(action.changes, &is_struct(&1, Ash.Resource.Validation)) ++
-        Ash.Resource.Info.validations(resource, action.type)
+        ResourceInfo.validations(resource, action.type)
 
     Enum.any?(validations, fn
       %{validation: {Ash.Resource.Validation.Present, opts}, where: where} ->

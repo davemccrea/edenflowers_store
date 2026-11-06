@@ -236,42 +236,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert reloaded.fulfillment_status == :fulfilled
   end
 
-  # A 50 € voucher sale paid at checkout, and the voucher it issued.
-  defp paid_voucher_sale(attrs \\ %{}) do
-    sale =
-      Orders.start_gift_voucher_sale!(
-        50,
-        Map.merge(
-          %{
-            customer_name: "Anna Buyer",
-            customer_email: "anna@example.com",
-            recipient_name: "Mia",
-            locale: "sv-FI",
-            voucher_locale: "fi"
-          },
-          attrs
-        ),
-        actor: nil
-      )
-
-    Mox.expect(StripeAPI.Mock, :create_payment_intent, fn 5000, _metadata, nil ->
-      {:ok, %{id: "pi_#{sale.id}", client_secret: "pi_secret", amount: 5000}}
-    end)
-
-    {:ok, _} = Orders.prepare_checkout_payment(sale.id, actor: nil)
-
-    {:ok, :completed} =
-      Edenflowers.Payments.complete(%{
-        id: "pi_#{sale.id}",
-        status: "succeeded",
-        metadata: %{"order_id" => sale.id},
-        amount_received: 5000
-      })
-
-    [%{gift_voucher: voucher}] = Ash.load!(sale, [line_items: :gift_voucher], authorize?: false).line_items
-    {sale, voucher}
-  end
-
   test "a voucher to collect as a gift card shows what to write on it until it's collected", %{conn: conn} do
     {sale, voucher} = paid_voucher_sale(%{collect_voucher_card: true})
 
@@ -843,5 +807,41 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert order.default_refund_method == :mobilepay
       assert has_element?(view, ~s|#order-refund-how option[value="mobilepay"][selected]|)
     end
+  end
+
+  # A 50 € voucher sale paid at checkout, and the voucher it issued.
+  defp paid_voucher_sale(attrs \\ %{}) do
+    sale =
+      Orders.start_gift_voucher_sale!(
+        50,
+        Map.merge(
+          %{
+            customer_name: "Anna Buyer",
+            customer_email: "anna@example.com",
+            recipient_name: "Mia",
+            locale: "sv-FI",
+            voucher_locale: "fi"
+          },
+          attrs
+        ),
+        actor: nil
+      )
+
+    Mox.expect(StripeAPI.Mock, :create_payment_intent, fn 5000, _metadata, nil ->
+      {:ok, %{id: "pi_#{sale.id}", client_secret: "pi_secret", amount: 5000}}
+    end)
+
+    {:ok, _} = Orders.prepare_checkout_payment(sale.id, actor: nil)
+
+    {:ok, :completed} =
+      Edenflowers.Payments.complete(%{
+        id: "pi_#{sale.id}",
+        status: "succeeded",
+        metadata: %{"order_id" => sale.id},
+        amount_received: 5000
+      })
+
+    [%{gift_voucher: voucher}] = Ash.load!(sale, [line_items: :gift_voucher], authorize?: false).line_items
+    {sale, voucher}
   end
 end

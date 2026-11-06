@@ -17,7 +17,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
-  alias EdenflowersWeb.Admin.CustomerSearch
   alias Edenflowers.Fulfillment.DeliveryError
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders
@@ -25,6 +24,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Pricing
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Admin.CustomerSearch
   alias EdenflowersWeb.Layouts
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
