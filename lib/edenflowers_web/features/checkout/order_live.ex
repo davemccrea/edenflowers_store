@@ -64,14 +64,16 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             name="flower-30"
             class={["text-primary/70 mb-6 h-12 w-12", if(@placed?, do: "flower-bloom", else: "flower-waiting")]}
           />
-          <div
+          <%!-- Covers <main>, so petals scroll with the page and stop at the footer. Under the fixed header. --%>
+          <canvas
             :if={@placed?}
             id={"petals-#{@shown_order.id}"}
             phx-hook=".Petals"
+            phx-update="ignore"
             data-petals={@shown_order.celebrated?}
+            class="size-full pointer-events-none absolute inset-0"
             aria-hidden="true"
-          >
-          </div>
+          ></canvas>
           <script :type={Phoenix.LiveView.ColocatedHook} name=".Petals">
             // Petals fall once per order, so a reload or return visit stays calm. The flower blooms
             // once a session, like the home hero: the root layout's head script covers reloads,
@@ -88,14 +90,18 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
                 }
                 if (!this.el.hasAttribute("data-petals")) return;
 
-                import("@/vendor/canvas-confetti.esm").then(({ default: confetti }) => {
+                import("@/vendor/canvas-confetti.esm").then(({ default: confettiLib }) => {
+                  const confetti = confettiLib.create(this.el, {
+                    resize: true,
+                    useWorker: true,
+                  });
                   const shapes = [
                     // Cherry blossom: notched tip.
-                    confetti.shapeFromPath({
+                    confettiLib.shapeFromPath({
                       path: "M0 18C-7 13-9 4-5-1L0 3L5-1C9 4 7 13 0 18Z",
                     }),
                     // Rose: broad and rounded.
-                    confetti.shapeFromPath({
+                    confettiLib.shapeFromPath({
                       path: "M0 16C-9 12-10 2-5-2C-2-4 2-4 5-2C10 2 9 12 0 16Z",
                     }),
                   ];
@@ -109,7 +115,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
                     setTimeout(() => {
                       confetti({
                         particleCount: 1,
-                        origin: { x: (slot + Math.random()) / count, y: -0.05 },
+                        origin: { x: (slot + Math.random()) / count, y: 0 },
                         angle: 270,
                         spread: 70,
                         startVelocity: 4,
@@ -121,8 +127,6 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
                         shapes,
                         colors,
                         disableForReducedMotion: true,
-                        // Below the fixed header (z-50) and the footer (z-10), so petals fall from under one and into the other.
-                        zIndex: 0,
                       });
                     }, i * 170);
                   });

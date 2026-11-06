@@ -910,12 +910,11 @@ defmodule EdenflowersWeb.Layouts do
 
     <.flash_group flash={@flash} />
 
-    <main id="main-content" tabindex="-1" class="flex-grow outline-hidden">
+    <main id="main-content" tabindex="-1" class="relative flex-grow outline-hidden">
       {render_slot(@inner_block)}
     </main>
 
-    <%!-- Above the order page's falling petals, so they disappear behind it. --%>
-    <footer class="relative z-10">
+    <footer>
       <div class="footer-sky text-dusk-content relative overflow-hidden border-b">
         <div class="container relative py-20 md:py-36">
           <div class="footer-grid">
