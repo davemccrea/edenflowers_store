@@ -16,6 +16,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   alias EdenflowersWeb.Admin.OrderLog
 
   attr :order, Order, required: true
+  attr :voucher_form, Phoenix.HTML.Form, default: nil, doc: "on the voucher's `change_last_day`, while it can change"
   attr :locale, :string, required: true
 
   @doc """
@@ -39,7 +40,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           </span>
         </.summary_fact>
         <.summary_fact :if={@order.gift_voucher_line.gift_voucher} label={~t"Valid until"}>
-          <.gift_voucher_last_day voucher={@order.gift_voucher_line.gift_voucher} locale={@locale} />
+          <.gift_voucher_last_day
+            voucher={@order.gift_voucher_line.gift_voucher}
+            form={@voucher_form}
+            locale={@locale}
+          />
         </.summary_fact>
       </div>
       <blockquote
@@ -57,6 +62,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   end
 
   attr :voucher, GiftVoucher, required: true
+  attr :form, Phoenix.HTML.Form, default: nil
   attr :locale, :string, required: true
 
   # The date, with Change beside it while the voucher can still be given time; the form opens in its place.
@@ -65,7 +71,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     <div id="gift-voucher-last-day-view" class="flex flex-wrap items-center gap-x-3 gap-y-1">
       <span class="tabular-nums">{Format.date(@voucher.expires_on, @locale)}</span>
       <.button
-        :if={@voucher.last_day_changeable?}
+        :if={@form}
         id="gift-voucher-last-day-open"
         type="button"
         variant="ghost"
@@ -82,24 +88,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       </.button>
     </div>
     <.form
-      :if={@voucher.last_day_changeable?}
-      for={%{}}
-      as={:voucher}
+      :if={@form}
+      for={@form}
       id="gift-voucher-last-day"
       phx-submit="change_voucher_last_day"
+      novalidate
       class="hidden"
     >
-      <div class="flex flex-wrap items-center gap-2">
-        <input
-          type="date"
-          name="voucher[expires_on]"
-          id="gift-voucher-expires-on"
-          aria-label={~t"Last day"}
-          value={Date.to_iso8601(@voucher.expires_on)}
-          min={Date.to_iso8601(Date.add(@voucher.expires_on, 1))}
-          required
-          class="input input-sm w-auto tabular-nums"
-        />
+      <.input
+        field={@form[:expires_on]}
+        id="gift-voucher-expires-on"
+        type="date"
+        aria-label={~t"Last day"}
+        min={Date.to_iso8601(Date.add(@voucher.expires_on, 1))}
+        class="input input-sm w-auto tabular-nums"
+      />
+      <div class="mt-2 flex gap-2">
         <.button type="submit" variant="primary" size="sm">{~t"Save"}</.button>
         <.button
           type="button"

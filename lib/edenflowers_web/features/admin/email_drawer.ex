@@ -1,15 +1,17 @@
 defmodule EdenflowersWeb.Admin.EmailDrawer do
   @moduledoc """
   The state behind `EdenflowersWeb.Admin.Drawers.email_drawer`, shared by
-  the order and course pages: opening it for a kind, rebuilding the preview as
-  Jennie types, closing it, and what each kind is called. Sending stays on the
-  page, because each kind has its own action and flash.
+  the order, course and invoice pages: an AshPhoenix form on the action that
+  sends each kind, the preview rebuilt as Jennie types, and what each kind is
+  called. A failed send keeps the drawer open with her edits, and an address
+  the action refuses marked on its field. The pages flash what happened, in
+  their words for each kind: a failed send's own error is for the log.
   """
 
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
-  import Phoenix.Component, only: [assign: 2, assign: 3, to_form: 2]
-  import Phoenix.LiveView, only: [push_event: 3]
+  import Phoenix.Component, only: [assign: 2, assign: 3, to_form: 1]
+  import Phoenix.LiveView, only: [clear_flash: 2, push_event: 3]
 
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Format
@@ -17,6 +19,9 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
   alias Edenflowers.Payments.CreditNote
   alias Edenflowers.Payments.Invoice
   alias EdenflowersWeb.Admin.DrawerPreview
+  alias EdenflowersWeb.Admin.Drawers
+
+  require Logger
 
   @doc """
   Opens the drawer for `kind`, previewing the email as it would go now.
@@ -25,10 +30,19 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
   def open(socket, kind, record, assigns \\ []) do
     kind = String.to_existing_atom(kind)
 
+    form =
+      record
+      |> AshPhoenix.Form.for_update(action(kind, record),
+        as: "email",
+        actor: socket.assigns.current_user,
+        transform_params: &transform_params/3
+      )
+      |> to_form()
+
     socket
     |> assign(assigns)
-    |> assign(email_kind: kind, email_form: to_form(%{}, as: :email))
-    |> assign(:preview, DrawerPreview.build(kind, record, %{}))
+    |> assign(email_kind: kind, email_form: form)
+    |> assign(:preview, DrawerPreview.build(kind, record, form))
     |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-show"})
   end
 
@@ -42,9 +56,48 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
 
   @doc "Rebuilds the preview from the drawer's form as Jennie types."
   def validate(socket, params, record) do
+    form = AshPhoenix.Form.validate(socket.assigns.email_form, params)
+
     socket
-    |> assign(email_form: to_form(params, as: :email))
-    |> assign(:preview, DrawerPreview.build(socket.assigns.email_kind, record, params))
+    |> assign(email_form: form)
+    |> assign(:preview, DrawerPreview.build(socket.assigns.email_kind, record, form))
+  end
+
+  @doc """
+  Sends the email: `{:ok, socket}` once it went, for the page to close the
+  drawer and say so, or `{:error, socket}` with the drawer still open as
+  Jennie filled it in.
+  """
+  def submit(socket, params) do
+    case AshPhoenix.Form.submit(socket.assigns.email_form, params: params) do
+      # An earlier try's failure no longer stands.
+      {:ok, _record} ->
+        {:ok, clear_flash(socket, :error)}
+
+      {:error, form} ->
+        Logger.warning("#{socket.assigns.email_kind} email not sent: #{inspect(AshPhoenix.Form.raw_errors(form))}")
+        {:error, assign(socket, email_form: form)}
+    end
+  end
+
+  defp action(:order_details, %Order{}), do: :send_order_details_email
+  defp action(:gift_voucher, %Order{}), do: :email_gift_voucher
+  defp action(:receipt, %Order{}), do: :email_receipt
+  defp action(:fulfillment, %Order{}), do: :email_fulfillment_confirmation
+  defp action(:payment_reminder, %Order{}), do: :send_payment_reminder
+  defp action(:payment_reminder, %CourseRegistration{}), do: :send_payment_reminder
+  defp action(:payment_link, %CourseRegistration{}), do: :email_payment_link
+  defp action(:confirmation, %CourseRegistration{}), do: :email_receipt
+  defp action(:invoice, %Invoice{}), do: :send
+  defp action(:credit_note, %CreditNote{}), do: :send
+
+  # Only an address Jennie changed goes to the action, so the log names it.
+  defp transform_params(form, params, type) do
+    params = Drawers.keep_email_edits(form, params, type)
+
+    if params["to"] in [nil, "", Map.get(form.data, :customer_email)],
+      do: Map.delete(params, "to"),
+      else: params
   end
 
   @doc "The drawer's heading, button and recipient for `kind`."
