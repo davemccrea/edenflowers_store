@@ -949,8 +949,8 @@ msgstr "Muokattu"
 #: lib/edenflowers_web/features/admin/course_booking_form_live.ex:76
 #: lib/edenflowers_web/features/admin/customers_live.ex:63
 #: lib/edenflowers_web/features/admin/drawers.ex:170
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:112
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:134
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:117
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:139
 #: lib/edenflowers_web/features/admin/invoice_live.ex:206
 #: lib/edenflowers_web/features/admin/order_form_live.ex:134
 #: lib/edenflowers_web/features/admin/order_form_live.ex:431
@@ -1515,7 +1515,7 @@ msgstr "Markkinointi"
 msgid "Maximum distance (km)"
 msgstr "Enimmäisetäisyys (km)"
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:81
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:86
 #: lib/edenflowers_web/features/admin/order_log.ex:156
 #, elixir-autogen, elixir-format
 msgid "Message"
@@ -1577,7 +1577,7 @@ msgstr "Lisää toimintoja"
 #: lib/edenflowers_web/features/admin/course_booking_form_live.ex:75
 #: lib/edenflowers_web/features/admin/courses_live.ex:73
 #: lib/edenflowers_web/features/admin/fulfillments_live.ex:90
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:97
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:102
 #: lib/edenflowers_web/features/admin/invoice_live.ex:197
 #: lib/edenflowers_web/features/admin/order_form_live.ex:119
 #: lib/edenflowers_web/features/admin/products_live.ex:68
@@ -2090,7 +2090,7 @@ msgstr "Odottaa"
 msgid "Petrol price (€/l)"
 msgstr "Bensiinin hinta (€/l)"
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:105
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:110
 #: lib/edenflowers_web/features/admin/order_form_live.ex:127
 #: lib/edenflowers_web/features/admin/order_log.ex:148
 #, elixir-autogen, elixir-format
@@ -2332,7 +2332,7 @@ msgstr "Kuitin lähetys epäonnistui"
 msgid "Receipt sent."
 msgstr "Kuitti lähetetty."
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:120
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:125
 #: lib/edenflowers_web/features/admin/order_detail_live.ex:434
 #: lib/edenflowers_web/features/admin/order_form_live.ex:277
 #: lib/edenflowers_web/features/admin/order_log.ex:143
@@ -5060,17 +5060,17 @@ msgstr ""
 msgid "20 € or more."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:113
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:118
 #, elixir-autogen, elixir-format
 msgid "A phone or an email is needed."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:90
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:95
 #, elixir-autogen, elixir-format
 msgid "Buyer"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:125
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:130
 #, elixir-autogen, elixir-format
 msgid "Full name"
 msgstr ""
@@ -5080,7 +5080,7 @@ msgstr ""
 msgid "Gift voucher emailed to the recipient"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:170
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:175
 #, elixir-autogen, elixir-format
 msgid "Gift voucher sold."
 msgstr ""
@@ -5105,7 +5105,7 @@ msgstr ""
 msgid "Sold in the shop"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:177
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:182
 #, elixir-autogen, elixir-format
 msgid "The voucher wasn't sold. Check the fields marked below."
 msgstr ""
@@ -5141,12 +5141,12 @@ msgstr "Valokuvaaja"
 msgid "Photographer website"
 msgstr "Valokuvaajan verkkosivusto"
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:142
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:147
 #, elixir-autogen, elixir-format
 msgid "Email the voucher as a gift"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:82
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:87
 #, elixir-autogen, elixir-format
 msgid "Printed on the emailed voucher."
 msgstr ""
@@ -5156,15 +5156,10 @@ msgstr ""
 msgid "Available from"
 msgstr "Saatavilla alkaen"
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:126
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:131
 #, elixir-autogen, elixir-format
 msgid "Printed on the voucher."
 msgstr ""
-
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:73
-#, elixir-autogen, elixir-format
-msgid "Christmas"
-msgstr "Joulu"
 
 #: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:72
 #, elixir-autogen, elixir-format
@@ -5186,7 +5181,22 @@ msgstr "Tyyli"
 msgid "You can choose it for a voucher you sell in the shop either way."
 msgstr "Myymälässä voit valita sen lahjakorttiin joka tapauksessa."
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:73
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:75
 #, elixir-autogen, elixir-format
-msgid "Regular"
-msgstr "Tavallinen"
+msgid "Golden hour"
+msgstr "Kultainen hetki"
+
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:74
+#, elixir-autogen, elixir-format
+msgid "Signature"
+msgstr "Klassikko"
+
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:77
+#, elixir-autogen, elixir-format
+msgid "Christmas green"
+msgstr "Vihreä joulu"
+
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:76
+#, elixir-autogen, elixir-format
+msgid "Christmas red"
+msgstr "Punainen joulu"

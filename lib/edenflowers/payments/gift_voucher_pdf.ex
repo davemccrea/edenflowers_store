@@ -15,7 +15,8 @@ defmodule Edenflowers.Payments.GiftVoucherPdf do
   @doc """
   A PNG of the voucher a buyer is still choosing, for the checkout's preview:
   what they've entered so far, with a placeholder code and a year's validity
-  from today.
+  from today. Until they write a name or message, placeholders show where
+  each goes, in the voucher's language.
   """
   def preview(%{
         amount: amount,
@@ -32,11 +33,22 @@ defmodule Edenflowers.Payments.GiftVoucherPdf do
         amount: amount,
         code: "XXXX XXXX XXXX XXXX",
         expires_on: Date.shift(Edenflowers.ShopTime.today(), year: 1),
-        recipient_name: recipient_name,
-        message: message
+        recipient_name: recipient_name || placeholder(locale, :recipient_name),
+        message: message || placeholder(locale, :message)
       )
 
     Edenflowers.Typst.render("voucher-main.typ", "voucher", payload, format: "png", ppi: 110)
+  end
+
+  defp placeholder(locale, field) do
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+      case field do
+        # Translators: Shown on the gift voucher preview where the recipient's name goes, until the buyer types it.
+        :recipient_name -> dgettext("receipts", "Name here")
+        # Translators: Shown on the gift voucher preview where the buyer's message goes, until they write one.
+        :message -> dgettext("receipts", "Your message here")
+      end
+    end)
   end
 
   # Named by the order, not the code, which shouldn't travel in file names.

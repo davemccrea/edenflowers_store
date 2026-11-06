@@ -1,4 +1,4 @@
-#import "theme.typ": colors, fonts, type-scale, honey-rule, eyebrow
+#import "theme.typ": colors, fonts, type-scale, eyebrow
 
 #let shop = toml("shop.toml")
 
@@ -21,6 +21,29 @@
 
 #let stub-width = 74mm
 
+// Each Christmas voucher has one accent for its stub, greeting and snow:
+// cranberry or brand green. Everything else is cream and the usual dark ink.
+#let christmas-accents = (
+  christmas: rgb("#8c2a2e"),
+  christmas_green: colors.primary,
+)
+
+// Photo styles: the stub is a flower photo instead of green, cropped
+// to the stub's shape. Darkened at the top and bottom, and a little in the
+// middle, so the logo, amount and code still read in cream over it.
+#let stub-photos = (
+  golden_hour: "assets/photos/golden-hour.jpg",
+)
+#let photo-shade = gradient.linear(
+  (black.transparentize(35%), 0%),
+  (black.transparentize(55%), 18%),
+  (black.transparentize(80%), 30%),
+  (black.transparentize(50%), 50%),
+  (black.transparentize(80%), 68%),
+  (black.transparentize(35%), 100%),
+  angle: 90deg,
+)
+
 // Small print that snow would make hard to read: (left, top, right, bottom)
 // from the page's top left, with a little room around each.
 #let small-print = (
@@ -42,11 +65,11 @@
 // the same every time it's printed. (flake, x, y, size, fill) from the page's
 // top left. The SVGs pad each flake, so a size is about a third larger than
 // the flake drawn.
-#let snowfall(seed) = {
+#let snowfall(seed, accent) = {
   let rows = 8
   let row-height = 148mm / rows
   let sides = (
-    (0mm, 210mm - stub-width, 8, colors.primary.lighten(72%)),
+    (0mm, 210mm - stub-width, 8, accent.lighten(72%)),
     (210mm - stub-width, stub-width, 4, colors.cream.transparentize(35%)),
   )
   let state = seed
@@ -87,8 +110,9 @@
   for key in ("gift-voucher", "to", "code", "valid-until", "how-to-use", "terms") {
     assert(key in voucher.labels, message: "voucher: missing label `" + key + "`")
   }
-  assert(voucher.style in ("cream", "christmas"), message: "voucher: unknown style `" + voucher.style + "`")
-  let christmas = voucher.style == "christmas"
+  assert(voucher.style == "cream" or voucher.style in christmas-accents or voucher.style in stub-photos, message: "voucher: unknown style `" + voucher.style + "`")
+  let christmas = voucher.style in christmas-accents
+  let accent = christmas-accents.at(voucher.style, default: none)
   // Vouchers sold without a seed, such as in the shop, all get the same snow.
   let seed = if voucher.snow_seed == none { 0 } else { voucher.snow_seed }
   if christmas {
@@ -105,9 +129,14 @@
     fill: ink.page,
     // The stub's green is drawn here, under the snow, so flakes fall behind its text too.
     background: {
-      place(top + right, rect(width: stub-width, height: 100%, fill: ink.stub))
+      if voucher.style in stub-photos {
+        place(top + right, image(stub-photos.at(voucher.style), width: stub-width, height: 100%, fit: "cover"))
+        place(top + right, rect(width: stub-width, height: 100%, fill: photo-shade))
+      } else {
+        place(top + right, rect(width: stub-width, height: 100%, fill: if christmas { accent } else { ink.stub }))
+      }
       if christmas {
-        for (n, x, y, size, fill) in snowfall(seed) {
+        for (n, x, y, size, fill) in snowfall(seed, accent) {
           place(top + left, dx: x, dy: y, snowflake(n, size, fill))
         }
       }
@@ -122,7 +151,7 @@
     rows: (auto, 1fr, auto),
     [
       #if christmas {
-        text(font: "Great Vibes", size: 30pt, fill: colors.primary, bottom-edge: "descender")[#t("christmas-greeting")]
+        text(font: "Great Vibes", size: 30pt, fill: accent, bottom-edge: "descender")[#t("christmas-greeting")]
         v(6pt)
       }
       #eyebrow(t("gift-voucher"), fill: ink.muted)
@@ -136,7 +165,6 @@
         #text(font: fonts.serif, size: name-size, fill: ink.strong)[#voucher.recipient_name]
         #v(10pt)
       ]
-      #box(honey-rule(length: 36pt))
       #if voucher.message != none {
         v(10pt)
         text(font: fonts.serif, size: 14pt, style: "italic")[#voucher.message]
