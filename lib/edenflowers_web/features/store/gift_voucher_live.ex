@@ -103,10 +103,10 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   />
                 </div>
                 <.input
-                  label={~t"Who is it for? *"}
+                  label={~t"Who is it for?"}
                   field={@form[:recipient_name]}
                   type="text"
-                  aria-required="true"
+                  required
                 />
                 <.input
                   label={~t"Your message"}
@@ -117,18 +117,18 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                 />
                 <div class="grid gap-6 sm:grid-cols-2">
                   <.input
-                    label={~t"Your name *"}
+                    label={~t"Your name"}
                     field={@form[:customer_name]}
                     type="text"
                     autocomplete="name"
-                    aria-required="true"
+                    required
                   />
                   <.input
-                    label={~t"Your email *"}
+                    label={~t"Your email"}
                     field={@form[:customer_email]}
                     type="email"
                     autocomplete="email"
-                    aria-required="true"
+                    required
                   />
                 </div>
                 <.input

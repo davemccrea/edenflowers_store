@@ -75,7 +75,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
         type="text"
         placeholder="Myrvägen 1, 65230 Vasa"
         autocomplete={@autocomplete}
-        aria-required={to_string(@required)}
+        required={@required}
         errors={errors(@error, @touched)}
         phx-change="typing"
         phx-blur={if @lookup_on_blur, do: "lookup_address"}

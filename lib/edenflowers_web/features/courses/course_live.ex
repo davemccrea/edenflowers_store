@@ -172,8 +172,8 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 class="flex flex-col gap-6"
                 data-testid="booking-form"
               >
-                <.input label={~t"Your name *"} field={@form[:name]} type="text" autocomplete="name" aria-required="true" />
-                <.input label={~t"Email *"} field={@form[:email]} type="email" autocomplete="email" aria-required="true" />
+                <.input label={~t"Your name"} field={@form[:name]} type="text" autocomplete="name" required />
+                <.input label={~t"Email"} field={@form[:email]} type="email" autocomplete="email" required />
                 <.input
                   label={~t"Places"}
                   field={@form[:seats]}

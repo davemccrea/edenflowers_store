@@ -381,7 +381,7 @@ defmodule EdenflowersWeb.Marketing.FaqLiveTest do
 
       view |> element("#address-input-field") |> render_blur(%{"value" => ""})
       refute has_element?(view, "#faq-delivery-cost", "This field is required")
-      assert has_element?(view, ~s|#address-input-field[aria-required="false"]|)
+      refute has_element?(view, ~s|#address-input-field[aria-required]|)
 
       for address <- ["", "   "] do
         view |> element("#address-input-field") |> render_change(%{"delivery_address" => address})

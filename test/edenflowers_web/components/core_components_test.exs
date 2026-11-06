@@ -197,6 +197,16 @@ defmodule EdenflowersWeb.CoreComponentsTest do
     refute html =~ "aria-invalid"
   end
 
+  test "an Ash form field is required when the action always needs it" do
+    form = Edenflowers.Orders.Order |> AshPhoenix.Form.for_create(:place_custom) |> Phoenix.Component.to_form()
+    required? = fn field -> render_component(&CoreComponents.input/1, field: form[field], label: "L") =~ "required" end
+
+    assert required?.(:locale), "allow_nil? false"
+    assert required?.(:customer_name), "an unconditional present/1 validation"
+    refute required?.(:customer_email), "one of email, phone or Instagram is enough"
+    refute required?.(:delivery_address), "only needed for a delivery"
+  end
+
   test "help and errors describe each supported input" do
     for type <- ~w(text select textarea checkbox) do
       html =

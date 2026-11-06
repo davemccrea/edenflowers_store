@@ -534,9 +534,9 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
-        <.input field={@form[:name]} label={~t"Your name *"} autocomplete="name" aria-required="true" />
-        <.input field={@form[:email]} type="email" label={~t"Email *"} autocomplete="email" aria-required="true" />
-        <.input field={@form[:wedding_date]} type="date" label={~t"Wedding date *"} aria-required="true" />
+        <.input field={@form[:name]} label={~t"Your name"} autocomplete="name" required />
+        <.input field={@form[:email]} type="email" label={~t"Email"} autocomplete="email" required />
+        <.input field={@form[:wedding_date]} type="date" label={~t"Wedding date"} required />
         <.input field={@form[:guests]} type="number" min="1" label={~t"Number of guests"} />
       </div>
       <.input field={@form[:venue]} label={~t"Venue"} />

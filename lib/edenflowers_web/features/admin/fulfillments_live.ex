@@ -298,6 +298,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             type="text"
             inputmode="decimal"
             label={~t"Price per km (€)"}
+            required
             class="input w-full tabular-nums"
           />
           <.input
@@ -305,6 +306,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             type="number"
             min="0"
             label={~t"Free delivery distance (km)"}
+            required
             help={
               ~t"Bouquets with free delivery get this many km free. Further away they pay the base price plus the price per km beyond it."
             }
@@ -315,6 +317,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             type="number"
             min="1"
             label={~t"Maximum distance (km)"}
+            required
             class="input w-full tabular-nums"
           />
         <% end %>

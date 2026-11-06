@@ -158,6 +158,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
             value={@form[:subject].value || @preview.subject}
             type="text"
             label={~t"Subject"}
+            required
             class="input w-full"
           />
           <.input
@@ -167,6 +168,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
             type="textarea"
             rows="16"
             label={~t"Email"}
+            required
             class="textarea w-full"
           />
           <p :if={@preview.attachments != []} class="text-base-content/75 text-sm">
@@ -312,6 +314,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           id={"#{@id}-method"}
           type="select"
           label={~t"Payment method"}
+          required
           class="select w-full"
           options={payment_method_options()}
         />
@@ -322,6 +325,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           type="text"
           inputmode="decimal"
           label={~t"Amount received (€)"}
+          required
           class="input w-full tabular-nums"
         />
         <.input
@@ -334,6 +338,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           phx-hook="VoucherCode"
           spellcheck="false"
           label={~t"Gift voucher code"}
+          required
           class="input w-full tabular-nums"
         />
       </div>
@@ -414,6 +419,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           type="text"
           inputmode="decimal"
           label={~t"Amount (€)"}
+          required
           class="input w-full tabular-nums"
         />
         <.input
@@ -421,6 +427,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           id={"#{@id}-how"}
           type="select"
           label={~t"How"}
+          required
           class="select w-full"
           options={@how_options}
         />

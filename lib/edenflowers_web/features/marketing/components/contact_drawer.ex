@@ -45,11 +45,11 @@ defmodule EdenflowersWeb.Marketing.ContactDrawer do
             class="flex flex-col gap-4"
           >
             <div class="grid gap-4 sm:grid-cols-2">
-              <.input field={@form[:name]} label={~t"Your name *"} autocomplete="name" aria-required="true" />
-              <.input field={@form[:email]} type="email" label={~t"Email *"} autocomplete="email" aria-required="true" />
+              <.input field={@form[:name]} label={~t"Your name"} autocomplete="name" required />
+              <.input field={@form[:email]} type="email" label={~t"Email"} autocomplete="email" required />
             </div>
             <.input field={@form[:phone]} type="tel" label={~t"Phone"} autocomplete="tel" />
-            <.input field={@form[:message]} type="textarea" label={~t"Message *"} rows="6" aria-required="true" />
+            <.input field={@form[:message]} type="textarea" label={~t"Message"} rows="6" required />
             <%!-- Honeypot: hidden from people, so only bots fill it in. --%>
             <.input field={@form[:website]} hidden tabindex="-1" autocomplete="off" aria-hidden="true" />
 
