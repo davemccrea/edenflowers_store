@@ -187,6 +187,12 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Every Payment and refund on the registration, oldest first."
       sort paid_at: :asc
     end
+
+    has_many :refunds, Edenflowers.Payments.Payment do
+      description "The money handed back on the registration that still stands: no Undo, and not undone."
+      filter expr(amount < 0 and is_nil(reverses_payment_id) and not exists(reversal, true))
+      sort paid_at: :asc
+    end
   end
 
   calculations do
@@ -194,7 +200,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Whether the customer can download a receipt for actual money recorded on this booking."
     end
 
-    calculate :first_name, :string, {AccountCalculations.FirstName, source: :name} do
+    calculate :first_name, :string, {AccountCalculations.NamePart, source: :name, part: :first} do
       description "A best guess at the first name from the name typed at checkout, for greeting in emails."
     end
 

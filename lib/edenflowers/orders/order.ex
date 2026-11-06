@@ -328,7 +328,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :quoted_free_delivery_fee, :decimal, constraints: [min: 0, scale: 2]
     # Set by Jennie on a custom order to charge her own fee, e.g. free delivery
     # for a regular. Nil means the fee is calculated, as at checkout.
-    attribute :fulfillment_fee_override, :decimal, constraints: [min: 0, scale: 2]
+    attribute :fulfillment_fee_override, Edenflowers.Types.Price, constraints: [min: 0, scale: 2]
     # Snapshotted from FulfillmentOption (+ its TaxRate) by
     # SnapshotFulfillmentMethod. Frozen once the order is placed.
     attribute :fulfillment_method, FulfillmentOption.FulfillmentMethod
@@ -438,7 +438,7 @@ defmodule Edenflowers.Orders.Order do
       description "Whether a fulfilled order still has a balance more than 14 days after fulfillment."
     end
 
-    calculate :customer_first_name, :string, {AccountCalculations.FirstName, source: :customer_name} do
+    calculate :customer_first_name, :string, {AccountCalculations.NamePart, source: :customer_name, part: :first} do
       description "A best guess at the first name in customer_name, for greeting the Customer in emails."
     end
 
@@ -456,7 +456,7 @@ defmodule Edenflowers.Orders.Order do
                     "day will do. The remind_shop job uses it."
     end
 
-    calculate :recipient_first_name, :string, {AccountCalculations.FirstName, source: :recipient_name} do
+    calculate :recipient_first_name, :string, {AccountCalculations.NamePart, source: :recipient_name, part: :first} do
       description "A best guess at the first name in recipient_name, for checkout and emails that name the Recipient."
     end
 

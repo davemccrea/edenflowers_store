@@ -206,4 +206,16 @@ defmodule Edenflowers.Fulfillment.AvailabilityTest do
       assert nil == Availability.order_status(struct!(ShopCalendar, available_days: []), @now)
     end
   end
+
+  describe "today_toggle_state/2" do
+    @now DateTime.from_naive!(~N[2023-06-01 10:00:00], "Europe/Helsinki")
+
+    test "open while customers can book today, closed when Jennie closed just today, else nothing to toggle" do
+      open = struct!(ShopCalendar, same_day: true, order_deadline: ~T[14:00:00])
+
+      assert :open == Availability.today_toggle_state(open, @now)
+      assert :closed == Availability.today_toggle_state(%{open | disabled_dates: [~D[2023-06-01]]}, @now)
+      assert nil == Availability.today_toggle_state(%{open | order_deadline: ~T[09:00:00]}, @now)
+    end
+  end
 end

@@ -405,8 +405,6 @@ defmodule Edenflowers.Payments do
     end
   end
 
-  # "goodwill" is from refunds made before Jennie's refunds were one action.
-  defp goodwill_reason?("goodwill"), do: true
   defp goodwill_reason?("owed"), do: false
   defp goodwill_reason?(_entered_or_made_in_dashboard), do: nil
 

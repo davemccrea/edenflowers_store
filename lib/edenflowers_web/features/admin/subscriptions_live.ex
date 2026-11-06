@@ -108,13 +108,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
 
   defp search_subscriptions(query, _searchable_columns, search_term) do
     require Ash.Query
-    import Ash.Expr
-
-    case_insensitive_term = Ash.CiString.new(search_term)
-
-    Ash.Query.filter(
-      query,
-      expr(contains(user.name, ^case_insensitive_term) or contains(user.email, ^case_insensitive_term))
-    )
+    term = Ash.CiString.new(search_term)
+    Ash.Query.filter(query, matches?(term: ^term))
   end
 end

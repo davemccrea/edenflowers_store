@@ -72,12 +72,12 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               <span class="whitespace-nowrap">{~t"#{seats = @course.seats_booked} / #{total = @course.total_places} seats"}</span>
               <.badge :if={@course.draft} tone={:neutral}>{~t"Draft"}</.badge>
               <.badge :if={!@course.draft} tone={:success}>{~t"Published"}</.badge>
-              <.badge :if={@past?} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
+              <.badge :if={@course.ended?} tone={:tag}>{dpgettext("admin", "course", "Past")}</.badge>
             </span>
           </:subtitle>
           <:actions>
             <.button
-              :if={!@past? && @registrations != []}
+              :if={!@course.ended? && @registrations != []}
               type="button"
               phx-click="open_course_reminders"
               variant="secondary"
@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
               <.icon name="hero-envelope" class="h-4 w-4" />
               {~t"Email everyone"}
             </.button>
-            <ShareLinkDrawer.open_button :if={!@past? && !@course.draft} id="share-course-link" />
+            <ShareLinkDrawer.open_button :if={!@course.ended? && !@course.draft} id="share-course-link" />
             <.button navigate={~p"/admin/courses/#{@course.id}/edit"} variant="secondary" size="sm">
               <.icon name="hero-pencil-square" class="h-4 w-4" />
               {~t"Edit course"}
@@ -250,7 +250,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         preview={@preview}
       />
       <.live_component
-        :if={!@past? && !@course.draft}
+        :if={!@course.ended? && !@course.draft}
         module={ShareLinkDrawer}
         id="share-course-link"
         path={~p"/courses/#{@course}"}
@@ -527,6 +527,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   defp load_course(socket, id) do
     load = [
       :seats_booked,
+      :ended?,
       bookings: [
         :amount_paid,
         :amount_held,
@@ -540,7 +541,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         :seats_held,
         :payment_link_open?,
         :payment_reminder?,
-        payments: [:undoable?, :reversal]
+        :refunds,
+        payments: [:undoable?]
       ]
     ]
 
@@ -555,7 +557,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
            registrations: registrations,
            cancelled_unsettled: Enum.filter(cancelled, & &1.cancelled_unsettled?),
            cancelled_settled: Enum.reject(cancelled, & &1.cancelled_unsettled?),
-           past?: Date.before?(course.date, Edenflowers.ShopTime.today()),
            bcc: registrations |> Enum.map(& &1.email) |> Enum.uniq() |> Enum.join(",")
          )}
 
@@ -701,18 +702,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   # A booking has no history, so its row lists what was handed back.
   defp refunds(assigns) do
-    assigns =
-      assign(
-        assigns,
-        :refunds,
-        Enum.filter(
-          assigns.registration.payments,
-          &(Decimal.negative?(&1.amount) and is_nil(&1.reverses_payment_id) and is_nil(&1.reversal))
-        )
-      )
-
     ~H"""
-    <p :for={refund <- @refunds} class="text-base-content/75 text-sm">
+    <p :for={refund <- @registration.refunds} class="text-base-content/75 text-sm">
       {~t"Refunded #{amount = Format.currency(Decimal.abs(refund.amount), @locale)} · #{how = OrderLog.payment_method_label(refund.method)}"}
       <span :if={refund.note}>· {refund.note}</span>
     </p>

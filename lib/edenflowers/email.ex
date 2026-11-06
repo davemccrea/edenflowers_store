@@ -10,7 +10,7 @@ defmodule Edenflowers.Email do
 
   import Swoosh.Email
 
-  alias Edenflowers.Accounts.Calculations.FirstName
+  alias Edenflowers.Accounts.Calculations.NamePart
   alias Edenflowers.Courses.Course
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email.Templates
@@ -119,7 +119,7 @@ defmodule Edenflowers.Email do
       |> text_body(
         Templates.invoice(%{
           invoice: invoice,
-          first_name: FirstName.extract(invoice.buyer_name),
+          first_name: NamePart.first(invoice.buyer_name),
           reminder?: reminder?,
           part_paid?: Decimal.positive?(paid),
           format_weekday_date: &Format.weekday_date(&1, locale),
@@ -143,7 +143,7 @@ defmodule Edenflowers.Email do
         Templates.credit_note(%{
           invoice: invoice,
           credit_note: credit_note,
-          first_name: FirstName.extract(invoice.buyer_name),
+          first_name: NamePart.first(invoice.buyer_name),
           invoice_date: Format.date(invoice.invoice_date, invoice.locale)
         })
       )
@@ -622,7 +622,7 @@ defmodule Edenflowers.Email do
     |> text_body(
       Templates.wedding_enquiry(%{
         enquiry: enquiry,
-        first_name: FirstName.extract(name),
+        first_name: NamePart.first(name),
         wedding_date: Format.weekday_date(enquiry["wedding_date"], enquiry["locale"])
       })
     )
@@ -641,7 +641,7 @@ defmodule Edenflowers.Email do
     |> text_body(
       Templates.contact_message(%{
         message: message,
-        first_name: FirstName.extract(name)
+        first_name: NamePart.first(name)
       })
     )
   end

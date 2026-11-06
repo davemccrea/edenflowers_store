@@ -350,21 +350,28 @@ defmodule Edenflowers.Accounts.User do
   end
 
   calculations do
+    calculate :matches?,
+              :boolean,
+              expr(contains(name, ^arg(:term)) or contains(email, ^arg(:term))) do
+      description "The admin customers search, case-insensitive: whether the term appears in the name or email."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :can_review?, :boolean, expr(admin or reviewer) do
       description "Whether every page turns on the Option+Click picker for leaving review notes. " <>
                     "`Feedback.Note`'s policies grant the same people."
     end
 
-    calculate :first_name, :string, {Calculations.FirstName, source: :name} do
-      description "Best guess from the free-text `name`, also handling \"Smith, Jane\". Sent to MailerLite."
+    calculate :first_name, :string, {Calculations.NamePart, source: :name, part: :first} do
+      description "Best guess from the free-text `name`. Sent to MailerLite."
     end
 
-    calculate :last_name, :string, {Calculations.LastName, source: :name} do
-      description "Best guess from the free-text `name`, also handling \"Smith, Jane\". Sent to MailerLite."
+    calculate :last_name, :string, {Calculations.NamePart, source: :name, part: :last} do
+      description "Best guess from the free-text `name`. Sent to MailerLite."
     end
 
-    calculate :initials, :string, {Calculations.Initials, source: :name} do
-      description "One or two capital letters from `name`, shown where there's no photo."
+    calculate :initials, :string, {Calculations.NamePart, source: :name, part: :initials, fallback: :email} do
+      description "One or two capital letters from `name`, or the email's first, shown where there's no photo."
     end
 
     # A user without a promo has no usage, so the `if` turns that NULL into a strict false.

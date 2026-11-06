@@ -26,8 +26,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
         )
       )
 
-    step_3_order = generate(order(state: :delivery, customer_name: "Jane", customer_email: "jane@example.com"))
+    step_3_order = generate(order(state: :gift_options, customer_name: "Jane", customer_email: "jane@example.com"))
     Orders.add_line_item!(step_3_order.id, variant.id, 1, authorize?: false)
+    step_3_order = Orders.submit_gift_options!(step_3_order, %{gift: false}, authorize?: false)
 
     mock_payment_intent = %{
       id: "pi_test_#{System.unique_integer([:positive])}",
@@ -361,13 +362,18 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       conn: conn,
       step_3_order: step_3_order
     } do
+      stub(Edenflowers.External.HereAPI.Mock, :geocode, fn _query ->
+        {:ok, {"Stadsgatan 3, 65300 Vasa", "63.0951,21.6165", "here-id-123"}}
+      end)
+
+      stub(Edenflowers.External.HereAPI.Mock, :route_distance, fn _position -> {:ok, 3000} end)
+
       step_3_order
       |> Ash.Changeset.for_update(:submit_delivery, %{
         fulfillment_date: Edenflowers.ShopTime.today() |> Date.add(7),
         delivery_address: "Stadsgatan 3, 65300 Vasa",
         contact_phone_number: "045 1234567"
       })
-      |> Ash.Changeset.force_change_attributes(geocoded_address: "Stadsgatan 3, 65300 Vasa", distance: 3000)
       |> Ash.update!(authorize?: false)
       |> Orders.return_to_delivery!(actor: nil)
 

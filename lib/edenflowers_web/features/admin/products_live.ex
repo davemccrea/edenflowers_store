@@ -145,17 +145,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
 
   defp search_products(query, _searchable_columns, search_term) do
     require Ash.Query
-    import Ash.Expr
-
-    case_insensitive_term = Ash.CiString.new(search_term)
-
-    Ash.Query.filter(
-      query,
-      expr(
-        contains(name, ^case_insensitive_term) or
-          contains(translations[:"sv-FI"][:name], ^case_insensitive_term) or
-          contains(translations[:fi][:name], ^case_insensitive_term)
-      )
-    )
+    term = Ash.CiString.new(search_term)
+    Ash.Query.filter(query, matches?(term: ^term))
   end
 end

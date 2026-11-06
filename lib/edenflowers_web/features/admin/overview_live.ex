@@ -140,7 +140,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     date = Date.from_iso8601!(date)
     %{calendar: calendar, current_user: actor} = socket.assigns
 
-    if date == Edenflowers.ShopTime.today() and booking(calendar, date) do
+    if date == Edenflowers.ShopTime.today() and Availability.today_toggle_state(calendar) do
       {:noreply, assign(socket, :calendar, Fulfillment.toggle_date!(calendar, date, actor: actor))}
     else
       {:noreply, socket}
@@ -161,19 +161,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
        :error,
        ~t"The #{month} report was downloaded without the bank transactions, because the bank couldn't be read. Try again later, or reconnect the bank if it has disconnected."
      )}
-  end
-
-  # Whether customers can book `date` (:open), Jennie closed just that day (:closed),
-  # or neither, when the weekday rule, same-day setting or deadline already shut it.
-  defp booking(calendar, date) do
-    now = Edenflowers.ShopTime.now()
-
-    cond do
-      Date.before?(date, DateTime.to_date(now)) -> nil
-      date in calendar.disabled_dates -> :closed
-      is_nil(Availability.unavailable_reason(calendar, date, now)) -> :open
-      true -> nil
-    end
   end
 
   # A day off the strip, such as yesterday's after midnight, falls back to today.
@@ -792,7 +779,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         texts={day_texts(@day, @today)}
         date={@day}
         orders={Map.get(@orders_by_date, @day, [])}
-        booking={if @day == @today, do: booking(@calendar, @day)}
+        booking={if @day == @today, do: Availability.today_toggle_state(@calendar)}
         locale={@locale}
         class="border-base-content/12 mt-4 border-t pt-4"
       />

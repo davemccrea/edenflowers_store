@@ -92,7 +92,7 @@ defmodule Edenflowers.Payments.Payable do
       description "Records money Jennie took by any method except Stripe, optionally emailing the customer a receipt. " <>
                     "Payments belong directly to this purchase."
 
-      argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
+      argument :amount, Edenflowers.Types.Price, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :email_receipt?, :boolean, default: false
 
@@ -117,7 +117,7 @@ defmodule Edenflowers.Payments.Payable do
                     "recorded as handed back. What was owed back is an ordinary refund and the rest a Goodwill " <>
                     "refund, so the record stays settled either way."
 
-      argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
+      argument :amount, Edenflowers.Types.Price, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
       argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
       argument :note, :string, description: "Jennie's note on the refund, for her own records and Stripe's."
       argument :email_customer?, :boolean, default: true

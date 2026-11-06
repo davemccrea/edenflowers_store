@@ -146,7 +146,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Admin do
 
       accept [:cancellation_reason]
 
-      argument :cancellation_charge, :decimal,
+      argument :cancellation_charge, Edenflowers.Types.Price,
         constraints: [scale: 2],
         description:
           "What Jennie keeps for the cancelled booking, from 0 to its Total due, paid or not. It " <>

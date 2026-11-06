@@ -1012,8 +1012,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       params: %{
         "amount" => Decimal.to_string(invoice.amount_unpaid, :normal),
         "paid_on" => Date.to_iso8601(ShopTime.today())
-      },
-      transform_params: fn params, _type -> Map.update(params, "amount", nil, &normalize_decimal/1) end
+      }
     )
     |> to_form()
   end

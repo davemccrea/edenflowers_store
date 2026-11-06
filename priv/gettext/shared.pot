@@ -173,13 +173,13 @@ msgid "This field is required"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:470
-#: lib/edenflowers_web/components/layouts.ex:692
+#: lib/edenflowers_web/components/layouts.ex:663
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:324
-#: lib/edenflowers_web/components/layouts.ex:768
+#: lib/edenflowers_web/components/layouts.ex:739
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr ""

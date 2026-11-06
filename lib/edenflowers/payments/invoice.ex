@@ -228,7 +228,7 @@ defmodule Edenflowers.Payments.Invoice do
     update :record_payment do
       description "Records a bank transfer received for this issued invoice, without sending an email."
       accept []
-      argument :amount, :decimal, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
+      argument :amount, Edenflowers.Types.Price, allow_nil?: false, constraints: [greater_than: 0, scale: 2]
 
       argument :paid_on, :date,
         allow_nil?: false,

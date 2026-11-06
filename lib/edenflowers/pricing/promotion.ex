@@ -10,7 +10,7 @@ defmodule Edenflowers.Pricing.Promotion do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshPaperTrail.Resource]
 
-  alias Edenflowers.Accounts.Calculations.FirstName
+  alias Edenflowers.Accounts.Calculations.NamePart
   alias Edenflowers.Orders.Validations.Holds
   alias Edenflowers.Pricing.Changes
 
@@ -269,6 +269,13 @@ defmodule Edenflowers.Pricing.Promotion do
   end
 
   calculations do
+    calculate :matches?,
+              :boolean,
+              expr(contains(name, ^arg(:term)) or contains(code, ^arg(:term))) do
+      description "The admin promotions search, case-insensitive: whether the term appears in the name or code."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :usable?,
               :boolean,
               expr(
@@ -303,7 +310,7 @@ defmodule Edenflowers.Pricing.Promotion do
       constraints one_of: [:not_opened, :opened, :used]
     end
 
-    calculate :recipient_first_name, :string, {FirstName, source: :gift_recipient_name} do
+    calculate :recipient_first_name, :string, {NamePart, source: :gift_recipient_name, part: :first} do
       description "The first name the card's page greets its recipient by. Nil for a card not linked to a gift."
     end
   end

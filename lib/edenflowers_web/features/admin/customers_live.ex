@@ -95,13 +95,7 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
 
   defp search_customers(query, _searchable_columns, search_term) do
     require Ash.Query
-    import Ash.Expr
-
-    case_insensitive_term = Ash.CiString.new(search_term)
-
-    Ash.Query.filter(
-      query,
-      expr(contains(name, ^case_insensitive_term) or contains(email, ^case_insensitive_term))
-    )
+    term = Ash.CiString.new(search_term)
+    Ash.Query.filter(query, matches?(term: ^term))
   end
 end
