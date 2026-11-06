@@ -625,10 +625,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("record_payment", %{"payment" => params}, socket) do
-    # A submit without the change that picks the method still runs the action for it.
-    %{order: order, current_user: actor} = socket.assigns
-    form = PaymentActions.payment_form(order, actor, params)
-    {:noreply, socket |> settlement_result(:payment_form, PaymentActions.submit(form, params))}
+    result = PaymentActions.submit(socket.assigns.payment_form, params)
+    {:noreply, settlement_result(socket, :payment_form, result)}
   end
 
   def handle_event("change_refund", %{"refund" => params} = event, socket) do
