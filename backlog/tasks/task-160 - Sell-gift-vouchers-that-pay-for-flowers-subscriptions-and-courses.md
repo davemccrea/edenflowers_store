@@ -4,7 +4,7 @@ title: 'Sell gift vouchers that pay for flowers, subscriptions and courses'
 status: ready-for-agent
 assignee: []
 created_date: '2026-10-31 20:30'
-updated_date: '2026-11-01 17:32'
+updated_date: '2026-11-06 09:22'
 labels:
   - spec
   - customers
@@ -35,7 +35,7 @@ Customers can buy an Eden Flowers gift voucher online or in the shop, and whoeve
 - Online: its own one-page voucher checkout, like course booking, built on an Order and the existing Stripe PaymentIntent flow. It asks for an amount (20-200 EUR in steps of 10), the recipient's name, a message and the buyer's email. A voucher can't share a cart with flowers.
 - The buyer gets a PDF by email: amount, code, expiry, recipient and message, in sv and fi, set in Typst with the receipts' theme.
 - Optional checkbox, 'collect a printed card at Minimossen'. The confirmation email says it's ready from the next opening day. A badge on the order tells Jennie to print it; there is no separate list.
-- In the shop: Jennie adds a voucher to a Custom Order.
+- In the shop: its own 'Sell gift voucher' admin form makes a voucher-only order, paid by card or cash on the spot (TASK-160.3).
 
 **Spending**
 - A separate 'Gift voucher' field in the payment step of checkout and course checkout. The promo field stays as is, and a promo and a voucher can both apply.
