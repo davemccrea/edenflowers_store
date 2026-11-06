@@ -532,7 +532,7 @@ defmodule EdenflowersWeb.CoreComponents do
         <div class="relative">
           <span
             :if={@leading != []}
-            class="text-base-content/60 pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center"
+            class="text-base-content/60 z-1 pointer-events-none absolute inset-y-0 left-3 flex items-center"
           >
             {render_slot(@leading)}
           </span>
@@ -550,7 +550,7 @@ defmodule EdenflowersWeb.CoreComponents do
           />
           <div
             :if={@loading or @confirmed or @trailing != []}
-            class="pointer-events-none absolute inset-y-0 right-3 z-10 flex items-center"
+            class="z-1 pointer-events-none absolute inset-y-0 right-3 flex items-center"
           >
             <span
               :if={@loading}
