@@ -1,4 +1,4 @@
-<%= if @order.recipient_name do %><%= dgettext("emails", "Hi %{name},", name: Edenflowers.Accounts.Calculations.FirstName.extract(@order.recipient_name)) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
+<%= if @order.recipient_first_name do %><%= dgettext("emails", "Hi %{name},", name: @order.recipient_first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
 <%= dgettext("emails", "%{name} has given you an Eden Flowers gift voucher. It's attached, ready to print or keep on your phone.", name: @order.customer_first_name) %>
 
