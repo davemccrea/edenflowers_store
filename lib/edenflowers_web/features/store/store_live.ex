@@ -136,9 +136,12 @@ defmodule EdenflowersWeb.Store.StoreLive do
               <.link
                 id="store-gift-voucher-link"
                 navigate={~q"/#{language}/gift-voucher"}
-                class="category-index__link text-base-content touch-target block py-2 no-underline"
+                class="category-index__link text-base-content touch-target flex items-center gap-2 py-2 no-underline"
               >
                 <span class="category-index__name font-serif text-lg md:text-xl">{~t"Gift voucher"}</span>
+                <span class="bg-primary text-primary-content text-[0.625rem] px-1.5 py-1 font-semibold uppercase leading-none tracking-wider">
+                  {~t"New"}
+                </span>
               </.link>
             </li>
           </ol>

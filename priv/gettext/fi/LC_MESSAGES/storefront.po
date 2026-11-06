@@ -4520,3 +4520,8 @@ msgstr "Sinulla on tallentamattomia muutoksia. Haluatko poistua tallentamatta?"
 #, elixir-autogen, elixir-format
 msgid "See Gift voucher terms"
 msgstr "Katso lahjakortin ehdot"
+
+#: lib/edenflowers_web/features/store/store_live.ex:143
+#, elixir-autogen, elixir-format
+msgid "New"
+msgstr "Uusi"
