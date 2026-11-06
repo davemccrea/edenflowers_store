@@ -226,6 +226,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         submit_label={~t"Cancel booking"}
         keep_label={~t"Keep booking"}
         form={@cancel_form}
+        payable={@cancelling}
         error={@cancel_error}
         email={@cancelling && @cancelling.email}
         locale={@locale}
@@ -387,12 +388,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("open_cancel", %{"id" => id}, socket) do
-    registration = booking(socket.assigns.course, id)
+    registration = PaymentActions.load_for_cancel(booking(socket.assigns.course, id))
+    form = PaymentActions.cancel_form(registration)
 
     {:noreply,
      socket
-     |> assign(cancelling: registration, cancel_form: PaymentActions.cancel_form(registration), cancel_error: nil)
-     |> assign(:preview, DrawerPreview.build(:cancelled, registration, PaymentActions.cancel_form(registration).params))
+     |> assign(cancelling: registration, cancel_form: form, cancel_error: nil)
+     |> assign(:preview, DrawerPreview.build(:cancelled, registration, form.params))
      |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
 

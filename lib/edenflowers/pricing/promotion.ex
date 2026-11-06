@@ -276,15 +276,26 @@ defmodule Edenflowers.Pricing.Promotion do
       argument :term, :ci_string, allow_nil?: false
     end
 
-    calculate :usable?,
-              :boolean,
+    calculate :status,
+              :atom,
               expr(
-                (is_nil(usage_limit) or usage < usage_limit) and
-                  (is_nil(start_date) or ^arg(:today) >= start_date) and
-                  (is_nil(expiration_date) or ^arg(:today) <= expiration_date)
+                cond do
+                  not is_nil(start_date) and ^arg(:today) < start_date -> :scheduled
+                  not is_nil(expiration_date) and ^arg(:today) > expiration_date -> :expired
+                  not is_nil(usage_limit) and usage >= usage_limit -> :used_up
+                  true -> :active
+                end
               ) do
-      description "Can be applied on `today`: within its dates, both inclusive Helsinki days, and under its usage " <>
-                    "limit."
+      description "Where the promotion stands on `today`: `scheduled` before its start date, `expired` after its " <>
+                    "expiry date (both inclusive Helsinki days), `used_up` once its usage reaches its limit, and " <>
+                    "otherwise `active`. Only an active one can be applied (`usable?`)."
+
+      argument :today, :date, allow_nil?: false, default: &Edenflowers.ShopTime.today/0
+      constraints one_of: [:scheduled, :expired, :used_up, :active]
+    end
+
+    calculate :usable?, :boolean, expr(status(today: ^arg(:today)) == :active) do
+      description "Can be applied on `today`: its `status` is `active`, so within its dates and under its usage limit."
 
       argument :today, :date, allow_nil?: false, default: &Edenflowers.ShopTime.today/0
     end

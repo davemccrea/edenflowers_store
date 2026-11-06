@@ -946,11 +946,12 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     do: Enum.any?([:customer_reference, :supply_description], &(form[&1].value not in [nil, ""]))
 
   # Issuing dates it today, so the due date shown is the one it gets if issued now.
+  # A term that isn't valid yet stays as typed, not an integer.
   defp issue_dates_hint(term, locale) do
-    with {days, ""} when days in 0..365 <- Integer.parse(to_string(term)),
+    with true <- is_integer(term),
          {:ok, due} <-
            Ash.calculate(Invoice, :due_date_if_issued,
-             refs: %{payment_term_days: days},
+             refs: %{payment_term_days: term},
              args: %{issued_on: ShopTime.today()},
              authorize?: false
            ) do

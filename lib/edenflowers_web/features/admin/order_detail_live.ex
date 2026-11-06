@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
          |> assign_order(order)
          |> assign(:fulfillment_form, nil)
          |> assign(:fulfillment_error, nil)
-         |> assign(cancel_form: nil, cancel_error: nil)
+         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
          |> assign(email_form: nil, email_kind: nil, preview: nil)
          |> assign(settlement_mode: :settle, settlement_error: nil)
          |> PhotoUpload.allow([@photo_field])
@@ -149,6 +149,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           submit_label={~t"Cancel order"}
           keep_label={~t"Keep order"}
           form={@cancel_form}
+          payable={@cancelling}
           error={@cancel_error}
           email={@order.customer_email}
           locale={@locale}
@@ -584,17 +585,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("open_cancel", _params, socket) do
-    form = PaymentActions.cancel_form(socket.assigns.order)
+    order = PaymentActions.load_for_cancel(socket.assigns.order)
+    form = PaymentActions.cancel_form(order)
 
     {:noreply,
      socket
-     |> assign(cancel_form: form, cancel_error: nil)
+     |> assign(cancelling: order, cancel_form: form, cancel_error: nil)
      |> assign_preview(:cancelled, form.params)
      |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
 
   def handle_event("close_cancel", _params, socket) do
-    {:noreply, assign(socket, cancel_form: nil, cancel_error: nil)}
+    {:noreply, assign(socket, cancelling: nil, cancel_form: nil, cancel_error: nil)}
   end
 
   def handle_event("validate_cancel", %{"cancel" => params}, socket) do
@@ -609,7 +611,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         {:noreply,
          socket
          |> assign_order(reload(order, socket))
-         |> assign(cancel_form: nil, cancel_error: nil)
+         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
          |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
          |> put_flash(:success, ~t"Order cancelled.")}
 
