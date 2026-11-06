@@ -10,22 +10,20 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
 
   alias Edenflowers.Courses
   alias Edenflowers.Courses.CourseRegistration
+  alias Edenflowers.Payments.Changes.Cancel
   alias EdenflowersWeb.Admin.Drawers
 
+  @doc "Loads what the cancel drawer shows about the money (`Changes.Cancel.load/0`)."
+  def load_for_cancel(payable), do: Ash.load!(payable, Cancel.load(), authorize?: false)
+
   @doc """
-  The cancel drawer's form for an order or a booking. The cancellation charge
-  starts at `default_cancellation_charge`. `held` and `total` only tell
-  Jennie what was paid and what it cost, so they go back with the form for
-  the drawer to show again, but not to the action.
+  The cancel drawer's form for a payable from `load_for_cancel/1`. The
+  cancellation charge starts at `default_cancellation_charge`.
   """
   def cancel_form(payable) do
-    payable = Ash.load!(payable, [:amount_held, :total_due, :default_cancellation_charge], authorize?: false)
-
     Phoenix.Component.to_form(
       %{
         "charge" => Decimal.to_string(payable.default_cancellation_charge, :normal),
-        "held" => Decimal.to_string(Decimal.max(payable.amount_held, 0), :normal),
-        "total" => Decimal.to_string(Decimal.max(payable.total_due, 0), :normal),
         "reason" => "",
         "email_customer" => "true"
       },

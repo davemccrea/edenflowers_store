@@ -9,7 +9,6 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   alias Edenflowers.Format
   alias Edenflowers.Pricing.Promotion
-  alias Edenflowers.ShopTime
   alias EdenflowersWeb.Admin.PromotionsLive
   alias EdenflowersWeb.Layouts
 
@@ -40,7 +39,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   @impl true
   def render(assigns) do
-    promotion_status = if assigns.form.source.type == :update, do: status(assigns.form.source.data)
+    promotion_status = if assigns.form.source.type == :update, do: status(assigns.form.source.data.status)
     assigns = assign(assigns, :promotion_status, promotion_status)
 
     ~H"""
@@ -77,7 +76,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
               <.badge tone={elem(@promotion_status, 1)} icon={elem(@promotion_status, 2)}>
                 {elem(@promotion_status, 0)}
               </.badge>
-              <p :if={scheduled?(@form.source.data)} class="text-base-content/75 mt-2 text-sm tabular-nums">
+              <p :if={@form.source.data.status == :scheduled} class="text-base-content/75 mt-2 text-sm tabular-nums">
                 {~t"Starts"} {Format.date(@form.source.data.start_date, @locale)}
               </p>
             </div>
@@ -205,9 +204,12 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   end
 
   def handle_event("generate_code", _params, socket) do
-    form = socket.assigns.form
-    params = Map.put(form.params, "code", Promotion.generate_code())
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
+    {:noreply,
+     assign(
+       socket,
+       :form,
+       AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "code", Promotion.generate_code()))
+     )}
   end
 
   def handle_event("save", %{"form" => params}, socket) do
@@ -246,7 +248,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   end
 
   defp load_form(%{"id" => id}, actor) do
-    case Ash.get(Promotion, id, actor: actor, load: [:usage]) do
+    case Ash.get(Promotion, id, actor: actor, load: [:usage, :status]) do
       {:ok, promotion} ->
         form = AshPhoenix.Form.for_update(promotion, :update, actor: actor, transform_params: &percent_to_rate/3)
         {:ok, promotion.name, to_form(form)}
@@ -321,26 +323,10 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   defp history_label(:expiration_date), do: ~t"Expires"
   defp history_label(:usage_limit), do: ~t"Usage limit"
 
-  defp status(promotion) do
-    today = ShopTime.today()
-
-    cond do
-      scheduled?(promotion) ->
-        {~t"Scheduled", :neutral, "hero-calendar-days"}
-
-      promotion.expiration_date && Date.before?(promotion.expiration_date, today) ->
-        {~t"Expired", :neutral, "hero-clock"}
-
-      promotion.usage_limit && promotion.usage >= promotion.usage_limit ->
-        {~t"Used up", :neutral, "hero-minus-circle"}
-
-      true ->
-        {~t"Active", :success, "hero-check"}
-    end
-  end
-
-  defp scheduled?(%{start_date: nil}), do: false
-  defp scheduled?(%{start_date: date}), do: Date.after?(date, ShopTime.today())
+  defp status(:scheduled), do: {~t"Scheduled", :neutral, "hero-calendar-days"}
+  defp status(:expired), do: {~t"Expired", :neutral, "hero-clock"}
+  defp status(:used_up), do: {~t"Used up", :neutral, "hero-minus-circle"}
+  defp status(:active), do: {~t"Active", :success, "hero-check"}
 
   defp show(nil, _field, _locale), do: "—"
   defp show(value, :discount_rate, locale), do: Format.percentage(Decimal.new(value), locale)

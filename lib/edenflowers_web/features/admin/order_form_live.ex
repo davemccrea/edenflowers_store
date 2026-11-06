@@ -844,7 +844,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     form = socket.assigns.form
 
     warning =
-      with {:ok, date} <- parse_date(form[:fulfillment_date].value),
+      with %Date{} = date <- form[:fulfillment_date].value,
            reason when reason not in [nil, :past] <-
              Availability.unavailable_reason(socket.assigns.shop_calendar, date, Edenflowers.ShopTime.now()) do
         date_warning(reason)
@@ -854,10 +854,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
     assign(socket, :date_warning, warning)
   end
-
-  defp parse_date(%Date{} = date), do: {:ok, date}
-  defp parse_date(value) when is_binary(value), do: Date.from_iso8601(value)
-  defp parse_date(_value), do: :error
 
   defp date_warning(:weekday_disabled), do: ~t"This weekday is normally closed. Booking it anyway."
   defp date_warning(:date_disabled), do: ~t"You've closed this date in the calendar. Booking it anyway."

@@ -13,6 +13,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :submit_label, :string, required: true
   attr :keep_label, :string, required: true
   attr :form, :any, default: nil
+  attr :payable, :any, default: nil, doc: "the order or booking, from `PaymentActions.load_for_cancel/1`"
   attr :error, :string, default: nil
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
@@ -38,9 +39,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
       >
         <.drawer_body>
           <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
-          <input type="hidden" name={@form[:held].name} value={@form[:held].value} />
-          <input type="hidden" name={@form[:total].name} value={@form[:total].value} />
-          <div :if={Decimal.positive?(Decimal.new(@form[:total].value))} class="space-y-2">
+          <div :if={Decimal.positive?(@payable.total_due)} class="space-y-2">
             <.input
               field={@form[:charge]}
               type="text"
@@ -49,8 +48,8 @@ defmodule EdenflowersWeb.Admin.Drawers do
               class="input w-full tabular-nums"
             />
             <p class="text-base-content/75 text-sm">
-              {~t"Paid #{paid = Edenflowers.Format.currency(Decimal.new(@form[:held].value), @locale)} of #{total = Edenflowers.Format.currency(Decimal.new(@form[:total].value), @locale)}."}
-              <%= case cancel_outcome(@form) do %>
+              {~t"Paid #{paid = Edenflowers.Format.currency(Decimal.max(@payable.amount_held, 0), @locale)} of #{total = Edenflowers.Format.currency(Decimal.max(@payable.total_due, 0), @locale)}."}
+              <%= case cancel_outcome(@payable, @form[:charge].value) do %>
                 <% {:refund, amount} -> %>
                   {~t"#{amount = Edenflowers.Format.currency(amount, @locale)} will be refunded."}
                 <% {:collect, amount} -> %>
@@ -60,7 +59,10 @@ defmodule EdenflowersWeb.Admin.Drawers do
                 <% nil -> %>
               <% end %>
             </p>
-            <p :if={match?({:refund, _}, cancel_outcome(@form))} class="text-base-content/75 text-sm">
+            <p
+              :if={match?({:refund, _}, cancel_outcome(@payable, @form[:charge].value))}
+              class="text-base-content/75 text-sm"
+            >
               {~t"Card payments are refunded through Stripe, and anything paid in person you hand back yourself."}
             </p>
           </div>
@@ -98,20 +100,22 @@ defmodule EdenflowersWeb.Admin.Drawers do
     """
   end
 
-  # What the charge typed so far leaves to refund or collect, or nil while it isn't a number.
-  defp cancel_outcome(form) do
-    held = Decimal.new(form[:held].value)
+  # What cancelling with the charge typed so far refunds or leaves to collect,
+  # as the cancel action works it out, or nil while the charge isn't an amount.
+  defp cancel_outcome(payable, charge) do
+    with {:ok, charge} <- Ash.Type.cast_input(Edenflowers.Types.Price, charge),
+         charge = charge || payable.default_cancellation_charge,
+         false <- Decimal.negative?(charge) do
+      money = Edenflowers.Payments.Changes.Cancel.money(payable, charge)
+      refund = money.refunded |> Decimal.add(money.back_on_voucher) |> Decimal.add(money.to_return)
 
-    case Decimal.parse(String.replace(form[:charge].value || "", ",", ".")) do
-      {charge, ""} ->
-        case Decimal.compare(held, charge) do
-          :gt -> {:refund, Decimal.sub(held, charge)}
-          :lt -> {:collect, Decimal.sub(charge, held)}
-          :eq -> :settled
-        end
-
-      _ ->
-        nil
+      cond do
+        Decimal.positive?(refund) -> {:refund, refund}
+        Decimal.positive?(money.to_collect) -> {:collect, money.to_collect}
+        true -> :settled
+      end
+    else
+      _ -> nil
     end
   end
 
