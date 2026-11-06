@@ -383,30 +383,22 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
       >
         <div
           :if={!@preview && !@error?}
-          class="grid-cols-[136fr_74fr] absolute inset-0 grid motion-safe:animate-pulse"
+          class="bg-cream grid-cols-[136fr_74fr] absolute inset-0 grid"
           aria-hidden="true"
           data-testid="voucher-preview-skeleton"
         >
-          <div class="bg-cream p-[9%] pb-[26%] flex flex-col justify-between">
-            <div class="bg-cream-content/10 h-1.5 w-1/3"></div>
-            <div class="flex flex-col gap-3">
-              <div class="bg-cream-content/10 h-2 w-2/3"></div>
-              <div class="bg-cream-content/10 h-1.5 w-4/5"></div>
-              <div class="bg-cream-content/10 h-1.5 w-1/2"></div>
-            </div>
+          <div class="px-[9%] flex flex-col justify-center gap-3 motion-safe:animate-pulse">
+            <div class="bg-cream-content/10 h-2 w-2/3"></div>
+            <div class="bg-cream-content/10 h-1.5 w-4/5"></div>
+            <div class="bg-cream-content/10 h-1.5 w-1/2"></div>
           </div>
-          <div class="bg-primary/15 px-[14%] py-[18%] flex flex-col items-center justify-between">
-            <.flower name="flower-30" class="text-primary/20 h-1/4 w-auto" />
-            <div class="bg-primary/15 h-4 w-2/3"></div>
-            <div class="flex w-full flex-col gap-2">
-              <div class="bg-primary/15 h-1.5 w-4/5"></div>
-              <div class="bg-primary/15 h-1.5 w-1/2"></div>
-            </div>
+          <div class="bg-primary flex items-center justify-center">
+            <div class="bg-cream/20 h-3 w-1/2 motion-safe:animate-pulse"></div>
           </div>
         </div>
         <p
           :if={!@preview && !@error?}
-          class="text-cream-content bottom-[10%] left-[6%] max-w-1/2 absolute text-sm"
+          class="sr-only"
           role="status"
         >
           {~t"Loading preview…"}
