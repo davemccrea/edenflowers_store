@@ -40,7 +40,14 @@ defmodule Edenflowers.Catalog.Product do
                     "Unlike the store reads, drafts are not filtered out."
 
       prepare build(
-                load: [:main_photo_slug, :pictured_sizes, :product_category, :tax_rate, product_variants: [:photo_slug]]
+                load: [
+                  :main_photo_slug,
+                  :pictured_sizes,
+                  :product_category,
+                  :tax_rate,
+                  :waiting_until,
+                  product_variants: [:photo_slug]
+                ]
               )
     end
 
@@ -134,6 +141,7 @@ defmodule Edenflowers.Catalog.Product do
         :position,
         :free_delivery,
         :subscribable,
+        :available_from,
         :translations,
         :slug
       ]
@@ -169,6 +177,7 @@ defmodule Edenflowers.Catalog.Product do
         :position,
         :free_delivery,
         :subscribable,
+        :available_from,
         :translations,
         :slug
       ]
@@ -260,6 +269,12 @@ defmodule Edenflowers.Catalog.Product do
       allow_nil? false
       default false
     end
+
+    attribute :available_from, :date do
+      description "Its Available from: the first day Jennie can make it again once she has run out of its " <>
+                    "flowers, after the next flower delivery. Nil, or a day already past, when it can be made now. " <>
+                    "Customers can still order it, for that day or later."
+    end
   end
 
   relationships do
@@ -315,6 +330,11 @@ defmodule Edenflowers.Catalog.Product do
               ) do
       description "Every size has run out of Stock. Never true for a product with a made-to-order size, " <>
                     "or with no sizes at all."
+    end
+
+    calculate :waiting_until, :date, expr(if(available_from > helsinki_today(), do: available_from, else: nil)) do
+      description "Its Available from while that day is still ahead, else nil. The store shows it as " <>
+                    "\"Available from\" in place of Sold out."
     end
   end
 

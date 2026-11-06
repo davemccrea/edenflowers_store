@@ -388,6 +388,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
                   <p :if={@cart_note} class="text-base-content/75 text-base" data-testid="replaces-cart-note">
                     {@cart_note}
                   </p>
+                  <p
+                    :if={@product.waiting_until && not sold_out?(@selected_variant)}
+                    class="text-base-content/80 text-base"
+                    data-testid="available-from"
+                  >
+                    {Edenflowers.Format.available_from(@product.waiting_until)}
+                  </p>
                   <.button
                     :if={sold_out?(@selected_variant)}
                     type="button"
@@ -567,12 +574,27 @@ defmodule EdenflowersWeb.Store.ProductLive do
           %{
             "@type" => "Offer",
             "price" => Decimal.to_string(variant.price, :normal),
-            "priceCurrency" => "EUR",
-            "availability" =>
-              if(sold_out?(variant), do: "https://schema.org/OutOfStock", else: "https://schema.org/InStock")
+            "priceCurrency" => "EUR"
           }
+          |> Map.merge(availability(product, variant))
         end
     }
+  end
+
+  defp availability(product, variant) do
+    cond do
+      sold_out?(variant) ->
+        %{"availability" => "https://schema.org/OutOfStock"}
+
+      product.waiting_until ->
+        %{
+          "availability" => "https://schema.org/PreOrder",
+          "availabilityStarts" => Date.to_iso8601(product.waiting_until)
+        }
+
+      true ->
+        %{"availability" => "https://schema.org/InStock"}
+    end
   end
 
   # A single size-less variant has nothing to choose; the header shows its price.

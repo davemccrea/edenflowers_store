@@ -29,7 +29,12 @@ defmodule Edenflowers.Orders.Order.Actions.PrepareCheckoutPayment do
     with {:ok, order} <-
            Orders.get_order_for_checkout(input.arguments.order_id,
              actor: context.actor,
-             load: [:checkout_ready?, :gift_voucher_sale?, line_items: [:over_stock?, :product_variant]]
+             load: [
+               :checkout_ready?,
+               :gift_voucher_sale?,
+               :available_from,
+               line_items: [:over_stock?, :product_variant]
+             ]
            ),
          :ok <- payable(order),
          :ok <- fulfillment_available(order) do
@@ -70,7 +75,12 @@ defmodule Edenflowers.Orders.Order.Actions.PrepareCheckoutPayment do
   defp fulfillment_available(order) do
     calendar = Fulfillment.get_shop_calendar!(authorize?: false)
 
-    case Availability.unavailable_reason(calendar, order.fulfillment_date, Edenflowers.ShopTime.now()) do
+    case Availability.unavailable_reason(
+           calendar,
+           order.fulfillment_date,
+           Edenflowers.ShopTime.now(),
+           order.available_from
+         ) do
       nil -> :ok
       _reason -> {:error, NotPayable.exception(reason: :fulfillment_unavailable)}
     end

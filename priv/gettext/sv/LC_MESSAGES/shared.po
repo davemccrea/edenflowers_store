@@ -27,7 +27,7 @@ msgstr "%{name}-kort"
 msgid "(opens a larger view)"
 msgstr "(öppnas i större format)"
 
-#: lib/edenflowers_web/components/core_components.ex:1181
+#: lib/edenflowers_web/components/core_components.ex:1188
 #, elixir-autogen, elixir-format
 msgid "Cart, empty"
 msgstr "Varukorgen, tom"
@@ -42,12 +42,12 @@ msgstr "Anslutningen bröts"
 msgid "Dimensions (cm)"
 msgstr "Mått (cm)"
 
-#: lib/edenflowers_web/components/core_components.ex:1111
+#: lib/edenflowers_web/components/core_components.ex:1118
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Facebook"
 msgstr "Eden Flowers på Facebook"
 
-#: lib/edenflowers_web/components/core_components.ex:1120
+#: lib/edenflowers_web/components/core_components.ex:1127
 #, elixir-autogen, elixir-format
 msgid "Eden Flowers on Instagram"
 msgstr "Eden Flowers på Instagram"
@@ -73,12 +73,12 @@ msgstr "Höjd (cm)"
 msgid "Language"
 msgstr "Språk"
 
-#: lib/edenflowers_web/components/core_components.ex:1380
+#: lib/edenflowers_web/components/core_components.ex:1387
 #, elixir-autogen, elixir-format
 msgid "Large"
 msgstr "Stor"
 
-#: lib/edenflowers_web/components/core_components.ex:1379
+#: lib/edenflowers_web/components/core_components.ex:1386
 #, elixir-autogen, elixir-format
 msgid "Medium"
 msgstr "Medel"
@@ -113,7 +113,7 @@ msgstr "Föregående månad"
 msgid "Reconnecting…"
 msgstr "Återansluter…"
 
-#: lib/edenflowers_web/components/core_components.ex:1378
+#: lib/edenflowers_web/components/core_components.ex:1385
 #, elixir-autogen, elixir-format
 msgid "Small"
 msgstr "Liten"
@@ -180,7 +180,12 @@ msgstr "Stäng navigeringsmenyn"
 msgid "Open navigation menu"
 msgstr "Öppna navigeringsmeny"
 
-#: lib/edenflowers_web/components/core_components.ex:1099
+#: lib/edenflowers_web/components/core_components.ex:1106
 #, elixir-autogen, elixir-format
 msgid "The first %{km} km of delivery from Minimossen are free on marked bouquets."
 msgstr "För märkta buketter är de första %{km} km av leveransen från Minimossen gratis."
+
+#: lib/edenflowers/format.ex:130
+#, elixir-autogen, elixir-format
+msgid "Available from %{date}"
+msgstr "Tillgänglig från %{date}"

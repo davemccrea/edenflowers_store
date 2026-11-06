@@ -399,5 +399,21 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       assert has_element?(view, ~s|input[name="form[fulfillment_date]"]|)
       refute has_element?(view, ~s|input[name="form[fulfillment_date]"][value="#{closed}"]|)
     end
+
+    test "a product waiting for flowers closes the days before it's available, and says why",
+         %{conn: conn, step_3_order: order} do
+      # Mid-month, so the day before shows in the same month as the day itself.
+      today = Edenflowers.ShopTime.today()
+      available_from = if today.day < 20, do: Date.add(today, 3), else: Date.add(Date.end_of_month(today), 15)
+      product = generate(product(name: "Peony bouquet", available_from: available_from))
+      Orders.add_line_item!(order.id, generate(product_variant(product_id: product.id)).id, 1, authorize?: false)
+
+      {:ok, view, _html} = live(conn, ~p"/checkout")
+
+      assert has_element?(view, "[data-testid=available-from]", "Peony bouquet is available from")
+      day_before = Date.add(available_from, -1)
+      assert has_element?(view, ~s|#calendar button[phx-value-date="#{day_before}"][aria-disabled="true"]|)
+      refute has_element?(view, ~s|#calendar button[phx-value-date="#{available_from}"][aria-disabled="true"]|)
+    end
   end
 end
