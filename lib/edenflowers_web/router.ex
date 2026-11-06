@@ -109,6 +109,7 @@ defmodule EdenflowersWeb.Router do
     get "/order/:id/receipt", Checkout.ReceiptController, :show
     get "/order/:id/pickup.ics", Checkout.PickupCalendarController, :show
 
+    # Links without a language, for sharing and print. Only pages someone links to get one.
     get "/", Marketing.LocalizedRedirectController, :show
     get "/product/:slug", Marketing.LocalizedRedirectController, :product
     get "/courses", Marketing.LocalizedRedirectController, :courses
@@ -165,14 +166,11 @@ defmodule EdenflowersWeb.Router do
   scope "/", EdenflowersWeb do
     pipe_through :browser_json
 
-    get "/review-notes", Review.NoteController, :index
-    post "/review-notes", Review.NoteController, :create
-    patch "/review-notes/:id", Review.NoteController, :update
-    delete "/review-notes/:id", Review.NoteController, :delete
+    resources "/review-notes", Review.NoteController, only: [:index, :create, :update, :delete]
     post "/review-notes/strings", Review.NoteController, :strings
   end
 
-  scope "/admin" do
+  scope "/admin", EdenflowersWeb.Admin do
     pipe_through :browser
 
     ash_authentication_live_session :admin,
@@ -181,44 +179,49 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutLocale,
         EdenflowersWeb.Hooks.PutCurrentPath
       ] do
-      live "/", EdenflowersWeb.Admin.OverviewLive
-      live "/orders", EdenflowersWeb.Admin.OrdersLive
-      live "/orders/new", EdenflowersWeb.Admin.OrderFormLive
-      live "/orders/new-gift-voucher", EdenflowersWeb.Admin.GiftVoucherSaleLive
-      live "/orders/:id", EdenflowersWeb.Admin.OrderDetailLive
-      live "/orders/:id/edit", EdenflowersWeb.Admin.OrderFormLive
-      live "/customers", EdenflowersWeb.Admin.CustomersLive
-      live "/customers/:id", EdenflowersWeb.Admin.CustomerDetailLive
-      live "/subscriptions", EdenflowersWeb.Admin.SubscriptionsLive
-      live "/subscriptions/:id", EdenflowersWeb.Admin.SubscriptionDetailLive
-      live "/fulfillments", EdenflowersWeb.Admin.FulfillmentsLive, :index
-      live "/fulfillments/:id", EdenflowersWeb.Admin.FulfillmentsLive, :edit
-      live "/courses", EdenflowersWeb.Admin.CoursesLive
-      live "/courses/new", EdenflowersWeb.Admin.CourseFormLive
-      live "/courses/:id", EdenflowersWeb.Admin.CourseDetailLive
-      live "/courses/:id/edit", EdenflowersWeb.Admin.CourseFormLive
-      live "/courses/:id/bookings/new", EdenflowersWeb.Admin.CourseBookingFormLive
-      live "/products", EdenflowersWeb.Admin.ProductsLive
-      live "/products/new", EdenflowersWeb.Admin.ProductFormLive
-      live "/products/:id", EdenflowersWeb.Admin.ProductFormLive
-      live "/promotions", EdenflowersWeb.Admin.PromotionsLive
-      live "/promotions/new", EdenflowersWeb.Admin.PromotionFormLive
-      live "/promotions/:id", EdenflowersWeb.Admin.PromotionFormLive
-      live "/invoices", EdenflowersWeb.Admin.InvoicesLive
-      live "/invoices/new", EdenflowersWeb.Admin.InvoiceLive, :new
-      live "/invoices/:id", EdenflowersWeb.Admin.InvoiceLive, :show
-      live "/expenses", EdenflowersWeb.Admin.ExpensesLive
-      live "/expenses/:id", EdenflowersWeb.Admin.ExpenseDetailLive
-      live "/account", EdenflowersWeb.Admin.AccountLive
-      live "/search", EdenflowersWeb.Admin.SearchLive
-      live "/links", EdenflowersWeb.Admin.LinksLive
+      live "/", OverviewLive
+      live "/orders", OrdersLive
+      live "/orders/new", OrderFormLive
+      live "/orders/new-gift-voucher", GiftVoucherSaleLive
+      live "/orders/:id", OrderDetailLive
+      live "/orders/:id/edit", OrderFormLive
+      live "/customers", CustomersLive
+      live "/customers/:id", CustomerDetailLive
+      live "/subscriptions", SubscriptionsLive
+      live "/subscriptions/:id", SubscriptionDetailLive
+      live "/fulfillments", FulfillmentsLive, :index
+      live "/fulfillments/:id", FulfillmentsLive, :edit
+      live "/courses", CoursesLive
+      live "/courses/new", CourseFormLive
+      live "/courses/:id", CourseDetailLive
+      live "/courses/:id/edit", CourseFormLive
+      live "/courses/:id/bookings/new", CourseBookingFormLive
+      live "/products", ProductsLive
+      live "/products/new", ProductFormLive
+      live "/products/:id", ProductFormLive
+      live "/promotions", PromotionsLive
+      live "/promotions/new", PromotionFormLive
+      live "/promotions/:id", PromotionFormLive
+      live "/invoices", InvoicesLive
+      live "/invoices/new", InvoiceLive, :new
+      live "/invoices/:id", InvoiceLive, :show
+      live "/expenses", ExpensesLive
+      live "/expenses/:id", ExpenseDetailLive
+      live "/account", AccountLive
+      live "/search", SearchLive
+      live "/links", LinksLive
     end
 
-    get "/account/avatar", EdenflowersWeb.Admin.AvatarController, :show
-    get "/reports", EdenflowersWeb.Admin.ReportController, :show
-    get "/bank/callback", EdenflowersWeb.Admin.BankController, :callback
-    get "/invoices/:id/pdf", EdenflowersWeb.Admin.InvoiceController, :show
-    get "/credit-notes/:id", EdenflowersWeb.Admin.InvoiceController, :credit_note
+    get "/account/avatar", AvatarController, :show
+    get "/reports", ReportController, :show
+    get "/bank/callback", BankController, :callback
+    get "/invoices/:id/pdf", InvoiceController, :show
+    get "/credit-notes/:id", InvoiceController, :credit_note
+  end
+
+  # Library dashboards name their own modules, so this scope has no alias.
+  scope "/admin" do
+    pipe_through :browser
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
 
