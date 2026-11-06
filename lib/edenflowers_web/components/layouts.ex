@@ -914,7 +914,8 @@ defmodule EdenflowersWeb.Layouts do
       {render_slot(@inner_block)}
     </main>
 
-    <footer>
+    <%!-- Above the order page's falling petals, so they disappear behind it. --%>
+    <footer class="relative z-10">
       <div class="footer-sky text-dusk-content relative overflow-hidden border-b">
         <div class="container relative py-20 md:py-36">
           <div class="footer-grid">

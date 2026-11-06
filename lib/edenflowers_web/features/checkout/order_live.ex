@@ -64,6 +64,73 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             name="flower-30"
             class={["text-primary/70 mb-6 h-12 w-12", if(@placed?, do: "flower-bloom", else: "flower-waiting")]}
           />
+          <%!-- Petals only for gift vouchers: "For somebody else" orders include condolence flowers. --%>
+          <div
+            :if={@placed?}
+            id={"petals-#{@shown_order.id}"}
+            phx-hook=".Petals"
+            data-petals={@shown_order.gift_voucher_sale?}
+            aria-hidden="true"
+          >
+          </div>
+          <script :type={Phoenix.LiveView.ColocatedHook} name=".Petals">
+            // Petals fall once per order, so a reload or return visit stays calm. The flower blooms
+            // once a session, like the home hero: the root layout's head script covers reloads,
+            // and leaving marks <html> so live navigation back doesn't replay it either.
+            export default {
+              mounted() {
+                try {
+                  sessionStorage.setItem("order-bloomed", "1");
+                  if (sessionStorage.getItem(this.el.id)) return;
+                  sessionStorage.setItem(this.el.id, "1");
+                } catch {
+                  // Without storage there's no way to remember, so stay calm rather than replay.
+                  return;
+                }
+                if (!this.el.hasAttribute("data-petals")) return;
+
+                import("@/vendor/canvas-confetti.esm").then(({ default: confetti }) => {
+                  const shapes = [
+                    // Cherry blossom: notched tip.
+                    confetti.shapeFromPath({
+                      path: "M0 18C-7 13-9 4-5-1L0 3L5-1C9 4 7 13 0 18Z",
+                    }),
+                    // Rose: broad and rounded.
+                    confetti.shapeFromPath({
+                      path: "M0 16C-9 12-10 2-5-2C-2-4 2-4 5-2C10 2 9 12 0 16Z",
+                    }),
+                  ];
+                  const colors = ["#f6cdd3", "#eea7b2", "#e08896", "#fbe9ec", "#f3c09c"];
+
+                  // Small waves from random points along the top, so they fall rather than burst.
+                  for (let wave = 0; wave < 8; wave++) {
+                    setTimeout(() => {
+                      confetti({
+                        particleCount: 3,
+                        origin: { x: Math.random(), y: -0.05 },
+                        angle: 270,
+                        spread: 70,
+                        startVelocity: 4,
+                        gravity: 0.45,
+                        drift: Math.random() - 0.5,
+                        decay: 0.96,
+                        ticks: 600,
+                        scalar: 1.2 + Math.random() * 0.6,
+                        shapes,
+                        colors,
+                        disableForReducedMotion: true,
+                        // Below the fixed header (z-50) and the footer (z-10), so petals fall from under one and into the other.
+                        zIndex: 0,
+                      });
+                    }, wave * 160);
+                  }
+                });
+              },
+              destroyed() {
+                document.documentElement.classList.add("order-bloomed");
+              },
+            };
+          </script>
           <div id="order-status">
             <h1 :if={@first_name} class="page-title">{~t"Thank you, #{@first_name}."}</h1>
             <h1 :if={!@first_name} class="page-title">{~t"Thank you for your order"}</h1>

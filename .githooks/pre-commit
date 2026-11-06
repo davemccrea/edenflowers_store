@@ -4,7 +4,7 @@ set -e
 PRETTIER_VERSION="3.3.3"
 
 elixir_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ex|exs|heex)$' || true)
-prettier_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|mjs|cjs|css)$' || true)
+prettier_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|mjs|cjs|css)$' | grep -v '/vendor/' || true)
 
 # Check rather than fix: re-adding fixed files would also stage their unstaged changes.
 if [ -n "$elixir_files" ]; then
