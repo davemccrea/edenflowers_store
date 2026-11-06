@@ -69,7 +69,6 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 label={~t"Style"}
                 options={[
                   {~t"Signature", "cream"},
-                  {~t"Golden hour", "golden_hour"},
                   {~t"Christmas red", "christmas"},
                   {~t"Christmas green", "christmas_green"}
                 ]}

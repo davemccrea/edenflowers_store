@@ -236,7 +236,6 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   end
 
   defp style_option(:cream), do: %{value: "cream", label: ~t"Signature"}
-  defp style_option(:golden_hour), do: %{value: "golden_hour", label: ~t"Golden hour"}
   defp style_option(:christmas), do: %{value: "christmas", label: ~t"Christmas red", emoji: "🎁"}
   defp style_option(:christmas_green), do: %{value: "christmas_green", label: ~t"Christmas green", emoji: "🎄"}
 
