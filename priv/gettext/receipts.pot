@@ -315,7 +315,7 @@ msgstr ""
 
 #: lib/edenflowers/orders/receipt_labels.ex:44
 #: lib/edenflowers/orders/receipt_labels.ex:45
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:92
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:95
 #, elixir-autogen, elixir-format
 msgid "Gift voucher"
 msgstr ""
@@ -325,7 +325,7 @@ msgstr ""
 msgid "A gift voucher is not subject to VAT. VAT is charged on what it's spent on."
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:95
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:98
 #, elixir-autogen, elixir-format
 msgid "Code"
 msgstr ""
@@ -335,18 +335,18 @@ msgstr ""
 msgid "For"
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:100
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:103
 #, elixir-autogen, elixir-format
 msgid "Spend it on flowers, subscriptions and courses: enter the code at checkout on edenflowers.fi, or show it in the shop."
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:105
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:108
 #, elixir-autogen, elixir-format
 msgid "Valid for one year. What you don't spend stays on the code, and it can't be exchanged for cash."
 msgstr ""
 
 #: lib/edenflowers/orders/receipt_labels.ex:46
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:96
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:99
 #, elixir-autogen, elixir-format
 msgid "Valid until"
 msgstr ""
@@ -366,22 +366,22 @@ msgstr ""
 msgid "Message on the voucher"
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:98
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:101
 #, elixir-autogen, elixir-format
 msgid "Merry Christmas"
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:94
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:97
 #, elixir-autogen, elixir-format
 msgid "To"
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:47
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:50
 #, elixir-autogen, elixir-format
 msgid "Name here"
 msgstr ""
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:49
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:52
 #, elixir-autogen, elixir-format
 msgid "Your message here"
 msgstr ""

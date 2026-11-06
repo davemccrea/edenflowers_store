@@ -197,6 +197,16 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       assert has_element?(view, ~s|a[href="/order/#{order.id}/receipt"]|)
     end
 
+    test "sees the gift voucher they bought instead of a message card", %{conn: conn} do
+      sale = paid_voucher_sale(%{card_message: "Yours, always"})
+
+      conn = Plug.Test.init_test_session(conn, %{guest_order_id: sale.id})
+      {:ok, view, _html} = live(conn, ~p"/order/#{sale.id}")
+
+      assert render_async(view) =~ ~s|alt="Preview of your gift voucher"|
+      refute has_element?(view, "[data-testid=order-card]")
+    end
+
     test "goes back to checkout, keeping their cart, when a redirect payment fails", %{conn: conn} do
       order = placed_order(state: :payment, ordered_at: nil)
 
@@ -222,6 +232,39 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       assert to =~ "/sign-in?return_to="
       assert conn |> get(~p"/order/#{order.id}/receipt") |> response(404)
     end
+  end
+
+  defp paid_voucher_sale(attrs) do
+    sale =
+      Orders.start_gift_voucher_sale!(
+        50,
+        Map.merge(
+          %{
+            customer_name: "Anna Buyer",
+            customer_email: "anna@example.com",
+            recipient_name: "Mia",
+            voucher_locale: "en-GB"
+          },
+          attrs
+        ),
+        actor: nil
+      )
+
+    Mox.expect(Edenflowers.External.StripeAPI.Mock, :create_payment_intent, fn 5000, _metadata, nil ->
+      {:ok, %{id: "pi_#{sale.id}", client_secret: "pi_secret", amount: 5000}}
+    end)
+
+    {:ok, _} = Orders.prepare_checkout_payment(sale.id, actor: nil)
+
+    {:ok, :completed} =
+      Edenflowers.Payments.complete(%{
+        id: "pi_#{sale.id}",
+        status: "succeeded",
+        metadata: %{"order_id" => sale.id},
+        amount_received: 5000
+      })
+
+    sale
   end
 
   defp browser_cart(conn), do: Orders.get_storefront_cart!(get_session(conn, :visitor_id), authorize?: false)
