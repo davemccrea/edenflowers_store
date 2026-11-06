@@ -342,9 +342,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
           class="input w-full tabular-nums"
         />
       </div>
-      <p :if={@voucher?} class="text-base-content/75 text-sm">
-        {~t"The voucher pays what's owed, as far as what's left on it goes."}
-      </p>
       <.customer_email
         :if={@receipt_email? and not @voucher?}
         id={"#{@id}-email"}

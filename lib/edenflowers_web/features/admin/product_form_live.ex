@@ -120,9 +120,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               </.form_section>
 
               <.form_section title={~t"Photos"}>
-                <:description>
-                  {~t"Use the eye button to hide a photo from the product page's thumbnails. A hidden photo still appears whenever the selected size uses it."}
-                </:description>
                 <.photo_gallery
                   field={@form[:photo_slugs]}
                   photo_slugs={photo_slugs(@form)}
@@ -478,7 +475,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
               </label>
             </div>
           </fieldset>
-          <p class="text-base-content/75 text-sm">{~t"Pick Main to follow whichever photo is main."}</p>
         </.drawer_body>
       </.admin_drawer>
     </li>
@@ -498,11 +494,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
       %{product_type: :card} when fan_card_count >= max ->
         ~t"Shows in the card fan on the store page, which holds the first #{max = max} in store order."
 
-      %{product_type: :card} ->
-        ~t"Shows in the card fan on the store page."
-
       _ ->
-        ~t"Shows under Favourites on the home page."
+        nil
     end
   end
 

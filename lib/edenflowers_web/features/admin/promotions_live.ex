@@ -50,7 +50,7 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
 
         <.form_section title={~t"Welcome offer"} class="mb-6">
           <:description>
-            {~t"New newsletter subscribers get a one-use code at this discount, valid for 30 days. Codes already sent keep their rate."}
+            {~t"Codes already sent keep their rate."}
           </:description>
           <.form
             for={@welcome_offer_form}

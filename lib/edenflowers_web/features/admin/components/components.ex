@@ -33,7 +33,6 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :id, :string, default: "customer-select"
   attr :empty?, :boolean, default: false
   attr :focus, :string, default: nil, doc: "Event sent to the LiveView when the search box gains focus."
-  attr :help, :string, default: nil, doc: "What the search matches. Defaults to name or email."
 
   @doc "The searchable customer picker shared by admin entry forms."
   def customer_picker(assigns) do
@@ -67,9 +66,6 @@ defmodule EdenflowersWeb.Admin.Components do
           <span class="sr-only">{~t"Clear customer selection"}</span>
         </:clear_button>
       </LiveSelect.live_select>
-      <p id="customer-search-help" class="text-base-content/75 mt-1.5 text-sm">
-        {@help || ~t"Search by name or email."}
-      </p>
       <div id="customer-results" role="status">
         <p :if={@empty?} class="text-base-content/75 mt-2 text-sm">
           {~t"No customers found."}

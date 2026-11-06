@@ -106,9 +106,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
               >
                 {option.label}
               </.input>
-              <p :if={@form[:payment_terms].value in [:payment_link, "payment_link"]} class="text-base-content/75 text-sm">
-                {~t"A payment link will be created and included if you email the booking confirmation."}
-              </p>
             </div>
           </.form_section>
 

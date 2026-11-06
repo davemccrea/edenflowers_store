@@ -54,7 +54,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         <.admin_page_header title={~t"Delivery and pickup"} />
 
         <.form_section title={~t"Calendar"}>
-          <:description>{~t"Delivery and pickup share these days."}</:description>
           <.calendar calendar={@calendar} today={@today} />
         </.form_section>
 
@@ -73,9 +72,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             />
             {~t"Offer the Christmas voucher online"}
           </label>
-          <p class="text-base-content/70 mt-2 text-sm">
-            {~t"You can choose it for a voucher you sell in the shop either way."}
-          </p>
         </.form_section>
 
         <.form_section title={~t"Options"} class="mt-6">
@@ -331,9 +327,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
             min="0"
             label={~t"Free delivery distance (km)"}
             required
-            help={
-              ~t"Bouquets with free delivery get this many km free. Further away they pay the base price plus the price per km beyond it."
-            }
             class="input w-full tabular-nums"
           />
           <.input
@@ -526,9 +519,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
           <span class="bg-success h-0.5 w-4"></span>{~t"Free-delivery bouquets"}
         </span>
       </div>
-      <p :if={@paths.car || @paths.fuel} class="text-base-content/70 mt-2 text-xs">
-        {~t"Costs count the drive there and back, but not your time."}
-      </p>
     </div>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".FeeExplorer">
       /**

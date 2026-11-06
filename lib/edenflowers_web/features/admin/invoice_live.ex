@@ -189,7 +189,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                   field={@form[:customer]}
                   empty?={@customer_search_empty?}
                   focus="customer_focus"
-                  help={~t"Search by name, company or email."}
                 />
                 <div class="grid gap-4 sm:grid-cols-2">
                   <.input
@@ -248,7 +247,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                     label={~t"Date of supply or advance payment"}
                     required
                     class="input w-full"
-                    help={~t"Needed to issue the invoice."}
                   />
                   <.input
                     field={@form[:locale]}

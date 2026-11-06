@@ -131,9 +131,6 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
               </.form_section>
 
               <.form_section title={~t"Cancellation"}>
-                <:description>
-                  {~t"Shown on the course page and in the booking emails, and used to fill in a cancelled booking's refund."}
-                </:description>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <.input
                     field={@form[:cancellation_days]}
@@ -195,9 +192,6 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
                     placeholder="https://example.com"
                     class="input w-full"
                   />
-                  <p class="text-base-content/70 text-sm">
-                    {~t"Shown with the course photo. Add a website to link the photographer's name."}
-                  </p>
                 </div>
               </.form_section>
             </aside>

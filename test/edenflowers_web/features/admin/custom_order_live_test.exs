@@ -159,7 +159,6 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       generate(order(state: :placed, user_id: customer.id))
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
 
-      assert has_element?(view, "#customer-search-help", "Search by name or email.")
       search_customers(view, "Keyboard")
       assert has_element?(view, "#customer-select ul", "keyboard@example.com")
       view |> element("#customer-select") |> render_hook("keydown", %{"key" => "ArrowDown"})

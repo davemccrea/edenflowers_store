@@ -51,10 +51,6 @@ defmodule EdenflowersWeb.Admin.SearchLive do
           <:subtitle :if={@term != ""}>{~t"Results for “#{term = @term}”"}</:subtitle>
         </.admin_page_header>
 
-        <p :if={@term == ""} class="text-base-content/75 text-sm">
-          {~t"Search orders by name, reference, phone, email or delivery address, and customers by name or email."}
-        </p>
-
         <p :if={@term != "" and @orders == [] and @customers == []} class="text-base-content/75 text-sm">
           {~t"No orders or customers match “#{term = @term}”."}
         </p>
