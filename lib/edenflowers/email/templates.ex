@@ -68,10 +68,9 @@ defmodule Edenflowers.Email.Templates do
   @doc "How the emails Jennie sends are signed."
   def signature do
     """
-    Jennie
+    Jennie McCrea
     Eden Flowers
-    #{shop_address()}
-    040 220 9494 · edenflowers.fi\
+    040 220 9494\
     """
   end
 end

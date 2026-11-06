@@ -57,7 +57,7 @@ defmodule Edenflowers.Pricing.Workers.SendNewsletterPromoEmailTest do
       assert_email_sent(fn email ->
         assert email.to == [{"", "new@example.com"}]
         assert {"Jennie", _address} = email.from
-        assert email.text_body =~ "\nJennie\nEden Flowers\n"
+        assert email.text_body =~ "\nJennie McCrea\nEden Flowers\n040 220 9494"
         assert email.text_body =~ code
         assert email.subject == "Your 15% welcome code for Eden Flowers"
       end)
