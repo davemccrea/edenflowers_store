@@ -109,8 +109,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   field={@form[:recipient_name]}
                   type="text"
                   autocomplete="off"
-                  validate_live?
-                  phx-debounce="400"
+                  phx-debounce="blur"
                   required
                 />
                 <.input
@@ -119,7 +118,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   type="textarea"
                   maxlength={Order.Checkout.voucher_message_length()}
                   help={~t"Up to #{count = Order.Checkout.voucher_message_length()} characters."}
-                  phx-debounce="400"
+                  phx-debounce="blur"
                   rows="3"
                 />
               </div>
