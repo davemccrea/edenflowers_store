@@ -175,8 +175,20 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
       assert %{style: :cream} = GiftVoucherPdf.build_payload(cream)
     end
 
-    test "customers can choose the Christmas style only while Jennie offers it" do
+    # A photo style is the only one that reads an image file into the PDF.
+    test "a voucher in a photo style prints with its photo" do
+      golden_hour = Ash.load!(voucher(buy(50, %{voucher_style: :golden_hour})), [line_item: :order], authorize?: false)
+
+      assert {:ok, "%PDF" <> _} = GiftVoucherPdf.generate(golden_hour)
+    end
+
+    test "customers can choose the Christmas styles only while Jennie offers them" do
       assert {:error, _} = Orders.start_gift_voucher_sale(50, christmas_sale_details(), actor: nil)
+
+      assert {:error, _} =
+               Orders.start_gift_voucher_sale(50, %{christmas_sale_details() | voucher_style: :christmas_green},
+                 actor: nil
+               )
 
       calendar = Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
       Edenflowers.Fulfillment.set_christmas_vouchers_online!(calendar, true, authorize?: false)

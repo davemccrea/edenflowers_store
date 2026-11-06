@@ -48,7 +48,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
   test "previews the voucher as it's filled in, and offers Christmas, with its snow shuffled, only while Jennie does",
        %{conn: conn} do
     {:ok, view, _html} = live(conn, "/en/gift-voucher")
-    render_async(view)
+    # Typst takes longer than render_async's default 100 ms under a full test run.
+    render_async(view, 5_000)
     assert has_element?(view, "img[data-testid=voucher-preview]")
     refute has_element?(view, "input[name='form[voucher_style]'][value=christmas]")
 

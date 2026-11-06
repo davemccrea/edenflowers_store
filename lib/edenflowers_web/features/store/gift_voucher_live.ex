@@ -15,6 +15,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments.GiftVoucherPdf
+  alias Edenflowers.Payments.GiftVoucherStyle
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
@@ -67,44 +68,30 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
             phx-submit="continue"
           >
             <%!-- The fields run down the left, and the preview sticks beside them while they're
-                 filled in. On a phone the preview sits between the choices and the words. --%>
+                 filled in. On a phone the preview follows the style choice, before the words. --%>
             <div class="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-x-16">
               <fieldset class="flex flex-col lg:col-start-1 lg:row-start-1">
-                <legend class="eyebrow text-base-content/70 mb-5">{~t"Voucher"}</legend>
-                <div class="grid gap-6 sm:grid-cols-2">
+                <legend class="eyebrow text-base-content/70 mb-5">{~t"Make it personal"}</legend>
+                <%!-- Two styles to a row, everyday above Christmas. --%>
+                <div class="[&_fieldset>div]:grid [&_fieldset>div]:grid-cols-2">
                   <.input
-                    label={~t"Amount"}
-                    field={@form[:amount]}
-                    type="select"
-                    options={Enum.map(Order.Checkout.voucher_amounts(), &{Format.storefront_price(&1, @locale), &1})}
-                  />
-                  <.input
-                    label={~t"Voucher language"}
-                    field={@form[:voucher_locale]}
-                    type="select"
-                    options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
-                  />
-                  <div :if={@christmas_offered?} class="sm:col-span-2">
-                    <.input
-                      :let={option}
-                      label={~t"Style"}
-                      field={@form[:voucher_style]}
-                      type="radio-card"
-                      options={[%{value: "cream", label: ~t"Regular"}, %{value: "christmas", label: ~t"Christmas"}]}
-                    >
-                      {option.label}
-                      <span :if={option.value == "christmas"} aria-hidden="true">☃️🎄</span>
-                    </.input>
-                  </div>
-                  <.input :if={!@christmas_offered?} field={@form[:voucher_style]} type="hidden" />
+                    :let={option}
+                    label={~t"Style"}
+                    field={@form[:voucher_style]}
+                    type="radio-card"
+                    options={style_options(@christmas_offered?)}
+                  >
+                    {option.label}
+                    <span :if={option[:emoji]} aria-hidden="true">{option.emoji}</span>
+                  </.input>
                 </div>
               </fieldset>
 
-              <div class="min-w-0 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky lg:col-start-2 lg:row-span-3 lg:row-start-1">
+              <div class="min-w-0 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky lg:col-start-2 lg:row-span-4 lg:row-start-1">
                 <.voucher_preview preview={@preview} loading?={@preview_loading?} />
                 <.input field={@form[:voucher_snow_seed]} type="hidden" />
                 <button
-                  :if={to_string(@form[:voucher_style].value) == "christmas"}
+                  :if={GiftVoucherStyle.christmas?(@form[:voucher_style].value)}
                   type="button"
                   phx-click={
                     JS.push("shuffle_snow", loading: "#gift-voucher-form")
@@ -120,8 +107,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   <span class="link-underline-hover">{~t"Let it snow"}</span>
                 </button>
               </div>
-              <fieldset class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2">
-                <legend class="eyebrow text-base-content/70 mb-5">{~t"Written on it"}</legend>
+
+              <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2 lg:-mt-4">
                 <.input
                   label={~t"Who is it for?"}
                   field={@form[:recipient_name]}
@@ -136,11 +123,29 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   type="textarea"
                   maxlength={Order.Checkout.voucher_message_length()}
                   phx-debounce="400"
-                  rows="5"
+                  rows="3"
                 />
-              </fieldset>
+              </div>
 
               <fieldset class="flex flex-col lg:col-start-1 lg:row-start-3">
+                <legend class="eyebrow text-base-content/70 mb-5">{~t"Voucher"}</legend>
+                <div class="grid gap-6 sm:grid-cols-2">
+                  <.input
+                    label={~t"Amount"}
+                    field={@form[:amount]}
+                    type="select"
+                    options={Enum.map(Order.Checkout.voucher_amounts(), &{Format.storefront_price(&1, @locale), &1})}
+                  />
+                  <.input
+                    label={~t"Voucher language"}
+                    field={@form[:voucher_locale]}
+                    type="select"
+                    options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
+                  />
+                </div>
+              </fieldset>
+
+              <fieldset class="flex flex-col lg:col-start-1 lg:row-start-4">
                 <legend class="eyebrow text-base-content/70 mb-5">{~t"Your details"}</legend>
                 <div class="grid gap-6 sm:grid-cols-2">
                   <.input
@@ -216,6 +221,16 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
       </.container>
     </Layouts.app>
     """
+  end
+
+  defp style_options(christmas_offered?) do
+    [
+      %{value: "cream", label: ~t"Signature"},
+      %{value: "golden_hour", label: ~t"Golden hour"},
+      christmas_offered? && %{value: "christmas", label: ~t"Christmas red", emoji: "🎁"},
+      christmas_offered? && %{value: "christmas_green", label: ~t"Christmas green", emoji: "🎄"}
+    ]
+    |> Enum.filter(& &1)
   end
 
   # The preview comes first, so it's above the fields on a phone; on a wide
