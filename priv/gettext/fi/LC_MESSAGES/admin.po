@@ -5166,16 +5166,6 @@ msgstr ""
 msgid "Christmas"
 msgstr "Joulu"
 
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:73
-#, elixir-autogen, elixir-format
-msgid "Cream"
-msgstr "Kermanvalkoinen"
-
-#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:73
-#, elixir-autogen, elixir-format
-msgid "Green"
-msgstr "Vihreä"
-
 #: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:72
 #, elixir-autogen, elixir-format
 msgid "Of the voucher PDF."
@@ -5195,3 +5185,8 @@ msgstr "Tyyli"
 #, elixir-autogen, elixir-format
 msgid "You can choose it for a voucher you sell in the shop either way."
 msgstr "Myymälässä voit valita sen lahjakorttiin joka tapauksessa."
+
+#: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:73
+#, elixir-autogen, elixir-format
+msgid "Regular"
+msgstr "Tavallinen"

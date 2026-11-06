@@ -70,7 +70,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 type="select"
                 label={~t"Style"}
                 help={~t"Of the voucher PDF."}
-                options={[{~t"Cream", "cream"}, {~t"Green", "green"}, {~t"Christmas", "christmas"}]}
+                options={[{~t"Regular", "cream"}, {~t"Christmas", "christmas"}]}
                 class="select w-full"
               />
               <div class="sm:col-span-2">

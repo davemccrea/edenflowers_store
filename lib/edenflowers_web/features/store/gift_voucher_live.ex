@@ -58,23 +58,13 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
             <p class="mt-6 text-lg leading-relaxed">
               {~t"Give them flowers on their own terms: a bouquet when they need one, fresh flowers every few weeks with a subscription, or an evening on one of my courses. They can spend it here online or in my shop at Minimossen."}
             </p>
-
-            <dl class="border-base-content/12 grid-cols-[auto_minmax(0,1fr)] mt-8 grid items-baseline gap-x-6 gap-y-3 border-t pt-6">
-              <dt class="eyebrow text-base-content/70">{~t"Amount"}</dt>
-              <dd class="tabular-nums">{~t"From 20 to 200 €"}</dd>
-
-              <dt class="eyebrow text-base-content/70">{~t"Valid"}</dt>
-              <dd>{~t"One year from the day you buy it"}</dd>
-
-              <dt class="eyebrow text-base-content/70">{~t"Delivery"}</dt>
-              <dd>
-                {~t"I email you the voucher as a PDF, in Swedish, Finnish or English, to print or forward. You can also collect a gift card at Minimossen, with the voucher written on it."}
-              </dd>
-            </dl>
           </header>
 
           <div class="min-w-0 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky lg:col-start-1 lg:row-span-2 lg:row-start-1">
             <.voucher_preview preview={@preview} />
+            <p class="text-base-content/70 mt-4">
+              {~t"I email it to you as a PDF, to print or forward. It's valid for a year from the day you buy it."}
+            </p>
           </div>
 
           <div
