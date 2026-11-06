@@ -3,9 +3,10 @@ id: TASK-180
 title: >-
   Back the admin action drawers with AshPhoenix forms, so a refused action marks
   the field it refused
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-11-06 17:10'
+updated_date: '2026-11-06 17:39'
 labels:
   - spec
   - admin
@@ -29,7 +30,13 @@ Open: how `Drawers.email_edits/1` (the rewritten subject and body every drawer s
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each listed drawer builds its form with AshPhoenix.Form.for_update or for_create on its action
-- [ ] #2 An action's validation error shows on the field it names, not only in a flash
-- [ ] #3 PaymentActions no longer maps params to action inputs by hand, and payment_error/1 is gone
+- [x] #1 Each listed drawer builds its form with AshPhoenix.Form.for_update or for_create on its action
+- [x] #2 An action's validation error shows on the field it names, not only in a flash
+- [x] #3 PaymentActions no longer maps params to action inputs by hand, and payment_error/1 is gone
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Open questions settled: the drawers' subject and body go to the actions' own subject/body arguments, and "Edit the email" stays a param of the form alone (Drawers.keep_email_edits/3 as transform_params drops them while it's unticked). "Was the customer home?" stays a UI param; fulfillment_params/3 turns "No" into email_delivery_photo. Form params now use the argument names (cancellation_charge, email_customer?, payment_method). Errors no input shows (a field-less refusal, or one on a field the drawer has no input for, like the credit note's invoice_id) render through Drawers.refusal/1. The record payment form swaps to pay_with_gift_voucher when Gift voucher is picked.
+<!-- SECTION:NOTES:END -->

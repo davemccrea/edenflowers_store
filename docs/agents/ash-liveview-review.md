@@ -23,7 +23,7 @@ A page and an action that answer the same question read the same calculation, so
 
 ### Forms (AshPhoenix)
 
-- A form that submits one action is built with `AshPhoenix.Form.for_create`/`for_update`, so errors land on their fields. `to_form(map)` is for UI-only forms. The admin action drawers are known exceptions, tracked in TASK-180.
+- A form that submits one action is built with `AshPhoenix.Form.for_create`/`for_update`, so errors land on their fields. `to_form(map)` is for UI-only forms.
 - To change a param on the server (shuffle, generate a code), use `AshPhoenix.Form.update_params/3`, not `form.params` or `form.source.params` passed back to `validate`.
 - Read typed values from the form. Once valid, `form[:field].value` is the cast value (`Date`, integer, atom); while invalid, it's the raw string. Previews read the changeset: `Ash.Changeset.get_attribute(form.source.source, ...)` and `get_argument`. Ash strings already trim and turn `""` into nil, and `Edenflowers.Types.Price` accepts a decimal comma. Look for `Integer.parse`, `Decimal.parse`, `Date.from_iso8601`, `String.trim` or `String.replace(",", ".")` on form values.
 - To convert between what the form shows and what the resource stores (a percentage against a rate), use `transform_params`, as `PromotionFormLive.percent_to_rate/3` does.

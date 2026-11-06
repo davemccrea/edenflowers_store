@@ -954,16 +954,21 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|[phx-click="open_cancel"]|) |> render_click()
-      assert has_element?(view, ~s|#cancel-form input[name="cancel[charge]"][value="0"]|)
+      assert has_element?(view, ~s|#cancel-form input[name="cancel[cancellation_charge]"][value="0"]|)
       assert has_element?(view, "#cancel-form", "Paid 50,00 € of 85,00 €. 50,00 € will be refunded.")
 
-      view |> form("#cancel-form", cancel: %{charge: "60,00"}) |> render_change()
+      view |> form("#cancel-form", cancel: %{cancellation_charge: "60,00"}) |> render_change()
       assert has_element?(view, "#cancel-form", "10,00 € left for the customer to pay.")
 
-      view |> form("#cancel-form", cancel: %{charge: "85.01", reason: "Ill that day"}) |> render_submit()
-      assert has_element?(view, "#cancel-drawer [role=alert]", "Enter an amount from 0 € to 85,00 €.")
+      view
+      |> form("#cancel-form", cancel: %{cancellation_charge: "85.01", cancellation_reason: "Ill that day"})
+      |> render_submit()
 
-      view |> form("#cancel-form", cancel: %{charge: "20,00", reason: "Ill that day"}) |> render_submit()
+      assert has_element?(view, "#cancel_cancellation_charge-error", "Enter an amount from 0 € to 85,00 €.")
+
+      view
+      |> form("#cancel-form", cancel: %{cancellation_charge: "20,00", cancellation_reason: "Ill that day"})
+      |> render_submit()
 
       assert has_element?(view, "header", "Cancelled")
       assert has_element?(view, "#order-log", "Ill that day")

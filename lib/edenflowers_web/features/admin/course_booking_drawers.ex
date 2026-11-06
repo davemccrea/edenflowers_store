@@ -12,9 +12,8 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   attr :course, :map, required: true
   attr :registration, :any, required: true, doc: "the booking being settled, or nil"
   attr :mode, :atom, required: true, values: [:settle, :refund]
-  attr :refund_params, :map, required: true
-  attr :payment_params, :map, required: true
-  attr :error, :string, default: nil
+  attr :refund_form, Phoenix.HTML.Form, default: nil, doc: "for the booking being settled, when it is refundable"
+  attr :payment_form, Phoenix.HTML.Form, default: nil, doc: "for the booking being settled, when it is to collect"
   attr :locale, :string, required: true
   attr :preview, Swoosh.Email, default: nil
 
@@ -23,14 +22,13 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
     <.admin_drawer id="settlement-drawer" title={settlement_title(@mode)}>
       <.drawer_body :if={@registration}>
         <.settlement_details course={@course} registration={@registration} locale={@locale} />
-        <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
         <.refund_form
-          :if={@mode == :refund and @registration.refundable?}
+          :if={@mode == :refund and @registration.refundable? and @refund_form}
           id={"refund-#{@registration.id}"}
           record={@registration}
           email={@registration.email}
           locale={@locale}
-          params={Map.get(@refund_params, @registration.id, %{})}
+          form={@refund_form}
           preview={@preview}
         />
         <.collect_payment
@@ -40,7 +38,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
           locale={@locale}
         />
         <section
-          :if={@mode == :settle and @registration.to_collect?}
+          :if={@mode == :settle and @registration.to_collect? and @payment_form}
           aria-labelledby="record-payment-heading"
           class="border-base-content/12 space-y-3 border-t pt-5"
         >
@@ -49,7 +47,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
             id={"payment-#{@registration.id}"}
             record={@registration}
             locale={@locale}
-            params={Map.get(@payment_params, @registration.id, %{})}
+            form={@payment_form}
             receipt_email?={true}
             preview={@preview}
           />

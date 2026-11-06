@@ -36,9 +36,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
          socket
          |> assign(:page_title, socket.assigns.course.name)
          |> assign(:locale, Localize.get_locale())
-         |> assign(refund_params: %{}, payment_params: %{})
-         |> assign(settling_id: nil, settlement_mode: :settle, settlement_error: nil)
-         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
+         |> assign(settling_id: nil, settlement_mode: :settle, refund_form: nil, payment_form: nil)
+         |> assign(cancelling: nil, cancel_form: nil)
          |> assign(email_form: nil, email_kind: nil, emailing_id: nil, preview: nil)
          |> assign(reminder_form: nil, reminder_previews: [], reminder_error: nil)}
 
@@ -227,7 +226,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         keep_label={~t"Keep booking"}
         form={@cancel_form}
         payable={@cancelling}
-        error={@cancel_error}
         email={@cancelling && @cancelling.email}
         locale={@locale}
         preview={@preview}
@@ -241,9 +239,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         course={@course}
         registration={@settling_id && booking(@course, @settling_id)}
         mode={@settlement_mode}
-        refund_params={@refund_params}
-        payment_params={@payment_params}
-        error={@settlement_error}
+        refund_form={@refund_form}
+        payment_form={@payment_form}
         locale={@locale}
         preview={@preview}
       />
@@ -267,13 +264,19 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         do: :refund,
         else: :settle
 
+    # Reopening the same booking keeps what Jennie entered.
+    socket =
+      if id == socket.assigns.settling_id,
+        do: socket,
+        else: assign_settlement_forms(socket, registration)
+
     {:noreply,
      socket
-     |> assign(settling_id: id, settlement_mode: mode, settlement_error: nil)
+     |> assign(settling_id: id, settlement_mode: mode)
      |> assign(
        :preview,
-       if(mode == :refund,
-         do: DrawerPreview.build(:refunded, registration, Map.get(socket.assigns.refund_params, id, %{}))
+       if(mode == :refund and socket.assigns.refund_form,
+         do: DrawerPreview.build(:refunded, registration, socket.assigns.refund_form)
        )
      )
      |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-show"})}
@@ -285,26 +288,26 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("change_refund", %{"record_id" => id, "refund" => params} = event, socket) do
-    params = PaymentActions.refund_params(params, event["_target"])
-    preview = DrawerPreview.build(:refunded, booking(socket.assigns.course, id), params)
-    {:noreply, socket |> update(:refund_params, &Map.put(&1, id, params)) |> assign(:preview, preview)}
+    form = PaymentActions.change_refund_form(socket.assigns.refund_form, params, event["_target"])
+    preview = DrawerPreview.build(:refunded, booking(socket.assigns.course, id), form)
+    {:noreply, assign(socket, refund_form: form, preview: preview)}
   end
 
-  def handle_event("refund", %{"record_id" => id, "refund" => params}, socket) do
-    actor = socket.assigns.current_user
-    settle(socket, id, &PaymentActions.refund(&1, params, actor))
+  def handle_event("refund", %{"refund" => params}, socket) do
+    settle(socket, :refund_form, PaymentActions.submit(socket.assigns.refund_form, params))
   end
 
   def handle_event("change_payment", %{"record_id" => id, "payment" => params} = event, socket) do
-    params = PaymentActions.payment_params(params, event["_target"])
-    preview = DrawerPreview.build(:payment, booking(socket.assigns.course, id), params)
-    {:noreply, socket |> update(:payment_params, &Map.put(&1, id, params)) |> assign(:preview, preview)}
+    %{payment_form: form, current_user: actor} = socket.assigns
+    form = PaymentActions.change_payment_form(form, params, event["_target"], actor)
+    preview = DrawerPreview.build(:payment, booking(socket.assigns.course, id), form)
+    {:noreply, assign(socket, payment_form: form, preview: preview)}
   end
 
   def handle_event("record_payment", %{"record_id" => id, "payment" => params}, socket) do
-    actor = socket.assigns.current_user
-    socket = update(socket, :payment_params, &Map.put(&1, id, params))
-    settle(socket, id, &PaymentActions.record_payment(&1, params, actor))
+    # A submit without the change that picks the method still runs the action for it.
+    form = PaymentActions.payment_form(booking(socket.assigns.course, id), socket.assigns.current_user, params)
+    settle(socket, :payment_form, PaymentActions.submit(form, params))
   end
 
   def handle_event("open_course_reminders", _params, socket) do
@@ -389,40 +392,38 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   def handle_event("open_cancel", %{"id" => id}, socket) do
     registration = PaymentActions.load_for_cancel(booking(socket.assigns.course, id))
-    form = PaymentActions.cancel_form(registration)
+    form = PaymentActions.cancel_form(registration, socket.assigns.current_user)
 
     {:noreply,
      socket
-     |> assign(cancelling: registration, cancel_form: form, cancel_error: nil)
-     |> assign(:preview, DrawerPreview.build(:cancelled, registration, form.params))
+     |> assign(cancelling: registration, cancel_form: form)
+     |> assign(:preview, DrawerPreview.build(:cancelled, registration, form))
      |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-show"})}
   end
 
   def handle_event("close_cancel", _params, socket) do
-    {:noreply, assign(socket, cancelling: nil, cancel_form: nil, cancel_error: nil)}
+    {:noreply, assign(socket, cancelling: nil, cancel_form: nil)}
   end
 
   def handle_event("validate_cancel", %{"cancel" => params}, socket) do
+    form = AshPhoenix.Form.validate(socket.assigns.cancel_form, params)
+
     {:noreply,
-     socket
-     |> assign(:cancel_form, to_form(params, as: :cancel))
-     |> assign(:preview, DrawerPreview.build(:cancelled, socket.assigns.cancelling, params))}
+     assign(socket, cancel_form: form, preview: DrawerPreview.build(:cancelled, socket.assigns.cancelling, form))}
   end
 
   def handle_event("submit_cancel", %{"cancel" => params}, socket) do
-    socket = assign(socket, :cancel_form, to_form(params, as: :cancel))
-
-    case PaymentActions.cancel(socket.assigns.cancelling, params, socket.assigns.current_user) do
+    case AshPhoenix.Form.submit(socket.assigns.cancel_form, params: params) do
       {:ok, _registration} ->
         {:noreply,
          socket
-         |> assign(cancelling: nil, cancel_form: nil, cancel_error: nil)
+         |> assign(cancelling: nil, cancel_form: nil)
          |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
          |> put_flash(:success, ~t"Booking cancelled.")
          |> reload_course()}
 
-      {:error, message} ->
-        {:noreply, socket |> assign(:cancel_error, message) |> reload_course()}
+      {:error, form} ->
+        {:noreply, socket |> assign(:cancel_form, form) |> reload_course()}
     end
   end
 
@@ -445,40 +446,29 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     {:noreply, reload_course(socket)}
   end
 
-  # The drawer closes once the money is recorded. On an error it stays open, and the
-  # form keeps what Jennie entered because the server never re-renders those inputs.
-  defp settle(socket, id, payment_action) do
-    socket =
-      case Courses.get_registration_by_id(id, actor: socket.assigns.current_user, load: [:balance]) do
-        {:ok, registration} ->
-          case payment_action.(registration) do
-            {:success, message} ->
-              settlement_recorded(socket, id, :success, message)
+  # The drawer closes once the money is recorded. On an error it stays open with
+  # the form as Jennie filled it in and the refusal on its fields.
+  defp settle(socket, _form_key, {:ok, {kind, message}}) do
+    {:noreply,
+     socket
+     |> put_flash(kind, message)
+     |> assign(settling_id: nil, refund_form: nil, payment_form: nil)
+     |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-hide"})
+     |> reload_course()}
+  end
 
-            {:ok, {kind, message}} ->
-              settlement_recorded(socket, id, kind, message)
+  defp settle(socket, form_key, {:error, form}), do: {:noreply, socket |> assign(form_key, form) |> reload_course()}
 
-            {:error, message} ->
-              assign(socket, :settlement_error, message)
-          end
+  defp assign_settlement_forms(socket, registration) do
+    actor = socket.assigns.current_user
 
-        {:error, _error} ->
-          assign(socket, :settlement_error, ~t"Booking not found.")
-      end
-
-    {:noreply, reload_course(socket)}
+    assign(socket,
+      payment_form: if(registration.to_collect?, do: PaymentActions.payment_form(registration, actor)),
+      refund_form: if(registration.refundable?, do: PaymentActions.refund_form(registration, actor))
+    )
   end
 
   defp booking(course, id), do: Enum.find(course.bookings, &(&1.id == id))
-
-  defp settlement_recorded(socket, id, kind, message) do
-    socket
-    |> put_flash(kind, message)
-    |> assign(settling_id: nil, settlement_error: nil)
-    |> update(:refund_params, &Map.delete(&1, id))
-    |> update(:payment_params, &Map.delete(&1, id))
-    |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-hide"})
-  end
 
   defp send_email(:payment_reminder, registration, edits, actor) do
     case Courses.send_registration_payment_reminder(registration, edits, actor: actor) do

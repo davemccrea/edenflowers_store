@@ -14,7 +14,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :keep_label, :string, required: true
   attr :form, :any, default: nil
   attr :payable, :any, default: nil, doc: "the order or booking, from `PaymentActions.load_for_cancel/1`"
-  attr :error, :string, default: nil
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
   attr :preview, Swoosh.Email, default: nil
@@ -22,7 +21,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   @doc """
   Cancels an order or a booking: the cancellation charge to keep, Jennie's
   reason for her records, and whether to email the customer, as she
-  rewrites it if she likes. Takes `PaymentActions.cancel_form/1`. Sends
+  rewrites it if she likes. Takes `PaymentActions.cancel_form/2`. Sends
   `validate_cancel` and `submit_cancel` with `cancel` params, and
   `close_cancel` when it closes.
   """
@@ -38,10 +37,11 @@ defmodule EdenflowersWeb.Admin.Drawers do
         class="flex min-h-0 flex-1 flex-col"
       >
         <.drawer_body>
-          <p :if={@error} role="alert" class="text-error text-sm">{@error}</p>
+          <.refusal form={@form} />
           <div :if={Decimal.positive?(@payable.total_due)} class="space-y-2">
             <.input
-              field={@form[:charge]}
+              field={@form[:cancellation_charge]}
+              value={@form.source.raw_params["cancellation_charge"]}
               type="text"
               inputmode="decimal"
               label={~t"Cancellation charge (€)"}
@@ -49,7 +49,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
             />
             <p class="text-base-content/75 text-sm">
               {~t"Paid #{paid = Edenflowers.Format.currency(Decimal.max(@payable.amount_held, 0), @locale)} of #{total = Edenflowers.Format.currency(Decimal.max(@payable.total_due, 0), @locale)}."}
-              <%= case cancel_outcome(@payable, @form[:charge].value) do %>
+              <%= case cancel_outcome(@payable, @form[:cancellation_charge].value) do %>
                 <% {:refund, amount} -> %>
                   {~t"#{amount = Edenflowers.Format.currency(amount, @locale)} will be refunded."}
                 <% {:collect, amount} -> %>
@@ -60,14 +60,14 @@ defmodule EdenflowersWeb.Admin.Drawers do
               <% end %>
             </p>
             <p
-              :if={match?({:refund, _}, cancel_outcome(@payable, @form[:charge].value))}
+              :if={match?({:refund, _}, cancel_outcome(@payable, @form[:cancellation_charge].value))}
               class="text-base-content/75 text-sm"
             >
               {~t"Card payments are refunded through Stripe, and anything paid in person you hand back yourself."}
             </p>
           </div>
           <.input
-            field={@form[:reason]}
+            field={@form[:cancellation_reason]}
             id="cancel-reason"
             type="textarea"
             rows="2"
@@ -77,7 +77,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           <.customer_email
             :if={@email}
             id="cancel-email"
-            send={@form[:email_customer]}
+            send={@form[:email_customer?]}
             label={~t"Email the customer"}
             form={@form}
             to={@email}
@@ -205,6 +205,59 @@ defmodule EdenflowersWeb.Admin.Drawers do
   def email_edits(%{"edit_email" => "true"} = params), do: %{subject: params["subject"], body: params["body"]}
   def email_edits(_params), do: %{}
 
+  @doc """
+  `email_edits/1` as an AshPhoenix form's `transform_params`: the action gets
+  the `subject` and `body` only while "Edit the email" is ticked, which stays
+  a param of the form alone.
+  """
+  def keep_email_edits(_form, %{"edit_email" => "true"} = params, _action), do: params
+  def keep_email_edits(_form, params, _action), do: Map.drop(params, ["subject", "body"])
+
+  attr :form, Phoenix.HTML.Form, required: true
+
+  @doc """
+  Why a drawer's action was refused, when none of its inputs shows it: an
+  error naming no field, or one the drawer has no input for, like a credit
+  note refused for its invoice's sake.
+  """
+  def refusal(assigns) do
+    assigns = assign(assigns, :message, refusal_message(assigns.form.source))
+
+    ~H"""
+    <p :if={@message} role="alert" class="text-error text-sm">{@message}</p>
+    """
+  end
+
+  defp refusal_message(%{errors: true} = form) do
+    shown = form |> AshPhoenix.Form.params() |> Map.keys()
+    errors = AshPhoenix.Form.errors(form)
+
+    cond do
+      message = Enum.find_value(errors, fn {field, message} -> to_string(field) not in shown && message end) ->
+        message
+
+      errors == [] ->
+        unformatted_message(AshPhoenix.Form.raw_errors(form))
+
+      true ->
+        nil
+    end
+  end
+
+  defp refusal_message(_form), do: nil
+
+  # A change's own `add_error(changeset, message)` names no fields, so AshPhoenix
+  # leaves it out of the form's errors. Anything else, like a database failure,
+  # has no words for Jennie.
+  defp unformatted_message([]), do: nil
+
+  defp unformatted_message(errors) do
+    Enum.find_value(errors, ~t"Something went wrong. Try again in a moment.", fn
+      %Ash.Error.Changes.InvalidChanges{message: message} when is_binary(message) -> message
+      _error -> nil
+    end)
+  end
+
   attr :email, Swoosh.Email, required: true
 
   def email_preview(assigns) do
@@ -287,7 +340,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
     doc: "an order or booking, with `balance` loaded"
 
   attr :locale, :string, required: true
-  attr :params, :map, default: %{}, doc: "the payment form as Jennie has filled it in so far"
+  attr :form, Phoenix.HTML.Form, required: true, doc: "from `PaymentActions.payment_form/3`"
   attr :receipt_email?, :boolean, default: false, doc: "whether the customer can be emailed a receipt"
   attr :preview, Swoosh.Email, default: nil
 
@@ -298,20 +351,12 @@ defmodule EdenflowersWeb.Admin.Drawers do
 
   """
   def record_payment_form(assigns) do
-    form =
-      %{
-        "payment_method" => "zettle",
-        "amount" => Decimal.to_string(assigns.record.balance, :normal),
-        "email_receipt" => "false"
-      }
-      |> Map.merge(assigns.params)
-      |> to_form(as: :payment)
-
-    assigns = assign(assigns, form: form, voucher?: form[:payment_method].value == "voucher")
+    assigns = assign(assigns, :voucher?, assigns.form.source.action == :pay_with_gift_voucher)
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="space-y-4">
       <input type="hidden" name="record_id" value={@record.id} />
+      <.refusal form={@form} />
       <div class="grid grid-cols-2 items-end gap-x-3 gap-y-4">
         <.input
           field={@form[:payment_method]}
@@ -325,6 +370,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
         <.input
           :if={not @voucher?}
           field={@form[:amount]}
+          value={@form.source.raw_params["amount"]}
           id={"#{@id}-amount"}
           type="text"
           inputmode="decimal"
@@ -349,7 +395,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
       <.customer_email
         :if={@receipt_email? and not @voucher?}
         id={"#{@id}-email"}
-        send={@form[:email_receipt]}
+        send={@form[:email_receipt?]}
         label={~t"Email the customer a receipt"}
         form={@form}
         preview={@preview}
@@ -394,7 +440,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
 
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
   attr :locale, :string, required: true
-  attr :params, :map, default: %{}, doc: "the form as Jennie has filled it in so far"
+  attr :form, Phoenix.HTML.Form, required: true, doc: "from `PaymentActions.refund_form/2`"
   attr :preview, Swoosh.Email, default: nil
 
   @doc """
@@ -405,17 +451,17 @@ defmodule EdenflowersWeb.Admin.Drawers do
   amount.
   """
   def refund_form(assigns) do
-    form = assigns.record |> refund_form_params(assigns.params) |> to_form(as: :refund)
-
     how_options = Enum.map(assigns.record.refund_methods, &{OrderLog.payment_method_label(&1), &1})
-    assigns = assign(assigns, form: form, how_options: how_options)
+    assigns = assign(assigns, :how_options, how_options)
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_refund" phx-submit="refund" class="space-y-4">
       <input type="hidden" name="record_id" value={@record.id} />
+      <.refusal form={@form} />
       <div class="grid grid-cols-2 items-end gap-x-3 gap-y-4">
         <.input
           field={@form[:amount]}
+          value={@form.source.raw_params["amount"]}
           id={"#{@id}-amount"}
           type="text"
           inputmode="decimal"
@@ -424,7 +470,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           class="input w-full tabular-nums"
         />
         <.input
-          field={@form[:how]}
+          field={@form[:payment_method]}
           id={"#{@id}-how"}
           type="select"
           label={~t"How"}
@@ -433,7 +479,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           options={@how_options}
         />
       </div>
-      <p :if={@form[:how].value != "stripe"} class="text-base-content/75 text-sm">
+      <p :if={to_string(@form[:payment_method].value) != "stripe"} class="text-base-content/75 text-sm">
         {~t"Records money you have already handed back."}
       </p>
       <.input
@@ -446,7 +492,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
       <.customer_email
         :if={@email}
         id={"#{@id}-email"}
-        send={@form[:email_customer]}
+        send={@form[:email_customer?]}
         label={~t"Email the customer"}
         form={@form}
         to={@email}
@@ -455,7 +501,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
       <.button
         type="submit"
         variant="primary"
-        data-confirm={refund_confirmation(@form[:amount].value, @form[:how].value, @locale)}
+        data-confirm={refund_confirmation(@form[:amount].value, @form[:payment_method].value, @locale)}
       >
         {~t"Refund"}
       </.button>
@@ -463,27 +509,12 @@ defmodule EdenflowersWeb.Admin.Drawers do
     """
   end
 
-  @doc "The Refund form's effective values, shared with its email preview."
-  def refund_form_params(record, params) do
-    owed_back = Decimal.max(Decimal.negate(record.balance), 0)
-
-    Map.merge(
-      %{
-        "how" => to_string(record.default_refund_method),
-        "amount" => if(Decimal.positive?(owed_back), do: Decimal.to_string(owed_back, :normal), else: ""),
-        "note" => "",
-        "email_customer" => "true"
-      },
-      params
-    )
-  end
-
   defp refund_confirmation(amount, how, locale) do
     with {:ok, %Decimal{} = amount} <- Ash.Type.cast_input(Edenflowers.Types.Price, amount),
          true <- Decimal.positive?(amount) do
       amount = Edenflowers.Format.currency(amount, locale)
 
-      if how == "stripe",
+      if to_string(how) == "stripe",
         do: ~t"Refund #{amount} to the customer's card with Stripe?",
         else: ~t"Record #{amount} handed back to the customer?"
     else

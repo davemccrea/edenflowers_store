@@ -582,6 +582,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
                 phx-submit="credit"
                 class="mt-4 space-y-4"
               >
+                <.refusal form={@credit_form} />
                 <p class="text-base-content/75 text-sm">
                   {~t"A full credit note reverses this unpaid invoice and its VAT."}
                 </p>
@@ -710,7 +711,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
          EmailDrawer.validate(socket, params, email_record(socket.assigns.email_kind, socket.assigns.invoice))}
 
   def handle_event("validate_credit", %{"credit" => params}, socket),
-    do: {:noreply, assign(socket, credit_form: to_form(params, as: :credit), error: nil)}
+    do: {:noreply, assign(socket, :credit_form, AshPhoenix.Form.validate(socket.assigns.credit_form, params))}
 
   def handle_event("add_line", _params, socket) do
     params = empty_line(socket.assigns.tax_rates)
@@ -825,15 +826,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       )
 
   def handle_event("credit", %{"credit" => params}, socket) do
-    socket = assign(socket, credit_form: to_form(params, as: :credit))
-
-    finish(
-      socket,
-      Payments.cancel_invoice(params |> Map.take(["reason"]) |> Map.put("invoice_id", socket.assigns.invoice.id),
-        actor: socket.assigns.current_user
-      ),
-      ~t"Credit note issued."
-    )
+    case AshPhoenix.Form.submit(socket.assigns.credit_form, params: params) do
+      {:ok, _credit_note} -> finish(socket, {:ok, nil}, ~t"Credit note issued.")
+      {:error, form} -> {:noreply, assign(socket, :credit_form, form)}
+    end
   end
 
   attr :label, :string, required: true
@@ -874,12 +870,19 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   defp finish(socket, {:ok, _}, message), do: {:noreply, socket |> refresh() |> put_flash(:info, message)}
 
-  defp finish(socket, {:error, _error}, _),
-    do:
-      {:noreply,
-       assign(socket,
-         error: ~t"Check the entered values and try again."
-       )}
+  # Undoing a payment is a button, so its refusal goes in the page's error line.
+  defp finish(socket, {:error, error}, _) do
+    message =
+      error
+      |> Ash.Error.to_error_class()
+      |> Map.get(:errors, [])
+      |> Enum.find_value(~t"Could not undo the payment.", fn
+        %{message: message} when is_binary(message) -> message
+        _error -> nil
+      end)
+
+    {:noreply, assign(socket, :error, message)}
+  end
 
   defp refresh(socket),
     do:
@@ -899,7 +902,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       email_form: nil,
       email_kind: nil,
       preview: nil,
-      credit_form: to_form(%{"reason" => ""}, as: :credit),
+      credit_form: credit_form(invoice, socket.assigns.current_user),
       submitted: false,
       issue_attempted: false,
       payment_form: payment_form(invoice, socket.assigns.current_user)
@@ -1006,6 +1009,18 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     if current in [nil, ""] or Enum.any?(options, fn {_label, value} -> value == current end),
       do: options,
       else: options ++ [{"#{current}%", current}]
+  end
+
+  # Only the reason comes from the page; the credit note is emailed from the email drawer, after its preview.
+  defp credit_form(invoice, actor) do
+    Edenflowers.Payments.CreditNote
+    |> AshPhoenix.Form.for_create(:create,
+      as: "credit",
+      actor: actor,
+      prepare_source: &Ash.Changeset.change_attribute(&1, :invoice_id, invoice.id),
+      transform_params: fn _form, params, _action -> Map.take(params, ["reason"]) end
+    )
+    |> to_form()
   end
 
   defp payment_form(invoice, actor) do
