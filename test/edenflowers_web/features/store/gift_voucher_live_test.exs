@@ -47,6 +47,22 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
     assert_push_event(view, "stripe:process_payment", %{client_secret: "pi_secret"})
   end
 
+  test "previews the voucher as it's filled in, and offers Christmas only while Jennie does", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/en/gift-voucher")
+    render_async(view)
+    assert has_element?(view, "img[data-testid=voucher-preview]")
+    refute has_element?(view, "input[name='form[voucher_style]'][value=christmas]")
+
+    calendar = Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
+    Edenflowers.Fulfillment.set_christmas_vouchers_online!(calendar, true, authorize?: false)
+
+    {:ok, view, _html} = live(conn, "/en/gift-voucher")
+    view |> form("#gift-voucher-form", form: Map.put(@details, "voucher_style", "christmas")) |> render_submit()
+
+    [%{id: id}] = Ash.read!(Order, authorize?: false)
+    assert sale(id).voucher_style == :christmas
+  end
+
   test "asks who the voucher is for before taking payment", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/en/gift-voucher")
 

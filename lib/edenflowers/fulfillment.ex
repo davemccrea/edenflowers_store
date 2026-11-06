@@ -42,6 +42,7 @@ defmodule Edenflowers.Fulfillment do
     resource Edenflowers.Fulfillment.ShopCalendar do
       define :get_shop_calendar, action: :get
       define :update_same_day, action: :update_same_day
+      define :set_christmas_vouchers_online, action: :set_christmas_vouchers_online, args: [:christmas_vouchers_online]
       define :toggle_date, action: :toggle_date, args: [:date]
       define :set_weekday, action: :set_weekday, args: [:weekday, :direction]
       define :set_week, action: :set_week, args: [:week, :today, :direction]

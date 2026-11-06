@@ -54,6 +54,13 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
       accept [:same_day, :order_deadline]
     end
 
+    update :set_christmas_vouchers_online do
+      description "Offers the Christmas Gift voucher style to customers online, or stops offering it. Jennie " <>
+                    "can sell one in the shop either way."
+
+      accept [:christmas_vouchers_online]
+    end
+
     update :toggle_date do
       description "Toggle a single date on or off, mutating enabled_dates / disabled_dates per the click semantics " <>
                     "in Changes.ToggleDate."
@@ -141,6 +148,15 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
       description "The time of day, Helsinki local time, after which today can no longer be chosen. " <>
                     "Required while `same_day` is on."
 
+      public? true
+    end
+
+    attribute :christmas_vouchers_online, :boolean do
+      description "Whether customers can choose the Christmas style for a Gift voucher they buy online. Not a " <>
+                    "calendar rule, but the calendar is the shop's one settings row."
+
+      allow_nil? false
+      default false
       public? true
     end
 

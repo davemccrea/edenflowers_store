@@ -51,6 +51,16 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
     )
   end
 
+  defp christmas_sale_details do
+    %{
+      customer_name: "A",
+      customer_email: "a@example.com",
+      recipient_name: "M",
+      voucher_locale: "sv-FI",
+      voucher_style: :christmas
+    }
+  end
+
   defp voucher(order) do
     [%{gift_voucher: voucher}] = order.line_items
     Ash.load!(voucher, [:remaining, :spendable?], authorize?: false, reuse_values?: false)
@@ -157,6 +167,24 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
                  recipient_name: "M",
                  voucher_locale: "sv-FI"
                })
+    end
+
+    test "the voucher prints in the style the buyer chose, cream unless they chose another" do
+      cream = Ash.load!(voucher(buy(50)), [line_item: :order], authorize?: false)
+      green = Ash.load!(voucher(buy(50, %{voucher_style: :green})), [line_item: :order], authorize?: false)
+
+      assert %{style: :cream} = GiftVoucherPdf.build_payload(cream)
+      assert %{style: :green} = GiftVoucherPdf.build_payload(green)
+    end
+
+    test "customers can choose the Christmas style only while Jennie offers it" do
+      assert {:error, _} = Orders.start_gift_voucher_sale(50, christmas_sale_details(), actor: nil)
+
+      calendar = Edenflowers.Fulfillment.get_shop_calendar!(authorize?: false)
+      Edenflowers.Fulfillment.set_christmas_vouchers_online!(calendar, true, authorize?: false)
+
+      assert {:ok, %{voucher_style: :christmas}} =
+               Orders.start_gift_voucher_sale(50, christmas_sale_details(), actor: nil)
     end
 
     test "going back changes the amount on the same sale" do

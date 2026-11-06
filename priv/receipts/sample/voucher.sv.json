@@ -2,17 +2,19 @@
   "lang": "sv",
   "labels": {
     "gift-voucher": "Presentkort",
-    "for": "Till",
+    "to": "Till",
     "code": "Kod",
     "valid-until": "Giltigt till",
     "how-to-use": "Använd det till blommor, prenumerationer och kurser: ange koden i kassan på edenflowers.fi eller visa den i butiken.",
-    "terms": "Giltigt i ett år. Det som inte används finns kvar på koden, och presentkortet kan inte bytas mot kontanter."
+    "terms": "Giltigt i ett år. Det som inte används finns kvar på koden, och presentkortet kan inte bytas mot kontanter.",
+    "christmas-greeting": "God Jul"
   },
   "seller": {
     "name": "Eden Flowers",
     "business_id": "1234567-8",
     "address": "Myrvägen 1, 65230 Vasa"
   },
+  "style": "cream",
   "amount": "50 €",
   "code": "4829 0617 5331 8407",
   "expires_on": "5.11.2027",

@@ -402,6 +402,11 @@ defmodule Edenflowers.Orders.Order do
     # whoever receives it. Nil on any other order.
     attribute :voucher_locale, :string
 
+    attribute :voucher_style, Edenflowers.Payments.GiftVoucherStyle do
+      description "How a Gift voucher sale's PDF looks, chosen with it. Nil on any other order, and on sales " <>
+                    "made before there was a choice, which print in cream."
+    end
+
     # Jennie's own working note. Never shown to the customer.
     attribute :florist_note, :string
 

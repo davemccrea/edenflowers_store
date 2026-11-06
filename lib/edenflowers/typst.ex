@@ -7,23 +7,28 @@ defmodule Edenflowers.Typst do
 
   @typst_bin "typst"
 
-  @doc "Compiles `entry` (a .typ file in priv/receipts) with `payload` as JSON in the input named `input`."
-  def render(entry, input, payload) do
+  @doc """
+  Compiles `entry` (a .typ file in priv/receipts) with `payload` as JSON in the input named `input`.
+  A PDF unless `format: "png"`, which renders the first page at `ppi` (default 96).
+  """
+  def render(entry, input, payload, opts \\ []) do
+    format = Keyword.get(opts, :format, "pdf")
     dir = Path.join(:code.priv_dir(:edenflowers), "receipts")
 
-    args = [
-      "compile",
-      Path.join(dir, entry),
-      "-",
-      "--format",
-      "pdf",
-      "--font-path",
-      Path.join(dir, "fonts"),
-      "--package-path",
-      Path.join(dir, "packages"),
-      "--input",
-      input <> "=" <> Jason.encode!(payload)
-    ]
+    args =
+      [
+        "compile",
+        Path.join(dir, entry),
+        "-",
+        "--format",
+        format,
+        "--font-path",
+        Path.join(dir, "fonts"),
+        "--package-path",
+        Path.join(dir, "packages"),
+        "--input",
+        input <> "=" <> Jason.encode!(payload)
+      ] ++ if(format == "png", do: ["--pages", "1", "--ppi", to_string(Keyword.get(opts, :ppi, 96))], else: [])
 
     # Keep stderr separate: merging it would corrupt the PDF bytes on stdout.
     case System.cmd(@typst_bin, args) do

@@ -17,7 +17,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
       Order
       |> AshPhoenix.Form.for_create(:sell_gift_voucher,
         actor: socket.assigns.current_user,
-        params: %{"locale" => "sv-FI"}
+        params: %{"locale" => "sv-FI", "voucher_style" => "cream"}
       )
       |> to_form()
 
@@ -63,6 +63,14 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 label={~t"Language"}
                 help={~t"Of the voucher and its emails."}
                 options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
+                class="select w-full"
+              />
+              <.input
+                field={@form[:voucher_style]}
+                type="select"
+                label={~t"Style"}
+                help={~t"Of the voucher PDF."}
+                options={[{~t"Cream", "cream"}, {~t"Green", "green"}, {~t"Christmas", "christmas"}]}
                 class="select w-full"
               />
               <div class="sm:col-span-2">

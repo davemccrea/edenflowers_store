@@ -5,11 +5,13 @@
 //
 // Local preview falls back to a fixture. Override via `--input fixture=…`:
 //   sv | fi | en          (default sv)
+// and its style via `--input style=cream|green|christmas`.
 #let data = if "voucher" in sys.inputs {
   json(bytes(sys.inputs.voucher))
 } else {
   let fixture = sys.inputs.at("fixture", default: "sv")
-  json("sample/voucher." + fixture + ".json")
+  let sample = json("sample/voucher." + fixture + ".json")
+  sample + (style: sys.inputs.at("style", default: sample.style))
 }
 
 #voucher(data)

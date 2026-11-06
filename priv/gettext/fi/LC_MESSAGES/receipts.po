@@ -315,7 +315,7 @@ msgstr "Tilaus #%{number}"
 
 #: lib/edenflowers/orders/receipt_labels.ex:44
 #: lib/edenflowers/orders/receipt_labels.ex:45
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:41
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:70
 #, elixir-autogen, elixir-format
 msgid "Gift voucher"
 msgstr "Lahjakortti"
@@ -325,29 +325,28 @@ msgstr "Lahjakortti"
 msgid "A gift voucher is not subject to VAT. VAT is charged on what it's spent on."
 msgstr "Lahjakortti ei ole arvonlisäverollinen. Arvonlisävero peritään siitä, mihin lahjakortti käytetään."
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:44
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:73
 #, elixir-autogen, elixir-format
 msgid "Code"
 msgstr "Koodi"
 
 #: lib/edenflowers/orders/receipt_labels.ex:48
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:43
 #, elixir-autogen, elixir-format
 msgid "For"
 msgstr "Kenelle"
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:47
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:78
 #, elixir-autogen, elixir-format
 msgid "Spend it on flowers, subscriptions and courses: enter the code at checkout on edenflowers.fi, or show it in the shop."
 msgstr "Käytä se kukkiin, tilauksiin ja kursseihin: syötä koodi kassalla osoitteessa edenflowers.fi tai näytä se myymälässä."
 
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:52
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:83
 #, elixir-autogen, elixir-format
 msgid "Valid for one year. What you don't spend stays on the code, and it can't be exchanged for cash."
 msgstr "Voimassa vuoden. Käyttämättä jäänyt summa säilyy koodilla, eikä lahjakorttia voi vaihtaa rahaksi."
 
 #: lib/edenflowers/orders/receipt_labels.ex:46
-#: lib/edenflowers/payments/gift_voucher_pdf.ex:45
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:74
 #, elixir-autogen, elixir-format
 msgid "Valid until"
 msgstr "Voimassa"
@@ -366,3 +365,13 @@ msgstr "Kortti noudettavissa Minimossenista"
 #, elixir-autogen, elixir-format
 msgid "Message on the voucher"
 msgstr "Tervehdys lahjakortissa"
+
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:76
+#, elixir-autogen, elixir-format
+msgid "Merry Christmas"
+msgstr "Hyvää joulua"
+
+#: lib/edenflowers/payments/gift_voucher_pdf.ex:72
+#, elixir-autogen, elixir-format
+msgid "To"
+msgstr "Kenelle"
