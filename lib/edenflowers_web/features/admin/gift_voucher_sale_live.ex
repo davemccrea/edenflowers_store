@@ -46,56 +46,6 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
           phx-submit="save"
           class="max-w-2xl space-y-6"
         >
-          <.form_section title={~t"Buyer"}>
-            <.customer_picker field={@form[:customer_id]} empty?={@customer_search_empty?} focus="customer_focus" />
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div class="sm:col-span-2">
-                <.input
-                  field={@form[:customer_name]}
-                  type="text"
-                  label={~t"Name"}
-                  class="input w-full"
-                  autocapitalize="words"
-                />
-              </div>
-              <.input
-                field={@form[:customer_phone_number]}
-                type="tel"
-                label={~t"Phone"}
-                class="input w-full"
-                autocomplete="off"
-              />
-              <.input
-                field={@form[:customer_email]}
-                type="email"
-                label={~t"Email"}
-                help={~t"A phone or an email is needed."}
-                class="input w-full"
-                autocomplete="off"
-              />
-            </div>
-          </.form_section>
-
-          <.form_section title={~t"Recipient"}>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <.input
-                field={@form[:recipient_name]}
-                type="text"
-                label={~t"Full name"}
-                help={~t"Printed on the voucher. Leave blank if the buyer doesn't say."}
-                class="input w-full"
-                autocapitalize="words"
-              />
-              <.input
-                field={@form[:recipient_email]}
-                type="email"
-                label={~t"Email"}
-                class="input w-full"
-                autocomplete="off"
-              />
-            </div>
-          </.form_section>
-
           <.form_section title={~t"Voucher"}>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <.input
@@ -122,7 +72,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                   type="textarea"
                   rows="3"
                   label={~t"Message"}
-                  help={~t"Printed on the emailed voucher. Write the gift card's message by hand."}
+                  help={~t"Printed on the emailed voucher."}
                   maxlength={Edenflowers.Orders.Order.Checkout.voucher_message_length()}
                   class="textarea w-full"
                 />
@@ -130,23 +80,69 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
             </div>
           </.form_section>
 
-          <.form_section title={~t"Send the voucher PDF to"}>
-            <p :if={blank?(@form[:customer_email]) and blank?(@form[:recipient_email])} class="text-base-content/75 text-sm">
-              {~t"Enter the buyer's or the recipient's email to send it."}
-            </p>
-            <div class="space-y-2">
+          <.form_section title={~t"Buyer"}>
+            <.customer_picker field={@form[:customer_id]} empty?={@customer_search_empty?} focus="customer_focus" />
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="sm:col-span-2">
+                <.input
+                  field={@form[:customer_name]}
+                  type="text"
+                  label={~t"Name"}
+                  class="input w-full"
+                  autocapitalize="words"
+                />
+              </div>
               <.input
-                :if={not blank?(@form[:customer_email])}
-                field={@form[:email_buyer?]}
-                type="checkbox"
-                label={~t"The buyer, with the receipt"}
+                field={@form[:customer_phone_number]}
+                type="tel"
+                label={~t"Phone"}
+                class="input w-full"
+                autocomplete="off"
               />
+              <div class="space-y-2">
+                <.input
+                  field={@form[:customer_email]}
+                  type="email"
+                  label={~t"Email"}
+                  help={~t"A phone or an email is needed."}
+                  class="input w-full"
+                  autocomplete="off"
+                />
+                <.input
+                  :if={not blank?(@form[:customer_email])}
+                  field={@form[:email_buyer?]}
+                  type="checkbox"
+                  label={~t"Email the voucher with the receipt"}
+                />
+              </div>
+            </div>
+          </.form_section>
+
+          <.form_section title={~t"Recipient"}>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <.input
-                :if={not blank?(@form[:recipient_email])}
-                field={@form[:email_recipient?]}
-                type="checkbox"
-                label={~t"The recipient, as a gift from the buyer"}
+                field={@form[:recipient_name]}
+                type="text"
+                label={~t"Full name"}
+                help={~t"Printed on the voucher. Leave blank if the buyer doesn't say."}
+                class="input w-full"
+                autocapitalize="words"
               />
+              <div class="space-y-2">
+                <.input
+                  field={@form[:recipient_email]}
+                  type="email"
+                  label={~t"Email"}
+                  class="input w-full"
+                  autocomplete="off"
+                />
+                <.input
+                  :if={not blank?(@form[:recipient_email])}
+                  field={@form[:email_recipient?]}
+                  type="checkbox"
+                  label={~t"Email the voucher as a gift"}
+                />
+              </div>
             </div>
           </.form_section>
 
