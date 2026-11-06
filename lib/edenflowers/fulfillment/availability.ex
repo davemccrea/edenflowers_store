@@ -18,6 +18,7 @@ defmodule Edenflowers.Fulfillment.Availability do
           | :weekday_disabled
           | :same_day_delivery_disabled
           | :order_deadline_passed
+          | :before_available_from
 
   @type customer_cell_state :: :open | :closed | :past
 
@@ -27,15 +28,17 @@ defmodule Edenflowers.Fulfillment.Availability do
   The booking rule. Returns `nil` when `calendar` can be fulfilled on `date`,
   otherwise the reason it's blocked. `now` must be a Helsinki-zoned `DateTime`:
   the same-day deadline compares wall-clock time against `order_deadline`,
-  which is stored in Helsinki local time.
+  which is stored in Helsinki local time. `available_from` is an order's
+  Available from, the first day its flowers let Jennie make it, or nil.
   """
-  @spec unavailable_reason(ShopCalendar.t(), Date.t(), DateTime.t()) :: unavailable_reason() | nil
+  @spec unavailable_reason(ShopCalendar.t(), Date.t(), DateTime.t(), Date.t() | nil) :: unavailable_reason() | nil
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-  def unavailable_reason(%ShopCalendar{} = calendar, %Date{} = date, %DateTime{} = now) do
+  def unavailable_reason(%ShopCalendar{} = calendar, %Date{} = date, %DateTime{} = now, available_from \\ nil) do
     today? = Date.compare(date, now) == :eq
 
     cond do
       Date.compare(date, now) == :lt -> :past
+      available_from && Date.compare(date, available_from) == :lt -> :before_available_from
       date in calendar.disabled_dates -> :date_disabled
       date not in calendar.enabled_dates and Weekday.from_date(date) not in calendar.available_days -> :weekday_disabled
       today? and not calendar.same_day -> :same_day_delivery_disabled
@@ -92,14 +95,20 @@ defmodule Edenflowers.Fulfillment.Availability do
 
   @doc """
   Cell state for the customer checkout calendar. A customer can't act on *why*
-  a date is unavailable, so every blocked weekday or date reads as `:closed`,
-  and a today that's past its deadline collapses to `:past`.
+  a date is unavailable, so every blocked weekday or date, and every day before
+  the order's `available_from`, reads as `:closed`, and a today that's past its
+  deadline collapses to `:past`.
   """
-  @spec customer_cell_state(ShopCalendar.t(), Date.t(), DateTime.t()) :: customer_cell_state()
-  def customer_cell_state(%ShopCalendar{} = calendar, %Date{} = date, now \\ Edenflowers.ShopTime.now()) do
-    case unavailable_reason(calendar, date, now) do
+  @spec customer_cell_state(ShopCalendar.t(), Date.t(), DateTime.t(), Date.t() | nil) :: customer_cell_state()
+  def customer_cell_state(
+        %ShopCalendar{} = calendar,
+        %Date{} = date,
+        now \\ Edenflowers.ShopTime.now(),
+        available_from \\ nil
+      ) do
+    case unavailable_reason(calendar, date, now, available_from) do
       nil -> :open
-      reason when reason in [:date_disabled, :weekday_disabled] -> :closed
+      reason when reason in [:date_disabled, :weekday_disabled, :before_available_from] -> :closed
       _past_or_same_day -> :past
     end
   end

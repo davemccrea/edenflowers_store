@@ -28,6 +28,32 @@ defmodule EdenflowersWeb.Store.StoreLiveTest do
     refute has_element?(view, "a[href='/en/product/#{partly.slug}'] [data-testid=sold-out]")
   end
 
+  test "marks a product waiting for flowers with when it's available, not sold out", %{conn: conn} do
+    category = generate(product_category(slug: "bouquets", visibility: :public))
+
+    waiting =
+      generate(
+        product(
+          product_category_id: category.id,
+          draft: false,
+          available_from: Date.add(Edenflowers.ShopTime.today(), 2)
+        )
+      )
+
+    generate(product_variant(product_id: waiting.id))
+
+    ready =
+      generate(product(product_category_id: category.id, draft: false, available_from: Edenflowers.ShopTime.today()))
+
+    generate(product_variant(product_id: ready.id))
+
+    {:ok, view, _html} = live(conn, ~p"/en/store/bouquets")
+
+    assert has_element?(view, "a[href='/en/product/#{waiting.slug}'] [data-testid=available-from]")
+    refute has_element?(view, "a[href='/en/product/#{waiting.slug}'] [data-testid=sold-out]")
+    refute has_element?(view, "a[href='/en/product/#{ready.slug}'] [data-testid=available-from]")
+  end
+
   test "/store opens on bouquets", %{conn: conn} do
     generate(product_category(slug: "bouquets", visibility: :public))
 

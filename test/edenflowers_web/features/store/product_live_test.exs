@@ -53,6 +53,18 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     assert has_element?(view, "[data-testid=add-to-cart-button]:not([disabled])", "Add to cart")
   end
 
+  test "a product waiting for flowers can still be added, and says when it's available", %{conn: conn, order: order} do
+    product = generate(product(draft: false, available_from: Date.add(Edenflowers.ShopTime.today(), 2)))
+    generate(product_variant(product_id: product.id, size: :medium))
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
+
+    assert has_element?(view, "[data-testid=available-from]", "Available from")
+    view |> form("[data-testid=product-form]") |> render_submit()
+
+    assert [%LineItem{}] = line_items(order)
+  end
+
   test "shows the chosen size's height and stems, leaving out what's not filled in", %{conn: conn} do
     flowers = generate(product_category(product_type: :flowers))
     product = generate(product(draft: false, product_category_id: flowers.id))

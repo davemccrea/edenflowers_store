@@ -53,7 +53,7 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
           id="products-table"
           resource={Product}
           actor={@current_user}
-          query_opts={[load: [:cheapest_price, :product_category, :product_variants]]}
+          query_opts={[load: [:cheapest_price, :product_category, :product_variants, :waiting_until]]}
           search={[
             label: ~t"Search",
             placeholder: ~t"Search name…",
@@ -90,12 +90,16 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
             <.badge :if={is_nil(product.cheapest_price)} tone={:warning}>{~t"No sizes"}</.badge>
           </:col>
           <:col :let={product} label={~t"Stock"} class="max-sm:hidden">
-            <div :if={tracked_sizes(product) != []} class="flex flex-wrap gap-1">
-              <.badge :for={size <- tracked_sizes(product)} tone={(size.stock_quantity == 0 && :warning) || :tag}>
-                {stock_label(size)}
-              </.badge>
-            </div>
-            <.blank :if={tracked_sizes(product) == []} />
+            <%= if tracked_sizes(product) != [] || product.waiting_until do %>
+              <div class="flex flex-wrap gap-1">
+                <.badge :if={product.waiting_until} tone={:warning}>{Format.available_from(product.waiting_until)}</.badge>
+                <.badge :for={size <- tracked_sizes(product)} tone={(size.stock_quantity == 0 && :warning) || :tag}>
+                  {stock_label(size)}
+                </.badge>
+              </div>
+            <% else %>
+              <.blank />
+            <% end %>
           </:col>
           <:col
             :let={product}

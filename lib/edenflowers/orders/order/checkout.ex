@@ -46,7 +46,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
     :stripe_amount,
     :card_needed?,
     :accepts_gift_voucher?,
-    line_items: [:total, :product_slug]
+    :available_from,
+    line_items: [:total, :product_slug, :available_from]
   ]
 
   @storefront_load [:total_items_in_cart, :add_ons_only?, :promotion_applied?, line_items: [:product_slug]]

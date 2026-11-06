@@ -340,9 +340,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                             {~t"Pickup date *"}
                           <% end %>
                         </legend>
+                        <p
+                          :if={@order.available_from}
+                          class="text-base-content/80 mb-2 text-sm"
+                          data-testid="available-from"
+                        >
+                          {available_from_note(@order)}
+                        </p>
                         <div class="sm:max-w-md">
                           <.store_calendar
                             id="calendar"
+                            available_from={@order.available_from}
                             error={
                               @selected_date_unavailable? or
                                 (Phoenix.Component.used_input?(@form[:fulfillment_date]) and
@@ -630,7 +638,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # A day that isn't open is still clickable, only marked aria-disabled.
   def handle_event("select-date", %{"date" => date}, socket) do
     with {:ok, date} <- Date.from_iso8601(date),
-         :open <- Availability.customer_cell_state(socket.assigns.shop_calendar, date) do
+         :open <-
+           Availability.customer_cell_state(
+             socket.assigns.shop_calendar,
+             date,
+             Edenflowers.ShopTime.now(),
+             socket.assigns.order.available_from
+           ) do
       form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "fulfillment_date", Date.to_iso8601(date)))
       {:noreply, assign(socket, form: form)}
     else
@@ -1003,6 +1017,13 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp has_card?(order), do: Enum.any?(order.line_items, & &1.is_card)
 
+  defp available_from_note(order) do
+    product = Enum.find_value(order.line_items, &(&1.available_from == order.available_from && &1.product_name))
+    date = Edenflowers.Format.weekday_day_month(order.available_from, Edenflowers.Format.locale())
+    gettext_comment("%{date} is like \"Monday 9.11.\" and already ends in a period, so add none after it.")
+    ~t"#{product} is available from #{date}"
+  end
+
   attr :fee, :any, required: true
   attr :distance, :integer, default: nil
   attr :locale, :string, required: true
@@ -1194,8 +1215,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     selected = if form, do: form[:fulfillment_date].value, else: order.fulfillment_date
 
     case Date.from_iso8601(to_string(selected)) do
-      {:ok, date} -> Availability.customer_cell_state(calendar, date) != :open
-      {:error, _} -> false
+      {:ok, date} ->
+        Availability.customer_cell_state(calendar, date, Edenflowers.ShopTime.now(), order.available_from) != :open
+
+      {:error, _} ->
+        false
     end
   end
 

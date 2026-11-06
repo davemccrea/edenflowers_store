@@ -102,6 +102,12 @@ defmodule Edenflowers.Fulfillment.AvailabilityTest do
       now = DateTime.from_naive!(~N[2024-04-02 15:00:00], "Europe/Helsinki")
       assert :past == Availability.customer_cell_state(calendar, ~D[2024-04-02], now)
     end
+
+    test ":closed before the order's Available from, :open from that day" do
+      now = DateTime.from_naive!(~N[2024-04-02 09:00:00], "Europe/Helsinki")
+      assert :closed == Availability.customer_cell_state(%ShopCalendar{}, ~D[2024-04-04], now, ~D[2024-04-05])
+      assert :open == Availability.customer_cell_state(%ShopCalendar{}, ~D[2024-04-05], now, ~D[2024-04-05])
+    end
   end
 
   describe "admin_cell_state/3" do

@@ -229,6 +229,11 @@ defmodule Edenflowers.Orders.LineItem do
       description "Where the cart links the line to: its product's current slug. Nil for a custom item."
     end
 
+    calculate :available_from, :date, expr(product.waiting_until) do
+      description "Its product's Available from while that day is still ahead, else nil. Checkout names the line " <>
+                    "that holds back the order's fulfillment date."
+    end
+
     calculate :promotion_applied?, :boolean, expr(order.promotion_applied?) do
       description "Whether its order's promotion code currently applies, so the line is discounted."
     end

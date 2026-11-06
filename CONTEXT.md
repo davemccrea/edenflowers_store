@@ -48,6 +48,10 @@ _Avoid_: Extra, upsell, accessory
 How many of a size are on the shelf and not yet promised to a placed order. Only some sizes have stock, like a batch of wreaths or bought-in chocolates; the rest are made to order and never run out. A placed order takes its stock, and cancelling puts it back. Subscriptions never take stock, as their bouquets are made fresh.
 _Avoid_: Inventory, quantity on hand
 
+**Available from**:
+The first day Jennie can make a product again once she has run out of its flowers, usually after the next flower delivery in 1-4 days. It never makes a product sold out: customers still order it, for that day or later, and an order waits for its latest Available from. Custom Orders and Occurrences aren't held to it. It stops applying once the day comes. Stock at 0 is still Sold out.
+_Avoid_: Sold out, out of stock, back in stock, restock date (for bouquets, which have no Stock)
+
 ### Subscriptions
 
 **Subscription**:

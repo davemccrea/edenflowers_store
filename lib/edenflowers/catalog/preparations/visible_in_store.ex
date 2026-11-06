@@ -2,7 +2,7 @@ defmodule Edenflowers.Catalog.Preparations.VisibleInStore do
   @moduledoc """
   Limits storefront reads to published products in public categories with at
   least one active variant. Sold-out products still appear and are marked by
-  the loaded `sold_out?` calculation.
+  the loaded `sold_out?` calculation, and ones waiting for flowers by `waiting_until`.
   """
 
   use Ash.Resource.Preparation
@@ -16,6 +16,13 @@ defmodule Edenflowers.Catalog.Preparations.VisibleInStore do
         exists(product_variants) and
         product_category.visibility == :public
     )
-    |> Ash.Query.load([:main_photo_slug, :cheapest_price, :sold_out?, :product_variants, :product_category])
+    |> Ash.Query.load([
+      :main_photo_slug,
+      :cheapest_price,
+      :sold_out?,
+      :waiting_until,
+      :product_variants,
+      :product_category
+    ])
   end
 end

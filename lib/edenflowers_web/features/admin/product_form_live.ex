@@ -77,6 +77,11 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
             <:status :if={@form.source.type == :update && @form.source.data.sold_out?}>
               <.badge tone={:warning}>{~t"Sold out"}</.badge>
             </:status>
+            <:status :if={@form.source.type == :update && @form.source.data.waiting_until && !@form.source.data.sold_out?}>
+              <.badge tone={:warning}>
+                {Edenflowers.Format.available_from(@form.source.data.waiting_until)}
+              </.badge>
+            </:status>
             <:actions>
               <.live_toggle
                 field={@form[:draft]}
@@ -140,19 +145,18 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     />
                   </.inputs_for>
                 </ul>
-                <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <div class="mt-3">
                   <.button type="button" phx-click="add_variant" variant="secondary" size="sm">
                     <.icon name="hero-plus" class="h-4 w-4" /> {~t"Add size"}
                   </.button>
-                  <.button
-                    type="button"
-                    phx-click="mark_sold_out"
-                    variant="secondary"
-                    size="sm"
-                    data-testid="mark-sold-out"
-                  >
-                    {~t"Sold out"}
-                  </.button>
+                </div>
+                <div class="mt-6 sm:max-w-xs">
+                  <.input
+                    field={@form[:available_from]}
+                    type="date"
+                    label={~t"Available from"}
+                    class="input w-full"
+                  />
                 </div>
               </.form_section>
             </div>
@@ -546,21 +550,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   def handle_event("make_main_photo", %{"slug" => slug}, socket),
     do: {:noreply, update_photos(socket, &[slug | List.delete(&1, slug)])}
 
-  # Fills each size's stock with 0; nothing is saved until Jennie saves.
-  def handle_event("mark_sold_out", _params, socket) do
-    form = socket.assigns.form
-    params = form.source.params
-
-    sizes =
-      for size <- form.source.forms[:product_variants] || [], into: %{} do
-        key = size.name |> String.split(["[", "]"], trim: true) |> List.last()
-        {key, Map.put(params["product_variants"][key] || %{}, "stock_quantity", "0")}
-      end
-
-    params = Map.put(params, "product_variants", Map.merge(params["product_variants"] || %{}, sizes))
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
-  end
-
   def handle_event("add_variant", _params, socket) do
     {:noreply, update(socket, :form, &AshPhoenix.Form.add_form(&1, "form[product_variants]"))}
   end
@@ -611,7 +600,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   end
 
   defp load_form(%{"id" => id}, actor) do
-    case Ash.get(Product, id, actor: actor, load: [:product_variants, :sold_out?]) do
+    case Ash.get(Product, id, actor: actor, load: [:product_variants, :sold_out?, :waiting_until]) do
       {:ok, product} ->
         form = AshPhoenix.Form.for_update(product, :update, actor: actor) |> TranslationFields.add_forms()
         {:ok, product.name, to_form(form)}

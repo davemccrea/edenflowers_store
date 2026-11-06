@@ -125,6 +125,10 @@ defmodule Edenflowers.Format do
   @spec weekday_day_month(Date.t(), Localize.Locale.locale_id()) :: String.t()
   def weekday_day_month(date, locale), do: Localize.Date.to_string!(date, locale: locale, format: "cccc d.M.")
 
+  @doc ~s(A product's Available from as a label, e.g. "Available from Monday 9.11.".)
+  @spec available_from(Date.t(), Localize.Locale.locale_id()) :: String.t()
+  def available_from(date, locale \\ locale()), do: ~t"Available from #{date = weekday_day_month(date, locale)}"
+
   @doc ~s(Localized weekday name for a `Fulfillment.Weekday`, e.g. "Friday" / "fredag".)
   @spec weekday_name(Edenflowers.Fulfillment.Weekday.t(), Localize.Locale.locale_id()) :: String.t()
   def weekday_name(weekday, locale) do
