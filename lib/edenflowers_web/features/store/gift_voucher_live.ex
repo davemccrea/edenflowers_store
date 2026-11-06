@@ -71,6 +71,9 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           position: sticky;
           top: 0;
           padding-top: max(0.75rem, env(safe-area-inset-top));
+          /* The 2rem fade and 1rem field clearance need more than the grid's
+             2.5rem gap, or the correction scroll pulls the preview off its stop. */
+          margin-bottom: 0.5rem;
         }
 
         #voucher-preview-band > .voucher-preview {
@@ -96,25 +99,16 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           display: none;
         }
 
-        /* The preview owns the header area, including its small top inset. Suppress
-           the shy header rather than letting an upward correction reveal it behind. */
-        body:has(#voucher-preview-band[data-preview-owns-top]) #hotfx-shy-header {
+        /* Hide the header while typing too, so it can't flash behind the preview
+           between keyboard dismissal and the preview taking over the top. */
+        body:has(
+            #voucher-preview-band:is([data-keyboard-open], [data-preview-owns-top])
+          )
+          #hotfx-shy-header {
           visibility: hidden;
           opacity: 0;
           pointer-events: none;
           transition: none;
-        }
-      }
-
-      @keyframes voucher-preview-return {
-        from {
-          transform: translateY(-0.5rem);
-        }
-      }
-
-      @media (width < 64rem) and (height >= 40rem) and (prefers-reduced-motion: no-preference) {
-        #voucher-preview-band[data-preview-returning]:not([data-field-too-tall]) {
-          animation: voucher-preview-return 150ms ease-out;
         }
       }
     </style>

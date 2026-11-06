@@ -15,6 +15,7 @@ function fixture({
   fieldHeight = 160,
   reducedMotion = false,
   scrollEnd = true,
+  previewTop = 0,
 } = {}) {
   const viewport = Object.assign(new EventTarget(), {
     height: 844,
@@ -28,6 +29,7 @@ function fixture({
   const attributes = new Set();
   const scrolls = [];
   const behaviors = [];
+  const animations = [];
   const bounds = {
     top: fieldTop,
     bottom: fieldTop + fieldHeight,
@@ -41,10 +43,11 @@ function fixture({
     blur: () => assert.fail("Closing the keyboard must not blur the field"),
     focus: () => assert.fail("Closing the keyboard must not focus a field"),
   };
+  const messageField = { ...field };
   const otherControl = { matches: () => false, closest: () => otherControl };
   const body = { matches: () => false, closest: () => null };
   const form = Object.assign(new EventTarget(), {
-    contains: (node) => node === field,
+    contains: (node) => node === field || node === messageField,
   });
   const el = {
     closest: () => form,
@@ -53,7 +56,22 @@ function fixture({
     removeAttribute: (name) => attributes.delete(name),
     toggleAttribute: (name, enabled) =>
       enabled ? attributes.add(name) : attributes.delete(name),
-    getBoundingClientRect: () => ({ top: 0, bottom: 276, height: 276 }),
+    getBoundingClientRect: () => {
+      const top = attributes.has("data-keyboard-open") ? previewTop : 0;
+      return { top, bottom: top + 276, height: 276 };
+    },
+    animate: (keyframes, options) => {
+      const animation = {
+        keyframes,
+        options,
+        cancelled: false,
+        cancel() {
+          this.cancelled = true;
+        },
+      };
+      animations.push(animation);
+      return animation;
+    },
   };
   const document = Object.assign(new EventTarget(), {
     activeElement: body,
@@ -119,10 +137,12 @@ function fixture({
     document,
     viewport,
     field,
+    messageField,
     body,
     otherControl,
     scrolls,
     behaviors,
+    animations,
     bounds,
     attributes,
     keyboardOpen: () => attributes.has("data-keyboard-open"),
@@ -170,6 +190,58 @@ test("does not scroll when the edited field is already fully visible", () => {
   f.settle();
   assert.deepEqual(f.scrolls, []);
   f.hook.destroyed();
+});
+
+test("returns from the preview's actual position after changing fields with the keyboard open", () => {
+  const f = fixture({ previewTop: -100 });
+  f.resize(504);
+  f.settle();
+  // Switching from the buyer's name to the message leaves the keyboard open.
+  f.document.activeElement = f.messageField;
+  f.hook.onFocusIn({ target: f.messageField });
+  f.resize(844);
+  f.settle();
+  assert.equal(f.animations.length, 1);
+  const animation = f.animations[0];
+  assert.equal(animation.keyframes[0].transform, "translateY(-100px)");
+  assert.equal(animation.keyframes[1].transform, "translateY(0)");
+  assert.equal(f.attributes.has("data-preview-owns-top"), true);
+  f.hook.updated();
+  f.settle();
+  assert.equal(
+    f.animations.length,
+    1,
+    "LiveView patches do not restart the return",
+  );
+  animation.onfinish();
+  f.settle();
+  assert.equal(f.hook.returnAnimation, null);
+  f.hook.destroyed();
+});
+
+test("skips the preview return animation for reduced motion and tall fields", () => {
+  for (const options of [{ reducedMotion: true }, { fieldHeight: 600 }]) {
+    const f = fixture({ previewTop: -100, ...options });
+    f.resize(504);
+    f.resize(844);
+    f.settle();
+    assert.equal(f.animations.length, 0);
+    f.hook.destroyed();
+  }
+});
+
+test("cancels the preview return when the keyboard reopens or the hook unmounts", () => {
+  for (const reopen of [true, false]) {
+    const f = fixture({ previewTop: -100 });
+    f.resize(504);
+    f.resize(844);
+    f.settle();
+    const animation = f.animations[0];
+    if (reopen) f.resize(504);
+    else f.hook.destroyed();
+    assert.equal(animation.cancelled, true);
+    if (reopen) f.hook.destroyed();
+  }
 });
 
 test("moves only enough to reveal help or errors below the bottom of the viewport", () => {

@@ -16,23 +16,48 @@ export const VoucherPreview = {
       if (this.frame) return;
       this.frame = requestAnimationFrame(() => {
         this.frame = null;
+        const returning =
+          !this.keyboardOpen && this.el.hasAttribute("data-keyboard-open");
+        const previousTop = returning
+          ? this.el.getBoundingClientRect().top
+          : null;
         if (!this.keyboardOpen) {
-          if (this.el.hasAttribute("data-keyboard-open")) {
-            this.el.setAttribute("data-preview-returning", "");
-            this.el.removeAttribute("data-keyboard-open");
-          }
+          this.el.removeAttribute("data-keyboard-open");
           if (this.restoreField?.isConnected && !this.scrolling)
             this.keepVisible(this.restoreField, { animate: true });
         }
         const bounds = this.el.getBoundingClientRect();
+        const sticky = getComputedStyle(this.el).position === "sticky";
+        if (
+          returning &&
+          sticky &&
+          Math.abs(previousTop - bounds.top) > 2 &&
+          !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ) {
+          // Switching from normal flow to sticky can move the preview by a
+          // whole field's height. Start at its actual position, not a fixed nudge.
+          const animation = this.el.animate(
+            [
+              { transform: `translateY(${previousTop - bounds.top}px)` },
+              { transform: "translateY(0)" },
+            ],
+            { duration: 200, easing: "ease-out" },
+          );
+          this.returnAnimation = animation;
+          animation.onfinish = () => {
+            this.returnAnimation = null;
+            this.renderPreview();
+          };
+        }
         const viewportTop = this.viewport?.offsetTop ?? 0;
         this.el.toggleAttribute(
           "data-preview-owns-top",
           Boolean(
             window.matchMedia("(width < 64rem)").matches &&
-              getComputedStyle(this.el).position === "sticky" &&
-              bounds.top < viewportTop + (this.header?.offsetHeight ?? 0) &&
-              bounds.bottom > viewportTop,
+              sticky &&
+              (this.returnAnimation ||
+                (bounds.top < viewportTop + (this.header?.offsetHeight ?? 0) &&
+                  bounds.bottom > viewportTop)),
           ),
         );
       });
@@ -96,9 +121,12 @@ export const VoucherPreview = {
         this.restoreField = this.editedField;
       }
 
+      if (this.keyboardOpen || !mobile || !unzoomed) {
+        this.returnAnimation?.cancel();
+        this.returnAnimation = null;
+      }
       if (this.keyboardOpen) {
         this.el.setAttribute("data-keyboard-open", "");
-        this.el.removeAttribute("data-preview-returning");
       }
       this.renderPreview();
     };
@@ -247,6 +275,7 @@ export const VoucherPreview = {
   },
 
   destroyed() {
+    this.returnAnimation?.cancel();
     clearTimeout(this.focusTimer);
     clearTimeout(this.scrollTimer);
     cancelAnimationFrame(this.frame);
