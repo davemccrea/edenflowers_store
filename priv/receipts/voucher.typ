@@ -62,7 +62,7 @@
 // translated by Gettext; amounts and dates arrive pre-formatted.
 //
 // A ticket: who it's to and the buyer's words fill the page, and a stub
-// behind a perforation holds the amount, code and last day.
+// holds the amount, code and last day.
 #let voucher(voucher) = {
   for key in ("lang", "labels", "seller", "style", "amount", "code", "expires_on", "recipient_name", "message") {
     assert(key in voucher, message: "voucher: missing key `" + key + "` (set to none if absent)")
@@ -90,11 +90,6 @@
         place(top + left, dx: x - size / 2, dy: y - size / 2, snowflake(n, size))
       }
     },
-    foreground: place(
-      top + right,
-      dx: -stub-width,
-      line(start: (0pt, 0pt), end: (0pt, 100%), stroke: (paint: ink.page, thickness: 1.2pt, dash: "dotted")),
-    ),
   )
   set document(title: t("gift-voucher"), author: voucher.seller.name, date: none)
   set text(font: fonts.sans, size: type-scale.body, fill: ink.body, lang: voucher.lang)

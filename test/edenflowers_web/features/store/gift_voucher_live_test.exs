@@ -15,8 +15,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
     "card_message" => "Grattis!",
     "voucher_locale" => "fi",
     "customer_name" => "Anna Buyer",
-    "customer_email" => "anna@example.com",
-    "collect_voucher_card" => "true"
+    "customer_email" => "anna@example.com"
   }
 
   defp sale(id), do: Ash.get!(Order, id, load: [:grand_total], authorize?: false)
@@ -31,7 +30,6 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
     started = sale(id)
     assert started.state == :payment
     assert Decimal.eq?(started.grand_total, 70)
-    assert started.collect_voucher_card
     assert started.voucher_locale == "fi"
     assert started.locale == "sv-FI"
 
