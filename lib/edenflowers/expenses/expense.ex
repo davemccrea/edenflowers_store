@@ -349,6 +349,13 @@ defmodule Edenflowers.Expenses.Expense do
   end
 
   calculations do
+    calculate :matches?,
+              :boolean,
+              expr(contains(vendor_name, ^arg(:term)) or contains(description, ^arg(:term))) do
+      description "The admin expenses search, case-insensitive: whether the term appears in the vendor or description."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :paid, :boolean, expr(not is_nil(paid_on)) do
       description "Paid or scheduled: Jennie has nothing left to do about the payment."
     end

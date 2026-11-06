@@ -47,17 +47,14 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               :if={!@current_user.avatar_content_type}
               class="bg-primary/10 text-primary inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-semibold"
             >
-              {user_initials(@current_user)}
+              {@current_user.initials}
             </span>
             <div class="min-w-0">
               <h2 class="text-base-content truncate text-lg font-semibold">
-                {display_name(@current_user)}
+                {@current_user.name || to_string(@current_user.email)}
               </h2>
-              <p
-                :if={display_name(@current_user) != user_email(@current_user)}
-                class="text-base-content/75 truncate text-sm"
-              >
-                {user_email(@current_user)}
+              <p :if={@current_user.name} class="text-base-content/75 truncate text-sm">
+                {to_string(@current_user.email)}
               </p>
             </div>
           </div>
@@ -286,31 +283,4 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     |> Localize.Language.display_name!(fallback: true)
     |> String.capitalize()
   end
-
-  defp display_name(user) do
-    case Map.get(user, :name) do
-      name when is_binary(name) ->
-        name = String.trim(name)
-        if name == "", do: user_email(user), else: name
-
-      _ ->
-        user_email(user)
-    end
-  end
-
-  defp user_email(user), do: user |> Map.get(:email) |> to_string()
-
-  defp user_initials(user) do
-    case Map.get(user, :initials) do
-      initials when is_binary(initials) ->
-        initials = String.trim(initials)
-        if initials == "", do: fallback_initial(user), else: initials
-
-      _ ->
-        fallback_initial(user)
-    end
-  end
-
-  defp fallback_initial(user),
-    do: user |> user_email() |> String.first() |> Kernel.||("A") |> String.upcase()
 end

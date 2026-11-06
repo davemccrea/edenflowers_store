@@ -24,10 +24,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment.Availability
-  alias Edenflowers.Fulfillment.Fee
-  alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Orders.LineItem.Validations.WithinStock
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Order.CheckoutPrice
   alias Edenflowers.PhoneNumber
   alias Edenflowers.Pricing
   alias Edenflowers.Translations
@@ -63,7 +62,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     with :ok <- validate_cart_not_empty(order),
          :ok <- validate_not_add_ons_only(order),
          {:ok, fulfillment_options} <- Fulfillment.list_options_for_checkout() do
-      order = ensure_fulfillment_default(order, fulfillment_options, socket.assigns[:current_user])
       fulfillment_options = Translations.translate(fulfillment_options)
       card_variants = Catalog.list_card_drawer_variants!() |> Translations.translate_assoc(:product)
 
@@ -374,7 +372,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                     on_ready={unlock_after_paying(%JS{})}
                   >
                     <:before_button>
-                      <.recurring_charge order={@order} fee={delivery_fee(@order, @delivery_quote)} />
+                      <.recurring_charge order={@order} fee={price(@order, @delivery_quote).fee} />
                       <p class="text-base-content/80 text-sm" data-testid="terms-acceptance">
                         {~t"By placing your order you accept the"}
                         <a href={~q"/#{language}/terms"} target="_blank" class="link-underline-static-body">{~t"terms of sale"}</a>.
@@ -476,7 +474,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
                 <div class="flex flex-col gap-2 text-base">
                   <.delivery_cost
-                    fee={delivery_fee(@order, @delivery_quote)}
+                    fee={price(@order, @delivery_quote).fee}
                     distance={delivery_distance(@order, @delivery_quote)}
                     locale={@order.locale}
                   />
@@ -509,18 +507,18 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   >
                     <span>{~t"Total"}</span>
                     <span class="tabular-nums" data-testid="total-amount">
-                      {Edenflowers.Format.currency(total(@order, @delivery_quote), @order.locale)}
+                      {Edenflowers.Format.currency(price(@order, @delivery_quote).total, @order.locale)}
                     </span>
                   </div>
 
                   <div
-                    :if={Decimal.gt?(vat(@order, @delivery_quote), 0)}
+                    :if={Decimal.gt?(price(@order, @delivery_quote).vat, 0)}
                     class="text-base-content/70 flex items-baseline justify-between"
                     data-testid="vat-line"
                   >
                     <span>{~t"Includes VAT"}</span>
                     <span class="tabular-nums">
-                      {Edenflowers.Format.currency(vat(@order, @delivery_quote), @order.locale)}
+                      {Edenflowers.Format.currency(price(@order, @delivery_quote).vat, @order.locale)}
                     </span>
                   </div>
                 </div>
@@ -984,23 +982,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp delivery_distance(%{fulfillment_method: :delivery}, %{distance: distance}), do: distance
   defp delivery_distance(_order, _quote), do: nil
 
-  # Until the delivery step is submitted the order has no fee, so the summary
-  # prices the quote, against the cart as it is now. After that the order's
-  # own fee is what Stripe charges.
-  defp delivery_fee(%{state: :delivery, fulfillment_method: :pickup, fulfillment_option: %{} = option}, _quote),
-    do: Fee.calculate(option, 0).fulfillment_fee
-
-  defp delivery_fee(%{state: :delivery, fulfillment_option: %{} = option} = order, %{distance: distance}) do
-    quoted = Fee.calculate(option, distance)
-    Orders.charged_fulfillment_fee!(quoted.fulfillment_fee, quoted.free_delivery_fee, order.free_delivery?)
-  end
-
-  defp delivery_fee(%{state: :delivery}, _quote), do: nil
-  defp delivery_fee(order, _quote), do: order.fulfillment_fee
-
-  defp total(order, quote), do: Decimal.add(order.items_total, delivery_fee(order, quote) || 0)
-
-  defp vat(order, quote), do: Vat.total(%{order | fulfillment_fee: delivery_fee(order, quote)})
+  defp price(order, quote), do: CheckoutPrice.price(order, quote && quote.distance)
 
   defp handle_mount_error(socket, flash_message) do
     {:ok,
@@ -1166,7 +1148,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
 
   defp reload_order(socket, opts \\ []) do
     order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
-    order = ensure_fulfillment_default(order, socket.assigns.fulfillment_options, actor(socket))
 
     socket
     |> refresh_calendar()
@@ -1183,22 +1164,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     do: assign(socket, delivery_quote: quote_from_order(order))
 
   defp maybe_quote_on_entering_delivery(socket, _order), do: socket
-
-  # Persisted (not just visual) so the dependent form-3b renders and the
-  # value flows through on submit. Re-read afterwards: the update's result
-  # still holds the unset fulfillment_option and totals from before it.
-  defp ensure_fulfillment_default(%{state: :delivery, fulfillment_option_id: nil} = order, options, actor) do
-    case List.first(options) do
-      nil ->
-        order
-
-      %{id: id} ->
-        Orders.update_fulfillment_option!(order, id, actor: actor)
-        Orders.get_order_for_checkout!(order.id, actor: actor)
-    end
-  end
-
-  defp ensure_fulfillment_default(order, _options, _actor), do: order
 
   defp validate_cart_not_empty(%{cart_effectively_empty?: true}), do: {:error, :empty_cart}
   defp validate_cart_not_empty(_order), do: :ok

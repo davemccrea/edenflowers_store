@@ -146,8 +146,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
     update :submit_gift_options do
       description "Checkout step 2: requires a recipient for a gift, and otherwise drops the recipient, their " <>
-                    "phone, the card message and card. Moves to delivery, prefilled from the signed-in customer's " <>
-                    "last order."
+                    "phone, the card message and card. Moves to delivery, on checkout's first fulfillment option " <>
+                    "unless one is chosen, prefilled from the signed-in customer's last order."
 
       accept [:gift, :recipient_name, :card_message]
       validate present(:recipient_name), where: [attribute_equals(:gift, true)]
@@ -156,6 +156,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
       change set_attribute(:card_message, nil), where: attribute_equals(:gift, false)
       change set_attribute(:recipient_phone_number, nil), where: attribute_equals(:gift, false)
       change Changes.RemoveCardLineItem, where: attribute_equals(:gift, false)
+      change Changes.DefaultFulfillmentOption
+      change Changes.SnapshotFulfillmentMethod
       change Changes.PrefillFromLastOrder
       change transition_state(:delivery)
       require_atomic? false

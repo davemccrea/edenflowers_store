@@ -488,6 +488,13 @@ defmodule Edenflowers.Orders.Subscription do
   end
 
   calculations do
+    calculate :matches?,
+              :boolean,
+              expr(contains(user.name, ^arg(:term)) or contains(user.email, ^arg(:term))) do
+      description "The admin subscriptions search, case-insensitive: whether the term appears in the subscriber's name or email."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :next_delivery_date, :date, expr(if(state == :active, do: next_fulfillment_date, else: nil)) do
       description "The next Occurrence's delivery or pickup date, or nil unless active: only an active " <>
                     "subscription has an Occurrence coming."

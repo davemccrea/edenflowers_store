@@ -412,7 +412,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   end
 
   defp refund_confirmation(amount, how, locale) do
-    with {amount, ""} <- Decimal.parse(String.replace(amount || "", ",", ".")),
+    with {:ok, %Decimal{} = amount} <- Ash.Type.cast_input(Edenflowers.Types.Price, amount),
          true <- Decimal.positive?(amount) do
       amount = Edenflowers.Format.currency(amount, locale)
 

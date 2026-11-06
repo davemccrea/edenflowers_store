@@ -10,7 +10,7 @@ defmodule Edenflowers.Email.Preview do
 
   import Edenflowers.Actors
 
-  alias Edenflowers.Accounts.Calculations.FirstName
+  alias Edenflowers.Accounts.Calculations.NamePart
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email
   alias Edenflowers.Email.Edits
@@ -69,7 +69,7 @@ defmodule Edenflowers.Email.Preview do
 
     entered = %{
       entered
-      | customer_first_name: FirstName.extract(entered.customer_name),
+      | customer_first_name: NamePart.first(entered.customer_name),
         line_items: Enum.map(price.lines, &%{quantity: &1.quantity, product_name: &1.name, subtotal: &1.total}),
         fulfillment_fee: price.fulfillment_fee,
         grand_total: price.total,
@@ -98,7 +98,7 @@ defmodule Edenflowers.Email.Preview do
       %{
         entered
         | course: course,
-          first_name: FirstName.extract(entered.name),
+          first_name: NamePart.first(entered.name),
           seats: seats,
           amount_paid: amount_paid,
           balance: Decimal.sub(Decimal.mult(course.price, seats), amount_paid),
@@ -245,11 +245,9 @@ defmodule Edenflowers.Email.Preview do
   defp refund(inputs), do: decimal(inputs[:refund]) || Decimal.new(0)
 
   # What Jennie has typed so far, which may not be a number yet.
-  defp decimal(nil), do: nil
-
   defp decimal(text) do
-    case Decimal.parse(String.replace(text, ",", ".")) do
-      {amount, ""} -> Decimal.max(amount, 0)
+    case Ash.Type.cast_input(Edenflowers.Types.Price, text) do
+      {:ok, %Decimal{} = amount} -> Decimal.max(amount, 0)
       _ -> nil
     end
   end

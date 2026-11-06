@@ -36,7 +36,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   def cancel(payable, params, actor) do
     input =
       Map.merge(Drawers.email_edits(params), %{
-        cancellation_charge: params["charge"] && String.replace(params["charge"], ",", "."),
+        cancellation_charge: params["charge"],
         cancellation_reason: params["reason"],
         email_customer?: params["email_customer"] != "false"
       })
@@ -52,7 +52,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   def record_payment(payable, %{"amount" => amount, "payment_method" => payment_method} = params, actor) do
     input =
       Map.merge(Drawers.email_edits(params), %{
-        amount: String.replace(amount, ",", "."),
+        amount: amount,
         payment_method: payment_method,
         email_receipt?: params["email_receipt"] == "true"
       })
@@ -68,23 +68,15 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   defp recorded_message(nil), do: {:success, ~t"Payment recorded."}
 
   def undo_payment(payable, payment_id, actor) do
-    case Ash.update(payable, %{payment_id: payment_id}, action: :undo_payment, actor: actor) do
-      {:ok, _payable} ->
-        {:success, ~t"Payment undone."}
-
-      {:error, error} ->
-        Logger.error(
-          "Payment #{payment_id} on #{inspect(payable.__struct__)} #{payable.id} not undone: #{inspect(error)}"
-        )
-
-        {:error, ~t"Could not undo the payment."}
-    end
+    payable
+    |> Ash.update(%{payment_id: payment_id}, action: :undo_payment, actor: actor)
+    |> logged(payable, "Undoing payment #{payment_id}", ~t"Payment undone.", ~t"Could not undo the payment.")
   end
 
   def refund(payable, %{"amount" => amount, "how" => how} = params, actor) do
     input =
       Map.merge(Drawers.email_edits(params), %{
-        amount: String.replace(amount, ",", "."),
+        amount: amount,
         payment_method: how,
         note: params["note"],
         email_customer?: params["email_customer"] != "false"
@@ -117,25 +109,22 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   def payment_params(params, _target), do: params
 
   def open_payment_link(payable, actor) do
-    case Ash.update(payable, %{}, action: :open_payment_link, actor: actor) do
-      {:ok, _payable} ->
-        {:success, ~t"Payment link created."}
-
-      {:error, error} ->
-        Logger.error("Payment link for #{inspect(payable.__struct__)} #{payable.id} not created: #{inspect(error)}")
-        {:error, ~t"Could not create a payment link."}
-    end
+    payable
+    |> Ash.update(%{}, action: :open_payment_link, actor: actor)
+    |> logged(payable, "Creating a payment link", ~t"Payment link created.", ~t"Could not create a payment link.")
   end
 
   def email_payment_link(payable, edits, actor) do
-    case send_payment_link(payable, edits, actor) do
-      {:ok, _payable} ->
-        {:success, ~t"Payment link emailed."}
+    payable
+    |> send_payment_link(edits, actor)
+    |> logged(payable, "Emailing a payment link", ~t"Payment link emailed.", ~t"Could not email the payment link.")
+  end
 
-      {:error, error} ->
-        Logger.error("Payment link for #{inspect(payable.__struct__)} #{payable.id} not emailed: #{inspect(error)}")
-        {:error, ~t"Could not email the payment link."}
-    end
+  defp logged({:ok, _payable}, _payable_before, _what, success, _failure), do: {:success, success}
+
+  defp logged({:error, error}, payable, what, _success, failure) do
+    Logger.error("#{what} for #{inspect(payable.__struct__)} #{payable.id} failed: #{inspect(error)}")
+    {:error, failure}
   end
 
   # Orders send theirs in a Payment reminder.

@@ -573,7 +573,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         "payment_terms" => "payment_link",
         "email_customer?" => "true"
       },
-      transform_params: &transform_params/3,
       forms: [line_items: [type: :list, resource: LineItem, create_action: :enter]]
     )
     |> to_form()
@@ -592,7 +591,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       AshPhoenix.Form.for_update(order, :edit,
         actor: actor,
         params: %{"fulfillment_time" => time_choice(order)},
-        transform_params: &transform_params/3,
         forms: [
           line_items: [
             type: :list,
@@ -618,15 +616,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     end)
     |> to_form()
   end
-
-  # Only a fee the form sent: adding a blank one would clear an order's own fee as the edit form opens.
-  defp transform_params(_form, %{"fulfillment_fee_override" => fee} = params, _action),
-    do: Map.put(params, "fulfillment_fee_override", decimal_comma(fee))
-
-  defp transform_params(_form, params, _action), do: params
-
-  defp decimal_comma(value) when is_binary(value), do: String.replace(value, ",", ".")
-  defp decimal_comma(value), do: value
 
   defp add_line(socket, params) do
     put_form(socket, AshPhoenix.Form.add_form(socket.assigns.form, :line_items, params: params))

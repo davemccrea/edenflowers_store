@@ -75,6 +75,22 @@ defmodule Edenflowers.Fulfillment.Availability do
   end
 
   @doc """
+  What Jennie can do about orders for today: stop them while customers can
+  still book it (`:open`), reopen it when she closed just today (`:closed`), or
+  nothing, when the weekday rule, same-day setting or deadline already shut it.
+  """
+  @spec today_toggle_state(ShopCalendar.t(), DateTime.t()) :: :open | :closed | nil
+  def today_toggle_state(%ShopCalendar{} = calendar, now \\ Edenflowers.ShopTime.now()) do
+    today = DateTime.to_date(now)
+
+    cond do
+      today in calendar.disabled_dates -> :closed
+      is_nil(unavailable_reason(calendar, today, now)) -> :open
+      true -> nil
+    end
+  end
+
+  @doc """
   Cell state for the customer checkout calendar. A customer can't act on *why*
   a date is unavailable, so every blocked weekday or date reads as `:closed`,
   and a today that's past its deadline collapses to `:past`.

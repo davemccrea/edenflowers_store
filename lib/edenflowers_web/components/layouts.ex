@@ -559,9 +559,7 @@ defmodule EdenflowersWeb.Layouts do
   defp admin_account_menu(assigns) do
     assigns =
       assigns
-      |> assign(:display_name, admin_user_display_name(assigns.current_user))
-      |> assign(:email, admin_user_email(assigns.current_user))
-      |> assign(:initials, admin_user_initials(assigns.current_user))
+      |> assign(:email, to_string(assigns.current_user.email))
 
     ~H"""
     <div class="dropdown dropdown-end">
@@ -581,10 +579,10 @@ defmodule EdenflowersWeb.Layouts do
           :if={!@current_user.avatar_content_type}
           class="bg-primary/10 text-primary inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
         >
-          {@initials}
+          {@current_user.initials}
         </span>
         <span :if={!@compact} class="min-w-0 text-left">
-          <span class="text-base-content max-w-44 block truncate text-sm font-semibold">{@display_name}</span>
+          <span class="text-base-content max-w-44 block truncate text-sm font-semibold">{@current_user.first_name || @email}</span>
           <span class="text-base-content/75 max-w-44 block truncate text-xs">{@email}</span>
         </span>
         <.icon :if={!@compact} name="hero-chevron-down" class="text-base-content/60 h-4 w-4 shrink-0" />
@@ -596,7 +594,7 @@ defmodule EdenflowersWeb.Layouts do
       >
         <li :if={@compact} class="px-3 py-2">
           <span class="block p-0 hover:bg-transparent">
-            <span class="text-base-content block truncate text-sm font-semibold">{@display_name}</span>
+            <span class="text-base-content block truncate text-sm font-semibold">{@current_user.first_name || @email}</span>
             <span class="text-base-content/75 block truncate text-xs">{@email}</span>
           </span>
         </li>
@@ -617,33 +615,6 @@ defmodule EdenflowersWeb.Layouts do
     </div>
     """
   end
-
-  defp admin_user_display_name(user) do
-    case Map.get(user, :first_name) do
-      first_name when is_binary(first_name) ->
-        first_name = String.trim(first_name)
-        if first_name == "", do: admin_user_email(user), else: first_name
-
-      _ ->
-        admin_user_email(user)
-    end
-  end
-
-  defp admin_user_email(user), do: user |> Map.get(:email) |> to_string()
-
-  defp admin_user_initials(user) do
-    case Map.get(user, :initials) do
-      initials when is_binary(initials) ->
-        initials = String.trim(initials)
-        if initials == "", do: fallback_admin_initial(user), else: initials
-
-      _ ->
-        fallback_admin_initial(user)
-    end
-  end
-
-  defp fallback_admin_initial(user),
-    do: user |> admin_user_email() |> String.first() |> Kernel.||("A") |> String.upcase()
 
   attr :current_user, :map, required: true
   attr :flash, :map, required: true

@@ -287,6 +287,16 @@ defmodule Edenflowers.Catalog.Product do
   end
 
   calculations do
+    calculate :matches?,
+              :boolean,
+              expr(
+                contains(name, ^arg(:term)) or contains(translations[:"sv-FI"][:name], ^arg(:term)) or
+                  contains(translations[:fi][:name], ^arg(:term))
+              ) do
+      description "The admin products search, case-insensitive: whether the term appears in the name in any language."
+      argument :term, :ci_string, allow_nil?: false
+    end
+
     calculate :main_photo_slug, :string, expr(at(photo_slugs, 0)) do
       description "The first of `photo_slugs`, shown on store cards and for sizes without their own photo."
     end
