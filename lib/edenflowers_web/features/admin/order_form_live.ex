@@ -11,13 +11,13 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   import EdenflowersWeb.Admin.Drawers
   import EdenflowersWeb.CardDrawer, only: [card_drawer: 1]
 
-  alias Edenflowers.Accounts
   alias Edenflowers.Catalog
   alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Email.Preview
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
+  alias EdenflowersWeb.Admin.CustomerSearch
   alias Edenflowers.Fulfillment.DeliveryError
   alias Edenflowers.Fulfillment.Fee
   alias Edenflowers.Orders
@@ -55,6 +55,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> assign(:default_tax_rate_id, default_tax_rate_id(tax_rates))
          |> assign(:form, build_form(mode, order, actor, tax_rates))
          |> assign(:customer_search_empty?, false)
+         |> assign(:customer_term, "")
          |> assign(:delivery_quote, stored_quote(mode, order))
          |> assign_date_warning()
          |> assign_price()}
@@ -104,7 +105,12 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         >
           <div class="space-y-6">
             <.form_section title={~t"Customer"}>
-              <.customer_picker :if={@mode == :new} field={@form[:customer_id]} empty?={@customer_search_empty?} />
+              <.customer_picker
+                :if={@mode == :new}
+                field={@form[:customer_id]}
+                empty?={@customer_search_empty?}
+                focus="customer_focus"
+              />
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                   <.input
@@ -443,22 +449,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         "live_select_change",
         %{"id" => "customer-select", "text" => term},
         %{assigns: %{mode: :new}} = socket
-      ) do
-    term = String.trim(term)
+      ),
+      do: {:noreply, CustomerSearch.search(socket, term)}
 
-    customers =
-      if term == "",
-        do: [],
-        else: Accounts.search_customers!(term, actor: socket.assigns.current_user, query: [limit: 10])
-
-    options =
-      Enum.map(customers, fn customer ->
-        {Enum.join(Enum.reject([customer.name, to_string(customer.email)], &is_nil/1), " · "), customer.id}
-      end)
-
-    send_update(LiveSelect.Component, id: "customer-select", options: options)
-    {:noreply, assign(socket, :customer_search_empty?, term != "" && customers == [])}
-  end
+  def handle_event("customer_focus", _params, socket), do: {:noreply, CustomerSearch.focus(socket)}
 
   def handle_event("validate", %{"form" => params}, socket) do
     params = prefill_customer(params, socket.assigns)
@@ -701,40 +695,10 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   defp card_message_max(%{size: size}) when not is_nil(size), do: ProductVariantSize.max_message_length(size)
   defp card_message_max(_card), do: ProductVariantSize.max_message_length(:large)
 
-  defp last_order_with_phone(customer_id, actor),
-    do: Orders.get_last_order_with_customer_phone!(customer_id, actor: actor, not_found_error?: false)
-
-  defp prefill_customer(%{"customer_id" => id} = params, %{mode: :new} = assigns)
-       when id not in [nil, ""] do
-    if id == assigns.form[:customer_id].value do
-      params
-    else
-      case Accounts.get_customer_for_admin(id, actor: assigns.current_user) do
-        {:ok, customer} when not is_nil(customer) ->
-          last = last_order_with_phone(customer.id, assigns.current_user)
-
-          Map.merge(params, %{
-            "customer_name" => customer.name || "",
-            "customer_email" => to_string(customer.email),
-            "customer_phone_number" => last_phone_number(last),
-            # Only a newsletter signup saves a customer's language, so most have
-            # just the one their last order was placed in.
-            "locale" => customer.locale || last_locale(last) || params["locale"]
-          })
-
-        _ ->
-          params
-      end
-    end
-  end
+  defp prefill_customer(params, %{mode: :new} = assigns),
+    do: CustomerSearch.prefill(params, assigns.form[:customer_id].value, assigns.current_user)
 
   defp prefill_customer(params, _assigns), do: params
-
-  defp last_phone_number(nil), do: ""
-  defp last_phone_number(order), do: order.customer_phone_number
-
-  defp last_locale(nil), do: nil
-  defp last_locale(order), do: order.locale
 
   defp validate_form(socket, params) do
     option_before = current_option_id(socket.assigns)

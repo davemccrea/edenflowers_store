@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
   import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Orders.Order
+  alias EdenflowersWeb.Admin.CustomerSearch
   alias EdenflowersWeb.Admin.OrderLog
 
   @impl true
@@ -21,7 +22,8 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
       )
       |> to_form()
 
-    {:ok, assign(socket, page_title: ~t"Sell gift voucher", form: form)}
+    {:ok,
+     assign(socket, page_title: ~t"Sell gift voucher", form: form, customer_search_empty?: false, customer_term: "")}
   end
 
   @impl true
@@ -45,6 +47,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
           class="max-w-2xl space-y-6"
         >
           <.form_section title={~t"Buyer"}>
+            <.customer_picker field={@form[:customer_id]} empty?={@customer_search_empty?} focus="customer_focus" />
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div class="sm:col-span-2">
                 <.input
@@ -159,8 +162,15 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
   end
 
   @impl true
+  def handle_event("live_select_change", %{"id" => "customer-select", "text" => term}, socket),
+    do: {:noreply, CustomerSearch.search(socket, term)}
+
+  def handle_event("customer_focus", _params, socket), do: {:noreply, CustomerSearch.focus(socket)}
+
   def handle_event("validate", %{"form" => params}, socket) do
-    {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
+    form = socket.assigns.form
+    params = CustomerSearch.prefill(params, form[:customer_id].value, socket.assigns.current_user)
+    {:noreply, assign(socket, form: AshPhoenix.Form.validate(form, params))}
   end
 
   def handle_event("save", %{"form" => params}, socket) do
