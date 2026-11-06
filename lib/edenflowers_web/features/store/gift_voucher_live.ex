@@ -69,8 +69,10 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
             phx-submit="continue"
           >
             <%!-- The fields run down the left, and the preview sticks beside them while they're
-                 filled in. On a phone the preview follows the style choice, before the words. --%>
-            <div class="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-x-16">
+                 filled in. On a phone the preview follows the style choice, before the words,
+                 and sticks to the top of the screen above them. --%>
+            <%!-- A field scrolled into view stops below the sticky preview, not under it. --%>
+            <div class="grid gap-10 max-lg:[&_:is(input,textarea,select)]:scroll-mt-[calc(var(--shy-header-offset,0px)+(100vw-2rem)*148/210+5rem)] lg:grid-cols-2 lg:items-start lg:gap-x-16">
               <fieldset class="flex flex-col lg:col-start-1 lg:row-start-1">
                 <legend class="eyebrow text-base-content/70 mb-5">{~t"Make it personal"}</legend>
                 <%!-- Two styles to a row, everyday above Christmas. --%>
@@ -88,7 +90,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                 </div>
               </fieldset>
 
-              <div class="min-w-0 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky lg:col-start-2 lg:row-span-4 lg:row-start-1">
+              <div class="bg-base-100 top-[var(--shy-header-offset,0px)] sticky z-10 -mx-4 min-w-0 px-4 py-3 after:bg-linear-to-b after:from-base-100 after:absolute after:inset-x-0 after:top-full after:h-8 after:to-transparent lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:z-auto lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:after:hidden">
                 <.voucher_preview preview={@preview} loading?={@preview_loading?} />
                 <.input field={@form[:voucher_snow_seed]} type="hidden" />
                 <button
@@ -248,7 +250,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
     ~H"""
     <div
       id="voucher-preview"
-      class={["bg-base-100 aspect-[210/148] shadow-xl", if(@loading?,
+      class={["bg-base-100 aspect-[210/148] shadow-md lg:shadow-xl", if(@loading?,
     do: "opacity-70 transition-opacity duration-150 ease-out",
     else: "transition-opacity duration-500 ease-out")]}
       aria-busy={to_string(@loading?)}
