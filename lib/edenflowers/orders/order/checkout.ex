@@ -245,6 +245,19 @@ defmodule Edenflowers.Orders.Order.Checkout do
       prepare build(sort: [updated_at: :desc], limit: 1)
     end
 
+    update :release_gift_voucher_sale do
+      description "Detaches an unpaid Gift voucher sale from the browser that started it, when the buyer starts " <>
+                    "over, so a reload opens a fresh form instead of resuming it. Only that browser can release it."
+
+      argument :visitor_id, :uuid do
+        allow_nil? false
+        description "The visitor_id from the browser's signed session."
+      end
+
+      change filter expr(voucher_visitor_id == ^arg(:visitor_id) and state == :payment)
+      change set_attribute(:voucher_visitor_id, nil)
+    end
+
     update :release_cart do
       description "Detaches a cart from its browser when Stripe sends the customer back from paying, so their " <>
                     "next add to cart opens a new one while the webhook places this order. Only the browser " <>
