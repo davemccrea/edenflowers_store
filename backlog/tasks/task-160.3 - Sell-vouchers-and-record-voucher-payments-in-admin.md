@@ -1,10 +1,10 @@
 ---
 id: TASK-160.3
 title: Sell vouchers and record voucher payments in admin
-status: in-progress
+status: done
 assignee: []
 created_date: '2026-11-01 17:32'
-updated_date: '2026-11-06 09:22'
+updated_date: '2026-11-06 09:52'
 labels: []
 dependencies:
   - TASK-160.1
@@ -40,8 +40,8 @@ ordinal: 309000
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Jennie can pay a Custom Order or course booking with a voucher code
-- [ ] #2 Sell gift voucher form records a paid voucher-only order and lands on its page
-- [ ] #3 The voucher PDF is emailed to the buyer, the recipient, both or neither, as Jennie ticks
+- [x] #2 Sell gift voucher form records a paid voucher-only order and lands on its page
+- [x] #3 The voucher PDF is emailed to the buyer, the recipient, both or neither, as Jennie ticks
 <!-- AC:END -->
 
 ## Comments

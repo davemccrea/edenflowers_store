@@ -1,0 +1,187 @@
+defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
+  @moduledoc """
+  Where Jennie sells a Gift voucher in the shop, paid there and then. She
+  lands on the sale's order page, whose Gift voucher card shows the code to
+  write onto the gift card.
+  """
+  use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
+
+  import EdenflowersWeb.Admin.Components
+
+  alias Edenflowers.Orders.Order
+  alias EdenflowersWeb.Admin.OrderLog
+
+  @impl true
+  def mount(_params, _session, socket) do
+    form =
+      Order
+      |> AshPhoenix.Form.for_create(:sell_gift_voucher,
+        actor: socket.assigns.current_user,
+        params: %{"locale" => "sv-FI", "payment_method" => "zettle"}
+      )
+      |> to_form()
+
+    {:ok, assign(socket, page_title: ~t"Sell gift voucher", form: form)}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
+      <.admin_page>
+        <.admin_page_header title={@page_title} back={{~t"Orders", ~p"/admin/orders"}} sticky>
+          <:actions>
+            <.button type="submit" form="gift-voucher-form" variant="primary" size="sm">
+              {~t"Sell voucher"}
+            </.button>
+          </:actions>
+        </.admin_page_header>
+
+        <.form
+          for={@form}
+          id="gift-voucher-form"
+          phx-change="validate"
+          phx-submit="save"
+          class="max-w-2xl space-y-6"
+        >
+          <.form_section title={~t"Buyer"}>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="sm:col-span-2">
+                <.input
+                  field={@form[:customer_name]}
+                  type="text"
+                  label={~t"Name"}
+                  class="input w-full"
+                  autocapitalize="words"
+                />
+              </div>
+              <.input
+                field={@form[:customer_phone_number]}
+                type="tel"
+                label={~t"Phone"}
+                class="input w-full"
+                autocomplete="off"
+              />
+              <.input
+                field={@form[:customer_email]}
+                type="email"
+                label={~t"Email"}
+                help={~t"A phone or an email is needed."}
+                class="input w-full"
+                autocomplete="off"
+              />
+            </div>
+          </.form_section>
+
+          <.form_section title={~t"Recipient"}>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <.input
+                field={@form[:recipient_name]}
+                type="text"
+                label={~t"Full name"}
+                help={~t"Printed on the voucher. Leave blank if the buyer doesn't say."}
+                class="input w-full"
+                autocapitalize="words"
+              />
+              <.input
+                field={@form[:recipient_email]}
+                type="email"
+                label={~t"Email"}
+                class="input w-full"
+                autocomplete="off"
+              />
+            </div>
+          </.form_section>
+
+          <.form_section title={~t"Voucher"}>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <.input
+                field={@form[:amount]}
+                type="number"
+                min="20"
+                step="1"
+                inputmode="numeric"
+                label={~t"Amount (€)"}
+                help={~t"20 € or more."}
+                class="input w-full tabular-nums"
+              />
+              <.input
+                field={@form[:locale]}
+                type="select"
+                label={~t"Language"}
+                help={~t"Of the voucher and its emails."}
+                options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
+                class="select w-full"
+              />
+              <div class="sm:col-span-2">
+                <.input
+                  field={@form[:card_message]}
+                  type="textarea"
+                  rows="3"
+                  label={~t"Message"}
+                  help={~t"Printed on the emailed voucher. Write the gift card's message by hand."}
+                  maxlength={Edenflowers.Orders.Order.Checkout.voucher_message_length()}
+                  class="textarea w-full"
+                />
+              </div>
+            </div>
+          </.form_section>
+
+          <.form_section title={~t"Send the voucher PDF to"}>
+            <p :if={blank?(@form[:customer_email]) and blank?(@form[:recipient_email])} class="text-base-content/75 text-sm">
+              {~t"Enter the buyer's or the recipient's email to send it."}
+            </p>
+            <div class="space-y-2">
+              <.input
+                :if={not blank?(@form[:customer_email])}
+                field={@form[:email_buyer?]}
+                type="checkbox"
+                label={~t"The buyer, with the receipt"}
+              />
+              <.input
+                :if={not blank?(@form[:recipient_email])}
+                field={@form[:email_recipient?]}
+                type="checkbox"
+                label={~t"The recipient, as a gift from the buyer"}
+              />
+            </div>
+          </.form_section>
+
+          <.form_section title={~t"Payment"}>
+            <.input :let={option} field={@form[:payment_method]} type="radio-card" options={payment_options()}>
+              {option.name}
+            </.input>
+          </.form_section>
+        </.form>
+      </.admin_page>
+    </Layouts.admin>
+    """
+  end
+
+  @impl true
+  def handle_event("validate", %{"form" => params}, socket) do
+    {:noreply, assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, params))}
+  end
+
+  def handle_event("save", %{"form" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+      {:ok, sale} ->
+        {:noreply,
+         socket
+         |> put_flash(:success, ~t"Gift voucher sold.")
+         |> push_navigate(to: ~p"/admin/orders/#{sale.id}")}
+
+      {:error, form} ->
+        {:noreply,
+         socket
+         |> assign(form: form)
+         |> put_flash(:error, ~t"The voucher wasn't sold. Check the fields marked below.")}
+    end
+  end
+
+  defp blank?(field), do: field.value in [nil, ""]
+
+  defp payment_options do
+    for method <- [:zettle, :cash], do: %{name: OrderLog.payment_method_label(method), value: to_string(method)}
+  end
+end

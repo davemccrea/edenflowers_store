@@ -66,8 +66,8 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   defp send_to(email, nil), do: email
   defp send_to(email, to), do: %{email | to: [{"", to}]}
 
-  # A Gift voucher sale's one voucher, as a PDF beside the receipt.
-  defp with_voucher(email, order) do
+  @doc "Attaches a Gift voucher sale's one voucher as a PDF, beside the receipt when there is one."
+  def with_voucher(email, order) do
     case order.gift_voucher_line do
       nil ->
         {:ok, email}
@@ -79,7 +79,8 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
     end
   end
 
-  defp load_for_send(order) do
+  @doc "The order with what its emails and their attachments need."
+  def load_for_send(order) do
     Ash.load!(
       order,
       [

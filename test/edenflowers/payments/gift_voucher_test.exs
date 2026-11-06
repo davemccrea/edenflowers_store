@@ -238,6 +238,66 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
     end
   end
 
+  describe "selling in the shop" do
+    setup do
+      %{admin: generate(admin_user())}
+    end
+
+    defp sell(admin, input) do
+      %{customer_name: "Anna Holm", customer_phone_number: "040 1234567", amount: 35, payment_method: :cash}
+      |> Map.merge(input)
+      |> Orders.sell_gift_voucher(actor: admin)
+    end
+
+    test "any amount from 20 €, paid and handed over at once, its voucher issued", %{admin: admin} do
+      assert {:ok, sale} = sell(admin, %{})
+
+      sale = Ash.load!(sale, [:balance, :gift_voucher_sale?, gift_voucher_line: :gift_voucher], authorize?: false)
+      assert sale.gift_voucher_sale?
+      assert sale.fulfillment_status == :fulfilled
+      assert Decimal.eq?(sale.balance, 0)
+      assert Decimal.eq?(sale.gift_voucher_line.gift_voucher.amount, 35)
+
+      Oban.drain_queue(queue: :default)
+      assert_no_email_sent()
+    end
+
+    test "emails the voucher to the buyer and the recipient as Jennie ticks", %{admin: admin} do
+      {:ok, _sale} =
+        sell(admin, %{
+          customer_email: "anna@example.com",
+          recipient_name: "Maria Lind",
+          locale: "en-GB",
+          email_buyer?: true,
+          email_recipient?: true,
+          recipient_email: "maria@example.com"
+        })
+
+      Oban.drain_queue(queue: :default)
+
+      assert_received {:email, first}
+      assert_received {:email, second}
+      emails = Map.new([first, second], fn email -> {email.to, email} end)
+
+      buyer = emails[[{"", "anna@example.com"}]]
+      assert buyer.subject == "Your Eden Flowers gift voucher for Maria Lind"
+
+      recipient = emails[[{"", "maria@example.com"}]]
+      assert recipient.subject == "A gift voucher for you from Anna"
+      assert recipient.text_body =~ "Hi Maria,"
+      assert length(recipient.attachments) == 1
+      assert length(buyer.attachments) == 2
+    end
+
+    test "needs a way to reach the buyer, 20 € or more and an address for each email", %{admin: admin} do
+      assert {:error, _} = sell(admin, %{customer_phone_number: nil})
+      assert {:error, _} = sell(admin, %{amount: 15})
+      assert {:error, _} = sell(admin, %{email_buyer?: true})
+      assert {:error, _} = sell(admin, %{email_recipient?: true})
+      assert {:error, _} = sell(admin, %{payment_method: :stripe})
+    end
+  end
+
   describe "looking after a voucher" do
     test "Jennie gives it more time, even once expired, but never takes time away" do
       expired = voucher("50.00", expires_on: Date.add(Edenflowers.ShopTime.today(), -3))

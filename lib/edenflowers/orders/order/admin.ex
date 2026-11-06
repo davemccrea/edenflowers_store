@@ -69,6 +69,7 @@ defmodule Edenflowers.Orders.Order.Admin do
     :cancelled?,
     :editable?,
     :fulfillable?,
+    :pass_it_on_shown?,
     :pass_it_on_card_changeable?,
     :pass_it_on_card_removable?,
     :payment_reminder_sendable?,
@@ -322,6 +323,64 @@ defmodule Edenflowers.Orders.Order.Admin do
 
       change {PaymentChanges.QueueEmail, trigger: :send_order_details_email},
         where: [argument_equals(:email_customer?, true)]
+    end
+
+    create :sell_gift_voucher do
+      description "Jennie sells a Gift voucher in the shop, paid there and then by card or cash: a placed, paid " <>
+                    "Gift voucher sale, the same kind of order the online voucher checkout makes, with its voucher " <>
+                    "issued. It's fulfilled as she writes the voucher onto a gift card. Any amount from 20 €. " <>
+                    "The voucher PDF goes to the buyer, the recipient, both or neither, as she ticks."
+
+      accept [:locale, :customer_name, :customer_email, :customer_phone_number, :recipient_name, :card_message]
+
+      argument :amount, :integer,
+        allow_nil?: false,
+        constraints: [min: 20],
+        description: "The voucher's amount in whole euros, and what the buyer paid."
+
+      argument :payment_method, Edenflowers.Payments.PaymentMethod, allow_nil?: false
+      argument :email_buyer?, :boolean, default: false, description: "Email the voucher and receipt to the buyer."
+      argument :email_recipient?, :boolean, default: false, description: "Email the voucher to the recipient."
+      argument :recipient_email, Edenflowers.Types.Email, description: "Where the recipient's voucher goes."
+
+      validate present(:customer_name)
+
+      validate present([:customer_email, :customer_phone_number], at_least: 1),
+        message: "enter a phone number or an email"
+
+      validate attribute_in(:locale, @locales)
+      validate string_length(:card_message, max: Edenflowers.Orders.Order.Checkout.voucher_message_length())
+      validate one_of(:payment_method, [:zettle, :cash])
+      validate present(:customer_email), where: [argument_equals(:email_buyer?, true)]
+      validate present(:recipient_email), where: [argument_equals(:email_recipient?, true)]
+
+      change set_attribute(:state, :placed)
+      change set_attribute(:origin, :custom)
+      change set_attribute(:gift, true)
+      change set_attribute(:fulfillment_status, :fulfilled)
+      # A voucher's VAT is due when it's spent, at the rates of what it buys.
+      change set_attribute(:vat_breakdown, [])
+      change set_attribute(:ordered_at, &DateTime.utc_now/0)
+      change atomic_set(:order_reference, expr(fragment("nextval('reference_seq')::text")))
+
+      change fn changeset, _context ->
+        Ash.Changeset.force_change_attribute(
+          changeset,
+          :voucher_locale,
+          Ash.Changeset.get_attribute(changeset, :locale)
+        )
+      end
+
+      change {Changes.NormalizePhoneNumber, attribute: :customer_phone_number}
+      change Changes.UpsertUserAndAssignToOrder, where: [present(:customer_email)]
+      change {Changes.SetGiftVoucherLine, authorize?: false}
+      change {PaymentChanges.RecordPayment, amount: :amount}
+      change Changes.IssueGiftVouchers
+
+      change {PaymentChanges.QueueEmail, trigger: :send_receipt_email}, where: [argument_equals(:email_buyer?, true)]
+
+      change {PaymentChanges.QueueEmail, trigger: :send_gift_voucher_to_recipient, arguments: [to: :recipient_email]},
+        where: [argument_equals(:email_recipient?, true)]
     end
 
     update :edit do
