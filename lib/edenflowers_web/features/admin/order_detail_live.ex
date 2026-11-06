@@ -450,7 +450,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             </.widget>
 
             <.pass_it_on_card
-              :if={@order.gift || (@order.promotion && @order.promotion.gift_order)}
+              :if={@order.pass_it_on_shown?}
               order={@order}
               locale={@locale}
             />

@@ -41,6 +41,9 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
       <.admin_page>
         <.admin_page_header title={~t"Orders"}>
           <:actions>
+            <.button navigate={~p"/admin/orders/new-gift-voucher"} variant="secondary" size="sm">
+              <.icon name="hero-gift" class="h-4 w-4" /> {~t"Sell gift voucher"}
+            </.button>
             <.button navigate={~p"/admin/orders/new"} variant="primary" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" /> {~t"New order"}
             </.button>

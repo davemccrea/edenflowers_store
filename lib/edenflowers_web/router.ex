@@ -183,6 +183,7 @@ defmodule EdenflowersWeb.Router do
       live "/", EdenflowersWeb.Admin.OverviewLive
       live "/orders", EdenflowersWeb.Admin.OrdersLive
       live "/orders/new", EdenflowersWeb.Admin.OrderFormLive
+      live "/orders/new-gift-voucher", EdenflowersWeb.Admin.GiftVoucherSaleLive
       live "/orders/:id", EdenflowersWeb.Admin.OrderDetailLive
       live "/orders/:id/edit", EdenflowersWeb.Admin.OrderFormLive
       live "/customers", EdenflowersWeb.Admin.CustomersLive

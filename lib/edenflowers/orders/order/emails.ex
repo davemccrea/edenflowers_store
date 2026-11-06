@@ -83,6 +83,19 @@ defmodule Edenflowers.Orders.Order.Emails do
         on_error :record_receipt_email_failure
       end
 
+      # Queued when Jennie sells a Gift voucher in the shop and ticks the recipient.
+      trigger :send_gift_voucher_to_recipient do
+        action :send_gift_voucher_to_recipient
+        queue :default
+        max_attempts 3
+        lock_for_update? false
+        scheduler_cron false
+        worker_module_name Edenflowers.Orders.Workers.SendGiftVoucherToRecipient
+        scheduler_module_name Edenflowers.Orders.Schedulers.SendGiftVoucherToRecipient
+        default_actor system_actor()
+        on_error :record_receipt_email_failure
+      end
+
       # Queued only when Jennie asks for it, on :mark_fulfilled or
       # :email_fulfillment_confirmation. A job that runs out of attempts records
       # the failure for her to see and send again.
@@ -138,6 +151,18 @@ defmodule Edenflowers.Orders.Order.Emails do
       transaction? false
       require_atomic? false
       change Changes.SendReceiptEmail
+    end
+
+    update :send_gift_voucher_to_recipient do
+      description "Run by its job when Jennie sells a Gift voucher in the shop and ticks the recipient: emails " <>
+                    "the voucher PDF to the recipient's address, as a gift from the buyer, without the receipt."
+
+      accept []
+      argument :to, Edenflowers.Types.Email, allow_nil?: false, description: "The recipient's email address."
+      validate {Holds, calculation: :gift_voucher_sale?, message: "doesn't sell a gift voucher"}
+      transaction? false
+      require_atomic? false
+      change Changes.SendGiftVoucherToRecipient
     end
 
     update :send_order_details_email do

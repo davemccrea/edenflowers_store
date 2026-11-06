@@ -157,6 +157,7 @@ defmodule Edenflowers.Orders.Order do
       :send_payment_received_email,
       :send_payment_reminder,
       :send_receipt_email,
+      :send_gift_voucher_to_recipient,
       :send_fulfillment_email,
       :record_fulfillment_email_failure,
       :record_receipt_email_failure,
@@ -182,6 +183,7 @@ defmodule Edenflowers.Orders.Order do
                      :start_subscription,
                      :mark_payment_cancelled,
                      :send_receipt_email,
+                     :send_gift_voucher_to_recipient,
                      :send_fulfillment_email,
                      :remind_shop,
                      :record_fulfillment_email_failure,
@@ -210,6 +212,7 @@ defmodule Edenflowers.Orders.Order do
                      :email_fulfillment_confirmation,
                      :sales_summary,
                      :place_custom,
+                     :sell_gift_voucher,
                      :edit,
                      :quote_entered,
                      :update_florist_note,
@@ -269,6 +272,7 @@ defmodule Edenflowers.Orders.Order do
     # to a placed order, by anyone, refreshes the admin pages showing it.
     # Carts are left out: they change with every checkout step.
     publish :place_custom, ["admin", "orders"]
+    publish :sell_gift_voucher, ["admin", "orders"]
     publish_all :update, ["admin", "orders"], filter: fn %{data: order} -> order.state == :placed end
     publish_all :update, ["order", "changed", :id], filter: fn %{data: order} -> order.state == :placed end
     publish :add_promotion_with_code, ["line_item", "changed", :id]
@@ -615,6 +619,13 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
       description "Whether Jennie can mark it fulfilled: placed and still to make."
+    end
+
+    calculate :pass_it_on_shown?,
+              :boolean,
+              expr((gift and not gift_voucher_sale?) or not is_nil(promotion.gift_order_id)) do
+      description "Whether the order page shows the Pass it on panel: a gift of flowers, whose card goes out with " <>
+                    "them, or an order placed with a card's code. Not a Gift voucher sale, which has no flowers."
     end
 
     calculate :pass_it_on_card_changeable?, :boolean, expr(gift and fulfillable?) do

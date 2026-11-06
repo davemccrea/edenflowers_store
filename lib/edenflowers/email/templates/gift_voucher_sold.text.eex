@@ -1,6 +1,6 @@
 <%= if @order.customer_first_name do %><%= dgettext("emails", "Hi %{name},", name: @order.customer_first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= dgettext("emails", "Thank you for buying a gift voucher! The voucher for %{recipient} is attached, ready to print or forward.", recipient: @order.recipient_name) %>
+<%= if @order.recipient_name do %><%= dgettext("emails", "Thank you for buying a gift voucher! The voucher for %{recipient} is attached, ready to print or forward.", recipient: @order.recipient_name) %><% else %><%= dgettext("emails", "Thank you for buying a gift voucher! The voucher is attached, ready to print or forward.") %><% end %>
 <%= if @ready_on do %>
 <%= dgettext("emails", "I'll have a gift card with the voucher written on it ready for you to collect at %{shop} from %{date}.", shop: shop_address(), date: @ready_on) %>
 <% end %>

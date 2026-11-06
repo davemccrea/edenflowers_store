@@ -67,6 +67,7 @@ defmodule Edenflowers.Orders do
       define :mark_order_fulfilled, action: :mark_fulfilled
       define :email_fulfillment_confirmation, action: :email_fulfillment_confirmation
       define :place_custom_order, action: :place_custom
+      define :sell_gift_voucher, action: :sell_gift_voucher
       define :edit_order, action: :edit
       define :quote_entered_order, action: :quote_entered, args: [:order, :params, :delivery_quote]
       define :update_florist_note, action: :update_florist_note

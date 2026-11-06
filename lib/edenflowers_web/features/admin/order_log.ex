@@ -70,6 +70,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   end
 
   defp title(%{version_action_name: :place_custom}), do: ~t"Placed by Jennie"
+  defp title(%{version_action_name: :sell_gift_voucher}), do: ~t"Sold in the shop"
   defp title(%{version_action_name: :finalize_checkout}), do: ~t"Placed and paid with Stripe"
   defp title(%{version_action_name: :place_unpaid_occurrence}), do: ~t"Placed, but the saved card was refused"
   defp title(%{version_action_name: :edit}), do: ~t"Edited"
@@ -92,6 +93,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :send_payment_failed_email}), do: ~t"Payment needed emailed"
   defp title(%{version_action_name: :send_receipt_email}), do: ~t"Receipt emailed"
   defp title(%{version_action_name: :email_gift_voucher}), do: ~t"Gift voucher emailed"
+  defp title(%{version_action_name: :send_gift_voucher_to_recipient}), do: ~t"Gift voucher emailed to the recipient"
 
   defp title(%{version_action_name: action}) when action in [:email_receipt, :send_payment_received_email],
     do: ~t"Payment received emailed"
@@ -122,7 +124,8 @@ defmodule EdenflowersWeb.Admin.OrderLog do
     [{~t"Sent to", version.changes["fulfillment_emailed_to"]}]
   end
 
-  defp field_details(%{version_action_name: :email_gift_voucher} = version, _locale) do
+  defp field_details(%{version_action_name: action} = version, _locale)
+       when action in [:email_gift_voucher, :send_gift_voucher_to_recipient] do
     if to = Map.get(version, :email_to), do: [{~t"Sent to", to}], else: []
   end
 
