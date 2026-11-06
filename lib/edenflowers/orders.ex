@@ -39,6 +39,7 @@ defmodule Edenflowers.Orders do
         args: [:visitor_id],
         not_found_error?: false
 
+      define :release_gift_voucher_sale, action: :release_gift_voucher_sale, get_by: [:id], args: [:visitor_id]
       define :release_cart, action: :release_cart, get_by: [:id], args: [:visitor_id]
       define :get_order_paid_with_payment_intent, action: :paid_with_payment_intent, args: [:id, :payment_intent_id]
       define :submit_contact_details, action: :submit_contact_details

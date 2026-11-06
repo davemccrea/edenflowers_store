@@ -37,6 +37,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
        sale: sale && load_sale(sale),
        editing?: sale != nil,
        voucher_styles: online_voucher_styles(),
+       # Until the buyer touches the form, the preview shows where their message goes.
+       interacted?: sale != nil,
        preview: nil,
        preview_error?: false,
        previewed: nil
@@ -145,10 +147,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
         <header class="max-w-prose">
           <h1 class="page-title">{~t"Give a gift voucher"}</h1>
           <p class="mt-6 text-lg leading-relaxed">
-            {~t"Let them choose flowers, a subscription or a course. Valid online and in my shop at Minimossen."}
-            <.link navigate={~q"/#{language}/terms" <> "#gift-vouchers"} class="link-underline-static-body">
-              {~t"See Gift voucher terms"}
-            </.link>
+            {~t"Let them choose their own flowers, a flower subscription or a place on one of my courses. They can use it online or in my shop at Minimossen."}
           </p>
         </header>
 
@@ -261,14 +260,20 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   >
                     {~t"Continue to payment"}
                   </.button>
-                  <div class="text-base-content/70 -mt-3 flex flex-col items-start gap-2 text-sm sm:col-span-2">
-                    <p>
-                      {~t"You'll receive an email with a PDF, to print or forward on. The voucher is valid for a year from the day you buy it."}
-                    </p>
-                    <.link navigate={~q"/#{language}/terms" <> "#gift-vouchers"} class="link-underline-hover">
-                      {~t"Gift voucher terms"}
-                    </.link>
-                  </div>
+                  <p class="text-base-content/70 -mt-3 text-sm sm:col-span-2">
+                    {~t"You'll receive an email with a PDF, to print or forward on. The voucher is valid for a year from the day you buy it."}
+                    <.link navigate={~q"/#{language}/terms" <> "#gift-vouchers"} class="link-underline-static-body">
+                      {~t"See Gift voucher terms"}</.link>.
+                  </p>
+                  <button
+                    :if={@interacted?}
+                    type="button"
+                    phx-click="start_over"
+                    data-confirm={~t"Clear everything you've entered and start over?"}
+                    class="link-underline-hover text-base-content/70 justify-self-start py-2.5 text-sm sm:col-span-2"
+                  >
+                    {~t"Start over"}
+                  </button>
                 </div>
               </fieldset>
             </div>
@@ -468,7 +473,10 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
 
   @impl true
   def handle_event("validate", %{"form" => params}, socket) do
-    {:noreply, socket |> assign(form: AshPhoenix.Form.validate(socket.assigns.form, params)) |> render_preview()}
+    {:noreply,
+     socket
+     |> assign(form: AshPhoenix.Form.validate(socket.assigns.form, params), interacted?: true)
+     |> render_preview()}
   end
 
   def handle_event("continue", %{"form" => params}, socket) do
@@ -489,6 +497,18 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   def handle_event("shuffle_snow", _params, socket) do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "voucher_snow_seed", to_string(snow_seed())))
     {:noreply, socket |> assign(form: form) |> render_preview()}
+  end
+
+  # A sale already placed by its webhook can't be released, and the page starts over regardless.
+  def handle_event("start_over", _params, socket) do
+    if sale = socket.assigns.sale do
+      Orders.release_gift_voucher_sale(sale.id, socket.assigns.visitor_id, actor: socket.assigns.current_user)
+    end
+
+    {:noreply,
+     socket
+     |> push_event("scroll-top", %{})
+     |> push_navigate(to: ~q"/#{language}/gift-voucher", replace: true)}
   end
 
   def handle_event("retry_preview", _params, socket), do: {:noreply, render_preview(socket)}
@@ -555,12 +575,13 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
       style: sale.voucher_style,
       snow_seed: sale.voucher_snow_seed,
       recipient_name: sale.recipient_name,
-      message: sale.card_message
+      message: sale.card_message || ""
     }
   end
 
-  defp preview_voucher(%{form: form}) do
+  defp preview_voucher(%{form: form, interacted?: interacted?}) do
     changeset = form.source.source
+    message = Ash.Changeset.get_attribute(changeset, :card_message)
 
     %{
       amount: Ash.Changeset.get_argument(changeset, :amount) || @default_amount,
@@ -568,7 +589,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
       style: Ash.Changeset.get_attribute(changeset, :voucher_style),
       snow_seed: Ash.Changeset.get_attribute(changeset, :voucher_snow_seed),
       recipient_name: Ash.Changeset.get_attribute(changeset, :recipient_name),
-      message: Ash.Changeset.get_attribute(changeset, :card_message)
+      message: if(interacted?, do: message || "", else: message)
     }
   end
 

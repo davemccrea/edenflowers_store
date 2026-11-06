@@ -51,6 +51,9 @@ window.addEventListener("phx:js-exec", ({ detail }) => {
     .forEach((el) => liveSocket.execJS(el, el.getAttribute(detail.attr)));
 });
 
+// Navigating to the page already open keeps its scroll, so a fresh start asks for the top.
+window.addEventListener("phx:scroll-top", () => window.scrollTo(0, 0));
+
 // Custom Umami events from EdenflowersWeb.Analytics. A `once` key is only
 // remembered once Umami has it, so a blocked tracker doesn't eat the event.
 window.addEventListener("phx:umami", ({ detail: { name, data, once } }) => {

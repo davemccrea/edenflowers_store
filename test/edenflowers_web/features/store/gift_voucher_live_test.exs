@@ -99,6 +99,20 @@ defmodule EdenflowersWeb.Store.GiftVoucherLiveTest do
     assert [%{recipient_name: "Ella"}] = Ash.read!(Order, authorize?: false)
   end
 
+  test "starting over clears the form and a reload no longer resumes the voucher", %{conn: conn} do
+    conn = get(conn, "/en/gift-voucher")
+    {:ok, view, _html} = live(conn)
+    view |> form("#gift-voucher-form", form: @details) |> render_submit()
+
+    {:ok, view, _html} = live(conn, "/en/gift-voucher")
+
+    assert {:error, {:live_redirect, %{to: "/en/gift-voucher"}}} =
+             view |> element("button", "Start over") |> render_click()
+
+    {:ok, view, _html} = live(conn, "/en/gift-voucher")
+    refute has_element?(view, "#gift-voucher-form input[name='form[recipient_name]'][value=Mia]")
+  end
+
   test "a cancelled MobilePay payment returns to the voucher's payment step", %{conn: conn} do
     conn = get(conn, "/en/gift-voucher")
     {:ok, view, _html} = live(conn)
