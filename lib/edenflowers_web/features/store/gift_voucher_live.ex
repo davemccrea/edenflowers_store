@@ -35,6 +35,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
        editing?: false,
        voucher_styles: online_voucher_styles(),
        preview: nil,
+       preview_error?: false,
        previewed: nil
      )
      |> assign_form()
@@ -68,16 +69,12 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
             phx-change="validate"
             phx-submit="continue"
           >
-            <%!-- The fields run down the left, and the preview sticks beside them while they're
-                 filled in. On a phone the preview follows the style choice, before the words,
-                 and sticks to the top of the screen above them, over the header, so the header
-                 coming and going leaves it where it is. While the keyboard is up it drops back
-                 into the page: iOS scrolls the page under the keyboard and would hide it. --%>
-            <%!-- A field scrolled into view stops below the sticky preview, not under it. --%>
-            <div class="group/voucher grid gap-10 max-lg:[&_:is(input,textarea,select)]:scroll-mt-[calc((100vw-2rem)*148/210+5rem)] lg:grid-cols-2 lg:items-start lg:gap-x-16">
+            <%!-- The mobile preview leaves room for the form, and scrolls normally on short
+                 screens or while the keyboard obscures the viewport. --%>
+            <div class="voucher-form-fields grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-x-16">
               <fieldset class="flex flex-col lg:col-start-1 lg:row-start-1">
                 <legend class="eyebrow text-base-content/70 mb-5">{~t"Make it personal"}</legend>
-                <%!-- Two styles to a row, everyday above Christmas. --%>
+                <%!-- Equal-height choices keep wrapped Finnish and Swedish labels aligned. --%>
                 <div class="[&_fieldset>div]:grid [&_fieldset>div]:auto-rows-fr [&_fieldset>div]:grid-cols-2">
                   <.input
                     :let={option}
@@ -92,78 +89,16 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                 </div>
               </fieldset>
 
-              <script :type={Phoenix.LiveView.ColocatedHook} name=".PreviewSlidesBack">
-                // When the keyboard closes, the preview slides back down to the top of the
-                // screen, instead of appearing there at once. iOS's Done closes the keyboard
-                // but leaves the field focused, so the preview would stay out of the way until
-                // the next scroll: when the screen grows back, the field lets go of focus.
-                const TYPING = "textarea, input[type=text], input[type=email]";
-
-                export default {
-                  mounted() {
-                    this.onFocusOut = (event) => {
-                      if (!event.target.matches(TYPING)) return;
-                      setTimeout(() => {
-                        if (document.activeElement?.matches(TYPING)) return;
-                        if (
-                          window.matchMedia(
-                            "(min-width: 64rem), (prefers-reduced-motion: reduce)",
-                          ).matches
-                        )
-                          return;
-                        if (this.el.getBoundingClientRect().top > 1) return;
-                        this.el.animate(
-                          [{ transform: "translateY(-100%)" }, { transform: "translateY(0)" }],
-                          { duration: 300, easing: "ease-out" },
-                        );
-                      });
-                    };
-                    this.el.closest("form").addEventListener("focusout", this.onFocusOut);
-
-                    const viewport = window.visualViewport;
-                    if (!viewport) return;
-                    let height = viewport.height;
-                    this.onResize = () => {
-                      const keyboardClosed = viewport.height > height + 100;
-                      height = viewport.height;
-                      const field = document.activeElement;
-                      if (
-                        keyboardClosed &&
-                        field?.matches(TYPING) &&
-                        this.el.closest("form").contains(field)
-                      ) {
-                        field.blur();
-                      }
-                    };
-                    viewport.addEventListener("resize", this.onResize);
-                  },
-
-                  destroyed() {
-                    this.el.closest("form")?.removeEventListener("focusout", this.onFocusOut);
-                    window.visualViewport?.removeEventListener("resize", this.onResize);
-                  },
-                };
-              </script>
               <div
                 id="voucher-preview-band"
-                phx-hook=".PreviewSlidesBack"
-                class="bg-base-100 z-60 sticky top-0 -mx-4 min-w-0 px-4 py-3 max-lg:group-has-[:is(textarea,input[type=text],input[type=email]):focus]/voucher:static after:bg-linear-to-b after:from-base-100 after:absolute after:inset-x-0 after:top-full after:h-8 after:to-transparent after:max-lg:group-has-[:is(textarea,input[type=text],input[type=email]):focus]/voucher:hidden lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:z-auto lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:after:hidden"
+                phx-hook="VoucherPreview"
+                class="bg-base-100 z-60 relative -mx-4 min-w-0 px-4 py-3 lg:top-[calc(var(--shy-header-offset,0px)+2rem)] lg:sticky lg:z-auto lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0"
               >
-                <%!-- Tapping a Christmas voucher shuffles its snow. --%>
-                <button
-                  :if={GiftVoucherStyle.christmas?(@form[:voucher_style].value)}
-                  type="button"
-                  phx-click={JS.push("shuffle_snow", loading: "#gift-voucher-form")}
-                  aria-label={~t"Shuffle the snow on the voucher"}
-                  class="block w-full cursor-pointer"
-                  data-testid="shuffle-snow"
-                >
-                  <.voucher_preview preview={@preview} loading?={@preview_loading?} />
-                </button>
                 <.voucher_preview
-                  :if={!GiftVoucherStyle.christmas?(@form[:voucher_style].value)}
                   preview={@preview}
                   loading?={@preview_loading?}
+                  error?={@preview_error?}
+                  shuffle?={GiftVoucherStyle.christmas?(@form[:voucher_style].value)}
                 />
                 <.input field={@form[:voucher_snow_seed]} type="hidden" />
               </div>
@@ -173,6 +108,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   label={~t"Who is it for?"}
                   field={@form[:recipient_name]}
                   type="text"
+                  autocomplete="off"
                   validate_live?
                   phx-debounce="400"
                   required
@@ -182,6 +118,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                   field={@form[:card_message]}
                   type="textarea"
                   maxlength={Order.Checkout.voucher_message_length()}
+                  help={~t"Up to #{count = Order.Checkout.voucher_message_length()} characters."}
                   phx-debounce="400"
                   rows="3"
                 />
@@ -250,7 +187,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                screen it moves to the right of it. --%>
           <div :if={@sale && !@editing?} class="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-x-16">
             <div class="min-w-0 lg:col-start-2 lg:row-start-1">
-              <.voucher_preview preview={@preview} loading?={@preview_loading?} />
+              <.voucher_preview preview={@preview} loading?={@preview_loading?} error?={@preview_error?} />
             </div>
             <section aria-labelledby="pay-heading" data-testid="payment-section">
               <%!-- The form, and the button that submitted it, are gone: focus lands here instead of on <body>. --%>
@@ -299,25 +236,51 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
 
   attr :preview, :string, required: true
   attr :loading?, :boolean, required: true
+  attr :error?, :boolean, required: true
+  attr :shuffle?, :boolean, default: false
 
   # Sized before the image arrives, so the fields beside it don't jump. Dims
   # gently while a new preview renders, so only changes to the voucher dim it.
   defp voucher_preview(assigns) do
     ~H"""
-    <div
-      id="voucher-preview"
-      class={["bg-base-100 aspect-[210/148] shadow-md lg:shadow-xl", if(@loading?,
+    <div class="voucher-preview">
+      <div
+        id="voucher-preview"
+        class={["bg-base-100 relative shadow-md lg:shadow-xl", !@error? && "aspect-[210/148]", if(@loading?,
     do: "opacity-70 transition-opacity duration-150 ease-out",
     else: "transition-opacity duration-500 ease-out")]}
-      aria-busy={to_string(@loading?)}
-    >
-      <img
-        :if={@preview}
-        src={"data:image/png;base64," <> @preview}
-        alt={~t"Preview of your gift voucher"}
-        class="block h-full w-full"
-        data-testid="voucher-preview"
-      />
+        aria-busy={to_string(@loading?)}
+      >
+        <img
+          :if={@preview && !@error?}
+          src={"data:image/png;base64," <> @preview}
+          alt={~t"Preview of your gift voucher"}
+          class="block h-full w-full"
+          data-testid="voucher-preview"
+        />
+        <button
+          :if={@shuffle? && !@error?}
+          type="button"
+          phx-click={JS.push("shuffle_snow", loading: "#gift-voucher-form")}
+          aria-label={~t"Shuffle the snow on the voucher"}
+          aria-describedby="voucher-snow-hint"
+          class="absolute inset-0 cursor-pointer"
+          data-testid="shuffle-snow"
+        ></button>
+        <div
+          :if={@error? || !@preview}
+          class={["flex flex-col items-center justify-center gap-3 p-4 text-center", !@error? && "absolute inset-0"]}
+          role="status"
+        >
+          <p>{if @error?, do: ~t"The preview couldn't load. Please try again.", else: ~t"Loading preview…"}</p>
+          <button :if={@error?} type="button" phx-click="retry_preview" class="link-underline-hover min-h-11 px-3">
+            {~t"Retry preview"}
+          </button>
+        </div>
+      </div>
+      <p :if={@shuffle? && !@error?} id="voucher-snow-hint" class="text-base-content/70 mt-2 text-center text-sm">
+        {~t"Tap the preview to shuffle the snow."}
+      </p>
     </div>
     """
   end
@@ -337,7 +300,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
          |> EdenflowersWeb.Analytics.track("Gift voucher checkout started", %{}, once: "gift-voucher:#{sale.id}")}
 
       {:error, form} ->
-        {:noreply, assign(socket, form: form)}
+        {:noreply, socket |> assign(form: form) |> push_event("focus-first-error", %{})}
     end
   end
 
@@ -345,6 +308,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
     form = AshPhoenix.Form.update_params(socket.assigns.form, &Map.put(&1, "voucher_snow_seed", to_string(snow_seed())))
     {:noreply, socket |> assign(form: form) |> render_preview()}
   end
+
+  def handle_event("retry_preview", _params, socket), do: {:noreply, render_preview(socket)}
 
   def handle_event("change", _params, socket) do
     {:noreply, socket |> assign(editing?: true) |> assign_form()}
@@ -381,10 +346,10 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   def handle_async(:preview, {:ok, {:ok, png}}, socket),
     do: {:noreply, assign(socket, preview: Base.encode64(png), preview_loading?: false)}
 
-  # A preview that fails to render keeps the last one; the voucher itself is unaffected.
+  # Keep the inputs retryable and hide the old image, which no longer represents them.
   def handle_async(:preview, result, socket) do
     Logger.warning("Gift voucher preview failed: #{inspect(result)}")
-    {:noreply, assign(socket, preview_loading?: false)}
+    {:noreply, assign(socket, preview_loading?: false, preview_error?: true, previewed: nil)}
   end
 
   # Rendered in a task, as Typst takes a moment. Only the latest render is shown,
@@ -396,7 +361,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
 
       voucher ->
         socket
-        |> assign(previewed: voucher, preview_loading?: true)
+        |> assign(previewed: voucher, preview_loading?: true, preview_error?: false)
         |> start_async(:preview, fn -> GiftVoucherPdf.preview(voucher) end)
     end
   end
