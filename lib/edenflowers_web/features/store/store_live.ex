@@ -122,7 +122,7 @@ defmodule EdenflowersWeb.Store.StoreLive do
         </p>
 
         <nav :if={@categories != []} aria-label={~t"Categories"} class="mt-8 mb-12 md:mb-16">
-          <ol class="category-index [scrollbar-width:none] m-0 flex list-none gap-x-8 overflow-x-auto whitespace-nowrap p-0">
+          <ol class="category-index m-0 flex list-none flex-wrap gap-x-6 gap-y-1 p-0 md:gap-x-8">
             <li :for={category <- @categories}>
               <.link
                 patch={~q"/#{language}/store/#{category.slug}"}
