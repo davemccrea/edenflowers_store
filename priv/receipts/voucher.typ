@@ -2,11 +2,9 @@
 
 #let shop = toml("shop.toml")
 
-// Each style's inks: the gift side, and the stub that holds the money.
-// Cream prints well at home; green fills the page, so it suits a voucher
-// that's forwarded more than printed; Christmas is cream with snowflakes and
-// a greeting.
-#let cream-palette = (
+// One set of inks for every style: Christmas is cream with snowflakes and a
+// greeting.
+#let ink = (
   page: colors.cream,
   body: colors.cream-content,
   strong: colors.ink,
@@ -14,19 +12,6 @@
   stub: colors.primary,
   stub-ink: colors.cream,
   stub-muted: colors.cream.transparentize(30%),
-)
-#let palettes = (
-  cream: cream-palette,
-  christmas: cream-palette,
-  green: (
-    page: colors.primary,
-    body: colors.cream,
-    strong: colors.cream,
-    muted: colors.cream.transparentize(30%),
-    stub: colors.cream,
-    stub-ink: colors.primary,
-    stub-muted: colors.primary.transparentize(30%),
-  ),
 )
 
 // The logo and snowflakes are one-colour SVGs, recoloured to suit the page.
@@ -70,12 +55,11 @@
   for key in ("gift-voucher", "to", "code", "valid-until", "how-to-use", "terms") {
     assert(key in voucher.labels, message: "voucher: missing label `" + key + "`")
   }
-  assert(voucher.style in palettes, message: "voucher: unknown style `" + voucher.style + "`")
+  assert(voucher.style in ("cream", "christmas"), message: "voucher: unknown style `" + voucher.style + "`")
   let christmas = voucher.style == "christmas"
   if christmas {
     assert("christmas-greeting" in voucher.labels, message: "voucher: missing label `christmas-greeting`")
   }
-  let ink = palettes.at(voucher.style)
 
   let t(key) = voucher.labels.at(key)
   let stub-label(key) = block(below: 4pt, text(size: type-scale.small, fill: ink.stub-muted)[#t(key)])

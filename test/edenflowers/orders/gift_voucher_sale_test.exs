@@ -169,12 +169,10 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
                })
     end
 
-    test "the voucher prints in the style the buyer chose, cream unless they chose another" do
+    test "the voucher prints in cream by default" do
       cream = Ash.load!(voucher(buy(50)), [line_item: :order], authorize?: false)
-      green = Ash.load!(voucher(buy(50, %{voucher_style: :green})), [line_item: :order], authorize?: false)
 
       assert %{style: :cream} = GiftVoucherPdf.build_payload(cream)
-      assert %{style: :green} = GiftVoucherPdf.build_payload(green)
     end
 
     test "customers can choose the Christmas style only while Jennie offers it" do
