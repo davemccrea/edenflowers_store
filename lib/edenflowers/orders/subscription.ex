@@ -201,7 +201,6 @@ defmodule Edenflowers.Orders.Subscription do
       prepare build(sort: [next_fulfillment_date: :asc], load: [:next_delivery_date, :user, :product_variant])
     end
 
-    # Held until Jennie sorts out the card: no Occurrence is made meanwhile.
     read :delivering_on_closed_days do
       description "Active subscriptions with a delivery scheduled on a day the shop calendar closes in the next " <>
                     "8 weeks, soonest first, for Jennie to deliver anyway or move the order to another day once it's booked."
@@ -217,6 +216,7 @@ defmodule Edenflowers.Orders.Subscription do
               end)
     end
 
+    # Held until Jennie sorts out the card: no Occurrence is made meanwhile.
     read :payment_failed do
       description "Subscriptions held after a refused card, soonest next delivery first, for Jennie to follow up."
       filter expr(state == :payment_failed)
