@@ -80,10 +80,10 @@ defmodule Edenflowers.Email do
   @doc """
   Tells the customer their payment of `amount` arrived outside checkout,
   through a payment link or recorded by Jennie, with the receipt the
-  sender attaches. Never asks for more, even if some is still owed. For an
-  order, expects `:customer_first_name`, `:grand_total`, `:amount_paid`,
-  `:balance` and `line_items: [:subtotal]` loaded; for a booking,
-  `:course` (translated), `:first_name`, `:amount_paid` and `:balance`.
+  sender attaches. The body identifies the purchase; item and payment
+  totals are in the receipt. Never asks for more, even if some is still
+  owed. For an order, expects `:customer_first_name` loaded; for a booking,
+  `:course` (translated) and `:first_name`.
   """
   def payment_received(record, amount)
 
@@ -120,7 +120,9 @@ defmodule Edenflowers.Email do
 
   @doc """
   A copy of an order's receipt, with the PDF the sender attaches. Does not
-  announce a new payment or imply fulfillment. Loads as `payment_received/3`.
+  announce a new payment or imply fulfillment. Expects `:customer_first_name`,
+  `:grand_total`, `:discount`, `:amount_paid`, `:balance` and
+  `line_items: [:subtotal]` loaded.
   """
   def purchase_receipt(%Order{} = order) do
     customer_email(order, from_address(), fn email ->
@@ -185,8 +187,9 @@ defmodule Edenflowers.Email do
 
   @doc """
   Jennie's reminder of what is still owed on an order or booking, with the
-  payment link to pay it. Only ever sent by hand. Loads as
-  `payment_received/3`.
+  payment link to pay it. Only ever sent by hand. For an order, loads as
+  `purchase_receipt/1`; for a booking, expects `:course` (translated),
+  `:first_name` and `:balance` loaded.
   """
   def payment_reminder(record, payment_link_url)
 
@@ -260,16 +263,11 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  A matter-of-fact receipt for a subscription's next delivery or pickup,
-  distinguishing its Gift voucher payment from what the card was charged.
-  Expects `:amount_paid`, `:payments` and `:line_items` loaded.
+  A matter-of-fact email carrying the receipt for a subscription's next
+  delivery or pickup. Payment details are in the attached receipt.
+  Expects `:line_items` loaded.
   """
   def subscription_charged(order) do
-    voucher_amount =
-      order.payments
-      |> Enum.filter(&(&1.method == :voucher))
-      |> Enum.reduce(Decimal.new(0), &Decimal.add(&1.amount, &2))
-
     customer_email(order, automated_from_address(), fn email ->
       email
       |> subject(~t"Your flowers for #{date = short_date(order)}")
@@ -277,20 +275,17 @@ defmodule Edenflowers.Email do
         Templates.subscription_charged(%{
           order: order,
           product: hd(order.line_items).product_name,
-          voucher_amount: voucher_amount,
-          card_amount: Decimal.sub(order.amount_paid, voucher_amount),
           date: Format.weekday_date(order.fulfillment_date, order.locale),
-          account_url: account_url(),
-          format_currency: &Format.currency(&1, order.locale)
+          account_url: account_url()
         })
       )
     end)
   end
 
   @doc """
-  An Occurrence whose saved card was refused: the flowers still come, and
-  the payment link pays for them. Expects `:customer_first_name`, `:balance`
-  and `:line_items` loaded.
+  Asks for the balance on an Occurrence whose saved card was refused,
+  with its payment link and the account link to update the saved card.
+  Expects `:customer_first_name`, `:balance` and `:line_items` loaded.
   """
   def subscription_payment_failed(order, payment_link_url) do
     customer_email(order, from_address(), fn email ->
@@ -406,7 +401,7 @@ defmodule Edenflowers.Email do
 
   @doc """
   The heads-up before a 2- or 4-week subscription's next delivery or pickup:
-  when, the last day to change it, and when the card is charged and how much.
+  when, the last day to change it, the total price and when payment is taken.
   Matter-of-fact, from the shop. Loads as `subscription_set_up/1`, without
   the user or first delivery, and with `:change_deadline` and `:charged_on`.
   """
@@ -414,16 +409,6 @@ defmodule Edenflowers.Email do
     delivery_on = subscription.next_fulfillment_date
     pickup? = subscription.fulfillment_option.fulfillment_method == :pickup
     day = Localize.Date.to_string!(delivery_on, locale: subscription.locale, format: "EEEE d.M.")
-    price = subscription_price(subscription)
-    voucher_amount = voucher_pays(subscription.gift_voucher, price)
-    card_amount = Decimal.sub(price, voucher_amount)
-
-    voucher_pays =
-      cond do
-        Decimal.eq?(voucher_amount, 0) -> :nothing
-        Decimal.eq?(card_amount, 0) -> :all
-        true -> :part
-      end
 
     customer_email(subscription, automated_from_address(), fn email ->
       email
@@ -437,9 +422,7 @@ defmodule Edenflowers.Email do
           subscription: subscription,
           product: subscription.product_variant.product.name,
           pickup?: pickup?,
-          price: Format.currency(card_amount, subscription.locale),
-          voucher_pays: voucher_pays,
-          voucher_amount: Format.currency(voucher_amount, subscription.locale),
+          price: Format.currency(subscription_price(subscription), subscription.locale),
           change_by: subscription.change_deadline,
           charged_on: subscription.charged_on,
           account_url: account_url(),
@@ -452,15 +435,6 @@ defmodule Edenflowers.Email do
   defp subscription_price(subscription) do
     Decimal.add(subscription.product_variant.price, subscription.first_order_fulfillment_fee || 0)
   end
-
-  # Match Payable.voucher_amount: cover it all, or leave at least 0.50 € for Stripe.
-  defp voucher_pays(%{spendable?: true, remaining: remaining}, price) do
-    if Decimal.compare(remaining, price) != :lt,
-      do: price,
-      else: Decimal.min(remaining, Decimal.max(Decimal.sub(price, "0.50"), 0))
-  end
-
-  defp voucher_pays(_no_usable_voucher, _price), do: Decimal.new(0)
 
   @doc """
   Tells the customer their order was delivered. A collected order gets

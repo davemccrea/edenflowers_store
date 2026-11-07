@@ -1,10 +1,6 @@
 <%= if @order.customer_first_name do %><%= dgettext("emails", "Hi %{name},", name: @order.customer_first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= if @order.fulfillment_status == :fulfilled or Date.before?(@order.fulfillment_date, Edenflowers.ShopTime.today()) do %><%= dgettext("emails", "The payment for your order for %{date} (%{product}) didn't go through.", product: @product, date: @date) %><% else %><%= if @order.fulfillment_method == :delivery do %><%= dgettext("emails", "The payment for your delivery scheduled for %{date} (%{product}) didn't go through, but your flowers are still coming.", product: @product, date: @date) %><% else %><%= dgettext("emails", "The payment for your order for collection on %{date} (%{product}) didn't go through, but your flowers will still be ready to collect.", product: @product, date: @date) %><% end %><% end %>
-
-<%= dgettext("emails", "Amount due") %>: <%= @format_currency.(@order.balance) %>
-
-<%= dgettext("emails", "You can pay online here:") %>
+<%= dgettext("emails", "The payment for your flowers on %{date} (%{product}) didn't go through. Please pay %{amount} using the link below:", product: @product, date: @date, amount: @format_currency.(@order.balance)) %>
 <%= @payment_link_url %>
 
 <%= dgettext("emails", "Later deliveries are on hold until this one is paid. To keep them coming, please also update your card in your account:") %>

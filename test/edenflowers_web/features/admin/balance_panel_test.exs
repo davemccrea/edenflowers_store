@@ -247,6 +247,10 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
     assert_email_sent(fn email ->
       refute email.text_body =~ "/pay/"
       assert email.text_body =~ "50,00 €. Your receipt is attached."
+      assert email.text_body =~ "Order #{order.order_reference}"
+      refute email.text_body =~ "Left to pay"
+      refute email.text_body =~ "Paid so far"
+      assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
     end)
   end
 

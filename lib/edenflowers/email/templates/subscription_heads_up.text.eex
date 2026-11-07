@@ -3,6 +3,6 @@
 <%= dgettext("emails", "Away, or want a change? Pause or change it in your account by %{date}:", date: @format_date.(@change_by)) %>
 <%= @account_url %>
 
-<%= case @voucher_pays do %><% :nothing -> %><%= dgettext("emails", "Your card will be charged %{amount} on %{date}.", amount: @price, date: @format_date.(@charged_on)) %><% :part -> %><%= dgettext("emails", "Your gift voucher pays %{voucher} of it, and your card will be charged the remaining %{amount} on %{date}.", voucher: @voucher_amount, amount: @price, date: @format_date.(@charged_on)) %><% :all -> %><%= dgettext("emails", "Your gift voucher pays for it all (%{voucher}), so your card won't be charged.", voucher: @voucher_amount) %><% end %>
+<%= dgettext("emails", "Your next flowers cost %{total}. On %{date}, we'll apply your available gift voucher balance and charge any remaining amount to your card.", total: @price, date: @format_date.(@charged_on)) %>
 
 Eden Flowers

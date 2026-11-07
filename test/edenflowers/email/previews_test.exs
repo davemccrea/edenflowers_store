@@ -66,7 +66,7 @@ defmodule Edenflowers.Email.PreviewsTest do
     end
   end
 
-  test "a cancellation promises an in-person refund, rather than claiming it already happened" do
+  test "cancellation emails distinguish charges, balances still to pay and refunds still to return" do
     emails =
       for {"Order cancelled", scenario, _, email} <- Previews.all("en-GB"), into: %{}, do: {scenario, email}
 
@@ -76,37 +76,58 @@ defmodule Edenflowers.Email.PreviewsTest do
     refute cash.text_body =~ "I've refunded"
 
     kept = emails["gift voucher sale paid in person, cancellation charge kept"]
-    assert kept.text_body =~ "I've kept 5,00 € as a cancellation charge."
+    assert kept.text_body =~ "Cancellation charge: 5,00 €."
     assert kept.text_body =~ "I'll pay back 45,00 € the same way you paid it."
+    refute kept.text_body =~ "Still to pay:"
+    refute kept.text_body =~ "I'll be in touch about how to pay it."
+
+    mixed = emails["part paid by card, part in cash"]
+    assert mixed.text_body =~ "I've refunded 34,00 €"
+    assert mixed.text_body =~ "I'll pay back 30,00 € the same way you paid it."
+
+    bookings =
+      for {"Booking cancelled", scenario, _, email} <- Previews.all("en-GB"), into: %{}, do: {scenario, email}
+
+    unpaid = bookings["unpaid by bank transfer, cancellation charge outstanding"]
+    assert unpaid.text_body =~ "Cancellation charge: 22,50 €."
+    assert unpaid.text_body =~ "Still to pay: 22,50 €. I'll be in touch about how to pay it."
+
+    partial = bookings["part paid, the rest of a cancellation charge still to pay"]
+    assert partial.text_body =~ "Cancellation charge: 22,50 €."
+    assert partial.text_body =~ "Still to pay: 12,50 €. I'll be in touch about how to pay it."
   end
 
-  test "subscription receipts distinguish voucher payments from the card charge" do
-    bodies =
-      for {"Subscription delivery charged", scenario, _, email} <- Previews.all("en-GB"),
-          into: %{},
-          do: {scenario, email.text_body}
+  test "subscription receipts name delivery or collection in each language" do
+    for {locale, delivery, pickup} <- [
+          {"en-GB", "Your receipt for your delivery on", "Your receipt for your order for collection on"},
+          {"sv-FI", "Ditt kvitto för din leverans", "Ditt kvitto för din beställning för avhämtning"},
+          {"fi", "Liitteenä on kuitti", "Liitteenä on kuitti"}
+        ] do
+      bodies =
+        for {"Subscription delivery charged", scenario, _, email} <- Previews.all(locale),
+            into: %{},
+            do: {scenario, email.text_body}
 
-    assert bodies["delivery partly paid by gift voucher"] =~ "Your card was charged 39,00 €"
-    assert bodies["delivery partly paid by gift voucher"] =~ "Paid with your gift voucher: 20,00 €."
-
-    for scenario <- ["delivery fully paid by gift voucher", "pickup fully paid by gift voucher"] do
-      assert bodies[scenario] =~ "Your gift voucher paid 59,00 €"
-      refute bodies[scenario] =~ "Your card was charged"
+      assert bodies["delivery"] =~ delivery
+      assert bodies["pickup"] =~ pickup
+      assert bodies["delivery"] =~ "14.11.2026"
+      assert bodies["pickup"] =~ "14.11.2026"
+      refute bodies["delivery"] =~ "%{"
+      refute bodies["pickup"] =~ "%{"
     end
-
-    assert bodies["nothing to charge"] =~ "Your receipt is attached."
-    refute bodies["nothing to charge"] =~ "Your card was charged"
-    refute bodies["nothing to charge"] =~ "Your gift voucher paid"
   end
 
-  test "the subscription heads-up leaves Stripe's minimum charge when a voucher nearly pays it all" do
-    [{_, _, _, email}] =
-      Enum.filter(Previews.all("en-GB"), fn {type, scenario, _, _} ->
-        type == "Subscription heads-up" and scenario == "gift voucher leaves the minimum card charge"
-      end)
+  test "the subscription heads-up gives the total and payment date for delivery and pickup" do
+    for {"Subscription heads-up", scenario, _, email} <- Previews.all("en-GB") do
+      total = if scenario == "delivery", do: "59,00 €", else: "49,00 €"
 
-    assert email.text_body =~ "Your gift voucher pays 58,50 € of it"
-    assert email.text_body =~ "your card will be charged the remaining 0,50 €"
+      assert email.text_body =~ "Your next flowers cost #{total}."
+
+      assert email.text_body =~
+               "On Thursday 26.11.2026, we'll apply your available gift voucher balance and charge any remaining amount to your card."
+
+      assert email.text_body =~ "in your account by Wednesday 25.11.2026:"
+    end
   end
 
   test "the routine subscription charge is matter-of-fact, from the shop rather than Jennie" do
@@ -117,7 +138,7 @@ defmodule Edenflowers.Email.PreviewsTest do
     assert email.subject == "Your flowers for Saturday 14.11."
 
     assert email.text_body =~
-             ~r/^Your card was charged 59,00 € for your delivery scheduled for Saturday 14\.11\.2026 \(.+\)\./
+             ~r/^Your receipt for your delivery on Saturday 14\.11\.2026 \(.+\) is attached\./
 
     assert String.ends_with?(email.text_body, "\nEden Flowers\n")
   end
