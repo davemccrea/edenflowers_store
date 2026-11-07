@@ -619,6 +619,11 @@ defmodule EdenflowersWeb.Layouts do
   attr :current_user, :map, required: true
   attr :flash, :map, required: true
   attr :order, :any, required: true, doc: "the browser's cart, nil until its first add"
+
+  attr :typed_checkout_details?, :boolean,
+    default: false,
+    doc: "the checkout page's customer has typed details not yet saved, which emptying the cart would lose"
+
   attr :current_path, :string, required: true
   attr :alternates, :map, default: %{}
   attr :notice_bar, :string, default: nil
@@ -710,6 +715,7 @@ defmodule EdenflowersWeb.Layouts do
       id="cart-drawer-component"
       module={EdenflowersWeb.Cart.Drawer}
       order={@order}
+      typed_details?={@typed_checkout_details?}
       current_user={@current_user}
     />
 

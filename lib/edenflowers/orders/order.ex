@@ -885,17 +885,20 @@ defmodule Edenflowers.Orders.Order do
                     "treats it as empty too."
     end
 
-    calculate :removing_last_item_loses_details?,
+    calculate :one_item_left?, :boolean, expr(non_card_line_item_count == 1) do
+      description "The cart holds one item besides any card, so removing it restarts checkout, blanking what the " <>
+                    "customer has entered there."
+    end
+
+    calculate :checkout_details_saved?,
               :boolean,
               expr(
-                non_card_line_item_count == 1 and
-                  (state != :contact_details or not is_nil(customer_name) or not is_nil(customer_email) or
-                     not is_nil(customer_phone_number) or not is_nil(promotion_id))
+                state != :contact_details or not is_nil(customer_name) or not is_nil(customer_email) or
+                  not is_nil(customer_phone_number) or not is_nil(promotion_id)
               ) do
-      description "Removing the cart's one item restarts checkout, which blanks what the customer has saved there: " <>
-                    "any step past contact details, their contact details, or a promotion code. The cart asks " <>
-                    "before that removal only when this is true, so a cart with nothing saved empties in one tap. " <>
-                    "Typing on a step isn't saved until the step is submitted, so it doesn't count."
+      description "The customer has saved something a checkout restart would blank: a step past contact details, " <>
+                    "their contact details, or a promotion code. Typing on a step isn't saved until the step is " <>
+                    "submitted, so the checkout page tracks that itself."
     end
 
     calculate :add_ons_only?, :boolean, expr(non_card_line_item_count > 0 and non_add_on_line_item_count == 0) do

@@ -40,6 +40,7 @@ defmodule EdenflowersWeb.Cart.Drawer do
             id="cart-line-items"
             module={EdenflowersWeb.Cart.LineItems}
             order={@order}
+            typed_details?={@typed_details?}
           />
 
           <div :if={@order != nil and @order.add_ons_only?} class="flex flex-col gap-3">

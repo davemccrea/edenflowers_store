@@ -12,9 +12,12 @@ defmodule EdenflowersWeb.Cart.LineItems do
   attr :order, :any, required: true
   # Only the checkout has the card picker for the card line to open.
   attr :card_picker?, :boolean, default: false
+  # Only the checkout has a form to type into; what's typed there isn't on the order until a step is submitted.
+  attr :typed_details?, :boolean, default: false
 
   @impl true
-  def mount(socket), do: {:ok, assign(socket, refused: %{}, card_picker?: false, asking_to_remove: nil)}
+  def mount(socket),
+    do: {:ok, assign(socket, refused: %{}, card_picker?: false, asking_to_remove: nil, typed_details?: false)}
 
   @impl true
   def render(assigns) do
@@ -136,7 +139,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
                   class="ml-auto phx-click-loading:opacity-50"
-                  phx-click={if @order.removing_last_item_loses_details?, do: "ask_to_remove", else: "remove_item"}
+                  phx-click="tap_remove"
                   phx-value-id={line_item.id}
                   phx-target={@myself}
                   aria_label={~t"Remove"}
@@ -150,7 +153,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
               <%!-- Asked in the page, not with data-confirm: iOS Safari can refuse window.confirm
                    inside the drawer's modal dialog, which reads as Cancel and leaves the bin dead. --%>
               <div
-                :if={@asking_to_remove == line_item.id and @order.removing_last_item_loses_details?}
+                :if={@asking_to_remove == line_item.id and asks_before_removing?(@order, @typed_details?)}
                 id={"#{@id}-ask-remove-#{line_item.id}"}
                 role="alert"
                 class="flex flex-col gap-3 text-sm"
@@ -238,8 +241,12 @@ defmodule EdenflowersWeb.Cart.LineItems do
     {:noreply, assign(socket, :asking_to_remove, nil)}
   end
 
-  def handle_event("ask_to_remove", %{"id" => id}, socket) do
-    {:noreply, assign(socket, :asking_to_remove, id)}
+  # Decided here rather than when the bin rendered: a checkout field sends what was typed on blur, which the
+  # tap on the bin causes, so its change arrives just before this event.
+  def handle_event("tap_remove", %{"id" => id} = params, socket) do
+    if asks_before_removing?(socket.assigns.order, socket.assigns.typed_details?),
+      do: {:noreply, assign(socket, :asking_to_remove, id)},
+      else: handle_event("remove_item", params, socket)
   end
 
   def handle_event("keep_item", _params, socket) do
@@ -258,6 +265,11 @@ defmodule EdenflowersWeb.Cart.LineItems do
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
     if item = line_item(socket.assigns.order, id), do: Orders.decrement_line_item(item)
     {:noreply, assign(socket, :refused, %{})}
+  end
+
+  # Removing the one item restarts checkout, so ask only when that would lose something the customer filled in.
+  defp asks_before_removing?(order, typed_details?) do
+    order.one_item_left? and (order.checkout_details_saved? or typed_details?)
   end
 
   # Looked up on the session's own order, so a client can't adjust another cart's items,
