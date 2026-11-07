@@ -973,38 +973,34 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <.icon name="hero-chat-bubble-bottom-center-text" class="text-base-content/50 align-[-2px] mr-1 h-3.5 w-3.5" />{@order.florist_note}
         </p>
 
-        <div class="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 empty:hidden">
-          <div
-            :if={@order.gift or present?(@order.card_message)}
-            class="text-base-content/75 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs"
-          >
-            <span :if={@order.gift} class="inline-flex min-w-0 items-baseline gap-1.5">
-              <.icon name="hero-gift" class="h-3.5 w-3.5 shrink-0 self-center" />
-              <span class="break-words">
-                {if presence(@order.recipient_name),
-                  do: ~t"Gift for #{order_recipient_name = @order.recipient_name}",
-                  else: ~t"Gift order"}
-              </span>
+        <div
+          :if={
+            @order.gift or present?(@order.card_message) or @order.missing_delivery_phone? or
+              Decimal.positive?(@order.balance)
+          }
+          class="text-base-content/75 mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs"
+        >
+          <span :if={@order.gift} class="inline-flex min-w-0 items-baseline gap-1.5">
+            <.icon name="hero-gift" class="h-3.5 w-3.5 shrink-0 self-center" />
+            <span class="break-words">
+              {if presence(@order.recipient_name),
+                do: ~t"Gift for #{order_recipient_name = @order.recipient_name}",
+                else: ~t"Gift order"}
             </span>
-            <span :if={present?(@order.card_message)} class="inline-flex items-center gap-1.5">
-              <.icon name="hero-pencil-square" class="h-3.5 w-3.5 shrink-0" /> {~t"Card to write"}
-            </span>
-          </div>
-          <div
-            :if={@order.missing_delivery_phone? or Decimal.positive?(@order.balance)}
-            class="ml-auto flex flex-wrap items-center justify-end gap-1"
-          >
-            <.badge :if={@order.missing_delivery_phone?} tone={:warning} icon="hero-phone-x-mark">
-              {~t"Missing recipient phone"}
-            </.badge>
-            <.badge :if={Decimal.positive?(@order.balance)} tone={:warning}>
-              <%= if Decimal.positive?(@order.amount_paid) do %>
-                {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
-              <% else %>
-                {~t"Unpaid"}
-              <% end %>
-            </.badge>
-          </div>
+          </span>
+          <span :if={present?(@order.card_message)} class="inline-flex items-center gap-1.5">
+            <.icon name="hero-pencil-square" class="h-3.5 w-3.5 shrink-0" /> {~t"Card to write"}
+          </span>
+          <.badge :if={@order.missing_delivery_phone?} tone={:warning} icon="hero-phone-x-mark">
+            {~t"Missing recipient phone"}
+          </.badge>
+          <.badge :if={Decimal.positive?(@order.balance)} tone={:warning}>
+            <%= if Decimal.positive?(@order.amount_paid) do %>
+              {~t"To collect #{amount = Format.currency(@order.balance, Format.locale())}"}
+            <% else %>
+              {~t"Unpaid"}
+            <% end %>
+          </.badge>
         </div>
       </.link>
     </li>
