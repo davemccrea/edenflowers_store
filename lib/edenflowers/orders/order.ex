@@ -677,9 +677,10 @@ defmodule Edenflowers.Orders.Order do
                     "for the rest."
     end
 
-    calculate :refunded_only_by_cancelling?, :boolean, expr(gift_voucher_sale?) do
-      description "Whether its money goes back only by cancelling it: a Gift voucher sale, so refunding it " <>
-                    "always stops the voucher. The admin offers no Refund for it, only Cancel."
+    calculate :refunded_only_by_cancelling?, :boolean, expr(gift_voucher_sale? and not cancelled?) do
+      description "Whether it must be cancelled before money can be handed back: an active Gift voucher sale, " <>
+                    "so refunding it always stops the voucher. Once cancelled, any money still owed back is " <>
+                    "refunded like any other order."
     end
 
     calculate :saves_card?, :boolean, expr(subscription?) do

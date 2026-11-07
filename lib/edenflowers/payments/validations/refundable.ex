@@ -5,8 +5,9 @@ defmodule Edenflowers.Payments.Validations.Refundable do
   Stripe only what was paid through it, onto the Gift voucher only what it
   paid, by another method only what was paid in person.
 
-  A Gift voucher sale is refunded only by cancelling it, which also stops
-  the voucher, so handing its money back can't leave the voucher spendable.
+  A Gift voucher sale must be cancelled first, which also stops the voucher,
+  so handing its money back can't leave the voucher spendable. Once cancelled,
+  money still owed back is refunded by the same rules as any other purchase.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]

@@ -22,9 +22,10 @@ defmodule Edenflowers.Payments.Payable do
     * `calculate :cancelled?`
     * `calculate :saves_card?`: whether paying it saves the card for later
       charges, so a Gift voucher must leave Stripe something to charge
-    * `calculate :refunded_only_by_cancelling?`: whether its money goes back
-      only by cancelling it, never by a refund on its own: a Gift voucher sale,
-      so handing the money back always stops the voucher
+    * `calculate :refunded_only_by_cancelling?`: whether it must be cancelled
+      before money can be handed back: an active Gift voucher sale, so handing
+      the money back always stops the voucher. Once cancelled, any money still
+      owed back is refunded like any other purchase
     * `calculate :cancellable?`: whether it can be cancelled now
     * `calculate :default_cancellation_charge`: what cancelling it now keeps
       unless Jennie enters a charge. An order keeps nothing; a booking applies

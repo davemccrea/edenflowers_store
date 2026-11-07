@@ -541,18 +541,28 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp order_refunded(locale) do
-    for {title, payments, method} <- [
-          {"to a card through Stripe", [card_payment("64.00")], :stripe},
-          {"to MobilePay through Stripe", [mobilepay_payment("64.00")], :stripe},
-          {"handed back in cash", [], :cash},
-          {"to a card on the card reader", [], :zettle},
-          {"by MobilePay to the customer's number", [], :mobilepay},
-          {"to the customer's bank account", [], :zervant},
-          {"back onto a gift voucher", [], :voucher}
-        ] do
-      refund = %{amount: Decimal.new("20.00"), payment_method: method}
-      {"Order refunded", title, :refunded, Email.refunded(order(%{payments: payments}, locale), refund)}
-    end
+    ordinary =
+      for {title, payments, method} <- [
+            {"to a card through Stripe", [card_payment("64.00")], :stripe},
+            {"to MobilePay through Stripe", [mobilepay_payment("64.00")], :stripe},
+            {"handed back in cash", [], :cash},
+            {"to a card on the card reader", [], :zettle},
+            {"by MobilePay to the customer's number", [], :mobilepay},
+            {"to the customer's bank account", [], :zervant},
+            {"back onto a gift voucher", [], :voucher}
+          ] do
+        refund = %{amount: Decimal.new("20.00"), payment_method: method}
+        {"Order refunded", title, :refunded, Email.refunded(order(%{payments: payments}, locale), refund)}
+      end
+
+    ordinary ++
+      [
+        {"Order refunded", "gift voucher sale handed back in cash", :refunded,
+         Email.refunded(
+           order(%{fulfillment_date: nil, payments: []}, locale),
+           %{amount: Decimal.new("20.00"), payment_method: :cash}
+         )}
+      ]
   end
 
   defp booking_refunded(locale) do

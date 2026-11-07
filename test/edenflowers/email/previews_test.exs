@@ -47,6 +47,23 @@ defmodule Edenflowers.Email.PreviewsTest do
 
     assert bodies["handed back in cash"] =~ "I've refunded 20,00 € in cash."
     refute bodies["handed back in cash"] =~ "statement"
+    assert bodies["gift voucher sale handed back in cash"] =~ "I've refunded 20,00 € in cash."
+  end
+
+  test "a gift voucher refund names the voucher in each language without a fulfillment date" do
+    for {locale, subject} <- [
+          {"en-GB", "A refund for your Eden Flowers gift voucher"},
+          {"sv-FI", "En återbetalning för ditt Eden Flowers-presentkort"},
+          {"fi", "Hyvitys Eden Flowers -lahjakortistasi"}
+        ] do
+      [{_, _, _, email}] =
+        Enum.filter(Previews.all(locale), fn {type, scenario, _, _} ->
+          type == "Order refunded" and scenario == "gift voucher sale handed back in cash"
+        end)
+
+      assert email.subject == subject
+      refute email.text_body =~ "%{"
+    end
   end
 
   test "the routine subscription charge is matter-of-fact, from the shop rather than Jennie" do

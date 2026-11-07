@@ -2,7 +2,7 @@
 
 <%= refund_line(%{amount: @refund.amount, how: @refunded_to, format_currency: @format_currency}) %>
 
-<%= dgettext("emails", "Order %{reference} for %{date}", reference: @order.order_reference, date: @format_date.(@order.fulfillment_date)) %>
+<%= if @order.fulfillment_date do %><%= dgettext("emails", "Order %{reference} for %{date}", reference: @order.order_reference, date: @format_date.(@order.fulfillment_date)) %><% else %><%= dgettext("emails", "Order %{reference}", reference: @order.order_reference) %><% end %>
 
 <%= dgettext("emails", "If you have any questions, just reply to this email.") %>
 

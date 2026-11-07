@@ -778,6 +778,73 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   describe "refund" do
+    for method <- [:cash, :zettle], kind <- [:flowers, :gift_voucher] do
+      @refund_method method
+      @order_kind kind
+      test "a cancelled #{@order_kind} order paid by #{@refund_method} uses the standard refund flow", %{
+        conn: conn,
+        admin: admin
+      } do
+        order =
+          case @order_kind do
+            :flowers ->
+              placed_order(payment_intent_id: nil)
+
+            :gift_voucher ->
+              Orders.sell_gift_voucher!(
+                %{customer_name: "Anna", customer_email: "a@example.com", amount: 50, locale: "en-GB"},
+                actor: admin
+              )
+          end
+
+        order = Orders.record_payment!(order, "50.00", @refund_method, actor: admin)
+        {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+        if @order_kind == :gift_voucher do
+          refute has_element?(view, "#order-actions button", "Refund")
+        end
+
+        view |> element(~s|button[phx-click="open_cancel"]|) |> render_click()
+        view |> form("#cancel-form", cancel: %{email_customer?: "false"}) |> render_submit()
+
+        assert has_element?(view, "#order-balance", "To refund")
+        assert has_element?(view, "#order-actions button", "Refund")
+        refute has_element?(view, "#order-status", "Refunded")
+
+        view |> element("#order-balance-settle") |> render_click()
+        assert has_element?(view, ~s|#order-refund-amount[value="50.00"]|)
+        assert has_element?(view, ~s|#order-refund-how option[value="#{@refund_method}"][selected]|)
+
+        assert view
+               |> form("#order-refund-form",
+                 refund: %{amount: "50.00", payment_method: to_string(@refund_method), email_customer?: "true"}
+               )
+               |> render_submit() =~ "Refund recorded."
+
+        assert has_element?(view, "#order-status", "Refunded")
+        assert has_element?(view, "#order-payments", "Refund")
+        assert has_element?(view, "#order-log", "Refunded")
+        refute has_element?(view, "#order-balance")
+        refute has_element?(view, "#order-actions button", "Refund")
+
+        order = Orders.get_order_for_admin!(order.id, actor: admin)
+        assert order.fulfillment_status == :cancelled
+        assert order.payment_status == :refunded
+        assert Decimal.eq?(order.balance, 0)
+
+        [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
+        assert :ok = perform_job(Edenflowers.Payments.Workers.SendRefundedEmail, job.args)
+
+        assert_email_sent(fn email ->
+          if @order_kind == :gift_voucher do
+            assert email.subject == "A refund for your Eden Flowers gift voucher"
+          end
+
+          assert email.text_body =~ order.order_reference
+        end)
+      end
+    end
+
     test "Refund is offered only once nothing is to collect", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{placed_order(paid: "40.00").id}")
       refute has_element?(view, "#order-actions button", "Refund")
