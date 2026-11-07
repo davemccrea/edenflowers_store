@@ -722,7 +722,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         socket
 
       true ->
-        # A newer lookup with the same name cancels one still in flight.
+        # Reusing the task name ignores earlier results, so only the latest lookup updates the quote.
         socket
         |> put_delivery_quote(%{status: :loading, address: address, option_id: option_id})
         |> start_async(:delivery_quote, fn ->

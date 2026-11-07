@@ -1,7 +1,7 @@
 defmodule Edenflowers.Format do
   @moduledoc """
-  Locale-aware formatting helpers shared across the project.
-  All functions use CLDR. Euro amounts use Finnish formatting in every locale.
+  Locale-aware formatting for prices, dates, times and order details.
+  Euro amounts use Finnish number formatting in every locale.
   """
 
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "shared"]

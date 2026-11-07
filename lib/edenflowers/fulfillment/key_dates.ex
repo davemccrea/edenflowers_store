@@ -1,12 +1,8 @@
 defmodule Edenflowers.Fulfillment.KeyDates do
   @moduledoc """
-  Florist-relevant key dates rendered as decorations in both the customer
-  checkout calendar and the admin fulfillment calendar.
-
-  The list is intentionally code-defined rather than DB-backed: these dates
-  are stable for years at a time, and version-controlling the list keeps every
-  change reviewable. Per-customer reminder dates (the wider auto-send feature)
-  will live in a separate, customer-scoped resource.
+  Florist key dates calculated from fixed dates and weekday rules, shared by
+  the checkout and admin calendars. Labels and artwork live in
+  `EdenflowersWeb.KeyDateIcon`.
   """
 
   alias Edenflowers.Fulfillment.Weekday

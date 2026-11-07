@@ -1,22 +1,14 @@
 defmodule Mix.Tasks.FetchMap do
   @moduledoc """
-  Fetches the Vaasa location map from Mapbox Static Images API and writes it to
+  Generates the committed Vaasa map asset from Mapbox Static Images API at
   `images/home-vaasa-map-10.png`, the Imgproxy local-storage source.
-
-  ## Why a Mix task
-
-  The map is a fixed editorial asset: one location, one zoom, never changes per
-  request. Fetching at runtime would either hit Mapbox on every cold-start
-  (wasteful) or require cache invalidation logic (premature). A Mix task you
-  run manually, with the resulting PNG committed to the repo, is the honest
-  pattern.
 
   ## Usage
 
       MAPBOX_TOKEN=pk.… mix fetch_map
 
-  Re-run whenever you want to refresh the asset (e.g. after Mapbox updates the
-  style or you change the spec below).
+  Re-run after changing the style or composition. Bump the output filename
+  and update its references when replacing a cached asset.
   """
   use Mix.Task
 

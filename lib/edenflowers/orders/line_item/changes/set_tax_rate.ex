@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.LineItem.Changes.SetTaxRate do
-  @moduledoc "Charges the line the percentage of the `tax_rate_id` chosen for it."
+  @moduledoc "Copies the selected VAT rate's percentage onto the line item."
   use Ash.Resource.Change
 
   alias Edenflowers.Pricing.TaxRate

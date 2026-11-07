@@ -1,11 +1,10 @@
 defmodule Edenflowers.Orders.Receipt do
   @moduledoc """
-  Renders the receipt PDF for an order or a course booking by shelling out to
-  the Typst CLI.
+  Generates order and course receipt PDFs on demand with the Typst CLI.
 
-  Deterministic over the placed order's snapshot columns, so the PDF
-  bytes aren't persisted.
-  Use `load_for_receipt/1` to load what `generate/1` expects.
+  Receipts use the loaded record, payments and current labels and seller details.
+  Course receipts also use the current course details.
+  Use `load_for_receipt/1` before `generate/1`.
   """
 
   alias Edenflowers.Courses.CourseRegistration

@@ -11,10 +11,9 @@ defmodule Edenflowers.Email.Edits do
   end
 
   @doc """
-  `email` with her `:subject` and `:body` in place of the template's, either
-  left as built when absent. The preview she edited shows a payment link that
-  sending opens with `placeholder_token/0`, so that link becomes
-  `payment_link_url`, the one sending opened.
+  Applies non-nil subject and body edits to `email`. If `payment_link_url`
+  is supplied, replaces the preview's placeholder payment URL in the edited
+  body with that URL.
   """
   def apply_to(email, edits, payment_link_url \\ nil) do
     email

@@ -1,23 +1,8 @@
 defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
   @moduledoc """
-  Toggles a single date on or off in the shop calendar's overrides.
-
-  ## Click semantics
-
-  Clicking a date cell toggles an *override*:
-
-    - If the date's weekday is currently available, the click adds the date
-      to `disabled_dates` (closes that specific date).
-    - If the date's weekday is currently unavailable, the click adds it to
-      `enabled_dates` (opens that specific date).
-    - Clicking an already-overridden date removes the override, returning the
-      date to its weekday default.
-
-  Every click is reversible and no override is stored once a date matches its
-  weekday default, keeping the data shape minimal.
-
-  `toggle_date/2` is a pure function kept public so the click semantics can be
-  unit-tested without a DB roundtrip; `change/3` just applies its result.
+  Toggles a date override in the shop calendar. Dates without an override
+  switch away from their weekday rule; dates with an override return to it.
+  Overrides are removed when the date matches its weekday rule.
   """
   use Ash.Resource.Change
 
@@ -37,9 +22,8 @@ defmodule Edenflowers.Fulfillment.Changes.ToggleDate do
   end
 
   @doc """
-  Toggle a date in the shop calendar, returning the updated
-  `%{enabled_dates: [...], disabled_dates: [...]}` map. See module doc for the
-  click semantics.
+  Toggles a date, returning the updated
+  `%{enabled_dates: [...], disabled_dates: [...]}` map.
   """
   @spec toggle_date(ShopCalendar.t(), Date.t()) :: %{
           enabled_dates: [Date.t()],

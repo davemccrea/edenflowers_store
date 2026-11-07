@@ -111,9 +111,8 @@ Repo.transaction(fn ->
         }
       }
     },
-    # Cards are surfaced only at checkout via ProductVariant.for_card_drawer.
-    # visibility: :hidden keeps the category out of the store ribbon while still
-    # allowing its products to be read by that action.
+    # The hidden category keeps cards out of ordinary catalogue lists.
+    # Dedicated reads supply the card picker and featured-card fan.
     %{
       name: "Cards",
       slug: "cards",

@@ -56,12 +56,15 @@ defmodule Edenflowers.Expenses.Expense do
   @moduledoc """
   A receipt or invoice imported from Papra and classified for accounting.
 
-  The extracted fields can be corrected in admin. An empty `paid_on` means it
-  is still unpaid, so it stays out of the monthly report until Jennie marks it
-  paid. A future `paid_on` means she has scheduled the payment in her bank; it
-  counts as paid from that day. Claude fills `paid_on` when the document shows
-  it was already paid, such as a till receipt. Papra is the only place to delete one: trashing the
-  document deletes its expense. To import it again, upload the PDF again.
+  Extracted fields can be corrected in admin. An empty `paid_on` means unpaid,
+  so the expense appears on the monthly report's payables sheet. The report
+  includes its amounts in the cash expense sheet and attaches its receipt in
+  the month it is paid.
+  A future `paid_on` records a scheduled bank payment and counts as paid from that day.
+  Claude fills `paid_on` when the document shows payment, such as a till receipt.
+
+  Trashing the document in Papra deletes its expense. Restoring or uploading
+  the document again allows reimporting.
   """
 
   use Ash.Resource,

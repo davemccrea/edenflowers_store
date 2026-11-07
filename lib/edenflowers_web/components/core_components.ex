@@ -262,44 +262,20 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
-  Renders an input with label and error messages.
+  Renders a labelled input with errors, using a `Phoenix.HTML.FormField` or
+  explicit attributes. Supported types include `select`, `textarea` and the
+  custom `radio-card`; see the `type` attribute for the full list.
 
-  A `Phoenix.HTML.FormField` may be passed as argument,
-  which is used to retrieve the input name, id, and values.
-  Otherwise all attributes may be passed explicitly.
-
-  ## Types
-
-  This function accepts all HTML input types, considering that:
-
-    * You may also set `type="select"` to render a `<select>` tag
-
-    * `type="checkbox"` is used exclusively to render boolean values
-
-    * For live file uploads, see `Phoenix.Component.live_file_input/1`
-
-  See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-  for more information. Unsupported types, such as radio, are best
-  written directly in your templates.
+  Use `checkbox` for booleans. Render plain radio inputs directly and use
+  `Phoenix.Component.live_file_input/1` for live uploads. Selects require
+  `options`; `value` sets the current selection.
 
   ## Examples
 
   ```heex
   <.input field={@form[:email]} type="email" />
-  <.input name="my-input" errors={["oh no!"]} />
-  ```
-
-  ## Select type
-
-  When using `type="select"`, you must pass the `options` and optionally
-  a `value` to mark which option should be preselected.
-
-  ```heex
   <.input field={@form[:user_type]} type="select" options={["Admin": "admin", "User": "user"]} />
   ```
-
-  For more information on what kind of data can be passed to `options` see
-  [`options_for_select`](https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html#options_for_select/2).
   """
   attr :id, :any, default: nil
   attr :name, :any
@@ -1027,11 +1003,8 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
-  Renders a product card used by both the Featured Blooms carousel (home)
-  and the Store grid. One editorial treatment, no surface chrome — the
-  photograph is the card; the only interactive accent is the brand
-  honey underline on hover. Mobile uses a 4:5 portrait crop for an
-  immersive feel; desktop uses a 1:1 square so cards line up cleanly.
+  Product card for featured products and the store grid. Uses a 4:5 photo
+  below `sm` and a square photo from `sm` upwards, with price and availability labels.
   """
   attr :product, :map,
     required: true,

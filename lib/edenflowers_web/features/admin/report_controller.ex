@@ -30,8 +30,8 @@ defmodule EdenflowersWeb.Admin.ReportController do
   def show(conn, _params), do: send_resp(conn, :not_found, "Not found")
 
   @doc """
-  Where the Overview Jennie downloaded from hears what the report left out,
-  since the tab the download opens in closes before it could say.
+  Returns the admin's PubSub topic for report warnings, so Overview can
+  display missing-bank-statement warnings from the download request.
   """
   def report_topic(user), do: "admin:reports:#{user.id}"
 

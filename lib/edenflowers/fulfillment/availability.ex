@@ -48,9 +48,9 @@ defmodule Edenflowers.Fulfillment.Availability do
   end
 
   @doc """
-  The first date an order placed at `now` could be fulfilled, or nil when the
-  shop is closed for the next 60 days. `from` starts the search on a later
-  day, for what needs a day's work first, such as a Gift voucher card.
+  Searches 60 dates starting at `from`, or the date in `now` when `from` is nil.
+  Returns the first available date, or nil when none is available.
+  Use `from` for orders needing preparation time, such as a Gift voucher card.
   """
   @spec next_open_date(ShopCalendar.t(), DateTime.t(), Date.t() | nil) :: Date.t() | nil
   def next_open_date(%ShopCalendar{} = calendar, %DateTime{} = now, from \\ nil) do

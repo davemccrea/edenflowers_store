@@ -1,17 +1,7 @@
 defmodule EdenflowersWeb.Admin.CinderTheme do
   @moduledoc """
-  Cinder table theme for the admin.
-
-  Extends the stock `daisy_ui` theme.
-
-  The filter inputs are pulled into the admin register: the selects and
-  search box drop to `sm` density to sit on the same scale as the compact data
-  table beneath them. Each filter shows a visible caption above its control so
-  the panel reads as a labelled form; the select prompts are then a bare "All",
-  since the caption already names the field. Captions are set per filter (via
-  the `:label` filter option) because the table column headers are terser than
-  a standalone caption wants to be — and two of them would otherwise both read
-  "Fulfillment".
+  Admin table theme extending `:daisy_ui`, with compact controls and visible
+  filter labels. Set each filter's `:label`; select prompts use "All".
   """
   use Cinder.Theme
 

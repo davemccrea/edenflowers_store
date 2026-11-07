@@ -1,7 +1,7 @@
 defmodule EdenflowersWeb.Cart.Drawer do
   @moduledoc """
-  The cart drawer shown across the storefront, with the current order lines and checkout entry point. `order` is
-  nil until the browser's first add to cart, and the drawer then shows an empty cart.
+  Storefront cart drawer with editable lines and a checkout link.
+  Shows the empty state when `order` is nil or has no items.
   """
 
   use EdenflowersWeb, :live_component

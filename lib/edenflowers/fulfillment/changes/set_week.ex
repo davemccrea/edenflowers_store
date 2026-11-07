@@ -1,16 +1,8 @@
 defmodule Edenflowers.Fulfillment.Changes.SetWeek do
   @moduledoc """
-  Sets every non-past date in a week to `:open` or `:closed` in the shop
-  calendar, idempotently per-date: cells already in the target direction pass
-  through unchanged.
-
-  Each per-date flip uses the same minimal-override discipline as
-  `ToggleDate.toggle_date/2`: a redundant override (matching the weekday rule)
-  is never written. Key dates in the week are skipped — the florist toggles
-  those individually.
-
-  `set_week/4` is a pure function kept public so the per-week logic can be
-  unit-tested without a DB roundtrip; `change/3` just applies its result.
+  Sets a week's non-past dates to `:open` or `:closed`, skipping key dates.
+  Overrides are removed when the target matches the weekday rule.
+  Repeating the same change leaves the calendar unchanged.
   """
   use Ash.Resource.Change
 
@@ -33,8 +25,8 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeek do
   end
 
   @doc """
-  Set every non-past date in `week` to the given direction, returning the updated `%{enabled_dates: [...], disabled_dates: [...]}`
-  map. Idempotent per-date.
+  Sets dates in `week` to the given direction, skipping past dates and key dates.
+  Returns the updated `%{enabled_dates: [...], disabled_dates: [...]}` map.
   """
   @spec set_week(ShopCalendar.t(), [Date.t()], Date.t(), :open | :closed) :: %{
           enabled_dates: [Date.t()],

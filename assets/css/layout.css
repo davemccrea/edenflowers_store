@@ -128,7 +128,7 @@ html:has(dialog.slide-drawer:modal) {
   margin-inline-start: auto;
 }
 
-/* drawer.js sets data-closing and waits for the slide-out before close(). */
+/* The drawer script in core_components.ex sets data-closing and waits for the slide-out before close(). */
 .slide-drawer[data-closing] {
   translate: var(--slide-drawer-offscreen);
   opacity: 0.3;

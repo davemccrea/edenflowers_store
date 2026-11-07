@@ -366,9 +366,8 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :status, :atom, required: true, doc: "nil shows a dash, for a payment status with nothing to say"
 
   @doc """
-  Payment-status pill for an order: paid reads as success, refunded as attention,
-  failed as error. Pending reads as "Unpaid": admin only sees placed orders, and
-  a placed order still pending is a custom order waiting for its money.
+  Renders an order's payment status: paid uses success, refunded uses attention,
+  pending uses warning with "Unpaid", and invoiced uses neutral. Nil shows a dash.
   """
   def payment_status_badge(%{status: nil} = assigns) do
     ~H"""

@@ -1,9 +1,8 @@
 defmodule Edenflowers.Orders.Subscription.Changes.QueueSubscriptionCancelledEmail do
   @moduledoc """
-  Queues the emails a cancelled subscription sends. When Jennie cancels it,
-  Subscription cancelled, as she rewrote it if she did, when she ticks it. When the customer
-  cancels it in their account, the matter-of-fact confirmation, and a shop
-  notice so Jennie hears about it.
+  Queues the optional cancellation email when an admin cancels a subscription,
+  including any subject and body edits. A customer cancellation always queues
+  a confirmation and a shop notice.
   """
 
   use Ash.Resource.Change

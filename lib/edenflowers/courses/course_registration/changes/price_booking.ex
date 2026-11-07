@@ -1,10 +1,10 @@
 defmodule Edenflowers.Courses.CourseRegistration.Changes.PriceBooking do
   @moduledoc """
-  Refuses a course that has closed or hasn't room for the requested seats,
-  then snapshots what the booking costs.
+  Snapshots the booking amount and VAT rate. Online bookings must meet the
+  deadline and seat limit; `manual?: true` skips those checks.
 
-  Nothing is held at website checkout: places are counted from confirmed bookings, so two people
-  paying for the last place at once are both booked and Jennie makes room.
+  Pending bookings do not reserve seats. Concurrent payments for the last
+  place can both confirm, leaving Jennie to accommodate the extra booking.
   """
 
   use Ash.Resource.Change
