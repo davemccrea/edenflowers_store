@@ -17,7 +17,11 @@ defmodule EdenflowersWeb.Courses.CoursesLiveTest do
         assert render(view) =~ "Anna Riska"
 
         if url do
-          assert has_element?(view, ~s|a[href="#{url}"][rel="noopener noreferrer"]|, "Anna Riska")
+          assert has_element?(
+                   view,
+                   ~s|a[href^="#{url}?"][href*="utm_source=edenflowers.fi"][rel="noopener noreferrer"]|,
+                   "Anna Riska"
+                 )
         else
           refute has_element?(view, "figcaption a")
         end
