@@ -94,7 +94,7 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :tone, :atom, required: true, values: [:success, :warning, :attention, :error, :neutral, :tag]
   attr :icon, :string, default: nil
   attr :class, :any, default: nil
-  attr :rest, :global, include: ~w(href type)
+  attr :rest, :global, include: ~w(href navigate type)
   slot :inner_block, required: true
 
   @doc """
@@ -118,6 +118,15 @@ defmodule EdenflowersWeb.Admin.Components do
       <.icon :if={@icon} name={@icon} class="h-3.5 w-3.5 shrink-0" />
       {render_slot(@inner_block)}
     </a>
+    """
+  end
+
+  def badge(%{rest: %{navigate: _}} = assigns) do
+    ~H"""
+    <.link class={[badge_class(@tone, @class), "hover:brightness-95"]} {@rest}>
+      <.icon :if={@icon} name={@icon} class="h-3.5 w-3.5 shrink-0" />
+      {render_slot(@inner_block)}
+    </.link>
     """
   end
 
@@ -409,10 +418,12 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :class, :any, default: nil
 
-  @doc "Marks an Occurrence: an order a Subscription created, not one the customer placed at checkout."
+  attr :rest, :global, include: ~w(navigate)
+
+  @doc "Marks an order that belongs to a Subscription, linking to it when given `navigate`."
   def subscription_badge(assigns) do
     ~H"""
-    <.badge tone={:tag} icon="hero-arrow-path" class={@class}>{~t"Subscription"}</.badge>
+    <.badge tone={:tag} icon="hero-arrow-path" class={@class} {@rest}>{~t"Subscription"}</.badge>
     """
   end
 

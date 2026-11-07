@@ -116,6 +116,19 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
           <div class="flex min-w-0 flex-col gap-6">
             <.widget id="subscription-fulfillment" title={~t"Fulfillment"}>
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
+                <%!-- Kept while paused too, when there's no next date to read it from. --%>
+                <.summary_fact
+                  :if={@subscription.delivery_day}
+                  label={
+                    if @subscription.fulfillment_option.fulfillment_method == :pickup,
+                      do: ~t"Pickup day",
+                      else: ~t"Delivery day"
+                  }
+                >
+                  <span id="subscription-delivery-day">
+                    {String.capitalize(Format.weekday_name(@subscription.delivery_day, @locale))}
+                  </span>
+                </.summary_fact>
                 <.summary_fact label={~t"Next delivery"}>
                   <%!-- Only an active subscription makes orders; resuming works out a fresh date. --%>
                   <span :if={@subscription.next_delivery_date} class="tabular-nums">
@@ -144,7 +157,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
                 <div>
                   <p class="text-warning-content text-sm font-semibold">{~t"Delivers on a closed day"}</p>
                   <p class="text-base-content mt-0.5">
-                    {~t"You're closed on #{dates = closed_dates(@subscription, @locale)}, but this subscription still delivers then. Agree another day with the customer, then change or pause it."}
+                    {~t"You've closed #{dates = closed_dates(@subscription, @locale)}, but this subscription delivers then. Deliver anyway, or change the order's delivery date once it's booked, two days before."}
                   </p>
                 </div>
               </div>

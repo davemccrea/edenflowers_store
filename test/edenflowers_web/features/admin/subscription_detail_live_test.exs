@@ -13,6 +13,18 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     %{customer: customer}
   end
 
+  test "names the weekday it delivers on, even while paused", %{conn: conn, customer: customer} do
+    friday =
+      Enum.find(Date.range(Date.add(Date.utc_today(), 7), Date.add(Date.utc_today(), 13)), &(Date.day_of_week(&1) == 5))
+
+    subscription = generate(subscription(user_id: customer.id, state: :paused, next_fulfillment_date: friday))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+
+    assert has_element?(view, "#subscription-fulfillment", "Delivery day")
+    assert has_element?(view, "#subscription-delivery-day", "Friday")
+  end
+
   test "shows what Jennie needs to service the subscription", %{conn: conn, customer: customer} do
     large = generate(product_variant(product_id: generate(product()).id, size: :large))
 
@@ -130,7 +142,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     assert has_element?(
              view,
              "#subscription-closed-days",
-             "You're closed on #{Edenflowers.Format.weekday_day_month(closed, "en-GB")}"
+             "You've closed #{Edenflowers.Format.weekday_day_month(closed, "en-GB")}"
            )
 
     view |> element(~s|button[phx-click="open_change"]|) |> render_click()

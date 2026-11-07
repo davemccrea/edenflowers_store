@@ -282,7 +282,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     }
   end
 
-  # The calendar no longer moves these, so Jennie agrees another day with the customer.
+  # The calendar doesn't move these: Jennie delivers anyway or moves the order once it's booked.
   defp closed_day_subscription_row(subscription, locale) do
     row = subscription_row(subscription)
     dates = Enum.map_join(subscription.closed_delivery_dates, ", ", &Format.weekday_day_month(&1, locale))
