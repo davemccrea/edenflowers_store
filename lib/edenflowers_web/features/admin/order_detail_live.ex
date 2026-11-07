@@ -236,7 +236,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                     <% else %>
                       {~t"Check the error, then send it again from the menu."}
                     <% end %>
-                    <.link navigate={~p"/admin/errors"} class="link link-primary">{~t"View errors"}</.link>
+                    <.link href={~p"/admin/errors"} class="link link-primary">{~t"View errors"}</.link>
                   </p>
                 </div>
               </div>
@@ -398,7 +398,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   </p>
                   <p class="text-base-content mt-0.5">
                     {~t"Check the error, then send it again from the menu."}
-                    <.link navigate={~p"/admin/errors"} class="link link-primary">{~t"View errors"}</.link>
+                    <.link href={~p"/admin/errors"} class="link link-primary">{~t"View errors"}</.link>
                   </p>
                 </div>
               </div>

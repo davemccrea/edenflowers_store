@@ -3,6 +3,7 @@ defmodule EdenflowersWeb.LayoutsTest do
   use EdenflowersWeb.ConnCase, async: false
 
   import Generator
+  import Phoenix.LiveViewTest
 
   @tracker ~s|data-website-id="site-1"|
 
@@ -28,5 +29,41 @@ defmodule EdenflowersWeb.LayoutsTest do
     Application.delete_env(:edenflowers, :umami_website_id)
 
     refute conn |> get(~p"/en") |> html_response(200) =~ "data-website-id"
+  end
+
+  test "admin menus use live navigation for every admin page", %{conn: conn} do
+    conn = log_in(conn, generate(admin_user()) |> with_token())
+    html = conn |> get(~p"/admin") |> html_response(200) |> LazyHTML.from_document()
+
+    assert [_, _] = html |> LazyHTML.query(~s|nav a[href="/admin/invoices"]|) |> Enum.to_list()
+
+    for link <- LazyHTML.query(html, "nav a") do
+      [href] = LazyHTML.attribute(link, "href")
+
+      if String.starts_with?(href, "/admin") do
+        assert LazyHTML.attribute(link, "data-phx-link") == ["redirect"], href
+      else
+        assert LazyHTML.attribute(link, "data-phx-link") == [], href
+        assert LazyHTML.attribute(link, "target") == ["_blank"], href
+      end
+    end
+  end
+
+  test "Invoices opens through live navigation from both admin menus", %{conn: conn} do
+    conn = log_in(conn, generate(admin_user()) |> with_token())
+
+    for menu <- [".admin-sidebar", "#admin-nav-drawer-dialog"] do
+      {:ok, view, _} = live(conn, ~p"/admin")
+
+      {:ok, invoices, _} =
+        view
+        |> element(~s|#{menu} nav a[href="/admin/invoices"]|)
+        |> render_click()
+        |> follow_redirect(conn, ~p"/admin/invoices")
+
+      assert has_element?(invoices, "h1", "Invoices")
+      assert has_element?(invoices, ~s|#{menu} nav a[aria-current="page"]|, "Invoices")
+      assert has_element?(invoices, ~s|a[href="/admin/invoices/new"][data-phx-link="redirect"]|, "New invoice")
+    end
   end
 end
