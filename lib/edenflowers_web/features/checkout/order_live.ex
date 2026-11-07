@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
   alias Edenflowers.Format
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.Payments.GiftVoucherPdf
   alias EdenflowersWeb.Analytics
 
@@ -366,13 +367,12 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   defp next_delivery(order, line) do
     locale = Format.locale()
 
-    date = Edenflowers.Orders.Subscription.next_date(order.fulfillment_date, line.interval_weeks)
+    date = Subscription.next_date(order.fulfillment_date, line.interval_weeks)
 
     %{
       date: Format.weekday_date(date, locale),
-      charge_date: Format.weekday_date(Edenflowers.Orders.Subscription.charged_on(date), locale),
-      amount:
-        Format.currency(Edenflowers.Orders.Subscription.price_per_order(line.subtotal, order.fulfillment_fee), locale)
+      charge_date: Format.weekday_date(Subscription.charged_on(date), locale),
+      amount: Format.currency(Subscription.price_per_order(line.subtotal, order.fulfillment_fee), locale)
     }
   end
 end
