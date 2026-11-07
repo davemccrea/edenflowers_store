@@ -136,7 +136,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
                   class="ml-auto phx-click-loading:opacity-50"
-                  phx-click={if last_non_card_item?(@order), do: "ask_to_remove", else: "remove_item"}
+                  phx-click={if @order.removing_last_item_loses_details?, do: "ask_to_remove", else: "remove_item"}
                   phx-value-id={line_item.id}
                   phx-target={@myself}
                   aria_label={~t"Remove"}
@@ -150,7 +150,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
               <%!-- Asked in the page, not with data-confirm: iOS Safari can refuse window.confirm
                    inside the drawer's modal dialog, which reads as Cancel and leaves the bin dead. --%>
               <div
-                :if={@asking_to_remove == line_item.id and last_non_card_item?(@order)}
+                :if={@asking_to_remove == line_item.id and @order.removing_last_item_loses_details?}
                 id={"#{@id}-ask-remove-#{line_item.id}"}
                 role="alert"
                 class="flex flex-col gap-3 text-sm"
@@ -258,12 +258,6 @@ defmodule EdenflowersWeb.Cart.LineItems do
   def handle_event("decrement_line_item", %{"id" => id}, socket) do
     if item = line_item(socket.assigns.order, id), do: Orders.decrement_line_item(item)
     {:noreply, assign(socket, :refused, %{})}
-  end
-
-  # Removing the last non-card item restarts checkout, which blanks every
-  # field the customer has entered. See Orders.Order.Changes.RemoveLineItem.
-  defp last_non_card_item?(order) do
-    Enum.count(order.line_items, &(not &1.is_card)) == 1
   end
 
   # Looked up on the session's own order, so a client can't adjust another cart's items,

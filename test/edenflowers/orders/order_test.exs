@@ -1244,6 +1244,34 @@ defmodule Edenflowers.Orders.OrderTest do
     end
   end
 
+  describe "removing_last_item_loses_details? calculation" do
+    defp loses_details?(order_opts, item_count) do
+      order = generate(order(order_opts))
+
+      for _ <- 1..item_count do
+        variant = generate(product_variant(product_id: generate(product()).id))
+        generate(line_item(order_id: order.id, product_variant_id: variant.id))
+      end
+
+      Ash.load!(order, :removing_last_item_loses_details?, authorize?: false).removing_last_item_loses_details?
+    end
+
+    test "a cart with nothing saved at checkout empties without asking" do
+      refute loses_details?([], 1)
+    end
+
+    test "saved contact details, a later step or a promotion code would be lost" do
+      assert loses_details?([customer_email: "jane@example.com"], 1)
+      assert loses_details?([customer_name: "Jane"], 1)
+      assert loses_details?([state: :delivery], 1)
+      assert loses_details?([promotion_id: generate(promotion()).id], 1)
+    end
+
+    test "removing one of several items keeps checkout" do
+      refute loses_details?([state: :payment, customer_email: "jane@example.com"], 2)
+    end
+  end
+
   describe "cart_effectively_empty? calculation" do
     test "true when the only remaining line item is a card" do
       tax_rate = generate(tax_rate())
