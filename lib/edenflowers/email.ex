@@ -331,7 +331,7 @@ defmodule Edenflowers.Email do
   how often, what each costs, the first two dates, and where to change it.
   The first order's receipt goes separately. Expects `product_variant: :product`
   (translated into the subscription's locale),
-  `:fulfillment_option`, `:first_delivery_date`, `:first_order_fulfillment_fee`
+  `:fulfillment_option`, `:first_delivery_date`, `:price_per_order`
   and `user: [:first_name]` loaded.
   """
   def subscription_set_up(subscription) do
@@ -344,7 +344,7 @@ defmodule Edenflowers.Email do
           pickup?: subscription.fulfillment_option.fulfillment_method == :pickup,
           size: EdenflowersWeb.CoreComponents.variant_size_label(subscription.product_variant.size),
           interval: EdenflowersWeb.Checkout.Fields.interval_label(subscription.interval_weeks),
-          price: Format.currency(subscription_price(subscription), subscription.locale),
+          price: Format.currency(subscription.price_per_order, subscription.locale),
           charge_days: Subscription.lead_days(),
           change_days: Subscription.change_deadline_days(),
           account_url: account_url(),
@@ -423,7 +423,7 @@ defmodule Edenflowers.Email do
           subscription: subscription,
           product: subscription.product_variant.product.name,
           pickup?: pickup?,
-          price: Format.currency(subscription_price(subscription), subscription.locale),
+          price: Format.currency(subscription.price_per_order, subscription.locale),
           voucher?: match?(%{spendable?: true}, subscription.gift_voucher),
           change_by: subscription.change_deadline,
           charged_on: subscription.charged_on,
@@ -432,10 +432,6 @@ defmodule Edenflowers.Email do
         })
       )
     end)
-  end
-
-  defp subscription_price(subscription) do
-    Decimal.add(subscription.product_variant.price, subscription.first_order_fulfillment_fee || 0)
   end
 
   @doc """

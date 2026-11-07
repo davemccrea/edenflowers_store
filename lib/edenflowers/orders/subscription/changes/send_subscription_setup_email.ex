@@ -20,7 +20,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionSetupEmail do
           [
             :first_order_discounted?,
             :first_delivery_date,
-            :first_order_fulfillment_fee,
+            :price_per_order,
             :fulfillment_option,
             product_variant: :product,
             user: [:first_name]

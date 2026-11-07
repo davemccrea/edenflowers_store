@@ -304,7 +304,7 @@ defmodule Edenflowers.Email.Previews do
              interval_weeks: 1,
              next_fulfillment_date: ~D[2026-11-21],
              product_variant: %{size: :small, price: Decimal.new("35.00")},
-             first_order_fulfillment_fee: Decimal.new(0),
+             price_per_order: Decimal.new("35.00"),
              first_order_discounted?: false,
              card_message: nil,
              user: %{email: "maria@example.com", first_name: nil}
@@ -313,7 +313,8 @@ defmodule Edenflowers.Email.Previews do
            %{
              interval_weeks: 4,
              next_fulfillment_date: ~D[2026-12-12],
-             product_variant: %{size: :large, price: Decimal.new("69.00")}
+             product_variant: %{size: :large, price: Decimal.new("69.00")},
+             price_per_order: Decimal.new("79.00")
            }},
           {"delivery, discount only", %{first_order_discounted?: true, card_message: nil}},
           {"delivery, card message only", %{first_order_discounted?: false, card_message: "Thinking of you!"}}
@@ -354,7 +355,7 @@ defmodule Edenflowers.Email.Previews do
              fulfillment_option: %{fulfillment_method: :pickup},
              delivery_address: nil,
              interval_weeks: 4,
-             first_order_fulfillment_fee: Decimal.new(0)
+             price_per_order: Decimal.new("49.00")
            }},
           {"gift voucher pays towards it", %{gift_voucher: %{spendable?: true}}}
         ] do
@@ -775,7 +776,7 @@ defmodule Edenflowers.Email.Previews do
         user: %{email: "maria@example.com", first_name: "Maria"},
         fulfillment_option: %{fulfillment_method: :delivery},
         product_variant: %{size: :medium, price: Decimal.new("49.00")},
-        first_order_fulfillment_fee: Decimal.new("10.00"),
+        price_per_order: Decimal.new("59.00"),
         interval_weeks: 2,
         delivery_address: "Strandgatan 12, 65100 Vaasa",
         first_delivery_date: ~D[2026-11-14],
