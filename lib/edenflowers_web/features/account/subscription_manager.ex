@@ -22,8 +22,20 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   @impl true
   def update(assigns, socket) do
+    reset_plan? = socket.assigns[:subscription] != assigns.subscription
     socket = assign(socket, assigns)
     sizes = Catalog.list_subscription_sizes!(socket.assigns.subscription.product_variant_id)
+
+    socket =
+      if reset_plan? do
+        assign(socket,
+          edited?: false,
+          plan_values: plan_values(assigns.subscription),
+          preview_date: assigns.subscription.plan_changes_from
+        )
+      else
+        socket
+      end
 
     {:ok, assign(socket, sizes: sizes)}
   end
@@ -59,6 +71,8 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
         locale={@locale}
         sizes={@sizes}
         edited?={@edited?}
+        plan_values={@plan_values}
+        preview_date={@preview_date}
         notice={@notice}
         target={@myself}
       />
@@ -93,12 +107,22 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   def handle_event("edit_subscription", params, socket) do
     subscription = socket.assigns.subscription
 
-    edited? =
-      params["product_variant_id"] != subscription.product_variant_id or
-        params["interval_weeks"] != to_string(subscription.interval_weeks) or
-        params["delivery_day"] != to_string(subscription.delivery_day)
+    values =
+      Map.merge(plan_values(subscription), Map.take(params, ["product_variant_id", "interval_weeks", "delivery_day"]))
 
-    {:noreply, assign(socket, edited?: edited?)}
+    preview_date =
+      case Subscription.preview_plan_change(subscription, values, actor: socket.assigns.current_user) do
+        {:ok, date} -> date
+        {:error, _error} -> nil
+      end
+
+    {:noreply,
+     assign(socket,
+       edited?: values != plan_values(subscription),
+       plan_values: values,
+       preview_date: preview_date,
+       notice: nil
+     )}
   end
 
   def handle_event("change_subscription", params, socket) do
@@ -108,7 +132,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       &Orders.change_subscription(
         &1,
         changes,
-        Keyword.put(&2, :load, [:product_variant, :price_per_order, :resume_date])
+        Keyword.put(&2, :load, [:plan_changes_from])
       )
 
     socket =
@@ -120,6 +144,14 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   end
 
   def subscription_name(subscription), do: Translations.translate(subscription.product_variant.product).name
+
+  defp plan_values(subscription) do
+    %{
+      "product_variant_id" => subscription.product_variant_id,
+      "interval_weeks" => to_string(subscription.interval_weeks),
+      "delivery_day" => to_string(subscription.delivery_day)
+    }
+  end
 
   # The outcome shows inside the subscription's drawer, which sits above the
   # page's flash while it's open, in the row whose action caused it. Pause and
@@ -174,28 +206,24 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     end
   end
 
-  # The occurrence job reads the subscription when it books each delivery, so a
-  # change applies from the first one it hasn't booked. A paused one's next
-  # date may long have passed, so it applies from when it would resume.
   defp change_confirmation(subscription, locale) do
-    %{product_variant: variant, interval_weeks: weeks} = subscription
-    from_date = if subscription.state == :paused, do: subscription.resume_date, else: subscription.next_fulfillment_date
-    from = Format.weekday_date(from_date, locale)
-    size = variant_size_label(variant.size)
-    price = Format.storefront_price(subscription.price_per_order, locale)
+    from = Format.weekday_date(subscription.plan_changes_from, locale)
 
-    ~t"From #{date = from}: #{size = size}, #{interval = String.downcase(Fields.interval_label(weeks))}, #{price = price} per delivery."
+    if subscription.state == :paused do
+      ~t"Changes saved. Your subscription is still paused. If you resume now, your updated plan starts with the delivery on #{date = from}."
+    else
+      ~t"Changes saved. Your updated plan starts with the delivery on #{date = from}."
+    end
   end
 
   attr :subscription, :map, required: true
-  attr :booked, :map, default: nil
   attr :locale, :string, required: true
   attr :target, :any, required: true
 
   # Asked in place rather than in a dialog, since the drawer is already a layer
   # of its own.
   defp cancel_confirmation(assigns) do
-    assigns = assign(assigns, id: assigns.subscription.id, final_delivery?: final_delivery?(assigns.booked))
+    assigns = assign(assigns, id: assigns.subscription.id)
 
     ~H"""
     <section
@@ -210,10 +238,12 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       >
         {~t"Stop your subscription?"}
       </h3>
-      <p :if={@final_delivery?} class="mt-2 text-sm" data-testid="final-delivery-warning">
-        {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} is already being prepared and will be your final delivery. There will be no deliveries or charges after that."}
+      <p :if={@subscription.final_delivery_date} class="mt-2 text-sm" data-testid="final-delivery-warning">
+        {~t"Your delivery on #{date = Format.weekday_date(@subscription.final_delivery_date, @locale)} is already being prepared and will be your final delivery. There will be no deliveries or charges after that."}
       </p>
-      <p :if={not @final_delivery?} class="mt-2 text-sm">{~t"There will be no more deliveries or charges."}</p>
+      <p :if={!@subscription.final_delivery_date} class="mt-2 text-sm">
+        {~t"There will be no more deliveries or charges."}
+      </p>
       <p :if={@subscription.state == :active} class="mt-2 text-sm">
         {~t"Want a break instead?"}
         <.button
@@ -318,9 +348,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     """
   end
 
-  defp final_delivery?(nil), do: false
-  defp final_delivery?(order), do: not order.changes_open?
-
   attr :subscription, :map, required: true
 
   defp manage_button(assigns) do
@@ -396,12 +423,12 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       assign(assigns,
         booked: subscription.booked_occurrence,
         unpaid: subscription.unpaid_occurrence,
-        next: subscription.next_fulfillment_date
+        next: subscription.next_pending_delivery_date
       )
 
     ~H"""
     <span class="tabular-nums">
-      {Format.weekday_day_month(if(@booked, do: @booked.fulfillment_date, else: @next), @locale)}
+      {Format.weekday_day_month(@next, @locale)}
     </span>
     <span :if={@unpaid} class="text-base-content/70 block text-sm">
       <span class="text-error">{~t"Unpaid"}</span>
@@ -420,6 +447,8 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   attr :locale, :string, required: true
   attr :sizes, :list, required: true
   attr :edited?, :boolean, required: true
+  attr :plan_values, :map, required: true
+  attr :preview_date, :any, required: true
   attr :notice, :any, default: nil
   attr :target, :any, required: true
 
@@ -501,7 +530,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
             <.cancel_confirmation
               :if={@subscription.state != :cancelled}
               subscription={@subscription}
-              booked={@booked}
               locale={@locale}
               target={@target}
             />
@@ -545,7 +573,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 label={~t"Size"}
                 class="select w-full text-base"
                 options={size_options(@sizes, @subscription, @locale)}
-                value={@subscription.product_variant_id}
+                value={@plan_values["product_variant_id"]}
               />
               <.input
                 type="select"
@@ -554,7 +582,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 label={~t"How often"}
                 class="select w-full text-base"
                 options={Enum.map(Subscription.intervals(), &{Fields.interval_label(&1), &1})}
-                value={@subscription.interval_weeks}
+                value={@plan_values["interval_weeks"]}
               />
               <.input
                 type="select"
@@ -563,13 +591,26 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 label={~t"Delivery day"}
                 class="select w-full text-base"
                 options={delivery_day_options(@subscription, @locale)}
-                value={@subscription.delivery_day}
+                value={@plan_values["delivery_day"]}
               />
+              <p
+                :if={@edited? && @preview_date}
+                role="status"
+                aria-atomic="true"
+                class="text-base-content/70 text-sm"
+                data-testid="subscription-plan-preview"
+              >
+                <%= if @subscription.state == :paused do %>
+                  {~t"If you resume now, your updated plan starts with the delivery on #{date = Format.weekday_date(@preview_date, @locale)}."}
+                <% else %>
+                  {~t"Your updated plan starts with the delivery on #{date = Format.weekday_date(@preview_date, @locale)}."}
+                <% end %>
+              </p>
               <.button
                 type="submit"
                 variant="primary"
                 class="self-start"
-                disabled={not @edited?}
+                disabled={not @edited? or is_nil(@preview_date)}
               >
                 {~t"Save changes"}
               </.button>
@@ -586,7 +627,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
           <.detail_row :if={@subscription.state not in [:cancelled, :payment_failed]} label={~t"Card"}>
             <div class="flex items-center justify-between gap-4">
-              <p class="font-serif text-lg" data-testid="subscription-card">
+              <p class="font-sans text-base tabular-nums" data-testid="subscription-card">
                 <Fields.saved_card :if={@subscription.card_brand} card={@subscription} />
                 <span :if={!@subscription.card_brand}>{~t"Saved card"}</span>
               </p>
@@ -645,7 +686,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     ~H"""
     <%= if @booked do %>
       <p class="font-sans text-base font-semibold">
-        {Format.weekday_date(@booked.fulfillment_date, @locale)}
+        {Format.weekday_date(@subscription.next_pending_delivery_date, @locale)}
       </p>
       <p class="text-base-content/70 text-sm">
         {~t"The one after: #{date = Format.weekday_date(@next, @locale)}, charged on #{charge_date = Format.weekday_date(@subscription.charged_on, @locale)}."}

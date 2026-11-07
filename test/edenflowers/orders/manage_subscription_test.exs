@@ -33,6 +33,7 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
       order(
         state: :placed,
         origin: :subscription,
+        user_id: subscription.user_id,
         subscription_id: subscription.id,
         subscription_date: days_from_today(days),
         fulfillment_date: days_from_today(days)
@@ -46,6 +47,64 @@ defmodule Edenflowers.Orders.ManageSubscriptionTest do
 
     assert [%{id: id}] = Orders.list_my_subscriptions!(actor: context.customer)
     assert id == mine.id
+  end
+
+  test "the next pending delivery advances after fulfillment while the unbooked schedule stays separate", context do
+    subscription = subscription_for(context)
+    today = occurrence(subscription, 0)
+
+    [mine] = Orders.list_my_subscriptions!(actor: context.customer)
+    assert mine.next_pending_delivery_date == days_from_today(0)
+    assert mine.next_delivery_date == subscription.next_fulfillment_date
+    assert mine.final_delivery_date == days_from_today(0)
+
+    Ash.Seed.update!(today, %{fulfillment_status: :fulfilled})
+
+    [mine] = Orders.list_my_subscriptions!(actor: context.customer)
+    assert mine.booked_occurrence == nil
+    assert mine.next_pending_delivery_date == subscription.next_fulfillment_date
+    assert mine.final_delivery_date == nil
+
+    next = occurrence(subscription, 2)
+    [mine] = Orders.list_my_subscriptions!(actor: context.customer)
+    assert mine.next_pending_delivery_date == next.fulfillment_date
+  end
+
+  test "only a pending delivery past its deadline survives cancellation", context do
+    subscription = subscription_for(context)
+    occurrence(subscription, 0) |> Ash.Seed.update!(%{fulfillment_status: :fulfilled})
+    occurrence(subscription, 1) |> Ash.Seed.update!(%{fulfillment_status: :cancelled})
+    occurrence(subscription, 5)
+
+    assert Ash.load!(subscription, :final_delivery_date, authorize?: false).final_delivery_date == nil
+
+    final = occurrence(subscription, 2)
+
+    assert Ash.load!(subscription, :final_delivery_date, authorize?: false).final_delivery_date ==
+             final.fulfillment_date
+
+    cancelled = Orders.cancel_subscription!(subscription, actor: context.customer)
+    assert Ash.reload!(final, authorize?: false).fulfillment_status == :pending
+    [mine] = Orders.list_my_subscriptions!(actor: context.customer)
+    assert mine.next_pending_delivery_date == final.fulfillment_date
+    assert mine.next_delivery_date == nil
+
+    Ash.Seed.update!(final, %{fulfillment_status: :fulfilled})
+    assert Orders.list_my_subscriptions!(actor: context.customer) == []
+    assert Ash.load!(cancelled, :next_pending_delivery_date, authorize?: false).next_pending_delivery_date == nil
+  end
+
+  test "a changed plan applies after booked orders, or on resuming a paused subscription", context do
+    active = subscription_for(context)
+    occurrence(active, 2)
+    assert Ash.load!(active, :plan_changes_from, authorize?: false).plan_changes_from == active.next_fulfillment_date
+
+    paused = subscription_for(context, state: :paused, next_fulfillment_date: days_from_today(-30))
+    from = Ash.load!(paused, :plan_changes_from, authorize?: false).plan_changes_from
+    resumed = Orders.resume_subscription!(paused, actor: context.customer)
+
+    assert from == resumed.next_fulfillment_date
+    assert Date.compare(from, days_from_today(0)) == :gt
   end
 
   test "a customer can't act on someone else's subscription", context do

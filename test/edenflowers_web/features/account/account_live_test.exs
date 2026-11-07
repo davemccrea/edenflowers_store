@@ -417,13 +417,13 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
     test "shows a delivery that's already booked as the next one", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id, next_fulfillment_date: days_from_today(30)))
-      placed_order(user_id: user.id, subscription_id: subscription.id, fulfillment_date: days_from_today(2), paid: true)
+      placed_order(user_id: user.id, subscription_id: subscription.id, fulfillment_date: days_from_today(0), paid: true)
       {:ok, view, _html} = live(conn, ~p"/account")
 
       assert has_element?(
                view,
                "#{row(subscription)} [data-testid=subscription-status]",
-               Edenflowers.Format.weekday_day_month(days_from_today(2), @locale)
+               Edenflowers.Format.weekday_day_month(days_from_today(0), @locale)
              )
 
       assert has_element?(
@@ -431,6 +431,58 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
                "#{drawer(subscription)} [data-testid=subscription-drawer-status]",
                "The one after: #{weekday_date(days_from_today(30))}"
              )
+    end
+
+    test "shows the next scheduled delivery after today's order has been delivered or collected", %{
+      conn: conn,
+      user: user
+    } do
+      subscriptions =
+        for method <- [:delivery, :pickup] do
+          option = generate(fulfillment_option(fulfillment_method: method))
+
+          subscription =
+            generate(
+              subscription(
+                user_id: user.id,
+                fulfillment_option_id: option.id,
+                next_fulfillment_date: days_from_today(7)
+              )
+            )
+
+          placed_order(
+            user_id: user.id,
+            subscription_id: subscription.id,
+            fulfillment_option_id: option.id,
+            fulfillment_date: days_from_today(0),
+            fulfillment_status: :fulfilled,
+            paid: true
+          )
+
+          subscription
+        end
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      for subscription <- subscriptions do
+        assert has_element?(
+                 view,
+                 "#{row(subscription)} [data-testid=subscription-status]",
+                 Edenflowers.Format.weekday_day_month(days_from_today(7), @locale)
+               )
+
+        refute has_element?(
+                 view,
+                 "#{row(subscription)} [data-testid=subscription-status]",
+                 Edenflowers.Format.weekday_day_month(days_from_today(0), @locale)
+               )
+
+        refute has_element?(
+                 view,
+                 "#{drawer(subscription)} [data-testid=subscription-drawer-status]",
+                 "The one after:"
+               )
+      end
     end
 
     test "counts the bouquets delivered so far, leaving out booked and cancelled ones", %{conn: conn, user: user} do
@@ -470,7 +522,8 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
         user_id: user.id,
         origin: :subscription,
         subscription_id: finished.id,
-        fulfillment_date: days_from_today(-2),
+        fulfillment_date: days_from_today(0),
+        fulfillment_status: :fulfilled,
         paid: true
       )
 
@@ -677,10 +730,11 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       assert large_id == large.id
       assert has_element?(view, "#{row(subscription)}", "Large · Every 4 weeks")
 
-      price = Edenflowers.Format.storefront_price(large.price, @locale)
-
-      assert render(view) =~
-               "From #{weekday_date(reload(subscription).next_fulfillment_date)}: Large, every 4 weeks, #{price} per delivery."
+      assert has_element?(
+               view,
+               "#{drawer(subscription)} [data-testid=subscription-notice]",
+               "Changes saved. Your updated plan starts with the delivery on #{weekday_date(reload(subscription).next_fulfillment_date)}."
+             )
     end
 
     test "a paused subscription's change applies from when it would resume", %{conn: conn, user: user} do
@@ -699,7 +753,15 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       resume_date = Ash.load!(reload(subscription), :resume_date, authorize?: false).resume_date
       assert Date.compare(resume_date, ShopTime.today()) == :gt
-      assert render(view) =~ "From #{weekday_date(resume_date)}: Large"
+
+      assert has_element?(
+               view,
+               "#{drawer(subscription)} [data-testid=subscription-notice]",
+               "Changes saved. Your subscription is still paused. If you resume now, your updated plan starts with the delivery on #{weekday_date(resume_date)}."
+             )
+
+      refute has_element?(view, "#{drawer(subscription)} [data-testid=subscription-plan-preview]")
+      assert reload(subscription).state == :paused
     end
 
     test "offers the sizes on sale, keeping the current one once it's a draft", %{conn: conn, user: user} do
@@ -731,7 +793,12 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       view |> form("#change-subscription-#{subscription.id}", changes) |> render_submit()
 
       assert reload(subscription).next_fulfillment_date == Date.add(next, 1)
-      assert render(view) =~ "From #{weekday_date(Date.add(next, 1))}:"
+
+      assert has_element?(
+               view,
+               "#{drawer(subscription)} [data-testid=subscription-notice]",
+               "Your updated plan starts with the delivery on #{weekday_date(Date.add(next, 1))}."
+             )
     end
 
     test "shows the card deliveries are charged to", %{conn: conn, user: user} do
