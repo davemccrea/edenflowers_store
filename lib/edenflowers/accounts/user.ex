@@ -15,6 +15,11 @@ defmodule Edenflowers.Accounts.User do
   alias Edenflowers.Accounts.Workers.PushNewsletterSubscriber
   alias Edenflowers.Types.Email
 
+  # The sign-in token's lifetime, which the session cookie and the privacy notice share.
+  @session_days 365
+
+  def session_days, do: @session_days
+
   authentication do
     add_ons do
       log_out_everywhere do
@@ -26,7 +31,7 @@ defmodule Edenflowers.Accounts.User do
       enabled? true
       token_resource Edenflowers.Accounts.Token
       signing_secret Edenflowers.Secrets
-      token_lifetime {365, :days}
+      token_lifetime {@session_days, :days}
       store_all_tokens? true
       require_token_presence_for_authentication? true
     end

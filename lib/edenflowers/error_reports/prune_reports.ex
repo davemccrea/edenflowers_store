@@ -17,6 +17,8 @@ defmodule Edenflowers.ErrorReports.PruneReports do
   alias ErrorTracker.Occurrence
 
   @retention_days 90
+
+  def retention_days, do: @retention_days
   @batch_size 500
 
   @impl true

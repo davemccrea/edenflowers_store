@@ -10,8 +10,7 @@ defmodule EdenflowersWeb.Endpoint do
       store: :cookie,
       key: "_edenflowers_key",
       signing_salt: "ZUXNYtPz",
-      # Matches the auth token_lifetime in Edenflowers.Accounts.User.
-      max_age: 365 * 24 * 60 * 60,
+      max_age: Edenflowers.Accounts.User.session_days() * 24 * 60 * 60,
       same_site: "Lax",
       secure: Application.get_env(:edenflowers, :secure_cookies, false)
     ]
