@@ -10,6 +10,7 @@ defmodule Edenflowers.Orders.Order.Changes.ActivateSubscription do
   use Ash.Resource.Change
 
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Subscription
 
   @impl true
   def change(changeset, _opts, context) do
@@ -30,7 +31,7 @@ defmodule Edenflowers.Orders.Order.Changes.ActivateSubscription do
       user_id: order.user_id,
       product_variant_id: line_item.product_variant_id,
       interval_weeks: line_item.interval_weeks,
-      next_fulfillment_date: Date.add(order.fulfillment_date, line_item.interval_weeks * 7),
+      next_fulfillment_date: Subscription.next_date(order.fulfillment_date, line_item.interval_weeks),
       customer_phone_number: order.customer_phone_number,
       recipient_name: order.recipient_name,
       recipient_phone_number: order.recipient_phone_number,

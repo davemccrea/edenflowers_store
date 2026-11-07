@@ -366,12 +366,13 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   defp next_delivery(order, line) do
     locale = Format.locale()
 
-    date = Date.add(order.fulfillment_date, line.interval_weeks * 7)
+    date = Edenflowers.Orders.Subscription.next_date(order.fulfillment_date, line.interval_weeks)
 
     %{
       date: Format.weekday_date(date, locale),
       charge_date: Format.weekday_date(Edenflowers.Orders.Subscription.charged_on(date), locale),
-      amount: Format.currency(Decimal.add(line.subtotal, order.fulfillment_fee || 0), locale)
+      amount:
+        Format.currency(Edenflowers.Orders.Subscription.price_per_order(line.subtotal, order.fulfillment_fee), locale)
     }
   end
 end

@@ -918,10 +918,17 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       %{} = line when not is_nil(order.fulfillment_date) ->
         assigns =
           assign(assigns,
-            amount: Edenflowers.Format.currency(Decimal.add(line.subtotal, fee || 0), order.locale),
+            amount:
+              Edenflowers.Format.currency(
+                Edenflowers.Orders.Subscription.price_per_order(line.subtotal, fee),
+                order.locale
+              ),
             interval: String.downcase(EdenflowersWeb.Checkout.Fields.interval_label(line.interval_weeks)),
             from:
-              Edenflowers.Format.weekday_date(Date.add(order.fulfillment_date, line.interval_weeks * 7), order.locale)
+              Edenflowers.Format.weekday_date(
+                Edenflowers.Orders.Subscription.next_date(order.fulfillment_date, line.interval_weeks),
+                order.locale
+              )
           )
 
         ~H"""
