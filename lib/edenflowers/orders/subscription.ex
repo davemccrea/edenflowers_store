@@ -36,6 +36,18 @@ defmodule Edenflowers.Orders.Subscription do
   def intervals, do: @intervals
 
   @doc """
+  The weekdays a subscription can deliver on: every day but Sunday, Jennie's
+  day off, whichever weekdays the shop calendar opens for one-off orders.
+  """
+  def delivery_days, do: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+
+  @doc """
+  The shop calendar as it applies to subscription deliveries: open on
+  `delivery_days/0`, still closed on the dates Jennie closes, such as holidays.
+  """
+  def calendar(shop_calendar), do: %{shop_calendar | available_days: delivery_days(), enabled_dates: []}
+
+  @doc """
   The day the occurrence job charges the card for a delivery on `date`. Checkout
   quotes it before the subscription exists; a subscription has `charged_on`.
   """

@@ -1,11 +1,11 @@
 defmodule Edenflowers.Orders.Subscription.Validations.SubscriptionDeliveryDay do
   @moduledoc """
-  A subscription moves only to a weekday the shop is open on.
+  A subscription moves only to one of `Subscription.delivery_days/0`.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
 
-  alias Edenflowers.Fulfillment
+  alias Edenflowers.Orders.Subscription
 
   @impl true
   def validate(changeset, _opts, _context) do
@@ -14,7 +14,7 @@ defmodule Edenflowers.Orders.Subscription.Validations.SubscriptionDeliveryDay do
         :ok
 
       day ->
-        if day in Fulfillment.get_shop_calendar!(authorize?: false).available_days, do: :ok, else: error()
+        if day in Subscription.delivery_days(), do: :ok, else: error()
     end
   end
 

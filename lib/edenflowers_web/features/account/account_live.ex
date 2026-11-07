@@ -11,8 +11,8 @@ defmodule EdenflowersWeb.Account.AccountLive do
   alias Edenflowers.Catalog
   alias Edenflowers.Courses
   alias Edenflowers.Format
-  alias Edenflowers.Fulfillment
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.ShopTime
   alias Edenflowers.Translations
   alias EdenflowersWeb.Account.SubscriptionManager
@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
      |> assign(locale: Format.locale())
      |> assign(orders: orders(user))
      |> assign(subscriptions: subscriptions(user))
-     |> assign(open_days: Fulfillment.get_shop_calendar!().available_days)
+     |> assign(delivery_days: Subscription.delivery_days())
      |> assign_subscription_path()
      |> assign(registrations: registrations(user))
      |> assign(past_visible: @past_visible)
@@ -82,7 +82,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
               id={"subscription-#{subscription.id}"}
               subscription={subscription}
               locale={@locale}
-              open_days={@open_days}
+              delivery_days={@delivery_days}
               current_user={@current_user}
             />
           </ol>
