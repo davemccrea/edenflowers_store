@@ -131,6 +131,7 @@ defmodule Edenflowers.Orders.Order.Emails do
         description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
       validate {Holds, calculation: :gift_voucher_sale?, message: "doesn't sell a gift voucher"}
+      validate attribute_does_not_equal(:fulfillment_status, :cancelled), message: "is cancelled"
       validate {Holds, calculation: :receipt_available?, message: "is not paid yet"}
       transaction? false
       require_atomic? false

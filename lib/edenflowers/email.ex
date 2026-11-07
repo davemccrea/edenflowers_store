@@ -260,11 +260,16 @@ defmodule Edenflowers.Email do
   end
 
   @doc """
-  A matter-of-fact note that a subscription's saved card was charged for
-  its next delivery or pickup, with the receipt the sender attaches. Expects
-  `:amount_paid` and `:line_items` loaded.
+  A matter-of-fact receipt for a subscription's next delivery or pickup,
+  distinguishing its Gift voucher payment from what the card was charged.
+  Expects `:amount_paid`, `:payments` and `:line_items` loaded.
   """
   def subscription_charged(order) do
+    voucher_amount =
+      order.payments
+      |> Enum.filter(&(&1.method == :voucher))
+      |> Enum.reduce(Decimal.new(0), &Decimal.add(&1.amount, &2))
+
     customer_email(order, automated_from_address(), fn email ->
       email
       |> subject(~t"Your flowers for #{date = short_date(order)}")
@@ -272,6 +277,8 @@ defmodule Edenflowers.Email do
         Templates.subscription_charged(%{
           order: order,
           product: hd(order.line_items).product_name,
+          voucher_amount: voucher_amount,
+          card_amount: Decimal.sub(order.amount_paid, voucher_amount),
           date: Format.weekday_date(order.fulfillment_date, order.locale),
           account_url: account_url(),
           format_currency: &Format.currency(&1, order.locale)
@@ -446,9 +453,13 @@ defmodule Edenflowers.Email do
     Decimal.add(subscription.product_variant.price, subscription.first_order_fulfillment_fee || 0)
   end
 
-  # ponytail: ignores Stripe's 0.50 € card minimum, so a voucher a few cents
-  # short reads slightly high here; the charge itself follows Payable.voucher_amount.
-  defp voucher_pays(%{spendable?: true, remaining: remaining}, price), do: Decimal.min(remaining, price)
+  # Match Payable.voucher_amount: cover it all, or leave at least 0.50 € for Stripe.
+  defp voucher_pays(%{spendable?: true, remaining: remaining}, price) do
+    if Decimal.compare(remaining, price) != :lt,
+      do: price,
+      else: Decimal.min(remaining, Decimal.max(Decimal.sub(price, "0.50"), 0))
+  end
+
   defp voucher_pays(_no_usable_voucher, _price), do: Decimal.new(0)
 
   @doc """

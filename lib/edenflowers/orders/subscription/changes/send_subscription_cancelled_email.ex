@@ -1,7 +1,7 @@
 defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail do
   @moduledoc """
   Emails the customer that their subscription is cancelled, naming the
-  already-charged delivery that still comes, if there is one: Subscription
+  delivery past its change deadline that still comes, if there is one: Subscription
   cancelled, as Jennie rewrote it if she did, when she cancelled it (`email: :cancelled`),
   or the matter-of-fact confirmation when they did (`:cancellation_confirmed`).
   """
@@ -44,7 +44,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   end
 
   @doc """
-  The day of the delivery already charged that cancelling left in place,
+  The day of the delivery that cancelling leaves in place,
   since it's past the change deadline, or nil.
   """
   def charged_on(subscription) do
@@ -54,7 +54,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
       Edenflowers.Orders.Order
       |> Ash.Query.filter(
         subscription_id == ^subscription.id and state == :placed and fulfillment_status == :pending and
-          fulfillment_date >= ^Edenflowers.ShopTime.today()
+          fulfillment_date >= ^Edenflowers.ShopTime.today() and not changes_open?
       )
       |> Ash.Query.sort(fulfillment_date: :asc)
       |> Ash.Query.limit(1)

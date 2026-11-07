@@ -4,6 +4,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   import Generator
   import Swoosh.TestAssertions
 
+  alias Edenflowers.Email.Preview
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Workers.SendSubscriptionCancelledEmail
 
@@ -27,8 +28,30 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
       assert email.subject =~ "subscription is cancelled"
 
       assert email.text_body =~
-               "Any delivery already charged will still come on #{Edenflowers.Format.weekday_date(charged_for, "en-GB")}."
+               "Your delivery on #{Edenflowers.Format.weekday_date(charged_for, "en-GB")} will still come."
     end)
+  end
+
+  test "the preview names only an order past its change deadline and does not claim an unpaid order was charged" do
+    {:ok, customer} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada Lovelace", authorize?: false)
+    subscription = generate(subscription(user_id: customer.id, locale: "en-GB"))
+    date = Date.add(Edenflowers.ShopTime.today(), 2)
+    placed_order(subscription_id: subscription.id, origin: :subscription, fulfillment_date: date)
+
+    preview = Preview.build(:subscription_cancelled, subscription, %{})
+    assert preview.text_body =~ "Your delivery on #{Edenflowers.Format.weekday_date(date, "en-GB")} will still come."
+    refute preview.text_body =~ "already charged"
+
+    other = generate(subscription(user_id: customer.id, locale: "en-GB"))
+
+    placed_order(
+      subscription_id: other.id,
+      origin: :subscription,
+      fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 14)
+    )
+
+    preview = Preview.build(:subscription_cancelled, other, %{})
+    refute preview.text_body =~ "will still come"
   end
 
   test "Jennie's rewrite of the email goes out from the queued job" do

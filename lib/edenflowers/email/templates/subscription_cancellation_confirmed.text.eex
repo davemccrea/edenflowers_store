@@ -1,6 +1,6 @@
 <%= dgettext("emails", "Your %{product} subscription is cancelled. Your card won't be charged again.", product: @product) %>
 <%= if @charged_on do %>
-<%= if @pickup? do %><%= dgettext("emails", "Your order has already been charged and will still be ready to collect on %{date}.", date: @format_date.(@charged_on)) %><% else %><%= dgettext("emails", "Your delivery on %{date} has already been charged and will still come.", date: @format_date.(@charged_on)) %><% end %>
+<%= if @pickup? do %><%= dgettext("emails", "Your order will still be ready to collect on %{date}.", date: @format_date.(@charged_on)) %><% else %><%= dgettext("emails", "Your delivery on %{date} will still come.", date: @format_date.(@charged_on)) %><% end %>
 <% end %>
 <%= dgettext("emails", "Questions? Reply to this email.") %>
 

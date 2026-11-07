@@ -641,7 +641,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       <%= if @paid? do %>
         <%!-- A voucher's email carries its receipt too. --%>
         <.actions_menu_button
-          :if={!@no_email && @order.gift_voucher_sale?}
+          :if={!@no_email && @order.gift_voucher_sale? && !@order.cancelled?}
           menu="order-actions"
           phx-click="open_email"
           phx-value-kind="gift_voucher"

@@ -9,6 +9,83 @@ defmodule Edenflowers.Email.PreviewTest do
   alias Edenflowers.Courses.CourseRegistration.Changes.SendReminderEmail
   alias Edenflowers.Email.Preview
 
+  for kind <- [:order, :gift_voucher, :booking], locale <- ["en-GB", "sv-FI", "fi"] do
+    @kind kind
+    @locale locale
+    test "#{@kind} cancellation and in-person refund emails match their actions in #{@locale}" do
+      admin = generate(admin_user())
+
+      record =
+        case @kind do
+          :order ->
+            placed_order(locale: @locale, payment_intent_id: nil)
+
+          :gift_voucher ->
+            Edenflowers.Orders.sell_gift_voucher!(
+              %{customer_name: "Anna", customer_email: "a@example.com", amount: 50, locale: @locale},
+              actor: admin
+            )
+
+          :booking ->
+            generate(course_registration(status: :confirmed, locale: @locale))
+        end
+
+      record = Ash.update!(record, %{amount: "50.00", payment_method: :cash}, action: :record_payment, actor: admin)
+      preview = Preview.build(:cancelled, record, %{charge: "5.00"})
+      cancelled = Ash.update!(record, %{cancellation_charge: "5.00"}, action: :cancel, actor: admin)
+
+      [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendCancelledEmail)
+      assert job.args["to_return"] == "45.00"
+      assert job.args["refunded_amount"] == "0"
+      assert :ok = perform_job(Edenflowers.Payments.Workers.SendCancelledEmail, job.args)
+
+      assert_email_sent(fn email ->
+        assert email.subject == preview.subject
+        assert email.text_body == preview.text_body
+      end)
+
+      preview = Preview.build(:refunded, cancelled, %{refund: "20.00", payment_method: :cash})
+      refunded = Ash.update!(cancelled, %{amount: "20.00", payment_method: :cash}, action: :refund, actor: admin)
+      assert Decimal.eq?(refunded.balance, "-25.00")
+
+      [job] = all_enqueued(worker: Edenflowers.Payments.Workers.SendRefundedEmail)
+      assert :ok = perform_job(Edenflowers.Payments.Workers.SendRefundedEmail, job.args)
+
+      assert_email_sent(fn email ->
+        assert email.subject == preview.subject
+        assert email.text_body == preview.text_body
+      end)
+    end
+  end
+
+  for parent <- [:order, :booking], method <- Edenflowers.Payments.PaymentMethod.values() do
+    @parent parent
+    @method method
+    test "the #{@parent} refund preview agrees with the sent email for #{@method} selected as text" do
+      record =
+        case @parent do
+          :order -> placed_order(paid: true)
+          :booking -> generate(course_registration(status: :confirmed, locale: "en-GB"))
+        end
+
+      form = Phoenix.Component.to_form(%{"amount" => "20.00", "payment_method" => to_string(@method)})
+      preview = EdenflowersWeb.Admin.DrawerPreview.build(:refunded, record, form)
+
+      args = %{
+        to_string(Edenflowers.Payments.parent_key(record)) => record.id,
+        "amount" => "20.00",
+        "payment_method" => to_string(@method)
+      }
+
+      assert :ok = perform_job(Edenflowers.Payments.Workers.SendRefundedEmail, args)
+
+      assert_email_sent(fn email ->
+        assert email.subject == preview.subject
+        assert email.text_body == preview.text_body
+      end)
+    end
+  end
+
   for amount <- [nil, "25.00", "85.00"] do
     @tag :typst
     test "manual confirmation preview matches actual delivery with #{inspect(amount)} received" do

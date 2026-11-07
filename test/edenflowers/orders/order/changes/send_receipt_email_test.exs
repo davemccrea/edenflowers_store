@@ -8,6 +8,58 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmailTest do
 
   @moduletag :typst
 
+  for kind <- [:flowers, :gift_voucher] do
+    @kind kind
+    test "a queued #{@kind} confirmation sends nothing if the order was cancelled before it ran" do
+      admin = generate(admin_user())
+
+      order =
+        case @kind do
+          :flowers ->
+            placed_order(payment_intent_id: nil)
+
+          :gift_voucher ->
+            Orders.sell_gift_voucher!(%{customer_name: "Anna", customer_email: "a@example.com", amount: 50},
+              actor: admin
+            )
+        end
+
+      order = Orders.record_payment!(order, "50.00", :cash, actor: admin)
+      Orders.cancel_order!(order, %{email_customer?: false}, actor: admin)
+
+      assert {:ok, _} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
+      assert_no_email_sent()
+      refute Orders.get_order_by_id!(order.id, authorize?: false).receipt_emailed_at
+    end
+  end
+
+  for voucher_amount <- ["20.00", "88.50"] do
+    @voucher_amount voucher_amount
+    test "a subscription receipt uses actual voucher payments of #{@voucher_amount}" do
+      voucher = generate(gift_voucher(amount: Decimal.new("100.00")))
+      order = placed_order(origin: :subscription, gift_voucher_id: voucher.id, payment_intent_id: nil)
+
+      generate(
+        payment(order_id: order.id, method: :voucher, gift_voucher_id: voucher.id, amount: Decimal.new(@voucher_amount))
+      )
+
+      card_amount = Decimal.sub("88.50", @voucher_amount)
+      if Decimal.positive?(card_amount), do: generate(payment(order_id: order.id, amount: card_amount))
+
+      assert {:ok, _} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
+
+      assert_email_sent(fn email ->
+        if Decimal.positive?(card_amount) do
+          assert email.text_body =~ "Your card was charged 68,50 €"
+          assert email.text_body =~ "Paid with your gift voucher: 20,00 €."
+        else
+          refute email.text_body =~ "Your card was charged"
+          assert email.text_body =~ "Your gift voucher paid 88,50 €"
+        end
+      end)
+    end
+  end
+
   test "delivers the confirmation email with the PDF receipt attached and marks the order" do
     tax_rate = generate(tax_rate())
     product = generate(product(tax_rate_id: tax_rate.id))

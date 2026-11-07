@@ -13,8 +13,13 @@ defmodule EdenflowersWeb.Admin.DrawerPreview do
     do: Preview.build(:receipt, record, %{amount: form[:amount].value})
 
   def build(:refunded, record, %Phoenix.HTML.Form{} = form) do
-    method = form[:payment_method].value
-    Preview.build(:refunded, record, %{refund: form[:amount].value, payment_method: if(is_atom(method), do: method)})
+    method =
+      case Ash.Type.cast_input(Edenflowers.Payments.PaymentMethod, form[:payment_method].value) do
+        {:ok, method} -> method
+        _ -> nil
+      end
+
+    Preview.build(:refunded, record, %{refund: form[:amount].value, payment_method: method})
   end
 
   def build(:cancelled, record, %Phoenix.HTML.Form{} = form),
