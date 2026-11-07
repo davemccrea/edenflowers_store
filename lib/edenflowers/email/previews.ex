@@ -188,28 +188,15 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp payment_received(locale) do
-    orders =
-      for {title, attrs, amount} <- [
-            {"order paid in full through the payment link", paid_in_full(), "64.00"},
-            {"order part paid, some still owed", part_paid(), "20.00"}
-          ] do
-        {"Payment received", title, :payment_received,
-         Email.payment_received(order(attrs, locale), Decimal.new(amount))}
-      end
-
-    bookings =
-      for {title, attrs} <- [
-            {"booking paid before the course", %{}},
-            {"booking for 2 paid after the course", %{seats: 2, course: %{date: ~D[2020-11-20]}}}
-          ] do
-        registration = registration(attrs, locale)
-        amount = Decimal.mult(Decimal.new("45.00"), registration.seats)
-        registration = %{registration | amount_paid: amount, balance: Decimal.new(0)}
-
-        {"Payment received", title, :payment_received, Email.payment_received(registration, amount)}
-      end
-
-    orders ++ bookings
+    [
+      {"Payment received", "order", :payment_received,
+       Email.payment_received(order(part_paid(), locale), Decimal.new("20.00"))},
+      {"Payment received", "booking", :payment_received,
+       Email.payment_received(
+         registration(%{amount_paid: Decimal.new("45.00"), balance: Decimal.new(0)}, locale),
+         Decimal.new("45.00")
+       )}
+    ]
   end
 
   defp purchase_receipt(locale) do
@@ -242,16 +229,7 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp subscription_charged(locale) do
-    for {title, attrs} <- [
-          {"delivery", %{}},
-          {"pickup", pickup()},
-          {"nothing to charge",
-           %{amount_paid: Decimal.new(0), grand_total: Decimal.new(0), discount: Decimal.new("59.00")}},
-          {"delivery partly paid by gift voucher", %{payments: [%{method: :voucher, amount: Decimal.new("20.00")}]}},
-          {"delivery fully paid by gift voucher", %{payments: [%{method: :voucher, amount: Decimal.new("59.00")}]}},
-          {"pickup fully paid by gift voucher",
-           Map.put(pickup(), :payments, [%{method: :voucher, amount: Decimal.new("59.00")}])}
-        ] do
+    for {title, attrs} <- [{"delivery", %{}}, {"pickup", pickup()}] do
       attrs =
         %{
           origin: :subscription,
@@ -271,9 +249,7 @@ defmodule Edenflowers.Email.Previews do
   defp subscription_payment_failed(locale) do
     for {title, attrs} <- [
           {"delivery", %{}},
-          {"pickup, no customer first name", Map.put(pickup(), :customer_first_name, nil)},
-          {"sent after delivery", %{fulfillment_status: :fulfilled}},
-          {"sent after the scheduled day", %{fulfillment_date: ~D[2020-11-14]}}
+          {"pickup, no customer first name", Map.put(pickup(), :customer_first_name, nil)}
         ] do
       attrs = Map.merge(%{origin: :subscription, gift: false, recipient_name: nil, recipient_first_name: nil}, attrs)
 
@@ -386,11 +362,7 @@ defmodule Edenflowers.Email.Previews do
              delivery_address: nil,
              interval_weeks: 4,
              first_order_fulfillment_fee: Decimal.new(0)
-           }},
-          {"gift voucher pays part", %{gift_voucher: %{spendable?: true, remaining: Decimal.new("20.00")}}},
-          {"gift voucher pays it all", %{gift_voucher: %{spendable?: true, remaining: Decimal.new("150.00")}}},
-          {"gift voucher leaves the minimum card charge",
-           %{gift_voucher: %{spendable?: true, remaining: Decimal.new("58.90")}}}
+           }}
         ] do
       {"Subscription heads-up", title, :subscription_heads_up, Email.subscription_heads_up(subscription(attrs, locale))}
     end

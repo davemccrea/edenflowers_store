@@ -4,7 +4,6 @@
 
 <%= dgettext("emails", "Order %{reference}", reference: @order.order_reference) %>
 
-<%= order_totals(assigns) %>
 <%= dgettext("emails", "Warm wishes,") %>
 
 <%= signature() %>

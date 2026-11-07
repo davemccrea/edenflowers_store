@@ -4,6 +4,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmailTest do
   import Swoosh.TestAssertions
 
   alias Edenflowers.Orders
+  alias Edenflowers.Orders.Receipt
   alias Edenflowers.Orders.Workers.SendReceiptEmail
 
   @moduletag :typst
@@ -35,27 +36,47 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmailTest do
 
   for voucher_amount <- ["20.00", "88.50"] do
     @voucher_amount voucher_amount
-    test "a subscription receipt uses actual voucher payments of #{@voucher_amount}" do
+    test "a subscription receipt leaves voucher payments of #{@voucher_amount} in the attached receipt" do
       voucher = generate(gift_voucher(amount: Decimal.new("100.00")))
       order = placed_order(origin: :subscription, gift_voucher_id: voucher.id, payment_intent_id: nil)
 
       generate(
-        payment(order_id: order.id, method: :voucher, gift_voucher_id: voucher.id, amount: Decimal.new(@voucher_amount))
+        payment(
+          order_id: order.id,
+          method: :voucher,
+          payment_method_type: "voucher",
+          gift_voucher_id: voucher.id,
+          amount: Decimal.new(@voucher_amount)
+        )
       )
 
       card_amount = Decimal.sub("88.50", @voucher_amount)
-      if Decimal.positive?(card_amount), do: generate(payment(order_id: order.id, amount: card_amount))
+
+      if Decimal.positive?(card_amount),
+        do: generate(payment(order_id: order.id, amount: card_amount, payment_method_type: "card"))
+
+      receipt_payments =
+        order
+        |> Ash.load!(Receipt.order_load(), authorize?: false)
+        |> Receipt.build_payload()
+        |> Map.fetch!(:payments)
+        |> Map.new(&{&1.method, &1.amount})
+
+      assert receipt_payments["voucher"] == Edenflowers.Format.currency(Decimal.new(@voucher_amount), order.locale)
+
+      if Decimal.positive?(card_amount) do
+        assert receipt_payments["card"] == Edenflowers.Format.currency(card_amount, order.locale)
+      else
+        refute Map.has_key?(receipt_payments, "card")
+      end
 
       assert {:ok, _} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
-        if Decimal.positive?(card_amount) do
-          assert email.text_body =~ "Your card was charged 68,50 €"
-          assert email.text_body =~ "Paid with your gift voucher: 20,00 €."
-        else
-          refute email.text_body =~ "Your card was charged"
-          assert email.text_body =~ "Your gift voucher paid 88,50 €"
-        end
+        assert email.text_body =~ "Your receipt for your order for collection on"
+        refute email.text_body =~ "charged"
+        refute email.text_body =~ "voucher"
+        assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
       end)
     end
   end
