@@ -28,6 +28,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   alias Edenflowers.Orders.LineItem.Validations.WithinStock
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Order.CheckoutPrice
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.PhoneNumber
   alias Edenflowers.Pricing
   alias Edenflowers.Translations
@@ -920,20 +921,20 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
           assign(assigns,
             amount:
               Edenflowers.Format.currency(
-                Edenflowers.Orders.Subscription.price_per_order(line.subtotal, fee),
+                Subscription.price_per_order(line.subtotal, fee),
                 order.locale
               ),
             interval: String.downcase(EdenflowersWeb.Checkout.Fields.interval_label(line.interval_weeks)),
             from:
               Edenflowers.Format.weekday_date(
-                Edenflowers.Orders.Subscription.next_date(order.fulfillment_date, line.interval_weeks),
+                Subscription.next_date(order.fulfillment_date, line.interval_weeks),
                 order.locale
               )
           )
 
         ~H"""
         <p class="text-base-content/80 -mt-4 text-sm leading-relaxed" data-testid="recurring-charge">
-          {~t"Then #{amount = @amount} #{interval = @interval} from #{date = @from}, charged #{days = Edenflowers.Orders.Subscription.lead_days()} days before each delivery. Pause or cancel anytime."}
+          {~t"Then #{amount = @amount} #{interval = @interval} from #{date = @from}, charged #{days = Subscription.lead_days()} days before each delivery. Pause or cancel anytime."}
         </p>
         """
 

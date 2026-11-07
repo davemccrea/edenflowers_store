@@ -17,9 +17,10 @@ defmodule Edenflowers.ErrorReports.PruneReports do
   alias ErrorTracker.Occurrence
 
   @retention_days 90
-
-  def retention_days, do: @retention_days
   @batch_size 500
+
+  @doc "How long error reports are kept, in days, as the privacy notice says."
+  def retention_days, do: @retention_days
 
   @impl true
   def perform(_job) do
