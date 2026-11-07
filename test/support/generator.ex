@@ -260,11 +260,13 @@ defmodule Generator do
       |> Keyword.put_new_lazy(:fulfillment_option_id, fn ->
         generate(fulfillment_option(fulfillment_method: :delivery)).id
       end)
+      |> Keyword.put_new(:next_fulfillment_date, Date.add(Edenflowers.ShopTime.today(), 14))
+
+    opts = Keyword.put_new(opts, :delivery_day, Edenflowers.Fulfillment.Weekday.from_date(opts[:next_fulfillment_date]))
 
     seed_generator(
       %Subscription{
         interval_weeks: 2,
-        next_fulfillment_date: Date.add(Edenflowers.ShopTime.today(), 14),
         locale: "en",
         stripe_customer_id: "cus_ada",
         stripe_payment_method_id: "pm_card"

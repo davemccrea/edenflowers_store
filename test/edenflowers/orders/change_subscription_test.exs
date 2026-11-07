@@ -88,15 +88,33 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
       assert weekly.next_fulfillment_date == days_from_today(9)
     end
 
-    test "moves to the nearest date on a new delivery day", context do
+    # The forms send the current day with every change, as here.
+    test "keeps a moved day when the interval changes later", context do
+      friday = first_on_or_after(days_from_today(14), 5)
+      subscription = subscription_for(context, interval_weeks: 2, next_fulfillment_date: friday)
+
+      Ash.Seed.update!(generate(order(state: :placed, fulfillment_date: Date.add(friday, -14))), %{
+        subscription_id: subscription.id
+      })
+
+      tuesday = Orders.change_subscription!(subscription, %{delivery_day: :tuesday}, actor: context.customer)
+
+      weekly =
+        Orders.change_subscription!(tuesday, %{interval_weeks: 1, delivery_day: :tuesday}, actor: context.customer)
+
+      assert Date.day_of_week(weekly.next_fulfillment_date) == 2
+    end
+
+    # Never back, so two deliveries are never closer together than the interval.
+    test "moves forward to the first date on a new delivery day", context do
       friday = first_on_or_after(days_from_today(14), 5)
       subscription = subscription_for(context, next_fulfillment_date: friday)
 
-      tuesday = Orders.change_subscription!(subscription, %{delivery_day: :tuesday}, actor: context.customer)
-      assert tuesday.next_fulfillment_date == Date.add(friday, -3)
+      saturday = Orders.change_subscription!(subscription, %{delivery_day: :saturday}, actor: context.customer)
+      assert saturday.next_fulfillment_date == Date.add(friday, 1)
 
-      monday = Orders.change_subscription!(tuesday, %{delivery_day: :monday}, actor: context.customer)
-      assert monday.next_fulfillment_date == Date.add(friday, -4)
+      thursday = Orders.change_subscription!(saturday, %{delivery_day: :thursday}, actor: context.customer)
+      assert thursday.next_fulfillment_date == Date.add(friday, 6)
     end
 
     test "changes how often and the day together, counting from the latest delivery", context do
@@ -112,7 +130,7 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
           actor: context.customer
         )
 
-      assert changed.next_fulfillment_date == Date.add(friday, -2)
+      assert changed.next_fulfillment_date == Date.add(friday, 5)
     end
 
     test "only to a day the shop is open", context do

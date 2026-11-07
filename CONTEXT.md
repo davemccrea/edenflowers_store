@@ -59,7 +59,7 @@ A customer's standing request for a subscribable product every one, two or four 
 _Avoid_: Plan, membership, recurring order
 
 **Occurrence**:
-One order a Subscription creates: an ordinary placed Online Order, charged to the saved card, that Jennie makes like any other. It is made for its scheduled date whatever the shop calendar says; before she closes, Jennie agrees another day with each customer it affects, or pauses their Subscription.
+One order a Subscription creates: an ordinary placed Online Order, charged to the saved card, that Jennie makes like any other. It is made for its scheduled date whatever the shop calendar says. On a day she has closed, Jennie delivers it anyway or, once it's booked, moves its order to another day.
 _Avoid_: Renewal, instalment, delivery (a delivery is how any order reaches its Recipient)
 
 **Charge day**:
