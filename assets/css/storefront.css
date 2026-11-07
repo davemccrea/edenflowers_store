@@ -660,3 +660,25 @@
       calc(var(--first) + var(--i) * var(--frame)) forwards;
   }
 }
+
+/* A product card's photo grows into the product page's (page_transitions.js).
+   Both frames show the same photo, so they don't cross-fade: two crops of it
+   fading through each other look like a ghost. The product page's frame covers
+   the card's from the start.
+   The two frames differ in shape, so each snapshot fills the moving frame and
+   crops rather than stretching. Unclipped, the crop spills past the frame. */
+.product-photo {
+  view-transition-name: product-photo;
+}
+::view-transition-group(product-photo) {
+  animation-duration: 450ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(product-photo),
+::view-transition-new(product-photo) {
+  height: 100%;
+  object-fit: cover;
+  overflow: clip;
+  animation: none;
+  mix-blend-mode: normal;
+}

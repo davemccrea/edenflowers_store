@@ -9,7 +9,7 @@ import { customerLiveSelect } from "./customer_select";
 import { VoucherCode } from "./voucher_code.mjs";
 import { VoucherPreview } from "./voucher_preview.mjs";
 import { cinderDom } from "./cinder_a11y";
-import { onDocumentPatch } from "./admin_transitions";
+import { onDocumentPatch } from "./page_transitions";
 import "./unsaved_forms";
 
 // Customers never use the picker, so only dev and reviewer pages fetch it.
