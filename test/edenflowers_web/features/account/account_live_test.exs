@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   import Phoenix.LiveViewTest
 
   alias Edenflowers.Accounts.Workers.SendEmailChangeCode
+  alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.ShopTime
 
   @locale "en-GB"
@@ -717,7 +718,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "moves deliveries to another day", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id))
       next = subscription.next_fulfillment_date
-      day = Edenflowers.Fulfillment.Weekday.from_date(Date.add(next, 1))
+      day = Weekday.from_date(Date.add(next, 1))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       changes = %{
@@ -791,7 +792,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
 
       Ash.Seed.update!(subscription, %{
         next_fulfillment_date: date,
-        delivery_day: Edenflowers.Fulfillment.Weekday.from_date(date)
+        delivery_day: Weekday.from_date(date)
       })
 
       view |> element("#subscription-#{subscription.id}-pause", "Pause") |> render_click()
