@@ -13,6 +13,7 @@ defmodule Edenflowers.Release do
         Ecto.Migrator.with_repo(repo, fn repo ->
           Ecto.Migrator.run(repo, :up, all: true)
           check_course_registration_states!(repo)
+          assign_missing_delivery_days!(repo)
         end)
     end
   end
@@ -25,6 +26,18 @@ defmodule Edenflowers.Release do
       raise "Deployment blocked: #{count} course registrations still have status awaiting_payment. " <>
               "Back up production, resolve their payments and cancel them using the previous release before deploying."
     end
+
+    :ok
+  end
+
+  # Subscriptions started before delivery_day existed deliver on their next
+  # date's weekday. Removed by TASK-183 once production has run it.
+  def assign_missing_delivery_days!(repo) do
+    Ecto.Adapters.SQL.query!(
+      repo,
+      "UPDATE subscriptions SET delivery_day = lower(to_char(next_fulfillment_date, 'FMDay')) " <>
+        "WHERE delivery_day IS NULL"
+    )
 
     :ok
   end

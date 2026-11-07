@@ -3,7 +3,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
   Turns the Subscription's next date into an Occurrence for that date: an
   ordinary Online Order, charged to the saved card and placed by
   `Payments.complete/1`, as a checkout payment is. The shop calendar doesn't
-  move it; Jennie agrees another day with the customer before she closes
+  move it; Jennie delivers it anyway or moves the order to another day
   (`:delivering_on_closed_days`). The Subscription's Gift voucher pays first,
   so the card is charged only for the rest, and not at all when the voucher
   covers it. Then moves the Subscription on by one interval. A date already

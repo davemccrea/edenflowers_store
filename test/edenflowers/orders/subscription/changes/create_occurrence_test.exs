@@ -231,10 +231,14 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
       assert {:ok, _} = run(subscription)
 
       # As if moving the date on had failed after the order was placed.
-      SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
-        ctx.date,
-        Ecto.UUID.dump!(subscription.id)
-      ])
+      SQL.query!(
+        Edenflowers.Repo,
+        "UPDATE subscriptions SET next_fulfillment_date = $1, delivery_day = lower(to_char($1::date, 'FMDay')) WHERE id = $2",
+        [
+          ctx.date,
+          Ecto.UUID.dump!(subscription.id)
+        ]
+      )
 
       assert {:ok, _} = run(subscription)
 
@@ -420,10 +424,14 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
       refuse(:card_declined)
       run_refused(ctx.subscription)
 
-      SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
-        ctx.date,
-        Ecto.UUID.dump!(ctx.subscription.id)
-      ])
+      SQL.query!(
+        Edenflowers.Repo,
+        "UPDATE subscriptions SET next_fulfillment_date = $1, delivery_day = lower(to_char($1::date, 'FMDay')) WHERE id = $2",
+        [
+          ctx.date,
+          Ecto.UUID.dump!(ctx.subscription.id)
+        ]
+      )
 
       Oban.drain_queue(queue: :default)
       assert :ok = perform_job(ScheduleOccurrences, %{})
@@ -464,10 +472,14 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
 
       passed = Date.add(ShopTime.today(), -1)
 
-      SQL.query!(Edenflowers.Repo, "UPDATE subscriptions SET next_fulfillment_date = $1 WHERE id = $2", [
-        passed,
-        Ecto.UUID.dump!(ctx.subscription.id)
-      ])
+      SQL.query!(
+        Edenflowers.Repo,
+        "UPDATE subscriptions SET next_fulfillment_date = $1, delivery_day = lower(to_char($1::date, 'FMDay')) WHERE id = $2",
+        [
+          passed,
+          Ecto.UUID.dump!(ctx.subscription.id)
+        ]
+      )
 
       payment_intent = %{
         id: "pi_link",
@@ -481,6 +493,35 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
       subscription = reload(ctx.subscription)
       assert subscription.state == :active
       assert subscription.next_fulfillment_date == Date.add(passed, 14)
+    end
+
+    # Otherwise the occurrence job would book and charge it at once, giving
+    # Jennie no notice and the customer no chance to change it.
+    test "paid just before its next date, skips to one still open to changes", ctx do
+      refuse(:card_declined)
+      run_refused(ctx.subscription)
+      [order] = occurrences(ctx.subscription)
+      tomorrow = Date.add(ShopTime.today(), 1)
+
+      SQL.query!(
+        Edenflowers.Repo,
+        "UPDATE subscriptions SET next_fulfillment_date = $1, delivery_day = lower(to_char($1::date, 'FMDay')) WHERE id = $2",
+        [
+          tomorrow,
+          Ecto.UUID.dump!(ctx.subscription.id)
+        ]
+      )
+
+      payment_intent = %{
+        id: "pi_link",
+        status: "succeeded",
+        metadata: %{"order_id" => order.id},
+        amount_received: StripeAPI.to_stripe_amount(order.grand_total)
+      }
+
+      assert {:ok, :completed} = Edenflowers.Payments.complete(payment_intent)
+
+      assert reload(ctx.subscription).next_fulfillment_date == Date.add(tomorrow, 14)
     end
   end
 

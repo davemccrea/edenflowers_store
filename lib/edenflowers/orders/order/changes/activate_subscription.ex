@@ -9,6 +9,7 @@ defmodule Edenflowers.Orders.Order.Changes.ActivateSubscription do
   """
   use Ash.Resource.Change
 
+  alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
 
@@ -31,6 +32,7 @@ defmodule Edenflowers.Orders.Order.Changes.ActivateSubscription do
       user_id: order.user_id,
       product_variant_id: line_item.product_variant_id,
       interval_weeks: line_item.interval_weeks,
+      delivery_day: Weekday.from_date(order.fulfillment_date),
       next_fulfillment_date: Subscription.next_date(order.fulfillment_date, line_item.interval_weeks),
       customer_phone_number: order.customer_phone_number,
       recipient_name: order.recipient_name,

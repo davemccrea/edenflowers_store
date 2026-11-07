@@ -83,6 +83,13 @@ defmodule Edenflowers.Orders.Subscription do
     references do
       reference :gift_voucher, on_delete: :restrict
     end
+
+    # Every way the next date moves must keep it on the delivery day.
+    check_constraints do
+      check_constraint :next_fulfillment_date, "subscriptions_next_date_on_delivery_day",
+        check: "delivery_day IS NULL OR delivery_day = lower(to_char(next_fulfillment_date, 'FMDay'))",
+        message: "must fall on the delivery day"
+    end
   end
 
   # Created only once the first order is paid, so it starts active.
@@ -197,7 +204,7 @@ defmodule Edenflowers.Orders.Subscription do
     # Held until Jennie sorts out the card: no Occurrence is made meanwhile.
     read :delivering_on_closed_days do
       description "Active subscriptions with a delivery scheduled on a day the shop calendar closes in the next " <>
-                    "8 weeks, soonest first, for Jennie to agree another day with the customer or pause it."
+                    "8 weeks, soonest first, for Jennie to deliver anyway or move the order to another day once it's booked."
 
       filter expr(state == :active)
       prepare build(sort: [next_fulfillment_date: :asc], load: [:user, product_variant: :product])
@@ -252,6 +259,7 @@ defmodule Edenflowers.Orders.Subscription do
         :user_id,
         :product_variant_id,
         :interval_weeks,
+        :delivery_day,
         :next_fulfillment_date,
         :customer_phone_number,
         :recipient_name,
@@ -330,14 +338,15 @@ defmodule Edenflowers.Orders.Subscription do
       change Changes.CreateOccurrence
     end
 
-    # Dates that passed while it was held are not owed, so it picks up at the
-    # first one not yet past.
+    # Dates that passed while it was held are not owed. Like resuming, it picks
+    # up at the first date still open to changes, so the occurrence job doesn't
+    # book one at once at short notice.
     update :reactivate do
       description "Returns a subscription held at payment_failed to active once its unpaid Occurrence is paid " <>
-                    "or its card replaced. System only."
+                    "or its card replaced, from the first scheduled date still open to changes. System only."
 
       change transition_state(:active)
-      change {Changes.StepToScheduledDate, days_from_today: 0}
+      change {Changes.StepToScheduledDate, days_from_today: @change_deadline_days}
       require_atomic? false
     end
 
@@ -378,8 +387,7 @@ defmodule Edenflowers.Orders.Subscription do
       description "Changes the size, interval or delivery day from the next Occurrence on, moving the next date " <>
                     "to fit. A customer can only before the Change deadline; Jennie can anytime."
 
-      accept [:product_variant_id, :interval_weeks]
-      argument :delivery_day, Edenflowers.Fulfillment.Weekday
+      accept [:product_variant_id, :interval_weeks, :delivery_day]
       validate {Holds, calculation: :plan_changeable?, message: "can't be changed"}
       validate attribute_in(:interval_weeks, @intervals)
       validate Validations.SubscriptionVariant
@@ -466,6 +474,14 @@ defmodule Edenflowers.Orders.Subscription do
     uuid_primary_key :id
 
     attribute :interval_weeks, :integer, allow_nil?: false
+
+    # Nil only for subscriptions started before it existed, until
+    # Release.migrate fills it in; TASK-183 makes it required.
+    attribute :delivery_day, Edenflowers.Fulfillment.Weekday do
+      description "The weekday every delivery is on, from the first order's date until the customer or Jennie " <>
+                    "changes it. next_fulfillment_date always falls on it."
+    end
+
     attribute :next_fulfillment_date, :date, allow_nil?: false
 
     # Copied from the first order. Each occurrence prices its fee afresh from
@@ -576,8 +592,8 @@ defmodule Edenflowers.Orders.Subscription do
     calculate :delivery_days,
               {:array, Edenflowers.Fulfillment.Weekday},
               Edenflowers.Orders.Subscription.Calculations.DeliveryDays do
-      description "The weekdays it can move to, Monday first: those the shop calendar opens, plus the one it " <>
-                    "delivers on now, so closing that weekday never forces a subscriber off it. The account " <>
+      description "The weekdays it can move to, Monday first: those the shop calendar opens, plus its own " <>
+                    "delivery_day, so closing that weekday never forces a subscriber off it. The account " <>
                     "and admin day pickers offer these, and the change action accepts only these."
     end
 
@@ -585,7 +601,7 @@ defmodule Edenflowers.Orders.Subscription do
               {:array, :date},
               Edenflowers.Orders.Subscription.Calculations.ClosedDeliveryDates do
       description "Its scheduled delivery dates in the next 8 weeks that the shop calendar closes. Each is " <>
-                    "delivered on its date all the same, so Jennie agrees another day with the customer first."
+                    "delivered on its date all the same unless Jennie moves its order to another day once it's booked."
     end
 
     calculate :fee_per_order,

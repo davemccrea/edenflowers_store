@@ -768,7 +768,13 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       subscription = generate(subscription(user_id: user.id))
       {:ok, view, _html} = live(conn, ~p"/account")
 
-      Ash.Seed.update!(subscription, %{next_fulfillment_date: days_from_today(2)})
+      date = days_from_today(2)
+
+      Ash.Seed.update!(subscription, %{
+        next_fulfillment_date: date,
+        delivery_day: Edenflowers.Fulfillment.Weekday.from_date(date)
+      })
+
       view |> element("#subscription-#{subscription.id}-pause", "Pause") |> render_click()
 
       assert reload(subscription).state == :active

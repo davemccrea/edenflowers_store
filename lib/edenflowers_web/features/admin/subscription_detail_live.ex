@@ -13,7 +13,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   alias Edenflowers.Catalog
   alias Edenflowers.Email.Preview
   alias Edenflowers.Format
-  alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Subscription
@@ -363,7 +362,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
         params: %{
           "product_variant_id" => subscription.product_variant_id,
           "interval_weeks" => subscription.interval_weeks,
-          "delivery_day" => Weekday.from_date(subscription.next_fulfillment_date)
+          "delivery_day" => subscription.delivery_day
         }
       )
       |> to_form()

@@ -10,7 +10,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   alias Edenflowers.Catalog
   alias Edenflowers.Format
-  alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Translations
@@ -97,7 +96,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     edited? =
       params["product_variant_id"] != subscription.product_variant_id or
         params["interval_weeks"] != to_string(subscription.interval_weeks) or
-        params["delivery_day"] != to_string(delivery_day(subscription))
+        params["delivery_day"] != to_string(subscription.delivery_day)
 
     {:noreply, assign(socket, edited?: edited?)}
   end
@@ -162,8 +161,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       {"#{variant_size_label(variant.size)} · #{Format.storefront_price(price, locale)}", variant.id}
     end
   end
-
-  defp delivery_day(subscription), do: Weekday.from_date(subscription.next_fulfillment_date)
 
   defp delivery_day_options(subscription, locale) do
     for day <- subscription.delivery_days do
@@ -552,7 +549,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 name="delivery_day"
                 label={~t"Delivery day"}
                 options={delivery_day_options(@subscription, @locale)}
-                value={delivery_day(@subscription)}
+                value={@subscription.delivery_day}
               />
               <.button
                 type="submit"

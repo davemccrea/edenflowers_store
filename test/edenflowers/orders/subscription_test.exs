@@ -457,5 +457,15 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       assert listed.id == closing.id
       assert listed.closed_delivery_dates == [Date.add(next, 14)]
     end
+
+    test "a subscription that isn't active has none, as it delivers nothing", _ctx do
+      next = Date.add(Edenflowers.ShopTime.today(), 3)
+      shop_calendar(disabled_dates: [next])
+
+      for state <- [:paused, :payment_failed, :cancelled] do
+        subscription = generate(subscription(state: state, next_fulfillment_date: next))
+        assert Ash.load!(subscription, :closed_delivery_dates, authorize?: false).closed_delivery_dates == []
+      end
+    end
   end
 end
