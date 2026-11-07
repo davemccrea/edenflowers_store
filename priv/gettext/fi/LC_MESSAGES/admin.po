@@ -1113,7 +1113,7 @@ msgid "Flowers and plants"
 msgstr "Kukat ja kasvit"
 
 #: lib/edenflowers_web/features/admin/components/components.ex:269
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:1012
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1008
 #, elixir-autogen, elixir-format
 msgid "For %{name}"
 msgstr "Vastaanottaja: %{name}"
@@ -3188,7 +3188,7 @@ msgstr "Rajaton"
 
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:53
 #: lib/edenflowers_web/features/admin/customers_live.ex:60
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:1008
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1005
 #: lib/edenflowers_web/features/admin/orders_live.ex:90
 #: lib/edenflowers_web/features/admin/overview_live.ex:277
 #: lib/edenflowers_web/features/admin/overview_live.ex:291
@@ -5182,8 +5182,3 @@ msgstr "Vaihda kuva"
 #, elixir-autogen, elixir-format
 msgid "Orders linked by Pass it on cards"
 msgstr "Anna eteenpäin -korteilla yhdistetyt tilaukset"
-
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:1009
-#, elixir-autogen, elixir-format
-msgid "this order"
-msgstr "tämä tilaus"
