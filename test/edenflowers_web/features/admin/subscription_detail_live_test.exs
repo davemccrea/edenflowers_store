@@ -79,6 +79,32 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     )
   end
 
+  test "Jennie can change the size and how often, even inside the customer's cutoff", %{
+    conn: conn,
+    customer: customer
+  } do
+    product = generate(product())
+    medium = generate(product_variant(product_id: product.id, size: :medium, draft: false))
+    large = generate(product_variant(product_id: product.id, size: :large, draft: false))
+    next_date = Edenflowers.ShopTime.today() |> Date.add(2)
+
+    subscription =
+      generate(subscription(user_id: customer.id, product_variant_id: medium.id, next_fulfillment_date: next_date))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+
+    view |> element(~s|button[phx-click="open_change"]|) |> render_click()
+
+    view
+    |> form("#change-subscription-form", change: %{product_variant_id: large.id, interval_weeks: 4})
+    |> render_submit()
+
+    changed = reload(subscription)
+    assert changed.product_variant_id == large.id
+    assert changed.interval_weeks == 4
+    assert has_element?(view, "#subscription-log", "Changed · Admin")
+  end
+
   test "cancelling with the email unticked sends nothing", %{conn: conn, customer: customer} do
     subscription = generate(subscription(user_id: customer.id))
 

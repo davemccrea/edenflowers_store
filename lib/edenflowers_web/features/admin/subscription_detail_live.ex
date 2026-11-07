@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   @moduledoc """
-  Admin view of a subscription and its occurrences, with pause, resume, and cancel controls.
+  Admin view of a subscription and its occurrences, with change, pause, resume, and cancel controls.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
@@ -10,10 +10,14 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.Drawers
 
+  alias Edenflowers.Catalog
   alias Edenflowers.Email.Preview
   alias Edenflowers.Format
+  alias Edenflowers.Fulfillment
+  alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
+  alias Edenflowers.Orders.Subscription
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.Drawers
   alias EdenflowersWeb.Admin.SubscriptionLog
@@ -36,7 +40,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
          |> assign(:page_title, subscription.user.name || to_string(subscription.user.email))
          |> assign(:locale, Localize.get_locale())
          |> assign_subscription(subscription)
-         |> assign(cancel_form: nil, preview: nil)
+         |> assign(change_form: nil, cancel_form: nil, preview: nil)
          |> assign(:orders_query, Ash.Query.filter(Order, subscription_id == ^subscription.id))}
 
       _ ->
@@ -69,6 +73,15 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
             </span>
           </:subtitle>
           <:actions>
+            <.button
+              :if={@subscription.plan_changeable?}
+              type="button"
+              phx-click="open_change"
+              variant="secondary"
+              size="sm"
+            >
+              {~t"Change"}
+            </.button>
             <.button
               :if={@subscription.pausable?}
               type="button"
@@ -235,6 +248,53 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
         </div>
       </.admin_page>
 
+      <.admin_drawer id="change-subscription" title={~t"Change subscription"} on_close={JS.push("close_change")}>
+        <.form
+          :if={@change_form}
+          for={@change_form}
+          id="change-subscription-form"
+          phx-change="validate_change"
+          phx-submit="change"
+          class="flex min-h-0 flex-1 flex-col"
+        >
+          <.drawer_body>
+            <.refusal form={@change_form} />
+            <p class="text-base-content/75 text-sm">
+              {~t"Applies from the next order not yet made, even past the customer's change deadline."}
+            </p>
+            <.input
+              field={@change_form[:product_variant_id]}
+              type="select"
+              label={~t"Size"}
+              options={@size_options}
+              class="select w-full"
+            />
+            <.input
+              field={@change_form[:interval_weeks]}
+              type="select"
+              label={~t"How often"}
+              options={Enum.map(Subscription.intervals(), &{Fields.interval_label(&1), &1})}
+              class="select w-full"
+            />
+            <.input
+              field={@change_form[:delivery_day]}
+              type="select"
+              label={~t"Delivery day"}
+              options={@day_options}
+              class="select w-full"
+            />
+          </.drawer_body>
+          <.drawer_footer>
+            <.button type="submit" variant="primary">{~t"Save changes"}</.button>
+            <.button
+              type="button"
+              phx-click={JS.exec("phx-hide", to: "#change-subscription") |> JS.push("close_change")}
+              variant="ghost"
+            >{~t"Discard"}</.button>
+          </.drawer_footer>
+        </.form>
+      </.admin_drawer>
+
       <.admin_drawer id="cancel-subscription" title={~t"Cancel subscription"} on_close={JS.push("close_cancel")}>
         <.form
           :if={@cancel_form}
@@ -277,6 +337,63 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
 
   def handle_event("resume", _params, socket) do
     {:noreply, change_subscription(socket, &Orders.resume_subscription/2, ~t"Subscription resumed.")}
+  end
+
+  def handle_event("open_change", _params, socket) do
+    %{subscription: subscription, current_user: actor, locale: locale} = socket.assigns
+
+    form =
+      subscription
+      |> AshPhoenix.Form.for_update(:change,
+        as: "change",
+        actor: actor,
+        params: %{
+          "product_variant_id" => subscription.product_variant_id,
+          "interval_weeks" => subscription.interval_weeks,
+          "delivery_day" => Weekday.from_date(subscription.next_fulfillment_date)
+        }
+      )
+      |> to_form()
+
+    size_options =
+      for variant <- Catalog.list_subscription_sizes!(subscription.product_variant_id) do
+        {"#{variant_size_label(variant.size)} · #{Format.currency(variant.price, locale)}", variant.id}
+      end
+
+    day_options =
+      for day <- Weekday.all(), day in Fulfillment.get_shop_calendar!().available_days do
+        {String.capitalize(Format.weekday_name(day, locale)), day}
+      end
+
+    {:noreply,
+     socket
+     |> assign(change_form: form, size_options: size_options, day_options: day_options)
+     |> push_event("js-exec", %{to: "#change-subscription", attr: "phx-show"})}
+  end
+
+  def handle_event("close_change", _params, socket) do
+    {:noreply, assign(socket, :change_form, nil)}
+  end
+
+  def handle_event("validate_change", %{"change" => params}, socket) do
+    {:noreply, assign(socket, :change_form, AshPhoenix.Form.validate(socket.assigns.change_form, params))}
+  end
+
+  def handle_event("change", %{"change" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.change_form, params: params) do
+      {:ok, _subscription} ->
+        {:ok, subscription} = get_subscription(socket.assigns.subscription.id, socket.assigns.current_user)
+
+        {:noreply,
+         socket
+         |> assign_subscription(subscription)
+         |> put_flash(:success, ~t"Subscription changed.")
+         |> assign(:change_form, nil)
+         |> push_event("js-exec", %{to: "#change-subscription", attr: "phx-hide"})}
+
+      {:error, form} ->
+        {:noreply, assign(socket, :change_form, form)}
+    end
   end
 
   def handle_event("open_cancel", _params, socket) do
@@ -356,6 +473,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
         :user,
         :fulfillment_option,
         :next_delivery_date,
+        :plan_changeable?,
         :pausable?,
         :resumable?,
         :cancellable?,

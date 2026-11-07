@@ -571,11 +571,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
               <span :if={@subscription.recipient_name} class="block">{@subscription.recipient_name}</span>
               {@subscription.delivery_address}
             </p>
-            <p class="text-base-content/70 mt-1 text-sm">
-              <.link navigate={~q"/#{language}/contact"} class="link-underline-hover text-base-content">
-                {~t"Contact us to change the address."}
-              </.link>
-            </p>
           </.detail_row>
 
           <.detail_row :if={@subscription.state not in [:cancelled, :payment_failed]} label={~t"Card"}>
