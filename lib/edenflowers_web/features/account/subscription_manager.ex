@@ -544,6 +544,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 id={"subscription-#{@id}-size"}
                 name="product_variant_id"
                 label={~t"Size"}
+                class="select w-full text-base"
                 options={size_options(@sizes, @subscription, @locale)}
                 value={@subscription.product_variant_id}
               />
@@ -552,6 +553,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 id={"subscription-#{@id}-interval"}
                 name="interval_weeks"
                 label={~t"How often"}
+                class="select w-full text-base"
                 options={Enum.map(Subscription.intervals(), &{Fields.interval_label(&1), &1})}
                 value={@subscription.interval_weeks}
               />
@@ -560,6 +562,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 id={"subscription-#{@id}-day"}
                 name="delivery_day"
                 label={~t"Delivery day"}
+                class="select w-full text-base"
                 options={delivery_day_options(@subscription, @locale)}
                 value={@subscription.delivery_day}
               />
