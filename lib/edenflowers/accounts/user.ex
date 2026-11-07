@@ -161,6 +161,13 @@ defmodule Edenflowers.Accounts.User do
       accept [:avatar, :avatar_content_type]
     end
 
+    update :update_admin_appearance do
+      description "Saves how the back office looks for this admin: the accent colour of the sidebar and buttons, " <>
+                    "and how much grain the sidebar has. Each admin picks their own."
+
+      accept [:admin_accent, :admin_grain]
+    end
+
     update :remove_avatar do
       description "Removes the admin's photo, so the back office falls back to their initials."
       change set_attribute(:avatar, nil)
@@ -335,6 +342,24 @@ defmodule Edenflowers.Accounts.User do
       default false
       public? true
       writable? false
+    end
+
+    attribute :admin_accent, :atom do
+      description "The back office's accent colour for this admin: the sidebar, phone topbar and primary " <>
+                    "buttons take it. Forest is the shop's own green."
+
+      constraints one_of: [:forest, :teal, :ink, :plum, :berry, :terracotta]
+      default :forest
+      allow_nil? false
+      public? true
+    end
+
+    attribute :admin_grain, :integer do
+      description "How much film grain the back office sidebar has for this admin, from 0 (none) to 3 (heavy)."
+      constraints min: 0, max: 3
+      default 2
+      allow_nil? false
+      public? true
     end
 
     attribute :avatar, :binary, allow_nil?: true, select_by_default?: false

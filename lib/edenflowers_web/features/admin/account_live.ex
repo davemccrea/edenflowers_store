@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Admin.AccountLive do
   @moduledoc """
-  Admin account settings for avatar and browser push notifications.
+  Admin account settings for avatar, back office appearance and browser push notifications.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
@@ -107,6 +107,55 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               </dd>
             </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
+              <dt id="accent-label" class="text-base-content/75 text-sm sm:pt-1.5">{~t"Colour"}</dt>
+              <dd>
+                <form id="accent-form" phx-change="update_appearance">
+                  <div role="radiogroup" aria-labelledby="accent-label" class="flex flex-wrap gap-x-3 gap-y-2">
+                    <label :for={{accent, label} <- accents()} class="flex w-16 cursor-pointer flex-col items-center gap-1">
+                      <input
+                        type="radio"
+                        name="admin_accent"
+                        value={accent}
+                        checked={@current_user.admin_accent == accent}
+                        class="peer sr-only"
+                      />
+                      <span
+                        data-swatch={accent}
+                        class="admin-swatch ring-offset-base-100 block h-9 w-9 rounded-full ring-offset-2 peer-checked:ring-base-content peer-checked:ring-2 peer-focus-visible:outline-primary peer-focus-visible:outline-solid peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4"
+                      />
+                      <span class="text-base-content/75 text-xs peer-checked:text-base-content peer-checked:font-semibold">
+                        {label}
+                      </span>
+                    </label>
+                  </div>
+                </form>
+              </dd>
+            </div>
+            <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
+              <dt class="text-base-content/75 text-sm sm:pt-0.5">
+                <label for="admin-grain">{~t"Sidebar grain"}</label>
+              </dt>
+              <dd>
+                <form id="grain-form" phx-change="update_appearance" class="sm:max-w-xs">
+                  <input
+                    id="admin-grain"
+                    type="range"
+                    name="admin_grain"
+                    min="0"
+                    max="3"
+                    step="1"
+                    value={@current_user.admin_grain}
+                    phx-debounce="150"
+                    class="range range-primary range-xs w-full"
+                  />
+                  <div class="text-base-content/75 mt-1 flex justify-between text-xs" aria-hidden="true">
+                    <span>{~t"None"}</span>
+                    <span>{~t"Heavy"}</span>
+                  </div>
+                </form>
+              </dd>
+            </div>
+            <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
               <dt class="text-base-content/75 text-sm">{~t"Access"}</dt>
               <dd class="text-base-content text-sm">{~t"Admin"}</dd>
             </div>
@@ -134,6 +183,20 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
   def handle_event("push_unsubscribed", params, socket),
     do: {:reply, PushSubscriptions.unsubscribe(params, socket.assigns.current_user), socket}
+
+  def handle_event("update_appearance", params, socket) do
+    user = socket.assigns.current_user
+    attrs = Map.take(params, ["admin_accent", "admin_grain"])
+
+    case Edenflowers.Accounts.update_admin_appearance(user, attrs, actor: user) do
+      {:ok, user} ->
+        {:noreply, assign(socket, :current_user, user)}
+
+      {:error, error} ->
+        Logger.error("Admin appearance of user #{user.id} not saved: #{inspect(error)}")
+        {:noreply, put_flash(socket, :error, ~t"Could not save the appearance.")}
+    end
+  end
 
   def handle_event("remove_avatar", _params, socket) do
     user = socket.assigns.current_user
@@ -269,6 +332,17 @@ defmodule EdenflowersWeb.Admin.AccountLive do
       };
     </script>
     """
+  end
+
+  defp accents do
+    [
+      forest: ~t"Forest",
+      teal: ~t"Teal",
+      ink: ~t"Ink",
+      plum: ~t"Plum",
+      berry: ~t"Berry",
+      terracotta: ~t"Terracotta"
+    ]
   end
 
   defp avatar_errors(upload),

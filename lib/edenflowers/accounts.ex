@@ -34,6 +34,7 @@ defmodule Edenflowers.Accounts do
       define :list_newsletter_subscribers, action: :newsletter_subscribers
       define :subscribe_to_newsletter, action: :subscribe_to_newsletter, args: [:email, :locale]
       define :update_name, action: :update, args: [:name]
+      define :update_admin_appearance, action: :update_admin_appearance
       define :request_email_change, action: :request_email_change, args: [:email]
       define :confirm_email_change, action: :confirm_email_change, args: [:code]
       define :update_newsletter_preference, action: :update, args: [:newsletter_opt_in, :locale]
