@@ -50,8 +50,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert render(view) =~ "No pass-it-on card has the code NOPE00."
 
     view |> form("#link-card-form", %{code: " #{String.downcase(code)} "}) |> render_submit()
-    assert has_element?(view, "#order-card-linked", code)
-    assert has_element?(view, "#order-card-linked", "Not opened yet")
+    assert has_element?(view, "#order-card-chain-#{gift.id}", code)
+    assert has_element?(view, "#order-card-chain-#{gift.id}", "Not opened yet")
     refute has_element?(view, "#order-card-missing")
     assert {:ok, %{gift_order_id: gift_id}} = Edenflowers.Pricing.get_promotion_by_code(code)
     assert gift_id == gift.id
@@ -75,18 +75,29 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert {:error, _too_late} = Orders.link_pass_it_on_card(delivered, code, actor: admin)
   end
 
-  test "a gift order and the order its pass-it-on card brought in link to each other", %{conn: conn, admin: admin} do
-    [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
-    {:ok, card} = Edenflowers.Pricing.get_promotion_by_code(code)
+  test "every order in a pass-it-on chain links to the rest of it", %{conn: conn, admin: admin} do
+    [first_code, second_code] =
+      Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 2, actor: Edenflowers.Actors.system_actor())
+
+    {:ok, first_card} = Edenflowers.Pricing.get_promotion_by_code(first_code)
+    {:ok, second_card} = Edenflowers.Pricing.get_promotion_by_code(second_code)
     gift = placed_order(gift: true, recipient_name: "Anna")
-    Edenflowers.Pricing.link_card_to_gift_order!(card, gift.id, actor: admin)
-    brought_in = placed_order(promotion_id: card.id)
+    Edenflowers.Pricing.link_card_to_gift_order!(first_card, gift.id, actor: admin)
+    cancelled = placed_order(promotion_id: first_card.id, fulfillment_status: :cancelled)
+    passed_on = placed_order(promotion_id: first_card.id, gift: true, recipient_name: "Berit")
+    Edenflowers.Pricing.link_card_to_gift_order!(second_card, passed_on.id, actor: admin)
+    brought_in = placed_order(promotion_id: second_card.id)
+    chain = [gift, passed_on, brought_in]
 
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{gift.id}")
-    assert has_element?(view, ~s|#order-pass-it-on a[href="/admin/orders/#{brought_in.id}"]|)
+    for order <- chain do
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      assert has_element?(view, ~s|#order-card-chain-#{order.id} [aria-current="page"]|)
+      refute has_element?(view, ~s|#order-card-chain a[href="/admin/orders/#{cancelled.id}"]|)
 
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{brought_in.id}")
-    assert has_element?(view, ~s|#order-pass-it-on a[href="/admin/orders/#{gift.id}"]|)
+      for other <- chain, other.id != order.id do
+        assert has_element?(view, ~s|#order-card-chain a[href="/admin/orders/#{other.id}"]|)
+      end
+    end
   end
 
   test "custom and online orders offer cancellation, never deletion", %{conn: conn} do

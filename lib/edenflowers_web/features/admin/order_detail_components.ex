@@ -871,8 +871,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   attr :locale, :string, required: true
 
   @doc """
-  The order's pass-it-on card: on a gift order, the card that went with it (or a field to link one) and any order it
-  brought in; on an order placed with a card's code, the gift the card came with.
+  The order's pass-it-on card (or a field to link one), and the chain of orders the cards link it to: the gift whose
+  card it was placed with, back to the first, and the order its own card brought in, onwards.
   """
   def pass_it_on_card(assigns) do
     ~H"""
@@ -911,28 +911,32 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           </.form>
         </div>
 
-        <div :if={@order.pass_it_on_card} id="order-card-linked" class="space-y-4">
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <.card_code code={@order.pass_it_on_card.code} />
-            <.card_status_badge card={@order.pass_it_on_card} locale={@locale} />
-          </div>
-          <div :if={@order.pass_it_on_card.placed_orders != []}>
-            <p class="eyebrow text-base-content/75 mb-1.5">{~t"Brought in"}</p>
-            <ul class="space-y-2">
-              <li :for={card_order <- @order.pass_it_on_card.placed_orders}>
-                <.linked_order order={card_order} locale={@locale} />
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div :if={@order.promotion && @order.promotion.gift_order} id="order-card-source">
-          <p class="eyebrow text-base-content/75 mb-1.5">{~t"Placed with the card from"}</p>
-          <.linked_order order={@order.promotion.gift_order} locale={@locale} />
-          <p class="text-base-content/65 mt-2 text-sm">
-            {~t"Card"} <.card_code code={@order.promotion.code} />
-          </p>
-        </div>
+        <ol
+          :if={length(@order.pass_it_on_chain) > 1 || @order.pass_it_on_card}
+          id="order-card-chain"
+          aria-label={~t"Orders linked by Pass it on cards"}
+        >
+          <li
+            :for={{link, index} <- Enum.with_index(@order.pass_it_on_chain)}
+            id={"order-card-chain-#{link.id}"}
+            class="relative pb-5 pl-7 last:pb-0"
+          >
+            <span
+              :if={index < length(@order.pass_it_on_chain) - 1}
+              class="bg-base-content/20 left-[5px] absolute top-5 -bottom-1 w-px"
+              aria-hidden="true"
+            />
+            <span
+              class={["h-[11px] w-[11px] absolute top-1.5 left-0 rounded-full border-2", if(link.id == @order.id, do: "bg-primary border-primary", else: "bg-base-100 border-base-content/40")]}
+              aria-hidden="true"
+            />
+            <.chain_order order={link} current?={link.id == @order.id} locale={@locale} />
+            <div :if={link.pass_it_on_card} class="mt-1.5 flex flex-wrap items-center gap-2">
+              <.card_code code={link.pass_it_on_card.code} />
+              <.card_status_badge card={link.pass_it_on_card} locale={@locale} />
+            </div>
+          </li>
+        </ol>
       </div>
     </.widget>
     """
@@ -942,7 +946,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   defp card_code(assigns) do
     ~H"""
-    <span class="bg-base-200 text-base-content font-mono px-2 py-0.5 text-sm font-semibold tracking-wider">
+    <span class="border-base-content/30 text-base-content/80 font-mono border px-2 py-0.5 text-xs tracking-wider">
       {@code}
     </span>
     """
@@ -972,27 +976,45 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   end
 
   attr :order, Order, required: true
+  attr :current?, :boolean, required: true
   attr :locale, :string, required: true
 
-  defp linked_order(assigns) do
+  defp chain_order(%{current?: true} = assigns) do
     ~H"""
-    <.link
-      navigate={~p"/admin/orders/#{@order.id}"}
-      class="border-base-content/12 group flex items-center gap-3 border px-3 py-2.5 text-sm hover:bg-base-200"
-    >
-      <span class="min-w-0 flex-1">
-        <span class="text-base-content block truncate font-semibold group-hover:underline">
-          {@order.customer_name || ~t"Unnamed customer"}
-        </span>
-        <span :if={@order.gift && @order.recipient_name} class="text-base-content/65 block truncate">
-          {~t"For #{name = @order.recipient_name}"}
-        </span>
-      </span>
-      <span class="text-base-content/65 shrink-0 tabular-nums">
-        {@order.order_reference}<span :if={@order.fulfillment_date}> · {Format.day_month(@order.fulfillment_date, @locale)}</span>
-      </span>
-      <.icon name="hero-chevron-right" class="text-base-content/50 h-4 w-4 shrink-0" />
+    <div aria-current="page" class="flex items-baseline gap-3 text-sm">
+      <.chain_order_text order={@order} current?={true} locale={@locale} />
+      <span class="w-4 shrink-0" aria-hidden="true" />
+    </div>
+    """
+  end
+
+  defp chain_order(assigns) do
+    ~H"""
+    <.link navigate={~p"/admin/orders/#{@order.id}"} class="group flex items-baseline gap-3 text-sm">
+      <.chain_order_text order={@order} current?={false} locale={@locale} />
+      <.icon name="hero-chevron-right" class="text-base-content/50 h-4 w-4 shrink-0 self-center" />
     </.link>
+    """
+  end
+
+  attr :order, Order, required: true
+  attr :current?, :boolean, required: true
+  attr :locale, :string, required: true
+
+  defp chain_order_text(assigns) do
+    ~H"""
+    <span class="min-w-0 flex-1">
+      <span class="text-base-content block truncate font-semibold group-hover:underline">
+        {@order.customer_name || ~t"Unnamed customer"}
+        <span :if={@current?} class="text-base-content/65 font-normal">· {~t"this order"}</span>
+      </span>
+      <span :if={@order.gift && @order.recipient_name} class="text-base-content/65 block truncate">
+        {~t"For #{name = @order.recipient_name}"}
+      </span>
+    </span>
+    <span class="text-base-content/65 shrink-0 tabular-nums">
+      {@order.order_reference}<span :if={@order.fulfillment_date}> · {Format.day_month(@order.fulfillment_date, @locale)}</span>
+    </span>
     """
   end
 end
