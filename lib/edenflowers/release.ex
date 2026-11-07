@@ -3,6 +3,8 @@ defmodule Edenflowers.Release do
   Used for executing DB release tasks when run in production without Mix
   installed.
   """
+  alias Ecto.Adapters.SQL
+
   @app :edenflowers
 
   def migrate do
@@ -20,7 +22,7 @@ defmodule Edenflowers.Release do
 
   def check_course_registration_states!(repo) do
     %{rows: [[count]]} =
-      Ecto.Adapters.SQL.query!(repo, "SELECT count(*) FROM course_registrations WHERE status = 'awaiting_payment'")
+      SQL.query!(repo, "SELECT count(*) FROM course_registrations WHERE status = 'awaiting_payment'")
 
     if count > 0 do
       raise "Deployment blocked: #{count} course registrations still have status awaiting_payment. " <>
@@ -33,7 +35,7 @@ defmodule Edenflowers.Release do
   # Subscriptions started before delivery_day existed deliver on their next
   # date's weekday. Removed by TASK-183 once production has run it.
   def assign_missing_delivery_days!(repo) do
-    Ecto.Adapters.SQL.query!(
+    SQL.query!(
       repo,
       "UPDATE subscriptions SET delivery_day = lower(to_char(next_fulfillment_date, 'FMDay')) " <>
         "WHERE delivery_day IS NULL"
