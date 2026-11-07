@@ -118,8 +118,22 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
       [line_item] = order.line_items
 
       view |> element("#checkout-line-items-remove-#{line_item.id}") |> render_click()
+      view |> element("#checkout-line-items-confirm-remove-#{line_item.id}") |> render_click()
 
       assert_redirect(view, "/en", 1_000)
+    end
+
+    test "the last item asks before emptying the cart, and Cancel keeps it", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(with_cart(conn, order), ~p"/checkout")
+      [line_item] = order.line_items
+
+      view |> element("#checkout-line-items-remove-#{line_item.id}") |> render_click()
+      assert has_element?(view, "#checkout-line-items-ask-remove-#{line_item.id}[role=alert]")
+
+      view |> element("#checkout-line-items-ask-remove-#{line_item.id} button", "Cancel") |> render_click()
+
+      refute has_element?(view, "#checkout-line-items-ask-remove-#{line_item.id}")
+      assert has_element?(view, "#checkout-line-items-remove-#{line_item.id}")
     end
 
     test "a cart notification arriving after a checkout reset redirects from payment", %{conn: conn, order: order} do
