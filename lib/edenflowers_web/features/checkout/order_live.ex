@@ -313,6 +313,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
           :gift_voucher_sale?,
           :celebrated?,
           :voucher_card_ready_on,
+          subscription: [:price_per_order],
           gift_voucher_line: :gift_voucher
         ],
         authorize?: false
@@ -363,7 +364,8 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     {:noreply, assign(socket, voucher_preview: :error)}
   end
 
-  # Each later delivery is priced afresh, so this is today's price for it.
+  # Each later delivery is priced afresh, so this is today's price for it. Until
+  # the subscription starts, just after checkout, it is quoted as checkout did.
   defp next_delivery(order, line) do
     locale = Format.locale()
 
@@ -372,7 +374,10 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     %{
       date: Format.weekday_date(date, locale),
       charge_date: Format.weekday_date(Subscription.charged_on(date), locale),
-      amount: Format.currency(Subscription.price_per_order(line.subtotal, order.fulfillment_fee), locale)
+      amount: Format.currency(next_price(order, line), locale)
     }
   end
+
+  defp next_price(%{subscription: %Subscription{price_per_order: price}}, _line), do: price
+  defp next_price(order, line), do: Subscription.price_per_order(line.subtotal, order.fulfillment_fee)
 end
