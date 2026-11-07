@@ -135,6 +135,35 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
     assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 14)
   end
 
+  # The set-up and heads-up emails quote price_per_order, so it must be what the card is charged.
+  test "charges the price per order the emails quote, not what the first order's delivery cost", ctx do
+    product = generate(product(tax_rate_id: ctx.delivery.tax_rate_id, subscribable: true))
+    variant = generate(product_variant(product_id: product.id, price: "60.00"))
+    subscription = subscription_for(ctx, product_variant_id: variant.id)
+
+    generate(
+      order(
+        subscription_id: subscription.id,
+        origin: :online,
+        state: :placed,
+        fulfillment_option_id: ctx.delivery.id,
+        distance: 3000,
+        fulfillment_fee_override: "0.00",
+        quoted_fulfillment_fee: "0.00"
+      )
+    )
+
+    quoted = Ash.load!(subscription, :price_per_order, authorize?: false).price_per_order
+    stub_geocoding()
+    expect(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
+
+    run(subscription)
+
+    assert [occurrence] = Enum.filter(occurrences(subscription), &(&1.origin == :subscription))
+    assert Decimal.gt?(quoted, "60.00")
+    assert Decimal.equal?(occurrence.grand_total, quoted)
+  end
+
   test "keeps a change Jennie makes while the card is being charged", ctx do
     subscription = subscription_for(ctx)
     stub_geocoding()

@@ -19,7 +19,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionHeadsUpEmail d
         changeset.data
         |> Ash.load!(
           [
-            :first_order_fulfillment_fee,
+            :price_per_order,
             :change_deadline,
             :charged_on,
             :fulfillment_option,

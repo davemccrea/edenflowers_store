@@ -533,6 +533,12 @@ defmodule Edenflowers.Orders.Subscription do
                     "scheduled date still open to changes."
     end
 
+    calculate :price_per_order, :decimal, Edenflowers.Orders.Subscription.Calculations.PricePerOrder do
+      description "What each Occurrence costs before any Gift voucher, in euros: the variant's current price " <>
+                    "plus the fee priced as an Occurrence prices it, from the option's current rates. For the " <>
+                    "set-up and heads-up emails."
+    end
+
     calculate :pausable?, :boolean, expr(state == :active) do
       description "Whether its state allows pausing. Ignores the Change deadline, so it also governs Jennie, " <>
                     "who may act inside it."
@@ -585,9 +591,9 @@ defmodule Edenflowers.Orders.Subscription do
       filter expr(origin == :online)
     end
 
-    first :first_order_fulfillment_fee, :orders, :fulfillment_fee do
-      description "The first order's delivery fee in euros. Each Occurrence prices delivery afresh to the same " <>
-                    "address, so it is what later ones cost too, for the set-up and heads-up emails."
+    first :first_order_distance, :orders, :distance do
+      description "The first order's delivery distance in metres, or nil for pickup. The address never " <>
+                    "changes, so price_per_order prices each Occurrence's fee from it."
 
       filter expr(origin == :online)
     end
