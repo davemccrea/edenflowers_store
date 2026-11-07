@@ -13,7 +13,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   alias Edenflowers.Catalog
   alias Edenflowers.Email.Preview
   alias Edenflowers.Format
-  alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Weekday
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
@@ -376,7 +375,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
       end
 
     day_options =
-      for day <- Weekday.all(), day in Fulfillment.get_shop_calendar!().available_days do
+      for day <- Subscription.delivery_days() do
         {String.capitalize(Format.weekday_name(day, locale)), day}
       end
 
