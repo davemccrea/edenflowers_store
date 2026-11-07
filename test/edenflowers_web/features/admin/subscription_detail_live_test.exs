@@ -105,6 +105,45 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     assert has_element?(view, "#subscription-log", "Changed · Admin")
   end
 
+  test "names a delivery on a closed day, and prices each size per delivery", %{conn: conn, customer: customer} do
+    delivery = generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :dynamic, base_price: "4.50"))
+    product = generate(product(free_delivery: false))
+    medium = generate(product_variant(product_id: product.id, size: :medium, price: "60.00", draft: false))
+    large = generate(product_variant(product_id: product.id, size: :large, price: "80.00", draft: false))
+    closed = Edenflowers.ShopTime.today() |> Date.add(5)
+
+    subscription =
+      generate(
+        subscription(
+          user_id: customer.id,
+          product_variant_id: medium.id,
+          fulfillment_option_id: delivery.id,
+          next_fulfillment_date: closed
+        )
+      )
+
+    generate(order(subscription_id: subscription.id, origin: :online, state: :placed, distance: 3000))
+    shop_calendar(disabled_dates: [closed])
+
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+
+    assert has_element?(
+             view,
+             "#subscription-closed-days",
+             "You're closed on #{Edenflowers.Format.weekday_day_month(closed, "en-GB")}"
+           )
+
+    view |> element(~s|button[phx-click="open_change"]|) |> render_click()
+    fee = Ash.load!(subscription, :fee_per_order, authorize?: false).fee_per_order
+    assert Decimal.positive?(fee)
+
+    assert has_element?(
+             view,
+             ~s|#change-subscription option[value="#{large.id}"]|,
+             Edenflowers.Format.currency(Decimal.add(large.price, fee), "en-GB")
+           )
+  end
+
   test "cancelling with the email unticked sends nothing", %{conn: conn, customer: customer} do
     subscription = generate(subscription(user_id: customer.id))
 

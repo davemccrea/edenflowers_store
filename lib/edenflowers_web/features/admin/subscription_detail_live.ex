@@ -138,6 +138,20 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
               </div>
 
               <div
+                :if={@subscription.closed_delivery_dates != []}
+                id="subscription-closed-days"
+                class="bg-warning/15 border-base-content/12 mt-5 flex gap-2.5 border px-3 py-2.5"
+              >
+                <.icon name="hero-calendar-days" class="text-warning-content mt-0.5 h-5 w-5 shrink-0" />
+                <div>
+                  <p class="text-warning-content text-sm font-semibold">{~t"Delivers on a closed day"}</p>
+                  <p class="text-base-content mt-0.5">
+                    {~t"You're closed on #{dates = closed_dates(@subscription, @locale)}, but this subscription still delivers then. Agree another day with the customer, then change or pause it."}
+                  </p>
+                </div>
+              </div>
+
+              <div
                 :if={@subscription.delivery_instructions}
                 class="bg-warning/15 border-base-content/12 mt-5 flex gap-2.5 border px-3 py-2.5"
               >
@@ -357,7 +371,8 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
 
     size_options =
       for variant <- Catalog.list_subscription_sizes!(subscription.product_variant_id) do
-        {"#{variant_size_label(variant.size)} · #{Format.currency(variant.price, locale)}", variant.id}
+        price = Subscription.price_per_order(variant.price, subscription.fee_per_order)
+        {"#{variant_size_label(variant.size)} · #{Format.currency(price, locale)}", variant.id}
       end
 
     day_options =
@@ -473,6 +488,8 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
         :user,
         :fulfillment_option,
         :next_delivery_date,
+        :closed_delivery_dates,
+        :fee_per_order,
         :plan_changeable?,
         :pausable?,
         :resumable?,
@@ -492,4 +509,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   end
 
   defp product_name(subscription), do: Translations.translate(subscription.product_variant.product).name
+
+  defp closed_dates(subscription, locale),
+    do: Enum.map_join(subscription.closed_delivery_dates, ", ", &Format.weekday_day_month(&1, locale))
 end

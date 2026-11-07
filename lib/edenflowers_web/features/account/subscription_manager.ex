@@ -156,9 +156,11 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   defp subscription_error_message(_error), do: ~t"Your subscription couldn't be changed."
 
-  defp size_options(sizes, locale) do
+  # Priced per delivery, as the plan's own price is, so the two can't read as different charges.
+  defp size_options(sizes, subscription, locale) do
     for variant <- sizes do
-      {"#{variant_size_label(variant.size)} · #{Format.storefront_price(variant.price, locale)}", variant.id}
+      price = Subscription.price_per_order(variant.price, subscription.fee_per_order)
+      {"#{variant_size_label(variant.size)} · #{Format.storefront_price(price, locale)}", variant.id}
     end
   end
 
@@ -535,7 +537,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
                 id={"subscription-#{@id}-size"}
                 name="product_variant_id"
                 label={~t"Size"}
-                options={size_options(@sizes, @locale)}
+                options={size_options(@sizes, @subscription, @locale)}
                 value={@subscription.product_variant_id}
               />
               <.input

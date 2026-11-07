@@ -114,15 +114,13 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
               <dt class="eyebrow text-base-content/70">{~t"Subscription"}</dt>
               <dd>{EdenflowersWeb.Checkout.Fields.interval_label(@interval_weeks)}</dd>
 
-              <div :if={@next_delivery} class="contents">
-                <dt class="eyebrow text-base-content/70">{~t"Next delivery"}</dt>
-                <dd data-testid="order-next-delivery">{@next_delivery.date}</dd>
+              <dt class="eyebrow text-base-content/70">{~t"Next delivery"}</dt>
+              <dd data-testid="order-next-delivery">{@next_delivery.date}</dd>
 
-                <dt class="eyebrow text-base-content/70">{~t"Payment"}</dt>
-                <dd class="tabular-nums" data-testid="order-next-charge">
-                  {~t"#{amount = @next_delivery.amount} on #{date = @next_delivery.charge_date}"}
-                </dd>
-              </div>
+              <dt :if={@next_delivery.amount} class="eyebrow text-base-content/70">{~t"Payment"}</dt>
+              <dd :if={@next_delivery.amount} class="tabular-nums" data-testid="order-next-charge">
+                {~t"#{amount = @next_delivery.amount} on #{date = @next_delivery.charge_date}"}
+              </dd>
             </dl>
 
             <p :if={!@current_user} class="text-base-content/70 mt-6">
@@ -312,7 +310,14 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   defp interval_weeks(%Subscription{interval_weeks: weeks}, _line), do: weeks
   defp interval_weeks(nil, line), do: line.interval_weeks
 
-  # Paused, or held after a refused card: no delivery is coming yet.
+  # Paused, or held after a refused card: no delivery is coming yet, so the page says why.
+  defp next_delivery(%{subscription: %Subscription{state: :paused}}, _line),
+    do: %{date: ~t"Paused", amount: nil}
+
+  defp next_delivery(%{subscription: %Subscription{state: :payment_failed}}, _line),
+    do: %{date: ~t"Payment failed", amount: nil}
+
+  # Cancelled: the page shows no subscription block.
   defp next_delivery(%{subscription: %Subscription{next_delivery_date: nil}}, _line), do: nil
 
   defp next_delivery(%{subscription: %Subscription{} = subscription}, _line),

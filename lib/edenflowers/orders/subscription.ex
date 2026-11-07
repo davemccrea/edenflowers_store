@@ -226,6 +226,7 @@ defmodule Edenflowers.Orders.Subscription do
                   :next_delivery_date,
                   :fulfilled_count,
                   :price_per_order,
+                  :fee_per_order,
                   booked_occurrence: [:changes_open?],
                   unpaid_occurrence: [:grand_total],
                   product_variant: :product
@@ -568,6 +569,13 @@ defmodule Edenflowers.Orders.Subscription do
               Edenflowers.Orders.Subscription.Calculations.ClosedDeliveryDates do
       description "Its scheduled delivery dates in the next 8 weeks that the shop calendar closes. Each is " <>
                     "delivered on its date all the same, so Jennie agrees another day with the customer first."
+    end
+
+    calculate :fee_per_order,
+              :decimal,
+              {Edenflowers.Orders.Subscription.Calculations.PricePerOrder, fee_only?: true} do
+      description "The delivery or pickup fee in each Occurrence's price_per_order, in euros, so a size " <>
+                    "picker can quote each size per delivery."
     end
 
     calculate :price_per_order, :decimal, Edenflowers.Orders.Subscription.Calculations.PricePerOrder do

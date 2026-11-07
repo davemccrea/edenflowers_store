@@ -190,7 +190,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           {"overdue-orders", "hero-clock", ~t"Overdue orders", Enum.map(overdue, &overdue_order_row/1)},
           {"failed-subscriptions", "hero-credit-card", ~t"Subscription payment failed",
            Enum.map(Orders.list_failed_subscriptions!(actor: actor), &subscription_row/1)},
-          {"closed-day-subscriptions", "hero-calendar-days", ~t"Subscription deliveries on closed days",
+          {"closed-day-subscriptions", "hero-calendar-days", ~t"Subscriptions on closed days",
            Enum.map(
              Orders.list_subscriptions_on_closed_days!(actor: actor),
              &closed_day_subscription_row(&1, socket.assigns.locale)
@@ -285,7 +285,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   # The calendar no longer moves these, so Jennie agrees another day with the customer.
   defp closed_day_subscription_row(subscription, locale) do
     row = subscription_row(subscription)
-    dates = Enum.map_join(subscription.closed_delivery_dates, ", ", &Format.day_month(&1, locale))
+    dates = Enum.map_join(subscription.closed_delivery_dates, ", ", &Format.weekday_day_month(&1, locale))
     %{row | what: "#{row.what} · #{dates}"}
   end
 
@@ -649,9 +649,12 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <details id={"attention-#{key}"} phx-mounted={JS.ignore_attributes(["open"])} class="group">
             <summary class="touch-target flex cursor-pointer list-none items-center gap-3 py-2">
               <.icon name={icon} class="text-amber-800/70 h-4 w-4 shrink-0" />
-              <span class="text-base-content flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <%!-- Inline, so a title that wraps keeps its count beside the last word. --%>
+              <span class="text-base-content min-w-0 flex-1">
                 {title}
-                <.count_badge count={length(rows)} active={true} tone={:warning} />
+                <span class="ml-1.5 inline-block align-middle">
+                  <.count_badge count={length(rows)} active={true} tone={:warning} />
+                </span>
               </span>
               <span :if={Map.has_key?(hd(rows), :amount)} class="text-base-content shrink-0 tabular-nums">
                 {Format.currency(sum_amounts(rows), @locale)}

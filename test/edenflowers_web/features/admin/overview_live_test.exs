@@ -228,13 +228,13 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(
                view,
                "#attention-closed-day-subscriptions summary",
-               "Subscription deliveries on closed days 1"
+               "Subscriptions on closed days 1"
              )
 
       assert has_element?(
                view,
                ~s|#attention-closed-day-subscriptions a[href="/admin/subscriptions/#{closing.id}"]|,
-               Edenflowers.Format.day_month(date, "en-GB")
+               Edenflowers.Format.weekday_day_month(date, "en-GB")
              )
     end
 
