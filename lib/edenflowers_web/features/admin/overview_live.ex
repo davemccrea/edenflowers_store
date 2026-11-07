@@ -190,6 +190,11 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           {"overdue-orders", "hero-clock", ~t"Overdue orders", Enum.map(overdue, &overdue_order_row/1)},
           {"failed-subscriptions", "hero-credit-card", ~t"Subscription payment failed",
            Enum.map(Orders.list_failed_subscriptions!(actor: actor), &subscription_row/1)},
+          {"closed-day-subscriptions", "hero-calendar-days", ~t"Subscription deliveries on closed days",
+           Enum.map(
+             Orders.list_subscriptions_on_closed_days!(actor: actor),
+             &closed_day_subscription_row(&1, socket.assigns.locale)
+           )},
           {"refund", "hero-arrow-uturn-left", ~t"To refund", to_refund},
           {"payment-overdue", "hero-banknotes", ~t"Payment overdue", payment_overdue}
         ],
@@ -275,6 +280,13 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       what: Translations.translate(subscription.product_variant.product).name,
       href: ~p"/admin/subscriptions/#{subscription.id}"
     }
+  end
+
+  # The calendar no longer moves these, so Jennie agrees another day with the customer.
+  defp closed_day_subscription_row(subscription, locale) do
+    row = subscription_row(subscription)
+    dates = Enum.map_join(subscription.closed_delivery_dates, ", ", &Format.day_month(&1, locale))
+    %{row | what: "#{row.what} · #{dates}"}
   end
 
   attr :vapid_public_key, :string, required: true

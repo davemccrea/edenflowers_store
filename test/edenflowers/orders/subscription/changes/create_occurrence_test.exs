@@ -186,7 +186,8 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
     assert all_enqueued(worker: CreateOccurrence) == []
   end
 
-  test "a closed day moves delivery to the next open day, but the schedule keeps its own date", ctx do
+  # Jennie agrees another day with the customer before she closes, so the calendar never moves it.
+  test "a closed day doesn't move the delivery", ctx do
     shop_calendar(disabled_dates: [ctx.date])
     subscription = subscription_for(ctx)
     stub_geocoding()
@@ -194,23 +195,9 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
 
     assert {:ok, _} = run(subscription)
 
-    assert [%{fulfillment_date: fulfillment_date, subscription_date: subscription_date}] = occurrences(subscription)
-    assert fulfillment_date == Date.add(ctx.date, 1)
-    assert subscription_date == ctx.date
+    assert [%{fulfillment_date: fulfillment_date}] = occurrences(subscription)
+    assert fulfillment_date == ctx.date
     assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 14)
-  end
-
-  test "a closed schedule window is skipped instead of colliding with the next occurrence", ctx do
-    shop_calendar(disabled_dates: Enum.map(0..6, &Date.add(ctx.date, &1)))
-    subscription = subscription_for(ctx, interval_weeks: 1)
-    stub_geocoding()
-    stub(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)
-
-    log = capture_log(fn -> assert {:ok, _} = run(subscription) end)
-
-    assert log =~ "missed its delivery"
-    assert occurrences(subscription) == []
-    assert reload(subscription).next_fulfillment_date == Date.add(ctx.date, 7)
   end
 
   test "a date missed while the job was down creates no order and is reported", ctx do
@@ -224,11 +211,9 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
     assert reload(subscription).next_fulfillment_date == Date.add(missed, 14)
   end
 
-  test "a past scheduled date is delivered when its first open fulfillment date is today", ctx do
+  test "a job running late on the delivery day still delivers that day", ctx do
     today = ShopTime.today()
-
-    shop_calendar(same_day: true, order_deadline: ~T[23:59:59])
-    subscription = subscription_for(ctx, next_fulfillment_date: Date.add(today, -1))
+    subscription = subscription_for(ctx, next_fulfillment_date: today)
 
     stub_geocoding()
     expect(StripeAPI.Mock, :charge_off_session, fn cents, params, _key -> succeeded(cents, params) end)

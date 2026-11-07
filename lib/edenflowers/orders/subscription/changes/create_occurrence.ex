@@ -1,10 +1,14 @@
 defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
   @moduledoc """
-  Turns the Subscription's next date into an Occurrence: an ordinary Online
-  Order, charged to the saved card and placed by `Payments.complete/1`, as a
-  checkout payment is. The Subscription's Gift voucher pays first, so the card
-  is charged only for the rest, and not at all when the voucher covers it. Then moves the Subscription on by one interval. A
-  missed date makes no order and just moves it on. A refused card
+  Turns the Subscription's next date into an Occurrence for that date: an
+  ordinary Online Order, charged to the saved card and placed by
+  `Payments.complete/1`, as a checkout payment is. The shop calendar doesn't
+  move it; Jennie agrees another day with the customer before she closes
+  (`:delivering_on_closed_days`). The Subscription's Gift voucher pays first,
+  so the card is charged only for the rest, and not at all when the voucher
+  covers it. Then moves the Subscription on by one interval. A date already
+  past, say after the job was down, makes no order, is reported for Jennie to
+  follow up, and just moves it on. A refused card
   places the order unpaid with a payment link and holds the Subscription at
   `:payment_failed` until it is paid.
 
@@ -25,8 +29,6 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
   import Edenflowers.Actors
 
   alias Edenflowers.External.StripeAPI
-  alias Edenflowers.Fulfillment
-  alias Edenflowers.Fulfillment.Availability
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Payments
@@ -79,25 +81,19 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
     end
   end
 
-  # Each occurrence may move within its own schedule window, but never into the
-  # next one's window. This keeps closed periods from piling up deliveries.
   defp occur_unless_missed(subscription, date) do
-    with {:ok, subscription} <- Ash.load(subscription, :user, actor: system_actor()) do
-      occur_on(subscription, date, first_open_day(date, subscription.interval_weeks))
+    if Date.before?(date, Edenflowers.ShopTime.today()) do
+      Logger.error(
+        "Subscription #{subscription.id} missed its delivery on #{date}: the date had passed when its " <>
+          "occurrence job ran. No order was made or charged."
+      )
+
+      :ok
+    else
+      with {:ok, subscription} <- Ash.load(subscription, :user, actor: system_actor()),
+           {:ok, order} <- create_occurrence(subscription, date),
+           do: pay(order, subscription)
     end
-  end
-
-  defp occur_on(subscription, date, nil) do
-    Logger.error(
-      "Subscription #{subscription.id} missed its delivery on #{date}: " <>
-        "there was no open fulfillment date before the next scheduled date. No order was made or charged."
-    )
-
-    :ok
-  end
-
-  defp occur_on(subscription, date, fulfillment_date) do
-    with {:ok, order} <- create_occurrence(subscription, date, fulfillment_date), do: pay(order, subscription)
   end
 
   defp find_occurrence(subscription, date) do
@@ -108,7 +104,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
     )
   end
 
-  defp create_occurrence(subscription, date, fulfillment_date) do
+  defp create_occurrence(subscription, date) do
     Orders.create_occurrence(
       %{
         subscription_id: subscription.id,
@@ -124,22 +120,12 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrence do
         delivery_address: subscription.delivery_address,
         delivery_instructions: subscription.delivery_instructions,
         fulfillment_option_id: subscription.fulfillment_option_id,
-        fulfillment_date: fulfillment_date,
+        fulfillment_date: date,
         gift_voucher_id: subscription.gift_voucher_id
       },
       load: [:stripe_amount],
       actor: system_actor()
     )
-  end
-
-  defp first_open_day(date, interval_weeks) do
-    calendar = Fulfillment.get_shop_calendar!(authorize?: false)
-    now = Edenflowers.ShopTime.now()
-
-    date
-    |> Stream.iterate(&Date.add(&1, 1))
-    |> Enum.take(interval_weeks * 7)
-    |> Enum.find(&is_nil(Availability.unavailable_reason(calendar, &1, now)))
   end
 
   defp pay(%Order{payment_intent_id: nil} = order, subscription) do

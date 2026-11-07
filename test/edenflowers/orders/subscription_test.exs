@@ -444,4 +444,18 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       payment_method: "pm_card"
     }
   end
+
+  describe "delivering on closed days" do
+    test "lists active subscriptions with a delivery the calendar closes in the next 8 weeks", _ctx do
+      next = Date.add(Edenflowers.ShopTime.today(), 3)
+      closing = generate(subscription(next_fulfillment_date: next, interval_weeks: 2))
+      generate(subscription(state: :paused, next_fulfillment_date: Date.add(next, 14)))
+      generate(subscription(next_fulfillment_date: Date.add(next, 1), interval_weeks: 4))
+      shop_calendar(disabled_dates: [Date.add(next, 14), Date.add(next, 15), Date.add(next, 70)])
+
+      assert [listed] = Orders.list_subscriptions_on_closed_days!(actor: generate(admin_user(admin: true)))
+      assert listed.id == closing.id
+      assert listed.closed_delivery_dates == [Date.add(next, 14)]
+    end
+  end
 end
