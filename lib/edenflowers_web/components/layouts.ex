@@ -483,9 +483,9 @@ defmodule EdenflowersWeb.Layouts do
         </.icon_button>
       </div>
 
-      <nav class="space-y-4 px-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+      <nav class="space-y-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <div :for={{heading, items} <- @nav_sections} class="space-y-0.5">
-          <p :if={heading} class="text-forest-content/70 mb-1 px-3 text-xs">{heading}</p>
+          <p :if={heading} class="text-forest-content/70 mb-1 px-6 text-xs">{heading}</p>
           <.admin_nav_item
             :for={{path, label, live?, icon} <- items}
             path={path}
@@ -498,8 +498,8 @@ defmodule EdenflowersWeb.Layouts do
         </div>
       </nav>
 
-      <div class="border-forest-content/15 mt-auto border-t px-3 pt-4">
-        <p class="text-forest-content/70 mb-1 px-3 text-xs">{dgettext("admin", "System")}</p>
+      <div class="border-forest-content/15 mt-auto border-t pt-4">
+        <p class="text-forest-content/70 mb-1 px-6 text-xs">{dgettext("admin", "System")}</p>
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @system_nav}
           path={path}
@@ -514,7 +514,7 @@ defmodule EdenflowersWeb.Layouts do
           href={"https://github.com/davemccrea/edenflowers_store/releases/tag/#{@version}"}
           target="_blank"
           rel="noopener"
-          class="text-forest-content/70 mt-3 block px-3 text-xs hover:text-forest-content"
+          class="text-forest-content/70 mt-3 block px-6 text-xs hover:text-forest-content"
         >
           {@version}
         </a>
@@ -543,7 +543,7 @@ defmodule EdenflowersWeb.Layouts do
       {if @live?, do: [navigate: @path], else: [href: @path]}
       {if @external, do: [target: "_blank", rel: "noopener"], else: []}
       aria-current={@active && "page"}
-      class={["group flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
+      class={["group flex items-center gap-3 px-6 py-2 text-sm transition-colors focus-visible:-outline-offset-2", if(@active,
     do: "bg-forest-content/10 font-semibold",
     else: "text-forest-content/90 hover:bg-forest-content/5 hover:text-forest-content")]}
     >
