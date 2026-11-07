@@ -112,9 +112,7 @@ defmodule Edenflowers.Email.Previews do
       {"Gift voucher", "collecting a gift card at the shop", :gift_voucher_sold,
        Email.gift_voucher_sold(%{sale | collect_voucher_card: true}, ~D[2026-11-07])},
       {"Gift voucher", "sold in the shop, no recipient named", :gift_voucher_sold,
-       Email.gift_voucher_sold(%{sale | recipient_name: nil}, nil)},
-      {"Gift voucher received", "sent to the recipient", :gift_voucher_received,
-       Email.gift_voucher_received(sale, "recipient@example.com")}
+       Email.gift_voucher_sold(%{sale | recipient_name: nil}, nil)}
     ]
   end
 

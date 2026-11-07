@@ -93,6 +93,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :send_payment_failed_email}), do: ~t"Payment needed emailed"
   defp title(%{version_action_name: :send_receipt_email}), do: ~t"Receipt emailed"
   defp title(%{version_action_name: :email_gift_voucher}), do: ~t"Gift voucher emailed"
+  # Retired: kept so older sales' logs still read.
   defp title(%{version_action_name: :send_gift_voucher_to_recipient}), do: ~t"Gift voucher emailed to the recipient"
 
   defp title(%{version_action_name: action}) when action in [:email_receipt, :send_payment_received_email],

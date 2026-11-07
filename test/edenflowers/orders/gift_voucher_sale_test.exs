@@ -101,22 +101,18 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
       end)
     end
 
-    test "Jennie resends the voucher where the buyer asks, and the log says where it went" do
+    test "Jennie resends the voucher to the buyer, as she rewrote it" do
       order = buy(50)
       admin = generate(admin_user())
 
-      assert {:ok, _order} =
-               Orders.email_gift_voucher(order, %{to: "mia@example.com", subject: "Your voucher"}, actor: admin)
+      assert {:ok, _order} = Orders.email_gift_voucher(order, %{subject: "Your voucher"}, actor: admin)
 
       assert_email_sent(fn email ->
-        assert email.to == [{"", "mia@example.com"}]
+        assert email.to == [{"", order.customer_email}]
         assert email.subject == "Your voucher"
         assert email.text_body =~ GiftVoucher.format_code(voucher(order).code)
         assert length(email.attachments) == 2
       end)
-
-      versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
-      assert %{email_to: "mia@example.com"} = Enum.find(versions, &(&1.version_action_name == :email_gift_voucher))
     end
 
     test "a buyer collecting a gift card is told it's ready from the shop's next open day" do

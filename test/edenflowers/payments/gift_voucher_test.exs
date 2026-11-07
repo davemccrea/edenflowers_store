@@ -263,30 +263,9 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
       assert_no_email_sent()
     end
 
-    test "emails the voucher to the recipient as Jennie ticks", %{admin: admin} do
-      {:ok, _sale} =
-        sell(admin, %{
-          customer_email: "anna@example.com",
-          recipient_name: "Maria Lind",
-          locale: "en-GB",
-          email_recipient?: true,
-          recipient_email: "maria@example.com"
-        })
-
-      Oban.drain_queue(queue: :default)
-
-      assert_received {:email, recipient}
-      assert recipient.to == [{"", "maria@example.com"}]
-      assert recipient.subject == "A gift voucher for you from Anna"
-      assert recipient.text_body =~ "Hi Maria,"
-      assert length(recipient.attachments) == 1
-      refute_received {:email, _}
-    end
-
-    test "needs a way to reach the buyer, 20 € or more and the recipient's address", %{admin: admin} do
+    test "needs a way to reach the buyer and 20 € or more", %{admin: admin} do
       assert {:error, _} = sell(admin, %{customer_phone_number: nil})
       assert {:error, _} = sell(admin, %{amount: 15})
-      assert {:error, _} = sell(admin, %{email_recipient?: true})
     end
   end
 

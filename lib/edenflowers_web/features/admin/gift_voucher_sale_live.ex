@@ -74,6 +74,13 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 ]}
                 class="select w-full"
               />
+              <.input
+                field={@form[:recipient_name]}
+                type="text"
+                label={~t"Recipient name"}
+                class="input w-full"
+                autocapitalize="words"
+              />
               <div class="sm:col-span-2">
                 <.input
                   field={@form[:card_message]}
@@ -115,33 +122,6 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
               />
             </div>
           </.form_section>
-
-          <.form_section title={~t"Recipient"}>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <.input
-                field={@form[:recipient_name]}
-                type="text"
-                label={~t"Full name"}
-                class="input w-full"
-                autocapitalize="words"
-              />
-              <div class="space-y-2">
-                <.input
-                  field={@form[:recipient_email]}
-                  type="email"
-                  label={~t"Email"}
-                  class="input w-full"
-                  autocomplete="off"
-                />
-                <.input
-                  :if={not blank?(@form[:recipient_email])}
-                  field={@form[:email_recipient?]}
-                  type="checkbox"
-                  label={~t"Email the voucher as a gift"}
-                />
-              </div>
-            </div>
-          </.form_section>
         </.form>
       </.admin_page>
     </Layouts.admin>
@@ -175,6 +155,4 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
          |> put_flash(:error, ~t"The voucher wasn't sold. Check the fields marked below.")}
     end
   end
-
-  defp blank?(field), do: field.value in [nil, ""]
 end

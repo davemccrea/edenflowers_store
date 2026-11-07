@@ -66,22 +66,6 @@ defmodule Edenflowers.Email do
   defp gift_voucher_sold_subject(nil), do: ~t"Your Eden Flowers gift voucher"
   defp gift_voucher_sold_subject(recipient), do: ~t"Your Eden Flowers gift voucher for #{recipient}"
 
-  @doc """
-  Gives the recipient of a Gift voucher sold in the shop their voucher, at
-  `to`, from the buyer, with the voucher PDF the sender attaches and no
-  receipt. Expects `:customer_first_name` and `gift_voucher_line: :gift_voucher` loaded.
-  """
-  def gift_voucher_received(order, to) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      new()
-      |> from(from_address())
-      |> to(to)
-      |> bcc(record_copy_address())
-      |> subject(~t"A gift voucher for you from #{name = order.customer_first_name}")
-      |> text_body(Templates.gift_voucher_received(gift_voucher_assigns(order, %{})))
-    end)
-  end
-
   defp gift_voucher_assigns(order, assigns) do
     voucher = order.gift_voucher_line.gift_voucher
 
