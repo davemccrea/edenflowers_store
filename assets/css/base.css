@@ -40,6 +40,13 @@
   outline-offset: -2px;
 }
 
+/* daisyUI paints a pressed or current menu item in its neutral, which this
+   theme leaves at near-black. The acting colour is primary. */
+.menu {
+  --menu-active-bg: var(--color-primary);
+  --menu-active-fg: var(--color-primary-content);
+}
+
 /* Invalid fields stay red when focused. */
 [aria-invalid="true"],
 .input:has([aria-invalid="true"]) {
