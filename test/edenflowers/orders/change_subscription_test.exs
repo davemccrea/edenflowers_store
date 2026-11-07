@@ -117,6 +117,21 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
       assert thursday.next_fulfillment_date == Date.add(friday, 6)
     end
 
+    test "changing the day back lands on the same date again, rather than drifting further out", context do
+      friday = first_on_or_after(days_from_today(14), 5)
+      subscription = subscription_for(context, interval_weeks: 1, next_fulfillment_date: friday)
+
+      Ash.Seed.update!(generate(order(state: :placed, fulfillment_date: Date.add(friday, -7))), %{
+        subscription_id: subscription.id
+      })
+
+      thursday = Orders.change_subscription!(subscription, %{delivery_day: :thursday}, actor: context.customer)
+      assert thursday.next_fulfillment_date == Date.add(friday, 6)
+
+      back = Orders.change_subscription!(thursday, %{delivery_day: :friday}, actor: context.customer)
+      assert back.next_fulfillment_date == friday
+    end
+
     test "changes how often and the day together, counting from the latest delivery", context do
       friday = first_on_or_after(days_from_today(14), 5)
       subscription = subscription_for(context, interval_weeks: 4, next_fulfillment_date: Date.add(friday, 14))
