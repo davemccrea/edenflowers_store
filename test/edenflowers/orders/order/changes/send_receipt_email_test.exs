@@ -73,7 +73,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmailTest do
       assert {:ok, _} = perform_job(SendReceiptEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
-        assert email.text_body =~ "Your receipt for your order for collection on"
+        assert email.text_body =~ "Thank you for your payment for your order for collection on"
         refute email.text_body =~ "charged"
         refute email.text_body =~ "voucher"
         assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments

@@ -27,9 +27,12 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
       order = load_for_send(changeset.data)
 
       # A queued confirmation must not promise flowers or a usable voucher after cancellation.
-      if order.fulfillment_status == :cancelled,
-        do: changeset,
-        else: deliver(changeset, order)
+      if order.fulfillment_status == :cancelled do
+        Logger.info("Skipped confirmation email for cancelled order #{order.id}")
+        changeset
+      else
+        deliver(changeset, order)
+      end
     end)
   end
 

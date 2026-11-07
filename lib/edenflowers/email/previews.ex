@@ -355,7 +355,8 @@ defmodule Edenflowers.Email.Previews do
              delivery_address: nil,
              interval_weeks: 4,
              first_order_fulfillment_fee: Decimal.new(0)
-           }}
+           }},
+          {"gift voucher pays towards it", %{gift_voucher: %{spendable?: true}}}
         ] do
       {"Subscription heads-up", title, :subscription_heads_up, Email.subscription_heads_up(subscription(attrs, locale))}
     end

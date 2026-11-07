@@ -1,4 +1,4 @@
-<%= if @order.fulfillment_method == :delivery do %><%= dgettext("emails", "Your receipt for your delivery on %{date} (%{product}) is attached.", product: @product, date: @date) %><% else %><%= dgettext("emails", "Your receipt for your order for collection on %{date} (%{product}) is attached.", product: @product, date: @date) %><% end %>
+<%= if @order.fulfillment_method == :delivery do %><%= dgettext("emails", "Thank you for your payment for your delivery on %{date} (%{product}). Your receipt is attached.", product: @product, date: @date) %><% else %><%= dgettext("emails", "Thank you for your payment for your order for collection on %{date} (%{product}). Your receipt is attached.", product: @product, date: @date) %><% end %>
 
 <%= dgettext("emails", "To pause, change or cancel your subscription, use your account:") %>
 <%= @account_url %>

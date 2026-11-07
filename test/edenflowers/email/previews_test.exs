@@ -76,9 +76,8 @@ defmodule Edenflowers.Email.PreviewsTest do
     refute cash.text_body =~ "I've refunded"
 
     kept = emails["gift voucher sale paid in person, cancellation charge kept"]
-    assert kept.text_body =~ "Cancellation charge: 5,00 €."
+    assert kept.text_body =~ "I've kept 5,00 € as a cancellation charge."
     assert kept.text_body =~ "I'll pay back 45,00 € the same way you paid it."
-    refute kept.text_body =~ "Still to pay:"
     refute kept.text_body =~ "I'll be in touch about how to pay it."
 
     mixed = emails["part paid by card, part in cash"]
@@ -89,19 +88,21 @@ defmodule Edenflowers.Email.PreviewsTest do
       for {"Booking cancelled", scenario, _, email} <- Previews.all("en-GB"), into: %{}, do: {scenario, email}
 
     unpaid = bookings["unpaid by bank transfer, cancellation charge outstanding"]
-    assert unpaid.text_body =~ "Cancellation charge: 22,50 €."
-    assert unpaid.text_body =~ "Still to pay: 22,50 €. I'll be in touch about how to pay it."
+    assert unpaid.text_body =~ "There's a cancellation charge of 22,50 €. I'll be in touch about how to pay it."
 
     partial = bookings["part paid, the rest of a cancellation charge still to pay"]
-    assert partial.text_body =~ "Cancellation charge: 22,50 €."
-    assert partial.text_body =~ "Still to pay: 12,50 €. I'll be in touch about how to pay it."
+
+    assert partial.text_body =~
+             "There's a cancellation charge of 22,50 €, and 12,50 € of it is still to pay. I'll be in touch about how to pay it."
   end
 
   test "subscription receipts name delivery or collection in each language" do
     for {locale, delivery, pickup} <- [
-          {"en-GB", "Your receipt for your delivery on", "Your receipt for your order for collection on"},
-          {"sv-FI", "Ditt kvitto för din leverans", "Ditt kvitto för din beställning för avhämtning"},
-          {"fi", "Liitteenä on kuitti", "Liitteenä on kuitti"}
+          {"en-GB", "Thank you for your payment for your delivery on",
+           "Thank you for your payment for your order for collection on"},
+          {"sv-FI", "Tack för din betalning för din blomleverans",
+           "Tack för din betalning för din beställning för avhämtning"},
+          {"fi", "Kuitti on liitteenä", "Kuitti on liitteenä"}
         ] do
       bodies =
         for {"Subscription delivery charged", scenario, _, email} <- Previews.all(locale),
@@ -117,17 +118,20 @@ defmodule Edenflowers.Email.PreviewsTest do
     end
   end
 
-  test "the subscription heads-up gives the total and payment date for delivery and pickup" do
-    for {"Subscription heads-up", scenario, _, email} <- Previews.all("en-GB") do
-      total = if scenario == "delivery", do: "59,00 €", else: "49,00 €"
+  test "the subscription heads-up gives the price and payment date, naming the gift voucher only when one pays towards it" do
+    bodies =
+      for {"Subscription heads-up", scenario, _, email} <- Previews.all("en-GB"),
+          into: %{},
+          do: {scenario, email.text_body}
 
-      assert email.text_body =~ "Your next flowers cost #{total}."
+    assert bodies["delivery"] =~ "Your card will be charged 59,00 € on Thursday 26.11.2026."
+    assert bodies["pickup, every 4 weeks"] =~ "Your card will be charged 49,00 € on Thursday 26.11.2026."
+    refute bodies["delivery"] =~ "gift voucher"
 
-      assert email.text_body =~
-               "On Thursday 26.11.2026, we'll apply your available gift voucher balance and charge any remaining amount to your card."
+    assert bodies["gift voucher pays towards it"] =~
+             "Your next flowers cost 59,00 €. On Thursday 26.11.2026, we'll apply your available gift voucher balance and charge any remaining amount to your card."
 
-      assert email.text_body =~ "in your account by Wednesday 25.11.2026:"
-    end
+    for {_scenario, body} <- bodies, do: assert(body =~ "in your account by Wednesday 25.11.2026:")
   end
 
   test "the routine subscription charge is matter-of-fact, from the shop rather than Jennie" do
@@ -138,7 +142,7 @@ defmodule Edenflowers.Email.PreviewsTest do
     assert email.subject == "Your flowers for Saturday 14.11."
 
     assert email.text_body =~
-             ~r/^Your receipt for your delivery on Saturday 14\.11\.2026 \(.+\) is attached\./
+             ~r/^Thank you for your payment for your delivery on Saturday 14\.11\.2026 \(.+\)\. Your receipt is attached\./
 
     assert String.ends_with?(email.text_body, "\nEden Flowers\n")
   end

@@ -2,6 +2,11 @@ defmodule Edenflowers.Email do
   @moduledoc """
   Builds the app's Swoosh email envelopes. Bodies are rendered by
   `Edenflowers.Email.Templates`; subjects are localised per the order's locale.
+
+  An email states only the amount it is about: what was paid, what is owed,
+  what was refunded. Itemised totals live in the attached receipt, so the two
+  can't disagree. Order confirmation, Order details and Order updated are the
+  exceptions: they set out what was bought or agreed.
   """
 
   use GettextSigils,
@@ -395,9 +400,11 @@ defmodule Edenflowers.Email do
 
   @doc """
   The heads-up before a 2- or 4-week subscription's next delivery or pickup:
-  when, the last day to change it, the total price and when payment is taken.
-  Matter-of-fact, from the shop. Loads as `subscription_set_up/1`, without
-  the user or first delivery, and with `:change_deadline` and `:charged_on`.
+  when, the last day to change it, the total price and when payment is taken,
+  mentioning the Gift voucher only when one can pay towards it. Matter-of-fact,
+  from the shop. Loads as `subscription_set_up/1`, without the user or first
+  delivery, and with `:change_deadline`, `:charged_on` and
+  `gift_voucher: [:spendable?]`.
   """
   def subscription_heads_up(subscription) do
     delivery_on = subscription.next_fulfillment_date
@@ -417,6 +424,7 @@ defmodule Edenflowers.Email do
           product: subscription.product_variant.product.name,
           pickup?: pickup?,
           price: Format.currency(subscription_price(subscription), subscription.locale),
+          voucher?: match?(%{spendable?: true}, subscription.gift_voucher),
           change_by: subscription.change_deadline,
           charged_on: subscription.charged_on,
           account_url: account_url(),

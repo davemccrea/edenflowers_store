@@ -37,7 +37,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendPaymentFailedEmailTest do
     assert_email_sent(fn email ->
       assert email.to == [{"", order.customer_email}]
       assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(order)
-      assert email.text_body =~ "The payment for your flowers on"
+      assert email.text_body =~ "didn't go through, but your flowers will still be ready to collect."
 
       assert email.text_body =~
                "Please pay #{Edenflowers.Format.currency(order.grand_total, order.locale)} using the link below:"
