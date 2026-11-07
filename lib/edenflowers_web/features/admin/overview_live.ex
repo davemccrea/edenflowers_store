@@ -52,11 +52,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
         <.admin_page_header title={greeting(@current_user, Edenflowers.ShopTime.now().hour)}>
-          <:subtitle>
-            <span class="text-base-content/80 font-serif text-lg italic tabular-nums">
-              {today_summary(Map.get(@orders_by_date, @today, []))}
-            </span>
-          </:subtitle>
           <:actions>
             <.button navigate={~p"/admin/orders/new-gift-voucher"} variant="secondary" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" /> {~t"New voucher"}
@@ -187,26 +182,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       hour in 5..11 -> ~t"Good morning"
       hour in 12..17 -> ~t"Good afternoon"
       true -> ~t"Good evening"
-    end
-  end
-
-  defp today_summary(orders) do
-    deliveries = Enum.count(orders, &(&1.fulfillment_method == :delivery))
-    pickups = Enum.count(orders, &(&1.fulfillment_method == :pickup))
-
-    case {deliveries, pickups} do
-      {0, 0} ->
-        ~t"Nothing due today."
-
-      {deliveries, 0} ->
-        dngettext("admin", "%{count} delivery today.", "%{count} deliveries today.", deliveries)
-
-      {0, pickups} ->
-        dngettext("admin", "%{count} pickup today.", "%{count} pickups today.", pickups)
-
-      {deliveries, pickups} ->
-        dngettext("admin", "%{count} delivery", "%{count} deliveries", deliveries) <>
-          " · " <> dngettext("admin", "%{count} pickup today.", "%{count} pickups today.", pickups)
     end
   end
 
