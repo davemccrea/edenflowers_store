@@ -171,6 +171,25 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
       assert %{style: :cream} = GiftVoucherPdf.build_payload(cream)
     end
 
+    @tag :typst
+    test "a voucher sold before styles were added still prints and previews in cream" do
+      order = buy(50) |> Ash.Seed.update!(%{voucher_style: nil})
+      voucher = Ash.load!(voucher(order), [line_item: :order], authorize?: false)
+      payload = GiftVoucherPdf.build_payload(voucher)
+
+      assert payload.style == :cream
+
+      assert {:ok, <<137, "PNG\r\n", 26, "\n", _rest::binary>>} =
+               GiftVoucherPdf.preview(%{
+                 amount: voucher.amount,
+                 locale: order.voucher_locale,
+                 style: order.voucher_style,
+                 snow_seed: order.voucher_snow_seed,
+                 recipient_name: order.recipient_name,
+                 message: order.card_message
+               })
+    end
+
     test "customers can choose the Christmas styles only while Jennie offers them" do
       assert {:error, _} = Orders.start_gift_voucher_sale(50, christmas_sale_details(), actor: nil)
 

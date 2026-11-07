@@ -689,7 +689,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("validate_email", %{"email" => params}, socket) do
-    {:noreply, EmailDrawer.validate(socket, params, socket.assigns.order)}
+    {:noreply, EmailDrawer.validate(socket, params)}
   end
 
   def handle_event("send_email", %{"email" => params}, socket) do
