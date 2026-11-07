@@ -396,7 +396,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
           label={~t"Payment method"}
           required
           class="select w-full"
-          options={payment_method_options()}
+          options={payment_method_options(@record)}
         />
         <.input
           :if={not @voucher?}
@@ -449,10 +449,16 @@ defmodule EdenflowersWeb.Admin.Drawers do
     """
   end
 
-  @doc "Every way Jennie records money herself, a Gift voucher by its code; Stripe records its own."
-  def payment_method_options do
+  @doc """
+  Every way Jennie records money herself, a Gift voucher by its code; Stripe
+  records its own. Not a Gift voucher on an order that doesn't accept one, a
+  Gift voucher sale. A course booking always does.
+  """
+  def payment_method_options(record) do
+    excluded = if Map.get(record, :accepts_gift_voucher?, true), do: [:stripe], else: [:stripe, :voucher]
+
     Edenflowers.Payments.PaymentMethod.values()
-    |> Kernel.--([:stripe])
+    |> Kernel.--(excluded)
     |> Enum.map(&{OrderLog.payment_method_label(&1), &1})
   end
 
