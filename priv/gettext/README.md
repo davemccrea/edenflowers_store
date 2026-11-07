@@ -126,3 +126,9 @@ catalogues. Add translator comments where intent or placeholders are ambiguous.
 `EdenflowersWeb.GettextTest` checks catalogue/template alignment and that admin
 modules and email templates extract into the correct domain. The locale pin test
 checks that every supported language has the required catalogues.
+
+Adding a language means adding it in three places, whose defaults differ on
+purpose (`sv-FI` is the shop's locale, `en` is the source text's):
+`Edenflowers.Locales`, `config :localize`'s `supported_locales`, and
+`EdenflowersWeb.Gettext`'s `locales`. Then add its catalogues under
+`<language>/LC_MESSAGES/`, one per domain listed in `Edenflowers.PinsTest`.

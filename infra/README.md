@@ -1,6 +1,14 @@
 # Infrastructure
 
-Ansible provisioning for the production server (Ubuntu/Debian). Docker Compose in `/opt/edenflowers_store` runs the app, `imgproxy`, `papra`, `umami` and `cloudflared`. Postgres runs on the host. Deploys don't go through Ansible, see the main README.
+Ansible provisioning for the production server (Ubuntu/Debian). Docker Compose in `/opt/edenflowers_store` runs the app, `imgproxy`, `papra`, `umami` and `cloudflared`. Postgres runs on the host. Deploys don't go through Ansible, see [Deploy](#deploy).
+
+Remote commands connect through this alias in `~/.ssh/config`. Server IPs stay out of this public repo; the origin is behind Cloudflare.
+
+```
+Host edenflowers-production
+    HostName <production IP>
+    User <you>
+```
 
 The recipes are in the repo's justfile under `infra`, and run from this folder. Install [Ansible](https://docs.ansible.com/), then `just install-infra` for its collections.
 
@@ -84,3 +92,44 @@ The deploy workflow SSHes in with the private half of `github_actions_public_key
 ## Monitoring
 
 Better Stack's uptime monitor checks https://edenflowers.fi/health every 3 minutes and emails David when it fails. The route answers 200 only when the app can reach the database. Deploys pause the monitor while the app restarts.
+
+## Deploy
+
+`just deploy [patch|minor|major] [--yes]` runs `mix precommit`, checks the tree is clean and `main` isn't behind origin, asks for the version bump (patch with `--yes`), pushes images, bumps `mix.exs` and tags `vX.Y.Z`. It then backs up the production database, pushes, watches the GitHub Actions deploy and publishes release notes. Plain pushes deploy nothing.
+
+`images/` is gitignored, so photos reach production only through `just push-images`. It deletes server files removed locally, but only when you allow it: any deletion fails the push and the deploy and lists the files, and `MAX_DELETE=<n>` lets that many through. If this machine never had those files, `just pull-images` downloads them without deleting anything locally. Neither touches admin uploads in `images/uploads/`, which the Storage Box backs up. Filenames must be ASCII.
+
+### Rolling back
+
+A rollback lasts until the next deploy. Fix forward on `main`, then deploy as usual.
+
+**Code only.** Fine when the bad release's migrations only added tables or nullable columns, so the old code runs on the new schema:
+
+```bash
+just rollback v1.6.0
+```
+
+It lists the migrations the old release will run without and asks before starting it.
+
+**Code and database.** Needed when a migration renamed or dropped something, added a NOT NULL column, or corrupted data. Everything written since the dump is lost, so check Stripe for payments to reconcile afterwards.
+
+```bash
+just rollback v1.6.0 tmp/production-v1.6.0-20261021T114210.dump
+```
+
+It backs up the current database first, so the rollback can be undone the same way. The dump must come from while that tag was running:
+
+- `just deploy` saves one just before pushing, as `tmp/production-v<running release>-<timestamp>.dump`.
+- Otherwise use a nightly dump. Name it after the release that was live then (`git for-each-ref --sort=-creatordate --format='%(creatordate:iso) %(refname:short)' refs/tags`):
+
+  ```bash
+  ssh edenflowers-production "sudo ls -lt /opt/edenflowers_store/backups/"
+  ssh edenflowers-production "sudo cat /opt/edenflowers_store/backups/edenflowers_store_prod_20261021T020000.dump" \
+    > tmp/production-v1.6.0-20261021T020000.dump
+  ```
+
+## Maintenance mode
+
+`MAINTENANCE_MODE` redirects visitors to `/back-soon`. Signed-in admins, and the sign-in, admin and payment-link paths, are let through.
+
+It lives in `/opt/edenflowers_store/maintenance.env` on the server, not in Ansible, so `just provision` leaves it alone. Switch it with `just maintenance`, or away from this computer with the **Maintenance mode** workflow: in the GitHub app, open the repo's Actions, pick the workflow, tap **Run workflow** and choose on or off. Either restarts the app, which takes a few seconds.
