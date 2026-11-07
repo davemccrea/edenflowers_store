@@ -14,7 +14,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
   attr :card_picker?, :boolean, default: false
 
   @impl true
-  def mount(socket), do: {:ok, assign(socket, refused: %{}, card_picker?: false)}
+  def mount(socket), do: {:ok, assign(socket, refused: %{}, card_picker?: false, asking_to_remove: nil)}
 
   @impl true
   def render(assigns) do
@@ -136,11 +136,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                   type="button"
                   id={"#{@id}-remove-#{line_item.id}"}
                   class="ml-auto phx-click-loading:opacity-50"
-                  phx-click="remove_item"
-                  data-confirm={
-                    last_non_card_item?(@order) &&
-                      ~t"Removing this empties your cart and clears the checkout details you've entered. Continue?"
-                  }
+                  phx-click={if last_non_card_item?(@order), do: "ask_to_remove", else: "remove_item"}
                   phx-value-id={line_item.id}
                   phx-target={@myself}
                   aria_label={~t"Remove"}
@@ -151,6 +147,38 @@ defmodule EdenflowersWeb.Cart.LineItems do
               <p :if={@refused[line_item.id]} role="alert" class="text-error text-sm">
                 {@refused[line_item.id]}
               </p>
+              <%!-- Asked in the page, not with data-confirm: iOS Safari can refuse window.confirm
+                   inside the drawer's modal dialog, which reads as Cancel and leaves the bin dead. --%>
+              <div
+                :if={@asking_to_remove == line_item.id and last_non_card_item?(@order)}
+                id={"#{@id}-ask-remove-#{line_item.id}"}
+                role="alert"
+                class="flex flex-col gap-3 text-sm"
+              >
+                <p>{~t"Removing this empties your cart and clears the checkout details you've entered. Continue?"}</p>
+                <div class="flex flex-row gap-2">
+                  <.button
+                    id={"#{@id}-confirm-remove-#{line_item.id}"}
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    phx-click="remove_item"
+                    phx-value-id={line_item.id}
+                    phx-target={@myself}
+                  >
+                    {~t"Remove"}
+                  </.button>
+                  <.button
+                    type="button"
+                    size="sm"
+                    phx-click="keep_item"
+                    phx-target={@myself}
+                    phx-mounted={JS.focus()}
+                  >
+                    {~t"Cancel"}
+                  </.button>
+                </div>
+              </div>
 
               <div :if={line_item.is_card} class="text-base-content/70 flex justify-end">
                 <.icon_button
@@ -207,7 +235,15 @@ defmodule EdenflowersWeb.Cart.LineItems do
   @impl true
   def handle_event("remove_item", %{"id" => id}, socket) do
     Orders.remove_line_item(socket.assigns.order, id)
-    {:noreply, socket}
+    {:noreply, assign(socket, :asking_to_remove, nil)}
+  end
+
+  def handle_event("ask_to_remove", %{"id" => id}, socket) do
+    {:noreply, assign(socket, :asking_to_remove, id)}
+  end
+
+  def handle_event("keep_item", _params, socket) do
+    {:noreply, assign(socket, :asking_to_remove, nil)}
   end
 
   def handle_event("increment_line_item", %{"id" => id}, socket) do
