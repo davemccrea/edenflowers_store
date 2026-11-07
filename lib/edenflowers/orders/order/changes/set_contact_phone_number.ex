@@ -1,11 +1,9 @@
 defmodule Edenflowers.Orders.Order.Changes.SetContactPhoneNumber do
   @moduledoc """
-  Writes checkout's one phone field, the `contact_phone_number` argument, to
-  the number it is: the Recipient's on a gift delivery, otherwise the
-  Customer's own. Any other order has no Recipient to call, so a number left
-  from an earlier gift delivery choice is cleared.
+  Stores `contact_phone_number` as `recipient_phone_number` for gift deliveries.
+  Otherwise stores it as `customer_phone_number` and clears `recipient_phone_number`.
 
-  Runs after `SnapshotFulfillmentMethod`, which decides whether it's a delivery.
+  Runs after `SnapshotFulfillmentMethod`.
   """
   use Ash.Resource.Change
 

@@ -1,9 +1,11 @@
 defmodule Edenflowers.Payments.Changes.Refund do
   @moduledoc """
-  Hands back `amount`. Through Stripe, before the change commits, and
-  `Payments.record_stripe_refund/1` records it. Onto a Gift voucher, or by
-  any other method Jennie already handed it back by: its negative goes in
-  `refund` for `SplitOffGoodwill` to split and `RecordPayment` to record.
+  Refunds Stripe payments before the transaction and records them through
+  `Payments.record_stripe_refund/1`.
+
+  For voucher refunds and money already returned by other methods, sets a
+  negative `refund` argument for `SplitOffGoodwill` and `RecordPayment`.
+  Voucher refunds also set `gift_voucher_id`.
   """
   use Ash.Resource.Change
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]

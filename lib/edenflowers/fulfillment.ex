@@ -17,12 +17,12 @@ defmodule Edenflowers.Fulfillment do
 
   def shop_address, do: "Muurahaistie 1, 65230 Vaasa"
 
-  @doc "The delivery option priced by distance, whose free distance free-delivery products get."
+  @doc "Returns the distance-priced delivery option, or nil."
   def distance_priced_delivery do
     Enum.find(list_options!(authorize?: false), &(&1.fulfillment_method == :delivery and &1.rate_type == :dynamic))
   end
 
-  @doc "How far free-delivery products are delivered for free, or nil when nothing is."
+  @doc "Returns the free-delivery radius in kilometres, or nil when no positive radius is configured."
   def free_dist_km do
     case distance_priced_delivery() do
       %{free_dist_km: km} when km > 0 -> km

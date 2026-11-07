@@ -1,11 +1,8 @@
 defmodule EdenflowersWeb.Checkout.PayLive do
   @moduledoc """
-  The page behind a custom order's payment link. The token in the URL is the
-  only thing that grants access, so the page shows what the customer agreed
-  with Jennie and never the florist note.
-
-  It always speaks the order's language, which Jennie chose when she took the
-  order, rather than the browser's.
+  Payment-link page for a placed order's outstanding balance, including
+  subscription orders. The URL token grants access. The page uses the order's
+  locale and excludes florist notes.
   """
   use EdenflowersWeb, :live_view
 

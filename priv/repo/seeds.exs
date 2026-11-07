@@ -577,7 +577,7 @@ seed_placed_order = fn attrs ->
           quoted_fulfillment_fee: fee.fulfillment_fee,
           quoted_free_delivery_fee: fee.free_delivery_fee,
           fulfillment_tax_rate: tax_rate.percentage,
-          # Snapshot the promotion the same way SnapshotPromotion does at checkout.
+          # Snapshot the promotion the same way ApplyPromotion does at checkout.
           # LineItem.discount keys off order.discount_rate + promotion_id, so both
           # the relationship and the frozen columns must be set for totals to match.
           promotion_id: promotion && promotion.id,

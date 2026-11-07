@@ -139,8 +139,7 @@ defmodule EdenflowersWeb.Checkout.AddressInput do
         locale = Gettext.get_locale(EdenflowersWeb.Gettext)
         send(self(), {:delivery_quoted, nil})
 
-        # start_async with the same name cancels any in-flight lookup, so the
-        # final blur wins when the user types fast.
+        # Reusing the task name ignores earlier results, so only the latest lookup updates the quote.
         {:noreply,
          socket
          |> assign(loading: true, typed: address, error: nil)

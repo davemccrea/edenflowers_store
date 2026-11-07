@@ -460,7 +460,7 @@
   }
 }
 
-/* Home page cards, stacked in one grid cell and fanned like a hand of playing cards.
+/* Store card fan, stacked in one grid cell like a hand of playing cards.
    The fan opens with `rotate` and `transform` and hover uses `translate`, so
    each keeps its own transition. The CardFan hook opens the fan once it scrolls into
    view, from the middle outwards, and brings a clicked card to the front. */

@@ -1,17 +1,8 @@
 defmodule Edenflowers.Fulfillment.Changes.SetWeekday do
   @moduledoc """
-  Sets a weekday's availability rule to `:on` or `:off` in the shop
-  calendar, idempotently.
-
-  Prunes any now-redundant overrides whose direction matches the new weekday
-  rule: an `enabled_dates` entry on a now-available weekday is dropped (the
-  rule already opens that date), and a `disabled_dates` entry on a now-closed
-  weekday is dropped (the rule already closes it). This keeps the invariant
-  "every override genuinely contradicts the weekday rule" so the override mark
-  in the UI never lies.
-
-  `set_weekday/3` is a pure function kept public so the rule logic can be
-  unit-tested without a DB roundtrip; `change/3` just applies its result.
+  Sets a weekday's availability rule to `:on` or `:off` and removes redundant
+  date overrides. Key dates on that weekday retain their previous open or
+  closed state for the current and following year, using overrides as needed.
   """
   use Ash.Resource.Change
 
@@ -35,9 +26,9 @@ defmodule Edenflowers.Fulfillment.Changes.SetWeekday do
   end
 
   @doc """
-  Set a weekday's rule to the given direction, returning
-  the updated `%{available_days: [...], enabled_dates: [...], disabled_dates: [...]}`
-  map. Idempotent: an already-matching calendar passes through unchanged.
+  Sets a weekday's rule, returning the updated
+  `%{available_days: [...], enabled_dates: [...], disabled_dates: [...]}` map.
+  Repeating the same change leaves the calendar unchanged.
   """
   @spec set_weekday(ShopCalendar.t(), Weekday.t(), :on | :off) :: %{
           available_days: [Weekday.t()],

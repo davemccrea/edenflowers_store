@@ -601,8 +601,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     end
   end
 
-  # AddressInput keeps its own state, so the parent only learns the typed
-  # address on submit.
+  # AddressInput submits outside the form's nested params; merge its value into the action params.
   def handle_event("save_form", %{"form" => params} = all_params, %{assigns: %{order: %{state: :delivery}}} = socket) do
     params =
       case all_params do
