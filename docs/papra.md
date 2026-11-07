@@ -1,0 +1,7 @@
+# Papra expense capture
+
+Dev and worktrees talk to production Papra: anything they upload, rename or delete there is real. Only the Fastmail polling below is switched off outside production.
+
+Every document uploaded to [Papra](https://papra.app) is a receipt or invoice. Papra's `document:created` webhook hits `/webhook/papra`, the app sends the document to Claude to extract the expense, then renames it after the receipt date and vendor (`2026-10-23 Kukkatukku Oy.pdf`). A document still under its original name has usually not been processed, but check admin: an expense without a date or vendor also keeps the original name. Correcting the date or vendor in admin renames it again. Deleting an expense in admin leaves the document in Papra; to import it again, delete the document in Papra and upload the PDF again. The API key needs `documents:create`, `documents:read` and `documents:update`.
+
+Invoice emails import themselves. A Fastmail filter (Settings → Filters & Rules) moves invoice emails, such as Hetzner's, into the folder `Fakturor`, and any invoice email can be dragged there by hand. Every 15 minutes production uploads each PDF attachment to Papra, which sends it for extraction like any other upload, and moves the email to `Fakturor/Importerade`. Emails without a PDF stay in `Fakturor` to handle by hand. Both folders must exist. Production reads the mailbox with `FASTMAIL_API_TOKEN` (Settings → Privacy & Security → API tokens, with mail write access, since emails are moved).
