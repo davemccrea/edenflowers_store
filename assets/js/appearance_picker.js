@@ -11,7 +11,7 @@ const WAVE_DETENTS = 14;
  * It keeps hue, chroma, lightness and grain as exact numbers while they
  * move, so the handle glides with the pointer, and rounds them only to save.
  * Draws them (handle, wave, dial), previews them on body's --admin-*
- * properties once per frame, ticks like Arc's detents as the dial and wave
+ * properties once per frame, pulses like Arc's detents as the dial and wave
  * pass a step, and pushes `update_appearance` once a change settles.
  */
 export default {
@@ -36,7 +36,6 @@ export default {
     this.waveThumb = this.el.querySelector("[data-wave-thumb]");
     this.dialDots = [...this.el.querySelectorAll("[data-dial-dot]")];
     this.dialKnob = this.el.querySelector("[data-dial-mark]").parentElement;
-    this.haptic = this.createHaptic();
 
     this.field.addEventListener("pointerdown", (event) =>
       this.startFieldDrag(event),
@@ -82,7 +81,7 @@ export default {
 
     this.el.querySelectorAll("[data-preset]").forEach((preset) => {
       preset.addEventListener("click", () => {
-        this.tick(preset);
+        this.pulse(preset);
         this.set({
           hue: Number(preset.dataset.hue),
           chroma: Number(preset.dataset.chroma),
@@ -101,7 +100,6 @@ export default {
   destroy() {
     this.resizeObserver.disconnect();
     cancelAnimationFrame(this.frame);
-    this.haptic?.remove();
   },
 
   // Grabbing the handle keeps the point under the finger where it is, as
@@ -118,7 +116,6 @@ export default {
       : { x: 0, y: 0 };
     this.el.toggleAttribute("data-gliding", !onHandle);
     this.el.toggleAttribute("data-dragging", true);
-    this.tick();
     this.pickAt(event);
     this.handle.focus({ preventScroll: true });
     // The glide only covers the jump to the pressed point; the drag after it follows directly.
@@ -154,8 +151,8 @@ export default {
     Object.assign(this.state, changes);
 
     const detents = this.currentDetents();
-    if (detents.dial !== this.detents.dial) this.tick(this.dialKnob);
-    if (detents.wave !== this.detents.wave) this.tick(this.waveThumb);
+    if (detents.dial !== this.detents.dial) this.pulse(this.dialKnob);
+    if (detents.wave !== this.detents.wave) this.pulse(this.waveThumb);
     this.detents = detents;
 
     // Restyling body recolours the whole page, so do it once a frame at most.
@@ -189,39 +186,13 @@ export default {
     }, 250);
   },
 
-  // iOS Safari has no vibrate(), but since iOS 18 toggling a native switch
-  // gives a light haptic tick, so a hidden one stands in. Android vibrates.
-  // Mac trackpads give web pages no haptics. Only touch screens get the switch:
-  // clicking its label moves focus, which would break a slider dragged with a
-  // mouse, so focus goes straight back too.
-  createHaptic() {
-    if (!matchMedia("(pointer: coarse)").matches) return null;
-    const label = document.createElement("label");
-    label.setAttribute("aria-hidden", "true");
-    label.style.cssText =
-      "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden";
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.setAttribute("switch", "");
-    input.tabIndex = -1;
-    label.append(input);
-    document.body.append(label);
-    return label;
-  },
-
-  tick(element) {
+  // A small pulse of the control at each step, like Arc's detents.
+  pulse(element) {
     const now = performance.now();
-    if (now - (this.lastTick || 0) < 40) return;
-    this.lastTick = now;
+    if (now - (this.lastPulse || 0) < 40) return;
+    this.lastPulse = now;
 
-    if (this.haptic) {
-      const focused = document.activeElement;
-      this.haptic.click();
-      focused?.focus({ preventScroll: true });
-    }
-    navigator.vibrate?.(6);
-
-    if (element && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
       element.animate([{ scale: 1 }, { scale: 1.06 }, { scale: 1 }], {
         duration: 140,
         easing: "ease-out",
