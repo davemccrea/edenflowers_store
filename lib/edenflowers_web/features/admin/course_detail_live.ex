@@ -264,11 +264,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         do: :refund,
         else: :settle
 
-    # Reopening the same booking keeps what Jennie entered.
-    socket =
-      if id == socket.assigns.settling_id,
-        do: socket,
-        else: assign_settlement_forms(socket, registration)
+    socket = assign_settlement_forms(socket, registration)
 
     {:noreply,
      socket
@@ -362,8 +358,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   def handle_event("validate_email", %{"email" => params}, socket) do
-    %{course: course, emailing_id: id} = socket.assigns
-    {:noreply, EmailDrawer.validate(socket, params, booking(course, id))}
+    {:noreply, EmailDrawer.validate(socket, params)}
   end
 
   def handle_event("send_email", %{"email" => params}, socket) do
@@ -465,11 +460,23 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   defp assign_settlement_forms(socket, registration) do
     actor = socket.assigns.current_user
+    same_booking? = socket.assigns.settling_id == registration.id
 
-    assign(socket,
-      payment_form: if(registration.to_collect?, do: PaymentActions.payment_form(registration, actor)),
-      refund_form: if(registration.refundable?, do: PaymentActions.refund_form(registration, actor))
-    )
+    payment_form =
+      if registration.to_collect? do
+        if same_booking? and socket.assigns.payment_form,
+          do: AshPhoenix.Form.set_data(socket.assigns.payment_form, registration),
+          else: PaymentActions.payment_form(registration, actor)
+      end
+
+    refund_form =
+      if registration.refundable? do
+        if same_booking? and socket.assigns.refund_form,
+          do: AshPhoenix.Form.set_data(socket.assigns.refund_form, registration),
+          else: PaymentActions.refund_form(registration, actor)
+      end
+
+    assign(socket, payment_form: payment_form, refund_form: refund_form)
   end
 
   defp booking(course, id), do: Enum.find(course.bookings, &(&1.id == id))
@@ -484,7 +491,11 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   defp reload_course(socket) do
     {:ok, socket} = load_course(socket, socket.assigns.course.id)
-    socket
+
+    case socket.assigns.settling_id && booking(socket.assigns.course, socket.assigns.settling_id) do
+      nil -> socket
+      registration -> assign_settlement_forms(socket, registration)
+    end
   end
 
   # Each booking's reminder is its own email, rewritten or not on its own.

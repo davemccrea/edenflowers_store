@@ -9,6 +9,37 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
 
   setup :log_in_admin
 
+  test "an open payment drawer keeps its entered values while refusing a second voucher", %{conn: conn, admin: admin} do
+    course = generate(course())
+    registration = generate(course_registration(course_id: course.id, status: :confirmed))
+    first = generate(gift_voucher(amount: Decimal.new(20)))
+    second = generate(gift_voucher(amount: Decimal.new(40)))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course.id}")
+    view |> element("#settle-#{registration.id}") |> render_click()
+
+    view
+    |> form("#payment-#{registration.id}-form", payment: %{payment_method: "voucher"})
+    |> render_change(%{"_target" => ["payment", "payment_method"]})
+
+    view
+    |> form("#payment-#{registration.id}-form", payment: %{code: second.code})
+    |> render_change()
+
+    Edenflowers.Courses.pay_registration_with_gift_voucher!(registration, first.code, actor: admin)
+    render(view)
+
+    assert has_element?(view, "#payment-#{registration.id}-code[value='#{second.code}']")
+
+    view |> form("#payment-#{registration.id}-form") |> render_submit()
+
+    assert has_element?(view, "#payment-#{registration.id}-code-error", "Another gift voucher")
+
+    fresh = Ash.reload!(registration, load: [:amount_paid], authorize?: false)
+    assert fresh.gift_voucher_id == first.id
+    assert Decimal.eq?(fresh.amount_paid, 20)
+  end
+
   test "shows publication status and only offers sharing for published courses", %{conn: conn} do
     for {draft, status} <- [{true, "Draft"}, {false, "Published"}] do
       course = generate(course(draft: draft))

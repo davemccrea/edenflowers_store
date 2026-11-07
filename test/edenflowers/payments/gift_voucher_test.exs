@@ -228,6 +228,33 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
                "Another gift voucher"
     end
 
+    for kind <- [:order, :booking] do
+      test "a stale #{kind} cannot replace a voucher that has already paid", %{admin: admin} do
+        record =
+          case unquote(kind) do
+            :order -> placed_order(payment_intent_id: nil)
+            :booking -> generate(course_registration(status: :confirmed))
+          end
+
+        first = voucher("20.00")
+        second = voucher("40.00")
+
+        assert {:ok, _paid} = Ash.update(record, %{code: first.code}, action: :pay_with_gift_voucher, actor: admin)
+
+        assert code_error(Ash.update(record, %{code: second.code}, action: :pay_with_gift_voucher, actor: admin)) =~
+                 "Another gift voucher"
+
+        fresh = Ash.reload!(record, authorize?: false)
+        assert fresh.gift_voucher_id == first.id
+
+        assert {:ok, _cancelled} =
+                 Ash.update(fresh, %{cancellation_charge: 0, email_customer?: false}, action: :cancel, actor: admin)
+
+        assert Decimal.eq?(remaining(first), 20)
+        assert Decimal.eq?(remaining(second), 40)
+      end
+    end
+
     test "refuses unknown and used-up vouchers", %{admin: admin} do
       order = placed_order(payment_intent_id: nil)
       used_up = voucher("20.00")

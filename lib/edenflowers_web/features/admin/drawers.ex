@@ -163,6 +163,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
             value={@form[:subject].value || @preview.subject}
             type="text"
             label={~t"Subject"}
+            phx-debounce="400"
             required
             class="input w-full"
           />
@@ -173,6 +174,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
             type="textarea"
             rows="16"
             label={~t"Email"}
+            phx-debounce="400"
             required
             class="textarea w-full"
           />

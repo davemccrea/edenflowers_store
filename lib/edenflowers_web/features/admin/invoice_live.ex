@@ -705,9 +705,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
 
   def handle_event("validate_email", %{"email" => params}, %{assigns: %{email_form: form}} = socket)
       when not is_nil(form),
-      do:
-        {:noreply,
-         EmailDrawer.validate(socket, params, email_record(socket.assigns.email_kind, socket.assigns.invoice))}
+      do: {:noreply, EmailDrawer.validate(socket, params)}
 
   def handle_event("validate_credit", %{"credit" => params}, socket),
     do: {:noreply, assign(socket, :credit_form, AshPhoenix.Form.validate(socket.assigns.credit_form, params))}

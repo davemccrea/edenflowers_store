@@ -2,7 +2,7 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
   @moduledoc """
   The state behind `EdenflowersWeb.Admin.Drawers.email_drawer`, shared by
   the order, course and invoice pages: an AshPhoenix form on the action that
-  sends each kind, the preview rebuilt as Jennie types, and what each kind is
+  sends each kind, the preview built when it opens, and what each kind is
   called. A failed send keeps the drawer open with her edits, and an address
   the action refuses marked on its field. The pages flash what happened, in
   their words for each kind: a failed send's own error is for the log.
@@ -54,14 +54,9 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
     |> push_event("js-exec", %{to: "#email-drawer", attr: "phx-hide"})
   end
 
-  @doc "Rebuilds the preview from the drawer's form as Jennie types."
-  def validate(socket, params, record) do
-    form = AshPhoenix.Form.validate(socket.assigns.email_form, params)
-
-    socket
-    |> assign(email_form: form)
-    |> assign(:preview, DrawerPreview.build(socket.assigns.email_kind, record, form))
-  end
+  @doc "Validates the email edits, keeping the template preview from when the drawer opened."
+  def validate(socket, params),
+    do: assign(socket, :email_form, AshPhoenix.Form.validate(socket.assigns.email_form, params))
 
   @doc """
   Sends the email: `{:ok, socket}` once it went, for the page to close the

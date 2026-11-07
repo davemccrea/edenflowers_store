@@ -133,7 +133,8 @@ defmodule Edenflowers.Payments.Payable do
 
       argument :code, :string, allow_nil?: false, constraints: [trim?: true, min_length: 1]
 
-      validate Validations.Recordable
+      change get_and_lock_for_update()
+      validate Validations.Recordable, before_action?: true
       change Changes.ApplyGiftVoucher
       change Changes.CancelOpenPaymentIntent
       change Changes.PayFromVoucher
