@@ -34,7 +34,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
        page_title: ~t"Gift voucher",
        alternates: alternates("/#{language}/gift-voucher"),
        page_description:
-         ~t"An Eden Flowers gift voucher, from 20 to 200 €, to spend on flowers, subscriptions and courses in Vaasa.",
+         ~t"An Eden Flowers gift voucher, from #{min = List.first(Order.Checkout.voucher_amounts())} to #{max = List.last(Order.Checkout.voucher_amounts())} €, to spend on flowers, subscriptions and courses in Vaasa.",
        locale: Format.locale(),
        sale: sale && load_sale(sale),
        editing?: sale != nil,

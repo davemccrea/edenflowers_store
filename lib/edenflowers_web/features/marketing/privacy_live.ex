@@ -124,7 +124,9 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
 
             <.privacy_section id="cookies" title={~t"Cookies and fraud prevention"}>
               <ul class="list-disc space-y-3 pl-6 marker:text-base-content/50">
-                <li>{~t"Our session cookie keeps your cart, language and sign-in for up to 30 days."}</li>
+                <li>
+                  {~t"Our session cookie keeps your cart, language and sign-in for up to #{days = Edenflowers.Accounts.User.session_days()} days."}
+                </li>
                 <li>
                   {~t"Stripe loads only on payment pages, for fraud prevention, and may use cookies and device/activity data there."}
                 </li>
@@ -150,7 +152,7 @@ defmodule EdenflowersWeb.Marketing.PrivacyLive do
                   {~t"Newsletters: until withdrawal or unsubscribe. Limited opt-out records prevent further marketing; consent evidence may remain where necessary."}
                 </li>
                 <li>{~t"Delivery photos: kept with the order until you ask us to delete them."}</li>
-                <li>{~t"Error reports: 90 days."}</li>
+                <li>{~t"Error reports: #{days = Edenflowers.ErrorReports.PruneReports.retention_days()} days."}</li>
                 <li>
                   {~t"Routine database backups: about 30 days."}
                 </li>
