@@ -72,7 +72,13 @@
    colour from body, which covers any html background, so body carries it and
    the admin app paints its own page colour. */
 body:has(.admin-theme) {
-  background-color: var(--color-base-200);
+  background-color: var(--color-forest);
+}
+
+/* The account menu opens light over the forest topbar, so it takes the light
+   surface's focus ring back. */
+.admin-theme .bg-forest .dropdown-content {
+  --focus-color: var(--color-primary);
 }
 
 /* Page transitions, started in page_transitions.js. The topbar, search bar, sidebar and
