@@ -1029,7 +1029,8 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   # What Jennie tells a customer on the phone, priced as saving will price it.
   defp price_summary(assigns) do
-    assigns = assign(assigns, :paid, assigns.order && assigns.order.amount_paid)
+    # An edited order's payments; a new one's voucher is shown above the form's payment choice.
+    assigns = assign(assigns, :paid, assigns.order && assigns.price.paid)
 
     ~H"""
     <p :if={@price.lines == []} id="order-price" class="text-base-content/75 text-sm">
@@ -1066,7 +1067,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
         :if={@paid && Decimal.positive?(@paid)}
         strong
         label={~t"Balance"}
-        amount={Decimal.sub(@price.total, @paid)}
+        amount={@price.balance}
         locale={@locale}
       />
     </dl>

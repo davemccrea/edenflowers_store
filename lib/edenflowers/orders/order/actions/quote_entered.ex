@@ -14,7 +14,9 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
 
   A line that isn't filled in yet is left out. The fee is nil while it can't be
   priced, and the total then leaves it out. `voucher_pays` is what a Gift
-  voucher whose code came with a new order would pay on placing it.
+  voucher whose code came with a new order would pay on placing it, by
+  `PayFromVoucher`'s rule. `paid` is what an edited order has been paid, or for
+  a new one what the voucher will pay, and `balance` what's left of the total.
   """
   use Ash.Resource.Actions.Implementation
 
@@ -26,6 +28,7 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Order.Calculations.PromotionApplied
   alias Edenflowers.Orders.Order.Changes.PriceFulfillment
+  alias Edenflowers.Payments.Changes.PayFromVoucher
 
   @impl true
   def run(input, _opts, context) do
@@ -45,6 +48,8 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
       })
 
     total = Decimal.add(sum(lines, :total), fee || 0)
+    voucher_pays = voucher_pays(changeset, total)
+    paid = paid(order, voucher_pays)
 
     {:ok,
      %{
@@ -53,7 +58,9 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
        free_delivery?: free_delivery?,
        vat: sum(vat_rows, :vat),
        total: total,
-       voucher_pays: voucher_pays(changeset, total)
+       voucher_pays: voucher_pays,
+       paid: paid,
+       balance: Decimal.sub(total, paid)
      }}
   end
 
@@ -147,12 +154,15 @@ defmodule Edenflowers.Orders.Order.Actions.QuoteEntered do
   defp located(delivery_quote),
     do: {:ok, %{fulfillment_fee: delivery_quote.fee, free_delivery_fee: delivery_quote.free_delivery_fee}}
 
+  defp paid(nil, voucher_pays), do: voucher_pays
+  defp paid(order, _voucher_pays), do: Ash.load!(order, :amount_paid, authorize?: false).amount_paid
+
   # Placing pays what it can from the voucher whose code came with it (PayWithGiftVoucherCode).
   defp voucher_pays(changeset, total) do
     with code when is_binary(code) <- Ash.Changeset.get_argument(changeset, :gift_voucher_code),
-         {:ok, %{spendable?: true} = voucher} <-
+         {:ok, %{} = voucher} <-
            Edenflowers.Payments.get_gift_voucher_by_code(code, not_found_error?: false, authorize?: false) do
-      Decimal.min(voucher.remaining, total)
+      PayFromVoucher.pays(voucher, total)
     else
       _no_voucher -> Decimal.new(0)
     end

@@ -12,6 +12,7 @@ defmodule Edenflowers.Email.Preview do
 
   alias Edenflowers.Accounts.Calculations.NamePart
   alias Edenflowers.Courses.CourseRegistration
+  alias Edenflowers.Courses.CourseRegistration.Changes.PriceBooking
   alias Edenflowers.Email
   alias Edenflowers.Email.Edits
   alias Edenflowers.Orders.Order
@@ -66,8 +67,6 @@ defmodule Edenflowers.Email.Preview do
   """
   def build_entered(kind, changeset, price, order) do
     {:ok, entered} = Ash.Changeset.apply_attributes(changeset, force?: true)
-    paid = if order, do: order.amount_paid, else: price.voucher_pays
-    balance = Decimal.sub(price.total, paid)
 
     entered = %{
       entered
@@ -75,8 +74,8 @@ defmodule Edenflowers.Email.Preview do
         line_items: Enum.map(price.lines, &%{quantity: &1.quantity, product_name: &1.name, subtotal: &1.total}),
         fulfillment_fee: price.fulfillment_fee,
         grand_total: price.total,
-        amount_paid: paid,
-        balance: balance
+        amount_paid: price.paid,
+        balance: price.balance
     }
 
     url = if entered_link?(entered, order), do: link_url(entered)
@@ -103,7 +102,7 @@ defmodule Edenflowers.Email.Preview do
           first_name: NamePart.first(entered.name),
           seats: seats,
           amount_paid: amount_paid,
-          balance: Decimal.sub(Decimal.mult(course.price, seats), amount_paid),
+          balance: Decimal.sub(PriceBooking.amount(course, seats), amount_paid),
           payment_link_token: if(entered.payment_terms == :payment_link, do: Edits.placeholder_token())
       }
       |> translated()
@@ -226,18 +225,7 @@ defmodule Edenflowers.Email.Preview do
   defp booking_email(:refunded, registration, inputs), do: Email.refunded(registration, refund_details(inputs))
 
   defp payment_receipt(record, inputs, reference) do
-    {record, amount} =
-      case decimal(inputs[:amount]) do
-        nil ->
-          {record, SendPaymentReceivedEmail.latest_payment(record)}
-
-        amount ->
-          {%{
-             record
-             | amount_paid: Decimal.add(record.amount_paid, amount),
-               balance: Decimal.sub(record.balance, amount)
-           }, amount}
-      end
+    amount = decimal(inputs[:amount]) || SendPaymentReceivedEmail.latest_payment(record)
 
     email =
       if match?(%Order{}, record) and is_nil(inputs[:amount]),

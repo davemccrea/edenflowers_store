@@ -43,8 +43,11 @@ defmodule Edenflowers.Courses.CourseRegistration.Changes.PriceBooking do
       true ->
         Ash.Changeset.force_change_attributes(changeset,
           tax_rate: course.tax_rate.percentage,
-          amount: Decimal.mult(course.price, seats)
+          amount: amount(course, seats)
         )
     end
   end
+
+  @doc "What a booking of `seats` places on `course` costs. Jennie's booking form previews its email with it."
+  def amount(course, seats), do: Decimal.mult(course.price, seats)
 end
