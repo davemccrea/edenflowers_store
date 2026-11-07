@@ -196,6 +196,7 @@ defmodule Edenflowers.Orders.Subscription do
                   :resume_date,
                   :next_delivery_date,
                   :fulfilled_count,
+                  :price_per_order,
                   booked_occurrence: [:changes_open?],
                   unpaid_occurrence: [:grand_total],
                   product_variant: :product
@@ -595,6 +596,8 @@ defmodule Edenflowers.Orders.Subscription do
       description "The first order's delivery distance in metres, or nil for pickup. The address never " <>
                     "changes, so price_per_order prices each Occurrence's fee from it."
 
+      # The price is the same whoever reads it.
+      authorize? false
       filter expr(origin == :online)
     end
   end

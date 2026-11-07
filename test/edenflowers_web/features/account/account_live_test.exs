@@ -348,6 +348,37 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     defp row(subscription), do: "#subscription-#{subscription.id}"
     defp drawer(subscription), do: "#manage-subscription-#{subscription.id}"
 
+    test "the price per delivery includes the delivery fee each one is charged", %{conn: conn, user: user} do
+      delivery = generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :dynamic, base_price: "4.50"))
+      variant = generate(product_variant(product_id: generate(product(free_delivery: false)).id, price: "60.00"))
+
+      subscription =
+        generate(subscription(user_id: user.id, product_variant_id: variant.id, fulfillment_option_id: delivery.id))
+
+      generate(
+        order(
+          subscription_id: subscription.id,
+          origin: :online,
+          state: :placed,
+          fulfillment_option_id: delivery.id,
+          distance: 3000
+        )
+      )
+
+      price = Ash.load!(subscription, :price_per_order, authorize?: false).price_per_order
+      assert Decimal.gt?(price, "60.00")
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      assert has_element?(view, row(subscription), Edenflowers.Format.storefront_price(price, @locale))
+
+      assert has_element?(
+               view,
+               drawer(subscription),
+               "#{Edenflowers.Format.storefront_price(price, @locale)} per delivery"
+             )
+    end
+
     test "lists the customer's subscriptions, not anyone else's", %{conn: conn, user: user} do
       mine = generate(subscription(user_id: user.id))
       theirs = generate(subscription(user_id: generate(admin_user(admin: false)).id))
