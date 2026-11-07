@@ -9,17 +9,17 @@ defmodule EdenflowersWeb.Admin.CustomerSearch do
   alias Edenflowers.Orders
 
   @doc """
-  Offers the customers `term` finds, or the latest customers when it's empty,
-  as the invoice page does, and says when a search finds none.
+  Offers the customers `term` finds, or the top customers when it's empty,
+  and says when a search finds none.
   """
   def search(socket, term) do
     term = String.trim(term)
+    actor = socket.assigns.current_user
 
     customers =
-      Accounts.search_customers!(if(term == "", do: nil, else: term),
-        actor: socket.assigns.current_user,
-        query: [limit: 10]
-      )
+      if term == "",
+        do: Accounts.top_customers!(actor: actor),
+        else: Accounts.search_customers!(term, actor: actor, query: [limit: 10])
 
     options =
       Enum.map(customers, fn customer ->
@@ -33,7 +33,7 @@ defmodule EdenflowersWeb.Admin.CustomerSearch do
     |> assign(:customer_search_empty?, term != "" && customers == [])
   end
 
-  @doc "Opens the latest customers when Jennie clicks into the empty search, so a regular is a click away."
+  @doc "Opens the top customers when Jennie clicks into the empty search, so a regular is a click away."
   def focus(%{assigns: %{customer_term: ""}} = socket), do: search(socket, "")
   def focus(socket), do: socket
 
