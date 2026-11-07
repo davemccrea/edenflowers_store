@@ -484,7 +484,7 @@ defmodule EdenflowersWeb.Admin.Components do
   def person_block(assigns) do
     ~H"""
     <div class="space-y-1.5">
-      <p :if={@name} class="text-base-content text-base font-semibold">{@name}</p>
+      <p :if={@name} class="text-base-content text-base">{@name}</p>
       <div :for={contact <- @contact} class="text-sm">{render_slot(contact)}</div>
     </div>
     """
@@ -602,7 +602,7 @@ defmodule EdenflowersWeb.Admin.Components do
     ~H"""
     <div class={@class}>
       <p class="eyebrow text-base-content/75 mb-1.5">{@label}</p>
-      <div class="text-base-content text-base font-semibold leading-relaxed">{render_slot(@inner_block)}</div>
+      <div class="text-base-content text-base leading-relaxed">{render_slot(@inner_block)}</div>
     </div>
     """
   end
@@ -674,7 +674,7 @@ defmodule EdenflowersWeb.Admin.Components do
   defp history_heading(assigns) do
     ~H"""
     <div class="flex items-baseline justify-between gap-4">
-      <p class="text-base-content flex items-center gap-1 font-semibold">
+      <p class="text-base-content flex items-center gap-1">
         {@title}
         <.icon
           :if={@expandable}

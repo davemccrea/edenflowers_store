@@ -424,7 +424,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           class="h-16 w-16 shrink-0 object-cover"
         />
         <div class="min-w-0 flex-1">
-          <p class="text-base-content text-base font-semibold">
+          <p class="text-base-content text-base">
             <span class="tabular-nums">{line_item.quantity} ×</span> {line_item.product_name}
           </p>
           <p :if={line_item.variant_size} class="text-base-content/85 mt-0.5 text-sm">
