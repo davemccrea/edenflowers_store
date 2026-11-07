@@ -89,7 +89,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           </:subtitle>
           <:actions>
             <.button type="submit" form="order-form" variant="primary" size="sm">
-              {if @mode == :new, do: ~t"Place order", else: ~t"Save"}
+              {if @mode == :new, do: ~t"Create order", else: ~t"Save"}
             </.button>
           </:actions>
         </.admin_page_header>

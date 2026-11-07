@@ -2074,11 +2074,6 @@ msgstr "Avhämtningar"
 msgid "Picture"
 msgstr "Bild"
 
-#: lib/edenflowers_web/features/admin/order_form_live.ex:92
-#, elixir-autogen, elixir-format
-msgid "Place order"
-msgstr "Lägg beställningen"
-
 #: lib/edenflowers_web/features/admin/order_log.ex:74
 #, elixir-autogen, elixir-format
 msgid "Placed and paid with Stripe"
@@ -5178,3 +5173,8 @@ msgstr "Byt färg"
 #, elixir-autogen, elixir-format
 msgid "Create voucher"
 msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:92
+#, elixir-autogen, elixir-format
+msgid "Create order"
+msgstr "Skapa beställning"

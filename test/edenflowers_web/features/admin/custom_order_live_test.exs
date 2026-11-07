@@ -416,7 +416,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert order.payment_link_open?
     end
 
-    test "shows the payment choice and one form-associated Place order button", ctx do
+    test "shows the payment choice and one form-associated Create order button", ctx do
       {:ok, _view, html} = live(ctx.conn, ~p"/admin/orders/new")
 
       [form] = html |> LazyHTML.from_document() |> LazyHTML.query("#order-form") |> Enum.to_list()
@@ -425,7 +425,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert List.last(sections) == "Payment"
       assert [submit] = submits
-      assert LazyHTML.text(submit) =~ "Place order"
+      assert LazyHTML.text(submit) =~ "Create order"
       assert LazyHTML.attribute(submit, "form") == ["order-form"]
     end
 
