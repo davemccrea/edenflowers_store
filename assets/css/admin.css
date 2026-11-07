@@ -476,9 +476,25 @@ body:has(.admin-theme) {
   );
 }
 
+/* The picker's sliders are invisible native ranges under drawn thumbs. The
+   intensity slider's native thumb takes the drawn pill's size, so the browser
+   maps the pointer to a value exactly where the pill is drawn. */
+[data-chroma-input] {
+  appearance: none;
+}
+[data-chroma-input]::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.75rem;
+  height: 3.5rem;
+}
+[data-chroma-input]::-moz-range-thumb {
+  width: 1.75rem;
+  height: 3.5rem;
+  border: 0;
+}
+
 /* The handle glides to presets, key presses and a pressed point, but follows
-   a drag directly, and lifts while held, as Arc's does. The wave thumb
-   glides the same way unless it is being dragged. */
+   a drag directly, and lifts while held, as Arc's does. */
 .admin-picker-handle {
   transition:
     left 180ms var(--ease-out, ease-out),
@@ -486,11 +502,7 @@ body:has(.admin-theme) {
     scale 160ms var(--ease-out, ease-out),
     box-shadow 160ms var(--ease-out, ease-out);
 }
-[data-wave-thumb] {
-  transition: left 180ms var(--ease-out, ease-out);
-}
-#appearance-picker[data-dragging]:not([data-gliding])
-  :is(.admin-picker-handle, [data-wave-thumb]) {
+#appearance-picker[data-dragging]:not([data-gliding]) .admin-picker-handle {
   transition-property: scale, box-shadow;
 }
 #appearance-picker[data-dragging] .admin-picker-handle {
@@ -498,7 +510,7 @@ body:has(.admin-theme) {
   box-shadow: 0 10px 24px rgb(0 0 0 / 0.4);
 }
 @media (prefers-reduced-motion: reduce) {
-  #appearance-picker :is(.admin-picker-handle, [data-wave-thumb]) {
+  #appearance-picker .admin-picker-handle {
     transition: none;
   }
 }
