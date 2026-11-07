@@ -115,15 +115,28 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
       assert changed.next_fulfillment_date == Date.add(friday, -2)
     end
 
-    test "to any day but Sunday, whichever days the shop opens for one-off orders", context do
+    test "only to a day the shop is open", context do
       shop_calendar(available_days: [:friday])
       subscription = subscription_for(context)
 
       assert {:error, %Ash.Error.Invalid{errors: [%{field: :delivery_day}]}} =
-               Orders.change_subscription(subscription, %{delivery_day: :sunday}, actor: context.customer)
-
-      assert {:ok, _subscription} =
                Orders.change_subscription(subscription, %{delivery_day: :monday}, actor: context.customer)
+    end
+
+    # The account and admin forms always send the day, so a changed size or
+    # interval arrives with the day the subscription is already on.
+    test "keeps a day the shop has since closed", context do
+      friday = first_on_or_after(days_from_today(14), 5)
+      subscription = subscription_for(context, next_fulfillment_date: friday)
+      shop_calendar(available_days: [:tuesday])
+
+      changed =
+        Orders.change_subscription!(subscription, %{product_variant_id: context.large.id, delivery_day: :friday},
+          actor: context.customer
+        )
+
+      assert changed.product_variant_id == context.large.id
+      assert changed.next_fulfillment_date == friday
     end
 
     test "only to another size of the same product", context do

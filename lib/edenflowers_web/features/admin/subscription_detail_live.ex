@@ -375,7 +375,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
       end
 
     day_options =
-      for day <- Subscription.delivery_days() do
+      for day <- subscription.delivery_days do
         {String.capitalize(Format.weekday_name(day, locale)), day}
       end
 
@@ -488,6 +488,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
         :fulfillment_option,
         :next_delivery_date,
         :closed_delivery_dates,
+        :delivery_days,
         :fee_per_order,
         :plan_changeable?,
         :pausable?,

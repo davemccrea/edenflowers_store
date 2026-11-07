@@ -36,22 +36,6 @@ defmodule Edenflowers.Orders.Subscription do
   def intervals, do: @intervals
 
   @doc """
-  The weekdays a subscription can deliver on: every day but Sunday, Jennie's
-  day off, whichever weekdays the shop calendar opens for one-off orders.
-  """
-  def delivery_days, do: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
-
-  @doc """
-  The shop calendar as it applies to subscription deliveries: open on
-  `delivery_days/0`, still closed on the dates Jennie closes, such as holidays.
-  """
-  def calendar(shop_calendar), do: %{shop_calendar | available_days: delivery_days(), enabled_dates: []}
-
-  @doc "The calendar a checkout `order` books against: `calendar/1`'s when it starts a subscription."
-  def calendar_for(%{subscription?: true}, shop_calendar), do: calendar(shop_calendar)
-  def calendar_for(_order, shop_calendar), do: shop_calendar
-
-  @doc """
   The day the occurrence job charges the card for a delivery on `date`. Checkout
   quotes it before the subscription exists; a subscription has `charged_on`.
   """
@@ -62,6 +46,14 @@ defmodule Edenflowers.Orders.Subscription do
   it, and checkout and the order page quote it before the subscription exists.
   """
   def next_date(date, interval_weeks), do: Date.add(date, interval_weeks * 7)
+
+  @doc """
+  The calendar a checkout `order` books against. A cart starting a subscription
+  can't take a date Jennie opens outside the calendar's weekdays, such as a
+  special Sunday: the subscription would repeat on a weekday the shop is closed.
+  """
+  def calendar_for(%{subscription?: true}, shop_calendar), do: %{shop_calendar | enabled_dates: []}
+  def calendar_for(_order, shop_calendar), do: shop_calendar
 
   @doc """
   What each Occurrence costs before any Gift voucher: the bouquet's price
@@ -243,6 +235,7 @@ defmodule Edenflowers.Orders.Subscription do
                   :fulfilled_count,
                   :price_per_order,
                   :fee_per_order,
+                  :delivery_days,
                   booked_occurrence: [:changes_open?],
                   unpaid_occurrence: [:grand_total],
                   product_variant: :product
@@ -578,6 +571,14 @@ defmodule Edenflowers.Orders.Subscription do
               {Edenflowers.Orders.Subscription.Calculations.ScheduledDate, days_from_today: @change_deadline_days} do
       description "The next delivery date a paused subscription would get if it resumed today: the first " <>
                     "scheduled date still open to changes."
+    end
+
+    calculate :delivery_days,
+              {:array, Edenflowers.Fulfillment.Weekday},
+              Edenflowers.Orders.Subscription.Calculations.DeliveryDays do
+      description "The weekdays it can move to, Monday first: those the shop calendar opens, plus the one it " <>
+                    "delivers on now, so closing that weekday never forces a subscriber off it. The account " <>
+                    "and admin day pickers offer these, and the change action accepts only these."
     end
 
     calculate :closed_delivery_dates,

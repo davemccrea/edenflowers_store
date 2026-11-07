@@ -1,11 +1,9 @@
 defmodule Edenflowers.Orders.Subscription.Validations.SubscriptionDeliveryDay do
   @moduledoc """
-  A subscription moves only to one of `Subscription.delivery_days/0`.
+  A subscription moves only to one of its `delivery_days`.
   """
   use Ash.Resource.Validation
   use GettextSigils, backend: EdenflowersWeb.Gettext
-
-  alias Edenflowers.Orders.Subscription
 
   @impl true
   def validate(changeset, _opts, _context) do
@@ -14,7 +12,8 @@ defmodule Edenflowers.Orders.Subscription.Validations.SubscriptionDeliveryDay do
         :ok
 
       day ->
-        if day in Subscription.delivery_days(), do: :ok, else: error()
+        subscription = Ash.load!(changeset.data, :delivery_days, authorize?: false, reuse_values?: false)
+        if day in subscription.delivery_days, do: :ok, else: error()
     end
   end
 

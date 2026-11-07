@@ -55,6 +55,37 @@ defmodule Edenflowers.Orders.OrderCalendarTest do
       assert {:ok, _order} = submit.(available_from)
     end
 
+    # It would repeat on a weekday the shop is closed.
+    test "submit_delivery refuses a subscription's first delivery on a date opened outside the weekdays" do
+      pickup_option = generate(fulfillment_option(fulfillment_method: :pickup))
+      special = Date.add(Edenflowers.ShopTime.today(), 7)
+      shop_calendar(available_days: [], enabled_dates: [special])
+
+      submit = fn order ->
+        order
+        |> Ash.Changeset.for_update(:submit_delivery, %{
+          fulfillment_option_id: pickup_option.id,
+          fulfillment_date: special,
+          contact_phone_number: "045 1234567"
+        })
+        |> Ash.update(authorize?: false)
+      end
+
+      one_off = generate(order(state: :delivery))
+
+      Edenflowers.Orders.add_line_item!(one_off.id, generate(product_variant(product_id: generate(product()).id)).id, 1,
+        authorize?: false
+      )
+
+      assert {:ok, _order} = submit.(one_off)
+
+      subscribable = generate(product_variant(product_id: generate(product(subscribable: true)).id))
+      subscription = generate(order(state: :delivery))
+      Edenflowers.Orders.add_line_item!(subscription.id, subscribable.id, 1, %{interval_weeks: 2}, authorize?: false)
+      assert {:error, %Ash.Error.Invalid{errors: errors}} = submit.(subscription)
+      assert Enum.any?(errors, &(&1.field == :fulfillment_date))
+    end
+
     test "Available from names the first open day when the shop is closed on it" do
       available_from = Date.add(Edenflowers.ShopTime.today(), 3)
       shop_calendar(disabled_dates: [available_from, Date.add(available_from, 1)])

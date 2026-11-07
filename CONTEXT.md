@@ -55,11 +55,11 @@ _Avoid_: Sold out, out of stock, back in stock, restock date (for bouquets, whic
 ### Subscriptions
 
 **Subscription**:
-A customer's standing request for a subscribable product every one, two or four weeks, for the same Recipient, delivered or picked up. It is not an order: it creates orders, and holds only the schedule, the delivery details and the saved card. The customer opts in on a subscribable product's page, choosing how often for that cart line, and sets it up by paying for the first order at checkout. The same product bought once is an ordinary order.
+A customer's standing request for a subscribable product every one, two or four weeks, for the same Recipient, delivered or picked up. It is not an order: it creates orders, and holds only the schedule, the delivery details and the saved card. The customer opts in on a subscribable product's page, choosing how often for that cart line, and sets it up by paying for the first order at checkout. It delivers on the weekday of that first order, which must be one the shop calendar opens, not a date Jennie opens outside them; later the customer can move it to another open weekday. The same product bought once is an ordinary order.
 _Avoid_: Plan, membership, recurring order
 
 **Occurrence**:
-One order a Subscription creates: an ordinary placed Online Order, charged to the saved card, that Jennie makes like any other. Subscriptions deliver on any day but Sunday, Jennie's day off, whichever weekdays the calendar opens for one-off orders. It is made for its scheduled date whatever the shop calendar says; before she closes, Jennie agrees another day with each customer it affects, or pauses their Subscription.
+One order a Subscription creates: an ordinary placed Online Order, charged to the saved card, that Jennie makes like any other. It is made for its scheduled date whatever the shop calendar says; before she closes, Jennie agrees another day with each customer it affects, or pauses their Subscription.
 _Avoid_: Renewal, instalment, delivery (a delivery is how any order reaches its Recipient)
 
 **Charge day**:

@@ -1,8 +1,8 @@
 defmodule Edenflowers.Orders.Order.Validations.FulfillmentDate do
   @moduledoc """
   Checks a checkout date against the shop calendar, same-day rules, ordering
-  deadline and the order's Available from. A cart starting a subscription
-  takes the calendar as `Subscription.calendar_for/2` applies it.
+  deadline and the order's Available from, taking the calendar as
+  `Subscription.calendar_for/2` applies it to a cart starting a subscription.
   """
 
   use Ash.Resource.Validation

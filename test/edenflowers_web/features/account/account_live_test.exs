@@ -698,9 +698,7 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
     test "moves deliveries to another day", %{conn: conn, user: user} do
       subscription = generate(subscription(user_id: user.id))
       next = subscription.next_fulfillment_date
-      # Sunday is never on offer.
-      moved = Enum.find([Date.add(next, 1), Date.add(next, 2)], &(Date.day_of_week(&1) != 7))
-      day = Edenflowers.Fulfillment.Weekday.from_date(moved)
+      day = Edenflowers.Fulfillment.Weekday.from_date(Date.add(next, 1))
       {:ok, view, _html} = live(conn, ~p"/account")
 
       changes = %{
@@ -712,8 +710,8 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
       view |> form("#change-subscription-#{subscription.id}", changes) |> render_change()
       view |> form("#change-subscription-#{subscription.id}", changes) |> render_submit()
 
-      assert reload(subscription).next_fulfillment_date == moved
-      assert render(view) =~ "From #{weekday_date(moved)}:"
+      assert reload(subscription).next_fulfillment_date == Date.add(next, 1)
+      assert render(view) =~ "From #{weekday_date(Date.add(next, 1))}:"
     end
 
     test "shows the card deliveries are charged to", %{conn: conn, user: user} do

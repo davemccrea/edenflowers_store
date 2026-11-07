@@ -18,7 +18,7 @@ defmodule Edenflowers.Orders.Subscription.Calculations.ClosedDeliveryDates do
 
   @impl true
   def calculate(subscriptions, _opts, _context) do
-    calendar = Subscription.calendar(Fulfillment.get_shop_calendar!(authorize?: false))
+    calendar = Fulfillment.get_shop_calendar!(authorize?: false)
     now = Edenflowers.ShopTime.now()
     until = Date.add(DateTime.to_date(now), @weeks_ahead * 7)
 
