@@ -330,7 +330,8 @@ defmodule Edenflowers.Orders.Order.Admin do
                     "online voucher checkout makes, with its voucher issued at once. The buyer pays in person, and " <>
                     "Jennie records the payment on the order page, from where she can email the buyer the voucher " <>
                     "with its receipt. It's fulfilled as she writes the voucher onto a gift card. Any amount from " <>
-                    "20 €, in any style, Christmas included. The voucher PDF goes to the recipient if she ticks it."
+                    "20 €, in any style, Christmas included. The voucher only ever goes to the buyer, who passes " <>
+                    "it on."
 
       accept [
         :locale,
@@ -347,8 +348,6 @@ defmodule Edenflowers.Orders.Order.Admin do
         constraints: [min: 20],
         description: "The voucher's amount in whole euros, and what the buyer pays."
 
-      argument :email_recipient?, :boolean, default: false, description: "Email the voucher to the recipient."
-      argument :recipient_email, Edenflowers.Types.Email, description: "Where the recipient's voucher goes."
       argument :customer_id, :uuid, description: "The existing customer Jennie picked, if she searched for one."
 
       validate present(:customer_name)
@@ -358,7 +357,6 @@ defmodule Edenflowers.Orders.Order.Admin do
 
       validate attribute_in(:locale, @locales)
       validate string_length(:card_message, max: Edenflowers.Orders.Order.Checkout.voucher_message_length())
-      validate present(:recipient_email), where: [argument_equals(:email_recipient?, true)]
 
       change set_attribute(:state, :placed)
       change set_attribute(:origin, :custom)
@@ -387,9 +385,6 @@ defmodule Edenflowers.Orders.Order.Admin do
 
       change {Changes.SetGiftVoucherLine, authorize?: false}
       change Changes.IssueGiftVouchers
-
-      change {PaymentChanges.QueueEmail, trigger: :send_gift_voucher_to_recipient, arguments: [to: :recipient_email]},
-        where: [argument_equals(:email_recipient?, true)]
     end
 
     update :edit do

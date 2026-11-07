@@ -7,9 +7,8 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   run out, `record_receipt_email_failure` stamps `receipt_email_failed_at` for
   the admin to see.
 
-  Jennie's `email_gift_voucher` resends a Gift voucher sale's email the same
-  way, to its `to` argument if she changed the address, with her rewrite if
-  she made one; the log records both.
+  Jennie's `email_gift_voucher` resends a Gift voucher sale's email to the
+  buyer the same way, with her rewrite if she made one; the log records it.
   """
 
   use Ash.Resource.Change
@@ -26,7 +25,6 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       order = load_for_send(changeset.data)
-      to = Ash.Changeset.get_argument(changeset, :to)
       edits = Edits.from_changeset(changeset)
 
       with {:ok, pdf} <- Receipt.generate(order),
@@ -34,14 +32,13 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
            {:ok, _result} <-
              email
              |> Edits.apply_to(edits)
-             |> send_to(to)
              |> Swoosh.Email.attachment(Receipt.attachment(pdf, order.order_reference))
              |> Mailer.deliver() do
         Logger.info("Sent confirmation email for order #{order.id}")
 
         changeset
         |> Ash.Changeset.force_change_attribute(:receipt_emailed_at, DateTime.utc_now())
-        |> Ash.Changeset.set_context(%{paper_trail_metadata: Map.put(Edits.for_log(edits), :email_to, to)})
+        |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})
         |> clear_failure()
       else
         {:error, error} -> Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")
@@ -62,9 +59,6 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   def gift_voucher_email(order) do
     Email.gift_voucher_sold(order, if(order.voucher_card_to_hand_over?, do: order.voucher_card_ready_on))
   end
-
-  defp send_to(email, nil), do: email
-  defp send_to(email, to), do: %{email | to: [{"", to}]}
 
   @doc "Attaches a Gift voucher sale's one voucher as a PDF, beside the receipt when there is one."
   def with_voucher(email, order) do

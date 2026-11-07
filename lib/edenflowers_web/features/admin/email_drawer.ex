@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
       |> AshPhoenix.Form.for_update(action(kind, record),
         as: "email",
         actor: socket.assigns.current_user,
-        transform_params: &transform_params/3
+        transform_params: &Drawers.keep_email_edits/3
       )
       |> to_form()
 
@@ -91,15 +91,6 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
   defp action(:invoice, %Invoice{}), do: :send
   defp action(:credit_note, %CreditNote{}), do: :send
 
-  # Only an address Jennie changed goes to the action, so the log names it.
-  defp transform_params(form, params, type) do
-    params = Drawers.keep_email_edits(form, params, type)
-
-    if params["to"] in [nil, "", Map.get(form.data, :customer_email)],
-      do: Map.delete(params, "to"),
-      else: params
-  end
-
   @doc "The drawer's heading, button and recipient for `kind`."
   def text(nil, _record, _locale), do: %{}
   def text(_kind, nil, _locale), do: %{}
@@ -136,8 +127,6 @@ defmodule EdenflowersWeb.Admin.EmailDrawer do
       title: title,
       submit_label: submit_label,
       to: order.customer_email,
-      # The buyer may ask for it to go straight to whoever it's for.
-      change_to?: kind == :gift_voucher,
       last_sent: last_sent_at && Format.datetime(last_sent_at, locale)
     }
   end
