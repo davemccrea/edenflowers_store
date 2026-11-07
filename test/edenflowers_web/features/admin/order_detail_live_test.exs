@@ -99,17 +99,18 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
         assert has_element?(view, ~s|#order-card-chain a[href="/admin/orders/#{other.id}"]|)
       end
 
-      assert has_element?(
-               view,
-               ~s|#order-card-chain-#{sibling.id} a[href="/admin/orders/#{gift.id}"]|,
-               "From order #{gift.order_reference}"
-             )
+      for child <- [passed_on, sibling] do
+        assert has_element?(view, "#order-card-chain-#{gift.id} > ol > #order-card-chain-#{child.id}")
+      end
 
-      assert has_element?(
-               view,
-               ~s|#order-card-chain-#{brought_in.id} a[href="/admin/orders/#{passed_on.id}"]|,
-               "From order #{passed_on.order_reference}"
-             )
+      assert has_element?(view, "#order-card-chain-#{passed_on.id} > ol > #order-card-chain-#{brought_in.id}")
+
+      # Card codes and order references identify their source once; the tree carries the handoff.
+      chain_html = view |> element("#order-card-chain") |> render()
+
+      for identifier <- [first_code, second_code] ++ Enum.map(chain, & &1.order_reference) do
+        assert length(Regex.scan(Regex.compile!(">\\s*#{Regex.escape(identifier)}\\s*<"), chain_html)) == 1
+      end
     end
   end
 
@@ -119,7 +120,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     order = placed_order(promotion_id: card.id)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    assert has_element?(view, "#order-pass-it-on", "Used card #{code}")
+    assert has_element?(view, "#order-pass-it-on", code)
     assert has_element?(view, "#order-pass-it-on", "Source gift not linked")
     refute has_element?(view, "#link-card-form")
 
@@ -152,11 +153,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{redeemed.id}")
     assert has_element?(view, "#order-card-chain-#{redeemed.id}", "Cancelled")
 
-    assert has_element?(
-             view,
-             ~s|#order-card-chain-#{redeemed.id} a[href="/admin/orders/#{gift.id}"]|,
-             "From order #{gift.order_reference}"
-           )
+    assert has_element?(view, "#order-card-chain-#{gift.id} > ol > #order-card-chain-#{redeemed.id}")
   end
 
   test "an expired card is distinguished from an opened usable card", %{conn: conn, admin: admin} do

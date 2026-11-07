@@ -875,6 +875,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   card it was placed with, back to the first, and the order its own card brought in, onwards.
   """
   def pass_it_on_card(assigns) do
+    assigns = assign(assigns, :chain, card_chain_tree(assigns.order.pass_it_on_chain))
+
     ~H"""
     <.widget id="order-pass-it-on" title={~t"Pass it on"}>
       <div class="space-y-5">
@@ -919,46 +921,77 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           id="order-card-chain"
           aria-label={~t"Orders linked by Pass it on cards"}
         >
-          <li
-            :for={{link, index} <- Enum.with_index(@order.pass_it_on_chain)}
-            id={"order-card-chain-#{link.id}"}
-            class="relative pb-5 pl-7 last:pb-0"
-          >
-            <span
-              :if={
-                match?(%{promotion: %{gift_order_id: id}} when id == link.id, Enum.at(@order.pass_it_on_chain, index + 1))
-              }
-              class="bg-base-content/20 left-[5px] absolute top-5 -bottom-1 w-px"
-              aria-hidden="true"
-            />
-            <span
-              class={["h-[11px] w-[11px] absolute top-1.5 left-0 rounded-full border-2", if(link.id == @order.id, do: "bg-primary border-primary", else: "bg-base-100 border-base-content/40")]}
-              aria-hidden="true"
-            />
-            <.chain_order order={link} current?={link.id == @order.id} locale={@locale} />
-            <p :if={link.fulfillment_status == :cancelled} class="mt-1 text-sm">
-              <.fulfillment_status_badge status={:cancelled} />
-            </p>
-            <div :if={match?(%{kind: :pass_it_on}, link.promotion)} class="text-base-content/65 mt-1 text-sm">
-              <p>{~t"Used card #{code = link.promotion.code}"}</p>
-              <.link
-                :if={link.promotion.gift_order}
-                navigate={~p"/admin/orders/#{link.promotion.gift_order.id}"}
-                class="underline underline-offset-2"
-              >
-                {~t"From order #{reference = link.promotion.gift_order.order_reference}"}
-              </.link>
-              <p :if={!link.promotion.gift_order}>{~t"Source gift not linked"}</p>
-            </div>
-            <div :if={link.pass_it_on_card} class="mt-1.5 flex flex-wrap items-center gap-2">
-              <span class="text-base-content/65 text-sm">{~t"Card to pass on"}</span>
-              <.card_code code={link.pass_it_on_card.code} />
-              <.card_status_badge card={link.pass_it_on_card} locale={@locale} />
-            </div>
-          </li>
+          <.card_chain_nodes nodes={@chain} current_id={@order.id} locale={@locale} />
         </ol>
       </div>
     </.widget>
+    """
+  end
+
+  defp card_chain_tree(orders) do
+    ids = MapSet.new(orders, & &1.id)
+    source_id = fn order -> if order.promotion, do: order.promotion.gift_order_id end
+    roots = Enum.reject(orders, &MapSet.member?(ids, source_id.(&1)))
+    # A malformed cycle has no root; start with the first order and render each once.
+    roots = if roots == [], do: Enum.take(orders, 1), else: roots
+    card_chain_nodes(roots, Enum.group_by(orders, source_id), MapSet.new())
+  end
+
+  defp card_chain_nodes(orders, children, seen) do
+    for order <- orders, not MapSet.member?(seen, order.id) do
+      descendants = card_chain_nodes(Map.get(children, order.id, []), children, MapSet.put(seen, order.id))
+      %{order: order, children: descendants}
+    end
+  end
+
+  attr :nodes, :list, required: true
+  attr :current_id, :string, required: true
+  attr :locale, :string, required: true
+  attr :branched?, :boolean, default: false
+
+  defp card_chain_nodes(assigns) do
+    ~H"""
+    <li :for={node <- @nodes} id={"order-card-chain-#{node.order.id}"} class="pb-5 last:pb-0">
+      <div class={["relative pl-7", node.children != [] && "pb-5"]}>
+        <span
+          :if={node.children != []}
+          class="bg-base-content/20 left-[5px] absolute top-5 -bottom-1 w-px"
+          aria-hidden="true"
+        />
+        <span
+          :if={@branched?}
+          class="bg-base-content/20 absolute top-3 -left-5 h-px w-6"
+          aria-hidden="true"
+        />
+        <span
+          class={["h-[11px] w-[11px] absolute top-1.5 left-0 rounded-full border-2", if(node.order.id == @current_id, do: "bg-primary border-primary", else: "bg-base-100 border-base-content/40")]}
+          aria-hidden="true"
+        />
+        <.chain_order order={node.order} current?={node.order.id == @current_id} locale={@locale} />
+        <p :if={node.order.fulfillment_status == :cancelled} class="mt-1 text-sm">
+          <.fulfillment_status_badge status={:cancelled} />
+        </p>
+        <div
+          :if={match?(%{kind: :pass_it_on, gift_order: nil}, node.order.promotion)}
+          class="text-base-content/65 mt-1.5 flex flex-wrap items-center gap-2 text-sm"
+        >
+          <.card_code code={node.order.promotion.code} />
+          <span>{~t"Source gift not linked"}</span>
+        </div>
+        <div :if={node.order.pass_it_on_card} class="mt-1.5 flex flex-wrap items-center gap-2">
+          <.card_code code={node.order.pass_it_on_card.code} />
+          <.card_status_badge card={node.order.pass_it_on_card} locale={@locale} />
+        </div>
+      </div>
+      <ol :if={node.children != []} class={length(node.children) > 1 && "border-base-content/20 ml-[5px] border-l pl-5"}>
+        <.card_chain_nodes
+          nodes={node.children}
+          current_id={@current_id}
+          locale={@locale}
+          branched?={length(node.children) > 1}
+        />
+      </ol>
+    </li>
     """
   end
 
@@ -967,6 +1000,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   defp card_code(assigns) do
     ~H"""
     <span class="border-base-content/30 text-base-content/80 font-mono border px-2 py-0.5 text-xs tracking-wider">
+      <span class="sr-only">{~t"Code on the card"}: </span>
       {@code}
     </span>
     """
