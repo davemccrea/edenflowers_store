@@ -158,7 +158,7 @@ defmodule EdenflowersWeb.Cart.LineItems do
                 role="alert"
                 class="flex flex-col gap-3 text-sm"
               >
-                <p>{~t"Removing this empties your cart and clears the checkout details you've entered. Continue?"}</p>
+                <p>{~t"This empties your cart and clears the details you've entered. Continue?"}</p>
                 <div class="flex flex-row gap-2">
                   <.button
                     id={"#{@id}-confirm-remove-#{line_item.id}"}
