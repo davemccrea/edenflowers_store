@@ -476,6 +476,56 @@ body:has(.admin-theme) {
   );
 }
 
+/* The picker opens as a popover beside its button where anchor positioning
+   exists, centred in the viewport (the UA default) elsewhere and on phones. It
+   grows out of its button like Arc's. */
+.admin-picker-trigger {
+  anchor-name: --admin-picker;
+}
+.admin-picker-trigger-swatch {
+  position: relative;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+.admin-picker-popover {
+  margin: auto;
+  padding: 0;
+  border: 0;
+  box-shadow: 0 24px 60px -12px rgb(0 0 0 / 0.45);
+  opacity: 1;
+  scale: 1;
+  transform-origin: left center;
+  transition:
+    opacity 160ms var(--ease-out, ease-out),
+    scale 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    display 220ms allow-discrete,
+    overlay 220ms allow-discrete;
+
+  @starting-style {
+    opacity: 0;
+    scale: 0.92;
+  }
+
+  &:not(:popover-open) {
+    opacity: 0;
+    scale: 0.96;
+  }
+
+  &::backdrop {
+    background: rgb(0 0 0 / 0.08);
+  }
+
+  @media (width >= 40rem) {
+    @supports (position-anchor: --admin-picker) {
+      position-anchor: --admin-picker;
+      position-area: right center;
+      position-try-fallbacks:
+        bottom span-right,
+        top span-right;
+      margin: 0 0.75rem;
+    }
+  }
+}
+
 .admin-picker-knob {
   background-color: color-mix(in oklab, var(--color-forest), white 12%);
 }
