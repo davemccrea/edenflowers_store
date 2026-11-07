@@ -85,6 +85,7 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
               type="range"
               min="0"
               max={@limits.chroma.max}
+              step="any"
               aria-label={~t"Colour intensity"}
               class="absolute inset-0 h-full w-full cursor-ew-resize touch-pan-y opacity-0"
             />
@@ -105,6 +106,7 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
               type="range"
               min="0"
               max={@limits.grain.max}
+              step="any"
               aria-label={~t"Sidebar grain"}
               class="absolute inset-0 h-full w-full cursor-ew-resize touch-pan-y opacity-0"
             />
@@ -115,10 +117,16 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
     <script :type={Phoenix.LiveView.ColocatedHook} name=".AppearancePicker">
       const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+      const DIAL_DETENTS = 23;
+      const WAVE_DETENTS = 14;
+
       /**
-       * The account page's colour picker. Keeps hue, chroma, lightness and grain,
-       * draws them (handle, wave, dial), previews them on body's --admin-*
-       * properties and pushes `update_appearance` once a change settles.
+       * The account page's colour picker. Keeps hue, chroma, lightness and grain
+       * as exact numbers while they move, so the handle glides with the pointer,
+       * and rounds them only to save. Draws them (handle, wave, dial) and previews
+       * them on body's --admin-* properties once per frame, ticks like Arc's
+       * detents as the dial and wave pass a step, and pushes `update_appearance`
+       * once a change settles.
        */
       export default {
         mounted() {
@@ -141,17 +149,17 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
           this.wavePath = this.el.querySelector("[data-wave] path");
           this.waveThumb = this.el.querySelector("[data-wave-thumb]");
           this.dialDots = [...this.el.querySelectorAll("[data-dial-dot]")];
-          this.dialMark = this.el.querySelector("[data-dial-mark]").parentElement;
+          this.dialKnob = this.el.querySelector("[data-dial-mark]").parentElement;
+          this.haptic = this.createHaptic();
 
-          this.field.addEventListener("pointerdown", (event) => {
-            this.field.setPointerCapture(event.pointerId);
-            this.pickAt(event);
-            this.handle.focus({ preventScroll: true });
-          });
+          this.field.addEventListener("pointerdown", (event) =>
+            this.startFieldDrag(event),
+          );
           this.field.addEventListener("pointermove", (event) => {
             if (this.field.hasPointerCapture(event.pointerId)) this.pickAt(event);
           });
-          this.field.addEventListener("pointerup", () => this.save());
+          this.field.addEventListener("pointerup", () => this.endDrag());
+          this.field.addEventListener("pointercancel", () => this.endDrag());
 
           this.handle.addEventListener("keydown", (event) => {
             const step = event.shiftKey ? 10 : 2;
@@ -177,17 +185,23 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
             if (event.key.startsWith("Arrow")) this.save();
           });
 
+          for (const input of [this.chromaInput, this.grainInput]) {
+            input.addEventListener("pointerdown", () =>
+              this.el.toggleAttribute("data-dragging", true),
+            );
+            input.addEventListener("pointerup", () => this.endDrag());
+            input.addEventListener("change", () => this.save());
+          }
           this.chromaInput.addEventListener("input", () =>
             this.set({ chroma: Number(this.chromaInput.value) }),
           );
           this.grainInput.addEventListener("input", () =>
             this.set({ grain: Number(this.grainInput.value) }),
           );
-          this.chromaInput.addEventListener("change", () => this.save());
-          this.grainInput.addEventListener("change", () => this.save());
 
           this.el.querySelectorAll("[data-preset]").forEach((preset) => {
             preset.addEventListener("click", () => {
+              this.tick(preset);
               this.set({
                 hue: Number(preset.dataset.hue),
                 chroma: Number(preset.dataset.chroma),
@@ -197,6 +211,7 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
             });
           });
 
+          this.detents = this.currentDetents();
           this.resizeObserver = new ResizeObserver(() => this.draw());
           this.resizeObserver.observe(this.el);
           this.draw();
@@ -204,40 +219,125 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
 
         destroyed() {
           this.resizeObserver.disconnect();
+          cancelAnimationFrame(this.frame);
+          this.haptic?.label.remove();
+        },
+
+        // Grabbing the handle keeps the point under the finger where it is, as
+        // Arc's does. Pressing elsewhere in the field glides the handle there.
+        startFieldDrag(event) {
+          this.field.setPointerCapture(event.pointerId);
+          const handleBox = this.handle.getBoundingClientRect();
+          const onHandle = event.target === this.handle;
+          this.grabOffset = onHandle
+            ? {
+                x: event.clientX - (handleBox.left + handleBox.width / 2),
+                y: event.clientY - (handleBox.top + handleBox.height / 2),
+              }
+            : { x: 0, y: 0 };
+          this.el.toggleAttribute("data-gliding", !onHandle);
+          this.el.toggleAttribute("data-dragging", true);
+          this.tick();
+          this.pickAt(event);
+          this.handle.focus({ preventScroll: true });
+          // The glide only covers the jump to the pressed point; the drag after it follows directly.
+          setTimeout(() => this.el.removeAttribute("data-gliding"), 180);
+        },
+
+        endDrag() {
+          if (!this.el.hasAttribute("data-dragging")) return;
+          this.el.removeAttribute("data-dragging");
+          this.save();
         },
 
         pickAt(event) {
           const box = this.field.getBoundingClientRect();
-          const x = clamp((event.clientX - box.left) / box.width, 0, 1);
-          const y = clamp((event.clientY - box.top) / box.height, 0, 1);
+          const x = clamp(
+            (event.clientX - this.grabOffset.x - box.left) / box.width,
+            0,
+            1,
+          );
+          const y = clamp(
+            (event.clientY - this.grabOffset.y - box.top) / box.height,
+            0,
+            1,
+          );
           this.set({
-            hue: Math.round(x * (this.hueMax - 1)),
-            lightness: Math.round(
+            hue: x * (this.hueMax - 1),
+            lightness:
               this.lightnessMax - y * (this.lightnessMax - this.lightnessMin),
-            ),
           });
         },
 
         set(changes) {
           Object.assign(this.state, changes);
-          const style = document.body.style;
-          style.setProperty("--admin-hue", this.state.hue);
-          style.setProperty("--admin-chroma", this.state.chroma);
-          style.setProperty("--admin-lightness", this.state.lightness);
-          style.setProperty("--admin-grain", this.state.grain);
-          this.draw();
+
+          const detents = this.currentDetents();
+          if (detents.dial !== this.detents.dial) this.tick(this.dialKnob);
+          if (detents.wave !== this.detents.wave) this.tick(this.waveThumb);
+          this.detents = detents;
+
+          // Restyling body recolours the whole page, so do it once a frame at most.
+          cancelAnimationFrame(this.frame);
+          this.frame = requestAnimationFrame(() => {
+            const style = document.body.style;
+            style.setProperty("--admin-hue", this.state.hue);
+            style.setProperty("--admin-chroma", this.state.chroma);
+            style.setProperty("--admin-lightness", this.state.lightness);
+            style.setProperty("--admin-grain", this.state.grain);
+            this.draw();
+          });
+        },
+
+        currentDetents() {
+          return {
+            dial: Math.round((this.state.grain / 100) * DIAL_DETENTS),
+            wave: Math.round((this.state.chroma / this.chromaMax) * WAVE_DETENTS),
+          };
         },
 
         save() {
           clearTimeout(this.saveTimer);
           this.saveTimer = setTimeout(() => {
             this.pushEvent("update_appearance", {
-              admin_hue: this.state.hue,
-              admin_chroma: this.state.chroma,
-              admin_lightness: this.state.lightness,
-              admin_grain: this.state.grain,
+              admin_hue: Math.round(this.state.hue),
+              admin_chroma: Math.round(this.state.chroma),
+              admin_lightness: Math.round(this.state.lightness),
+              admin_grain: Math.round(this.state.grain),
             });
           }, 250);
+        },
+
+        // iOS Safari has no vibrate(), but since iOS 18 toggling a native switch
+        // gives a light haptic tick, so a hidden one stands in. Android vibrates.
+        createHaptic() {
+          const label = document.createElement("label");
+          label.setAttribute("aria-hidden", "true");
+          label.style.cssText =
+            "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden";
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.setAttribute("switch", "");
+          input.tabIndex = -1;
+          label.append(input);
+          document.body.append(label);
+          return { label };
+        },
+
+        tick(element) {
+          const now = performance.now();
+          if (now - (this.lastTick || 0) < 40) return;
+          this.lastTick = now;
+
+          this.haptic.label.click();
+          navigator.vibrate?.(6);
+
+          if (element && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            element.animate([{ scale: 1 }, { scale: 1.06 }, { scale: 1 }], {
+              duration: 140,
+              easing: "ease-out",
+            });
+          }
         },
 
         draw() {
@@ -246,30 +346,37 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
 
           this.handle.style.left = `${(hue / (hueMax - 1)) * 100}%`;
           this.handle.style.top = `${((lightnessMax - lightness) / (lightnessMax - lightnessMin)) * 100}%`;
-          this.handle.setAttribute("aria-valuenow", hue);
-          this.handle.setAttribute("aria-valuetext", `${hue}°, ${lightness}%`);
+          this.handle.setAttribute("aria-valuenow", Math.round(hue));
+          this.handle.setAttribute(
+            "aria-valuetext",
+            `${Math.round(hue)}°, ${Math.round(lightness)}%`,
+          );
 
-          // The wave runs up to the thumb and grows with the intensity, as Arc's does.
-          this.chromaInput.value = chroma;
+          // The wave runs up to the thumb and grows with the intensity, as Arc's
+          // does. Its phase is anchored at the thumb, so the stretch beside the
+          // thumb stays put and the wave unrolls from the left as it moves.
+          if (document.activeElement !== this.chromaInput)
+            this.chromaInput.value = chroma;
           const wave = this.wavePath.ownerSVGElement.getBoundingClientRect();
           const end = (chroma / chromaMax) * wave.width;
           const middle = wave.height / 2;
           const amplitude = 2 + (chroma / chromaMax) * (middle - 6);
           const points = [];
-          for (let x = 0; x <= end; x += 2) {
+          for (let x = 0; x <= end; x += 1.5) {
             points.push(
-              `${x === 0 ? "M" : "L"}${x},${middle + Math.sin(x / 7) * amplitude}`,
+              `${x === 0 ? "M" : "L"}${x.toFixed(1)},${(middle + Math.sin((end - x) / 7) * amplitude).toFixed(2)}`,
             );
           }
           this.wavePath.setAttribute("d", points.join(" "));
           this.waveThumb.style.left = `clamp(0.875rem, ${(chroma / chromaMax) * 100}%, calc(100% - 0.875rem))`;
 
-          this.grainInput.value = grain;
+          if (document.activeElement !== this.grainInput)
+            this.grainInput.value = grain;
           const lit = Math.round((grain / 100) * (this.dialDots.length - 1));
           this.dialDots.forEach((dot, index) =>
             dot.toggleAttribute("data-lit", index <= lit),
           );
-          this.dialMark.style.transform = `rotate(${-135 + (grain / 100) * 270}deg)`;
+          this.dialKnob.style.transform = `rotate(${-135 + (grain / 100) * 270}deg)`;
         },
       };
     </script>

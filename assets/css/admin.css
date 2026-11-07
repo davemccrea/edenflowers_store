@@ -476,6 +476,33 @@ body:has(.admin-theme) {
   );
 }
 
+/* The handle glides to presets, key presses and a pressed point, but follows
+   a drag directly, and lifts while held, as Arc's does. The wave thumb
+   glides the same way unless it is being dragged. */
+.admin-picker-handle {
+  transition:
+    left 180ms var(--ease-out, ease-out),
+    top 180ms var(--ease-out, ease-out),
+    scale 160ms var(--ease-out, ease-out),
+    box-shadow 160ms var(--ease-out, ease-out);
+}
+[data-wave-thumb] {
+  transition: left 180ms var(--ease-out, ease-out);
+}
+#appearance-picker[data-dragging]:not([data-gliding])
+  :is(.admin-picker-handle, [data-wave-thumb]) {
+  transition-property: scale, box-shadow;
+}
+#appearance-picker[data-dragging] .admin-picker-handle {
+  scale: 1.12;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.4);
+}
+@media (prefers-reduced-motion: reduce) {
+  #appearance-picker :is(.admin-picker-handle, [data-wave-thumb]) {
+    transition: none;
+  }
+}
+
 /* The picker opens as a popover beside its button where anchor positioning
    exists, centred in the viewport (the UA default) elsewhere and on phones. It
    grows out of its button like Arc's. */
