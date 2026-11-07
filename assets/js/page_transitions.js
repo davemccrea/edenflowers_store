@@ -102,10 +102,8 @@ export function onDocumentPatch(start) {
   }
 
   // A product card's frame is a figure, holding its Free delivery tag; a
-  // course card's is the photo itself.
-  const frame =
-    link?.isConnected &&
-    (link.querySelector("figure") ?? link.querySelector("img"));
+  // course card's is the photo itself. The figure comes before its photo.
+  const frame = link?.isConnected && link.querySelector("figure, img");
 
   // Only on phones: there the card sits roughly where its photo lands, so it
   // reads as opening the card. In wider layouts it would cross the screen.
@@ -113,8 +111,7 @@ export function onDocumentPatch(start) {
     frame &&
     onScreen(frame) &&
     matchMedia("(width < 48rem)").matches &&
-    !matchMedia("(prefers-reduced-motion: reduce)").matches &&
-    !document.querySelector("dialog[open]")
+    !matchMedia("(prefers-reduced-motion: reduce)").matches
   ) {
     // Only the clicked card carries the name: two elements sharing one would
     // abort the transition.
