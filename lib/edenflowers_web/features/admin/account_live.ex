@@ -1,6 +1,6 @@
 defmodule EdenflowersWeb.Admin.AccountLive do
   @moduledoc """
-  Admin account settings for avatar, back office appearance and browser push notifications.
+  Admin account settings for avatar, back office colour and browser push notifications.
   """
 
   use EdenflowersWeb, {:live_view, gettext_domain: "admin"}
@@ -107,55 +107,6 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               </dd>
             </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt id="accent-label" class="text-base-content/75 text-sm sm:pt-1.5">{~t"Colour"}</dt>
-              <dd>
-                <form id="accent-form" phx-change="update_appearance">
-                  <div role="radiogroup" aria-labelledby="accent-label" class="flex flex-wrap gap-x-3 gap-y-2">
-                    <label :for={{accent, label} <- accents()} class="flex w-16 cursor-pointer flex-col items-center gap-1">
-                      <input
-                        type="radio"
-                        name="admin_accent"
-                        value={accent}
-                        checked={@current_user.admin_accent == accent}
-                        class="peer sr-only"
-                      />
-                      <span
-                        data-swatch={accent}
-                        class="admin-swatch ring-offset-base-100 block h-9 w-9 rounded-full ring-offset-2 peer-checked:ring-base-content peer-checked:ring-2 peer-focus-visible:outline-primary peer-focus-visible:outline-solid peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4"
-                      />
-                      <span class="text-base-content/75 text-xs peer-checked:text-base-content peer-checked:font-semibold">
-                        {label}
-                      </span>
-                    </label>
-                  </div>
-                </form>
-              </dd>
-            </div>
-            <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt class="text-base-content/75 text-sm sm:pt-0.5">
-                <label for="admin-grain">{~t"Sidebar grain"}</label>
-              </dt>
-              <dd>
-                <form id="grain-form" phx-change="update_appearance" class="sm:max-w-xs">
-                  <input
-                    id="admin-grain"
-                    type="range"
-                    name="admin_grain"
-                    min="0"
-                    max="3"
-                    step="1"
-                    value={@current_user.admin_grain}
-                    phx-debounce="150"
-                    class="range range-primary range-xs w-full"
-                  />
-                  <div class="text-base-content/75 mt-1 flex justify-between text-xs" aria-hidden="true">
-                    <span>{~t"None"}</span>
-                    <span>{~t"Heavy"}</span>
-                  </div>
-                </form>
-              </dd>
-            </div>
-            <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
               <dt class="text-base-content/75 text-sm">{~t"Access"}</dt>
               <dd class="text-base-content text-sm">{~t"Admin"}</dd>
             </div>
@@ -168,6 +119,8 @@ defmodule EdenflowersWeb.Admin.AccountLive do
             </.button>
           </div>
         </section>
+
+        <.appearance_picker user={@current_user} />
 
         <.device_notifications :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
       </.admin_page>
@@ -186,7 +139,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
   def handle_event("update_appearance", params, socket) do
     user = socket.assigns.current_user
-    attrs = Map.take(params, ["admin_accent", "admin_grain"])
+    attrs = Map.take(params, ["admin_hue", "admin_chroma", "admin_lightness", "admin_grain"])
 
     case Edenflowers.Accounts.update_admin_appearance(user, attrs, actor: user) do
       {:ok, user} ->
@@ -233,6 +186,274 @@ defmodule EdenflowersWeb.Admin.AccountLive do
         Logger.error("Profile picture of user #{user.id} not saved: #{inspect(error)}")
         {:noreply, put_flash(socket, :error, ~t"Could not save the profile picture.")}
     end
+  end
+
+  attr :user, :map, required: true
+
+  # Modelled on Arc's theme picker. The field picks hue (across) and lightness
+  # (down), the wave slider the colour's intensity and the dial the grain. The
+  # hook previews each change on body, where the admin's colour lives (see
+  # Layouts.admin_appearance_style/1), and saves when a drag or key press ends.
+  # Both sliders are real range inputs under their drawings, so keyboards and
+  # screen readers get native controls; the field's handle is an ARIA slider.
+  defp appearance_picker(assigns) do
+    ~H"""
+    <section class="mt-6">
+      <h2 id="appearance-title" class="text-base-content mb-3 text-base font-semibold">{~t"Colour"}</h2>
+      <div
+        id="appearance-picker"
+        phx-hook=".AppearancePicker"
+        phx-update="ignore"
+        aria-labelledby="appearance-title"
+        role="group"
+        data-hue={@user.admin_hue}
+        data-chroma={@user.admin_chroma}
+        data-lightness={@user.admin_lightness}
+        data-grain={@user.admin_grain}
+        class="admin-chrome text-forest-content relative max-w-sm select-none overflow-hidden rounded-3xl"
+      >
+        <div data-field class="admin-picker-field aspect-square relative m-3 cursor-crosshair touch-none rounded-2xl">
+          <div
+            data-handle
+            role="slider"
+            tabindex="0"
+            aria-label={~t"Colour"}
+            aria-valuemin="0"
+            aria-valuemax="360"
+            class="admin-picker-handle border-[5px] shadow-[0_4px_14px_rgb(0_0_0/0.35)] absolute h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full border-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white"
+          />
+        </div>
+
+        <div class="flex items-center justify-center gap-2.5 px-3 py-3">
+          <button
+            :for={{label, hue, chroma, lightness} <- presets()}
+            type="button"
+            data-preset
+            data-hue={hue}
+            data-chroma={chroma}
+            data-lightness={lightness}
+            aria-label={label}
+            title={label}
+            style={"--h: #{hue}; --c: #{chroma}; --l: #{lightness}"}
+            class="admin-swatch touch-target ring-white/25 h-8 w-8 shrink-0 rounded-full ring-1 transition-transform hover:scale-110 active:scale-95"
+          />
+        </div>
+
+        <div class="flex items-center gap-4 px-4 pt-1 pb-5">
+          <div class="relative h-14 min-w-0 flex-1">
+            <svg data-wave class="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
+              <line x1="0" x2="100%" y1="50%" y2="50%" class="stroke-white/15" stroke-width="14" stroke-linecap="round" />
+              <path fill="none" class="stroke-white/70" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span
+              data-wave-thumb
+              class="shadow-[0_4px_14px_rgb(0_0_0/0.3)] pointer-events-none absolute top-1/2 h-14 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+            />
+            <input
+              data-chroma-input
+              type="range"
+              min="0"
+              max="140"
+              aria-label={~t"Colour intensity"}
+              class="absolute inset-0 h-full w-full cursor-ew-resize touch-pan-y opacity-0"
+            />
+          </div>
+
+          <div class="relative h-20 w-20 shrink-0">
+            <span
+              :for={i <- 0..23}
+              data-dial-dot={i}
+              class="bg-white/25 -mt-[3px] -ml-[3px] absolute top-1/2 left-1/2 h-1.5 w-1.5 rounded-full data-[lit]:bg-white/85"
+              style={"transform: rotate(#{-135 + i * 270 / 23}deg) translateY(-2.3rem)"}
+            />
+            <span class="admin-picker-knob shadow-[inset_0_1px_2px_rgb(255_255_255/0.2),0_3px_8px_rgb(0_0_0/0.35)] absolute inset-3 rounded-full">
+              <span data-dial-mark class="absolute top-1.5 left-1/2 h-3 w-1 -translate-x-1/2 rounded-full bg-white" />
+            </span>
+            <input
+              data-grain-input
+              type="range"
+              min="0"
+              max="100"
+              aria-label={~t"Sidebar grain"}
+              class="absolute inset-0 h-full w-full cursor-ew-resize touch-pan-y opacity-0"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".AppearancePicker">
+      const HUE_MAX = 360;
+      const L_MIN = 18;
+      const L_MAX = 36;
+
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+      /**
+       * The account page's colour picker. Keeps hue, chroma, lightness and grain,
+       * draws them (handle, wave, dial), previews them on body's --admin-*
+       * properties and pushes `update_appearance` once a change settles.
+       */
+      export default {
+        mounted() {
+          const data = this.el.dataset;
+          this.state = {
+            hue: Number(data.hue),
+            chroma: Number(data.chroma),
+            lightness: Number(data.lightness),
+            grain: Number(data.grain),
+          };
+
+          this.field = this.el.querySelector("[data-field]");
+          this.handle = this.el.querySelector("[data-handle]");
+          this.chromaInput = this.el.querySelector("[data-chroma-input]");
+          this.grainInput = this.el.querySelector("[data-grain-input]");
+          this.wavePath = this.el.querySelector("[data-wave] path");
+          this.waveThumb = this.el.querySelector("[data-wave-thumb]");
+          this.dialDots = [...this.el.querySelectorAll("[data-dial-dot]")];
+          this.dialMark = this.el.querySelector("[data-dial-mark]").parentElement;
+
+          this.field.addEventListener("pointerdown", (event) => {
+            this.field.setPointerCapture(event.pointerId);
+            this.pickAt(event);
+            this.handle.focus({ preventScroll: true });
+          });
+          this.field.addEventListener("pointermove", (event) => {
+            if (this.field.hasPointerCapture(event.pointerId)) this.pickAt(event);
+          });
+          this.field.addEventListener("pointerup", () => this.save());
+
+          this.handle.addEventListener("keydown", (event) => {
+            const step = event.shiftKey ? 10 : 2;
+            const moves = {
+              ArrowLeft: { hue: -step },
+              ArrowRight: { hue: step },
+              ArrowUp: { lightness: 1 },
+              ArrowDown: { lightness: -1 },
+            };
+            const move = moves[event.key];
+            if (!move) return;
+            event.preventDefault();
+            this.set({
+              hue: (this.state.hue + (move.hue || 0) + HUE_MAX) % HUE_MAX,
+              lightness: clamp(
+                this.state.lightness + (move.lightness || 0),
+                L_MIN,
+                L_MAX,
+              ),
+            });
+          });
+          this.handle.addEventListener("keyup", (event) => {
+            if (event.key.startsWith("Arrow")) this.save();
+          });
+
+          this.chromaInput.addEventListener("input", () =>
+            this.set({ chroma: Number(this.chromaInput.value) }),
+          );
+          this.grainInput.addEventListener("input", () =>
+            this.set({ grain: Number(this.grainInput.value) }),
+          );
+          this.chromaInput.addEventListener("change", () => this.save());
+          this.grainInput.addEventListener("change", () => this.save());
+
+          this.el.querySelectorAll("[data-preset]").forEach((preset) => {
+            preset.addEventListener("click", () => {
+              this.set({
+                hue: Number(preset.dataset.hue),
+                chroma: Number(preset.dataset.chroma),
+                lightness: Number(preset.dataset.lightness),
+              });
+              this.save();
+            });
+          });
+
+          this.resizeObserver = new ResizeObserver(() => this.draw());
+          this.resizeObserver.observe(this.el);
+          this.draw();
+        },
+
+        destroyed() {
+          this.resizeObserver.disconnect();
+        },
+
+        pickAt(event) {
+          const box = this.field.getBoundingClientRect();
+          const x = clamp((event.clientX - box.left) / box.width, 0, 1);
+          const y = clamp((event.clientY - box.top) / box.height, 0, 1);
+          this.set({
+            hue: Math.round(x * (HUE_MAX - 1)),
+            lightness: Math.round(L_MAX - y * (L_MAX - L_MIN)),
+          });
+        },
+
+        set(changes) {
+          Object.assign(this.state, changes);
+          const style = document.body.style;
+          style.setProperty("--admin-hue", this.state.hue);
+          style.setProperty("--admin-chroma", this.state.chroma);
+          style.setProperty("--admin-lightness", this.state.lightness);
+          style.setProperty("--admin-grain", this.state.grain);
+          this.draw();
+        },
+
+        save() {
+          clearTimeout(this.saveTimer);
+          this.saveTimer = setTimeout(() => {
+            this.pushEvent("update_appearance", {
+              admin_hue: this.state.hue,
+              admin_chroma: this.state.chroma,
+              admin_lightness: this.state.lightness,
+              admin_grain: this.state.grain,
+            });
+          }, 250);
+        },
+
+        draw() {
+          const { hue, chroma, lightness, grain } = this.state;
+
+          this.handle.style.left = `${(hue / (HUE_MAX - 1)) * 100}%`;
+          this.handle.style.top = `${((L_MAX - lightness) / (L_MAX - L_MIN)) * 100}%`;
+          this.handle.setAttribute("aria-valuenow", hue);
+          this.handle.setAttribute("aria-valuetext", `${hue}°, ${lightness}%`);
+
+          // The wave runs up to the thumb and grows with the intensity, as Arc's does.
+          this.chromaInput.value = chroma;
+          const wave = this.wavePath.ownerSVGElement.getBoundingClientRect();
+          const end = (chroma / 140) * wave.width;
+          const middle = wave.height / 2;
+          const amplitude = 2 + (chroma / 140) * (middle - 6);
+          const points = [];
+          for (let x = 0; x <= end; x += 2) {
+            points.push(
+              `${x === 0 ? "M" : "L"}${x},${middle + Math.sin(x / 7) * amplitude}`,
+            );
+          }
+          this.wavePath.setAttribute("d", points.join(" "));
+          this.waveThumb.style.left = `clamp(0.875rem, ${(chroma / 140) * 100}%, calc(100% - 0.875rem))`;
+
+          this.grainInput.value = grain;
+          const lit = Math.round((grain / 100) * (this.dialDots.length - 1));
+          this.dialDots.forEach((dot, index) =>
+            dot.toggleAttribute("data-lit", index <= lit),
+          );
+          this.dialMark.style.transform = `rotate(${-135 + (grain / 100) * 270}deg)`;
+        },
+      };
+    </script>
+    """
+  end
+
+  # Starting points under the field: label, hue, chroma, lightness.
+  defp presets do
+    [
+      {~t"Forest", 152, 50, 26},
+      {~t"Sage", 140, 25, 32},
+      {~t"Teal", 200, 55, 26},
+      {~t"Ink", 262, 70, 24},
+      {~t"Plum", 325, 70, 26},
+      {~t"Berry", 8, 85, 26},
+      {~t"Terracotta", 40, 80, 28},
+      {~t"Charcoal", 75, 8, 24}
+    ]
   end
 
   attr :vapid_public_key, :string, required: true
@@ -332,17 +553,6 @@ defmodule EdenflowersWeb.Admin.AccountLive do
       };
     </script>
     """
-  end
-
-  defp accents do
-    [
-      forest: ~t"Forest",
-      teal: ~t"Teal",
-      ink: ~t"Ink",
-      plum: ~t"Plum",
-      berry: ~t"Berry",
-      terracotta: ~t"Terracotta"
-    ]
   end
 
   defp avatar_errors(upload),

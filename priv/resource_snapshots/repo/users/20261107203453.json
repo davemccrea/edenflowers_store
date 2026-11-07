@@ -86,19 +86,43 @@
     },
     {
       "allow_nil?": false,
-      "default": "\"forest\"",
+      "default": "152",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "admin_accent",
-      "type": "text"
+      "source": "admin_hue",
+      "type": "bigint"
     },
     {
       "allow_nil?": false,
-      "default": "2",
+      "default": "50",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "admin_chroma",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "26",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "admin_lightness",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "60",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -220,7 +244,7 @@
   "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "A63274DEA02BE44E4B4BEDC23B368D80894E00C0A5CCB8EFA4D523012FC373A7",
+  "hash": "EB6A4D725BF9984C7F95FB6A4FEDDA8AD663E757504AF97E514F738A0AF6A73E",
   "identities": [
     {
       "all_tenants?": false,

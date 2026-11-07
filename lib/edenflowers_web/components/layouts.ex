@@ -143,6 +143,15 @@ defmodule EdenflowersWeb.Layouts do
   end
 
   # The Option+Click picker in element_picker.js only turns on for reviewers.
+  # On body, so the overscroll canvas and the flash group take the admin's colour as well. admin.css
+  # turns these into colours only on admin pages, so the storefront is untouched.
+  defp admin_appearance_style(%{admin: true} = user) do
+    "--admin-hue: #{user.admin_hue}; --admin-chroma: #{user.admin_chroma}; " <>
+      "--admin-lightness: #{user.admin_lightness}; --admin-grain: #{user.admin_grain}"
+  end
+
+  defp admin_appearance_style(_user), do: nil
+
   defp reviewer?(nil), do: false
   defp reviewer?(user), do: Edenflowers.Accounts.can_review?(user)
 
@@ -280,8 +289,6 @@ defmodule EdenflowersWeb.Layouts do
     <div
       id="admin-app"
       phx-hook=".AdminApp"
-      data-accent={@current_user.admin_accent}
-      data-grain={@current_user.admin_grain}
       class={["admin-theme", if(@fill_viewport, do: "h-dvh flex flex-col lg:flex-row", else: "min-h-screen lg:flex")]}
     >
       <%!-- Mobile: slide-in drawer --%>

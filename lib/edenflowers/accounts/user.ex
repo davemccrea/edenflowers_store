@@ -162,10 +162,10 @@ defmodule Edenflowers.Accounts.User do
     end
 
     update :update_admin_appearance do
-      description "Saves how the back office looks for this admin: the accent colour of the sidebar and buttons, " <>
-                    "and how much grain the sidebar has. Each admin picks their own."
+      description "Saves how the back office looks for this admin, as set on their account page's colour " <>
+                    "picker: the hue, intensity and lightness of the sidebar and buttons, and the sidebar's grain."
 
-      accept [:admin_accent, :admin_grain]
+      accept [:admin_hue, :admin_chroma, :admin_lightness, :admin_grain]
     end
 
     update :remove_avatar do
@@ -344,20 +344,40 @@ defmodule Edenflowers.Accounts.User do
       writable? false
     end
 
-    attribute :admin_accent, :atom do
-      description "The back office's accent colour for this admin: the sidebar, phone topbar and primary " <>
-                    "buttons take it. Forest is the shop's own green."
+    attribute :admin_hue, :integer do
+      description "Hue in degrees (OKLCH) of this admin's back office colour: the sidebar, phone topbar and " <>
+                    "primary buttons. 152 is the shop's forest green."
 
-      constraints one_of: [:forest, :teal, :ink, :plum, :berry, :terracotta]
-      default :forest
+      constraints min: 0, max: 360
+      default 152
+      allow_nil? false
+      public? true
+    end
+
+    attribute :admin_chroma, :integer do
+      description "Intensity of this admin's back office colour, as OKLCH chroma in thousandths: 0 is grey, " <>
+                    "140 the most vivid. 50 is the shop's forest green."
+
+      constraints min: 0, max: 140
+      default 50
+      allow_nil? false
+      public? true
+    end
+
+    attribute :admin_lightness, :integer do
+      description "Lightness (OKLCH percent) of this admin's sidebar. Primary buttons sit about 11 points " <>
+                    "lighter. The range keeps the sidebar's white text and the buttons' text readable."
+
+      constraints min: 18, max: 36
+      default 26
       allow_nil? false
       public? true
     end
 
     attribute :admin_grain, :integer do
-      description "How much film grain the back office sidebar has for this admin, from 0 (none) to 3 (heavy)."
-      constraints min: 0, max: 3
-      default 2
+      description "How much film grain this admin's back office sidebar has, from 0 (none) to 100 (heaviest)."
+      constraints min: 0, max: 100
+      default 60
       allow_nil? false
       public? true
     end
