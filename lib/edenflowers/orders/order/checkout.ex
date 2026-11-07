@@ -36,6 +36,7 @@ defmodule Edenflowers.Orders.Order.Checkout do
     :vat,
     :cart_effectively_empty?,
     :add_ons_only?,
+    :removing_last_item_loses_details?,
     :free_delivery?,
     :subscription?,
     :newsletter_offer_hidden?,
@@ -51,7 +52,13 @@ defmodule Edenflowers.Orders.Order.Checkout do
     line_items: [:total, :product_slug, :available_from]
   ]
 
-  @storefront_load [:total_items_in_cart, :add_ons_only?, :promotion_applied?, line_items: [:product_slug]]
+  @storefront_load [
+    :total_items_in_cart,
+    :add_ons_only?,
+    :promotion_applied?,
+    :removing_last_item_loses_details?,
+    line_items: [:product_slug]
+  ]
 
   @doc "The longest message a Gift voucher can carry."
   def voucher_message_length, do: @voucher_message_length
