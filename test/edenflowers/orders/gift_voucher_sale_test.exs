@@ -243,6 +243,39 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
       %{admin: generate(admin_user())}
     end
 
+    test "an in-person refund requires cancellation, then can be recorded in parts with a charge kept", %{admin: admin} do
+      sale =
+        Orders.sell_gift_voucher!(%{customer_name: "Anna", customer_email: "a@example.com", amount: 50},
+          actor: admin
+        )
+        |> Orders.record_payment!("50.00", :cash, actor: admin)
+        |> Ash.load!([line_items: :gift_voucher], authorize?: false)
+
+      refund = %{amount: "20.00", payment_method: :cash, email_customer?: false}
+      assert {:error, error} = Ash.update(sale, refund, action: :refund, actor: admin)
+      assert Exception.message(error) =~ "Cancel the order"
+      assert voucher(sale).spendable?
+
+      cancelled = Orders.cancel_order!(sale, %{cancellation_charge: "5.00", email_customer?: false}, actor: admin)
+      refute voucher(sale).spendable?
+      assert Decimal.eq?(cancelled.balance, "-45.00")
+      assert cancelled.payment_status == :paid
+      assert cancelled.refundable?
+
+      assert {:ok, part_refunded} = Ash.update(cancelled, refund, action: :refund, actor: admin)
+      assert Decimal.eq?(part_refunded.balance, "-25.00")
+      refute part_refunded.settled?
+
+      assert {:ok, settled} =
+               Ash.update(part_refunded, %{refund | amount: "25.00"}, action: :refund, actor: admin)
+
+      assert Decimal.eq?(settled.balance, 0)
+      assert Decimal.eq?(settled.amount_held, 5)
+      assert settled.settled?
+      refute settled.refunded?
+      refute voucher(sale).spendable?
+    end
+
     test "cancelling an unspent voucher's sale refunds the card and stops the voucher", %{admin: admin} do
       order = buy(50)
       pi = "pi_#{order.id}"

@@ -573,7 +573,7 @@ defmodule Edenflowers.Email do
   def refunded(%Order{} = order, refund) do
     customer_email(order, from_address(), fn email ->
       email
-      |> subject(~t"A refund for your Eden Flowers order for #{date = short_date(order)}")
+      |> subject(refunded_subject(order))
       |> text_body(
         Templates.order_refunded(%{
           order: order,
@@ -601,6 +601,9 @@ defmodule Edenflowers.Email do
       )
     end)
   end
+
+  defp refunded_subject(%{fulfillment_date: nil}), do: ~t"A refund for your Eden Flowers gift voucher"
+  defp refunded_subject(order), do: ~t"A refund for your Eden Flowers order for #{date = short_date(order)}"
 
   # Money Jennie handed back herself went the way she says; MobilePay to her
   # own number is a transfer, not a card refund, so it shows at once.
