@@ -32,7 +32,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(view, "#day-orders-title", "Today")
       assert has_element?(view, "#day-orders-delivery", "Today Delivery")
       assert has_element?(view, "#day-orders-pickup", "Today Pickup")
-      assert has_element?(view, "#day-orders-delivery h3 .badge", "1")
+      assert has_element?(view, "#day-orders-delivery h4 .badge", "1")
       refute has_element?(view, "#day-orders", "Tomorrow Pickup")
       refute has_element?(view, "#day-orders", "Last Week")
     end

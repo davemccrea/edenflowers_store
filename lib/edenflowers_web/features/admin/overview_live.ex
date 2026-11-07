@@ -735,10 +735,13 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <section id={@id} aria-labelledby={"#{@id}-title"} class={@class}>
       <div class="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div class="min-w-0">
-          <h2 id={"#{@id}-title"} class="text-base-content flex flex-wrap items-center gap-2 text-lg font-semibold">
+          <h3 id={"#{@id}-title"} class="text-base-content flex flex-wrap items-baseline gap-2 text-base font-semibold">
             {@label || Format.weekday_day_month(@date, @locale)}
+            <span :if={@label} class="text-base-content/75 text-sm font-normal">
+              · {Format.day_month(@date, @locale)}
+            </span>
             <.badge :if={@booking == :closed} id={"#{@id}-closed"} tone={:warning}>{~t"Closed"}</.badge>
-          </h2>
+          </h3>
         </div>
         <.button
           :if={@booking}
@@ -763,11 +766,11 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
       <div class="space-y-4">
         <div :for={{method, orders} <- by_method(@orders)} id={"#{@id}-#{method}"}>
-          <h3 class="eyebrow text-base-content/75 flex items-center gap-1.5 pb-1">
+          <h4 class="eyebrow text-base-content/75 flex items-center gap-1.5 pb-2">
             <.icon name={fulfillment_method_icon(method)} class="text-base-content/50 h-4 w-4 shrink-0" />
             {method_heading(method)}
-            <.count_badge :if={length(orders) < length(@orders)} count={length(orders)} active={true} />
-          </h3>
+            <.count_badge count={length(orders)} active={true} />
+          </h4>
           <ul class="divide-base-content/12 -mx-4 divide-y sm:-mx-5">
             <.order_row :for={order <- orders} order={order} />
           </ul>
@@ -792,7 +795,16 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   # Nine days because Jennie buys from the wholesaler anywhere from a day to a week ahead.
   defp days_card(assigns) do
     ~H"""
-    <div class="admin-card p-4 sm:p-5">
+    <section id="overview-orders" aria-labelledby="overview-orders-title" class="admin-card p-4 sm:p-5">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <h2 id="overview-orders-title" class="text-base-content text-base font-semibold">{~t"Orders"}</h2>
+        <.link
+          navigate={~p"/admin/orders"}
+          class="text-primary touch-target inline-flex items-center py-1 text-sm hover:underline"
+        >
+          {~t"View all orders"} →
+        </.link>
+      </div>
       <%!-- Scrolls sideways on a phone, bleeding to the card's edges. --%>
       <ol
         id="days"
@@ -821,13 +833,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         locale={@locale}
         class="border-base-content/12 mt-4 border-t pt-4"
       />
-
-      <div class="border-base-content/12 mt-5 border-t pt-3">
-        <.link navigate={~p"/admin/orders"} class="text-primary touch-target inline-block py-1 text-sm hover:underline">
-          {~t"View all orders"} →
-        </.link>
-      </div>
-    </div>
+    </section>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".ScrollToCurrent">
       /**
        * Scrolls a sideways list so its `aria-current` item is in view, such as the
@@ -863,18 +869,19 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       patch={if @today?, do: ~p"/admin", else: ~p"/admin?#{[day: Date.to_iso8601(@date)]}"}
       aria-current={@selected? && "true"}
       aria-label={day_cell_label(@date, @count, @closed?, @locale)}
-      class={["flex flex-col items-center gap-0.5 py-2 transition-colors", day_cell_class(@selected?, @closed?)]}
+      class={["flex flex-col items-center gap-0.5 border py-2 transition-colors", day_cell_class(@selected?, @closed?)]}
     >
       <span class={["text-xs", !@selected? && !@closed? && "text-base-content/75"]}>
         {Localize.Date.to_string!(@date, locale: @locale, format: "ccc")}
       </span>
-      <span class={["text-sm font-semibold tabular-nums", @today? && ["underline underline-offset-4", if(@selected?, do: "decoration-primary-content/50", else: "decoration-base-content/30")]]}>
+      <span class="relative text-sm font-semibold tabular-nums">
         {@date.day}
+        <span :if={@today?} aria-hidden="true" class="bg-primary absolute top-0.5 -right-2 h-1 w-1 rounded-full" />
       </span>
       <span class="flex h-5 items-center">
         <span
           :if={@count > 0}
-          class={["badge badge-sm rounded-full border-0 font-semibold tabular-nums", if(@selected?, do: "bg-primary-content/20 text-primary-content", else: "bg-primary/10 text-primary")]}
+          class="badge badge-sm bg-primary/10 text-primary rounded-full border-0 font-semibold tabular-nums"
         >
           {@count}
         </span>
@@ -884,9 +891,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     """
   end
 
-  defp day_cell_class(true = _selected?, _closed?), do: "bg-primary text-primary-content"
-  defp day_cell_class(false, true), do: "bg-base-200/70 text-base-content/40 hover:bg-base-200"
-  defp day_cell_class(false, false), do: "hover:bg-base-200/60"
+  defp day_cell_class(true = _selected?, _closed?), do: "border-primary bg-primary/5 text-base-content"
+  defp day_cell_class(false, true), do: "border-transparent bg-base-200/70 text-base-content/60 hover:bg-base-200"
+  defp day_cell_class(false, false), do: "border-transparent hover:bg-base-200/60"
 
   defp day_cell_label(date, count, closed?, locale) do
     [
@@ -919,35 +926,64 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <li>
       <.link
         navigate={~p"/admin/orders/#{@order.id}"}
-        class="grid-cols-[minmax(0,1fr)_auto] grid items-start gap-x-3 px-4 py-3.5 transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2 sm:px-5"
+        class="block px-4 py-4 transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2 sm:px-5"
       >
-        <div class="min-w-0">
-          <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <span class="text-base-content min-w-0 break-words font-semibold">
-              {@order.customer_name || ~t"Unnamed customer"}
-            </span>
-          </div>
+        <div class="grid-cols-[minmax(0,1fr)_auto] grid items-baseline gap-x-3 gap-y-1">
+          <span class="text-base-content min-w-0 break-words font-semibold">
+            {@order.customer_name || ~t"Unnamed customer"}
+          </span>
+          <span
+            :if={Format.fulfillment_time_range(@order, Format.locale())}
+            class="text-base-content col-start-2 row-start-1 flex items-center justify-end gap-1 whitespace-nowrap text-xs font-semibold tabular-nums sm:text-sm"
+            data-testid="fulfillment-time"
+          >
+            <.icon name="hero-clock" class="text-base-content/50 h-3.5 w-3.5" />
+            {Format.fulfillment_time_range(@order, Format.locale())}
+          </span>
 
-          <ul :if={@items != []} class="text-base-content mt-1 space-y-0.5 text-sm">
+          <ul :if={@items != []} class="text-base-content col-start-1 row-start-2 min-w-0 space-y-0.5 text-sm">
             <li :for={item <- @items} class="break-words" phx-no-format>
               <span class="font-semibold tabular-nums">{item.quantity} ×</span>
-              <span class="font-semibold">{item.product_name}</span><span :if={item.variant_size} class="text-base-content/75">, {variant_size_label(item.variant_size)}</span>
+              <span>{item.product_name}</span><span :if={item.variant_size} class="text-base-content/75">, {variant_size_label(item.variant_size)}</span>
             </li>
           </ul>
-
-          <p
-            :if={present?(@order.florist_note)}
-            class="text-base-content/85 line-clamp-2 mt-1 text-sm italic"
-            data-testid="florist-note"
+          <span
+            :if={@order.distance_km}
+            class="text-base-content/75 col-start-2 row-start-2 text-right text-xs tabular-nums"
           >
-            <.icon name="hero-chat-bubble-bottom-center-text" class="text-base-content/50 align-[-2px] mr-1 h-3.5 w-3.5" />{@order.florist_note}
-          </p>
+            {@order.distance_km} km
+          </span>
+        </div>
 
-          <div class="mt-1.5 flex flex-wrap items-center gap-1 empty:hidden">
-            <.gift_badge :if={@order.gift} recipient_name={presence(@order.recipient_name)} />
-            <.badge :if={present?(@order.card_message)} tone={:neutral} icon="hero-pencil-square">
-              {~t"Card to write"}
-            </.badge>
+        <p
+          :if={present?(@order.florist_note)}
+          class="text-base-content/85 line-clamp-2 mt-1 text-sm italic"
+          data-testid="florist-note"
+        >
+          <.icon name="hero-chat-bubble-bottom-center-text" class="text-base-content/50 align-[-2px] mr-1 h-3.5 w-3.5" />{@order.florist_note}
+        </p>
+
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 empty:hidden">
+          <div
+            :if={@order.gift or present?(@order.card_message)}
+            class="text-base-content/75 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs"
+          >
+            <span :if={@order.gift} class="inline-flex min-w-0 items-baseline gap-1.5">
+              <.icon name="hero-gift" class="h-3.5 w-3.5 shrink-0 self-center" />
+              <span class="break-words">
+                {if presence(@order.recipient_name),
+                  do: ~t"Gift for #{order_recipient_name = @order.recipient_name}",
+                  else: ~t"Gift order"}
+              </span>
+            </span>
+            <span :if={present?(@order.card_message)} class="inline-flex items-center gap-1.5">
+              <.icon name="hero-pencil-square" class="h-3.5 w-3.5 shrink-0" /> {~t"Card to write"}
+            </span>
+          </div>
+          <div
+            :if={@order.missing_delivery_phone? or Decimal.positive?(@order.balance)}
+            class="ml-auto flex flex-wrap items-center justify-end gap-1"
+          >
             <.badge :if={@order.missing_delivery_phone?} tone={:warning} icon="hero-phone-x-mark">
               {~t"Missing recipient phone"}
             </.badge>
@@ -959,20 +995,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               <% end %>
             </.badge>
           </div>
-        </div>
-
-        <div class="flex shrink-0 flex-col items-end gap-0.5 pt-0.5 text-right">
-          <span
-            :if={Format.fulfillment_time_range(@order, Format.locale())}
-            class="text-base-content flex items-center gap-1 whitespace-nowrap text-xs font-semibold tabular-nums sm:text-sm"
-            data-testid="fulfillment-time"
-          >
-            <.icon name="hero-clock" class="text-base-content/50 h-3.5 w-3.5" />
-            {Format.fulfillment_time_range(@order, Format.locale())}
-          </span>
-          <span :if={@order.distance_km} class="text-base-content/75 text-xs tabular-nums">
-            {@order.distance_km} km
-          </span>
         </div>
       </.link>
     </li>
