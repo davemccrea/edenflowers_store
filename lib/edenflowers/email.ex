@@ -120,20 +120,14 @@ defmodule Edenflowers.Email do
 
   @doc """
   A copy of an order's receipt, with the PDF the sender attaches. Does not
-  announce a new payment or imply fulfillment. Expects `:customer_first_name`,
-  `:grand_total`, `:discount`, `:amount_paid`, `:balance` and
-  `line_items: [:subtotal]` loaded.
+  announce a new payment or imply fulfillment. Item and payment totals are
+  in the attached receipt. Expects `:customer_first_name` loaded.
   """
   def purchase_receipt(%Order{} = order) do
     customer_email(order, from_address(), fn email ->
       email
       |> subject(~t"Your receipt from Eden Flowers · #{reference = order.order_reference}")
-      |> text_body(
-        Templates.purchase_receipt(%{
-          order: order,
-          format_currency: &Format.currency(&1, order.locale)
-        })
-      )
+      |> text_body(Templates.purchase_receipt(%{order: order}))
     end)
   end
 

@@ -1054,8 +1054,11 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       assert order.receipt_emailed_at
 
       assert_email_sent(fn email ->
-        assert [_receipt] = email.attachments
+        assert [%Swoosh.Attachment{content_type: "application/pdf"}] = email.attachments
         assert email.subject == "Your receipt from Eden Flowers · #{order.order_reference}"
+        refute email.text_body =~ "Total"
+        refute email.text_body =~ "Paid in full"
+        assert email.text_body =~ "Order #{order.order_reference}"
       end)
     end
 
