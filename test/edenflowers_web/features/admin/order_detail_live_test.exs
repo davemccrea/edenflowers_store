@@ -98,6 +98,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     view |> element(~s|button[phx-click="open_settlement"]|) |> render_click()
     assert has_element?(view, "#order-balance-email-send[checked]")
+    assert has_element?(view, ~s|#order-balance-method option[value="cash"]|)
+    refute has_element?(view, ~s|#order-balance-method option[value="voucher"]|)
 
     view
     |> element("#order-balance-form")

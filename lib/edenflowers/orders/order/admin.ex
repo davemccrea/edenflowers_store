@@ -81,6 +81,7 @@ defmodule Edenflowers.Orders.Order.Admin do
     :invoiceable?,
     :fulfillment_option,
     :gift_voucher_sale?,
+    :accepts_gift_voucher?,
     :gift_voucher_spent?,
     :voucher_card_to_hand_over?,
     promotion: [:gift_order],
