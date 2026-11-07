@@ -368,7 +368,9 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
                   // slidesToScroll: 1 on mobile, 'auto' on >=md so an arrow click jumps a
                   // full page of cards on desktop.
+                  // A shorter settle than Embla's 25 makes the swipe feel snappier.
                   this.embla = EmblaCarousel(this.el, {
+                    duration: 18,
                     align: "center",
                     containScroll: "trimSnaps",
                     slidesToScroll: 1,
