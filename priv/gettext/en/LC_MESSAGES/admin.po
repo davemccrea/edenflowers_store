@@ -2074,11 +2074,6 @@ msgstr ""
 msgid "Picture"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_form_live.ex:92
-#, elixir-autogen, elixir-format
-msgid "Place order"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/order_log.ex:74
 #, elixir-autogen, elixir-format
 msgid "Placed and paid with Stripe"
@@ -5177,4 +5172,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:36
 #, elixir-autogen, elixir-format
 msgid "Create voucher"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_form_live.ex:92
+#, elixir-autogen, elixir-format
+msgid "Create order"
 msgstr ""

@@ -611,7 +611,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <ul
         tabindex="0"
-        class="dropdown-content menu bg-base-100 border-base-content/12 mt-2 w-56 border p-1 shadow"
+        class="dropdown-content menu bg-base-100 text-base-content border-base-content/12 mt-2 w-56 border p-1 shadow"
       >
         <li :if={@compact} class="px-3 py-2">
           <span class="block p-0 hover:bg-transparent">
