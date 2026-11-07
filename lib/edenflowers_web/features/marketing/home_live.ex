@@ -366,13 +366,16 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                     "(prefers-reduced-motion: reduce)",
                   ).matches;
 
-                  // slidesToScroll: 1 on mobile, 'auto' on >=md so an arrow click jumps a
-                  // full page of cards on desktop.
-                  // A shorter settle than Embla's 25 makes the swipe feel snappier.
+                  // Going back to the page reopens the slide that was showing (onSelect).
+                  // A fresh visit has a new history entry, so starts on the first.
                   this.embla = EmblaCarousel(this.el, {
+                    startIndex: history.state?.featuredSlide ?? 0,
+                    // A shorter settle than Embla's 25 makes the swipe feel snappier.
                     duration: 18,
                     align: "center",
                     containScroll: "trimSnaps",
+                    // 1 on mobile, 'auto' on >=md so an arrow click jumps a full page
+                    // of cards on desktop.
                     slidesToScroll: 1,
                     breakpoints: {
                       "(min-width: 768px)": { slidesToScroll: "auto" },
@@ -478,6 +481,9 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
 
                 onSelect() {
                   const selected = this.embla.selectedScrollSnap();
+                  // LiveView keeps its own keys in this entry and merges rather than
+                  // replacing it, so this survives navigating away.
+                  history.replaceState({ ...history.state, featuredSlide: selected }, "");
                   this.dotNodes.forEach((node, i) => {
                     const isSelected = i === selected;
                     node.classList.toggle("embla__dot--selected", isSelected);
