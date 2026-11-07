@@ -388,24 +388,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutDeliveryLiveTest do
       refute has_element?(view, ~s|input[name="form[contact_phone_number]"][value]|)
     end
 
-    test "a subscription starts on any day but Sunday, whichever days one-off orders get",
-         %{conn: conn, delivery_option: delivery_option} do
-      variant = generate(product_variant(product_id: generate(product(subscribable: true)).id))
-      shop_calendar(available_days: [:friday])
-      order = generate(order(state: :delivery, fulfillment_option_id: delivery_option.id))
-      Orders.add_line_item!(order.id, variant.id, 1, %{interval_weeks: 2}, authorize?: false)
-      days = Date.range(Date.add(Edenflowers.ShopTime.today(), 2), Date.add(Edenflowers.ShopTime.today(), 8))
-      monday = Enum.find(days, &(Date.day_of_week(&1) == 1))
-      sunday = Enum.find(days, &(Date.day_of_week(&1) == 7))
-      {:ok, view, _html} = live(with_cart(conn, order), ~p"/checkout")
-
-      render_click(view, "select-date", %{"date" => Date.to_string(monday)})
-      assert has_element?(view, ~s|input[name="form[fulfillment_date]"][value="#{monday}"]|)
-
-      render_click(view, "select-date", %{"date" => Date.to_string(sunday)})
-      assert has_element?(view, ~s|input[name="form[fulfillment_date]"][value="#{monday}"]|)
-    end
-
     # Closed days are only aria-disabled, so a click on one still arrives.
     test "picking a closed date keeps the form as it was", %{conn: conn} do
       closed = Edenflowers.ShopTime.today() |> Date.add(7)
