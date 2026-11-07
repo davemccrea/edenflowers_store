@@ -1050,7 +1050,7 @@ defmodule EdenflowersWeb.CoreComponents do
           sources={[%{media: "(min-width: 640px)", width: 600, height: 600}]}
           sizes="(min-width: 640px) 25vw, 50vw"
           priority={@priority}
-          class={["h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]", @product.sold_out? && "opacity-50"]}
+          class={["h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]", @product.sold_out? && "opacity-50"]}
         />
         <span
           :if={@product.free_delivery and @free_dist_km}
