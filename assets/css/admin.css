@@ -67,14 +67,6 @@
   }
 }
 
-/* Pulling past the top reveals the page canvas above the sticky topbar, so it
-   matches the topbar instead of showing a white band. iOS takes the canvas
-   colour from body, which covers any html background, so body carries it and
-   the admin app paints its own page colour. */
-body:has(.admin-theme) {
-  background-color: var(--color-forest);
-}
-
 /* The account menu opens light over the forest topbar, so it takes the light
    surface's focus ring back. */
 .admin-theme .bg-forest .dropdown-content {
@@ -423,8 +415,11 @@ body:has(.admin-theme) {
 /* Each admin sets their own colour on the account page's picker (User.admin_*).
    The root layout puts the raw values on body; here, on admin pages only, they
    become the forest chrome and the primary colour. Lightness is held to a range
-   where white text stays readable on both. The fallbacks are the shop's forest. */
+   where white text stays readable on both. The fallbacks are the shop's forest.
+   Pulling past the top reveals body above the sticky topbar, and iOS takes the
+   canvas colour from body, so body is painted the chrome colour to match. */
 body:has(.admin-theme) {
+  background-color: var(--color-forest);
   --admin-l: calc(var(--admin-lightness, 26) * 1%);
   --admin-c: calc(var(--admin-chroma, 50) / 1000);
   --admin-h: var(--admin-hue, 152);
@@ -463,16 +458,10 @@ body:has(.admin-theme) {
 }
 
 /* Presets and the field's handle show a colour brighter than the sidebar it
-   makes, so it reads on the dark panel. Presets carry --h/--c/--l; the handle
-   follows the admin's own. */
+   makes, so it reads on the dark panel. Presets carry --h/--c/--l. */
 .admin-swatch {
   background-color: oklch(
     calc(var(--l) * 1% + 30%) calc(var(--c) / 1000 + 0.04) var(--h)
-  );
-}
-.admin-picker-handle {
-  background-color: oklch(
-    calc(var(--admin-l) + 30%) calc(var(--admin-c) + 0.04) var(--admin-h)
   );
 }
 
@@ -493,9 +482,13 @@ body:has(.admin-theme) {
   border: 0;
 }
 
-/* The handle glides to presets, key presses and a pressed point, but follows
-   a drag directly, and lifts while held, as Arc's does. */
+/* The handle shows the admin's colour, brighter like the presets. It glides
+   to presets, key presses and a pressed point, but follows a drag directly,
+   and lifts while held, as Arc's does. */
 .admin-picker-handle {
+  background-color: oklch(
+    calc(var(--admin-l) + 30%) calc(var(--admin-c) + 0.04) var(--admin-h)
+  );
   transition:
     left 180ms var(--ease-out, ease-out),
     top 180ms var(--ease-out, ease-out),
@@ -522,7 +515,6 @@ body:has(.admin-theme) {
   anchor-name: --admin-picker;
 }
 .admin-picker-trigger-swatch {
-  position: relative;
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
 }
 .admin-picker-popover {
