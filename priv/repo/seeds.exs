@@ -775,10 +775,10 @@ end
 # the order that started it and some with later deliveries (Occurrences).
 # Ash.Seed for the same reason as the orders above. As in the app, the schedule
 # runs on whole intervals from the first order's date: each Occurrence is the
-# next date on it, and next_fulfillment_date the one after the latest. Active
-# next dates sit beyond the lead time and the change cutoff, so the hourly
-# occurrence job doesn't charge them as soon as they're seeded, and customers
-# can still change them.
+# next date on it, and next_fulfillment_date the one after the latest, on the
+# first order's weekday, its delivery day. Active next dates sit beyond the
+# lead time and the change cutoff, so the hourly occurrence job doesn't charge
+# them as soon as they're seeded, and customers can still change them.
 alias Edenflowers.Orders.Subscription
 
 weekly_bouquet = fn size -> variant_for.("Florist's choice bouquet", size) end
@@ -833,6 +833,19 @@ subscriptions = [
     locale: "sv-FI",
     occurrences: [%{fulfillment_status: :fulfilled}]
   },
+  # An ordinary one running smoothly, with no state to sort out, so there's an
+  # active subscription to try things on besides David's own.
+  %{
+    email: "emma.lindqvist@example.fi",
+    name: "Emma Lindqvist",
+    state: :active,
+    size: :large,
+    interval_weeks: 2,
+    first_days_out: -16,
+    recipient_name: "Emma Lindqvist",
+    locale: "sv-FI",
+    occurrences: [%{fulfillment_status: :fulfilled}]
+  },
   # A gift, paused before its second delivery was charged, so its next date
   # stays put until it resumes.
   %{
@@ -860,22 +873,44 @@ subscriptions = [
     locale: "en",
     occurrences: [%{fulfillment_status: :fulfilled}, %{paid?: false}]
   },
+  # Cancelled after its latest delivery was charged. That delivery, a day or
+  # two out, still comes, so the account page keeps the subscription until then
+  # and it's too late to call off.
   %{
     email: "jonas.berg@example.fi",
     name: "Jonas Berg",
     state: :cancelled,
     size: :large,
     interval_weeks: 2,
-    first_days_out: -21,
+    first_days_out: -12,
     recipient_name: "Jonas Berg",
     locale: "sv-FI",
-    occurrences: [%{fulfillment_status: :fulfilled}]
+    occurrences: [%{}]
+  },
+  # Delivers on Mondays, which the shop has since closed. Her day picker still
+  # offers Monday, and the admin flags each Monday delivery for Jennie to agree
+  # another day. Its first delivery was the Monday four weeks before the next.
+  %{
+    email: "kaisa.virtanen@example.fi",
+    name: "Kaisa Virtanen",
+    state: :active,
+    size: :medium,
+    interval_weeks: 4,
+    first_date:
+      today
+      |> Date.add(Subscription.change_deadline_days())
+      |> Stream.iterate(&Date.add(&1, 1))
+      |> Enum.find(&(Weekday.from_date(&1) == :monday))
+      |> Date.add(-28),
+    recipient_name: "Kaisa Virtanen",
+    locale: "fi",
+    occurrences: []
   }
 ]
 
 for attrs <- subscriptions do
   user = Accounts.upsert_user!(attrs.email, attrs.name, actor: Actors.system_actor())
-  first_date = fulfillment_date_for.(attrs.first_days_out)
+  first_date = attrs[:first_date] || fulfillment_date_for.(attrs.first_days_out)
   scheduled_date = fn n -> Date.add(first_date, n * attrs.interval_weeks * 7) end
 
   {customer_id, payment_method_id} =
@@ -895,6 +930,7 @@ for attrs <- subscriptions do
       fulfillment_option_id: home_delivery.id,
       state: attrs.state,
       interval_weeks: attrs.interval_weeks,
+      delivery_day: Weekday.from_date(first_date),
       next_fulfillment_date: scheduled_date.(length(attrs.occurrences) + 1),
       customer_phone_number: "045 7651234",
       recipient_name: attrs.recipient_name,
