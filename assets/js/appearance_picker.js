@@ -223,7 +223,7 @@ export default {
     const end =
       thumbWidth / 2 + (chroma / chromaMax) * (wave.width - thumbWidth);
     const middle = wave.height / 2;
-    const amplitude = 2 + (chroma / chromaMax) * (middle - 6);
+    const amplitude = 2 + (chroma / chromaMax) * 9;
     const points = [];
     for (let x = 0; x <= end; x += 1.5) {
       points.push(
