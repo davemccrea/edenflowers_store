@@ -168,18 +168,20 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             </p>
           </div>
 
-          <div :if={@next_delivery} class="mt-8" data-testid="order-subscription">
+          <div :if={@interval_weeks} class="mt-8" data-testid="order-subscription">
             <dl class="border-base-content/12 grid-cols-[auto_1fr] grid items-baseline gap-x-6 gap-y-3 border-y py-4">
               <dt class="eyebrow text-base-content/70">{~t"Subscription"}</dt>
               <dd>{EdenflowersWeb.Checkout.Fields.interval_label(@interval_weeks)}</dd>
 
-              <dt class="eyebrow text-base-content/70">{~t"Next delivery"}</dt>
-              <dd data-testid="order-next-delivery">{@next_delivery.date}</dd>
+              <div :if={@next_delivery} class="contents">
+                <dt class="eyebrow text-base-content/70">{~t"Next delivery"}</dt>
+                <dd data-testid="order-next-delivery">{@next_delivery.date}</dd>
 
-              <dt class="eyebrow text-base-content/70">{~t"Payment"}</dt>
-              <dd class="tabular-nums" data-testid="order-next-charge">
-                {~t"#{amount = @next_delivery.amount} on #{date = @next_delivery.charge_date}"}
-              </dd>
+                <dt class="eyebrow text-base-content/70">{~t"Payment"}</dt>
+                <dd class="tabular-nums" data-testid="order-next-charge">
+                  {~t"#{amount = @next_delivery.amount} on #{date = @next_delivery.charge_date}"}
+                </dd>
+              </div>
             </dl>
 
             <p :if={!@current_user} class="text-base-content/70 mt-6">
@@ -218,7 +220,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
           </figure>
 
           <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
-            <div :if={@shown_order.receipt_available? || (@next_delivery && @current_user)} class="flex flex-wrap gap-3">
+            <div :if={@shown_order.receipt_available? || (@interval_weeks && @current_user)} class="flex flex-wrap gap-3">
               <.button
                 :if={@shown_order.receipt_available?}
                 href={~p"/order/#{@shown_order.id}/receipt"}
@@ -230,7 +232,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
                 <.icon name="hero-arrow-top-right-on-square" class="size-4" />
               </.button>
               <.button
-                :if={@next_delivery && @current_user}
+                :if={@interval_weeks && @current_user}
                 navigate={~p"/account"}
                 variant="secondary"
                 data-testid="manage-subscription"
@@ -313,7 +315,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
           :gift_voucher_sale?,
           :celebrated?,
           :voucher_card_ready_on,
-          subscription: [:price_per_order],
+          subscription: [:interval_weeks, :state, :next_delivery_date, :charged_on, :price_per_order],
           gift_voucher_line: :gift_voucher
         ],
         authorize?: false
@@ -328,7 +330,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     |> assign(:placed?, order.committed?)
     |> assign(:first_name, order.customer_first_name)
     |> assign(:date, Format.weekday_date(order.voucher_card_ready_on || order.fulfillment_date, Format.locale()))
-    |> assign(:interval_weeks, subscription_line && subscription_line.interval_weeks)
+    |> assign(:interval_weeks, subscription_line && interval_weeks(order.subscription, subscription_line))
     |> assign(:next_delivery, subscription_line && next_delivery(order, subscription_line))
     |> render_voucher_preview(order)
   end
@@ -364,20 +366,36 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
     {:noreply, assign(socket, voucher_preview: :error)}
   end
 
-  # Each later delivery is priced afresh, so this is today's price for it. Until
-  # the subscription starts, just after checkout, it is quoted as checkout did.
-  defp next_delivery(order, line) do
-    locale = Format.locale()
+  # Once started, the subscription says what comes next, since the customer may
+  # have changed it since. A cancelled one has nothing to show.
+  defp interval_weeks(%Subscription{state: :cancelled}, _line), do: nil
+  defp interval_weeks(%Subscription{interval_weeks: weeks}, _line), do: weeks
+  defp interval_weeks(nil, line), do: line.interval_weeks
 
+  # Paused, or held after a refused card: no delivery is coming yet.
+  defp next_delivery(%{subscription: %Subscription{next_delivery_date: nil}}, _line), do: nil
+
+  defp next_delivery(%{subscription: %Subscription{} = subscription}, _line),
+    do: next_delivery(subscription.next_delivery_date, subscription.charged_on, subscription.price_per_order)
+
+  # Just after checkout, before the subscription starts, it is quoted as checkout did.
+  defp next_delivery(order, line) do
     date = Subscription.next_date(order.fulfillment_date, line.interval_weeks)
+
+    next_delivery(
+      date,
+      Subscription.charged_on(date),
+      Subscription.price_per_order(line.subtotal, order.fulfillment_fee)
+    )
+  end
+
+  defp next_delivery(date, charged_on, price) do
+    locale = Format.locale()
 
     %{
       date: Format.weekday_date(date, locale),
-      charge_date: Format.weekday_date(Subscription.charged_on(date), locale),
-      amount: Format.currency(next_price(order, line), locale)
+      charge_date: Format.weekday_date(charged_on, locale),
+      amount: Format.currency(price, locale)
     }
   end
-
-  defp next_price(%{subscription: %Subscription{price_per_order: price}}, _line), do: price
-  defp next_price(order, line), do: Subscription.price_per_order(line.subtotal, order.fulfillment_fee)
 end
