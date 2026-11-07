@@ -375,7 +375,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
 
   """
   def record_payment_form(assigns) do
-    voucher_sale? = Map.get(assigns.record, :gift_voucher_sale?) == true
+    voucher_sale? = PaymentActions.voucher_sale?(assigns.record)
 
     assigns =
       assign(assigns,

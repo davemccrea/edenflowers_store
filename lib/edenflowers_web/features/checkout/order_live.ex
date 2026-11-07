@@ -70,74 +70,15 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
             name="flower-30"
             class={["text-primary/70 mb-6 h-12 w-12", if(@placed?, do: "flower-bloom", else: "flower-waiting")]}
           />
-          <%!-- Covers <main>, so petals scroll with the page and stop at the footer. Under the fixed header.
-               Petals are paused for now: restore data-petals={@shown_order.celebrated?} to bring them back. --%>
-          <canvas
-            :if={@placed?}
-            id={"petals-#{@shown_order.id}"}
-            phx-hook=".Petals"
-            phx-update="ignore"
-            data-petals={false}
-            class="size-full pointer-events-none absolute inset-0 z-10"
-            aria-hidden="true"
-          ></canvas>
-          <script :type={Phoenix.LiveView.ColocatedHook} name=".Petals">
-            // Petals fall once per order, so a reload or return visit stays calm. The flower blooms
-            // once a session, like the home hero: the root layout's head script covers reloads,
-            // and leaving marks <html> so live navigation back doesn't replay it either.
+          <%!-- The flower blooms once a session, like the home hero: the root layout's head script
+               covers reloads, and leaving marks <html> so live navigation back doesn't replay it either. --%>
+          <span :if={@placed?} id="order-bloom" phx-hook=".OrderBloom" hidden></span>
+          <script :type={Phoenix.LiveView.ColocatedHook} name=".OrderBloom">
             export default {
               mounted() {
                 try {
                   sessionStorage.setItem("order-bloomed", "1");
-                  if (sessionStorage.getItem(this.el.id)) return;
-                  sessionStorage.setItem(this.el.id, "1");
-                } catch {
-                  // Without storage there's no way to remember, so stay calm rather than replay.
-                  return;
-                }
-                if (!this.el.hasAttribute("data-petals")) return;
-
-                import("@/vendor/canvas-confetti.esm").then(({ default: confettiLib }) => {
-                  const confetti = confettiLib.create(this.el, {
-                    resize: true,
-                    useWorker: true,
-                  });
-                  const shapes = [
-                    // Cherry blossom: notched tip.
-                    confettiLib.shapeFromPath({
-                      path: "M0 18C-7 13-9 4-5-1L0 3L5-1C9 4 7 13 0 18Z",
-                    }),
-                    // Rose: broad and rounded.
-                    confettiLib.shapeFromPath({
-                      path: "M0 16C-9 12-10 2-5-2C-2-4 2-4 5-2C10 2 9 12 0 16Z",
-                    }),
-                  ];
-                  const colors = ["#f2b8c1", "#eea7b2", "#e08896", "#d46f80", "#f0b088"];
-
-                  // One petal at a time, each from its own slot across the top in shuffled order,
-                  // over a few seconds and at varied speeds, so they fall apart rather than as one band.
-                  const count = 36;
-                  const slots = [...Array(count).keys()].sort(() => Math.random() - 0.5);
-                  slots.forEach((slot, i) => {
-                    setTimeout(() => {
-                      confetti({
-                        particleCount: 1,
-                        origin: { x: (slot + Math.random()) / count, y: 0 },
-                        angle: 270,
-                        spread: 70,
-                        startVelocity: 4,
-                        gravity: 0.35 + Math.random() * 0.2,
-                        drift: Math.random() - 0.5,
-                        decay: 0.96,
-                        ticks: 600,
-                        scalar: 1.4 + Math.random() * 0.7,
-                        shapes,
-                        colors,
-                        disableForReducedMotion: true,
-                      });
-                    }, i * 170);
-                  });
-                });
+                } catch {}
               },
               destroyed() {
                 document.documentElement.classList.add("order-bloomed");
@@ -313,7 +254,6 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
           :grand_total,
           :subscription?,
           :gift_voucher_sale?,
-          :celebrated?,
           :voucher_card_ready_on,
           subscription: [:interval_weeks, :state, :next_delivery_date, :charged_on, :price_per_order],
           gift_voucher_line: :gift_voucher

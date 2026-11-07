@@ -9,6 +9,7 @@ defmodule Edenflowers.Orders.Subscription.Calculations.ClosedDeliveryDates do
 
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
+  alias Edenflowers.Orders.Subscription
 
   @weeks_ahead 8
 
@@ -23,7 +24,7 @@ defmodule Edenflowers.Orders.Subscription.Calculations.ClosedDeliveryDates do
 
     Enum.map(subscriptions, fn subscription ->
       subscription.next_fulfillment_date
-      |> Stream.iterate(&Date.add(&1, subscription.interval_weeks * 7))
+      |> Stream.iterate(&Subscription.next_date(&1, subscription.interval_weeks))
       |> Enum.take_while(&(Date.compare(&1, until) != :gt))
       |> Enum.filter(&closed?(calendar, &1, now))
     end)

@@ -665,12 +665,6 @@ defmodule Edenflowers.Orders.Order do
                     "buy another."
     end
 
-    calculate :celebrated?, :boolean, expr(gift_voucher_sale? or (subscription? and not gift)) do
-      description "Whether the thank-you page lets petals fall: a Gift voucher sale, or a Subscription the " <>
-                    "Customer starts for themselves. Gifts stay calm, since flowers for somebody else may be " <>
-                    "condolence flowers."
-    end
-
     calculate :payment_emailable?, :boolean, expr(not gift_voucher_sale? or (receipt_available? and not cancelled?)) do
       description "Whether a payment on it can be emailed. A Gift voucher sale's only once it's paid in full, " <>
                     "since the email carries the voucher, so a part payment in cash beside one by card waits " <>
