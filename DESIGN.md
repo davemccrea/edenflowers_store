@@ -105,7 +105,7 @@ The palette is one warm family. Every neutral sits at hue ~75 (oat, cream, near-
 
 Density is generous and editorial. Interaction is quiet and physical: hover underlines fade in, presses land instantly with a 1px drop and an opacity dip. Motion is for arrival and photography, and almost nowhere else.
 
-The admin is an operating tool and follows the same tokens with three deliberate differences: sans headings, bright status colours, and bordered panels.
+The admin is an operating tool and follows the same tokens with four deliberate differences: sans headings, bright status colours, bordered panels, and forest chrome (sidebar, navigation drawer and phone topbar) where the honey underline marks the current page.
 
 **Key Characteristics:**
 - Warm oat paper (hue ~75) under everything; no cold grey.
@@ -130,12 +130,12 @@ Paper at hue ~75 and forest at hue ~150, with one amber accent reserved for inte
 ### Tertiary
 - **Warm Cream** (`{colors.cream}`): the editorial surface for the footer, callouts, banners, empty states, and behind photographs while they load. Warmer than `base-200`, so a cream block reads as deliberate.
 - **Dark Warm Brown** (`{colors.cream-content}`): text on cream.
-- **Deep Forest Green** (`{colors.forest}`): reverse-out sections, used sparingly.
+- **Deep Forest Green** (`{colors.forest}`): reverse-out sections, used sparingly, and the admin chrome.
 - **Pale Warm Cream** (`{colors.forest-content}`): text and flower marks on forest.
 
 ### Neutral
 - **Warm Off-White** (`{colors.base-100}`): the page, the header, inputs.
-- **Light Warm Oat** (`{colors.base-200}`): the first tonal step: recessed areas, the admin sidebar.
+- **Light Warm Oat** (`{colors.base-200}`): the first tonal step: recessed areas.
 - **Warm Oat** (`{colors.base-300}`): soft edges that are not structure: the resting border of a choice that turns primary when selected, floating menus, admin secondary buttons, admin hover fills. Too faint to structure a page.
 - **Near-Black Warm Grey** (`{colors.base-content}`): all text, and through opacity, every secondary text, rule and decoration.
 

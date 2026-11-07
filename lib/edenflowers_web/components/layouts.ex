@@ -287,7 +287,7 @@ defmodule EdenflowersWeb.Layouts do
         id="admin-nav-drawer"
         placement="left"
         label={dgettext("admin", "Admin navigation")}
-        class="bg-base-200 border-base-content/20 w-[80vw] flex h-full flex-col border-r sm:w-[25rem]"
+        class="bg-forest text-forest-content border-forest-content/15 w-[80vw] flex h-full flex-col border-r sm:w-[25rem]"
       >
         <.admin_sidebar_content
           nav_sections={@nav_sections}
@@ -300,7 +300,7 @@ defmodule EdenflowersWeb.Layouts do
       <%!-- Desktop: persistent sidebar, pinned so it stays in view while content scrolls --%>
       <aside
         aria-label={dgettext("admin", "Admin navigation")}
-        class="admin-sidebar [view-transition-name:admin-sidebar] bg-base-200 border-base-content/20 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
+        class="admin-sidebar [view-transition-name:admin-sidebar] bg-forest text-forest-content border-forest-content/15 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
       >
         <.admin_sidebar_content
           nav_sections={@nav_sections}
@@ -315,7 +315,7 @@ defmodule EdenflowersWeb.Layouts do
              Equal side columns keep the wordmark centred on the bar.
              It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
              blur over the top edge unless a sticky or fixed element covers it. --%>
-        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] bg-base-200 border-base-content/12 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
+        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] bg-forest text-forest-content border-forest-content/15 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
           <div class="flex items-center">
             <button
               type="button"
@@ -323,19 +323,19 @@ defmodule EdenflowersWeb.Layouts do
               phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
               aria-label={dgettext("shared", "Open navigation menu")}
             >
-              <.icon name="hero-bars-3-bottom-left" class="text-base-content h-6 w-6 hover:text-base-content/60" />
+              <.icon name="hero-bars-3-bottom-left" class="h-6 w-6 hover:text-forest-content/70" />
             </button>
             <.link
               href={~q"/#{language}"}
               aria-label={dgettext("admin", "Storefront")}
               class="touch-target group flex h-12 w-8 items-center justify-center"
             >
-              <.icon name="hero-building-storefront" class="text-base-content h-5 w-5 group-hover:text-base-content/60" />
+              <.icon name="hero-building-storefront" class="h-5 w-5 group-hover:text-forest-content/70" />
             </.link>
           </div>
           <.link
             navigate={~p"/admin"}
-            class="text-primary logo-wordmark touch-target justify-self-center whitespace-nowrap text-xl max-[359px]:tracking-[0.06em] max-[359px]:text-sm max-sm:tracking-[0.1em] sm:text-2xl"
+            class="logo-wordmark touch-target justify-self-center whitespace-nowrap text-xl max-[359px]:tracking-[0.06em] max-[359px]:text-sm max-sm:tracking-[0.1em] sm:text-2xl"
           >
             Eden Flowers
           </.link>
@@ -460,13 +460,14 @@ defmodule EdenflowersWeb.Layouts do
     <%!-- Below lg the whole drawer scrolls, so a pinned footer can't squeeze the links into an unnoticed scroll box --%>
     <div class="flex h-full flex-col overflow-y-auto overscroll-contain py-5 lg:overflow-visible">
       <div class="mb-6 flex items-center justify-between px-5">
-        <.link navigate={~p"/admin"} class="text-primary logo-wordmark text-lg">
+        <.link navigate={~p"/admin"} class="logo-wordmark text-lg">
           Eden Flowers
         </.link>
         <.icon_button
           :if={@closeable}
           phx-click={JS.exec("phx-hide", to: "#admin-nav-drawer")}
           size="sm"
+          class="text-forest-content hover:bg-forest-content/10"
           aria_label={dgettext("shared", "Close navigation menu")}
         >
           <.icon name="hero-x-mark" class="h-5 w-5" />
@@ -475,7 +476,7 @@ defmodule EdenflowersWeb.Layouts do
 
       <nav class="space-y-4 px-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <div :for={{heading, items} <- @nav_sections} class="space-y-0.5">
-          <p :if={heading} class="text-base-content/75 mb-1 px-3 text-xs">{heading}</p>
+          <p :if={heading} class="text-forest-content/70 mb-1 px-3 text-xs">{heading}</p>
           <.admin_nav_item
             :for={{path, label, live?, icon} <- items}
             path={path}
@@ -488,8 +489,8 @@ defmodule EdenflowersWeb.Layouts do
         </div>
       </nav>
 
-      <div class="border-base-content/12 mt-auto border-t px-3 pt-4">
-        <p class="text-base-content/75 mb-1 px-3 text-xs">{dgettext("admin", "System")}</p>
+      <div class="border-forest-content/15 mt-auto border-t px-3 pt-4">
+        <p class="text-forest-content/70 mb-1 px-3 text-xs">{dgettext("admin", "System")}</p>
         <.admin_nav_item
           :for={{path, label, live?, icon} <- @system_nav}
           path={path}
@@ -504,7 +505,7 @@ defmodule EdenflowersWeb.Layouts do
           href={"https://github.com/davemccrea/edenflowers_store/releases/tag/#{@version}"}
           target="_blank"
           rel="noopener"
-          class="text-base-content/75 mt-3 block px-3 text-xs hover:text-base-content"
+          class="text-forest-content/70 mt-3 block px-3 text-xs hover:text-forest-content"
         >
           {@version}
         </a>
@@ -533,12 +534,15 @@ defmodule EdenflowersWeb.Layouts do
       {if @live?, do: [navigate: @path], else: [href: @path]}
       {if @external, do: [target: "_blank", rel: "noopener"], else: []}
       aria-current={@active && "page"}
-      class={["flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
-    do: "text-base-content bg-base-300/50 font-semibold",
-    else: "text-base-content/75 hover:bg-base-300/40 hover:text-base-content")]}
+      class={["group flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
+    do: "bg-forest-content/10 font-semibold",
+    else: "text-forest-content/80 hover:bg-forest-content/5 hover:text-forest-content")]}
     >
-      <.icon name={@icon} class={["h-4 w-4 shrink-0", if(@active, do: "text-primary", else: "text-base-content/60")]} />
-      {@label}
+      <.icon
+        name={@icon}
+        class={["h-4 w-4 shrink-0", if(@active, do: "text-forest-content", else: "text-forest-content/60")]}
+      />
+      <span class="link-underline-group-hover group-aria-[current=page]:decoration-(--color-link-underline)">{@label}</span>
     </.link>
     """
   end
@@ -567,7 +571,9 @@ defmodule EdenflowersWeb.Layouts do
         type="button"
         tabindex="0"
         aria-label={dgettext("admin", "Admin account menu")}
-        class={["inline-flex items-center transition-colors hover:bg-base-300/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact, do: "touch-target h-9 w-9 justify-center p-0", else: "gap-2 px-2 py-1.5")]}
+        class={["inline-flex items-center transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2", if(@compact,
+    do: "touch-target h-9 w-9 justify-center p-0 hover:bg-forest-content/10",
+    else: "gap-2 px-2 py-1.5 hover:bg-base-300/50")]}
       >
         <img
           :if={@current_user.avatar_content_type}
@@ -577,7 +583,7 @@ defmodule EdenflowersWeb.Layouts do
         />
         <span
           :if={!@current_user.avatar_content_type}
-          class="bg-primary/10 text-primary inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+          class={["inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold", if(@compact, do: "bg-forest-content/15 text-forest-content", else: "bg-primary/10 text-primary")]}
         >
           {@current_user.initials}
         </span>
