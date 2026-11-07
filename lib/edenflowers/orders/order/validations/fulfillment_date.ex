@@ -2,7 +2,7 @@ defmodule Edenflowers.Orders.Order.Validations.FulfillmentDate do
   @moduledoc """
   Checks a checkout date against the shop calendar, same-day rules, ordering
   deadline and the order's Available from. A cart starting a subscription
-  takes the calendar as `Subscription.calendar/1` applies it.
+  takes the calendar as `Subscription.calendar_for/2` applies it.
   """
 
   use Ash.Resource.Validation
@@ -24,8 +24,7 @@ defmodule Edenflowers.Orders.Order.Validations.FulfillmentDate do
     order =
       Ash.load!(order, [:available_from, :first_open_day, :subscription?], authorize?: false, reuse_values?: false)
 
-    calendar = Fulfillment.get_shop_calendar!(authorize?: false)
-    calendar = if order.subscription?, do: Subscription.calendar(calendar), else: calendar
+    calendar = Subscription.calendar_for(order, Fulfillment.get_shop_calendar!(authorize?: false))
 
     case Availability.unavailable_reason(calendar, date, Edenflowers.ShopTime.now(), order.available_from) do
       nil -> :ok
