@@ -353,7 +353,6 @@ msgstr ""
 msgid "Car costs"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:933
 #: lib/edenflowers_web/features/admin/order_form_live.ex:297
 #: lib/edenflowers_web/features/admin/subscription_log.ex:71
 #, elixir-autogen, elixir-format
@@ -1118,7 +1117,7 @@ msgid "Flowers and plants"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/components.ex:269
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:988
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1012
 #, elixir-autogen, elixir-format
 msgid "For %{name}"
 msgstr ""
@@ -3193,7 +3192,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:53
 #: lib/edenflowers_web/features/admin/customers_live.ex:60
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:985
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1008
 #: lib/edenflowers_web/features/admin/orders_live.ex:90
 #: lib/edenflowers_web/features/admin/overview_live.ex:277
 #: lib/edenflowers_web/features/admin/overview_live.ex:291
@@ -3240,7 +3239,7 @@ msgstr ""
 msgid "Use a JPG, PNG or WebP photo."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:956
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:960
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:84
 #: lib/edenflowers_web/features/admin/promotions_live.ex:153
 #, elixir-autogen, elixir-format
@@ -4653,29 +4652,19 @@ msgstr ""
 msgid "Gift orders"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:920
-#, elixir-autogen, elixir-format
-msgid "Brought in"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:896
 #, elixir-autogen, elixir-format
 msgid "No card linked to this gift"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:970
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:974
 #, elixir-autogen, elixir-format
 msgid "Not opened yet"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:963
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:967
 #, elixir-autogen, elixir-format
 msgid "Opened · valid until %{date}"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:930
-#, elixir-autogen, elixir-format
-msgid "Placed with the card from"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:897
@@ -5191,4 +5180,14 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/account_live.ex:76
 #, elixir-autogen, elixir-format
 msgid "Change picture"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:917
+#, elixir-autogen, elixir-format
+msgid "Orders linked by Pass it on cards"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1009
+#, elixir-autogen, elixir-format
+msgid "this order"
 msgstr ""
