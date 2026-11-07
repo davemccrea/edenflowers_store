@@ -671,7 +671,7 @@ defmodule Edenflowers.Orders.Order do
                     "condolence flowers."
     end
 
-    calculate :payment_emailable?, :boolean, expr(not gift_voucher_sale? or receipt_available?) do
+    calculate :payment_emailable?, :boolean, expr(not gift_voucher_sale? or (receipt_available? and not cancelled?)) do
       description "Whether a payment on it can be emailed. A Gift voucher sale's only once it's paid in full, " <>
                     "since the email carries the voucher, so a part payment in cash beside one by card waits " <>
                     "for the rest."

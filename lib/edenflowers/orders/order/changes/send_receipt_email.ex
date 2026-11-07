@@ -25,25 +25,33 @@ defmodule Edenflowers.Orders.Order.Changes.SendReceiptEmail do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
       order = load_for_send(changeset.data)
-      edits = Edits.from_changeset(changeset)
 
-      with {:ok, pdf} <- Receipt.generate(order),
-           {:ok, email} <- with_voucher(email(order), order),
-           {:ok, _result} <-
-             email
-             |> Edits.apply_to(edits)
-             |> Swoosh.Email.attachment(Receipt.attachment(pdf, order.order_reference))
-             |> Mailer.deliver() do
-        Logger.info("Sent confirmation email for order #{order.id}")
-
-        changeset
-        |> Ash.Changeset.force_change_attribute(:receipt_emailed_at, DateTime.utc_now())
-        |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})
-        |> clear_failure()
-      else
-        {:error, error} -> Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")
-      end
+      # A queued confirmation must not promise flowers or a usable voucher after cancellation.
+      if order.fulfillment_status == :cancelled,
+        do: changeset,
+        else: deliver(changeset, order)
     end)
+  end
+
+  defp deliver(changeset, order) do
+    edits = Edits.from_changeset(changeset)
+
+    with {:ok, pdf} <- Receipt.generate(order),
+         {:ok, email} <- with_voucher(email(order), order),
+         {:ok, _result} <-
+           email
+           |> Edits.apply_to(edits)
+           |> Swoosh.Email.attachment(Receipt.attachment(pdf, order.order_reference))
+           |> Mailer.deliver() do
+      Logger.info("Sent confirmation email for order #{order.id}")
+
+      changeset
+      |> Ash.Changeset.force_change_attribute(:receipt_emailed_at, DateTime.utc_now())
+      |> Ash.Changeset.set_context(%{paper_trail_metadata: Edits.for_log(edits)})
+      |> clear_failure()
+    else
+      {:error, error} -> Ash.Changeset.add_error(changeset, "Failed to send confirmation email: #{inspect(error)}")
+    end
   end
 
   # An Occurrence's charge is routine; the receipt with thanks is for an order the customer placed.

@@ -242,11 +242,26 @@ defmodule Edenflowers.Email.Previews do
   end
 
   defp subscription_charged(locale) do
-    for {title, attrs} <- [{"delivery", %{}}, {"pickup", pickup()}] do
+    for {title, attrs} <- [
+          {"delivery", %{}},
+          {"pickup", pickup()},
+          {"nothing to charge",
+           %{amount_paid: Decimal.new(0), grand_total: Decimal.new(0), discount: Decimal.new("59.00")}},
+          {"delivery partly paid by gift voucher", %{payments: [%{method: :voucher, amount: Decimal.new("20.00")}]}},
+          {"delivery fully paid by gift voucher", %{payments: [%{method: :voucher, amount: Decimal.new("59.00")}]}},
+          {"pickup fully paid by gift voucher",
+           Map.put(pickup(), :payments, [%{method: :voucher, amount: Decimal.new("59.00")}])}
+        ] do
       attrs =
-        %{origin: :subscription, gift: false, recipient_name: nil, recipient_first_name: nil}
+        %{
+          origin: :subscription,
+          gift: false,
+          recipient_name: nil,
+          recipient_first_name: nil,
+          amount_paid: Decimal.new("59.00"),
+          balance: Decimal.new(0)
+        }
         |> Map.merge(attrs)
-        |> Map.merge(%{amount_paid: Decimal.new("59.00"), balance: Decimal.new(0)})
 
       {"Subscription delivery charged", title, :subscription_charged,
        Email.subscription_charged(subscription_order(attrs, locale))}
@@ -373,7 +388,9 @@ defmodule Edenflowers.Email.Previews do
              first_order_fulfillment_fee: Decimal.new(0)
            }},
           {"gift voucher pays part", %{gift_voucher: %{spendable?: true, remaining: Decimal.new("20.00")}}},
-          {"gift voucher pays it all", %{gift_voucher: %{spendable?: true, remaining: Decimal.new("150.00")}}}
+          {"gift voucher pays it all", %{gift_voucher: %{spendable?: true, remaining: Decimal.new("150.00")}}},
+          {"gift voucher leaves the minimum card charge",
+           %{gift_voucher: %{spendable?: true, remaining: Decimal.new("58.90")}}}
         ] do
       {"Subscription heads-up", title, :subscription_heads_up, Email.subscription_heads_up(subscription(attrs, locale))}
     end
@@ -432,6 +449,16 @@ defmodule Edenflowers.Email.Previews do
        Email.cancelled(
          order(Map.merge(paid, %{fulfillment_date: nil, payments: [card_payment("64.00")]}), locale),
          cancel_money(refunded: "64.00")
+       )},
+      {"Order cancelled", "gift voucher sale paid in person, still to hand back", :cancelled,
+       Email.cancelled(
+         order(%{fulfillment_date: nil, payments: [cash_payment("50.00")]}, locale),
+         cancel_money(to_return: "50.00")
+       )},
+      {"Order cancelled", "gift voucher sale paid in person, cancellation charge kept", :cancelled,
+       Email.cancelled(
+         order(%{fulfillment_date: nil, payments: [cash_payment("50.00")]}, locale),
+         cancel_money(charge: "5.00", to_return: "45.00")
        )}
     ]
   end

@@ -802,6 +802,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
         if @order_kind == :gift_voucher do
           refute has_element?(view, "#order-actions button", "Refund")
+          assert has_element?(view, ~s|[phx-value-kind="gift_voucher"]|)
         end
 
         view |> element(~s|button[phx-click="open_cancel"]|) |> render_click()
@@ -810,6 +811,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
         assert has_element?(view, "#order-balance", "To refund")
         assert has_element?(view, "#order-actions button", "Refund")
         refute has_element?(view, "#order-status", "Refunded")
+
+        if @order_kind == :gift_voucher do
+          refute has_element?(view, ~s|[phx-value-kind="gift_voucher"]|)
+          cancelled = Orders.get_order_for_admin!(order.id, actor: admin)
+          assert {:error, _} = Orders.email_gift_voucher(cancelled, actor: admin)
+        end
 
         view |> element("#order-balance-settle") |> render_click()
         assert has_element?(view, ~s|#order-refund-amount[value="50.00"]|)

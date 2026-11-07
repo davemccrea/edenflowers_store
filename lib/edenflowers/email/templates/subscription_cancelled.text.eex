@@ -2,7 +2,7 @@
 
 <%= dgettext("emails", "I've cancelled your %{product} subscription. You won't be charged again.", product: @product) %>
 
-<%= if @charged_on do %><%= if @pickup? do %><%= dgettext("emails", "Any order already charged will still be ready to collect on %{date}.", date: @format_date.(@charged_on)) %><% else %><%= dgettext("emails", "Any delivery already charged will still come on %{date}.", date: @format_date.(@charged_on)) %><% end %>
+<%= if @charged_on do %><%= if @pickup? do %><%= dgettext("emails", "Your order will still be ready to collect on %{date}.", date: @format_date.(@charged_on)) %><% else %><%= dgettext("emails", "Your delivery on %{date} will still come.", date: @format_date.(@charged_on)) %><% end %>
 
 <% end %><%= dgettext("emails", "If you have any questions, just reply to this email.") %>
 
