@@ -23,6 +23,21 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, "#order-missing-phone")
   end
 
+  test "links an order to the subscription it belongs to, including the one that started it", %{conn: conn} do
+    subscription = generate(subscription())
+    first = Ash.Seed.update!(placed_order(), %{subscription_id: subscription.id})
+    occurrence = Ash.Seed.update!(placed_order(), %{subscription_id: subscription.id, origin: :subscription})
+    link = ~s|a[href="/admin/subscriptions/#{subscription.id}"]|
+
+    for order <- [first, occurrence] do
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      assert has_element?(view, link, "Subscription")
+    end
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{placed_order().id}")
+    refute has_element?(view, ~s|a[href^="/admin/subscriptions/"]|)
+  end
+
   test "Jennie links a pass-it-on card to a gift order by typing its code, and can remove it", %{conn: conn} do
     [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
     gift = placed_order(gift: true, recipient_name: "Anna")

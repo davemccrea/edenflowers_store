@@ -89,7 +89,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   :if={@order.gift && !@order.gift_voucher_sale?}
                   recipient_name={presence(@order.recipient_name)}
                 />
-                <.subscription_badge :if={@order.origin == :subscription} />
+                <%!-- The order that started it too, not only its Occurrences. --%>
+                <.subscription_badge
+                  :if={@order.subscription_id}
+                  navigate={~p"/admin/subscriptions/#{@order.subscription_id}"}
+                />
                 <.badge :if={@order.voucher_card_to_hand_over?} tone={:attention} icon="hero-pencil-square">
                   {~t"Card to write"}
                 </.badge>
