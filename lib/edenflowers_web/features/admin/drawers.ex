@@ -390,7 +390,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
     <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="space-y-4">
       <input type="hidden" name="record_id" value={@record.id} />
       <.refusal form={@form} />
-      <div class="grid grid-cols-2 items-end gap-x-3 gap-y-4">
+      <div class="grid grid-cols-2 items-start gap-x-3 gap-y-4">
         <.input
           field={@form[:payment_method]}
           id={"#{@id}-method"}
@@ -500,7 +500,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
     <.form for={@form} id={"#{@id}-form"} phx-change="change_refund" phx-submit="refund" class="space-y-4">
       <input type="hidden" name="record_id" value={@record.id} />
       <.refusal form={@form} />
-      <div class="grid grid-cols-2 items-end gap-x-3 gap-y-4">
+      <div class="grid grid-cols-2 items-start gap-x-3 gap-y-4">
         <.input
           field={@form[:amount]}
           value={@form.source.raw_params["amount"]}
