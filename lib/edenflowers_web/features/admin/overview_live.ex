@@ -659,17 +659,16 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <section
       id="attention"
       aria-labelledby="attention-title"
-      class="admin-card border-base-content/12 bg-amber-50/40 min-w-0 p-4 sm:p-5 xl:col-start-2"
+      class="admin-card shadow-[inset_4px_0_0_var(--color-warning)] min-w-0 p-4 sm:p-5 xl:col-start-2"
     >
-      <h2 id="attention-title" class="text-base-content mb-2 flex items-center gap-2 text-base font-semibold">
-        <.icon name="hero-exclamation-triangle" class="text-warning h-5 w-5" />
+      <h2 id="attention-title" class="text-base-content mb-2 text-base font-semibold">
         {~t"Needs attention"}
       </h2>
       <ul class="divide-base-content/12 divide-y text-sm">
         <li :for={{key, icon, title, rows} <- @groups}>
           <details id={"attention-#{key}"} phx-mounted={JS.ignore_attributes(["open"])} class="group">
             <summary class="touch-target flex cursor-pointer list-none items-center gap-3 py-2">
-              <.icon name={icon} class="text-amber-800/70 h-4 w-4 shrink-0" />
+              <.icon name={icon} class="text-base-content/60 h-4 w-4 shrink-0" />
               <%!-- Inline, so a title that wraps keeps its count beside the last word. --%>
               <span class="text-base-content min-w-0 flex-1">
                 {title}
@@ -682,7 +681,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               </span>
               <.icon
                 name="hero-chevron-down"
-                class="text-amber-800/60 h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+                class="text-base-content/60 h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
               />
             </summary>
             <ul class="border-base-content/12 divide-base-content/12 mb-2 ml-2 divide-y border-l pl-5">
@@ -704,7 +703,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     <li id={@id}>
       <.link
         navigate={@row.href}
-        class="-mx-2 flex items-baseline justify-between gap-4 px-2 py-2 transition-colors hover:bg-amber-900/5"
+        class="-mx-2 flex items-baseline justify-between gap-4 px-2 py-2 transition-colors hover:bg-base-content/5"
       >
         <span class="min-w-0">
           <span class="text-base-content block truncate font-semibold">{@row.who}</span>
