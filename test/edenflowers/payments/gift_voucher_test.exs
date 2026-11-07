@@ -301,8 +301,13 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
     test "emails the buyer the voucher with its receipt only once it's paid in full", %{admin: admin} do
       {:ok, sale} = sell(admin, %{customer_email: "anna@example.com", recipient_name: "Mia", locale: "en-GB"})
 
-      assert {:ok, part} = Orders.record_payment(sale, "20.00", :cash, %{email_receipt?: true}, actor: admin)
-      refute part.__metadata__.receipt_emailed?
+      log =
+        capture_log(fn ->
+          assert {:ok, part} = Orders.record_payment(sale, "20.00", :cash, %{email_receipt?: true}, actor: admin)
+          refute part.__metadata__.receipt_emailed?
+        end)
+
+      assert log =~ "not yet paid in full"
       assert_no_email_sent()
 
       assert {:ok, _} = Orders.record_payment(sale, "15.00", :zettle, %{email_receipt?: true}, actor: admin)
