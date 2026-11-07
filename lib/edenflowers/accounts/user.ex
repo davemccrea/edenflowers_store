@@ -197,6 +197,15 @@ defmodule Edenflowers.Accounts.User do
       prepare build(sort: [last_ordered_at: :desc])
     end
 
+    read :top_customers do
+      description "The customers Jennie sees before she types in a customer picker, so whoever she's likely " <>
+                    "entering is a click away: most orders in the last year first, then most spent."
+
+      filter expr(exists(placed_orders, true))
+
+      prepare build(sort: [recent_order_count: :desc, total_spent: :desc, last_ordered_at: :desc], limit: 10)
+    end
+
     read :admin_show do
       description "A customer for the admin, with their order count, last order date and total spent. Users without " <>
                     "a placed order are not found."
@@ -391,6 +400,11 @@ defmodule Edenflowers.Accounts.User do
   aggregates do
     count :placed_order_count, :placed_orders do
       description "Placed orders, cancelled ones included."
+    end
+
+    count :recent_order_count, :placed_orders do
+      description "Placed orders in the last 12 months, cancelled ones included. Ranks the top customers."
+      filter expr(ordered_at > ago(12, :month))
     end
 
     max :last_ordered_at, :placed_orders, :ordered_at do

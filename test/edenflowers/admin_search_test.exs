@@ -68,4 +68,24 @@ defmodule Edenflowers.AdminSearchTest do
       assert length(Accounts.search_customers!("byron", actor: admin, query: [limit: 2])) == 2
     end
   end
+
+  describe "top customers" do
+    test "ranks by orders in the last year, then by money spent", %{admin: admin} do
+      customer = fn name -> generate(admin_user(admin: false, name: name)) end
+      regular = customer.("Regular")
+      lapsed = customer.("Lapsed")
+      spender = customer.("Spender")
+      occasional = customer.("Occasional")
+
+      for _ <- 1..2, do: placed(user_id: regular.id)
+      two_years_ago = DateTime.add(DateTime.utc_now(), -730, :day)
+      for _ <- 1..3, do: placed(user_id: lapsed.id, ordered_at: two_years_ago)
+      placed(user_id: occasional.id)
+      order = placed(user_id: spender.id)
+      generate(payment(order_id: order.id, amount: Decimal.new("500.00")))
+
+      assert Enum.map(Accounts.top_customers!(actor: admin), & &1.id) ==
+               [regular.id, spender.id, occasional.id, lapsed.id]
+    end
+  end
 end
