@@ -153,6 +153,7 @@ defmodule EdenflowersWeb.Courses.CoursesLive do
         <.link
           navigate={~q"/#{language}/courses/#{@course}"}
           aria-label={@course.name}
+          data-photo-transition
           class="block"
         >
           <.image

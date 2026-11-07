@@ -661,24 +661,48 @@
   }
 }
 
-/* A product card's photo grows into the product page's (page_transitions.js).
-   Both frames show the same photo, so they don't cross-fade: two crops of it
-   fading through each other look like a ghost. The product page's frame covers
-   the card's from the start.
-   The two frames differ in shape, so each snapshot fills the moving frame and
+/* A product or course card's photo grows into its page's (page_transitions.js).
+   Both frames show the same photo, so only the page's is drawn, from the
+   start: the card's, drawn too, ghosts through it.
+   The two frames differ in shape, so the snapshot fills the moving frame and
    crops rather than stretching. Unclipped, the crop spills past the frame. */
-.product-photo {
-  view-transition-name: product-photo;
+.morph-photo {
+  view-transition-name: morph-photo;
 }
-::view-transition-group(product-photo) {
+::view-transition-group(morph-photo) {
   animation-duration: 450ms;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
-::view-transition-old(product-photo),
-::view-transition-new(product-photo) {
+::view-transition-old(morph-photo) {
+  display: none;
+}
+::view-transition-new(morph-photo) {
   height: 100%;
   object-fit: cover;
   overflow: clip;
   animation: none;
-  mix-blend-mode: normal;
+}
+
+/* The list is often scrolled far from the top, so cross-fading it with the
+   new page would overlap two pages' text. It fades out before the new page
+   fades in. */
+@keyframes photo-page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes photo-page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+html[data-photo-transition] {
+  &::view-transition-old(root) {
+    animation: 100ms ease-in both photo-page-fade-out;
+    mix-blend-mode: normal;
+  }
+  &::view-transition-new(root) {
+    animation: 200ms ease-out 100ms both photo-page-fade-in;
+    mix-blend-mode: normal;
+  }
 }

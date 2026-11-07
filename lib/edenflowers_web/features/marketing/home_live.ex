@@ -402,8 +402,15 @@ defmodule EdenflowersWeb.Marketing.HomeLive do
                   if (this.embla) this.embla.reInit();
                 },
 
+                // Destroying clears the slides' position, snapping back to the first.
+                // The page is being left, and the tapped slide's photo has to stay
+                // where it was to grow into the product page's (page_transitions.js).
                 destroyed() {
-                  if (this.embla) this.embla.destroy();
+                  if (!this.embla) return;
+                  const container = this.embla.containerNode();
+                  const position = container.style.transform;
+                  this.embla.destroy();
+                  container.style.transform = position;
                 },
 
                 /**
