@@ -549,8 +549,21 @@ body:has(.admin-theme) {
     scale: 0.96;
   }
 
+  /* The page dims in and out with the panel instead of snapping. */
   &::backdrop {
-    background: rgb(0 0 0 / 0.08);
+    background-color: transparent;
+    transition:
+      background-color 220ms var(--ease-out, ease-out),
+      display 220ms allow-discrete,
+      overlay 220ms allow-discrete;
+  }
+
+  &:popover-open::backdrop {
+    background-color: rgb(0 0 0 / 0.08);
+
+    @starting-style {
+      background-color: transparent;
+    }
   }
 
   @media (width >= 40rem) {
