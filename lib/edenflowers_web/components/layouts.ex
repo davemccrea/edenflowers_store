@@ -287,7 +287,7 @@ defmodule EdenflowersWeb.Layouts do
         id="admin-nav-drawer"
         placement="left"
         label={dgettext("admin", "Admin navigation")}
-        class="bg-forest text-forest-content border-forest-content/15 w-[80vw] flex h-full flex-col border-r sm:w-[25rem]"
+        class="admin-chrome bg-forest text-forest-content border-forest-content/15 w-[80vw] flex h-full flex-col border-r sm:w-[25rem]"
       >
         <.admin_sidebar_content
           nav_sections={@nav_sections}
@@ -300,7 +300,7 @@ defmodule EdenflowersWeb.Layouts do
       <%!-- Desktop: persistent sidebar, pinned so it stays in view while content scrolls --%>
       <aside
         aria-label={dgettext("admin", "Admin navigation")}
-        class="admin-sidebar [view-transition-name:admin-sidebar] bg-forest text-forest-content border-forest-content/15 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
+        class="admin-sidebar [view-transition-name:admin-sidebar] admin-chrome bg-forest text-forest-content border-forest-content/15 hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col"
       >
         <.admin_sidebar_content
           nav_sections={@nav_sections}
@@ -315,7 +315,7 @@ defmodule EdenflowersWeb.Layouts do
              Equal side columns keep the wordmark centred on the bar.
              It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
              blur over the top edge unless a sticky or fixed element covers it. --%>
-        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] bg-forest text-forest-content border-forest-content/15 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
+        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] admin-chrome bg-forest text-forest-content border-forest-content/15 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
           <div class="flex items-center">
             <button
               type="button"
@@ -536,11 +536,11 @@ defmodule EdenflowersWeb.Layouts do
       aria-current={@active && "page"}
       class={["group flex items-center gap-3 px-3 py-2 text-sm transition-colors", if(@active,
     do: "bg-forest-content/10 font-semibold",
-    else: "text-forest-content/80 hover:bg-forest-content/5 hover:text-forest-content")]}
+    else: "text-forest-content/90 hover:bg-forest-content/5 hover:text-forest-content")]}
     >
       <.icon
         name={@icon}
-        class={["h-4 w-4 shrink-0", if(@active, do: "text-forest-content", else: "text-forest-content/60")]}
+        class={["h-4 w-4 shrink-0", if(@active, do: "text-forest-content", else: "text-forest-content/75")]}
       />
       <span class="link-underline-group-hover group-aria-[current=page]:decoration-(--color-link-underline)">{@label}</span>
       <.icon
