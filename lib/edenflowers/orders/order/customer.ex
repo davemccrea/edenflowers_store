@@ -27,6 +27,7 @@ defmodule Edenflowers.Orders.Order.Customer do
                 load: [
                   :payment_status,
                   :unpaid?,
+                  :payment_instruction,
                   :grand_total,
                   :payment_link_open?,
                   :amount_paid,
@@ -49,6 +50,39 @@ defmodule Edenflowers.Orders.Order.Customer do
       change {Changes.AdjustStock, direction: :return}
       change {NotifyShop, notice: :cancelled}
       require_atomic? false
+    end
+  end
+
+  calculations do
+    calculate :payment_instruction,
+              :atom,
+              expr(
+                cond do
+                  not unpaid? ->
+                    nil
+
+                  payment_link_open? ->
+                    :pay_now
+
+                  payment_terms == :invoice ->
+                    :invoice
+
+                  payment_terms == :on_fulfillment and fulfillment_status == :pending and
+                      fulfillment_method == :delivery ->
+                    :on_delivery
+
+                  payment_terms == :on_fulfillment and fulfillment_status == :pending ->
+                    :at_collection
+
+                  true ->
+                    nil
+                end
+              ) do
+      constraints one_of: [:pay_now, :invoice, :on_delivery, :at_collection]
+
+      description "How the customer should pay an unpaid order, following its payment link or agreed terms. " <>
+                    "Once handed over, an order no longer asks for payment in person. Nil when nothing is due " <>
+                    "or no payment method was agreed."
     end
   end
 end

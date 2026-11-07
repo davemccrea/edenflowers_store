@@ -48,18 +48,6 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionCancelledEmail
   since it's past the change deadline, or nil.
   """
   def charged_on(subscription) do
-    require Ash.Query
-
-    order =
-      Edenflowers.Orders.Order
-      |> Ash.Query.filter(
-        subscription_id == ^subscription.id and state == :placed and fulfillment_status == :pending and
-          fulfillment_date >= ^Edenflowers.ShopTime.today() and not changes_open?
-      )
-      |> Ash.Query.sort(fulfillment_date: :asc)
-      |> Ash.Query.limit(1)
-      |> Ash.read_one!(authorize?: false)
-
-    order && order.fulfillment_date
+    Ash.load!(subscription, :final_delivery_date, authorize?: false).final_delivery_date
   end
 end

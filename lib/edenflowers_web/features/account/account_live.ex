@@ -442,12 +442,12 @@ defmodule EdenflowersWeb.Account.AccountLive do
       <p class="text-base-content/70 mt-1 text-sm tabular-nums">
         {~t"Course"} · {course_state(@registration, @upcoming?, @locale)} · {@registration.course.location_name} · {~t"#{count = @registration.seats_held} place(s)"N}
       </p>
-      <p :if={Decimal.positive?(@registration.balance)} class="text-base-content/70 mt-1 text-sm">
+      <p :if={@registration.payment_instruction} class="text-base-content/70 mt-1 text-sm">
         {~t"Amount to pay: #{amount = Format.currency(@registration.balance, @locale)}."}
         <%= cond do %>
-          <% @registration.payment_terms == :invoice -> %>
+          <% @registration.payment_instruction == :invoice -> %>
             {~t"Pay by invoice"}
-          <% @registration.payment_link_open? -> %>
+          <% @registration.payment_instruction == :pay_now -> %>
             <.link navigate={EdenflowersWeb.PaymentLink.path_for(@registration)} class="link-underline-hover text-primary">
               {~t"Pay now"}
             </.link>
@@ -580,7 +580,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   attr :order, :map, required: true
 
   defp unpaid_note(assigns) do
-    assigns = assign(assigns, :note, payment_note(assigns.order))
+    assigns = assign(assigns, :note, payment_note(assigns.order.payment_instruction))
 
     ~H"""
     <span :if={@note} class="text-base-content/70 block text-sm" data-testid="order-unpaid">
@@ -597,15 +597,11 @@ defmodule EdenflowersWeb.Account.AccountLive do
     """
   end
 
-  # Only how Jennie said they'd pay: once handed over, "in person" no longer holds.
-  defp payment_note(%{payment_link_open?: true}), do: :pay_now
-  defp payment_note(%{payment_terms: :invoice}), do: ~t"Pay by invoice"
-
-  defp payment_note(%{payment_terms: :on_fulfillment, fulfillment_status: :pending, fulfillment_method: :delivery}),
-    do: ~t"Pay on delivery"
-
-  defp payment_note(%{payment_terms: :on_fulfillment, fulfillment_status: :pending}), do: ~t"Pay at collection"
-  defp payment_note(_order), do: nil
+  defp payment_note(:pay_now), do: :pay_now
+  defp payment_note(:invoice), do: ~t"Pay by invoice"
+  defp payment_note(:on_delivery), do: ~t"Pay on delivery"
+  defp payment_note(:at_collection), do: ~t"Pay at collection"
+  defp payment_note(nil), do: nil
 
   # The customer's words for an order's `customer_status`. The date sits beside it.
   defp status_label(:refunded), do: ~t"Refunded"
@@ -648,10 +644,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
   defp order_date(order), do: order.fulfillment_date || ordered_on(order)
 
   defp registrations(user) do
-    Courses.list_my_registrations!(
-      actor: user,
-      load: [:course, :seats_held, :upcoming?, :balance, :receipt_available?, :payment_link_open?]
-    )
+    Courses.list_my_registrations!(actor: user)
     |> Translations.translate_assoc(:course)
   end
 

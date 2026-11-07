@@ -14,6 +14,7 @@ defmodule Edenflowers.Orders.Subscription do
   import Edenflowers.Actors
 
   alias Edenflowers.Orders.Changes.NotifyShop
+  alias Edenflowers.Orders.Subscription.Calculations.PlanChangesFrom
   alias Edenflowers.Orders.Subscription.Changes
   alias Edenflowers.Orders.Subscription.Validations
   alias Edenflowers.Orders.Validations.Holds
@@ -68,6 +69,20 @@ defmodule Edenflowers.Orders.Subscription do
   def cutoff_days, do: @cutoff_days
 
   def change_deadline_days, do: @change_deadline_days
+
+  @doc """
+  Previews the first delivery a plan change applies to, without saving it.
+  Validates the proposed plan and uses the same rescheduling and paused-date
+  calculations as the change action and its confirmation.
+  """
+  def preview_plan_change(subscription, params, opts \\ []) do
+    changeset = Ash.Changeset.for_update(subscription, :change, params, opts)
+
+    with {:ok, proposed} <- Ash.Changeset.apply_attributes(changeset),
+         {:ok, date} <- Changes.Reschedule.next_fulfillment_date(changeset, Keyword.put(opts, :authorize?, false)) do
+      {:ok, PlanChangesFrom.date(%{proposed | next_fulfillment_date: date})}
+    end
+  end
 
   @doc "Starts a subscription held at `:payment_failed` making Occurrences again."
   def reactivate_if_held(%{state: :payment_failed} = subscription) do
@@ -238,12 +253,15 @@ defmodule Edenflowers.Orders.Subscription do
                   :charged_on,
                   :changes_reopen_on,
                   :resume_date,
+                  :plan_changes_from,
                   :next_delivery_date,
+                  :next_pending_delivery_date,
+                  :final_delivery_date,
                   :fulfilled_count,
                   :price_per_order,
                   :fee_per_order,
                   :delivery_days,
-                  booked_occurrence: [:changes_open?],
+                  :booked_occurrence,
                   unpaid_occurrence: [:grand_total],
                   product_variant: :product
                 ]
@@ -544,12 +562,12 @@ defmodule Edenflowers.Orders.Subscription do
     end
 
     has_one :booked_occurrence, Edenflowers.Orders.Order do
-      description "The next uncancelled order from today on (Helsinki time). The occurrence job books each " <>
-                    "delivery ahead of its date, after which next_fulfillment_date has already moved on to the " <>
-                    "one after."
+      description "The next placed order still awaiting fulfillment from today on (Helsinki time). The " <>
+                    "occurrence job books each delivery ahead of its date, after which next_fulfillment_date " <>
+                    "has already moved on to the one after."
 
       from_many? true
-      filter expr(fulfillment_status != :cancelled and fulfillment_date >= helsinki_today())
+      filter expr(fulfillable? and fulfillment_date >= helsinki_today())
       sort fulfillment_date: :asc
     end
   end
@@ -565,6 +583,18 @@ defmodule Edenflowers.Orders.Subscription do
     calculate :next_delivery_date, :date, expr(if(state == :active, do: next_fulfillment_date, else: nil)) do
       description "The next Occurrence's delivery or pickup date, or nil unless active: only an active " <>
                     "subscription has an Occurrence coming."
+    end
+
+    calculate :next_pending_delivery_date,
+              :date,
+              expr(booked_occurrence.fulfillment_date || next_delivery_date) do
+      description "The next delivery still awaiting fulfillment: an already booked order first, otherwise the " <>
+                    "active schedule's next date. Completed deliveries never take precedence over the schedule."
+    end
+
+    calculate :plan_changes_from, :date, Edenflowers.Orders.Subscription.Calculations.PlanChangesFrom do
+      description "The first delivery a changed plan applies to: the next unbooked date while active, or the " <>
+                    "date it would resume on if paused. Orders already booked keep their original plan."
     end
 
     calculate :charged_on, :date, expr(date_add(next_fulfillment_date, ^(-@lead_days), :day)) do
@@ -655,6 +685,14 @@ defmodule Edenflowers.Orders.Subscription do
   end
 
   aggregates do
+    first :final_delivery_date, :orders, :fulfillment_date do
+      description "The next delivery cancelling would leave in place: still awaiting fulfillment today or " <>
+                    "later, and past its change deadline. Shared by the account warning and cancellation email."
+
+      filter expr(fulfillable? and fulfillment_date >= helsinki_today() and not changes_open?)
+      sort fulfillment_date: :asc
+    end
+
     count :fulfilled_count, :orders do
       description "How many of its orders Jennie has delivered or had collected, counting the first. The " <>
                     "account page shows it as a quiet thank-you for staying."

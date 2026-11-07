@@ -33,7 +33,27 @@ defmodule Edenflowers.Orders.Subscription.Changes.Reschedule do
   end
 
   defp reschedule(changeset, context) do
-    case Ash.load(changeset.data, :last_delivery_date, Ash.Context.to_opts(context, authorize?: false)) do
+    case next_fulfillment_date(changeset, Ash.Context.to_opts(context, authorize?: false)) do
+      {:ok, next_date} ->
+        Ash.Changeset.force_change_attribute(changeset, :next_fulfillment_date, next_date)
+
+      {:error, error} ->
+        Ash.Changeset.add_error(changeset, error)
+    end
+  end
+
+  @doc false
+  def next_fulfillment_date(changeset, opts) do
+    if Ash.Changeset.changing_attribute?(changeset, :interval_weeks) or
+         Ash.Changeset.changing_attribute?(changeset, :delivery_day) do
+      rescheduled_date(changeset, opts)
+    else
+      {:ok, changeset.data.next_fulfillment_date}
+    end
+  end
+
+  defp rescheduled_date(changeset, opts) do
+    case Ash.load(changeset.data, :last_delivery_date, opts) do
       {:ok, %{last_delivery_date: last, next_fulfillment_date: next, interval_weeks: old_weeks}} ->
         weeks = Ash.Changeset.get_attribute(changeset, :interval_weeks)
 
@@ -43,10 +63,10 @@ defmodule Edenflowers.Orders.Subscription.Changes.Reschedule do
           |> on_weekday(Ash.Changeset.get_attribute(changeset, :delivery_day))
           |> StepToScheduledDate.scheduled_date(weeks, Subscription.change_deadline_days())
 
-        Ash.Changeset.force_change_attribute(changeset, :next_fulfillment_date, next_date)
+        {:ok, next_date}
 
       {:error, error} ->
-        Ash.Changeset.add_error(changeset, error)
+        {:error, error}
     end
   end
 

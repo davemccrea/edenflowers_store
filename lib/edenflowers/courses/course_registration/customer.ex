@@ -15,6 +15,26 @@ defmodule Edenflowers.Courses.CourseRegistration.Customer do
       description "The actor's own confirmed bookings, for their account page."
 
       filter expr(user_id == ^actor(:id) and status == :confirmed)
+
+      prepare build(load: [:course, :seats_held, :upcoming?, :balance, :receipt_available?, :payment_instruction])
+    end
+  end
+
+  calculations do
+    calculate :payment_instruction,
+              :atom,
+              expr(
+                cond do
+                  balance <= 0 -> nil
+                  payment_terms == :invoice -> :invoice
+                  payment_link_open? -> :pay_now
+                  true -> :at_course
+                end
+              ) do
+      constraints one_of: [:invoice, :pay_now, :at_course]
+
+      description "How the customer should pay the booking's remaining balance: by invoice, an open payment " <>
+                    "link, or at the course. Nil once the balance is paid."
     end
   end
 end
