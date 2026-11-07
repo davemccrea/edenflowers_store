@@ -1244,8 +1244,8 @@ defmodule Edenflowers.Orders.OrderTest do
     end
   end
 
-  describe "removing_last_item_loses_details? calculation" do
-    defp loses_details?(order_opts, item_count) do
+  describe "one_item_left? and checkout_details_saved? calculations" do
+    defp cart_with(order_opts, item_count) do
       order = generate(order(order_opts))
 
       for _ <- 1..item_count do
@@ -1253,22 +1253,23 @@ defmodule Edenflowers.Orders.OrderTest do
         generate(line_item(order_id: order.id, product_variant_id: variant.id))
       end
 
-      Ash.load!(order, :removing_last_item_loses_details?, authorize?: false).removing_last_item_loses_details?
+      Ash.load!(order, [:one_item_left?, :checkout_details_saved?], authorize?: false)
     end
 
-    test "a cart with nothing saved at checkout empties without asking" do
-      refute loses_details?([], 1)
+    test "a fresh cart has nothing saved for a checkout restart to lose" do
+      refute cart_with([], 1).checkout_details_saved?
     end
 
     test "saved contact details, a later step or a promotion code would be lost" do
-      assert loses_details?([customer_email: "jane@example.com"], 1)
-      assert loses_details?([customer_name: "Jane"], 1)
-      assert loses_details?([state: :delivery], 1)
-      assert loses_details?([promotion_id: generate(promotion()).id], 1)
+      assert cart_with([customer_email: "jane@example.com"], 1).checkout_details_saved?
+      assert cart_with([customer_name: "Jane"], 1).checkout_details_saved?
+      assert cart_with([state: :delivery], 1).checkout_details_saved?
+      assert cart_with([promotion_id: generate(promotion()).id], 1).checkout_details_saved?
     end
 
-    test "removing one of several items keeps checkout" do
-      refute loses_details?([state: :payment, customer_email: "jane@example.com"], 2)
+    test "only the last item's removal restarts checkout" do
+      assert cart_with([], 1).one_item_left?
+      refute cart_with([], 2).one_item_left?
     end
   end
 

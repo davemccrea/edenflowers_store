@@ -62,6 +62,27 @@ defmodule EdenflowersWeb.Checkout.CheckoutLiveTest do
     %{order: order, product: product, variant: variant}
   end
 
+  describe "emptying the cart" do
+    test "removes the last item at once when nothing has been filled in", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(with_cart(conn, order), ~p"/checkout")
+      [line_item] = order.line_items
+
+      view |> element("#checkout-line-items-remove-#{line_item.id}") |> render_click()
+
+      assert_redirect(view, "/en", 1_000)
+    end
+
+    test "asks first once the customer has typed a detail, though it isn't saved yet", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(with_cart(conn, order), ~p"/checkout")
+      [line_item] = order.line_items
+
+      view |> element("#checkout-form-1") |> render_change(%{"form" => %{"customer_name" => "Jane"}})
+      view |> element("#checkout-line-items-remove-#{line_item.id}") |> render_click()
+
+      assert has_element?(view, "#checkout-line-items-ask-remove-#{line_item.id}")
+    end
+  end
+
   describe "paying" do
     setup %{variant: variant} do
       order =

@@ -36,7 +36,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
     :vat,
     :cart_effectively_empty?,
     :add_ons_only?,
-    :removing_last_item_loses_details?,
+    :one_item_left?,
+    :checkout_details_saved?,
     :free_delivery?,
     :subscription?,
     :newsletter_offer_hidden?,
@@ -56,7 +57,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
     :total_items_in_cart,
     :add_ons_only?,
     :promotion_applied?,
-    :removing_last_item_loses_details?,
+    :one_item_left?,
+    :checkout_details_saved?,
     line_items: [:product_slug]
   ]
 

@@ -82,6 +82,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
          build_submit_form(order, prefill_contact_details(order, socket.assigns[:current_user]), actor(socket))
        )
        |> assign(:customer_session_client_secret, nil)
+       |> assign(:typed_details?, false)
        |> assign(gift_voucher_error: nil, gift_voucher_code: nil)
        |> ensure_customer_session(order, actor(socket))
        |> maybe_scroll_to_current_step()}
@@ -156,6 +157,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
       flash={@flash}
       current_path={@current_path}
       notice_bar={@notice_bar}
+      typed_checkout_details?={@typed_details?}
     >
       <.container>
         <div class="max-w-[58rem] mx-auto w-full">
@@ -502,6 +504,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                   module={EdenflowersWeb.Cart.LineItems}
                   order={@order}
                   card_picker?={true}
+                  typed_details?={@typed_details?}
                 />
 
                 <div class="border-base-content/12 border-t"></div>
@@ -580,9 +583,11 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   end
 
   @impl true
+  # A change event only fires on the customer's own edits, so a prefilled name and email don't count as typed.
   def handle_event("validate_form", %{"form" => params}, socket) do
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
-    {:noreply, assign(socket, form: form)}
+    typed? = socket.assigns.typed_details? or Enum.any?(params, &typed_value?/1)
+    {:noreply, assign(socket, form: form, typed_details?: typed?)}
   end
 
   def handle_event("format_phone_number", %{"value" => typed}, socket) do
@@ -1195,6 +1200,10 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # Sent as a message rather than pushed directly so it lands after any
   # send_update from forward_delivery_address_error, whose errors render in a
   # later diff.
+  defp typed_value?({"_" <> _, _value}), do: false
+  defp typed_value?({_key, value}) when is_binary(value), do: String.trim(value) != ""
+  defp typed_value?(_param), do: false
+
   defp focus_first_error, do: send(self(), :focus_first_error)
 
   defp forward_delivery_address_error(form) do
