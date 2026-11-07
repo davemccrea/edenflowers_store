@@ -699,10 +699,8 @@
 html[data-photo-transition] {
   &::view-transition-old(root) {
     animation: 100ms ease-in both photo-page-fade-out;
-    mix-blend-mode: normal;
   }
   &::view-transition-new(root) {
     animation: 200ms ease-out 100ms both photo-page-fade-in;
-    mix-blend-mode: normal;
   }
 }
