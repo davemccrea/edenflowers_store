@@ -31,7 +31,8 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   @doc """
   The record payment form, on `record_payment`, or on `pay_with_gift_voucher`
   once Jennie picks Gift voucher. Starts at a card payment in the shop for the
-  whole balance, without a receipt.
+  whole balance, without a receipt, except on a Gift voucher sale, whose buyer
+  gets the voucher by email once it's paid in full.
   """
   def payment_form(payable, actor, params \\ %{}) do
     params =
@@ -39,7 +40,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
         %{
           "payment_method" => "zettle",
           "amount" => Decimal.to_string(payable.balance, :normal),
-          "email_receipt?" => "false"
+          "email_receipt?" => to_string(voucher_sale?(payable))
         },
         params
       )
@@ -51,18 +52,41 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   @doc """
   The record payment form as Jennie changes it. Choosing a bank transfer ticks
   the receipt email, since the customer paid from home and would otherwise
-  hear nothing; any other method unticks it, as she was there in person.
+  hear nothing; any other method unticks it, as she was there in person. On a
+  Gift voucher sale it's ticked while the amount pays it off, so its buyer
+  gets the voucher, and off for a part payment, which can't email it.
   Choosing or leaving Gift voucher swaps the form's action.
   """
-  def change_payment_form(form, params, ["payment", "payment_method"], actor),
-    do:
-      payment_form(
-        form.source.data,
-        actor,
-        Map.put(params, "email_receipt?", to_string(params["payment_method"] == "zervant"))
-      )
+  def change_payment_form(form, params, ["payment", "payment_method"], actor) do
+    payable = form.source.data
+    email? = pays_off_voucher?(payable, params["amount"]) or params["payment_method"] == "zervant"
+    payment_form(payable, actor, Map.put(params, "email_receipt?", to_string(email?)))
+  end
+
+  def change_payment_form(form, params, ["payment", "amount"], _actor) do
+    payable = form.source.data
+
+    params =
+      if voucher_sale?(payable),
+        do: Map.put(params, "email_receipt?", to_string(pays_off_voucher?(payable, params["amount"]))),
+        else: params
+
+    AshPhoenix.Form.validate(form, params)
+  end
 
   def change_payment_form(form, params, _target, _actor), do: AshPhoenix.Form.validate(form, params)
+
+  @doc "Whether `amount` pays off a Gift voucher sale, so the payment can email the voucher."
+  def pays_off_voucher?(payable, amount) do
+    with true <- voucher_sale?(payable),
+         {:ok, %Decimal{} = amount} <- Ash.Type.cast_input(Edenflowers.Types.Price, amount) do
+      not Decimal.lt?(amount, payable.balance)
+    else
+      _ -> false
+    end
+  end
+
+  defp voucher_sale?(payable), do: Map.get(payable, :gift_voucher_sale?) == true
 
   @doc """
   The refund form on the `refund` action: what's owed back, if anything, the

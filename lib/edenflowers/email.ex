@@ -305,6 +305,10 @@ defmodule Edenflowers.Email do
   # Subjects name the day, "Saturday 14.11.", so the customer can tell orders apart.
   defp short_date(order), do: Format.weekday_day_month(order.fulfillment_date, order.locale)
 
+  # Only a Gift voucher sale has no fulfillment date.
+  defp cancelled_subject(%{fulfillment_date: nil}), do: ~t"Your Eden Flowers gift voucher is cancelled"
+  defp cancelled_subject(order), do: ~t"Your Eden Flowers order for #{date = short_date(order)} is cancelled"
+
   # A window reads as the course emails write theirs: "Saturday 14.11.2026, 12:00–16:00".
   defp fulfillment_on(order) do
     date = Format.weekday_date(order.fulfillment_date, order.locale)
@@ -502,7 +506,7 @@ defmodule Edenflowers.Email do
   def cancelled(%Order{} = order, money) do
     customer_email(order, from_address(), fn email ->
       email
-      |> subject(~t"Your Eden Flowers order for #{date = short_date(order)} is cancelled")
+      |> subject(cancelled_subject(order))
       |> text_body(
         Templates.order_cancelled(%{
           order: order,

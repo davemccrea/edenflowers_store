@@ -185,7 +185,8 @@ defmodule Edenflowers.Orders.Order.Emails do
     update :send_payment_received_email do
       description "Run by its job: emails Payment received with the receipt PDF for amount, or else the latest " <>
                     "payment that isn't a refund, after a payment link is paid or Jennie records a payment and " <>
-                    "ticks to email it, regardless of fulfillment."
+                    "ticks to email it, regardless of fulfillment. A Gift voucher sale gets the voucher email " <>
+                    "instead, with the voucher PDF beside the receipt, and only once it's paid in full."
 
       accept []
       argument :amount, :decimal
@@ -198,7 +199,14 @@ defmodule Edenflowers.Orders.Order.Emails do
 
       transaction? false
       require_atomic? false
-      change PaymentChanges.SendPaymentReceivedEmail
+
+      validate {Holds, calculation: :payment_emailable?, message: "is a gift voucher not yet paid in full"}
+
+      change PaymentChanges.SendPaymentReceivedEmail,
+        where: [negate({Holds, calculation: :gift_voucher_sale?, message: "sells a gift voucher"})]
+
+      change Changes.SendReceiptEmail,
+        where: [{Holds, calculation: :gift_voucher_sale?, message: "doesn't sell a gift voucher"}]
     end
 
     update :send_fulfillment_email do

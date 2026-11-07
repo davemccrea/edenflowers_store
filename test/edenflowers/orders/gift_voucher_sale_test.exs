@@ -239,6 +239,23 @@ defmodule Edenflowers.Orders.GiftVoucherSaleTest do
       refute voucher(order).spendable?
     end
 
+    # A voucher sale has no fulfillment date for the subject to name.
+    test "the buyer is told their gift voucher is cancelled", %{admin: admin} do
+      order = buy(50, %{locale: "en-GB"})
+      pi = "pi_#{order.id}"
+
+      StripeAPI.Mock
+      |> stub(:list_refunds, fn ^pi -> {:ok, []} end)
+      |> stub(:create_refund, fn ^pi, 5000, _key, _metadata ->
+        {:ok, %{id: "re_#{order.id}", payment_intent: pi, amount: 5000, status: "succeeded"}}
+      end)
+
+      assert {:ok, _cancelled} = Orders.cancel_order(order, %{email_customer?: true}, actor: admin)
+      Oban.drain_queue(queue: :default)
+
+      assert_received {:email, %{subject: "Your Eden Flowers gift voucher is cancelled"}}
+    end
+
     test "once any of it is spent, the sale can't be cancelled", %{admin: admin} do
       order = buy(50)
       spent_on = generate(order(state: :placed))

@@ -596,9 +596,14 @@ defmodule Edenflowers.Orders.Order.Admin do
 
     update :open_payment_link do
       description "Gives an order that isn't cancelled a payment link, keeping the one it already has. For a " <>
-                    "custom order paid later, or an order edited after it was paid."
+                    "custom order paid later, or an order edited after it was paid. Never a Gift voucher sale, " <>
+                    "paid at the counter when Jennie sells it or at checkout online."
 
       validate attribute_does_not_equal(:fulfillment_status, :cancelled), message: "is cancelled"
+
+      validate negate({Holds, calculation: :gift_voucher_sale?, message: "sells a gift voucher"}),
+        message: "is a gift voucher, paid in person"
+
       change set_context(%{skip_version_when_unchanged?: true})
       change PaymentChanges.OpenPaymentLink
       change load(@admin_show_load)

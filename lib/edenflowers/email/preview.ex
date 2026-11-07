@@ -137,8 +137,10 @@ defmodule Edenflowers.Email.Preview do
 
   defp order_load(:cancelled), do: [:customer_first_name, :payments | Cancel.load()]
   defp order_load(:refunded), do: [:customer_first_name, :payments, :paid_through_stripe]
+  defp order_load(:receipt), do: [:gift_voucher_sale? | order_load(:gift_voucher)] ++ totals_load()
+  defp order_load(_kind), do: totals_load()
 
-  defp order_load(_kind),
+  defp totals_load,
     do: [
       :customer_first_name,
       :grand_total,
@@ -158,6 +160,9 @@ defmodule Edenflowers.Email.Preview do
 
   defp order_email(:payment_reminder, order, _inputs),
     do: Email.payment_reminder(order, link_url(order))
+
+  # A Gift voucher sale's payment is answered with the voucher itself.
+  defp order_email(:receipt, %{gift_voucher_sale?: true} = order, inputs), do: order_email(:gift_voucher, order, inputs)
 
   defp order_email(:receipt, order, inputs), do: payment_receipt(order, inputs, order.order_reference)
 

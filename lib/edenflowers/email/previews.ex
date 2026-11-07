@@ -427,7 +427,12 @@ defmodule Edenflowers.Email.Previews do
       {"Order cancelled", "unpaid by bank transfer, cancellation charge outstanding", :cancelled,
        Email.cancelled(order(%{payment_terms: :invoice}, locale), cancel_money(charge: "32.00", to_collect: "32.00"))},
       {"Order cancelled", "nothing to refund, no customer first name", :cancelled,
-       Email.cancelled(order(%{customer_first_name: nil, payments: []}, locale), cancel_money([]))}
+       Email.cancelled(order(%{customer_first_name: nil, payments: []}, locale), cancel_money([]))},
+      {"Order cancelled", "gift voucher sale refunded to a card", :cancelled,
+       Email.cancelled(
+         order(Map.merge(paid, %{fulfillment_date: nil, payments: [card_payment("64.00")]}), locale),
+         cancel_money(refunded: "64.00")
+       )}
     ]
   end
 
