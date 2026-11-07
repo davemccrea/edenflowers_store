@@ -6,7 +6,7 @@ title: >-
 status: done
 assignee: []
 created_date: '2026-11-06 13:43'
-updated_date: '2026-11-07 08:20'
+updated_date: '2026-11-07 08:21'
 labels:
   - customers
 dependencies: []
@@ -39,6 +39,15 @@ created: 2026-11-07 08:20
 ---
 
 David got World of Printables' written permission on 2026-11-07 for the snowflakes on sold vouchers. Not yet filed next to priv/receipts/assets/snowflakes: the email wasn't found in Fastmail.
+
+---
+
+author: @claude
+created: 2026-11-07 08:21
+
+---
+
+The permission came by Instagram message; David chose not to file a copy with the assets.
 
 ---
 <!-- COMMENTS:END -->
