@@ -328,7 +328,6 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     <.button
       type="button"
       variant="secondary"
-      size="sm"
       class="whitespace-nowrap"
       aria-label={~t"Manage #{name = subscription_name(@subscription)}"}
       phx-click={JS.exec("phx-show", to: "#manage-subscription-#{@subscription.id}")}
