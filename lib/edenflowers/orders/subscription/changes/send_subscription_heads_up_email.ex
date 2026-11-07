@@ -24,6 +24,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.SendSubscriptionHeadsUpEmail d
             :charged_on,
             :fulfillment_option,
             :user,
+            gift_voucher: [:spendable?],
             product_variant: :product
           ],
           Ash.Context.to_opts(context)

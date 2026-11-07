@@ -33,8 +33,7 @@ defmodule Edenflowers.Payments.PurchasePaymentRegressionTest do
     assert :ok = perform_job(SendCancelledEmail, job.args)
 
     Swoosh.TestAssertions.assert_email_sent(fn email ->
-      assert email.text_body =~ "Cancellation charge: 20,00 €."
-      assert email.text_body =~ "Still to pay: 20,00 €."
+      assert email.text_body =~ "There's a cancellation charge of 20,00 €. I'll be in touch about how to pay it."
       refute email.text_body =~ "invoice"
       true
     end)

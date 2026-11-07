@@ -49,8 +49,7 @@ defmodule Edenflowers.Orders.CancelTest do
     assert cancelled.cancellation_emailed_to == order.customer_email
 
     email = sent_email()
-    assert email.text_body =~ "Cancellation charge: 20,00 €."
-    refute email.text_body =~ "Still to pay:"
+    assert email.text_body =~ "I've kept 20,00 € as a cancellation charge."
     assert email.text_body =~ "68,50 €"
     assert email.text_body =~ "If you have any questions"
     refute email.text_body =~ "didn't mean to cancel"
