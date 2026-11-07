@@ -1,6 +1,5 @@
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-const DIAL_DETENTS = 23;
 const WAVE_DETENTS = 14;
 
 /**
@@ -151,7 +150,7 @@ export default {
     Object.assign(this.state, changes);
 
     const detents = this.currentDetents();
-    if (detents.dial !== this.detents.dial) this.pulse(this.dialKnob);
+    if (detents.dial !== this.detents.dial) this.pulse(this.dialKnob, 1.02);
     if (detents.wave !== this.detents.wave) this.pulse(this.waveThumb);
     this.detents = detents;
 
@@ -169,7 +168,7 @@ export default {
 
   currentDetents() {
     return {
-      dial: Math.round((this.state.grain / 100) * DIAL_DETENTS),
+      dial: Math.round((this.state.grain / 100) * (this.dialDots.length - 1)),
       wave: Math.round((this.state.chroma / this.chromaMax) * WAVE_DETENTS),
     };
   },
@@ -187,13 +186,13 @@ export default {
   },
 
   // A small pulse of the control at each step, like Arc's detents.
-  pulse(element) {
+  pulse(element, peakScale = 1.06) {
     const now = performance.now();
     if (now - (this.lastPulse || 0) < 40) return;
     this.lastPulse = now;
 
     if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      element.animate([{ scale: 1 }, { scale: 1.06 }, { scale: 1 }], {
+      element.animate([{ scale: 1 }, { scale: peakScale }, { scale: 1 }], {
         duration: 140,
         easing: "ease-out",
       });

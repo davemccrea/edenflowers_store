@@ -5094,11 +5094,6 @@ msgstr "God morgon, %{first_name}"
 msgid "(opens in a new tab)"
 msgstr "(öppnas i en ny flik)"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:157
-#, elixir-autogen, elixir-format
-msgid "Berry"
-msgstr "Bär"
-
 #: lib/edenflowers_web/features/admin/account_live.ex:112
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:33
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:50
@@ -5111,50 +5106,15 @@ msgstr "Färg"
 msgid "Could not save the appearance."
 msgstr "Det gick inte att spara utseendet."
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:152
-#, elixir-autogen, elixir-format
-msgid "Forest"
-msgstr "Skog"
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:155
-#, elixir-autogen, elixir-format
-msgid "Ink"
-msgstr "Bläck"
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:156
-#, elixir-autogen, elixir-format
-msgid "Plum"
-msgstr "Plommon"
-
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:109
 #, elixir-autogen, elixir-format
 msgid "Sidebar grain"
 msgstr "Sidofältets korn"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:154
-#, elixir-autogen, elixir-format
-msgid "Teal"
-msgstr "Blågrön"
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:158
-#, elixir-autogen, elixir-format
-msgid "Terracotta"
-msgstr "Terrakotta"
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:159
-#, elixir-autogen, elixir-format
-msgid "Charcoal"
-msgstr "Kol"
-
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:88
 #, elixir-autogen, elixir-format
 msgid "Colour intensity"
 msgstr "Färgstyrka"
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:153
-#, elixir-autogen, elixir-format
-msgid "Sage"
-msgstr "Salvia"
 
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:26
 #, elixir-autogen, elixir-format
@@ -5185,3 +5145,38 @@ msgstr "Byt bild"
 #, elixir-autogen, elixir-format
 msgid "Orders linked by Pass it on cards"
 msgstr "Beställningar kopplade via Skicka vidare-kort"
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:158
+#, elixir-autogen, elixir-format
+msgid "Apricot"
+msgstr "Aprikos"
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:159
+#, elixir-autogen, elixir-format
+msgid "Cocoa"
+msgstr "Kakao"
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:154
+#, elixir-autogen, elixir-format
+msgid "Lagoon"
+msgstr "Lagun"
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:156
+#, elixir-autogen, elixir-format
+msgid "Lilac"
+msgstr "Syren"
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:153
+#, elixir-autogen, elixir-format
+msgid "Moss"
+msgstr "Mossa"
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:155
+#, elixir-autogen, elixir-format
+msgid "Periwinkle"
+msgstr "Vintergröna"
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:157
+#, elixir-autogen, elixir-format
+msgid "Rose"
+msgstr "Ros"
