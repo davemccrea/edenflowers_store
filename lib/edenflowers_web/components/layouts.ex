@@ -1048,6 +1048,25 @@ defmodule EdenflowersWeb.Layouts do
               </a>
             </span>
           </div>
+          <div class="-mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs">
+            <span>Built with</span>
+            <%= for {{name, url, logo}, index} <- Enum.with_index([
+                  {"Elixir", "https://elixir-lang.org", ~p"/images/logo-elixir.svg"},
+                  {"Phoenix", "https://www.phoenixframework.org", ~p"/images/logo-phoenix.svg"},
+                  {"Ash", "https://ash-hq.org", ~p"/images/logo-ash.svg"}
+                ]) do %>
+              <span :if={index > 0} aria-hidden="true">/</span>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener"
+                class="text-base-content link-underline-hover inline-flex items-center gap-1"
+              >
+                <img src={logo} alt="" loading="lazy" class="h-3.5 w-3.5 object-contain" />
+                {name}
+              </a>
+            <% end %>
+          </div>
         </div>
       </div>
     </footer>
