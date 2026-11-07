@@ -543,6 +543,12 @@ defmodule EdenflowersWeb.Layouts do
         class={["h-4 w-4 shrink-0", if(@active, do: "text-forest-content", else: "text-forest-content/60")]}
       />
       <span class="link-underline-group-hover group-aria-[current=page]:decoration-(--color-link-underline)">{@label}</span>
+      <.icon
+        :if={@external}
+        name="hero-arrow-top-right-on-square"
+        class="text-forest-content/60 ml-auto h-3.5 w-3.5 shrink-0"
+      />
+      <span :if={@external} class="sr-only">{dgettext("admin", "(opens in a new tab)")}</span>
     </.link>
     """
   end

@@ -172,7 +172,7 @@ Paper at hue ~75 and forest at hue ~150, with one amber accent reserved for inte
 
 ### Named Rules
 
-**The Serif-Sans Split Rule.** On the storefront, serif is what the shop says (headings, product names, prices, quotes, addresses, hours) and sans is what the interface says about itself (eyebrows, buttons, nav, form labels). A serif button or a sans product name is a defect. The admin and the reference pages are sans throughout, headings included: one is a tool, the others are documents people consult rather than pages that persuade.
+**The Serif-Sans Split Rule.** On the storefront, serif is what the shop says (headings, product names, prices, quotes, addresses, hours) and sans is what the interface says about itself (eyebrows, buttons, nav, form labels). A serif button or a sans product name is a defect. The admin and the reference pages are sans throughout, headings included (the one exception is the overview's italic serif line under the greeting, where the shop says what today holds): one is a tool, the others are documents people consult rather than pages that persuade.
 
 **The Open Price Rule.** A price is never smaller or fainter than what it prices: serif, upright, full `base-content`, `text-lg` or larger beside a title. Storefront prices go through `Format.storefront_price/2`, which drops the cents on whole euros.
 

@@ -51,7 +51,12 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
-        <.admin_page_header title={greeting(@current_user)}>
+        <.admin_page_header title={greeting(@current_user, Edenflowers.ShopTime.now().hour)}>
+          <:subtitle>
+            <span class="text-base-content/80 font-serif text-lg italic tabular-nums">
+              {today_summary(Map.get(@orders_by_date, @today, []))}
+            </span>
+          </:subtitle>
           <:actions>
             <.button navigate={~p"/admin/orders/new-gift-voucher"} variant="secondary" size="sm">
               <.icon name="hero-plus" class="h-4 w-4" /> {~t"New voucher"}
@@ -169,9 +174,41 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   # A day off the strip, such as yesterday's after midnight, falls back to today.
   defp selected_day(day, [today | _] = days), do: if(day in days, do: day, else: today)
 
-  defp greeting(%{first_name: first_name}) when is_binary(first_name), do: ~t"Hi, #{first_name}"
+  defp greeting(%{first_name: first_name}, hour) when is_binary(first_name) do
+    cond do
+      hour in 5..11 -> ~t"Good morning, #{first_name}"
+      hour in 12..17 -> ~t"Good afternoon, #{first_name}"
+      true -> ~t"Good evening, #{first_name}"
+    end
+  end
 
-  defp greeting(_user), do: ~t"Hi"
+  defp greeting(_user, hour) do
+    cond do
+      hour in 5..11 -> ~t"Good morning"
+      hour in 12..17 -> ~t"Good afternoon"
+      true -> ~t"Good evening"
+    end
+  end
+
+  defp today_summary(orders) do
+    deliveries = Enum.count(orders, &(&1.fulfillment_method == :delivery))
+    pickups = Enum.count(orders, &(&1.fulfillment_method == :pickup))
+
+    case {deliveries, pickups} do
+      {0, 0} ->
+        ~t"Nothing due today."
+
+      {deliveries, 0} ->
+        dngettext("admin", "%{count} delivery today.", "%{count} deliveries today.", deliveries)
+
+      {0, pickups} ->
+        dngettext("admin", "%{count} pickup today.", "%{count} pickups today.", pickups)
+
+      {deliveries, pickups} ->
+        dngettext("admin", "%{count} delivery", "%{count} deliveries", deliveries) <>
+          " · " <> dngettext("admin", "%{count} pickup today.", "%{count} pickups today.", pickups)
+    end
+  end
 
   defp assign_orders(socket) do
     actor = socket.assigns.current_user
@@ -421,7 +458,13 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       <figure id="revenue-pace" class="mt-4" aria-hidden="true">
         <div class="border-base-content/12 relative h-28 border-b">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">
-            <path d={@chart.this_area} class="fill-primary/12" />
+            <defs>
+              <linearGradient id="revenue-pace-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="[stop-color:var(--color-primary)] [stop-opacity:0.35]" />
+                <stop offset="1" class="[stop-color:var(--color-primary)] [stop-opacity:0.02]" />
+              </linearGradient>
+            </defs>
+            <path d={@chart.this_area} fill="url(#revenue-pace-fill)" />
             <path
               d={@chart.last_line}
               fill="none"
@@ -443,9 +486,12 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             style={"left: #{@chart.last_today_x}%; top: #{@chart.last_today_y}%"}
           />
           <span
-            class="bg-primary ring-base-100 absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2"
+            class="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2"
             style={"left: #{@chart.today_x}%; top: #{@chart.today_y}%"}
-          />
+          >
+            <span class="bg-primary/40 absolute inset-0 rounded-full motion-safe:animate-ping" />
+            <span class="bg-primary ring-base-100 absolute inset-0 rounded-full ring-2" />
+          </span>
         </div>
         <div class="text-base-content/75 mt-1 flex justify-between text-xs tabular-nums">
           <span>{Format.day_month(Date.beginning_of_month(@today), @locale)}</span>
