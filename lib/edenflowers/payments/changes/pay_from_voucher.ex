@@ -32,10 +32,11 @@ defmodule Edenflowers.Payments.Changes.PayFromVoucher do
   defp pay(record, voucher_id) do
     with {:ok, voucher} <- lock(voucher_id),
          {:ok, record} <- Ash.load(record, :balance, authorize?: false, reuse_values?: false) do
-      case amount(voucher, record.balance) do
-        :none -> {:ok, record}
-        amount -> record_payment(record, voucher, amount)
-      end
+      amount = pays(voucher, record.balance)
+
+      if Decimal.positive?(amount),
+        do: record_payment(record, voucher, amount),
+        else: {:ok, record}
     end
   end
 
@@ -49,11 +50,13 @@ defmodule Edenflowers.Payments.Changes.PayFromVoucher do
     end
   end
 
-  defp amount(%{spendable?: false}, _balance), do: :none
-
-  defp amount(voucher, balance) do
-    if Decimal.positive?(balance), do: Decimal.min(voucher.remaining, balance), else: :none
-  end
+  @doc """
+  What `voucher` (with `:remaining` and `:spendable?` loaded) pays towards
+  `owed`: what's left on it, up to what's owed. The order form quotes it
+  before placing.
+  """
+  def pays(%{spendable?: false}, _owed), do: Decimal.new(0)
+  def pays(voucher, owed), do: owed |> Decimal.max(0) |> Decimal.min(voucher.remaining)
 
   defp record_payment(record, voucher, amount) do
     payment =
