@@ -567,7 +567,7 @@ msgstr ""
 msgid "Could not refund with Stripe. Check the payment in Stripe."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:156
+#: lib/edenflowers_web/features/admin/account_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "Could not remove the profile picture."
 msgstr ""
@@ -577,7 +577,7 @@ msgstr ""
 msgid "Could not remove the seat."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:177
+#: lib/edenflowers_web/features/admin/account_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "Could not save the profile picture."
 msgstr ""
@@ -610,7 +610,7 @@ msgstr ""
 msgid "Could not upload the photo."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:186
+#: lib/edenflowers_web/features/admin/account_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "Could not upload the picture."
 msgstr ""
@@ -1342,7 +1342,7 @@ msgstr ""
 msgid "Its money was since refunded. Undo the refund first."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:95
+#: lib/edenflowers_web/features/admin/account_live.ex:102
 #, elixir-autogen, elixir-format
 msgid "JPG, PNG or WebP, up to 2 MB."
 msgstr ""
@@ -2346,7 +2346,7 @@ msgstr ""
 msgid "Refunded with Stripe."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:84
+#: lib/edenflowers_web/features/admin/account_live.ex:91
 #: lib/edenflowers_web/features/admin/order_form_live.ex:322
 #, elixir-autogen, elixir-format
 msgid "Remove"
@@ -2666,7 +2666,7 @@ msgid "Shown on this device only."
 msgstr ""
 
 #: lib/edenflowers_web/components/layouts.ex:632
-#: lib/edenflowers_web/features/admin/account_live.ex:116
+#: lib/edenflowers_web/features/admin/account_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Sign out"
 msgstr ""
@@ -2922,7 +2922,7 @@ msgstr ""
 msgid "The photo must be under 40 MB."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:184
+#: lib/edenflowers_web/features/admin/account_live.ex:191
 #, elixir-autogen, elixir-format
 msgid "The picture must be under 2 MB."
 msgstr ""
@@ -3230,7 +3230,7 @@ msgstr ""
 msgid "Usage limit"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:185
+#: lib/edenflowers_web/features/admin/account_live.ex:192
 #, elixir-autogen, elixir-format
 msgid "Use a JPG, PNG or WebP image."
 msgstr ""
@@ -5106,54 +5106,54 @@ msgstr ""
 msgid "(opens in a new tab)"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:299
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:157
 #, elixir-autogen, elixir-format
 msgid "Berry"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:105
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:34
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:51
+#: lib/edenflowers_web/features/admin/account_live.ex:112
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:33
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:50
 #, elixir-autogen, elixir-format
 msgid "Colour"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:143
+#: lib/edenflowers_web/features/admin/account_live.ex:150
 #, elixir-autogen, elixir-format
 msgid "Could not save the appearance."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:294
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:152
 #, elixir-autogen, elixir-format
 msgid "Forest"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:297
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:155
 #, elixir-autogen, elixir-format
 msgid "Ink"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:298
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:156
 #, elixir-autogen, elixir-format
 msgid "Plum"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:108
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:109
 #, elixir-autogen, elixir-format
 msgid "Sidebar grain"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:296
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:154
 #, elixir-autogen, elixir-format
 msgid "Teal"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:300
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:158
 #, elixir-autogen, elixir-format
 msgid "Terracotta"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:301
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:159
 #, elixir-autogen, elixir-format
 msgid "Charcoal"
 msgstr ""
@@ -5163,7 +5163,7 @@ msgstr ""
 msgid "Colour intensity"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:295
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:153
 #, elixir-autogen, elixir-format
 msgid "Sage"
 msgstr ""
@@ -5181,4 +5181,14 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_form_live.ex:92
 #, elixir-autogen, elixir-format
 msgid "Create order"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/account_live.ex:77
+#, elixir-autogen, elixir-format
+msgid "Add picture"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/account_live.ex:76
+#, elixir-autogen, elixir-format
+msgid "Change picture"
 msgstr ""

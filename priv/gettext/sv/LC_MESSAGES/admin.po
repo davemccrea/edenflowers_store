@@ -563,7 +563,7 @@ msgstr "Bekräftelsen kunde inte läggas i kö."
 msgid "Could not refund with Stripe. Check the payment in Stripe."
 msgstr "Återbetalningen med Stripe misslyckades. Kontrollera betalningen i Stripe."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:156
+#: lib/edenflowers_web/features/admin/account_live.ex:163
 #, elixir-autogen, elixir-format
 msgid "Could not remove the profile picture."
 msgstr "Det gick inte att ta bort profilbilden."
@@ -573,7 +573,7 @@ msgstr "Det gick inte att ta bort profilbilden."
 msgid "Could not remove the seat."
 msgstr "Platsen kunde inte tas bort."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:177
+#: lib/edenflowers_web/features/admin/account_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "Could not save the profile picture."
 msgstr "Det gick inte att spara profilbilden."
@@ -606,7 +606,7 @@ msgstr "Betalningen kunde inte ångras."
 msgid "Could not upload the photo."
 msgstr "Det gick inte att ladda upp bilden."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:186
+#: lib/edenflowers_web/features/admin/account_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "Could not upload the picture."
 msgstr "Det gick inte att ladda upp bilden."
@@ -1338,7 +1338,7 @@ msgstr "Delsumma varor"
 msgid "Its money was since refunded. Undo the refund first."
 msgstr "Betalningen har redan återbetalats. Ångra återbetalningen först."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:95
+#: lib/edenflowers_web/features/admin/account_live.ex:102
 #, elixir-autogen, elixir-format
 msgid "JPG, PNG or WebP, up to 2 MB."
 msgstr "JPG, PNG eller WebP, högst 2 MB."
@@ -2342,7 +2342,7 @@ msgstr "Återbetalt %{amount} · %{how}"
 msgid "Refunded with Stripe."
 msgstr "Återbetalat med Stripe."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:84
+#: lib/edenflowers_web/features/admin/account_live.ex:91
 #: lib/edenflowers_web/features/admin/order_form_live.ex:322
 #, elixir-autogen, elixir-format
 msgid "Remove"
@@ -2662,7 +2662,7 @@ msgid "Shown on this device only."
 msgstr "Visas bara på den här enheten."
 
 #: lib/edenflowers_web/components/layouts.ex:632
-#: lib/edenflowers_web/features/admin/account_live.ex:116
+#: lib/edenflowers_web/features/admin/account_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Sign out"
 msgstr "Logga ut"
@@ -2918,7 +2918,7 @@ msgstr "Beställningen sparades inte. Kontrollera de markerade fälten nedan."
 msgid "The photo must be under 40 MB."
 msgstr "Bilden får vara högst 40 MB."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:184
+#: lib/edenflowers_web/features/admin/account_live.ex:191
 #, elixir-autogen, elixir-format
 msgid "The picture must be under 2 MB."
 msgstr "Bilden måste vara under 2 MB."
@@ -3226,7 +3226,7 @@ msgstr "Laddar upp bild"
 msgid "Usage limit"
 msgstr "Användningsgräns"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:185
+#: lib/edenflowers_web/features/admin/account_live.ex:192
 #, elixir-autogen, elixir-format
 msgid "Use a JPG, PNG or WebP image."
 msgstr "Använd en JPG-, PNG- eller WebP-bild."
@@ -5102,54 +5102,54 @@ msgstr "God morgon, %{first_name}"
 msgid "(opens in a new tab)"
 msgstr "(öppnas i en ny flik)"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:299
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:157
 #, elixir-autogen, elixir-format
 msgid "Berry"
 msgstr "Bär"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:105
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:34
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:51
+#: lib/edenflowers_web/features/admin/account_live.ex:112
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:33
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:50
 #, elixir-autogen, elixir-format
 msgid "Colour"
 msgstr "Färg"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:143
+#: lib/edenflowers_web/features/admin/account_live.ex:150
 #, elixir-autogen, elixir-format
 msgid "Could not save the appearance."
 msgstr "Det gick inte att spara utseendet."
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:294
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:152
 #, elixir-autogen, elixir-format
 msgid "Forest"
 msgstr "Skog"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:297
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:155
 #, elixir-autogen, elixir-format
 msgid "Ink"
 msgstr "Bläck"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:298
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:156
 #, elixir-autogen, elixir-format
 msgid "Plum"
 msgstr "Plommon"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:108
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:109
 #, elixir-autogen, elixir-format
 msgid "Sidebar grain"
 msgstr "Sidofältets korn"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:296
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:154
 #, elixir-autogen, elixir-format
 msgid "Teal"
 msgstr "Blågrön"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:300
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:158
 #, elixir-autogen, elixir-format
 msgid "Terracotta"
 msgstr "Terrakotta"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:301
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:159
 #, elixir-autogen, elixir-format
 msgid "Charcoal"
 msgstr "Kol"
@@ -5159,7 +5159,7 @@ msgstr "Kol"
 msgid "Colour intensity"
 msgstr "Färgstyrka"
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:295
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:153
 #, elixir-autogen, elixir-format
 msgid "Sage"
 msgstr "Salvia"
@@ -5178,3 +5178,13 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Create order"
 msgstr "Skapa beställning"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:77
+#, elixir-autogen, elixir-format
+msgid "Add picture"
+msgstr "Lägg till bild"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:76
+#, elixir-autogen, elixir-format
+msgid "Change picture"
+msgstr "Byt bild"

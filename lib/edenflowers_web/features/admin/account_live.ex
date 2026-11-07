@@ -64,17 +64,24 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
           <dl class="divide-base-content/12 divide-y">
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
-              <dt id="avatar-label" class="text-base-content/75 text-sm sm:pt-1.5">{~t"Picture"}</dt>
+              <dt class="text-base-content/75 text-sm sm:pt-1.5">{~t"Picture"}</dt>
               <dd>
                 <form id="avatar-form" phx-change="validate_avatar" class="grid gap-2">
                   <div class="flex items-center gap-2">
-                    <.live_file_input
-                      upload={@uploads.avatar}
-                      class="file-input min-w-0 flex-1 sm:max-w-xs"
-                      aria-labelledby="avatar-label"
-                      aria-describedby="avatar-help"
-                      aria-invalid={to_string(avatar_errors(@uploads.avatar) != [])}
-                    />
+                    <label class="border-base-content/12 flex cursor-pointer items-center gap-2.5 border py-1.5 pr-3 pl-1.5 text-sm transition-colors focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 hover:bg-base-200">
+                      <span class="bg-base-200 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+                        <.icon name="hero-camera" class="h-4 w-4" />
+                      </span>
+                      {if @current_user.avatar_content_type,
+                        do: ~t"Change picture",
+                        else: ~t"Add picture"}
+                      <.live_file_input
+                        upload={@uploads.avatar}
+                        class="sr-only"
+                        aria-describedby="avatar-help"
+                        aria-invalid={to_string(avatar_errors(@uploads.avatar) != [])}
+                      />
+                    </label>
                     <.button
                       :if={@current_user.avatar_content_type}
                       type="button"
