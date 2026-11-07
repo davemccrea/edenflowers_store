@@ -295,7 +295,8 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
       conn = Plug.Test.init_test_session(conn, %{guest_order_id: sale.id})
       {:ok, view, _html} = live(conn, ~p"/order/#{sale.id}")
 
-      assert render_async(view) =~ ~s|alt="Preview of your gift voucher"|
+      # Typst takes longer than render_async's default 100 ms under a full test run.
+      assert render_async(view, 5_000) =~ ~s|alt="Preview of your gift voucher"|
       refute has_element?(view, "[data-testid=order-card]")
     end
 
