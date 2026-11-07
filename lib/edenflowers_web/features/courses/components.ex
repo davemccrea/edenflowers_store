@@ -11,7 +11,7 @@ defmodule EdenflowersWeb.Courses.Components do
     {~t"Photo:"}
     <a
       :if={@course.photo_credit_url}
-      href={@course.photo_credit_url}
+      href={photo_credit_url(@course.photo_credit_url)}
       target="_blank"
       rel="noopener noreferrer"
       class="link-underline-static-body break-words"

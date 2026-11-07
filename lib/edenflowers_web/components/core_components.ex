@@ -1003,6 +1003,15 @@ defmodule EdenflowersWeb.CoreComponents do
   end
 
   @doc """
+  A photographer's website tagged with UTM parameters, so their analytics show
+  the visitors who came from a photo credit on our site.
+  """
+  def photo_credit_url(url) do
+    query = URI.encode_query(utm_source: "edenflowers.fi", utm_medium: "referral", utm_campaign: "photo-credit")
+    url |> URI.parse() |> URI.append_query(query) |> to_string()
+  end
+
+  @doc """
   Product card for featured products and the store grid. Uses a 4:5 photo
   below `sm` and a square photo from `sm` upwards, with price and availability labels.
   """

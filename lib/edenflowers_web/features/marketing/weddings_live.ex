@@ -637,7 +637,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
 
     ~H"""
     {~t"Photo:"}
-    <a :if={@url} href={@url} target="_blank" rel="noopener noreferrer" class="link-underline-static-body">
+    <a :if={@url} href={photo_credit_url(@url)} target="_blank" rel="noopener noreferrer" class="link-underline-static-body">
       {@name}
     </a>
     <span :if={!@url}>{@name}</span>
