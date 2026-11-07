@@ -419,3 +419,18 @@ body:has(.admin-theme) {
     margin-block: -0.75rem;
   }
 }
+
+/* The forest chrome (sidebar, drawer, phone topbar) takes a whiter cream than
+   the storefront's reverse-out sections, a light-to-deep fall of green and a
+   film grain, so it reads as a material rather than a flat fill. */
+.admin-chrome {
+  --color-forest-content: oklch(98.5% 0.008 85);
+  background-color: var(--color-forest);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(
+      165deg,
+      oklch(33% 0.06 155),
+      var(--color-forest) 55%,
+      oklch(21% 0.045 150)
+    );
+}
