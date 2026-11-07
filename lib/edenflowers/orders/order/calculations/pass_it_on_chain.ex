@@ -1,18 +1,15 @@
 defmodule Edenflowers.Orders.Order.Calculations.PassItOnChain do
   @moduledoc """
-  The run of orders an order belongs to through pass-it-on cards, oldest first:
-  back through the gift whose card each order was placed with, then forward
-  through each gift's card to the order it brought in. Each order comes with its
-  card, if one went with it.
+  The orders connected through pass-it-on cards, source before redemption.
+  Walk back to the source, then visit every live redemption of each card.
+  Checkout can overuse a one-use code concurrently, so retain every branch.
 
-  A cancelled order brought nothing in, so the chain doesn't run through one.
-  A card can only be used once, so it never branches.
+  Cancelled redemptions are omitted unless they connect surviving orders or
+  are the order being viewed, so recorded sources always remain traceable.
   """
   use Ash.Resource.Calculation
 
-  alias Edenflowers.Orders.Order
-
-  @link_load [promotion: [], pass_it_on_card: [:card_status, :placed_orders]]
+  @link_load [promotion: [:card_status, gift_order: []], pass_it_on_card: [:card_status, :placed_orders]]
 
   @impl true
   def calculate(orders, _opts, context) do
@@ -22,38 +19,44 @@ defmodule Edenflowers.Orders.Order.Calculations.PassItOnChain do
 
   defp chain(order, opts) do
     order = Ash.load!(order, @link_load, opts)
-    back(order, [order], MapSet.new([order.id]), opts)
+    root = source(order, MapSet.new([order.id]), opts)
+    {chain, _seen} = forward(root, order.id, MapSet.new(), opts)
+    chain
   end
 
-  # The seen ids only guard against a loop in bad data, which would hang the page.
-  defp back(%{promotion: %{gift_order_id: id}}, chain, seen, opts) when is_binary(id) do
-    if MapSet.member?(seen, id) do
-      forward(List.last(chain), chain, seen, opts)
+  defp source(%{promotion: %{kind: :pass_it_on, gift_order: %{state: :placed} = gift}} = order, seen, opts) do
+    if MapSet.member?(seen, gift.id) do
+      order
     else
-      gift = Ash.get!(Order, id, Keyword.put(opts, :load, @link_load))
-      back(gift, [gift | chain], MapSet.put(seen, id), opts)
+      gift = Ash.load!(gift, @link_load, opts)
+      source(gift, MapSet.put(seen, gift.id), opts)
     end
   end
 
-  defp back(_order, chain, seen, opts), do: forward(List.last(chain), chain, seen, opts)
+  defp source(order, _seen, _opts), do: order
 
-  defp forward(order, chain, seen, opts) do
-    case brought_in(order) do
-      %{id: id} = next ->
-        if MapSet.member?(seen, id) do
-          chain
-        else
-          next = Ash.load!(next, @link_load, opts)
-          forward(next, chain ++ [next], MapSet.put(seen, id), opts)
-        end
+  # Seen ids bound both directions even if historical data contains a cycle.
+  defp forward(order, current_id, seen, opts) do
+    if MapSet.member?(seen, order.id) do
+      {[], seen}
+    else
+      order = Ash.load!(order, @link_load, opts)
 
-      nil ->
-        chain
+      {branches, seen} =
+        Enum.reduce(brought_in(order), {[], MapSet.put(seen, order.id)}, fn next, {chain, seen} ->
+          {branch, seen} = forward(next, current_id, seen, opts)
+          {chain ++ branch, seen}
+        end)
+
+      if order.fulfillment_status == :cancelled and order.id != current_id and branches == [],
+        do: {[], seen},
+        else: {[order | branches], seen}
     end
   end
 
-  defp brought_in(%{pass_it_on_card: %{placed_orders: orders}}),
-    do: Enum.find(orders, &(&1.fulfillment_status != :cancelled))
+  defp brought_in(%{pass_it_on_card: %{kind: :pass_it_on, placed_orders: orders}}) do
+    Enum.sort_by(orders, &{&1.ordered_at && DateTime.to_unix(&1.ordered_at, :microsecond), &1.id})
+  end
 
-  defp brought_in(_order), do: nil
+  defp brought_in(_order), do: []
 end

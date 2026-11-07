@@ -33,7 +33,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   def mount(%{"id" => id}, _session, socket) do
     case Orders.get_order_for_admin(id, actor: socket.assigns.current_user) do
       {:ok, %Order{} = order} ->
-        if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("order:changed:#{order.id}")
+        if connected?(socket) do
+          EdenflowersWeb.Endpoint.subscribe("order:changed:#{order.id}")
+          EdenflowersWeb.Endpoint.subscribe("admin:orders")
+          EdenflowersWeb.Endpoint.subscribe("admin:pass_it_on")
+        end
 
         {:ok,
          socket
@@ -720,7 +724,30 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
+  # Redemptions and scans change the chain without changing the order being viewed.
+  def handle_info(%Phoenix.Socket.Broadcast{topic: topic, payload: %{data: changed}}, socket)
+      when topic in ["admin:orders", "admin:pass_it_on"] do
+    socket =
+      if socket.assigns.order.pass_it_on_shown? and chain_changed?(socket.assigns.order.pass_it_on_chain, changed),
+        do: assign(socket, :order, reload(socket.assigns.order, socket)),
+        else: socket
+
+    {:noreply, socket}
+  end
+
   def handle_info(_message, socket), do: {:noreply, socket}
+
+  defp chain_changed?(chain, %Order{id: id, promotion_id: promotion_id}) do
+    Enum.any?(chain, fn link ->
+      link.id == id or match?(%{id: ^promotion_id} when not is_nil(promotion_id), link.pass_it_on_card)
+    end)
+  end
+
+  defp chain_changed?(chain, %Edenflowers.Pricing.Promotion{id: id, gift_order_id: gift_order_id}) do
+    Enum.any?(chain, fn link ->
+      link.id == gift_order_id or link.promotion_id == id or match?(%{id: ^id}, link.pass_it_on_card)
+    end)
+  end
 
   # Reloads on an error too: a payment can be recorded while its receipt failed to send.
   defp flash_payment_result(socket, {kind, message}) do

@@ -8,6 +8,7 @@ defmodule Edenflowers.Pricing.Promotion do
     domain: Edenflowers.Pricing,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshPaperTrail.Resource]
 
   alias Edenflowers.Accounts.Calculations.NamePart
@@ -212,6 +213,11 @@ defmodule Edenflowers.Pricing.Promotion do
     end
   end
 
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+    publish_all :update, ["admin", "pass_it_on"], filter: fn %{data: card} -> card.kind == :pass_it_on end
+  end
+
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false
@@ -310,15 +316,17 @@ defmodule Edenflowers.Pricing.Promotion do
               expr(
                 cond do
                   usage > 0 -> :used
+                  not is_nil(expiration_date) and ^arg(:today) > expiration_date -> :expired
                   not is_nil(expiration_date) -> :opened
                   true -> :not_opened
                 end
               ) do
       description "Where a pass-it-on card is, for admin: `not_opened` until its recipient first opens its page " <>
                     "or applies its code, `opened` once its 30 days run, `used` once an order placed with it " <>
-                    "counts."
+                    "counts, or `expired` when its inclusive validity date has passed without a live redemption."
 
-      constraints one_of: [:not_opened, :opened, :used]
+      argument :today, :date, allow_nil?: false, default: &Edenflowers.ShopTime.today/0
+      constraints one_of: [:not_opened, :opened, :used, :expired]
     end
 
     calculate :recipient_first_name, :string, {NamePart, source: :gift_recipient_name, part: :first} do

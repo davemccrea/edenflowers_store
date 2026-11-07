@@ -912,7 +912,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         </div>
 
         <ol
-          :if={length(@order.pass_it_on_chain) > 1 || @order.pass_it_on_card}
+          :if={
+            length(@order.pass_it_on_chain) > 1 || @order.pass_it_on_card ||
+              Enum.any?(@order.pass_it_on_chain, &match?(%{promotion: %{kind: :pass_it_on}}, &1))
+          }
           id="order-card-chain"
           aria-label={~t"Orders linked by Pass it on cards"}
         >
@@ -922,7 +925,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
             class="relative pb-5 pl-7 last:pb-0"
           >
             <span
-              :if={index < length(@order.pass_it_on_chain) - 1}
+              :if={
+                match?(%{promotion: %{gift_order_id: id}} when id == link.id, Enum.at(@order.pass_it_on_chain, index + 1))
+              }
               class="bg-base-content/20 left-[5px] absolute top-5 -bottom-1 w-px"
               aria-hidden="true"
             />
@@ -931,7 +936,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
               aria-hidden="true"
             />
             <.chain_order order={link} current?={link.id == @order.id} locale={@locale} />
+            <p :if={link.fulfillment_status == :cancelled} class="mt-1 text-sm">
+              <.fulfillment_status_badge status={:cancelled} />
+            </p>
+            <div :if={match?(%{kind: :pass_it_on}, link.promotion)} class="text-base-content/65 mt-1 text-sm">
+              <p>{~t"Used card #{code = link.promotion.code}"}</p>
+              <.link
+                :if={link.promotion.gift_order}
+                navigate={~p"/admin/orders/#{link.promotion.gift_order.id}"}
+                class="underline underline-offset-2"
+              >
+                {~t"From order #{reference = link.promotion.gift_order.order_reference}"}
+              </.link>
+              <p :if={!link.promotion.gift_order}>{~t"Source gift not linked"}</p>
+            </div>
             <div :if={link.pass_it_on_card} class="mt-1.5 flex flex-wrap items-center gap-2">
+              <span class="text-base-content/65 text-sm">{~t"Card to pass on"}</span>
               <.card_code code={link.pass_it_on_card.code} />
               <.card_status_badge card={link.pass_it_on_card} locale={@locale} />
             </div>
@@ -966,6 +986,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     <.badge tone={:attention}>
       {~t"Opened · valid until #{date = Format.date(@card.expiration_date, @locale)}"}
     </.badge>
+    """
+  end
+
+  defp card_status_badge(%{card: %{card_status: :expired}} = assigns) do
+    ~H"""
+    <.badge tone={:warning}>{~t"Expired"}</.badge>
     """
   end
 

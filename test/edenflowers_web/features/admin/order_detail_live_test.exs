@@ -87,7 +87,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     passed_on = placed_order(promotion_id: first_card.id, gift: true, recipient_name: "Berit")
     Edenflowers.Pricing.link_card_to_gift_order!(second_card, passed_on.id, actor: admin)
     brought_in = placed_order(promotion_id: second_card.id)
-    chain = [gift, passed_on, brought_in]
+    sibling = placed_order(promotion_id: first_card.id)
+    chain = [gift, passed_on, brought_in, sibling]
 
     for order <- chain do
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
@@ -97,7 +98,79 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       for other <- chain, other.id != order.id do
         assert has_element?(view, ~s|#order-card-chain a[href="/admin/orders/#{other.id}"]|)
       end
+
+      assert has_element?(
+               view,
+               ~s|#order-card-chain-#{sibling.id} a[href="/admin/orders/#{gift.id}"]|,
+               "From order #{gift.order_reference}"
+             )
+
+      assert has_element?(
+               view,
+               ~s|#order-card-chain-#{brought_in.id} a[href="/admin/orders/#{passed_on.id}"]|,
+               "From order #{passed_on.order_reference}"
+             )
     end
+  end
+
+  test "a redeemed unlinked card still shows its code and missing source", %{conn: conn} do
+    [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+    card = Edenflowers.Pricing.get_pass_it_on_card!(code, authorize?: false)
+    order = placed_order(promotion_id: card.id)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    assert has_element?(view, "#order-pass-it-on", "Used card #{code}")
+    assert has_element?(view, "#order-pass-it-on", "Source gift not linked")
+    refute has_element?(view, "#link-card-form")
+
+    manual = placed_order(promotion_id: generate(promotion()).id)
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{manual.id}")
+    refute has_element?(view, "#order-pass-it-on")
+  end
+
+  test "the chain refreshes when a card is opened, redeemed, then its redemption cancelled",
+       %{conn: conn, admin: admin} do
+    [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+    gift = placed_order(gift: true)
+    Orders.link_pass_it_on_card!(gift, code, actor: admin)
+    card = Edenflowers.Pricing.get_pass_it_on_card!(code, authorize?: false)
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{gift.id}")
+    assert has_element?(view, "#order-pass-it-on", "Not opened yet")
+
+    card = Edenflowers.Pricing.start_promotion_validity!(card, actor: nil)
+    assert has_element?(view, "#order-pass-it-on", "Opened")
+
+    redeemed = placed_order(promotion_id: card.id, payment_intent_id: nil)
+    Orders.update_florist_note!(redeemed, %{florist_note: "Flowers"}, actor: admin)
+    assert has_element?(view, ~s|#order-card-chain a[href="/admin/orders/#{redeemed.id}"]|)
+    assert has_element?(view, "#order-card-chain-#{gift.id}", "Used")
+
+    Orders.cancel_order!(redeemed, %{cancellation_reason: "Changed mind", email_customer?: false}, actor: admin)
+    refute has_element?(view, "#order-card-chain-#{redeemed.id}")
+    assert has_element?(view, "#order-card-chain-#{gift.id}", "Opened")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{redeemed.id}")
+    assert has_element?(view, "#order-card-chain-#{redeemed.id}", "Cancelled")
+
+    assert has_element?(
+             view,
+             ~s|#order-card-chain-#{redeemed.id} a[href="/admin/orders/#{gift.id}"]|,
+             "From order #{gift.order_reference}"
+           )
+  end
+
+  test "an expired card is distinguished from an opened usable card", %{conn: conn, admin: admin} do
+    [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+    gift = placed_order(gift: true)
+    Orders.link_pass_it_on_card!(gift, code, actor: admin)
+    card = Edenflowers.Pricing.get_pass_it_on_card!(code, authorize?: false)
+
+    Edenflowers.Pricing.start_promotion_validity!(card, %{today: Date.add(Edenflowers.ShopTime.today(), -31)},
+      actor: nil
+    )
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{gift.id}")
+    assert has_element?(view, "#order-card-chain-#{gift.id}", "Expired")
   end
 
   test "custom and online orders offer cancellation, never deletion", %{conn: conn} do
