@@ -38,7 +38,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
           {subscription_name(@subscription)}
         </h3>
         <p class="font-serif text-xl tabular-nums">
-          {Format.storefront_price(@subscription.product_variant.price, @locale)}
+          {Format.storefront_price(@subscription.price_per_order, @locale)}
         </p>
         <p class="text-base-content/70 mt-1 text-sm">{plan_label(@subscription)}</p>
         <p class="text-base-content/70 text-right text-sm">{~t"per delivery"}</p>
@@ -105,7 +105,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   def handle_event("change_subscription", params, socket) do
     changes = Map.take(params, ["product_variant_id", "interval_weeks", "delivery_day"])
-    change = &Orders.change_subscription(&1, changes, Keyword.put(&2, :load, :product_variant))
+    change = &Orders.change_subscription(&1, changes, Keyword.put(&2, :load, [:product_variant, :price_per_order]))
 
     socket =
       socket
@@ -176,7 +176,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
     %{product_variant: variant, interval_weeks: weeks} = subscription
     from = Format.weekday_date(subscription.next_fulfillment_date, locale)
     size = variant_size_label(variant.size)
-    price = Format.storefront_price(variant.price, locale)
+    price = Format.storefront_price(subscription.price_per_order, locale)
 
     ~t"From #{date = from}: #{size = size}, #{interval = String.downcase(Fields.interval_label(weeks))}, #{price = price} per delivery."
   end
@@ -504,7 +504,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
               <div>
                 <p class="font-serif text-lg">{plan_label(@subscription)}</p>
                 <p class="text-base-content/70 text-sm">
-                  {~t"#{price = Format.storefront_price(@subscription.product_variant.price, @locale)} per delivery"}
+                  {~t"#{price = Format.storefront_price(@subscription.price_per_order, @locale)} per delivery"}
                 </p>
               </div>
               <.button

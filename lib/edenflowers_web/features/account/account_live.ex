@@ -481,7 +481,7 @@ defmodule EdenflowersWeb.Account.AccountLive do
         {~t"Subscription"} · {~t"Charged #{date = Format.day_month(@subscription.charged_on, @locale)}"}
       </p>
     </div>
-    <.entry_price price={@subscription.product_variant.price} locale={@locale} />
+    <.entry_price price={@subscription.price_per_order} locale={@locale} />
     """
   end
 
