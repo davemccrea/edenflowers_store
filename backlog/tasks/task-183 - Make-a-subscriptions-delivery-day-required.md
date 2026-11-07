@@ -1,9 +1,10 @@
 ---
 id: TASK-183
 title: Make a subscription's delivery day required
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-11-07 14:20'
+updated_date: '2026-11-07 17:01'
 labels:
   - developers
 dependencies: []
@@ -22,7 +23,7 @@ Ships as a second deploy, after the deploy that adds delivery_day has run Releas
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 delivery_day is allow_nil? false on Subscription, with a generated migration
-- [ ] #2 The subscriptions_next_date_on_delivery_day check drops its IS NULL escape
-- [ ] #3 The delivery_day backfill in Release.migrate is removed
+- [x] #1 delivery_day is allow_nil? false on Subscription, with a generated migration
+- [x] #2 The subscriptions_next_date_on_delivery_day check drops its IS NULL escape
+- [x] #3 The delivery_day backfill in Release.migrate is removed
 <!-- AC:END -->
