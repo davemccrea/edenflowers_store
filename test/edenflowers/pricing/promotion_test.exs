@@ -266,6 +266,19 @@ defmodule Edenflowers.Pricing.PromotionTest do
       assert {:error, _expired} = Pricing.get_promotion_by_code(promotion.code, ~D[2026-12-06])
     end
 
+    test "card status keeps the last valid day inclusive and used cards traceable after expiry", %{promotion: card} do
+      card = Pricing.start_promotion_validity!(card, %{today: ~D[2026-11-01]}, actor: nil)
+      status = fn today -> Ash.load!(card, [card_status: [today: today]], authorize?: false).card_status end
+      assert status.(~D[2026-12-01]) == :opened
+      assert status.(~D[2026-12-02]) == :expired
+
+      redeemed = Generator.placed_order(promotion_id: card.id)
+      assert status.(~D[2026-12-02]) == :used
+
+      Ash.Seed.update!(redeemed, %{fulfillment_status: :cancelled})
+      assert status.(~D[2026-12-02]) == :expired
+    end
+
     test "don't start when an admin opens the card", %{promotion: promotion} do
       promotion = Pricing.start_promotion_validity!(promotion, actor: generate(admin_user()))
       assert is_nil(promotion.expiration_date)

@@ -643,21 +643,26 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :pass_it_on_shown?,
               :boolean,
-              expr((gift and not gift_voucher_sale?) or not is_nil(promotion.gift_order_id)) do
+              expr(
+                (gift and not gift_voucher_sale?) or exists(promotion, kind == :pass_it_on) or exists(pass_it_on_card)
+              ) do
       description "Whether the order page shows the Pass it on panel: a gift of flowers, whose card goes out with " <>
-                    "them, or an order placed with a card's code. Not a Gift voucher sale, which has no flowers."
+                    "them, an order placed with a card's code (even if its source gift wasn't linked), or an " <>
+                    "order that already has a card linked."
     end
 
     calculate :pass_it_on_chain, {:array, :struct}, Calculations.PassItOnChain do
-      description "Every order linked to this one through pass-it-on cards, oldest first, this order included: " <>
+      description "Every order linked to this one through pass-it-on cards, sources before redemptions, this order included: " <>
                     "the gift whose card it was placed with, that gift's own source, and so on back, then the " <>
                     "order its own card brought in, and so on forward. Each comes with its `pass_it_on_card` " <>
-                    "(with `card_status`) loaded. Cancelled orders are left out, as they brought nothing in."
+                    "(with `card_status`) and source promotion loaded. Includes every live redemption if a card " <>
+                    "was overused. Cancelled redemptions are left out unless needed to trace a surviving order " <>
+                    "or the order being viewed."
 
       constraints items: [instance_of: __MODULE__]
     end
 
-    calculate :pass_it_on_card_changeable?, :boolean, expr(gift and fulfillable?) do
+    calculate :pass_it_on_card_changeable?, :boolean, expr(gift and not gift_voucher_sale? and fulfillable?) do
       description "Whether Jennie can still link or remove the gift's pass-it-on card: the card goes out with " <>
                     "the flowers, so only a gift still to deliver, not one fulfilled or cancelled."
     end
