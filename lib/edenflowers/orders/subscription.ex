@@ -102,7 +102,7 @@ defmodule Edenflowers.Orders.Subscription do
     # Every way the next date moves must keep it on the delivery day.
     check_constraints do
       check_constraint :next_fulfillment_date, "subscriptions_next_date_on_delivery_day",
-        check: "delivery_day IS NULL OR delivery_day = lower(to_char(next_fulfillment_date, 'FMDay'))",
+        check: "delivery_day = lower(to_char(next_fulfillment_date, 'FMDay'))",
         message: "must fall on the delivery day"
     end
   end
@@ -493,9 +493,9 @@ defmodule Edenflowers.Orders.Subscription do
 
     attribute :interval_weeks, :integer, allow_nil?: false
 
-    # Nil only for subscriptions started before it existed, until
-    # Release.migrate fills it in; TASK-183 makes it required.
     attribute :delivery_day, Edenflowers.Fulfillment.Weekday do
+      allow_nil? false
+
       description "The weekday every delivery is on, from the first order's date until the customer or Jennie " <>
                     "changes it. next_fulfillment_date always falls on it."
     end
