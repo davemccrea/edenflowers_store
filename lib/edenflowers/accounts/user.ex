@@ -157,8 +157,22 @@ defmodule Edenflowers.Accounts.User do
     end
 
     update :update_avatar do
-      description "Stores an uploaded photo for the admin's account page and back office, in the database itself."
-      accept [:avatar, :avatar_content_type]
+      description "Stores an uploaded photo for the admin's account page and back office, in the database itself. " <>
+                    "The content type comes from the file name's extension, which the upload has already checked; " <>
+                    "the type the browser reports is untrusted."
+
+      argument :filename, :string do
+        description "The uploaded file's name, used only for its extension."
+        allow_nil? false
+      end
+
+      accept [:avatar]
+      require_atomic? false
+
+      change fn changeset, _context ->
+        filename = Ash.Changeset.get_argument(changeset, :filename)
+        Ash.Changeset.change_attribute(changeset, :avatar_content_type, MIME.from_path(filename))
+      end
     end
 
     update :update_admin_appearance do
