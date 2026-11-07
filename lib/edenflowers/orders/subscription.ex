@@ -370,7 +370,7 @@ defmodule Edenflowers.Orders.Subscription do
 
       accept [:product_variant_id, :interval_weeks]
       argument :delivery_day, Edenflowers.Fulfillment.Weekday
-      validate attribute_does_not_equal(:state, :cancelled)
+      validate {Holds, calculation: :plan_changeable?, message: "can't be changed"}
       validate attribute_in(:interval_weeks, @intervals)
       validate Validations.SubscriptionVariant
       validate Validations.SubscriptionDeliveryDay
@@ -589,6 +589,11 @@ defmodule Edenflowers.Orders.Subscription do
     calculate :cancellable?, :boolean, expr(state in [:active, :paused, :payment_failed]) do
       description "Whether it isn't cancelled yet. Ignores the Change deadline, so it also governs Jennie, " <>
                     "who may act inside it."
+    end
+
+    calculate :plan_changeable?, :boolean, expr(state != :cancelled) do
+      description "Whether its state allows changing the size, interval or delivery day. Ignores the Change " <>
+                    "deadline, so it also governs Jennie, who may act inside it."
     end
 
     calculate :changeable?, :boolean, expr(state in [:active, :paused] and not changes_closed?) do
