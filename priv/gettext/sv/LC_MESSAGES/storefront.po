@@ -2081,7 +2081,7 @@ msgstr "Betalningen misslyckades"
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:118
 #: lib/edenflowers_web/features/checkout/checkout_live.ex:715
 #: lib/edenflowers_web/features/courses/course_live.ex:329
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:544
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:540
 #: lib/edenflowers_web/payment_link.ex:90
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please refresh the page and try again."
@@ -2089,7 +2089,7 @@ msgstr "Betalningen är tillfälligt otillgänglig. Ladda om sidan och försök 
 
 #: lib/edenflowers_web/features/account/subscription_card_live.ex:83
 #: lib/edenflowers_web/features/courses/course_live.ex:346
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:535
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:531
 #: lib/edenflowers_web/payment_link.ex:73
 #, elixir-autogen, elixir-format
 msgid "Payment is temporarily unavailable. Please try again in a moment."
@@ -4483,17 +4483,12 @@ msgstr "Skaka om snön på presentkortet"
 msgid "Loading preview…"
 msgstr "Laddar förhandsvisningen…"
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:463
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:462
 #, elixir-autogen, elixir-format
 msgid "Retry preview"
 msgstr "Försök ladda förhandsvisningen igen"
 
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:468
-#, elixir-autogen, elixir-format
-msgid "Tap the preview to shuffle the snow."
-msgstr "Tryck på förhandsvisningen för att flytta snöflingorna."
-
-#: lib/edenflowers_web/features/store/gift_voucher_live.ex:461
+#: lib/edenflowers_web/features/store/gift_voucher_live.ex:460
 #, elixir-autogen, elixir-format
 msgid "The preview couldn't load. Please try again."
 msgstr "Förhandsvisningen kunde inte laddas. Försök igen."

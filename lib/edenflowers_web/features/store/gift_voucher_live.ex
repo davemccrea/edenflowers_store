@@ -92,7 +92,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
         #voucher-preview-band {
           position: sticky;
           top: 0;
-          padding-top: max(0.75rem, env(safe-area-inset-top));
+          padding-top: env(safe-area-inset-top);
           /* The 2rem fade and 1rem field clearance need more than the grid's
              2.5rem gap, or the correction scroll pulls the preview off its stop. */
           margin-bottom: 0.5rem;
@@ -449,7 +449,6 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           type="button"
           phx-click={JS.push("shuffle_snow", loading: "#gift-voucher-form")}
           aria-label={~t"Shuffle the snow on the voucher"}
-          aria-describedby="voucher-snow-hint"
           class="voucher-shuffle absolute inset-0 cursor-pointer"
           data-testid="shuffle-snow"
         ></button>
@@ -464,9 +463,6 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           </button>
         </div>
       </div>
-      <p :if={@shuffle? && !@error?} id="voucher-snow-hint" class="text-base-content/70 mt-2 text-center text-sm">
-        {~t"Tap the preview to shuffle the snow."}
-      </p>
     </div>
     """
   end
