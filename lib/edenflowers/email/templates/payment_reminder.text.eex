@@ -1,9 +1,6 @@
 <%= if @order.customer_first_name do %><%= dgettext("emails", "Hi %{name},", name: @order.customer_first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= dgettext("emails", "A friendly reminder that %{amount} is still to pay for your order for %{date}.", amount: @format_currency.(@order.balance), date: @date) %>
-
-<%= order_totals(assigns) %>
-<%= dgettext("emails", "You can pay online here:") %>
+<%= dgettext("emails", "There's %{amount} still to pay for order %{reference}, for %{date}. You can pay using the link below:", amount: @format_currency.(@order.balance), reference: @order.order_reference, date: @date) %>
 <%= @payment_link_url %>
 
 <%= dgettext("emails", "If you've already paid, thank you, and please ignore this email.") %>

@@ -17,27 +17,10 @@ msgstr "%{code} är din kod för att byta e-postadress hos Eden Flowers"
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr "%{otp_code} är din inloggningskod till Eden Flowers"
 
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "1 place on %{course}, %{date}"
-msgid_plural "%{count} places on %{course}, %{date}"
-msgstr[0] "1 plats på kursen %{course}, %{date}"
-msgstr[1] "%{count} platser på kursen %{course}, %{date}"
-
 #: lib/edenflowers/email/templates.ex:63
 #, elixir-autogen, elixir-format
 msgid "65230 Vasa"
 msgstr "65230 Vasa"
-
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "A friendly reminder that %{amount} is still to pay for your booking on %{course}."
-msgstr "En vänlig påminnelse om att %{amount} fortfarande återstår att betala för din bokning till kursen %{course}."
-
-#: lib/edenflowers/email/templates/payment_reminder.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "A friendly reminder that %{amount} is still to pay for your order for %{date}."
-msgstr "En vänlig påminnelse om att %{amount} fortfarande återstår att betala för din beställning för %{date}."
 
 #: lib/edenflowers/email.ex:591
 #, elixir-autogen, elixir-format
@@ -303,8 +286,8 @@ msgstr "Om du behöver hjälp med betalningen, svara bara på det här mailet."
 msgid "If you need to change anything, reply and I'll let you know what's possible."
 msgstr "Om du behöver ändra något, svara så berättar jag vad som går att ordna."
 
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:11
-#: lib/edenflowers/email/templates/payment_reminder.text.eex:9
+#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:6
+#: lib/edenflowers/email/templates/payment_reminder.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "If you've already paid, thank you, and please ignore this email."
 msgstr "Om du redan har betalat, tack, och bortse från det här mailet."
@@ -320,7 +303,6 @@ msgstr "Den gäller i 10 minuter. Om du inte har begärt den kan du bortse från
 msgid "Later deliveries are on hold until this one is paid. To keep them coming, please also update your card in your account:"
 msgstr "Senare leveranser väntar tills den här är betald. För att de ska fortsätta, uppdatera också ditt kort på ditt konto:"
 
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:6
 #: lib/edenflowers/email/templates/order_totals.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "Left to pay"
@@ -565,7 +547,7 @@ msgstr "Plats: %{venue}"
 
 #: lib/edenflowers/email/templates/booking_cancelled.text.eex:15
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:7
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:13
+#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:8
 #: lib/edenflowers/email/templates/booking_refunded.text.eex:9
 #: lib/edenflowers/email/templates/contact_message.text.eex:14
 #: lib/edenflowers/email/templates/credit_note.text.eex:7
@@ -580,7 +562,7 @@ msgstr "Plats: %{venue}"
 #: lib/edenflowers/email/templates/order_refunded.text.eex:9
 #: lib/edenflowers/email/templates/order_updated.text.eex:8
 #: lib/edenflowers/email/templates/payment_received.text.eex:7
-#: lib/edenflowers/email/templates/payment_reminder.text.eex:11
+#: lib/edenflowers/email/templates/payment_reminder.text.eex:8
 #: lib/edenflowers/email/templates/purchase_receipt.text.eex:8
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:9
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:11
@@ -607,10 +589,8 @@ msgstr "När: %{date}, %{start}–%{end}"
 msgid "Where: %{venue}, %{address}"
 msgstr "Var: %{venue}, %{address}"
 
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:8
 #: lib/edenflowers/email/templates/course_payment.text.eex:3
 #: lib/edenflowers/email/templates/order_payment.text.eex:1
-#: lib/edenflowers/email/templates/payment_reminder.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "You can pay online here:"
 msgstr "Du kan betala online här:"
@@ -1032,3 +1012,13 @@ msgstr "Betalningen för dina blommor %{date} (%{product}) gick inte igenom. Bet
 #, elixir-autogen, elixir-format
 msgid "Booking on %{course}, %{date}"
 msgstr "Bokning till %{course}, %{date}"
+
+#: lib/edenflowers/email/templates/payment_reminder.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "There's %{amount} still to pay for order %{reference}, for %{date}. You can pay using the link below:"
+msgstr "Det återstår %{amount} att betala för beställning %{reference} (%{date}). Du kan betala via länken nedan:"
+
+#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "There's %{amount} still to pay for your booking on %{course}, %{date}. You can pay using the link below:"
+msgstr "Det återstår %{amount} att betala för din bokning till %{course}, %{date}. Du kan betala via länken nedan:"

@@ -1,11 +1,6 @@
 <%= if @registration.first_name do %><%= dgettext("emails", "Hi %{name},", name: @registration.first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= dgettext("emails", "A friendly reminder that %{amount} is still to pay for your booking on %{course}.", amount: @format_currency.(@registration.balance), course: @registration.course.name) %>
-
-<%= dngettext("emails", "1 place on %{course}, %{date}", "%{count} places on %{course}, %{date}", @registration.seats, course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
-<%= dgettext("emails", "Left to pay") %>  <%= @format_currency.(@registration.balance) %>
-
-<%= dgettext("emails", "You can pay online here:") %>
+<%= dgettext("emails", "There's %{amount} still to pay for your booking on %{course}, %{date}. You can pay using the link below:", amount: @format_currency.(@registration.balance), course: @registration.course.name, date: @format_date.(@registration.course.date)) %>
 <%= @payment_link_url %>
 
 <%= dgettext("emails", "If you've already paid, thank you, and please ignore this email.") %>
