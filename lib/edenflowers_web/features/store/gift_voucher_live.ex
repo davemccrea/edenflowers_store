@@ -161,7 +161,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
     >
       <.container>
         <header class="max-w-prose">
-          <h1 class="page-title">{~t"Give a gift voucher"} <span aria-hidden="true">💛</span></h1>
+          <h1 class="page-title">{~t"Give a gift voucher"}</h1>
           <p class="mt-6 text-lg leading-relaxed">
             {~t"Let them choose their own flowers, a flower subscription or a place on one of my courses. They can use it online or in my shop at Minimossen."}
           </p>
