@@ -982,8 +982,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   defp chain_order(%{current?: true} = assigns) do
     ~H"""
     <div aria-current="page" class="flex items-baseline gap-3 text-sm">
-      <.chain_order_text order={@order} current?={true} locale={@locale} />
-      <span class="w-4 shrink-0" aria-hidden="true" />
+      <.chain_order_text order={@order} locale={@locale} />
     </div>
     """
   end
@@ -991,14 +990,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   defp chain_order(assigns) do
     ~H"""
     <.link navigate={~p"/admin/orders/#{@order.id}"} class="group flex items-baseline gap-3 text-sm">
-      <.chain_order_text order={@order} current?={false} locale={@locale} />
-      <.icon name="hero-chevron-right" class="text-base-content/50 h-4 w-4 shrink-0 self-center" />
+      <.chain_order_text order={@order} locale={@locale} />
     </.link>
     """
   end
 
   attr :order, Order, required: true
-  attr :current?, :boolean, required: true
   attr :locale, :string, required: true
 
   defp chain_order_text(assigns) do
@@ -1006,7 +1003,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     <span class="min-w-0 flex-1">
       <span class="text-base-content block truncate font-semibold group-hover:underline">
         {@order.customer_name || ~t"Unnamed customer"}
-        <span :if={@current?} class="text-base-content/65 font-normal">· {~t"this order"}</span>
       </span>
       <span :if={@order.gift && @order.recipient_name} class="text-base-content/65 block truncate">
         {~t"For #{name = @order.recipient_name}"}
