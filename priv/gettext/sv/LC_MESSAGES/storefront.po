@@ -3788,7 +3788,7 @@ msgstr "din@epost.fi"
 msgid "•••• %{last4}, expires %{expiry}"
 msgstr "•••• %{last4}, giltigt till %{expiry}"
 
-#: lib/edenflowers_web/components/core_components.ex:1164
+#: lib/edenflowers_web/components/core_components.ex:1173
 #, elixir-autogen, elixir-format
 msgid "Cart, %{count} item"
 msgid_plural "Cart, %{count} items"
