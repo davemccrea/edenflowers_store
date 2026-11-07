@@ -218,6 +218,26 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(view, ~s|#attention-failed-subscriptions a[href="/admin/subscriptions/#{failed.id}"]|)
     end
 
+    test "lists subscription deliveries on closed days, so Jennie can agree another day", %{conn: conn} do
+      date = Date.add(Edenflowers.ShopTime.today(), 5)
+      closing = generate(subscription(next_fulfillment_date: date))
+      shop_calendar(disabled_dates: [date])
+
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      assert has_element?(
+               view,
+               "#attention-closed-day-subscriptions summary",
+               "Subscription deliveries on closed days 1"
+             )
+
+      assert has_element?(
+               view,
+               ~s|#attention-closed-day-subscriptions a[href="/admin/subscriptions/#{closing.id}"]|,
+               Edenflowers.Format.day_month(date, "en-GB")
+             )
+    end
+
     test "flags refunds and overdue payments, and totals what orders still owe", %{conn: conn} do
       overdue = placed_order(customer_name: "Ada Lovelace", fulfillment_status: :fulfilled, payment_intent_id: nil)
 

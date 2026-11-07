@@ -187,6 +187,21 @@ defmodule Edenflowers.Orders.Subscription do
     end
 
     # Held until Jennie sorts out the card: no Occurrence is made meanwhile.
+    read :delivering_on_closed_days do
+      description "Active subscriptions with a delivery scheduled on a day the shop calendar closes in the next " <>
+                    "8 weeks, soonest first, for Jennie to agree another day with the customer or pause it."
+
+      filter expr(state == :active)
+      prepare build(sort: [next_fulfillment_date: :asc], load: [:user, product_variant: :product])
+
+      # The dates are worked out in Elixir from the calendar, so they can't filter in the database.
+      prepare after_action(fn _query, subscriptions, _context ->
+                with {:ok, subscriptions} <- Ash.load(subscriptions, :closed_delivery_dates, authorize?: false) do
+                  {:ok, Enum.reject(subscriptions, &(&1.closed_delivery_dates == []))}
+                end
+              end)
+    end
+
     read :payment_failed do
       description "Subscriptions held after a refused card, soonest next delivery first, for Jennie to follow up."
       filter expr(state == :payment_failed)
@@ -546,6 +561,13 @@ defmodule Edenflowers.Orders.Subscription do
               {Edenflowers.Orders.Subscription.Calculations.ScheduledDate, days_from_today: @change_deadline_days} do
       description "The next delivery date a paused subscription would get if it resumed today: the first " <>
                     "scheduled date still open to changes."
+    end
+
+    calculate :closed_delivery_dates,
+              {:array, :date},
+              Edenflowers.Orders.Subscription.Calculations.ClosedDeliveryDates do
+      description "Its scheduled delivery dates in the next 8 weeks that the shop calendar closes. Each is " <>
+                    "delivered on its date all the same, so Jennie agrees another day with the customer first."
     end
 
     calculate :price_per_order, :decimal, Edenflowers.Orders.Subscription.Calculations.PricePerOrder do
