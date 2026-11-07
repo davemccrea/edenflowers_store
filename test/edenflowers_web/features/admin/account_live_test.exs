@@ -32,19 +32,21 @@ defmodule EdenflowersWeb.Admin.AccountLiveTest do
     assert get(conn, ~p"/admin/account/avatar").status == 404
   end
 
-  test "admin's colour and grain choices stick and restyle the back office", %{conn: conn} do
+  test "admin's colour picker choice sticks and colours the back office", %{conn: conn} do
     admin = generate(admin_user()) |> with_token()
     conn = log_in(conn, admin)
 
     {:ok, view, _html} = live(conn, ~p"/admin/account")
 
-    view |> form("#accent-form", %{admin_accent: "plum"}) |> render_change()
-    view |> form("#grain-form", %{admin_grain: "0"}) |> render_change()
+    render_hook(view, "update_appearance", %{
+      "admin_hue" => 325,
+      "admin_chroma" => 70,
+      "admin_lightness" => 30,
+      "admin_grain" => 0
+    })
 
-    assert has_element?(view, "#admin-app[data-accent=plum][data-grain='0']")
-
-    {:ok, _view, html} = live(conn, ~p"/admin")
-    assert html =~ ~s(data-accent="plum")
+    body = conn |> get(~p"/admin") |> html_response(200)
+    assert body =~ "--admin-hue: 325; --admin-chroma: 70; --admin-lightness: 30; --admin-grain: 0"
   end
 
   test "admin picks the admin language in account settings", %{conn: conn} do

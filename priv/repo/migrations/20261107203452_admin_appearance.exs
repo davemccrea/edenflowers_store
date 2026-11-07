@@ -9,15 +9,19 @@ defmodule Edenflowers.Repo.Migrations.AdminAppearance do
 
   def up do
     alter table(:users) do
-      add :admin_accent, :text, null: false, default: "forest"
-      add :admin_grain, :bigint, null: false, default: 2
+      add :admin_hue, :bigint, null: false, default: 152
+      add :admin_chroma, :bigint, null: false, default: 50
+      add :admin_lightness, :bigint, null: false, default: 26
+      add :admin_grain, :bigint, null: false, default: 60
     end
   end
 
   def down do
     alter table(:users) do
       remove :admin_grain
-      remove :admin_accent
+      remove :admin_lightness
+      remove :admin_chroma
+      remove :admin_hue
     end
   end
 end

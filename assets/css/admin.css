@@ -420,73 +420,79 @@ body:has(.admin-theme) {
   }
 }
 
-/* Each admin picks an accent (User.admin_accent). It re-hues the shop's forest
-   green and the primary colour from one hue and chroma, at the same lightness,
-   so contrast holds whatever they choose. Forest keeps the shop's own values.
-   On :root, so the flash group and the overscroll canvas follow it too. */
-:root:has(.admin-theme[data-accent="teal"]),
-[data-swatch="teal"] {
-  --accent-hue: 200;
-  --accent-chroma: 0.055;
-}
-:root:has(.admin-theme[data-accent="ink"]),
-[data-swatch="ink"] {
-  --accent-hue: 262;
-  --accent-chroma: 0.07;
-}
-:root:has(.admin-theme[data-accent="plum"]),
-[data-swatch="plum"] {
-  --accent-hue: 325;
-  --accent-chroma: 0.07;
-}
-:root:has(.admin-theme[data-accent="berry"]),
-[data-swatch="berry"] {
-  --accent-hue: 8;
-  --accent-chroma: 0.085;
-}
-:root:has(.admin-theme[data-accent="terracotta"]),
-[data-swatch="terracotta"] {
-  --accent-hue: 40;
-  --accent-chroma: 0.08;
-}
-:root:has(.admin-theme[data-accent]:not([data-accent="forest"])) {
-  --color-primary: oklch(36.8% var(--accent-chroma) var(--accent-hue));
-  --color-forest: oklch(26% var(--accent-chroma) var(--accent-hue));
+/* Each admin sets their own colour on the account page's picker (User.admin_*).
+   The root layout puts the raw values on body; here, on admin pages only, they
+   become the forest chrome and the primary colour. Lightness is held to a range
+   where white text stays readable on both. The fallbacks are the shop's forest. */
+body:has(.admin-theme) {
+  --admin-l: calc(var(--admin-lightness, 26) * 1%);
+  --admin-c: calc(var(--admin-chroma, 50) / 1000);
+  --admin-h: var(--admin-hue, 152);
+  --color-forest: oklch(var(--admin-l) var(--admin-c) var(--admin-h));
+  --color-primary: oklch(
+    calc(var(--admin-l) + 10.8%) var(--admin-c) var(--admin-h)
+  );
   --chrome-light: oklch(
-    33% calc(var(--accent-chroma) + 0.01) var(--accent-hue)
+    calc(var(--admin-l) + 7%) calc(var(--admin-c) + 0.01) var(--admin-h)
   );
   --chrome-deep: oklch(
-    21% calc(var(--accent-chroma) - 0.005) var(--accent-hue)
+    calc(var(--admin-l) - 5%) max(0, calc(var(--admin-c) - 0.005))
+      var(--admin-h)
   );
 }
 
-/* The account page's colour choices. Each swatch carries its own hue, so the
-   forest one sets it back rather than inheriting the chosen accent. */
-[data-swatch="forest"] {
-  --accent-hue: 152;
-  --accent-chroma: 0.05;
+/* The account page's colour picker (AccountLive.appearance_picker/1). The
+   field runs every hue across and dark to light down, under Arc's dot grid. */
+.admin-picker-field {
+  background-image: radial-gradient(
+      circle,
+      rgb(255 255 255 / 0.22) 1px,
+      transparent 1.4px
+    ),
+    linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / 0.55)),
+    linear-gradient(
+      to right in oklch longer hue,
+      oklch(62% 0.1 0),
+      oklch(62% 0.1 359.9)
+    );
+  background-size:
+    9px 9px,
+    100% 100%,
+    100% 100%;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
 }
+
+/* Presets and the field's handle show a colour brighter than the sidebar it
+   makes, so it reads on the dark panel. Presets carry --h/--c/--l; the handle
+   follows the admin's own. */
 .admin-swatch {
-  background-image: linear-gradient(
-    165deg,
-    oklch(33% calc(var(--accent-chroma) + 0.01) var(--accent-hue)),
-    oklch(21% calc(var(--accent-chroma) - 0.005) var(--accent-hue))
+  background-color: oklch(
+    calc(var(--l) * 1% + 30%) calc(var(--c) / 1000 + 0.04) var(--h)
+  );
+}
+.admin-picker-handle {
+  background-color: oklch(
+    calc(var(--admin-l) + 30%) calc(var(--admin-c) + 0.04) var(--admin-h)
   );
 }
 
-/* The forest chrome (sidebar, drawer, phone topbar) takes a whiter cream than
-   the storefront's reverse-out sections, a light-to-deep fall of colour and a
-   film grain, so it reads as a material rather than a flat fill. The grain is
-   a layer of its own so each admin can set its strength (User.admin_grain).
-   Every chrome element is positioned (sticky or relative) to hold it. */
+.admin-picker-knob {
+  background-color: color-mix(in oklab, var(--color-forest), white 12%);
+}
+
+/* The forest chrome (sidebar, drawer, phone topbar, colour picker) takes a
+   whiter cream than the storefront's reverse-out sections, a light-to-deep fall
+   of colour and a film grain, so it reads as a material rather than a flat
+   fill. The grain is a layer of its own so its strength can change. Every
+   chrome element is positioned (sticky or relative) to hold it. */
 .admin-chrome {
   --color-forest-content: oklch(98.5% 0.008 85);
   background-color: var(--color-forest);
   background-image: linear-gradient(
     165deg,
-    var(--chrome-light, oklch(33% 0.06 155)),
+    var(--chrome-light),
     var(--color-forest) 55%,
-    var(--chrome-deep, oklch(21% 0.045 150))
+    var(--chrome-deep)
   );
 
   &::before {
@@ -494,17 +500,7 @@ body:has(.admin-theme) {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: var(--admin-grain, 0.6);
+    opacity: calc(var(--admin-grain, 60) / 100);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-}
-
-.admin-theme[data-grain="0"] {
-  --admin-grain: 0;
-}
-.admin-theme[data-grain="1"] {
-  --admin-grain: 0.3;
-}
-.admin-theme[data-grain="3"] {
-  --admin-grain: 1;
 }
