@@ -374,7 +374,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   attr :transition, :string,
     required: true,
-    doc: "Page transition in admin_transitions.js, matching the arrow's direction"
+    doc: "Page transition in page_transitions.js, matching the arrow's direction"
 
   def queue_link(%{to: nil} = assigns) do
     ~H"""

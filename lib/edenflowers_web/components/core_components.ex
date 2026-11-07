@@ -1038,6 +1038,7 @@ defmodule EdenflowersWeb.CoreComponents do
     ~H"""
     <.link
       navigate={@navigate}
+      data-photo-transition
       class="group relative isolate block after:content-[''] after:pointer-events-none after:absolute after:inset-0 after:z-10 focus-visible:outline-hidden focus-visible:after:border-primary focus-visible:after:border-2"
     >
       <figure class="bg-cream aspect-[4/5] relative mb-4 overflow-hidden sm:aspect-square">

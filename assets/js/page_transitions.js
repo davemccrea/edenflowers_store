@@ -1,7 +1,9 @@
-// Admin page changes animate like a native app (admin.css). Only link and
-// server navigations animate. Browser back and forward swap instantly, as
-// does every other diff.
+// Admin page changes animate like a native app (admin.css). On the storefront,
+// a product card's photo grows into the product page's (storefront.css). Only
+// link and server navigations animate. Browser back and forward swap
+// instantly, as does every other diff.
 let pendingAdminTransition = null;
+let pendingPhotoLink = null;
 
 const adminPath = (href) =>
   new URL(href, location.href).pathname.replace(/\/$/, "");
@@ -28,12 +30,14 @@ function transitionBetween(from, to) {
 // the previous and next arrows between orders. Captured ahead of LiveView's
 // click handler, which starts the navigation.
 let linkTransition = null;
+let photoLink = null;
 
 document.addEventListener(
   "click",
   (event) => {
     linkTransition =
       event.target.closest?.("a[data-transition]")?.dataset.transition ?? null;
+    photoLink = event.target.closest?.("a[data-photo-transition]") ?? null;
   },
   true,
 );
@@ -44,10 +48,13 @@ window.addEventListener("phx:page-loading-start", ({ detail }) => {
   pendingAdminTransition =
     linkTransition ??
     transitionBetween(adminPath(location.href), adminPath(detail.to));
+  pendingPhotoLink = photoLink;
   linkTransition = null;
+  photoLink = null;
 });
 window.addEventListener("phx:page-loading-stop", () => {
   pendingAdminTransition = null;
+  pendingPhotoLink = null;
 });
 
 // LiveView applies updates in the order they arrive. A view transition delays
@@ -69,33 +76,69 @@ export function onDocumentPatch(start) {
   if (heldPatches) return heldPatches.push(start);
 
   const kind = pendingAdminTransition;
+  const link = pendingPhotoLink;
   pendingAdminTransition = null;
+  pendingPhotoLink = null;
+
+  if (!document.startViewTransition) return start();
 
   // An open drawer or modal would be snapshotted mid-page, so those navigations
   // swap instantly, as they did before. The navigation drawer is the exception:
   // it slides away in its own snapshot (admin.css).
   // Only the installed app animates, as a native one would. In a browser tab
   // pages swap straight away, as on most web apps.
-  const animate =
+  if (
     kind &&
-    document.startViewTransition &&
     document.querySelector(".admin-theme") &&
     matchMedia("(display-mode: standalone)").matches &&
-    !document.querySelector("dialog[open]:not(#admin-nav-drawer-dialog)");
-  if (!animate) return start();
+    !document.querySelector("dialog[open]:not(#admin-nav-drawer-dialog)")
+  ) {
+    const root = document.documentElement;
+    root.dataset.adminTransition = kind;
+    transition(start).finished.finally(
+      () => delete root.dataset.adminTransition,
+    );
+    return;
+  }
 
-  const root = document.documentElement;
-  root.dataset.adminTransition = kind;
+  if (
+    link?.isConnected &&
+    !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+    !document.querySelector("dialog[open]")
+  ) {
+    // Only the clicked card carries the name: two elements sharing one would
+    // abort the transition.
+    link.querySelector("figure").style.viewTransitionName = "product-photo";
+    transition(start, waitForProductPhoto);
+    return;
+  }
+
+  start();
+}
+
+function transition(start, afterStart = () => {}) {
   heldPatches = [];
-  document
-    .startViewTransition(() => {
-      try {
-        start();
-      } finally {
-        const held = heldPatches;
-        heldPatches = null;
-        held.forEach((patch) => patch());
-      }
-    })
-    .finished.finally(() => delete root.dataset.adminTransition);
+  return document.startViewTransition(() => {
+    try {
+      start();
+    } finally {
+      const held = heldPatches;
+      heldPatches = null;
+      held.forEach((patch) => patch());
+    }
+    return afterStart();
+  });
+}
+
+// LiveView only scrolls the new page to the top after the snapshot, so the
+// photo would land where it sits at the store page's scroll, then jump.
+// The product page's photo is larger than the card's, so it's rarely loaded
+// yet. Snapshotted now, the card would grow into an empty frame. The page stays
+// frozen while this waits, so it waits no longer than a blink.
+function waitForProductPhoto() {
+  window.scrollTo(0, 0);
+  const img = document.querySelector(".product-photo img");
+  if (!img) return;
+  const timeout = new Promise((resolve) => setTimeout(resolve, 300));
+  return Promise.race([img.decode().catch(() => {}), timeout]);
 }

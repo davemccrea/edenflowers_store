@@ -135,7 +135,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
           <div class="md:col-start-1 md:row-span-2 md:row-start-1">
             <figure>
-              <div class="bg-cream aspect-square relative overflow-hidden md:aspect-[4/5]">
+              <div class="product-photo bg-cream aspect-square relative overflow-hidden md:aspect-[4/5]">
                 <.image
                   data-testid="product-image"
                   src={@photo_slug}
