@@ -123,27 +123,19 @@ defmodule EdenflowersWeb.Store.StoreLive do
 
         <nav :if={@categories != []} aria-label={~t"Categories"} class="mt-8 mb-12 md:mb-16">
           <ol class="category-index m-0 flex list-none flex-wrap gap-x-6 gap-y-1 p-0 md:gap-x-8">
-            <li :for={category <- @categories}>
-              <.link
-                patch={~q"/#{language}/store/#{category.slug}"}
-                class="category-index__link text-base-content touch-target block py-2 no-underline"
-                aria-current={@selected_category && @selected_category.id == category.id && "page"}
-              >
-                <span class="category-index__name font-serif text-lg md:text-xl">{category.name}</span>
-              </.link>
-            </li>
-            <li>
-              <.link
-                id="store-gift-voucher-link"
-                navigate={~q"/#{language}/gift-voucher"}
-                class="category-index__link text-base-content touch-target flex items-center gap-2 py-2 no-underline"
-              >
-                <span class="category-index__name font-serif text-lg md:text-xl">{~t"Gift voucher"}</span>
-                <span class="bg-primary text-primary-content text-[0.625rem] px-1.5 py-1 font-semibold uppercase leading-none tracking-wider">
-                  {~t"New"}
-                </span>
-              </.link>
-            </li>
+            <%= for category <- @categories do %>
+              <li>
+                <.link
+                  patch={~q"/#{language}/store/#{category.slug}"}
+                  class="category-index__link text-base-content touch-target block py-2 no-underline"
+                  aria-current={@selected_category && @selected_category.id == category.id && "page"}
+                >
+                  <span class="category-index__name font-serif text-lg md:text-xl">{category.name}</span>
+                </.link>
+              </li>
+              <.gift_voucher_link :if={@bouquets && category.id == @bouquets.id} />
+            <% end %>
+            <.gift_voucher_link :if={!@bouquets} />
           </ol>
         </nav>
 
@@ -369,6 +361,23 @@ defmodule EdenflowersWeb.Store.StoreLive do
         </div>
       </section>
     </Layouts.app>
+    """
+  end
+
+  defp gift_voucher_link(assigns) do
+    ~H"""
+    <li>
+      <.link
+        id="store-gift-voucher-link"
+        navigate={~q"/#{language}/gift-voucher"}
+        class="category-index__link text-base-content touch-target flex items-center gap-2 py-2 no-underline"
+      >
+        <span class="category-index__name font-serif text-lg md:text-xl">{~t"Gift voucher"}</span>
+        <span class="bg-primary text-primary-content text-[0.625rem] px-1.5 py-1 font-semibold uppercase leading-none tracking-wider">
+          {~t"New"}
+        </span>
+      </.link>
+    </li>
     """
   end
 
