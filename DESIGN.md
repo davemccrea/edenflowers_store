@@ -105,7 +105,7 @@ The palette is one warm family. Every neutral sits at hue ~75 (oat, cream, near-
 
 Density is generous and editorial. Interaction is quiet and physical: hover underlines fade in, presses land instantly with a 1px drop and an opacity dip. Motion is for arrival and photography, and almost nowhere else.
 
-The admin is an operating tool and follows the same tokens with four deliberate differences: sans headings, bright status colours, bordered panels, and forest chrome (sidebar, navigation drawer and phone topbar) where the honey underline marks the current page.
+The admin is an operating tool and follows the same tokens with four deliberate differences: sans headings, bright status colours, bordered panels, and forest chrome (sidebar, navigation drawer and phone topbar) with a film grain, where the honey underline marks the current page. Each admin can re-hue the chrome and the primary colour from a fixed set of accents (forest, teal, ink, plum, berry, terracotta) at the same lightness, and set the grain's strength, on their account page.
 
 **Key Characteristics:**
 - Warm oat paper (hue ~75) under everything; no cold grey.

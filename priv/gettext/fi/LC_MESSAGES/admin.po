@@ -60,12 +60,12 @@ msgstr "%{variant_size_label}: loppuunmyyty"
 msgid "(missing text)"
 msgstr "(teksti puuttuu)"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:110
+#: lib/edenflowers_web/features/admin/account_live.ex:159
 #, elixir-autogen, elixir-format
 msgid "Access"
 msgstr "Käyttöoikeus"
 
-#: lib/edenflowers_web/components/layouts.ex:617
+#: lib/edenflowers_web/components/layouts.ex:619
 #: lib/edenflowers_web/features/admin/account_live.ex:21
 #: lib/edenflowers_web/features/admin/account_live.ex:36
 #, elixir-autogen, elixir-format
@@ -83,7 +83,7 @@ msgstr "Raportti kirjanpitäjälle"
 msgid "Active"
 msgstr "Aktiivinen"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:200
+#: lib/edenflowers_web/features/admin/account_live.ex:263
 #, elixir-autogen, elixir-format
 msgid "Add Eden Admin to your home screen to get notifications."
 msgstr "Lisää Eden Admin Koti-valikkoon, niin saat ilmoitukset."
@@ -125,18 +125,18 @@ msgstr "Lisää koko"
 msgid "Address"
 msgstr "Osoite"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:111
+#: lib/edenflowers_web/features/admin/account_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "Admin"
 msgstr "Ylläpitäjä"
 
-#: lib/edenflowers_web/components/layouts.ex:579
+#: lib/edenflowers_web/components/layouts.ex:581
 #, elixir-autogen, elixir-format
 msgid "Admin account menu"
 msgstr "Ylläpitäjän tilivalikko"
 
-#: lib/edenflowers_web/components/layouts.ex:289
-#: lib/edenflowers_web/components/layouts.ex:302
+#: lib/edenflowers_web/components/layouts.ex:291
+#: lib/edenflowers_web/components/layouts.ex:304
 #, elixir-autogen, elixir-format
 msgid "Admin navigation"
 msgstr "Ylläpidon navigointi"
@@ -573,7 +573,7 @@ msgstr "Vahvistusta ei voitu lisätä lähetysjonoon."
 msgid "Could not refund with Stripe. Check the payment in Stripe."
 msgstr "Hyvitys Stripellä epäonnistui. Tarkista maksu Stripessä."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:147
+#: lib/edenflowers_web/features/admin/account_live.ex:210
 #, elixir-autogen, elixir-format
 msgid "Could not remove the profile picture."
 msgstr "Profiilikuvan poistaminen epäonnistui."
@@ -583,7 +583,7 @@ msgstr "Profiilikuvan poistaminen epäonnistui."
 msgid "Could not remove the seat."
 msgstr "Paikkaa ei voitu poistaa."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:171
+#: lib/edenflowers_web/features/admin/account_live.ex:234
 #, elixir-autogen, elixir-format
 msgid "Could not save the profile picture."
 msgstr "Profiilikuvan tallentaminen epäonnistui."
@@ -616,7 +616,7 @@ msgstr "Maksun peruminen ei onnistunut."
 msgid "Could not upload the photo."
 msgstr "Kuvan lataaminen epäonnistui."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:279
+#: lib/edenflowers_web/features/admin/account_live.ex:353
 #, elixir-autogen, elixir-format
 msgid "Could not upload the picture."
 msgstr "Kuvan lataaminen epäonnistui."
@@ -639,7 +639,7 @@ msgstr "Tilauksen tietoja ei voitu lähettää sähköpostilla."
 msgid "Couldn't email the receipt."
 msgstr "Kuittia ei voitu lähettää sähköpostilla."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:206
+#: lib/edenflowers_web/features/admin/account_live.ex:269
 #, elixir-autogen, elixir-format
 msgid "Couldn't turn on notifications. Try again."
 msgstr "Ilmoitusten käyttöönotto epäonnistui. Yritä uudelleen."
@@ -1560,7 +1560,7 @@ msgstr "Uusi tilaus"
 msgid "New order %{order_order_reference}"
 msgstr "Uusi tilaus %{order_order_reference}"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:193
+#: lib/edenflowers_web/features/admin/account_live.ex:256
 #, elixir-autogen, elixir-format
 msgid "New order notifications"
 msgstr "Ilmoitukset uusista tilauksista"
@@ -1719,7 +1719,7 @@ msgstr "Tänään ei valmistettavaa"
 msgid "Nothing to make tomorrow"
 msgstr "Huomenna ei valmistettavaa"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:203
+#: lib/edenflowers_web/features/admin/account_live.ex:266
 #, elixir-autogen, elixir-format
 msgid "Notifications are blocked. Allow them for Eden Admin in your phone's Settings."
 msgstr "Ilmoitukset on estetty. Salli ne Eden Adminille puhelimen asetuksista."
@@ -2561,12 +2561,12 @@ msgstr "Hae nimellä tai sähköpostilla…"
 msgid "Search name…"
 msgstr "Hae nimellä…"
 
-#: lib/edenflowers_web/components/layouts.ex:410
+#: lib/edenflowers_web/components/layouts.ex:412
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers"
 msgstr "Hae tilauksia ja asiakkaita"
 
-#: lib/edenflowers_web/components/layouts.ex:421
+#: lib/edenflowers_web/components/layouts.ex:423
 #, elixir-autogen, elixir-format
 msgid "Search orders and customers…"
 msgstr "Hae tilauksia ja asiakkaita…"
@@ -2671,13 +2671,13 @@ msgstr "Näytä"
 msgid "Show photo %{n} in the store's gallery"
 msgstr "Näytä kuva %{n} kaupan kuvagalleriassa"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:197
+#: lib/edenflowers_web/features/admin/account_live.ex:260
 #, elixir-autogen, elixir-format
 msgid "Shown on this device only."
 msgstr "Näytetään vain tällä laitteella."
 
-#: lib/edenflowers_web/components/layouts.ex:623
-#: lib/edenflowers_web/features/admin/account_live.ex:118
+#: lib/edenflowers_web/components/layouts.ex:625
+#: lib/edenflowers_web/features/admin/account_live.ex:167
 #, elixir-autogen, elixir-format
 msgid "Sign out"
 msgstr "Kirjaudu ulos"
@@ -2835,7 +2835,7 @@ msgstr "Kestotilaukset"
 msgid "Swedish"
 msgstr "Ruotsi"
 
-#: lib/edenflowers_web/components/layouts.ex:493
+#: lib/edenflowers_web/components/layouts.ex:495
 #: lib/edenflowers_web/features/admin/links_live.ex:21
 #, elixir-autogen, elixir-format
 msgid "System"
@@ -2933,7 +2933,7 @@ msgstr "Tilausta ei tallennettu. Tarkista alla merkityt kentät."
 msgid "The photo must be under 40 MB."
 msgstr "Kuvan on oltava alle 40 Mt."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:277
+#: lib/edenflowers_web/features/admin/account_live.ex:351
 #, elixir-autogen, elixir-format
 msgid "The picture must be under 2 MB."
 msgstr "Kuvan on oltava alle 2 Mt."
@@ -2963,7 +2963,7 @@ msgstr "Sähköpostiosoitetta ei ole, joten asiakkaalle ei lähetetä sähköpos
 msgid "This changed while you had it open, so it wasn't cancelled."
 msgstr "Tämä muuttui sillä välin, kun se oli auki, joten sitä ei peruttu."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:189
+#: lib/edenflowers_web/features/admin/account_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "This device"
 msgstr "Tämä laite"
@@ -3241,7 +3241,7 @@ msgstr "Kuvaa ladataan"
 msgid "Usage limit"
 msgstr "Käyttöraja"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:278
+#: lib/edenflowers_web/features/admin/account_live.ex:352
 #, elixir-autogen, elixir-format
 msgid "Use a JPG, PNG or WebP image."
 msgstr "Käytä JPG-, PNG- tai WebP-kuvaa."
@@ -3354,8 +3354,8 @@ msgstr "Näytä kuva"
 msgid "View receipt"
 msgstr "Näytä kuitti"
 
-#: lib/edenflowers_web/components/layouts.ex:330
-#: lib/edenflowers_web/components/layouts.ex:361
+#: lib/edenflowers_web/components/layouts.ex:332
+#: lib/edenflowers_web/components/layouts.ex:363
 #, elixir-autogen, elixir-format
 msgid "Storefront"
 msgstr "Verkkokauppa"
@@ -5117,7 +5117,62 @@ msgstr "Hyvää huomenta"
 msgid "Good morning, %{first_name}"
 msgstr "Hyvää huomenta, %{first_name}"
 
-#: lib/edenflowers_web/components/layouts.ex:551
+#: lib/edenflowers_web/components/layouts.ex:553
 #, elixir-autogen, elixir-format
 msgid "(opens in a new tab)"
 msgstr "(avautuu uuteen välilehteen)"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:343
+#, elixir-autogen, elixir-format
+msgid "Berry"
+msgstr "Marja"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:110
+#, elixir-autogen, elixir-format
+msgid "Colour"
+msgstr "Väri"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:197
+#, elixir-autogen, elixir-format
+msgid "Could not save the appearance."
+msgstr "Ulkoasun tallentaminen epäonnistui."
+
+#: lib/edenflowers_web/features/admin/account_live.ex:339
+#, elixir-autogen, elixir-format
+msgid "Forest"
+msgstr "Metsä"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:153
+#, elixir-autogen, elixir-format
+msgid "Heavy"
+msgstr "Voimakas"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:341
+#, elixir-autogen, elixir-format
+msgid "Ink"
+msgstr "Muste"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:152
+#, elixir-autogen, elixir-format
+msgid "None"
+msgstr "Ei lainkaan"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:342
+#, elixir-autogen, elixir-format
+msgid "Plum"
+msgstr "Luumu"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:136
+#, elixir-autogen, elixir-format
+msgid "Sidebar grain"
+msgstr "Sivupalkin rakeisuus"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:340
+#, elixir-autogen, elixir-format
+msgid "Teal"
+msgstr "Sinivihreä"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:344
+#, elixir-autogen, elixir-format
+msgid "Terracotta"
+msgstr "Terrakotta"

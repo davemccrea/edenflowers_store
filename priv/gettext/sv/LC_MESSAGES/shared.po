@@ -168,14 +168,14 @@ msgstr "Det uppstod ett problem med att beräkna leveranskostnaden, försök ige
 msgid "This field is required"
 msgstr "Det här fältet är obligatoriskt"
 
-#: lib/edenflowers_web/components/layouts.ex:471
-#: lib/edenflowers_web/components/layouts.ex:680
+#: lib/edenflowers_web/components/layouts.ex:473
+#: lib/edenflowers_web/components/layouts.ex:682
 #, elixir-autogen, elixir-format
 msgid "Close navigation menu"
 msgstr "Stäng navigeringsmenyn"
 
-#: lib/edenflowers_web/components/layouts.ex:324
-#: lib/edenflowers_web/components/layouts.ex:757
+#: lib/edenflowers_web/components/layouts.ex:326
+#: lib/edenflowers_web/components/layouts.ex:759
 #, elixir-autogen, elixir-format
 msgid "Open navigation menu"
 msgstr "Öppna navigeringsmeny"

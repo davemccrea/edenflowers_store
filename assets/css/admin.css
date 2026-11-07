@@ -420,17 +420,91 @@ body:has(.admin-theme) {
   }
 }
 
+/* Each admin picks an accent (User.admin_accent). It re-hues the shop's forest
+   green and the primary colour from one hue and chroma, at the same lightness,
+   so contrast holds whatever they choose. Forest keeps the shop's own values.
+   On :root, so the flash group and the overscroll canvas follow it too. */
+:root:has(.admin-theme[data-accent="teal"]),
+[data-swatch="teal"] {
+  --accent-hue: 200;
+  --accent-chroma: 0.055;
+}
+:root:has(.admin-theme[data-accent="ink"]),
+[data-swatch="ink"] {
+  --accent-hue: 262;
+  --accent-chroma: 0.07;
+}
+:root:has(.admin-theme[data-accent="plum"]),
+[data-swatch="plum"] {
+  --accent-hue: 325;
+  --accent-chroma: 0.07;
+}
+:root:has(.admin-theme[data-accent="berry"]),
+[data-swatch="berry"] {
+  --accent-hue: 8;
+  --accent-chroma: 0.085;
+}
+:root:has(.admin-theme[data-accent="terracotta"]),
+[data-swatch="terracotta"] {
+  --accent-hue: 40;
+  --accent-chroma: 0.08;
+}
+:root:has(.admin-theme[data-accent]:not([data-accent="forest"])) {
+  --color-primary: oklch(36.8% var(--accent-chroma) var(--accent-hue));
+  --color-forest: oklch(26% var(--accent-chroma) var(--accent-hue));
+  --chrome-light: oklch(
+    33% calc(var(--accent-chroma) + 0.01) var(--accent-hue)
+  );
+  --chrome-deep: oklch(
+    21% calc(var(--accent-chroma) - 0.005) var(--accent-hue)
+  );
+}
+
+/* The account page's colour choices. Each swatch carries its own hue, so the
+   forest one sets it back rather than inheriting the chosen accent. */
+[data-swatch="forest"] {
+  --accent-hue: 152;
+  --accent-chroma: 0.05;
+}
+.admin-swatch {
+  background-image: linear-gradient(
+    165deg,
+    oklch(33% calc(var(--accent-chroma) + 0.01) var(--accent-hue)),
+    oklch(21% calc(var(--accent-chroma) - 0.005) var(--accent-hue))
+  );
+}
+
 /* The forest chrome (sidebar, drawer, phone topbar) takes a whiter cream than
-   the storefront's reverse-out sections, a light-to-deep fall of green and a
-   film grain, so it reads as a material rather than a flat fill. */
+   the storefront's reverse-out sections, a light-to-deep fall of colour and a
+   film grain, so it reads as a material rather than a flat fill. The grain is
+   a layer of its own so each admin can set its strength (User.admin_grain).
+   Every chrome element is positioned (sticky or relative) to hold it. */
 .admin-chrome {
   --color-forest-content: oklch(98.5% 0.008 85);
   background-color: var(--color-forest);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    linear-gradient(
-      165deg,
-      oklch(33% 0.06 155),
-      var(--color-forest) 55%,
-      oklch(21% 0.045 150)
-    );
+  background-image: linear-gradient(
+    165deg,
+    var(--chrome-light, oklch(33% 0.06 155)),
+    var(--color-forest) 55%,
+    var(--chrome-deep, oklch(21% 0.045 150))
+  );
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--admin-grain, 0.6);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+.admin-theme[data-grain="0"] {
+  --admin-grain: 0;
+}
+.admin-theme[data-grain="1"] {
+  --admin-grain: 0.3;
+}
+.admin-theme[data-grain="3"] {
+  --admin-grain: 1;
 }

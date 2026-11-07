@@ -280,6 +280,8 @@ defmodule EdenflowersWeb.Layouts do
     <div
       id="admin-app"
       phx-hook=".AdminApp"
+      data-accent={@current_user.admin_accent}
+      data-grain={@current_user.admin_grain}
       class={["admin-theme", if(@fill_viewport, do: "h-dvh flex flex-col lg:flex-row", else: "min-h-screen lg:flex")]}
     >
       <%!-- Mobile: slide-in drawer --%>
@@ -287,7 +289,7 @@ defmodule EdenflowersWeb.Layouts do
         id="admin-nav-drawer"
         placement="left"
         label={dgettext("admin", "Admin navigation")}
-        class="admin-chrome bg-forest text-forest-content border-forest-content/15 w-[80vw] flex h-full flex-col border-r sm:w-[25rem]"
+        class="admin-chrome bg-forest text-forest-content border-forest-content/15 w-[80vw] relative flex h-full flex-col border-r sm:w-[25rem]"
       >
         <.admin_sidebar_content
           nav_sections={@nav_sections}
