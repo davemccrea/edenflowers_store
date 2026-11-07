@@ -103,7 +103,13 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   def handle_event("change_subscription", params, socket) do
     changes = Map.take(params, ["product_variant_id", "interval_weeks", "delivery_day"])
-    change = &Orders.change_subscription(&1, changes, Keyword.put(&2, :load, [:product_variant, :price_per_order]))
+
+    change =
+      &Orders.change_subscription(
+        &1,
+        changes,
+        Keyword.put(&2, :load, [:product_variant, :price_per_order, :resume_date])
+      )
 
     socket =
       socket
@@ -169,10 +175,12 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
   end
 
   # The occurrence job reads the subscription when it books each delivery, so a
-  # change applies from the first one it hasn't booked.
+  # change applies from the first one it hasn't booked. A paused one's next
+  # date may long have passed, so it applies from when it would resume.
   defp change_confirmation(subscription, locale) do
     %{product_variant: variant, interval_weeks: weeks} = subscription
-    from = Format.weekday_date(subscription.next_fulfillment_date, locale)
+    from_date = if subscription.state == :paused, do: subscription.resume_date, else: subscription.next_fulfillment_date
+    from = Format.weekday_date(from_date, locale)
     size = variant_size_label(variant.size)
     price = Format.storefront_price(subscription.price_per_order, locale)
 

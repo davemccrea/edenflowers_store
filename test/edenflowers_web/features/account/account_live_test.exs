@@ -682,6 +682,25 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
                "From #{weekday_date(reload(subscription).next_fulfillment_date)}: Large, every 4 weeks, #{price} per delivery."
     end
 
+    test "a paused subscription's change applies from when it would resume", %{conn: conn, user: user} do
+      long_ago = Date.add(ShopTime.today(), -30)
+
+      subscription =
+        generate(subscription(user_id: user.id, state: :paused, next_fulfillment_date: long_ago, interval_weeks: 2))
+
+      variant = Ash.get!(Edenflowers.Catalog.ProductVariant, subscription.product_variant_id)
+      large = generate(product_variant(product_id: variant.product_id, size: :large, draft: false))
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      changes = %{"product_variant_id" => large.id, "interval_weeks" => "2"}
+      view |> form("#change-subscription-#{subscription.id}", changes) |> render_change()
+      view |> form("#change-subscription-#{subscription.id}", changes) |> render_submit()
+
+      resume_date = Ash.load!(reload(subscription), :resume_date, authorize?: false).resume_date
+      assert Date.compare(resume_date, ShopTime.today()) == :gt
+      assert render(view) =~ "From #{weekday_date(resume_date)}: Large"
+    end
+
     test "offers the sizes on sale, keeping the current one once it's a draft", %{conn: conn, user: user} do
       current = generate(product_variant(product_id: generate(product()).id, size: :medium, draft: true))
       subscription = generate(subscription(user_id: user.id, product_variant_id: current.id))
