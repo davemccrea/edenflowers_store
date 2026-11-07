@@ -203,7 +203,11 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
       class="bg-cream text-cream-content mt-4 hidden p-5"
       aria-labelledby={"cancel-subscription-#{@id}-title"}
     >
-      <h3 id={"cancel-subscription-#{@id}-title"} tabindex="-1" class="card-heading outline-hidden">
+      <h3
+        id={"cancel-subscription-#{@id}-title"}
+        tabindex="-1"
+        class="font-sans text-balance text-base font-semibold outline-hidden"
+      >
         {~t"Stop your subscription?"}
       </h3>
       <p :if={@final_delivery?} class="mt-2 text-sm" data-testid="final-delivery-warning">
@@ -507,7 +511,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
           <.detail_row :if={@subscription.state != :cancelled} label={~t"Plan"}>
             <div class="flex items-baseline justify-between gap-4">
               <div>
-                <p class="font-serif text-lg">{plan_label(@subscription)}</p>
+                <p class="font-sans text-base font-semibold">{plan_label(@subscription)}</p>
                 <p class="text-base-content/70 text-sm">
                   {~t"#{price = Format.storefront_price(@subscription.price_per_order, @locale)} per delivery"}
                 </p>
@@ -572,7 +576,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
           </.detail_row>
 
           <.detail_row :if={@subscription.state != :cancelled and @subscription.delivery_address} label={~t"Delivers to"}>
-            <p class="font-serif text-lg" data-testid="subscription-recipient">
+            <p class="font-sans text-base" data-testid="subscription-recipient">
               <span :if={@subscription.recipient_name} class="block">{@subscription.recipient_name}</span>
               {@subscription.delivery_address}
             </p>
@@ -638,12 +642,14 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
     ~H"""
     <%= if @booked do %>
-      <p class="font-serif text-lg">{Format.weekday_date(@booked.fulfillment_date, @locale)}</p>
+      <p class="font-sans text-base font-semibold">
+        {Format.weekday_date(@booked.fulfillment_date, @locale)}
+      </p>
       <p class="text-base-content/70 text-sm">
         {~t"The one after: #{date = Format.weekday_date(@next, @locale)}, charged on #{charge_date = Format.weekday_date(@subscription.charged_on, @locale)}."}
       </p>
     <% else %>
-      <p class="font-serif text-lg">{Format.weekday_date(@next, @locale)}</p>
+      <p class="font-sans text-base font-semibold">{Format.weekday_date(@next, @locale)}</p>
       <p class="text-base-content/70 text-sm">
         {~t"Charged to your card on #{date = Format.weekday_date(@subscription.charged_on, @locale)}."}
       </p>
@@ -653,7 +659,7 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   defp drawer_status(%{subscription: %{state: :paused}} = assigns) do
     ~H"""
-    <p class="font-serif text-lg">{~t"Paused"}</p>
+    <p class="font-sans text-base font-semibold">{~t"Paused"}</p>
     <p class="text-base-content/70 text-sm">
       <span :if={@booked}>
         {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} will still arrive."}
@@ -665,14 +671,14 @@ defmodule EdenflowersWeb.Account.SubscriptionManager do
 
   defp drawer_status(%{subscription: %{state: :payment_failed}} = assigns) do
     ~H"""
-    <p class="font-serif text-lg">{~t"On hold"}</p>
+    <p class="font-sans text-base font-semibold">{~t"On hold"}</p>
     <p class="text-base-content/70 text-sm">{~t"No deliveries until the unpaid one is paid or your card is updated."}</p>
     """
   end
 
   defp drawer_status(%{subscription: %{state: :cancelled}} = assigns) do
     ~H"""
-    <p class="font-serif text-lg">{~t"One final delivery remains"}</p>
+    <p class="font-sans text-base font-semibold">{~t"One final delivery remains"}</p>
     <p class="text-base-content/70 text-sm">
       {~t"Your delivery on #{date = Format.weekday_date(@booked.fulfillment_date, @locale)} was already being prepared when you cancelled. There will be no deliveries or charges after that."}
     </p>
