@@ -9,10 +9,10 @@ const WAVE_DETENTS = 14;
  * Its methods are mixed into that hook, so `this` is the hook.
  *
  * It keeps hue, chroma, lightness and grain as exact numbers while they
- * move, so the handle glides with the pointer, and rounds them only to save. Draws them (handle, wave, dial) and previews
- * them on body's --admin-* properties once per frame, ticks like Arc's
- * detents as the dial and wave pass a step, and pushes `update_appearance`
- * once a change settles.
+ * move, so the handle glides with the pointer, and rounds them only to save.
+ * Draws them (handle, wave, dial), previews them on body's --admin-*
+ * properties once per frame, ticks like Arc's detents as the dial and wave
+ * pass a step, and pushes `update_appearance` once a change settles.
  */
 export default {
   mount() {
@@ -49,19 +49,14 @@ export default {
 
     this.handle.addEventListener("keydown", (event) => {
       const step = event.shiftKey ? 10 : 2;
-      const moves = {
-        ArrowLeft: { hue: -step },
-        ArrowRight: { hue: step },
-        ArrowUp: { lightness: 1 },
-        ArrowDown: { lightness: -1 },
-      };
-      const move = moves[event.key];
-      if (!move) return;
+      const dh = { ArrowLeft: -step, ArrowRight: step }[event.key] ?? 0;
+      const dl = { ArrowUp: 1, ArrowDown: -1 }[event.key] ?? 0;
+      if (!dh && !dl) return;
       event.preventDefault();
       this.set({
-        hue: (this.state.hue + (move.hue || 0) + this.hueMax) % this.hueMax,
+        hue: (this.state.hue + dh + this.hueMax) % this.hueMax,
         lightness: clamp(
-          this.state.lightness + (move.lightness || 0),
+          this.state.lightness + dl,
           this.lightnessMin,
           this.lightnessMax,
         ),
@@ -106,7 +101,7 @@ export default {
   destroy() {
     this.resizeObserver.disconnect();
     cancelAnimationFrame(this.frame);
-    this.haptic?.label.remove();
+    this.haptic?.remove();
   },
 
   // Grabbing the handle keeps the point under the finger where it is, as
@@ -211,7 +206,7 @@ export default {
     input.tabIndex = -1;
     label.append(input);
     document.body.append(label);
-    return { label };
+    return label;
   },
 
   tick(element) {
@@ -221,7 +216,7 @@ export default {
 
     if (this.haptic) {
       const focused = document.activeElement;
-      this.haptic.label.click();
+      this.haptic.click();
       focused?.focus({ preventScroll: true });
     }
     navigator.vibrate?.(6);
@@ -268,7 +263,7 @@ export default {
     this.waveThumb.style.left = `${end}px`;
 
     if (!dragging) this.grainInput.value = grain;
-    const lit = Math.round((grain / 100) * (this.dialDots.length - 1));
+    const lit = this.detents.dial;
     this.dialDots.forEach((dot, index) =>
       dot.toggleAttribute("data-lit", index <= lit),
     );
