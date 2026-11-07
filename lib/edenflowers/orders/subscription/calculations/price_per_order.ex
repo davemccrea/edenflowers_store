@@ -9,6 +9,7 @@ defmodule Edenflowers.Orders.Subscription.Calculations.PricePerOrder do
   use Ash.Resource.Calculation
 
   alias Edenflowers.Fulfillment.Fee
+  alias Edenflowers.Orders.Subscription
 
   @impl true
   def load(_query, _opts, _context),
@@ -21,7 +22,7 @@ defmodule Edenflowers.Orders.Subscription.Calculations.PricePerOrder do
   @impl true
   def calculate(subscriptions, _opts, _context) do
     Enum.map(subscriptions, fn subscription ->
-      Decimal.add(subscription.product_variant.price, fee(subscription) || 0)
+      Subscription.price_per_order(subscription.product_variant.price, fee(subscription))
     end)
   end
 

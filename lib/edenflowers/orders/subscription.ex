@@ -41,6 +41,20 @@ defmodule Edenflowers.Orders.Subscription do
   """
   def charged_on(date), do: Date.add(date, -@lead_days)
 
+  @doc """
+  The delivery after one on `date`: the subscription starts its schedule from
+  it, and checkout and the order page quote it before the subscription exists.
+  """
+  def next_date(date, interval_weeks), do: Date.add(date, interval_weeks * 7)
+
+  @doc """
+  What each Occurrence costs before any Gift voucher: the bouquet's price
+  before any promotion, which applies to the first order only, plus the fee.
+  `price_per_order` prices a started subscription with it; checkout and the
+  order page quote it before one exists.
+  """
+  def price_per_order(item_price, fee), do: Decimal.add(item_price, fee || 0)
+
   def lead_days, do: @lead_days
 
   def cutoff_days, do: @cutoff_days
