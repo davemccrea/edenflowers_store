@@ -92,10 +92,10 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
 
         <div class="relative h-20 w-20 shrink-0">
           <span
-            :for={i <- 0..23}
+            :for={i <- 0..11}
             data-dial-dot={i}
             class="bg-white/25 -mt-[3px] -ml-[3px] absolute top-1/2 left-1/2 h-1.5 w-1.5 rounded-full data-[lit]:bg-white/85"
-            style={"transform: rotate(#{-135 + i * 270 / 23}deg) translateY(-2.3rem)"}
+            style={"transform: rotate(#{-135 + i * 270 / 11}deg) translateY(-2.3rem)"}
           />
           <span class="admin-picker-knob shadow-[inset_0_1px_2px_rgb(255_255_255/0.2),0_3px_8px_rgb(0_0_0/0.35)] absolute inset-3 rounded-full">
             <span data-dial-mark class="absolute top-1.5 left-1/2 h-3 w-1 -translate-x-1/2 rounded-full bg-white" />
@@ -149,14 +149,14 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
   # Starting points under the field: label, hue, chroma, lightness.
   defp presets do
     [
-      {~t"Forest", 152, 50, 26},
-      {~t"Sage", 140, 25, 32},
-      {~t"Teal", 200, 55, 26},
-      {~t"Ink", 262, 70, 24},
-      {~t"Plum", 325, 70, 26},
-      {~t"Berry", 8, 85, 26},
-      {~t"Terracotta", 40, 80, 28},
-      {~t"Charcoal", 75, 8, 24}
+      {"Eden Flowers", 152, 50, 26},
+      {~t"Moss", 125, 45, 33},
+      {~t"Lagoon", 190, 55, 32},
+      {~t"Periwinkle", 265, 75, 32},
+      {~t"Lilac", 305, 65, 33},
+      {~t"Rose", 5, 75, 33},
+      {~t"Apricot", 60, 70, 34},
+      {~t"Cocoa", 45, 35, 28}
     ]
   end
 end

@@ -5094,11 +5094,6 @@ msgstr ""
 msgid "(opens in a new tab)"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:157
-#, elixir-autogen, elixir-format
-msgid "Berry"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/account_live.ex:112
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:33
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:50
@@ -5111,49 +5106,14 @@ msgstr ""
 msgid "Could not save the appearance."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:152
-#, elixir-autogen, elixir-format
-msgid "Forest"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:155
-#, elixir-autogen, elixir-format
-msgid "Ink"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:156
-#, elixir-autogen, elixir-format
-msgid "Plum"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:109
 #, elixir-autogen, elixir-format
 msgid "Sidebar grain"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:154
-#, elixir-autogen, elixir-format
-msgid "Teal"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:158
-#, elixir-autogen, elixir-format
-msgid "Terracotta"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:159
-#, elixir-autogen, elixir-format
-msgid "Charcoal"
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:88
 #, elixir-autogen, elixir-format
 msgid "Colour intensity"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:153
-#, elixir-autogen, elixir-format
-msgid "Sage"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/appearance_picker.ex:26
@@ -5185,3 +5145,38 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Orders linked by Pass it on cards"
 msgstr "Orders linked by Pass it on cards"
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:158
+#, elixir-autogen, elixir-format
+msgid "Apricot"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:159
+#, elixir-autogen, elixir-format
+msgid "Cocoa"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:154
+#, elixir-autogen, elixir-format
+msgid "Lagoon"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:156
+#, elixir-autogen, elixir-format
+msgid "Lilac"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:153
+#, elixir-autogen, elixir-format
+msgid "Moss"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:155
+#, elixir-autogen, elixir-format
+msgid "Periwinkle"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/components/appearance_picker.ex:157
+#, elixir-autogen, elixir-format
+msgid "Rose"
+msgstr ""
