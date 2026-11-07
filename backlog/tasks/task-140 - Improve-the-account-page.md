@@ -4,8 +4,10 @@ title: Improve the account page
 status: needs-triage
 assignee: []
 created_date: '2026-10-28 19:23'
+updated_date: '2026-11-07 08:18'
 labels:
   - customers
+  - spec
 dependencies: []
 priority: medium
 type: feature

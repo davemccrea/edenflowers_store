@@ -1,9 +1,10 @@
 ---
 id: TASK-170
 title: Replace customer email notes with editable email drafts
-status: needs-triage
+status: done
 assignee: []
 created_date: '2026-11-03 08:32'
+updated_date: '2026-11-07 08:19'
 labels:
   - spec
   - admin
@@ -66,3 +67,16 @@ Relevant code: lib/edenflowers_web/features/admin/email_drawer.ex, drawers.ex, d
 - [ ] #7 The final delivered subject/body are retained in the agreed email history. Subject/body validation and send authorisation are enforced through domain actions.
 - [ ] #8 Behavioural coverage verifies composed delivery, retries, draft preservation/reset, optional sending, bulk recipient eligibility and real payment-link resolution. Standard previews are reviewed in Swedish, Finnish and English, and ADR 0006 is updated to match the implemented composer.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-07 08:19
+
+---
+
+Built in 77a2978b (5.11): every email drawer has an Edit the email tick box that rewrites the whole subject and text, the note box is gone, and ADR 0006 describes it. The ACs above were written before the build and weren't ticked one by one; ADR 0006 is the record of what shipped.
+
+---
+<!-- COMMENTS:END -->

@@ -1,10 +1,10 @@
 ---
 id: TASK-165
 title: Print pass-it-on cards with one-use promo codes
-status: done
+status: ready-for-human
 assignee: []
 created_date: '2026-11-01 16:22'
-updated_date: '2026-11-05 11:36'
+updated_date: '2026-11-07 08:19'
 labels:
   - customers
   - admin
@@ -103,6 +103,15 @@ created: 2026-11-05 09:15
 ---
 
 2026-11-05: Cards can be linked to their gift order (TASK-165.1, recipient's first name on the page) and codes expire 30 days after first scan (TASK-165.2). Card back mentions the 30 days.
+
+---
+
+author: @claude
+created: 2026-11-07 08:19
+
+---
+
+Reopened from done: TASK-165.3 (privacy page wording for gift recipients) was added after and is still open.
 
 ---
 <!-- COMMENTS:END -->

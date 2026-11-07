@@ -1,10 +1,10 @@
 ---
 id: TASK-73
 title: Set up Eden Flowers' Google Business Profile
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-20 10:12'
-updated_date: '2026-10-29 07:35'
+updated_date: '2026-11-07 08:19'
 labels:
   - spec
   - customers
@@ -39,7 +39,7 @@ Keep the name, address and phone identical to the website's Contact page.
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 The profile is verified and shows in Maps for "Eden Flowers Vaasa"
-- [ ] #2 Hours, phone, website, categories and photos are filled in
+- [x] #2 Hours, phone, website, categories and photos are filled in
 - [x] #3 Name, address and phone match the website exactly
 <!-- AC:END -->
 
@@ -48,3 +48,16 @@ Keep the name, address and phone identical to the website's Contact page.
 <!-- SECTION:NOTES:BEGIN -->
 2026-10-29: Profile is set up and verified (per David). Only photos are missing; waiting on photos from Jennie. Gaps found online: Stormossen's Minimossen pages linked to the old /valkommen and /tervetuloa pages, now redirected (71e1dc1b). Stormossen gives the address in Finnish (Muurahaistie 1), so check Maps has a single pin for the shop. Check Facebook and Instagram details match the Contact page. Finder.fi's listing has no phone, hours or website and could be claimed.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-07 08:19
+
+---
+
+David confirmed on 2026-11-07 that the photos are up. TASK-159 is unblocked.
+
+---
+<!-- COMMENTS:END -->

@@ -4,7 +4,7 @@ title: Remind customers to reorder before last year's occasion
 status: needs-triage
 assignee: []
 created_date: '2026-10-10 14:30'
-updated_date: '2026-10-31 20:30'
+updated_date: '2026-11-07 08:19'
 labels:
   - spec
   - customers
@@ -32,7 +32,7 @@ A signed-in customer should be able to save the dates they buy flowers for and g
 ### Decisions
 
 1. **The shop's special days stay in code.**
-   `Edenflowers.Fulfillment.KeyDates` keeps its code-defined list. Moving it to the database, so the florist could edit it, isn't worth it yet. The list has barely changed since May 2026 (Christmas Eve was the only removal), a code change is cheap, and the database version needs a resource, a form for the date rules, translated names in the database, and a database read inside the bulk week and weekday toggles (`SetWeek`, `SetWeekday`, `CalendarViewModel`). Revisit if the florist asks to add a day or wants their own one-off days.
+   `Edenflowers.Fulfillment.KeyDates` keeps its code-defined list. Moving it to the database, so the florist could edit it, isn't worth it yet. The list has barely changed since May 2026 (Christmas Eve was the only removal), a code change is cheap, and the database version needs a resource, a form for the date rules, translated names in the database, and a database read inside the bulk week and weekday toggles (`SetWeek`, `SetWeekday`). Revisit if the florist asks to add a day or wants their own one-off days.
 
 2. **Reminders are their own resource, scoped to one customer.**
    This is the separate customer-scoped resource the `KeyDates` moduledoc already anticipates. Each reminder is one of two kinds:
@@ -42,7 +42,7 @@ A signed-in customer should be able to save the dates they buy flowers for and g
    A reminder for 29 February fires on 28 February in non-leap years.
 
 3. **A daily Oban cron job sends the emails.**
-   `Oban.Plugins.Cron` is already configured, with an empty crontab. The job finds every reminder whose next occurrence is the configured number of days ahead, in Helsinki time (`Expressions.HelsinkiToday`), and enqueues one email per reminder. The email uses the existing `Edenflowers.Email` templates. It states the occasion and the date and links into the store, so the delivery date can be picked straight away.
+   `Oban.Plugins.Cron` is already configured (it runs the newsletter sync and error-report pruning). The job finds every reminder whose next occurrence is the configured number of days ahead, in Helsinki time (`Expressions.HelsinkiToday`), and enqueues one email per reminder. The email uses the existing `Edenflowers.Email` templates. It states the occasion and the date and links into the store, so the delivery date can be picked straight away.
 
 4. **The customer manages reminders on the account page.**
    They can add a reminder from the list of shop special days or as a personal date, and remove one. That's the whole UI for v1; there's no editing, so they remove and re-add.

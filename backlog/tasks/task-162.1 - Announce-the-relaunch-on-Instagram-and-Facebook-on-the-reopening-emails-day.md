@@ -4,7 +4,7 @@ title: Announce the relaunch on Instagram and Facebook on the reopening email's 
 status: ready-for-human
 assignee: []
 created_date: '2026-11-01 14:07'
-updated_date: '2026-11-01 15:57'
+updated_date: '2026-11-07 08:19'
 labels: []
 dependencies:
   - TASK-152
@@ -53,8 +53,8 @@ Linkki löytyy biosta. Toivottavasti nähdään💛
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Post and stories are live on Instagram and Facebook the day the email goes out
-- [ ] #2 Links carry campaign reopening-2026 UTM tags
+- [x] #1 Post and stories are live on Instagram and Facebook the day the email goes out
+- [x] #2 Links carry campaign reopening-2026 UTM tags
 - [ ] #3 The post is boosted to Vaasa
 - [ ] #4 Two follow-up reels (ordering home, starting a subscription) are posted within about a week of launch
 - [ ] #5 The better reel is boosted for 20 EUR
@@ -87,6 +87,15 @@ created: 2026-11-01 15:57
 ---
 
 2026-11-01: Grilled and agreed with David. Left for Jennie: photos and screenshots, her caption, posting on the email's day, the stories, the reels and both boosts.
+
+---
+
+author: @claude
+created: 2026-11-07 08:19
+
+---
+
+Launch post and stories went out with the email on 3.11 (David, 2026-11-07). Not boosted yet; the reels and second boost are still to do.
 
 ---
 <!-- COMMENTS:END -->
