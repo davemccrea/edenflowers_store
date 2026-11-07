@@ -105,7 +105,7 @@ The palette is one warm family. Every neutral sits at hue ~75 (oat, cream, near-
 
 Density is generous and editorial. Interaction is quiet and physical: hover underlines fade in, presses land instantly with a 1px drop and an opacity dip. Motion is for arrival and photography, and almost nowhere else.
 
-The admin is an operating tool and follows the same tokens with four deliberate differences: sans headings, bright status colours, bordered panels, and forest chrome (sidebar, navigation drawer and phone topbar) with a film grain, where the honey underline marks the current page. Each admin sets their own colour on an Arc-style picker that pops over their account page: hue and lightness from a dotted field, intensity from a wave slider, grain from a dial, plus presets. The chrome and the primary colour follow it; lightness is held to 18–36% so white text stays readable. The picker panel is the one rounded admin surface.
+The admin is an operating tool and follows the same tokens with four deliberate differences: sans headings, bright status colours, bordered panels, and forest chrome (sidebar, navigation drawer and phone topbar) with a film grain, where the honey underline marks the current page. Each admin sets their own colour on an Arc-style picker that pops over their account page: hue and lightness from a dotted field, intensity from a wave slider, grain from a dial, plus presets. The chrome and the primary colour follow it; lightness is held to 18–36% so white text stays readable. The picker is square on paper like the other admin panels; only its field, top strip and grain dial carry the colour.
 
 **Key Characteristics:**
 - Warm oat paper (hue ~75) under everything; no cold grey.
