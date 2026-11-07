@@ -15,6 +15,9 @@ defmodule Edenflowers.Orders.Validations.Holds do
   end
 
   @impl true
+  def describe(opts), do: [message: Keyword.fetch!(opts, :message), vars: []]
+
+  @impl true
   def atomic(_changeset, opts, _context) do
     calculation = Keyword.fetch!(opts, :calculation)
     message = Keyword.fetch!(opts, :message)

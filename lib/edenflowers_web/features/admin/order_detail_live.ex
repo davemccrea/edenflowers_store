@@ -338,10 +338,14 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 locale={@locale}
                 class="mt-4"
               >
-                <.payment_link_buttons :if={Decimal.positive?(@order.balance)} order={@order} locale={@locale} />
+                <.payment_link_buttons
+                  :if={Decimal.positive?(@order.balance) && !@order.gift_voucher_sale?}
+                  order={@order}
+                  locale={@locale}
+                />
               </.balance_panel>
               <.payment_link
-                :if={@order.payment_link_open? && Decimal.positive?(@order.balance)}
+                :if={@order.payment_link_open? && Decimal.positive?(@order.balance) && !@order.gift_voucher_sale?}
                 order={@order}
                 payment_message_urls={@payment_message_urls}
               />

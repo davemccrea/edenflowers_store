@@ -671,6 +671,12 @@ defmodule Edenflowers.Orders.Order do
                     "condolence flowers."
     end
 
+    calculate :payment_emailable?, :boolean, expr(not gift_voucher_sale? or receipt_available?) do
+      description "Whether a payment on it can be emailed. A Gift voucher sale's only once it's paid in full, " <>
+                    "since the email carries the voucher, so a part payment in cash beside one by card waits " <>
+                    "for the rest."
+    end
+
     calculate :refunded_only_by_cancelling?, :boolean, expr(gift_voucher_sale?) do
       description "Whether its money goes back only by cancelling it: a Gift voucher sale, so refunding it " <>
                     "always stops the voucher. The admin offers no Refund for it, only Cancel."
@@ -752,10 +758,11 @@ defmodule Edenflowers.Orders.Order do
               :boolean,
               expr(
                 fulfillment_status != :cancelled and
-                  not is_nil(customer_email) and to_collect?
+                  not is_nil(customer_email) and to_collect? and not gift_voucher_sale?
               ) do
       description "Whether Jennie can send a Payment reminder: a Balance to collect, an email to send it to, " <>
-                    "on a purchase that has not been cancelled."
+                    "on a purchase that has not been cancelled. Never a Gift voucher sale, paid at the counter " <>
+                    "when Jennie sells it or at checkout online."
     end
 
     calculate :payment_status,
@@ -780,8 +787,12 @@ defmodule Edenflowers.Orders.Order do
       description "A placed, uncancelled order with nothing left to pay. The payment link page shows it as paid."
     end
 
-    calculate :details_emailable?, :boolean, expr(committed? and not cancelled? and not is_nil(customer_email)) do
-      description "Whether Jennie can email the order details: placed, not cancelled, and with an email address."
+    calculate :details_emailable?,
+              :boolean,
+              expr(committed? and not cancelled? and not is_nil(customer_email) and not gift_voucher_sale?) do
+      description "Whether Jennie can email the order details: placed, not cancelled, and with an email address. " <>
+                    "Never a Gift voucher sale, which has no date or delivery to tell: its buyer gets the voucher " <>
+                    "email, or a Payment reminder while it's unpaid."
     end
 
     calculate :fulfillment_confirmation_applicable?,

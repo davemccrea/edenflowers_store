@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
   alias EdenflowersWeb.Admin.OrderLog
+  alias EdenflowersWeb.Admin.PaymentActions
 
   attr :title, :string, required: true
   attr :submit_label, :string, required: true
@@ -372,7 +373,16 @@ defmodule EdenflowersWeb.Admin.Drawers do
 
   """
   def record_payment_form(assigns) do
-    assigns = assign(assigns, :voucher?, assigns.form.source.action == :pay_with_gift_voucher)
+    voucher_sale? = Map.get(assigns.record, :gift_voucher_sale?) == true
+
+    assigns =
+      assign(assigns,
+        voucher?: assigns.form.source.action == :pay_with_gift_voucher,
+        voucher_sale?: voucher_sale?,
+        voucher_part_paid?:
+          voucher_sale? and
+            not PaymentActions.pays_off_voucher?(assigns.record, assigns.form.source.raw_params["amount"])
+      )
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="space-y-4">
@@ -414,13 +424,16 @@ defmodule EdenflowersWeb.Admin.Drawers do
         />
       </div>
       <.customer_email
-        :if={@receipt_email? and not @voucher?}
+        :if={@receipt_email? and not @voucher? and not @voucher_part_paid?}
         id={"#{@id}-email"}
         send={@form[:email_receipt?]}
-        label={~t"Email the customer a receipt"}
+        label={if @voucher_sale?, do: ~t"Email gift voucher and receipt", else: ~t"Email the customer a receipt"}
         form={@form}
         preview={@preview}
       />
+      <p :if={@receipt_email? and @voucher_part_paid?} id={"#{@id}-voucher-later"} class="text-base-content/75 text-sm">
+        {~t"The gift voucher and receipt can be emailed once it's paid in full."}
+      </p>
       <.button
         type="submit"
         variant="primary"

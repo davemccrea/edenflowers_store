@@ -86,6 +86,35 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|button[phx-click="open_cancel"]|, "Cancel order")
   end
 
+  # A voucher sale has no fulfillment date for its emails' previews to name.
+  test "a gift voucher sold in the shop is paid in person, or cancelled", %{conn: conn, admin: admin} do
+    {:ok, sale} =
+      Orders.sell_gift_voucher(%{customer_name: "Anna", customer_email: "a@example.com", amount: 35}, actor: admin)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{sale.id}")
+    refute has_element?(view, ~s|[phx-value-kind="order_details"]|)
+    refute has_element?(view, ~s|[phx-value-kind="payment_reminder"]|)
+    refute has_element?(view, ~s|button[phx-click="open_payment_link"]|)
+
+    view |> element(~s|button[phx-click="open_settlement"]|) |> render_click()
+    assert has_element?(view, "#order-balance-email-send[checked]")
+
+    view
+    |> element("#order-balance-form")
+    |> render_change(%{
+      "_target" => ["payment", "amount"],
+      "payment" => %{"payment_method" => "cash", "amount" => "20"}
+    })
+
+    refute has_element?(view, "#order-balance-email-send")
+    assert has_element?(view, "#order-balance-voucher-later")
+
+    view |> element(~s|button[phx-click="open_cancel"]|) |> render_click()
+    view |> form("#cancel-form") |> render_submit()
+
+    assert Orders.get_order_by_id!(sale.id, authorize?: false).fulfillment_status == :cancelled
+  end
+
   test "an order on invoice terms is invoiced from its page, then shows the invoice and stays locked",
        %{conn: conn, admin: admin} do
     order = placed_order(origin: :custom, payment_terms: :invoice, payment_intent_id: nil)

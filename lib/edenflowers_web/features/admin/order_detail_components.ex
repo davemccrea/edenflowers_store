@@ -661,14 +661,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         </.unavailable_menu_item>
       <% else %>
         <.actions_menu_button
-          :if={!@email_details_unavailable}
+          :if={!@order.gift_voucher_sale? && !@email_details_unavailable}
           menu="order-actions"
           phx-click="open_email"
           phx-value-kind="order_details"
         >
           {if @order.order_details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
         </.actions_menu_button>
-        <.unavailable_menu_item :if={@email_details_unavailable} reason={@email_details_unavailable}>
+        <.unavailable_menu_item
+          :if={!@order.gift_voucher_sale? && @email_details_unavailable}
+          reason={@email_details_unavailable}
+        >
           {~t"Email order details"}
         </.unavailable_menu_item>
       <% end %>

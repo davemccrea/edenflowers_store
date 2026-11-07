@@ -1,6 +1,6 @@
 <%= if @order.customer_first_name do %><%= dgettext("emails", "Hi %{name},", name: @order.customer_first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
 
-<%= dgettext("emails", "Your order for %{date} is cancelled.", date: @format_date.(@order.fulfillment_date)) %>
+<%= if @order.fulfillment_date do %><%= dgettext("emails", "Your order for %{date} is cancelled.", date: @format_date.(@order.fulfillment_date)) %><% else %><%= dgettext("emails", "Your gift voucher is cancelled.") %><% end %>
 
 <%= if Decimal.positive?(@charge) do %><%= cancellation_charge(assigns) %>
 

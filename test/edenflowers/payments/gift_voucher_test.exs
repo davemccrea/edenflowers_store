@@ -263,6 +263,31 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
       assert_no_email_sent()
     end
 
+    test "is paid at the counter: no order details, payment reminder or payment link", %{admin: admin} do
+      {:ok, sale} = sell(admin, %{customer_email: "anna@example.com"})
+
+      assert {:error, _} = Orders.send_order_details_email(sale, actor: admin)
+      assert {:error, _} = Orders.send_payment_reminder(sale, actor: admin)
+      assert {:error, _} = Orders.open_payment_link(sale, actor: admin)
+    end
+
+    test "emails the buyer the voucher with its receipt only once it's paid in full", %{admin: admin} do
+      {:ok, sale} = sell(admin, %{customer_email: "anna@example.com", recipient_name: "Mia", locale: "en-GB"})
+
+      assert {:ok, part} = Orders.record_payment(sale, "20.00", :cash, %{email_receipt?: true}, actor: admin)
+      refute part.__metadata__.receipt_emailed?
+      assert_no_email_sent()
+
+      assert {:ok, _} = Orders.record_payment(sale, "15.00", :zettle, %{email_receipt?: true}, actor: admin)
+
+      assert_email_sent(fn email ->
+        assert email.subject == "Your Eden Flowers gift voucher for Mia"
+
+        assert email.attachments |> Enum.map(& &1.filename) |> Enum.sort() ==
+                 ["eden-flowers-#{sale.order_reference}.pdf", "eden-flowers-gift-voucher-#{sale.order_reference}.pdf"]
+      end)
+    end
+
     test "needs a way to reach the buyer and 20 € or more", %{admin: admin} do
       assert {:error, _} = sell(admin, %{customer_phone_number: nil})
       assert {:error, _} = sell(admin, %{amount: 15})
