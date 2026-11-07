@@ -1042,7 +1042,7 @@ msgstr "Expense: %{var}"
 msgid "Expenses"
 msgstr "Expenses"
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:994
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1028
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:327
 #, elixir-autogen, elixir-format
 msgid "Expired"
@@ -1114,7 +1114,7 @@ msgid "Flowers and plants"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/components/components.ex:269
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:1034
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1068
 #, elixir-autogen, elixir-format
 msgid "For %{name}"
 msgstr ""
@@ -3192,7 +3192,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/customer_detail_live.ex:53
 #: lib/edenflowers_web/features/admin/customers_live.ex:60
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:1031
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1065
 #: lib/edenflowers_web/features/admin/orders_live.ex:90
 #: lib/edenflowers_web/features/admin/overview_live.ex:277
 #: lib/edenflowers_web/features/admin/overview_live.ex:291
@@ -3239,7 +3239,7 @@ msgstr ""
 msgid "Use a JPG, PNG or WebP photo."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:980
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1014
 #: lib/edenflowers_web/features/admin/promotion_form_live.ex:84
 #: lib/edenflowers_web/features/admin/promotions_live.ex:153
 #, elixir-autogen, elixir-format
@@ -4632,12 +4632,13 @@ msgstr ""
 msgid "Card removed."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:904
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:906
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1003
 #, elixir-autogen, elixir-format
 msgid "Code on the card"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:910
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:912
 #, elixir-autogen, elixir-format
 msgid "Link card"
 msgstr ""
@@ -4652,32 +4653,32 @@ msgstr ""
 msgid "Gift orders"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:896
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:898
 #, elixir-autogen, elixir-format
 msgid "No card linked to this gift"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:1000
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1034
 #, elixir-autogen, elixir-format
 msgid "Not opened yet"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:987
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:1021
 #, elixir-autogen, elixir-format
 msgid "Opened · valid until %{date}"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:897
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:899
 #, elixir-autogen, elixir-format
 msgid "Type the code printed under the card's QR code."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:886
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:888
 #, elixir-autogen, elixir-format
 msgid "No card went with this gift."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:879
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:881
 #, elixir-autogen, elixir-format
 msgid "Pass it on"
 msgstr ""
@@ -5142,7 +5143,7 @@ msgstr ""
 msgid "Change picture"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:920
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:922
 #, elixir-autogen, elixir-format
 msgid "Orders linked by Pass it on cards"
 msgstr "Orders linked by Pass it on cards"
@@ -5182,22 +5183,7 @@ msgstr ""
 msgid "Rose"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:949
-#, elixir-autogen, elixir-format
-msgid "From order %{reference}"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:951
+#: lib/edenflowers_web/features/admin/order_detail_components.ex:979
 #, elixir-autogen, elixir-format
 msgid "Source gift not linked"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:943
-#, elixir-autogen, elixir-format
-msgid "Used card %{code}"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_detail_components.ex:954
-#, elixir-autogen, elixir-format
-msgid "Card to pass on"
 msgstr ""
