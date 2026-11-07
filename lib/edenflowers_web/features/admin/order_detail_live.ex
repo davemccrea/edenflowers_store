@@ -896,10 +896,26 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   # Written in the customer's language, not the admin's.
+  # Sent the day Jennie finishes it, so "today" is the day she sends it. On a
+  # Sunday the shop is shut, so there's no closing time to give.
   defp pickup_message(order) do
-    EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
-      ~t"Hi #{order.customer_first_name}, your Eden Flowers order #{order.order_reference} is ready for pick up."
-    end)
+    today = Edenflowers.ShopTime.today()
+
+    message =
+      EdenflowersWeb.Gettext.with_app_locale(order.locale, fn ->
+        name = order.customer_first_name
+        reference = order.order_reference
+
+        case EdenflowersWeb.Business.closing_time(today) do
+          nil ->
+            ~t"Hi #{name}, your Eden Flowers order #{reference} is now ready for pick up."
+
+          closing_time ->
+            ~t"Hi #{name}, your Eden Flowers order #{reference} is now ready for pick up. Minimossen closes at #{time = Format.time(closing_time, order.locale)} today. If that doesn't suit, just let me know."
+        end
+      end)
+
+    message <> "\nJennie / Eden Flowers"
   end
 
   defp payment_message(order) do

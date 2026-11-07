@@ -26,6 +26,15 @@ defmodule EdenflowersWeb.Business do
     [~t"Mon–Fri: #{weekdays}", ~t"Sat: #{saturday}", ~t"Sun: closed"]
   end
 
+  @doc "When the shop closes on `date`, or nil on a Sunday."
+  def closing_time(date) do
+    case Date.day_of_week(date) do
+      7 -> nil
+      6 -> elem(@saturday_hours, 1)
+      _weekday -> elem(@weekday_hours, 1)
+    end
+  end
+
   @doc """
   schema.org `WebSite` for the home page. Google takes the site name in search
   results from it; without it, Google shows the domain as "Edenflowers".

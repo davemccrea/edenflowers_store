@@ -1255,14 +1255,9 @@ msgstr ""
 msgid "Hi"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:910
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:926
 #, elixir-autogen, elixir-format
 msgid "Hi %{order_customer_first_name}, you can pay %{amount} for your Eden Flowers order %{order_order_reference} here: %{url}"
-msgstr ""
-
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:901
-#, elixir-autogen, elixir-format
-msgid "Hi %{order_customer_first_name}, your Eden Flowers order %{order_order_reference} is ready for pick up."
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/overview_live.ex:172
@@ -5036,4 +5031,14 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/drawers.ex:435
 #, elixir-autogen, elixir-format
 msgid "The gift voucher and receipt can be emailed once it's paid in full."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:911
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up."
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:914
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen closes at %{time} today. If that doesn't suit, just let me know."
 msgstr ""
