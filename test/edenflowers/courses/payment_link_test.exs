@@ -148,6 +148,10 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
 
       assert_email_sent(fn email ->
         assert email.text_body =~ EdenflowersWeb.PaymentLink.url_for(reload(reminded))
+        assert email.text_body =~ "on vielä maksamatta 55,00 €."
+        assert length(:binary.matches(email.text_body, "55,00 €")) == 1
+        refute email.text_body =~ "85,00 €"
+        assert email.text_body =~ "Jos olet jo maksanut"
       end)
     end
 

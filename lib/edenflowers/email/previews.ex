@@ -211,18 +211,11 @@ defmodule Edenflowers.Email.Previews do
 
   defp payment_reminder(locale) do
     [
-      {"Payment reminder", "order, unpaid", :payment_reminder,
-       Email.payment_reminder(order(%{}, locale), @payment_link)},
       {"Payment reminder", "order part paid", :payment_reminder,
        Email.payment_reminder(order(part_paid(), locale), @payment_link)},
       {"Payment reminder", "confirmed booking, part paid before the course", :payment_reminder,
        Email.payment_reminder(
          registration(%{status: :confirmed, amount_paid: Decimal.new("30.00"), balance: Decimal.new("55.00")}, locale),
-         @payment_link
-       )},
-      {"Payment reminder", "booking for 2 after the course", :payment_reminder,
-       Email.payment_reminder(
-         registration(%{seats: 2, balance: Decimal.new("90.00"), course: %{date: ~D[2020-11-20]}}, locale),
          @payment_link
        )}
     ]

@@ -21,26 +21,9 @@ msgstr ""
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr ""
 
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "1 place on %{course}, %{date}"
-msgid_plural "%{count} places on %{course}, %{date}"
-msgstr[0] ""
-msgstr[1] ""
-
 #: lib/edenflowers/email/templates.ex:63
 #, elixir-autogen, elixir-format
 msgid "65230 Vasa"
-msgstr ""
-
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "A friendly reminder that %{amount} is still to pay for your booking on %{course}."
-msgstr ""
-
-#: lib/edenflowers/email/templates/payment_reminder.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "A friendly reminder that %{amount} is still to pay for your order for %{date}."
 msgstr ""
 
 #: lib/edenflowers/email.ex:591
@@ -307,8 +290,8 @@ msgstr ""
 msgid "If you need to change anything, reply and I'll let you know what's possible."
 msgstr ""
 
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:11
-#: lib/edenflowers/email/templates/payment_reminder.text.eex:9
+#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:6
+#: lib/edenflowers/email/templates/payment_reminder.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "If you've already paid, thank you, and please ignore this email."
 msgstr ""
@@ -324,7 +307,6 @@ msgstr ""
 msgid "Later deliveries are on hold until this one is paid. To keep them coming, please also update your card in your account:"
 msgstr ""
 
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:6
 #: lib/edenflowers/email/templates/order_totals.text.eex:8
 #, elixir-autogen, elixir-format
 msgid "Left to pay"
@@ -569,7 +551,7 @@ msgstr ""
 
 #: lib/edenflowers/email/templates/booking_cancelled.text.eex:15
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:7
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:13
+#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:8
 #: lib/edenflowers/email/templates/booking_refunded.text.eex:9
 #: lib/edenflowers/email/templates/contact_message.text.eex:14
 #: lib/edenflowers/email/templates/credit_note.text.eex:7
@@ -584,7 +566,7 @@ msgstr ""
 #: lib/edenflowers/email/templates/order_refunded.text.eex:9
 #: lib/edenflowers/email/templates/order_updated.text.eex:8
 #: lib/edenflowers/email/templates/payment_received.text.eex:7
-#: lib/edenflowers/email/templates/payment_reminder.text.eex:11
+#: lib/edenflowers/email/templates/payment_reminder.text.eex:8
 #: lib/edenflowers/email/templates/purchase_receipt.text.eex:8
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:9
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:11
@@ -611,10 +593,8 @@ msgstr ""
 msgid "Where: %{venue}, %{address}"
 msgstr ""
 
-#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:8
 #: lib/edenflowers/email/templates/course_payment.text.eex:3
 #: lib/edenflowers/email/templates/order_payment.text.eex:1
-#: lib/edenflowers/email/templates/payment_reminder.text.eex:6
 #, elixir-autogen, elixir-format
 msgid "You can pay online here:"
 msgstr ""
@@ -1035,4 +1015,14 @@ msgstr ""
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Booking on %{course}, %{date}"
+msgstr ""
+
+#: lib/edenflowers/email/templates/payment_reminder.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "There's %{amount} still to pay for order %{reference}, for %{date}. You can pay using the link below:"
+msgstr ""
+
+#: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "There's %{amount} still to pay for your booking on %{course}, %{date}. You can pay using the link below:"
 msgstr ""

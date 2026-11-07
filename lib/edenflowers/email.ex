@@ -187,8 +187,8 @@ defmodule Edenflowers.Email do
 
   @doc """
   Jennie's reminder of what is still owed on an order or booking, with the
-  payment link to pay it. Only ever sent by hand. For an order, loads as
-  `purchase_receipt/1`; for a booking, expects `:course` (translated),
+  payment link to pay it. Only ever sent by hand. For an order, expects
+  `:customer_first_name` and `:balance` loaded; for a booking, `:course` (translated),
   `:first_name` and `:balance` loaded.
   """
   def payment_reminder(record, payment_link_url)
