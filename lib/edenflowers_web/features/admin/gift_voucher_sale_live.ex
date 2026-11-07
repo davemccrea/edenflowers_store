@@ -33,7 +33,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
         <.admin_page_header title={@page_title} back={{~t"Orders", ~p"/admin/orders"}} sticky>
           <:actions>
             <.button type="submit" form="gift-voucher-form" variant="primary" size="sm">
-              {~t"Sell voucher"}
+              {~t"Create voucher"}
             </.button>
           </:actions>
         </.admin_page_header>
