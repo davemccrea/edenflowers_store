@@ -47,6 +47,10 @@ defmodule Edenflowers.Orders.Subscription do
   """
   def calendar(shop_calendar), do: %{shop_calendar | available_days: delivery_days(), enabled_dates: []}
 
+  @doc "The calendar a checkout `order` books against: `calendar/1`'s when it starts a subscription."
+  def calendar_for(%{subscription?: true}, shop_calendar), do: calendar(shop_calendar)
+  def calendar_for(_order, shop_calendar), do: shop_calendar
+
   @doc """
   The day the occurrence job charges the card for a delivery on `date`. Checkout
   quotes it before the subscription exists; a subscription has `charged_on`.

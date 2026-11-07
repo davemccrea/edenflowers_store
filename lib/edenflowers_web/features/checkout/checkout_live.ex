@@ -360,7 +360,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
                                    Enum.any?(@form[:fulfillment_date].errors))
                             }
                             selected_date={@form[:fulfillment_date].value}
-                            calendar={checkout_calendar(@order, @shop_calendar)}
+                            calendar={Subscription.calendar_for(@order, @shop_calendar)}
                           />
                         </div>
                         <.field_errors field={@form[:fulfillment_date]} />
@@ -645,7 +645,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     with {:ok, date} <- Date.from_iso8601(date),
          :open <-
            Availability.customer_cell_state(
-             checkout_calendar(socket.assigns.order, socket.assigns.shop_calendar),
+             Subscription.calendar_for(socket.assigns.order, socket.assigns.shop_calendar),
              date,
              Edenflowers.ShopTime.now(),
              socket.assigns.order.available_from
@@ -1233,7 +1233,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     case Date.from_iso8601(to_string(selected)) do
       {:ok, date} ->
         Availability.customer_cell_state(
-          checkout_calendar(order, calendar),
+          Subscription.calendar_for(order, calendar),
           date,
           Edenflowers.ShopTime.now(),
           order.available_from
@@ -1247,10 +1247,6 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   defp selected_date_unavailable?(_assigns), do: false
 
   defp refresh_calendar(socket), do: assign(socket, :shop_calendar, Fulfillment.get_shop_calendar!())
-
-  # A subscription delivers on its own days, every day but Sunday.
-  defp checkout_calendar(%{subscription?: true}, calendar), do: Subscription.calendar(calendar)
-  defp checkout_calendar(_order, calendar), do: calendar
 
   defp reload_order(socket, opts \\ []) do
     order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
