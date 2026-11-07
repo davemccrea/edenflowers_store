@@ -3,9 +3,10 @@ id: TASK-177
 title: >-
   Get World of Printables' permission for the Christmas voucher's snowflakes, or
   replace them
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-11-06 13:43'
+updated_date: '2026-11-07 08:20'
 labels:
   - customers
 dependencies: []
@@ -26,5 +27,18 @@ Either David gets written permission from World of Printables (contact on https:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 World of Printables has given written permission, kept with the assets, or the snowflakes are replaced with CC0 ones
+- [x] #1 World of Printables has given written permission, kept with the assets, or the snowflakes are replaced with CC0 ones
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+author: @claude
+created: 2026-11-07 08:20
+
+---
+
+David got World of Printables' written permission on 2026-11-07 for the snowflakes on sold vouchers. Not yet filed next to priv/receipts/assets/snowflakes: the email wasn't found in Fastmail.
+
+---
+<!-- COMMENTS:END -->
