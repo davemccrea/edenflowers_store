@@ -1,5 +1,5 @@
 // Admin page changes animate like a native app (admin.css). On the storefront,
-// a product card's photo grows into the product page's (storefront.css). Only
+// a product or course card's photo grows into its page's (storefront.css). Only
 // link and server navigations animate. Browser back and forward swap
 // instantly, as does every other diff.
 let pendingAdminTransition = null;
@@ -101,19 +101,43 @@ export function onDocumentPatch(start) {
     return;
   }
 
-  if (
+  // A product card's frame is a figure, holding its Free delivery tag; a
+  // course card's is the photo itself.
+  const frame =
     link?.isConnected &&
+    (link.querySelector("figure") ?? link.querySelector("img"));
+
+  // Only on phones: there the card sits roughly where its photo lands, so it
+  // reads as opening the card. In wider layouts it would cross the screen.
+  if (
+    frame &&
+    onScreen(frame) &&
+    matchMedia("(width < 48rem)").matches &&
     !matchMedia("(prefers-reduced-motion: reduce)").matches &&
     !document.querySelector("dialog[open]")
   ) {
     // Only the clicked card carries the name: two elements sharing one would
     // abort the transition.
-    link.querySelector("figure").style.viewTransitionName = "product-photo";
-    transition(start, waitForProductPhoto);
+    frame.style.viewTransitionName = "morph-photo";
+    const root = document.documentElement;
+    root.dataset.photoTransition = "";
+    transition(start, waitForMorphPhoto).finished.finally(
+      () => delete root.dataset.photoTransition,
+    );
     return;
   }
 
   start();
+}
+
+// A snapshot escapes the clipping around it, so a carousel slide peeking in
+// from the side would fly in whole from off screen. "Nearly", because the
+// carousel's last slide can end a fraction of a pixel past the edge.
+function onScreen(el) {
+  const { left, right, width } = el.getBoundingClientRect();
+  const visible =
+    Math.min(right, document.documentElement.clientWidth) - Math.max(left, 0);
+  return visible >= width * 0.9;
 }
 
 function transition(start, afterStart = () => {}) {
@@ -131,13 +155,13 @@ function transition(start, afterStart = () => {}) {
 }
 
 // LiveView only scrolls the new page to the top after the snapshot, so the
-// photo would land where it sits at the store page's scroll, then jump.
-// The product page's photo is larger than the card's, so it's rarely loaded
-// yet. Snapshotted now, the card would grow into an empty frame. The page stays
-// frozen while this waits, so it waits no longer than a blink.
-function waitForProductPhoto() {
+// photo would land where it sits at the list's scroll, then jump.
+// The page's photo is larger than the card's, so it's rarely loaded yet.
+// Snapshotted now, an empty frame would grow. The page stays frozen while this
+// waits, so it waits no longer than a blink.
+function waitForMorphPhoto() {
   window.scrollTo(0, 0);
-  const img = document.querySelector(".product-photo img");
+  const img = document.querySelector("img.morph-photo, .morph-photo img");
   if (!img) return;
   const timeout = new Promise((resolve) => setTimeout(resolve, 300));
   return Promise.race([img.decode().catch(() => {}), timeout]);

@@ -90,7 +90,7 @@ defmodule EdenflowersWeb.Courses.CourseLive do
                 height={1250}
                 sizes="(min-width: 640px) 32rem, calc(100vw - 2rem)"
                 priority
-                class="bg-cream aspect-[4/5] w-full object-cover"
+                class="morph-photo bg-cream aspect-[4/5] w-full object-cover"
               />
               <figcaption :if={@course.photo_credit_name} class="text-base-content/70 mt-2 text-sm">
                 <.photo_credit course={@course} />
