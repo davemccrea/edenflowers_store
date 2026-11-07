@@ -86,7 +86,8 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     end
   end
 
-  defp voucher_sale?(payable), do: Map.get(payable, :gift_voucher_sale?) == true
+  @doc "Whether `payable` is a Gift voucher sale. A course booking never is."
+  def voucher_sale?(payable), do: Map.get(payable, :gift_voucher_sale?) == true
 
   @doc """
   The refund form on the `refund` action: what's owed back, if anything, the
