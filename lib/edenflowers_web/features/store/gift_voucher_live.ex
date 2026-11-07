@@ -21,6 +21,8 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
 
   @default_amount 50
+  # Picked by eye: even snow that keeps clear of the amount and the name.
+  @first_snow_seed 148_922
 
   @impl true
   def mount(_params, _session, socket) do
@@ -68,7 +70,21 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
   def render(assigns) do
     ~H"""
     <style :type={EdenflowersWeb.ColocatedCSS}>
-      /* Reserve space for both the voucher and its snow hint without covering the form.
+      #voucher-preview {
+        transition: transform 120ms ease-out;
+      }
+
+      #voucher-preview:has(.voucher-shuffle:active) {
+        transform: scale(0.98);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #voucher-preview:has(.voucher-shuffle:active) {
+          transform: none;
+        }
+      }
+
+      /* Reserve space for the voucher without covering the form.
          Short screens keep the full preview in normal flow instead. */
       .voucher-form-fields fieldset {
         /* Scrolling to an error can reveal the shy header, so reserve its full height. */
@@ -619,7 +635,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
           "amount" => to_string(@default_amount),
           "voucher_locale" => locale,
           "voucher_style" => "cream",
-          "voucher_snow_seed" => to_string(snow_seed()),
+          "voucher_snow_seed" => to_string(@first_snow_seed),
           "customer_name" => user && user.name,
           "customer_email" => user && to_string(user.email)
         },
