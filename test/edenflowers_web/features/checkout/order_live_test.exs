@@ -93,6 +93,42 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     assert has_element?(view, "[data-testid=manage-subscription]", "Manage subscription")
   end
 
+  test "once the subscription starts, quotes what it charges, not the first order's waived fee", %{
+    conn: conn,
+    user: user
+  } do
+    delivery = generate(fulfillment_option(fulfillment_method: :delivery, rate_type: :dynamic, base_price: "4.50"))
+    variant = generate(product_variant(product_id: generate(product(subscribable: true)).id, price: "60.00"))
+
+    subscription =
+      generate(subscription(user_id: user.id, product_variant_id: variant.id, fulfillment_option_id: delivery.id))
+
+    order =
+      generate(
+        order(
+          state: :placed,
+          origin: :online,
+          user_id: user.id,
+          subscription_id: subscription.id,
+          fulfillment_option_id: delivery.id,
+          fulfillment_method: :delivery,
+          fulfillment_date: ~D[2026-06-10],
+          distance: 3000,
+          fulfillment_fee_override: "0.00",
+          quoted_fulfillment_fee: "0.00",
+          locale: "en-GB"
+        )
+      )
+
+    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1, interval_weeks: 2))
+    price = Ash.load!(subscription, :price_per_order, authorize?: false).price_per_order
+    assert Decimal.gt?(price, "60.00")
+
+    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+
+    assert has_element?(view, "[data-testid=order-next-charge]", Edenflowers.Format.currency(price, "en-GB"))
+  end
+
   test "says nothing about a subscription for a one-off order", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, paid: true)
 
