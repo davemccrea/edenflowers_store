@@ -446,25 +446,24 @@ body:has(.admin-theme) {
 .admin-picker-field {
   background-image: radial-gradient(
       circle,
-      oklch(93.5% 0.012 75 / 0.4) 1px,
+      rgb(255 255 255 / 0.22) 1px,
       transparent 1.4px
     ),
-    linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / 0.45)),
+    linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / 0.55)),
     linear-gradient(
       to right in oklch longer hue,
-      oklch(64% 0.065 0),
-      oklch(64% 0.065 359.9)
+      oklch(62% 0.1 0),
+      oklch(62% 0.1 359.9)
     );
   background-size:
     9px 9px,
     100% 100%,
     100% 100%;
-  box-shadow: inset 0 0 0 1px
-    color-mix(in oklab, var(--color-base-content) 12%, transparent);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
 /* Presets and the field's handle show a colour brighter than the sidebar it
-   makes, so it reads as the colour rather than near-black. Presets carry --h/--c/--l; the handle
+   makes, so it reads on the dark panel. Presets carry --h/--c/--l; the handle
    follows the admin's own. */
 .admin-swatch {
   background-color: oklch(
@@ -479,7 +478,7 @@ body:has(.admin-theme) {
 
 /* The picker opens as a popover beside its button where anchor positioning
    exists, centred in the viewport (the UA default) elsewhere and on phones. It
-   lands quietly, a fade and a short rise, like the rest of the site. */
+   grows out of its button like Arc's. */
 .admin-picker-trigger {
   anchor-name: --admin-picker;
 }
@@ -491,23 +490,24 @@ body:has(.admin-theme) {
   margin: auto;
   padding: 0;
   border: 0;
-  box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.25);
+  box-shadow: 0 24px 60px -12px rgb(0 0 0 / 0.45);
   opacity: 1;
-  translate: 0 0;
+  scale: 1;
+  transform-origin: left center;
   transition:
-    opacity 180ms var(--ease-out, ease-out),
-    translate 180ms var(--ease-out, ease-out),
-    display 180ms allow-discrete,
-    overlay 180ms allow-discrete;
+    opacity 160ms var(--ease-out, ease-out),
+    scale 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    display 220ms allow-discrete,
+    overlay 220ms allow-discrete;
 
   @starting-style {
     opacity: 0;
-    translate: 0 4px;
+    scale: 0.92;
   }
 
   &:not(:popover-open) {
     opacity: 0;
-    translate: 0 4px;
+    scale: 0.96;
   }
 
   &::backdrop {
@@ -524,6 +524,10 @@ body:has(.admin-theme) {
       margin: 0 0.75rem;
     }
   }
+}
+
+.admin-picker-knob {
+  background-color: color-mix(in oklab, var(--color-forest), white 12%);
 }
 
 /* The forest chrome (sidebar, drawer, phone topbar, colour picker) takes a

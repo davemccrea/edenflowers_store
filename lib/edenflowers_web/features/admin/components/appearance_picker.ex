@@ -41,10 +41,9 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
         data-chroma-max={@limits.chroma.max}
         data-lightness-min={@limits.lightness.min}
         data-lightness-max={@limits.lightness.max}
-        class="admin-picker-popover bg-base-100 text-base-content border-base-content/12 w-[22rem] max-w-[calc(100vw-2rem)] select-none overflow-hidden border"
+        class="admin-chrome admin-picker-popover text-forest-content w-[22rem] max-w-[calc(100vw-2rem)] select-none overflow-hidden rounded-3xl"
       >
-        <div class="admin-chrome relative h-2" aria-hidden="true" />
-        <div data-field class="admin-picker-field aspect-square relative m-3 cursor-crosshair touch-none">
+        <div data-field class="admin-picker-field aspect-square relative m-3 cursor-crosshair touch-none rounded-2xl">
           <div
             data-handle
             role="slider"
@@ -67,19 +66,19 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
             aria-label={label}
             title={label}
             style={"--h: #{hue}; --c: #{chroma}; --l: #{lightness}"}
-            class="admin-swatch touch-target ring-base-content/10 h-8 w-8 shrink-0 rounded-full ring-1 transition-transform hover:scale-110 active:scale-95"
+            class="admin-swatch touch-target ring-white/25 h-8 w-8 shrink-0 rounded-full ring-1 transition-transform hover:scale-110 active:scale-95"
           />
         </div>
 
         <div class="flex items-center gap-4 px-4 pt-1 pb-5">
           <div class="relative h-14 min-w-0 flex-1">
             <svg data-wave class="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
-              <line x1="0" x2="100%" y1="50%" y2="50%" class="stroke-base-content/8" stroke-width="14" />
-              <path fill="none" class="stroke-primary/70" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <line x1="0" x2="100%" y1="50%" y2="50%" class="stroke-white/15" stroke-width="14" stroke-linecap="round" />
+              <path fill="none" class="stroke-white/70" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             <span
               data-wave-thumb
-              class="bg-primary pointer-events-none absolute top-1/2 h-12 w-2 -translate-x-1/2 -translate-y-1/2"
+              class="shadow-[0_4px_14px_rgb(0_0_0/0.3)] pointer-events-none absolute top-1/2 h-14 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
             />
             <input
               data-chroma-input
@@ -95,10 +94,10 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
             <span
               :for={i <- 0..23}
               data-dial-dot={i}
-              class="bg-base-content/15 -mt-[3px] -ml-[3px] absolute top-1/2 left-1/2 h-1.5 w-1.5 rounded-full data-[lit]:bg-primary"
+              class="bg-white/25 -mt-[3px] -ml-[3px] absolute top-1/2 left-1/2 h-1.5 w-1.5 rounded-full data-[lit]:bg-white/85"
               style={"transform: rotate(#{-135 + i * 270 / 23}deg) translateY(-2.3rem)"}
             />
-            <span class="admin-chrome shadow-[inset_0_1px_2px_rgb(255_255_255/0.15),0_2px_6px_rgb(0_0_0/0.2)] absolute inset-3 overflow-hidden rounded-full">
+            <span class="admin-picker-knob shadow-[inset_0_1px_2px_rgb(255_255_255/0.2),0_3px_8px_rgb(0_0_0/0.35)] absolute inset-3 rounded-full">
               <span data-dial-mark class="absolute top-1.5 left-1/2 h-3 w-1 -translate-x-1/2 rounded-full bg-white" />
             </span>
             <input
@@ -263,7 +262,7 @@ defmodule EdenflowersWeb.Admin.AppearancePicker do
             );
           }
           this.wavePath.setAttribute("d", points.join(" "));
-          this.waveThumb.style.left = `clamp(0.25rem, ${(chroma / chromaMax) * 100}%, calc(100% - 0.25rem))`;
+          this.waveThumb.style.left = `clamp(0.875rem, ${(chroma / chromaMax) * 100}%, calc(100% - 0.875rem))`;
 
           this.grainInput.value = grain;
           const lit = Math.round((grain / 100) * (this.dialDots.length - 1));
