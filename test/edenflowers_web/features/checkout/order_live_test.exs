@@ -129,6 +129,61 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     assert has_element?(view, "[data-testid=order-next-charge]", Edenflowers.Format.currency(price, "en-GB"))
   end
 
+  test "once the subscription starts, shows its own next delivery, or none while paused or cancelled", %{
+    conn: conn,
+    user: user
+  } do
+    order =
+      generate(
+        order(
+          state: :placed,
+          user_id: user.id,
+          fulfillment_method: :delivery,
+          fulfillment_date: ~D[2026-06-10],
+          locale: "en-GB"
+        )
+      )
+
+    variant = generate(product_variant(product_id: generate(product(subscribable: true)).id))
+    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 1, interval_weeks: 2))
+
+    subscription =
+      generate(
+        subscription(
+          user_id: user.id,
+          product_variant_id: variant.id,
+          interval_weeks: 4,
+          next_fulfillment_date: ~D[2026-07-15]
+        )
+      )
+
+    Ash.Seed.update!(order, %{subscription_id: subscription.id})
+
+    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    assert has_element?(view, "[data-testid=order-subscription]", "Every 4 weeks")
+
+    assert has_element?(
+             view,
+             "[data-testid=order-next-delivery]",
+             Edenflowers.Format.weekday_date(~D[2026-07-15], "en-GB")
+           )
+
+    assert has_element?(
+             view,
+             "[data-testid=order-next-charge]",
+             "on #{Edenflowers.Format.weekday_date(~D[2026-07-13], "en-GB")}"
+           )
+
+    Ash.Seed.update!(subscription, %{state: :paused})
+    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    assert has_element?(view, "[data-testid=order-subscription]", "Every 4 weeks")
+    refute has_element?(view, "[data-testid=order-next-delivery]")
+
+    Ash.Seed.update!(subscription, %{state: :cancelled})
+    {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
+    refute has_element?(view, "[data-testid=order-subscription]")
+  end
+
   test "says nothing about a subscription for a one-off order", %{conn: conn, user: user} do
     order = placed_order(user_id: user.id, paid: true)
 
