@@ -5,6 +5,8 @@ defmodule Edenflowers.Orders.Subscription.Calculations.PricePerOrder do
   current rates and the first order's distance (the address never changes).
   A free-delivery product pays the free-delivery fee. An address the option no
   longer reaches prices the fee as nothing, since no Occurrence can be made.
+  With `fee_only?: true` it is just that fee, so a size picker can price each
+  size per delivery.
   """
   use Ash.Resource.Calculation
 
@@ -20,9 +22,11 @@ defmodule Edenflowers.Orders.Subscription.Calculations.PricePerOrder do
     ]
 
   @impl true
-  def calculate(subscriptions, _opts, _context) do
+  def calculate(subscriptions, opts, _context) do
     Enum.map(subscriptions, fn subscription ->
-      Subscription.price_per_order(subscription.product_variant.price, fee(subscription))
+      if opts[:fee_only?],
+        do: fee(subscription) || Decimal.new(0),
+        else: Subscription.price_per_order(subscription.product_variant.price, fee(subscription))
     end)
   end
 

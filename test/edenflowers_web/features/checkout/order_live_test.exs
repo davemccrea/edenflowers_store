@@ -129,7 +129,7 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     assert has_element?(view, "[data-testid=order-next-charge]", Edenflowers.Format.currency(price, "en-GB"))
   end
 
-  test "once the subscription starts, shows its own next delivery, or none while paused or cancelled", %{
+  test "once the subscription starts, shows its own next delivery, that it's paused, or nothing once cancelled", %{
     conn: conn,
     user: user
   } do
@@ -177,7 +177,8 @@ defmodule EdenflowersWeb.Checkout.OrderLiveTest do
     Ash.Seed.update!(subscription, %{state: :paused})
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
     assert has_element?(view, "[data-testid=order-subscription]", "Every 4 weeks")
-    refute has_element?(view, "[data-testid=order-next-delivery]")
+    assert has_element?(view, "[data-testid=order-next-delivery]", "Paused")
+    refute has_element?(view, "[data-testid=order-next-charge]")
 
     Ash.Seed.update!(subscription, %{state: :cancelled})
     {:ok, view, _html} = live(conn, ~p"/order/#{order.id}")
