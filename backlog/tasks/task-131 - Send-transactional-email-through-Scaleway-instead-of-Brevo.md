@@ -1,10 +1,10 @@
 ---
 id: TASK-131
 title: Send transactional email through Scaleway instead of Brevo
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-25 14:24'
-updated_date: '2026-10-31 19:07'
+updated_date: '2026-11-07 08:19'
 labels:
   - spec
   - customers
@@ -38,10 +38,10 @@ Human steps: create the Scaleway project, add edenflowers.fi under Transactional
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A sign-in code email received in Fastmail shows no Unsubscribe button
-- [ ] #2 SPF, DKIM and DMARC pass for edenflowers.fi on Scaleway-sent mail
-- [ ] #3 Receipt PDF and delivery photo attachments arrive intact
-- [ ] #4 Prod sends all transactional email through Scaleway; Brevo is not used
+- [x] #1 A sign-in code email received in Fastmail shows no Unsubscribe button
+- [x] #2 SPF, DKIM and DMARC pass for edenflowers.fi on Scaleway-sent mail
+- [x] #3 Receipt PDF and delivery photo attachments arrive intact
+- [x] #4 Prod sends all transactional email through Scaleway; Brevo is not used
 <!-- AC:END -->
 
 ## Comments
@@ -98,6 +98,15 @@ created: 2026-10-31 19:07
 ---
 
 David chose to remove Brevo from infra entirely (compose, vars, vault example) instead of keeping BREVO_API_KEY for rollbacks. Main's vault already has vault_scaleway_project_id, vault_scaleway_secret_key and vault_mailerlite_api_key, and no Brevo key.
+
+---
+
+author: @claude
+created: 2026-11-07 08:19
+
+---
+
+Merged and live since v1.23.4. David confirmed the human checks on 2026-11-07.
 
 ---
 <!-- COMMENTS:END -->

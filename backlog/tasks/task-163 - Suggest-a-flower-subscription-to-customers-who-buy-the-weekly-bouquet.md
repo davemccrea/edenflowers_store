@@ -4,10 +4,11 @@ title: Suggest a flower subscription to customers who buy the weekly bouquet
 status: ready-for-agent
 assignee: []
 created_date: '2026-11-01 14:07'
-updated_date: '2026-11-01 19:13'
+updated_date: '2026-11-07 08:18'
 labels:
   - customers
   - admin
+  - spec
 dependencies:
   - TASK-159
 priority: medium

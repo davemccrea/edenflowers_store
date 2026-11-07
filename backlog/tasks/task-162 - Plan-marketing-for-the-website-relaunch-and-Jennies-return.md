@@ -4,10 +4,11 @@ title: Plan marketing for the website relaunch and Jennie's return
 status: ready-for-human
 assignee: []
 created_date: '2026-11-01 13:25'
-updated_date: '2026-11-01 14:07'
+updated_date: '2026-11-07 08:18'
 labels:
   - admin
   - customers
+  - spec
 dependencies: []
 priority: high
 type: grilling

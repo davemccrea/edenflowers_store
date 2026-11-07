@@ -1,10 +1,10 @@
 ---
 id: TASK-160
 title: 'Sell gift vouchers that pay for flowers, subscriptions and courses'
-status: ready-for-agent
+status: ready-for-human
 assignee: []
 created_date: '2026-10-31 20:30'
-updated_date: '2026-11-06 09:22'
+updated_date: '2026-11-07 08:19'
 labels:
   - spec
   - customers
@@ -117,6 +117,15 @@ created: 2026-11-01 17:32
 ---
 
 2026-11-01: Grilled and agreed with David, then trimmed in a Ponytail review. Split into subtasks TASK-160.1 to .6.
+
+---
+
+author: @claude
+created: 2026-11-07 08:19
+
+---
+
+2026-11-07 status check: TASK-160.1 to .5 and .7 are done; only TASK-160.6 (accountant on VAT) is left. Changed since the spec above: the buyer picks a voucher style (cream or Christmas, TASK-176/178) and the PDF's language; the PDF goes only to the buyer (0e308cc0); a collected card is one of Jennie's ready-printed cards she writes the recipient and code on (Order.voucher_card_to_hand_over?). TASK-177 (snowflake licence) must be settled before the next deploy.
 
 ---
 <!-- COMMENTS:END -->

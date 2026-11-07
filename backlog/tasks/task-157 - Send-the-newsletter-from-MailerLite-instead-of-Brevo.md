@@ -1,13 +1,14 @@
 ---
 id: TASK-157
 title: Send the newsletter from MailerLite instead of Brevo
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-10-31 12:48'
-updated_date: '2026-10-31 20:27'
+updated_date: '2026-11-07 08:19'
 labels:
   - customers
   - admin
+  - spec
 dependencies: []
 priority: medium
 type: feature
@@ -36,11 +37,11 @@ Human steps: create the MailerLite account and custom fields, add the API key to
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Opting in or out on the site reaches MailerLite within a minute
-- [ ] #2 Someone who unsubscribes from a campaign is shown as not subscribed on the site after the next nightly sync
-- [ ] #3 Someone who unsubscribed and opts in again on the site is active in MailerLite
-- [ ] #4 Customers who never opted in are not sent to MailerLite
-- [ ] #5 The privacy policy names MailerLite for the newsletter and Scaleway for email, in en, sv and fi
+- [x] #1 Opting in or out on the site reaches MailerLite within a minute
+- [x] #2 Someone who unsubscribes from a campaign is shown as not subscribed on the site after the next nightly sync
+- [x] #3 Someone who unsubscribed and opts in again on the site is active in MailerLite
+- [x] #4 Customers who never opted in are not sent to MailerLite
+- [x] #5 The privacy policy names MailerLite for the newsletter and Scaleway for email, in en, sv and fi
 <!-- AC:END -->
 
 ## Comments
@@ -61,6 +62,15 @@ created: 2026-10-31 20:27
 ---
 
 2026-10-31: Decision changed: the site now owns a MailerLite group, Newsletter (id 202876690108515964, created), instead of all active subscribers. Pushes and the nightly field refresh add subscribers to it; the nightly sync takes members the site hasn't opted in out of the group rather than unsubscribing them, and never touches contacts outside it. Unsubscribes stay account-wide. Campaigns go to the Newsletter group. Lets other groups (the TASK-152 reopening list) live in MailerLite.
+
+---
+
+author: @claude
+created: 2026-11-07 08:19
+
+---
+
+Merged and live since v1.23.4; the privacy page names MailerLite and Scaleway. David confirmed the human checks on 2026-11-07.
 
 ---
 <!-- COMMENTS:END -->

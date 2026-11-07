@@ -4,7 +4,7 @@ title: Send a reopening email to recent customers
 status: ready-for-human
 assignee: []
 created_date: '2026-10-31 07:39'
-updated_date: '2026-11-01 16:05'
+updated_date: '2026-11-07 08:19'
 labels:
   - spec
   - customers
@@ -44,8 +44,8 @@ Sending (re-grilled 2026-11-01)
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Jennie has approved the Swedish and Finnish copy
-- [ ] #2 The campaign is sent to a temporary list of recent customers only
+- [x] #1 Jennie has approved the Swedish and Finnish copy
+- [x] #2 The campaign is sent to a temporary list of recent customers only
 - [ ] #3 The welcome percent is 25% while the offer runs and back to 15% after
 - [ ] #4 After clean-up, MailerLite holds only newsletter subscribers and unsubscribers
 <!-- AC:END -->
@@ -105,6 +105,15 @@ created: 2026-11-01 16:05
 ---
 
 2026-11-01: Re-grilled and agreed with David. No privacy policy change after all (David's call). Left: Jennie's test-email review, setting the date and offer end, the discount switches, sending and the clean-up.
+
+---
+
+author: @claude
+created: 2026-11-07 08:19
+
+---
+
+Sent 3.11.2026; the 25% offer ends 16.11. Left: set the welcome percent back to 15% on 17.11 (AC 3) and the MailerLite clean-up the same day (AC 4).
 
 ---
 <!-- COMMENTS:END -->

@@ -4,9 +4,11 @@ title: Show last week's sales on the admin overview
 status: ready-for-agent
 assignee: []
 created_date: '2026-11-01 16:34'
+updated_date: '2026-11-07 08:18'
 labels:
   - admin
   - quick
+  - spec
 dependencies: []
 priority: medium
 type: feature
