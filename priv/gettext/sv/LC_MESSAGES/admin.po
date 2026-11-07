@@ -60,7 +60,7 @@ msgstr "%{variant_size_label}: slutsåld"
 msgid "(missing text)"
 msgstr "(text saknas)"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:110
+#: lib/edenflowers_web/features/admin/account_live.ex:114
 #, elixir-autogen, elixir-format
 msgid "Access"
 msgstr "Åtkomst"
@@ -83,7 +83,7 @@ msgstr "Rapport till bokföraren"
 msgid "Active"
 msgstr "Aktiv"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:484
+#: lib/edenflowers_web/features/admin/account_live.ex:494
 #, elixir-autogen, elixir-format
 msgid "Add Eden Admin to your home screen to get notifications."
 msgstr "Lägg till Eden Admin på hemskärmen för att få notiser."
@@ -125,7 +125,7 @@ msgstr "Lägg till storlek"
 msgid "Address"
 msgstr "Adress"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:111
+#: lib/edenflowers_web/features/admin/account_live.ex:115
 #, elixir-autogen, elixir-format
 msgid "Admin"
 msgstr "Administratör"
@@ -573,7 +573,7 @@ msgstr "Bekräftelsen kunde inte läggas i kö."
 msgid "Could not refund with Stripe. Check the payment in Stripe."
 msgstr "Återbetalningen med Stripe misslyckades. Kontrollera betalningen i Stripe."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:163
+#: lib/edenflowers_web/features/admin/account_live.ex:165
 #, elixir-autogen, elixir-format
 msgid "Could not remove the profile picture."
 msgstr "Det gick inte att ta bort profilbilden."
@@ -583,7 +583,7 @@ msgstr "Det gick inte att ta bort profilbilden."
 msgid "Could not remove the seat."
 msgstr "Platsen kunde inte tas bort."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:187
+#: lib/edenflowers_web/features/admin/account_live.ex:189
 #, elixir-autogen, elixir-format
 msgid "Could not save the profile picture."
 msgstr "Det gick inte att spara profilbilden."
@@ -616,7 +616,7 @@ msgstr "Betalningen kunde inte ångras."
 msgid "Could not upload the photo."
 msgstr "Det gick inte att ladda upp bilden."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:563
+#: lib/edenflowers_web/features/admin/account_live.ex:573
 #, elixir-autogen, elixir-format
 msgid "Could not upload the picture."
 msgstr "Det gick inte att ladda upp bilden."
@@ -639,7 +639,7 @@ msgstr "Beställningen kunde inte mailas."
 msgid "Couldn't email the receipt."
 msgstr "Kvittot kunde inte mailas."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:490
+#: lib/edenflowers_web/features/admin/account_live.ex:500
 #, elixir-autogen, elixir-format
 msgid "Couldn't turn on notifications. Try again."
 msgstr "Det gick inte att slå på notiser. Försök igen."
@@ -1560,7 +1560,7 @@ msgstr "Ny beställning"
 msgid "New order %{order_order_reference}"
 msgstr "Ny beställning %{order_order_reference}"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:477
+#: lib/edenflowers_web/features/admin/account_live.ex:487
 #, elixir-autogen, elixir-format
 msgid "New order notifications"
 msgstr "Notiser om nya beställningar"
@@ -1719,7 +1719,7 @@ msgstr "Inget att göra i dag"
 msgid "Nothing to make tomorrow"
 msgstr "Inget att göra i morgon"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:487
+#: lib/edenflowers_web/features/admin/account_live.ex:497
 #, elixir-autogen, elixir-format
 msgid "Notifications are blocked. Allow them for Eden Admin in your phone's Settings."
 msgstr "Notiser är blockerade. Tillåt dem för Eden Admin i telefonens inställningar."
@@ -2671,13 +2671,13 @@ msgstr "Visa"
 msgid "Show photo %{n} in the store's gallery"
 msgstr "Visa bild %{n} i butikens bildgalleri"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:481
+#: lib/edenflowers_web/features/admin/account_live.ex:491
 #, elixir-autogen, elixir-format
 msgid "Shown on this device only."
 msgstr "Visas bara på den här enheten."
 
 #: lib/edenflowers_web/components/layouts.ex:632
-#: lib/edenflowers_web/features/admin/account_live.ex:118
+#: lib/edenflowers_web/features/admin/account_live.ex:122
 #, elixir-autogen, elixir-format
 msgid "Sign out"
 msgstr "Logga ut"
@@ -2933,7 +2933,7 @@ msgstr "Beställningen sparades inte. Kontrollera de markerade fälten nedan."
 msgid "The photo must be under 40 MB."
 msgstr "Bilden får vara högst 40 MB."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:561
+#: lib/edenflowers_web/features/admin/account_live.ex:571
 #, elixir-autogen, elixir-format
 msgid "The picture must be under 2 MB."
 msgstr "Bilden måste vara under 2 MB."
@@ -2963,7 +2963,7 @@ msgstr "Det finns ingen e-postadress, så kunden mailas inte."
 msgid "This changed while you had it open, so it wasn't cancelled."
 msgstr "Det här ändrades medan du hade det öppet, så det annullerades inte."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:473
+#: lib/edenflowers_web/features/admin/account_live.ex:483
 #, elixir-autogen, elixir-format
 msgid "This device"
 msgstr "Den här enheten"
@@ -3241,7 +3241,7 @@ msgstr "Laddar upp bild"
 msgid "Usage limit"
 msgstr "Användningsgräns"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:562
+#: lib/edenflowers_web/features/admin/account_live.ex:572
 #, elixir-autogen, elixir-format
 msgid "Use a JPG, PNG or WebP image."
 msgstr "Använd en JPG-, PNG- eller WebP-bild."
@@ -5122,63 +5122,69 @@ msgstr "God morgon, %{first_name}"
 msgid "(opens in a new tab)"
 msgstr "(öppnas i en ny flik)"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:453
+#: lib/edenflowers_web/features/admin/account_live.ex:463
 #, elixir-autogen, elixir-format
 msgid "Berry"
 msgstr "Bär"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:202
-#: lib/edenflowers_web/features/admin/account_live.ex:220
+#: lib/edenflowers_web/features/admin/account_live.ex:110
+#: lib/edenflowers_web/features/admin/account_live.ex:217
+#: lib/edenflowers_web/features/admin/account_live.ex:230
 #, elixir-autogen, elixir-format
 msgid "Colour"
 msgstr "Färg"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:150
+#: lib/edenflowers_web/features/admin/account_live.ex:152
 #, elixir-autogen, elixir-format
 msgid "Could not save the appearance."
 msgstr "Det gick inte att spara utseendet."
 
-#: lib/edenflowers_web/features/admin/account_live.ex:448
+#: lib/edenflowers_web/features/admin/account_live.ex:458
 #, elixir-autogen, elixir-format
 msgid "Forest"
 msgstr "Skog"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:451
+#: lib/edenflowers_web/features/admin/account_live.ex:461
 #, elixir-autogen, elixir-format
 msgid "Ink"
 msgstr "Bläck"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:452
+#: lib/edenflowers_web/features/admin/account_live.ex:462
 #, elixir-autogen, elixir-format
 msgid "Plum"
 msgstr "Plommon"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:277
+#: lib/edenflowers_web/features/admin/account_live.ex:287
 #, elixir-autogen, elixir-format
 msgid "Sidebar grain"
 msgstr "Sidofältets korn"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:450
+#: lib/edenflowers_web/features/admin/account_live.ex:460
 #, elixir-autogen, elixir-format
 msgid "Teal"
 msgstr "Blågrön"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:454
+#: lib/edenflowers_web/features/admin/account_live.ex:464
 #, elixir-autogen, elixir-format
 msgid "Terracotta"
 msgstr "Terrakotta"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:455
+#: lib/edenflowers_web/features/admin/account_live.ex:465
 #, elixir-autogen, elixir-format
 msgid "Charcoal"
 msgstr "Kol"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:257
+#: lib/edenflowers_web/features/admin/account_live.ex:267
 #, elixir-autogen, elixir-format
 msgid "Colour intensity"
 msgstr "Färgstyrka"
 
-#: lib/edenflowers_web/features/admin/account_live.ex:449
+#: lib/edenflowers_web/features/admin/account_live.ex:459
 #, elixir-autogen, elixir-format
 msgid "Sage"
 msgstr "Salvia"
+
+#: lib/edenflowers_web/features/admin/account_live.ex:209
+#, elixir-autogen, elixir-format
+msgid "Change colour"
+msgstr "Byt färg"

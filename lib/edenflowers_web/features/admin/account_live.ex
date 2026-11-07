@@ -107,6 +107,10 @@ defmodule EdenflowersWeb.Admin.AccountLive do
               </dd>
             </div>
             <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
+              <dt class="text-base-content/75 text-sm sm:pt-1.5">{~t"Colour"}</dt>
+              <dd><.appearance_picker user={@current_user} /></dd>
+            </div>
+            <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
               <dt class="text-base-content/75 text-sm">{~t"Access"}</dt>
               <dd class="text-base-content text-sm">{~t"Admin"}</dd>
             </div>
@@ -119,8 +123,6 @@ defmodule EdenflowersWeb.Admin.AccountLive do
             </.button>
           </div>
         </section>
-
-        <.appearance_picker user={@current_user} />
 
         <.device_notifications :if={@vapid_public_key} vapid_public_key={@vapid_public_key} />
       </.admin_page>
@@ -198,19 +200,27 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   # screen readers get native controls; the field's handle is an ARIA slider.
   defp appearance_picker(assigns) do
     ~H"""
-    <section class="mt-6">
-      <h2 id="appearance-title" class="text-base-content mb-3 text-base font-semibold">{~t"Colour"}</h2>
+    <button
+      type="button"
+      popovertarget="appearance-picker"
+      class="admin-picker-trigger border-base-content/12 flex items-center gap-2.5 border py-1.5 pr-3 pl-1.5 text-sm transition-colors hover:bg-base-200"
+    >
+      <span class="admin-picker-trigger-swatch admin-chrome h-7 w-7 shrink-0 rounded-full" />
+      {~t"Change colour"}
+    </button>
+    <div>
       <div
         id="appearance-picker"
+        popover
         phx-hook=".AppearancePicker"
         phx-update="ignore"
-        aria-labelledby="appearance-title"
-        role="group"
+        aria-label={~t"Colour"}
+        role="dialog"
         data-hue={@user.admin_hue}
         data-chroma={@user.admin_chroma}
         data-lightness={@user.admin_lightness}
         data-grain={@user.admin_grain}
-        class="admin-chrome text-forest-content relative max-w-sm select-none overflow-hidden rounded-3xl"
+        class="admin-chrome admin-picker-popover text-forest-content w-[22rem] max-w-[calc(100vw-2rem)] select-none overflow-hidden rounded-3xl"
       >
         <div data-field class="admin-picker-field aspect-square relative m-3 cursor-crosshair touch-none rounded-2xl">
           <div
@@ -280,7 +290,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
           </div>
         </div>
       </div>
-    </section>
+    </div>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".AppearancePicker">
       const HUE_MAX = 360;
       const L_MIN = 18;
