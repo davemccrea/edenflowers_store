@@ -22,7 +22,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
       |> to_form()
 
     {:ok,
-     assign(socket, page_title: ~t"Sell gift voucher", form: form, customer_search_empty?: false, customer_term: "")}
+     assign(socket, page_title: ~t"New gift voucher", form: form, customer_search_empty?: false, customer_term: "")}
   end
 
   @impl true

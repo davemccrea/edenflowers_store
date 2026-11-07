@@ -4893,7 +4893,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/gift_voucher_sale_live.ex:25
 #, elixir-autogen, elixir-format
-msgid "Sell gift voucher"
+msgid "New gift voucher"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_log.ex:73
