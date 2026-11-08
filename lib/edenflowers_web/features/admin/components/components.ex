@@ -798,7 +798,7 @@ defmodule EdenflowersWeb.Admin.Components do
         phx-mounted={JS.ignore_attributes(["open"])}
         class="group"
       >
-        <summary class="cursor-pointer list-none">
+        <summary class="-mx-1 cursor-pointer list-none px-1 pointer-coarse:min-h-11 hover:bg-base-content/5 focus-visible:bg-base-content/5">
           <.history_heading title={@title} at={@at} locale={@locale} warning?={@warning?} expandable />
         </summary>
         {render_slot(@details)}
