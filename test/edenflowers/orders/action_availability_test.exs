@@ -5,6 +5,25 @@ defmodule Edenflowers.Orders.ActionAvailabilityTest do
 
   alias Edenflowers.Orders
 
+  test "the admin order menu contains only selectable actions" do
+    admin = generate(admin_user())
+
+    for {attributes, actions} <- [
+          {[fulfillment_method: :delivery], [:order_details, :payment_reminder, :cancel]},
+          {[fulfillment_method: :delivery, fulfillment_status: :fulfilled],
+           [:order_details, :payment_reminder, :fulfillment]},
+          {[paid: true, fulfillment_method: :delivery], [:receipt, :view_receipt, :refund, :cancel]},
+          {[paid: true, fulfillment_method: :delivery, fulfillment_status: :fulfilled],
+           [:receipt, :fulfillment, :view_receipt, :refund]},
+          {[paid: true, customer_email: nil], [:view_receipt, :refund, :cancel]},
+          {[customer_email: nil, fulfillment_status: :fulfilled], []},
+          {[fulfillment_status: :cancelled], []}
+        ] do
+      order = placed_order(attributes)
+      assert Orders.get_order_for_admin!(order.id, actor: admin).admin_menu_actions == actions
+    end
+  end
+
   test "a fully refunded order cannot be sent a payment reminder" do
     order = generate(placed_order(refunded: true))
     order = Ash.load!(order, [:to_collect?, :payment_reminder_sendable?], authorize?: false)

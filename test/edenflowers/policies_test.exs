@@ -401,12 +401,15 @@ defmodule Edenflowers.PoliciesTest do
       assert match?(%Ash.Error.Forbidden{}, error) or match?(%Ash.Error.Invalid{}, error)
     end
 
-    test "admin can mark a placed order fulfilled", %{order: order} do
+    test "admin can mark a ready order fulfilled", %{order: order} do
+      assert {:ok, order} = Orders.mark_order_ready(order, actor: %{admin: true})
       assert {:ok, order} = Orders.mark_order_fulfilled(order, actor: %{admin: true})
       assert order.fulfillment_status == :fulfilled
     end
 
-    test "non-admin cannot mark a placed order fulfilled", %{order: order} do
+    test "non-admin cannot mark a ready order fulfilled", %{order: order} do
+      assert {:ok, order} = Orders.mark_order_ready(order, actor: %{admin: true})
+
       assert {:error, %Ash.Error.Forbidden{}} =
                Orders.mark_order_fulfilled(order, actor: %{id: Ash.UUID.generate(), admin: false})
     end

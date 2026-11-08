@@ -138,10 +138,10 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               {~t"Undo ready"}
             </.button>
             <.button
-              :if={@order.fulfillable?}
+              :if={@order.can_mark_fulfilled?}
               type="button"
               phx-click="confirm_fulfillment"
-              variant={if @order.can_mark_ready?, do: "secondary", else: "primary"}
+              variant="primary"
               size="sm"
             >
               {if @order.fulfillment_method == :delivery, do: ~t"Mark as delivered", else: ~t"Mark as collected"}
@@ -161,7 +161,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         </.admin_page_header>
 
         <.confirm_fulfillment
-          :if={@order.fulfillable?}
+          :if={@order.can_mark_fulfilled?}
           form={@fulfillment_form}
           photo_error={@photo_error}
           order={@order}

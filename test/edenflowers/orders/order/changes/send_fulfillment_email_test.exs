@@ -17,7 +17,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmailTest do
           customer_email: "ada@example.com",
           fulfillment_method: :delivery,
           fulfillment_date: ~D[2026-06-10],
-          fulfillment_status: :pending,
+          fulfillment_status: :ready,
           locale: "en-GB"
         ],
         overrides
@@ -108,7 +108,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmailTest do
       order = fulfillable_order([])
 
       assert {:error, _} = Orders.mark_order_fulfilled(order, %{email_delivery_photo: true}, actor: admin())
-      assert Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_status == :pending
+      assert Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_status == :ready
       refute_enqueued(worker: SendFulfillmentEmail)
     end
   end
