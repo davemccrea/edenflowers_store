@@ -26,12 +26,12 @@ defmodule EdenflowersWeb.Business do
     [~t"Mon–Fri: #{weekdays}", ~t"Sat: #{saturday}", ~t"Sun: closed"]
   end
 
-  @doc "When the shop closes on `date`, or nil on a Sunday."
-  def closing_time(date) do
+  @doc "The shop's opening and closing times on `date`, or nil on a Sunday."
+  def opening_hours(date) do
     case Date.day_of_week(date) do
       7 -> nil
-      6 -> elem(@saturday_hours, 1)
-      _weekday -> elem(@weekday_hours, 1)
+      6 -> @saturday_hours
+      _weekday -> @weekday_hours
     end
   end
 

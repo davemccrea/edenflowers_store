@@ -920,7 +920,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   # Written in the customer's language, not the admin's.
   # Sent the day Jennie finishes it, so "today" is the day she sends it. On a
-  # Sunday the shop is shut, so there's no closing time to give.
+  # Sunday the shop is shut, so there are no opening hours to give.
   defp pickup_message(order) do
     today = Edenflowers.ShopTime.today()
 
@@ -929,12 +929,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
         name = order.customer_first_name
         reference = order.order_reference
 
-        case EdenflowersWeb.Business.closing_time(today) do
+        case EdenflowersWeb.Business.opening_hours(today) do
           nil ->
             ~t"Hi #{name}, your Eden Flowers order #{reference} is now ready for pick up."
 
-          closing_time ->
-            ~t"Hi #{name}, your Eden Flowers order #{reference} is now ready for pick up. Minimossen closes at #{time = Format.time(closing_time, order.locale)} today. If that doesn't suit, just let me know."
+          {opens, closes} ->
+            ~t"Hi #{name}, your Eden Flowers order #{reference} is now ready for pick up. Minimossen is open from #{opening_time = Format.time(opens, order.locale)} to #{closing_time = Format.time(closes, order.locale)} today. If that doesn't suit, just let me know."
         end
       end)
 
