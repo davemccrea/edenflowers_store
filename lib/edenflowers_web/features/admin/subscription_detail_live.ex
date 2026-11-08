@@ -22,8 +22,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   alias EdenflowersWeb.Checkout.Fields
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     case get_subscription(id, socket.assigns.current_user) do

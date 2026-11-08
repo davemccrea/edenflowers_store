@@ -14,8 +14,6 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   @history_fields [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(params, _session, socket) do
     actor = socket.assigns.current_user

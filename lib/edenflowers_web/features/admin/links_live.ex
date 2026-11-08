@@ -9,8 +9,6 @@ defmodule EdenflowersWeb.Admin.LinksLive do
 
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(_params, _session, socket) do
     {:ok, assign(socket, page_title: ~t"Links", sections: sections())}

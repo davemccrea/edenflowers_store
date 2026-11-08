@@ -14,8 +14,6 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
   alias Edenflowers.Translations
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(_params, _session, socket) do
     # Placing, editing or cancelling an order changes stock.

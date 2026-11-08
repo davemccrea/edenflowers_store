@@ -18,8 +18,6 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
   # Hand-made promotions; newsletter and card codes would otherwise bury them.
   @default_view %{"kind" => "manual"}
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(_params, _session, socket) do
     {:ok,

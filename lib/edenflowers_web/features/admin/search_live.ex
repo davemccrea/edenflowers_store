@@ -14,8 +14,6 @@ defmodule EdenflowersWeb.Admin.SearchLive do
 
   @limit 10
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket |> assign(:locale, Localize.get_locale()) |> assign(:limit, @limit)}

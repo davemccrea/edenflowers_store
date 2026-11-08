@@ -24,8 +24,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   alias EdenflowersWeb.Admin.ShareLinkDrawer
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     case load_course(socket, id) do

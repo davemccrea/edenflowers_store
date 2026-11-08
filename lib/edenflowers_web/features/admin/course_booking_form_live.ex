@@ -11,8 +11,6 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
   alias Edenflowers.Format
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     case Ash.get(Course, id, actor: socket.assigns.current_user) do

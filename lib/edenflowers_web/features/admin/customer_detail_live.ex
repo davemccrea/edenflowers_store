@@ -17,8 +17,6 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
   alias EdenflowersWeb.Checkout.Fields
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     case Accounts.get_customer_for_admin(id, actor: socket.assigns.current_user) do

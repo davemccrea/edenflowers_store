@@ -15,8 +15,6 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   alias Edenflowers.Accounts
   alias EdenflowersWeb.Admin.PushSubscriptions
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(_params, _session, socket) do
     {:ok,

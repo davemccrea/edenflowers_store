@@ -12,8 +12,6 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
   alias Edenflowers.Format
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:orders")

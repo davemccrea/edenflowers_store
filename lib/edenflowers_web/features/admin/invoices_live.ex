@@ -8,8 +8,6 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
   alias Edenflowers.Payments.Invoice
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   def mount(_params, _session, socket),
     do: {:ok, assign(socket, page_title: ~t"Invoices", locale: Localize.get_locale())}
 
