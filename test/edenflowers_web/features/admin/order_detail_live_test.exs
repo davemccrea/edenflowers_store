@@ -149,6 +149,26 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert {:error, _too_late} = Orders.link_pass_it_on_card(delivered, code, actor: admin)
   end
 
+  test "fulfilling a gift locks its linked card, including stale removal requests", %{conn: conn, admin: admin} do
+    [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
+    gift = placed_order(gift: true, recipient_name: "Anna")
+    Orders.link_pass_it_on_card!(gift, code, actor: admin)
+    ready = Orders.mark_order_ready!(gift, actor: admin)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{gift.id}")
+    assert has_element?(view, ~s|button[phx-click="unlink_card"]|)
+
+    view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
+    view |> form("#confirm-fulfillment-form") |> render_submit()
+
+    refute has_element?(view, ~s|button[phx-click="unlink_card"]|)
+    assert has_element?(view, "#order-card-chain-#{gift.id}", code)
+    assert {:error, _too_late} = Orders.remove_pass_it_on_card(ready, actor: admin)
+    render_click(view, "unlink_card")
+    assert Orders.get_order_for_admin!(gift.id, actor: admin).pass_it_on_card.gift_order_id == gift.id
+    refute has_element?(view, "#order-log", "Pass it on card #{code} removed")
+  end
+
   test "every order in a pass-it-on chain links to the rest of it", %{conn: conn, admin: admin} do
     [first_code, second_code] =
       Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 2, actor: Edenflowers.Actors.system_actor())

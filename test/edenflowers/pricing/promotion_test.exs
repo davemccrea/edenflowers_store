@@ -330,6 +330,16 @@ defmodule Edenflowers.Pricing.PromotionTest do
       assert {:error, _taken} = Pricing.link_card_to_gift_order(other_card, order.id, actor: admin)
     end
 
+    test "a fulfilled gift keeps its card even when unlinked through Pricing", %{card: card, admin: admin} do
+      gift = placed_order(gift: true)
+      card = Pricing.link_card_to_gift_order!(card, gift.id, actor: admin, load: :gift_order_linkable?)
+      ready = Orders.mark_order_ready!(gift, actor: admin)
+      Orders.mark_order_fulfilled!(ready, %{email_customer?: false}, actor: admin)
+
+      assert {:error, _fulfilled} = Pricing.link_card_to_gift_order(card, nil, actor: admin)
+      assert Ash.reload!(card, authorize?: false).gift_order_id == gift.id
+    end
+
     test "a card stays with its gift when its code is typed on another", %{card: card, admin: admin} do
       gift = placed_order(gift: true, recipient_name: "Anna")
       other_gift = placed_order(gift: true, recipient_name: "Bea")
