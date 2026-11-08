@@ -64,6 +64,34 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-log", "Pass it on card #{code} removed")
   end
 
+  test "history details keep their record identity when a new event arrives", %{conn: conn, admin: admin} do
+    order = placed_order()
+    Orders.update_florist_note!(order, %{florist_note: "Original arrangement"}, actor: admin)
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    [original_id] =
+      view
+      |> element("#order-log details", "Original arrangement")
+      |> render()
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("details")
+      |> LazyHTML.attribute("id")
+
+    Orders.update_florist_note!(order, %{florist_note: "Add white roses"}, actor: admin)
+
+    assert has_element?(view, "##{original_id}", "Original arrangement")
+
+    [new_id] =
+      view
+      |> element("#order-log details", "Add white roses")
+      |> render()
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("details")
+      |> LazyHTML.attribute("id")
+
+    assert new_id != original_id
+  end
+
   test "a delivered gift's card can no longer be linked", %{conn: conn, admin: admin} do
     [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
     delivered = placed_order(gift: true, recipient_name: "Anna", fulfillment_status: :fulfilled)

@@ -254,6 +254,10 @@ The storefront has no cards. A product card is a link, an unframed photograph on
 
 The admin groups its forms and tables in `admin-card`, a `base-100` panel with a `/12` hairline that runs edge to edge on phones. The sign-in pages centre their lone form in the same panel. Nowhere else.
 
+### Timelines
+
+Admin history and Pass it on use `timeline` and `timeline_item` from `EdenflowersWeb.Admin.Components` for the rail, dots, spacing and branch indentation. Callers supply each item's stable record ID and choose `active?` explicitly. History uses `history_timeline` to group events by Helsinki day, showing Today or the full date once and only the local time on each `history_entry` (the full timestamp remains on hover). The rail continues through date separators so the history reads as one sequence. Native expandable details use a 16px inter-event gap via `compact?`; entries are keyed by the underlying version, payment or document event so an expanded event stays attached to its record during live updates. Pass it on uses the standard 20px gap and supplies order content and nested timelines through the `children` slot.
+
 ### Navigation
 - **Header:** a flat row of small sans links with the honey hover underline and no active state; a drawer below `xl`.
 - **Category index (signature):** a vertical list of serif words, each anchored by an eyebrow numeral, the active one carrying a snapped honey underline. The reference pages' section index uses the same pattern in sans.

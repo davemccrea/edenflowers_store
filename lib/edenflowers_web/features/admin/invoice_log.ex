@@ -17,14 +17,20 @@ defmodule EdenflowersWeb.Admin.InvoiceLog do
   end
 
   defp lifecycle(invoice) do
-    created = %{at: invoice.inserted_at, title: ~t"Draft created", details: []}
-    issued = if invoice.issued_at, do: [%{at: invoice.issued_at, title: ~t"Invoice issued", details: []}], else: []
+    created = %{id: "invoice-#{invoice.id}-created", at: invoice.inserted_at, title: ~t"Draft created", details: []}
+
+    issued =
+      if invoice.issued_at,
+        do: [%{id: "invoice-#{invoice.id}-issued", at: invoice.issued_at, title: ~t"Invoice issued", details: []}],
+        else: []
+
     issued ++ [created]
   end
 
   defp invoice_emails(invoice) do
     Enum.map(invoice.paper_trail_versions, fn version ->
       %{
+        id: "invoice-email-#{version.id}",
         at: version.version_inserted_at,
         title: if(version.reminder, do: ~t"Payment reminder emailed", else: ~t"Invoice emailed"),
         details: email_details(version, invoice.buyer_email)
@@ -36,6 +42,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLog do
 
   defp credit_note_entries(credit_note, email) do
     issued = %{
+      id: "credit-note-#{credit_note.id}-issued",
       at: credit_note.inserted_at,
       title: ~t"Credit note #{number = credit_note.number} issued",
       details: if(credit_note.reason, do: [{~t"Reason", credit_note.reason}], else: [])
@@ -44,6 +51,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLog do
     emails =
       Enum.map(credit_note.paper_trail_versions, fn version ->
         %{
+          id: "credit-note-email-#{version.id}",
           at: version.version_inserted_at,
           title: ~t"Credit note emailed",
           details: email_details(version, email)

@@ -184,11 +184,18 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
     view |> element("button", "Pause") |> render_click()
 
-    assert has_element?(view, "#subscription-log li:nth-child(1)", "Paused · Admin")
-    assert has_element?(view, "#subscription-log li:nth-child(2)", "Changed · Ada Lovelace")
-    assert has_element?(view, "#subscription-log li:nth-child(2)", "Large")
-    assert has_element?(view, "#subscription-log li:nth-child(3)", "Payment received, deliveries restarted")
-    refute has_element?(view, "#subscription-log li:nth-child(3)", "·")
+    [paused, changed, restarted] =
+      view
+      |> render()
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("#subscription-history > li:not([role=presentation])")
+      |> Enum.map(&LazyHTML.text/1)
+
+    assert paused =~ "Paused · Admin"
+    assert changed =~ "Changed · Ada Lovelace"
+    assert changed =~ "Large"
+    assert restarted =~ "Payment received, deliveries restarted"
+    refute restarted =~ "·"
   end
 
   defp reload(subscription), do: Ash.reload!(subscription, authorize?: false)

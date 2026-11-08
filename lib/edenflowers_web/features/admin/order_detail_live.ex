@@ -470,29 +470,21 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             />
 
             <.widget id="order-log" title={~t"History"}>
-              <ol class="divide-base-content/12 divide-y text-sm">
-                <.history_entry
-                  :for={{entry, index} <- Enum.with_index(@log)}
-                  id={"order-log-entry-#{index}"}
-                  title={entry.title}
-                  at={entry.at}
-                  locale={@locale}
-                >
-                  <:details :if={entry.details != []}>
-                    <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
-                      <div :for={{label, value} <- entry.details}>
-                        <dt :if={label} class="text-base-content/75 text-xs">{label}</dt>
-                        <dd class="text-base-content/85 break-words">
-                          <ul :if={is_list(value)}>
-                            <li :for={item <- value}>{item}</li>
-                          </ul>
-                          <span :if={!is_list(value)} class="whitespace-pre-line">{value}</span>
-                        </dd>
-                      </div>
-                    </dl>
-                  </:details>
-                </.history_entry>
-              </ol>
+              <.history_timeline id="order-history" entries={@log} locale={@locale}>
+                <:details :let={entry}>
+                  <dl class="mt-2 space-y-2">
+                    <div :for={{label, value} <- entry.details}>
+                      <dt :if={label} class="text-base-content/75 text-xs">{label}</dt>
+                      <dd class="text-base-content/85 break-words">
+                        <ul :if={is_list(value)}>
+                          <li :for={item <- value}>{item}</li>
+                        </ul>
+                        <span :if={!is_list(value)} class="whitespace-pre-line">{value}</span>
+                      </dd>
+                    </div>
+                  </dl>
+                </:details>
+              </.history_timeline>
             </.widget>
           </aside>
         </div>

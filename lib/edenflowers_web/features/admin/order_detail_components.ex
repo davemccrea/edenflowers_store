@@ -913,7 +913,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           </.form>
         </div>
 
-        <ol
+        <.timeline
           :if={
             length(@order.pass_it_on_chain) > 1 || @order.pass_it_on_card ||
               Enum.any?(@order.pass_it_on_chain, &match?(%{promotion: %{kind: :pass_it_on}}, &1))
@@ -922,7 +922,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           aria-label={~t"Orders linked by Pass it on cards"}
         >
           <.card_chain_nodes nodes={@chain} current_id={@order.id} locale={@locale} />
-        </ol>
+        </.timeline>
       </div>
     </.widget>
     """
@@ -951,47 +951,40 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   defp card_chain_nodes(assigns) do
     ~H"""
-    <li :for={node <- @nodes} id={"order-card-chain-#{node.order.id}"} class="pb-5 last:pb-0">
-      <div class={["relative pl-7", node.children != [] && "pb-5"]}>
-        <span
-          :if={node.children != []}
-          class="bg-base-content/20 left-[5px] absolute top-5 -bottom-1 w-px"
-          aria-hidden="true"
-        />
-        <span
-          :if={@branched?}
-          class="bg-base-content/20 absolute top-3 -left-5 h-px w-6"
-          aria-hidden="true"
-        />
-        <span
-          class={["h-[11px] w-[11px] absolute top-1.5 left-0 rounded-full border-2", if(node.order.id == @current_id, do: "bg-primary border-primary", else: "bg-base-100 border-base-content/40")]}
-          aria-hidden="true"
-        />
-        <.chain_order order={node.order} current?={node.order.id == @current_id} locale={@locale} />
-        <p :if={node.order.fulfillment_status == :cancelled} class="mt-1 text-sm">
-          <.fulfillment_status_badge status={:cancelled} />
-        </p>
-        <div
-          :if={match?(%{kind: :pass_it_on, gift_order: nil}, node.order.promotion)}
-          class="text-base-content/65 mt-1.5 flex flex-wrap items-center gap-2 text-sm"
-        >
-          <.card_code code={node.order.promotion.code} />
-          <span>{~t"Source gift not linked"}</span>
-        </div>
-        <div :if={node.order.pass_it_on_card} class="mt-1.5 flex flex-wrap items-center gap-2">
-          <.card_code code={node.order.pass_it_on_card.code} />
-          <.card_status_badge card={node.order.pass_it_on_card} locale={@locale} />
-        </div>
+    <.timeline_item
+      :for={node <- @nodes}
+      :key={node.order.id}
+      id={"order-card-chain-#{node.order.id}"}
+      active?={node.order.id == @current_id}
+      connect?={node.children != []}
+      branched?={@branched?}
+    >
+      <.chain_order order={node.order} current?={node.order.id == @current_id} locale={@locale} />
+      <p :if={node.order.fulfillment_status == :cancelled} class="mt-1 text-sm">
+        <.fulfillment_status_badge status={:cancelled} />
+      </p>
+      <div
+        :if={match?(%{kind: :pass_it_on, gift_order: nil}, node.order.promotion)}
+        class="text-base-content/65 mt-1.5 flex flex-wrap items-center gap-2 text-sm"
+      >
+        <.card_code code={node.order.promotion.code} />
+        <span>{~t"Source gift not linked"}</span>
       </div>
-      <ol :if={node.children != []} class={length(node.children) > 1 && "border-base-content/20 ml-[5px] border-l pl-5"}>
-        <.card_chain_nodes
-          nodes={node.children}
-          current_id={@current_id}
-          locale={@locale}
-          branched?={length(node.children) > 1}
-        />
-      </ol>
-    </li>
+      <div :if={node.order.pass_it_on_card} class="mt-1.5 flex flex-wrap items-center gap-2">
+        <.card_code code={node.order.pass_it_on_card.code} />
+        <.card_status_badge card={node.order.pass_it_on_card} locale={@locale} />
+      </div>
+      <:children :if={node.children != []}>
+        <.timeline branched?={length(node.children) > 1}>
+          <.card_chain_nodes
+            nodes={node.children}
+            current_id={@current_id}
+            locale={@locale}
+            branched?={length(node.children) > 1}
+          />
+        </.timeline>
+      </:children>
+    </.timeline_item>
     """
   end
 
