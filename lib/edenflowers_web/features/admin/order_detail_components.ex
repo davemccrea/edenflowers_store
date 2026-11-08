@@ -323,7 +323,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         <%= if @fulfilled do %>
           {~t"Fulfilled · #{remaining_to_fulfil(@queue)} left"}
         <% else %>
-          {~t"#{@queue.position} of #{@queue.total} to fulfil"}
+          {~t"#{@queue.position} of #{@queue.total}"}
         <% end %>
       </span>
       <.queue_link

@@ -35,10 +35,11 @@ msgstr "%{label} (%{arrow_symbol})"
 msgid "%{price}/km"
 msgstr "%{price}/km"
 
+# Position in the queue of unfinished orders, e.g. “1 of 15”; the nav's aria-label says which queue.
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:326
 #, elixir-autogen, elixir-format
-msgid "%{queue_position} of %{queue_total} to fulfil"
-msgstr "%{queue_position}/%{queue_total} toimitettavana"
+msgid "%{queue_position} of %{queue_total}"
+msgstr "%{queue_position}/%{queue_total}"
 
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:71
 #, elixir-autogen, elixir-format
