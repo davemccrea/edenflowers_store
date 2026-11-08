@@ -330,6 +330,7 @@ defmodule EdenflowersWeb.Layouts do
               type="button"
               class="flex h-12 w-12 items-center justify-center"
               phx-click={JS.exec("phx-show", to: "#admin-nav-drawer")}
+              aria-controls="admin-nav-drawer-dialog"
               aria-label={dgettext("shared", "Open navigation menu")}
             >
               <.icon name="hero-bars-3-bottom-left" class="h-6 w-6 hover:text-forest-content/70" />
@@ -466,16 +467,14 @@ defmodule EdenflowersWeb.Layouts do
     assigns = assign(assigns, :version, "v#{Application.spec(:edenflowers, :vsn)}")
 
     ~H"""
-    <%!-- Below lg the whole drawer scrolls, so a pinned footer can't squeeze the links into an unnoticed scroll box --%>
-    <div class="flex h-full flex-col overflow-y-auto overscroll-contain pt-7 pb-5 lg:overflow-visible">
-      <div class="mb-6 flex items-center justify-between px-5">
+    <div class="flex h-full min-h-0 flex-col pt-4 lg:pt-7 lg:pb-5">
+      <div class="mb-2 flex h-14 shrink-0 items-center justify-between px-5 lg:mb-6 lg:h-auto">
         <.link navigate={~p"/admin"} class="logo-wordmark text-lg">
           Eden Flowers
         </.link>
         <.icon_button
           :if={@closeable}
           phx-click={JS.exec("phx-hide", to: "#admin-nav-drawer")}
-          size="sm"
           class="text-forest-content hover:bg-forest-content/10"
           aria_label={dgettext("shared", "Close navigation menu")}
         >
@@ -483,41 +482,43 @@ defmodule EdenflowersWeb.Layouts do
         </.icon_button>
       </div>
 
-      <nav class="space-y-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
-        <div :for={{heading, items} <- @nav_sections} class="space-y-0.5">
-          <p :if={heading} class="text-forest-content/70 mb-1 px-6 text-xs">{heading}</p>
+      <div class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-5 lg:contents">
+        <nav class="shrink-0 space-y-4 lg:min-h-0 lg:flex-1 lg:shrink lg:overflow-y-auto">
+          <div :for={{heading, items} <- @nav_sections} class="space-y-0.5">
+            <p :if={heading} class="text-forest-content/70 mb-1 px-6 text-xs">{heading}</p>
+            <.admin_nav_item
+              :for={{path, label, live?, icon} <- items}
+              path={path}
+              label={label}
+              live?={live?}
+              icon={icon}
+              current_path={@current_path}
+              exact={path == "/admin"}
+            />
+          </div>
+        </nav>
+
+        <div class="border-forest-content/15 mt-auto shrink-0 border-t pt-4">
+          <p class="text-forest-content/70 mb-1 px-6 text-xs">{dgettext("admin", "System")}</p>
           <.admin_nav_item
-            :for={{path, label, live?, icon} <- items}
+            :for={{path, label, live?, icon} <- @system_nav}
             path={path}
             label={label}
             live?={live?}
             icon={icon}
             current_path={@current_path}
-            exact={path == "/admin"}
+            exact={false}
           />
+
+          <a
+            href={"https://github.com/davemccrea/edenflowers_store/releases/tag/#{@version}"}
+            target="_blank"
+            rel="noopener"
+            class="text-forest-content/70 mt-3 block px-6 text-xs hover:text-forest-content"
+          >
+            {@version}
+          </a>
         </div>
-      </nav>
-
-      <div class="border-forest-content/15 mt-auto border-t pt-4">
-        <p class="text-forest-content/70 mb-1 px-6 text-xs">{dgettext("admin", "System")}</p>
-        <.admin_nav_item
-          :for={{path, label, live?, icon} <- @system_nav}
-          path={path}
-          label={label}
-          live?={live?}
-          icon={icon}
-          current_path={@current_path}
-          exact={false}
-        />
-
-        <a
-          href={"https://github.com/davemccrea/edenflowers_store/releases/tag/#{@version}"}
-          target="_blank"
-          rel="noopener"
-          class="text-forest-content/70 mt-3 block px-6 text-xs hover:text-forest-content"
-        >
-          {@version}
-        </a>
       </div>
     </div>
     """
@@ -543,7 +544,7 @@ defmodule EdenflowersWeb.Layouts do
       {if @live?, do: [navigate: @path], else: [href: @path]}
       {if @external, do: [target: "_blank", rel: "noopener"], else: []}
       aria-current={@active && "page"}
-      class={["group flex items-center gap-3 px-6 py-2 text-sm transition-colors focus-visible:-outline-offset-2", if(@active,
+      class={["group min-h-11 flex items-center gap-3 px-6 py-2 text-base transition-colors focus-visible:-outline-offset-2 lg:min-h-0 lg:text-sm", if(@active,
     do: "bg-forest-content/10 font-semibold",
     else: "text-forest-content/90 hover:bg-forest-content/5 hover:text-forest-content")]}
     >
