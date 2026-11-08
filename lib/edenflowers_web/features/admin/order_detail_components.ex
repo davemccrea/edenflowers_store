@@ -484,7 +484,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     assigns = assign(assigns, :directions, directions_url(assigns.position, assigns.address))
 
     ~H"""
-    <div :if={@directions} id="order-directions" class="border-base-content/12 mt-5 border-t pt-5">
+    <div
+      :if={@directions}
+      id="order-directions"
+      class="border-base-content/12 mt-5 border-t pt-5 last:max-sm:has-[img]:-mb-4"
+    >
       <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <.summary_fact label={~t"Deliver to"}>
           {@address}
@@ -507,7 +511,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         href={@directions}
         target="_blank"
         rel="noopener"
-        class="mt-3 block overflow-hidden"
+        class="mt-3 block overflow-hidden max-sm:-mx-4"
         aria-label={~t"Open directions in Google Maps"}
       >
         <img
