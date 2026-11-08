@@ -71,6 +71,13 @@ defmodule EdenflowersWeb.Admin.OrderLog do
       id: "version-#{version.id}",
       at: version.version_inserted_at,
       title: title(version),
+      warning?:
+        version.version_action_name in [
+          :record_fulfillment_email_failure,
+          :record_receipt_email_failure,
+          :record_order_details_email_failure,
+          :place_unpaid_occurrence
+        ],
       details: field_details(version, locale) ++ items_details(version) ++ message_details(version)
     }
   end

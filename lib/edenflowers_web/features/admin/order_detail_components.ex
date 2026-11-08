@@ -921,7 +921,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           id="order-card-chain"
           aria-label={~t"Orders linked by Pass it on cards"}
         >
-          <.card_chain_nodes nodes={@chain} current_id={@order.id} locale={@locale} />
+          <.card_chain_nodes
+            nodes={@chain}
+            current_id={@order.id}
+            locale={@locale}
+            markers?={length(@order.pass_it_on_chain) > 1}
+          />
         </.timeline>
       </div>
     </.widget>
@@ -948,6 +953,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   attr :current_id, :string, required: true
   attr :locale, :string, required: true
   attr :branched?, :boolean, default: false
+  attr :markers?, :boolean, default: true
 
   defp card_chain_nodes(assigns) do
     ~H"""
@@ -958,6 +964,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       active?={node.order.id == @current_id}
       connect?={node.children != []}
       branched?={@branched?}
+      markers?={@markers?}
     >
       <.chain_order order={node.order} current?={node.order.id == @current_id} locale={@locale} />
       <p :if={node.order.fulfillment_status == :cancelled} class="mt-1 text-sm">
@@ -981,6 +988,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
             current_id={@current_id}
             locale={@locale}
             branched?={length(node.children) > 1}
+            markers?={@markers?}
           />
         </.timeline>
       </:children>

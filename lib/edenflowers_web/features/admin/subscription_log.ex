@@ -33,6 +33,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
       id: "version-#{version.id}",
       at: version.version_inserted_at,
       title: title(version),
+      warning?: version.version_action_name == :create_occurrence,
       details: details(version, sizes, locale)
     }
   end
