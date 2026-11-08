@@ -601,12 +601,27 @@ body:has(.admin-theme) {
   background-image: none;
 }
 
+/* Blend into the plain system status bar instead of ending the grain at a seam. */
+.admin-topbar::before,
+#admin-nav-drawer-content::before {
+  mask-image: linear-gradient(
+    transparent env(safe-area-inset-top),
+    #000 calc(env(safe-area-inset-top) + 3.5rem)
+  );
+}
+
 /* One stationary material across the heading, scrolling links and safe areas.
    Start at the topbar's colour rather than a separate, lighter panel. */
 #admin-nav-drawer-content {
+  padding-bottom: 0;
   background-image: linear-gradient(
     to bottom,
     var(--color-forest),
     var(--chrome-deep)
   );
+
+  /* Let the list scroll through the safe area; clear the home indicator only at its end. */
+  & .overflow-y-auto {
+    padding-bottom: calc(var(--spacing) * 5 + env(safe-area-inset-bottom));
+  }
 }
