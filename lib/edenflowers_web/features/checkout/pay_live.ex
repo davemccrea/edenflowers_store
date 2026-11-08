@@ -10,7 +10,6 @@ defmodule EdenflowersWeb.Checkout.PayLive do
 
   alias Edenflowers.Format
   alias Edenflowers.Orders
-  alias Edenflowers.ShopTime
   alias EdenflowersWeb.PaymentLink
 
   on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_user_optional}
@@ -101,21 +100,8 @@ defmodule EdenflowersWeb.Checkout.PayLive do
               class="mb-4 leading-relaxed"
               data-testid="pay-fulfillment"
             >
-              <%= cond do %>
-                <% @payable.fulfillment_status == :fulfilled and @payable.fulfillment_method == :delivery -> %>
-                  {~t"Your order has been delivered. I hope you're happy with it."}
-                <% @payable.fulfillment_status == :fulfilled -> %>
-                  {~t"Your order has been collected. I hope you're happy with it."}
-                <% true -> %>
-                  {fulfillment_line(@payable, @locale)}
-              <% end %>
-              <span
-                :if={
-                  @payable.fulfillment_method == :pickup and @payable.fulfillment_status == :pending and
-                    not is_nil(@payable.customer_phone_number)
-                }
-                class="block"
-              >
+              {fulfillment_line(@payable, @locale)}
+              <span :if={@payable.pickup_message_pending?} class="block">
                 {~t"I'll send a message when your order is ready for pick up."}
               </span>
               <span :if={@payable.gift && @payable.recipient_name} class="block">
@@ -238,26 +224,25 @@ defmodule EdenflowersWeb.Checkout.PayLive do
 
   defp email_form(_order), do: nil
 
-  defp fulfillment_line(%{fulfillment_method: :delivery} = order, locale) do
-    case Date.diff(order.fulfillment_date, ShopTime.today()) do
-      0 ->
-        ~t"Delivery today to #{address = order.delivery_address}"
+  defp fulfillment_line(%{customer_status: :ready_for_pickup}, _locale), do: ~t"Ready for pickup"
+  defp fulfillment_line(%{customer_status: :pickup_today}, _locale), do: ~t"Pickup today"
+  defp fulfillment_line(%{customer_status: :confirmed}, _locale), do: ~t"Confirmed"
 
-      1 ->
-        ~t"Delivery tomorrow to #{address = order.delivery_address}"
+  defp fulfillment_line(%{customer_status: :delivered}, _locale),
+    do: ~t"Your order has been delivered. I hope you're happy with it."
 
-      _ ->
-        ~t"Delivery on #{date = Format.weekday_date(order.fulfillment_date, locale)} to #{address = order.delivery_address}"
-    end
-  end
+  defp fulfillment_line(%{customer_status: :collected}, _locale),
+    do: ~t"Your order has been collected. I hope you're happy with it."
 
-  defp fulfillment_line(order, locale) do
-    case Date.diff(order.fulfillment_date, ShopTime.today()) do
-      0 -> ~t"Ready to collect today"
-      1 -> ~t"Ready to collect tomorrow"
-      _ -> ~t"Ready to collect on #{date = Format.weekday_date(order.fulfillment_date, locale)}"
-    end
-  end
+  defp fulfillment_line(%{customer_status: status} = order, locale) when status in [:for_pickup, :pickup_scheduled],
+    do: ~t"Pickup on #{date = Format.weekday_date(order.fulfillment_date, locale)}"
+
+  defp fulfillment_line(%{customer_status: :arriving_today} = order, _locale),
+    do: ~t"Delivery today to #{address = order.delivery_address}"
+
+  defp fulfillment_line(%{customer_status: status} = order, locale) when status in [:arriving, :delivery_scheduled],
+    do:
+      ~t"Delivery on #{date = Format.weekday_date(order.fulfillment_date, locale)} to #{address = order.delivery_address}"
 
   defp load_order(token), do: Orders.get_order_by_payment_link_token(token, authorize?: false)
 end

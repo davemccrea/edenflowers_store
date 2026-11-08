@@ -58,7 +58,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           search={[
             label: ~t"Search",
             placeholder: ~t"Search orders…",
-            fn: &search_orders/3
+            fn: fn query, _columns, term -> Ash.Query.set_argument(query, :term, term) end
           ]}
           url_state={@url_state}
           sort_mode="exclusive"
@@ -71,8 +71,14 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             type={:select}
             label={~t"Show"}
             prompt={~t"All orders"}
-            options={[{~t"Still to do", "true"}, {~t"Gift orders", "gift"}]}
-            fn={&show_orders/2}
+            options={[
+              {~t"Still to do", "true"},
+              {~t"All unfinished", "unfinished"},
+              {~t"To make", "pending"},
+              {~t"Ready", "ready"},
+              {~t"Gift orders", "gift"}
+            ]}
+            fn={fn query, %{value: value} -> Ash.Query.set_argument(query, :show, value) end}
           />
           <:filter
             field="kind"
@@ -80,7 +86,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             label={~t"Kind"}
             prompt={~t"All"}
             options={[{~t"Flowers", "flowers"}, {~t"Gift vouchers", "gift_vouchers"}]}
-            fn={&order_kind/2}
+            fn={fn query, %{value: value} -> Ash.Query.set_argument(query, :kind, value) end}
           />
           <:col :let={order} field="customer_name" search sort label={~t"Customer"}>
             <.link
@@ -124,7 +130,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
             sort
             label={~t"Fulfillment"}
           >
-            <.fulfillment_status_badge status={order.fulfillment_status} />
+            <.fulfillment_status_badge status={order.fulfillment_status} method={order.fulfillment_method} />
           </:col>
           <:col
             :let={order}
@@ -169,33 +175,6 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
     do: {:noreply, Cinder.refresh_table(socket, "orders-table")}
-
-  # "true" means still to do, kept from when it was the only option, so saved links still work.
-  defp show_orders(query, %{value: "gift"}) do
-    require Ash.Query
-    Ash.Query.filter(query, gift)
-  end
-
-  defp show_orders(query, _filter) do
-    require Ash.Query
-    Ash.Query.filter(query, open?)
-  end
-
-  defp order_kind(query, %{value: "gift_vouchers"}) do
-    require Ash.Query
-    Ash.Query.filter(query, gift_voucher_sale?)
-  end
-
-  defp order_kind(query, %{value: "flowers"}) do
-    require Ash.Query
-    Ash.Query.filter(query, not gift_voucher_sale?)
-  end
-
-  defp search_orders(query, _searchable_columns, search_term) do
-    require Ash.Query
-    term = Ash.CiString.new(search_term)
-    Ash.Query.filter(query, matches?(term: ^term))
-  end
 
   defp fulfillment_method_options do
     Edenflowers.Fulfillment.FulfillmentOption.FulfillmentMethod.values()

@@ -124,7 +124,29 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   def handle_event("push_subscribed", params, socket),
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
 
-  # Only today, so a page left open overnight can't toggle yesterday.
+  def handle_event(event, %{"id" => id}, socket) when event in ["mark_ready", "undo_ready"] do
+    actor = socket.assigns.current_user
+
+    result =
+      with {:ok, order} <- Orders.get_order_for_admin(id, actor: actor) do
+        case event do
+          "mark_ready" -> Orders.mark_order_ready(order, actor: actor)
+          "undo_ready" -> Orders.undo_order_ready(order, actor: actor)
+        end
+      end
+
+    socket = assign_orders(socket)
+
+    case result do
+      {:ok, _order} ->
+        message = if event == "mark_ready", do: ~t"Order marked as ready.", else: ~t"Order returned to To make."
+        {:noreply, put_flash(socket, :success, message)}
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, ~t"The order has changed. Check its status and try again.")}
+    end
+  end
+
   def handle_event("connect_bank", _params, socket) do
     user = socket.assigns.current_user
     state = BankController.sign_state(user)
@@ -139,6 +161,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     end
   end
 
+  # Only today, so a page left open overnight can't toggle yesterday.
   def handle_event("toggle-date", %{"date" => date}, socket) do
     date = Date.from_iso8601!(date)
     %{calendar: calendar, current_user: actor} = socket.assigns
@@ -749,6 +772,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
               {method_heading(method)}
               <.count_badge count={length(orders)} active={true} />
             </h4>
+            <span class="text-base-content/75 text-sm tabular-nums">
+              {~t"#{ready = Enum.count(orders, & &1.can_undo_ready?)} of #{total = length(orders)} ready"}
+            </span>
             <.day_booking_controls :if={index == 0} id={@id} date={@date} booking={@booking} />
           </div>
           <ul class="-mx-4 sm:-mx-5">
@@ -933,7 +959,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     assigns = assign(assigns, :items, Enum.reject(assigns.order.line_items, & &1.is_card))
 
     ~H"""
-    <li>
+    <li id={"day-order-#{@order.id}"}>
       <.link
         navigate={~p"/admin/orders/#{@order.id}"}
         class="block px-4 py-4 transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2 sm:px-5"
@@ -1003,6 +1029,31 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           </.badge>
         </div>
       </.link>
+      <div class="flex flex-wrap items-center justify-between gap-2 px-4 pb-4 sm:px-5">
+        <.fulfillment_status_badge status={@order.fulfillment_status} method={@order.fulfillment_method} />
+        <.button
+          :if={@order.can_mark_ready?}
+          type="button"
+          variant="secondary"
+          size="sm"
+          phx-click="mark_ready"
+          phx-value-id={@order.id}
+          aria-label={~t"Mark order #{@order.order_reference} as ready"}
+        >
+          {~t"Mark as ready"}
+        </.button>
+        <.button
+          :if={@order.can_undo_ready?}
+          type="button"
+          variant="ghost"
+          size="sm"
+          phx-click="undo_ready"
+          phx-value-id={@order.id}
+          aria-label={~t"Undo ready for order #{@order.order_reference}"}
+        >
+          {~t"Undo ready"}
+        </.button>
+      </div>
     </li>
     """
   end

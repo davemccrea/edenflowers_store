@@ -27,6 +27,7 @@ defmodule Edenflowers.Orders.PaymentInstructionTest do
       ]
 
       assert instruction(Order, refs) == expected
+      assert instruction(Order, Keyword.put(refs, :fulfillment_status, :ready)) == expected
       assert instruction(Order, Keyword.put(refs, :fulfillment_status, :fulfilled)) == nil
     end
   end

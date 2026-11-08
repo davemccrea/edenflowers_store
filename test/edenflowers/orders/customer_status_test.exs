@@ -25,6 +25,8 @@ defmodule Edenflowers.Orders.CustomerStatusTest do
   test "names the outcome once an order is fulfilled" do
     assert status(fulfillment_status: :fulfilled) == :delivered
     assert status(fulfillment_status: :fulfilled, fulfillment_method: :pickup) == :collected
+    assert status(fulfillment_status: :fulfilled, fulfillment_date: nil) == :delivered
+    assert status(fulfillment_status: :fulfilled, fulfillment_method: :pickup, fulfillment_date: nil) == :collected
   end
 
   test "looks forward to a fulfillment date still to come" do
@@ -36,7 +38,12 @@ defmodule Edenflowers.Orders.CustomerStatusTest do
 
   test "says today when the order lands today" do
     assert status(fulfillment_date: ShopTime.today()) == :arriving_today
-    assert status(fulfillment_date: ShopTime.today(), fulfillment_method: :pickup) == :ready_today
+    assert status(fulfillment_date: ShopTime.today(), fulfillment_method: :pickup) == :pickup_today
+  end
+
+  test "only an explicitly prepared pickup is ready; deliveries keep readiness internal" do
+    assert status(fulfillment_status: :ready, fulfillment_method: :pickup) == :ready_for_pickup
+    assert status(fulfillment_status: :ready, fulfillment_date: ShopTime.today()) == :arriving_today
   end
 
   test "never claims delivery for a past date Jennie hasn't marked fulfilled" do

@@ -24,6 +24,7 @@ defmodule Edenflowers.Orders do
       define :search_orders, action: :search, args: [:term]
       define :get_last_order_with_customer_phone, action: :last_with_customer_phone, args: [:customer_id]
       define :list_my_orders, action: :mine
+      define :list_orders_for_admin, action: :admin_list
       define :list_orders_due_soon, action: :due_soon
       define :list_orders_to_fulfil, action: :to_fulfil
       define :list_unsettled_orders, action: :unsettled
@@ -71,6 +72,8 @@ defmodule Edenflowers.Orders do
       define :place_unpaid_occurrence, action: :place_unpaid_occurrence
 
       # Admin
+      define :mark_order_ready, action: :mark_ready
+      define :undo_order_ready, action: :undo_ready
       define :mark_order_fulfilled, action: :mark_fulfilled
       define :email_fulfillment_confirmation, action: :email_fulfillment_confirmation
       define :place_custom_order, action: :place_custom

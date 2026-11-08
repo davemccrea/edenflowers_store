@@ -69,6 +69,9 @@ defmodule Edenflowers.Orders.Order.Admin do
     :cancelled?,
     :editable?,
     :fulfillable?,
+    :can_mark_ready?,
+    :can_undo_ready?,
+    :pickup_message_sendable?,
     :pass_it_on_shown?,
     :pass_it_on_card_changeable?,
     :pass_it_on_card_removable?,
@@ -101,8 +104,7 @@ defmodule Edenflowers.Orders.Order.Admin do
 
   oban do
     triggers do
-      # An hour before an order's time or window starts, while it is still to
-      # be made. Only within that hour, so orders long past never get one.
+      # Only within the hour before handover, so orders long past never get one.
       trigger :remind_shop do
         action :remind_shop
         queue :default
@@ -114,7 +116,7 @@ defmodule Edenflowers.Orders.Order.Admin do
         default_actor system_actor()
 
         where expr(
-                state == :placed and fulfillment_status == :pending and is_nil(shop_reminded_at) and
+                fulfillable? and is_nil(shop_reminded_at) and
                   fulfillment_starts_at > now() and fulfillment_starts_at <= datetime_add(now(), 1, :hour)
               )
       end
@@ -123,13 +125,10 @@ defmodule Edenflowers.Orders.Order.Admin do
 
   actions do
     read :due_soon do
-      description "The admin Overview's list: placed orders still to make up to 8 days ahead, overdue included, " <>
+      description "The admin Overview's list: unfinished placed orders up to 8 days ahead, overdue included, " <>
                     "by date, time and distance."
 
-      filter expr(
-               state == :placed and fulfillment_status == :pending and
-                 fulfillment_date <= date_add(helsinki_today(), 8, :day)
-             )
+      filter expr(fulfillable? and fulfillment_date <= date_add(helsinki_today(), 8, :day))
 
       prepare build(
                 sort: [fulfillment_date: :asc, fulfillment_time_start: :asc_nils_last, distance: :asc_nils_last],
@@ -151,6 +150,8 @@ defmodule Edenflowers.Orders.Order.Admin do
                   :recipient_name,
                   :card_message,
                   :missing_delivery_phone?,
+                  :can_mark_ready?,
+                  :can_undo_ready?,
                   :line_items
                 ]
               )
@@ -164,7 +165,36 @@ defmodule Edenflowers.Orders.Order.Admin do
 
       pagination offset?: true, keyset?: true, countable: true, required?: false
 
+      # "true" keeps existing Still to do links working.
+      argument :show, :string, allow_nil?: false, default: "all"
+      argument :kind, :string, allow_nil?: false, default: "all"
+      argument :term, :ci_string
+
+      validate argument_in(:show, ["all", "true", "unfinished", "pending", "ready", "gift"])
+      validate argument_in(:kind, ["all", "flowers", "gift_vouchers"])
+
       filter expr(state == :placed)
+
+      filter expr(
+               cond do
+                 ^arg(:show) == "true" -> open?
+                 ^arg(:show) == "unfinished" -> fulfillable?
+                 ^arg(:show) == "pending" -> can_mark_ready?
+                 ^arg(:show) == "ready" -> can_undo_ready?
+                 ^arg(:show) == "gift" -> gift
+                 true -> true
+               end
+             )
+
+      filter expr(
+               cond do
+                 ^arg(:kind) == "flowers" -> not gift_voucher_sale?
+                 ^arg(:kind) == "gift_vouchers" -> gift_voucher_sale?
+                 true -> true
+               end
+             )
+
+      prepare build(filter: expr(matches?(term: ^arg(:term)))), where: [present(:term)]
 
       prepare build(
                 sort: [ordered_at: :desc],
@@ -207,9 +237,9 @@ defmodule Edenflowers.Orders.Order.Admin do
     end
 
     read :to_fulfil do
-      description "Placed orders still to make, paid or not, soonest first."
+      description "Placed orders still to deliver or collect, prepared or not, paid or not, soonest first."
       # Unpaid custom orders still have to be made (ADR 0001).
-      filter expr(state == :placed and fulfillment_status == :pending)
+      filter expr(fulfillable?)
       prepare build(sort: [fulfillment_date: :asc, ordered_at: :asc, id: :asc], load: [:payment_status])
     end
 
@@ -516,6 +546,26 @@ defmodule Edenflowers.Orders.Order.Admin do
       require_atomic? false
     end
 
+    update :mark_ready do
+      description "Jennie marks the whole order prepared. No customer notification is sent."
+      accept []
+      validate {Holds, calculation: :can_mark_ready?, message: "is no longer waiting to be made"}
+      change filter expr(can_mark_ready?)
+      change set_attribute(:fulfillment_status, :ready)
+      change set_attribute(:ready_at, &DateTime.utc_now/0)
+      change load(@admin_show_load)
+    end
+
+    update :undo_ready do
+      description "Returns a prepared order to To make, without changing its payment or sending a message."
+      accept []
+      validate {Holds, calculation: :can_undo_ready?, message: "is no longer ready"}
+      change filter expr(can_undo_ready?)
+      change set_attribute(:fulfillment_status, :pending)
+      change set_attribute(:ready_at, nil)
+      change load(@admin_show_load)
+    end
+
     update :mark_fulfilled do
       description "Jennie marks an open order delivered or collected. A delivery with an email queues the " <>
                     "fulfillment email, with the delivery photo when chosen, unless `email_customer?` is false."
@@ -530,6 +580,7 @@ defmodule Edenflowers.Orders.Order.Admin do
         description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
       validate {Holds, calculation: :fulfillable?, message: "is no longer open"}
+      change filter expr(fulfillable?)
       change set_attribute(:fulfillment_status, :fulfilled)
       change set_attribute(:email_delivery_photo, false), where: [argument_equals(:email_customer?, false)]
 
@@ -553,8 +604,8 @@ defmodule Edenflowers.Orders.Order.Admin do
     end
 
     update :remind_shop do
-      description "Run by its job an hour before a placed order's time or window starts, while it is still to " <>
-                    "make: notifies Jennie by email and push, once."
+      description "Run by its job an hour before an unfinished order's time or window starts, prepared or " <>
+                    "not: notifies Jennie by email and push, once."
 
       accept []
       change set_attribute(:shop_reminded_at, &DateTime.utc_now/0)

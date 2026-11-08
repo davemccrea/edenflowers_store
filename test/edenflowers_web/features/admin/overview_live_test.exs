@@ -21,6 +21,23 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       )
     end
 
+    test "prepares an order in place, keeps it visible and allows undo", %{conn: conn, admin: admin} do
+      order = open_order("To prepare", :delivery, 0)
+      {:ok, view, _html} = live(conn, ~p"/admin")
+      row = "#day-order-#{order.id}"
+      assert has_element?(view, "#day-orders-delivery", "0 of 1 ready")
+
+      view |> element("#{row} button", "Mark as ready") |> render_click()
+      assert Edenflowers.Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :ready
+      assert has_element?(view, row, "Ready for delivery")
+      assert has_element?(view, "#day-orders-delivery", "1 of 1 ready")
+      assert has_element?(view, "#{row} a", "To prepare")
+
+      view |> element("#{row} button", "Undo ready") |> render_click()
+      assert Edenflowers.Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :pending
+      assert has_element?(view, "#{row} button", "Mark as ready")
+    end
+
     test "lists today's orders by method, and only today's", %{conn: conn} do
       open_order("Today Delivery", :delivery, 0)
       open_order("Today Pickup", :pickup, 0)

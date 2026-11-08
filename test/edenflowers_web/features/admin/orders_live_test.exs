@@ -52,6 +52,30 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     refute has_element?(view, "[data-item-id]", "For Myself")
   end
 
+  test "filters prepared and unprepared orders without treating ready as done", %{conn: conn} do
+    pending = placed_order(customer_name: "Still making", paid: true)
+    ready = placed_order(customer_name: "Prepared", fulfillment_status: :ready, paid: true)
+    done = placed_order(customer_name: "Done", fulfillment_status: :fulfilled, paid: true)
+    ids = [pending.id, ready.id, done.id]
+
+    for {filter, expected} <- [
+          {"pending", [pending.id]},
+          {"ready", [ready.id]},
+          {"unfinished", [pending.id, ready.id]},
+          {"true", [pending.id, ready.id]}
+        ] do
+      {:ok, view, _html} = live(conn, ~p"/admin/orders?open=#{filter}")
+
+      for id <- ids do
+        assert has_element?(view, ~s|[data-item-id="#{id}"]|) == id in expected
+      end
+
+      if ready.id in expected do
+        assert has_element?(view, ~s|[data-item-id="#{ready.id}"]|, "Ready for pickup")
+      end
+    end
+  end
+
   test "opens on the orders still to make or still to be paid for", %{conn: conn} do
     placed_order(customer_name: "To Make", paid: true, fulfillment_status: :pending)
     placed_order(customer_name: "Already Done", paid: true, fulfillment_status: :fulfilled)

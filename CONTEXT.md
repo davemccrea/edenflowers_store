@@ -10,6 +10,10 @@ The storefront and back office for a single-florist flower shop in Vaasa: custom
 An order the shop has committed to make. An Online Order is placed when its payment succeeds; a Custom Order is placed when Jennie saves it, and may still be awaiting payment.
 _Avoid_: Confirmed, submitted
 
+**Ready**:
+A placed order Jennie has finished preparing, including its card and add-ons, waiting to be delivered or collected. Marking it Ready does not mean paid, handed over or that anyone was notified. Jennie can undo Ready before handover; she does so before editing it. Orders may be delivered or collected without first being marked Ready. Ready orders still get timed handover reminders, and marking one Ready does not shorten the Customer's Change deadline.
+_Avoid_: Fulfilled, delivered, collected (those mean handed over)
+
 **Cancelled**:
 A placed order, or a confirmed course booking, that will not go ahead. When Jennie cancels, she chooses how much to keep as a cancellation charge, from nothing up to its Total due, whether or not anything was paid, and refunds what was paid above it: card payments go back through Stripe at once, and money paid in person is left as a Balance for her to hand back. Any of the charge not yet paid is left as a Balance to collect, to settle with the customer; cancelling never creates an invoice. A course booking's charge starts at its course's cancellation terms, an order's at nothing. The customer is emailed unless she unticks it, as she rewrites the email if she likes; her reason for cancelling is for her own record. Customers cancel a course booking by asking Jennie. A Customer can cancel their own Online Order from their account until 3 days before its fulfillment date (the Change deadline), which refunds everything they paid by card; orders closer than that, or paid outside Stripe, go through Jennie.
 _Avoid_: Void, deleted, abandoned (an abandoned order is a cart that was never placed)

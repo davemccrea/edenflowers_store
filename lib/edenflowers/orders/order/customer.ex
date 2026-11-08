@@ -67,11 +67,11 @@ defmodule Edenflowers.Orders.Order.Customer do
                   payment_terms == :invoice ->
                     :invoice
 
-                  payment_terms == :on_fulfillment and fulfillment_status == :pending and
+                  payment_terms == :on_fulfillment and fulfillment_status in [:pending, :ready] and
                       fulfillment_method == :delivery ->
                     :on_delivery
 
-                  payment_terms == :on_fulfillment and fulfillment_status == :pending ->
+                  payment_terms == :on_fulfillment and fulfillment_status in [:pending, :ready] ->
                     :at_collection
 
                   true ->

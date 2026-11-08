@@ -69,6 +69,15 @@ defmodule EdenflowersWeb.Account.AccountLiveTest do
   end
 
   describe "orders" do
+    test "distinguishes today's scheduled pickup from an explicitly prepared order", %{conn: conn, user: user} do
+      placed_order(user_id: user.id, fulfillment_date: ShopTime.today())
+      placed_order(user_id: user.id, fulfillment_date: ShopTime.today(), fulfillment_status: :ready)
+
+      {:ok, view, _html} = live(conn, ~p"/account")
+      assert has_element?(view, "[data-testid=upcoming]", "Pickup today")
+      assert has_element?(view, "[data-testid=upcoming]", "Ready for pickup")
+    end
+
     test "cancels an order before the cut-off and refunds it", %{conn: conn, user: user} do
       order = placed_order(user_id: user.id, payment_intent_id: nil, fulfillment_date: Date.add(ShopTime.today(), 10))
       generate(payment(order_id: order.id, amount: order.grand_total, payment_intent_id: "pi_account_cancel"))
