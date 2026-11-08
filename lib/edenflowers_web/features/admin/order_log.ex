@@ -98,6 +98,8 @@ defmodule EdenflowersWeb.Admin.OrderLog do
   defp title(%{version_action_name: :update_business_details}), do: ~t"Business details changed"
   defp title(%{version_action_name: :cancel}), do: ~t"Cancelled"
   defp title(%{version_action_name: :cancel_by_customer}), do: ~t"Cancelled by the customer"
+  defp title(%{version_action_name: :mark_ready}), do: ~t"Marked ready"
+  defp title(%{version_action_name: :undo_ready}), do: ~t"Returned to To make"
   defp title(%{version_action_name: :mark_fulfilled}), do: ~t"Fulfilled"
   defp title(%{version_action_name: :open_payment_link}), do: ~t"Payment link created"
   defp title(%{version_action_name: :send_order_details_email}), do: ~t"Order details emailed"

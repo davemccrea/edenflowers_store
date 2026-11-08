@@ -234,6 +234,27 @@ the exact wording remain outstanding. Domain: `emails`; context: empty.
 | `Just a friendly reminder that it was due on %{date}, and %{amount} of it is still to pay. Thank you for what you've paid so far.` | `Ystävällinen muistutus: lasku erääntyi %{date}, ja siitä on vielä maksamatta %{amount}. Kiitos jo maksamastasi osuudesta.` |
 | `Future orders are on hold until this one is paid. Please also update your saved card in your account:` | `Seuraavia tilauksia ei käsitellä ennen kuin tämä tilaus on maksettu. Päivitä myös tilillesi tallennettu maksukortti:` |
 
+## Order readiness — 8 November 2026
+
+AI wording review by OpenAI coding agent, 2026-11-08; native review and Jennie's
+Swedish editorial approval are still outstanding. No email copy changed.
+
+- `sv` / `storefront` / no context: `Pickup today` → `Avhämtning i dag`;
+  `Ready for pickup` → `Klar att hämtas`; `Pickup on %{date}` → `Avhämtning %{date}`.
+- `fi` / `storefront` / no context: `Pickup today` → `Nouto tänään`;
+  `Ready for pickup` → `Valmis noudettavaksi`; `Pickup on %{date}` → `Nouto %{date}`.
+  Scheduled pickup wording is also used for past dates: only an explicitly
+  prepared order is described as ready.
+- `sv`, `fi` / `admin` / no context: review the new `Ready`, `Ready for delivery`,
+  `Ready for pickup`, `Mark as ready`, `Undo ready`, `All unfinished`,
+  `%{ready} of %{total} ready`, `Marked ready`, `Marked ready %{at}`,
+  `Order marked as ready.`, `Order returned to To make.`, `Returned to To make`,
+  `Mark order %{order_order_reference} as ready`,
+  `Undo ready for order %{order_order_reference}`, and
+  `The order has changed. Check its status and try again.` entries in the
+  accompanying catalogue diff. Ready means the whole order is prepared, not
+  delivered, collected, paid or that a message was sent. This follows up S05.
+
 ## Remaining coverage
 
 - Cinder dependency alignment added 15 untranslated admin-only entries per

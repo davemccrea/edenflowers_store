@@ -1,5 +1,5 @@
 defmodule Edenflowers.Orders.Order.Types.FulfillmentStatus do
-  @moduledoc "The pending, fulfilled, and cancelled fulfillment states of an order."
+  @moduledoc "The to-make, ready, fulfilled, and cancelled fulfillment states of an order."
 
-  use Ash.Type.Enum, values: [:pending, :fulfilled, :cancelled]
+  use Ash.Type.Enum, values: [:pending, :ready, :fulfilled, :cancelled]
 end

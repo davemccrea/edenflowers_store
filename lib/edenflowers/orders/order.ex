@@ -150,6 +150,8 @@ defmodule Edenflowers.Orders.Order do
       :cancel,
       :cancel_by_customer,
       :mark_fulfilled,
+      :mark_ready,
+      :undo_ready,
       :open_payment_link,
       :send_order_details_email,
       :send_order_updated_email,
@@ -207,6 +209,8 @@ defmodule Edenflowers.Orders.Order do
     bypass actor_attribute_equals(:admin, true) do
       authorize_if action([
                      :mark_fulfilled,
+                     :mark_ready,
+                     :undo_ready,
                      :email_fulfillment_confirmation,
                      :sales_summary,
                      :place_custom,
@@ -298,6 +302,7 @@ defmodule Edenflowers.Orders.Order do
     attribute :ordered_at, :utc_datetime
 
     attribute :fulfillment_status, __MODULE__.Types.FulfillmentStatus, allow_nil?: false, default: :pending
+    attribute :ready_at, :utc_datetime
     attribute :cancelled_at, :utc_datetime
     # Why Jennie cancelled, for her own record in the log.
     attribute :cancellation_reason, :string
@@ -597,7 +602,7 @@ defmodule Edenflowers.Orders.Order do
               :boolean,
               expr(
                 state == :placed and
-                  (fulfillment_status == :pending or (gift_voucher_sale? and fulfillment_status == :fulfilled)) and
+                  (fulfillment_status in [:pending, :ready] or (gift_voucher_sale? and fulfillment_status == :fulfilled)) and
                   not gift_voucher_spent?
               ) do
       description "Whether Jennie can cancel it now: placed and not yet fulfilled or cancelled. A Gift voucher " <>
@@ -619,7 +624,7 @@ defmodule Edenflowers.Orders.Order do
 
     calculate :voucher_card_to_hand_over?,
               :boolean,
-              expr(collect_voucher_card and fulfillment_status == :pending and state == :placed) do
+              expr(collect_voucher_card and fulfillment_status in [:pending, :ready] and state == :placed) do
       description "A Gift voucher sale whose buyer collects a gift card at the shop and hasn't yet: Jennie " <>
                     "writes the recipient and code on a ready-printed card, and marks the order fulfilled when " <>
                     "it's collected. The admin shows a badge."
@@ -637,8 +642,34 @@ defmodule Edenflowers.Orders.Order do
                     "page and the voucher email both name it."
     end
 
-    calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
-      description "Whether Jennie can mark it fulfilled: placed and still to make."
+    calculate :can_mark_ready?, :boolean, expr(state == :placed and fulfillment_status == :pending) do
+      description "Whether Jennie can mark the whole order prepared, including its card and add-ons."
+    end
+
+    calculate :can_undo_ready?, :boolean, expr(state == :placed and fulfillment_status == :ready) do
+      description "Whether Jennie can return a prepared order to To make, before editing or correcting a mistake."
+    end
+
+    calculate :pickup_message_sendable?,
+              :boolean,
+              expr(
+                state == :placed and fulfillment_status == :ready and fulfillment_method == :pickup and
+                  not is_nil(customer_phone_number)
+              ) do
+      description "Whether Jennie can offer a ready-for-pickup message: prepared, not collected, with a phone number."
+    end
+
+    calculate :pickup_message_pending?,
+              :boolean,
+              expr(
+                state == :placed and fulfillment_status == :pending and fulfillment_method == :pickup and
+                  not is_nil(customer_phone_number)
+              ) do
+      description "Whether an unprepared pickup has a phone number for Jennie's ready message."
+    end
+
+    calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status in [:pending, :ready]) do
+      description "Whether Jennie can mark it delivered or collected, with or without marking it ready first."
     end
 
     calculate :pass_it_on_shown?,
@@ -699,23 +730,25 @@ defmodule Edenflowers.Orders.Order do
     calculate :open?,
               :boolean,
               expr(
-                fulfillment_status == :pending or
+                fulfillment_status in [:pending, :ready] or
                   (fulfillment_status == :fulfilled and payment_status == :pending)
               ) do
-      description "Still to make, or made but still to be paid for. The admin orders table's Open filter."
+      description "Not yet handed over, or handed over but still to be paid for. The admin orders table's Open filter."
     end
 
-    calculate :overdue?, :boolean, expr(fulfillment_status == :pending and fulfillment_date < helsinki_today()) do
-      description "Still to make, though its fulfillment date has passed in Helsinki time. Flagged in the admin."
+    calculate :overdue?,
+              :boolean,
+              expr(fulfillment_status in [:pending, :ready] and fulfillment_date < helsinki_today()) do
+      description "Not yet delivered or collected, though its fulfillment date has passed in Helsinki time."
     end
 
     calculate :upcoming?,
               :boolean,
               expr(
-                fulfillment_status == :pending and customer_status != :refunded and
+                fulfillment_status in [:pending, :ready] and customer_status != :refunded and
                   (is_nil(fulfillment_date) or fulfillment_date >= helsinki_today())
               ) do
-      description "Whether the Customer's account lists it under upcoming rather than past: still to make, " <>
+      description "Whether the Customer's account lists it under upcoming rather than past: not yet handed over, " <>
                     "dated today or later in Helsinki time, or undated."
     end
 
@@ -725,10 +758,11 @@ defmodule Edenflowers.Orders.Order do
                 cond do
                   payment_status == :refunded -> :refunded
                   fulfillment_status == :cancelled -> :cancelled
-                  is_nil(fulfillment_date) -> :confirmed
+                  fulfillment_status == :ready and fulfillment_method == :pickup -> :ready_for_pickup
                   fulfillment_status == :fulfilled and fulfillment_method == :pickup -> :collected
                   fulfillment_status == :fulfilled -> :delivered
-                  fulfillment_date == helsinki_today() and fulfillment_method == :pickup -> :ready_today
+                  is_nil(fulfillment_date) -> :confirmed
+                  fulfillment_date == helsinki_today() and fulfillment_method == :pickup -> :pickup_today
                   fulfillment_date == helsinki_today() -> :arriving_today
                   fulfillment_date > helsinki_today() and fulfillment_method == :pickup -> :for_pickup
                   fulfillment_date > helsinki_today() -> :arriving
@@ -839,11 +873,11 @@ defmodule Edenflowers.Orders.Order do
     calculate :cancellable_by_customer?,
               :boolean,
               expr(
-                state == :placed and fulfillment_status == :pending and origin == :online and
+                fulfillable? and origin == :online and
                   fulfillment_date > date_add(helsinki_today(), ^Subscription.cutoff_days(), :day) and
                   not exists(payments, method != :stripe)
               ) do
-      description "Whether the Customer can cancel this Online Order from their account: still to make, on or " <>
+      description "Whether the Customer can cancel this Online Order from their account: not yet handed over, on or " <>
                     "before its Change deadline, and paid only through Stripe so the refund can go back by card. " <>
                     "Jennie has bought flowers for anything closer."
     end

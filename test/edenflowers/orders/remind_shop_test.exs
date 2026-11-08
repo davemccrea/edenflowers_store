@@ -23,6 +23,15 @@ defmodule Edenflowers.Orders.RemindShopTest do
     end)
   end
 
+  test "preparing an order does not suppress its handover reminder" do
+    order = starting_in(30)
+    ready = Edenflowers.Orders.mark_order_ready!(order, actor: generate(admin_user()))
+
+    assert ready.id in scheduled_reminders()
+    assert {:ok, _order} = perform_job(RemindShop, %{"primary_key" => %{"id" => ready.id}})
+    assert_enqueued(worker: EmailShop, args: %{"notice" => "reminder", "order_id" => ready.id})
+  end
+
   test "no reminder for an order outside the hour, without a time, done, or already reminded" do
     orders = [
       starting_in(90),

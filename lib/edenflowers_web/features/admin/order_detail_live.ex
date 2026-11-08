@@ -85,9 +85,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                   <span class="sr-only">{~t"Payment:"}</span>
                   <.payment_status_badge status={@order.payment_status} />
                 </span>
-                <span :if={@order.fulfillment_status != :pending}>
+                <span>
                   <span class="sr-only">{~t"Fulfillment:"}</span>
-                  <.fulfillment_status_badge status={@order.fulfillment_status} />
+                  <.fulfillment_status_badge status={@order.fulfillment_status} method={@order.fulfillment_method} />
                 </span>
                 <.gift_badge
                   :if={@order.gift && !@order.gift_voucher_sale?}
@@ -118,10 +118,28 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
           </:subtitle>
           <:actions>
             <.button
+              :if={@order.can_mark_ready?}
+              type="button"
+              phx-click="mark_ready"
+              variant="primary"
+              size="sm"
+            >
+              {~t"Mark as ready"}
+            </.button>
+            <.button
+              :if={@order.can_undo_ready?}
+              type="button"
+              phx-click="undo_ready"
+              variant="ghost"
+              size="sm"
+            >
+              {~t"Undo ready"}
+            </.button>
+            <.button
               :if={@order.fulfillable?}
               type="button"
               phx-click="confirm_fulfillment"
-              variant="primary"
+              variant={if @order.can_mark_ready?, do: "secondary", else: "primary"}
               size="sm"
             >
               {if @order.fulfillment_method == :delivery, do: ~t"Mark as delivered", else: ~t"Mark as collected"}
@@ -184,6 +202,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
             />
 
             <.widget :if={!@order.gift_voucher_sale?} id="order-fulfillment-summary" title={~t"Fulfillment"}>
+              <p
+                :if={@order.can_undo_ready? && @order.ready_at}
+                id="order-ready-at"
+                class="text-base-content/75 mb-4 text-sm"
+              >
+                {~t"Marked ready #{at = Format.datetime(@order.ready_at, @locale)}"}
+              </p>
+              <div :if={@pickup_message_urls} id="order-ready-messages" class="mb-4">
+                <.message_links
+                  urls={@pickup_message_urls}
+                  sms_label={~t"Text ready for pickup"}
+                  whatsapp_label={~t"WhatsApp ready for pickup"}
+                />
+              </div>
               <div class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
                 <.summary_fact label={~t"Date"}>
                   {Format.weekday_day_month(@order.fulfillment_date, @locale)}
@@ -419,13 +451,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
                 <:contact :if={present?(@order.customer_instagram)}>
                   <.instagram_link handle={@order.customer_instagram} />
                 </:contact>
-                <:contact :if={@pickup_message_urls}>
-                  <.message_links
-                    urls={@pickup_message_urls}
-                    sms_label={~t"Text ready for pickup"}
-                    whatsapp_label={~t"WhatsApp ready for pickup"}
-                  />
-                </:contact>
                 <:contact :if={@order.user_id}>
                   <.link
                     id="order-customer-link"
@@ -494,6 +519,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   @impl true
+  def handle_event("mark_ready", _params, socket) do
+    result = Orders.mark_order_ready(socket.assigns.order, actor: socket.assigns.current_user)
+    {:noreply, readiness_result(socket, result, ~t"Order marked as ready.")}
+  end
+
+  def handle_event("undo_ready", _params, socket) do
+    result = Orders.undo_order_ready(socket.assigns.order, actor: socket.assigns.current_user)
+    {:noreply, readiness_result(socket, result, ~t"Order returned to To make.")}
+  end
+
   def handle_event("confirm_fulfillment", _params, socket) do
     # "customer_home" starts as the unanswered radio posts it, so ticking
     # the email box first isn't taken for an answer.
@@ -837,6 +872,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     OrderLog.entries(order.paper_trail_versions, payments, locale, order.gift_voucher_sale?)
   end
 
+  defp readiness_result(socket, {:ok, order}, message) do
+    socket |> assign_order(reload(order, socket)) |> put_flash(:success, message)
+  end
+
+  defp readiness_result(socket, {:error, _error}, _message) do
+    socket
+    |> assign_order(reload(socket.assigns.order, socket))
+    |> put_flash(:error, ~t"The order has changed. Check its status and try again.")
+  end
+
   defp reload(order, socket), do: Orders.get_order_for_admin!(order.id, actor: socket.assigns.current_user)
 
   # LinkPassItOnCard words its own errors about the card; the rest are the order's state.
@@ -889,7 +934,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
     end
   end
 
-  defp pickup_message_urls(%{fulfillment_method: :pickup, fulfillment_status: :pending} = order) do
+  defp pickup_message_urls(%{pickup_message_sendable?: true} = order) do
     message_urls(order.customer_phone_number, pickup_message(order))
   end
 

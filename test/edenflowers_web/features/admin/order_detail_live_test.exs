@@ -12,6 +12,28 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   setup :log_in_admin
 
+  test "marks an order ready and undoes it without losing the handover action", %{conn: conn, admin: admin} do
+    order = placed_order(customer_phone_number: "040 123 4567")
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    refute has_element?(view, "#order-ready-messages")
+    assert has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|, "Mark as collected")
+
+    view |> element("button", "Mark as ready") |> render_click()
+    assert Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :ready
+    assert has_element?(view, "#order-status", "Ready for pickup")
+    assert has_element?(view, "#order-ready-at", "Marked ready")
+    assert has_element?(view, "#order-ready-messages", "Text ready for pickup")
+    assert has_element?(view, "#order-log", "Marked ready")
+    assert has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|, "Mark as collected")
+    refute has_element?(view, ~s|a[href="/admin/orders/#{order.id}/edit"]|)
+
+    view |> element("button", "Undo ready") |> render_click()
+    assert Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :pending
+    assert has_element?(view, "button", "Mark as ready")
+    refute has_element?(view, "#order-ready-messages")
+    assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}/edit"]|)
+  end
+
   test "warns when a delivery has no phone to call", %{conn: conn} do
     missing = placed_order(fulfillment_method: :delivery, gift: true, recipient_name: "Grandma")
     phoned = placed_order(fulfillment_method: :delivery, customer_phone_number: "+358401234567")
@@ -792,16 +814,22 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "offers ready-for-pickup message links in the customer's language", %{conn: conn} do
-    order = placed_order(order_reference: "DETAIL", customer_phone_number: "040 123 4567", locale: "sv-FI")
+    order =
+      placed_order(
+        order_reference: "DETAIL",
+        customer_phone_number: "040 123 4567",
+        locale: "sv-FI",
+        fulfillment_status: :ready
+      )
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
     body = "Hej%20Ada%2C%20din%20best%C3%A4llning%20DETAIL"
-    assert has_element?(view, ~s|#order-customer a[href^="sms:+358401234567?&body=#{body}"]|)
-    assert has_element?(view, ~s|#order-customer a[href^="https://wa.me/358401234567?text=#{body}"]|)
+    assert has_element?(view, ~s|#order-ready-messages a[href^="sms:+358401234567?&body=#{body}"]|)
+    assert has_element?(view, ~s|#order-ready-messages a[href^="https://wa.me/358401234567?text=#{body}"]|)
   end
 
-  test "omits ready-for-pickup links for deliveries and fulfilled pickups", %{conn: conn} do
+  test "omits ready-for-pickup links for deliveries, unprepared and fulfilled pickups", %{conn: conn} do
     delivery =
       placed_order(
         customer_phone_number: "040 123 4567",
@@ -816,7 +844,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
         fulfillment_status: :fulfilled
       )
 
-    for order <- [delivery, fulfilled] do
+    for order <- [delivery, fulfilled, placed_order(customer_phone_number: "040 123 4567")] do
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       refute has_element?(view, ~s|a[href^="sms:"]|)
     end

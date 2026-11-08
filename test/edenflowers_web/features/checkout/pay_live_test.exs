@@ -47,7 +47,13 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
 
     assert has_element?(view, "h1", "Pay for your order")
     assert has_element?(view, "hgroup p", "Order #{order.order_reference}")
-    assert has_element?(view, "[data-testid=pay-fulfillment]", "Ready to collect tomorrow")
+    assert has_element?(view, "[data-testid=pay-fulfillment]", "Pickup on")
+
+    assert has_element?(
+             view,
+             "[data-testid=pay-fulfillment]",
+             Edenflowers.Format.weekday_date(order.fulfillment_date, order.locale)
+           )
 
     assert has_element?(
              view,
@@ -61,6 +67,48 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     refute render(view) =~ "Paid so far"
     assert has_element?(view, ~s|#pay-form[data-amount="8500"]|)
     refute render(view) =~ "lilies"
+  end
+
+  test "distinguishes a pickup scheduled today from one Jennie has prepared", %{conn: conn, order: order, admin: admin} do
+    order = Ash.Seed.update!(order, %{fulfillment_date: Edenflowers.ShopTime.today()})
+    {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
+    assert has_element?(view, "[data-testid=pay-fulfillment]", "Pickup today")
+
+    Orders.mark_order_ready!(order, actor: admin)
+    {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
+    assert has_element?(view, "[data-testid=pay-fulfillment]", "Ready for pickup")
+    assert has_element?(view, "#pay-form")
+  end
+
+  test "a past pickup date does not claim an unprepared order is ready", %{conn: conn, order: order} do
+    order = Ash.Seed.update!(order, %{fulfillment_date: Date.add(Edenflowers.ShopTime.today(), -1)})
+    {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
+
+    assert has_element?(view, "[data-testid=pay-fulfillment]", "Pickup on")
+    refute has_element?(view, "[data-testid=pay-fulfillment]", "Ready")
+  end
+
+  test "delivery dates are presented from the domain's customer status", %{conn: conn, order: order} do
+    for days <- [-1, 0, 1] do
+      order =
+        order
+        |> Ash.reload!(authorize?: false)
+        |> Ash.Seed.update!(%{
+          fulfillment_method: :delivery,
+          delivery_address: "Myrvägen 1",
+          fulfillment_date: Date.add(Edenflowers.ShopTime.today(), days)
+        })
+
+      {:ok, view, _html} = live(conn, ~p"/pay/orders/#{order.payment_link_token}")
+
+      assert has_element?(
+               view,
+               "[data-testid=pay-fulfillment]",
+               if(days == 0, do: "Delivery today", else: "Delivery on")
+             )
+
+      assert has_element?(view, "[data-testid=pay-fulfillment]", order.delivery_address)
+    end
   end
 
   test "creates the PaymentIntent when the customer pays", %{conn: conn, order: order} do
@@ -189,7 +237,7 @@ defmodule EdenflowersWeb.Checkout.PayLiveTest do
     assert has_element?(view, "h1[data-testid=pay-paid]", "Thank you, Anna.")
     refute render(view) =~ "is paid."
     assert has_element?(view, "hgroup p", "Order #{order.order_reference}")
-    assert has_element?(view, "[data-testid=pay-fulfillment]", "Ready to collect")
+    assert has_element?(view, "[data-testid=pay-fulfillment]", "Pickup on")
     assert has_element?(view, "dt", "Total paid")
     refute has_element?(view, "dl > div:nth-child(3)")
     refute render(view) =~ "Paid so far"

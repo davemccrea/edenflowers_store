@@ -69,11 +69,23 @@ defmodule Edenflowers.Orders.CancelByCustomerTest do
     )
   end
 
-  test "is closed 2 days or fewer before the fulfillment date", %{customer: customer} do
-    order = paid_order(customer, fulfillment_date: days_ahead(2))
+  test "preparing early does not shorten the customer's change deadline", %{customer: customer} do
+    order = paid_order(customer, fulfillment_date: days_ahead(10))
+    ready = Orders.mark_order_ready!(order, actor: generate(admin_user()))
+    expect_refund(order)
 
-    assert {:error, %Ash.Error.Invalid{}} = Orders.cancel_order_by_customer(order, actor: customer)
-    assert Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_status == :pending
+    assert {:ok, cancelled} = Orders.cancel_order_by_customer(ready, actor: customer)
+    assert cancelled.fulfillment_status == :cancelled
+    assert Decimal.equal?(Ash.load!(cancelled, :amount_paid, authorize?: false).amount_paid, 0)
+  end
+
+  test "is closed 2 days or fewer before the fulfillment date, prepared or not", %{customer: customer} do
+    for status <- [:pending, :ready] do
+      order = paid_order(customer, fulfillment_date: days_ahead(2), fulfillment_status: status)
+
+      assert {:error, %Ash.Error.Invalid{}} = Orders.cancel_order_by_customer(order, actor: customer)
+      assert Orders.get_order_by_id!(order.id, authorize?: false).fulfillment_status == status
+    end
   end
 
   test "refuses an Occurrence, which is created past the change deadline", %{customer: customer} do

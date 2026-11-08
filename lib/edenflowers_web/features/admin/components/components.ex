@@ -392,10 +392,21 @@ defmodule EdenflowersWeb.Admin.Components do
 
   attr :status, :atom, required: true
 
-  @doc "Fulfillment-status pill for an order: fulfilled reads as success, cancelled as error, pending stays neutral."
+  attr :method, :atom, default: nil
+
+  @doc "Fulfillment-status pill, naming what a ready order is waiting for when its method is known."
   def fulfillment_status_badge(assigns) do
     ~H"""
-    <.badge tone={fulfillment_status_tone(@status)}>{fulfillment_status_label(@status)}</.badge>
+    <.badge tone={fulfillment_status_tone(@status)}>
+      <%= cond do %>
+        <% @status == :ready and @method == :pickup -> %>
+          {~t"Ready for pickup"}
+        <% @status == :ready and @method == :delivery -> %>
+          {~t"Ready for delivery"}
+        <% true -> %>
+          {fulfillment_status_label(@status)}
+      <% end %>
+    </.badge>
     """
   end
 
@@ -931,11 +942,13 @@ defmodule EdenflowersWeb.Admin.Components do
   def payment_status_label(value), do: to_string(value)
 
   defp fulfillment_status_tone(:fulfilled), do: :success
+  defp fulfillment_status_tone(:ready), do: :attention
   defp fulfillment_status_tone(:cancelled), do: :error
   defp fulfillment_status_tone(_), do: :neutral
 
   defp fulfillment_status_label(:fulfilled), do: ~t"Fulfilled"
-  defp fulfillment_status_label(:pending), do: ~t"Pending"
+  defp fulfillment_status_label(:pending), do: ~t"To make"
+  defp fulfillment_status_label(:ready), do: ~t"Ready"
   defp fulfillment_status_label(:cancelled), do: ~t"Cancelled"
   defp fulfillment_status_label(value), do: to_string(value)
 
