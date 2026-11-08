@@ -890,7 +890,7 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "son@example.com"}]
-        assert email.subject =~ "A reminder about your order for"
+        assert email.subject =~ "Payment reminder for your order for"
         assert email.text_body =~ "/pay/orders/#{order.payment_link_token}"
       end)
 
@@ -978,15 +978,16 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert Decimal.equal?(order.balance, "-30.00")
     end
 
-    test "asks before fulfilling an unpaid order", ctx do
+    test "asks before fulfilling an unpaid ready order", ctx do
       order = place_custom_order(ctx)
 
       {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/#{order.id}")
 
+      view |> element("button", "Mark as ready") |> render_click()
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
 
       assert has_element?(view, "#confirm-fulfillment", "This order is still unpaid.")
-      assert Orders.get_order_for_admin!(order.id, actor: ctx.admin).fulfillment_status == :pending
+      assert Orders.get_order_for_admin!(order.id, actor: ctx.admin).fulfillment_status == :ready
     end
   end
 end

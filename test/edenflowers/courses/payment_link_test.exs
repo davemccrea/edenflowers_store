@@ -205,7 +205,7 @@ defmodule Edenflowers.Courses.PaymentLinkTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
-        assert email.subject =~ "Muistutus varauksestasi kurssille"
+        assert email.subject =~ "Maksumuistutus varauksestasi kurssille"
         assert email.text_body == preview.text_body
         refute email.text_body =~ "Paikkasi varataan heti, kun olet maksanut."
         refute email.text_body =~ "palautan koko summan"
