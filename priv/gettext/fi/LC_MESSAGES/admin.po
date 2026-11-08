@@ -5001,11 +5001,6 @@ msgstr "Lahjakortin ja kuitin voi lähettää, kun se on maksettu kokonaan."
 msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up."
 msgstr "Hei %{name}, Eden Flowersin tilauksesi %{reference} on nyt noudettavissa."
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:937
-#, elixir-autogen, elixir-format
-msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen closes at %{time} today. If that doesn't suit, just let me know."
-msgstr "Hei %{name}, Eden Flowersin tilauksesi %{reference} on nyt noudettavissa. Minimossen sulkeutuu tänään klo %{time}. Jos se ei sovi, laita vain viestiä."
-
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:280
 #, elixir-autogen, elixir-format
 msgid "Applies from the next order not yet made, even past the customer's change deadline."
@@ -5189,3 +5184,8 @@ msgstr "Ruusu"
 #, elixir-autogen, elixir-format
 msgid "Source gift not linked"
 msgstr "Alkuperäistä lahjatilausta ei ole yhdistetty"
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:937
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen is open from %{opening_time} to %{closing_time} today. If that doesn't suit, just let me know."
+msgstr "Hei %{name}, Eden Flowersin tilauksesi %{reference} on nyt noudettavissa. Minimossen on avoinna tänään klo %{opening_time}–%{closing_time}. Jos se ei sovi, laita vain viestiä."

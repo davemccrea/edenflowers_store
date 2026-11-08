@@ -5001,11 +5001,6 @@ msgstr ""
 msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:937
-#, elixir-autogen, elixir-format
-msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen closes at %{time} today. If that doesn't suit, just let me know."
-msgstr ""
-
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:280
 #, elixir-autogen, elixir-format
 msgid "Applies from the next order not yet made, even past the customer's change deadline."
@@ -5187,4 +5182,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:971
 #, elixir-autogen, elixir-format
 msgid "Source gift not linked"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:937
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen is open from %{opening_time} to %{closing_time} today. If that doesn't suit, just let me know."
 msgstr ""

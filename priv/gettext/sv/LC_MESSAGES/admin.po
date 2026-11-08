@@ -5001,11 +5001,6 @@ msgstr "Presentkortet och kvittot kan mailas när det är betalt i sin helhet."
 msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up."
 msgstr "Hej %{name}, din beställning %{reference} från Eden Flowers är nu klar att hämtas."
 
-#: lib/edenflowers_web/features/admin/order_detail_live.ex:937
-#, elixir-autogen, elixir-format
-msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen closes at %{time} today. If that doesn't suit, just let me know."
-msgstr "Hej %{name}, din beställning %{reference} från Eden Flowers är nu klar att hämtas. Minimossen stänger kl. %{time} i dag. Om det inte passar, hör bara av dig."
-
 #: lib/edenflowers_web/features/admin/subscription_detail_live.ex:280
 #, elixir-autogen, elixir-format
 msgid "Applies from the next order not yet made, even past the customer's change deadline."
@@ -5189,3 +5184,8 @@ msgstr "Ros"
 #, elixir-autogen, elixir-format
 msgid "Source gift not linked"
 msgstr "Den ursprungliga gåvan är inte kopplad"
+
+#: lib/edenflowers_web/features/admin/order_detail_live.ex:937
+#, elixir-autogen, elixir-format
+msgid "Hi %{name}, your Eden Flowers order %{reference} is now ready for pick up. Minimossen is open from %{opening_time} to %{closing_time} today. If that doesn't suit, just let me know."
+msgstr "Hej %{name}, din beställning %{reference} från Eden Flowers är nu klar att hämtas. Minimossen har öppet kl. %{opening_time}–%{closing_time} i dag. Om det inte passar, hör bara av dig."
