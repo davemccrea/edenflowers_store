@@ -737,17 +737,17 @@ msgstr "Koden gäller till och med %{date}."
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "As a welcome gift, you get %{percent} off one order. Enter the following code at checkout:"
-msgstr "Som välkomstgåva får du %{percent} rabatt på en beställning. Ange följande kod i kassan:"
+msgstr "Som välkomstgåva får du %{percent} rabatt på en beställning. Ange koden i kassan:"
 
 #: lib/edenflowers/email.ex:688
 #, elixir-autogen, elixir-format
 msgid "Your %{percent} welcome code for Eden Flowers"
-msgstr "Din välkomstrabatt på %{percent} från Eden Flowers"
+msgstr "Din rabattkod för %{percent} rabatt hos Eden Flowers"
 
 #: lib/edenflowers/email/templates/already_subscribed.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Your welcome code for %{percent} off one order is still valid. Enter the following code at checkout:"
-msgstr "Din välkomstkod för %{percent} rabatt på en beställning gäller fortfarande. Ange följande kod i kassan:"
+msgstr "Din rabattkod gäller fortfarande och ger %{percent} rabatt på en beställning. Ange koden i kassan:"
 
 #: lib/edenflowers/email.ex:623
 #, elixir-autogen, elixir-format
