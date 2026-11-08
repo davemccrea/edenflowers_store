@@ -290,7 +290,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
 
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
-        refute email.text_body =~ "Alennuskoodisi koski vain ensimmäistä tilausta."
+        refute email.text_body =~ "Alennuskoodilla saamasi alennus koski vain ensimmäistä tilausta."
         assert email.text_body =~ "Hovrättsesplanaden 1, Vasa"
         assert email.text_body =~ "Korttiviestisi tulee vain ensimmäisen tilauksen mukana."
       end)
@@ -312,7 +312,7 @@ defmodule Edenflowers.Orders.SubscriptionTest do
       assert {:ok, _subscription} = perform_job(SendSubscriptionSetupEmail, job.args)
 
       assert_email_sent(fn email ->
-        assert email.text_body =~ "Alennuskoodisi koski vain ensimmäistä tilausta."
+        assert email.text_body =~ "Alennuskoodilla saamasi alennus koski vain ensimmäistä tilausta."
       end)
     end
 
