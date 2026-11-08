@@ -12,6 +12,9 @@ end
 
 config :ash_oban, pro?: false
 config :cinder, default_theme: "daisy_ui", gettext_backend: EdenflowersWeb.Gettext, show_filters: :toggle
+# Admin tables load their first page while the page is rendered, so the first paint
+# already has rows instead of an empty table with a spinner over the filters.
+config :cinder, default_initial_load: :sync
 
 config :edenflowers, Oban,
   engine: Oban.Engines.Basic,
