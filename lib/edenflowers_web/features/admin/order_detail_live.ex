@@ -81,11 +81,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
               </span>
               <%!-- Worded to stand alone, so the badges need no captions. --%>
               <span id="order-status" class="inline-flex flex-wrap items-center gap-1.5">
-                <span :if={@order.payment_status}>
+                <%!-- Flex, so the pill is a flex item like its siblings: inside a
+                     plain span the inherited line-height would offset it. --%>
+                <span :if={@order.payment_status} class="inline-flex items-center">
                   <span class="sr-only">{~t"Payment:"}</span>
                   <.payment_status_badge status={@order.payment_status} />
                 </span>
-                <span>
+                <span class="inline-flex items-center">
                   <span class="sr-only">{~t"Fulfillment:"}</span>
                   <.fulfillment_status_badge status={@order.fulfillment_status} method={@order.fulfillment_method} />
                 </span>

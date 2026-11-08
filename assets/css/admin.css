@@ -264,13 +264,20 @@
   color: var(--color-red-700);
 }
 
-.badge.admin-badge-neutral {
+.badge.admin-badge-neutral,
+.badge.admin-badge-tag {
   background-color: color-mix(
     in oklab,
-    var(--color-base-content) 9%,
+    var(--color-base-content) var(--badge-fill, 9%),
     transparent
   );
   color: color-mix(in oklab, var(--color-base-content) 78%, transparent);
+}
+
+/* A fact about a record rather than a state, like its category or that it's a
+   gift: the neutral badge's edge and text in a lighter fill. */
+.badge.admin-badge-tag {
+  --badge-fill: 6%;
 }
 
 /* Keep horizontal overflow discoverable on compact admin tables. */
