@@ -33,6 +33,11 @@ defmodule Edenflowers.Payments.Payment do
     table "payments"
     migration_types amount: :decimal
 
+    custom_indexes do
+      index [:order_id], concurrently: true
+      index [:course_registration_id], concurrently: true
+    end
+
     check_constraints do
       check_constraint :amount, "payments_valid_amount",
         check: "amount = round(amount, 2)",

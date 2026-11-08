@@ -30,8 +30,6 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   alias Edenflowers.Translations
   alias EdenflowersWeb.AdminCalendar
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @fee_fields [:base_price, :price_per_km, :free_dist_km, :max_dist_km]
   @chart %{width: 600, height: 240, left: 44, right: 12, top: 12, bottom: 28}
   @steps_per_km 10

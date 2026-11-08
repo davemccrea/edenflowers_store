@@ -26,8 +26,6 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias EdenflowersWeb.Layouts
   alias EdenflowersWeb.Store.StoreLive
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @max_photos 8
 
   @impl true

@@ -46,6 +46,10 @@ defmodule Edenflowers.Payments.Invoice do
     table "invoices"
     migration_types amount: :decimal
 
+    custom_indexes do
+      index [:order_id], concurrently: true
+    end
+
     references do
       reference :order, on_delete: :restrict
     end

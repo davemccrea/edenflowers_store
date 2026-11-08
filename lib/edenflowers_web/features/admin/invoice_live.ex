@@ -32,8 +32,6 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     payments: [:undoable?],
     credit_note: [:invoice, :paper_trail_versions]
   ]
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   def mount(_params, _session, socket) do
     {:ok,
      assign(socket,

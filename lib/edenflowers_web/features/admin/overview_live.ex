@@ -23,8 +23,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias EdenflowersWeb.Admin.ReportController
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket) do
@@ -128,11 +126,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     actor = socket.assigns.current_user
 
     result =
-      with {:ok, order} <- Orders.get_order_for_admin(id, actor: actor) do
+      with {:ok, order} <- Orders.get_order_by_id(id, actor: actor) do
         Orders.mark_order_ready(order, actor: actor)
       end
-
-    socket = assign_orders(socket)
 
     case result do
       {:ok, _order} ->
@@ -142,7 +138,10 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
          |> push_event("order-ready", %{})}
 
       {:error, _error} ->
-        {:noreply, put_flash(socket, :error, ~t"The order has changed. Check its status and try again.")}
+        {:noreply,
+         socket
+         |> assign_orders()
+         |> put_flash(:error, ~t"The order has changed. Check its status and try again.")}
     end
   end
 

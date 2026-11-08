@@ -11,8 +11,6 @@ defmodule EdenflowersWeb.Admin.ExpenseDetailLive do
   alias Edenflowers.Format
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @loads [:overdue, :scheduled, :needs_review]
 
   @impl true

@@ -21,14 +21,18 @@ defmodule Edenflowers.Translations do
 
   def translate(data, locale) when is_list(data) do
     data
-    |> Ash.load!(:translations)
+    |> load_translations()
     |> Enum.map(&AshTranslation.translate(&1, locale))
   end
 
   def translate(data, locale) do
     data
-    |> Ash.load!(:translations)
+    |> load_translations()
     |> AshTranslation.translate(locale)
+  end
+
+  defp load_translations(data) do
+    if Ash.Resource.loaded?(data, :translations), do: data, else: Ash.load!(data, :translations)
   end
 
   @doc """

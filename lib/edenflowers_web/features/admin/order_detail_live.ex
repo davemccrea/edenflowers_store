@@ -25,8 +25,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   alias EdenflowersWeb.Admin.PhotoUpload
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @photo_field "fulfillment[photo]"
 
   @impl true

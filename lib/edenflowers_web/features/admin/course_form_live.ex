@@ -19,8 +19,6 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
 
   @photo_fields ["form[image_slug]"]
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(params, _session, socket) do
     actor = socket.assigns.current_user

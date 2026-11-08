@@ -27,6 +27,23 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       row = "#day-order-#{order.id}"
       assert has_element?(view, "#day-orders-delivery", "0 of 1 ready")
 
+      ref = make_ref()
+
+      :ok =
+        :telemetry.attach(
+          ref,
+          [:edenflowers, :repo, :query],
+          fn _event, _measurements, metadata, owner ->
+            if self() == view.pid and metadata.source == "orders" and
+                 String.starts_with?(metadata.query, "SELECT coalesce(count(*),") do
+              send(owner, ref)
+            end
+          end,
+          self()
+        )
+
+      on_exit(fn -> :telemetry.detach(ref) end)
+
       view |> element("#{row} button", "Mark as ready") |> render_click()
       assert_push_event(view, "order-ready", %{})
       assert Edenflowers.Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :ready
@@ -36,17 +53,36 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       # The order page is where readiness is undone; the overview only moves work forward.
       refute has_element?(view, "#{row} button")
+
+      # Each refresh reads the three sales summaries.
+      for _ <- 1..3, do: assert_received(^ref)
+      refute_received ^ref
     end
 
-    test "does not celebrate a readiness change that fails", %{conn: conn, admin: admin} do
+    test "refreshes a stale order without celebrating a readiness change that fails", %{conn: conn} do
       order = open_order("Already prepared", :delivery, 0)
       {:ok, view, _html} = live(conn, ~p"/admin")
-      Edenflowers.Orders.mark_order_ready!(order, actor: admin)
+      Ash.Seed.update!(order, %{fulfillment_status: :ready})
 
       render_click(view, "mark_ready", %{"id" => order.id})
 
       refute_push_event(view, "order-ready", %{})
       assert has_element?(view, "#flash-error", "The order has changed")
+      assert has_element?(view, "#day-order-#{order.id}", "Ready for delivery")
+      refute has_element?(view, "#day-order-#{order.id} button")
+    end
+
+    test "rejects a cart id sent as a readiness event", %{conn: conn, admin: admin} do
+      cart = generate(order())
+      {:ok, view, _html} = live(conn, ~p"/admin")
+
+      render_click(view, "mark_ready", %{"id" => cart.id})
+
+      refute_push_event(view, "order-ready", %{})
+      assert has_element?(view, "#flash-error", "The order has changed")
+      unchanged = Edenflowers.Orders.get_order_by_id!(cart.id, actor: admin)
+      assert unchanged.state == cart.state
+      assert unchanged.fulfillment_status == cart.fulfillment_status
     end
 
     test "lists today's orders by method, and only today's", %{conn: conn} do

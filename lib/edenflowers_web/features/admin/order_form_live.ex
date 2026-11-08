@@ -27,8 +27,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias EdenflowersWeb.Admin.CustomerSearch
   alias EdenflowersWeb.Layouts
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(params, _session, socket) do
     actor = socket.assigns.current_user

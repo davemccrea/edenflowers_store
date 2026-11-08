@@ -17,8 +17,6 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   # Upcoming courses and past ones still to settle, soonest first.
   @default_view %{"period" => "current", "sort" => "date"}
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:bookings")

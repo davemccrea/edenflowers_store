@@ -17,8 +17,6 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
   # The subscriptions still being delivered, or about to be once their payment is fixed.
   @default_view %{"state" => "active,payment_failed"}
 
-  on_mount {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required}
-
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:subscriptions")

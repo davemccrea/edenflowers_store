@@ -53,6 +53,10 @@ defmodule Edenflowers.Orders.Order do
 
     identity_wheres_to_sql unique_cart_per_visitor: "state != 'placed'"
 
+    custom_indexes do
+      index [:user_id], concurrently: true
+    end
+
     check_constraints do
       check_constraint :quoted_fulfillment_fee, "orders_valid_quoted_fulfillment_fee",
         check: "quoted_fulfillment_fee >= 0 AND quoted_fulfillment_fee = round(quoted_fulfillment_fee, 2)",
