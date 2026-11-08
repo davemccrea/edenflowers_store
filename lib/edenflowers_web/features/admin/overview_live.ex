@@ -124,23 +124,19 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   def handle_event("push_subscribed", params, socket),
     do: {:reply, PushSubscriptions.subscribe(params, socket.assigns.current_user), socket}
 
-  def handle_event(event, %{"id" => id}, socket) when event in ["mark_ready", "undo_ready"] do
+  def handle_event("mark_ready", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
 
     result =
       with {:ok, order} <- Orders.get_order_for_admin(id, actor: actor) do
-        case event do
-          "mark_ready" -> Orders.mark_order_ready(order, actor: actor)
-          "undo_ready" -> Orders.undo_order_ready(order, actor: actor)
-        end
+        Orders.mark_order_ready(order, actor: actor)
       end
 
     socket = assign_orders(socket)
 
     case result do
       {:ok, _order} ->
-        message = if event == "mark_ready", do: ~t"Order marked as ready.", else: ~t"Order returned to To make."
-        {:noreply, put_flash(socket, :success, message)}
+        {:noreply, put_flash(socket, :success, ~t"Order marked as ready.")}
 
       {:error, _error} ->
         {:noreply, put_flash(socket, :error, ~t"The order has changed. Check its status and try again.")}
@@ -764,7 +760,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
         <div
           :for={{{method, orders}, index} <- Enum.with_index(@groups)}
           id={"#{@id}-#{method}"}
-          class={index > 0 && "border-base-content/12 border-t pt-4"}
+          class={index > 0 && "pt-4"}
         >
           <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pb-2">
             <h4 class="eyebrow text-base-content/75 flex items-center gap-1.5">
@@ -777,7 +773,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
             </span>
             <.day_booking_controls :if={index == 0} id={@id} date={@date} booking={@booking} />
           </div>
-          <ul class="-mx-4 sm:-mx-5">
+          <ul class="divide-base-content/12 -mx-4 divide-y sm:-mx-5">
             <.order_row :for={order <- orders} order={order} />
           </ul>
         </div>
@@ -959,10 +955,13 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     assigns = assign(assigns, :items, Enum.reject(assigns.order.line_items, & &1.is_card))
 
     ~H"""
-    <li id={"day-order-#{@order.id}"}>
+    <li
+      id={"day-order-#{@order.id}"}
+      class="transition-colors focus-within:bg-base-200/60 hover:bg-base-200/60"
+    >
       <.link
         navigate={~p"/admin/orders/#{@order.id}"}
-        class="block px-4 py-4 transition-colors hover:bg-base-200/60 focus-visible:-outline-offset-2 sm:px-5"
+        class="block px-4 pt-4 pb-2 focus-visible:-outline-offset-2 sm:px-5"
       >
         <div class="grid-cols-[minmax(0,1fr)_auto] grid items-baseline gap-x-3 gap-y-1">
           <span class="text-base-content min-w-0 break-words font-semibold">
@@ -1029,7 +1028,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           </.badge>
         </div>
       </.link>
-      <div class="flex flex-wrap items-center justify-between gap-2 px-4 pb-4 sm:px-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-1 pb-4 sm:px-5">
         <.fulfillment_status_badge status={@order.fulfillment_status} method={@order.fulfillment_method} />
         <.button
           :if={@order.can_mark_ready?}
@@ -1041,17 +1040,6 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           aria-label={~t"Mark order #{@order.order_reference} as ready"}
         >
           {~t"Mark as ready"}
-        </.button>
-        <.button
-          :if={@order.can_undo_ready?}
-          type="button"
-          variant="ghost"
-          size="sm"
-          phx-click="undo_ready"
-          phx-value-id={@order.id}
-          aria-label={~t"Undo ready for order #{@order.order_reference}"}
-        >
-          {~t"Undo ready"}
         </.button>
       </div>
     </li>
