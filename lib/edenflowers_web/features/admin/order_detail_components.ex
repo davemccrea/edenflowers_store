@@ -626,96 +626,59 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   attr :order, :map, required: true
   attr :locale, :string, required: true
 
-  # Always there, so Jennie finds it in the same place on every order. An item
-  # that doesn't apply yet says why; one that never could, like removing a
-  # Pass it on card from an order without one, is left out.
   def order_menu(assigns) do
-    assigns =
-      assigns
-      |> assign(:paid?, assigns.order.receipt_available?)
-      |> assign(:email_details_unavailable, email_details_unavailable(assigns.order))
-      |> assign(:no_email, no_email(assigns.order))
-      |> assign(:receipt_unavailable, receipt_unavailable(assigns.order))
-      |> assign(:confirmation_unavailable, confirmation_unavailable(assigns.order))
-      |> assign(:cancel_unavailable, cancel_unavailable(assigns.order))
-
     ~H"""
-    <.actions_menu id="order-actions" class="w-56">
-      <%!-- One email at a time: the details carry how to pay, so once paid the receipt replaces them. --%>
-      <%= if @paid? do %>
-        <%!-- A voucher's email carries its receipt too. --%>
-        <.actions_menu_button
-          :if={!@no_email && @order.gift_voucher_sale? && !@order.cancelled?}
-          menu="order-actions"
-          phx-click="open_email"
-          phx-value-kind="gift_voucher"
-        >
-          {~t"Resend gift voucher"}
-        </.actions_menu_button>
-        <.actions_menu_button
-          :if={!@no_email && !@order.gift_voucher_sale?}
-          menu="order-actions"
-          phx-click="open_email"
-          phx-value-kind="receipt"
-        >
-          {if @order.receipt_emailed_at, do: ~t"Resend receipt", else: ~t"Email receipt"}
-        </.actions_menu_button>
-        <.unavailable_menu_item :if={@no_email} reason={@no_email}>
-          {~t"Email receipt"}
-        </.unavailable_menu_item>
-      <% else %>
-        <.actions_menu_button
-          :if={!@order.gift_voucher_sale? && !@email_details_unavailable}
-          menu="order-actions"
-          phx-click="open_email"
-          phx-value-kind="order_details"
-        >
-          {if @order.order_details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
-        </.actions_menu_button>
-        <.unavailable_menu_item
-          :if={!@order.gift_voucher_sale? && @email_details_unavailable}
-          reason={@email_details_unavailable}
-        >
-          {~t"Email order details"}
-        </.unavailable_menu_item>
-      <% end %>
-
+    <.actions_menu :if={@order.admin_menu_actions != []} id="order-actions" class="w-56">
       <.actions_menu_button
-        :if={@order.payment_reminder_sendable?}
+        :if={:gift_voucher in @order.admin_menu_actions}
+        menu="order-actions"
+        phx-click="open_email"
+        phx-value-kind="gift_voucher"
+      >
+        {~t"Resend gift voucher"}
+      </.actions_menu_button>
+      <.actions_menu_button
+        :if={:receipt in @order.admin_menu_actions}
+        menu="order-actions"
+        phx-click="open_email"
+        phx-value-kind="receipt"
+      >
+        {if @order.receipt_emailed_at, do: ~t"Resend receipt", else: ~t"Email receipt"}
+      </.actions_menu_button>
+      <.actions_menu_button
+        :if={:order_details in @order.admin_menu_actions}
+        menu="order-actions"
+        phx-click="open_email"
+        phx-value-kind="order_details"
+      >
+        {if @order.order_details_emailed_at, do: ~t"Resend order details", else: ~t"Email order details"}
+      </.actions_menu_button>
+      <.actions_menu_button
+        :if={:payment_reminder in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_email"
         phx-value-kind="payment_reminder"
       >
         {~t"Send payment reminder"}
       </.actions_menu_button>
+      <.actions_menu_button
+        :if={:fulfillment in @order.admin_menu_actions}
+        menu="order-actions"
+        phx-click="open_email"
+        phx-value-kind="fulfillment"
+      >
+        {if @order.fulfillment_emailed_at, do: ~t"Resend confirmation", else: ~t"Email confirmation"}
+      </.actions_menu_button>
 
-      <%!-- A cancelled order is never fulfilled and a collected one was handed over, so neither has anything to confirm. --%>
-      <%= if @order.fulfillment_confirmation_applicable? do %>
-        <.actions_menu_button
-          :if={!@confirmation_unavailable}
-          menu="order-actions"
-          phx-click="open_email"
-          phx-value-kind="fulfillment"
-        >
-          {if @order.fulfillment_emailed_at, do: ~t"Resend confirmation", else: ~t"Email confirmation"}
-        </.actions_menu_button>
-        <.unavailable_menu_item :if={@confirmation_unavailable} reason={@confirmation_unavailable}>
-          {~t"Email confirmation"}
-        </.unavailable_menu_item>
-      <% end %>
-
-      <li :if={!@receipt_unavailable}>
+      <li :if={:view_receipt in @order.admin_menu_actions}>
         <.link href={~p"/order/#{@order.id}/receipt"} target="_blank" rel="noopener">
           {~t"View receipt"}
           <.icon name="hero-arrow-top-right-on-square" class="h-3.5 w-3.5" />
         </.link>
       </li>
-      <.unavailable_menu_item :if={@receipt_unavailable} reason={@receipt_unavailable}>
-        {~t"View receipt"}
-      </.unavailable_menu_item>
 
       <.actions_menu_button
-        :if={@order.refundable?}
+        :if={:refund in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="open_settlement"
         phx-value-mode="refund"
@@ -725,7 +688,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
       <%!-- In the menu, behind a confirmation, so a linked card isn't removed by a stray tap. --%>
       <.actions_menu_button
-        :if={@order.pass_it_on_card_removable?}
+        :if={:unlink_card in @order.admin_menu_actions}
         menu="order-actions"
         phx-click="unlink_card"
         data-confirm={~t"Remove card #{code = @order.pass_it_on_card.code} from this gift?"}
@@ -733,42 +696,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         {~t"Remove Pass it on card"}
       </.actions_menu_button>
 
-      <.actions_menu_button :if={!@cancel_unavailable} menu="order-actions" phx-click="open_cancel" class="text-error">
+      <.actions_menu_button
+        :if={:cancel in @order.admin_menu_actions}
+        menu="order-actions"
+        phx-click="open_cancel"
+        class="text-error"
+      >
         {~t"Cancel order"}
       </.actions_menu_button>
-      <.unavailable_menu_item :if={@cancel_unavailable} reason={@cancel_unavailable}>
-        {~t"Cancel order"}
-      </.unavailable_menu_item>
     </.actions_menu>
     """
   end
-
-  attr :reason, :string, required: true
-  slot :inner_block, required: true
-
-  # The reason is written out rather than put in a tooltip, which a touch screen never shows.
-  def unavailable_menu_item(assigns) do
-    ~H"""
-    <li class="menu-disabled">
-      <span aria-disabled="true" class="flex flex-col items-start gap-0.5">
-        {render_slot(@inner_block)}
-        <span class="text-xs">{@reason}</span>
-      </span>
-    </li>
-    """
-  end
-
-  def email_details_unavailable(%{details_emailable?: true}), do: nil
-  def email_details_unavailable(%{cancelled?: true}), do: ~t"The order is cancelled"
-  def email_details_unavailable(order), do: no_email(order)
-
-  def confirmation_unavailable(%{fulfillment_confirmation_sendable?: true}), do: nil
-  def confirmation_unavailable(%{customer_email: nil} = order), do: no_email(order)
-  def confirmation_unavailable(_order), do: ~t"Not fulfilled yet"
-
-  def receipt_unavailable(%{receipt_available?: true}), do: nil
-  def receipt_unavailable(%{payment_status: :refunded}), do: ~t"The order was refunded"
-  def receipt_unavailable(_order), do: ~t"Not paid"
 
   def line_label(%{variant_size: nil} = line_item), do: "#{line_item.quantity} × #{line_item.product_name}"
 
@@ -783,15 +721,6 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       do: ~t"Refund · #{how = OrderLog.payment_method_label(method)}",
       else: OrderLog.payment_method_label(method)
   end
-
-  def no_email(%{customer_email: nil}), do: ~t"No email address"
-  def no_email(_order), do: nil
-
-  def cancel_unavailable(%{invoiced?: true}), do: ~t"Credit the invoice first"
-  def cancel_unavailable(%{cancellable?: true}), do: nil
-  def cancel_unavailable(%{gift_voucher_spent?: true}), do: ~t"Some of the voucher is spent"
-  def cancel_unavailable(%{fulfillment_status: :fulfilled}), do: ~t"Already fulfilled"
-  def cancel_unavailable(%{fulfillment_status: :cancelled}), do: ~t"Already cancelled"
 
   # The queue was counted at mount with this order still in it.
   def remaining_to_fulfil(queue), do: queue.total - 1

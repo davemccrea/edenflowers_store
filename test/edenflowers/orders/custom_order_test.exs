@@ -907,7 +907,8 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
     test "an order fulfilled since Jennie loaded it can't be cancelled", ctx do
       {:ok, stale} = place(ctx, %{line_items: [catalogue_line(ctx.wreath, "2")]})
-      {:ok, _order} = Orders.mark_order_fulfilled(stale, actor: ctx.admin)
+      {:ok, ready} = Orders.mark_order_ready(stale, actor: ctx.admin)
+      {:ok, _order} = Orders.mark_order_fulfilled(ready, actor: ctx.admin)
 
       assert {:error, _} = Orders.cancel_order(stale, actor: ctx.admin)
       assert Orders.get_order_by_id!(stale.id, authorize?: false).fulfillment_status == :fulfilled
@@ -1066,6 +1067,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
     test "for an order collected and paid in full, sends the receipt for the purchase", ctx do
       {:ok, order} = place(ctx, %{customer_email: "son@example.com", email_customer?: false, locale: "en-GB"})
       {:ok, order} = Orders.record_payment(order, "134.00", :cash, actor: ctx.admin)
+      {:ok, order} = Orders.mark_order_ready(order, actor: ctx.admin)
       {:ok, order} = Orders.mark_order_fulfilled(order, actor: ctx.admin)
 
       {:ok, _order} = Orders.email_receipt(order, actor: ctx.admin)
@@ -1093,6 +1095,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
 
       order =
         if unquote(fulfilled?) do
+          {:ok, order} = Orders.mark_order_ready(order, actor: ctx.admin)
           {:ok, fulfilled} = Orders.mark_order_fulfilled(order, %{email_customer?: false}, actor: ctx.admin)
           fulfilled
         else

@@ -12,26 +12,37 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   setup :log_in_admin
 
-  test "marks an order ready and undoes it without losing the handover action", %{conn: conn, admin: admin} do
-    order = placed_order(customer_phone_number: "040 123 4567")
-    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
-    refute has_element?(view, "#order-ready-messages")
-    assert has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|, "Mark as collected")
+  test "handover is available only while the order is ready", %{conn: conn, admin: admin} do
+    for {method, label, ready_status} <- [
+          {:pickup, "Mark as collected", "Ready for pickup"},
+          {:delivery, "Mark as delivered", "Ready"}
+        ] do
+      order = placed_order(fulfillment_method: method, customer_phone_number: "040 123 4567")
+      {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+      refute has_element?(view, "#order-ready-messages")
+      refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
+      refute has_element?(view, "#confirm-fulfillment-form")
 
-    view |> element("button", "Mark as ready") |> render_click()
-    assert Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :ready
-    assert has_element?(view, "#order-status", "Ready for pickup")
-    assert has_element?(view, "#order-ready-at", "Marked ready")
-    assert has_element?(view, "#order-ready-messages", "Text ready for pickup")
-    assert has_element?(view, "#order-log", "Marked ready")
-    assert has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|, "Mark as collected")
-    refute has_element?(view, ~s|a[href="/admin/orders/#{order.id}/edit"]|)
+      view |> element("button", "Mark as ready") |> render_click()
+      assert Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :ready
+      assert has_element?(view, "#order-status", ready_status)
+      assert has_element?(view, "#order-ready-at", "Marked ready")
+      assert has_element?(view, "#order-log", "Marked ready")
+      assert has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|, label)
+      refute has_element?(view, ~s|a[href="/admin/orders/#{order.id}/edit"]|)
 
-    view |> element("button", "Undo ready") |> render_click()
-    assert Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :pending
-    assert has_element?(view, "button", "Mark as ready")
-    refute has_element?(view, "#order-ready-messages")
-    assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}/edit"]|)
+      if method == :pickup do
+        assert has_element?(view, "#order-ready-messages", "Text ready for pickup")
+      end
+
+      view |> element("button", "Undo ready") |> render_click()
+      assert Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :pending
+      assert has_element?(view, "button", "Mark as ready")
+      refute has_element?(view, "#order-ready-messages")
+      refute has_element?(view, ~s|button[phx-click="confirm_fulfillment"]|)
+      refute has_element?(view, "#confirm-fulfillment-form")
+      assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}/edit"]|)
+    end
   end
 
   test "warns when a delivery has no phone to call", %{conn: conn} do
@@ -355,17 +366,28 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, ~s|button[phx-value-kind="payment_reminder"]|)
   end
 
-  test "the actions menu says why each action is unavailable", %{conn: conn} do
+  test "the actions menu hides unavailable options", %{conn: conn} do
+    order = placed_order(fulfillment_method: :delivery)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    assert has_element?(view, ~s|#order-actions button[phx-value-kind="order_details"]|)
+    assert has_element?(view, ~s|#order-actions button[phx-value-kind="payment_reminder"]|)
+    assert has_element?(view, ~s|#order-actions button[phx-click="open_cancel"]|)
+    refute has_element?(view, "#order-actions [aria-disabled=true]")
+    refute has_element?(view, "#order-actions li", "Email confirmation")
+    refute has_element?(view, "#order-actions li", "View receipt")
+    refute has_element?(view, "#order-actions li", "Email receipt")
+    refute has_element?(view, "#order-actions li", "Refund")
+  end
+
+  test "an order with no selectable menu options has no actions menu", %{conn: conn} do
     order = placed_order(customer_email: nil, customer_phone_number: "044 222 3344", fulfillment_status: :fulfilled)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
-    assert has_element?(view, ~s|button[aria-label="More actions"]|)
-    assert has_element?(view, "[aria-disabled=true]", "No email address")
-    assert has_element?(view, "[aria-disabled=true]", "Not paid")
-    assert has_element?(view, "[aria-disabled=true]", "Already fulfilled")
-    refute has_element?(view, ~s|button[phx-click="cancel_order"]|)
-    refute has_element?(view, ~s|button[phx-click="fetch_stripe_refunds"]|)
+    refute has_element?(view, ~s|button[aria-label="More actions"]|)
+    refute has_element?(view, "#order-actions")
   end
 
   @tag :typst
@@ -394,7 +416,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "marking an order fulfilled flips the status and shows the fulfilled badge", %{conn: conn} do
-    order = placed_order()
+    order = placed_order(fulfillment_status: :ready)
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -423,6 +445,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-status", "Card to write")
     assert has_element?(view, "#order-gift-voucher-code", Edenflowers.Payments.GiftVoucher.format_code(voucher.code))
 
+    view |> element("button", "Mark as ready") |> render_click()
     view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
     view |> form("#confirm-fulfillment-form") |> render_submit()
 
@@ -460,7 +483,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "fulfills a pickup with no customer email", %{conn: conn} do
-    order = placed_order(customer_email: nil, customer_phone_number: "044 222 3344")
+    order = placed_order(fulfillment_status: :ready, customer_email: nil, customer_phone_number: "044 222 3344")
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
     view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
@@ -553,7 +576,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   describe "confirming a delivery" do
     test "reopening after native drawer dismissal forgets the previous photo", %{conn: conn} do
-      order = placed_order(fulfillment_method: :delivery)
+      order = placed_order(fulfillment_status: :ready, fulfillment_method: :delivery)
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
@@ -569,12 +592,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       view |> form("#confirm-fulfillment-form") |> render_submit()
 
       assert has_element?(view, "#confirm-fulfillment-dialog [role=alert]", "Take a photo of where you left the order.")
-      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :pending
+      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :ready
       refute_enqueued(worker: Edenflowers.Orders.Workers.SendFulfillmentEmail)
     end
 
     test "the customer was home: fulfils with no photo and, by default, no email", %{conn: conn} do
-      order = placed_order(fulfillment_method: :delivery)
+      order = placed_order(fulfillment_status: :ready, fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
 
@@ -592,7 +615,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     end
 
     test "nobody was home: requires a photo, then names it after the time and order reference", %{conn: conn} do
-      order = placed_order(fulfillment_method: :delivery)
+      order = placed_order(fulfillment_status: :ready, fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
@@ -600,7 +623,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
       view |> form("#confirm-fulfillment-form") |> render_submit()
       assert has_element?(view, "#confirm-fulfillment-dialog [role=alert]", "Take a photo of where you left the order.")
-      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :pending
+      assert Orders.get_order_for_admin!(order.id, actor: %{admin: true}).fulfillment_status == :ready
 
       view
       |> file_input("#confirm-fulfillment-form", "photo_fulfillment[photo]", [
@@ -622,7 +645,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
   describe "choosing whether to email the customer" do
     test "nobody home sends Left at the door with the photo, unless Jennie unticks it", %{conn: conn} do
-      order = placed_order(fulfillment_method: :delivery, locale: "en-GB")
+      order = placed_order(fulfillment_status: :ready, fulfillment_method: :delivery, locale: "en-GB")
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
@@ -646,7 +669,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     end
 
     test "a delivery starts unticked each time the form opens", %{conn: conn} do
-      order = placed_order(fulfillment_method: :delivery)
+      order = placed_order(fulfillment_status: :ready, fulfillment_method: :delivery)
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
@@ -665,14 +688,21 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     test "a gift, or a delivery left while nobody was home, starts ticked", %{conn: conn} do
       checked = ~s|#confirm-fulfillment-form input[name="fulfillment[email_customer?]"][checked]|
 
-      gift = placed_order(fulfillment_method: :delivery, gift: true, recipient_name: "Grace Hopper")
+      gift =
+        placed_order(
+          fulfillment_status: :ready,
+          fulfillment_method: :delivery,
+          gift: true,
+          recipient_name: "Grace Hopper"
+        )
+
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{gift.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       assert has_element?(view, checked)
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "true"}) |> render_change()
       assert has_element?(view, checked)
 
-      order = placed_order(fulfillment_method: :delivery)
+      order = placed_order(fulfillment_status: :ready, fulfillment_method: :delivery)
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
       view |> form("#confirm-fulfillment-form", fulfillment: %{customer_home: "false"}) |> render_change()
@@ -681,7 +711,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     test "no: fulfils without queueing the fulfillment email", %{conn: conn} do
       # A gift starts ticked, so unticking is a real choice.
-      order = placed_order(fulfillment_method: :delivery, gift: true, recipient_name: "Grace Hopper")
+      order =
+        placed_order(
+          fulfillment_status: :ready,
+          fulfillment_method: :delivery,
+          gift: true,
+          recipient_name: "Grace Hopper"
+        )
 
       {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
       view |> element(~s|button[phx-click="confirm_fulfillment"]|) |> render_click()
@@ -897,7 +933,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   end
 
   test "keeps stepping after marking an order fulfilled and counts what is left", %{conn: conn} do
-    current = placed_order(order_reference: "CURRENT", fulfillment_date: ~D[2026-06-11])
+    current = placed_order(fulfillment_status: :ready, order_reference: "CURRENT", fulfillment_date: ~D[2026-06-11])
     later = placed_order(order_reference: "LATER", fulfillment_date: ~D[2026-06-12])
     placed_order(order_reference: "LATEST", fulfillment_date: ~D[2026-06-13])
 

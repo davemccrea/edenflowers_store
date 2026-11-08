@@ -53,20 +53,36 @@ defmodule Edenflowers.Orders.OrderReadinessTest do
     assert Orders.get_order_by_id!(order.id, actor: admin).fulfillment_status == :fulfilled
   end
 
-  test "readiness is optional before handover and never prevents cancelling" do
+  test "handover requires readiness and cancellation remains available before handover" do
     admin = generate(admin_user())
 
     for status <- [:pending, :ready] do
       order = placed_order(fulfillment_status: status)
 
-      assert {:ok, %{fulfillment_status: :fulfilled}} =
-               Orders.mark_order_fulfilled(order, %{email_customer?: false}, actor: admin)
+      if status == :ready do
+        assert {:ok, %{fulfillment_status: :fulfilled}} =
+                 Orders.mark_order_fulfilled(order, %{email_customer?: false}, actor: admin)
+      else
+        assert {:error, _} = Orders.mark_order_fulfilled(order, %{email_customer?: false}, actor: admin)
+        assert Orders.get_order_by_id!(order.id, actor: admin).fulfillment_status == :pending
+        assert [] = all_enqueued()
+      end
 
       order = placed_order(fulfillment_status: status, payment_intent_id: nil)
 
       assert {:ok, %{fulfillment_status: :cancelled}} =
                Orders.cancel_order(order, %{email_customer?: false}, actor: admin)
     end
+  end
+
+  test "a stale ready order cannot be handed over after readiness is undone" do
+    admin = generate(admin_user())
+    ready = Orders.mark_order_ready!(placed_order(), actor: admin)
+    Orders.undo_order_ready!(ready, actor: admin)
+
+    assert {:error, _} = Orders.mark_order_fulfilled(ready, %{email_customer?: false}, actor: admin)
+    assert Orders.get_order_by_id!(ready.id, actor: admin).fulfillment_status == :pending
+    assert [] = all_enqueued()
   end
 
   test "carts, cancelled orders and fulfilled orders cannot be marked ready" do
@@ -104,7 +120,8 @@ defmodule Edenflowers.Orders.OrderReadinessTest do
 
       undone = Orders.undo_order_ready!(ready, actor: admin)
       refute undone.pickup_message_sendable?
-      fulfilled = Orders.mark_order_fulfilled!(undone, %{email_customer?: false}, actor: admin)
+      ready = Orders.mark_order_ready!(undone, actor: admin)
+      fulfilled = Orders.mark_order_fulfilled!(ready, %{email_customer?: false}, actor: admin)
       refute fulfilled.pickup_message_sendable?
     end
   end

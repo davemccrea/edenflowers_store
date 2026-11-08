@@ -650,6 +650,10 @@ defmodule Edenflowers.Orders.Order do
       description "Whether Jennie can return a prepared order to To make, before editing or correcting a mistake."
     end
 
+    calculate :can_mark_fulfilled?, :boolean, expr(state == :placed and fulfillment_status == :ready) do
+      description "Whether Jennie can mark a prepared order delivered or collected."
+    end
+
     calculate :pickup_message_sendable?,
               :boolean,
               expr(
@@ -669,7 +673,7 @@ defmodule Edenflowers.Orders.Order do
     end
 
     calculate :fulfillable?, :boolean, expr(state == :placed and fulfillment_status in [:pending, :ready]) do
-      description "Whether Jennie can mark it delivered or collected, with or without marking it ready first."
+      description "Whether the order is still waiting to be prepared or handed over."
     end
 
     calculate :pass_it_on_shown?,

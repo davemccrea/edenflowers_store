@@ -43,6 +43,7 @@ defmodule Edenflowers.Orders.Order.Admin do
   ]
 
   @admin_show_load [
+    :admin_menu_actions,
     :payment_status,
     :amount_paid,
     :amount_held,
@@ -71,6 +72,7 @@ defmodule Edenflowers.Orders.Order.Admin do
     :fulfillable?,
     :can_mark_ready?,
     :can_undo_ready?,
+    :can_mark_fulfilled?,
     :pickup_message_sendable?,
     :pass_it_on_shown?,
     :pass_it_on_card_changeable?,
@@ -120,6 +122,12 @@ defmodule Edenflowers.Orders.Order.Admin do
                   fulfillment_starts_at > now() and fulfillment_starts_at <= datetime_add(now(), 1, :hour)
               )
       end
+    end
+  end
+
+  calculations do
+    calculate :admin_menu_actions, {:array, :atom}, Edenflowers.Orders.Order.Calculations.AdminMenuActions do
+      description "The currently selectable actions in the admin order menu."
     end
   end
 
@@ -567,7 +575,7 @@ defmodule Edenflowers.Orders.Order.Admin do
     end
 
     update :mark_fulfilled do
-      description "Jennie marks an open order delivered or collected. A delivery with an email queues the " <>
+      description "Jennie marks a prepared order delivered or collected. A delivery with an email queues the " <>
                     "fulfillment email, with the delivery photo when chosen, unless `email_customer?` is false."
 
       accept [:delivery_photo_slug, :email_delivery_photo]
@@ -579,8 +587,8 @@ defmodule Edenflowers.Orders.Order.Admin do
       argument :body, :string,
         description: "Jennie's own text for the email, in place of the template's, if she rewrote it."
 
-      validate {Holds, calculation: :fulfillable?, message: "is no longer open"}
-      change filter expr(fulfillable?)
+      validate {Holds, calculation: :can_mark_fulfilled?, message: "is not ready to be handed over"}
+      change filter expr(can_mark_fulfilled?)
       change set_attribute(:fulfillment_status, :fulfilled)
       change set_attribute(:email_delivery_photo, false), where: [argument_equals(:email_customer?, false)]
 
