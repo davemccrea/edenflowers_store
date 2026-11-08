@@ -41,7 +41,7 @@ msgstr ""
 
 #: lib/edenflowers_web/features/admin/order_detail_components.ex:326
 #, elixir-autogen, elixir-format
-msgid "%{queue_position} of %{queue_total} to fulfil"
+msgid "%{queue_position} of %{queue_total}"
 msgstr ""
 
 #: lib/edenflowers_web/features/admin/course_detail_live.ex:71

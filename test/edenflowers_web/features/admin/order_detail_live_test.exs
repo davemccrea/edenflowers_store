@@ -863,7 +863,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{current.id}")
 
-    assert has_element?(view, "#order-queue-nav", "2 of 3 to fulfil")
+    assert has_element?(view, "#order-queue-nav", "2 of 3")
     assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{earlier.id}"]|)
     assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{later.id}"]|)
   end
@@ -882,7 +882,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     view |> form("#confirm-fulfillment-form") |> render_submit()
 
     assert has_element?(view, "#order-queue-nav", "Fulfilled · 2 left")
-    refute has_element?(view, "#order-queue-nav", "1 of 3 to fulfil")
+    refute has_element?(view, "#order-queue-nav", "1 of 3")
     assert has_element?(view, ~s|#order-queue-nav a[href="/admin/orders/#{later.id}"]|)
   end
 
