@@ -602,7 +602,8 @@ defmodule Edenflowers.Orders.Order do
               :boolean,
               expr(
                 state == :placed and
-                  (fulfillment_status in [:pending, :ready] or (gift_voucher_sale? and fulfillment_status == :fulfilled)) and
+                  (fulfillment_status in [:pending, :ready] or
+                     (gift_voucher_sale? and fulfillment_status == :fulfilled)) and
                   not gift_voucher_spent?
               ) do
       description "Whether Jennie can cancel it now: placed and not yet fulfilled or cancelled. A Gift voucher " <>
