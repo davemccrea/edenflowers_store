@@ -11,9 +11,9 @@ copy = "wt step copy-ignored"
 [[pre-start]]
 env = "bash -c 'echo >> .env && echo export DATABASE_NAME=edenflowers_{{ branch | sanitize_db }} >> .env && echo export PORT={{ branch | hash_port }} >> .env && echo export PHX_HOST={{ branch | sanitize_db | replace(\"_\", \"-\") }}.localhost >> .env'"
 
-# Point Claude Code's Tidewave MCP at this worktree's dev server (main's copy says 4000)
+# Point Claude Code and Codex's Tidewave MCP at this worktree's dev server (main uses 4000)
 [[pre-start]]
-mcp = '''printf '{"mcpServers": {"tidewave": {"type": "http", "url": "http://localhost:{{ branch | hash_port }}/tidewave/mcp"}}}\n' > .mcp.json'''
+mcp = '''printf '{"mcpServers": {"tidewave": {"type": "http", "url": "http://localhost:{{ branch | hash_port }}/tidewave/mcp"}}}\n' > .mcp.json && mkdir -p .codex && printf '[mcp_servers.tidewave]\nurl = "http://localhost:{{ branch | hash_port }}/tidewave/mcp"\n' > .codex/config.toml'''
 
 # Fetch and compile any dependencies added/changed since the main worktree snapshot was copied
 [[pre-start]]

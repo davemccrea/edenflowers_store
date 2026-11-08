@@ -1031,6 +1031,7 @@ fulfilled_unpaid =
     days_out: 0,
     line_items: [catalogue_line.("Bouquet 1", :small, 1)]
   })
+  |> Orders.mark_order_ready!(actor: jennie)
   |> Orders.mark_order_fulfilled!(actor: jennie)
 
 Ash.Seed.update!(fulfilled_unpaid, %{
@@ -1313,6 +1314,7 @@ invoiced_order =
     payment_terms: :invoice,
     line_items: [custom_line.("Vastaanoton kukat", "240.00")]
   })
+  |> Orders.mark_order_ready!(actor: jennie)
   |> Orders.mark_order_fulfilled!(actor: jennie)
 
 Payments.create_invoice_for_order!(invoiced_order.id, actor: jennie)
