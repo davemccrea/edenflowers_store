@@ -41,6 +41,15 @@
         "value": "cubic-bezier(0.3, 1.15, 0.5, 1)",
         "createdAt": "2026-11-06T19:40:54.101Z",
         "reason": "Agent review: existing homepage card fan models a physical hand of playing cards, as documented above .card-fan; slight rotational overshoot belongs to that motion. Present in HEAD before the voucher changes."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.2, 0.9, 0.3, 1.2)",
+        "files": [
+          "assets/css/admin.css"
+        ],
+        "createdAt": "2026-11-08T11:36:31.874Z",
+        "reason": "Agent: preserve the existing Arc-style appearance-picker popover motion documented beside .admin-picker-popover; unchanged by the navigation work."
       }
     ]
   }
