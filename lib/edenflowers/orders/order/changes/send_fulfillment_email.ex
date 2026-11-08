@@ -22,7 +22,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmail do
   end
 
   defp send_email(changeset) do
-    order = Ash.load!(changeset.data, [:customer_first_name, :recipient_first_name], authorize?: false)
+    order = Ash.load!(changeset.data, :customer_first_name, authorize?: false)
     edits = Edits.from_changeset(changeset)
 
     case email(order) do

@@ -38,10 +38,10 @@ Optional suggestions may be rejected without changing usable copy.
 | T12 | sv, fi | Jennie + native editors: bouquet style and personal-service intent. |
 | T13 | fi | Native editor: explicitly enter the email verification code. |
 | T14 | fi | Jennie + native editor: canonical subscription terminology. |
-| T15 | sv, fi | Jennie: couple versus sender in wedding emails; then native editors. |
+| T15 | sv, fi | 8 Nov 2026: AI-drafted wedding emails consistently address the sender, following the generic-copy cleanup below; native review remains. |
 | T16 | fi | Native editor: email polish preserving payment meaning. |
 | T17 | fi | Developer exception recorded for three exact recipient constructions; native review remains. |
-| T18 | fi | Developer exception recorded for one exact email recipient construction; native review remains. |
+| T18 | fi | Retired 8 Nov 2026: delivery notifications now use generic wording, removing the recipient-specific sentence and its placeholder exception. |
 | S01 | en | Developer: clarify future charge date; Swedish/Finnish already express future tense. |
 | S02 | sv, fi, en | Jennie: actual wedding products and price meaning; then align languages. |
 | S03 | fi | Native florist/editor + Jennie: funeral tone and product scope against Swedish intent. |
@@ -120,6 +120,44 @@ and Jennie's approval remain outstanding.
 | `There's %{amount} left to pay.` | `Det återstår %{amount} att betala.` | `Maksettavaa on vielä %{amount}.` |
 | `The payment for your order for %{date} (%{product}) didn't go through.` | `Betalningen för din beställning för %{date} (%{product}) gick inte igenom.` | `Tilauksesi (%{product}, %{date}) maksu ei onnistunut.` |
 | `Your receipt from Eden Flowers · %{reference}` | `Ditt kvitto från Eden Flowers · %{reference}` | `Kuittisi Eden Flowersilta · %{reference}` |
+
+## Email consistency cleanup, 8 November 2026
+
+AI-reviewed by Codex on 2026-11-08. Domain: `emails`; context: empty.
+The user requested generic wording to reduce branching and drift, and no em
+dashes. Native Swedish/Finnish review and approval of exact wording remain
+outstanding. Payment rules, deadlines and cancellation terms are unchanged.
+
+- Delivery notifications use the existing generic delivered/left-at-door subjects
+  and bodies for gifts too, removing the recipient-name variants and T18.
+- Gift voucher emails use the existing subject `Your Eden Flowers gift voucher`
+  and opening `Thank you for buying a gift voucher! The voucher is attached,
+  ready to print or forward.` whether a recipient is named or not.
+- Subscription payment receipts use `Thank you for your payment. Your receipt
+  for the order on %{date} (%{product}) is attached.` for both delivery and
+  pickup: Swedish `Tack för din betalning. Kvittot för din beställning %{date}
+  (%{product}) finns bifogat.`; Finnish `Kiitos maksustasi. Kuitti
+  tilauksestasi (%{product}, %{date}) on liitteenä.`
+- Failed subscription payments use `The payment for your order for %{date}
+  (%{product}) didn't go through, but your order will still go ahead as planned.`:
+  Swedish `Betalningen för din beställning för %{date} (%{product}) gick inte
+  igenom, men din beställning blir klar som planerat.`; Finnish `Tilauksesi
+  (%{product}) maksu ei onnistunut, mutta saat kukkasi sovitusti %{date}.`
+- The shared follow-up is `Future orders are on hold until this one is paid.
+  Please also update your saved card in your account:`: Swedish `Kommande
+  beställningar pausas tills den här är betald. Uppdatera också ditt sparade kort
+  på ditt konto:`; Finnish `Seuraavat tilaukset odottavat, kunnes tämä on maksettu.
+  Päivitä myös tallennettu korttisi tililläsi:`
+- Payment reminder subjects explicitly say `Payment reminder`, `Betalningspåminnelse`
+  and `Maksumuistutus`, retaining their order date or course name.
+- T15: wedding email translations consistently address the individual sender.
+  Swedish subject `Din bröllopsförfrågan till Eden Flowers`, flowers heading
+  `Blommor du är intresserad av:`; Finnish subject `Häätiedustelusi Eden Flowersille`,
+  heading `Kukat, joista olet kiinnostunut:`, opening `Kiitos tiedustelustasi.
+  Palaan asiaan tarjouksen kanssa mahdollisimman pian. Mitään ei ole varattu ennen
+  kuin olet nähnyt ja hyväksynyt tarjouksen.` Shared contact-message wording stays
+  in the singular. No additional template branch is needed.
+- Swedish email copy uses `mejl` / `mejlet` consistently.
 
 ## Remaining coverage
 
