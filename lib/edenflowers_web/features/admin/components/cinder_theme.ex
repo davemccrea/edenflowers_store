@@ -52,6 +52,11 @@ defmodule EdenflowersWeb.Admin.CinderTheme do
   # `pl-10` leaves room for the search icon the renderer overlays.
   set :search_input_class, "input input-sm w-full pl-10"
 
+  # Cinder floats its spinner over the top-right of the whole collection, which lands
+  # on the filter card's search box. Later loads keep the rows on screen, so the
+  # spinner can sit in the flow under the table and only nudge the pagination row.
+  set :loading_overlay_class, "flex justify-end pt-2 pr-1"
+
   set :pagination_container_class, "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
   set :pagination_info_class, "text-sm"
   set :pagination_count_class, "text-base-content/75 block text-xs sm:ml-2 sm:inline"
