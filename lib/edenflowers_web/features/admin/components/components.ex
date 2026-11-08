@@ -100,8 +100,8 @@ defmodule EdenflowersWeb.Admin.Components do
   @doc """
   The one pill every admin badge is drawn with, so they can't drift apart.
 
-  The coloured tones are states; `:tag` is a quieter, borderless fill for
-  facts about a record, like its category or that it's a gift.
+  The coloured tones are states; `:tag` is a quieter fill for facts about a
+  record, like its category or that it's a gift.
   """
   def badge(%{rest: %{type: "button"}} = assigns) do
     ~H"""
@@ -147,7 +147,7 @@ defmodule EdenflowersWeb.Admin.Components do
   defp badge_tone_class(:attention), do: "admin-badge-attention"
   defp badge_tone_class(:error), do: "admin-badge-error"
   defp badge_tone_class(:neutral), do: "admin-badge-neutral"
-  defp badge_tone_class(:tag), do: "badge-soft badge-neutral"
+  defp badge_tone_class(:tag), do: "admin-badge-tag"
 
   attr :category, :atom, default: nil
 
