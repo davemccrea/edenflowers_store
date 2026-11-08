@@ -1,3 +1,10 @@
+/* The page-loading bar (assets/js/app.js) spans the top edge, so its colour
+   belongs to the surface underneath. Storefront pages put the brand primary on
+   their pale header; admin overrides this in admin.css to clear its chrome. */
+:root {
+  --color-loading-bar: var(--color-primary);
+}
+
 [data-phx-session],
 [data-phx-teleported-src] {
   display: contents;

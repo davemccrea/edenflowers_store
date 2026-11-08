@@ -67,17 +67,23 @@ window.addEventListener("phx:umami", ({ detail: { name, data, once } }) => {
 });
 
 topbar.config({
-  barColors: {
-    0: getComputedStyle(document.documentElement).getPropertyValue(
-      "--color-primary",
-    ),
-  },
   shadowColor: "rgba(0, 0, 0, .3)",
 });
 
+// The bar runs over the storefront's pale header but over admin's dark chrome,
+// so each names its colour in CSS (--color-loading-bar). Read it when the bar
+// starts: an admin's colour choice, previewed live by the picker, applies then.
+function showLoadingBar() {
+  const color = getComputedStyle(document.body)
+    .getPropertyValue("--color-loading-bar")
+    .trim();
+  if (color) topbar.config({ barColors: { 0: color } });
+  topbar.show(300);
+}
+
 // The first connect happens behind an already-rendered page, so the bar would only flicker.
 window.addEventListener("phx:page-loading-start", ({ detail }) => {
-  if (detail.kind !== "initial") topbar.show(300);
+  if (detail.kind !== "initial") showLoadingBar();
 });
 window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
 

@@ -431,6 +431,15 @@ body:has(.admin-theme) {
     calc(var(--admin-l) - 5%) max(0, calc(var(--admin-c) - 0.005))
       var(--admin-h)
   );
+
+  /* The loading bar runs along the top edge: over the topbar on phones, over
+     the sidebar and the page's pale header on desktop. At the primary's
+     lightness it would sit within a hair of the chrome and vanish there, so it
+     takes the admin's hue and chroma lifted well clear of the chrome, and stays
+     mid-way so it still reads over the page beside it. */
+  --color-loading-bar: oklch(
+    calc(var(--admin-l) + 30%) var(--admin-c) var(--admin-h)
+  );
 }
 
 /* The account page's colour picker (AccountLive.appearance_picker/1). The
