@@ -30,6 +30,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionLog do
 
   defp entry(version, sizes, locale) do
     %{
+      id: "version-#{version.id}",
       at: version.version_inserted_at,
       title: title(version),
       details: details(version, sizes, locale)

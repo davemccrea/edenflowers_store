@@ -172,24 +172,16 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
           <aside :if={@history != []} class="flex flex-col gap-6 xl:col-start-2 xl:row-span-2 xl:row-start-1">
             <.widget id="promotion-history-widget" title={~t"History"}>
-              <ol id="promotion-history" class="divide-base-content/12 divide-y text-sm">
-                <.history_entry
-                  :for={{entry, index} <- Enum.with_index(@history)}
-                  id={"promotion-history-entry-#{index}"}
-                  title={entry.title}
-                  at={entry.at}
-                  locale={@locale}
-                >
-                  <:details :if={entry.changes != []}>
-                    <dl class="border-base-content/12 mt-1.5 mb-1 ml-0.5 space-y-2 border-l pl-3">
-                      <div :for={{label, from, to} <- entry.changes}>
-                        <dt class="text-base-content/75 text-xs">{label}</dt>
-                        <dd class="text-base-content/85 break-words">{from} → {to}</dd>
-                      </div>
-                    </dl>
-                  </:details>
-                </.history_entry>
-              </ol>
+              <.history_timeline id="promotion-history" entries={@history} locale={@locale}>
+                <:details :let={entry}>
+                  <dl class="mt-2 space-y-2">
+                    <div :for={{label, from, to} <- entry.details}>
+                      <dt class="text-base-content/75 text-xs">{label}</dt>
+                      <dd class="text-base-content/85 break-words">{from} → {to}</dd>
+                    </div>
+                  </dl>
+                </:details>
+              </.history_timeline>
             </.widget>
           </aside>
         </div>
@@ -303,7 +295,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   end
 
   defp history_entry(%{version_action_type: :create} = version, _locale),
-    do: %{at: version.version_inserted_at, title: ~t"Created", changes: []}
+    do: %{id: "version-#{version.id}", at: version.version_inserted_at, title: ~t"Created", details: []}
 
   defp history_entry(version, locale) do
     changes =
@@ -312,7 +304,8 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
       end
 
     # A save that changed nothing still leaves a version.
-    if changes != [], do: %{at: version.version_inserted_at, title: ~t"Edited", changes: changes}
+    if changes != [],
+      do: %{id: "version-#{version.id}", at: version.version_inserted_at, title: ~t"Edited", details: changes}
   end
 
   defp history_label(:name), do: ~t"Name"

@@ -55,7 +55,12 @@ defmodule EdenflowersWeb.Admin.OrderLog do
         true -> ~t"Paid #{amount} · #{how}"
       end
 
-    %{at: payment.paid_at, title: title, details: if(payment.note, do: [{nil, payment.note}], else: [])}
+    %{
+      id: "payment-#{payment.id}",
+      at: payment.paid_at,
+      title: title,
+      details: if(payment.note, do: [{nil, payment.note}], else: [])
+    }
   end
 
   defp entry(%{version_action_name: :send_receipt_email} = version, locale, true = _gift_voucher_sale?),
@@ -63,6 +68,7 @@ defmodule EdenflowersWeb.Admin.OrderLog do
 
   defp entry(version, locale, _gift_voucher_sale?) do
     %{
+      id: "version-#{version.id}",
       at: version.version_inserted_at,
       title: title(version),
       details: field_details(version, locale) ++ items_details(version) ++ message_details(version)

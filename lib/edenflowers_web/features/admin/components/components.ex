@@ -642,18 +642,145 @@ defmodule EdenflowersWeb.Admin.Components do
   end
 
   attr :id, :string, default: nil
+  attr :branched?, :boolean, default: false
+  attr :rest, :global
+  slot :inner_block, required: true
+
+  @doc "An ordered timeline; nested branches share the same rail and indentation."
+  def timeline(assigns) do
+    ~H"""
+    <ol id={@id} class={["text-sm", @branched? && "border-base-content/20 ml-[5px] border-l pl-5"]} {@rest}>
+      {render_slot(@inner_block)}
+    </ol>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :active?, :boolean, default: false
+  attr :connect?, :boolean, default: true
+  attr :branched?, :boolean, default: false
+  attr :compact?, :boolean, default: false
+  slot :inner_block, required: true
+  slot :children
+
+  @doc """
+  The shared timeline geometry. Callers supply a stable record id and choose
+  the highlighted item. `children` holds a nested timeline; `connect?` can stop
+  a chain at a leaf, while flat histories hide the final connector themselves.
+  """
+  def timeline_item(assigns) do
+    ~H"""
+    <li id={@id} class={["group/timeline relative last:pb-0", if(@compact?, do: "pb-4", else: "pb-5")]}>
+      <div class={["pl-7", @children != [] && "relative", @children != [] && if(@compact?, do: "pb-4", else: "pb-5")]}>
+        <span
+          :if={@connect?}
+          class={["bg-base-content/20 left-[5px] absolute top-5 -bottom-1 w-px", @children == [] && "group-last/timeline:hidden"]}
+          aria-hidden="true"
+        />
+        <span
+          :if={@branched?}
+          class="bg-base-content/20 absolute top-3 -left-5 h-px w-6"
+          aria-hidden="true"
+        />
+        <span
+          class={["h-[11px] w-[11px] absolute top-1.5 left-0 rounded-full border-2", if(@active?, do: "bg-primary border-primary", else: "bg-base-100 border-base-content/40")]}
+          aria-hidden="true"
+        />
+        {render_slot(@inner_block)}
+      </div>
+      {render_slot(@children)}
+    </li>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :entries, :list, required: true
+  attr :locale, :string, required: true
+  slot :details
+
+  @doc "Groups newest-first history by Helsinki day, with one date label and compact event times."
+  def history_timeline(assigns) do
+    today = Edenflowers.ShopTime.today()
+
+    groups =
+      assigns.entries
+      |> Enum.chunk_by(&Edenflowers.ShopTime.today(&1.at))
+      |> Enum.map(fn entries ->
+        date = Edenflowers.ShopTime.today(hd(entries).at)
+        label = if date == today, do: ~t"Today", else: Edenflowers.Format.date(date, assigns.locale)
+        %{date: Date.to_iso8601(date), label: label, entries: entries}
+      end)
+
+    assigns = assign(assigns, groups: groups, latest_id: List.first(assigns.entries) && hd(assigns.entries).id)
+
+    ~H"""
+    <.timeline id={@id}>
+      <.history_day
+        :for={group <- @groups}
+        :key={group.date}
+        id={@id}
+        group={group}
+        locale={@locale}
+        latest_id={@latest_id}
+        connect?={group.date != hd(@groups).date}
+      >
+        <:details :let={entry} :if={@details != []}>
+          {render_slot(@details, entry)}
+        </:details>
+      </.history_day>
+    </.timeline>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :group, :map, required: true
+  attr :locale, :string, required: true
+  attr :latest_id, :string, default: nil
+  attr :connect?, :boolean, default: false
+  slot :details
+
+  defp history_day(assigns) do
+    ~H"""
+    <li id={"#{@id}-day-#{@group.date}"} role="presentation" class="relative pb-2 pl-7">
+      <span
+        :if={@connect?}
+        class="bg-base-content/20 left-[5px] absolute top-0 -bottom-1 w-px"
+        aria-hidden="true"
+      />
+      <h3 id={"#{@id}-date-#{@group.date}"} class="text-base-content/65 text-sm font-semibold">
+        {@group.label}
+      </h3>
+    </li>
+    <.history_entry
+      :for={entry <- @group.entries}
+      :key={entry.id}
+      id={"#{@id}-entry-#{entry.id}"}
+      active?={entry.id == @latest_id}
+      title={entry.title}
+      at={entry.at}
+      locale={@locale}
+    >
+      <:details :if={entry.details != [] && @details != []}>
+        {render_slot(@details, entry)}
+      </:details>
+    </.history_entry>
+    """
+  end
+
+  attr :id, :string, required: true
   attr :title, :string, required: true
   attr :at, DateTime, required: true
   attr :locale, :string, required: true
+  attr :active?, :boolean, default: false
   slot :details
 
   def history_entry(assigns) do
     ~H"""
-    <li class="py-2 first:pt-0 last:pb-0">
+    <.timeline_item id={@id} active?={@active?} compact?={true}>
       <.history_heading :if={@details == []} title={@title} at={@at} locale={@locale} />
       <details
         :if={@details != []}
-        id={@id}
+        id={"#{@id}-details"}
         phx-mounted={JS.ignore_attributes(["open"])}
         class="group"
       >
@@ -662,7 +789,7 @@ defmodule EdenflowersWeb.Admin.Components do
         </summary>
         {render_slot(@details)}
       </details>
-    </li>
+    </.timeline_item>
     """
   end
 
@@ -673,19 +800,19 @@ defmodule EdenflowersWeb.Admin.Components do
 
   defp history_heading(assigns) do
     ~H"""
-    <div class="flex items-baseline justify-between gap-4">
-      <p class="text-base-content flex items-center gap-1">
-        {@title}
+    <div class="flex items-baseline gap-3 text-sm">
+      <p class="text-base-content flex min-w-0 flex-1 items-start gap-1 font-semibold">
+        <span class="min-w-0 break-words">{@title}</span>
         <.icon
           :if={@expandable}
           name="hero-chevron-right"
-          class="text-base-content/50 h-3.5 w-3.5 transition-transform group-open:rotate-90"
+          class="text-base-content/50 mt-0.5 h-3.5 w-3.5 shrink-0 group-open:rotate-90 motion-safe:transition-transform"
         />
       </p>
       <time
         datetime={DateTime.to_iso8601(@at)}
         title={Edenflowers.Format.datetime(@at, @locale)}
-        class="text-base-content/75 shrink-0 text-xs tabular-nums"
+        class="text-base-content/65 shrink-0 tabular-nums"
       >
         {history_time(@at, @locale)}
       </time>
@@ -798,7 +925,7 @@ defmodule EdenflowersWeb.Admin.Components do
   defp history_time(at, locale) do
     local = DateTime.shift_zone!(at, Edenflowers.ShopTime.timezone())
 
-    "#{Edenflowers.Format.day_month(DateTime.to_date(local), locale)} #{Edenflowers.Format.time(DateTime.to_time(local), locale)}"
+    Edenflowers.Format.time(DateTime.to_time(local), locale)
   end
 
   attr :label, :string, required: true
