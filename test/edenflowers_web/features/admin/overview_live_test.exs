@@ -28,6 +28,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(view, "#day-orders-delivery", "0 of 1 ready")
 
       view |> element("#{row} button", "Mark as ready") |> render_click()
+      assert_push_event(view, "order-ready", %{})
       assert Edenflowers.Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :ready
       assert has_element?(view, row, "Ready for delivery")
       assert has_element?(view, "#day-orders-delivery", "1 of 1 ready")
@@ -35,6 +36,17 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       # The order page is where readiness is undone; the overview only moves work forward.
       refute has_element?(view, "#{row} button")
+    end
+
+    test "does not celebrate a readiness change that fails", %{conn: conn, admin: admin} do
+      order = open_order("Already prepared", :delivery, 0)
+      {:ok, view, _html} = live(conn, ~p"/admin")
+      Edenflowers.Orders.mark_order_ready!(order, actor: admin)
+
+      render_click(view, "mark_ready", %{"id" => order.id})
+
+      refute_push_event(view, "order-ready", %{})
+      assert has_element?(view, "#flash-error", "The order has changed")
     end
 
     test "lists today's orders by method, and only today's", %{conn: conn} do

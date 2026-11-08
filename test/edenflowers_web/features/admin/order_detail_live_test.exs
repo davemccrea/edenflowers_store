@@ -24,6 +24,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       refute has_element?(view, "#confirm-fulfillment-form")
 
       view |> element("button", "Mark as ready") |> render_click()
+      assert_push_event(view, "order-ready", %{})
       assert Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :ready
       assert has_element?(view, "#order-status", ready_status)
       assert has_element?(view, "#order-ready-at", "Marked ready")
@@ -36,6 +37,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       end
 
       view |> element("button", "Undo ready") |> render_click()
+      refute_push_event(view, "order-ready", %{})
       assert Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :pending
       assert has_element?(view, "button", "Mark as ready")
       refute has_element?(view, "#order-ready-messages")
@@ -43,6 +45,17 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       refute has_element?(view, "#confirm-fulfillment-form")
       assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}/edit"]|)
     end
+  end
+
+  test "does not celebrate a readiness change that fails", %{conn: conn, admin: admin} do
+    order = placed_order()
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    Orders.mark_order_ready!(order, actor: admin)
+
+    render_click(view, "mark_ready")
+
+    refute_push_event(view, "order-ready", %{})
+    assert has_element?(view, "#flash-error", "The order has changed")
   end
 
   test "warns when a delivery has no phone to call", %{conn: conn} do

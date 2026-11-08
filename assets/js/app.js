@@ -54,6 +54,25 @@ window.addEventListener("phx:js-exec", ({ detail }) => {
 // Navigating to the page already open keeps its scroll, so a fresh start asks for the top.
 window.addEventListener("phx:scroll-top", () => window.scrollTo(0, 0));
 
+window.addEventListener("phx:order-ready", () => {
+  if (!document.querySelector(".admin-theme")) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  import("../vendor/canvas-confetti.mjs")
+    .then(({ default: confetti }) =>
+      confetti({
+        particleCount: 70,
+        spread: 70,
+        origin: { y: 0.65 },
+        ticks: 120,
+        disableForReducedMotion: true,
+      }),
+    )
+    .catch((error) =>
+      console.error("Could not launch order-ready confetti", error),
+    );
+});
+
 // Custom Umami events from EdenflowersWeb.Analytics. A `once` key is only
 // remembered once Umami has it, so a blocked tracker doesn't eat the event.
 window.addEventListener("phx:umami", ({ detail: { name, data, once } }) => {
