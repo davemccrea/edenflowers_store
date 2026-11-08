@@ -58,7 +58,7 @@ defmodule Edenflowers.Email do
   def gift_voucher_sold(order, ready_on) do
     customer_email(order, from_address(), fn email ->
       email
-      |> subject(gift_voucher_sold_subject(order.recipient_name))
+      |> subject(~t"Your Eden Flowers gift voucher")
       |> text_body(
         Templates.gift_voucher_sold(
           gift_voucher_assigns(order, %{ready_on: ready_on && Format.weekday_date(ready_on, order.locale)})
@@ -66,10 +66,6 @@ defmodule Edenflowers.Email do
       )
     end)
   end
-
-  # A voucher sold in the shop may name no recipient.
-  defp gift_voucher_sold_subject(nil), do: ~t"Your Eden Flowers gift voucher"
-  defp gift_voucher_sold_subject(recipient), do: ~t"Your Eden Flowers gift voucher for #{recipient}"
 
   defp gift_voucher_assigns(order, assigns) do
     voucher = order.gift_voucher_line.gift_voucher
@@ -195,7 +191,7 @@ defmodule Edenflowers.Email do
   def payment_reminder(%Order{} = order, payment_link_url) do
     customer_email(order, from_address(), fn email ->
       email
-      |> subject(~t"A reminder about your order for #{date = short_date(order)}")
+      |> subject(~t"Payment reminder for your order for #{date = short_date(order)}")
       |> text_body(
         Templates.payment_reminder(%{
           order: order,
@@ -210,7 +206,7 @@ defmodule Edenflowers.Email do
   def payment_reminder(%CourseRegistration{} = registration, payment_link_url) do
     customer_email(registration, from_address(), fn email ->
       email
-      |> subject(~t"A reminder about your booking on #{course = registration.course.name}")
+      |> subject(~t"Payment reminder for your booking on #{course = registration.course.name}")
       |> text_body(
         Templates.booking_payment_reminder(%{
           registration: registration,
@@ -436,39 +432,28 @@ defmodule Edenflowers.Email do
 
   @doc """
   Tells the customer their order was delivered. A collected order gets
-  none: the customer was there. Expects `:customer_first_name` and
-  `:recipient_first_name` loaded.
+  none: the customer was there. Expects `:customer_first_name` loaded.
   """
   def order_delivered(order) do
     customer_email(order, from_address(), fn email ->
       email
-      |> subject(delivered_subject(order))
+      |> subject(~t"Your Eden Flowers order has been delivered")
       |> text_body(Templates.order_delivered(%{order: order}))
     end)
   end
 
-  defp delivered_subject(%{gift: true, recipient_first_name: name}) when is_binary(name),
-    do: ~t"Your order for #{recipient = name} has been delivered"
-
-  defp delivered_subject(_order), do: ~t"Your Eden Flowers order has been delivered"
-
   @doc """
   Tells the customer nobody was home, with the photo of where the order was
-  left, so they can go and look. Loads as `order_delivered/2`.
+  left, so they can go and look. Loads as `order_delivered/1`.
   """
   def order_left_at_door(order, photo_jpeg) do
     customer_email(order, from_address(), fn email ->
       email
-      |> subject(left_at_door_subject(order))
+      |> subject(~t"Your Eden Flowers order was left at the door")
       |> text_body(Templates.order_left_at_door(%{order: order}))
       |> attach_delivery_photo(photo_jpeg)
     end)
   end
-
-  defp left_at_door_subject(%{gift: true, recipient_first_name: name}) when is_binary(name),
-    do: ~t"Your order for #{recipient = name} was left at the door"
-
-  defp left_at_door_subject(_order), do: ~t"Your Eden Flowers order was left at the door"
 
   defp attach_delivery_photo(email, photo_jpeg) do
     attachment(

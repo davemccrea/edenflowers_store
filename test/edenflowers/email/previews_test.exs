@@ -96,21 +96,19 @@ defmodule Edenflowers.Email.PreviewsTest do
              "There's a cancellation charge of 22,50 €, and 12,50 € of it is still to pay. I'll be in touch about how to pay it."
   end
 
-  test "subscription receipts name delivery or collection in each language" do
-    for {locale, delivery, pickup} <- [
-          {"en-GB", "Thank you for your payment for your delivery on",
-           "Thank you for your payment for your order for collection on"},
-          {"sv-FI", "Tack för din betalning för din blomleverans",
-           "Tack för din betalning för din beställning för avhämtning"},
-          {"fi", "Kuitti on liitteenä", "Kuitti on liitteenä"}
+  test "subscription receipts use the same wording for delivery and pickup in each language" do
+    for {locale, opening} <- [
+          {"en-GB", "Thank you for your payment. Your receipt for the order on"},
+          {"sv-FI", "Tack för din betalning. Kvittot för din beställning"},
+          {"fi", "Kiitos maksustasi. Kuitti tilauksestasi"}
         ] do
       bodies =
         for {"Subscription delivery charged", scenario, _, email} <- Previews.all(locale),
             into: %{},
             do: {scenario, email.text_body}
 
-      assert bodies["delivery"] =~ delivery
-      assert bodies["pickup"] =~ pickup
+      assert bodies["delivery"] == bodies["pickup"]
+      assert bodies["delivery"] =~ opening
       assert bodies["delivery"] =~ "14.11.2026"
       assert bodies["pickup"] =~ "14.11.2026"
       refute bodies["delivery"] =~ "%{"
@@ -142,8 +140,26 @@ defmodule Edenflowers.Email.PreviewsTest do
     assert email.subject == "Your flowers for Saturday 14.11."
 
     assert email.text_body =~
-             ~r/^Thank you for your payment for your delivery on Saturday 14\.11\.2026 \(.+\)\. Your receipt is attached\./
+             ~r/^Thank you for your payment\. Your receipt for the order on Saturday 14\.11\.2026 \(.+\) is attached\./
 
     assert String.ends_with?(email.text_body, "\nEden Flowers\n")
+  end
+
+  test "a gift recipient does not change notification wording in any language" do
+    for locale <- ["en-GB", "sv-FI", "fi"], type <- ["Delivered", "Left at the door", "Gift voucher"] do
+      variants =
+        for {^type, scenario, _, email} <- Previews.all(locale),
+            scenario not in ["no customer first name", "collecting a gift card at the shop"],
+            uniq: true,
+            do: {email.subject, email.text_body}
+
+      assert length(variants) == 1
+    end
+  end
+
+  test "email subjects and bodies contain no em dashes in any language" do
+    for locale <- ["en-GB", "sv-FI", "fi"], {type, scenario, _, email} <- Previews.all(locale) do
+      refute String.contains?(email.subject <> email.text_body, "\u2014"), "#{locale}: #{type}, #{scenario}"
+    end
   end
 end

@@ -313,7 +313,7 @@ defmodule Edenflowers.Payments.GiftVoucherTest do
       assert {:ok, _} = Orders.record_payment(sale, "15.00", :zettle, %{email_receipt?: true}, actor: admin)
 
       assert_email_sent(fn email ->
-        assert email.subject == "Your Eden Flowers gift voucher for Mia"
+        assert email.subject == "Your Eden Flowers gift voucher"
 
         assert email.attachments |> Enum.map(& &1.filename) |> Enum.sort() ==
                  ["eden-flowers-#{sale.order_reference}.pdf", "eden-flowers-gift-voucher-#{sale.order_reference}.pdf"]

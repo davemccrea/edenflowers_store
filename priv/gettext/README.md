@@ -55,7 +55,7 @@ Existing exceptions are recorded in `check-exceptions.json`, matched by language
 domain, context, exact source, plural index and translation. Every exception needs
 a reason. Changed text is checked again, and stale exceptions fail until removed.
 The initial list retains intentional language-code fallbacks, the existing privacy
-URLs, and four Finnish recipient constructions pending native review. Add an
+URLs, and three Finnish recipient constructions pending native review. Add an
 exception only after reviewing the actual wording; do not regenerate a baseline
 to silence CI. Some route segments intentionally remain unchanged;
 a missing route translation is a developer decision, not necessarily work for a

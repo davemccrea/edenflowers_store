@@ -129,7 +129,7 @@ defmodule Edenflowers.Email.Preview do
   defp entered_link?(entered, nil), do: entered.payment_terms == :payment_link
   defp entered_link?(_entered, order), do: order.payment_link_open?
 
-  defp order_load(:fulfillment), do: [:customer_first_name, :recipient_first_name]
+  defp order_load(:fulfillment), do: [:customer_first_name]
 
   defp order_load(:gift_voucher),
     do: [:customer_first_name, :voucher_card_ready_on, :voucher_card_to_hand_over?, gift_voucher_line: [:gift_voucher]]

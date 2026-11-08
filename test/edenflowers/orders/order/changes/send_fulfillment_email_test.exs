@@ -114,7 +114,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmailTest do
   end
 
   describe "the trigger" do
-    test "tells the customer their gift reached the recipient" do
+    test "confirms delivery without naming the gift recipient" do
       order = fulfillable_order(gift: true, recipient_name: "Grace Hopper", fulfillment_status: :fulfilled)
 
       assert {:ok, _} = perform_job(SendFulfillmentEmail, %{"primary_key" => %{"id" => order.id}})
@@ -122,9 +122,10 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmailTest do
       assert_email_sent(fn email ->
         assert email.to == [{"", "ada@example.com"}]
         assert email.bcc == [{"Jennie", "info+copy@edenflowers.fi"}]
-        assert email.subject == "Your order for Grace has been delivered"
+        assert email.subject == "Your Eden Flowers order has been delivered"
         assert email.text_body =~ "Hi Ada,"
-        assert email.text_body =~ "Your order for Grace has been delivered."
+        refute email.text_body =~ "Grace"
+        assert email.text_body =~ "Your order has been delivered."
       end)
 
       reloaded = Orders.get_order_by_id!(order.id, authorize?: false)
@@ -200,7 +201,7 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmailTest do
       end)
     end
 
-    test "names the recipient when a gift was left at the door" do
+    test "uses the same doorstep wording for a gift" do
       stub_delivery_photo()
 
       order =
@@ -215,9 +216,9 @@ defmodule Edenflowers.Orders.Order.Changes.SendFulfillmentEmailTest do
       assert {:ok, _} = perform_job(SendFulfillmentEmail, %{"primary_key" => %{"id" => order.id}})
 
       assert_email_sent(fn email ->
-        assert email.subject == "Your order for Grace was left at the door"
-        assert email.text_body =~ "delivered your order for Grace"
-        assert email.text_body =~ "You might like to let Grace know it's waiting."
+        assert email.subject == "Your Eden Flowers order was left at the door"
+        refute email.text_body =~ "Grace"
+        assert email.text_body =~ "Nobody was home when I delivered your order, so I left it in a safe place."
       end)
     end
 
