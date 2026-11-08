@@ -159,6 +159,81 @@ outstanding. Payment rules, deadlines and cancellation terms are unchanged.
   in the singular. No additional template branch is needed.
 - Swedish email copy uses `mejl` / `mejlet` consistently.
 
+Follow-up cross-language review by Codex on 2026-11-08 covered all 177 email
+entries, their plural forms, the shared labels and course cancellation terms
+used in email bodies. Swedish/Finnish native review remains outstanding.
+
+- Swedish discount-code wording, revised after user feedback on 2026-11-08:
+  `Your %{percent} welcome code for Eden Flowers` now reads
+  `Din rabattkod för %{percent} rabatt hos Eden Flowers`. `Rabattkod` replaces
+  the literal `välkomstkod`, and `hos` identifies where the discount applies.
+  The welcome body reads `Som välkomstgåva får du %{percent} rabatt på en
+  beställning. Ange koden i kassan:`. The already-subscribed email reads
+  `Din rabattkod gäller fortfarande och ger %{percent} rabatt på en beställning.
+  Ange koden i kassan:`. The percentage, one-order limit and expiry are preserved;
+  native review remains outstanding.
+- Finnish discount-code wording, revised on 2026-11-08 to prioritise idiomatic
+  Finnish, as the user requested, while preserving the offer's meaning:
+  the subject reads `Tervetuloa! Saat %{percent} alennusta`. The welcome body
+  reads `Tervetuliaisetuna saat %{percent} alennusta yhdestä tilauksesta.
+  Syötä alennuskoodi kassalla:`. The already-subscribed
+  email reads `Alennuskoodisi on edelleen voimassa. Saat sillä %{percent}
+  alennusta yhdestä tilauksesta. Syötä koodi kassalla:`. `Alennuskoodi` replaces
+  the literal `tervetulokoodi`, matching Swedish `rabattkod` and existing Finnish
+  checkout wording; `%{percent} alennusta` avoids attaching a case ending to the
+  formatted percentage. `Shop flowers:` is `Tutustu kukkavalikoimaan:` in both
+  emails. `Käytä koodi viimeistään %{date}.` is retained because it fits the
+  inflected weekday. Reviewed by Codex; native Finnish approval remains pending.
+- `I'll have a gift card with the voucher written on it ready for you to collect
+  at %{shop} from %{date}.`: Finnish now reads `Kirjoitan lahjakortin yhdelle
+  korteistani. Voit noutaa sen osoitteesta %{shop} aikaisintaan %{date}.` The
+  date includes an inflected weekday, so `aikaisintaan lauantaina` replaces the
+  ungrammatical `lauantaina ... alkaen` while preserving the earliest pickup day.
+- Payment amounts, refund methods, deadlines, cancellation terms, singular/plural
+  address and placeholders were checked for equivalent meaning. No additional
+  template branches or payment-policy changes were needed.
+
+## Finnish email prose review, 8 November 2026
+
+AI-reviewed by Codex on 2026-11-08, following the user's request for natural
+Finnish throughout the emails. Reviewed all 177 email entries and the rendered
+messages, including their shared labels and course cancellation terms. The edits
+below use natural Finnish without mirroring English or Swedish syntax. They
+retain every placeholder and keep amounts, dates, payment methods, deadlines,
+booking confirmation conditions and cancellation terms unchanged. No template
+branches were added. Native Finnish review and Jennie's editorial approval of
+the exact wording remain outstanding. Domain: `emails`; context: empty.
+
+| English source | Reviewed Finnish wording |
+| --- | --- |
+| `%{code} is your email change code for Eden Flowers` | `Vahvista uusi sähköpostiosoitteesi: %{code}` |
+| `Away, or want a change? Pause or change it in your account by %{date}:` | `Oletko poissa tai haluatko tehdä muutoksia? Voit keskeyttää kestotilauksesi tai muuttaa sitä tililläsi viimeistään %{date}:` |
+| `I've received your payment of %{amount}. Your receipt is attached.` | `Olen saanut maksusi (%{amount}). Kuitti on liitteenä.` |
+| `I've refunded %{amount} the way you paid. It can take a few days to show on your statement.` | `Olen palauttanut %{amount} samalla maksutavalla, jolla maksoit. Palautuksen näkyminen tiliotteellasi voi kestää muutaman päivän.` |
+| `I've refunded %{amount} to your %{brand} card ending in %{last4}. It can take a few days to show on your statement.` | `Olen palauttanut %{amount} %{brand}-kortillesi, jonka loppunumerot ovat %{last4}. Palautuksen näkyminen tiliotteellasi voi kestää muutaman päivän.` |
+| `I've refunded %{amount} to your MobilePay. It can take a few days to show on your statement.` | `Olen palauttanut sinulle %{amount} MobilePayn kautta. Palautuksen näkyminen tiliotteellasi voi kestää muutaman päivän.` |
+| `I've refunded %{amount} to your card. It can take a few days to show on your statement.` | `Olen palauttanut %{amount} kortillesi. Palautuksen näkyminen tiliotteellasi voi kestää muutaman päivän.` |
+| `If you need to change anything, reply and I'll let you know what's possible.` | `Jos haluat tehdä muutoksia, vastaa tähän viestiin, niin kerron, mitä voin järjestää.` |
+| `If you've already paid, thank you, and please ignore this email.` | `Jos olet jo maksanut, kiitos! Voit silloin jättää tämän viestin huomiotta.` |
+| `It expires in 10 minutes. If you didn't ask for it, you can ignore this email.` | `Koodi on voimassa 10 minuuttia. Jos et pyytänyt koodia, voit jättää tämän viestin huomiotta.` |
+| `Payment needed for your flowers on %{date}` | `Kukkatilauksesi maksu ei onnistunut (%{date})` |
+| `Thank you for starting a %{product} subscription.` | `Kiitos kestotilauksestasi (%{product}).` |
+| `Thank you for your enquiry. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it.` | `Kiitos tiedustelustasi. Lähetän sinulle tarjouksen mahdollisimman pian. Varaus vahvistuu vasta, kun olet tutustunut tarjoukseen ja hyväksynyt sen.` |
+| `Thank you for your message. I'll get back to you as soon as I can.` | `Kiitos viestistäsi. Vastaan sinulle mahdollisimman pian.` |
+| `Thank you for your order. If anything isn't as it should be, just reply and I'll take care of it.` | `Kiitos tilauksestasi. Jos jokin ei ole kunnossa, vastaa tähän viestiin, niin hoidan asian.` |
+| `To pause, change or cancel your subscription, use your account:` | `Voit muuttaa kestotilaustasi, keskeyttää sen tai perua sen tililläsi:` |
+| `To pause, change or cancel, use your account at least %{days} days before a delivery:` | `Voit muuttaa kestotilaustasi, keskeyttää sen tai perua sen tililläsi viimeistään %{days} päivää ennen toimitusta:` |
+| `To pause, change or cancel, use your account at least %{days} days before a pickup:` | `Voit muuttaa kestotilaustasi, keskeyttää sen tai perua sen tililläsi viimeistään %{days} päivää ennen noutoa:` |
+| `Your %{product} subscription is set up` | `Kestotilauksesi on vahvistettu: %{product}` |
+| `Your next %{product} delivery is on %{date}, to %{address}.` | `Seuraavat kukkasi (%{product}) toimitetaan %{date} osoitteeseen %{address}.` |
+| `Your promo code discount was for the first order only. Later orders are at the price above.` | `Alennuskoodilla saamasi alennus koski vain ensimmäistä tilausta. Seuraavista tilauksista veloitetaan yllä mainittu hinta.` |
+| `If anything on it looks wrong, just reply to this email.` | `Jos laskun tiedoissa on virheitä, vastaa tähän viestiin.` |
+| `If anything is still to pay, I'll send you a new invoice.` | `Jos maksettavaa on vielä jäljellä, lähetän sinulle uuden laskun.` |
+| `Just a friendly reminder that it was due on %{date}, and I haven't seen the payment yet. If you've already paid, thank you, and please ignore this email.` | `Ystävällinen muistutus: lasku erääntyi %{date}, enkä ole vielä saanut maksua. Jos olet jo maksanut, kiitos! Voit silloin jättää tämän viestin huomiotta.` |
+| `I'll be in touch about how to pay it.` | `Otan sinuun yhteyttä ja kerron, miten voit maksaa.` |
+| `Just a friendly reminder that it was due on %{date}, and %{amount} of it is still to pay. Thank you for what you've paid so far.` | `Ystävällinen muistutus: lasku erääntyi %{date}, ja siitä on vielä maksamatta %{amount}. Kiitos jo maksamastasi osuudesta.` |
+| `Future orders are on hold until this one is paid. Please also update your saved card in your account:` | `Seuraavia tilauksia ei käsitellä ennen kuin tämä tilaus on maksettu. Päivitä myös tilillesi tallennettu maksukortti:` |
+
 ## Remaining coverage
 
 - Cinder dependency alignment added 15 untranslated admin-only entries per
