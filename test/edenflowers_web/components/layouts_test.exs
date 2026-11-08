@@ -49,6 +49,22 @@ defmodule EdenflowersWeb.LayoutsTest do
     end
   end
 
+  test "admin wordmarks return to Overview through live navigation", %{conn: conn} do
+    conn = log_in(conn, generate(admin_user()) |> with_token())
+
+    for location <- [~s|[class~="[view-transition-name:admin-topbar]"]|, ".admin-sidebar", "#admin-nav-drawer-dialog"] do
+      {:ok, view, _} = live(conn, ~p"/admin/account")
+
+      {:ok, overview, _} =
+        view
+        |> element(~s|#{location} a.logo-wordmark[href="/admin"][data-phx-link="redirect"]|)
+        |> render_click()
+        |> follow_redirect(conn, ~p"/admin")
+
+      assert has_element?(overview, "#day-orders-title", "Today")
+    end
+  end
+
   test "Invoices opens through live navigation from both admin menus", %{conn: conn} do
     conn = log_in(conn, generate(admin_user()) |> with_token())
 
