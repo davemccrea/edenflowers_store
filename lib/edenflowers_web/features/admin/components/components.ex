@@ -660,30 +660,33 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :connect?, :boolean, default: true
   attr :branched?, :boolean, default: false
   attr :compact?, :boolean, default: false
+  attr :markers?, :boolean, default: true
   slot :inner_block, required: true
   slot :children
 
   @doc """
   The shared timeline geometry. Callers supply a stable record id and choose
-  the highlighted item. `children` holds a nested timeline; `connect?` can stop
+  the highlighted item. `markers?` hides the markers and gutter for a standalone
+  entry. `children` holds a nested timeline; `connect?` can stop
   a chain at a leaf, while flat histories hide the final connector themselves.
   """
   def timeline_item(assigns) do
     ~H"""
     <li id={@id} class={["group/timeline relative last:pb-0", if(@compact?, do: "pb-4", else: "pb-5")]}>
-      <div class={["pl-7", @children != [] && "relative", @children != [] && if(@compact?, do: "pb-4", else: "pb-5")]}>
+      <div class={[@markers? && "pl-7", @children != [] && "relative", @children != [] && if(@compact?, do: "pb-4", else: "pb-5")]}>
         <span
-          :if={@connect?}
+          :if={@markers? && @connect?}
           class={["bg-base-content/20 left-[5px] absolute top-5 -bottom-1 w-px", @children == [] && "group-last/timeline:hidden"]}
           aria-hidden="true"
         />
         <span
-          :if={@branched?}
+          :if={@markers? && @branched?}
           class="bg-base-content/20 absolute top-3 -left-5 h-px w-6"
           aria-hidden="true"
         />
         <span
-          class={["h-[11px] w-[11px] absolute top-1.5 left-0 rounded-full border-2", if(@active?, do: "bg-primary border-primary", else: "bg-base-100 border-base-content/40")]}
+          :if={@markers?}
+          class={["left-[1.5px] size-2 absolute top-2 rounded-full", if(@active?, do: "bg-primary/70", else: "bg-base-content/30")]}
           aria-hidden="true"
         />
         {render_slot(@inner_block)}
@@ -711,7 +714,12 @@ defmodule EdenflowersWeb.Admin.Components do
         %{date: Date.to_iso8601(date), label: label, entries: entries}
       end)
 
-    assigns = assign(assigns, groups: groups, latest_id: List.first(assigns.entries) && hd(assigns.entries).id)
+    assigns =
+      assign(assigns,
+        groups: groups,
+        latest_id: List.first(assigns.entries) && hd(assigns.entries).id,
+        markers?: length(assigns.entries) > 1
+      )
 
     ~H"""
     <.timeline id={@id}>
@@ -722,6 +730,7 @@ defmodule EdenflowersWeb.Admin.Components do
         group={group}
         locale={@locale}
         latest_id={@latest_id}
+        markers?={@markers?}
         connect?={group.date != hd(@groups).date}
       >
         <:details :let={entry} :if={@details != []}>
@@ -737,13 +746,14 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :locale, :string, required: true
   attr :latest_id, :string, default: nil
   attr :connect?, :boolean, default: false
+  attr :markers?, :boolean, default: true
   slot :details
 
   defp history_day(assigns) do
     ~H"""
-    <li id={"#{@id}-day-#{@group.date}"} role="presentation" class="relative pb-2 pl-7">
+    <li id={"#{@id}-day-#{@group.date}"} role="presentation" class={["relative pb-2", @markers? && "pl-7"]}>
       <span
-        :if={@connect?}
+        :if={@markers? && @connect?}
         class="bg-base-content/20 left-[5px] absolute top-0 -bottom-1 w-px"
         aria-hidden="true"
       />
@@ -756,6 +766,8 @@ defmodule EdenflowersWeb.Admin.Components do
       :key={entry.id}
       id={"#{@id}-entry-#{entry.id}"}
       active?={entry.id == @latest_id}
+      markers?={@markers?}
+      warning?={Map.get(entry, :warning?, false)}
       title={entry.title}
       at={entry.at}
       locale={@locale}
@@ -772,12 +784,14 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :at, DateTime, required: true
   attr :locale, :string, required: true
   attr :active?, :boolean, default: false
+  attr :markers?, :boolean, default: true
+  attr :warning?, :boolean, default: false
   slot :details
 
   def history_entry(assigns) do
     ~H"""
-    <.timeline_item id={@id} active?={@active?} compact?={true}>
-      <.history_heading :if={@details == []} title={@title} at={@at} locale={@locale} />
+    <.timeline_item id={@id} active?={@active?} markers?={@markers?} compact?={true}>
+      <.history_heading :if={@details == []} title={@title} at={@at} locale={@locale} warning?={@warning?} />
       <details
         :if={@details != []}
         id={"#{@id}-details"}
@@ -785,7 +799,7 @@ defmodule EdenflowersWeb.Admin.Components do
         class="group"
       >
         <summary class="cursor-pointer list-none">
-          <.history_heading title={@title} at={@at} locale={@locale} expandable />
+          <.history_heading title={@title} at={@at} locale={@locale} warning?={@warning?} expandable />
         </summary>
         {render_slot(@details)}
       </details>
@@ -797,17 +811,16 @@ defmodule EdenflowersWeb.Admin.Components do
   attr :at, DateTime, required: true
   attr :locale, :string, required: true
   attr :expandable, :boolean, default: false
+  attr :warning?, :boolean, default: false
 
   defp history_heading(assigns) do
     ~H"""
     <div class="flex items-baseline gap-3 text-sm">
-      <p class="text-base-content flex min-w-0 flex-1 items-start gap-1 font-semibold">
+      <p class="text-base-content flex min-w-0 flex-1 items-start gap-1">
+        <span :if={@warning?} class="text-warning-content mt-0.5 shrink-0" aria-hidden="true">
+          <.icon name="hero-exclamation-triangle" class="block h-4 w-4" />
+        </span>
         <span class="min-w-0 break-words">{@title}</span>
-        <.icon
-          :if={@expandable}
-          name="hero-chevron-right"
-          class="text-base-content/50 mt-0.5 h-3.5 w-3.5 shrink-0 group-open:rotate-90 motion-safe:transition-transform"
-        />
       </p>
       <time
         datetime={DateTime.to_iso8601(@at)}
@@ -816,6 +829,15 @@ defmodule EdenflowersWeb.Admin.Components do
       >
         {history_time(@at, @locale)}
       </time>
+      <span
+        class={["text-base-content/50 mt-1 shrink-0 self-start", !@expandable && "invisible"]}
+        aria-hidden="true"
+      >
+        <.icon
+          name="hero-chevron-right"
+          class="block h-3.5 w-3.5 group-open:rotate-90 motion-safe:transition-transform"
+        />
+      </span>
     </div>
     """
   end
