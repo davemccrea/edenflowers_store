@@ -15,7 +15,8 @@ const reviewer = document.body.hasAttribute("data-reviewer");
 const touch = matchMedia("(hover: none)").matches;
 const admin = location.pathname.startsWith("/admin");
 
-if ((dev || reviewer) && !admin) {
+// Admin pages are staff-only, so reviewers get no picker there outside dev.
+if (dev || (reviewer && !admin)) {
   let activeEl = null;
   let selection = 0;
   let lastTarget = null;
