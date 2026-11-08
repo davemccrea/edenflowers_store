@@ -136,7 +136,10 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
     case result do
       {:ok, _order} ->
-        {:noreply, put_flash(socket, :success, ~t"Order marked as ready.")}
+        {:noreply,
+         socket
+         |> put_flash(:success, ~t"Order marked as ready.")
+         |> push_event("order-ready", %{})}
 
       {:error, _error} ->
         {:noreply, put_flash(socket, :error, ~t"The order has changed. Check its status and try again.")}

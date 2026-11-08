@@ -523,7 +523,12 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   @impl true
   def handle_event("mark_ready", _params, socket) do
     result = Orders.mark_order_ready(socket.assigns.order, actor: socket.assigns.current_user)
-    {:noreply, readiness_result(socket, result, ~t"Order marked as ready.")}
+    socket = readiness_result(socket, result, ~t"Order marked as ready.")
+
+    case result do
+      {:ok, _order} -> {:noreply, push_event(socket, "order-ready", %{})}
+      {:error, _error} -> {:noreply, socket}
+    end
   end
 
   def handle_event("undo_ready", _params, socket) do
