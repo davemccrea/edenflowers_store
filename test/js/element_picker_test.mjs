@@ -12,6 +12,7 @@ const fixture = ({
   dev = true,
   reviewer = false,
   touch = false,
+  pathname = "/fi/kauppa",
   responses = {},
   fetchReply = null,
 } = {}) => {
@@ -20,7 +21,7 @@ const fixture = ({
   const copied = [];
   const requests = [];
   const observers = [];
-  const location = { pathname: "/fi/kauppa", search: "" };
+  const location = { pathname, search: "" };
   const listen = (name, callback) => {
     const callbacks = listeners.get(name) || [];
     callbacks.push(callback);
@@ -252,6 +253,25 @@ test("highlight joins the open modal and anchors to the element", async () => {
   await fire("keyup", { key: "Alt" });
   assert.ok(!highlight.open);
   assert.equal(child.style.getPropertyValue("anchor-name"), "");
+});
+
+test("dev keeps the picker on admin pages", async () => {
+  const { fire, copied } = fixture({ pathname: "/admin/orders" });
+  const event = await fire("click");
+  assert.ok(event.defaultPrevented);
+  assert.deepEqual(copied, ["SPAN"]);
+});
+
+test("outside dev, reviewers get no picker on admin pages", async () => {
+  const { fire, copied, overlays } = fixture({
+    dev: false,
+    reviewer: true,
+    pathname: "/admin/orders",
+  });
+  const event = await fire("click");
+  assert.equal(event.defaultPrevented, undefined);
+  assert.deepEqual(copied, []);
+  assert.ok(!overlays.some((node) => node.tagName === "TEXTAREA"));
 });
 
 test("a reviewer on a page without dev annotations gets a note box, not a copy", async () => {
