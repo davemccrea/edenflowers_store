@@ -91,12 +91,15 @@ defmodule Edenflowers.Pricing.Promotion do
 
     update :link_gift_order do
       description "Jennie links a pass-it-on card to the gift order it goes out with, typing the card's code on " <>
-                    "the order's page. A nil `gift_order_id` unlinks it. Either only until the recipient first " <>
-                    "opens the card (`gift_order_linkable?`). One card per order, and one order per card: a card " <>
+                    "the order's page. A nil `gift_order_id` unlinks it. Either only before handover and before " <>
+                    "the recipient opens the card (`gift_order_linkable?`). One card per order, and one order per card: a card " <>
                     "already linked is unlinked before it can go with another order."
 
       accept [:gift_order_id]
-      validate {Holds, calculation: :gift_order_linkable?, message: "has already been opened by its recipient"}
+
+      validate {Holds,
+                calculation: :gift_order_linkable?,
+                message: "has already been opened, or its gift has been fulfilled or cancelled"}
 
       # So a mistyped code can't take a card off the gift it went with.
       validate fn changeset, _context ->
@@ -306,9 +309,14 @@ defmodule Edenflowers.Pricing.Promotion do
       argument :today, :date, allow_nil?: false, default: &Edenflowers.ShopTime.today/0
     end
 
-    calculate :gift_order_linkable?, :boolean, expr(kind == :pass_it_on and is_nil(expiration_date)) do
+    calculate :gift_order_linkable?,
+              :boolean,
+              expr(
+                kind == :pass_it_on and is_nil(expiration_date) and
+                  (is_nil(gift_order_id) or exists(gift_order, pass_it_on_card_changeable?))
+              ) do
       description "A pass-it-on card Jennie can still link to its gift delivery: its recipient hasn't opened it " <>
-                    "yet, which would have started its 30 days."
+                    "yet, which would have started its 30 days, and any linked gift is still to deliver."
     end
 
     calculate :card_status,
