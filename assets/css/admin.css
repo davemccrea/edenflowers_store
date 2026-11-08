@@ -420,6 +420,10 @@
    canvas colour from body, so body is painted the chrome colour to match. */
 body:has(.admin-theme) {
   background-color: var(--color-forest);
+  @media (width < 64rem) {
+    padding-top: 0;
+  }
+
   --admin-l: calc(var(--admin-lightness, 26) * 1%);
   --admin-c: calc(var(--admin-chroma, 50) / 1000);
   --admin-h: var(--admin-hue, 152);
@@ -596,5 +600,14 @@ body:has(.admin-theme) {
     pointer-events: none;
     opacity: calc(var(--admin-grain, 60) / 100);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* A solid mobile header gives iOS a single colour at the viewport edge. */
+.admin-topbar {
+  background-image: none;
+
+  &::before {
+    content: none;
   }
 }

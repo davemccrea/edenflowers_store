@@ -322,9 +322,9 @@ defmodule EdenflowersWeb.Layouts do
       <div class={["flex min-w-0 flex-1 flex-col", @fill_viewport && "min-h-0"]}>
         <%!-- Mobile topbar mirrors the store header's menu button and wordmark.
              Equal side columns keep the wordmark centred on the bar.
-             It reaches up under the status bar and stays pinned there: iOS standalone draws a glass
-             blur over the top edge unless a sticky or fixed element covers it. --%>
-        <div class="[view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] admin-chrome bg-forest text-forest-content border-forest-content/15 -mt-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+0.5rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
+             The topbar owns the top safe-area padding on phones.
+             shortcut: 8px extra clearance for iOS blur; remove when it no longer overlaps controls. --%>
+        <div class="admin-topbar [view-transition-name:admin-topbar] grid-cols-[5rem_1fr_5rem] admin-chrome bg-forest text-forest-content border-forest-content/15 pt-[calc(env(safe-area-inset-top)+1rem)] sticky top-0 z-30 grid items-center border-b px-3 pb-2 sm:px-6 lg:hidden">
           <div class="flex items-center">
             <button
               type="button"
@@ -467,7 +467,7 @@ defmodule EdenflowersWeb.Layouts do
 
     ~H"""
     <%!-- Below lg the whole drawer scrolls, so a pinned footer can't squeeze the links into an unnoticed scroll box --%>
-    <div class="flex h-full flex-col overflow-y-auto overscroll-contain py-5 lg:overflow-visible">
+    <div class="flex h-full flex-col overflow-y-auto overscroll-contain pt-7 pb-5 lg:overflow-visible">
       <div class="mb-6 flex items-center justify-between px-5">
         <.link navigate={~p"/admin"} class="logo-wordmark text-lg">
           Eden Flowers

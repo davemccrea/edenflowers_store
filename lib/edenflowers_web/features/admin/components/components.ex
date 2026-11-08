@@ -856,7 +856,7 @@ defmodule EdenflowersWeb.Admin.Components do
     ~H"""
     <header
       :if={@sticky}
-      class="bg-base-100 border-base-content/12 top-[calc(env(safe-area-inset-top)+4rem)] sticky z-20 -mx-4 -mt-5 mb-6 flex items-center gap-3 border-b px-4 py-2.5 sm:-mx-6 sm:-mt-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-8 lg:mb-8 lg:px-8 lg:py-3"
+      class="bg-base-100 border-base-content/12 top-[calc(env(safe-area-inset-top)+4.5rem)] sticky z-20 -mx-4 -mt-5 mb-6 flex items-center gap-3 border-b px-4 py-2.5 sm:-mx-6 sm:-mt-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-8 lg:mb-8 lg:px-8 lg:py-3"
     >
       <.link
         :if={@back}
