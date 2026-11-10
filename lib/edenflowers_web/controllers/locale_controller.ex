@@ -20,14 +20,26 @@ defmodule EdenflowersWeb.LocaleController do
     redirect(conn, to: ~p"/admin/account")
   end
 
-  defp get_redirect_path(_conn, %{"redirect_to" => redirect_to}), do: redirect_to
-
-  defp get_redirect_path(conn, _params) do
-    with [referer] <- get_req_header(conn, "referer"),
-         %URI{path: path} when is_binary(path) <- URI.parse(referer) do
+  defp get_redirect_path(conn, params) do
+    with path when is_binary(path) <- params["redirect_to"] || referer_path(conn),
+         true <- local_path?(path) do
       path
     else
       _ -> ~q"/#{language}"
     end
   end
+
+  defp referer_path(conn) do
+    with [referer] <- get_req_header(conn, "referer"),
+         %URI{path: path} <- URI.parse(referer) do
+      path
+    else
+      _ -> nil
+    end
+  end
+
+  # Phoenix's redirect/2 raises on anything but a local path.
+  defp local_path?("//" <> _), do: false
+  defp local_path?("/" <> _ = path), do: not String.contains?(path, "\\")
+  defp local_path?(_), do: false
 end

@@ -127,7 +127,7 @@ defmodule Edenflowers.MixProject do
       {:req, "~> 0.5"},
       {:tz, "~> 0.28"},
       # Dev & build tooling
-      {:igniter, "~> 0.4"},
+      {:igniter, "~> 0.4", only: [:dev, :test]},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:tailwind_formatter, "~> 0.4.2", only: [:dev, :test], runtime: false},
       {:tidewave, "~> 0.9", only: [:dev]},

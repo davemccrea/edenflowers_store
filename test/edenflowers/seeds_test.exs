@@ -1,10 +1,10 @@
 defmodule Edenflowers.SeedsTest do
   use Edenflowers.DataCase, async: false
 
+  require Ash.Query
+
   import ExUnit.CaptureIO
   import Mox
-
-  require Ash.Query
 
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order

@@ -12,10 +12,11 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
   @resend_cooldown_seconds 30
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     socket =
       socket
-      |> assign(strategy: Info.strategy!(User, :otp))
+      # Set by EdenflowersWeb.Plugs.PutClientIp; User's per-visitor rate limits key on it.
+      |> assign(strategy: Info.strategy!(User, :otp), client_ip: session["client_ip"])
       |> reset_state()
 
     # Set by AuthController.failure/3 after a wrong code, so the user lands
@@ -53,7 +54,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
           <div class="space-y-2 text-center">
             <h1 class="text-xl font-semibold">{~t"Check your email"}</h1>
             <p class="text-base-content/70 text-sm">
-              {~t"A 6-digit code was sent to"} <span class="text-base-content break-all font-semibold">{@email}</span>. {~t"It expires in 10 minutes."}
+              {~t"An 8-digit code was sent to"} <span class="text-base-content break-all font-semibold">{@email}</span>. {~t"It expires in 10 minutes."}
             </p>
           </div>
 
@@ -75,8 +76,8 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
               required={false}
               autocomplete="one-time-code"
               inputmode="numeric"
-              maxlength="6"
-              pattern="[0-9]{6}"
+              maxlength="8"
+              pattern="[0-9]{8}"
               spellcheck="false"
             />
 
@@ -183,13 +184,13 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
       email: nil,
       trigger_action: false,
       resend_remaining: 0,
-      request_form: build_form(strategy, strategy.request_action_name, "otp-request"),
-      sign_in_form: build_form(strategy, strategy.sign_in_action_name, "otp-sign-in")
+      request_form: build_form(socket, strategy.request_action_name, "otp-request"),
+      sign_in_form: build_form(socket, strategy.sign_in_action_name, "otp-sign-in")
     )
   end
 
   defp request_code(%{assigns: %{strategy: strategy}} = socket, email) do
-    form = build_form(strategy, strategy.request_action_name, "otp-request")
+    form = build_form(socket, strategy.request_action_name, "otp-request")
 
     case AshPhoenix.Form.submit(form, params: %{"email" => email}) do
       {:error, form} ->
@@ -216,14 +217,14 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     end
   end
 
-  defp build_form(strategy, action_name, id) do
+  defp build_form(%{assigns: %{strategy: strategy, client_ip: client_ip}}, action_name, id) do
     strategy.resource
     |> AshPhoenix.Form.for_action(action_name,
       domain: Info.authentication_domain!(strategy.resource),
       as: "user",
       id: id,
       transform_errors: fn _source, error -> error end,
-      context: %{strategy: strategy, private: %{ash_authentication?: true}}
+      context: %{strategy: strategy, client_ip: client_ip, private: %{ash_authentication?: true}}
     )
     |> to_form()
   end
@@ -242,7 +243,7 @@ defmodule EdenflowersWeb.Auth.OtpSignInLive do
     end
   end
 
-  defp rate_limited?(%{source: %{errors: errors}}) when is_list(errors) do
+  defp rate_limited?(%Phoenix.HTML.Form{source: %AshPhoenix.Form{source: %{errors: errors}}}) do
     Enum.any?(errors, &match?(%AshRateLimiter.LimitExceeded{}, &1))
   end
 

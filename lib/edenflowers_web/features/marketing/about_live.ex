@@ -194,7 +194,7 @@ defmodule EdenflowersWeb.Marketing.AboutLive do
 
       <.trusted_by />
 
-      <.live_component module={ContactDrawer} id="contact-drawer" />
+      <.live_component module={ContactDrawer} id="contact-drawer" client_ip={@client_ip} />
     </Layouts.app>
     """
   end

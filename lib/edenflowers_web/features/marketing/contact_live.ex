@@ -97,7 +97,7 @@ defmodule EdenflowersWeb.Marketing.ContactLive do
         </div>
       </.container>
 
-      <.live_component module={ContactDrawer} id="contact-drawer" />
+      <.live_component module={ContactDrawer} id="contact-drawer" client_ip={@client_ip} />
     </Layouts.app>
     """
   end

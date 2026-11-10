@@ -497,7 +497,7 @@ defmodule Edenflowers.Orders.OrderTest do
       assert order.user_id == user.id
     end
 
-    test "updates existing user name when email already exists" do
+    test "keeps an existing user's name when the email already exists" do
       alias Edenflowers.Accounts.User
 
       {:ok, existing_user} = Edenflowers.Accounts.upsert_user("existing@example.com", "Old Name", authorize?: false)
@@ -514,7 +514,7 @@ defmodule Edenflowers.Orders.OrderTest do
                |> Ash.update(authorize?: false)
 
       {:ok, updated_user} = Accounts.get_user_by_email("existing@example.com", authorize?: false)
-      assert updated_user.name == "Updated Name"
+      assert updated_user.name == "Old Name"
       assert updated_user.id == existing_user.id
 
       assert order.user_id == existing_user.id

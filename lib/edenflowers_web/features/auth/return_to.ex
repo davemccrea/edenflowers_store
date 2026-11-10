@@ -7,7 +7,7 @@ defmodule EdenflowersWeb.Auth.ReturnTo do
   login flow.
   """
 
-  @disallowed_prefixes ["/sign-in", "/sign-out", "/auth", "/password-reset"]
+  @disallowed_prefixes ["/sign-in", "/sign-out", "/auth"]
 
   @doc """
   Returns the candidate if it's a safe path to redirect to after sign-in,

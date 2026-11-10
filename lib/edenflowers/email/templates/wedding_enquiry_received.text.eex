@@ -1,0 +1,7 @@
+<%= dgettext("emails", "Hi,") %>
+
+<%= dgettext("emails", "Thank you for your enquiry. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it.") %>
+
+<%= dgettext("emails", "Warm wishes,") %>
+
+<%= signature() %>

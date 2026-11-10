@@ -98,7 +98,7 @@ defmodule Edenflowers.Orders.Subscription.Changes.CreateOccurrenceTest do
   test "creates, charges and places the order a few days before delivery, then moves on", ctx do
     subscription = subscription_for(ctx)
     stub_geocoding()
-    {:ok, _user} = Edenflowers.Accounts.upsert_user("ada@example.com", "Ada King", authorize?: false)
+    Edenflowers.Accounts.update_name!(ctx.user, "Ada King", authorize?: false)
     expected_key = "sub-#{subscription.id}-#{ctx.date}"
 
     expect(StripeAPI.Mock, :charge_off_session, fn 6000, params, ^expected_key ->

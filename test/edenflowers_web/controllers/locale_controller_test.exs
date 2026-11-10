@@ -24,6 +24,27 @@ defmodule EdenflowersWeb.LocaleControllerTest do
     end
   end
 
+  describe "GET /locale/:locale redirect target" do
+    test "follows a local path, including its query string and the sign-in page" do
+      for path <- ["/sv/shop?page=2&q=a", "/sv/sign-in"] do
+        conn = get(build_conn(), "/locale/fi", %{"redirect_to" => path})
+        assert redirected_to(conn) == path
+      end
+    end
+
+    test "falls back to the home page for anything that is not a local path" do
+      for target <- ["https://x.example/", "//evil.example", "/\\evil.example", "shop"] do
+        conn = get(build_conn(), "/locale/fi", %{"redirect_to" => target})
+        assert redirected_to(conn) == "/sv"
+      end
+    end
+
+    test "applies the same check to the Referer" do
+      conn = build_conn() |> put_req_header("referer", "https://shop.example//evil.example") |> get("/locale/fi")
+      assert redirected_to(conn) == "/sv"
+    end
+  end
+
   describe "GET /admin-locale/:locale" do
     for locale <- ~w(sv-FI en-GB) do
       test "stores #{locale} separately from the storefront preference" do

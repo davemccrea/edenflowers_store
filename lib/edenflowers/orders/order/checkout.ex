@@ -70,7 +70,8 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
   oban do
     triggers do
-      # Removing a cart's last line leaves it empty.
+      # Removing a cart's last line leaves it empty. A cart with lines goes after 90 days, as it
+      # holds the customer's contact details. Keep the filter in step with the destroy action's.
       trigger :purge_abandoned_cart do
         action :purge_abandoned_cart
         queue :default
@@ -82,8 +83,10 @@ defmodule Edenflowers.Orders.Order.Checkout do
         default_actor system_actor()
 
         where expr(
-                state != :placed and is_nil(payment_intent_id) and not exists(line_items, true) and
-                  updated_at < ago(1, :day) and (is_nil(promotion_id) or updated_at < ago(30, :day))
+                state != :placed and is_nil(payment_intent_id) and
+                  ((not exists(line_items, true) and updated_at < ago(1, :day) and
+                      (is_nil(promotion_id) or updated_at < ago(30, :day))) or
+                     updated_at < ago(90, :day))
               )
       end
     end
@@ -97,12 +100,15 @@ defmodule Edenflowers.Orders.Order.Checkout do
 
   actions do
     destroy :purge_abandoned_cart do
-      description "Run nightly: deletes a cart that was never placed, has no lines or PaymentIntent and hasn't " <>
-                    "changed for a day, or for 30 days if it holds a code from a link."
+      description "Run nightly: deletes a cart that was never placed and has no PaymentIntent, when it has no " <>
+                    "lines and hasn't changed for a day (30 days if it holds a code from a link), or has " <>
+                    "lines and hasn't changed for 90 days."
 
       change filter expr(
-                      state != :placed and is_nil(payment_intent_id) and not exists(line_items, true) and
-                        updated_at < ago(1, :day) and (is_nil(promotion_id) or updated_at < ago(30, :day))
+                      state != :placed and is_nil(payment_intent_id) and
+                        ((not exists(line_items, true) and updated_at < ago(1, :day) and
+                            (is_nil(promotion_id) or updated_at < ago(30, :day))) or
+                           updated_at < ago(90, :day))
                     )
     end
 

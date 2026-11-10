@@ -17,6 +17,7 @@ defmodule EdenflowersWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
+    plug EdenflowersWeb.Plugs.PutClientIp
     plug :put_root_layout, html: {EdenflowersWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
@@ -60,6 +61,7 @@ defmodule EdenflowersWeb.Router do
         EdenflowersWeb.Hooks.PutCurrentPath,
         EdenflowersWeb.Hooks.PutOrder,
         EdenflowersWeb.Hooks.PutNoticeBar,
+        EdenflowersWeb.Hooks.PutClientIp,
         EdenflowersWeb.Hooks.HandleLineItemChanged
       ] do
       localize do

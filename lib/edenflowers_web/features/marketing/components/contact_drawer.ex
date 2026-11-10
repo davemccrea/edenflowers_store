@@ -12,7 +12,7 @@ defmodule EdenflowersWeb.Marketing.ContactDrawer do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, form: build_form(%{}), sent?: false)}
+    {:ok, assign(socket, form: build_form(%{}), sent?: false, rate_limited?: false)}
   end
 
   @impl true
@@ -53,6 +53,9 @@ defmodule EdenflowersWeb.Marketing.ContactDrawer do
             <%!-- Honeypot: hidden from people, so only bots fill it in. --%>
             <.input field={@form[:website]} hidden tabindex="-1" autocomplete="off" aria-hidden="true" />
 
+            <p :if={@rate_limited?} id="contact-rate-limited" class="text-error text-sm" role="alert">
+              {~t"Too many requests. Please wait a few minutes and try again."}
+            </p>
             <.button type="submit" variant="primary">{~t"Send message"}</.button>
             <p class="text-base-content/70 text-sm">
               {~t"Or email me directly at"}
@@ -60,7 +63,7 @@ defmodule EdenflowersWeb.Marketing.ContactDrawer do
             </p>
           </.form>
           <p :if={@sent?} id="contact-sent" class="text-base-content/80">
-            {~t"Your message is on its way, and a copy is in your inbox. I'll get back to you as soon as I can."}
+            {~t"Your message is on its way. I'll get back to you as soon as I can."}
           </p>
         </div>
       </.drawer>
@@ -74,9 +77,12 @@ defmodule EdenflowersWeb.Marketing.ContactDrawer do
   end
 
   def handle_event("send", %{"message" => params}, socket) do
-    case ContactMessage.submit(params, to_string(Edenflowers.Format.locale())) do
+    case ContactMessage.submit(params, to_string(Edenflowers.Format.locale()), socket.assigns.client_ip) do
       :ok ->
-        {:noreply, assign(socket, sent?: true)}
+        {:noreply, assign(socket, sent?: true, rate_limited?: false)}
+
+      {:error, :rate_limited} ->
+        {:noreply, assign(socket, rate_limited?: true)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset, as: :message))}

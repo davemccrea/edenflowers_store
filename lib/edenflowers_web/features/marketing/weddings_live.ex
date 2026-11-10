@@ -253,7 +253,7 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
           />
           <div :if={@enquiry_sent?} id="enquiry-sent">
             <p class="text-base-content/80">
-              {~t"Your enquiry is on its way, and a copy is in your inbox. I'll get back to you with a quote as soon as I can. Nothing is booked until you confirm it."}
+              {~t"Your enquiry is on its way. I'll get back to you with a quote as soon as I can. Nothing is booked until you confirm it."}
             </p>
           </div>
         </div>
@@ -273,9 +273,12 @@ defmodule EdenflowersWeb.Marketing.WeddingsLive do
     estimate = estimate_label(estimate(items, quantities))
     locale = to_string(Edenflowers.Format.locale())
 
-    case WeddingEnquiry.submit(params, selection_lines(items, quantities), estimate, locale) do
+    case WeddingEnquiry.submit(params, selection_lines(items, quantities), estimate, locale, socket.assigns.client_ip) do
       :ok ->
         {:noreply, assign(socket, enquiry_sent?: true)}
+
+      {:error, :rate_limited} ->
+        {:noreply, put_flash(socket, :error, ~t"Too many requests. Please wait a few minutes and try again.")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, enquiry_form: to_form(changeset, as: :enquiry))}
