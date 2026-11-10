@@ -89,6 +89,12 @@ ssh -T edenflowers-production "cd /opt/edenflowers_store && docker compose exec 
 
 The deploy workflow SSHes in with the private half of `github_actions_public_key`, stored as `DEPLOY_SSH_KEY` next to `DEPLOY_HOST` and `DEPLOY_USER` in the `production` GitHub environment.
 
+## Cloudflare rate limiting
+
+The zone is on the Free plan, which allows one rate limiting rule with a 10 s period, a 10 s block, counting by IP, and only the Path field in the expression (no method). The one rule, "Limit sign-in attempts per IP" (Security → Security rules), blocks an IP for 10 s after 5 requests in 10 s whose path starts with `/auth/`. The only routes there are `POST /auth/user/otp/request` and `POST /auth/user/otp/sign_in`, so it slows sign-in code guessing before it reaches the app. The app's own per-email and per-IP limits remain the main defence; this is a second layer.
+
+Forms that go over the `/live` websocket can't be counted per message, so they aren't covered. A rule must never match `/webhook/stripe`, `/webhook/papra`, `/pay/`, `/checkout`, `/order/` or `/health`: a blocked Stripe webhook means a paid order is never placed. A wrongly blocked customer shows up in Security → Events.
+
 ## Monitoring
 
 Better Stack's uptime monitor checks https://edenflowers.fi/health every 3 minutes and emails David when it fails. The route answers 200 only when the app can reach the database. Deploys pause the monitor while the app restarts.
