@@ -651,8 +651,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
 
   def handle_event("change_payment", %{"payment" => params} = event, socket) do
     %{payment_form: form, current_user: actor} = socket.assigns
-    form = PaymentActions.change_payment_form(form, params, event["_target"], actor)
-    {:noreply, socket |> assign(:payment_form, form) |> assign_preview(:payment, form)}
+    {:noreply, assign(socket, PaymentActions.change_payment(form, params, event["_target"], actor))}
   end
 
   # Money owed back, or the menu's Refund, opens the refund form.
@@ -678,8 +677,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLive do
   end
 
   def handle_event("change_refund", %{"refund" => params} = event, socket) do
-    form = PaymentActions.change_refund_form(socket.assigns.refund_form, params, event["_target"])
-    {:noreply, socket |> assign(:refund_form, form) |> assign_preview(:refunded, form)}
+    {:noreply, assign(socket, PaymentActions.change_refund(socket.assigns.refund_form, params, event["_target"]))}
   end
 
   def handle_event("refund", %{"refund" => params}, socket) do

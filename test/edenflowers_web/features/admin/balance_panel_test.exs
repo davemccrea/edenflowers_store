@@ -103,7 +103,6 @@ defmodule EdenflowersWeb.Admin.BalancePanelTest do
           |> element(form)
           |> render_change(%{
             "_target" => ["refund", "payment_method"],
-            "record_id" => record.id,
             "refund" => %{"payment_method" => how}
           })
         end
