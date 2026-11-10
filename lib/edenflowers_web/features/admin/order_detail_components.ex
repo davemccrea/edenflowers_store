@@ -808,7 +808,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   card it was placed with, back to the first, and the order its own card brought in, onwards.
   """
   def pass_it_on_card(assigns) do
-    assigns = assign(assigns, :chain, card_chain_tree(assigns.order.pass_it_on_chain))
+    assigns = assign(assigns, :chain, assigns.order.pass_it_on_chain)
 
     ~H"""
     <.widget id="order-pass-it-on" title={~t"Pass it on"}>
@@ -847,39 +847,20 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
         </div>
 
         <.timeline
-          :if={
-            length(@order.pass_it_on_chain) > 1 || @order.pass_it_on_card ||
-              Enum.any?(@order.pass_it_on_chain, &match?(%{promotion: %{kind: :pass_it_on}}, &1))
-          }
+          :if={@chain.visible?}
           id="order-card-chain"
           aria-label={~t"Orders linked by Pass it on cards"}
         >
           <.card_chain_nodes
-            nodes={@chain}
+            nodes={@chain.nodes}
             current_id={@order.id}
             locale={@locale}
-            markers?={length(@order.pass_it_on_chain) > 1}
+            markers?={@chain.multiple?}
           />
         </.timeline>
       </div>
     </.widget>
     """
-  end
-
-  defp card_chain_tree(orders) do
-    ids = MapSet.new(orders, & &1.id)
-    source_id = fn order -> if order.promotion, do: order.promotion.gift_order_id end
-    roots = Enum.reject(orders, &MapSet.member?(ids, source_id.(&1)))
-    # A malformed cycle has no root; start with the first order and render each once.
-    roots = if roots == [], do: Enum.take(orders, 1), else: roots
-    card_chain_nodes(roots, Enum.group_by(orders, source_id), MapSet.new())
-  end
-
-  defp card_chain_nodes(orders, children, seen) do
-    for order <- orders, not MapSet.member?(seen, order.id) do
-      descendants = card_chain_nodes(Map.get(children, order.id, []), children, MapSet.put(seen, order.id))
-      %{order: order, children: descendants}
-    end
   end
 
   attr :nodes, :list, required: true
