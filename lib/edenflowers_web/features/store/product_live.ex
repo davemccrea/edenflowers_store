@@ -27,8 +27,13 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
   @impl true
   def mount(%{"slug" => slug} = params, _session, socket) do
-    product = get_product!(slug)
+    case get_product!(slug) do
+      %{product_variants: []} -> {:ok, push_navigate(socket, to: ~q"/#{language}/store")}
+      product -> mount_product(product, params, socket)
+    end
+  end
 
+  defp mount_product(product, params, socket) do
     if connected?(socket),
       do: Events.subscribe(Events.product_variant_changed(product.id))
 
@@ -500,13 +505,24 @@ defmodule EdenflowersWeb.Store.ProductLive do
   def handle_info(%Phoenix.Socket.Broadcast{topic: topic}, socket) do
     if topic == Events.topic(Events.product_variant_changed(socket.assigns.product.id)) do
       {:ok, product} = Catalog.get_product_by_id(socket.assigns.product.id)
-      variants = product.product_variants
 
-      selected_variant =
-        Enum.find(variants, &(&1.id == socket.assigns.selected_variant.id)) ||
-          default_variant(socket.assigns.subscribe?, selectable_variants(variants))
+      case product.product_variants do
+        [] ->
+          {:noreply, push_navigate(socket, to: ~q"/#{language}/store")}
 
-      {:noreply, assign(socket, product_variants: variants, selected_variant: selected_variant)}
+        variants ->
+          selected_variant =
+            Enum.find(variants, &(&1.id == socket.assigns.selected_variant.id)) ||
+              default_variant(socket.assigns.subscribe?, selectable_variants(variants))
+
+          photo_slug =
+            if selected_variant.id == socket.assigns.selected_variant.id,
+              do: socket.assigns.photo_slug,
+              else: selected_variant.photo_slug
+
+          {:noreply,
+           assign(socket, product_variants: variants, selected_variant: selected_variant, photo_slug: photo_slug)}
+      end
     else
       {:noreply, socket}
     end

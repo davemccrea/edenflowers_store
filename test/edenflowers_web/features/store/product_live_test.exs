@@ -12,6 +12,31 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     %{conn: with_cart(conn, order), order: order}
   end
 
+  test "removing the last size sends an open product page back to the store", %{conn: conn} do
+    product = generate(product(draft: false))
+    variant = generate(product_variant(product_id: product.id, size: nil))
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
+
+    Ash.destroy!(variant, authorize?: false)
+
+    assert_redirect(view, ~p"/en/store")
+    assert {:error, {:live_redirect, %{to: "/en/store"}}} = live(conn, ~p"/en/product/#{product.slug}")
+  end
+
+  test "removing the selected size keeps another size available to buy", %{conn: conn, order: order} do
+    product = generate(product(draft: false))
+    small = generate(product_variant(product_id: product.id, size: :small, price: "30.00"))
+    large = generate(product_variant(product_id: product.id, size: :large, price: "60.00"))
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}?size=small")
+
+    Ash.destroy!(small, authorize?: false)
+
+    assert has_element?(view, "[data-testid=variant-option-large][checked]")
+    view |> form("[data-testid=product-form]") |> render_submit()
+    assert [%LineItem{product_variant_id: variant_id}] = line_items(order)
+    assert variant_id == large.id
+  end
+
   test "a one-size product has no size to choose, and still adds to the cart", %{conn: conn, order: order} do
     product = generate(product(draft: false))
     generate(product_variant(product_id: product.id, size: nil, price: "6.00"))
