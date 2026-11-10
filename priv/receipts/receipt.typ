@@ -36,7 +36,7 @@
     assert(key in order, message: "receipt: missing optional key `" + key + "` (set to none if absent)")
   }
   let line_item_required = (
-    "product_name", "variant_size", "quantity",
+    "product_name", "variant_size", "bow_colour", "quantity",
     "unit_price_ex_tax", "tax_rate", "total",
   )
   for item in order.line_items {

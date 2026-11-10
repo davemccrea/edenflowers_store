@@ -439,8 +439,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           <p class="text-base-content text-base">
             <span class="tabular-nums">{line_item.quantity} ×</span> {line_item.product_name}
           </p>
-          <p :if={line_item.variant_size} class="text-base-content/85 mt-0.5 text-sm">
-            {variant_size_label(line_item.variant_size)}
+          <p :if={line_item.variant_size || line_item.bow_colour} class="text-base-content/85 mt-0.5 text-sm">
+            {Edenflowers.Format.line_item_choices(line_item)}
           </p>
         </div>
       </li>
@@ -720,10 +720,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
     """
   end
 
-  def line_label(%{variant_size: nil} = line_item), do: "#{line_item.quantity} × #{line_item.product_name}"
-
-  def line_label(line_item),
-    do: "#{line_item.quantity} × #{line_item.product_name}, #{variant_size_label(line_item.variant_size)}"
+  def line_label(line_item) do
+    "#{line_item.quantity} × #{Edenflowers.Format.line_item_name(line_item)}"
+  end
 
   def payment_label(%{reverses_payment_id: reversed, method: method}) when is_binary(reversed),
     do: ~t"Undone · #{how = OrderLog.payment_method_label(method)}"

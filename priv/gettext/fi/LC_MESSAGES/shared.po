@@ -7,12 +7,12 @@ msgstr ""
 "Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers/catalog/product_type.ex:43
+#: lib/edenflowers/catalog/product_type.ex:46
 #, elixir-autogen, elixir-format
 msgid "%{count} pieces"
 msgstr "%{count} kpl"
 
-#: lib/edenflowers/catalog/product_type.ex:39
+#: lib/edenflowers/catalog/product_type.ex:41
 #, elixir-autogen, elixir-format
 msgid "%{count} stems"
 msgstr "%{count} vartta"
@@ -37,7 +37,7 @@ msgstr "Ostoskori, tyhjä"
 msgid "Connection lost"
 msgstr "Yhteys katkesi"
 
-#: lib/edenflowers/catalog/product_type.ex:20
+#: lib/edenflowers/catalog/product_type.ex:22
 #, elixir-autogen, elixir-format
 msgid "Dimensions (cm)"
 msgstr "Mitat (cm)"
@@ -62,7 +62,7 @@ msgstr "Ilmainen toimitus"
 msgid "From"
 msgstr "Alkaen"
 
-#: lib/edenflowers/catalog/product_type.ex:18
+#: lib/edenflowers/catalog/product_type.ex:19
 #, elixir-autogen, elixir-format
 msgid "Height (cm)"
 msgstr "Korkeus (cm)"
@@ -73,12 +73,12 @@ msgstr "Korkeus (cm)"
 msgid "Language"
 msgstr "Kieli"
 
-#: lib/edenflowers_web/components/core_components.ex:1377
+#: lib/edenflowers/catalog/product_variant_size.ex:15
 #, elixir-autogen, elixir-format
 msgid "Large"
 msgstr "Suuri"
 
-#: lib/edenflowers_web/components/core_components.ex:1376
+#: lib/edenflowers/catalog/product_variant_size.ex:14
 #, elixir-autogen, elixir-format
 msgid "Medium"
 msgstr "Keskikokoinen"
@@ -88,17 +88,17 @@ msgstr "Keskikokoinen"
 msgid "Next month"
 msgstr "Seuraava kuukausi"
 
-#: lib/edenflowers/catalog/product_type.ex:23
+#: lib/edenflowers/catalog/product_type.ex:25
 #, elixir-autogen, elixir-format
 msgid "Pieces"
 msgstr "Kappalemäärä"
 
-#: lib/edenflowers/catalog/product_type.ex:41
+#: lib/edenflowers/catalog/product_type.ex:44
 #, elixir-autogen, elixir-format
 msgid "Pot %{size} cm"
 msgstr "Ruukku %{size} cm"
 
-#: lib/edenflowers/catalog/product_type.ex:21
+#: lib/edenflowers/catalog/product_type.ex:23
 #, elixir-autogen, elixir-format
 msgid "Pot (cm)"
 msgstr "Ruukku (cm)"
@@ -113,7 +113,7 @@ msgstr "Edellinen kuukausi"
 msgid "Reconnecting…"
 msgstr "Yhdistetään uudelleen…"
 
-#: lib/edenflowers_web/components/core_components.ex:1375
+#: lib/edenflowers/catalog/product_variant_size.ex:13
 #, elixir-autogen, elixir-format
 msgid "Small"
 msgstr "Pieni"
@@ -123,17 +123,17 @@ msgstr "Pieni"
 msgid "Sold out"
 msgstr "Loppuunmyyty"
 
-#: lib/edenflowers/catalog/product_type.ex:19
+#: lib/edenflowers/catalog/product_type.ex:20
 #, elixir-autogen, elixir-format
 msgid "Stems"
 msgstr "Varret"
 
-#: lib/edenflowers/catalog/product_type.ex:22
+#: lib/edenflowers/catalog/product_type.ex:24
 #, elixir-autogen, elixir-format
 msgid "Weight (g)"
 msgstr "Paino (g)"
 
-#: lib/edenflowers/format.ex:90
+#: lib/edenflowers/format.ex:109
 #, elixir-autogen, elixir-format
 msgid "at %{time}"
 msgstr "klo %{time}"
@@ -185,7 +185,27 @@ msgstr "Avaa navigointivalikko"
 msgid "The first %{km} km of delivery from Minimossen are free on marked bouquets."
 msgstr "Merkityille kimpuille toimituksen ensimmäiset %{km} km Minimossenista ovat ilmaisia."
 
-#: lib/edenflowers/format.ex:130
+#: lib/edenflowers/format.ex:149
 #, elixir-autogen, elixir-format
 msgid "Available from %{date}"
 msgstr "Saatavilla %{date} alkaen"
+
+#: lib/edenflowers/catalog/bow_colour.ex:13
+#, elixir-autogen, elixir-format
+msgid "Blue bow"
+msgstr "Sininen rusetti"
+
+#: lib/edenflowers/catalog/bow_colour.ex:11
+#, elixir-autogen, elixir-format
+msgid "Red bow"
+msgstr "Punainen rusetti"
+
+#: lib/edenflowers/catalog/bow_colour.ex:12
+#, elixir-autogen, elixir-format
+msgid "Yellow bow"
+msgstr "Keltainen rusetti"
+
+#: lib/edenflowers/catalog/product_type.ex:21
+#, elixir-autogen, elixir-format
+msgid "Diameter (cm)"
+msgstr "Halkaisija (cm)"

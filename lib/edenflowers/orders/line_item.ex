@@ -51,6 +51,10 @@ defmodule Edenflowers.Orders.LineItem do
     table "line_items"
     migration_types unit_price: :decimal
 
+    # A Custom Order's described items have no size, so they're outside the
+    # identity that merges a catalogue line.
+    identity_wheres_to_sql unique_product_variant: "product_variant_id IS NOT NULL"
+
     check_constraints do
       check_constraint :unit_price, "line_items_valid_unit_price",
         check: "unit_price >= 0 AND unit_price = round(unit_price, 2)",
@@ -74,7 +78,7 @@ defmodule Edenflowers.Orders.LineItem do
                     "A subscription goes alone: adding one, or beside one, replaces a cart of only that product " <>
                     "and is refused otherwise."
 
-      accept [:order_id, :product_variant_id, :quantity, :is_card, :interval_weeks]
+      accept [:order_id, :product_variant_id, :quantity, :is_card, :interval_weeks, :bow_colour]
 
       # KeepSubscriptionAlone replaces or refuses before the upsert can merge a
       # one-off and a subscription of the same variant.
@@ -84,6 +88,7 @@ defmodule Edenflowers.Orders.LineItem do
 
       validate attribute_in(:interval_weeks, Edenflowers.Orders.Subscription.intervals())
       validate Validations.Subscribable
+      validate {Validations.BowColour, required?: true}
       validate Validations.WithinStock
       change PopulateFromVariant
       change Changes.KeepSubscriptionAlone
@@ -94,7 +99,7 @@ defmodule Edenflowers.Orders.LineItem do
       description "A line Jennie enters when she places or edits a Custom Order: a size from the catalogue, " <>
                     "priced from it, or an item she describes and prices herself with a VAT rate."
 
-      accept [:product_variant_id, :product_name, :unit_price, :quantity, :is_card]
+      accept [:product_variant_id, :product_name, :unit_price, :quantity, :is_card, :bow_colour]
       # A catalogue line takes them from its variant; a custom one is checked below.
       allow_nil_input [:product_name, :unit_price]
       argument :kind, :atom, allow_nil?: false, constraints: [one_of: [:catalogue, :custom]]
@@ -104,6 +109,9 @@ defmodule Edenflowers.Orders.LineItem do
       validate present(:product_name), message: "describe the item", where: [argument_equals(:kind, :custom)]
       validate present(:unit_price), message: "enter a price", where: [argument_equals(:kind, :custom)]
       validate present(:tax_rate_id), message: "choose a VAT rate", where: [argument_equals(:kind, :custom)]
+
+      # Jennie may leave the bow to herself, unlike the customer on the web.
+      validate Validations.BowColour
 
       change PopulateFromVariant, where: [argument_equals(:kind, :catalogue)]
       change Changes.SetTaxRate, where: [argument_equals(:kind, :custom)]
@@ -202,6 +210,9 @@ defmodule Edenflowers.Orders.LineItem do
     # How often a subscription line is to be delivered, chosen on the product
     # page. Nil for a one-off.
     attribute :interval_weeks, :integer
+    # The bow the customer chose on the product page. Nil for a product that
+    # offers none, and for a Custom Order line Jennie leaves to herself.
+    attribute :bow_colour, Edenflowers.Catalog.BowColour
     attribute :variant_size, Edenflowers.Catalog.ProductVariantSize
     timestamps()
   end
@@ -276,6 +287,11 @@ defmodule Edenflowers.Orders.LineItem do
   end
 
   identities do
-    identity :unique_product_variant, [:order_id, :product_variant_id]
+    # Only a catalogue size merges into its line; Custom Order items it
+    # describes are never merged. Nils must not be distinct, or a line for a
+    # product without a bow would stop merging too.
+    identity :unique_product_variant, [:order_id, :product_variant_id, :bow_colour],
+      where: expr(not is_nil(product_variant_id)),
+      nils_distinct?: false
   end
 end

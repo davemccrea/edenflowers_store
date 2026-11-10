@@ -321,6 +321,22 @@ defmodule Edenflowers.Catalog.ProductTest do
     end
   end
 
+  test "only a wreath category keeps a product's bow colours" do
+    wreath = generate(product(bow_colours: [:red, :blue]))
+    assert wreath.bow_colours == [:red, :blue]
+
+    bouquets = generate(product_category())
+    assert update!(wreath, %{product_category_id: bouquets.id}).bow_colours == []
+  end
+
+  test "a wreath is never a subscription, as its later deliveries couldn't carry the bow" do
+    wreaths = generate(product_category(product_type: :wreath))
+    bouquet = generate(product(subscribable: true))
+
+    refute update!(bouquet, %{product_category_id: wreaths.id}).subscribable
+    refute update!(generate(product(bow_colours: [:red])), %{subscribable: true}).subscribable
+  end
+
   defp update(product, params),
     do: product |> Ash.Changeset.for_update(:update, params) |> Ash.update(authorize?: false)
 

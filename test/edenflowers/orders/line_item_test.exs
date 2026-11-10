@@ -217,6 +217,76 @@ defmodule Edenflowers.Orders.LineItemTest do
     end
   end
 
+  describe "bow colour" do
+    setup do
+      ribboned = generate(product(bow_colours: [:red, :yellow, :blue]))
+      %{ribboned: ribboned, ribboned_variant: generate(product_variant(product_id: ribboned.id))}
+    end
+
+    test "a customer chooses one of the colours it offers", %{
+      order: order,
+      ribboned_variant: variant
+    } do
+      assert {:ok, line_item} =
+               Orders.add_line_item(order.id, variant.id, 1, %{bow_colour: :yellow}, authorize?: false)
+
+      assert line_item.bow_colour == :yellow
+    end
+
+    test "the choice is required when the product offers colours", %{order: order, ribboned_variant: variant} do
+      assert {:error, %Ash.Error.Invalid{errors: [%{field: :bow_colour, message: "choose a bow colour"}]}} =
+               Orders.add_line_item(order.id, variant.id, 1, authorize?: false)
+    end
+
+    test "a colour the product doesn't offer is refused", %{
+      order: order,
+      product_variant: variant
+    } do
+      other = generate(product(bow_colours: [:red]))
+      other_variant = generate(product_variant(product_id: other.id))
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{field: :bow_colour, message: "is not a colour it offers"}]}} =
+               Orders.add_line_item(order.id, other_variant.id, 1, %{bow_colour: :blue}, authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{field: :bow_colour, message: "is not a colour it offers"}]}} =
+               Orders.add_line_item(order.id, variant.id, 1, %{bow_colour: :red}, authorize?: false)
+    end
+
+    test "two colours are two lines, and the same colour adds to its line", %{
+      order: order,
+      ribboned_variant: variant
+    } do
+      Orders.add_line_item!(order.id, variant.id, 1, %{bow_colour: :red}, authorize?: false)
+      Orders.add_line_item!(order.id, variant.id, 1, %{bow_colour: :yellow}, authorize?: false)
+      Orders.add_line_item!(order.id, variant.id, 1, %{bow_colour: :red}, authorize?: false)
+
+      lines = order |> Ash.load!(:line_items, authorize?: false) |> Map.fetch!(:line_items)
+
+      assert Enum.sort(Enum.map(lines, &{&1.bow_colour, &1.quantity})) == [{:red, 2}, {:yellow, 1}]
+    end
+
+    test "colours draw on the same stock instead of each having its own", %{order: order} do
+      ribboned = generate(product(bow_colours: [:red, :yellow]))
+      tracked = generate(product_variant(product_id: ribboned.id, stock_quantity: 2))
+
+      red = Orders.add_line_item!(order.id, tracked.id, 1, %{bow_colour: :red}, authorize?: false)
+      Orders.add_line_item!(order.id, tracked.id, 1, %{bow_colour: :yellow}, authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{message: "Only 2 left"}]}} =
+               Orders.add_line_item(order.id, tracked.id, 1, %{bow_colour: :red}, authorize?: false)
+
+      assert {:error, %Ash.Error.Invalid{errors: [%{message: "Only 2 left"}]}} =
+               Orders.increment_line_item(red, authorize?: false)
+    end
+
+    test "Jennie may leave the bow to herself on a catalogue line", %{ribboned_variant: variant} do
+      changeset = Ash.Changeset.for_create(LineItem, :enter, %{kind: :catalogue, product_variant_id: variant.id})
+
+      assert changeset.valid?
+      assert Ash.Changeset.apply_attributes(changeset) |> elem(1) |> Map.fetch!(:bow_colour) == nil
+    end
+  end
+
   describe "stock" do
     setup %{product: product} do
       %{tracked: generate(product_variant(product_id: product.id, size: :large, stock_quantity: 2))}

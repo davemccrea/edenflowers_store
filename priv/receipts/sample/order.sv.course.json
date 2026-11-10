@@ -12,6 +12,7 @@
     {
       "product_name": "Adventskransar",
       "variant_size": null,
+      "bow_colour": null,
       "quantity": 3,
       "tax_rate": "25,5 %",
       "unit_price_ex_tax": "67,73 €",

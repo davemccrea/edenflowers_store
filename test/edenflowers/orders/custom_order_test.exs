@@ -605,8 +605,8 @@ defmodule Edenflowers.Orders.CustomOrderTest do
       versions = Ash.load!(order, :paper_trail_versions, authorize?: false).paper_trail_versions
       [edit, placed] = OrderLog.entries(versions, [], "en-GB")
 
-      assert {"Items", ["2 × Spring Bouquet", "1 × Funeral spray"]} in edit.details
-      assert {"Items", ["1 × Spring Bouquet"]} in placed.details
+      assert {"Items", ["2 × Spring Bouquet (Medium)", "1 × Funeral spray"]} in edit.details
+      assert {"Items", ["1 × Spring Bouquet (Medium)"]} in placed.details
     end
 
     test "the log names the language an edit switched to", ctx do

@@ -42,18 +42,21 @@ defmodule Edenflowers.Orders.LineItem.Validations.WithinStock do
     end
   end
 
-  # Adding to the cart merges into a line it already has for the size.
-  defp quantity_after(%{action: %{name: :add_to_cart}} = changeset) do
+  # Every bow of a size draws on the same stock, so all its lines count, the
+  # one being added to or incremented among them.
+  defp quantity_after(changeset) do
     order_id = Ash.Changeset.get_attribute(changeset, :order_id)
     variant_id = Ash.Changeset.get_attribute(changeset, :product_variant_id)
 
     in_cart =
       LineItem
       |> Ash.Query.filter(order_id == ^order_id and product_variant_id == ^variant_id)
-      |> Ash.read_one!(authorize?: false)
+      |> Ash.read!(authorize?: false)
+      |> Enum.reduce(0, &(&1.quantity + &2))
 
-    Ash.Changeset.get_attribute(changeset, :quantity) + ((in_cart && in_cart.quantity) || 0)
+    in_cart + adding(changeset)
   end
 
-  defp quantity_after(%{action: %{name: :increment_quantity}} = changeset), do: changeset.data.quantity + 1
+  defp adding(%{action: %{name: :add_to_cart}} = changeset), do: Ash.Changeset.get_attribute(changeset, :quantity)
+  defp adding(%{action: %{name: :increment_quantity}}), do: 1
 end

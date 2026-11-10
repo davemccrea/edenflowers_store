@@ -90,6 +90,16 @@ defmodule Edenflowers.Orders.ReceiptTest do
       assert unsized.variant_size == nil
     end
 
+    test "names the bow colour in the order's locale" do
+      order = build_delivery_order(locale: "fi")
+      [first | rest] = order.line_items
+      order = %{order | line_items: [%{first | bow_colour: :red} | rest]}
+
+      [line | _] = Receipt.build_payload(order).line_items
+
+      assert line.bow_colour == "punainen rusetti"
+    end
+
     test "renders discount as null when no promotion is applied" do
       order = build_delivery_order(locale: "en-GB", with_promotion: false)
       payload = Receipt.build_payload(order)

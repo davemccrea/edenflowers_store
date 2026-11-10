@@ -18,6 +18,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
   alias EdenflowersWeb.Hooks.HandleLineItemChanged
 
   alias Edenflowers.Catalog
+  alias Edenflowers.Catalog.BowColour
   alias Edenflowers.Catalog.ProductType
   alias Edenflowers.Fulfillment
   alias Edenflowers.Translations
@@ -64,6 +65,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      |> assign(product_category: product_category)
      |> assign(product_variants: product_variants)
      |> assign(selected_variant: selected_variant)
+     |> assign(bow_colour: initial_bow_colour(product.bow_colours, cart_line && cart_line.bow_colour))
      |> assign(photo_slug: selected_variant.photo_slug)
      |> assign(subscribe?: subscribe?)
      |> assign(interval_weeks: to_string(linked_interval(params) || (cart_line && cart_line.interval_weeks) || 4))
@@ -94,6 +96,22 @@ defmodule EdenflowersWeb.Store.ProductLive do
   defp initial_subscribe?(%{"every" => _every}, product, _cart_line), do: product.subscribable
   defp initial_subscribe?(_params, _product, nil), do: false
   defp initial_subscribe?(_params, _product, cart_line), do: cart_line.interval_weeks != nil
+
+  # A product that offers bows starts on the one its cart line has, else the
+  # first, so the choice is always sent.
+  defp initial_bow_colour([], _chosen), do: nil
+
+  defp initial_bow_colour(colours, chosen), do: if(chosen in colours, do: chosen, else: hd(colours))
+
+  # An unknown colour keeps the current one; add_to_cart refuses an unoffered one.
+  defp bow_colour_param(nil, current), do: current
+
+  defp bow_colour_param(value, current) do
+    case BowColour.match(value) do
+      {:ok, colour} -> colour
+      :error -> current
+    end
+  end
 
   @impl true
   def render(assigns) do
@@ -295,6 +313,31 @@ defmodule EdenflowersWeb.Store.ProductLive do
                 {details(@product_category, @selected_variant)}
               </p>
 
+              <fieldset
+                :if={@product.bow_colours != []}
+                class="flex flex-col gap-3"
+                data-testid="bow-colour-options"
+              >
+                <legend class="eyebrow text-base-content/70 mb-1">{~t"Bow colour"}</legend>
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                  <label
+                    :for={colour <- @product.bow_colours}
+                    class="size-option touch-target"
+                    data-active={(colour == @bow_colour && "true") || nil}
+                  >
+                    <input
+                      type="radio"
+                      name="bow_colour"
+                      value={colour}
+                      checked={colour == @bow_colour}
+                      class="sr-only"
+                      data-testid={"bow-colour-option-#{colour}"}
+                    />
+                    <span class="size-option__label font-serif text-xl">{BowColour.label(colour)}</span>
+                  </label>
+                </div>
+              </fieldset>
+
               <fieldset :if={@product.subscribable} class="flex flex-col gap-3">
                 <legend class="eyebrow text-base-content/70 mb-1">{~t"How to buy"}</legend>
                 <div class="grid max-w-sm grid-cols-2 gap-3">
@@ -458,8 +501,10 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   @impl true
-  def handle_event("change", %{"product_variant_id" => id} = params, socket) do
-    variant = Enum.find(socket.assigns.product_variants, &(&1.id == id))
+  def handle_event("change", params, socket) do
+    variant =
+      Enum.find(socket.assigns.product_variants, &(&1.id == params["product_variant_id"])) ||
+        socket.assigns.selected_variant
 
     # Toggling a subscription also sends the size, which mustn't undo a thumbnail pick.
     photo_slug =
@@ -469,6 +514,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
      assign(socket,
        selected_variant: variant,
        photo_slug: photo_slug,
+       bow_colour: bow_colour_param(params["bow_colour"], socket.assigns.bow_colour),
        subscribe?: params["subscribe"] == "true",
        interval_weeks: params["interval_weeks"] || socket.assigns.interval_weeks
      )}
@@ -483,9 +529,14 @@ defmodule EdenflowersWeb.Store.ProductLive do
   def handle_event("submit", _params, socket) do
     subscription = if socket.assigns.subscribe?, do: %{interval_weeks: socket.assigns.interval_weeks}, else: %{}
 
+    choice =
+      if socket.assigns.bow_colour,
+        do: Map.put(subscription, :bow_colour, socket.assigns.bow_colour),
+        else: subscription
+
     socket = open_cart(socket)
 
-    case Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1, subscription) do
+    case Orders.add_line_item(socket.assigns.order.id, socket.assigns.selected_variant.id, 1, choice) do
       {:ok, _line_item} ->
         {:noreply,
          socket
@@ -521,7 +572,12 @@ defmodule EdenflowersWeb.Store.ProductLive do
               else: selected_variant.photo_slug
 
           {:noreply,
-           assign(socket, product_variants: variants, selected_variant: selected_variant, photo_slug: photo_slug)}
+           assign(socket,
+             product_variants: variants,
+             selected_variant: selected_variant,
+             bow_colour: initial_bow_colour(product.bow_colours, socket.assigns.bow_colour),
+             photo_slug: photo_slug
+           )}
       end
     else
       {:noreply, socket}
@@ -639,12 +695,12 @@ defmodule EdenflowersWeb.Store.ProductLive do
   defp cart_line(order, product_id),
     do: Enum.find(cart_lines(order), &(not &1.is_card and &1.product_id == product_id))
 
-  defp in_cart?(%{order: order, product: product, selected_variant: variant} = assigns) do
+  defp in_cart?(%{order: order, product: product, selected_variant: variant, bow_colour: bow_colour} = assigns) do
     interval = if assigns.subscribe?, do: String.to_integer(assigns.interval_weeks)
 
     case Enum.reject(cart_lines(order), & &1.is_card) do
-      [%{product_id: product_id, product_variant_id: variant_id, quantity: 1, interval_weeks: ^interval}] ->
-        product_id == product.id and variant_id == variant.id
+      [%{product_id: product_id, product_variant_id: variant_id, quantity: 1, interval_weeks: ^interval} = line] ->
+        product_id == product.id and variant_id == variant.id and line.bow_colour == bow_colour
 
       _ ->
         false

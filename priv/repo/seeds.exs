@@ -196,7 +196,7 @@ wreaths_category =
     name: "Wreaths",
     slug: "wreaths",
     visibility: :public,
-    product_type: :flowers,
+    product_type: :wreath,
     description: "Seasonal wreaths for doors and tables.",
     translations: %{
       "sv-FI": %{name: "Kransar", description: "Säsongens kransar för dörrar och bord."},
@@ -208,7 +208,7 @@ wreaths_category =
 create_product.(
   %{product_category_id: wreaths_category.id, name: "Advent Wreath", draft: true},
   [medium: "65"],
-  %{}
+  %{medium: %{diameter_cm: "35"}}
 )
 
 create_product.(

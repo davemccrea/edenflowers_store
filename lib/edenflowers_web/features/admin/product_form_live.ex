@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   import EdenflowersWeb.Admin.TranslationFields
 
   alias Edenflowers.Catalog
+  alias Edenflowers.Catalog.BowColour
   alias Edenflowers.Catalog.Product
   alias Edenflowers.Catalog.ProductCategory
   alias Edenflowers.Catalog.ProductType
@@ -41,7 +42,10 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
         {:ok,
          socket
          |> assign(:page_title, title)
-         |> assign(:categories, ProductCategory |> Ash.read!(actor: actor) |> Translations.translate())
+         |> assign(
+           :categories,
+           ProductCategory |> Ash.read!(actor: actor, load: [:offers_bows]) |> Translations.translate()
+         )
          |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
          |> assign(:free_dist_km, Edenflowers.Fulfillment.free_dist_km())
          |> assign(:fan_card_count, length(Catalog.list_featured_cards!(actor: actor)))
@@ -159,6 +163,31 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                     class="input w-full"
                   />
                 </div>
+                <div :if={offers_bows?(@form, @categories)} class="mt-6">
+                  <p class="text-base-content/75 mb-2 text-sm">{~t"Bow colours"}</p>
+                  <input type="hidden" name={@form[:bow_colours].name <> "[]"} value="" />
+                  <input
+                    :for={colour <- bow_colour_values(@form)}
+                    type="hidden"
+                    name={@form[:bow_colours].name <> "[]"}
+                    value={colour}
+                  />
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      :for={colour <- BowColour.values()}
+                      type="button"
+                      phx-click="toggle_bow_colour"
+                      phx-value-colour={colour}
+                      aria-pressed={to_string(to_string(colour) in bow_colour_values(@form))}
+                      class={["btn btn-xs rounded-full font-normal shadow-none pointer-coarse:btn-sm", if(to_string(colour) in bow_colour_values(@form), do: "btn-primary", else: "btn-ghost")]}
+                    >
+                      {BowColour.label(colour)}
+                    </button>
+                  </div>
+                  <p class="text-base-content/60 mt-2 text-xs">
+                    {~t"Customers pick one of these on the product page. None means it asks for no bow."}
+                  </p>
+                </div>
               </.form_section>
             </div>
 
@@ -201,6 +230,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
                       label={~t"First #{km = @free_dist_km} km of delivery free"}
                     />
                     <.input
+                      :if={not offers_bows?(@form, @categories)}
                       field={@form[:subscribable]}
                       type="checkbox"
                       label={~t"Can be bought as a subscription"}
@@ -503,6 +533,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     end
   end
 
+  defp offers_bows?(form, categories),
+    do: Enum.any?(categories, &(&1.id == form[:product_category_id].value and &1.offers_bows))
+
   # Follows the category select, so choosing Cards swaps height and stems for size at once.
   defp attribute_keys(form, categories) do
     case Enum.find(categories, &(&1.id == form[:product_category_id].value)) do
@@ -538,6 +571,14 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
 
   def handle_event("remove_photo", %{"slug" => slug}, socket),
     do: {:noreply, update_photos(socket, &List.delete(&1, slug))}
+
+  def handle_event("toggle_bow_colour", %{"colour" => colour}, socket) do
+    form = socket.assigns.form
+    colours = bow_colour_values(form)
+    colours = if colour in colours, do: List.delete(colours, colour), else: colours ++ [colour]
+    params = form |> AshPhoenix.Form.params() |> Map.put("bow_colours", colours)
+    {:noreply, assign(socket, form: AshPhoenix.Form.validate(form, params))}
+  end
 
   def handle_event("toggle_photo_hidden", %{"slug" => slug}, socket) do
     form = socket.assigns.form
@@ -643,6 +684,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   end
 
   defp photo_slugs(form), do: form[:photo_slugs].value || []
+
+  defp bow_colour_values(form),
+    do: form[:bow_colours].value |> List.wrap() |> Enum.map(&to_string/1) |> List.delete("")
 
   defp hidden_photo_slugs(form), do: List.delete(form[:hidden_photo_slugs].value || [], "")
 

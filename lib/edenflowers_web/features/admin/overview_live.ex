@@ -995,7 +995,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
           <ul :if={@items != []} class="text-base-content col-start-1 row-start-2 min-w-0 space-y-0.5 text-sm">
             <li :for={item <- @items} class="break-words" phx-no-format>
               <span class="tabular-nums">{item.quantity} ×</span>
-              <span>{item.product_name}</span><span :if={item.variant_size} class="text-base-content/75">, {variant_size_label(item.variant_size)}</span>
+              <span>{item.product_name}</span><span :if={item.variant_size || item.bow_colour} class="text-base-content/75">, {Format.line_item_choices(item)}</span>
             </li>
           </ul>
           <span

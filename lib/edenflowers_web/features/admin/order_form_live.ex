@@ -51,7 +51,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
          |> assign(:locale, Localize.get_locale())
          |> assign(:fulfillment_options, Fulfillment.list_options!(actor: actor) |> Translations.translate())
          |> assign(:shop_calendar, Fulfillment.get_shop_calendar!(actor: actor))
-         |> assign(:variant_options, variant_options(actor))
+         |> assign(variant_choices(actor))
          |> assign(
            :card_variants,
            Catalog.list_card_drawer_variants!(actor: actor) |> Translations.translate_assoc(:product)
@@ -169,6 +169,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   <.order_line
                     line={line}
                     variant_options={@variant_options}
+                    bow_colours={Map.get(@variant_bow_colours, line.params["product_variant_id"], [])}
                     tax_rate_options={tax_rate_options(@tax_rates)}
                   />
                 </.inputs_for>
@@ -653,10 +654,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     put_form(socket, AshPhoenix.Form.add_form(socket.assigns.form, :line_items, params: params))
   end
 
-  defp existing_line_name(%{variant_size: nil} = line_item), do: line_item.product_name
-
-  defp existing_line_name(line_item),
-    do: "#{line_item.product_name} · #{variant_size_label(line_item.variant_size)}"
+  defp existing_line_name(line_item), do: Edenflowers.Format.line_item_name(line_item)
 
   # A line stores the percentage it was charged, not the rate it came from.
   defp tax_rate_id_for(tax_rates, percentage) do
@@ -674,12 +672,17 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   # Cards are chosen as the order's card, not added as items.
-  defp variant_options(actor) do
-    Catalog.list_custom_order_variants!(actor: actor)
-    |> Enum.map(fn variant ->
-      {"#{variant.product.name} · #{variant_size_label(variant.size)} · #{Format.currency(variant.price, Format.locale())}",
-       variant.id}
-    end)
+  defp variant_choices(actor) do
+    variants = Catalog.list_custom_order_variants!(actor: actor)
+
+    [
+      variant_options:
+        Enum.map(variants, fn variant ->
+          {"#{variant.product.name} · #{variant_size_label(variant.size)} · #{Format.currency(variant.price, Format.locale())}",
+           variant.id}
+        end),
+      variant_bow_colours: Map.new(variants, &{&1.id, &1.product.bow_colours})
+    ]
   end
 
   # A card the drawer no longer offers, as it has sold out since, is still the order's own.
@@ -932,6 +935,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   attr :line, Phoenix.HTML.Form, required: true
   attr :variant_options, :list, required: true
+  attr :bow_colours, :list, required: true
   attr :tax_rate_options, :list, required: true
 
   # A line the order already has: its product is fixed, only how many changes.
@@ -961,6 +965,16 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
           required
           prompt={~t"Choose…"}
           options={@variant_options}
+          class="select w-full"
+        />
+      </div>
+      <div :if={@bow_colours != []} class="w-40">
+        <.input
+          field={@line[:bow_colour]}
+          type="select"
+          label={~t"Bow"}
+          prompt={~t"Yours to choose"}
+          options={Enum.map(@bow_colours, &{Edenflowers.Catalog.BowColour.label(&1), &1})}
           class="select w-full"
         />
       </div>

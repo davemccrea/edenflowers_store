@@ -416,6 +416,72 @@ defmodule EdenflowersWeb.Admin.CustomOrderLiveTest do
       assert order.payment_link_open?
     end
 
+    test "a catalogue line can carry the bow colour the product offers", ctx do
+      wreath =
+        generate(product(tax_rate_id: ctx.tax_rate.id, name: "Christmas wreath", bow_colours: [:red, :yellow, :blue]))
+
+      variant = generate(product_variant(product_id: wreath.id, size: nil, price: "45.00"))
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="catalogue"]|) |> render_click()
+
+      view
+      |> form("#order-form", form: %{line_items: %{"0" => %{"product_variant_id" => variant.id}}})
+      |> render_change()
+
+      assert has_element?(view, "#form_line_items_0_bow_colour")
+
+      assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
+               view
+               |> form("#order-form",
+                 form: %{
+                   customer_name: "Mrs Holm",
+                   customer_phone_number: "040 123 4567",
+                   locale: "sv-FI",
+                   fulfillment_option_id: ctx.pickup.id,
+                   fulfillment_date: Date.to_iso8601(tomorrow()),
+                   line_items: %{
+                     "0" => %{
+                       "product_variant_id" => variant.id,
+                       "quantity" => "1",
+                       "bow_colour" => "yellow"
+                     }
+                   }
+                 }
+               )
+               |> render_submit()
+
+      order = Orders.get_order_for_admin!(id, actor: ctx.admin) |> Ash.load!(:line_items, authorize?: false)
+
+      assert [%{bow_colour: :yellow}] = order.line_items
+    end
+
+    test "a catalogue line may leave the bow to Jennie", ctx do
+      wreath = generate(product(tax_rate_id: ctx.tax_rate.id, bow_colours: [:red, :yellow]))
+      variant = generate(product_variant(product_id: wreath.id, size: nil, price: "45.00"))
+
+      {:ok, view, _html} = live(ctx.conn, ~p"/admin/orders/new")
+      view |> element(~s|button[phx-click="add_line"][phx-value-kind="catalogue"]|) |> render_click()
+
+      assert {:error, {:live_redirect, %{to: "/admin/orders/" <> id}}} =
+               view
+               |> form("#order-form",
+                 form: %{
+                   customer_name: "Mrs Holm",
+                   customer_phone_number: "040 123 4567",
+                   locale: "sv-FI",
+                   fulfillment_option_id: ctx.pickup.id,
+                   fulfillment_date: Date.to_iso8601(tomorrow()),
+                   line_items: %{"0" => %{"product_variant_id" => variant.id, "quantity" => "1"}}
+                 }
+               )
+               |> render_submit()
+
+      order = Orders.get_order_for_admin!(id, actor: ctx.admin) |> Ash.load!(:line_items, authorize?: false)
+
+      assert [%{bow_colour: nil}] = order.line_items
+    end
+
     test "shows the payment choice and one form-associated Create order button", ctx do
       {:ok, _view, html} = live(ctx.conn, ~p"/admin/orders/new")
 
