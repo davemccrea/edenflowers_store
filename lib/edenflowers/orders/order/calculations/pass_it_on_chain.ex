@@ -9,7 +9,7 @@ defmodule Edenflowers.Orders.Order.Calculations.PassItOnChain do
   """
   use Ash.Resource.Calculation
 
-  @link_load [promotion: [:card_status, gift_order: []], pass_it_on_card: [:card_status, :placed_orders]]
+  @link_load [promotion: [gift_order: []], pass_it_on_card: [:card_status, :placed_orders]]
 
   defstruct [:nodes, :multiple?, :visible?]
 
