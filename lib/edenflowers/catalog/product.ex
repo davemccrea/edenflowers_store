@@ -144,6 +144,7 @@ defmodule Edenflowers.Catalog.Product do
         :position,
         :free_delivery,
         :subscribable,
+        :bow_colours,
         :available_from,
         :translations,
         :slug
@@ -152,6 +153,7 @@ defmodule Edenflowers.Catalog.Product do
       argument :product_variants, {:array, :map}
 
       validate Validations.SizePhotosAreProducts
+      change Changes.FitWreathChoices
 
       change {Edenflowers.Slug.SetSlug, @slug_options}
       change Changes.TidyHiddenPhotos
@@ -180,6 +182,7 @@ defmodule Edenflowers.Catalog.Product do
         :position,
         :free_delivery,
         :subscribable,
+        :bow_colours,
         :available_from,
         :translations,
         :slug
@@ -189,6 +192,7 @@ defmodule Edenflowers.Catalog.Product do
       require_atomic? false
 
       validate Validations.SizePhotosAreProducts
+      change Changes.FitWreathChoices
 
       validate {Edenflowers.Orders.Validations.NotReferencedByCurrentSubscription,
                 reference: :product, field: :subscribable, changing_to: {:subscribable, false}}
@@ -285,6 +289,16 @@ defmodule Edenflowers.Catalog.Product do
 
       allow_nil? false
       default false
+    end
+
+    attribute :bow_colours, {:array, Edenflowers.Catalog.BowColour} do
+      description "The bows a customer can choose from on its page. Empty when it asks for none, as most " <>
+                    "products do."
+
+      allow_nil? false
+      default []
+      # The admin form posts a blank entry so unticking every colour still sends the field.
+      constraints remove_nil_items?: true
     end
 
     attribute :available_from, :date do

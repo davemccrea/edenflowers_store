@@ -4,11 +4,12 @@ defmodule Edenflowers.Catalog.ProductType do
   A new kind of product needs a value here and its keys, labels and wording below.
   """
 
-  use Ash.Type.Enum, values: [:flowers, :card, :plant, :chocolate, :other]
+  use Ash.Type.Enum, values: [:flowers, :wreath, :card, :plant, :chocolate, :other]
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "shared"]
 
   @doc "The `ProductVariant` attributes a size of the type has, in display order."
   def attribute_keys(:flowers), do: [:height_cm, :stem_count]
+  def attribute_keys(:wreath), do: [:diameter_cm]
   def attribute_keys(:card), do: [:dimensions_cm]
   def attribute_keys(:plant), do: [:height_cm, :pot_cm]
   def attribute_keys(:chocolate), do: [:weight_g, :pieces]
@@ -17,6 +18,7 @@ defmodule Edenflowers.Catalog.ProductType do
   @doc "The admin form's label for an attribute."
   def label(:height_cm), do: ~t"Height (cm)"
   def label(:stem_count), do: ~t"Stems"
+  def label(:diameter_cm), do: ~t"Diameter (cm)"
   def label(:dimensions_cm), do: ~t"Dimensions (cm)"
   def label(:pot_cm), do: ~t"Pot (cm)"
   def label(:weight_g), do: ~t"Weight (g)"
@@ -37,6 +39,7 @@ defmodule Edenflowers.Catalog.ProductType do
 
   defp describe_value(:height_cm, value), do: "#{value} cm"
   defp describe_value(:stem_count, value), do: ~t"#{count = value} stems"
+  defp describe_value(:diameter_cm, value), do: "Ø #{value} cm"
   defp describe_value(:dimensions_cm, value), do: "#{value} cm"
   defp describe_value(:pot_cm, value), do: ~t"Pot #{size = value} cm"
   defp describe_value(:weight_g, value), do: "#{value} g"

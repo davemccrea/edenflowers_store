@@ -30,7 +30,17 @@ defmodule Edenflowers.Catalog.ProductCategory do
 
   actions do
     defaults [:read, :destroy, :create, :update]
-    default_accept [:slug, :visibility, :add_on, :product_type, :name, :description, :translations, :position]
+
+    default_accept [
+      :slug,
+      :visibility,
+      :add_on,
+      :product_type,
+      :name,
+      :description,
+      :translations,
+      :position
+    ]
 
     read :public do
       description "Categories browsable in the store and listed in the sitemap, in store order. Draft and hidden " <>
@@ -97,6 +107,12 @@ defmodule Edenflowers.Catalog.ProductCategory do
   relationships do
     has_many :products, Edenflowers.Catalog.Product do
       description "Every product in it, drafts included."
+    end
+  end
+
+  calculations do
+    calculate :offers_bows, :boolean, expr(product_type == :wreath) do
+      description "Its products can offer customers a choice of bow colour. Only wreaths do."
     end
   end
 

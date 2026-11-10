@@ -6,7 +6,8 @@
       "tax_rate": "25,5 %",
       "unit_price_ex_tax": "31,79 €",
       "product_name": "Vårbukett",
-      "variant_size": "Medium"
+      "variant_size": "Medium",
+      "bow_colour": null
     },
     {
       "total": "17,00 €",
@@ -14,7 +15,8 @@
       "tax_rate": "25,5 %",
       "unit_price_ex_tax": "6,77 €",
       "product_name": "Eukalyptusbukett",
-      "variant_size": null
+      "variant_size": null,
+      "bow_colour": null
     },
     {
       "total": "4,50 €",
@@ -22,7 +24,8 @@
       "tax_rate": "25,5 %",
       "unit_price_ex_tax": "3,59 €",
       "product_name": "Handskrivet kort",
-      "variant_size": null
+      "variant_size": null,
+      "bow_colour": null
     }
   ],
   "customer_email": "anna.lindqvist@example.fi",

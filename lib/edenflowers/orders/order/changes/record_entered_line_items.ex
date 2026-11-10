@@ -8,6 +8,7 @@ defmodule Edenflowers.Orders.Order.Changes.RecordEnteredLineItems do
   use Ash.Resource.Change
 
   alias Edenflowers.Catalog
+  alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Types.Price
 
@@ -46,12 +47,13 @@ defmodule Edenflowers.Orders.Order.Changes.RecordEnteredLineItems do
     changeset.data
     |> Ash.load!(:line_items, authorize?: false)
     |> Map.fetch!(:line_items)
-    |> Map.new(&{&1.id, {&1.product_name, &1.quantity, &1.unit_price}})
+    |> Map.new(&{&1.id, {Format.line_item_name(&1), &1.quantity, &1.unit_price}})
   end
 
   # The lines arrive as the form sent them, before LineItem casts them.
   defp describe(line, existing) do
     quantity = quantity(fetch(line, :quantity))
+    colour = line |> fetch(:bow_colour) |> cast_colour()
 
     cond do
       id = fetch(line, :id) ->
@@ -62,12 +64,30 @@ defmodule Edenflowers.Orders.Order.Changes.RecordEnteredLineItems do
 
       variant_id = fetch(line, :product_variant_id) ->
         case Catalog.get_variant_by_id(variant_id, load: [:product], authorize?: false) do
-          {:ok, variant} -> {variant.product.name, quantity, variant.price}
-          _ -> :unknown
+          {:ok, variant} ->
+            name =
+              Format.line_item_name(%{
+                product_name: variant.product.name,
+                variant_size: variant.size,
+                bow_colour: colour
+              })
+
+            {name, quantity, variant.price}
+
+          _ ->
+            :unknown
         end
 
       true ->
         {fetch(line, :product_name), quantity, price(fetch(line, :unit_price))}
+    end
+  end
+
+  defp cast_colour(colour) do
+    case Ash.Type.cast_input(Edenflowers.Catalog.BowColour, colour) do
+      {:ok, colour} -> colour
+      # LineItem refuses the line, so the log never records it.
+      _ -> nil
     end
   end
 

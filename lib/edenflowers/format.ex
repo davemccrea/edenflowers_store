@@ -12,7 +12,26 @@ defmodule Edenflowers.Format do
   # Card products are named for their design alone, like "Aruba". In the
   # current Gettext locale.
   def line_item_name(%{is_card: true, product_name: name}), do: ~t"#{name} card"
-  def line_item_name(line_item), do: line_item.product_name
+
+  # With its size and bow, so two of one product never read alike in a list
+  # that has no room for them on their own.
+  def line_item_name(line_item) do
+    case line_item_choices(line_item) do
+      "" -> line_item.product_name
+      choices -> "#{line_item.product_name} (#{choices})"
+    end
+  end
+
+  # The bow is lower-cased as it follows the size mid-phrase.
+  @doc "The size and bow a line was chosen in, as \"Medium, red bow\", or \"\" for neither."
+  def line_item_choices(line_item) do
+    [
+      Map.get(line_item, :variant_size) && Edenflowers.Catalog.ProductVariantSize.label(line_item.variant_size),
+      Map.get(line_item, :bow_colour) && String.downcase(Edenflowers.Catalog.BowColour.label(line_item.bow_colour))
+    ]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(", ")
+  end
 
   @spec currency(number | nil, Localize.Locale.locale_id()) :: String.t()
   def currency(nil, locale), do: currency(0, locale)

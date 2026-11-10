@@ -115,6 +115,7 @@ defmodule Edenflowers.Orders.Receipt do
         %{
           product_name: course.name,
           variant_size: nil,
+          bow_colour: nil,
           quantity: registration.seats,
           unit_price_ex_tax:
             Format.currency(
@@ -182,6 +183,7 @@ defmodule Edenflowers.Orders.Receipt do
     %{
       product_name: item.product_name,
       variant_size: item.variant_size && size_label(item.variant_size, locale),
+      bow_colour: item.bow_colour && bow_colour_label(item.bow_colour, locale),
       quantity: item.quantity,
       unit_price_ex_tax: Format.currency(item.unit_price_ex_tax, locale),
       # Outside VAT, not taxed at 0 %.
@@ -233,6 +235,12 @@ defmodule Edenflowers.Orders.Receipt do
   defp size_label(size, locale) do
     EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
       EdenflowersWeb.CoreComponents.variant_size_label(size)
+    end)
+  end
+
+  defp bow_colour_label(colour, locale) do
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+      String.downcase(Edenflowers.Catalog.BowColour.label(colour))
     end)
   end
 

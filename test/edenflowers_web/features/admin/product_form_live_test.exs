@@ -380,6 +380,23 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
     for name <- names, do: render_upload(upload, name)
   end
 
+  test "only a wreath category shows the bow colour picker, and hides the subscription box", %{conn: conn} do
+    wreath = generate(product())
+    generate(product_variant(product_id: wreath.id))
+    wreaths = generate(product_category(product_type: :wreath))
+    {:ok, view, _html} = live(conn, ~p"/admin/products/#{wreath.id}")
+
+    refute has_element?(view, ~s|button[phx-value-colour="red"]|)
+    assert has_element?(view, ~s|input[name="form[subscribable]"]|)
+
+    view |> form("#product-form", form: %{product_category_id: wreaths.id}) |> render_change()
+    refute has_element?(view, ~s|input[name="form[subscribable]"]|)
+    view |> element(~s|button[phx-value-colour="red"]|) |> render_click()
+    view |> form("#product-form") |> render_submit()
+
+    assert Ash.get!(Product, wreath.id, authorize?: false).bow_colours == [:red]
+  end
+
   defp uploaded_content("local:///uploads/" <> filename),
     do: File.read!(Path.join(Application.fetch_env!(:edenflowers, :uploads_dir), filename))
 end

@@ -143,6 +143,7 @@ defmodule Edenflowers.Payments.InvoicePdf do
       %{
         product_name: line["description"],
         variant_size: nil,
+        bow_colour: nil,
         quantity: line["quantity"],
         unit_price_ex_tax: unit_price(price_excl_vat(line), locale, negative?),
         unit_price_incl_tax: unit_price(line["unit_price"], locale, negative?),

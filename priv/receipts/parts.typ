@@ -110,8 +110,9 @@
   ..items.map(item => (
     [
       #item.product_name
-      #if item.variant_size != none [
-        (#item.variant_size)
+      #let choices = (item.variant_size, item.bow_colour).filter(c => c != none)
+      #if choices.len() > 0 [
+        (#choices.join(", "))
       ]
     ],
     text(features: ("tnum",))[#item.unit_price_ex_tax],

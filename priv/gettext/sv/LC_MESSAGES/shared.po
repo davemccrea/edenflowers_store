@@ -7,12 +7,12 @@ msgstr ""
 "Language: sv\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers/catalog/product_type.ex:43
+#: lib/edenflowers/catalog/product_type.ex:46
 #, elixir-autogen, elixir-format
 msgid "%{count} pieces"
 msgstr "%{count} st"
 
-#: lib/edenflowers/catalog/product_type.ex:39
+#: lib/edenflowers/catalog/product_type.ex:41
 #, elixir-autogen, elixir-format
 msgid "%{count} stems"
 msgstr "%{count} stjälkar"
@@ -37,7 +37,7 @@ msgstr "Varukorgen, tom"
 msgid "Connection lost"
 msgstr "Anslutningen bröts"
 
-#: lib/edenflowers/catalog/product_type.ex:20
+#: lib/edenflowers/catalog/product_type.ex:22
 #, elixir-autogen, elixir-format
 msgid "Dimensions (cm)"
 msgstr "Mått (cm)"
@@ -62,7 +62,7 @@ msgstr "Gratis leverans"
 msgid "From"
 msgstr "Från"
 
-#: lib/edenflowers/catalog/product_type.ex:18
+#: lib/edenflowers/catalog/product_type.ex:19
 #, elixir-autogen, elixir-format
 msgid "Height (cm)"
 msgstr "Höjd (cm)"
@@ -73,12 +73,12 @@ msgstr "Höjd (cm)"
 msgid "Language"
 msgstr "Språk"
 
-#: lib/edenflowers_web/components/core_components.ex:1377
+#: lib/edenflowers/catalog/product_variant_size.ex:15
 #, elixir-autogen, elixir-format
 msgid "Large"
 msgstr "Stor"
 
-#: lib/edenflowers_web/components/core_components.ex:1376
+#: lib/edenflowers/catalog/product_variant_size.ex:14
 #, elixir-autogen, elixir-format
 msgid "Medium"
 msgstr "Medel"
@@ -88,17 +88,17 @@ msgstr "Medel"
 msgid "Next month"
 msgstr "Nästa månad"
 
-#: lib/edenflowers/catalog/product_type.ex:23
+#: lib/edenflowers/catalog/product_type.ex:25
 #, elixir-autogen, elixir-format
 msgid "Pieces"
 msgstr "Antal"
 
-#: lib/edenflowers/catalog/product_type.ex:41
+#: lib/edenflowers/catalog/product_type.ex:44
 #, elixir-autogen, elixir-format
 msgid "Pot %{size} cm"
 msgstr "Kruka %{size} cm"
 
-#: lib/edenflowers/catalog/product_type.ex:21
+#: lib/edenflowers/catalog/product_type.ex:23
 #, elixir-autogen, elixir-format
 msgid "Pot (cm)"
 msgstr "Kruka (cm)"
@@ -113,7 +113,7 @@ msgstr "Föregående månad"
 msgid "Reconnecting…"
 msgstr "Återansluter…"
 
-#: lib/edenflowers_web/components/core_components.ex:1375
+#: lib/edenflowers/catalog/product_variant_size.ex:13
 #, elixir-autogen, elixir-format
 msgid "Small"
 msgstr "Liten"
@@ -123,17 +123,17 @@ msgstr "Liten"
 msgid "Sold out"
 msgstr "Slutsåld"
 
-#: lib/edenflowers/catalog/product_type.ex:19
+#: lib/edenflowers/catalog/product_type.ex:20
 #, elixir-autogen, elixir-format
 msgid "Stems"
 msgstr "Stjälkar"
 
-#: lib/edenflowers/catalog/product_type.ex:22
+#: lib/edenflowers/catalog/product_type.ex:24
 #, elixir-autogen, elixir-format
 msgid "Weight (g)"
 msgstr "Vikt (g)"
 
-#: lib/edenflowers/format.ex:90
+#: lib/edenflowers/format.ex:109
 #, elixir-autogen, elixir-format
 msgid "at %{time}"
 msgstr "kl. %{time}"
@@ -185,7 +185,27 @@ msgstr "Öppna navigeringsmeny"
 msgid "The first %{km} km of delivery from Minimossen are free on marked bouquets."
 msgstr "För märkta buketter är de första %{km} km av leveransen från Minimossen gratis."
 
-#: lib/edenflowers/format.ex:130
+#: lib/edenflowers/format.ex:149
 #, elixir-autogen, elixir-format
 msgid "Available from %{date}"
 msgstr "Tillgänglig från %{date}"
+
+#: lib/edenflowers/catalog/bow_colour.ex:13
+#, elixir-autogen, elixir-format
+msgid "Blue bow"
+msgstr "Blå rosett"
+
+#: lib/edenflowers/catalog/bow_colour.ex:11
+#, elixir-autogen, elixir-format
+msgid "Red bow"
+msgstr "Röd rosett"
+
+#: lib/edenflowers/catalog/bow_colour.ex:12
+#, elixir-autogen, elixir-format
+msgid "Yellow bow"
+msgstr "Gul rosett"
+
+#: lib/edenflowers/catalog/product_type.ex:21
+#, elixir-autogen, elixir-format
+msgid "Diameter (cm)"
+msgstr "Diameter (cm)"

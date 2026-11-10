@@ -399,7 +399,8 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
     end
 
     test "says which size the photo pictures when it isn't the chosen one", %{conn: conn} do
-      product = generate(product(name: "Rose", draft: false, photo_slugs: ["a.jpg", "b.jpg"]))
+      # Not "Rose": an async test in product_test.exs claims the slug "rose", and racing it deadlocks.
+      product = generate(product(name: "Pictured Rose", draft: false, photo_slugs: ["a.jpg", "b.jpg"]))
       small = generate(product_variant(product_id: product.id, size: :small, price: "40.00", own_photo_slug: nil))
       medium = generate(product_variant(product_id: product.id, size: :medium, price: "50.00", own_photo_slug: nil))
       generate(product_variant(product_id: product.id, size: :large, price: "60.00", own_photo_slug: "b.jpg"))
@@ -408,7 +409,7 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
       view |> form("[data-testid=product-form]", %{product_variant_id: small.id}) |> render_change()
       assert has_element?(view, "[data-testid=pictured-size]", "Pictured: Medium")
-      assert has_element?(view, ~s|[data-testid=product-image][alt="Rose Medium"]|)
+      assert has_element?(view, ~s|[data-testid=product-image][alt="Pictured Rose Medium"]|)
 
       view |> form("[data-testid=product-form]", %{product_variant_id: medium.id}) |> render_change()
       refute has_element?(view, "[data-testid=pictured-size]")
@@ -476,6 +477,60 @@ defmodule EdenflowersWeb.Store.ProductLiveTest do
 
   defp line_items(order) do
     Ash.read!(LineItem, authorize?: false) |> Enum.filter(&(&1.order_id == order.id))
+  end
+
+  test "asks for the bow colour a product offers and adds the chosen one", %{conn: conn, order: order} do
+    product = generate(product(draft: false, bow_colours: [:red, :yellow, :blue]))
+    generate(product_variant(product_id: product.id, size: nil, price: "45.00"))
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
+
+    assert has_element?(view, "[data-testid=bow-colour-option-red][checked]")
+    assert has_element?(view, "[data-testid=bow-colour-option-blue]")
+
+    view
+    |> form("[data-testid=product-form]", %{bow_colour: "yellow"})
+    |> render_change()
+
+    assert has_element?(view, "[data-testid=bow-colour-option-yellow][checked]")
+
+    view |> form("[data-testid=product-form]") |> render_submit()
+
+    assert [%LineItem{bow_colour: :yellow}] = line_items(order)
+  end
+
+  test "another bow of one already in the cart can be added as its own line", %{conn: conn, order: order} do
+    product = generate(product(draft: false, bow_colours: [:red, :yellow]))
+    variant = generate(product_variant(product_id: product.id, size: nil))
+    Orders.add_line_item!(order.id, variant.id, 1, %{bow_colour: :red}, authorize?: false)
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
+
+    # It starts on the bow already in the cart, which needs no second add.
+    assert has_element?(view, "[data-testid=add-to-cart-button]", "Show cart")
+
+    view
+    |> form("[data-testid=product-form]", %{bow_colour: "yellow"})
+    |> render_change()
+
+    assert has_element?(view, "[data-testid=add-to-cart-button]", "Add to cart")
+
+    view |> form("[data-testid=product-form]") |> render_submit()
+
+    assert Enum.sort(Enum.map(line_items(order), & &1.bow_colour)) == [:red, :yellow]
+  end
+
+  test "a product with no bow colour asks for none", %{conn: conn, order: order} do
+    product = generate(product(draft: false))
+    generate(product_variant(product_id: product.id, size: nil))
+
+    {:ok, view, _html} = live(conn, ~p"/en/product/#{product.slug}")
+
+    refute has_element?(view, "[data-testid=bow-colour-options]")
+
+    view |> form("[data-testid=product-form]") |> render_submit()
+
+    assert [%LineItem{bow_colour: nil}] = line_items(order)
   end
 
   test "states each size's price and stock to search engines", %{conn: conn} do

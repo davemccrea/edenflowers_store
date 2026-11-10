@@ -53,6 +53,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
         :size,
         :height_cm,
         :stem_count,
+        :diameter_cm,
         :dimensions_cm,
         :pot_cm,
         :weight_g,
@@ -67,6 +68,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
         :size,
         :height_cm,
         :stem_count,
+        :diameter_cm,
         :dimensions_cm,
         :pot_cm,
         :weight_g,
@@ -193,6 +195,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
     # product type says which of these its sizes have; see ProductType.
     attribute :height_cm, :string
     attribute :stem_count, :string
+    attribute :diameter_cm, :string
     attribute :dimensions_cm, :string
     attribute :pot_cm, :string
     attribute :weight_g, :string

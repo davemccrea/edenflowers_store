@@ -81,11 +81,11 @@ defmodule EdenflowersWeb.Cart.LineItems do
                     <span :if={not @card_picker?}>{Edenflowers.Format.line_item_name(line_item)}</span>
                   <% end %>
                   <span
-                    :if={line_item.variant_size}
+                    :if={line_item.variant_size || line_item.bow_colour}
                     class="font-serif text-base-content/65 text-sm italic"
                     data-testid="line-item-meta"
                   >
-                    {variant_size_label(line_item.variant_size)}
+                    {Edenflowers.Format.line_item_choices(line_item)}
                   </span>
                 </div>
                 <span class="shrink-0 text-right tabular-nums">

@@ -70,7 +70,9 @@ defmodule Generator do
         # running tests (not sequence/2, which restarts per test process) or
         # concurrent sandbox transactions deadlock on the index.
         slug: StreamData.repeatedly(fn -> "category-#{System.unique_integer([:positive])}" end),
-        add_on: false
+        add_on: false,
+        # Not left to chance: a wreath category keeps bow colours other categories drop.
+        product_type: :flowers
       },
       overrides: opts,
       authorize?: false
@@ -80,8 +82,18 @@ defmodule Generator do
   def product(opts \\ []) do
     tax_rate_id = opts[:tax_rate_id] || once(:default_tax_rate_id, fn -> generate(tax_rate()).id end)
 
+    # Only a wreath category keeps a product's bow colours.
     product_category_id =
-      opts[:product_category_id] || once(:default_product_category_id, fn -> generate(product_category()).id end)
+      cond do
+        opts[:product_category_id] ->
+          opts[:product_category_id]
+
+        opts[:bow_colours] not in [nil, []] ->
+          once(:bow_category_id, fn -> generate(product_category(product_type: :wreath)).id end)
+
+        true ->
+          once(:default_product_category_id, fn -> generate(product_category()).id end)
+      end
 
     changeset_generator(Product, :create,
       defaults: %{
@@ -95,7 +107,8 @@ defmodule Generator do
         slug: nil,
         photo_slugs: ["image.png"],
         free_delivery: false,
-        subscribable: false
+        subscribable: false,
+        bow_colours: []
       },
       overrides: opts,
       authorize?: false
@@ -311,7 +324,8 @@ defmodule Generator do
       defaults: %{
         quantity: 1,
         is_card: false,
-        interval_weeks: nil
+        interval_weeks: nil,
+        bow_colour: nil
       },
       overrides: opts,
       authorize?: false
