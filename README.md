@@ -29,7 +29,7 @@ just reset-db           # drop and migrate dev + test, then seed-db
 
 Order finalization and the confirmation email depend on Stripe's `payment_intent.succeeded`, so checkout needs `just forward-stripe` running.
 
-Tidewave is enabled in development. Start `just dev` before opening Codex in this trusted project, then use `/mcp` to check the connection. `.codex/config.toml` points Codex at `http://localhost:4000/tidewave/mcp`; `.mcp.json` configures Claude Code. Restart the client's MCP connection after changing either file. If you run on another port, update its Tidewave URL; new `wt` worktrees configure both clients automatically.
+Tidewave and Backlog MCP servers are enabled in development. Start `just dev` before opening Codex in this trusted project, then use `/mcp` to check the connection. `.codex/config.toml` points Codex at `http://localhost:4000/tidewave/mcp`; `.mcp.json` configures Claude Code and `opencode.jsonc` configures OpenCode. Backlog (`backlog mcp start`) serves the tasks under `backlog/` and needs no dev server. Restart the client's MCP connection after changing these files. If you run on another port, update its Tidewave URL; new `wt` worktrees configure both clients automatically.
 
 Translations, including adding a language, follow [priv/gettext/README.md](priv/gettext/README.md). Preview emails with `mix print_emails` or `just map-emails`.
 

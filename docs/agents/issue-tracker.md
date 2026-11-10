@@ -1,6 +1,17 @@
 # Issue tracker: Backlog.md
 
-Issues and specs live as Backlog.md tasks under `backlog/`. Change them through the `backlog` CLI, not by hand-editing files. The CLI keeps IDs, frontmatter and section markers consistent. Pass `--plain` to read output. `backlog instructions overview` explains the CLI in general; where it disagrees with this file, this file wins.
+Issues and specs live as Backlog.md tasks under `backlog/`. Change them through Backlog's own interfaces — the MCP server's tools, or the `backlog` CLI for what it doesn't cover — never by hand-editing files. Both run the same core and write identical files (same frontmatter, section markers, subtask numbering), so either is safe; pick per the section below. Pass `--plain` to read CLI output. `backlog instructions overview` and the server's `backlog://workflow/overview` resource explain Backlog in general; where they disagree with this file, this file wins.
+
+## MCP or CLI
+
+The `backlog` MCP server is configured for OpenCode (`opencode.jsonc`) and Claude Code (`.mcp.json` plus `.claude/settings.json`), and `.config/wt.toml` writes both in each worktree. It exposes:
+
+- tasks: `task_create`, `task_edit`, `task_view`, `task_list`, `task_search`, `task_archive`, `task_restore`, `task_delete`
+- documents and milestones: `document_*`, `milestone_*`
+
+Prefer it for those. A description passed as a parameter never goes near a shell, which matters because descriptions here are multi-line markdown with backticks and quotes. Tool names are namespaced per harness — `tools.backlog.task_create` in OpenCode's Code Mode, `mcp__backlog__task_create` in Claude Code — so refer to the operation, not the full name.
+
+The CLI keeps the rest: `board`, `overview`, `decision`, `draft`, `task demote`, `config`, `doctor`, `cleanup` and `browser`. Flags map one to one: `-s` → `status`, `--ac` → `acceptanceCriteria`, `--comment`/`--comment-author` → `commentsAppend`/`commentAuthor`, `--plan` → `planSet`, `--notes` → `notesAppend`, `--check-ac` → `acceptanceCriteriaCheck`, `-p` → `parentTaskId`, `-l` → `labels`, `--dep` → `dependencies`, `--type` → `type`, `--priority` → `priority`. The examples below use CLI flags for that reason.
 
 Install the CLI with `npm i -g backlog.md`. `backlog browser` serves a local board at http://127.0.0.1:6420.
 
