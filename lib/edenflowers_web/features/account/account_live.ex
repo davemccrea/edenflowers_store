@@ -61,9 +61,14 @@ defmodule EdenflowersWeb.Account.AccountLive do
           <h1 class="page-title">
             {if @current_user.first_name, do: ~t"Hi, #{@current_user.first_name}!", else: ~t"My account"}
           </h1>
-          <.button href={~p"/sign-out"} method="delete" variant="secondary" class="w-fit">
-            {~t"Sign out"}
-          </.button>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <.button href={~p"/sign-out"} method="delete" variant="secondary" class="w-fit">
+              {~t"Sign out"}
+            </.button>
+            <.link href={~p"/sign-out?everywhere=true"} method="delete" class="link-underline-hover text-sm">
+              {~t"Sign out of all devices"}
+            </.link>
+          </div>
         </div>
 
         <%!-- Cream marks the one living thing on the page; the rest is history and settings. --%>

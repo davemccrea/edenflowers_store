@@ -1,3 +1,19 @@
+defmodule Edenflowers.Accounts.User.LogsOutSelf do
+  @moduledoc """
+  Authorizes `log_out_everywhere` only for the user it signs out. A generic
+  action has no row to filter, so the check compares the actor with the
+  action's `user` argument.
+  """
+  use Ash.Policy.SimpleCheck
+
+  @impl true
+  def describe(_opts), do: "actor is the user being signed out"
+
+  @impl true
+  def match?(%{id: id}, %{subject: %Ash.ActionInput{arguments: %{user: %{id: id}}}}, _opts), do: true
+  def match?(_actor, _context, _opts), do: false
+end
+
 defmodule Edenflowers.Accounts.User do
   @moduledoc """
   Customer and admin identity. Email one-time codes authenticate users; the same record links orders, course bookings, and newsletter preferences.
@@ -25,7 +41,6 @@ defmodule Edenflowers.Accounts.User do
   authentication do
     add_ons do
       log_out_everywhere do
-        apply_on_password_change? true
       end
     end
 
@@ -298,6 +313,10 @@ defmodule Edenflowers.Accounts.User do
 
     policy action(:subscribe_to_newsletter) do
       authorize_if always()
+    end
+
+    policy action(:log_out_everywhere) do
+      authorize_if __MODULE__.LogsOutSelf
     end
   end
 

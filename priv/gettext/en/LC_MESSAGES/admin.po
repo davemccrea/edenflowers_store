@@ -551,7 +551,7 @@ msgstr ""
 msgid "Could not refund with Stripe. Check the payment in Stripe."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:170
+#: lib/edenflowers_web/features/admin/account_live.ex:173
 #, elixir-autogen, elixir-format
 msgid "Could not remove the profile picture."
 msgstr ""
@@ -561,7 +561,7 @@ msgstr ""
 msgid "Could not remove the seat."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:197
+#: lib/edenflowers_web/features/admin/account_live.ex:200
 #, elixir-autogen, elixir-format
 msgid "Could not save the profile picture."
 msgstr ""
@@ -594,7 +594,7 @@ msgstr ""
 msgid "Could not upload the photo."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:206
+#: lib/edenflowers_web/features/admin/account_live.ex:209
 #, elixir-autogen, elixir-format
 msgid "Could not upload the picture."
 msgstr ""
@@ -2878,7 +2878,7 @@ msgstr ""
 msgid "The photo must be under 40 MB."
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:204
+#: lib/edenflowers_web/features/admin/account_live.ex:207
 #, elixir-autogen, elixir-format
 msgid "The picture must be under 2 MB."
 msgstr ""
@@ -3189,7 +3189,7 @@ msgstr "Uploading photo"
 msgid "Usage limit"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:205
+#: lib/edenflowers_web/features/admin/account_live.ex:208
 #, elixir-autogen, elixir-format
 msgid "Use a JPG, PNG or WebP image."
 msgstr ""
@@ -5052,7 +5052,7 @@ msgstr ""
 msgid "Colour"
 msgstr ""
 
-#: lib/edenflowers_web/features/admin/account_live.ex:157
+#: lib/edenflowers_web/features/admin/account_live.ex:160
 #, elixir-autogen, elixir-format
 msgid "Could not save the appearance."
 msgstr ""
@@ -5257,4 +5257,9 @@ msgstr ""
 #: lib/edenflowers_web/features/admin/order_form_live.ex:976
 #, elixir-autogen, elixir-format
 msgid "Yours to choose"
+msgstr ""
+
+#: lib/edenflowers_web/features/admin/account_live.ex:130
+#, elixir-autogen, elixir-format
+msgid "Sign out of all devices"
 msgstr ""

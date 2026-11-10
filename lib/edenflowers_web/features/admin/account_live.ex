@@ -121,11 +121,14 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
         <.device_settings current_path={@current_path} vapid_public_key={@vapid_public_key} />
 
-        <div class="mt-6">
+        <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
           <.button href={~p"/sign-out"} method="delete" variant="secondary" size="sm">
             <.icon name="hero-arrow-right-start-on-rectangle" class="h-4 w-4" />
             {~t"Sign out"}
           </.button>
+          <.link href={~p"/sign-out?everywhere=true"} method="delete" class="link-underline-static-body text-sm">
+            {~t"Sign out of all devices"}
+          </.link>
         </div>
       </.admin_page>
     </Layouts.admin>

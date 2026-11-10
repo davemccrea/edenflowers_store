@@ -42,6 +42,7 @@ defmodule Edenflowers.Accounts do
       define :update_newsletter_preference, action: :update, args: [:newsletter_opt_in, :locale]
       define :ensure_stripe_customer, action: :ensure_stripe_customer
       define :forget_stripe_customer, action: :forget_stripe_customer
+      define :log_out_everywhere, action: :log_out_everywhere, args: [:user]
       define :set_newsletter_promo, action: :set_newsletter_promo, args: [:newsletter_promo_id]
       define_calculation :can_review?, args: [:_record]
       define_calculation :first_name, args: [:_record]
