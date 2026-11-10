@@ -1,10 +1,10 @@
 ---
 id: TASK-162.2
 title: Tag the Instagram and Facebook bio links to the site
-status: ready-for-human
+status: done
 assignee: []
 created_date: '2026-11-01 14:07'
-updated_date: '2026-11-01 16:07'
+updated_date: '2026-11-09 12:32'
 labels: []
 dependencies: []
 parent_task_id: TASK-162
@@ -25,7 +25,7 @@ Decisions (grilled 2026-11-01):
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The Instagram bio and Facebook page link to the site with UTM tags
+- [x] #1 The Instagram bio and Facebook page link to the site with UTM tags
 <!-- AC:END -->
 
 ## Comments
@@ -37,6 +37,15 @@ created: 2026-11-01 16:07
 ---
 
 2026-11-01: Grilled with David. Left for Jennie or David: make both links in the share drawer and paste them into the Instagram bio and the Facebook page.
+
+---
+
+author: @claude
+created: 2026-11-09 12:32
+
+---
+
+2026-11-09: the UTM-tagged links are in the Instagram bio and the Facebook page. Closed.
 
 ---
 <!-- COMMENTS:END -->
