@@ -8,37 +8,38 @@ defmodule EdenflowersWeb.Admin.SearchLive do
   import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Accounts
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Orders
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   @limit 10
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: PubSub.subscribe([Events.admin_orders(), Events.admin_customers()])
+
     {:ok, socket |> assign(:locale, Localize.get_locale()) |> assign(:limit, @limit)}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
     term = String.trim(params["q"] || "")
-    actor = socket.assigns.current_user
-
-    {orders, customers} =
-      if term == "" do
-        {[], []}
-      else
-        {Orders.search_orders!(term, actor: actor, query: [limit: @limit]),
-         Accounts.search_customers!(term, actor: actor, query: [limit: @limit])}
-      end
 
     {:noreply,
      socket
      |> assign(:page_title, ~t"Search")
      |> assign(:term, term)
-     |> assign(:orders, orders)
-     |> assign(:customers, customers)}
+     |> search()}
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
+    do: {:noreply, PubSub.schedule_refresh(socket, :search)}
+
+  def handle_info({:admin_refresh, :search}, socket), do: {:noreply, search(socket)}
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   @impl true
   def render(assigns) do
@@ -103,6 +104,21 @@ defmodule EdenflowersWeb.Admin.SearchLive do
       </.admin_page>
     </Layouts.admin>
     """
+  end
+
+  defp search(socket) do
+    term = socket.assigns[:term] || ""
+    actor = socket.assigns.current_user
+
+    {orders, customers} =
+      if term == "" do
+        {[], []}
+      else
+        {Orders.search_orders!(term, actor: actor, query: [limit: @limit]),
+         Accounts.search_customers!(term, actor: actor, query: [limit: @limit])}
+      end
+
+    assign(socket, orders: orders, customers: customers)
   end
 
   # At the limit the count is only the page size, and "See all" says there are more.

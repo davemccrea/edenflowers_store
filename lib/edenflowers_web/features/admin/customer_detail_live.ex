@@ -11,9 +11,11 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
 
   alias Edenflowers.Accounts
   alias Edenflowers.Accounts.User
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Subscription
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Checkout.Fields
   alias EdenflowersWeb.Layouts
 
@@ -22,12 +24,16 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
     case Accounts.get_customer_for_admin(id, actor: socket.assigns.current_user) do
       {:ok, %User{} = customer} ->
         if connected?(socket) do
-          EdenflowersWeb.Endpoint.subscribe("admin:orders")
-          EdenflowersWeb.Endpoint.subscribe("admin:subscriptions")
+          PubSub.subscribe([
+            Events.admin_customer(customer.id),
+            Events.admin_orders(),
+            Events.admin_subscriptions()
+          ])
         end
 
         {:ok,
          socket
+         |> assign(:stale, false)
          |> assign(:page_title, customer.name || to_string(customer.email))
          |> assign(:locale, Localize.get_locale())
          |> assign(:customer, customer)
@@ -47,6 +53,7 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header
           title={@customer.name || ~t"Unnamed customer"}
           back={{~t"Customers", ~p"/admin/customers"}}
@@ -162,9 +169,12 @@ defmodule EdenflowersWeb.Admin.CustomerDetailLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
-    do: {:noreply, Cinder.refresh_table(socket, "customer-orders-table")}
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: socket.assigns.current_path)}
 
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:subscriptions"}, socket),
-    do: {:noreply, Cinder.refresh_table(socket, "customer-subscriptions-table")}
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 end

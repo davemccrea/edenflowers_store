@@ -9,12 +9,14 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
   import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Accounts.User
+  alias Edenflowers.Events
   alias Edenflowers.Format
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:orders")
+    if connected?(socket), do: PubSub.subscribe([Events.admin_customers(), Events.admin_orders()])
 
     {:ok,
      socket
@@ -88,8 +90,13 @@ defmodule EdenflowersWeb.Admin.CustomersLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
+    do: {:noreply, PubSub.schedule_refresh(socket, :customers_table)}
+
+  def handle_info({:admin_refresh, :customers_table}, socket),
     do: {:noreply, Cinder.refresh_table(socket, "customers-table")}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp search_customers(query, _searchable_columns, search_term) do
     require Ash.Query

@@ -8,11 +8,15 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
   alias Edenflowers.Courses.Course
   alias Edenflowers.Courses.CourseRegistration
   alias Edenflowers.Email.Preview
+  alias Edenflowers.Events
   alias Edenflowers.Format
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
+    if connected?(socket), do: PubSub.subscribe([Events.admin_course(id), Events.admin_bookings()])
+
     case Ash.get(Course, id, actor: socket.assigns.current_user) do
       {:ok, course} ->
         form =
@@ -27,6 +31,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
 
         {:ok,
          socket
+         |> assign(:stale, false)
          |> assign(:course, course)
          |> assign(:page_title, ~t"Add booking")
          |> assign(:locale, Localize.get_locale())
@@ -42,6 +47,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header title={@page_title} back={{@course.name, ~p"/admin/courses/#{@course.id}"}} sticky>
           <:subtitle>
             <span id="booking-course" class="flex flex-col gap-1">
@@ -124,6 +130,9 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
   end
 
   @impl true
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: socket.assigns.current_path)}
+
   def handle_event("validate", %{"form" => params}, socket) do
     {:noreply, assign_form(socket, AshPhoenix.Form.validate(socket.assigns.form, params))}
   end
@@ -140,6 +149,12 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
         {:noreply, assign_form(socket, form)}
     end
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp assign_form(socket, form) do
     form = to_form(form)

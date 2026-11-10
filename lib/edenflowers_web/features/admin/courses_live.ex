@@ -9,9 +9,11 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   import EdenflowersWeb.Admin.Components
 
   alias Edenflowers.Courses.Course
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.DefaultTableView
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   # Upcoming courses and past ones still to settle, soonest first.
@@ -19,7 +21,7 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:bookings")
+    if connected?(socket), do: PubSub.subscribe([Events.admin_courses(), Events.admin_bookings()])
 
     {:ok,
      socket
@@ -113,7 +115,10 @@ defmodule EdenflowersWeb.Admin.CoursesLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:bookings"}, socket),
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
+    do: {:noreply, PubSub.schedule_refresh(socket, :courses_table)}
+
+  def handle_info({:admin_refresh, :courses_table}, socket),
     do: {:noreply, Cinder.refresh_table(socket, "courses-table")}
 
   def handle_info(_message, socket), do: {:noreply, socket}

@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
   import EdenflowersWeb.VoucherSkeleton, only: [voucher_skeleton: 1]
 
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Subscription
@@ -41,7 +42,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
   end
 
   defp wait_for_placement(socket, order) do
-    if connected?(socket), do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:placed:#{order.id}")
+    if connected?(socket), do: Events.subscribe(Events.order_placed(order.id))
     assign_order(socket, order)
   end
 
@@ -198,7 +199,7 @@ defmodule EdenflowersWeb.Checkout.OrderLive do
 
   # Only the order's owner subscribes, in mount.
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:placed:" <> _}, socket) do
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket) do
     order = Orders.get_order_by_id!(socket.assigns.shown_order.id, authorize?: false)
     {:noreply, assign_order(socket, order)}
   end

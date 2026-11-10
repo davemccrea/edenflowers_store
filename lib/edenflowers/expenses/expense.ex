@@ -73,6 +73,7 @@ defmodule Edenflowers.Expenses.Expense do
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
+  alias Edenflowers.Events
   alias Edenflowers.Expenses.Changes
   alias Edenflowers.Payments.ReferenceNumber
 
@@ -292,9 +293,13 @@ defmodule Edenflowers.Expenses.Expense do
   pub_sub do
     module EdenflowersWeb.Endpoint
 
-    publish_all :create, ["admin", "expenses"]
-    publish_all :update, ["admin", "expenses"]
-    publish_all :destroy, ["admin", "expenses"]
+    publish_all :create, Events.admin_expenses()
+    publish_all :update, Events.admin_expenses()
+    publish_all :destroy, Events.admin_expenses()
+
+    publish_all :create, Events.admin_expense(:id)
+    publish_all :update, Events.admin_expense(:id)
+    publish_all :destroy, Events.admin_expense(:id)
   end
 
   # Claude's draft may lack these, so ingest takes it as it is; Jennie fills

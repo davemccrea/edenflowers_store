@@ -7,6 +7,7 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
   use Phoenix.Component
   import Phoenix.LiveView
 
+  alias Edenflowers.Events
   alias Edenflowers.Orders
 
   def on_mount(:default, _params, _session, socket) do
@@ -18,12 +19,16 @@ defmodule EdenflowersWeb.Hooks.HandleLineItemChanged do
     end
   end
 
-  def subscribe(order), do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
+  def subscribe(order), do: Events.subscribe(Events.line_items_changed(order.id))
 
-  defp handle_line_item_changed(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
-    actor = socket.assigns[:current_user]
-    order = Orders.get_storefront_cart!(socket.assigns.visitor_id, actor: actor)
-    {:halt, assign(socket, order: order)}
+  defp handle_line_item_changed(%Phoenix.Socket.Broadcast{topic: topic}, %{assigns: %{order: %{id: order_id}}} = socket) do
+    if topic == Events.topic(Events.line_items_changed(order_id)) do
+      actor = socket.assigns[:current_user]
+      order = Orders.get_storefront_cart!(socket.assigns.visitor_id, actor: actor)
+      {:halt, assign(socket, order: order)}
+    else
+      {:cont, socket}
+    end
   end
 
   defp handle_line_item_changed(_, socket), do: {:cont, socket}

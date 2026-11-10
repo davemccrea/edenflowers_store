@@ -4,16 +4,24 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
   use Cinder.UrlSync
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Payments.Invoice
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
-  def mount(_params, _session, socket),
-    do: {:ok, assign(socket, page_title: ~t"Invoices", locale: Localize.get_locale())}
+  @impl true
+  def mount(_params, _session, socket) do
+    if connected?(socket), do: PubSub.subscribe([Events.admin_invoices()])
 
+    {:ok, assign(socket, page_title: ~t"Invoices", locale: Localize.get_locale())}
+  end
+
+  @impl true
   def handle_params(params, uri, socket),
     do: {:noreply, Cinder.UrlSync.handle_params(params, uri, socket)}
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
@@ -91,6 +99,15 @@ defmodule EdenflowersWeb.Admin.InvoicesLive do
     </Layouts.admin>
     """
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
+    do: {:noreply, PubSub.schedule_refresh(socket, :invoices_table)}
+
+  def handle_info({:admin_refresh, :invoices_table}, socket),
+    do: {:noreply, Cinder.refresh_table(socket, "invoices-table")}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp search_invoices(query, _searchable_columns, search_term) do
     require Ash.Query

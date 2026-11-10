@@ -11,6 +11,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
   import Edenflowers.Actors
 
   alias Edenflowers.Courses
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Translations
   alias EdenflowersWeb.PaymentLink
@@ -26,9 +27,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
           gettext: EdenflowersWeb.Gettext
         )
 
-        if connected?(socket) do
-          Phoenix.PubSub.subscribe(Edenflowers.PubSub, "course_registration:paid:#{registration.id}")
-        end
+        if connected?(socket), do: Events.subscribe(Events.course_registration_paid(registration.id))
 
         {:ok,
          socket
@@ -159,7 +158,7 @@ defmodule EdenflowersWeb.Courses.CoursePayLive do
   def handle_event("stripe:error", params, socket), do: {:noreply, PaymentLink.stripe_error(socket, params)}
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> _}, socket),
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
     do: {:noreply, socket |> PaymentLink.paid() |> assign_page_title()}
 
   defp assign_page_title(socket) do

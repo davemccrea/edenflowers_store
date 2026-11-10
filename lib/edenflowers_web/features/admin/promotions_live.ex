@@ -8,11 +8,13 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Pricing
   alias Edenflowers.Pricing.Promotion
   alias EdenflowersWeb.Admin.DefaultTableView
   alias EdenflowersWeb.Admin.PromotionFormLive
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   # Hand-made promotions; newsletter and card codes would otherwise bury them.
@@ -20,6 +22,8 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: PubSub.subscribe([Events.admin_promotions(), Events.admin_welcome_offer()])
+
     {:ok,
      socket
      |> assign(:page_title, ~t"Promotions")
@@ -50,6 +54,7 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
           <:description>
             {~t"Codes already sent keep their rate."}
           </:description>
+          <.stale_editor_notice stale={@welcome_offer_stale} reload="reload_welcome_offer" />
           <.form
             for={@welcome_offer_form}
             id="welcome-offer-form"
@@ -158,8 +163,13 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
   end
 
   @impl true
+  def handle_event("reload_welcome_offer", _params, socket), do: {:noreply, assign_welcome_offer_form(socket)}
+
   def handle_event("validate_welcome_offer", %{"form" => params}, socket) do
-    {:noreply, assign(socket, :welcome_offer_form, AshPhoenix.Form.validate(socket.assigns.welcome_offer_form, params))}
+    {:noreply,
+     assign(socket,
+       welcome_offer_form: AshPhoenix.Form.validate(socket.assigns.welcome_offer_form, params)
+     )}
   end
 
   def handle_event("save_welcome_offer", %{"form" => params}, socket) do
@@ -171,9 +181,23 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
          |> put_flash(:success, ~t"Welcome offer saved.")}
 
       {:error, form} ->
-        {:noreply, assign(socket, :welcome_offer_form, form)}
+        {:noreply, assign(socket, welcome_offer_form: form)}
     end
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: topic} = notification, socket) do
+    if topic == Events.topic(Events.admin_welcome_offer()) do
+      {:noreply, PubSub.mark_stale(socket, notification, :welcome_offer_stale)}
+    else
+      {:noreply, PubSub.schedule_refresh(socket, :promotions_table)}
+    end
+  end
+
+  def handle_info({:admin_refresh, :promotions_table}, socket),
+    do: {:noreply, Cinder.refresh_table(socket, "promotions-table")}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp assign_welcome_offer_form(socket) do
     actor = socket.assigns.current_user
@@ -182,7 +206,7 @@ defmodule EdenflowersWeb.Admin.PromotionsLive do
       Pricing.get_welcome_offer!(actor: actor)
       |> AshPhoenix.Form.for_update(:update, actor: actor, transform_params: &PromotionFormLive.percent_to_rate/3)
 
-    assign(socket, :welcome_offer_form, to_form(form))
+    assign(socket, welcome_offer_form: to_form(form), welcome_offer_stale: false)
   end
 
   def default_path, do: ~p"/admin/promotions?#{@default_view}"

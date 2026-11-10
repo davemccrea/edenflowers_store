@@ -8,12 +8,13 @@ defmodule EdenflowersWeb.Admin.ReportController do
   require Logger
 
   alias Edenflowers.Accounting.MonthlyReport
+  alias Edenflowers.Events
 
   def show(%{assigns: %{current_user: %{admin: true} = user}} = conn, %{"month" => month}) do
     with {:ok, year, month_number} <- parse_month(month),
          {:ok, filename, zip, missing} <- MonthlyReport.build(year, month_number, psu_headers: psu_headers(conn)) do
       if :bank_statement in missing do
-        Phoenix.PubSub.broadcast(Edenflowers.PubSub, report_topic(user), {:bank_statement_missing, month})
+        Events.broadcast(Events.admin_report(user.id), {:bank_statement_missing, month})
       end
 
       send_download(conn, {:binary, zip}, filename: filename, content_type: "application/zip")
@@ -28,12 +29,6 @@ defmodule EdenflowersWeb.Admin.ReportController do
   end
 
   def show(conn, _params), do: send_resp(conn, :not_found, "Not found")
-
-  @doc """
-  Returns the admin's PubSub topic for report warnings, so Overview can
-  display missing-bank-statement warnings from the download request.
-  """
-  def report_topic(user), do: "admin:reports:#{user.id}"
 
   # Every PSU header the browser gives us: the bank wants all it requires or none.
   # Behind Cloudflare, remote_ip is the tunnel's; Cloudflare passes on Jennie's.

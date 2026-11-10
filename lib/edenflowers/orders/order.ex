@@ -34,6 +34,7 @@ defmodule Edenflowers.Orders.Order do
   import Ash.Expr, only: [expr: 1]
 
   alias Edenflowers.Accounts.Calculations, as: AccountCalculations
+  alias Edenflowers.Events
   alias Edenflowers.Fulfillment.FulfillmentOption
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Orders.Order.Calculations
@@ -270,23 +271,35 @@ defmodule Edenflowers.Orders.Order do
   pub_sub do
     module EdenflowersWeb.Endpoint
 
-    publish :restart_checkout, ["order", "checkout_restarted", :id]
-    publish :finalize_checkout, ["order", "placed", :id]
-    publish :place_paid_by_voucher, ["order", "placed", :id]
-    publish :record_link_payment, ["order", "paid", :id]
+    publish :restart_checkout, Events.order_checkout_restarted(:id)
+    publish :finalize_checkout, Events.order_placed(:id)
+    publish :place_paid_by_voucher, Events.order_placed(:id)
+    publish :record_link_payment, Events.order_paid(:id)
+
     # The admin is an installed app without pull to refresh, so every change
-    # to a placed order, by anyone, refreshes the admin pages showing it.
-    # Carts are left out: they change with every checkout step.
-    publish :place_custom, ["admin", "orders"]
-    publish :sell_gift_voucher, ["admin", "orders"]
-    publish_all :update, ["admin", "orders"], filter: fn %{data: order} -> order.state == :placed end
-    publish_all :update, ["order", "changed", :id], filter: fn %{data: order} -> order.state == :placed end
-    publish :add_promotion_with_code, ["line_item", "changed", :id]
-    publish :add_promotion_from_link, ["line_item", "changed", :id]
-    publish :clear_promotion, ["line_item", "changed", :id]
-    publish :add_gift_voucher_with_code, ["line_item", "changed", :id]
-    publish :clear_gift_voucher, ["line_item", "changed", :id]
+    # to a placed order, by anyone, refreshes the pages showing it. Carts and
+    # occurrences still waiting for payment are left out.
+    publish_all :create, Events.admin_orders(), filter: &placed?/1
+    publish_all :update, Events.admin_orders(), filter: &placed?/1
+    publish_all :destroy, Events.admin_orders(), filter: &placed?/1
+
+    # The order page follows one order, including invoices tied to it.
+    publish_all :create, Events.admin_order(:id), filter: &placed?/1
+    publish_all :update, Events.admin_order(:id), filter: &placed?/1
+    publish_all :destroy, Events.admin_order(:id), filter: &placed?/1
+
+    # The customer's own order page.
+    publish_all :update, Events.order_changed(:id), filter: &placed?/1
+
+    publish :add_promotion_with_code, Events.line_items_changed(:id)
+    publish :add_promotion_from_link, Events.line_items_changed(:id)
+    publish :clear_promotion, Events.line_items_changed(:id)
+    publish :add_gift_voucher_with_code, Events.line_items_changed(:id)
+    publish :clear_gift_voucher, Events.line_items_changed(:id)
   end
+
+  defp placed?(%{data: %{state: :placed}}), do: true
+  defp placed?(_notification), do: false
 
   # Every read and write returns the charged fee, so code that shows or totals
   # an order reads `fulfillment_fee` as it did when the fee was stored.

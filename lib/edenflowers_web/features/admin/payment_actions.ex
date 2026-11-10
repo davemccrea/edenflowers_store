@@ -3,9 +3,8 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   Jennie's payment controls on an order or a course booking, shared by the
   order page and the courses page: the AshPhoenix forms behind the cancel,
   record payment and refund drawers, and the flash for what each did, keeping
-  a committed payment distinct from a receipt failure. The page refreshes from
-  the actions' notifications; a failed receipt can follow a committed payment,
-  so errors reload it directly.
+  a committed payment distinct from a receipt failure. The page explicitly
+  reloads after a committed action, including when its receipt failed.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 

@@ -14,6 +14,7 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   import EdenflowersWeb.GiftVoucherField, only: [gift_voucher_field: 1]
 
   alias Edenflowers.Catalog.ProductVariantSize
+  alias Edenflowers.Events
 
   alias Edenflowers.Orders
   alias Edenflowers.Payments
@@ -56,9 +57,9 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
     order = Orders.get_order_for_checkout!(order_id, actor: actor(socket))
 
     if connected?(socket) do
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "line_item:changed:#{order.id}")
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:checkout_restarted:#{order.id}")
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "shop_calendar:changed")
+      Events.subscribe(Events.line_items_changed(order.id))
+      Events.subscribe(Events.order_checkout_restarted(order.id))
+      Events.subscribe(Events.shop_calendar_changed())
     end
 
     with :ok <- validate_cart_not_empty(order),
@@ -724,22 +725,28 @@ defmodule EdenflowersWeb.Checkout.CheckoutLive do
   # The `pay` handler syncs the PaymentIntent amount, so only a switch between
   # one-off and subscription, which changes card saving, replaces it here.
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "line_item:changed:" <> _}, socket) do
-    order = Orders.get_order_for_checkout!(socket.assigns.order.id, actor: actor(socket))
+  def handle_info(%Phoenix.Socket.Broadcast{topic: topic}, socket) do
+    order_id = socket.assigns.order.id
 
     cond do
-      order.cart_effectively_empty? -> {:noreply, push_navigate(socket, to: ~q"/#{language}")}
-      order.add_ons_only? -> {:noreply, back_to_store(socket)}
-      true -> apply_cart_change(socket, order)
+      topic == Events.topic(Events.line_items_changed(order_id)) ->
+        order = Orders.get_order_for_checkout!(order_id, actor: actor(socket))
+
+        cond do
+          order.cart_effectively_empty? -> {:noreply, push_navigate(socket, to: ~q"/#{language}")}
+          order.add_ons_only? -> {:noreply, back_to_store(socket)}
+          true -> apply_cart_change(socket, order)
+        end
+
+      topic == Events.topic(Events.order_checkout_restarted(order_id)) ->
+        {:noreply, push_navigate(socket, to: ~q"/#{language}")}
+
+      topic == Events.topic(Events.shop_calendar_changed()) ->
+        {:noreply, refresh_calendar(socket)}
+
+      true ->
+        {:noreply, socket}
     end
-  end
-
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:checkout_restarted:" <> _}, socket) do
-    {:noreply, push_navigate(socket, to: ~q"/#{language}")}
-  end
-
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "shop_calendar:changed"}, socket) do
-    {:noreply, refresh_calendar(socket)}
   end
 
   def handle_info(:focus_first_error, socket) do

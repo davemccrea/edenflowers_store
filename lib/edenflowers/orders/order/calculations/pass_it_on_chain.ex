@@ -9,9 +9,6 @@ defmodule Edenflowers.Orders.Order.Calculations.PassItOnChain do
   """
   use Ash.Resource.Calculation
 
-  alias Edenflowers.Orders.Order
-  alias Edenflowers.Pricing.Promotion
-
   @link_load [promotion: [:card_status, gift_order: []], pass_it_on_card: [:card_status, :placed_orders]]
 
   defstruct [:nodes, :multiple?, :visible?]
@@ -69,23 +66,6 @@ defmodule Edenflowers.Orders.Order.Calculations.PassItOnChain do
         do: {[], seen},
         else: {[%{order: order, children: branches}], seen}
     end
-  end
-
-  @doc "Whether a changed Order or Pass it on card can affect this tree."
-  def changed?(%__MODULE__{nodes: nodes}, %Order{id: id, promotion_id: promotion_id}) do
-    any_order?(nodes, fn order ->
-      order.id == id or match?(%{id: ^promotion_id} when not is_nil(promotion_id), order.pass_it_on_card)
-    end)
-  end
-
-  def changed?(%__MODULE__{nodes: nodes}, %Promotion{id: id, gift_order_id: gift_order_id}) do
-    any_order?(nodes, fn order ->
-      order.id == gift_order_id or order.promotion_id == id or match?(%{id: ^id}, order.pass_it_on_card)
-    end)
-  end
-
-  defp any_order?(nodes, predicate) do
-    Enum.any?(nodes, fn node -> predicate.(node.order) or any_order?(node.children, predicate) end)
   end
 
   defp brought_in(%{pass_it_on_card: %{kind: :pass_it_on, placed_orders: orders}}) do

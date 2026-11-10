@@ -37,6 +37,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
     ]
 
   alias Edenflowers.Accounts.Calculations, as: AccountCalculations
+  alias Edenflowers.Events
   alias Edenflowers.Payments.Payment
 
   # Enough for the usual group of friends without letting one booking empty a course.
@@ -119,13 +120,13 @@ defmodule Edenflowers.Courses.CourseRegistration do
   pub_sub do
     module EdenflowersWeb.Endpoint
 
-    publish :confirm_payment, ["course_registration", "paid", :id]
-    publish :confirm_paid_by_voucher, ["course_registration", "paid", :id]
-    publish :record_link_payment, ["course_registration", "paid", :id]
+    publish :confirm_payment, Events.course_registration_paid(:id)
+    publish :confirm_paid_by_voucher, Events.course_registration_paid(:id)
+    publish :record_link_payment, Events.course_registration_paid(:id)
     # Refreshes the admin's Courses and Overview pages, which have no pull to refresh.
-    publish_all :create, ["admin", "bookings"]
-    publish_all :update, ["admin", "bookings"]
-    publish_all :destroy, ["admin", "bookings"]
+    publish_all :create, Events.admin_bookings()
+    publish_all :update, Events.admin_bookings()
+    publish_all :destroy, Events.admin_bookings()
   end
 
   attributes do

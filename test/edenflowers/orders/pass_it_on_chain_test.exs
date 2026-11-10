@@ -4,8 +4,6 @@ defmodule Edenflowers.Orders.PassItOnChainTest do
   import Generator
 
   alias Edenflowers.Orders
-  alias Edenflowers.Orders.Order
-  alias Edenflowers.Orders.Order.Calculations.PassItOnChain
   alias Edenflowers.Pricing
 
   setup do
@@ -38,13 +36,6 @@ defmodule Edenflowers.Orders.PassItOnChainTest do
       assert source_id == source.id
       assert Enum.map(children, & &1.order.id) == [first.id, sibling.id]
       assert ids(hd(children).children) == [next.id]
-
-      assert PassItOnChain.changed?(chain, %Order{id: next.id})
-      assert PassItOnChain.changed?(chain, %Order{id: "new-redemption", promotion_id: second_card.id})
-      assert PassItOnChain.changed?(chain, %{first_card | gift_order_id: nil})
-      assert PassItOnChain.changed?(chain, %{second_card | gift_order_id: source.id})
-      refute PassItOnChain.changed?(chain, %Order{id: "unrelated"})
-      refute PassItOnChain.changed?(chain, %{first_card | id: "unrelated", gift_order_id: nil})
     end
 
     # A cancelled order remains traceable on its own page, without being an active conversion elsewhere.
@@ -101,7 +92,6 @@ defmodule Edenflowers.Orders.PassItOnChainTest do
     chain = Orders.get_order_for_admin!(redemption.id, actor: admin).pass_it_on_chain
     assert chain.visible?
     refute chain.multiple?
-    assert PassItOnChain.changed?(chain, card)
 
     gift = placed_order(gift: true)
     Pricing.link_card_to_gift_order!(card, gift.id, actor: admin)

@@ -1,10 +1,32 @@
 defmodule EdenflowersWeb.Admin.ProductsLiveTest do
-  use EdenflowersWeb.ConnCase, async: true
+  # Query counts must not include broadcasts from concurrent tests.
+  use EdenflowersWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
   import Generator
 
+  alias EdenflowersWeb.QueryCounter
+
   setup :log_in_admin
+
+  test "notes and readiness changes do not query the product list", %{conn: conn, admin: admin} do
+    order = placed_order(fulfillment_date: Edenflowers.ShopTime.today())
+    {:ok, view, _html} = live(conn, ~p"/admin/products")
+    render_async(view)
+    reads = QueryCounter.track(view.pid)
+
+    {:ok, order} = Edenflowers.Orders.update_florist_note(order, %{florist_note: "White flowers"}, actor: admin)
+    render_async(view)
+    assert QueryCounter.count(reads) == 0
+
+    {:ok, order} = Edenflowers.Orders.mark_order_ready(order, actor: admin)
+    render_async(view)
+    assert QueryCounter.count(reads) == 0
+
+    {:ok, _order} = Edenflowers.Orders.undo_order_ready(order, actor: admin)
+    render_async(view)
+    assert QueryCounter.count(reads) == 0
+  end
 
   test "searches products by name", %{conn: conn} do
     generate(product(name: "Rose bouquet"))
@@ -15,6 +37,44 @@ defmodule EdenflowersWeb.Admin.ProductsLiveTest do
 
     assert html =~ "Rose bouquet"
     refute html =~ "Tulip bouquet"
+  end
+
+  test "stock changes elsewhere preserve the category filter, price sort and current page", %{conn: conn, admin: admin} do
+    category = generate(product_category(name: "Bouquets"))
+
+    variants =
+      for n <- 1..11 do
+        product = generate(product(name: "Bouquet #{n}", product_category_id: category.id))
+        generate(product_variant(product_id: product.id, price: n * 10, stock_quantity: 3))
+      end
+
+    hidden = generate(product(name: "Another category"))
+    generate(product_variant(product_id: hidden.id, price: "200.00"))
+    variant = List.last(variants)
+    order = generate(order(state: :placed, fulfillment_date: Edenflowers.ShopTime.today(), payment_intent_id: nil))
+    generate(line_item(order_id: order.id, product_variant_id: variant.id, quantity: 2))
+
+    {:ok, view, _html} =
+      live(
+        conn,
+        ~p"/admin/products?#{%{"product_category.name" => "Bouquets", "sort" => "cheapest_price", "page_size" => 10, "page" => 2}}"
+      )
+
+    render_async(view)
+    row = ~s([data-item-id="#{variant.product_id}"])
+    assert has_element?(view, row, "3 left")
+    assert has_element?(view, ~s([data-key="pagination_info_class"]), "showing 11-11 of 11")
+    reads = QueryCounter.track(view.pid)
+
+    {:ok, _cancelled} = Edenflowers.Orders.cancel_order(order, %{email_customer?: false}, actor: admin)
+    Process.sleep(200)
+    render_async(view)
+
+    assert has_element?(view, row, "5 left")
+    assert has_element?(view, ~s([data-key="pagination_info_class"]), "showing 11-11 of 11")
+    refute has_element?(view, ~s([data-item-id="#{hd(variants).product_id}"]))
+    refute has_element?(view, ~s([data-item-id="#{hidden.id}"]))
+    assert QueryCounter.count(reads) > 0
   end
 
   test "lists drafts and flags products without sizes", %{conn: conn} do

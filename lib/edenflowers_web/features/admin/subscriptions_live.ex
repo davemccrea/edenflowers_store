@@ -8,9 +8,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Orders.Subscription
   alias EdenflowersWeb.Admin.DefaultTableView
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Checkout.Fields
   alias EdenflowersWeb.Layouts
 
@@ -19,7 +21,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:subscriptions")
+    if connected?(socket), do: PubSub.subscribe([Events.admin_subscriptions()])
 
     {:ok,
      socket
@@ -97,8 +99,13 @@ defmodule EdenflowersWeb.Admin.SubscriptionsLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:subscriptions"}, socket),
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
+    do: {:noreply, PubSub.schedule_refresh(socket, :subscriptions_table)}
+
+  def handle_info({:admin_refresh, :subscriptions_table}, socket),
     do: {:noreply, Cinder.refresh_table(socket, "subscriptions-table")}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp state_options do
     Enum.map(AshStateMachine.Info.state_machine_all_states(Subscription), &{subscription_state_label(&1), &1})

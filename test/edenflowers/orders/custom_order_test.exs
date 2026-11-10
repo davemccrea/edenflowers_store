@@ -6,6 +6,7 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   import Mox
   import Swoosh.TestAssertions
 
+  alias Edenflowers.Events
   alias Edenflowers.External.HereAPI
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Orders
@@ -96,16 +97,20 @@ defmodule Edenflowers.Orders.CustomOrderTest do
   end
 
   describe "placing a custom order" do
-    test "broadcasts a newly placed order to open admin pages", ctx do
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "admin:orders")
+    test "broadcasts a newly placed order to the collection followed by admin pages", ctx do
+      {:ok, user} = Edenflowers.Accounts.upsert_user("son@example.com", "Son", authorize?: false)
+      Events.subscribe(Events.admin_orders())
+      topic = Events.topic(Events.admin_orders())
 
-      assert {:ok, %{id: id}} = place(ctx)
+      assert {:ok, %{id: id}} = place(ctx, %{customer_email: "son@example.com"})
 
       assert_receive %Phoenix.Socket.Broadcast{
-        topic: "admin:orders",
+        topic: ^topic,
         event: "place_custom",
-        payload: %{data: %{id: ^id}}
+        payload: %{data: %{id: ^id, user_id: user_id}}
       }
+
+      assert user_id == user.id
     end
 
     test "is placed straight away, unpaid, with its own reference", ctx do

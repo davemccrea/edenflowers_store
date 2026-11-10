@@ -10,14 +10,15 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
 
   alias Edenflowers.Catalog.Product
   alias Edenflowers.Catalog.ProductCategory
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   @impl true
   def mount(_params, _session, socket) do
-    # Placing, editing or cancelling an order changes stock.
-    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:orders")
+    if connected?(socket), do: PubSub.subscribe([Events.admin_products()])
 
     categories = Ash.read!(ProductCategory, actor: socket.assigns.current_user)
 
@@ -135,8 +136,13 @@ defmodule EdenflowersWeb.Admin.ProductsLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
+    do: {:noreply, PubSub.schedule_refresh(socket, :products_table)}
+
+  def handle_info({:admin_refresh, :products_table}, socket),
     do: {:noreply, Cinder.refresh_table(socket, "products-table")}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp tracked_sizes(product), do: Enum.reject(product.product_variants, &is_nil(&1.stock_quantity))
 

@@ -7,9 +7,12 @@ defmodule Edenflowers.Courses.Course do
     domain: Edenflowers.Courses,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshTranslation.Resource]
 
   use GettextSigils, backend: EdenflowersWeb.Gettext
+
+  alias Edenflowers.Events
 
   @slug_options [former_slugs: Edenflowers.Courses.FormerCourseSlug, owner_key: :course_id, fallback: "course"]
 
@@ -119,6 +122,20 @@ defmodule Edenflowers.Courses.Course do
       description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
     end
+  end
+
+  # The admin's course list follows course changes; bookings publish through
+  # CourseRegistration to its own topics.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, Events.admin_courses()
+    publish_all :update, Events.admin_courses()
+    publish_all :destroy, Events.admin_courses()
+
+    publish_all :create, Events.admin_course(:id)
+    publish_all :update, Events.admin_course(:id)
+    publish_all :destroy, Events.admin_course(:id)
   end
 
   validations do

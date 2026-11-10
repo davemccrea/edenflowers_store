@@ -41,6 +41,7 @@ defmodule Edenflowers.Orders.LineItem do
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
+  alias Edenflowers.Events
   alias Edenflowers.Orders.Changes.PopulateFromVariant
   alias Edenflowers.Orders.LineItem.Changes
   alias Edenflowers.Orders.LineItem.Validations
@@ -176,9 +177,9 @@ defmodule Edenflowers.Orders.LineItem do
   pub_sub do
     module EdenflowersWeb.Endpoint
 
-    publish_all :create, ["line_item", "changed", :order_id]
-    publish_all :update, ["line_item", "changed", :order_id]
-    publish_all :destroy, ["line_item", "changed", :order_id], previous_values?: true
+    publish_all :create, Events.line_items_changed(:order_id)
+    publish_all :update, Events.line_items_changed(:order_id)
+    publish_all :destroy, Events.line_items_changed(:order_id), previous_values?: true
   end
 
   preparations do

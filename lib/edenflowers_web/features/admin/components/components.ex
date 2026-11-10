@@ -5,6 +5,34 @@ defmodule EdenflowersWeb.Admin.Components do
 
   use EdenflowersWeb, {:html, gettext_domain: "admin"}
 
+  attr :stale, :boolean, required: true
+  attr :reload, :string, default: "reload_editor"
+  attr :id, :string, default: "editor-stale-notice"
+
+  def stale_editor_notice(assigns) do
+    ~H"""
+    <div
+      :if={@stale}
+      id={@id}
+      role="alert"
+      class="border-warning bg-warning/10 mb-6 flex flex-wrap items-center justify-between gap-3 border p-4"
+    >
+      <p class="min-w-0 text-sm font-semibold">
+        {~t"Saved data changed elsewhere. Saving now may overwrite those changes. Reload to use the latest saved data, or save anyway."}
+      </p>
+      <.button
+        type="button"
+        phx-click={@reload}
+        data-confirm={~t"Discard your unsaved changes and load the latest saved data?"}
+        variant="secondary"
+        size="sm"
+      >
+        {~t"Discard changes and reload"}
+      </.button>
+    </div>
+    """
+  end
+
   attr :field, Phoenix.HTML.FormField, required: true
   attr :label, :string, required: true
   attr :label_class, :any, default: nil

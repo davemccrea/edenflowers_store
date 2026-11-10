@@ -11,8 +11,10 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   import EdenflowersWeb.Admin.SlugField, only: [slug_field: 1]
 
   alias Edenflowers.Courses.Course
+  alias Edenflowers.Events
   alias Edenflowers.Pricing
   alias EdenflowersWeb.Admin.PhotoUpload
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.SlugField
   alias EdenflowersWeb.Admin.TranslationFields
   alias EdenflowersWeb.Layouts
@@ -22,11 +24,13 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   @impl true
   def mount(params, _session, socket) do
     actor = socket.assigns.current_user
+    if connected?(socket) && params["id"], do: Events.subscribe(Events.admin_course(params["id"]))
 
     case load_form(params, actor) do
       {:ok, title, form} ->
         {:ok,
          socket
+         |> assign(:stale, false)
          |> assign(:page_title, title)
          |> assign(:tax_rates, Pricing.list_selectable_tax_rates!(actor: actor))
          |> assign(:form, form)
@@ -47,6 +51,7 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.form
           for={@form}
           id="course-form"
@@ -201,6 +206,9 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
   end
 
   @impl true
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: socket.assigns.current_path)}
+
   def handle_event("validate", %{"form" => params} = event, socket) do
     slug_edited? = socket.assigns.slug_edited? or SlugField.edited?(event)
 
@@ -247,6 +255,12 @@ defmodule EdenflowersWeb.Admin.CourseFormLive do
 
   defp form_back(%{source: %{type: :create}}), do: {~t"Courses", ~p"/admin/courses"}
   defp form_back(%{source: %{data: course}}), do: {course.name, ~p"/admin/courses/#{course.id}"}
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp load_form(%{"id" => id}, actor) do
     case Ash.get(Course, id, actor: actor) do

@@ -1,5 +1,6 @@
 defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
-  use EdenflowersWeb.ConnCase, async: true
+  # Absence-of-warning assertions need isolation from the global order topic.
+  use EdenflowersWeb.ConnCase, async: false
 
   use Oban.Testing, repo: Edenflowers.Repo
 
@@ -11,6 +12,102 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
   alias Edenflowers.Orders
 
   setup :log_in_admin
+
+  test "an external full payment only warns until reload makes refunds available", %{conn: conn, admin: admin} do
+    order = placed_order(payment_intent_id: nil)
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    Orders.record_payment!(order, order.grand_total, :cash, actor: admin)
+
+    assert has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#order-actions button", "Refund")
+    assert has_element?(view, "#order-balance-settle")
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    assert has_element?(view, "#order-actions button", "Refund")
+    view |> element("#order-actions button", "Refund") |> render_click()
+    assert has_element?(view, ~s|#order-refund-how option[value="cash"][selected]|)
+
+    view
+    |> form("#order-refund-form", refund: %{amount: "10.00", payment_method: "cash", email_customer?: "false"})
+    |> render_submit()
+
+    fresh = Orders.get_order_for_admin!(order.id, actor: admin)
+    assert Decimal.eq?(fresh.amount_held, Decimal.sub(order.grand_total, 10))
+  end
+
+  test "undoing a payment elsewhere leaves payment controls unchanged until reload", %{conn: conn, admin: admin} do
+    order = placed_order(payment_intent_id: nil)
+    payment = generate(payment(order_id: order.id, method: :cash, amount: order.grand_total))
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+
+    Orders.undo_payment!(order, payment.id, actor: admin)
+
+    assert has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#order-balance-settle")
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    assert has_element?(view, "#order-balance-settle")
+    view |> element("#order-balance-settle") |> render_click()
+
+    view
+    |> form("#order-balance-form", payment: %{payment_method: "cash", email_receipt?: "false"})
+    |> render_submit()
+
+    fresh = Orders.get_order_for_admin!(order.id, actor: admin)
+    assert Decimal.eq?(fresh.amount_paid, order.grand_total)
+    refute fresh.to_collect?
+  end
+
+  test "external changes leave saved data, settlement input and unsaved notes alone", %{conn: conn, admin: admin} do
+    order = placed_order()
+    {:ok, view, _} = live(conn, ~p"/admin/orders/#{order.id}")
+    view |> form("#florist-note-form", note: %{florist_note: "Keep this draft"}) |> render_change()
+    view |> element("button[phx-click=open_settlement]") |> render_click()
+
+    view
+    |> form("#order-balance-form", payment: %{amount: "12", payment_method: "cash"})
+    |> render_change(%{"_target" => ["payment", "amount"]})
+
+    Orders.update_florist_note!(order, %{florist_note: "Saved elsewhere"}, actor: admin)
+    assert has_element?(view, "#florist-note-form textarea", "Keep this draft")
+    assert has_element?(view, "#order-balance-form input[name='payment[amount]'][value='12']")
+    refute has_element?(view, "#order-log", "Saved elsewhere")
+    assert has_element?(view, "#editor-stale-notice")
+    assert has_element?(view, "#settlement-drawer-stale-notice[role=alert]")
+
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    assert has_element?(view, "#florist-note-form textarea", "Saved elsewhere")
+    refute has_element?(view, "#editor-stale-notice")
+  end
+
+  test "a saved note still warns about the next external save and may be overwritten", %{conn: conn, admin: admin} do
+    order = placed_order()
+    {:ok, view, _} = live(conn, ~p"/admin/orders/#{order.id}")
+    view |> form("#florist-note-form", note: %{florist_note: "My note"}) |> render_change()
+    view |> form("#florist-note-form") |> render_submit()
+    refute has_element?(view, "#editor-stale-notice")
+
+    Orders.update_florist_note!(order, %{florist_note: "Next note"}, actor: admin)
+    assert has_element?(view, "#editor-stale-notice[role=alert]")
+    view |> form("#florist-note-form", note: %{florist_note: "Save anyway"}) |> render_submit()
+    assert Orders.get_order_for_admin!(order.id, actor: admin).florist_note == "Save anyway"
+    refute has_element?(view, "#editor-stale-notice")
+  end
+
+  test "a successful readiness action reloads the order", %{conn: conn} do
+    order = placed_order()
+    {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
+    view |> element("button", "Mark as ready") |> render_click()
+
+    assert_push_event(view, "order-ready", %{})
+    assert has_element?(view, "#order-status", "Ready for pickup")
+    assert has_element?(view, "#order-log", "Marked ready")
+  end
 
   test "handover is available only while the order is ready", %{conn: conn, admin: admin} do
     for {method, label, ready_status} <- [
@@ -110,7 +207,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-log", "Pass it on card #{code} removed")
   end
 
-  test "history details keep their record identity when a new event arrives", %{conn: conn, admin: admin} do
+  test "history details keep their record identity after a local save", %{conn: conn, admin: admin} do
     order = placed_order()
     Orders.update_florist_note!(order, %{florist_note: "Original arrangement"}, actor: admin)
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
@@ -123,7 +220,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       |> LazyHTML.query("details")
       |> LazyHTML.attribute("id")
 
-    Orders.update_florist_note!(order, %{florist_note: "Add white roses"}, actor: admin)
+    view |> form("#florist-note-form", note: %{florist_note: "Add white roses"}) |> render_submit()
 
     assert has_element?(view, "##{original_id}", "Original arrangement")
 
@@ -223,7 +320,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, "#order-pass-it-on")
   end
 
-  test "the chain refreshes when a card is opened, redeemed, then its redemption cancelled",
+  test "external card changes warn and only appear after reloading the order",
        %{conn: conn, admin: admin} do
     [code] = Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare", 1, actor: Edenflowers.Actors.system_actor())
     gift = placed_order(gift: true)
@@ -233,14 +330,23 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-pass-it-on", "Not opened yet")
 
     card = Edenflowers.Pricing.start_promotion_validity!(card, actor: nil)
+    assert has_element?(view, "#editor-stale-notice")
+    assert has_element?(view, "#order-pass-it-on", "Not opened yet")
+    {:ok, view, _} = live(conn, ~p"/admin/orders/#{gift.id}")
     assert has_element?(view, "#order-pass-it-on", "Opened")
 
     redeemed = placed_order(promotion_id: card.id, payment_intent_id: nil)
     Orders.update_florist_note!(redeemed, %{florist_note: "Flowers"}, actor: admin)
+    assert has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, ~s|#order-card-chain a[href="/admin/orders/#{redeemed.id}"]|)
+    {:ok, view, _} = live(conn, ~p"/admin/orders/#{gift.id}")
     assert has_element?(view, ~s|#order-card-chain a[href="/admin/orders/#{redeemed.id}"]|)
     assert has_element?(view, "#order-card-chain-#{gift.id}", "Used")
 
     Orders.cancel_order!(redeemed, %{cancellation_reason: "Changed mind", email_customer?: false}, actor: admin)
+    assert has_element?(view, "#editor-stale-notice")
+    assert has_element?(view, "#order-card-chain-#{redeemed.id}")
+    {:ok, view, _} = live(conn, ~p"/admin/orders/#{gift.id}")
     refute has_element?(view, "#order-card-chain-#{redeemed.id}")
     assert has_element?(view, "#order-card-chain-#{gift.id}", "Opened")
 
@@ -486,8 +592,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     refute has_element?(view, "#order-status", "Card to write")
   end
 
-  test "a voucher's order shows what's left and where it went, and Jennie gives it more time", %{conn: conn} do
+  test "a voucher's order shows spending and preserves its date editor through refreshes", %{conn: conn, admin: admin} do
     {sale, voucher} = paid_voucher_sale()
+    sale = Orders.get_order_for_admin!(sale.id, actor: admin)
     spent_on = placed_order(customer_name: "Bertil Ek")
 
     generate(
@@ -498,6 +605,13 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     assert has_element?(view, "#order-gift-voucher-remaining", "30,00")
     assert has_element?(view, ~s|#order-gift-voucher-payments a[href="/admin/orders/#{spent_on.id}"]|, "Bertil Ek")
 
+    later = Date.add(voucher.expires_on, 90)
+    view |> form("#gift-voucher-last-day", voucher: %{expires_on: Date.to_iso8601(later)}) |> render_change()
+    Orders.update_florist_note!(sale, %{florist_note: "Saved elsewhere"}, actor: admin)
+
+    assert has_element?(view, "#gift-voucher-expires-on[value='#{later}']")
+    assert has_element?(view, "#editor-stale-notice")
+
     earlier = Date.add(voucher.expires_on, -1)
 
     view
@@ -505,14 +619,16 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     |> render_submit()
 
     assert has_element?(view, "#gift-voucher-last-day", "must be later than the current last day")
-
-    later = Date.add(voucher.expires_on, 90)
+    Orders.update_florist_note!(sale, %{florist_note: "Another saved note"}, actor: admin)
+    assert has_element?(view, "#gift-voucher-expires-on[value='#{earlier}']")
+    assert has_element?(view, "#gift-voucher-last-day", "must be later than the current last day")
 
     view
     |> form("#gift-voucher-last-day", voucher: %{expires_on: Date.to_iso8601(later)})
     |> render_submit()
 
     assert Ash.reload!(voucher, authorize?: false).expires_on == later
+    refute has_element?(view, "#editor-stale-notice")
   end
 
   test "fulfills a pickup with no customer email", %{conn: conn} do
@@ -547,6 +663,8 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
       assert email.text_body == "Thank you for choosing us."
     end)
 
+    assert has_element?(view, "#editor-stale-notice")
+    {:ok, view, _} = live(conn, ~p"/admin/orders/#{order.id}")
     assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*Your flowers arrived/s)
     assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*Thank you for choosing us\./s)
     assert has_element?(view, "#order-log li", ~r/Fulfillment confirmation emailed.*ada@example\.com/s)
@@ -582,6 +700,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     )
 
     assert render(view) =~ "Couldn&#39;t email the confirmation."
+    assert has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#order-confirmation-failed")
+    {:ok, view, _} = live(conn, ~p"/admin/orders/#{order.id}")
     assert has_element?(view, "#order-confirmation-failed", "Check the delivery photo")
     assert has_element?(view, "#order-log li", "Fulfillment confirmation failed")
   end
@@ -603,6 +724,9 @@ defmodule EdenflowersWeb.Admin.OrderDetailLiveTest do
     )
 
     assert render(view) =~ "Couldn&#39;t email the receipt."
+    assert has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#order-email-failed")
+    {:ok, view, _} = live(conn, ~p"/admin/orders/#{order.id}")
     assert has_element?(view, "#order-email-failed", "Couldn't email the receipt.")
     assert has_element?(view, "#order-log li", "Receipt failed")
   end

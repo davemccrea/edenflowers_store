@@ -11,7 +11,10 @@ defmodule Edenflowers.Pricing.WelcomeOffer do
     otp_app: :edenflowers,
     domain: Edenflowers.Pricing,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
+
+  alias Edenflowers.Events
 
   postgres do
     table "welcome_offer"
@@ -63,6 +66,13 @@ defmodule Edenflowers.Pricing.WelcomeOffer do
     policy action_type(:update) do
       forbid_if always()
     end
+  end
+
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, Events.admin_welcome_offer()
+    publish_all :update, Events.admin_welcome_offer()
   end
 
   attributes do
