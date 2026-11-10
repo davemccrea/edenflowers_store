@@ -278,6 +278,7 @@ defmodule Edenflowers.Pricing.Promotion do
     has_many :placed_orders, Edenflowers.Orders.Order do
       description "Placed orders the code was used on, cancelled ones included."
       filter expr(state == :placed)
+      sort ordered_at: :asc, id: :asc
     end
 
     belongs_to :gift_order, Edenflowers.Orders.Order do

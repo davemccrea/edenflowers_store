@@ -816,11 +816,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   attr :locale, :string, required: true
 
   @doc """
-  The order's pass-it-on card (or a field to link one), and the chain of orders the cards link it to: the gift whose
-  card it was placed with, back to the first, and the order its own card brought in, onwards.
+  The order's pass-it-on card (or a field to link one), its source gift and
+  the orders its own card brought in. Follow each link to continue the chain.
   """
   def pass_it_on_card(assigns) do
-    assigns = assign(assigns, :chain, assigns.order.pass_it_on_chain)
+    assigns = assign(assigns, :source, assigns.order.promotion && assigns.order.promotion.gift_order)
 
     ~H"""
     <.widget id="order-pass-it-on" title={~t"Pass it on"}>
@@ -858,67 +858,44 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           </.form>
         </div>
 
-        <.timeline
-          :if={@chain.visible?}
-          id="order-card-chain"
-          aria-label={~t"Orders linked by Pass it on cards"}
+        <section
+          :if={match?(%{kind: :pass_it_on}, @order.promotion)}
+          id="order-card-source"
+          aria-labelledby="order-card-source-title"
+          class="space-y-2"
         >
-          <.card_chain_nodes
-            nodes={@chain.nodes}
-            current_id={@order.id}
-            locale={@locale}
-            markers?={@chain.multiple?}
-          />
-        </.timeline>
+          <h3 id="order-card-source-title" class="text-base-content flex items-center gap-2 text-sm font-semibold">
+            <.icon name="hero-arrow-left" class="h-4 w-4" />
+            <% gettext_comment("The gift order this order's discount card came from, not a product or payment source.") %>
+            {~t"Source gift"}
+          </h3>
+          <.card_code code={@order.promotion.code} />
+          <.related_order :if={@source && @source.committed?} order={@source} locale={@locale} />
+          <p :if={!@source || !@source.committed?} class="text-base-content/65 text-sm">
+            {~t"Source gift not linked"}
+          </p>
+        </section>
+
+        <section :if={@order.pass_it_on_card} id="order-card-outgoing" class="space-y-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <.card_code code={@order.pass_it_on_card.code} />
+            <.card_status_badge card={@order.pass_it_on_card} locale={@locale} />
+          </div>
+          <div :if={@order.pass_it_on_card.placed_orders != []} class="space-y-2">
+            <h3 class="text-base-content flex items-center gap-2 text-sm font-semibold">
+              <.icon name="hero-arrow-right" class="h-4 w-4" />
+              <% gettext_comment("Orders placed using the pass-it-on card sent with this gift.") %>
+              {~t"Orders brought in"}
+            </h3>
+            <ul class="space-y-2">
+              <li :for={order <- @order.pass_it_on_card.placed_orders} id={"order-card-redemption-#{order.id}"}>
+                <.related_order order={order} locale={@locale} />
+              </li>
+            </ul>
+          </div>
+        </section>
       </div>
     </.widget>
-    """
-  end
-
-  attr :nodes, :list, required: true
-  attr :current_id, :string, required: true
-  attr :locale, :string, required: true
-  attr :branched?, :boolean, default: false
-  attr :markers?, :boolean, default: true
-
-  defp card_chain_nodes(assigns) do
-    ~H"""
-    <.timeline_item
-      :for={node <- @nodes}
-      :key={node.order.id}
-      id={"order-card-chain-#{node.order.id}"}
-      active?={node.order.id == @current_id}
-      connect?={node.children != []}
-      branched?={@branched?}
-      markers?={@markers?}
-    >
-      <.chain_order order={node.order} current?={node.order.id == @current_id} locale={@locale} />
-      <p :if={node.order.fulfillment_status == :cancelled} class="mt-1 text-sm">
-        <.fulfillment_status_badge status={:cancelled} />
-      </p>
-      <div
-        :if={match?(%{kind: :pass_it_on, gift_order: nil}, node.order.promotion)}
-        class="text-base-content/65 mt-1.5 flex flex-wrap items-center gap-2 text-sm"
-      >
-        <.card_code code={node.order.promotion.code} />
-        <span>{~t"Source gift not linked"}</span>
-      </div>
-      <div :if={node.order.pass_it_on_card} class="mt-1.5 flex flex-wrap items-center gap-2">
-        <.card_code code={node.order.pass_it_on_card.code} />
-        <.card_status_badge card={node.order.pass_it_on_card} locale={@locale} />
-      </div>
-      <:children :if={node.children != []}>
-        <.timeline branched?={length(node.children) > 1}>
-          <.card_chain_nodes
-            nodes={node.children}
-            current_id={@current_id}
-            locale={@locale}
-            branched?={length(node.children) > 1}
-            markers?={@markers?}
-          />
-        </.timeline>
-      </:children>
-    </.timeline_item>
     """
   end
 
@@ -963,41 +940,28 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
   end
 
   attr :order, Order, required: true
-  attr :current?, :boolean, required: true
   attr :locale, :string, required: true
 
-  defp chain_order(%{current?: true} = assigns) do
+  defp related_order(assigns) do
     ~H"""
-    <div aria-current="page" class="flex items-baseline gap-3 text-sm">
-      <.chain_order_text order={@order} locale={@locale} />
+    <div>
+      <.link navigate={~p"/admin/orders/#{@order.id}"} class="group min-h-11 flex items-center gap-3 text-sm">
+        <span class="min-w-0 flex-1">
+          <span class="text-base-content block truncate font-semibold group-hover:underline">
+            {@order.customer_name || ~t"Unnamed customer"}
+          </span>
+          <span :if={@order.gift && @order.recipient_name} class="text-base-content/65 block truncate">
+            {~t"For #{name = @order.recipient_name}"}
+          </span>
+        </span>
+        <span class="text-base-content/65 shrink-0 tabular-nums">
+          {@order.order_reference}<span :if={@order.fulfillment_date}> · {Format.day_month(@order.fulfillment_date, @locale)}</span>
+        </span>
+      </.link>
+      <span :if={@order.fulfillment_status == :cancelled}>
+        <.fulfillment_status_badge status={:cancelled} />
+      </span>
     </div>
-    """
-  end
-
-  defp chain_order(assigns) do
-    ~H"""
-    <.link navigate={~p"/admin/orders/#{@order.id}"} class="group flex items-baseline gap-3 text-sm">
-      <.chain_order_text order={@order} locale={@locale} />
-    </.link>
-    """
-  end
-
-  attr :order, Order, required: true
-  attr :locale, :string, required: true
-
-  defp chain_order_text(assigns) do
-    ~H"""
-    <span class="min-w-0 flex-1">
-      <span class="text-base-content block truncate font-semibold group-hover:underline">
-        {@order.customer_name || ~t"Unnamed customer"}
-      </span>
-      <span :if={@order.gift && @order.recipient_name} class="text-base-content/65 block truncate">
-        {~t"For #{name = @order.recipient_name}"}
-      </span>
-    </span>
-    <span class="text-base-content/65 shrink-0 tabular-nums">
-      {@order.order_reference}<span :if={@order.fulfillment_date}> · {Format.day_month(@order.fulfillment_date, @locale)}</span>
-    </span>
     """
   end
 end
