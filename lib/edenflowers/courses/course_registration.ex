@@ -37,8 +37,8 @@ defmodule Edenflowers.Courses.CourseRegistration do
     ]
 
   alias Edenflowers.Accounts.Calculations, as: AccountCalculations
+  alias Edenflowers.Courses.Calculations
   alias Edenflowers.Events
-  alias Edenflowers.Payments.Payment
 
   # Enough for the usual group of friends without letting one booking empty a course.
   @max_seats 4
@@ -261,9 +261,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
                     "cancellation fee on the places still held."
     end
 
-    calculate :cancelled_unsettled?,
-              :boolean,
-              expr(status == :cancelled and not settled?) do
+    calculate :cancelled_unsettled?, :boolean, Calculations.RegistrationCancelledUnsettled do
       description "Whether a cancelled booking still needs Jennie: money to refund, a cancellation charge to " <>
                     "collect. The course page lists these beside the live bookings instead " <>
                     "of folding them away with the settled cancellations."
@@ -273,7 +271,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Who is told about cancels and refunds: the email given at checkout or entered by Jennie."
     end
 
-    calculate :paid?, :boolean, expr(status == :confirmed and not refunded? and balance <= 0) do
+    calculate :paid?, :boolean, Calculations.RegistrationPaid do
       description "Whether a confirmed booking has nothing left to pay and wasn't refunded, for its Payment Link page."
     end
 
@@ -281,12 +279,7 @@ defmodule Edenflowers.Courses.CourseRegistration do
       description "Whether a confirmed booking still holds places on a course that hasn't ended."
     end
 
-    calculate :payment_overdue?,
-              :boolean,
-              expr(
-                balance > 0 and
-                  course.date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
-              ) do
+    calculate :payment_overdue?, :boolean, Calculations.RegistrationPaymentOverdue do
       description "Whether a booking still has a balance more than 14 days after the course."
     end
 

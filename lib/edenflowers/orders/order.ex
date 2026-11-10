@@ -39,7 +39,6 @@ defmodule Edenflowers.Orders.Order do
   alias Edenflowers.Orders.Calculations.Vat
   alias Edenflowers.Orders.Order.Calculations
   alias Edenflowers.Orders.Subscription
-  alias Edenflowers.Payments.Payment
 
   @checkout_states [:contact_details, :gift_options, :delivery, :payment]
 
@@ -495,12 +494,7 @@ defmodule Edenflowers.Orders.Order do
   end
 
   calculations do
-    calculate :payment_overdue?,
-              :boolean,
-              expr(
-                fulfillment_status == :fulfilled and balance > 0 and
-                  fulfillment_date < date_add(helsinki_today(), ^(-Payment.overdue_after_days()), :day)
-              ) do
+    calculate :payment_overdue?, :boolean, Calculations.PaymentOverdue do
       description "Whether a fulfilled order still has a balance more than 14 days after fulfillment."
     end
 
@@ -595,12 +589,7 @@ defmodule Edenflowers.Orders.Order do
                     "invoice, edits must keep its amount per VAT rate, date and terms, and the order can't be cancelled."
     end
 
-    calculate :invoiceable?,
-              :boolean,
-              expr(
-                state == :placed and origin == :custom and payment_terms == :invoice and amount_held == 0 and
-                  balance > 0 and not invoiced?
-              ) do
+    calculate :invoiceable?, :boolean, Calculations.Invoiceable do
       description "Whether Jennie can invoice it: a Custom Order on invoice terms with nothing paid, a Balance " <>
                     "to collect and no invoice already covering it. A cancelled one is invoiced for its " <>
                     "cancellation charge. The admin offers Create invoice from it and issuing a linked invoice " <>
@@ -709,9 +698,7 @@ defmodule Edenflowers.Orders.Order do
                     "the flowers, so only a gift still to deliver, not one fulfilled or cancelled."
     end
 
-    calculate :pass_it_on_card_removable?,
-              :boolean,
-              expr(pass_it_on_card_changeable? and exists(pass_it_on_card, gift_order_linkable?)) do
+    calculate :pass_it_on_card_removable?, :boolean, Calculations.PassItOnCardRemovable do
       description "Whether Jennie can remove the gift's pass-it-on card, if she typed the wrong code: the gift is " <>
                     "still to deliver and its recipient hasn't opened the card."
     end
@@ -832,7 +819,7 @@ defmodule Edenflowers.Orders.Order do
                     "invoice's. Nil for a cancelled order that never took any money."
     end
 
-    calculate :paid?, :boolean, expr(committed? and payment_status == :paid and not cancelled?) do
+    calculate :paid?, :boolean, Calculations.Paid do
       description "A placed, uncancelled order with nothing left to pay. The payment link page shows it as paid."
     end
 

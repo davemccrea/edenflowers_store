@@ -23,14 +23,7 @@ defmodule Edenflowers.Courses.CourseRegistration.Customer do
   calculations do
     calculate :payment_instruction,
               :atom,
-              expr(
-                cond do
-                  balance <= 0 -> nil
-                  payment_terms == :invoice -> :invoice
-                  payment_link_open? -> :pay_now
-                  true -> :at_course
-                end
-              ) do
+              Edenflowers.Courses.Calculations.RegistrationPaymentInstruction do
       constraints one_of: [:invoice, :pay_now, :at_course]
 
       description "How the customer should pay the booking's remaining balance: by invoice, an open payment " <>
