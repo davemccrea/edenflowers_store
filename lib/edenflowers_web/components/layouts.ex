@@ -550,13 +550,12 @@ defmodule EdenflowersWeb.Layouts do
       {if @live?, do: [navigate: @path], else: [href: @path]}
       {if @external, do: [target: "_blank", rel: "noopener"], else: []}
       aria-current={@active && "page"}
-      class={["group min-h-11 flex items-center gap-3 px-6 py-2 text-base transition-colors focus-visible:-outline-offset-2 lg:min-h-0 lg:text-sm", if(@active,
-    do: "bg-forest-content/10 font-semibold",
-    else: "text-forest-content/90 hover:bg-forest-content/5 hover:text-forest-content")]}
+      data-admin-nav-link
+      class="group min-h-11 text-forest-content/90 flex items-center gap-3 px-6 py-2 text-base transition-colors aria-[current=page]:bg-forest-content/10 aria-[current=page]:text-forest-content aria-[current=page]:font-semibold hover:text-forest-content hover:not-aria-[current=page]:bg-forest-content/5 focus-visible:-outline-offset-2 lg:min-h-0 lg:text-sm"
     >
       <.icon
         name={@icon}
-        class={["h-4 w-4 shrink-0", if(@active, do: "text-forest-content", else: "text-forest-content/75")]}
+        class="text-forest-content/75 h-4 w-4 shrink-0 group-aria-[current=page]:text-forest-content"
       />
       <span class="link-underline-group-hover group-aria-[current=page]:decoration-(--color-link-underline)">{@label}</span>
       <.icon
@@ -566,6 +565,22 @@ defmodule EdenflowersWeb.Layouts do
       />
       <span :if={@external} class="sr-only">{dgettext("admin", "(opens in a new tab)")}</span>
     </.link>
+    <script :type={Phoenix.LiveView.ColocatedJS}>
+      // Marks the tapped item current before the next page renders. A phx-click can't do this:
+      // LiveView stops the click on navigate links before phx-click bindings see it, and this
+      // document listener runs ahead of LiveView's window listeners.
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest?.("a[data-admin-nav-link]");
+        const modified =
+          event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+        if (!link || link.target || modified || event.button !== 0) return;
+
+        document
+          .querySelectorAll("a[data-admin-nav-link][aria-current=page]")
+          .forEach((el) => el.removeAttribute("aria-current"));
+        link.setAttribute("aria-current", "page");
+      });
+    </script>
     """
   end
 
