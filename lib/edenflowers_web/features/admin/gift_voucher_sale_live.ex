@@ -60,7 +60,7 @@ defmodule EdenflowersWeb.Admin.GiftVoucherSaleLive do
                 field={@form[:locale]}
                 type="select"
                 label={~t"Language"}
-                options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
+                options={Edenflowers.Locales.options()}
                 class="select w-full"
               />
               <.input

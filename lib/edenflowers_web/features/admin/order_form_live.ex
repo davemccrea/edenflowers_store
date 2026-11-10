@@ -147,7 +147,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
                   field={@form[:locale]}
                   type="select"
                   label={~t"Language"}
-                  options={locale_options()}
+                  options={Edenflowers.Locales.options()}
                   class="select w-full"
                 />
               </div>
@@ -868,8 +868,6 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
       nil -> order && order.fulfillment_method
     end
   end
-
-  defp locale_options, do: [{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]
 
   defp time_choice(%{fulfillment_time_start: nil}), do: "any"
   defp time_choice(%{fulfillment_time_end: nil}), do: "at"

@@ -6,6 +6,7 @@ defmodule Edenflowers.Locales do
   @translatable_atoms [:"sv-FI", :fi]
 
   def all, do: @all
+  def options, do: Enum.map(@all, &{name(&1), &1})
   def default, do: @default
   def translatable_atoms, do: @translatable_atoms
   def supported?(locale), do: locale in @all

@@ -84,7 +84,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingFormLive do
                 field={@form[:locale]}
                 type="select"
                 label={~t"Email language"}
-                options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
+                options={Edenflowers.Locales.options()}
                 class="select w-full"
               />
             </div>

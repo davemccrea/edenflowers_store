@@ -243,7 +243,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
                     label={~t"Voucher language"}
                     field={@form[:voucher_locale]}
                     type="select"
-                    options={[{"Svenska", "sv-FI"}, {"Suomi", "fi"}, {"English", "en-GB"}]}
+                    options={Edenflowers.Locales.options()}
                   />
                 </div>
               </fieldset>
