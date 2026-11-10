@@ -40,10 +40,16 @@ defmodule Edenflowers.PinsTest do
     end
 
     test "every app locale has the catalogs its pages need" do
-      for locale <- Edenflowers.Locales.all(),
-          domain <- ["storefront", "emails", "receipts", "shared", "admin", "errors", "routes"] do
-        path = Path.join(@root, "priv/gettext/#{language(locale)}/LC_MESSAGES/#{domain}.po")
+      for domain <- ~w(storefront emails receipts shared admin cinder errors routes),
+          locale <- Edenflowers.TranslationCatalogues.locales(domain) do
+        path = Path.join(@root, "priv/gettext/#{locale}/LC_MESSAGES/#{domain}.po")
         assert File.exists?(path), "missing #{domain}.po for #{locale}"
+      end
+    end
+
+    test "Finnish catalogues are reserved for customer-facing domains" do
+      for domain <- ~w(admin cinder) do
+        refute File.exists?(Path.join(@root, "priv/gettext/fi/LC_MESSAGES/#{domain}.po"))
       end
     end
 

@@ -28,7 +28,8 @@ The domain is modelled in Ash. Put domain logic in the resources, the way the As
 
 ## Translations
 
-- English is the technical Gettext source and lives in code. After changing source strings, run `mix gettext.extract --merge`, review the diff, and commit `.pot`/`.po` updates with the code.
+- English is the technical Gettext source and lives in code. After changing source strings, run `mix gettext.update`, review the diff, and commit `.pot`/`.po` updates with the code. This policy-aware command replaces `mix gettext.extract --merge`, which recreates unsupported catalogues.
+- Admin/back-office copy supports English and Swedish only (`admin`, `cinder` domains); customer-facing copy still supports English, Swedish and Finnish, including emails/PDFs triggered from admin. Keep admin's language preference separate from customer language choices. See `priv/gettext/README.md` for catalogue rules.
 - Agents may create or improve Finnish/Swedish translations when requested. Edit `.po` files in Git and preserve outstanding translator edits. Weblate is retired; translations follow the normal Git workflow.
 - Before changing translations, source copy or translation domains, read `priv/gettext/README.md` for checks, Swedish-led editorial authority, the glossary and review queue. Add translator comments for ambiguous strings, placeholders and length limits. Review route translations as URL changes; follow the email review instructions below for emails.
 - After catalogue changes, run `mix gettext.check` and `mix gettext.stats`. CI enforces mechanical checks and customer-facing coverage; documented exceptions and their review rules live in `priv/gettext/README.md`. Receipt labels are in `receipts.po`; update affected sample fixtures and render receipts after changing them.

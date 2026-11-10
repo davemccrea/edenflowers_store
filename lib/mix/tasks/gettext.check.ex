@@ -8,7 +8,6 @@ defmodule Mix.Tasks.Gettext.Check do
 
   @shortdoc "Checks translations for mechanical errors and coverage regressions"
   @critical ~w(storefront emails receipts shared errors routes)
-  @locales ~w(en sv fi)
 
   @impl Mix.Task
   def run(args) do
@@ -52,7 +51,7 @@ defmodule Mix.Tasks.Gettext.Check do
 
     Enum.flat_map(domains, fn domain ->
       template = messages(template_path(root, domain))
-      locales = if domain == "cinder", do: ~w(sv fi), else: @locales
+      locales = Edenflowers.TranslationCatalogues.locales(domain)
 
       Enum.flat_map(locales, fn locale ->
         catalogue_path = Path.join([root, locale, "LC_MESSAGES", "#{domain}.po"])

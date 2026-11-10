@@ -42,10 +42,12 @@ defmodule EdenflowersWeb.Layouts do
   attr :current_path, :string, required: true
   attr :alternates, :map, default: %{}, doc: "the page in each language, for pages with a URL per language"
   attr :class, :any, default: nil
+  attr :admin?, :boolean, default: false
   slot :inner_block, required: true
 
   def locale_picker(assigns) do
-    assigns = assign(assigns, :locales, locale_options())
+    codes = if assigns.admin?, do: Edenflowers.Locales.admin(), else: Edenflowers.Locales.all()
+    assigns = assign(assigns, :locales, locale_options(codes))
 
     # A transparent native <select> laid over the slot, so the slot is what
     # shows and the browser's own picker is what opens. The focus outline is
@@ -64,7 +66,11 @@ defmodule EdenflowersWeb.Layouts do
       >
         <option
           :for={{code, name, current?} <- @locales}
-          value={@alternates[code] || ~p"/locale/#{code}?redirect_to=#{@current_path}"}
+          value={
+            if @admin?,
+              do: ~p"/admin-locale/#{code}",
+              else: @alternates[code] || ~p"/locale/#{code}?redirect_to=#{@current_path}"
+          }
           selected={current?}
         >
           {name}
@@ -75,10 +81,10 @@ defmodule EdenflowersWeb.Layouts do
   end
 
   # Each language named in itself, so a visitor can find their own.
-  defp locale_options do
+  defp locale_options(codes \\ Edenflowers.Locales.all()) do
     current_language = Localize.get_locale().language |> to_string()
 
-    for code <- Edenflowers.Locales.all() do
+    for code <- codes do
       language_code = code |> String.split("-") |> hd()
       name = Localize.Language.display_name!(language_code, locale: code, fallback: true)
       {code, String.capitalize(name), language_code == current_language}

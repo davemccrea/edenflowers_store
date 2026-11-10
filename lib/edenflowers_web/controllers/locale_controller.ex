@@ -15,6 +15,11 @@ defmodule EdenflowersWeb.LocaleController do
     end
   end
 
+  def admin(conn, %{"locale" => locale}) do
+    conn = if locale in Edenflowers.Locales.admin(), do: put_session(conn, "admin_locale", locale), else: conn
+    redirect(conn, to: ~p"/admin/account")
+  end
+
   defp get_redirect_path(_conn, %{"redirect_to" => redirect_to}), do: redirect_to
 
   defp get_redirect_path(conn, _params) do

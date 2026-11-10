@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Gettext.Stats do
   @moduledoc """
-  Run `mix gettext.stats` after `mix gettext.extract --merge` to see translation
+  Run `mix gettext.stats` after `mix gettext.update` to see translation
   progress. Empty English translations use the source text and are not missing.
   Fuzzy entries need review even when they contain a translation.
   """

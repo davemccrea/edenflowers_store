@@ -61,19 +61,19 @@ defmodule EdenflowersWeb.GettextCheckTest do
 
   test "admin coverage can wait but its placeholders must still be valid", %{root: root} do
     catalogue(root, "admin", @singular)
-    translate(root, "fi", "admin", String.replace(@singular, "Hei %{name}", ""))
+    translate(root, "sv", "admin", String.replace(@singular, "Hei %{name}", ""))
     assert Check.check(root) == []
 
-    translate(root, "fi", "admin", String.replace(@singular, "Hei %{name}", "Hei"))
+    translate(root, "sv", "admin", String.replace(@singular, "Hei %{name}", "Hei"))
     assert [%{"kind" => "placeholders", "domain" => "admin"}] = Check.check(root)
   end
 
   test "all domains require matching contexts, singular and plural sources", %{root: root} do
     catalogue(root, "cinder", @plural)
-    translate(root, "fi", "cinder", String.replace(@plural, "%{count} items", "%{count} things"))
+    translate(root, "sv", "cinder", String.replace(@plural, "%{count} items", "%{count} things"))
     assert [%{"kind" => "alignment", "domain" => "cinder"}] = Check.check(root)
 
-    translate(root, "fi", "cinder", "msgctxt \"other meaning\"\n" <> @plural)
+    translate(root, "sv", "cinder", "msgctxt \"other meaning\"\n" <> @plural)
     assert [%{"kind" => "alignment"}] = Check.check(root)
   end
 
@@ -115,7 +115,7 @@ defmodule EdenflowersWeb.GettextCheckTest do
   test "Cinder uses its dependency template when no local template exists", %{root: root} do
     template = Path.join([Mix.Project.deps_path(), "cinder", "i18n/gettext/cinder.pot"])
     text = File.read!(template)
-    for locale <- ~w(sv fi), do: translate(root, locale, "cinder", text)
+    translate(root, "sv", "cinder", text)
     assert Check.check(root) == []
   end
 
@@ -129,7 +129,7 @@ defmodule EdenflowersWeb.GettextCheckTest do
 
   defp catalogue(root, domain, text) do
     File.write!(Path.join(root, "#{domain}.pot"), text)
-    for locale <- ~w(en sv fi), do: translate(root, locale, domain, text)
+    for locale <- Edenflowers.TranslationCatalogues.locales(domain), do: translate(root, locale, domain, text)
   end
 
   defp translate(root, locale, domain, text) do

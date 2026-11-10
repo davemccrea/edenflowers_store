@@ -4,6 +4,16 @@ English is the source language. Swedish (`sv`) and Finnish (`fi`) translations
 live in `<language>/LC_MESSAGES/`. Edit the `.po` files, not the `.pot` templates.
 Empty English translations intentionally fall back to the English source text.
 
+Admin/back-office copy supports **English and Swedish only**. Finnish remains
+required for customer-facing domains, including shared components, validation,
+emails and PDFs generated from admin. `admin.po` exists only for English and
+Swedish; Cinder uses English source text and a Swedish `cinder.po`.
+
+The admin interface has its own session language preference. It accepts Swedish
+or English, initially reuses a supported storefront preference, and otherwise
+falls back to Swedish. Changing it leaves the storefront language unchanged.
+Customer language fields and email previews retain all three languages.
+
 ## What to translate first
 
 | Catalogue | Audience and content | Priority |
@@ -13,8 +23,8 @@ Empty English translations intentionally fall back to the English source text.
 | `receipts.po` | Labels and copy printed in order and course receipt PDFs and invoice PDFs | Critical |
 | `shared.po` | Reusable UI components, formatting, product descriptions and delivery errors used across audiences | Critical |
 | `errors.po` | Generic form/validation errors | Critical |
-| `admin.po` | Back office, accounting reports, admin-only action errors and notifications to the shop | Can wait |
-| `cinder.po` | Admin table library | Can wait |
+| `admin.po` | Back office, accounting reports, admin-only action errors and notifications to the shop (English/Swedish only) | Can wait |
+| `cinder.po` | Admin table library (Swedish translation; English source) | Can wait |
 | `routes.po` | Localised URL segments | Coordinate with a developer; changing these changes URLs |
 
 A message belongs to the audience that **reads it**, not the audience that triggers
@@ -32,7 +42,7 @@ prefixed with `#~` are obsolete: retained translation history, not current work.
 ## Update and check progress
 
 ```sh
-mix gettext.extract --merge
+mix gettext.update
 mix gettext.stats
 mix gettext.extract --check-up-to-date
 mix gettext.check
@@ -47,8 +57,8 @@ forms and catalogue/template mismatches in every domain. Admin/cinder coverage
 can wait, but their structure and placeholders must remain valid. English empty
 translations use the source. Each supported locale currently requires two plural
 forms. Cinder's template comes from the installed dependency at
-`deps/cinder/i18n/gettext/cinder.pot`; only Swedish and Finnish catalogues are
-required for it. After upgrading Cinder, merge that template into both catalogues
+`deps/cinder/i18n/gettext/cinder.pot`; only the Swedish catalogue is
+required for it. After upgrading Cinder, merge that template into its catalogue
 with `mix gettext.merge <catalogue.po> deps/cinder/i18n/gettext/cinder.pot --no-fuzzy`.
 
 Existing exceptions are recorded in `check-exceptions.json`, matched by language,
@@ -123,6 +133,13 @@ Only use `shared` for genuinely reusable components or messages; identical Engli
 alone is not a reason to move unrelated page copy there. Avoid adding per-page
 catalogues. Add translator comments where intent or placeholders are ambiguous.
 
+Use `mix gettext.update` (optionally `--no-fuzzy`) to extract and merge only
+supported domain/language pairs. `mix gettext.extract --merge` creates a catalogue
+for every template in every locale, including unwanted Finnish admin copy; use
+the policy-aware command instead. `Edenflowers.TranslationCatalogues.locales/1` defines
+the catalogue language policy. Keep `~t`/Gettext in admin source so Swedish still
+works; remove only the Finnish admin catalogues, not shared/customer translations.
+
 `EdenflowersWeb.GettextTest` checks catalogue/template alignment and that admin
 modules and email templates extract into the correct domain. The locale pin test
 checks that every supported language has the required catalogues.
@@ -130,5 +147,6 @@ checks that every supported language has the required catalogues.
 Adding a language means adding it in three places, whose defaults differ on
 purpose (`sv-FI` is the shop's locale, `en` is the source text's):
 `Edenflowers.Locales`, `config :localize`'s `supported_locales`, and
-`EdenflowersWeb.Gettext`'s `locales`. Then add its catalogues under
-`<language>/LC_MESSAGES/`, one per domain listed in `Edenflowers.PinsTest`.
+`EdenflowersWeb.Gettext`'s `locales`. Then update `Edenflowers.TranslationCatalogues` and
+add its customer-facing catalogues under `<language>/LC_MESSAGES/`. Admin
+languages are a separate policy, not automatically extended with storefront ones.

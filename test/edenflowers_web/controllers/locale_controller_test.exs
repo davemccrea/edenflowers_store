@@ -24,6 +24,33 @@ defmodule EdenflowersWeb.LocaleControllerTest do
     end
   end
 
+  describe "GET /admin-locale/:locale" do
+    for locale <- ~w(sv-FI en-GB) do
+      test "stores #{locale} separately from the storefront preference" do
+        conn =
+          build_conn()
+          |> init_test_session(%{@session_key => "fi"})
+          |> get("/admin-locale/#{unquote(locale)}")
+
+        assert redirected_to(conn) == "/admin/account"
+        assert get_session(conn, "admin_locale") == unquote(locale)
+        assert get_session(conn, @session_key) == "fi"
+      end
+    end
+
+    test "rejects Finnish and unsupported admin preferences" do
+      for locale <- ~w(fi de-DE) do
+        conn =
+          build_conn()
+          |> init_test_session(%{@session_key => "fi", "admin_locale" => "en-GB"})
+          |> get("/admin-locale/#{locale}")
+
+        assert get_session(conn, "admin_locale") == "en-GB"
+        assert get_session(conn, @session_key) == "fi"
+      end
+    end
+  end
+
   describe "Accept-Language header resolution" do
     for {header, expected} <- [
           {"sv-FI", "sv-FI"},
