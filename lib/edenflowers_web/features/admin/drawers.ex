@@ -370,9 +370,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
 
   @doc """
   Records money Jennie took herself. Sends `record_payment` with `payment`
-  params and the record's id as `record_id`, and `change_payment` with
-  `payment` params as the form is filled in.
-
+  params, and `change_payment` with them as the form is filled in.
   """
   def record_payment_form(assigns) do
     voucher_sale? = PaymentActions.voucher_sale?(assigns.record)
@@ -388,7 +386,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_payment" phx-submit="record_payment" class="space-y-4">
-      <input type="hidden" name="record_id" value={@record.id} />
       <.refusal form={@form} />
       <div class="grid grid-cols-2 items-start gap-x-3 gap-y-4">
         <.input
@@ -488,9 +485,8 @@ defmodule EdenflowersWeb.Admin.Drawers do
   @doc """
   Hands money back, with or without cancelling: what's owed back, or more for
   an unhappy customer. Starts at what's owed back, if anything. Sends `refund`
-  with `refund` params and the record's id as `record_id`, and
-  `change_refund` as the form is filled in, so the confirmation can name the
-  amount.
+  with `refund` params, and `change_refund` with them as the form is filled in,
+  so the confirmation can name the amount.
   """
   def refund_form(assigns) do
     how_options = Enum.map(assigns.record.refund_methods, &{OrderLog.payment_method_label(&1), &1})
@@ -498,7 +494,6 @@ defmodule EdenflowersWeb.Admin.Drawers do
 
     ~H"""
     <.form for={@form} id={"#{@id}-form"} phx-change="change_refund" phx-submit="refund" class="space-y-4">
-      <input type="hidden" name="record_id" value={@record.id} />
       <.refusal form={@form} />
       <div class="grid grid-cols-2 items-start gap-x-3 gap-y-4">
         <.input

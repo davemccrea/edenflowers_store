@@ -281,21 +281,17 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     with_registration(socket, id, &PaymentActions.undo_payment(&1, payment_id, actor))
   end
 
-  def handle_event("change_refund", %{"record_id" => id, "refund" => params} = event, socket) do
-    form = PaymentActions.change_refund_form(socket.assigns.refund_form, params, event["_target"])
-    preview = DrawerPreview.build(:refunded, booking(socket.assigns.course, id), form)
-    {:noreply, assign(socket, refund_form: form, preview: preview)}
+  def handle_event("change_refund", %{"refund" => params} = event, socket) do
+    {:noreply, assign(socket, PaymentActions.change_refund(socket.assigns.refund_form, params, event["_target"]))}
   end
 
   def handle_event("refund", %{"refund" => params}, socket) do
     settle(socket, :refund_form, PaymentActions.submit(socket.assigns.refund_form, params))
   end
 
-  def handle_event("change_payment", %{"record_id" => id, "payment" => params} = event, socket) do
+  def handle_event("change_payment", %{"payment" => params} = event, socket) do
     %{payment_form: form, current_user: actor} = socket.assigns
-    form = PaymentActions.change_payment_form(form, params, event["_target"], actor)
-    preview = DrawerPreview.build(:payment, booking(socket.assigns.course, id), form)
-    {:noreply, assign(socket, payment_form: form, preview: preview)}
+    {:noreply, assign(socket, PaymentActions.change_payment(form, params, event["_target"], actor))}
   end
 
   def handle_event("record_payment", %{"payment" => params}, socket) do

@@ -3,14 +3,16 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   Jennie's payment controls on an order or a course booking, shared by the
   order page and the courses page: the AshPhoenix forms behind the cancel,
   record payment and refund drawers, and the flash for what each did, keeping
-  a committed payment distinct from a receipt failure. The page reloads what
-  it shows.
+  a committed payment distinct from a receipt failure. The page refreshes from
+  the actions' notifications; a failed receipt can follow a committed payment,
+  so errors reload it directly.
   """
   use GettextSigils, backend: EdenflowersWeb.Gettext, sigils: [domain: "admin"]
 
   require Logger
 
   alias Edenflowers.Payments.Changes.Cancel
+  alias EdenflowersWeb.Admin.DrawerPreview
   alias EdenflowersWeb.Admin.Drawers
 
   @doc "Loads what the cancel drawer shows about the money (`Changes.Cancel.load/0`)."
@@ -50,20 +52,25 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   end
 
   @doc """
-  The record payment form as Jennie changes it. Choosing a bank transfer ticks
-  the receipt email, since the customer paid from home and would otherwise
+  The record payment form and its matching preview as Jennie changes it.
+  Choosing a bank transfer ticks the receipt email, since the customer paid from home and would otherwise
   hear nothing; any other method unticks it, as she was there in person. On a
   Gift voucher sale it's ticked while the amount pays it off, so its buyer
   gets the voucher, and off for a part payment, which can't email it.
   Choosing or leaving Gift voucher swaps the form's action.
   """
-  def change_payment_form(form, params, ["payment", "payment_method"], actor) do
+  def change_payment(form, params, target, actor) do
+    form = change_payment_form(form, params, target, actor)
+    [payment_form: form, preview: DrawerPreview.build(:payment, form.source.data, form)]
+  end
+
+  defp change_payment_form(form, params, ["payment", "payment_method"], actor) do
     payable = form.source.data
     email? = pays_off_voucher?(payable, params["amount"]) or params["payment_method"] == "zervant"
     payment_form(payable, actor, Map.put(params, "email_receipt?", to_string(email?)))
   end
 
-  def change_payment_form(form, params, ["payment", "amount"], _actor) do
+  defp change_payment_form(form, params, ["payment", "amount"], _actor) do
     payable = form.source.data
 
     params =
@@ -74,7 +81,7 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
     AshPhoenix.Form.validate(form, params)
   end
 
-  def change_payment_form(form, params, _target, _actor), do: AshPhoenix.Form.validate(form, params)
+  defp change_payment_form(form, params, _target, _actor), do: AshPhoenix.Form.validate(form, params)
 
   @doc "Whether `amount` pays off a Gift voucher sale, so the payment can email the voucher."
   def pays_off_voucher?(payable, amount) do
@@ -104,14 +111,20 @@ defmodule EdenflowersWeb.Admin.PaymentActions do
   end
 
   @doc """
-  The refund form as Jennie changes it. Choosing cash unticks the email,
-  since she hands that back in person; any other way ticks it again.
+  The refund form and its matching preview as Jennie changes it.
+  Choosing cash unticks the email, since she hands that back in person;
+  any other way ticks it again.
   """
-  def change_refund_form(form, params, ["refund", "payment_method"]),
+  def change_refund(form, params, target) do
+    form = change_refund_form(form, params, target)
+    [refund_form: form, preview: DrawerPreview.build(:refunded, form.source.data, form)]
+  end
+
+  defp change_refund_form(form, params, ["refund", "payment_method"]),
     do:
       AshPhoenix.Form.validate(form, Map.put(params, "email_customer?", to_string(params["payment_method"] != "cash")))
 
-  def change_refund_form(form, params, _target), do: AshPhoenix.Form.validate(form, params)
+  defp change_refund_form(form, params, _target), do: AshPhoenix.Form.validate(form, params)
 
   @doc """
   Submits a record payment or refund form: `{:ok, {kind, flash}}` once the
