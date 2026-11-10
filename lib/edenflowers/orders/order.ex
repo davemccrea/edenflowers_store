@@ -704,17 +704,6 @@ defmodule Edenflowers.Orders.Order do
                     "order that already has a card linked."
     end
 
-    calculate :pass_it_on_chain, :struct, Calculations.PassItOnChain do
-      description "The tree of orders linked to this one through pass-it-on cards, sources before redemptions, this order included: " <>
-                    "the gift whose card it was placed with, that gift's own source, and so on back, then the " <>
-                    "order its own card brought in, and so on forward. Each comes with its `pass_it_on_card` " <>
-                    "(with `card_status`) and source promotion loaded. Includes every live redemption if a card " <>
-                    "was overused. Cancelled redemptions are left out unless needed to trace a surviving order " <>
-                    "or the order being viewed."
-
-      constraints instance_of: Calculations.PassItOnChain
-    end
-
     calculate :pass_it_on_card_changeable?, :boolean, expr(gift and not gift_voucher_sale? and fulfillable?) do
       description "Whether Jennie can still link or remove the gift's pass-it-on card: the card goes out with " <>
                     "the flowers, so only a gift still to deliver, not one fulfilled or cancelled."

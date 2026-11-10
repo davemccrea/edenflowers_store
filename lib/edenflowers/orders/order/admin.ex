@@ -89,8 +89,8 @@ defmodule Edenflowers.Orders.Order.Admin do
     :accepts_gift_voucher?,
     :gift_voucher_spent?,
     :voucher_card_to_hand_over?,
-    :pass_it_on_chain,
-    pass_it_on_card: [:gift_order_linkable?, :card_status],
+    promotion: [gift_order: [:committed?]],
+    pass_it_on_card: [:gift_order_linkable?, :card_status, :placed_orders],
     invoices: [:status, :overdue?],
     line_items: [:subtotal, :total],
     gift_voucher_line: [
