@@ -8,6 +8,7 @@ defmodule Edenflowers.Payments.Invoice do
     extensions: [AshPaperTrail.Resource]
 
   alias Edenflowers.Events
+  alias Edenflowers.Payments.Calculations
   alias Edenflowers.Payments.Changes
   alias Edenflowers.Payments.Validations
 
@@ -512,13 +513,13 @@ defmodule Edenflowers.Payments.Invoice do
                     "invoice can take a Payment, and never more than its amount_unpaid."
     end
 
-    calculate :cancellable?, :boolean, expr(status == :open and amount_paid == 0) do
+    calculate :cancellable?, :boolean, Calculations.InvoiceCancellable do
       description "Whether Jennie can cancel it with a Credit note: open with nothing paid on it. One with " <>
                     "Payments, even part-paid, can't be, as those Payments would count against no open invoice; " <>
                     "she consults the accountant for corrections. Validations.Cancellable refuses a Credit note otherwise."
     end
 
-    calculate :overdue?, :boolean, expr(status == :open and due_date < helsinki_today()) do
+    calculate :overdue?, :boolean, Calculations.InvoiceOverdue do
       description "Whether it is late: still open after its due date, counted in Helsinki days, so it turns " <>
                     "overdue the day after the due date. A paid or cancelled invoice is never overdue; one " <>
                     "paid only in part still is. Admin flags it, and sending it again makes the email a friendly " <>
@@ -532,22 +533,22 @@ defmodule Edenflowers.Payments.Invoice do
       argument :issued_on, :date, allow_nil?: false
     end
 
-    calculate :payable?, :boolean, expr(status == :open) do
+    calculate :payable?, :boolean, Calculations.InvoiceOpen do
       description "Whether it can take a Payment: open, with something left to pay. An Undo also works on a " <>
                     "paid invoice, which reopens it."
     end
 
-    calculate :partly_paid?, :boolean, expr(status == :open and amount_paid > 0) do
+    calculate :partly_paid?, :boolean, Calculations.InvoicePartlyPaid do
       description "Whether it is open with some of its amount already paid, so what is left differs from its total."
     end
 
-    calculate :sendable?, :boolean, expr(status == :open) do
+    calculate :sendable?, :boolean, Calculations.InvoiceOpen do
       description "Whether Jennie can email it, for the first time or again: only while it is open. A paid " <>
                     "invoice needs no email and a cancelled one has its Credit note instead. " <>
                     "Validations.Sendable refuses :send otherwise."
     end
 
-    calculate :paid?, :boolean, expr(status == :paid) do
+    calculate :paid?, :boolean, Calculations.InvoicePaid do
       description "Whether its Payments cover its amount."
     end
 
@@ -595,7 +596,7 @@ defmodule Edenflowers.Payments.Invoice do
       description "Who it bills, for lists: the company's name for a business customer, otherwise the customer's."
     end
 
-    calculate :amount_unpaid, :decimal, expr(amount - amount_paid) do
+    calculate :amount_unpaid, :decimal, Calculations.InvoiceAmountUnpaid do
       description "What is still to pay on it in euros: its amount less its Payments, which can't exceed it."
     end
   end
