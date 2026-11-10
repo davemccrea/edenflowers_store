@@ -31,6 +31,10 @@ locales = "bash -c 'source .env && mix localize.download_locales'"
 [[pre-start]]
 db = "bash -c 'source .env && (mix ecto.drop --quiet 2>/dev/null; true) && mix ash.setup --quiet && mix run priv/repo/seeds.exs'"
 
+# Wait for Tidewave before an agent opens the worktree and connects its MCP servers.
+[[pre-start]]
+server = "bash scripts/start-worktree-server.sh {{ branch | hash_port }}"
+
 # Drop this worktree's dev and test databases
 [[pre-remove]]
 db = "bash -c 'source .env && mix ecto.drop --quiet; MIX_ENV=test mix ecto.drop --quiet'"
