@@ -13,6 +13,7 @@ defmodule Edenflowers.Catalog.ProductVariant do
 
   require Ash.Sort
 
+  alias Edenflowers.Events
   alias Edenflowers.Orders.Validations
 
   postgres do
@@ -156,12 +157,22 @@ defmodule Edenflowers.Catalog.ProductVariant do
     end
   end
 
-  # Product pages listen so a size that sells out elsewhere shows as sold out.
+  # Product pages listen so a size that sells out elsewhere shows as sold out;
+  # the admin follows the same change through its product list.
   pub_sub do
     module EdenflowersWeb.Endpoint
 
-    publish :adjust_stock, ["product_variant", "changed", :product_id]
-    publish :update, ["product_variant", "changed", :product_id]
+    publish_all :create, Events.product_variant_changed(:product_id)
+    publish_all :update, Events.product_variant_changed(:product_id)
+    publish_all :destroy, Events.product_variant_changed(:product_id), previous_values?: true
+
+    publish_all :create, Events.admin_products()
+    publish_all :update, Events.admin_products()
+    publish_all :destroy, Events.admin_products(), previous_values?: true
+
+    publish_all :create, Events.admin_product(:product_id)
+    publish_all :update, Events.admin_product(:product_id)
+    publish_all :destroy, Events.admin_product(:product_id), previous_values?: true
   end
 
   preparations do

@@ -9,6 +9,53 @@ defmodule EdenflowersWeb.Admin.ProductFormLiveTest do
 
   setup :log_in_admin
 
+  test "a clean editor warns about product and stock changes and reloads explicitly", %{conn: conn, admin: admin} do
+    product = generate(product(name: "Original bouquet"))
+    variant = generate(product_variant(product_id: product.id, stock_quantity: 5))
+    {:ok, view, _} = live(conn, ~p"/admin/products/#{product.id}")
+
+    Ash.update!(product, %{name: "Updated bouquet"}, action: :update, actor: admin)
+    assert has_element?(view, "#editor-stale-notice[role=alert]", "Saving now may overwrite")
+    assert has_element?(view, "#flash-info", "Saving now may overwrite")
+    assert has_element?(view, "#form_name[value='Original bouquet']")
+
+    Ash.update!(variant, %{by: -1}, action: :adjust_stock, actor: admin)
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    assert has_element?(view, "#form_name[value='Updated bouquet']")
+    assert has_element?(view, "#form_product_variants_0_stock_quantity[value='4']")
+    refute has_element?(view, "#editor-stale-notice")
+  end
+
+  test "an edited form warns and can discard input to catch up", %{conn: conn, admin: admin} do
+    product = generate(product(name: "Original bouquet"))
+    generate(product_variant(product_id: product.id))
+    {:ok, view, _} = live(conn, ~p"/admin/products/#{product.id}")
+    view |> form("#product-form", form: %{name: "Unsaved bouquet"}) |> render_change()
+
+    Ash.update!(product, %{name: "Updated elsewhere"}, action: :update, actor: admin)
+    assert has_element?(view, "#form_name[value='Unsaved bouquet']")
+    assert has_element?(view, "#editor-stale-notice[role=alert]")
+
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    assert has_element?(view, "#form_name[value='Updated elsewhere']")
+    refute has_element?(view, "#editor-stale-notice")
+  end
+
+  test "a stock broadcast warns after adding a size", %{conn: conn, admin: admin} do
+    product = generate(product())
+    variant = generate(product_variant(product_id: product.id, stock_quantity: 5))
+    {:ok, view, _} = live(conn, ~p"/admin/products/#{product.id}")
+    view |> element("button", "Add size") |> render_click()
+
+    Ash.update!(variant, %{stock_quantity: 4}, actor: admin)
+    assert has_element?(view, "#form_product_variants_1_price")
+    assert has_element?(view, "#editor-stale-notice")
+  end
+
   test "creates a product with two sizes", %{conn: conn} do
     category = generate(product_category())
     tax_rate = generate(tax_rate())

@@ -13,6 +13,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
 
   alias Edenflowers.Courses
   alias Edenflowers.Email.Preview
+  alias Edenflowers.Events
   alias Edenflowers.External.StripeAPI
   alias Edenflowers.Format
   alias Edenflowers.Translations
@@ -21,6 +22,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   alias EdenflowersWeb.Admin.EmailDrawer
   alias EdenflowersWeb.Admin.OrderLog
   alias EdenflowersWeb.Admin.PaymentActions
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.ShareLinkDrawer
   alias EdenflowersWeb.Layouts
 
@@ -28,10 +30,16 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   def mount(%{"id" => id}, _session, socket) do
     case load_course(socket, id) do
       {:ok, socket} ->
-        if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:bookings")
+        if connected?(socket) do
+          PubSub.subscribe([
+            Events.admin_course(socket.assigns.course.id),
+            Events.admin_bookings()
+          ])
+        end
 
         {:ok,
          socket
+         |> assign(:stale, false)
          |> assign(:page_title, socket.assigns.course.name)
          |> assign(:locale, Localize.get_locale())
          |> assign(settling_id: nil, settlement_mode: :settle, refund_form: nil, payment_form: nil)
@@ -56,6 +64,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header title={@course.name} back={{~t"Courses", ~p"/admin/courses"}}>
           <:subtitle>
             <span class="inline-flex flex-wrap items-center gap-x-2 tabular-nums">
@@ -172,6 +181,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       <.admin_drawer
         id="course-reminder-drawer"
         title={~t"Send course reminder"}
+        stale={@stale}
         on_close={JS.push("close_course_reminders")}
       >
         <.form
@@ -219,6 +229,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         </.form>
       </.admin_drawer>
       <.cancel_drawer
+        stale={@stale}
         title={~t"Cancel booking"}
         submit_label={~t"Cancel booking"}
         keep_label={~t"Keep booking"}
@@ -229,11 +240,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         preview={@preview}
       />
       <.email_drawer
+        stale={@stale}
         form={@email_form}
         preview={@preview}
         {EmailDrawer.text(@email_kind, @emailing_id && booking(@course, @emailing_id), @locale)}
       />
       <.settlement_drawer
+        stale={@stale}
         course={@course}
         registration={@settling_id && booking(@course, @settling_id)}
         mode={@settlement_mode}
@@ -254,6 +267,9 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   end
 
   @impl true
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: socket.assigns.current_path)}
+
   def handle_event("open_settlement", %{"id" => id} = params, socket) do
     registration = booking(socket.assigns.course, id)
 
@@ -262,7 +278,7 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
         do: :refund,
         else: :settle
 
-    socket = assign_settlement_forms(socket, registration)
+    socket = if socket.assigns.settling_id == id, do: socket, else: assign_settlement_forms(socket, registration)
 
     {:noreply,
      socket
@@ -301,7 +317,6 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   def handle_event("open_course_reminders", _params, socket) do
     {:noreply,
      socket
-     |> reload_course()
      |> assign(reminder_form: to_form(%{}, as: :reminder), reminder_error: nil)
      |> assign_reminder_previews()
      |> push_event("js-exec", %{to: "#course-reminder-drawer", attr: "phx-show"})}
@@ -327,6 +342,8 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       {:ok, _count} ->
         {:noreply,
          socket
+         |> reload_course()
+         |> assign(:stale, false)
          |> assign(reminder_form: nil, reminder_previews: [], reminder_error: nil)
          |> push_event("js-exec", %{to: "#course-reminder-drawer", attr: "phx-hide"})
          |> put_flash(:success, ~t"Course reminders queued.")}
@@ -360,9 +377,10 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       {:ok, socket} ->
         {:noreply,
          socket
+         |> reload_course()
+         |> assign(:stale, false)
          |> put_flash(:success, sent_message(socket.assigns.email_kind))
-         |> EmailDrawer.close(emailing_id: nil)
-         |> reload_course()}
+         |> EmailDrawer.close(emailing_id: nil)}
 
       {:error, socket} ->
         {:noreply, put_flash(socket, :error, failed_message(socket.assigns.email_kind))}
@@ -372,15 +390,13 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   def handle_event("remove_seat", %{"id" => id}, socket) do
     actor = socket.assigns.current_user
 
-    socket =
-      with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
-           {:ok, _} <- Courses.remove_registration_seat(registration, actor: actor) do
-        put_flash(socket, :success, ~t"Seat removed.")
-      else
-        {:error, error} -> put_flash(socket, :error, Drawers.refusal_text(error, ~t"Could not remove the seat."))
-      end
-
-    {:noreply, reload_course(socket)}
+    with {:ok, registration} <- Courses.get_registration_by_id(id, actor: actor),
+         {:ok, _} <- Courses.remove_registration_seat(registration, actor: actor) do
+      {:noreply, socket |> reload_course() |> assign(:stale, false) |> put_flash(:success, ~t"Seat removed.")}
+    else
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, Drawers.refusal_text(error, ~t"Could not remove the seat."))}
+    end
   end
 
   def handle_event("open_cancel", %{"id" => id}, socket) do
@@ -410,33 +426,32 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
       {:ok, _registration} ->
         {:noreply,
          socket
-         |> assign(cancelling: nil, cancel_form: nil)
+         |> reload_course()
+         |> assign(cancelling: nil, cancel_form: nil, stale: false)
          |> push_event("js-exec", %{to: "#cancel-drawer", attr: "phx-hide"})
-         |> put_flash(:success, ~t"Booking cancelled.")
-         |> reload_course()}
+         |> put_flash(:success, ~t"Booking cancelled.")}
 
       {:error, form} ->
-        {:noreply, socket |> assign(:cancel_form, form) |> reload_course()}
+        {:noreply, assign(socket, :cancel_form, form)}
     end
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:bookings"}, socket), do: {:noreply, reload_course(socket)}
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
 
   def handle_info(_message, socket), do: {:noreply, socket}
 
   defp with_registration(socket, id, payment_action) do
-    socket =
-      case Courses.get_registration_by_id(id, actor: socket.assigns.current_user) do
-        {:ok, registration} ->
-          {kind, message} = payment_action.(registration)
-          put_flash(socket, kind, message)
+    case Courses.get_registration_by_id(id, actor: socket.assigns.current_user) do
+      {:ok, registration} ->
+        {kind, message} = payment_action.(registration)
+        socket = put_flash(socket, kind, message)
+        {:noreply, if(kind == :success, do: socket |> reload_course() |> assign(:stale, false), else: socket)}
 
-        {:error, _error} ->
-          put_flash(socket, :error, ~t"Booking not found.")
-      end
-
-    {:noreply, reload_course(socket)}
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, ~t"Booking not found.")}
+    end
   end
 
   # The drawer closes once the money is recorded. On an error it stays open with
@@ -444,33 +459,21 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   defp settle(socket, _form_key, {:ok, {kind, message}}) do
     {:noreply,
      socket
+     |> reload_course()
      |> put_flash(kind, message)
-     |> assign(settling_id: nil, refund_form: nil, payment_form: nil)
-     |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-hide"})
-     |> reload_course()}
+     |> assign(settling_id: nil, refund_form: nil, payment_form: nil, stale: false)
+     |> push_event("js-exec", %{to: "#settlement-drawer", attr: "phx-hide"})}
   end
 
-  defp settle(socket, form_key, {:error, form}), do: {:noreply, socket |> assign(form_key, form) |> reload_course()}
+  defp settle(socket, form_key, {:error, form}), do: {:noreply, assign(socket, form_key, form)}
 
   defp assign_settlement_forms(socket, registration) do
     actor = socket.assigns.current_user
-    same_booking? = socket.assigns.settling_id == registration.id
 
-    payment_form =
-      if registration.to_collect? do
-        if same_booking? and socket.assigns.payment_form,
-          do: AshPhoenix.Form.set_data(socket.assigns.payment_form, registration),
-          else: PaymentActions.payment_form(registration, actor)
-      end
-
-    refund_form =
-      if registration.refundable? do
-        if same_booking? and socket.assigns.refund_form,
-          do: AshPhoenix.Form.set_data(socket.assigns.refund_form, registration),
-          else: PaymentActions.refund_form(registration, actor)
-      end
-
-    assign(socket, payment_form: payment_form, refund_form: refund_form)
+    assign(socket,
+      payment_form: if(registration.to_collect?, do: PaymentActions.payment_form(registration, actor)),
+      refund_form: if(registration.refundable?, do: PaymentActions.refund_form(registration, actor))
+    )
   end
 
   defp booking(course, id), do: Enum.find(course.bookings, &(&1.id == id))
@@ -484,11 +487,17 @@ defmodule EdenflowersWeb.Admin.CourseDetailLive do
   defp failed_message(:confirmation), do: ~t"Could not email the confirmation."
 
   defp reload_course(socket) do
-    {:ok, socket} = load_course(socket, socket.assigns.course.id)
+    case load_course(socket, socket.assigns.course.id) do
+      {:ok, socket} ->
+        case socket.assigns.settling_id && booking(socket.assigns.course, socket.assigns.settling_id) do
+          nil -> socket
+          registration -> assign_settlement_forms(socket, registration)
+        end
 
-    case socket.assigns.settling_id && booking(socket.assigns.course, socket.assigns.settling_id) do
-      nil -> socket
-      registration -> assign_settlement_forms(socket, registration)
+      :error ->
+        socket
+        |> put_flash(:error, ~t"Course not found.")
+        |> push_navigate(to: ~p"/admin/courses")
     end
   end
 

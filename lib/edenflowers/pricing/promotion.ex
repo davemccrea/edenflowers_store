@@ -12,6 +12,7 @@ defmodule Edenflowers.Pricing.Promotion do
     extensions: [AshPaperTrail.Resource]
 
   alias Edenflowers.Accounts.Calculations.NamePart
+  alias Edenflowers.Events
   alias Edenflowers.Orders.Validations.Holds
   alias Edenflowers.Pricing.Changes
 
@@ -218,8 +219,21 @@ defmodule Edenflowers.Pricing.Promotion do
 
   pub_sub do
     module EdenflowersWeb.Endpoint
-    publish_all :update, ["admin", "pass_it_on"], filter: fn %{data: card} -> card.kind == :pass_it_on end
+
+    publish_all :create, Events.admin_promotions()
+    publish_all :update, Events.admin_promotions()
+    publish_all :destroy, Events.admin_promotions()
+
+    publish_all :update, Events.admin_promotion(:id)
+    publish_all :destroy, Events.admin_promotion(:id)
+
+    publish_all :create, Events.admin_pass_it_on(), filter: &pass_it_on?/1
+    publish_all :update, Events.admin_pass_it_on(), filter: &pass_it_on?/1
+    publish_all :destroy, Events.admin_pass_it_on(), filter: &pass_it_on?/1
   end
+
+  defp pass_it_on?(%{data: %{kind: :pass_it_on}}), do: true
+  defp pass_it_on?(_notification), do: false
 
   attributes do
     uuid_primary_key :id

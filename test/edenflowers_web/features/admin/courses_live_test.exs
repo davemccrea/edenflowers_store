@@ -29,6 +29,20 @@ defmodule EdenflowersWeb.Admin.CoursesLiveTest do
     assert has_element?(view, "tbody tr", "Published")
   end
 
+  test "refreshes when a course changes elsewhere", %{conn: conn, admin: admin} do
+    course = generate(course(name: "Autumn wreaths"))
+
+    {:ok, view, _html} = live(conn, ~p"/admin/courses")
+    render_async(view, 500)
+
+    assert has_element?(view, "tbody a", "Autumn wreaths")
+
+    {:ok, _course} = Ash.update(course, %{name: "Winter wreaths"}, actor: admin)
+    Process.sleep(200)
+
+    assert has_element?(view, "tbody a", "Winter wreaths")
+  end
+
   test "filters draft and published courses while keeping the period filter", %{conn: conn} do
     generate(course(name: "Draft wreaths", draft: true))
     generate(course(name: "Published wreaths", draft: false))

@@ -8,13 +8,15 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Events
   alias Edenflowers.Expenses.Expense
   alias Edenflowers.Format
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:expenses")
+    if connected?(socket), do: PubSub.subscribe([Events.admin_expenses()])
 
     {:ok,
      socket
@@ -129,8 +131,13 @@ defmodule EdenflowersWeb.Admin.ExpensesLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:expenses"}, socket),
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
+    do: {:noreply, PubSub.schedule_refresh(socket, :expenses_table)}
+
+  def handle_info({:admin_refresh, :expenses_table}, socket),
     do: {:noreply, Cinder.refresh_table(socket, "expenses-table")}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp search_expenses(query, _searchable_columns, search_term) do
     require Ash.Query

@@ -62,6 +62,38 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLiveTest do
     end
   end
 
+  describe "live changes" do
+    test "calendar changes only warn until explicit reload", %{conn: conn, admin: admin} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+
+      refute has_element?(view, "[data-testid=christmas-vouchers-toggle][checked]")
+
+      calendar = Fulfillment.get_shop_calendar!(actor: admin)
+      Fulfillment.set_christmas_vouchers_online!(calendar, true, actor: admin)
+      assert has_element?(view, "#editor-stale-notice")
+      refute has_element?(view, "[data-testid=christmas-vouchers-toggle][checked]")
+      view |> element("#editor-stale-notice button") |> render_click()
+      {path, _} = assert_redirect(view)
+      {:ok, view, _} = live(conn, path)
+      assert has_element?(view, "[data-testid=christmas-vouchers-toggle][checked]")
+    end
+
+    test "refreshes the options table when a price changes elsewhere", %{conn: conn, admin: admin, delivery: delivery} do
+      {:ok, view, _html} = live(conn, ~p"/admin/fulfillments")
+      render_async(view, 500)
+
+      assert has_element?(view, ~s|tr a[href="/admin/fulfillments/#{delivery.id}"]|, "Delivery")
+
+      {:ok, option} = Fulfillment.update_pricing(delivery, %{base_price: "5.00"}, actor: admin)
+      assert Decimal.equal?(option.base_price, "5.00")
+
+      Process.sleep(200)
+      render_async(view, 500)
+
+      assert render(view) =~ "5,00"
+    end
+  end
+
   describe "accessible state" do
     test "weekday toggles announce open and closed", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/admin/fulfillments")

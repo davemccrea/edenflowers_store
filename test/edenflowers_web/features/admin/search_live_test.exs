@@ -4,6 +4,8 @@ defmodule EdenflowersWeb.Admin.SearchLiveTest do
   import Phoenix.LiveViewTest
   import Generator
 
+  alias Edenflowers.Orders
+
   setup :log_in_admin
 
   test "finds orders and customers from one search", %{conn: conn} do
@@ -30,6 +32,29 @@ defmodule EdenflowersWeb.Admin.SearchLiveTest do
     assert has_element?(view, ~s|#search-orders a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
     assert has_element?(view, ~s|#search-customers a[href="/admin/customers/#{customer.id}"]|, "Ada Byron")
     refute render(view) =~ "Grace Hopper"
+  end
+
+  test "refreshes results when a matching order is placed elsewhere", %{conn: conn, admin: admin} do
+    {:ok, view, _html} = live(conn, ~p"/admin/search?q=ada")
+    refute render(view) =~ "Ada Lovelace"
+
+    order =
+      generate(
+        order(
+          state: :placed,
+          customer_name: "Ada Lovelace",
+          fulfillment_method: :pickup,
+          fulfillment_date: ~D[2026-06-10],
+          fulfillment_status: :pending,
+          grand_total: "42.00",
+          ordered_at: DateTime.utc_now()
+        )
+      )
+
+    Orders.update_florist_note!(order, %{florist_note: "White only"}, actor: admin)
+    Process.sleep(200)
+
+    assert has_element?(view, ~s|#search-orders a[href="/admin/orders/#{order.id}"]|, "Ada Lovelace")
   end
 
   test "the admin header searches", %{conn: conn} do

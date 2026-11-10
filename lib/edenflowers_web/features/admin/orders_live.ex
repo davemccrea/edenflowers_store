@@ -9,9 +9,11 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Orders.Order
   alias EdenflowersWeb.Admin.DefaultTableView
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   # Open orders, soonest first, so overdue ones lead.
@@ -19,7 +21,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: EdenflowersWeb.Endpoint.subscribe("admin:orders")
+    if connected?(socket), do: PubSub.subscribe([Events.admin_orders()])
 
     {:ok,
      socket
@@ -172,8 +174,13 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "admin:orders"}, socket),
+  def handle_info(%Phoenix.Socket.Broadcast{topic: _topic}, socket),
+    do: {:noreply, PubSub.schedule_refresh(socket, :orders_table)}
+
+  def handle_info({:admin_refresh, :orders_table}, socket),
     do: {:noreply, Cinder.refresh_table(socket, "orders-table")}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp fulfillment_method_options do
     Edenflowers.Fulfillment.FulfillmentOption.FulfillmentMethod.values()

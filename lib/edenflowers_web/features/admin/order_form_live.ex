@@ -14,6 +14,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Catalog
   alias Edenflowers.Catalog.ProductVariantSize
   alias Edenflowers.Email.Preview
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.Availability
@@ -25,11 +26,17 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   alias Edenflowers.Pricing
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.CustomerSearch
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   @impl true
   def mount(params, _session, socket) do
     actor = socket.assigns.current_user
+
+    if connected?(socket) do
+      PubSub.subscribe([Events.admin_products(), Events.admin_fulfillment_options(), Events.shop_calendar_changed()])
+      if params["id"], do: Events.subscribe(Events.admin_order(params["id"]))
+    end
 
     case load(params, actor) do
       {:ok, mode, order} ->
@@ -37,6 +44,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
         {:ok,
          socket
+         |> assign(:stale, false)
          |> assign(:mode, mode)
          |> assign(:order, order)
          |> assign(:page_title, page_title(mode, order))
@@ -77,6 +85,7 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header
           title={@page_title}
           back={order_form_back(@order)}
@@ -437,6 +446,9 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
   end
 
   @impl true
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: socket.assigns.current_path)}
+
   def handle_event(
         "live_select_change",
         %{"id" => "customer-select", "text" => term},
@@ -575,6 +587,12 @@ defmodule EdenflowersWeb.Admin.OrderFormLive do
 
   defp back_path(%{"id" => id}), do: ~p"/admin/orders/#{id}"
   defp back_path(_params), do: ~p"/admin/orders"
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp build_form(:new, _order, actor, _tax_rates) do
     Order

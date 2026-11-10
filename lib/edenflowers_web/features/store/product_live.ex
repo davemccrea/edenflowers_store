@@ -9,6 +9,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
 
   use EdenflowersWeb, :live_view
 
+  alias Edenflowers.Events
   alias Edenflowers.Orders
   alias Edenflowers.Orders.LineItem.Changes.KeepSubscriptionAlone
   alias Edenflowers.Orders.Subscription
@@ -29,7 +30,7 @@ defmodule EdenflowersWeb.Store.ProductLive do
     product = get_product!(slug)
 
     if connected?(socket),
-      do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, "product_variant:changed:#{product.id}")
+      do: Events.subscribe(Events.product_variant_changed(product.id))
 
     product_variants = product.product_variants
     product_category = Translations.translate(product.product_category)
@@ -496,15 +497,19 @@ defmodule EdenflowersWeb.Store.ProductLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "product_variant:changed:" <> _}, socket) do
-    {:ok, product} = Catalog.get_product_by_id(socket.assigns.product.id)
-    variants = product.product_variants
+  def handle_info(%Phoenix.Socket.Broadcast{topic: topic}, socket) do
+    if topic == Events.topic(Events.product_variant_changed(socket.assigns.product.id)) do
+      {:ok, product} = Catalog.get_product_by_id(socket.assigns.product.id)
+      variants = product.product_variants
 
-    selected_variant =
-      Enum.find(variants, &(&1.id == socket.assigns.selected_variant.id)) ||
-        default_variant(socket.assigns.subscribe?, selectable_variants(variants))
+      selected_variant =
+        Enum.find(variants, &(&1.id == socket.assigns.selected_variant.id)) ||
+          default_variant(socket.assigns.subscribe?, selectable_variants(variants))
 
-    {:noreply, assign(socket, product_variants: variants, selected_variant: selected_variant)}
+      {:noreply, assign(socket, product_variants: variants, selected_variant: selected_variant)}
+    else
+      {:noreply, socket}
+    end
   end
 
   defp get_product!(slug) do

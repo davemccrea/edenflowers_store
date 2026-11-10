@@ -1,5 +1,5 @@
 defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
-  use EdenflowersWeb.ConnCase, async: true
+  use EdenflowersWeb.ConnCase, async: false
   use Oban.Testing, repo: Edenflowers.Repo
 
   import Generator
@@ -13,6 +13,65 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     %{customer: customer}
   end
 
+  test "an open change drawer preserves input and offers to reload after external changes", %{
+    conn: conn,
+    customer: customer,
+    admin: admin
+  } do
+    subscription = generate(subscription(user_id: customer.id))
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    view |> element("button[phx-click=open_change]") |> render_click()
+    view |> form("#change-subscription-form", change: %{interval_weeks: 4}) |> render_change()
+
+    Edenflowers.Orders.pause_subscription!(subscription, actor: admin)
+
+    assert has_element?(view, "#subscription-status", "Active")
+    assert has_element?(view, "#change-subscription-form option[value='4'][selected]")
+    assert has_element?(view, "#change-subscription-stale-notice[role=alert]")
+    assert has_element?(view, "#editor-stale-notice")
+
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _html} = live(conn, path)
+    refute has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#change-subscription-form")
+    assert has_element?(view, "#subscription-status", "Paused")
+  end
+
+  test "a refused subscription change keeps its errors through notifications", %{conn: conn, admin: admin} do
+    subscription = generate(subscription())
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    view |> element("button[phx-click=open_change]") |> render_click()
+    render_submit(view, "change", %{"change" => %{"interval_weeks" => "3"}})
+    assert has_element?(view, "#change-subscription-form [aria-invalid=true]")
+
+    Edenflowers.Orders.pause_subscription!(subscription, actor: admin)
+
+    assert has_element?(view, "#change-subscription-form [aria-invalid=true]")
+    assert has_element?(view, "#editor-stale-notice")
+    render_click(view, "close_change")
+    assert has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#change-subscription-form")
+  end
+
+  test "a cancellation drawer keeps its email draft until closed", %{conn: conn, admin: admin} do
+    subscription = generate(subscription())
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    view |> element("button[phx-click=open_cancel]") |> render_click()
+    view |> form("#cancel-subscription-form", cancel: %{edit_email: "true"}) |> render_change()
+    view |> form("#cancel-subscription-form", cancel: %{body: "Keep my wording"}) |> render_change()
+
+    Edenflowers.Orders.pause_subscription!(subscription, actor: admin)
+
+    assert has_element?(view, "#cancel-subscription-form textarea", "Keep my wording")
+    assert has_element?(view, "#cancel-subscription-stale-notice[role=alert]")
+    assert has_element?(view, "#editor-stale-notice")
+    render_click(view, "close_cancel")
+    assert has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#cancel-subscription-form")
+    assert has_element?(view, "#subscription-status", "Active")
+  end
+
   test "names the weekday it delivers on, even while paused", %{conn: conn, customer: customer} do
     friday =
       Enum.find(Date.range(Date.add(Date.utc_today(), 7), Date.add(Date.utc_today(), 13)), &(Date.day_of_week(&1) == 5))
@@ -23,6 +82,102 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
 
     assert has_element?(view, "#subscription-fulfillment", "Delivery day")
     assert has_element?(view, "#subscription-delivery-day", "Friday")
+  end
+
+  test "collection notifications do not mix other subscriptions' orders into the page", %{
+    conn: conn,
+    customer: customer,
+    admin: admin
+  } do
+    subscription = generate(subscription(user_id: customer.id))
+    other = generate(subscription())
+    order = placed_order(subscription_id: other.id, payment_intent_id: nil)
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    render_async(view)
+
+    {:ok, _other} = Edenflowers.Orders.pause_subscription(other, actor: admin)
+    {:ok, _order} = Edenflowers.Orders.record_payment(order, "10.00", :cash, actor: admin)
+    render_async(view)
+
+    assert has_element?(view, "#subscription-status", "Active")
+    refute has_element?(view, ~s|[data-item-id="#{order.id}"]|)
+  end
+
+  test "external subscription changes only appear after reload, local actions reload immediately", %{
+    conn: conn,
+    customer: customer,
+    admin: admin
+  } do
+    subscription = generate(subscription(user_id: customer.id))
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    render_async(view)
+
+    {:ok, _subscription} = Edenflowers.Orders.pause_subscription(subscription, actor: admin)
+
+    assert has_element?(view, "#editor-stale-notice")
+    assert has_element?(view, "#subscription-status", "Active")
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    assert has_element?(view, "#subscription-status", "Paused")
+    view |> element("button", "Resume") |> render_click()
+    render_async(view)
+
+    assert has_element?(view, "#subscription-status", "Active")
+  end
+
+  test "related orders only change after reload and stay scoped to their subscription", %{
+    conn: conn,
+    customer: customer,
+    admin: admin
+  } do
+    first = generate(subscription(user_id: customer.id))
+    second = generate(subscription(user_id: customer.id))
+    {:ok, first_view, _html} = live(conn, ~p"/admin/subscriptions/#{first.id}")
+    {:ok, second_view, _html} = live(conn, ~p"/admin/subscriptions/#{second.id}")
+    render_async(first_view)
+    render_async(second_view)
+
+    # Seeded rows don't notify. The subscription's own job creates its
+    # Occurrence and then places it, and that update is what its page hears.
+    order = placed_order(subscription_id: first.id, payment_intent_id: nil)
+    refute has_element?(first_view, ~s|[data-item-id="#{order.id}"]|)
+
+    {:ok, _order} = Edenflowers.Orders.record_payment(order, "10.00", :cash, actor: admin)
+    assert has_element?(first_view, "#editor-stale-notice")
+    refute has_element?(first_view, ~s|[data-item-id="#{order.id}"]|)
+    refute has_element?(second_view, ~s|[data-item-id="#{order.id}"]|)
+    {:ok, first_view, _} = live(conn, ~p"/admin/subscriptions/#{first.id}")
+    {:ok, second_view, _} = live(conn, ~p"/admin/subscriptions/#{second.id}")
+    assert has_element?(first_view, ~s|[data-item-id="#{order.id}"]|)
+    refute has_element?(second_view, ~s|[data-item-id="#{order.id}"]|)
+  end
+
+  test "closed-day warnings only change after explicit reload", %{
+    conn: conn,
+    customer: customer,
+    admin: admin
+  } do
+    date = Date.add(Edenflowers.ShopTime.today(), 7)
+    subscription = generate(subscription(user_id: customer.id, next_fulfillment_date: date))
+    calendar = shop_calendar(disabled_dates: [], enabled_dates: [])
+    {:ok, view, _html} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    refute has_element?(view, "#subscription-closed-days")
+    render_async(view)
+
+    calendar = Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+
+    assert has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#subscription-closed-days")
+    {:ok, view, _} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    assert has_element?(view, "#subscription-closed-days")
+
+    Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+
+    assert has_element?(view, "#editor-stale-notice")
+    assert has_element?(view, "#subscription-closed-days")
+    {:ok, view, _} = live(conn, ~p"/admin/subscriptions/#{subscription.id}")
+    refute has_element?(view, "#subscription-closed-days")
   end
 
   test "shows what Jennie needs to service the subscription", %{conn: conn, customer: customer} do
@@ -115,6 +270,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLiveTest do
     assert changed.product_variant_id == large.id
     assert changed.interval_weeks == 4
     assert has_element?(view, "#subscription-log", "Changed · Admin")
+    refute has_element?(view, "#editor-stale-notice")
   end
 
   test "names a delivery on a closed day, and prices each size per delivery", %{conn: conn, customer: customer} do

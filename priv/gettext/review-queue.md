@@ -77,6 +77,27 @@ Optional suggestions may be rejected without changing usable copy.
 | T32 | sv, fi | Closed-day subscription notices (`admin`, empty context), AI-drafted 7 Nov 2026: overview heading `Subscriptions on closed days` (sv `Prenumerationer på stängda dagar`, fi `Kestotilaukset suljettuina päivinä`); subscription page `Delivers on a closed day` (sv `Levereras en stängd dag`, fi `Toimitus suljettuna päivänä`) and `You're closed on %{dates}, but this subscription still delivers then. Agree another day with the customer, then change or pause it.` Native review remains. |
 | R11 | sv, fi | Retired purchase-linked invoice-total wording: `To be invoiced later` (`Faktureras senare` / `Laskutetaan myöhemmin`) and `Not charged after cancellation` (`Debiteras inte efter avbokning` / `Ei veloiteta peruutuksen jälkeen`) are removed from source/catalogs and require no approval for current UI. Standalone invoices print only their own billed lines/VAT, with no whole-purchase totals, earlier-advance deductions or cancellation remainder rows. Current total/unit-price/VAT terminology still needs native/accountant review under R05/R06; no native approval is asserted. |
 
+## Admin external-save notice — 9 November 2026
+
+Domain: `admin`; context: empty; languages: Swedish and Finnish. AI-drafted and
+AI-reviewed by OpenAI on 2026-11-09. David requested active translations, without
+fuzzy flags. Native sv/fi review and Jennie's approval of Swedish meaning remain
+outstanding; activation is not native or editorial approval.
+
+- Source: `Saved data changed elsewhere. Saving now may overwrite those changes. Reload to use the latest saved data, or save anyway.`
+  - Swedish: `Sparade uppgifter har ändrats på annat håll. Om du sparar nu kan de ändringarna skrivas över. Läs in de senaste sparade uppgifterna eller spara ändå.`
+  - Finnish: `Tallennettuja tietoja on muutettu muualla. Jos tallennat nyt, saatat korvata nämä muutokset. Lataa uusimmat tallennetut tiedot tai tallenna silti.`
+- Source: `Discard changes and reload`
+  - Swedish: `Kasta ändringarna och läs in på nytt`
+  - Finnish: `Hylkää muutokset ja lataa uudelleen`
+- Source: `Discard your unsaved changes and load the latest saved data?`
+  - Swedish: `Vill du kasta dina osparade ändringar och läsa in de senaste sparade uppgifterna?`
+  - Finnish: `Hylätäänkö tallentamattomat muutoksesi ja ladataanko uusimmat tallennetut tiedot?`
+
+Review the three entries together: saving stays available, overwrite is a risk
+rather than a certainty, and only confirmed reload discards local input. Finnish
+follows this Swedish draft's meaning; no native-approved source is asserted.
+
 ## AI SEO copy follow-up — 28 October 2026
 
 AI-reviewed by the coding assistant on 2026-10-28; native review and Jennie's

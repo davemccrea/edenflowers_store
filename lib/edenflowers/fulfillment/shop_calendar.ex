@@ -14,6 +14,7 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
     authorizers: [Ash.Policy.Authorizer],
     notifiers: [Ash.Notifier.PubSub]
 
+  alias Edenflowers.Events
   alias Edenflowers.Fulfillment.Changes
   alias Edenflowers.Fulfillment.Weekday
 
@@ -118,7 +119,7 @@ defmodule Edenflowers.Fulfillment.ShopCalendar do
   pub_sub do
     module EdenflowersWeb.Endpoint
 
-    publish_all :update, ["shop_calendar", "changed"]
+    publish_all :update, Events.shop_calendar_changed()
   end
 
   validations do

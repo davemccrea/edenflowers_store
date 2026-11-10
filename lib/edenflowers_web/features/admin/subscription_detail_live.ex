@@ -12,12 +12,14 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
 
   alias Edenflowers.Catalog
   alias Edenflowers.Email.Preview
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias Edenflowers.Orders.Order
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.Drawers
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.SubscriptionLog
   alias EdenflowersWeb.Checkout.Fields
   alias EdenflowersWeb.Layouts
@@ -27,8 +29,13 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
     case get_subscription(id, socket.assigns.current_user) do
       {:ok, subscription} ->
         if connected?(socket) do
-          EdenflowersWeb.Endpoint.subscribe("admin:subscriptions")
-          EdenflowersWeb.Endpoint.subscribe("admin:orders")
+          PubSub.subscribe([
+            Events.admin_subscription(subscription.id),
+            Events.admin_orders(),
+            Events.admin_products(),
+            Events.admin_fulfillment_options(),
+            Events.shop_calendar_changed()
+          ])
         end
 
         {:ok,
@@ -36,7 +43,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
          |> assign(:page_title, subscription.user.name || to_string(subscription.user.email))
          |> assign(:locale, Localize.get_locale())
          |> assign_subscription(subscription)
-         |> assign(change_form: nil, cancel_form: nil, preview: nil)
+         |> assign(change_form: nil, cancel_form: nil, preview: nil, stale: false)
          |> assign(:orders_query, Ash.Query.filter(Order, subscription_id == ^subscription.id))}
 
       _ ->
@@ -52,6 +59,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header
           title={@subscription.user.name || ~t"Unnamed customer"}
           back={{~t"Subscriptions", ~p"/admin/subscriptions"}}
@@ -263,7 +271,12 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
         </div>
       </.admin_page>
 
-      <.admin_drawer id="change-subscription" title={~t"Change subscription"} on_close={JS.push("close_change")}>
+      <.admin_drawer
+        id="change-subscription"
+        title={~t"Change subscription"}
+        stale={@stale}
+        on_close={JS.push("close_change")}
+      >
         <.form
           :if={@change_form}
           for={@change_form}
@@ -310,7 +323,12 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
         </.form>
       </.admin_drawer>
 
-      <.admin_drawer id="cancel-subscription" title={~t"Cancel subscription"} on_close={JS.push("close_cancel")}>
+      <.admin_drawer
+        id="cancel-subscription"
+        title={~t"Cancel subscription"}
+        stale={@stale}
+        on_close={JS.push("close_cancel")}
+      >
         <.form
           :if={@cancel_form}
           for={@cancel_form}
@@ -346,6 +364,9 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   end
 
   @impl true
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: ~p"/admin/subscriptions/#{socket.assigns.subscription.id}")}
+
   def handle_event("pause", _params, socket) do
     {:noreply, change_subscription(socket, &Orders.pause_subscription/2, ~t"Subscription paused.")}
   end
@@ -383,12 +404,12 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
 
     {:noreply,
      socket
-     |> assign(change_form: form, size_options: size_options, day_options: day_options)
+     |> assign(change_form: form, cancel_form: nil, size_options: size_options, day_options: day_options)
      |> push_event("js-exec", %{to: "#change-subscription", attr: "phx-show"})}
   end
 
   def handle_event("close_change", _params, socket) do
-    {:noreply, assign(socket, :change_form, nil)}
+    {:noreply, assign(socket, change_form: nil)}
   end
 
   def handle_event("validate_change", %{"change" => params}, socket) do
@@ -398,13 +419,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   def handle_event("change", %{"change" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.change_form, params: params) do
       {:ok, _subscription} ->
-        {:ok, subscription} = get_subscription(socket.assigns.subscription.id, socket.assigns.current_user)
-
         {:noreply,
          socket
-         |> assign_subscription(subscription)
+         |> refresh_subscription()
          |> put_flash(:success, ~t"Subscription changed.")
-         |> assign(:change_form, nil)
+         |> assign(change_form: nil, stale: false)
          |> push_event("js-exec", %{to: "#change-subscription", attr: "phx-hide"})}
 
       {:error, form} ->
@@ -425,7 +444,7 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
 
     {:noreply,
      socket
-     |> assign(:cancel_form, form)
+     |> assign(cancel_form: form, change_form: nil)
      |> assign(:preview, Preview.build(:subscription_cancelled, socket.assigns.subscription, %{}))
      |> push_event("js-exec", %{to: "#cancel-subscription", attr: "phx-show"})}
   end
@@ -441,14 +460,11 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   def handle_event("cancel", %{"cancel" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.cancel_form, params: params) do
       {:ok, _subscription} ->
-        {:ok, subscription} = get_subscription(socket.assigns.subscription.id, socket.assigns.current_user)
-
         {:noreply,
          socket
-         |> assign_subscription(subscription)
+         |> refresh_subscription()
          |> put_flash(:success, ~t"Subscription cancelled.")
-         |> Cinder.refresh_table("subscription-orders-table")
-         |> assign(cancel_form: nil, preview: nil)
+         |> assign(cancel_form: nil, preview: nil, stale: false)
          |> push_event("js-exec", %{to: "#cancel-subscription", attr: "phx-hide"})}
 
       {:error, form} ->
@@ -457,28 +473,26 @@ defmodule EdenflowersWeb.Admin.SubscriptionDetailLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{}, socket) do
-    {:ok, subscription} = get_subscription(socket.assigns.subscription.id, socket.assigns.current_user)
-
-    {:noreply,
-     socket
-     |> assign_subscription(subscription)
-     |> Cinder.refresh_table("subscription-orders-table")}
-  end
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
 
   def handle_info(_message, socket), do: {:noreply, socket}
 
-  defp change_subscription(socket, action, success_message) do
-    actor = socket.assigns.current_user
+  defp refresh_subscription(socket) do
+    {:ok, subscription} = get_subscription(socket.assigns.subscription.id, socket.assigns.current_user)
 
-    with {:ok, _} <- action.(socket.assigns.subscription, actor: actor),
-         {:ok, subscription} <- get_subscription(socket.assigns.subscription.id, actor) do
-      socket
-      |> assign_subscription(subscription)
-      |> put_flash(:success, success_message)
-      |> Cinder.refresh_table("subscription-orders-table")
-    else
-      _ -> put_flash(socket, :error, ~t"Could not change the subscription.")
+    socket
+    |> assign_subscription(subscription)
+    |> Cinder.refresh_table("subscription-orders-table")
+  end
+
+  defp change_subscription(socket, action, success_message) do
+    case action.(socket.assigns.subscription, actor: socket.assigns.current_user) do
+      {:ok, _subscription} ->
+        socket |> refresh_subscription() |> assign(:stale, false) |> put_flash(:success, success_message)
+
+      _error ->
+        put_flash(socket, :error, ~t"Could not change the subscription.")
     end
   end
 

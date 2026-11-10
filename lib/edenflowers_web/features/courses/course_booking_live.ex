@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   import Edenflowers.Actors
 
   alias Edenflowers.Courses
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Translations
 
@@ -20,9 +21,7 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   def mount(%{"id" => id} = params, _session, socket) do
     payment_failed? = params["redirect_status"] == "failed"
 
-    if connected?(socket) do
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, "course_registration:paid:#{id}")
-    end
+    if connected?(socket), do: Events.subscribe(Events.course_registration_paid(id))
 
     case load_registration(id) do
       # A redirect-based method (MobilePay) comes back with `redirect_status=failed`
@@ -116,8 +115,8 @@ defmodule EdenflowersWeb.Courses.CourseBookingLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "course_registration:paid:" <> id}, socket) do
-    case load_registration(id) do
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket) do
+    case load_registration(socket.assigns.registration.id) do
       {:ok, registration} ->
         {:noreply, socket |> assign(registration: registration) |> track_course_booked(registration)}
 

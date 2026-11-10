@@ -21,6 +21,14 @@ A page and an action that answer the same question read the same calculation, so
 - Option lists filtered in the page by a setting the action also checks. Fix: a calculation that both the page's options and the action's validation read, like `ShopCalendar.online_voucher_styles`.
 - Money arithmetic in a component (refunds, balances, what's left to pay). Fix: call the function the action uses, like `Changes.Cancel.money/2`.
 
+### PubSub (Ash to LiveView)
+
+- A topic name lives in `Edenflowers.Events`, never as a literal string. Resources publish with `Events.<topic>()` from their `pub_sub` block; pages subscribe with `Edenflowers.Events.subscribe/1` or `EdenflowersWeb.Admin.PubSub.subscribe/1`.
+- An admin-facing resource publishes to its collection topic (`admin:<collection>`) and, when a detail page shows one record, its record topic (`admin:<collection>:<id>`). Pages showing related records follow their collection topics; the queries still select only the page's records.
+- Lists and dashboards refresh automatically. Admin detail/editor pages only warn on external notifications: do not reload records, tables, calculations or forms, and do not schedule a refresh. Own notifications never reload either; successful local actions explicitly reload saved data and rebuild the affected forms together. Use record topics for editors and collection topics for related data, rather than action-name exceptions or payload relevance checks. Subscribe only when `connected?(socket)`, and add a catch-all `handle_info/2`.
+- Coalesce bursty list/dashboard refreshes with `EdenflowersWeb.Admin.PubSub.schedule_refresh/3`. Notifications share one pending timer without postponing it. A list table beside an editor may refresh independently, but must not change the editor's saved data or forms.
+- Every admin detail/editor page warns on external changes, whether or not the user has typed. `PubSub.mark_stale/3` ignores own writes and sends a flash notification, so scrolled editors still notice. Show `stale_editor_notice` prominently on the page and inside editor drawers, with a confirmed discard-and-reload action. Saving remains available: the shop accepts overwrite risk and can consult PaperTrail. Do not track dirty forms, merge drafts, repair missing forms after notifications or add concurrency locking. Explicit reload replaces the complete page state and discards local input. Keep the editor notice until reload or a successful save, never clear it merely on drawer open/close or validation failure. Creation forms warn about changing saved dependencies when relevant. Customer-facing payment/stock notifications retain their specific live updates.
+
 ### Forms (AshPhoenix)
 
 - A form that submits one action is built with `AshPhoenix.Form.for_create`/`for_update`, so errors land on their fields. `to_form(map)` is for UI-only forms.

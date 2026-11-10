@@ -10,6 +10,26 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
   setup :log_in_admin
 
+  test "an expense correction survives bank updates until discarded", %{conn: conn} do
+    expense = create_expense("dirty-bank-paid", "Original vendor", "Flowers")
+    {:ok, view, _} = live(conn, ~p"/admin/expenses/#{expense.id}")
+    view |> form("#expense-form", form: %{vendor_name: "Unsaved vendor"}) |> render_change()
+
+    Expenses.mark_expense_paid_from_bank!(expense, Edenflowers.ShopTime.today(),
+      actor: Edenflowers.Actors.system_actor()
+    )
+
+    assert has_element?(view, "#expense-form input[name='form[vendor_name]'][value='Unsaved vendor']")
+    assert has_element?(view, "#editor-stale-notice")
+
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    assert has_element?(view, "#expense-form input[name='form[vendor_name]'][value='Original vendor']")
+    refute has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "button[name=paid_today]")
+  end
+
   test "searches expenses by vendor", %{conn: conn} do
     create_expense("vendor-match", "Northern Blooms", "Weekly flowers")
     create_expense("vendor-miss", "Office Depot", "Printer paper")
@@ -70,6 +90,24 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
 
     assert has_element?(view, "[data-item-id]", "Unpaid Vendor")
     refute has_element?(view, "[data-item-id]", "Paid Vendor")
+  end
+
+  test "a clean expense editor warns when the bank marks it paid and reload catches up", %{conn: conn} do
+    expense = create_expense("bank-paid", "Bank Vendor", "Bank payment")
+    paid_on = Edenflowers.ShopTime.today()
+
+    {:ok, view, _html} = live(conn, ~p"/admin/expenses/#{expense.id}")
+    refute render(view) =~ "Paid #{Edenflowers.Format.date(paid_on, "en")}"
+
+    {:ok, _expense} =
+      Expenses.mark_expense_paid_from_bank(expense, paid_on, actor: Edenflowers.Actors.system_actor())
+
+    assert has_element?(view, "#editor-stale-notice[role=alert]")
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+
+    assert render(view) =~ "Paid #{Edenflowers.Format.date(paid_on, "en")}"
   end
 
   test "translates the table controls", %{conn: conn} do

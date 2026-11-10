@@ -12,6 +12,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
 
   alias Edenflowers.Bank
   alias Edenflowers.Courses
+  alias Edenflowers.Events
   alias Edenflowers.External.EnableBankingAPI
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
@@ -19,17 +20,25 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   alias Edenflowers.Orders
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.BankController
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.PushSubscriptions
-  alias EdenflowersWeb.Admin.ReportController
   alias EdenflowersWeb.Layouts
+
+  @store_presence Events.topic(Events.store_presence())
 
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket) do
-      EdenflowersWeb.Endpoint.subscribe("admin:orders")
-      EdenflowersWeb.Endpoint.subscribe("admin:bookings")
+      PubSub.subscribe([
+        Events.admin_orders(),
+        Events.admin_bookings(),
+        Events.admin_subscriptions(),
+        Events.shop_calendar_changed(),
+        Events.admin_bank(),
+        Events.admin_report(socket.assigns.current_user.id)
+      ])
+
       EdenflowersWeb.Presence.subscribe()
-      Phoenix.PubSub.subscribe(Edenflowers.PubSub, ReportController.report_topic(socket.assigns.current_user))
     end
 
     {:ok,
@@ -37,11 +46,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
      |> assign(:page_title, ~t"Overview")
      |> assign(:locale, Localize.get_locale())
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
-     |> assign(:report_month, previous_month())
-     |> assign(:bank_connection, bank_connection(socket.assigns.current_user))
      |> assign(:connected_customers, EdenflowersWeb.Presence.connected_customers())
-     |> assign(:calendar, Fulfillment.get_shop_calendar!(actor: socket.assigns.current_user))
-     |> assign_orders()}
+     |> refresh()}
   end
 
   @impl true
@@ -140,7 +146,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
       {:error, _error} ->
         {:noreply,
          socket
-         |> assign_orders()
+         |> refresh()
          |> put_flash(:error, ~t"The order has changed. Check its status and try again.")}
     end
   end
@@ -172,11 +178,14 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "store:presence", event: "presence_diff"}, socket) do
+  def handle_info(%Phoenix.Socket.Broadcast{topic: @store_presence, event: "presence_diff"}, socket) do
     {:noreply, assign(socket, :connected_customers, EdenflowersWeb.Presence.connected_customers())}
   end
 
-  def handle_info(%Phoenix.Socket.Broadcast{}, socket), do: {:noreply, assign_orders(socket)}
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
+    do: {:noreply, PubSub.schedule_refresh(socket, :overview)}
+
+  def handle_info({:admin_refresh, :overview}, socket), do: {:noreply, refresh(socket)}
 
   def handle_info({:bank_statement_missing, month}, socket) do
     {:noreply,
@@ -186,6 +195,8 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
        ~t"The #{month} report was downloaded without the bank transactions, because the bank couldn't be read. Try again later, or reconnect the bank if it has disconnected."
      )}
   end
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   # A day off the strip, such as yesterday's after midnight, falls back to today.
   defp selected_day(day, [today | _] = days), do: if(day in days, do: day, else: today)
@@ -206,7 +217,7 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     end
   end
 
-  defp assign_orders(socket) do
+  defp refresh(socket) do
     actor = socket.assigns.current_user
     today = Edenflowers.ShopTime.today()
 
@@ -238,6 +249,9 @@ defmodule EdenflowersWeb.Admin.OverviewLive do
     same_day_last_month = Date.shift(today, month: -1)
 
     socket
+    |> assign(:calendar, Fulfillment.get_shop_calendar!(actor: actor))
+    |> assign(:bank_connection, bank_connection(actor))
+    |> assign(:report_month, previous_month())
     |> assign(:days, Enum.to_list(Date.range(today, Date.add(today, 8))))
     |> assign(:orders_by_date, Enum.group_by(due, & &1.fulfillment_date))
     |> assign(:attention, attention)

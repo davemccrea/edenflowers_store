@@ -22,13 +22,14 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   import EdenflowersWeb.AdminCalendar, only: [admin_calendar: 1, legend: 1]
   import EdenflowersWeb.Admin.Components
 
-  alias EdenflowersWeb.Layouts
-
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Fulfillment
   alias Edenflowers.Fulfillment.DeliveryCost
   alias Edenflowers.Translations
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.AdminCalendar
+  alias EdenflowersWeb.Layouts
 
   @fee_fields [:base_price, :price_per_km, :free_dist_km, :max_dist_km]
   @chart %{width: 600, height: 240, left: 44, right: 12, top: 12, bottom: 28}
@@ -38,6 +39,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   def mount(params, _session, socket) do
     socket =
       socket
+      |> assign(:stale, false)
       |> assign(:locale, Format.locale())
       |> assign(:today, Edenflowers.ShopTime.today())
 
@@ -49,6 +51,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header title={~t"Delivery and pickup"} />
 
         <.form_section title={~t"Calendar"}>
@@ -100,6 +103,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header title={@page_title} back={{~t"Delivery and pickup", ~p"/admin/fulfillments"}} />
 
         <%!-- On a wide screen the graph sits beside the prices, so it stays in view while they're typed. --%>
@@ -123,6 +127,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   end
 
   @impl true
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: socket.assigns.current_path)}
+
   def handle_event("validate", %{"pricing" => params}, socket) do
     {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
   end
@@ -133,6 +140,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         {:noreply,
          socket
          |> assign(:form, pricing_form(option, socket.assigns.current_user))
+         |> assign(:stale, false)
          |> push_event("admin-form-saved", %{id: "pricing-form"})
          |> put_flash(:success, ~t"Saved.")}
 
@@ -158,6 +166,7 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
         {:noreply,
          socket
          |> assign_calendar(calendar)
+         |> assign(:stale, false)
          |> put_flash(:success, ~t"Saved.")}
 
       {:error, form} ->
@@ -213,6 +222,9 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   end
 
   defp mount_action(:index, _params, socket) do
+    if connected?(socket),
+      do: PubSub.subscribe([Events.shop_calendar_changed(), Events.admin_fulfillment_options()])
+
     {:ok,
      socket
      |> assign(:page_title, ~t"Delivery and pickup")
@@ -220,6 +232,8 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
   end
 
   defp mount_action(:edit, %{"id" => id}, socket) do
+    if connected?(socket), do: Events.subscribe(Events.admin_fulfillment_option(id))
+
     case Fulfillment.get_option_by_id(id, actor: socket.assigns.current_user) do
       {:error, _} ->
         {:ok,
@@ -681,6 +695,25 @@ defmodule EdenflowersWeb.Admin.FulfillmentsLive do
 
     Enum.join([Format.currency(option.base_price, locale)] ++ distance, " · ")
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{topic: topic} = notification, %{assigns: %{live_action: :index}} = socket) do
+    socket = PubSub.mark_stale(socket, notification)
+
+    {:noreply,
+     if(topic == Events.topic(Events.admin_fulfillment_options()),
+       do: PubSub.schedule_refresh(socket, :options),
+       else: socket
+     )}
+  end
+
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
+
+  def handle_info({:admin_refresh, :options}, socket),
+    do: {:noreply, Cinder.refresh_table(socket, "fulfillment-options")}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp pricing_form(option, actor) do
     option

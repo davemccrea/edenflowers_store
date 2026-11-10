@@ -13,6 +13,7 @@ defmodule Edenflowers.Orders.Subscription do
 
   import Edenflowers.Actors
 
+  alias Edenflowers.Events
   alias Edenflowers.Orders.Changes.NotifyShop
   alias Edenflowers.Orders.Subscription.Calculations.PlanChangesFrom
   alias Edenflowers.Orders.Subscription.Changes
@@ -484,8 +485,13 @@ defmodule Edenflowers.Orders.Subscription do
   pub_sub do
     module EdenflowersWeb.Endpoint
 
-    publish_all :create, ["admin", "subscriptions"]
-    publish_all :update, ["admin", "subscriptions"]
+    publish_all :create, Events.admin_subscriptions()
+    publish_all :update, Events.admin_subscriptions()
+    publish_all :destroy, Events.admin_subscriptions()
+
+    publish_all :create, Events.admin_subscription(:id)
+    publish_all :update, Events.admin_subscription(:id)
+    publish_all :destroy, Events.admin_subscription(:id)
   end
 
   attributes do

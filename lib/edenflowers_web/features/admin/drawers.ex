@@ -13,6 +13,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :title, :string, required: true
   attr :submit_label, :string, required: true
   attr :keep_label, :string, required: true
+  attr :stale, :boolean, default: false
   attr :form, :any, default: nil
   attr :payable, :any, default: nil, doc: "the order or booking, from `PaymentActions.load_for_cancel/1`"
   attr :email, :string, default: nil, doc: "the customer's address, or nil when they have none"
@@ -28,7 +29,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   """
   def cancel_drawer(assigns) do
     ~H"""
-    <.admin_drawer id="cancel-drawer" title={@title} on_close={JS.push("close_cancel")}>
+    <.admin_drawer id="cancel-drawer" title={@title} stale={@stale} on_close={JS.push("close_cancel")}>
       <.form
         :if={@form}
         for={@form}
@@ -315,6 +316,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :submit_label, :string, default: nil
   attr :to, :string, default: nil
   attr :last_sent, :string, default: nil, doc: "when this email last went, if it has"
+  attr :stale, :boolean, default: false
   attr :preview, Swoosh.Email, default: nil
 
   @doc """
@@ -324,7 +326,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   """
   def email_drawer(assigns) do
     ~H"""
-    <.admin_drawer id="email-drawer" title={@title || ""} on_close={JS.push("close_email")}>
+    <.admin_drawer id="email-drawer" title={@title || ""} stale={@stale} on_close={JS.push("close_email")}>
       <.form
         :if={@form}
         for={@form}
@@ -562,6 +564,7 @@ defmodule EdenflowersWeb.Admin.Drawers do
   attr :id, :string, required: true
   attr :title, :string, required: true
   attr :on_close, JS, default: %JS{}, doc: "runs after the drawer hides, like telling the server"
+  attr :stale, :boolean, default: false
   slot :inner_block, required: true
 
   @doc """
@@ -588,6 +591,9 @@ defmodule EdenflowersWeb.Admin.Drawers do
           <.icon name="hero-x-mark" class="h-5 w-5" />
         </.icon_button>
       </header>
+      <div :if={@stale} class="shrink-0 px-4 pt-4">
+        <EdenflowersWeb.Admin.Components.stale_editor_notice stale={@stale} id={"#{@id}-stale-notice"} />
+      </div>
       {render_slot(@inner_block)}
     </.drawer>
     """

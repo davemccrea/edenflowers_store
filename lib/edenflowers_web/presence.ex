@@ -8,9 +8,11 @@ defmodule EdenflowersWeb.Presence do
     otp_app: :edenflowers,
     pubsub_server: Edenflowers.PubSub
 
-  @topic "store:presence"
+  alias Edenflowers.Events
 
-  def subscribe, do: Phoenix.PubSub.subscribe(Edenflowers.PubSub, @topic)
+  @topic Events.topic(Events.store_presence())
+
+  def subscribe, do: Events.subscribe(Events.store_presence())
 
   def track_customer(%{admin: true}, _visitor_id), do: :ok
 

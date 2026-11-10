@@ -149,8 +149,9 @@ defmodule Edenflowers.Orders.ChangeSubscriptionTest do
     end
 
     test "only to a day the shop is open", context do
+      friday = first_on_or_after(days_from_today(14), 5)
       shop_calendar(available_days: [:friday])
-      subscription = subscription_for(context)
+      subscription = subscription_for(context, delivery_day: :friday, next_fulfillment_date: friday)
 
       assert {:error, %Ash.Error.Invalid{errors: [%{field: :delivery_day}]}} =
                Orders.change_subscription(subscription, %{delivery_day: :monday}, actor: context.customer)

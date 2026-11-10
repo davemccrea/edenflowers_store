@@ -91,6 +91,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
       :if={@form}
       for={@form}
       id="gift-voucher-last-day"
+      phx-change="validate_voucher_last_day"
       phx-submit="change_voucher_last_day"
       novalidate
       class="hidden"
@@ -109,7 +110,11 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
           type="button"
           variant="ghost"
           size="sm"
-          phx-click={JS.hide(to: "#gift-voucher-last-day") |> JS.show(to: "#gift-voucher-last-day-view")}
+          phx-click={
+            JS.hide(to: "#gift-voucher-last-day")
+            |> JS.show(to: "#gift-voucher-last-day-view")
+            |> JS.push("cancel_voucher_last_day")
+          }
         >
           {~t"Cancel"}
         </.button>
@@ -159,6 +164,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   attr :order, Order, required: true
   attr :mode, :atom, required: true, values: [:settle, :refund]
+  attr :stale, :boolean, default: false
   attr :payment_form, Phoenix.HTML.Form, default: nil, doc: "nil when there is nothing to collect"
   attr :refund_form, Phoenix.HTML.Form, default: nil, doc: "nil when there is nothing to refund"
   attr :locale, :string, required: true
@@ -166,7 +172,7 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   def settlement_drawer(assigns) do
     ~H"""
-    <.admin_drawer id="settlement-drawer" title={settlement_title(@order, @mode)}>
+    <.admin_drawer id="settlement-drawer" title={settlement_title(@order, @mode)} stale={@stale}>
       <.drawer_body>
         <div class="space-y-1">
           <p :if={@order.customer_name} class="text-base-content font-semibold">{@order.customer_name}</p>
@@ -220,13 +226,19 @@ defmodule EdenflowersWeb.Admin.OrderDetailComponents do
 
   attr :form, :any, default: nil
   attr :photo_error, :string, default: nil
+  attr :stale, :boolean, default: false
   attr :order, Order, required: true
   attr :uploads, :map, required: true
   attr :preview, Swoosh.Email, default: nil
 
   def confirm_fulfillment(assigns) do
     ~H"""
-    <.admin_drawer id="confirm-fulfillment" title={~t"Confirm fulfillment"} on_close={JS.push("cancel_fulfillment")}>
+    <.admin_drawer
+      id="confirm-fulfillment"
+      title={~t"Confirm fulfillment"}
+      stale={@stale}
+      on_close={JS.push("cancel_fulfillment")}
+    >
       <.form
         :if={@form}
         for={@form}

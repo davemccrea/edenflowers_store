@@ -19,8 +19,10 @@ defmodule Edenflowers.Payments.CreditNote do
     domain: Edenflowers.Payments,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshPaperTrail.Resource]
 
+  alias Edenflowers.Events
   alias Edenflowers.Payments.Changes
   alias Edenflowers.Payments.Validations
 
@@ -118,6 +120,21 @@ defmodule Edenflowers.Payments.CreditNote do
     end
   end
 
+  # A credit note changes the invoice it cancels, so the register and that
+  # invoice's page follow it.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, Events.admin_invoices()
+    publish_all :update, Events.admin_invoices()
+
+    publish_all :create, Events.admin_invoice(:invoice_id)
+    publish_all :update, Events.admin_invoice(:invoice_id)
+
+    publish_all :create, Events.admin_order(:order_id)
+    publish_all :update, Events.admin_order(:order_id)
+  end
+
   attributes do
     uuid_primary_key :id
 
@@ -155,6 +172,13 @@ defmodule Edenflowers.Payments.CreditNote do
     belongs_to :invoice, Edenflowers.Payments.Invoice do
       description "The Invoice it cancels and credits in full. Each Invoice has at most one."
       allow_nil? false
+    end
+  end
+
+  calculations do
+    calculate :order_id, :uuid, expr(invoice.order_id) do
+      description "The order whose invoice this credit note cancels, for the order page's topic."
+      allow_nil? true
     end
   end
 

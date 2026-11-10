@@ -7,7 +7,37 @@ defmodule EdenflowersWeb.Admin.CourseDetailLiveTest do
   import Generator
   import Swoosh.TestAssertions
 
+  alias Edenflowers.Courses
+
   setup :log_in_admin
+
+  test "booking notifications keep the course's bookings scoped to that course", %{conn: conn, admin: admin} do
+    registration = generate(course_registration(status: :confirmed, seats: 3))
+    other = generate(course_registration(status: :confirmed, seats: 3))
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
+
+    Courses.cancel_registration!(other, %{email_customer?: false}, actor: admin)
+    render(view)
+    assert has_element?(view, "#registration-#{registration.id}", "+2")
+    refute has_element?(view, "#registration-#{other.id}")
+
+    Courses.remove_registration_seat!(registration, actor: admin)
+    assert has_element?(view, "#editor-stale-notice")
+    assert has_element?(view, "#registration-#{registration.id}", "+2")
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    assert has_element?(view, "#registration-#{registration.id}", "+1")
+  end
+
+  test "removing a seat locally reloads the course", %{conn: conn} do
+    registration = generate(course_registration(status: :confirmed, seats: 3))
+    {:ok, view, _html} = live(conn, ~p"/admin/courses/#{registration.course_id}")
+
+    view |> element(~s|button[phx-click="remove_seat"][phx-value-id="#{registration.id}"]|) |> render_click()
+
+    assert has_element?(view, "#registration-#{registration.id}", "+1")
+  end
 
   test "an open payment drawer keeps its entered values while refusing a second voucher", %{conn: conn, admin: admin} do
     course = generate(course())

@@ -13,12 +13,17 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   import EdenflowersWeb.Admin.DeviceSettings
 
   alias Edenflowers.Accounts
+  alias Edenflowers.Events
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.PushSubscriptions
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: Events.subscribe(Events.admin_customer(socket.assigns.current_user.id))
+
     {:ok,
      socket
+     |> assign(:stale, false)
      |> assign(:page_title, ~t"Account")
      |> assign(:vapid_public_key, Edenflowers.WebPush.public_key())
      |> allow_upload(:avatar,
@@ -34,6 +39,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header title={~t"Account"} />
 
         <section class="admin-card p-4 sm:p-5">
@@ -127,6 +133,9 @@ defmodule EdenflowersWeb.Admin.AccountLive do
   end
 
   @impl true
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: ~p"/admin/account")}
+
   def handle_event("validate_avatar", _params, socket), do: {:noreply, socket}
 
   def handle_event("push_subscribed", params, socket),
@@ -141,7 +150,7 @@ defmodule EdenflowersWeb.Admin.AccountLive do
 
     case Accounts.update_admin_appearance(user, attrs, actor: user) do
       {:ok, user} ->
-        {:noreply, assign(socket, :current_user, user)}
+        {:noreply, assign(socket, current_user: user, stale: false)}
 
       {:error, error} ->
         Logger.error("Admin appearance of user #{user.id} not saved: #{inspect(error)}")
@@ -161,6 +170,12 @@ defmodule EdenflowersWeb.Admin.AccountLive do
         {:noreply, put_flash(socket, :error, ~t"Could not remove the profile picture.")}
     end
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp handle_avatar_progress(:avatar, %{done?: false}, socket), do: {:noreply, socket}
 

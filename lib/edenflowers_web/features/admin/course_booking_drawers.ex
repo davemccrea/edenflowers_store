@@ -10,6 +10,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
   alias Edenflowers.Format
 
   attr :course, :map, required: true
+  attr :stale, :boolean, default: false
   attr :registration, :any, required: true, doc: "the booking being settled, or nil"
   attr :mode, :atom, required: true, values: [:settle, :refund]
   attr :refund_form, Phoenix.HTML.Form, default: nil, doc: "for the booking being settled, when it is refundable"
@@ -19,7 +20,7 @@ defmodule EdenflowersWeb.Admin.CourseBookingDrawers do
 
   def settlement_drawer(assigns) do
     ~H"""
-    <.admin_drawer id="settlement-drawer" title={settlement_title(@mode)}>
+    <.admin_drawer id="settlement-drawer" title={settlement_title(@mode)} stale={@stale}>
       <.drawer_body :if={@registration}>
         <.settlement_details course={@course} registration={@registration} locale={@locale} />
         <.refund_form

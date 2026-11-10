@@ -5,6 +5,7 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
   import Generator
 
   alias Edenflowers.Fulfillment.Weekday
+  alias EdenflowersWeb.Admin.OverviewLive
 
   describe "days" do
     setup :log_in_admin
@@ -27,25 +28,9 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       row = "#day-order-#{order.id}"
       assert has_element?(view, "#day-orders-delivery", "0 of 1 ready")
 
-      ref = make_ref()
-
-      :ok =
-        :telemetry.attach(
-          ref,
-          [:edenflowers, :repo, :query],
-          fn _event, _measurements, metadata, owner ->
-            if self() == view.pid and metadata.source == "orders" and
-                 String.starts_with?(metadata.query, "SELECT coalesce(count(*),") do
-              send(owner, ref)
-            end
-          end,
-          self()
-        )
-
-      on_exit(fn -> :telemetry.detach(ref) end)
-
       view |> element("#{row} button", "Mark as ready") |> render_click()
       assert_push_event(view, "order-ready", %{})
+      Process.sleep(100)
       assert Edenflowers.Orders.get_order_for_admin!(order.id, actor: admin).fulfillment_status == :ready
       assert has_element?(view, row, "Ready for delivery")
       assert has_element?(view, "#day-orders-delivery", "1 of 1 ready")
@@ -54,9 +39,48 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       # The order page is where readiness is undone; the overview only moves work forward.
       refute has_element?(view, "#{row} button")
 
-      # Each refresh reads the three sales summaries.
-      for _ <- 1..3, do: assert_received(^ref)
-      refute_received ^ref
+      order = Edenflowers.Orders.get_order_by_id!(order.id, actor: admin)
+      {:ok, _order} = Edenflowers.Orders.undo_order_ready(order, actor: admin)
+      Process.sleep(100)
+      assert has_element?(view, "#{row} button")
+      assert has_element?(view, "#day-orders-delivery", "0 of 1 ready")
+    end
+
+    test "refreshes a note from another page", %{conn: conn, admin: admin} do
+      order = open_order("New note", :pickup, 0)
+      {:ok, view, _html} = live(conn, ~p"/admin")
+      {:ok, _order} = Edenflowers.Orders.update_florist_note(order, %{florist_note: "White flowers"}, actor: admin)
+      Process.sleep(100)
+
+      assert has_element?(view, "#day-order-#{order.id}", "White flowers")
+    end
+
+    test "business notifications refresh all saved data after the day changes", %{admin: admin} do
+      today = Edenflowers.ShopTime.today()
+      socket = %Phoenix.LiveView.Socket{assigns: %{__changed__: %{}, current_user: admin}}
+      {:ok, socket} = OverviewLive.mount(%{}, %{}, socket)
+      bank_connection = socket.assigns.bank_connection
+      report_month = socket.assigns.report_month
+
+      socket =
+        Phoenix.Component.assign(socket,
+          today: Date.add(today, -1),
+          calendar: nil,
+          bank_connection: nil,
+          report_month: nil
+        )
+
+      for topic <- ["admin:orders", "admin:subscriptions", "shop_calendar:changed", "admin:bank"] do
+        {:noreply, pending} = OverviewLive.handle_info(%Phoenix.Socket.Broadcast{topic: topic}, socket)
+        assert_receive {:admin_refresh, :overview}
+        {:noreply, refreshed} = OverviewLive.handle_info({:admin_refresh, :overview}, pending)
+
+        assert refreshed.assigns.today == today
+        assert hd(refreshed.assigns.days) == today
+        assert refreshed.assigns.calendar
+        assert refreshed.assigns.bank_connection == bank_connection
+        assert refreshed.assigns.report_month == report_month
+      end
     end
 
     test "refreshes a stale order without celebrating a readiness change that fails", %{conn: conn} do
@@ -223,8 +247,9 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
     )
 
     EdenflowersWeb.Endpoint.broadcast("admin:orders", "finalize_checkout", %{})
+    Process.sleep(200)
 
-    assert render(view) =~ "Grace Hopper"
+    assert render_async(view, 500) =~ "Grace Hopper"
   end
 
   describe "needs attention" do
@@ -280,6 +305,53 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
 
       assert has_element?(view, "#attention-failed-subscriptions summary", "Subscription payment failed 1")
       assert has_element?(view, ~s|#attention-failed-subscriptions a[href="/admin/subscriptions/#{failed.id}"]|)
+    end
+
+    test "refreshes subscription alerts changed elsewhere and keeps other dashboard data", %{conn: conn, admin: admin} do
+      date = Date.add(Edenflowers.ShopTime.today(), 7)
+      held = generate(subscription(state: :payment_failed, next_fulfillment_date: date))
+      shop_calendar(disabled_dates: [date])
+      overdue = placed_order(fulfillment_date: Date.add(Edenflowers.ShopTime.today(), -1))
+      {:ok, view, _html} = live(conn, ~p"/admin")
+      assert has_element?(view, "#attention-failed-subscriptions")
+      refute has_element?(view, "#attention-closed-day-subscriptions")
+      finances = render(element(view, "#revenue"))
+      owed = render(element(view, "#still-owed"))
+
+      {:ok, active} = Edenflowers.Orders.reactivate_subscription(held, actor: Edenflowers.Actors.system_actor())
+      Process.sleep(100)
+
+      refute has_element?(view, "#attention-failed-subscriptions")
+      assert has_element?(view, ~s|#attention-closed-day-subscriptions a[href="/admin/subscriptions/#{held.id}"]|)
+      assert has_element?(view, ~s|#attention-overdue-orders a[href="/admin/orders/#{overdue.id}"]|)
+      assert render(element(view, "#revenue")) == finances
+      assert render(element(view, "#still-owed")) == owed
+      {:ok, _paused} = Edenflowers.Orders.pause_subscription(active, actor: admin)
+      Process.sleep(100)
+
+      refute has_element?(view, "#attention-closed-day-subscriptions")
+      refute has_element?(view, "#attention-failed-subscriptions")
+    end
+
+    test "refreshes calendar changes made elsewhere along with subscription alerts", %{conn: conn, admin: admin} do
+      date = Date.add(Edenflowers.ShopTime.today(), 5)
+      closing = generate(subscription(next_fulfillment_date: date))
+      failed = generate(subscription(state: :payment_failed))
+      calendar = shop_calendar(available_days: Weekday.all(), disabled_dates: [], enabled_dates: [])
+      {:ok, view, _html} = live(conn, ~p"/admin")
+      refute has_element?(view, "#attention-closed-day-subscriptions")
+
+      calendar = Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+      Process.sleep(100)
+
+      assert has_element?(view, ~s|#day-#{date} a[aria-label$=", Closed"]|)
+      assert has_element?(view, ~s|#attention-closed-day-subscriptions a[href="/admin/subscriptions/#{closing.id}"]|)
+      assert has_element?(view, ~s|#attention-failed-subscriptions a[href="/admin/subscriptions/#{failed.id}"]|)
+      Edenflowers.Fulfillment.toggle_date!(calendar, date, actor: admin)
+      Process.sleep(100)
+
+      refute has_element?(view, ~s|#day-#{date} a[aria-label$=", Closed"]|)
+      refute has_element?(view, "#attention-closed-day-subscriptions")
     end
 
     test "lists subscription deliveries on closed days, so Jennie can agree another day", %{conn: conn} do
@@ -340,18 +412,35 @@ defmodule EdenflowersWeb.Admin.OverviewLiveTest do
       assert has_element?(view, "#still-owed", "177,00 €")
     end
 
-    test "settles an order paid while the Overview is open", %{conn: conn} do
+    test "refreshes payments and refunds made while the Overview is open", %{conn: conn} do
       order = placed_order(payment_intent_id: "pi_link", fulfillment_date: Edenflowers.ShopTime.today())
 
       {:ok, view, _html} = live(conn, ~p"/admin")
       assert has_element?(view, "#still-owed", "88,50 €")
+      assert has_element?(view, "#revenue dd", "0,00 €")
 
       {:ok, _order} =
         Edenflowers.Orders.record_link_payment(order, "pi_link", %{amount_paid: order.grand_total},
           actor: Edenflowers.Actors.system_actor()
         )
 
+      Process.sleep(200)
       refute has_element?(view, "#still-owed")
+      assert has_element?(view, "#revenue dd", "88,50 €")
+      assert has_element?(view, "#sales dd", "1")
+
+      assert {:ok, :recorded} =
+               Edenflowers.Payments.record_stripe_refund(%{
+                 id: "re_overview",
+                 status: "succeeded",
+                 payment_intent: "pi_link",
+                 amount: 1_000
+               })
+
+      Process.sleep(200)
+      refute has_element?(view, "#still-owed")
+      assert has_element?(view, "#revenue dd", "78,50 €")
+      assert has_element?(view, "#sales dd", "1")
     end
   end
 

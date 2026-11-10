@@ -9,8 +9,10 @@ defmodule Edenflowers.Bank.Connection do
     domain: Edenflowers.Bank,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshOban]
 
+  alias Edenflowers.Events
   alias Edenflowers.External.EnableBankingAPI
 
   postgres do
@@ -112,6 +114,16 @@ defmodule Edenflowers.Bank.Connection do
     policy always() do
       forbid_if always()
     end
+  end
+
+  # The Overview shows the current connection; connecting at the bank must
+  # update it without a reload.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, Events.admin_bank()
+    publish_all :update, Events.admin_bank()
+    publish_all :destroy, Events.admin_bank()
   end
 
   attributes do

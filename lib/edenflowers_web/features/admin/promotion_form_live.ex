@@ -7,9 +7,11 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
 
   import EdenflowersWeb.Admin.Components
 
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Pricing.Promotion
   alias EdenflowersWeb.Admin.PromotionsLive
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   @history_fields [:name, :code, :discount_rate, :minimum_cart_total, :start_date, :expiration_date, :usage_limit]
@@ -17,11 +19,13 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   @impl true
   def mount(params, _session, socket) do
     actor = socket.assigns.current_user
+    if connected?(socket) && params["id"], do: Events.subscribe(Events.admin_promotion(params["id"]))
 
     case load_form(params, actor) do
       {:ok, title, form} ->
         {:ok,
          socket
+         |> assign(:stale, false)
          |> assign(:page_title, title)
          |> assign(:form, form)
          |> assign(:locale, Localize.get_locale())
@@ -43,6 +47,7 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header title={@page_title} back={{~t"Promotions", PromotionsLive.default_path()}} sticky>
           <:actions>
             <.button type="submit" form="promotion-form" variant="primary" size="sm">
@@ -189,6 +194,9 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
   end
 
   @impl true
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: socket.assigns.current_path)}
+
   def handle_event("validate", %{"form" => params}, socket) do
     {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
   end
@@ -236,6 +244,12 @@ defmodule EdenflowersWeb.Admin.PromotionFormLive do
          )}
     end
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp load_form(%{"id" => id}, actor) do
     case Ash.get(Promotion, id, actor: actor, load: [:usage, :status]) do

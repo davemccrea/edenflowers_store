@@ -7,6 +7,45 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
 
   setup :log_in_admin
 
+  test "closing an invoice email does not dismiss the external-save warning", %{conn: conn, admin: admin} do
+    {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    view |> element("button[phx-click=open_email][phx-value-kind=invoice]") |> render_click()
+    view |> form("#email-form", email: %{edit_email: "true"}) |> render_change()
+    view |> form("#email-form", email: %{edit_email: "true", body: "Keep my unsent message"}) |> render_change()
+
+    Payments.record_invoice_payment!(invoice, "1", %{}, actor: admin)
+    assert has_element?(view, "#email-form textarea", "Keep my unsent message")
+    assert has_element?(view, "#email-drawer-stale-notice[role=alert]")
+    assert has_element?(view, "#editor-stale-notice")
+
+    render_click(view, "close_email")
+    refute has_element?(view, "#email-form")
+    assert has_element?(view, "#editor-stale-notice")
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    refute has_element?(view, "#editor-stale-notice")
+    refute has_element?(view, "#invoice-credit-form")
+    assert has_element?(view, "#invoice-payment", "14,02")
+  end
+
+  test "invoice payment input survives a broadcast until explicitly reloaded", %{conn: conn, admin: admin} do
+    {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
+    {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+    view |> form("#invoice-payment-form", payment: %{amount: "3"}) |> render_change()
+
+    Payments.record_invoice_payment!(invoice, "1", %{}, actor: admin)
+    assert has_element?(view, "#invoice-payment-form input[name='payment[amount]'][value='3']")
+    assert has_element?(view, "#editor-stale-notice")
+
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+    refute has_element?(view, "#editor-stale-notice")
+    assert has_element?(view, "#invoice-payment", "14,02")
+  end
+
   test "standalone draft previews totals, saves, and issues without a purchase", %{conn: conn, admin: admin} do
     {:ok, view, _} = live(conn, ~p"/admin/invoices/new")
     view |> form("#invoice-form", invoice: params()) |> render_change()
@@ -28,6 +67,20 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     issued = Ash.get!(Invoice, saved.id, actor: admin)
     assert issued.number
     assert Decimal.equal?(issued.amount, "15.02")
+  end
+
+  test "the invoice register refreshes when an invoice is issued elsewhere", %{conn: conn, admin: admin} do
+    invoice = draft(admin)
+
+    {:ok, view, _html} = live(conn, ~p"/admin/invoices")
+
+    assert has_element?(view, ~s|a[href="/admin/invoices/#{invoice.id}"]|, "Draft")
+
+    {:ok, issued} = Payments.issue_invoice(invoice, actor: admin)
+    Process.sleep(200)
+
+    refute has_element?(view, ~s|a[href="/admin/invoices/#{invoice.id}"]|, "Draft")
+    assert has_element?(view, ~s|a[href="/admin/invoices/#{invoice.id}"]|, to_string(issued.number))
   end
 
   test "saved drafts and issued invoices show lifecycle history", %{conn: conn, admin: admin} do
@@ -230,14 +283,21 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     refute has_element?(view, "[aria-invalid=true]")
   end
 
-  test "failed credit submission preserves the reason", %{conn: conn, admin: admin} do
+  test "a clean invoice warns when another session records money", %{conn: conn, admin: admin} do
     {:ok, invoice} = Payments.issue_invoice(draft(admin), actor: admin)
     {:ok, view, _} = live(conn, ~p"/admin/invoices/#{invoice.id}")
+
+    assert has_element?(view, "#invoice-credit-form")
+
     # Another session records money after this page was loaded.
     {:ok, _} = Payments.record_invoice_payment(invoice, "1", %{}, actor: admin)
-    view |> form("#invoice-credit-form", credit: %{reason: "Customer requested a correction"}) |> render_submit()
-    assert has_element?(view, "#invoice-credit-form [role=alert]", "Payments are recorded against this invoice.")
-    assert has_element?(view, "#invoice-credit-form textarea", "Customer requested a correction")
+    assert has_element?(view, "#editor-stale-notice[role=alert]")
+    view |> element("#editor-stale-notice button") |> render_click()
+    {path, _} = assert_redirect(view)
+    {:ok, view, _} = live(conn, path)
+
+    refute has_element?(view, "#invoice-credit-form")
+    assert has_element?(view, "#invoice-payment", "Balance due")
     assert Ash.load!(invoice, :credit_note, actor: admin).credit_note == nil
   end
 
@@ -337,6 +397,11 @@ defmodule EdenflowersWeb.Admin.InvoiceLiveTest do
     assert {:ok, [draft]} = Ash.read(Invoice, actor: admin)
     assert_patched(view, ~p"/admin/invoices/#{draft.id}")
     assert page_title(view) =~ "Invoice draft"
+    refute has_element?(view, "#editor-stale-notice")
+
+    Payments.update_invoice_draft!(draft, %{buyer_name: "Changed elsewhere"}, actor: admin)
+    assert has_element?(view, "#editor-stale-notice")
+    assert has_element?(view, "#line-0-quantity-error")
   end
 
   @tag :capture_log

@@ -10,11 +10,13 @@ defmodule Edenflowers.Catalog.Product do
     domain: Edenflowers.Catalog,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshTranslation.Resource]
 
   alias Edenflowers.Catalog.Changes
   alias Edenflowers.Catalog.Preparations
   alias Edenflowers.Catalog.Validations
+  alias Edenflowers.Events
 
   @slug_options [former_slugs: Edenflowers.Catalog.FormerProductSlug, owner_key: :product_id, fallback: "product"]
 
@@ -225,6 +227,20 @@ defmodule Edenflowers.Catalog.Product do
       description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
     end
+  end
+
+  # The admin's product list follows catalogue changes; size changes publish
+  # through ProductVariant to the same topic.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, Events.admin_products()
+    publish_all :update, Events.admin_products()
+    publish_all :destroy, Events.admin_products()
+
+    publish_all :create, Events.admin_product(:id)
+    publish_all :update, Events.admin_product(:id)
+    publish_all :destroy, Events.admin_product(:id)
   end
 
   attributes do

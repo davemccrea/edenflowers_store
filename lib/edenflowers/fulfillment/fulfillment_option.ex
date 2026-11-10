@@ -24,8 +24,10 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
     domain: Edenflowers.Fulfillment,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshTranslation.Resource]
 
+  alias Edenflowers.Events
   alias Edenflowers.Fulfillment.Actions
 
   postgres do
@@ -126,6 +128,18 @@ defmodule Edenflowers.Fulfillment.FulfillmentOption do
       description "All mutations require admin actor (covered by bypass above)."
       forbid_if always()
     end
+  end
+
+  # The admin's delivery and pickup page lists these options and their prices.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, Events.admin_fulfillment_options()
+    publish_all :update, Events.admin_fulfillment_options()
+    publish_all :destroy, Events.admin_fulfillment_options()
+
+    publish_all :update, Events.admin_fulfillment_option(:id)
+    publish_all :destroy, Events.admin_fulfillment_option(:id)
   end
 
   validations do

@@ -8,11 +8,13 @@ defmodule Edenflowers.Accounts.User do
     domain: Edenflowers.Accounts,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub],
     extensions: [AshAuthentication, AshRateLimiter, AshAdmin.Resource]
 
   alias Edenflowers.Accounts.Calculations
   alias Edenflowers.Accounts.Changes
   alias Edenflowers.Accounts.Workers.PushNewsletterSubscriber
+  alias Edenflowers.Events
   alias Edenflowers.Types.Email
 
   # The sign-in token's lifetime, which the session cookie and the privacy notice share.
@@ -291,6 +293,34 @@ defmodule Edenflowers.Accounts.User do
     policy action(:subscribe_to_newsletter) do
       authorize_if always()
     end
+  end
+
+  # The admin's customer pages show the name, email, newsletter choice and
+  # order aggregates. Avatar and Stripe bookkeeping changes can't affect them.
+  pub_sub do
+    module EdenflowersWeb.Endpoint
+
+    publish_all :create, Events.admin_customers()
+    publish_all :create, Events.admin_customer(:id)
+
+    publish_all :update, Events.admin_customers(),
+      except: [
+        :ensure_stripe_customer,
+        :forget_stripe_customer,
+        :request_email_change,
+        :update_avatar,
+        :remove_avatar,
+        :update_admin_appearance,
+        :set_newsletter_promo
+      ]
+
+    publish_all :update, Events.admin_customer(:id),
+      except: [
+        :ensure_stripe_customer,
+        :forget_stripe_customer,
+        :request_email_change,
+        :set_newsletter_promo
+      ]
   end
 
   validations do

@@ -4,6 +4,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   import EdenflowersWeb.Admin.Components
   import EdenflowersWeb.Admin.Drawers
 
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Locales
   alias Edenflowers.Payments
@@ -15,6 +16,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   alias EdenflowersWeb.Admin.InvoiceLog
   alias EdenflowersWeb.Admin.InvoicesLive
   alias EdenflowersWeb.Admin.OrderLog
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Layouts
 
   @load [
@@ -32,11 +34,14 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     payments: [:undoable?],
     credit_note: [:invoice, :paper_trail_versions]
   ]
+  @impl true
   def mount(_params, _session, socket) do
     {:ok,
      assign(socket,
        locale: Localize.get_locale(),
        error: nil,
+       stale: false,
+       subscribed_invoice_id: nil,
        submitted: false,
        issue_attempted: false,
        customer_search_empty?: false,
@@ -51,9 +56,13 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   end
 
   # Already showing it: a draft saved on the way to a failed issue moved here without reloading.
-  def handle_params(%{"id" => id}, _uri, %{assigns: %{invoice: %{id: id}}} = socket), do: {:noreply, socket}
+  @impl true
+  def handle_params(%{"id" => id}, _uri, %{assigns: %{invoice: %{id: id}}} = socket),
+    do: {:noreply, subscribe_invoice(socket, id)}
 
   def handle_params(%{"id" => id}, _uri, socket) do
+    socket = subscribe_invoice(socket, id)
+
     case Payments.get_invoice(id, actor: socket.assigns.current_user, load: @load) do
       {:ok, invoice} -> {:noreply, show_invoice(socket, invoice)}
       _ -> {:noreply, socket |> put_flash(:error, ~t"Invoice not found.") |> push_navigate(to: ~p"/admin/invoices")}
@@ -61,6 +70,8 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   end
 
   def handle_params(_params, _uri, socket) do
+    socket = subscribe_invoice(socket, nil)
+
     form =
       Invoice
       |> AshPhoenix.Form.for_create(
@@ -76,10 +87,12 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     {:noreply, socket |> assign(invoice: nil, page_title: ~t"New invoice", editable: true) |> put_form(form)}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.admin_page_header title={@page_title} back={back(@invoice)} sticky={@editable}>
           <:subtitle :if={!@editable}>
             <span class="block">
@@ -163,6 +176,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
         <p :if={@error} id="invoice-error" role="alert" class="text-error mb-5 whitespace-pre-line">{@error}</p>
         <.email_drawer
           :if={!@editable}
+          stale={@stale}
           form={@email_form}
           preview={@preview}
           {EmailDrawer.text(@email_kind, email_record(@email_kind, @invoice), @locale)}
@@ -661,6 +675,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     """
   end
 
+  @impl true
   def handle_event("live_select_change", %{"id" => "customer-select", "text" => term}, socket),
     do: {:noreply, show_customers(socket, String.trim(term))}
 
@@ -681,7 +696,10 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   def handle_event("validate_payment", %{"payment" => params}, socket),
     do:
       {:noreply,
-       assign(socket, payment_form: AshPhoenix.Form.validate(socket.assigns.payment_form, params), error: nil)}
+       assign(socket,
+         payment_form: AshPhoenix.Form.validate(socket.assigns.payment_form, params),
+         error: nil
+       )}
 
   def handle_event("open_email", %{"kind" => kind}, socket) when kind in ["invoice", "credit_note"] do
     record = email_record(String.to_existing_atom(kind), socket.assigns.invoice)
@@ -691,6 +709,9 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       else: {:noreply, socket}
   end
 
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: ~p"/admin/invoices/#{socket.assigns.invoice.id}")}
+
   def handle_event("close_email", _params, socket), do: {:noreply, EmailDrawer.close(socket)}
 
   def handle_event("validate_email", %{"email" => params}, %{assigns: %{email_form: form}} = socket)
@@ -698,15 +719,21 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       do: {:noreply, EmailDrawer.validate(socket, params)}
 
   def handle_event("validate_credit", %{"credit" => params}, socket),
-    do: {:noreply, assign(socket, :credit_form, AshPhoenix.Form.validate(socket.assigns.credit_form, params))}
+    do: {:noreply, assign(socket, credit_form: AshPhoenix.Form.validate(socket.assigns.credit_form, params))}
 
   def handle_event("add_line", _params, socket) do
     params = empty_line(socket.assigns.tax_rates)
-    {:noreply, put_form(socket, AshPhoenix.Form.add_form(socket.assigns.form, :lines, params: params))}
+
+    {:noreply,
+     socket
+     |> put_form(AshPhoenix.Form.add_form(socket.assigns.form, :lines, params: params))}
   end
 
   def handle_event("remove_line", %{"path" => path}, socket),
-    do: {:noreply, put_form(socket, AshPhoenix.Form.remove_form(socket.assigns.form, path))}
+    do:
+      {:noreply,
+       socket
+       |> put_form(AshPhoenix.Form.remove_form(socket.assigns.form, path))}
 
   def handle_event("save", %{"invoice" => params} = input, socket) do
     params = used_params(params)
@@ -807,9 +834,15 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
   def handle_event("credit", %{"credit" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.credit_form, params: params) do
       {:ok, _credit_note} -> finish(socket, {:ok, nil}, ~t"Credit note issued.")
-      {:error, form} -> {:noreply, assign(socket, :credit_form, form)}
+      {:error, form} -> {:noreply, assign(socket, credit_form: form)}
     end
   end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   attr :label, :string, required: true
   attr :class, :any, default: nil
@@ -863,12 +896,28 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
     {:noreply, assign(socket, :error, message)}
   end
 
-  defp refresh(socket),
-    do:
-      show_invoice(
-        socket,
-        Payments.get_invoice!(socket.assigns.invoice.id, actor: socket.assigns.current_user, load: @load)
-      )
+  defp subscribe_invoice(socket, id) do
+    previous_id = socket.assigns.subscribed_invoice_id
+
+    if connected?(socket) && previous_id != id do
+      if previous_id, do: Events.unsubscribe(Events.admin_invoice(previous_id))
+      if id, do: PubSub.subscribe([Events.admin_invoice(id)])
+    end
+
+    assign(socket, :subscribed_invoice_id, id)
+  end
+
+  defp refresh(socket) do
+    case Payments.get_invoice(socket.assigns.invoice.id, actor: socket.assigns.current_user, load: @load) do
+      {:ok, invoice} ->
+        show_invoice(socket, invoice)
+
+      {:error, _error} ->
+        socket
+        |> put_flash(:error, ~t"Invoice not found.")
+        |> push_navigate(to: ~p"/admin/invoices")
+    end
+  end
 
   defp show_invoice(socket, invoice) do
     socket
@@ -876,6 +925,7 @@ defmodule EdenflowersWeb.Admin.InvoiceLive do
       invoice: invoice,
       log: InvoiceLog.entries(invoice, socket.assigns.locale),
       editable: invoice.editable?,
+      stale: false,
       error: nil,
       page_title: if(invoice.number, do: ~t"Invoice #{number = invoice.number}", else: ~t"Invoice draft"),
       email_form: nil,

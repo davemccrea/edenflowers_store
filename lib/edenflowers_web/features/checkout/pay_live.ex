@@ -8,6 +8,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
 
   import Edenflowers.Actors
 
+  alias Edenflowers.Events
   alias Edenflowers.Format
   alias Edenflowers.Orders
   alias EdenflowersWeb.PaymentLink
@@ -23,9 +24,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
           gettext: EdenflowersWeb.Gettext
         )
 
-        if connected?(socket) do
-          Phoenix.PubSub.subscribe(Edenflowers.PubSub, "order:paid:#{order.id}")
-        end
+        if connected?(socket), do: Events.subscribe(Events.order_paid(order.id))
 
         {:ok,
          socket
@@ -199,7 +198,7 @@ defmodule EdenflowersWeb.Checkout.PayLive do
   def handle_event("stripe:error", params, socket), do: {:noreply, PaymentLink.stripe_error(socket, params)}
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{topic: "order:paid:" <> _}, socket),
+  def handle_info(%Phoenix.Socket.Broadcast{}, socket),
     do: {:noreply, socket |> PaymentLink.paid() |> assign_page_title()}
 
   defp assign_page_title(socket) do

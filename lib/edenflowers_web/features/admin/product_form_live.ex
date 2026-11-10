@@ -15,10 +15,12 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   alias Edenflowers.Catalog.ProductCategory
   alias Edenflowers.Catalog.ProductType
   alias Edenflowers.Catalog.ProductVariantSize
+  alias Edenflowers.Events
   alias Edenflowers.Orders.Subscription
   alias Edenflowers.Pricing
   alias Edenflowers.Translations
   alias EdenflowersWeb.Admin.PhotoUpload
+  alias EdenflowersWeb.Admin.PubSub
   alias EdenflowersWeb.Admin.ShareLinkDrawer
   alias EdenflowersWeb.Admin.SlugField
   alias EdenflowersWeb.Admin.TranslationFields
@@ -32,6 +34,8 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   def mount(params, _session, socket) do
     actor = socket.assigns.current_user
 
+    if connected?(socket) && params["id"], do: Events.subscribe(Events.admin_product(params["id"]))
+
     case load_form(params, actor) do
       {:ok, title, form} ->
         {:ok,
@@ -42,6 +46,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
          |> assign(:free_dist_km, Edenflowers.Fulfillment.free_dist_km())
          |> assign(:fan_card_count, length(Catalog.list_featured_cards!(actor: actor)))
          |> assign(:form, form)
+         |> assign(:stale, false)
          |> assign(:translating, nil)
          |> assign(:slug_edited?, false)
          |> assign(:max_photos, @max_photos)
@@ -64,6 +69,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     ~H"""
     <Layouts.admin flash={@flash} current_path={@current_path} current_user={@current_user}>
       <.admin_page>
+        <.stale_editor_notice stale={@stale} />
         <.form
           for={@form}
           id="product-form"
@@ -517,6 +523,9 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   defp size_label(size), do: variant_size_label(size)
 
   @impl true
+  def handle_event("reload_editor", _params, socket),
+    do: {:noreply, push_navigate(socket, to: ~p"/admin/products/#{socket.assigns.form.source.data.id}")}
+
   def handle_event("validate", %{"form" => params} = event, socket) do
     slug_edited? = socket.assigns.slug_edited? or SlugField.edited?(event)
     params = SlugField.suggest(params, socket.assigns.form, slug_edited?)
@@ -535,7 +544,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     hidden = hidden_photo_slugs(form)
     hidden = if slug in hidden, do: List.delete(hidden, slug), else: hidden ++ [slug]
     params = form |> AshPhoenix.Form.params() |> Map.put("hidden_photo_slugs", hidden)
-    {:noreply, assign(socket, :form, AshPhoenix.Form.validate(form, params))}
+    {:noreply, assign(socket, form: AshPhoenix.Form.validate(form, params))}
   end
 
   def handle_event("make_main_photo", %{"slug" => slug}, socket),
@@ -571,6 +580,12 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
   @impl true
   def handle_async(:translate, result, socket),
     do: {:noreply, TranslationFields.put_translations(socket, result)}
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{} = notification, socket),
+    do: {:noreply, PubSub.mark_stale(socket, notification)}
+
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp share_link_choices(product) do
     sizes = Enum.map(product.product_variants, & &1.size)
@@ -624,7 +639,7 @@ defmodule EdenflowersWeb.Admin.ProductFormLive do
     slugs = fun.(photo_slugs(form))
     # From the whole form, as its own params miss the size a new form starts with.
     params = form |> AshPhoenix.Form.params() |> Map.put("photo_slugs", slugs)
-    assign(socket, :form, AshPhoenix.Form.validate(form, params))
+    assign(socket, form: AshPhoenix.Form.validate(form, params))
   end
 
   defp photo_slugs(form), do: form[:photo_slugs].value || []
