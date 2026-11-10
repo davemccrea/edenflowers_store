@@ -1,6 +1,6 @@
 defmodule Edenflowers.Orders.Order.Calculations.PassItOnChain do
   @moduledoc """
-  The orders connected through pass-it-on cards, source before redemption.
+  The tree of orders connected through pass-it-on cards, source before redemption.
   Walk back to the source, then visit every live redemption of each card.
   Checkout can overuse a one-use code concurrently, so retain every branch.
 
@@ -9,19 +9,36 @@ defmodule Edenflowers.Orders.Order.Calculations.PassItOnChain do
   """
   use Ash.Resource.Calculation
 
+  alias Edenflowers.Orders.Order
+  alias Edenflowers.Pricing.Promotion
+
   @link_load [promotion: [:card_status, gift_order: []], pass_it_on_card: [:card_status, :placed_orders]]
+
+  defstruct [:nodes, :multiple?, :visible?]
+
+  @impl true
+  def load(_query, _opts, _context), do: @link_load
 
   @impl true
   def calculate(orders, _opts, context) do
-    opts = Ash.Context.to_opts(context)
+    # The chain has no fixed depth, so each node's links are loaded as they are
+    # discovered. `load/3` preloads the first links in one batched query, and
+    # `reuse_values?` stops `chain/2` reading them again.
+    opts = context |> Ash.Context.to_opts() |> Keyword.put(:reuse_values?, true)
     Enum.map(orders, &chain(&1, opts))
   end
 
   defp chain(order, opts) do
     order = Ash.load!(order, @link_load, opts)
     root = source(order, MapSet.new([order.id]), opts)
-    {chain, _seen} = forward(root, order.id, MapSet.new(), opts)
-    chain
+    {nodes, _seen} = forward(root, order.id, MapSet.new(), opts)
+    multiple? = length(nodes) > 1 or Enum.any?(nodes, &(&1.children != []))
+
+    %__MODULE__{
+      nodes: nodes,
+      multiple?: multiple?,
+      visible?: multiple? or not is_nil(order.pass_it_on_card) or match?(%{kind: :pass_it_on}, order.promotion)
+    }
   end
 
   defp source(%{promotion: %{kind: :pass_it_on, gift_order: %{state: :placed} = gift}} = order, seen, opts) do
@@ -50,8 +67,25 @@ defmodule Edenflowers.Orders.Order.Calculations.PassItOnChain do
 
       if order.fulfillment_status == :cancelled and order.id != current_id and branches == [],
         do: {[], seen},
-        else: {[order | branches], seen}
+        else: {[%{order: order, children: branches}], seen}
     end
+  end
+
+  @doc "Whether a changed Order or Pass it on card can affect this tree."
+  def changed?(%__MODULE__{nodes: nodes}, %Order{id: id, promotion_id: promotion_id}) do
+    any_order?(nodes, fn order ->
+      order.id == id or match?(%{id: ^promotion_id} when not is_nil(promotion_id), order.pass_it_on_card)
+    end)
+  end
+
+  def changed?(%__MODULE__{nodes: nodes}, %Promotion{id: id, gift_order_id: gift_order_id}) do
+    any_order?(nodes, fn order ->
+      order.id == gift_order_id or order.promotion_id == id or match?(%{id: ^id}, order.pass_it_on_card)
+    end)
+  end
+
+  defp any_order?(nodes, predicate) do
+    Enum.any?(nodes, fn node -> predicate.(node.order) or any_order?(node.children, predicate) end)
   end
 
   defp brought_in(%{pass_it_on_card: %{kind: :pass_it_on, placed_orders: orders}}) do
