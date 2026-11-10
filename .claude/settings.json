@@ -21,6 +21,7 @@
     ]
   },
   "enabledMcpjsonServers": [
-    "tidewave"
+    "tidewave",
+    "backlog"
   ]
 }

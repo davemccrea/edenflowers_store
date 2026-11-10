@@ -1,0 +1,43 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // CLAUDE.md is the single source of project rules for every harness.
+  // OpenCode auto-discovers .claude/skills, ~/.claude/skills and the
+  // ~/.claude/plugins cache, so Claude plugins appear here too.
+  "instructions": ["CLAUDE.md"],
+  "formatter": true,
+  "mcp": {
+    "servers": {
+      // Main checks out on port 4000. Each worktree overrides this URL in
+      // .opencode/opencode.json, which its pre-start hook writes (see .config/wt.toml).
+      "tidewave": {
+        "type": "remote",
+        "url": "http://localhost:4000/tidewave/mcp"
+      },
+      // Backlog.md tasks under backlog/. Code Mode is on by default, so its
+      // 24 tool schemas stay out of the context window until an agent needs
+      // them. No `pool`: tasks are branch-aware, so each worktree gets its
+      // own connection rooted at its own directory.
+      "backlog": {
+        "type": "local",
+        "command": ["backlog", "mcp", "start"]
+      },
+      // Hosted servers that authenticate with OAuth. OpenCode keeps the
+      // tokens outside this file; sign in once per server from `/mcps`.
+      "mailerlite": {
+        "type": "remote",
+        "url": "https://mcp.mailerlite.com/mcp"
+      },
+      "cloudflare": {
+        "type": "remote",
+        "url": "https://mcp.cloudflare.com/mcp"
+      },
+      // Same server Claude Code's playwright plugin runs. First start
+      // downloads the package, so give it time to connect.
+      "playwright": {
+        "type": "local",
+        "disabled": true,
+        "command": ["npx", "-y", "@playwright/mcp@latest", "--headless"]
+      }
+    }
+  }
+}

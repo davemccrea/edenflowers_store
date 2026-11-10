@@ -1,2 +1,5 @@
 [mcp_servers.tidewave]
 url = "http://localhost:4000/tidewave/mcp"
+
+[mcp_servers.tidewave.tools.browser_eval]
+approval_mode = "approve"

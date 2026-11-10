@@ -35,7 +35,7 @@ The domain is modelled in Ash. Put domain logic in the resources, the way the As
 
 ## Agent skills
 
-- Issue tracker: Backlog.md tasks under `backlog/`, managed with the `backlog` CLI. See `docs/agents/issue-tracker.md`. Ungrilled tasks stay `needs-triage`; never implement one until you've grilled the user on it (`grilling` skill).
+- Issue tracker: Backlog.md tasks under `backlog/`, managed with the Backlog MCP server's `task_*`, `document_*` and `milestone_*` tools, and with the `backlog` CLI for what the server doesn't expose (`board`, `overview`, `decision`, `draft`, `config`, `doctor`, `demote`). Both write identical files; prefer the MCP because task descriptions are long markdown that a shell mangles. See `docs/agents/issue-tracker.md`. Ungrilled tasks stay `needs-triage`; never implement one until you've grilled the user on it (`grilling` skill).
 - Grilling: whenever you grill the user (`grilling` skill), ask each question through the `AskUserQuestion` tool's interactive prompts, not as plain text.
 - Triage: status strings and the `wontfix` label. See `docs/agents/triage-labels.md`.
 - Domain docs: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.

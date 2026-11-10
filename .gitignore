@@ -47,6 +47,7 @@ images
 .playwright-mcp
 # Written per worktree with its own port (see .config/wt.toml)
 /.mcp.json
+/.opencode/opencode.json
 
 /priv/heroku_import/
 
