@@ -278,10 +278,10 @@ for attrs <- [
   |> Ash.create!(authorize?: false)
 end
 
-# Hanna's card brings in Karin's gift for Elin. Karin's gift has its own card,
-# ready for Elin to continue the chain. Mikael's is also unopened; one is spare to scan.
-[linked_card_code, used_card_code, karin_card_code, _spare_card_code] =
-  Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare 2026-11", 4, actor: Edenflowers.Actors.system_actor())
+# Hanna → Karin → Elin and Olle (cancelled) → Nils. Sanna's source was never
+# linked. Mikael's card is unopened; one is spare to scan.
+[linked_card_code, used_card_code, karin_card_code, cancelled_card_code, unlinked_card_code, _spare_card_code] =
+  Edenflowers.Pricing.create_pass_it_on_batch!("Skicka vidare 2026-11", 6, actor: Edenflowers.Actors.system_actor())
 
 Edenflowers.Pricing.create_newsletter_promotion!(authorize?: false)
 
@@ -730,6 +730,7 @@ orders = [
     promotion: promotion_by_code.(used_card_code),
     customer_name: "Karin Öst",
     customer_email: "karin.ost@example.fi",
+    ordered_at: DateTime.add(DateTime.utc_now(), -1, :day),
     fulfillment_option: home_delivery,
     fulfillment_date: today,
     fulfillment_time_start: ~T[10:00:00],
@@ -757,7 +758,47 @@ orders = [
     gift: true,
     recipient_name: "Maja Björk",
     items: [line_item.("Bouquet 2", :small, 1)]
-  })
+  }),
+  # Karin's page shows both redemptions, including the cancelled gift. It does
+  # not show Nils: following Olle's link reveals that next handoff.
+  %{
+    customer_name: "Elin Järvinen",
+    customer_email: "elin.jarvinen@example.fi",
+    ordered_at: DateTime.add(DateTime.utc_now(), -2, :hour),
+    fulfillment_option: store_pickup,
+    fulfillment_date: fulfillment_date_for.(2),
+    promotion: promotion_by_code.(karin_card_code),
+    items: [line_item.("Bouquet 1", :medium, 1)]
+  },
+  %{
+    customer_name: "Olle Berg",
+    customer_email: "olle.berg@example.fi",
+    ordered_at: DateTime.add(DateTime.utc_now(), -1, :hour),
+    fulfillment_option: store_pickup,
+    fulfillment_date: fulfillment_date_for.(3),
+    fulfillment_status: :cancelled,
+    cancelled_at: DateTime.utc_now(),
+    gift: true,
+    recipient_name: "Nils Ek",
+    promotion: promotion_by_code.(karin_card_code),
+    items: [line_item.("Bouquet 2", :small, 1)]
+  },
+  %{
+    customer_name: "Nils Ek",
+    customer_email: "nils.ek@example.fi",
+    fulfillment_option: store_pickup,
+    fulfillment_date: fulfillment_date_for.(4),
+    promotion: promotion_by_code.(cancelled_card_code),
+    items: [line_item.("Bouquet 1", :small, 1)]
+  },
+  %{
+    customer_name: "Sanna Holm",
+    customer_email: "sanna.holm@example.fi",
+    fulfillment_option: store_pickup,
+    fulfillment_date: fulfillment_date_for.(5),
+    promotion: promotion_by_code.(unlinked_card_code),
+    items: [line_item.("Bouquet 2", :medium, 1)]
+  }
 ]
 
 for {attrs, index} <- Enum.with_index(orders) do
@@ -1069,6 +1110,18 @@ Edenflowers.Pricing.link_card_to_gift_order!(used_card, online_order.("Hanna Jä
 Edenflowers.Pricing.start_promotion_validity!(used_card, %{today: fulfillment_date_for.(-2)},
   actor: Actors.system_actor()
 )
+
+# The cancelled gift remains a recorded source, even though it cannot be
+# linked through Jennie's order action anymore.
+Edenflowers.Pricing.link_card_to_gift_order!(
+  promotion_by_code.(cancelled_card_code),
+  online_order.("Olle Berg").id,
+  actor: jennie
+)
+
+for code <- [karin_card_code, cancelled_card_code, unlinked_card_code] do
+  Edenflowers.Pricing.start_promotion_validity!(promotion_by_code.(code), actor: Actors.system_actor())
+end
 
 # An online order the customer asked to add to by email after paying: it now
 # has a balance to collect and a payment link for just that.
