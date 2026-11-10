@@ -83,6 +83,40 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
     end
   end
 
+  describe "DELETE /sign-out?everywhere=true" do
+    test "signs the user out of their other devices too", %{conn: conn} do
+      user = generate(admin_user(admin: false))
+      this_device = with_token(user)
+      other_device = with_token(user)
+
+      conn = conn |> log_in(this_device) |> delete(~p"/sign-out?everywhere=true")
+
+      assert redirected_to(conn) == ~p"/en"
+      refute get_session(conn, "user_token")
+
+      assert {:error, {:redirect, %{to: "/sign-in" <> _}}} =
+               build_conn() |> log_in(other_device) |> live(~p"/account")
+    end
+
+    test "a plain sign-out leaves other devices signed in", %{conn: conn} do
+      user = generate(admin_user(admin: false))
+      this_device = with_token(user)
+      other_device = with_token(user)
+
+      conn |> log_in(this_device) |> delete(~p"/sign-out")
+
+      assert {:ok, _view, _html} = build_conn() |> log_in(other_device) |> live(~p"/account")
+    end
+
+    test "nobody can sign another user out" do
+      user = generate(admin_user(admin: false)) |> with_token()
+      stranger = generate(admin_user(admin: false))
+
+      assert {:error, %Ash.Error.Forbidden{}} = Edenflowers.Accounts.log_out_everywhere(user, actor: stranger)
+      assert {:ok, _view, _html} = build_conn() |> log_in(user) |> live(~p"/account")
+    end
+  end
+
   defp init_auth_session(conn, session) do
     conn
     |> Plug.Test.init_test_session(session)

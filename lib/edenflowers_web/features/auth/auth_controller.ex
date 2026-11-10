@@ -40,6 +40,17 @@ defmodule EdenflowersWeb.Auth.AuthController do
 
   defp put_otp_email(conn, _activity), do: conn
 
+  # The account pages' "Sign out of all devices": revokes every token the
+  # user holds, so their other browsers and installed apps are signed out too.
+  def sign_out(%{assigns: %{current_user: %{} = user}} = conn, %{"everywhere" => "true"}) do
+    :ok = Edenflowers.Accounts.log_out_everywhere(user, actor: user)
+
+    conn
+    |> clear_session(:edenflowers)
+    |> put_flash(:success, ~t"You are now signed out on all your devices")
+    |> redirect(to: ~q"/#{language}")
+  end
+
   def sign_out(conn, _params) do
     conn
     |> clear_session(:edenflowers)
