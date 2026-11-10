@@ -44,6 +44,7 @@ defmodule Edenflowers.Accounts.User do
         registration_enabled? true
         brute_force_strategy :rate_limit
         otp_characters :digits_only
+        otp_length 8
 
         sender Edenflowers.Accounts.Senders.SendOtp
       end
@@ -103,12 +104,17 @@ defmodule Edenflowers.Accounts.User do
     end
 
     create :upsert do
-      description "Finds or creates the user for a customer's email as a checkout, order or booking takes it, " <>
-                    "setting their name."
+      description "Finds or creates the user for a customer's email as a checkout, order or booking takes it. " <>
+                    "The name only fills an account that has none: the email isn't verified, so whoever types " <>
+                    "it must not rename someone else's account."
 
       accept [:email, :name]
       upsert? true
       upsert_identity :unique_email
+      # On conflict `name` is the existing row's and `atomic_ref(:name)` the typed one.
+      change atomic_update(:name, expr(if is_nil(name), do: ^atomic_ref(:name), else: name))
+      # Without it the conflict sets the identity key, so the typed casing would replace the account's.
+      change atomic_update(:email, expr(email))
     end
 
     update :update do
@@ -321,6 +327,32 @@ defmodule Edenflowers.Accounts.User do
         :request_email_change,
         :set_newsletter_promo
       ]
+  end
+
+  # Per-visitor limits on top of the per-email ones above, which can't stop one
+  # visitor trying many addresses. `rate_limit` takes one entry per action, so
+  # these are added directly. The address comes from EdenflowersWeb.Plugs.PutClientIp
+  # (the `/auth` routes) or OtpSignInLive; callers outside the web have none.
+  preparations do
+    prepare {AshRateLimiter.Preparation,
+             action: :request_otp,
+             limit: 10,
+             per: :timer.minutes(15),
+             key: fn input -> "otp:request:ip:#{input.context[:client_ip]}" end},
+            on: :action,
+            where: fn input, _context -> if input.context[:client_ip], do: :ok, else: {:error, "no client IP"} end
+  end
+
+  changes do
+    change {AshRateLimiter.Change,
+            action: :sign_in_with_otp,
+            limit: 20,
+            per: :timer.minutes(10),
+            key: fn changeset -> "otp:sign_in:ip:#{changeset.context[:client_ip]}" end},
+           on: :create,
+           where: fn changeset, _context ->
+             if changeset.context[:client_ip], do: :ok, else: {:error, "no client IP"}
+           end
   end
 
   validations do

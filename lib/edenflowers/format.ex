@@ -23,7 +23,7 @@ defmodule Edenflowers.Format do
   end
 
   # The bow is lower-cased as it follows the size mid-phrase.
-  @doc "The size and bow a line was chosen in, as \"Medium, red bow\", or \"\" for neither."
+  @doc ~S|The size and bow a line was chosen in, as "Medium, red bow", or "" for neither.|
   def line_item_choices(line_item) do
     [
       Map.get(line_item, :variant_size) && Edenflowers.Catalog.ProductVariantSize.label(line_item.variant_size),

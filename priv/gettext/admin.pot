@@ -1725,7 +1725,7 @@ msgstr ""
 msgid "Open directions in Google Maps"
 msgstr ""
 
-#: lib/edenflowers/email.ex:745
+#: lib/edenflowers/email.ex:769
 #, elixir-autogen, elixir-format
 msgid "Open in the admin:"
 msgstr ""

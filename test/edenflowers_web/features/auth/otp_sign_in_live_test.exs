@@ -37,4 +37,21 @@ defmodule EdenflowersWeb.Auth.OtpSignInLiveTest do
     refute html =~ "Check your email"
     refute html =~ "We couldn&#39;t send your sign-in code"
   end
+
+  # One visitor asking for codes for many addresses stays under every per-email limit.
+  test "a visitor requesting codes for many emails is stopped", %{conn: conn} do
+    conn = put_req_header(conn, "cf-connecting-ip", "198.51.100.#{System.unique_integer([:positive])}")
+    {:ok, view, _html} = live(conn, ~p"/sign-in")
+
+    request = fn n ->
+      view |> form("#otp-request", %{"user" => %{"email" => "otp-ip-#{n}@example.com"}}) |> render_submit()
+    end
+
+    for n <- 1..10 do
+      assert request.(n) =~ "Check your email"
+      view |> element("button[phx-click=reset]") |> render_click()
+    end
+
+    assert request.(11) =~ "Too many requests"
+  end
 end

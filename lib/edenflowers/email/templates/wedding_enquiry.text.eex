@@ -1,9 +1,3 @@
-<%= if @first_name do %><%= dgettext("emails", "Hi %{name},", name: @first_name) %><% else %><%= dgettext("emails", "Hi,") %><% end %>
-
-<%= dgettext("emails", "Thank you for your enquiry. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it.") %>
-
-<%= dgettext("emails", "Here's a copy of what you sent:") %>
-
 <%= dgettext("emails", "Name: %{name}", name: @enquiry["name"]) %>
 <%= dgettext("emails", "Email: %{email}", email: @enquiry["email"]) %>
 <%= dgettext("emails", "Wedding date: %{date}", date: @wedding_date) %>
@@ -14,9 +8,6 @@
 <%= for line <- @enquiry["selection"] do %>- <%= line %>
 <% end %><%= dgettext("emails", "Rough estimate, not a quote: %{estimate}", estimate: @enquiry["estimate"]) %>
 <% end %><%= if @enquiry["message"] do %>
-<%= dgettext("emails", "Your message:") %>
+<%= dgettext("emails", "Message:") %>
 <%= @enquiry["message"] %>
 <% end %>
-<%= dgettext("emails", "Warm wishes,") %>
-
-<%= signature() %>

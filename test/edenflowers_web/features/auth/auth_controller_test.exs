@@ -13,7 +13,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
       conn =
         conn
         |> init_auth_session(%{})
-        |> AuthController.success({:password, :sign_in}, admin, nil)
+        |> AuthController.success({:otp, :sign_in}, admin, nil)
 
       assert redirected_to(conn) == ~p"/en"
     end
@@ -24,7 +24,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
       conn =
         conn
         |> init_auth_session(%{})
-        |> AuthController.success({:password, :sign_in}, user, nil)
+        |> AuthController.success({:otp, :sign_in}, user, nil)
 
       assert redirected_to(conn) == ~p"/en"
     end
@@ -35,7 +35,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
       conn =
         conn
         |> init_auth_session(return_to: "/admin/orders")
-        |> AuthController.success({:password, :sign_in}, admin, nil)
+        |> AuthController.success({:otp, :sign_in}, admin, nil)
 
       assert redirected_to(conn) == ~p"/admin/orders"
       refute get_session(conn, :return_to)
@@ -45,7 +45,7 @@ defmodule EdenflowersWeb.Auth.AuthControllerTest do
   describe "failure/3" do
     test "a wrong OTP sends the user back to the code step for the same email", %{conn: conn} do
       conn =
-        %{conn | params: %{"user" => %{"email" => "jennie@example.com", "otp" => "WRONG1"}}}
+        %{conn | params: %{"user" => %{"email" => "jennie@example.com", "otp" => "00000000"}}}
         |> init_auth_session(%{})
         |> AuthController.failure({:otp, :sign_in}, nil)
 

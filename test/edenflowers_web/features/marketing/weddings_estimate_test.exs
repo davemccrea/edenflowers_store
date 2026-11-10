@@ -20,6 +20,19 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
     assert_enqueued(worker: SendEmails, args: %{name: "Anna Svensson", selection: []})
   end
 
+  test "an enquiry queues the shop email and an acknowledgement that carry no typed text", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/weddings")
+
+    typed = Map.merge(@enquiry, %{"venue" => "Zebrakulla", "message" => "Quokka please"})
+    view |> form("#enquiry-form", enquiry: typed) |> render_submit()
+
+    assert_enqueued(worker: SendEmails, args: %{name: "Anna Svensson", venue: "Zebrakulla"})
+    assert_enqueued(worker: SendEmails, args: %{acknowledgement: true, email: "anna@example.com", locale: "en-GB"})
+
+    [acknowledgement] = all_enqueued(worker: SendEmails) |> Enum.filter(& &1.args["acknowledgement"])
+    assert Map.keys(acknowledgement.args) |> Enum.sort() == ["acknowledgement", "email", "locale"]
+  end
+
   test "localized metadata describes the service without promising hidden prices", %{conn: conn} do
     for {path, expected} <- [
           {"/en/weddings",
@@ -88,6 +101,19 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
     refute_enqueued(worker: SendEmails)
   end
 
+  test "an over-long message isn't sent", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/en/weddings")
+
+    html =
+      view
+      |> form("#enquiry-form", enquiry: Map.put(@enquiry, "message", String.duplicate("a", 5001)))
+      |> render_submit()
+
+    assert html =~ "Should be at most 5000 characters"
+    refute has_element?(view, "#enquiry-sent")
+    refute_enqueued(worker: SendEmails)
+  end
+
   test "a filled-in honeypot looks sent but nothing goes out", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/en/weddings")
 
@@ -95,5 +121,28 @@ defmodule EdenflowersWeb.Marketing.WeddingsEstimateTest do
 
     assert has_element?(view, "#enquiry-sent")
     refute_enqueued(worker: SendEmails)
+  end
+
+  test "a visitor's sixth enquiry within the hour queues nothing, while another visitor still gets through", %{
+    conn: conn
+  } do
+    busy = %{conn | remote_ip: {10, 30, 0, 1}}
+
+    for _ <- 1..5 do
+      {:ok, view, _html} = live(busy, ~p"/en/weddings")
+      view |> form("#enquiry-form", enquiry: @enquiry) |> render_submit()
+      assert has_element?(view, "#enquiry-sent")
+    end
+
+    {:ok, view, _html} = live(busy, ~p"/en/weddings")
+    html = view |> form("#enquiry-form", enquiry: @enquiry) |> render_submit()
+
+    refute has_element?(view, "#enquiry-sent")
+    assert html =~ "Too many requests"
+    assert length(all_enqueued(worker: SendEmails)) == 10
+
+    {:ok, view, _html} = live(%{conn | remote_ip: {10, 30, 0, 2}}, ~p"/en/weddings")
+    view |> form("#enquiry-form", enquiry: @enquiry) |> render_submit()
+    assert has_element?(view, "#enquiry-sent")
   end
 end

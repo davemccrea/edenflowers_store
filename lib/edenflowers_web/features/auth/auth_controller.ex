@@ -6,40 +6,22 @@ defmodule EdenflowersWeb.Auth.AuthController do
   use EdenflowersWeb, :controller
   use AshAuthentication.Phoenix.Controller
 
-  def success(conn, activity, user, _token) do
+  def success(conn, _activity, user, _token) do
     return_to = get_session(conn, :return_to) || ~q"/#{language}"
-
-    message =
-      case activity do
-        {:confirm_new_user, :confirm} -> ~t"Your email address has now been confirmed"
-        {:password, :reset} -> ~t"Your password has successfully been reset"
-        _ -> ~t"You are now signed in"
-      end
 
     conn
     |> delete_session(:return_to)
     |> store_in_session(user)
     |> assign(:current_user, user)
-    |> put_flash(:success, message)
+    |> put_flash(:success, ~t"You are now signed in")
     |> redirect(to: return_to)
   end
 
-  def failure(conn, activity, reason) do
+  def failure(conn, activity, _reason) do
     message =
-      case {activity, reason} do
-        {_,
-         %AshAuthentication.Errors.AuthenticationFailed{
-           caused_by: %Ash.Error.Forbidden{
-             errors: [%AshAuthentication.Errors.CannotConfirmUnconfirmedUser{}]
-           }
-         }} ->
-          ~t"You have already signed in another way, but have not confirmed your account. You can confirm your account using the link we sent to you, or by resetting your password."
-
-        {{:otp, :sign_in}, _} ->
-          ~t"That code didn't work. Check it and try again, or send a new code."
-
-        _ ->
-          ~t"We couldn't sign you in. Please try again."
+      case activity do
+        {:otp, :sign_in} -> ~t"That code didn't work. Check it and try again, or send a new code."
+        _ -> ~t"We couldn't sign you in. Please try again."
       end
 
     conn

@@ -1,6 +1,7 @@
 defmodule Edenflowers.WeddingEnquiry.SendEmails do
   @moduledoc """
-  Oban job that sends a wedding enquiry to the shop and a copy to the couple.
+  Oban jobs that email a wedding enquiry to the shop and acknowledge it to the
+  couple. They are separate jobs so a retry of one never resends the other.
   """
 
   use Oban.Worker, queue: :default, max_attempts: 3
@@ -9,6 +10,12 @@ defmodule Edenflowers.WeddingEnquiry.SendEmails do
   alias Edenflowers.Mailer
 
   @impl true
+  def perform(%Oban.Job{args: %{"acknowledgement" => true, "email" => email, "locale" => locale}}) do
+    EdenflowersWeb.Gettext.with_app_locale(locale, fn ->
+      email |> Email.wedding_enquiry_received() |> Mailer.deliver()
+    end)
+  end
+
   def perform(%Oban.Job{args: %{"locale" => locale} = args}) do
     enquiry = Map.update!(args, "wedding_date", &Date.from_iso8601!/1)
 

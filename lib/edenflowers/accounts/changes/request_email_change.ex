@@ -24,7 +24,7 @@ defmodule Edenflowers.Accounts.Changes.RequestEmailChange do
   end
 
   defp request(changeset, email) do
-    code = DefaultGenerator.generate(characters: :digits_only)
+    code = DefaultGenerator.generate(length: 8, characters: :digits_only)
 
     changeset
     |> Ash.Changeset.force_change_attributes(%{

@@ -639,40 +639,64 @@ defmodule Edenflowers.Email do
   defp course_day(registration), do: Format.weekday_day_month(registration.course.date, registration.locale)
 
   @doc """
-  A copy of a couple's wedding enquiry, bcc Jennie so she can reply to them
-  directly. `enquiry` is the job args of `Edenflowers.WeddingEnquiry.SendEmails`.
+  A couple's wedding enquiry, sent to Jennie only: the address they typed is
+  unverified, so it's the reply-to and never a recipient. `enquiry` is the job args of `Edenflowers.WeddingEnquiry.SendEmails`.
   """
   def wedding_enquiry(%{"name" => name, "email" => email} = enquiry) do
     new()
     |> from(from_address())
-    |> to({name, email})
-    |> bcc(from_address())
-    |> subject(~t"Your wedding enquiry to Eden Flowers")
+    |> to(from_address())
+    |> reply_to({name, email})
+    |> subject(~t"New wedding enquiry from #{name}")
     |> text_body(
       Templates.wedding_enquiry(%{
         enquiry: enquiry,
-        first_name: NamePart.first(name),
         wedding_date: Format.weekday_date(enquiry["wedding_date"], enquiry["locale"])
       })
     )
   end
 
   @doc """
-  A copy of a contact form message, bcc Jennie so she can reply directly.
-  `message` is the job args of `Edenflowers.ContactMessage.SendEmails`.
+  Acknowledges a wedding enquiry to the address typed on the form. The typed
+  address is unverified, so nothing the visitor wrote appears in it, not even
+  their name.
+  """
+  def wedding_enquiry_received(email) do
+    new()
+    |> from(from_address())
+    |> to(email)
+    |> subject(~t"Your wedding enquiry to Eden Flowers")
+    |> text_body(Templates.wedding_enquiry_received())
+  end
+
+  @doc """
+  A contact form message, sent to Jennie only: the address the sender typed is
+  unverified, so it's the reply-to and never a recipient. `message` is the job args of `Edenflowers.ContactMessage.SendEmails`.
   """
   def contact_message(%{"name" => name, "email" => email} = message) do
     new()
     |> from(from_address())
-    |> to({name, email})
-    |> bcc(from_address())
-    |> subject(~t"Your message to Eden Flowers")
+    |> to(from_address())
+    |> reply_to({name, email})
+    |> subject(~t"New message from #{name}")
     |> text_body(
       Templates.contact_message(%{
-        message: message,
-        first_name: NamePart.first(name)
+        message: message
       })
     )
+  end
+
+  @doc """
+  Acknowledges a contact form message to the address typed on the form. The
+  typed address is unverified, so nothing the visitor wrote appears in it, not
+  even their name.
+  """
+  def contact_message_received(email) do
+    new()
+    |> from(from_address())
+    |> to(email)
+    |> subject(~t"Your message to Eden Flowers")
+    |> text_body(Templates.contact_message_received())
   end
 
   @doc """

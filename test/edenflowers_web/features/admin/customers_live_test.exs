@@ -187,7 +187,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
       refute has_element?(view, ~s([data-item-id="#{theirs.id}"]))
     end
 
-    test "a name changed through an order only appears after reloading the customer", %{conn: conn, admin: admin} do
+    test "an order edit flags the open customer as stale but no longer renames the account", %{conn: conn, admin: admin} do
       ada = customer("Ada Lovelace", "ada@example.com")
 
       order =
@@ -215,7 +215,7 @@ defmodule EdenflowersWeb.Admin.CustomersLiveTest do
       assert has_element?(view, "#editor-stale-notice")
       assert has_element?(view, "h1", "Ada Lovelace")
       {:ok, view, _} = live(conn, ~p"/admin/customers/#{ada.id}")
-      assert has_element?(view, "h1", "Ada Byron")
+      assert has_element?(view, "h1", "Ada Lovelace")
     end
 
     test "both owners keep their saved snapshot until reload when an order moves", %{conn: conn, admin: admin} do

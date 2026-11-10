@@ -623,8 +623,10 @@ defmodule Edenflowers.Email.Previews do
     minimal = Map.merge(full, %{"venue" => nil, "guests" => nil, "selection" => [], "message" => nil})
 
     [
-      {"Wedding enquiry copy", "everything filled in", :wedding_enquiry, Email.wedding_enquiry(full)},
-      {"Wedding enquiry copy", "only the required fields", :wedding_enquiry, Email.wedding_enquiry(minimal)}
+      {"Wedding enquiry", "everything filled in", :wedding_enquiry, Email.wedding_enquiry(full)},
+      {"Wedding enquiry", "only the required fields", :wedding_enquiry, Email.wedding_enquiry(minimal)},
+      {"Wedding enquiry acknowledgement", "sent to the couple", :wedding_enquiry_received,
+       Email.wedding_enquiry_received(full["email"])}
     ]
   end
 
@@ -650,9 +652,11 @@ defmodule Edenflowers.Email.Previews do
     }
 
     [
-      {"Contact message copy", "with a phone number", :contact_message, Email.contact_message(full)},
-      {"Contact message copy", "without a phone number", :contact_message,
-       Email.contact_message(Map.put(full, "phone", nil))}
+      {"Contact message", "with a phone number", :contact_message, Email.contact_message(full)},
+      {"Contact message", "without a phone number", :contact_message,
+       Email.contact_message(Map.put(full, "phone", nil))},
+      {"Contact message acknowledgement", "sent to the sender", :contact_message_received,
+       Email.contact_message_received(full["email"])}
     ]
   end
 
@@ -666,8 +670,8 @@ defmodule Edenflowers.Email.Previews do
        Email.already_subscribed("maria@example.com", promo, locale)},
       {"Already subscribed", "code used or expired", :already_subscribed,
        Email.already_subscribed("maria@example.com", nil, locale)},
-      {"Account", "sign-in code", :otp_sign_in, Email.otp_sign_in("maria@example.com", "482913")},
-      {"Account", "email change code", :email_change_code, Email.email_change_code("maria@example.com", "730184")}
+      {"Account", "sign-in code", :otp_sign_in, Email.otp_sign_in("maria@example.com", "48291375")},
+      {"Account", "email change code", :email_change_code, Email.email_change_code("maria@example.com", "73018462")}
     ]
   end
 

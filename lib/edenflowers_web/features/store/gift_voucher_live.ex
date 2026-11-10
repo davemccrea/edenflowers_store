@@ -576,6 +576,7 @@ defmodule EdenflowersWeb.Store.GiftVoucherLive do
       voucher ->
         socket
         |> assign(previewed: voucher, preview_loading?: true, preview_error?: false)
+        |> cancel_async(:preview)
         |> start_async(:preview, fn -> GiftVoucherPdf.preview(voucher) end)
     end
   end

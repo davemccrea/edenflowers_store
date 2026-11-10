@@ -50,7 +50,7 @@ defmodule Edenflowers.Fulfillment.KeyDates do
   """
   @spec dates_for_weekday(Weekday.t()) :: [Date.t()]
   def dates_for_weekday(weekday) do
-    year = Date.utc_today().year
+    year = Edenflowers.ShopTime.today().year
 
     [year, year + 1]
     |> Enum.flat_map(&for_year/1)

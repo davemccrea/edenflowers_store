@@ -1,7 +1,8 @@
 # Copy gitignored files from main (deps/, .env). _build/ is left out so a stale
 # or half-compiled build in main can't leak in; each worktree compiles its own.
+# tmp/ and the root dumps hold production customer data, which must not spread.
 [step.copy-ignored]
-exclude = ["_build/"]
+exclude = ["_build/", "tmp/", "heroku_db.dump", "erl_crash.dump"]
 
 [[pre-start]]
 copy = "wt step copy-ignored"

@@ -7,17 +7,17 @@ msgstr ""
 "Language: sv\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/edenflowers/email.ex:771
+#: lib/edenflowers/email.ex:795
 #, elixir-autogen, elixir-format
 msgid "%{code} is your email change code for Eden Flowers"
 msgstr "%{code} är din kod för att byta e-postadress hos Eden Flowers"
 
-#: lib/edenflowers/email.ex:763
+#: lib/edenflowers/email.ex:787
 #, elixir-autogen, elixir-format
 msgid "%{otp_code} is your Eden Flowers sign-in code"
 msgstr "%{otp_code} är din inloggningskod till Eden Flowers"
 
-#: lib/edenflowers/email/templates.ex:63
+#: lib/edenflowers/email/templates.ex:65
 #, elixir-autogen, elixir-format
 msgid "65230 Vasa"
 msgstr "65230 Vasa"
@@ -78,8 +78,8 @@ msgstr "Leverans %{date} till %{address}"
 msgid "Discount"
 msgstr "Rabatt"
 
-#: lib/edenflowers/email/templates/contact_message.text.eex:8
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:8
+#: lib/edenflowers/email/templates/contact_message.text.eex:2
+#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:2
 #, elixir-autogen, elixir-format
 msgid "Email: %{email}"
 msgstr "E-post: %{email}"
@@ -99,7 +99,7 @@ msgstr "Första leveransen"
 msgid "First pickup"
 msgstr "Första avhämtningen"
 
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:13
+#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:7
 #, elixir-autogen, elixir-format
 msgid "Flowers you're interested in:"
 msgstr "Blommor du är intresserad av:"
@@ -110,12 +110,6 @@ msgstr "Blommor du är intresserad av:"
 msgid "For %{recipient}"
 msgstr "Till %{recipient}"
 
-#: lib/edenflowers/email/templates/contact_message.text.eex:5
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:5
-#, elixir-autogen, elixir-format
-msgid "Here's a copy of what you sent:"
-msgstr "Här är en kopia av det du skickade:"
-
 #: lib/edenflowers/email/templates/otp_sign_in.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Here's your code to sign in to Eden Flowers:"
@@ -125,7 +119,6 @@ msgstr "Här är din inloggningskod till Eden Flowers:"
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:1
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:1
 #: lib/edenflowers/email/templates/booking_refunded.text.eex:1
-#: lib/edenflowers/email/templates/contact_message.text.eex:1
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:1
 #: lib/edenflowers/email/templates/course_reminder.text.eex:1
 #: lib/edenflowers/email/templates/credit_note.text.eex:1
@@ -144,7 +137,6 @@ msgstr "Här är din inloggningskod till Eden Flowers:"
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:1
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:1
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:1
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:1
 #, elixir-autogen, elixir-format
 msgid "Hi %{name},"
 msgstr "Hej %{name},"
@@ -153,7 +145,7 @@ msgstr "Hej %{name},"
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:1
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:1
 #: lib/edenflowers/email/templates/booking_refunded.text.eex:1
-#: lib/edenflowers/email/templates/contact_message.text.eex:1
+#: lib/edenflowers/email/templates/contact_message_received.text.eex:1
 #: lib/edenflowers/email/templates/course_confirmation.text.eex:1
 #: lib/edenflowers/email/templates/course_reminder.text.eex:1
 #: lib/edenflowers/email/templates/credit_note.text.eex:1
@@ -175,7 +167,7 @@ msgstr "Hej %{name},"
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:1
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:1
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:1
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:1
+#: lib/edenflowers/email/templates/wedding_enquiry_received.text.eex:1
 #, elixir-autogen, elixir-format
 msgid "Hi,"
 msgstr "Hej,"
@@ -293,13 +285,13 @@ msgstr "Den gäller i 10 minuter. Om du inte har begärt den kan du bortse från
 msgid "Left to pay"
 msgstr "Kvar att betala"
 
-#: lib/edenflowers/email/templates.ex:63
+#: lib/edenflowers/email/templates.ex:65
 #, elixir-autogen, elixir-format
 msgid "Myrvägen 1"
 msgstr "Myrvägen 1"
 
-#: lib/edenflowers/email/templates/contact_message.text.eex:7
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:7
+#: lib/edenflowers/email/templates/contact_message.text.eex:1
+#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:1
 #, elixir-autogen, elixir-format
 msgid "Name: %{name}"
 msgstr "Namn: %{name}"
@@ -319,7 +311,7 @@ msgstr "Nästa avhämtning"
 msgid "Nobody was home when I delivered your order, so I left it in a safe place. The attached photo shows where."
 msgstr "Ingen var hemma när jag levererade din beställning, så jag lämnade den på ett säkert ställe. Det bifogade fotot visar var."
 
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:11
+#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Number of guests: %{guests}"
 msgstr "Antal gäster: %{guests}"
@@ -359,7 +351,7 @@ msgstr "Betalning mottagen för %{course}, %{date}"
 msgid "Payment received for your order for %{date}"
 msgstr "Betalning mottagen för din beställning för %{date}"
 
-#: lib/edenflowers/email/templates/contact_message.text.eex:9
+#: lib/edenflowers/email/templates/contact_message.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Phone: %{phone}"
 msgstr "Telefon: %{phone}"
@@ -405,7 +397,7 @@ msgstr "Återbetalning: %{amount}, på samma sätt som du betalade"
 msgid "Refunds usually take 3–5 working days to appear on your statement."
 msgstr "Återbetalningar syns vanligtvis på ditt kontoutdrag inom 3–5 arbetsdagar."
 
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:15
+#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:9
 #, elixir-autogen, elixir-format
 msgid "Rough estimate, not a quote: %{estimate}"
 msgstr "Prisuppskattning, inte en offert: %{estimate}"
@@ -443,16 +435,6 @@ msgstr "Tack för att du startade en prenumeration på %{product}."
 #, elixir-autogen, elixir-format
 msgid "Thank you for subscribing to the Eden Flowers newsletter."
 msgstr "Tack för att du prenumererar på Eden Flowers nyhetsbrev."
-
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Thank you for your enquiry. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it."
-msgstr "Tack för din förfrågan. Jag återkommer med en offert så snart jag kan. Inget är bokat förrän du har sett och godkänt offerten."
-
-#: lib/edenflowers/email/templates/contact_message.text.eex:3
-#, elixir-autogen, elixir-format
-msgid "Thank you for your message. I'll get back to you as soon as I can."
-msgstr "Tack för ditt meddelande. Jag hör av mig så snart jag kan."
 
 #: lib/edenflowers/email/templates/order_details.text.eex:3
 #, elixir-autogen, elixir-format
@@ -520,7 +502,7 @@ msgstr "För att pausa, ändra eller avsluta, använd ditt konto senast %{days} 
 msgid "Total"
 msgstr "Totalt"
 
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:10
+#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:4
 #, elixir-autogen, elixir-format
 msgid "Venue: %{venue}"
 msgstr "Plats: %{venue}"
@@ -529,7 +511,7 @@ msgstr "Plats: %{venue}"
 #: lib/edenflowers/email/templates/booking_payment_received.text.eex:7
 #: lib/edenflowers/email/templates/booking_payment_reminder.text.eex:8
 #: lib/edenflowers/email/templates/booking_refunded.text.eex:9
-#: lib/edenflowers/email/templates/contact_message.text.eex:14
+#: lib/edenflowers/email/templates/contact_message_received.text.eex:5
 #: lib/edenflowers/email/templates/credit_note.text.eex:7
 #: lib/edenflowers/email/templates/gift_voucher_sold.text.eex:13
 #: lib/edenflowers/email/templates/invoice.text.eex:13
@@ -547,12 +529,12 @@ msgstr "Plats: %{venue}"
 #: lib/edenflowers/email/templates/subscription_cancelled.text.eex:9
 #: lib/edenflowers/email/templates/subscription_payment_failed.text.eex:13
 #: lib/edenflowers/email/templates/subscription_set_up.text.eex:22
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:20
+#: lib/edenflowers/email/templates/wedding_enquiry_received.text.eex:5
 #, elixir-autogen, elixir-format
 msgid "Warm wishes,"
 msgstr "Varma hälsningar,"
 
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:9
+#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:3
 #, elixir-autogen, elixir-format
 msgid "Wedding date: %{date}"
 msgstr "Bröllopsdatum: %{date}"
@@ -585,7 +567,7 @@ msgstr "Du betalar vid leveransen."
 msgid "You pay when you collect your order."
 msgstr "Du betalar när du hämtar din beställning."
 
-#: lib/edenflowers/email.ex:707
+#: lib/edenflowers/email.ex:731
 #, elixir-autogen, elixir-format
 msgid "You're already subscribed to the Eden Flowers newsletter"
 msgstr "Du prenumererar redan på Eden Flowers nyhetsbrev"
@@ -657,17 +639,6 @@ msgstr "Kortet med ditt meddelande följer bara med den första beställningen."
 msgid "Your flowers for %{date}"
 msgstr "Dina blommor för %{date}"
 
-#: lib/edenflowers/email.ex:669
-#, elixir-autogen, elixir-format
-msgid "Your message to Eden Flowers"
-msgstr "Ditt meddelande till Eden Flowers"
-
-#: lib/edenflowers/email/templates/contact_message.text.eex:11
-#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:17
-#, elixir-autogen, elixir-format
-msgid "Your message:"
-msgstr "Ditt meddelande:"
-
 #: lib/edenflowers/email/templates/subscription_heads_up.text.eex:1
 #, elixir-autogen, elixir-format
 msgid "Your next %{product} delivery is on %{date}, to %{address}."
@@ -723,11 +694,6 @@ msgstr "Kvittot finns bifogat. Svara på det här mejlet om du har frågor om di
 msgid "Your updated Eden Flowers order for %{date}"
 msgstr "Din uppdaterade Eden Flowers-beställning för %{date}"
 
-#: lib/edenflowers/email.ex:650
-#, elixir-autogen, elixir-format
-msgid "Your wedding enquiry to Eden Flowers"
-msgstr "Din bröllopsförfrågan till Eden Flowers"
-
 #: lib/edenflowers/email/templates/already_subscribed.text.eex:7
 #: lib/edenflowers/email/templates/newsletter_welcome.text.eex:9
 #, elixir-autogen, elixir-format
@@ -739,7 +705,7 @@ msgstr "Koden gäller till och med %{date}."
 msgid "As a welcome gift, you get %{percent} off one order. Enter the following code at checkout:"
 msgstr "Som välkomstgåva får du %{percent} rabatt på en beställning. Ange koden i kassan:"
 
-#: lib/edenflowers/email.ex:688
+#: lib/edenflowers/email.ex:712
 #, elixir-autogen, elixir-format
 msgid "Your %{percent} welcome code for Eden Flowers"
 msgstr "Din rabattkod för %{percent} rabatt hos Eden Flowers"
@@ -822,7 +788,7 @@ msgstr "Faktura %{number} är makulerad"
 msgid "Just a friendly reminder that it was due on %{date}, and I haven't seen the payment yet. If you've already paid, thank you, and please ignore this email."
 msgstr "Bara en vänlig påminnelse om att den skulle betalas senast %{date}, och jag har inte sett betalningen ännu. Om du redan har betalat, tack, och bortse från det här mejlet."
 
-#: lib/edenflowers/email/templates.ex:65
+#: lib/edenflowers/email/templates.ex:67
 #: lib/edenflowers/email/templates/course_payment.text.eex:4
 #: lib/edenflowers/email/templates/order_payment.text.eex:16
 #, elixir-autogen, elixir-format
@@ -997,3 +963,39 @@ msgstr "Betalningen för din beställning för %{date} (%{product}) gick inte ig
 #, elixir-autogen, elixir-format
 msgid "Thank you for your payment. Your receipt for the order on %{date} (%{product}) is attached."
 msgstr "Tack för din betalning. Kvittot för din beställning %{date} (%{product}) finns bifogat."
+
+#: lib/edenflowers/email/templates/contact_message.text.eex:5
+#: lib/edenflowers/email/templates/wedding_enquiry.text.eex:11
+#, elixir-autogen, elixir-format
+msgid "Message:"
+msgstr "Meddelande:"
+
+#: lib/edenflowers/email.ex:681
+#, elixir-autogen, elixir-format
+msgid "New message from %{name}"
+msgstr "Nytt meddelande från %{name}"
+
+#: lib/edenflowers/email.ex:650
+#, elixir-autogen, elixir-format
+msgid "New wedding enquiry from %{name}"
+msgstr "Ny bröllopsförfrågan från %{name}"
+
+#: lib/edenflowers/email/templates/wedding_enquiry_received.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for your enquiry. I'll get back to you with a quote as soon as I can. Nothing is booked until you've seen the quote and confirmed it."
+msgstr "Tack för din förfrågan. Jag återkommer med en offert så snart jag kan. Inget är bokat förrän du har sett och godkänt offerten."
+
+#: lib/edenflowers/email/templates/contact_message_received.text.eex:3
+#, elixir-autogen, elixir-format
+msgid "Thank you for your message. I'll get back to you as soon as I can."
+msgstr "Tack för ditt meddelande. Jag hör av mig så snart jag kan."
+
+#: lib/edenflowers/email.ex:698
+#, elixir-autogen, elixir-format
+msgid "Your message to Eden Flowers"
+msgstr "Ditt meddelande till Eden Flowers"
+
+#: lib/edenflowers/email.ex:668
+#, elixir-autogen, elixir-format
+msgid "Your wedding enquiry to Eden Flowers"
+msgstr "Din bröllopsförfrågan till Eden Flowers"

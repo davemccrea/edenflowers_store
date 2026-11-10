@@ -22,12 +22,11 @@ defmodule EdenflowersWeb.Auth.ReturnToTest do
       assert ReturnTo.safe_path("../etc/passwd") == nil
     end
 
-    test "rejects sign-in, sign-out, auth, and password-reset paths" do
+    test "rejects sign-in, sign-out and auth paths" do
       assert ReturnTo.safe_path("/sign-in") == nil
       assert ReturnTo.safe_path("/sign-in?foo=bar") == nil
       assert ReturnTo.safe_path("/sign-out") == nil
       assert ReturnTo.safe_path("/auth/user/google") == nil
-      assert ReturnTo.safe_path("/password-reset") == nil
     end
 
     test "does not reject paths that merely share a prefix with auth routes" do
