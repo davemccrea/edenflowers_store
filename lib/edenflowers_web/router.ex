@@ -32,6 +32,10 @@ defmodule EdenflowersWeb.Router do
     plug EdenflowersWeb.Plugs.Maintenance
   end
 
+  pipeline :admin_locale do
+    plug EdenflowersWeb.Plugs.PutAdminLocale
+  end
+
   pipeline :browser_json do
     plug :accepts, ["json"]
     plug :fetch_session
@@ -140,6 +144,7 @@ defmodule EdenflowersWeb.Router do
 
     get "/courses/bookings/:id/receipt", Courses.CourseReceiptController, :show
     get "/locale/:locale", LocaleController, :index
+    get "/admin-locale/:locale", LocaleController, :admin
 
     auth_routes Auth.AuthController, Edenflowers.Accounts.User, path: "/auth"
 
@@ -171,12 +176,12 @@ defmodule EdenflowersWeb.Router do
   end
 
   scope "/admin", EdenflowersWeb.Admin do
-    pipe_through :browser
+    pipe_through [:browser, :admin_locale]
 
     ash_authentication_live_session :admin,
       on_mount: [
         {EdenflowersWeb.Auth.LiveUserAuth, :live_admin_required},
-        EdenflowersWeb.Hooks.PutLocale,
+        {EdenflowersWeb.Hooks.PutLocale, :admin},
         EdenflowersWeb.Hooks.PutCurrentPath
       ] do
       live "/", OverviewLive
@@ -221,7 +226,7 @@ defmodule EdenflowersWeb.Router do
 
   # Library dashboards name their own modules, so this scope has no alias.
   scope "/admin" do
-    pipe_through :browser
+    pipe_through [:browser, :admin_locale]
 
     oban_dashboard("/oban", resolver: EdenflowersWeb.ObanResolver)
 

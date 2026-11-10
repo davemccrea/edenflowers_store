@@ -55,15 +55,44 @@ defmodule EdenflowersWeb.Admin.AccountLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/account")
 
-    for locale <- Edenflowers.Locales.all() do
+    for locale <- Edenflowers.Locales.admin() do
       assert has_element?(
                view,
-               ~s|#admin-locale-picker option[value="/locale/#{locale}?redirect_to=%2Fadmin%2Faccount"]|
+               ~s|#admin-locale-picker option[value="/admin-locale/#{locale}"]|
              )
     end
 
+    refute has_element?(view, ~s|#admin-locale-picker option[value="/admin-locale/fi"]|)
+
     {:ok, _view, html} = live(conn, ~p"/admin/orders")
     refute html =~ "/locale/"
+  end
+
+  test "Finnish storefront visitors see Swedish admin without changing their customer language", %{conn: conn} do
+    admin = generate(admin_user()) |> with_token()
+    key = Localize.Plug.PutLocale.session_key()
+    conn = conn |> log_in(admin) |> init_test_session(%{key => "fi"})
+
+    {:ok, view, html} = live(conn, ~p"/admin/account")
+    assert has_element?(view, ~s|#admin-locale-picker option[value="/admin-locale/sv-FI"][selected]|)
+
+    assert html =~
+             Gettext.with_locale(EdenflowersWeb.Gettext, "sv", fn ->
+               Gettext.dgettext(EdenflowersWeb.Gettext, "admin", "This device")
+             end)
+
+    response = get(conn, ~p"/admin/account")
+    assert get_session(response, key) == "fi"
+
+    response = conn |> get(~p"/admin-locale/en-GB") |> recycle() |> get(~p"/admin/account")
+    assert get_session(response, key) == "fi"
+    {:ok, view, html} = live(recycle(response), ~p"/admin/account")
+    assert has_element?(view, ~s|#admin-locale-picker option[value="/admin-locale/en-GB"][selected]|)
+    assert html =~ "This device"
+
+    response = response |> recycle() |> get(~p"/account")
+    assert get_session(response, key) == "fi"
+    assert html_response(response, 200) =~ ~s|lang="fi"|
   end
 
   test "non-admins cannot fetch an avatar", %{conn: conn} do

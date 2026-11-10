@@ -6,6 +6,13 @@ defmodule Edenflowers.Locales do
   @translatable_atoms [:"sv-FI", :fi]
 
   def all, do: @all
+  def admin, do: ["sv-FI", "en-GB"]
+
+  def admin_locale(session) do
+    locale = session["admin_locale"] || session[Localize.Plug.PutLocale.session_key()]
+    if locale in admin(), do: locale, else: @default
+  end
+
   def options, do: Enum.map(@all, &{name(&1), &1})
   def default, do: @default
   def translatable_atoms, do: @translatable_atoms

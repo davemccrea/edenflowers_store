@@ -21,7 +21,7 @@ defmodule EdenflowersWeb.Admin.DeviceSettings do
         <div class="grid gap-1 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
           <dt class="text-base-content/75 text-sm sm:pt-1.5">{~t"Language"}</dt>
           <dd>
-            <Layouts.locale_picker id="admin-locale-picker" current_path={@current_path} class="w-full sm:max-w-xs">
+            <Layouts.locale_picker admin? id="admin-locale-picker" current_path={@current_path} class="w-full sm:max-w-xs">
               <span class="select w-full">{current_language()}</span>
             </Layouts.locale_picker>
           </dd>

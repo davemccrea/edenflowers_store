@@ -110,12 +110,12 @@ defmodule EdenflowersWeb.Admin.ExpensesLiveTest do
     assert render(view) =~ "Paid #{Edenflowers.Format.date(paid_on, "en")}"
   end
 
-  test "translates the table controls", %{conn: conn} do
+  test "Finnish visitors get Swedish table controls", %{conn: conn} do
     conn = Plug.Conn.put_session(conn, Localize.Plug.PutLocale.session_key(), "fi")
 
     {:ok, _view, html} = live(conn, ~p"/admin/expenses")
 
-    assert html =~ "Suodattimet"
+    assert html =~ ~r/\bFilter\b/
   end
 
   test "marking paid keeps the corrections", %{conn: conn} do

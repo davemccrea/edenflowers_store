@@ -320,10 +320,10 @@ defmodule Edenflowers.Payments.PayableTest do
       end
 
       test "a refusal is in Jennie's language" do
-        Gettext.put_locale(EdenflowersWeb.Gettext, "fi")
+        Gettext.put_locale(EdenflowersWeb.Gettext, "sv")
 
         assert {:error, error} = record_payment(build(@parent), "80.01")
-        assert Exception.message(error) =~ "Summa on suurempi kuin maksettavaa on jäljellä."
+        assert Exception.message(error) =~ "Beloppet är större än det som återstår att betala."
       end
 
       test "a payment on a cancelled one is refused" do
