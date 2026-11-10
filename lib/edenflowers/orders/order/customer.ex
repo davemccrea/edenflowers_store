@@ -56,28 +56,7 @@ defmodule Edenflowers.Orders.Order.Customer do
   calculations do
     calculate :payment_instruction,
               :atom,
-              expr(
-                cond do
-                  not unpaid? ->
-                    nil
-
-                  payment_link_open? ->
-                    :pay_now
-
-                  payment_terms == :invoice ->
-                    :invoice
-
-                  payment_terms == :on_fulfillment and fulfillment_status in [:pending, :ready] and
-                      fulfillment_method == :delivery ->
-                    :on_delivery
-
-                  payment_terms == :on_fulfillment and fulfillment_status in [:pending, :ready] ->
-                    :at_collection
-
-                  true ->
-                    nil
-                end
-              ) do
+              Edenflowers.Orders.Order.Calculations.PaymentInstruction do
       constraints one_of: [:pay_now, :invoice, :on_delivery, :at_collection]
 
       description "How the customer should pay an unpaid order, following its payment link or agreed terms. " <>

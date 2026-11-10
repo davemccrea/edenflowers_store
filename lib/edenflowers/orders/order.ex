@@ -721,7 +721,7 @@ defmodule Edenflowers.Orders.Order do
                     "buy another."
     end
 
-    calculate :payment_emailable?, :boolean, expr(not gift_voucher_sale? or (receipt_available? and not cancelled?)) do
+    calculate :payment_emailable?, :boolean, Calculations.PaymentEmailable do
       description "Whether a payment on it can be emailed. A Gift voucher sale's only once it's paid in full, " <>
                     "since the email carries the voucher, so a part payment in cash beside one by card waits " <>
                     "for the rest."
@@ -808,12 +808,7 @@ defmodule Edenflowers.Orders.Order do
       argument :term, :ci_string, allow_nil?: false
     end
 
-    calculate :payment_reminder_sendable?,
-              :boolean,
-              expr(
-                fulfillment_status != :cancelled and
-                  not is_nil(customer_email) and to_collect? and not gift_voucher_sale?
-              ) do
+    calculate :payment_reminder_sendable?, :boolean, Calculations.PaymentReminderSendable do
       description "Whether Jennie can send a Payment reminder: a Balance to collect, an email to send it to, " <>
                     "on a purchase that has not been cancelled. Never a Gift voucher sale, paid at the counter " <>
                     "when Jennie sells it or at checkout online."
@@ -868,11 +863,11 @@ defmodule Edenflowers.Orders.Order do
                     "with an email address."
     end
 
-    calculate :receipt_available?, :boolean, expr(state == :placed and payment_status == :paid) do
+    calculate :receipt_available?, :boolean, Calculations.ReceiptAvailable do
       description "Placed and paid. A Custom Order is placed before it is paid, and has no receipt until it is."
     end
 
-    calculate :unpaid?, :boolean, expr(state == :placed and payable?) do
+    calculate :unpaid?, :boolean, Calculations.Unpaid do
       description "Money still owed on a placed order. A fulfilled order can still be unpaid when the customer " <>
                     "pays afterwards, and an Occurrence whose card was refused is placed unpaid."
     end

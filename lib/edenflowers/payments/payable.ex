@@ -285,17 +285,15 @@ defmodule Edenflowers.Payments.Payable do
                     "its Balance, but is settled."
     end
 
-    calculate :to_collect?, :boolean, expr(not settled? and balance > 0) do
+    calculate :to_collect?, :boolean, Calculations.ToCollect do
       description "Whether money is still owed by the customer."
     end
 
-    calculate :to_refund?, :boolean, expr(not settled? and balance < 0) do
+    calculate :to_refund?, :boolean, Calculations.ToRefund do
       description "Whether money is owed back to the customer."
     end
 
-    calculate :refundable?,
-              :boolean,
-              expr(committed? and balance <= 0 and amount_held > 0 and not refunded_only_by_cancelling?) do
+    calculate :refundable?, :boolean, Calculations.Refundable do
       description "Whether Jennie can hand money back now: committed, nothing left to collect, money still " <>
                     "held, and not something refunded only by cancelling it. Validations.Refundable applies the " <>
                     "same rules."
