@@ -35,6 +35,10 @@ db = "bash -c 'source .env && (mix ecto.drop --quiet 2>/dev/null; true) && mix a
 [[pre-start]]
 server = "bash scripts/start-worktree-server.sh {{ branch | hash_port }}"
 
+# Stop this worktree's dev server so it releases the database before the drop
+[[pre-remove]]
+server = "bash -c 'source .env && lsof -ti tcp:$PORT | xargs kill -9 2>/dev/null; sleep 1; true'"
+
 # Drop this worktree's dev and test databases
 [[pre-remove]]
 db = "bash -c 'source .env && mix ecto.drop --quiet; MIX_ENV=test mix ecto.drop --quiet'"
