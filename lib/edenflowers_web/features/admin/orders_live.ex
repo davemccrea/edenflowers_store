@@ -61,6 +61,7 @@ defmodule EdenflowersWeb.Admin.OrdersLive do
           url_state={@url_state}
           sort_mode="exclusive"
           page_size={[default: 25, options: [10, 25, 50, 100]]}
+          pagination={[mode: :offset, count: :async]}
           theme={EdenflowersWeb.Admin.CinderTheme}
           click={fn order -> JS.navigate(~p"/admin/orders/#{order.id}") end}
         >
