@@ -96,6 +96,19 @@ defmodule Edenflowers.Courses.Course do
       prepare build(default_sort: [date: :asc, start_time: :asc])
     end
 
+    read :search do
+      description "Admin search for courses, drafts and past ones included, by name in any language, latest first."
+
+      argument :term, :ci_string, allow_nil?: false
+
+      filter expr(
+               contains(name, ^arg(:term)) or contains(translations[:"sv-FI"][:name], ^arg(:term)) or
+                 contains(translations[:fi][:name], ^arg(:term))
+             )
+
+      prepare build(sort: [date: :desc], load: [:seats_booked])
+    end
+
     read :admin_list do
       description "Courses for the admin list, paginated, soonest first, with seats booked and whether any " <>
                     "booking is still to settle."

@@ -138,6 +138,7 @@ defmodule EdenflowersWeb.Admin.OrdersLiveTest do
     {:ok, view, _html} = live(conn, ~p"/admin/orders?search=CANCELLED123")
     assert has_element?(view, ~s|[data-item-id="#{order.id}"]|)
     {:ok, view, _html} = live(conn, ~p"/admin/search?q=CANCELLED123")
+    render_async(view)
     assert has_element?(view, ~s|a[href="/admin/orders/#{order.id}"]|)
     {:ok, view, _html} = live(conn, ~p"/admin/orders/#{order.id}")
     assert render(view) =~ "To refund"

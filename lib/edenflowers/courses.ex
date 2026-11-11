@@ -59,6 +59,7 @@ defmodule Edenflowers.Courses do
       define :get_course_by_slug, action: :read, get_by: [:slug]
       define :current_course_slug, action: :current_slug, args: [:param]
       define :list_upcoming_courses, action: :upcoming
+      define :search_courses, action: :search, args: [:term]
     end
 
     resource Edenflowers.Courses.FormerCourseSlug
@@ -66,6 +67,7 @@ defmodule Edenflowers.Courses do
     resource Edenflowers.Courses.CourseRegistration do
       define :list_my_registrations, action: :mine
       define :list_unsettled_registrations, action: :unsettled
+      define :search_registrations, action: :search, args: [:term]
       define :register_for_course, action: :register
       define :get_checkout_registration, action: :checkout, get_by: [:id, :course_id]
       define :revise_registration, action: :revise

@@ -89,6 +89,17 @@ defmodule Edenflowers.Payments.Invoice do
       prepare build(sort: [inserted_at: :desc])
     end
 
+    read :search do
+      description "Admin search for invoices, drafts included, by customer or company name, email or reference " <>
+                    "number, newest first."
+
+      argument :term, :ci_string, allow_nil?: false
+
+      filter expr(matches?(term: ^arg(:term)))
+
+      prepare build(sort: [inserted_at: :desc], load: [:buyer, :status, :overdue?])
+    end
+
     read :previous_customers do
       description "Each invoice customer's latest issued invoice, newest first. A customer is one email (any " <>
                     "case) as a private customer, or that email for one business and Y-tunnus. The term is " <>

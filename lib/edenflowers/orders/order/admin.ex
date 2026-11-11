@@ -225,7 +225,18 @@ defmodule Edenflowers.Orders.Order.Admin do
 
       filter expr(state == :placed and matches?(term: ^arg(:term)))
 
-      prepare build(sort: [ordered_at: :desc], load: [:settled?, :to_collect?, :amount_paid, :balance, :payment_status])
+      prepare build(
+                sort: [ordered_at: :desc],
+                load: [
+                  :settled?,
+                  :to_collect?,
+                  :amount_paid,
+                  :balance,
+                  :payment_status,
+                  :grand_total,
+                  :gift_voucher_sale?
+                ]
+              )
     end
 
     # What the Overview lists as still to collect or refund.

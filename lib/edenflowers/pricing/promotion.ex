@@ -141,6 +141,16 @@ defmodule Edenflowers.Pricing.Promotion do
       filter expr(code == ^arg(:code) and usable?(today: ^arg(:today)))
     end
 
+    read :search_by_code do
+      description "Admin search for promotions of every kind by part of their code, any case."
+
+      argument :term, :ci_string, allow_nil?: false
+
+      filter expr(contains(code, ^arg(:term)))
+
+      prepare build(sort: [code: :asc], load: [:status, :usage])
+    end
+
     create :create_for_newsletter do
       description "Generates a new newsletter subscriber's welcome code at the `WelcomeOffer` rate: one use, " <>
                     "valid for 30 days."
